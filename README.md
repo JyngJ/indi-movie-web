@@ -1,67 +1,180 @@
-# 예술영화관 상영 통합 조회 웹서비스
+# 예술영화관 상영 통합 조회
 
-> 서울 독립·예술영화관 상영 정보 통합 조회 모바일 웹 서비스 (MVP)
+서울 독립·예술영화관 상영 정보를 한 곳에서 조회하는 모바일 웹 서비스 (MVP).
 
-## 프로젝트 개요
-
-### 핵심 기능
-- 🗺️ **지도 기반 극장 탐색** - 사용자 위치 기반 가까운 극장 검색
-- 🎬 **영화 검색** - KMDB/TMDB 통합 영화 정보 조회
-- ⏰ **상영시간표** - 극장별/영화별 상영 시간표 조회
-- ⭐ **즐겨찾기** - 극장/영화 즐겨찾기 및 알림 설정
-
-### 플랫폼
-- **MVP**: 모바일 웹 (375px 기준)
-- **향후**: React Native/Capacitor로 앱 확장 가능한 구조
+---
 
 ## 빠른 시작
 
 ```bash
 npm install
 npm run dev
-# http://localhost:3000
+# → http://localhost:3000
 ```
+
+> Node 18+ 필요. 환경 변수는 `.env.local` 참고 (`.env.example` 예정).
+
+---
 
 ## 기술 스택
 
-| 영역 | 도구 |
-|------|------|
-| 프레임워크 | Next.js 14 (App Router) |
-| 언어 | TypeScript |
-| 상태관리 | React Query (서버), Zustand (UI) |
-| 스타일링 | Tailwind CSS |
-| 지도 | Leaflet |
-| 데이터베이스 | Supabase 또는 자체 서버 (TBD) |
+| 영역 | 도구 | 비고 |
+|------|------|------|
+| 프레임워크 | Next.js 16 (App Router) | Turbopack 사용 |
+| 언어 | TypeScript | strict 모드 |
+| 서버 상태 | TanStack React Query v5 | 캐싱·동기화 |
+| 클라이언트 상태 | Zustand v5 | 테마, UI 상태 |
+| 스타일 | Tailwind CSS v4 + CSS Variables | 디자인 토큰 기반 |
+| 지도 | Leaflet + react-leaflet v5 | Carto Voyager 타일 |
+| 데이터베이스 | **미정** (백엔드 팀 협의 필요) | Supabase 또는 자체 서버 |
 
-## 문서
-
-| 파일 | 내용 |
-|------|------|
-| [CLAUDE.md](./CLAUDE.md) | Claude 작업 컨텍스트 & 코드 규칙 |
-| [docs/API.md](./docs/API.md) | REST API 스펙 & 프론트 Hook 매핑 |
-| [docs/DB.md](./docs/DB.md) | DB 스키마 (논리 모델) |
-| [docs/DESIGN.md](./docs/DESIGN.md) | 디자인 토큰 & 컴포넌트 가이드 |
-| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | 폴더 구조, 데이터 레이어, Adapter 패턴 |
-| [docs/INFRA.md](./docs/INFRA.md) | 호스팅, 환경 변수, 배포 흐름 |
-| [docs/WORKFLOW.md](./docs/WORKFLOW.md) | 브랜치 전략 & Phase별 체크리스트 |
+---
 
 ## 프로젝트 구조
 
 ```
 src/
-├── app/                  # 페이지 (Next.js App Router)
-├── components/           # React 컴포넌트
-│   ├── primitives/       # Button, Input, Card 등
-│   └── domain/           # MovieCard, TheaterPin 등
-├── hooks/                # Custom Hooks (API, UI)
-├── lib/                  # 유틸리티, API 클라이언트
-├── store/                # Zustand 상태관리
-├── styles/               # CSS, 디자인 토큰
-└── types/                # TypeScript 타입 정의
+├── app/                    # 페이지 (Next.js App Router)
+│   ├── page.tsx            # 홈 (지도 뷰)
+│   └── dev/components/     # 디자인 시스템 쇼케이스 (/dev/components)
+│
+├── components/
+│   ├── primitives/         # 재사용 UI 원자 — 비즈니스 로직 없음
+│   │   ├── Button, Chip, Badge, Card
+│   │   ├── Input, SearchBar
+│   │   ├── FAB (FabRound)
+│   │   └── BottomSheet, Skeleton
+│   ├── domain/             # 서비스 도메인 컴포넌트
+│   │   ├── ShowtimeCell    # 상영 시간 셀
+│   │   ├── DateBar         # 날짜/시간 선택 바
+│   │   ├── MapPin          # 지도 마커
+│   │   ├── PosterThumb     # 영화 포스터
+│   │   └── TheaterSheet    # 극장 정보 바텀시트
+│   └── map/
+│       └── MapView.tsx     # 전체화면 지도 + 오버레이
+│
+├── hooks/
+│   ├── useUserLocation.ts  # Geolocation → 지도 중심 좌표
+│   ├── queries/            # React Query read hooks (useTheaters 등, 예정)
+│   └── mutations/          # React Query write hooks (예정)
+│
+├── lib/
+│   ├── adapters/
+│   │   ├── location.ts     # Geolocation API (추후 RN 교체 가능)
+│   │   └── storage.ts      # localStorage (추후 AsyncStorage 교체 가능)
+│   └── query-client.ts     # React Query 전역 설정
+│
+├── store/                  # Zustand 스토어 (테마, 유저 등)
+├── styles/tokens.css       # CSS Variables 디자인 토큰 (라이트/다크)
+└── types/                  # 공유 TypeScript 타입
 ```
 
-## ⚠️ TBD (백엔드 팀과 협의 필수)
+---
 
-- DB 선택: Supabase vs 자체 서버
-- 백엔드 구현 방식
-- 외부 API 연동 방식 (KMDB/TMDB)
+## API 계약 (프론트 ↔ 백엔드)
+
+> 상세 스펙: [`docs/API.md`](./docs/API.md)
+
+백엔드 구현 방식 결정 전이므로, 아래는 **엔드포인트 인터페이스 계약**입니다.
+구현체(Supabase RPC / Express / FastAPI 등)는 백엔드 팀이 선택 후 작성합니다.
+
+### 주요 엔드포인트
+
+| 엔드포인트 | 용도 | 캐시 |
+|-----------|------|------|
+| `GET /api/theaters/search` | 지도 범위 내 극장 목록 (바운딩박스) | 30분 |
+| `GET /api/theaters/:id` | 극장 상세 정보 | 1시간 |
+| `GET /api/movies/search` | 영화 검색 (KMDB/TMDB) | 30분 |
+| `GET /api/movies/trending` | 현재 상영중 / 개봉 예정 | 6시간 |
+| `GET /api/showtimes/theater/:id` | 극장별 상영시간표 | 10분 |
+| `GET /api/showtimes/movie/:id` | 영화별 상영 극장 | 15분 |
+| `POST /api/favorites` | 즐겨찾기 추가 (인증 필요) | — |
+
+**에러 형식 통일:**
+```json
+{ "error": { "code": "ERR_CODE", "message": "설명" } }
+```
+
+### 프론트 React Query Hooks (예정)
+
+```ts
+useTheaters(bounds)               // 지도 범위 극장
+useTheater(theaterId)             // 극장 상세
+useMovies(query)                  // 영화 검색
+useShowtimes(theaterId, date)     // 상영시간표
+useFavorites()                    // 즐겨찾기 목록
+useToggleFavorite({ type, id })   // 즐겨찾기 토글
+```
+
+---
+
+## DB 스키마 (논리 모델)
+
+> 상세 스펙: [`docs/DB.md`](./docs/DB.md)
+
+| 테이블 | 핵심 컬럼 |
+|--------|-----------|
+| `theaters` | id, name, lat, lng, address, screen_count |
+| `movies` | id, title, kmdb_id, tmdb_id, genre[], poster_url |
+| `showtimes` | theater_id, movie_id, show_date, show_time, seat_total, seat_available |
+| `users` | id (→ auth), email, preferred_city |
+| `favorites` | user_id, item_type ('theater'\|'movie'), item_id |
+
+**구현 전 백엔드 팀과 확인 필요:**
+- DB 엔진 선택 → SQL 마이그레이션 스크립트 작성
+- Supabase 선택 시: RLS 정책 설정
+- 외부 API(KMDB/TMDB) 연동 위치 (프론트 직접 vs 백엔드 프록시)
+
+---
+
+## 개발 로드맵
+
+| Phase | 내용 | 상태 |
+|-------|------|------|
+| 1 | 프로젝트 초기화, 디자인 토큰, 컴포넌트 시스템 | ✅ 완료 |
+| 2 | 지도 뷰, 위치 기반 극장 탐색, 극장 상세 | 🔄 진행중 |
+| 3 | 영화 검색, 상영시간표 UI | 예정 |
+| 4 | 사용자 인증, 즐겨찾기 | 예정 |
+| 5 | 성능 최적화, Capacitor 앱 확장 준비 | 예정 |
+
+---
+
+## 디자인 시스템
+
+컴포넌트 전체 확인: **http://localhost:3000/dev/components**
+
+- 모든 색상·간격·폰트는 `src/styles/tokens.css`의 CSS Variables로 정의
+- 라이트/다크 모드 모두 지원 (`[data-theme="dark"]`)
+- 모바일 375px 기준, 터치 타겟 최소 44px
+- 자세한 내용: [`docs/DESIGN.md`](./docs/DESIGN.md)
+
+---
+
+## 웹 → 앱 확장 구조
+
+`src/lib/adapters/`의 인터페이스를 교체하는 것만으로 React Native 전환 가능:
+
+| 어댑터 | 웹 | React Native (예정) |
+|--------|-----|---------------------|
+| `location.ts` | Geolocation API | RN Geolocation |
+| `storage.ts` | localStorage | AsyncStorage |
+
+---
+
+## 문서
+
+| 파일 | 내용 |
+|------|------|
+| [`docs/API.md`](./docs/API.md) | REST API 상세 스펙 & 에러 코드 |
+| [`docs/DB.md`](./docs/DB.md) | DB 테이블 스키마 (논리 모델) |
+| [`docs/DESIGN.md`](./docs/DESIGN.md) | 디자인 토큰 & 컴포넌트 가이드 |
+| [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | 폴더 구조 & Adapter 패턴 |
+| [`docs/INFRA.md`](./docs/INFRA.md) | 환경 변수 & 배포 |
+| [`docs/WORKFLOW.md`](./docs/WORKFLOW.md) | 브랜치 전략 & Phase 체크리스트 |
+| [`CLAUDE.md`](./CLAUDE.md) | AI 코딩 어시스턴트(Claude Code) 설정 |
+
+---
+
+## 지도 데이터 저작권
+
+지도 타일: © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, © [CARTO](https://carto.com/attributions)
