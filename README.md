@@ -35,9 +35,15 @@ npm run dev
 
 ## 문서
 
-- 📋 **[CLAUDE.md](./CLAUDE.md)** - Claude 작업 컨텍스트 & 지시사항
-- 📖 **[DEVELOPMENT.md](./DEVELOPMENT.md)** - API 스펙, DB 스키마, 개발 계획
-- 🔄 **[WORKFLOW.md](./WORKFLOW.md)** - Phase별 작업 흐름
+| 파일 | 내용 |
+|------|------|
+| [CLAUDE.md](./CLAUDE.md) | Claude 작업 컨텍스트 & 코드 규칙 |
+| [docs/API.md](./docs/API.md) | REST API 스펙 & 프론트 Hook 매핑 |
+| [docs/DB.md](./docs/DB.md) | DB 스키마 (논리 모델) |
+| [docs/DESIGN.md](./docs/DESIGN.md) | 디자인 토큰 & 컴포넌트 가이드 |
+| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | 폴더 구조, 데이터 레이어, Adapter 패턴 |
+| [docs/INFRA.md](./docs/INFRA.md) | 호스팅, 환경 변수, 배포 흐름 |
+| [docs/WORKFLOW.md](./docs/WORKFLOW.md) | 브랜치 전략 & Phase별 체크리스트 |
 
 ## 프로젝트 구조
 
