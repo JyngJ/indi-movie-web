@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 디자인 파일 (로컬 전용)
+untitled/
+영화 tokens.js

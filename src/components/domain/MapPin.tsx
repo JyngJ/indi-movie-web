@@ -9,68 +9,77 @@ interface MapPinProps {
   onClick?: () => void
 }
 
-const PIN_DOT_COLORS: Record<PinKind, string> = {
-  indie: 'var(--color-primary-base)',   /* #4A6380 */
-  cgv:   'var(--color-cgv)',            /* #E30613 */
-  mega:  'var(--color-mega)',           /* #6C1E9F */
-  lotte: 'var(--color-lotte)',          /* #ED1C24 */
+const PIN_COLORS: Record<PinKind, { dot: string; aura: string }> = {
+  indie: { dot: 'var(--color-primary-base)', aura: 'rgba(74,99,128,0.25)' },
+  cgv:   { dot: 'var(--color-cgv)',          aura: 'rgba(227,6,19,0.25)' },
+  mega:  { dot: 'var(--color-mega)',         aura: 'rgba(108,30,159,0.25)' },
+  lotte: { dot: 'var(--color-lotte)',        aura: 'rgba(237,28,36,0.25)' },
 }
 
-const PIN_RING_COLORS: Record<PinKind, string> = {
-  indie: 'rgba(74,99,128,0.25)',
-  cgv:   'rgba(227,6,19,0.25)',
-  mega:  'rgba(108,30,159,0.25)',
-  lotte: 'rgba(237,28,36,0.25)',
-}
+const DOT = 22
+const AURA = 44
 
 export function MapPin({ kind = 'indie', selected = false, label, onClick }: MapPinProps) {
-  const containerSize = selected
-    ? 'var(--comp-pin-selected-size)'   /* 44px */
-    : 'var(--comp-pin-base-size)'       /* 28px */
+  const { dot, aura } = PIN_COLORS[kind]
 
   return (
     <div
-      className="inline-flex flex-col items-center gap-1"
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
-      style={{ cursor: onClick ? 'pointer' : 'default' }}
+      style={{
+        display: 'inline-flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 4,
+        position: 'relative',
+        cursor: onClick ? 'pointer' : 'default',
+      }}
     >
-      <div
-        className="relative flex items-center justify-center"
-        style={{ width: containerSize, height: containerSize }}
-      >
-        {selected && (
-          <div
-            className="absolute inset-0 rounded-full"
-            style={{ backgroundColor: PIN_RING_COLORS[kind] }}
-          />
-        )}
-        <div
-          className="rounded-full"
-          style={{
-            width: 'var(--comp-pin-dot-size)',    /* 22px */
-            height: 'var(--comp-pin-dot-size)',
-            backgroundColor: PIN_DOT_COLORS[kind],
-            border: '2px solid #FFFFFF',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.18)',
-          }}
-        />
-      </div>
+      {/* 오라 — dot 뒤에 absolute로 표시, 레이아웃 영향 없음 */}
+      {selected && (
+        <div style={{
+          position: 'absolute',
+          width: AURA,
+          height: AURA,
+          bottom: -((AURA - DOT) / 2),
+          left: '50%',
+          transform: 'translateX(-50%)',
+          borderRadius: '50%',
+          backgroundColor: aura,
+          zIndex: 0,
+        }} />
+      )}
 
+      {/* 라벨 */}
       {label && (
-        <div
-          className="text-[11px] font-semibold whitespace-nowrap"
-          style={{
-            padding: '2px 6px',
-            borderRadius: 'var(--radius-sm)',   /* 4px */
-            color: '#1A1714',
-            backgroundColor: 'rgba(255,255,255,0.85)',
-          }}
-        >
+        <div style={{
+          fontSize: 11,
+          fontWeight: 600,
+          whiteSpace: 'nowrap',
+          padding: '2px 6px',
+          borderRadius: 4,
+          color: '#1A1714',
+          backgroundColor: 'rgba(255,255,255,0.88)',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
+          position: 'relative',
+          zIndex: 1,
+        }}>
           {label}
         </div>
       )}
+
+      {/* dot */}
+      <div style={{
+        width: DOT,
+        height: DOT,
+        borderRadius: '50%',
+        backgroundColor: dot,
+        border: '2px solid #FFFFFF',
+        boxShadow: '0 2px 6px rgba(0,0,0,0.18)',
+        position: 'relative',
+        zIndex: 1,
+      }} />
     </div>
   )
 }

@@ -245,7 +245,10 @@ export default function ComponentsPage() {
 
         {/* 03 지도 핀 */}
         <Section title="03 · 지도 핀">
-          <div className="flex gap-8 flex-wrap items-end">
+          <div
+            className="flex gap-8 flex-wrap items-end p-6 rounded-xl"
+            style={{ backgroundColor: '#d4d0c8' }}   /* 지도 배경 느낌 */
+          >
             {[
               { kind: 'indie' as const, label: '더숲 아트시네마', sub: 'indie default' },
               { kind: 'indie' as const, label: '아트나인', selected: true, sub: 'indie selected' },
@@ -255,7 +258,7 @@ export default function ComponentsPage() {
             ].map((p) => (
               <div key={p.sub} className="flex flex-col items-center gap-1">
                 <MapPin kind={p.kind} label={p.label} selected={p.selected} />
-                <span style={captionStyle}>{p.sub}</span>
+                <span style={{ ...captionStyle, color: '#555' }}>{p.sub}</span>
               </div>
             ))}
           </div>
