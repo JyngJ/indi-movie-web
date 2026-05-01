@@ -43,6 +43,13 @@ a {
   text-decoration: none;
 }
 
+/* search input 브라우저 기본 clear 버튼 제거 */
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 /* 이미지 기본 설정 */
 img {
   max-width: 100%;
