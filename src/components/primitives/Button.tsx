@@ -1,3 +1,5 @@
+'use client'
+
 import { ButtonHTMLAttributes, ReactNode } from 'react'
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger'
@@ -14,17 +16,17 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const variantStyles: Record<Variant, string> = {
   primary: `
     bg-[var(--color-primary-base)] text-[var(--color-text-inverse)]
-    hover:bg-[var(--color-primary-light)]
+    hover:bg-[var(--color-primary-hover-l)]
     active:opacity-80
   `,
   secondary: `
     bg-transparent text-[var(--color-primary-base)]
     border border-[var(--color-primary-base)]
-    hover:bg-[var(--color-primary-base)] hover:text-[var(--color-text-inverse)]
+    hover:bg-[var(--color-primary-subtle-l)]
   `,
   ghost: `
-    bg-transparent text-[var(--color-text-secondary)]
-    hover:bg-[var(--color-border)] hover:text-[var(--color-text-primary)]
+    bg-transparent text-[var(--color-text-body)]
+    hover:bg-[var(--color-surface-raised)] hover:text-[var(--color-text-primary)]
   `,
   danger: `
     bg-[var(--color-error)] text-[var(--color-text-inverse)]

@@ -1,3 +1,5 @@
+'use client'
+
 import { HTMLAttributes, ReactNode } from 'react'
 
 type Padding = 'none' | 'sm' | 'md' | 'lg'
