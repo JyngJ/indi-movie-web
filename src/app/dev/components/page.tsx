@@ -295,22 +295,32 @@ export default function ComponentsPage() {
           </div>
         </Section>
 
-        {/* 05 바텀시트 — 극장 카드 */}
+        {/* 05 바텀시트 — 극장 카드 (드래그 가능 시트, 지도 화면에서 사용) */}
         <Section title="05 · 바텀시트 — 극장 카드">
-          <TheaterSheet
-            name="더숲 아트시네마"
-            address="서울특별시 노원구 화랑로 123"
-            movies={SAMPLE_MOVIES}
-            favorited={favorited}
-            selectedMovieId={selectedMovie}
-            onFavorite={() => setFavorited(!favorited)}
-            onMovieSelect={setSelectedMovie}
-          />
+          <div style={{ position: 'relative', height: 400, overflow: 'hidden', borderRadius: 16, background: '#e0ddd6' }}>
+            <TheaterSheet
+              theater={{ id: 'dev', name: '더숲 아트시네마', address: '서울특별시 노원구 화랑로 123', lat: 37.6, lng: 127.0, kind: 'indie' }}
+              expanded={false}
+              selectedMovieId={selectedMovie}
+              favorited={favorited}
+              onMovieSelect={setSelectedMovie}
+              onExpand={() => {}}
+              onCollapse={() => {}}
+              onClose={() => {}}
+              onFavorite={() => setFavorited(!favorited)}
+            />
+          </div>
         </Section>
 
         {/* 06 날짜 선택 바 */}
         <Section title="06 · 날짜 선택 바">
-          <DateBar days={SAMPLE_DAYS} />
+          <p className="text-xs mb-2" style={{ color: 'var(--color-text-caption)' }}>전체 활성</p>
+          <DateBar days={SAMPLE_DAYS} selectedDate={SAMPLE_DAYS[0].date} />
+          <p className="text-xs mt-4 mb-2" style={{ color: 'var(--color-text-caption)' }}>일부 disabled (상영 없는 날)</p>
+          <DateBar
+            days={SAMPLE_DAYS.map((d, i) => ({ ...d, disabled: i === 1 || i === 3 || i === 5 }))}
+            selectedDate={SAMPLE_DAYS[0].date}
+          />
         </Section>
 
         {/* 07 상영시간표 셀 */}

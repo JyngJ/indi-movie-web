@@ -7,8 +7,8 @@ import L from 'leaflet'
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { Map as LeafletMap } from 'leaflet'
 import { useUserLocation } from '@/hooks/useUserLocation'
-import { SearchBar, FabRound, BottomSheet } from '@/components/primitives'
-import { MapPin, PosterThumb } from '@/components/domain'
+import { SearchBar, FabRound } from '@/components/primitives'
+import { MapPin, PosterThumb, TheaterSheet } from '@/components/domain'
 import { MOCK_THEATERS } from '@/mocks/theaters'
 import { MOCK_MOVIES } from '@/mocks/movies'
 
@@ -131,62 +131,12 @@ export default function MapView() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [zoom, setZoom] = useState(14)
 
+  // 바텀시트 상태
+  const [sheetExpanded, setSheetExpanded] = useState(false)
+  const [selectedMovieId, setSelectedMovieId] = useState(MOCK_MOVIES[0].id)
+
   const defaultCenter: [number, number] = [37.5665, 126.978]
   const selectedTheater = MOCK_THEATERS.find((t) => t.id === selectedId) ?? null
-  const sheetRef = useRef<HTMLDivElement | null>(null)
-  const scrollRef = useRef<HTMLDivElement | null>(null)
-  const drag = useRef({ active: false, startX: 0, scrollLeft: 0 })
-
-  useEffect(() => {
-    const el = sheetRef.current
-    if (!el) return
-    L.DomEvent.disableScrollPropagation(el)
-    L.DomEvent.disableClickPropagation(el)
-  }, [selectedTheater])
-
-  // 드래그 스크롤 — native 이벤트로 등록해야 preventDefault가 동작함
-  useEffect(() => {
-    const el = scrollRef.current
-    if (!el) return
-
-    const onDown = (e: MouseEvent | TouchEvent) => {
-      const x = 'touches' in e ? e.touches[0].pageX : e.pageX
-      drag.current = { active: true, startX: x, scrollLeft: el.scrollLeft }
-      el.style.cursor = 'grabbing'
-    }
-    const onMove = (e: MouseEvent | TouchEvent) => {
-      if (!drag.current.active) return
-      e.preventDefault()
-      const x = 'touches' in e ? e.touches[0].pageX : e.pageX
-      el.scrollLeft = drag.current.scrollLeft - (x - drag.current.startX)
-    }
-    const onUp = () => {
-      drag.current.active = false
-      el.style.cursor = 'grab'
-    }
-    // 휠로 가로 스크롤 되지 않도록 차단
-    const onWheel = (e: WheelEvent) => { e.preventDefault() }
-
-    el.addEventListener('mousedown', onDown)
-    el.addEventListener('mousemove', onMove)
-    el.addEventListener('mouseup', onUp)
-    el.addEventListener('mouseleave', onUp)
-    el.addEventListener('touchstart', onDown, { passive: false })
-    el.addEventListener('touchmove', onMove, { passive: false })
-    el.addEventListener('touchend', onUp)
-    el.addEventListener('wheel', onWheel, { passive: false })
-
-    return () => {
-      el.removeEventListener('mousedown', onDown)
-      el.removeEventListener('mousemove', onMove)
-      el.removeEventListener('mouseup', onUp)
-      el.removeEventListener('mouseleave', onUp)
-      el.removeEventListener('touchstart', onDown)
-      el.removeEventListener('touchmove', onMove)
-      el.removeEventListener('touchend', onUp)
-      el.removeEventListener('wheel', onWheel)
-    }
-  }, [selectedTheater])
 
   // 위치 첫 수신 시 지도 이동 — 이후엔 무시
   const initialMoved = useRef(false)
@@ -203,6 +153,31 @@ export default function MapView() {
       mapRef.current.flyTo([coords.lat, coords.lng], 15, { duration: 1 })
     }
   }, [coords, refetch])
+
+  // 극장 선택 시 → 첫 번째 영화 선택 + 시트 collapsed로 열기
+  const handlePinClick = useCallback((theaterId: string) => {
+    if (selectedId === theaterId) {
+      setSelectedId(null)
+      setSheetExpanded(false)
+    } else {
+      setSelectedId(theaterId)
+      setSelectedMovieId(MOCK_MOVIES[0].id)
+      setSheetExpanded(false)
+      const currentZoom = mapRef.current?.getZoom() ?? 15
+      const theater = MOCK_THEATERS.find((t) => t.id === theaterId)
+      if (theater) {
+        mapRef.current?.flyTo(
+          [theater.lat, theater.lng],
+          Math.max(currentZoom, 15),
+          { duration: 0.5 },
+        )
+      }
+    }
+  }, [selectedId])
+
+  // FAB 버튼 bottom: collapsed = COLLAPSED_H(300) + 여유 16 = 316
+  // expanded / 시트 없음 = safe area 위 32px
+  const fabBottom = selectedTheater && !sheetExpanded ? 316 : 32
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100dvh' }}>
@@ -226,21 +201,7 @@ export default function MapView() {
             key={theater.id}
             position={[theater.lat, theater.lng]}
             icon={makePinIcon(theater.name, selectedId === theater.id, zoom)}
-            eventHandlers={{
-              click: () => {
-                if (selectedId === theater.id) {
-                  setSelectedId(null)
-                } else {
-                  setSelectedId(theater.id)
-                  const currentZoom = mapRef.current?.getZoom() ?? 15
-                  mapRef.current?.flyTo(
-                    [theater.lat, theater.lng],
-                    Math.max(currentZoom, 15),
-                    { duration: 0.5 }
-                  )
-                }
-              },
-            }}
+            eventHandlers={{ click: () => handlePinClick(theater.id) }}
           />
         ))}
       </MapContainer>
@@ -261,14 +222,14 @@ export default function MapView() {
         </div>
       </div>
 
-      {/* 줌 + 현위치 — 바텀시트 높이(약 300px) + 여유 16px */}
+      {/* 줌 + 현위치 */}
       <div style={{
         position: 'absolute',
         right: 16,
-        bottom: selectedTheater ? 316 : 32,
+        bottom: fabBottom,
         zIndex: 1000,
         display: 'flex', flexDirection: 'column', gap: 8,
-        transition: 'bottom 0.3s ease',
+        transition: 'bottom 0.35s cubic-bezier(0.32, 0.72, 0, 1)',
       }}>
         <FabRound onClick={() => mapRef.current?.zoomIn()}><IcoPlus /></FabRound>
         <FabRound onClick={() => mapRef.current?.zoomOut()}><IcoMinus /></FabRound>
@@ -276,75 +237,19 @@ export default function MapView() {
         <FabRound onClick={handleLocate}><IcoLocate /></FabRound>
       </div>
 
-      {/* 바텀시트 — native 이벤트로 Leaflet 차단 (sheetRef) */}
+      {/* 드래그 바텀시트 — TheaterSheet가 자체적으로 Leaflet 이벤트 차단 */}
       {selectedTheater && (
-        <div
-          ref={sheetRef}
-          style={{
-            position: 'absolute',
-            left: 0, right: 0,
-            bottom: 0,
-            zIndex: 1100,
-            padding: '0 16px max(16px, env(safe-area-inset-bottom))',
-          }}
-        >
-          <BottomSheet>
-            {/* 헤더 */}
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, padding: '0 20px 12px' }}>
-              <div>
-                <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--color-text-primary)' }}>
-                  {selectedTheater.name}
-                </div>
-                <div style={{ fontSize: 12, color: 'var(--color-text-sub)', marginTop: 4 }}>
-                  {selectedTheater.address}
-                </div>
-              </div>
-              <button
-                onClick={() => setSelectedId(null)}
-                style={{
-                  flexShrink: 0, width: 28, height: 28,
-                  border: 'none', background: 'none', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: 'var(--color-text-caption)',
-                }}
-              >
-                <svg width={16} height={16} viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-                  <path d="M6 6l12 12M18 6 6 18" />
-                </svg>
-              </button>
-            </div>
-
-            {/* 포스터 가로 스크롤 — TheaterSheet와 동일 스펙 */}
-            <div style={{
-              borderTop: '1px solid var(--color-border)',
-              borderBottom: '1px solid var(--color-border)',
-              backgroundColor: 'var(--color-surface-bg)',
-            }}>
-              <div
-                ref={scrollRef}
-                style={{
-                  display: 'flex',
-                  gap: 16,
-                  overflowX: 'auto',
-                  paddingLeft: 20,
-                  paddingRight: 20,
-                  paddingTop: 14,
-                  paddingBottom: 14,
-                  scrollbarWidth: 'none',
-                  cursor: 'grab',
-                  userSelect: 'none',
-                }}
-              >
-                {MOCK_MOVIES.map((movie) => (
-                  <div key={movie.id} style={{ flexShrink: 0, width: 96 }}>
-                    <PosterThumb width={96} height={144} size="lg" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </BottomSheet>
-        </div>
+        <TheaterSheet
+          theater={selectedTheater}
+          expanded={sheetExpanded}
+          selectedMovieId={selectedMovieId}
+          onMovieSelect={setSelectedMovieId}
+          onExpand={() => setSheetExpanded(true)}
+          onCollapse={() => setSheetExpanded(false)}
+          onClose={() => { setSelectedId(null); setSheetExpanded(false) }}
+          favorited={false}
+          onFavorite={() => { /* Phase 4 */ }}
+        />
       )}
     </div>
   )
