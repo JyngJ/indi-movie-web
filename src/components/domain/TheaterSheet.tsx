@@ -39,44 +39,58 @@ const IconChevronLeft = () => (
 )
 
 /* ── 시놉시스 카드 ──────────────────────────────────────────────── */
-function SynopsisCard({ synopsis }: { synopsis: string }) {
-  const [open, setOpen] = useState(false)
+// `visible` — 아코디언 열림/닫힘 (grid-template-rows 트릭으로 실제 높이로 애니메이션)
+// `textOpen` — 본문 3줄 clamp vs 전체 펼치기
+interface SynopsisCardProps {
+  synopsis: string
+  visible: boolean
+  textOpen: boolean
+  onToggleText: () => void
+}
 
+function SynopsisCard({ synopsis, visible, textOpen, onToggleText }: SynopsisCardProps) {
   return (
+    // grid-template-rows: 0fr → 1fr 트릭: 실제 콘텐츠 높이로 부드럽게 애니메이션
     <div style={{
-      margin: '0',
-      padding: '16px 20px',
-      backgroundColor: 'var(--color-neutral-800)',   /* #2E2A25 */
+      display: 'grid',
+      gridTemplateRows: visible ? '1fr' : '0fr',
+      transition: 'grid-template-rows 0.32s cubic-bezier(0.4, 0, 0.2, 1)',
+      backgroundColor: 'var(--color-neutral-800)',
       flexShrink: 0,
     }}>
-      <p style={{
-        margin: 0,
-        fontSize: 13,
-        lineHeight: 1.65,
-        color: 'var(--color-neutral-200)',            /* #DDD9CF */
-        overflow: open ? 'visible' : 'hidden',
-        display: open ? 'block' : '-webkit-box',
-        WebkitLineClamp: open ? undefined : 3,
-        WebkitBoxOrient: 'vertical' as const,
-      }}>
-        {synopsis}
-      </p>
-      <button
-        onClick={() => setOpen((v) => !v)}
-        style={{
-          marginTop: 8,
-          padding: 0,
-          border: 'none',
-          background: 'none',
-          cursor: 'pointer',
-          fontSize: 12,
-          fontWeight: 600,
-          color: 'var(--color-neutral-400)',          /* #A9A39A */
-          letterSpacing: '0.2px',
-        }}
-      >
-        {open ? '접기' : '자세히'}
-      </button>
+      {/* inner wrapper: overflow hidden + minHeight 0 이 필수 */}
+      <div style={{ overflow: 'hidden', minHeight: 0 }}>
+        <div style={{ padding: '16px 20px' }}>
+          <p style={{
+            margin: 0,
+            fontSize: 13,
+            lineHeight: 1.65,
+            color: 'var(--color-neutral-200)',
+            overflow: textOpen ? 'visible' : 'hidden',
+            display: textOpen ? 'block' : '-webkit-box',
+            WebkitLineClamp: textOpen ? undefined : 3,
+            WebkitBoxOrient: 'vertical' as const,
+          }}>
+            {synopsis}
+          </p>
+          <button
+            onClick={onToggleText}
+            style={{
+              marginTop: 8,
+              padding: 0,
+              border: 'none',
+              background: 'none',
+              cursor: 'pointer',
+              fontSize: 12,
+              fontWeight: 600,
+              color: 'var(--color-neutral-400)',
+              letterSpacing: '0.2px',
+            }}
+          >
+            {textOpen ? '접기' : '자세히'}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -108,6 +122,7 @@ function buildDays(count = 7, availableDates?: Set<string>): Day[] {
 interface TheaterSheetProps {
   theater: MockTheater
   expanded: boolean
+  exiting?: boolean           // true이면 아래로 퇴장 애니메이션
   selectedMovieId: string
   onMovieSelect: (id: string) => void
   onExpand: () => void
@@ -121,6 +136,7 @@ interface TheaterSheetProps {
 export function TheaterSheet({
   theater,
   expanded,
+  exiting = false,
   selectedMovieId,
   onMovieSelect,
   onExpand,
@@ -129,6 +145,60 @@ export function TheaterSheet({
   favorited = false,
   onFavorite,
 }: TheaterSheetProps) {
+
+  /* ── 진입 애니메이션 ─────────────────────────────────────────── */
+  // 마운트 직후 translateY = window.innerHeight → 다음 프레임에 정상 위치로 전환
+  const enterDone = useRef(false)
+  const [, forceUpdate] = useState(0)
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        enterDone.current = true
+        forceUpdate((n) => n + 1)
+      })
+    })
+    return () => cancelAnimationFrame(id)
+  }, [])
+
+  /* ── 시놉시스 아코디언 상태 ──────────────────────────────────── */
+  // displayedSynopsisId: 현재 화면에 표시 중인 영화 ID (전환 중엔 이전 값 유지)
+  const [displayedSynopsisId, setDisplayedSynopsisId] = useState(selectedMovieId)
+  const [synopsisVisible, setSynopsisVisible] = useState(false)
+  const [synopsisTextOpen, setSynopsisTextOpen] = useState(false)
+  const synopsisTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // expanded 상태 변화: 펼쳐지면 시놉시스 열기, 접히면 닫기
+  useEffect(() => {
+    if (synopsisTimerRef.current) clearTimeout(synopsisTimerRef.current)
+    if (expanded) {
+      setDisplayedSynopsisId(selectedMovieId)
+      // 약간의 딜레이 후 열기 (시트 펼침 애니메이션과 겹치지 않게)
+      synopsisTimerRef.current = setTimeout(() => setSynopsisVisible(true), 180)
+    } else {
+      setSynopsisVisible(false)
+      setSynopsisTextOpen(false)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expanded])
+
+  // 영화 전환: 닫기 → 교체 → 열기
+  useEffect(() => {
+    if (!expanded) {
+      setDisplayedSynopsisId(selectedMovieId)
+      return
+    }
+    if (synopsisTimerRef.current) clearTimeout(synopsisTimerRef.current)
+    setSynopsisVisible(false)
+    setSynopsisTextOpen(false)
+    synopsisTimerRef.current = setTimeout(() => {
+      setDisplayedSynopsisId(selectedMovieId)
+      setSynopsisVisible(true)
+    }, 340)   // 닫힘 애니메이션(320ms) 끝난 뒤 열기
+    return () => {
+      if (synopsisTimerRef.current) clearTimeout(synopsisTimerRef.current)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedMovieId])
 
   /* ── 날짜 / 필터 상태 ── */
   // 선택된 영화의 상영 날짜 Set 계산 (목업: movieId의 홀짝으로 날짜 분배)
@@ -261,6 +331,11 @@ export function TheaterSheet({
     Math.min(getMaxOffset(), baseTranslate + dragOffset),
   )
 
+  // 진입: enterDone 전엔 화면 아래 / 퇴장: exiting이면 화면 아래
+  const finalTranslate = (!enterDone.current || exiting)
+    ? window.innerHeight
+    : effectiveTranslate
+
   const handlePointerDown = (e: React.PointerEvent) => {
     e.currentTarget.setPointerCapture(e.pointerId)
     dragActive.current      = true
@@ -351,15 +426,15 @@ export function TheaterSheet({
         position: 'absolute',
         left: 0, right: 0, bottom: 0,
         height: '100dvh',
-        transform: `translateY(${effectiveTranslate}px)`,
-        transition: dragging
+        transform: `translateY(${finalTranslate}px)`,
+        // 드래그 중엔 transition 없음, 진입/퇴장/snap엔 항상 transition
+        transition: (dragging && enterDone.current && !exiting)
           ? 'none'
-          : 'transform 0.35s cubic-bezier(0.32, 0.72, 0, 1)',
+          : 'transform 0.38s cubic-bezier(0.32, 0.72, 0, 1)',
         zIndex: 1100,
         display: 'flex',
         flexDirection: 'column',
         backgroundColor: 'var(--color-surface-raised)',
-        // expanded(= translateY 0)이면 화면 꽉 채움 → 상단 radius 제거
         borderRadius: effectiveTranslate === 0
           ? '0'
           : 'var(--comp-sheet-radius) var(--comp-sheet-radius) 0 0',
@@ -553,13 +628,18 @@ export function TheaterSheet({
         </div>
       </div>
 
-      {/* ── 시놉시스 — expanded에서만 ───────────────────────────── */}
-      {expanded && selectedMovie?.synopsis && (
-        <SynopsisCard
-          synopsis={selectedMovie.synopsis}
-          key={selectedMovieId}   // 영화 바뀌면 접힘 상태 초기화
-        />
-      )}
+      {/* ── 시놉시스 아코디언 — expanded에서만 마운트, 콘텐츠는 displayedSynopsisId 기준 ── */}
+      {expanded && (() => {
+        const displayedMovie = MOCK_MOVIES.find((m) => m.id === displayedSynopsisId)
+        return displayedMovie?.synopsis ? (
+          <SynopsisCard
+            synopsis={displayedMovie.synopsis}
+            visible={synopsisVisible}
+            textOpen={synopsisTextOpen}
+            onToggleText={() => setSynopsisTextOpen((v) => !v)}
+          />
+        ) : null
+      })()}
 
       {/* ── 상영시간표 — expanded에서만, 스크롤 가능 ──────────── */}
       {expanded && (

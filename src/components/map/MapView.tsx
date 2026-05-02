@@ -134,9 +134,13 @@ export default function MapView() {
   // 바텀시트 상태
   const [sheetExpanded, setSheetExpanded] = useState(false)
   const [selectedMovieId, setSelectedMovieId] = useState(MOCK_MOVIES[0].id)
+  const [sheetExiting, setSheetExiting] = useState(false)
+  // displayedId: 퇴장 애니메이션 중에도 이전 극장을 유지하기 위한 지연 참조
+  const [displayedId, setDisplayedId] = useState<string | null>(null)
+  const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const defaultCenter: [number, number] = [37.5665, 126.978]
-  const selectedTheater = MOCK_THEATERS.find((t) => t.id === selectedId) ?? null
+  const selectedTheater = MOCK_THEATERS.find((t) => t.id === (displayedId ?? selectedId)) ?? null
 
   // 위치 첫 수신 시 지도 이동 — 이후엔 무시
   const initialMoved = useRef(false)
@@ -154,13 +158,27 @@ export default function MapView() {
     }
   }, [coords, refetch])
 
+  // 퇴장 애니메이션 후 완전히 언마운트
+  const closeSheet = useCallback(() => {
+    if (exitTimerRef.current) clearTimeout(exitTimerRef.current)
+    setSheetExiting(true)
+    exitTimerRef.current = setTimeout(() => {
+      setSelectedId(null)
+      setDisplayedId(null)
+      setSheetExpanded(false)
+      setSheetExiting(false)
+    }, 400)
+  }, [])
+
   // 극장 선택 시 → 첫 번째 영화 선택 + 시트 collapsed로 열기
   const handlePinClick = useCallback((theaterId: string) => {
     if (selectedId === theaterId) {
-      setSelectedId(null)
-      setSheetExpanded(false)
+      closeSheet()
     } else {
+      if (exitTimerRef.current) clearTimeout(exitTimerRef.current)
+      setSheetExiting(false)
       setSelectedId(theaterId)
+      setDisplayedId(theaterId)
       setSelectedMovieId(MOCK_MOVIES[0].id)
       setSheetExpanded(false)
       const currentZoom = mapRef.current?.getZoom() ?? 15
@@ -173,7 +191,7 @@ export default function MapView() {
         )
       }
     }
-  }, [selectedId])
+  }, [selectedId, closeSheet])
 
   // FAB 버튼 bottom: collapsed = COLLAPSED_H(300) + 여유 16 = 316
   // expanded / 시트 없음 = safe area 위 32px
@@ -242,11 +260,12 @@ export default function MapView() {
         <TheaterSheet
           theater={selectedTheater}
           expanded={sheetExpanded}
+          exiting={sheetExiting}
           selectedMovieId={selectedMovieId}
           onMovieSelect={setSelectedMovieId}
           onExpand={() => setSheetExpanded(true)}
           onCollapse={() => setSheetExpanded(false)}
-          onClose={() => { setSelectedId(null); setSheetExpanded(false) }}
+          onClose={closeSheet}
           favorited={false}
           onFavorite={() => { /* Phase 4 */ }}
         />
