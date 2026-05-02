@@ -13,10 +13,13 @@
 html {
   height: 100%;
   height: -webkit-fill-available;
+  /* pull-to-refresh / 과도한 bounce 스크롤 방지 */
+  overscroll-behavior: none;
 }
 
 body {
   min-height: 100dvh;
+  overscroll-behavior: none;
   min-height: -webkit-fill-available;
   font-family: var(--font-sans);
   font-size: var(--text-base);

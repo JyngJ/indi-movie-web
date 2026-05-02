@@ -218,6 +218,15 @@ export function TheaterSheet({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedMovieId])
 
+  /* ── 포스터 축소 진행도 (0 = 풀사이즈, 1 = 미니) — 스크롤에 비례 ── */
+  const [posterProgress, setPosterProgress] = useState(0)
+  const postersCollapsed = posterProgress > 0.5  // 클릭 판단용 threshold
+
+  // 시트가 접힐 때 포스터 복원
+  useEffect(() => {
+    if (!expanded) setPosterProgress(0)
+  }, [expanded])
+
   /* ── 날짜 / 필터 상태 ── */
   // 선택된 영화의 상영 날짜 Set 계산 (목업: movieId의 홀짝으로 날짜 분배)
   // 실제 데이터 연결 시 API 응답의 show_date Set으로 교체
@@ -306,6 +315,37 @@ export function TheaterSheet({
     }
   }, [])
 
+  /* 확장 시 스크롤 최상단에서 아래로 드래그 → 시트 접기 */
+  useEffect(() => {
+    const el = scrollAreaRef.current
+    if (!el) return
+    let startY = 0
+    let startScrollTop = 0
+    let collapsing = false
+
+    const onDown = (e: TouchEvent) => {
+      startY = e.touches[0].clientY
+      startScrollTop = el.scrollTop
+      collapsing = false
+    }
+    const onMove = (e: TouchEvent) => {
+      if (collapsing) { e.preventDefault(); return }
+      if (startScrollTop > 2) return          // 스크롤 중이면 무시
+      const dy = e.touches[0].clientY - startY
+      if (dy > 20) {                          // 20px 아래로 드래그 → 접기
+        collapsing = true
+        onCollapse()
+        e.preventDefault()
+      }
+    }
+    el.addEventListener('touchstart', onDown, { passive: true })
+    el.addEventListener('touchmove',  onMove, { passive: false })
+    return () => {
+      el.removeEventListener('touchstart', onDown)
+      el.removeEventListener('touchmove',  onMove)
+    }
+  }, [onCollapse, expanded])   // expanded 바뀔 때 ref 재등록
+
   /* 포스터 가로 드래그 — native 이벤트 (preventDefault 필요) */
   useEffect(() => {
     const el = posterScrollRef.current
@@ -365,6 +405,12 @@ export function TheaterSheet({
     : effectiveTranslate
 
   const handlePointerDown = (e: React.PointerEvent) => {
+    // expanded 모드: 스크롤 영역 내부 터치는 네이티브 스크롤에 맡김
+    // collapsed 모드: 어디서든 드래그 가능
+    if (expanded) {
+      const scrollEl = scrollAreaRef.current
+      if (scrollEl?.contains(e.target as Element)) return
+    }
     e.currentTarget.setPointerCapture(e.pointerId)
     dragActive.current      = true
     dragStartY.current      = e.clientY
@@ -389,6 +435,13 @@ export function TheaterSheet({
     if (!dragActive.current) return
     dragActive.current = false
     setDragging(false)
+
+    // 이동 거리가 8px 미만이면 tap으로 간주 — snap 없이 원위치
+    if (Math.abs(e.clientY - dragStartY.current) < 8) {
+      setDragOffset(0)
+      velocityBuffer.current = []
+      return
+    }
 
     const max = getMaxOffset()
 
@@ -450,6 +503,10 @@ export function TheaterSheet({
   return (
     <div
       ref={containerRef}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={(e) => handlePointerUp(e)}
+      onPointerCancel={(e) => handlePointerUp(e)}
       style={{
         position: 'absolute',
         left: 0, right: 0, bottom: 0,
@@ -465,25 +522,23 @@ export function TheaterSheet({
         backgroundColor: 'var(--color-surface-raised)',
         borderRadius: effectiveTranslate === 0
           ? '0'
-          : 'var(--comp-sheet-radius) var(--comp-sheet-radius) 0 0',
+          : 'var(--comp-sheet-radius)',
         boxShadow: 'var(--shadow-sheet)',
         overflow: 'hidden',
+        // collapsed 모드: 컨테이너 전체가 드래그 대상이므로 native scroll 차단
+        touchAction: expanded ? 'auto' : 'none',
+        cursor: dragging ? 'grabbing' : (expanded ? 'auto' : 'grab'),
+        userSelect: 'none',
       }}
     >
-      {/* ── 드래그 핸들 — expanded(화면 꽉 참)이면 핸들 바 숨김 ── */}
+      {/* ── 드래그 핸들 바 — expanded이면 숨김 ── */}
       <div
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={(e) => handlePointerUp(e)}
-        onPointerCancel={(e) => handlePointerUp(e)}
         style={{
           padding: expanded ? '4px 0' : '8px 0 6px',
           display: 'flex',
           justifyContent: 'center',
           flexShrink: 0,
-          cursor: dragging ? 'grabbing' : 'grab',
-          touchAction: 'none',
-          userSelect: 'none',
+          pointerEvents: 'none',   // 컨테이너가 드래그 처리
         }}
       >
         {!expanded && (
@@ -633,65 +688,85 @@ export function TheaterSheet({
         borderBottom: '1px solid var(--color-border)',
         backgroundColor: 'var(--color-surface-bg)',
         flexShrink: 0,
+        // 스크롤 비례 높이 축소 (220 → 82)
+        maxHeight: 220 - 138 * posterProgress,
+        overflow: 'hidden',
       }}>
         <div
           ref={posterScrollRef}
           style={{
             display: 'flex',
-            gap: 12,
+            gap: 12 - 4 * posterProgress,           // 12 → 8
             overflowX: 'auto',
-            paddingTop: 14,
+            paddingTop: 14 - 6 * posterProgress,    // 14 → 8
             paddingLeft: 20,
             paddingRight: 20,
-            // collapsed 상태에서 포스터 하단이 홈 인디케이터 위에 오도록
-            paddingBottom: 'max(14px, env(safe-area-inset-bottom))',
+            paddingBottom: 14 - 6 * posterProgress, // 14 → 8
             scrollbarWidth: 'none',
-            cursor: 'grab',
+            cursor: postersCollapsed ? 'pointer' : 'grab',
             userSelect: 'none',
             touchAction: 'none',
           }}
         >
           {MOCK_MOVIES.map((movie) => (
+            // 너비 트랜지션 래퍼: overflow hidden으로 스케일 된 내용 클리핑
             <div
               key={movie.id}
-              style={{ flexShrink: 0, width: 88 }}
-            >
-              <PosterThumb
-                width={88}
-                height={132}
-                size="lg"
-                selected={expanded && selectedMovieId === movie.id}
-                onClick={() => {
-                  onMovieSelect(movie.id)
-                  if (!expanded) onExpand()
-                }}
-              />
-              <div style={{
-                marginTop: 6,
-                fontSize: 11,
-                fontWeight: 600,
-                color: 'var(--color-text-primary)',
-                fontFamily: 'var(--font-serif)',
-                lineHeight: 1.35,
+              style={{
+                flexShrink: 0,
+                width: 88 - 44 * posterProgress,    // 88 → 44
                 overflow: 'hidden',
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
+              }}
+            >
+              {/* 스케일 트랜지션 내부 — 항상 88px 기준, 축소 시 0.5 스케일 */}
+              <div style={{
+                width: 88,
+                transformOrigin: 'top left',
+                transform: `scale(${1 - 0.5 * posterProgress})`,  // scale 1 → 0.5
               }}>
-                {movie.title}
-              </div>
-              {movie.director && (
+                <PosterThumb
+                  width={88}
+                  height={132}
+                  size="lg"
+                  selected={expanded && selectedMovieId === movie.id}
+                  onClick={() => {
+                    onMovieSelect(movie.id)
+                    if (!expanded) onExpand()
+                    // 미니 모드에서 클릭 → 스크롤 복귀로 자동 펼침
+                    if (postersCollapsed) {
+                      scrollAreaRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+                    }
+                  }}
+                />
                 <div style={{
-                  marginTop: 3,
-                  fontSize: 10,
-                  color: 'var(--color-text-caption)',
+                  marginTop: 6,
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: 'var(--color-text-primary)',
+                  fontFamily: 'var(--font-serif)',
+                  lineHeight: 1.35,
                   overflow: 'hidden',
-                  whiteSpace: 'nowrap',
-                  textOverflow: 'ellipsis',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  opacity: Math.max(0, 1 - posterProgress * 2.5),  // 40% 스크롤에서 이미 사라짐
                 }}>
-                  {movie.director}
+                  {movie.title}
                 </div>
-              )}
+                {movie.director && (
+                  <div style={{
+                    marginTop: 3,
+                    fontSize: 10,
+                    color: 'var(--color-text-caption)',
+                    overflow: 'hidden',
+                    whiteSpace: 'nowrap',
+                    textOverflow: 'ellipsis',
+                    opacity: Math.max(0, 1 - posterProgress * 2.5),
+                  }}>
+                    {movie.director}
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -701,7 +776,12 @@ export function TheaterSheet({
       {expanded && (
         <div
           ref={scrollAreaRef}
-          style={{ flex: 1, overflowY: 'scroll', WebkitOverflowScrolling: 'touch' as never }}
+          style={{ flex: 1, overflowY: 'scroll', WebkitOverflowScrolling: 'touch' as never, overscrollBehavior: 'none' }}
+          onScroll={(e) => {
+            const top = e.currentTarget.scrollTop
+            // 스크롤 0→120px 구간에서 0→1로 선형 매핑
+            setPosterProgress(Math.min(1, Math.max(0, top / 120)))
+          }}
         >
           {/* 시놉시스 아코디언 */}
           {(() => {
