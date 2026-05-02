@@ -4,6 +4,8 @@ import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { PosterThumb } from './PosterThumb'
 import { DateBar, type Day, type DayType, type TimeFilter } from './DateBar'
 import { ShowtimeCell } from './ShowtimeCell'
+import { Button } from '@/components/primitives/Button'
+import { Chip } from '@/components/primitives/Chip'
 import { MOCK_MOVIES } from '@/mocks/movies'
 import { MOCK_SHOWTIMES } from '@/mocks/showtimes'
 import type { MockTheater } from '@/mocks/theaters'
@@ -39,16 +41,14 @@ const IconChevronLeft = () => (
 )
 
 /* ── 시놉시스 카드 ──────────────────────────────────────────────── */
-// `visible` — 아코디언 열림/닫힘 (grid-template-rows 트릭으로 실제 높이로 애니메이션)
-// `textOpen` — 본문 3줄 clamp vs 전체 펼치기
 interface SynopsisCardProps {
   synopsis: string
+  tags?: string[]
   visible: boolean
-  textOpen: boolean
-  onToggleText: () => void
+  onSearchTheaters?: () => void
 }
 
-function SynopsisCard({ synopsis, visible, textOpen, onToggleText }: SynopsisCardProps) {
+function SynopsisCard({ synopsis, tags, visible, onSearchTheaters }: SynopsisCardProps) {
   return (
     // grid-template-rows: 0fr → 1fr 트릭: 실제 콘텐츠 높이로 부드럽게 애니메이션
     <div style={{
@@ -58,37 +58,56 @@ function SynopsisCard({ synopsis, visible, textOpen, onToggleText }: SynopsisCar
       backgroundColor: 'var(--color-neutral-800)',
       flexShrink: 0,
     }}>
-      {/* inner wrapper: overflow hidden + minHeight 0 이 필수 */}
       <div style={{ overflow: 'hidden', minHeight: 0 }}>
-        <div style={{ padding: '16px 20px' }}>
+        <div style={{ padding: '16px 20px 20px' }}>
+          {/* 태그 — 있을 때만 */}
+          {tags && tags.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+              {tags.map((tag) => (
+                <span
+                  key={tag}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    fontSize: 10,
+                    fontWeight: 500,
+                    lineHeight: 1,
+                    color: 'var(--color-neutral-200)',
+                    border: '1px solid var(--color-neutral-600)',
+                    backgroundColor: 'rgba(255,255,255,0.08)',
+                    borderRadius: 999,
+                    paddingLeft: 10,
+                    paddingRight: 10,
+                    paddingTop: 3,
+                    paddingBottom: 3,
+                  }}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+          {/* 시놉시스 — 전체 표시 (자세히 버튼 없음) */}
           <p style={{
             margin: 0,
             fontSize: 13,
-            lineHeight: 1.65,
+            lineHeight: 1.7,
             color: 'var(--color-neutral-200)',
-            overflow: textOpen ? 'visible' : 'hidden',
-            display: textOpen ? 'block' : '-webkit-box',
-            WebkitLineClamp: textOpen ? undefined : 3,
-            WebkitBoxOrient: 'vertical' as const,
           }}>
             {synopsis}
           </p>
-          <button
-            onClick={onToggleText}
-            style={{
-              marginTop: 8,
-              padding: 0,
-              border: 'none',
-              background: 'none',
-              cursor: 'pointer',
-              fontSize: 12,
-              fontWeight: 600,
-              color: 'var(--color-neutral-400)',
-              letterSpacing: '0.2px',
-            }}
-          >
-            {textOpen ? '접기' : '자세히'}
-          </button>
+          {/* 상영 중인 영화관 모두 검색 버튼 */}
+          <div style={{ marginTop: 16 }}>
+            <Button
+              variant="secondary"
+              size="sm"
+              fullWidth
+              onClick={onSearchTheaters}
+              style={{ borderColor: 'var(--color-neutral-600)', color: 'var(--color-neutral-200)' }}
+            >
+              상영중인 영화관 모두 검색
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -164,7 +183,7 @@ export function TheaterSheet({
   // displayedSynopsisId: 현재 화면에 표시 중인 영화 ID (전환 중엔 이전 값 유지)
   const [displayedSynopsisId, setDisplayedSynopsisId] = useState(selectedMovieId)
   const [synopsisVisible, setSynopsisVisible] = useState(false)
-  const [synopsisTextOpen, setSynopsisTextOpen] = useState(false)
+  const [synopsisTextOpen] = useState(false)   // reserved for future use
   const synopsisTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // expanded 상태 변화: 펼쳐지면 시놉시스 열기, 접히면 닫기
@@ -176,7 +195,7 @@ export function TheaterSheet({
       synopsisTimerRef.current = setTimeout(() => setSynopsisVisible(true), 180)
     } else {
       setSynopsisVisible(false)
-      setSynopsisTextOpen(false)
+      void synopsisTextOpen   // reserved
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expanded])
@@ -189,7 +208,6 @@ export function TheaterSheet({
     }
     if (synopsisTimerRef.current) clearTimeout(synopsisTimerRef.current)
     setSynopsisVisible(false)
-    setSynopsisTextOpen(false)
     synopsisTimerRef.current = setTimeout(() => {
       setDisplayedSynopsisId(selectedMovieId)
       setSynopsisVisible(true)
@@ -262,19 +280,29 @@ export function TheaterSheet({
   const posterScrollRef = useRef<HTMLDivElement>(null)
   const posterDrag      = useRef({ active: false, startX: 0, scrollLeft: 0 })
 
+  /* ── 확장 시 스크롤 영역 ── */
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
+
   /* Leaflet 이벤트 차단 — 시트 영역에서 map 이벤트가 발동되지 않게 */
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
     const stop = (e: Event) => e.stopPropagation()
+    // 페이지 스크롤 방지: 스크롤 영역 내부 터치는 네이티브 스크롤 허용
+    const preventPageScroll = (e: TouchEvent) => {
+      if (scrollAreaRef.current?.contains(e.target as Node)) return
+      e.preventDefault()
+    }
     // pointerdown은 제외 — 포함하면 React의 onPointerDown(드래그 핸들)까지 차단됨
     el.addEventListener('wheel',      stop, { passive: false })
     el.addEventListener('mousedown',  stop)
     el.addEventListener('touchstart', stop, { passive: false })
+    el.addEventListener('touchmove',  preventPageScroll, { passive: false })
     return () => {
       el.removeEventListener('wheel',      stop)
       el.removeEventListener('mousedown',  stop)
       el.removeEventListener('touchstart', stop)
+      el.removeEventListener('touchmove',  preventPageScroll)
     }
   }, [])
 
@@ -527,22 +555,62 @@ export function TheaterSheet({
               </button>
             </div>
           </div>
-          {/* 2행: 극장 정보 */}
-          <div style={{ padding: '7px 20px 12px' }}>
-            <div style={{
-              fontSize: 22, fontWeight: 700,
-              color: 'var(--color-text-primary)',
-              lineHeight: 1.2,
-              letterSpacing: '-0.3px',
-            }}>
-              {theater.name}
+          {/* 2행: 극장 정보 + 외부 링크 버튼 */}
+          <div style={{ padding: '7px 20px 12px', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {/* 극장명 + 외부링크 아이콘 */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{
+                  fontSize: 22, fontWeight: 700,
+                  color: 'var(--color-text-primary)',
+                  lineHeight: 1.2,
+                  letterSpacing: '-0.3px',
+                }}>
+                  {theater.name}
+                </div>
+                {theater.website && (
+                  <button
+                    onClick={() => window.open(theater.website, '_blank', 'noopener')}
+                    style={{
+                      padding: 0, border: 'none', background: 'none',
+                      cursor: 'pointer', flexShrink: 0,
+                      color: 'var(--color-text-caption)',
+                      display: 'flex', alignItems: 'center',
+                    }}
+                  >
+                    <svg width={16} height={16} viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+                      <polyline points="15 3 21 3 21 9" />
+                      <line x1="10" y1="14" x2="21" y2="3" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+              <div style={{
+                fontSize: 13,
+                color: 'var(--color-text-sub)',
+                marginTop: 5,
+              }}>
+                {theater.address}
+              </div>
             </div>
-            <div style={{
-              fontSize: 13,
-              color: 'var(--color-text-sub)',
-              marginTop: 5,
-            }}>
-              {theater.address}
+            {/* 길찾기 버튼 */}
+            <div style={{ flexShrink: 0 }}>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  const url = `nmap://route/public?dlat=${theater.lat}&dlng=${theater.lng}&dname=${encodeURIComponent(theater.name)}&appname=kr.indi.movie`
+                  const fallback = `https://map.naver.com/v5/directions/-/-/-/transit?c=${theater.lng},${theater.lat},15,0,0,0,dh`
+                  const a = document.createElement('a')
+                  a.href = url
+                  a.click()
+                  setTimeout(() => window.open(fallback, '_blank', 'noopener'), 1500)
+                }}
+              >
+                길 찾기
+              </Button>
             </div>
           </div>
         </div>
@@ -580,6 +648,7 @@ export function TheaterSheet({
             scrollbarWidth: 'none',
             cursor: 'grab',
             userSelect: 'none',
+            touchAction: 'none',
           }}
         >
           {MOCK_MOVIES.map((movie) => (
@@ -628,51 +697,53 @@ export function TheaterSheet({
         </div>
       </div>
 
-      {/* ── 시놉시스 아코디언 — expanded에서만 마운트, 콘텐츠는 displayedSynopsisId 기준 ── */}
-      {expanded && (() => {
-        const displayedMovie = MOCK_MOVIES.find((m) => m.id === displayedSynopsisId)
-        return displayedMovie?.synopsis ? (
-          <SynopsisCard
-            synopsis={displayedMovie.synopsis}
-            visible={synopsisVisible}
-            textOpen={synopsisTextOpen}
-            onToggleText={() => setSynopsisTextOpen((v) => !v)}
-          />
-        ) : null
-      })()}
-
-      {/* ── 상영시간표 — expanded에서만, 스크롤 가능 ──────────── */}
+      {/* ── 시놉시스 + 상영시간표 — expanded에서 함께 스크롤 ──── */}
       {expanded && (
-        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 20px 40px' }}>
-          {showtimes.length === 0 ? (
-            <div style={{
-              paddingTop: 32,
-              textAlign: 'center',
-              color: 'var(--color-text-caption)',
-              fontSize: 13,
-            }}>
-              선택한 날짜에 상영 정보가 없습니다.
-            </div>
-          ) : (
-            <div style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 8,
-            }}>
-              {showtimes.map((st) => (
-                <ShowtimeCell
-                  key={st.id}
-                  startTime={st.startTime}
-                  endTime={st.endTime}
-                  seatAvailable={st.seatAvailable}
-                  seatTotal={st.seatTotal}
-                  screenName={st.screenName}
-                  kind={st.kind}
-                  promo={st.promo}
-                />
-              ))}
-            </div>
-          )}
+        <div
+          ref={scrollAreaRef}
+          style={{ flex: 1, overflowY: 'scroll', WebkitOverflowScrolling: 'touch' as never }}
+        >
+          {/* 시놉시스 아코디언 */}
+          {(() => {
+            const displayedMovie = MOCK_MOVIES.find((m) => m.id === displayedSynopsisId)
+            return displayedMovie?.synopsis ? (
+              <SynopsisCard
+                synopsis={displayedMovie.synopsis}
+                tags={displayedMovie.tags}
+                visible={synopsisVisible}
+                onSearchTheaters={() => { /* Phase 3: 영화별 상영관 검색 */ }}
+              />
+            ) : null
+          })()}
+
+          {/* 상영시간표 */}
+          <div style={{ padding: '20px 20px 40px' }}>
+            {showtimes.length === 0 ? (
+              <div style={{
+                paddingTop: 32,
+                textAlign: 'center',
+                color: 'var(--color-text-caption)',
+                fontSize: 13,
+              }}>
+                선택한 날짜에 상영 정보가 없습니다.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {showtimes.map((st) => (
+                  <ShowtimeCell
+                    key={st.id}
+                    startTime={st.startTime}
+                    endTime={st.endTime}
+                    seatAvailable={st.seatAvailable}
+                    seatTotal={st.seatTotal}
+                    screenName={st.screenName}
+                    kind={st.kind}
+                    promo={st.promo}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
