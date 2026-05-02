@@ -1,13 +1,13 @@
 'use client'
 
 import 'leaflet/dist/leaflet.css'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { Map as LeafletMap } from 'leaflet'
 import { useUserLocation } from '@/hooks/useUserLocation'
-import { SearchBar, FabRound } from '@/components/primitives'
+import { SearchBar, FabRound, BottomSheet } from '@/components/primitives'
 import { MapPin, PosterThumb } from '@/components/domain'
 import { MOCK_THEATERS } from '@/mocks/theaters'
 import { MOCK_MOVIES } from '@/mocks/movies'
@@ -131,16 +131,24 @@ export default function MapView() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [zoom, setZoom] = useState(14)
 
-  const defaultCenter: [number, number] = coords
-    ? [coords.lat, coords.lng]
-    : [37.5665, 126.978]
+  const defaultCenter: [number, number] = [37.5665, 126.978]  // 서울 시청 — 위치 수신 전 초기값
+  const selectedTheater = MOCK_THEATERS.find((t) => t.id === selectedId) ?? null
 
-  const handleLocate = () => {
+  // 위치 첫 수신 시 지도 이동 — 이후엔 무시
+  const initialMoved = useRef(false)
+  useEffect(() => {
+    if (coords && !initialMoved.current && mapRef.current) {
+      initialMoved.current = true
+      mapRef.current.flyTo([coords.lat, coords.lng], 14, { duration: 1 })
+    }
+  }, [coords])
+
+  const handleLocate = useCallback(() => {
     refetch()
     if (coords && mapRef.current) {
       mapRef.current.flyTo([coords.lat, coords.lng], 15, { duration: 1 })
     }
-  }
+  }, [coords, refetch])
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100dvh' }}>
@@ -172,8 +180,8 @@ export default function MapView() {
                   setSelectedId(theater.id)
                   mapRef.current?.flyTo(
                     [theater.lat, theater.lng],
-                    mapRef.current.getZoom(),
-                    { duration: 0.4 }
+                    15,
+                    { duration: 0.5 }
                   )
                 }
               },
@@ -202,15 +210,82 @@ export default function MapView() {
       <div style={{
         position: 'absolute',
         right: 16,
-        bottom: 'max(32px, env(safe-area-inset-bottom))',
+        bottom: selectedTheater
+          ? 'max(220px, calc(env(safe-area-inset-bottom) + 200px))'
+          : 'max(32px, env(safe-area-inset-bottom))',
         zIndex: 1000,
         display: 'flex', flexDirection: 'column', gap: 8,
+        transition: 'bottom 0.3s ease',
       }}>
         <FabRound onClick={() => mapRef.current?.zoomIn()}><IcoPlus /></FabRound>
         <FabRound onClick={() => mapRef.current?.zoomOut()}><IcoMinus /></FabRound>
         <div style={{ height: 8 }} />
         <FabRound onClick={handleLocate}><IcoLocate /></FabRound>
       </div>
+
+      {/* 바텀시트 */}
+      {selectedTheater && (
+        <div style={{
+          position: 'absolute',
+          left: 0, right: 0,
+          bottom: 0,
+          zIndex: 1100,
+          padding: '0 16px max(16px, env(safe-area-inset-bottom))',
+          transition: 'transform 0.3s ease',
+        }}>
+          <BottomSheet>
+            {/* 헤더 */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, padding: '0 20px 12px' }}>
+              <div>
+                <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+                  {selectedTheater.name}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--color-text-sub)', marginTop: 4 }}>
+                  {selectedTheater.address}
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedId(null)}
+                style={{
+                  flexShrink: 0, width: 28, height: 28,
+                  border: 'none', background: 'none', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'var(--color-text-caption)',
+                }}
+              >
+                <svg width={16} height={16} viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+                  <path d="M6 6l12 12M18 6 6 18" />
+                </svg>
+              </button>
+            </div>
+
+            {/* 포스터 가로 스크롤 — TheaterSheet와 동일 스펙 */}
+            <div style={{
+              borderTop: '1px solid var(--color-border)',
+              borderBottom: '1px solid var(--color-border)',
+              backgroundColor: 'var(--color-surface-bg)',
+            }}>
+              <div style={{
+                display: 'flex',
+                gap: 16,
+                overflowX: 'auto',
+                paddingLeft: 20,
+                paddingRight: 20,
+                paddingTop: 14,
+                paddingBottom: 14,
+                scrollbarWidth: 'none',
+              }}>
+                {MOCK_MOVIES.map((movie) => (
+                  <div key={movie.id} style={{ flexShrink: 0, width: 96 }}>
+                    <PosterThumb width={96} height={144} size="lg" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </BottomSheet>
+        </div>
+      )}
     </div>
   )
 }
