@@ -131,8 +131,62 @@ export default function MapView() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [zoom, setZoom] = useState(14)
 
-  const defaultCenter: [number, number] = [37.5665, 126.978]  // 서울 시청 — 위치 수신 전 초기값
+  const defaultCenter: [number, number] = [37.5665, 126.978]
   const selectedTheater = MOCK_THEATERS.find((t) => t.id === selectedId) ?? null
+  const sheetRef = useRef<HTMLDivElement | null>(null)
+  const scrollRef = useRef<HTMLDivElement | null>(null)
+  const drag = useRef({ active: false, startX: 0, scrollLeft: 0 })
+
+  useEffect(() => {
+    const el = sheetRef.current
+    if (!el) return
+    L.DomEvent.disableScrollPropagation(el)
+    L.DomEvent.disableClickPropagation(el)
+  }, [selectedTheater])
+
+  // 드래그 스크롤 — native 이벤트로 등록해야 preventDefault가 동작함
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+
+    const onDown = (e: MouseEvent | TouchEvent) => {
+      const x = 'touches' in e ? e.touches[0].pageX : e.pageX
+      drag.current = { active: true, startX: x, scrollLeft: el.scrollLeft }
+      el.style.cursor = 'grabbing'
+    }
+    const onMove = (e: MouseEvent | TouchEvent) => {
+      if (!drag.current.active) return
+      e.preventDefault()
+      const x = 'touches' in e ? e.touches[0].pageX : e.pageX
+      el.scrollLeft = drag.current.scrollLeft - (x - drag.current.startX)
+    }
+    const onUp = () => {
+      drag.current.active = false
+      el.style.cursor = 'grab'
+    }
+    // 휠로 가로 스크롤 되지 않도록 차단
+    const onWheel = (e: WheelEvent) => { e.preventDefault() }
+
+    el.addEventListener('mousedown', onDown)
+    el.addEventListener('mousemove', onMove)
+    el.addEventListener('mouseup', onUp)
+    el.addEventListener('mouseleave', onUp)
+    el.addEventListener('touchstart', onDown, { passive: false })
+    el.addEventListener('touchmove', onMove, { passive: false })
+    el.addEventListener('touchend', onUp)
+    el.addEventListener('wheel', onWheel, { passive: false })
+
+    return () => {
+      el.removeEventListener('mousedown', onDown)
+      el.removeEventListener('mousemove', onMove)
+      el.removeEventListener('mouseup', onUp)
+      el.removeEventListener('mouseleave', onUp)
+      el.removeEventListener('touchstart', onDown)
+      el.removeEventListener('touchmove', onMove)
+      el.removeEventListener('touchend', onUp)
+      el.removeEventListener('wheel', onWheel)
+    }
+  }, [selectedTheater])
 
   // 위치 첫 수신 시 지도 이동 — 이후엔 무시
   const initialMoved = useRef(false)
@@ -178,9 +232,10 @@ export default function MapView() {
                   setSelectedId(null)
                 } else {
                   setSelectedId(theater.id)
+                  const currentZoom = mapRef.current?.getZoom() ?? 15
                   mapRef.current?.flyTo(
                     [theater.lat, theater.lng],
-                    15,
+                    Math.max(currentZoom, 15),
                     { duration: 0.5 }
                   )
                 }
@@ -206,13 +261,11 @@ export default function MapView() {
         </div>
       </div>
 
-      {/* 줌 + 현위치 */}
+      {/* 줌 + 현위치 — 바텀시트 높이(약 300px) + 여유 16px */}
       <div style={{
         position: 'absolute',
         right: 16,
-        bottom: selectedTheater
-          ? 'max(220px, calc(env(safe-area-inset-bottom) + 200px))'
-          : 'max(32px, env(safe-area-inset-bottom))',
+        bottom: selectedTheater ? 316 : 32,
         zIndex: 1000,
         display: 'flex', flexDirection: 'column', gap: 8,
         transition: 'bottom 0.3s ease',
@@ -223,16 +276,18 @@ export default function MapView() {
         <FabRound onClick={handleLocate}><IcoLocate /></FabRound>
       </div>
 
-      {/* 바텀시트 */}
+      {/* 바텀시트 — native 이벤트로 Leaflet 차단 (sheetRef) */}
       {selectedTheater && (
-        <div style={{
-          position: 'absolute',
-          left: 0, right: 0,
-          bottom: 0,
-          zIndex: 1100,
-          padding: '0 16px max(16px, env(safe-area-inset-bottom))',
-          transition: 'transform 0.3s ease',
-        }}>
+        <div
+          ref={sheetRef}
+          style={{
+            position: 'absolute',
+            left: 0, right: 0,
+            bottom: 0,
+            zIndex: 1100,
+            padding: '0 16px max(16px, env(safe-area-inset-bottom))',
+          }}
+        >
           <BottomSheet>
             {/* 헤더 */}
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, padding: '0 20px 12px' }}>
@@ -266,16 +321,21 @@ export default function MapView() {
               borderBottom: '1px solid var(--color-border)',
               backgroundColor: 'var(--color-surface-bg)',
             }}>
-              <div style={{
-                display: 'flex',
-                gap: 16,
-                overflowX: 'auto',
-                paddingLeft: 20,
-                paddingRight: 20,
-                paddingTop: 14,
-                paddingBottom: 14,
-                scrollbarWidth: 'none',
-              }}>
+              <div
+                ref={scrollRef}
+                style={{
+                  display: 'flex',
+                  gap: 16,
+                  overflowX: 'auto',
+                  paddingLeft: 20,
+                  paddingRight: 20,
+                  paddingTop: 14,
+                  paddingBottom: 14,
+                  scrollbarWidth: 'none',
+                  cursor: 'grab',
+                  userSelect: 'none',
+                }}
+              >
                 {MOCK_MOVIES.map((movie) => (
                   <div key={movie.id} style={{ flexShrink: 0, width: 96 }}>
                     <PosterThumb width={96} height={144} size="lg" />

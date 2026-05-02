@@ -17,6 +17,7 @@ export function BottomSheet({ children, className = '' }: BottomSheetProps) {
         boxShadow: 'var(--shadow-sheet)',
         paddingTop: 8,
         paddingBottom: 20,
+        overflow: 'hidden',   // 모서리 라운드 유지
       }}
     >
       {/* 핸들바 */}
