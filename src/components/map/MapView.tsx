@@ -7,9 +7,10 @@ import L from 'leaflet'
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { Map as LeafletMap } from 'leaflet'
 import { useUserLocation } from '@/hooks/useUserLocation'
-import { SearchBar, FabRound } from '@/components/primitives'
+import { useRouter } from 'next/navigation'
+import { SearchBarButton, FabRound } from '@/components/primitives'
 import { MapPin, PosterThumb, TheaterSheet } from '@/components/domain'
-import { MOCK_THEATERS } from '@/mocks/theaters'
+import { MOCK_THEATERS, type MockTheater } from '@/mocks/theaters'
 import { MOCK_MOVIES } from '@/mocks/movies'
 
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
@@ -52,30 +53,40 @@ function PosterGrid({ count, total }: { count: number; total: number }) {
 
   return (
     <div style={{ position: 'relative', marginTop: 6 }}>
+      {/* 흰 카드 배경 */}
       <div style={{
-        position: 'absolute', top: -8, left: 0,
-        fontSize: 9, fontWeight: 700, padding: '1px 4px', borderRadius: 3,
-        backgroundColor: 'rgba(255,180,0,0.9)', color: '#1A1714',
-        letterSpacing: '0.3px', whiteSpace: 'nowrap', zIndex: 1,
-      }}>MOCK</div>
+        backgroundColor: 'rgba(255,255,255,0.92)',
+        borderRadius: 8,
+        padding: '8px 8px 8px',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.18)',
+        display: 'inline-block',
+        position: 'relative',
+      }}>
+        <div style={{
+          position: 'absolute', top: -7, left: 4,
+          fontSize: 9, fontWeight: 700, padding: '1px 4px', borderRadius: 3,
+          backgroundColor: 'rgba(255,180,0,0.9)', color: '#1A1714',
+          letterSpacing: '0.3px', whiteSpace: 'nowrap', zIndex: 1,
+        }}>MOCK</div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        {Array.from({ length: count === 6 ? 2 : 1 }).map((_, row) => (
-          <div key={row} style={{ display: 'flex', gap: 4 }}>
-            {Array.from({ length: perRow }).map((_, col) => {
-              const idx = row * perRow + col
-              return (
-                <PosterThumb
-                  key={idx}
-                  width={44}
-                  height={66}
-                  size="sm"
-                  overflow={idx === count - 1 && overflow > 0 ? overflow : undefined}
-                />
-              )
-            })}
-          </div>
-        ))}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {Array.from({ length: count === 6 ? 2 : 1 }).map((_, row) => (
+            <div key={row} style={{ display: 'flex', gap: 4 }}>
+              {Array.from({ length: perRow }).map((_, col) => {
+                const idx = row * perRow + col
+                return (
+                  <PosterThumb
+                    key={idx}
+                    width={44}
+                    height={66}
+                    size="sm"
+                    overflow={idx === count - 1 && overflow > 0 ? overflow : undefined}
+                  />
+                )
+              })}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -91,15 +102,19 @@ const ANCHOR_Y = LABEL_H + GAP + DOT / 2
 
 const TOTAL_MOVIES = MOCK_MOVIES.length
 
-function makePinIcon(name: string, selected: boolean, zoom: number) {
+function makePinIcon(name: string, selected: boolean, zoom: number, posterOffsetX = 0) {
   const count = posterCountForZoom(zoom)
   const numRows = count === 6 ? 2 : count > 0 ? 1 : 0
   const posterH = numRows > 0 ? 66 * numRows + 4 * (numRows - 1) + 6 : 0
 
+  const posterHtml = count > 0
+    ? `<div style="position:relative;left:${Math.round(posterOffsetX)}px">${renderToStaticMarkup(<PosterGrid count={count} total={TOTAL_MOVIES} />)}</div>`
+    : ''
+
   const html = `
     <div style="width:140px;display:flex;flex-direction:column;align-items:center;overflow:visible;">
       ${renderToStaticMarkup(<MapPin kind="indie" selected={selected} label={name} />)}
-      ${count > 0 ? renderToStaticMarkup(<PosterGrid count={count} total={TOTAL_MOVIES} />) : ''}
+      ${posterHtml}
     </div>
   `
 
@@ -109,6 +124,137 @@ function makePinIcon(name: string, selected: boolean, zoom: number) {
     iconSize: [140, LABEL_H + GAP + DOT + posterH],
     iconAnchor: [70, ANCHOR_Y],   // dot 중심 — zoom/포스터 수 무관 고정
   })
+}
+
+/* ── 클러스터 타입 ─────────────────────────────────────────────── */
+interface TheaterCluster {
+  id: string
+  theaters: MockTheater[]
+  lat: number
+  lng: number
+}
+
+/* ── 줌 레벨에서 클러스터링 반경(px) ── */
+function clusterRadiusForZoom(zoom: number): number {
+  if (zoom >= 16) return 30
+  if (zoom >= 15) return 45
+  if (zoom >= 14) return 60
+  return 80
+}
+
+/* ── 픽셀 거리 기반 클러스터 계산 ─────────────────────────────── */
+function computeClusters(
+  theaters: MockTheater[],
+  map: LeafletMap,
+  zoom: number,
+): TheaterCluster[] {
+  const radiusPx = clusterRadiusForZoom(zoom)
+  const pts = theaters.map((t) => ({
+    t,
+    px: map.latLngToContainerPoint([t.lat, t.lng] as [number, number]),
+  }))
+  const used = new Set<string>()
+  const clusters: TheaterCluster[] = []
+
+  for (const a of pts) {
+    if (used.has(a.t.id)) continue
+    const group = [a]
+    used.add(a.t.id)
+    for (const b of pts) {
+      if (used.has(b.t.id)) continue
+      if (a.px.distanceTo(b.px) < radiusPx) {
+        group.push(b)
+        used.add(b.t.id)
+      }
+    }
+    const lat = group.reduce((s, g) => s + g.t.lat, 0) / group.length
+    const lng = group.reduce((s, g) => s + g.t.lng, 0) / group.length
+    clusters.push({ id: a.t.id, theaters: group.map((g) => g.t), lat, lng })
+  }
+
+  return clusters
+}
+
+/* ── 포스터 겹침 방지 오프셋 계산 ─────────────────────────────── */
+// 단일 마커끼리 포스터(140px)가 겹치면 양쪽을 수평으로 밀어냄
+function computePosterOffsets(
+  clusters: TheaterCluster[],
+  map: LeafletMap,
+  zoom: number,
+): Map<string, number> {
+  const offsets = new Map<string, number>()
+  if (posterCountForZoom(zoom) === 0) return offsets
+
+  const POSTER_W = 140
+  const singles = clusters
+    .filter((c) => c.theaters.length === 1)
+    .map((c) => ({
+      id: c.id,
+      px: map.latLngToContainerPoint([c.lat, c.lng] as [number, number]),
+    }))
+
+  for (let i = 0; i < singles.length; i++) {
+    for (let j = i + 1; j < singles.length; j++) {
+      const a = singles[i]
+      const b = singles[j]
+      const dx = b.px.x - a.px.x
+      const dy = Math.abs(b.px.y - a.px.y)
+      if (dy > 120) continue
+      const overlap = POSTER_W - Math.abs(dx)
+      if (overlap <= 0) continue
+      const shift = overlap / 2 + 8
+      offsets.set(a.id, (offsets.get(a.id) ?? 0) + (dx >= 0 ? -shift : shift))
+      offsets.set(b.id, (offsets.get(b.id) ?? 0) + (dx >= 0 ? shift : -shift))
+    }
+  }
+
+  return offsets
+}
+
+/* ── 클러스터 아이콘 ────────────────────────────────────────────── */
+function makeClusterIcon(count: number) {
+  const SIZE = 40
+  const html = `<div style="
+    width:${SIZE}px;height:${SIZE}px;border-radius:50%;
+    background:#2C3E50;
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:700;font-size:16px;line-height:1;
+    box-shadow:0 2px 10px rgba(0,0,0,0.35);
+    border:2.5px solid rgba(255,255,255,0.85);
+  ">${count}</div>`
+  return L.divIcon({ html, className: '', iconSize: [SIZE, SIZE], iconAnchor: [SIZE / 2, SIZE / 2] })
+}
+
+/* ── 클러스터가 분리되는 최소 줌 계산 ── */
+function findSplitZoom(
+  theaters: MockTheater[],
+  map: LeafletMap,
+  currentZoom: number,
+): number {
+  for (let z = currentZoom + 1; z <= 19; z++) {
+    const radius = clusterRadiusForZoom(z)
+    // 이 줌에서 픽셀 거리 계산 (latLngToContainerPoint는 현재 줌 기준이므로 비율로 환산)
+    const zoomScale = Math.pow(2, z - currentZoom)
+    const pts = theaters.map((t) => {
+      const base = map.latLngToContainerPoint([t.lat, t.lng] as [number, number])
+      return { id: t.id, x: base.x * zoomScale, y: base.y * zoomScale }
+    })
+    // 이 줌에서 모든 쌍이 radius 밖으로 벗어나는지 확인
+    let allSeparated = true
+    for (let i = 0; i < pts.length; i++) {
+      for (let j = i + 1; j < pts.length; j++) {
+        const dx = pts[i].x - pts[j].x
+        const dy = pts[i].y - pts[j].y
+        if (Math.sqrt(dx * dx + dy * dy) < radius) {
+          allSeparated = false
+          break
+        }
+      }
+      if (!allSeparated) break
+    }
+    if (allSeparated) return z
+  }
+  return Math.min(currentZoom + 4, 19)
 }
 
 /* ── 줌 트래커 ─────────────────────────────────────────────────── */
@@ -125,9 +271,9 @@ function MapRefSetter({ mapRef }: { mapRef: React.MutableRefObject<LeafletMap | 
 
 /* ── 메인 컴포넌트 ──────────────────────────────────────────────── */
 export default function MapView() {
+  const router = useRouter()
   const { coords, refetch } = useUserLocation()
   const mapRef = useRef<LeafletMap | null>(null)
-  const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [zoom, setZoom] = useState(14)
 
@@ -141,6 +287,28 @@ export default function MapView() {
 
   const defaultCenter: [number, number] = [37.5665, 126.978]
   const selectedTheater = MOCK_THEATERS.find((t) => t.id === (displayedId ?? selectedId)) ?? null
+
+  /* ── 클러스터 & 포스터 오프셋 ── */
+  // 초기값: 전체 극장을 개별 클러스터로 (map 준비 전)
+  const [clusters, setClusters] = useState<TheaterCluster[]>(() =>
+    MOCK_THEATERS.map((t) => ({ id: t.id, theaters: [t], lat: t.lat, lng: t.lng }))
+  )
+  const [posterOffsets, setPosterOffsets] = useState<Map<string, number>>(new Map())
+
+  const recompute = useCallback(() => {
+    const map = mapRef.current
+    if (!map) return
+    const c = computeClusters(MOCK_THEATERS, map, zoom)
+    const o = computePosterOffsets(c, map, zoom)
+    setClusters(c)
+    setPosterOffsets(o)
+  }, [zoom])
+
+  // zoom 변경 시 재계산 (줌 애니메이션 끝난 뒤)
+  useEffect(() => {
+    const id = setTimeout(recompute, 80)
+    return () => clearTimeout(id)
+  }, [recompute])
 
   // 위치 첫 수신 시 지도 이동 — 이후엔 무시
   const initialMoved = useRef(false)
@@ -214,28 +382,59 @@ export default function MapView() {
         <MapRefSetter mapRef={mapRef} />
         <ZoomTracker onZoom={setZoom} />
 
-        {MOCK_THEATERS.map((theater) => (
-          <Marker
-            key={theater.id}
-            position={[theater.lat, theater.lng]}
-            icon={makePinIcon(theater.name, selectedId === theater.id, zoom)}
-            eventHandlers={{ click: () => handlePinClick(theater.id) }}
-          />
-        ))}
+        {clusters.map((cluster) => {
+          // 클러스터 마커 (2개 이상) — 클릭 시 줌인
+          if (cluster.theaters.length > 1) {
+            return (
+              <Marker
+                key={`cluster-${cluster.id}`}
+                position={[cluster.lat, cluster.lng]}
+                icon={makeClusterIcon(cluster.theaters.length)}
+                eventHandlers={{
+                  click: () => {
+                    const map = mapRef.current
+                    if (!map) return
+                    const currentZoom = map.getZoom()
+                    const splitZoom = findSplitZoom(cluster.theaters, map, currentZoom)
+                    const bounds = L.latLngBounds(
+                      cluster.theaters.map((t) => [t.lat, t.lng] as [number, number])
+                    )
+                    // fitBounds로 전체가 뷰포트 안에 들어오는 줌/센터 계산
+                    // maxZoom을 splitZoom으로 제한 → 분리 가능하면 분리, 아니면 화면 내 최대로
+                    map.flyToBounds(bounds, {
+                      padding: [80, 80],
+                      maxZoom: splitZoom,
+                      duration: 0.6,
+                    })
+                  },
+                }}
+              />
+            )
+          }
+          // 단일 마커 — 포스터 오프셋 적용
+          const theater = cluster.theaters[0]
+          const offsetX = posterOffsets.get(theater.id) ?? 0
+          return (
+            <Marker
+              key={theater.id}
+              position={[theater.lat, theater.lng]}
+              icon={makePinIcon(theater.name, selectedId === theater.id, zoom, offsetX)}
+              eventHandlers={{ click: () => handlePinClick(theater.id) }}
+            />
+          )
+        })}
       </MapContainer>
 
-      {/* 검색창 */}
+      {/* 검색창 버튼 — 클릭 시 /search 로 이동 */}
       <div style={{
         position: 'absolute',
         top: 'max(16px, env(safe-area-inset-top))',
         left: 16, right: 16, zIndex: 1000,
       }}>
         <div style={{ boxShadow: 'var(--shadow-sheet)', borderRadius: 'var(--comp-search-radius)' }}>
-          <SearchBar
+          <SearchBarButton
             placeholder="극장 또는 영화 검색"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onClear={() => setSearch('')}
+            onClick={() => router.push('/search')}
           />
         </div>
       </div>

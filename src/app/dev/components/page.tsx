@@ -5,7 +5,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Chip, SearchBar, FabRound } from '@/components/primitives'
+import { Chip, SearchBar, SearchBarButton, FabRound } from '@/components/primitives'
 import { MapPin, PosterThumb, ShowtimeCell, DateBar, TheaterSheet } from '@/components/domain'
 import { useThemeStore } from '@/store/themeStore'
 
@@ -214,15 +214,25 @@ export default function ComponentsPage() {
 
         {/* 01 검색창 */}
         <Section title="01 · 검색창">
+          <Label>버튼 모드 (지도 위 — 클릭 시 검색 페이지 이동)</Label>
+          <SearchBarButton
+            placeholder="극장 또는 영화 검색"
+            onClick={() => {}}
+          />
+
+          <Label>인풋 모드 (검색 페이지 내 — 뒤로가기 포함)</Label>
           <SearchBar
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             onClear={() => setSearchValue('')}
+            onBack={() => {}}
           />
-          {/* 값 있는 상태 — readOnly로 경고 없이 표시 */}
+
+          <Label>인풋 모드 — 값 입력된 상태</Label>
           <SearchBar
             defaultValue="봉준호"
             onClear={() => {}}
+            onBack={() => {}}
           />
         </Section>
 

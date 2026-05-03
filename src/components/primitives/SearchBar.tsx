@@ -15,26 +15,23 @@ const IconClose = () => (
   </svg>
 )
 
-interface SearchBarProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
-  onClear?: () => void
+/* ── 버튼 모드 — 검색 페이지로 이동하는 트리거 ── */
+interface SearchBarButtonProps {
+  placeholder?: string
+  onClick?: () => void
+  className?: string
 }
 
-export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(function SearchBar(
-  { placeholder = '영화, 영화관, 감독을 검색하세요', value, onClear, onChange, className = '', ...props },
-  ref
-) {
-  const isControlled = value !== undefined
-  const hasValue = isControlled && value !== ''
-
-  /* controlled(value 제공) vs uncontrolled(defaultValue 등) 분리
-     → value 없이 onChange만 넘기면 React 경고 발생하므로 함께 처리 */
-  const inputValueProps = isControlled
-    ? { value: value as string, onChange }
-    : {}
-
+export function SearchBarButton({
+  placeholder = '영화, 영화관, 감독을 검색하세요',
+  onClick,
+  className = '',
+}: SearchBarButtonProps) {
   return (
-    <div
-      className={`flex items-center gap-[10px] border transition-colors duration-150 ${className}`}
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex items-center gap-[10px] border w-full text-left ${className}`}
       style={{
         height: 'var(--comp-search-height)',
         paddingLeft: 'var(--comp-search-px)',
@@ -42,36 +39,104 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(function S
         borderRadius: 'var(--comp-search-radius)',
         backgroundColor: 'var(--color-surface-raised)',
         borderColor: 'var(--color-border)',
+        cursor: 'pointer',
+        minHeight: 'unset',  // globals.css button min-height 44px 재정의
       }}
     >
-      <span
-        className="flex-shrink-0"
-        style={{ color: hasValue ? 'var(--color-text-body)' : 'var(--color-text-caption)' }}
-      >
+      <span className="flex-shrink-0" style={{ color: 'var(--color-text-caption)' }}>
         <IconSearch />
       </span>
+      <span className="flex-1 text-[14px]" style={{ color: 'var(--color-text-placeholder)' }}>
+        {placeholder}
+      </span>
+    </button>
+  )
+}
 
-      <input
-        ref={ref}
-        type="search"
-        placeholder={placeholder}
-        className="flex-1 bg-transparent outline-none border-none text-[14px]"
-        style={{ color: 'var(--color-text-primary)' }}
-        {...inputValueProps}
-        {...props}
-      />
+/* ── 인풋 모드 — 검색 페이지 내 실제 입력 필드 ── */
+interface SearchBarProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
+  onClear?: () => void
+  onBack?: () => void
+}
 
-      {hasValue && (
+export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(function SearchBar(
+  { placeholder = '영화, 영화관, 감독을 검색하세요', value, onClear, onBack, onChange, className = '', ...props },
+  ref
+) {
+  const isControlled = value !== undefined
+  const hasValue = isControlled && value !== ''
+
+  const inputValueProps = isControlled
+    ? { value: value as string, onChange }
+    : {}
+
+  return (
+    <div className={`flex items-center gap-[10px] ${className}`}
+      style={{ height: 'var(--comp-search-height)' }}
+    >
+      {/* 뒤로가기 버튼 */}
+      {onBack && (
         <button
           type="button"
-          onClick={onClear}
+          onClick={onBack}
           className="flex-shrink-0 flex items-center justify-center"
-          style={{ color: 'var(--color-text-caption)' }}
-          aria-label="검색어 지우기"
+          style={{
+            width: 36, height: 36, padding: 0,
+            border: 'none', background: 'none',
+            color: 'var(--color-text-body)',
+            cursor: 'pointer',
+            minHeight: 'unset',
+          }}
+          aria-label="뒤로가기"
         >
-          <IconClose />
+          <svg width={22} height={22} viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
         </button>
       )}
+
+      {/* 인풋 영역 */}
+      <div
+        className="flex flex-1 items-center gap-[10px] border transition-colors duration-150"
+        style={{
+          height: '100%',
+          paddingLeft: 'var(--comp-search-px)',
+          paddingRight: 'var(--comp-search-px)',
+          borderRadius: 'var(--comp-search-radius)',
+          backgroundColor: 'var(--color-surface-raised)',
+          borderColor: 'var(--color-border)',
+        }}
+      >
+        <span
+          className="flex-shrink-0"
+          style={{ color: hasValue ? 'var(--color-text-body)' : 'var(--color-text-caption)' }}
+        >
+          <IconSearch />
+        </span>
+
+        <input
+          ref={ref}
+          type="search"
+          placeholder={placeholder}
+          className="flex-1 bg-transparent outline-none border-none text-[14px]"
+          style={{ color: 'var(--color-text-primary)' }}
+          {...inputValueProps}
+          {...props}
+        />
+
+        {hasValue && (
+          <button
+            type="button"
+            onClick={onClear}
+            className="flex-shrink-0 flex items-center justify-center"
+            style={{ color: 'var(--color-text-caption)', minHeight: 'unset' }}
+            aria-label="검색어 지우기"
+          >
+            <IconClose />
+          </button>
+        )}
+      </div>
     </div>
   )
 })

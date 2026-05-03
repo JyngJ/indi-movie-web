@@ -688,8 +688,8 @@ export function TheaterSheet({
         borderBottom: '1px solid var(--color-border)',
         backgroundColor: 'var(--color-surface-bg)',
         flexShrink: 0,
-        // 스크롤 비례 높이 축소 (220 → 82)
-        maxHeight: 220 - 138 * posterProgress,
+        // 스크롤 비례 높이 축소 (228 → 90) — 상단 배지(8px) 여백 포함
+        maxHeight: 228 - 138 * posterProgress,
         overflow: 'hidden',
       }}>
         <div
@@ -698,7 +698,7 @@ export function TheaterSheet({
             display: 'flex',
             gap: 12 - 4 * posterProgress,           // 12 → 8
             overflowX: 'auto',
-            paddingTop: 14 - 6 * posterProgress,    // 14 → 8
+            paddingTop: 22 - 6 * posterProgress,    // 22 → 16 (배지 8px 여백 포함)
             paddingLeft: 20,
             paddingRight: 20,
             paddingBottom: 14 - 6 * posterProgress, // 14 → 8
@@ -709,13 +709,12 @@ export function TheaterSheet({
           }}
         >
           {MOCK_MOVIES.map((movie) => (
-            // 너비 트랜지션 래퍼: overflow hidden으로 스케일 된 내용 클리핑
             <div
               key={movie.id}
               style={{
                 flexShrink: 0,
                 width: 88 - 44 * posterProgress,    // 88 → 44
-                overflow: 'hidden',
+                overflow: 'visible',  // 체크 배지(-6px)가 잘리지 않도록
               }}
             >
               {/* 스케일 트랜지션 내부 — 항상 88px 기준, 축소 시 0.5 스케일 */}
