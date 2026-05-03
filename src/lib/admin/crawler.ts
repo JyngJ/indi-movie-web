@@ -14,6 +14,49 @@ interface ParseContext {
   sourceUrl?: string
 }
 
+interface DtryxMovie {
+  MovieCd: string
+  MovieNm: string
+  MovieNmEng?: string
+  Rating?: string
+  RunningTime?: string
+  Url?: string
+  HiddenYn?: string
+}
+
+interface DtryxCinema {
+  CinemaCd: string
+  CinemaNm: string
+  HiddenYn?: string
+}
+
+interface DtryxPlayDate {
+  PlaySDT: string
+  HiddenYn?: string
+}
+
+interface DtryxShowtimeGroup {
+  ScreenNm?: string
+  ScreeningInfo?: string
+  MovieDetail?: DtryxShowtimeDetail[]
+}
+
+interface DtryxShowtimeDetail {
+  BrandCd?: string
+  CinemaNm?: string
+  MovieNm?: string
+  MovieCd?: string
+  ScreenNm?: string
+  ScreeningInfo?: string
+  StartTime?: string
+  EndTime?: string
+  RemainSeatCnt?: string | number
+  TotalSeatCnt?: string | number
+  SaleCloseYn?: string
+  ScreenCd?: string
+  ShowSeq?: string
+}
+
 export async function resolveCrawlInput(
   inputKind: CrawlInputKind,
   content?: string,
@@ -53,6 +96,106 @@ export function parseShowtimeCandidates(
         ]
 
   return dedupeCandidates(candidates)
+}
+
+export async function crawlShowtimeCandidates(context: ParseContext) {
+  if (context.source.parser === 'dtryxReservationApi') {
+    return crawlDtryxReservationApi(context)
+  }
+
+  const content = await resolveCrawlInput(
+    context.inputKind,
+    undefined,
+    context.sourceUrl ?? context.source.listingUrl,
+  )
+
+  return parseShowtimeCandidates(content, context)
+}
+
+export async function crawlDtryxReservationApi(context: ParseContext) {
+  const cgid = extractDtryxCgid(context.sourceUrl ?? context.source.listingUrl)
+  const baseUrl = new URL(context.sourceUrl ?? context.source.listingUrl)
+  const origin = baseUrl.origin
+  const headers = {
+    'user-agent': 'Mozilla/5.0 (compatible; indi-movie-web-admin-crawler/0.1)',
+    accept: 'application/json, text/javascript, */*; q=0.01',
+    'x-requested-with': 'XMLHttpRequest',
+    referer: context.sourceUrl ?? context.source.listingUrl,
+  }
+  const mainParams = createDtryxParams(cgid)
+  const main = await fetchJson<{
+    MovieList?: DtryxMovie[]
+    CinemaList?: DtryxCinema[]
+    PlaySdtList?: DtryxPlayDate[]
+  }>(`${origin}/reserve/main_list.do?${mainParams}`, headers)
+  const cinemas = (main.CinemaList ?? []).filter((cinema) => cinema.HiddenYn !== 'Y')
+  const movies = (main.MovieList ?? []).filter((movie) => movie.HiddenYn !== 'Y')
+  const playDates = (main.PlaySdtList ?? []).filter((date) => date.HiddenYn !== 'Y').slice(0, 14)
+  const targetCinema = pickDtryxCinema(cinemas, context.source.theaterName)
+
+  if (!targetCinema) {
+    throw new Error(`${context.source.theaterName} 영화관 코드를 찾지 못했습니다.`)
+  }
+
+  const tasks = playDates.flatMap((playDate) =>
+    movies.map((movie) => async () => {
+      const candidates: CrawledShowtimeCandidate[] = []
+      const params = createDtryxParams(cgid, {
+        CinemaCd: targetCinema.CinemaCd,
+        MovieCd: movie.MovieCd,
+        PlaySDT: playDate.PlaySDT,
+      })
+      const data = await fetchJson<{ Showseqlist?: DtryxShowtimeGroup[] }>(
+        `${origin}/reserve/showseq_list.do?${params}`,
+        headers,
+      )
+      const groups = data.Showseqlist ?? []
+
+      groups.forEach((group) => {
+        ;(group.MovieDetail ?? []).forEach((detail) => {
+          const startTime = normalizeDtryxTime(detail.StartTime)
+          const movieTitle = detail.MovieNm || movie.MovieNm
+
+          if (!startTime || !movieTitle) return
+
+          const screenName = [detail.ScreenNm ?? group.ScreenNm, detail.ScreeningInfo ?? group.ScreeningInfo]
+            .filter(Boolean)
+            .join(' ')
+            .trim() || '상영관 확인 필요'
+          const seatAvailable = toInt(detail.RemainSeatCnt, DEFAULT_SEAT_TOTAL)
+          const seatTotal = toInt(detail.TotalSeatCnt, DEFAULT_SEAT_TOTAL)
+          const closed = detail.SaleCloseYn === 'Y'
+          const warnings = [
+            ...(closed ? ['예매 종료 회차입니다.'] : []),
+            ...(screenName === '상영관 확인 필요' ? ['상영관을 확인해야 합니다.'] : []),
+          ]
+
+          candidates.push(buildCandidate({
+            context,
+            movieTitle,
+            showDate: playDate.PlaySDT,
+            showTime: startTime,
+            endTime: normalizeDtryxTime(detail.EndTime),
+            screenName,
+            formatText: `${screenName} ${movie.MovieNmEng ?? ''}`,
+            seatAvailable,
+            seatTotal,
+            price: DEFAULT_PRICE,
+            bookingUrl: `${origin}/reserve/movie.do?cgid=${encodeURIComponent(cgid)}`,
+            rawText: JSON.stringify(detail),
+            confidence: warnings.length ? 0.82 : 0.96,
+            warnings,
+          }))
+        })
+      })
+
+      return candidates
+    }),
+  )
+
+  const candidateGroups = await mapWithConcurrency(tasks, 6)
+
+  return dedupeCandidates(candidateGroups.flat())
 }
 
 function parseJsonLdEvents(content: string, context: ParseContext) {
@@ -295,6 +438,92 @@ function normalizeDateTime(value: string) {
     time: timeOnly ? `${timeOnly[1].padStart(2, '0')}:${timeOnly[2]}` : '00:00',
     valid: Boolean(timeOnly),
   }
+}
+
+async function fetchJson<T>(url: string, headers: Record<string, string>): Promise<T> {
+  const response = await fetch(url, {
+    headers,
+    cache: 'no-store',
+  })
+
+  if (!response.ok) {
+    throw new Error(`디트릭스 API 요청 실패: ${response.status}`)
+  }
+
+  return response.json() as Promise<T>
+}
+
+async function mapWithConcurrency<T>(
+  tasks: Array<() => Promise<T>>,
+  concurrency: number,
+) {
+  const results: T[] = []
+  let nextIndex = 0
+
+  async function worker() {
+    while (nextIndex < tasks.length) {
+      const currentIndex = nextIndex
+      nextIndex += 1
+      results[currentIndex] = await tasks[currentIndex]()
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, tasks.length) }, () => worker()),
+  )
+
+  return results
+}
+
+function extractDtryxCgid(url: string) {
+  try {
+    const parsed = new URL(url)
+    const cgid = parsed.searchParams.get('cgid')
+    if (cgid) return cgid
+  } catch {
+    const cgid = url.match(/[?&]cgid=([^&]+)/)?.[1]
+    if (cgid) return decodeURIComponent(cgid)
+  }
+
+  throw new Error('디트릭스 예매 URL에서 cgid를 찾지 못했습니다.')
+}
+
+function createDtryxParams(cgid: string, overrides: Partial<Record<string, string>> = {}) {
+  return new URLSearchParams({
+    cgid,
+    BrandCd: 'dtryx',
+    CinemaCd: 'all',
+    MovieCd: 'all',
+    PlaySDT: 'all',
+    Sort: 'boxoffice',
+    ScreenCd: '',
+    ShowSeq: '',
+    TabBrandCd: 'dtryx',
+    TabRegionCd: 'all',
+    TabMovieType: 'all',
+    ...overrides,
+  })
+}
+
+function pickDtryxCinema(cinemas: DtryxCinema[], theaterName: string) {
+  const normalizedTarget = normalizeKoreanName(theaterName)
+
+  return cinemas.find((cinema) => normalizeKoreanName(cinema.CinemaNm) === normalizedTarget) ??
+    cinemas.find((cinema) => normalizeKoreanName(cinema.CinemaNm).includes(normalizedTarget)) ??
+    cinemas.find((cinema) => normalizedTarget.includes(normalizeKoreanName(cinema.CinemaNm)))
+}
+
+function normalizeKoreanName(value: string) {
+  return value.replace(/\s+/g, '').replace(/[()（）\-_·.]/g, '').toLowerCase()
+}
+
+function normalizeDtryxTime(value: unknown) {
+  const text = String(value ?? '').trim()
+  const match = text.match(/^(\d{1,2}):?(\d{2})$/)
+
+  if (!match) return undefined
+
+  return `${match[1].padStart(2, '0')}:${match[2]}`
 }
 
 function splitByDateLabel(content: string) {

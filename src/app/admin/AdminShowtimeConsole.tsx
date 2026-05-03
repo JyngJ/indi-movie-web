@@ -241,6 +241,7 @@ export function AdminShowtimeConsole() {
                   >
                     <option value="tableText">HTML 테이블</option>
                     <option value="timelineCard">타임라인 카드</option>
+                    <option value="dtryxReservationApi">디트릭스 예매 API</option>
                     <option value="jsonLdEvent">JSON-LD Event</option>
                     <option value="csv">CSV</option>
                   </select>

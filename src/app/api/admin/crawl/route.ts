@@ -1,12 +1,12 @@
 import type { CrawlRequestPayload, CrawlRun } from '@/types/admin'
-import { parseShowtimeCandidates, resolveCrawlInput } from '@/lib/admin/crawler'
+import { crawlDtryxReservationApi, parseShowtimeCandidates, resolveCrawlInput } from '@/lib/admin/crawler'
 import { getAdminSource, saveCrawlRun } from '@/lib/admin/store'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
   const payload = (await request.json()) as Partial<CrawlRequestPayload>
-  const source = payload.sourceId ? getAdminSource(payload.sourceId) : null
+  const source = payload.sourceId ? await getAdminSource(payload.sourceId) : null
 
   if (!source) {
     return Response.json(
@@ -16,23 +16,22 @@ export async function POST(request: Request) {
   }
 
   const startedAt = new Date().toISOString()
+  const inputKind = payload.inputKind ?? 'fixture'
+  const sourceUrl = payload.url ?? source.listingUrl
 
   try {
-    const content = await resolveCrawlInput(
-      payload.inputKind ?? 'fixture',
-      payload.content,
-      payload.url ?? source.listingUrl,
-    )
-    const candidates = parseShowtimeCandidates(content, {
-      source,
-      inputKind: payload.inputKind ?? 'fixture',
-      sourceUrl: payload.url ?? source.listingUrl,
-    })
+    const context = { source, inputKind, sourceUrl }
+    const candidates = source.parser === 'dtryxReservationApi'
+      ? await crawlDtryxReservationApi(context)
+      : parseShowtimeCandidates(
+          await resolveCrawlInput(inputKind, payload.content, sourceUrl),
+          context,
+        )
     const run: CrawlRun = {
       id: `run_${Date.now().toString(36)}`,
       sourceId: source.id,
       sourceName: source.theaterName,
-      inputKind: payload.inputKind ?? 'fixture',
+      inputKind,
       status: 'completed',
       startedAt,
       finishedAt: new Date().toISOString(),
@@ -42,13 +41,15 @@ export async function POST(request: Request) {
       warningCount: candidates.reduce((sum, candidate) => sum + candidate.warnings.length, 0),
     }
 
-    return Response.json(saveCrawlRun(run))
+    await saveCrawlRun(run)
+
+    return Response.json(run)
   } catch (error) {
     const run: CrawlRun = {
       id: `run_${Date.now().toString(36)}`,
       sourceId: source.id,
       sourceName: source.theaterName,
-      inputKind: payload.inputKind ?? 'fixture',
+      inputKind,
       status: 'failed',
       startedAt,
       finishedAt: new Date().toISOString(),
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
       error: error instanceof Error ? error.message : '알 수 없는 크롤링 오류입니다.',
     }
 
-    saveCrawlRun(run)
+    await saveCrawlRun(run)
 
     return Response.json(run, { status: 500 })
   }

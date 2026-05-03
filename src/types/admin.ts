@@ -10,7 +10,7 @@ export interface AdminTheaterSource {
   theaterName: string
   homepageUrl: string
   listingUrl: string
-  parser: 'jsonLdEvent' | 'tableText' | 'timelineCard' | 'csv'
+  parser: 'jsonLdEvent' | 'tableText' | 'timelineCard' | 'dtryxReservationApi' | 'csv'
   enabled: boolean
   cadence: 'manual' | 'daily' | 'twice_daily'
   lastCrawledAt?: string
