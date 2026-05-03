@@ -169,7 +169,9 @@ export function TheaterSheet({
   // 마운트 직후 translateY = window.innerHeight → 다음 프레임에 정상 위치로 전환
   const enterDone = useRef(false)
   const [, forceUpdate] = useState(0)
+  const [viewportHeight, setViewportHeight] = useState(900)
   useEffect(() => {
+    setViewportHeight(window.innerHeight)
     const id = requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         enterDone.current = true
@@ -177,6 +179,12 @@ export function TheaterSheet({
       })
     })
     return () => cancelAnimationFrame(id)
+  }, [])
+
+  useEffect(() => {
+    const handleResize = () => setViewportHeight(window.innerHeight)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
   }, [])
 
   /* ── 시놉시스 아코디언 상태 ──────────────────────────────────── */
@@ -389,8 +397,8 @@ export function TheaterSheet({
   // containerRef.clientHeight는 마운트 전 0이라 잘못된 값이 나옴.
   // window.innerHeight * 0.85 = height: 85dvh 와 동일한 값을 직접 계산.
   const getMaxOffset = useCallback(() => {
-    return Math.max(0, window.innerHeight - COLLAPSED_H)
-  }, [])
+    return Math.max(0, viewportHeight - COLLAPSED_H)
+  }, [viewportHeight])
 
   const baseTranslate = expanded ? 0 : getMaxOffset()
 
@@ -401,7 +409,7 @@ export function TheaterSheet({
 
   // 진입: enterDone 전엔 화면 아래 / 퇴장: exiting이면 화면 아래
   const finalTranslate = (!enterDone.current || exiting)
-    ? window.innerHeight
+    ? viewportHeight
     : effectiveTranslate
 
   const handlePointerDown = (e: React.PointerEvent) => {
