@@ -71,11 +71,19 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(function S
     : {}
 
   return (
-    <div className={`flex items-center gap-[10px] ${className}`}
-      style={{ height: 'var(--comp-search-height)' }}
+    <div
+      className={`flex flex-1 items-center gap-[10px] border transition-colors duration-150 ${className}`}
+      style={{
+        height: 'var(--comp-search-height)',
+        paddingLeft: onBack ? 4 : 'var(--comp-search-px)',
+        paddingRight: 'var(--comp-search-px)',
+        borderRadius: 'var(--comp-search-radius)',
+        backgroundColor: 'var(--color-surface-raised)',
+        borderColor: 'var(--color-border)',
+      }}
     >
-      {/* 뒤로가기 버튼 */}
-      {onBack && (
+      {/* 뒤로가기 or 돋보기 */}
+      {onBack ? (
         <button
           type="button"
           onClick={onBack}
@@ -94,49 +102,36 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(function S
             <path d="M15 18l-6-6 6-6" />
           </svg>
         </button>
-      )}
-
-      {/* 인풋 영역 */}
-      <div
-        className="flex flex-1 items-center gap-[10px] border transition-colors duration-150"
-        style={{
-          height: '100%',
-          paddingLeft: 'var(--comp-search-px)',
-          paddingRight: 'var(--comp-search-px)',
-          borderRadius: 'var(--comp-search-radius)',
-          backgroundColor: 'var(--color-surface-raised)',
-          borderColor: 'var(--color-border)',
-        }}
-      >
+      ) : (
         <span
           className="flex-shrink-0"
           style={{ color: hasValue ? 'var(--color-text-body)' : 'var(--color-text-caption)' }}
         >
           <IconSearch />
         </span>
+      )}
 
-        <input
-          ref={ref}
-          type="search"
-          placeholder={placeholder}
-          className="flex-1 bg-transparent outline-none border-none text-[14px]"
-          style={{ color: 'var(--color-text-primary)' }}
-          {...inputValueProps}
-          {...props}
-        />
+      <input
+        ref={ref}
+        type="search"
+        placeholder={placeholder}
+        className="flex-1 bg-transparent outline-none border-none"
+        style={{ color: 'var(--color-text-primary)', fontSize: 16 }}  // 16px 미만이면 iOS 자동 줌인
+        {...inputValueProps}
+        {...props}
+      />
 
-        {hasValue && (
-          <button
-            type="button"
-            onClick={onClear}
-            className="flex-shrink-0 flex items-center justify-center"
-            style={{ color: 'var(--color-text-caption)', minHeight: 'unset' }}
-            aria-label="검색어 지우기"
-          >
-            <IconClose />
-          </button>
-        )}
-      </div>
+      {hasValue && (
+        <button
+          type="button"
+          onClick={onClear}
+          className="flex-shrink-0 flex items-center justify-center"
+          style={{ color: 'var(--color-text-caption)', minHeight: 'unset' }}
+          aria-label="검색어 지우기"
+        >
+          <IconClose />
+        </button>
+      )}
     </div>
   )
 })

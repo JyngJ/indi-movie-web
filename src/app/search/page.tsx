@@ -43,6 +43,7 @@ export default function SearchPage() {
           onChange={(e) => setQuery(e.target.value)}
           onClear={() => setQuery('')}
           onBack={() => router.back()}
+          autoFocus
         />
       </div>
 

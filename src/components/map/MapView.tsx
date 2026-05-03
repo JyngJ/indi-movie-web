@@ -7,8 +7,7 @@ import L from 'leaflet'
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { Map as LeafletMap } from 'leaflet'
 import { useUserLocation } from '@/hooks/useUserLocation'
-import { useRouter } from 'next/navigation'
-import { SearchBarButton, FabRound } from '@/components/primitives'
+import { SearchBarButton, SearchBar, FabRound } from '@/components/primitives'
 import { MapPin, PosterThumb, TheaterSheet } from '@/components/domain'
 import { MOCK_THEATERS, type MockTheater } from '@/mocks/theaters'
 import { MOCK_MOVIES } from '@/mocks/movies'
@@ -271,11 +270,34 @@ function MapRefSetter({ mapRef }: { mapRef: React.MutableRefObject<LeafletMap | 
 
 /* ── 메인 컴포넌트 ──────────────────────────────────────────────── */
 export default function MapView() {
-  const router = useRouter()
   const { coords, refetch } = useUserLocation()
   const mapRef = useRef<LeafletMap | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [zoom, setZoom] = useState(14)
+
+  // 검색 오버레이
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const searchInputRef = useRef<HTMLInputElement>(null)
+
+  const dummyInputRef = useRef<HTMLInputElement>(null)
+
+  const openSearch = useCallback(() => {
+    // iOS Safari: 키보드는 반드시 클릭 핸들러 안에서 동기적으로 focus()가 불려야 열림
+    // 1) 클릭 핸들러 동기 컨텍스트 안에서 hidden dummy input 포커스 → iOS가 키보드 세션 시작
+    dummyInputRef.current?.focus()
+    // 2) 상태 업데이트 → 오버레이 마운트
+    setSearchOpen(true)
+    // 3) 오버레이 렌더 후 진짜 인풋으로 포커스 이동 (키보드 세션이 이미 열려있으므로 유지됨)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => searchInputRef.current?.focus())
+    })
+  }, [])
+
+  const closeSearch = useCallback(() => {
+    setSearchOpen(false)
+    setSearchQuery('')
+  }, [])
 
   // 바텀시트 상태
   const [sheetExpanded, setSheetExpanded] = useState(false)
@@ -367,6 +389,21 @@ export default function MapView() {
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100dvh' }}>
+      {/* iOS 키보드 트릭용 hidden dummy input — 항상 DOM에 존재 */}
+      <input
+        ref={dummyInputRef}
+        type="text"
+        readOnly
+        aria-hidden="true"
+        tabIndex={-1}
+        style={{
+          position: 'fixed', top: 0, left: 0,
+          width: 1, height: 1, opacity: 0,
+          fontSize: 16,  // 16px 미만이면 iOS 자동 줌인
+          border: 'none', padding: 0, margin: 0,
+          pointerEvents: 'none',
+        }}
+      />
       <MapContainer
         center={defaultCenter}
         zoom={14}
@@ -425,7 +462,7 @@ export default function MapView() {
         })}
       </MapContainer>
 
-      {/* 검색창 버튼 — 클릭 시 /search 로 이동 */}
+      {/* 검색창 버튼 — 클릭 시 오버레이 열기 */}
       <div style={{
         position: 'absolute',
         top: 'max(16px, env(safe-area-inset-top))',
@@ -434,10 +471,56 @@ export default function MapView() {
         <div style={{ boxShadow: 'var(--shadow-sheet)', borderRadius: 'var(--comp-search-radius)' }}>
           <SearchBarButton
             placeholder="극장 또는 영화 검색"
-            onClick={() => router.push('/search')}
+            onClick={openSearch}
           />
         </div>
       </div>
+
+      {/* 검색 오버레이 — same page, iOS 키보드 대응 */}
+      {searchOpen && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundColor: 'var(--color-surface-bg)',
+          display: 'flex',
+          flexDirection: 'column',
+          zIndex: 2000,
+        }}>
+          {/* 검색바 헤더 */}
+          <div style={{
+            paddingTop: 'max(12px, env(safe-area-inset-top))',
+            paddingLeft: 16,
+            paddingRight: 16,
+            paddingBottom: 12,
+            borderBottom: '1px solid var(--color-border)',
+            flexShrink: 0,
+          }}>
+            <SearchBar
+              ref={searchInputRef}
+              value={searchQuery}
+              placeholder="극장 또는 영화 검색"
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onClear={() => setSearchQuery('')}
+              onBack={closeSearch}
+            />
+          </div>
+
+          {/* 결과 영역 (Phase 3에서 실제 결과로 교체) */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px' }}>
+            {searchQuery === '' ? (
+              <p style={{ textAlign: 'center', marginTop: 60, fontSize: 14, color: 'var(--color-text-caption)' }}>
+                극장명, 영화 제목, 감독 이름으로 검색하세요
+              </p>
+            ) : (
+              <p style={{ textAlign: 'center', marginTop: 60, fontSize: 14, color: 'var(--color-text-caption)' }}>
+                &ldquo;{searchQuery}&rdquo; 검색 결과
+                <br />
+                <span style={{ fontSize: 12, marginTop: 8, display: 'block' }}>(Phase 3 연결 예정)</span>
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 줌 + 현위치 */}
       <div style={{
