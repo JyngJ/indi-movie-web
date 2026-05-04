@@ -66,6 +66,14 @@ img {
   margin: 0 auto;
 }
 
+/* 가로 스크롤 영역 스크롤바 숨김 */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* prefers-reduced-motion 지원 */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

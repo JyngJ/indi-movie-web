@@ -8,7 +8,7 @@ interface ChipProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode
 }
 
-export function Chip({ selected = false, onDismiss, children, className = '', onClick, ...props }: ChipProps) {
+export function Chip({ selected = false, onDismiss, children, className = '', onClick, style: externalStyle, ...props }: ChipProps) {
   const handleDismiss = (e: MouseEvent) => {
     e.stopPropagation()
     onDismiss?.()
@@ -32,6 +32,7 @@ export function Chip({ selected = false, onDismiss, children, className = '', on
         backgroundColor: selected ? 'var(--color-primary-subtle-l)' : 'var(--color-surface-raised)',
         color: selected ? 'var(--color-primary-text)' : 'var(--color-text-body)',
         borderColor: selected ? 'var(--color-primary-base)' : 'var(--color-border)',
+        ...externalStyle,
       }}
       onClick={onClick}
       {...props}

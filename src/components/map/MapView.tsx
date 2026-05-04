@@ -8,7 +8,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import type { Map as LeafletMap } from 'leaflet'
 import { useUserLocation } from '@/hooks/useUserLocation'
 import { SearchBarButton, SearchBar, FabRound } from '@/components/primitives'
-import { MapPin, PosterThumb, TheaterSheet } from '@/components/domain'
+import { MapPin, PosterThumb, TheaterSheet, FilterBar } from '@/components/domain'
 import { MOCK_THEATERS, type MockTheater } from '@/mocks/theaters'
 import { MOCK_MOVIES } from '@/mocks/movies'
 
@@ -462,17 +462,26 @@ export default function MapView() {
         })}
       </MapContainer>
 
-      {/* 검색창 버튼 — 클릭 시 오버레이 열기 */}
+      {/* 검색창 + 필터 칩 */}
       <div style={{
         position: 'absolute',
-        top: 'max(16px, env(safe-area-inset-top))',
-        left: 16, right: 16, zIndex: 1000,
+        top: 'max(0px, env(safe-area-inset-top))',
+        left: 0, right: 0,
+        zIndex: 1000,
+        pointerEvents: 'none',
       }}>
-        <div style={{ boxShadow: 'var(--shadow-sheet)', borderRadius: 'var(--comp-search-radius)' }}>
-          <SearchBarButton
-            placeholder="극장 또는 영화 검색"
-            onClick={openSearch}
-          />
+        {/* 검색창 */}
+        <div style={{ padding: '16px 16px 0', pointerEvents: 'auto' }}>
+          <div style={{ boxShadow: 'var(--shadow-sheet)', borderRadius: 'var(--comp-search-radius)' }}>
+            <SearchBarButton
+              placeholder="극장 또는 영화 검색"
+              onClick={openSearch}
+            />
+          </div>
+        </div>
+        {/* 필터 칩 */}
+        <div style={{ marginTop: 8, pointerEvents: 'auto' }}>
+          <FilterBar />
         </div>
       </div>
 
