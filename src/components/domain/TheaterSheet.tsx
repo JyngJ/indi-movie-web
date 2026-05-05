@@ -296,6 +296,7 @@ export function TheaterSheet({
   /* ── 포스터 스크롤 드래그 ── */
   const posterScrollRef = useRef<HTMLDivElement>(null)
   const posterDrag      = useRef({ active: false, startX: 0, scrollLeft: 0 })
+  const posterTouching  = useRef(false)  // 포스터 영역 터치 중 (방향 미확정 포함)
 
   /* ── 확장 시 스크롤 영역 ── */
   const scrollAreaRef = useRef<HTMLDivElement>(null)
@@ -359,18 +360,42 @@ export function TheaterSheet({
     const el = posterScrollRef.current
     if (!el) return
 
+    let startY = 0
+
     const onDown = (e: MouseEvent | TouchEvent) => {
       const x = 'touches' in e ? e.touches[0].pageX : e.pageX
-      posterDrag.current = { active: true, startX: x, scrollLeft: el.scrollLeft }
+      startY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY
+      posterDrag.current = { active: false, startX: x, scrollLeft: el.scrollLeft }
+      posterTouching.current = true
       el.style.cursor = 'grabbing'
     }
     const onMove = (e: MouseEvent | TouchEvent) => {
-      if (!posterDrag.current.active) return
-      e.preventDefault()
+      if (!posterTouching.current) return
       const x = 'touches' in e ? e.touches[0].pageX : e.pageX
+      const y = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY
+      const dx = Math.abs(x - posterDrag.current.startX)
+      const dy = y - startY
+
+      // 방향 미확정 상태: 가로/세로 판단
+      if (!posterDrag.current.active) {
+        if (dx < 6 && Math.abs(dy) < 6) return  // 아직 판단 불가
+        if (Math.abs(dy) > dx) {
+          // 세로 방향 — 포스터 스크롤 포기, 시트에 맡김
+          posterTouching.current = false
+          return
+        }
+        // 가로 방향 확정
+        posterDrag.current.active = true
+      }
+
+      e.preventDefault()
       el.scrollLeft = posterDrag.current.scrollLeft - (x - posterDrag.current.startX)
     }
-    const onUp = () => { posterDrag.current.active = false; el.style.cursor = 'grab' }
+    const onUp = () => {
+      posterDrag.current.active = false
+      posterTouching.current = false
+      el.style.cursor = 'grab'
+    }
     const onWheel = (e: WheelEvent) => { e.preventDefault() }
 
     el.addEventListener('mousedown',  onDown)
@@ -429,8 +454,12 @@ export function TheaterSheet({
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!dragActive.current) return
+    // 포스터 영역 터치 중(방향 미확정 포함)이면 시트 수직 이동 무시
+    if (posterTouching.current) return
     const delta    = e.clientY - dragStartY.current
-    const newTrans = Math.max(0, Math.min(getMaxOffset(), dragStartOffset.current + delta))
+    // collapsed 상태: 아래로 더 내려가는 것 허용 (닫기 제스처)
+    const maxTrans = expanded ? getMaxOffset() : getMaxOffset() + 120
+    const newTrans = Math.max(0, Math.min(maxTrans, dragStartOffset.current + delta))
     setDragOffset(newTrans - baseTranslate)
 
     // 최근 5프레임만 유지
@@ -443,6 +472,13 @@ export function TheaterSheet({
     if (!dragActive.current) return
     dragActive.current = false
     setDragging(false)
+
+    // 포스터 영역 터치 중이었으면 snap 로직 없이 그냥 종료
+    if (posterTouching.current) {
+      setDragOffset(0)
+      velocityBuffer.current = []
+      return
+    }
 
     // 이동 거리가 8px 미만이면 tap으로 간주 — snap 없이 원위치
     if (Math.abs(e.clientY - dragStartY.current) < 8) {
@@ -480,6 +516,10 @@ export function TheaterSheet({
 
     if (shouldExpand && !expanded) onExpand()
     else if (!shouldExpand && expanded) onCollapse()
+    else if (!shouldExpand && !expanded) {
+      // collapsed 상태에서 아래로 flick하거나 충분히 내리면 닫기
+      if (isFlickDown || posRatio > POSITION_THRESHOLD) onClose()
+    }
 
     setDragOffset(0)
     velocityBuffer.current = []
@@ -650,19 +690,32 @@ export function TheaterSheet({
                   </button>
                 )}
               </div>
-              <div style={{
-                fontSize: 13,
-                color: 'var(--color-text-sub)',
-                marginTop: 5,
-              }}>
-                {theater.address}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 5 }}>
+                <div style={{ fontSize: 13, color: 'var(--color-text-sub)' }}>
+                  {theater.address}
+                </div>
+                <button
+                  onClick={() => navigator.clipboard.writeText(theater.address)}
+                  style={{
+                    padding: 0, border: 'none', background: 'none',
+                    cursor: 'pointer', flexShrink: 0,
+                    color: 'var(--color-text-caption)',
+                    display: 'flex', alignItems: 'center',
+                    minHeight: 'unset',
+                  }}
+                  aria-label="주소 복사"
+                >
+                  <svg width={14} height={14} viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                  </svg>
+                </button>
               </div>
             </div>
             {/* 길찾기 버튼 */}
             <div style={{ flexShrink: 0 }}>
-              <Button
-                variant="secondary"
-                size="sm"
+              <button
                 onClick={() => {
                   const url = `nmap://route/public?dlat=${theater.lat}&dlng=${theater.lng}&dname=${encodeURIComponent(theater.name)}&appname=kr.indi.movie`
                   const fallback = `https://map.naver.com/v5/directions/-/-/-/transit?c=${theater.lng},${theater.lat},15,0,0,0,dh`
@@ -671,9 +724,20 @@ export function TheaterSheet({
                   a.click()
                   setTimeout(() => window.open(fallback, '_blank', 'noopener'), 1500)
                 }}
+                style={{
+                  fontSize: 13, fontWeight: 500,
+                  padding: '5px 12px',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-full)',
+                  background: 'none',
+                  color: 'var(--color-text-body)',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  minHeight: 'unset',
+                }}
               >
                 길 찾기
-              </Button>
+              </button>
             </div>
           </div>
         </div>

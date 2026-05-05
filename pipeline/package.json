@@ -1,0 +1,22 @@
+{
+  "name": "indi-movie-pipeline",
+  "version": "0.1.0",
+  "description": "상영 시간표 이미지 → JSON 추출 파이프라인",
+  "type": "module",
+  "scripts": {
+    "extract": "npx tsx src/extract.ts",
+    "discord:test": "npx tsx src/test-discord.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@google-cloud/vision": "^4.3.2",
+    "dotenv": "^17.4.2",
+    "openai": "^6.36.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
