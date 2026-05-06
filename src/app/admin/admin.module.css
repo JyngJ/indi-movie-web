@@ -9,6 +9,57 @@
   background: var(--color-surface-bg);
 }
 
+.loginShell {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: 24px;
+  color: var(--color-text-primary);
+  background: var(--color-surface-bg);
+}
+
+.loginPanel {
+  width: min(100%, 420px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  background: var(--color-surface-card);
+  box-shadow: var(--shadow-md);
+}
+
+.loginPanel h1 {
+  margin: 6px 0 20px;
+  font-family: var(--font-serif);
+  font-size: 28px;
+  line-height: 1.2;
+}
+
+.loginForm {
+  display: grid;
+  gap: 14px;
+}
+
+.loginForm label {
+  display: grid;
+  gap: 7px;
+  color: var(--color-text-sub);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.loginForm input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 11px 12px;
+  color: var(--color-text-primary);
+  background: var(--color-surface-bg);
+  font: inherit;
+}
+
 .header {
   display: flex;
   align-items: center;
@@ -43,7 +94,7 @@
 
 .metrics {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 12px;
   margin: 0 auto 16px;
   max-width: 1320px;
@@ -88,7 +139,8 @@
 
 .panel,
 .reviewPanel,
-.runLog {
+.runLog,
+.servicePanel {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface-card);
@@ -299,6 +351,77 @@
   font-size: 13px;
 }
 
+.inlineForm {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto;
+  align-items: end;
+  gap: 10px;
+  margin: 12px 16px 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  background: var(--color-surface-bg);
+}
+
+.movieSearchBox {
+  display: grid;
+  gap: 10px;
+}
+
+.movieResults {
+  display: grid;
+  gap: 8px;
+  margin: 0 16px 0;
+}
+
+.movieResultItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 10px 12px;
+  background: var(--color-surface-bg);
+}
+
+.movieResultItem strong,
+.movieResultItem small {
+  display: block;
+}
+
+.movieResultItem small {
+  margin-top: 4px;
+  color: var(--color-text-caption);
+  font-size: 12px;
+}
+
+.inlineForm label,
+.matchControls label {
+  display: grid;
+  gap: 6px;
+  color: var(--color-text-sub);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.inlineForm input,
+.matchControls select {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 9px 10px;
+  color: var(--color-text-primary);
+  background: var(--color-surface-bg);
+  font: inherit;
+}
+
+.matchControls {
+  display: grid;
+  gap: 8px;
+  min-width: 220px;
+}
+
 .tableWrap {
   overflow: auto;
   max-height: 640px;
@@ -306,7 +429,7 @@
 
 .table {
   width: 100%;
-  min-width: 840px;
+  min-width: 1080px;
   border-collapse: collapse;
 }
 
@@ -399,6 +522,148 @@
   max-width: 1320px;
 }
 
+.servicePanel {
+  margin: 16px auto 0;
+  max-width: 1320px;
+}
+
+.theaterForm {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+  align-items: end;
+  gap: 10px;
+  margin: 12px 16px 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  background: var(--color-surface-bg);
+}
+
+.theaterForm label {
+  display: grid;
+  gap: 6px;
+  color: var(--color-text-sub);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.theaterForm input,
+.table select,
+.table input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 8px 9px;
+  color: var(--color-text-primary);
+  background: var(--color-surface-bg);
+  font: inherit;
+}
+
+.wideField {
+  grid-column: span 2;
+}
+
+.serviceGrid {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 16px;
+  padding: 16px;
+}
+
+.serviceList {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.serviceDetail {
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.movieAdminPanel {
+  margin: 0 16px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.movieAdminGrid {
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
+  gap: 16px;
+  padding: 16px;
+}
+
+.movieEditForm {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: 10px;
+}
+
+.movieEditForm label {
+  display: grid;
+  gap: 6px;
+  color: var(--color-text-sub);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.movieEditForm input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 9px 10px;
+  color: var(--color-text-primary);
+  background: var(--color-surface-bg);
+  font: inherit;
+}
+
+.serviceDetailHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-bg);
+}
+
+.serviceDetailHeader strong,
+.serviceDetailHeader span {
+  display: block;
+}
+
+.serviceDetailHeader span {
+  margin-top: 4px;
+  color: var(--color-text-sub);
+  font-size: 12px;
+}
+
+.showtimeEditGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  min-width: 260px;
+}
+
+.checkLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--color-text-sub);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.checkLabel input {
+  width: 16px;
+  height: 16px;
+}
+
 .logGrid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -443,6 +708,10 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .inlineForm {
+    grid-template-columns: 1fr;
+  }
+
   .reviewPanel,
   .runLog {
     margin-top: 16px;
@@ -450,5 +719,16 @@
 
   .logGrid {
     grid-template-columns: 1fr;
+  }
+
+  .theaterForm,
+  .serviceGrid,
+  .movieAdminGrid,
+  .movieEditForm {
+    grid-template-columns: 1fr;
+  }
+
+  .wideField {
+    grid-column: span 1;
   }
 }
