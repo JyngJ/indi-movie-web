@@ -6,6 +6,7 @@ import { DateBar, type Day, type DayType, type TimeFilter } from './DateBar'
 import { ShowtimeCell } from './ShowtimeCell'
 import { Button } from '@/components/primitives/Button'
 import { Chip } from '@/components/primitives/Chip'
+import { Toast } from '@/components/primitives/Toast'
 import { MOCK_MOVIES } from '@/mocks/movies'
 import { MOCK_SHOWTIMES } from '@/mocks/showtimes'
 import type { MockTheater } from '@/mocks/theaters'
@@ -287,6 +288,7 @@ export function TheaterSheet({
   const dragStartOffset = useRef(0)   // 드래그 시작 시점의 translateY
   const [dragOffset, setDragOffset] = useState(0)   // 현재 드래그 delta
   const [dragging, setDragging]     = useState(false)
+  const [copyCount, setCopyCount] = useState(0)
 
   // 속도 계산용 — 최근 이벤트 (timestamp, y) 를 최대 5개 보관
   const velocityBuffer = useRef<Array<{ t: number; y: number }>>([])
@@ -397,7 +399,10 @@ export function TheaterSheet({
       el.style.cursor = 'grab'
     }
     const onWheel = (e: WheelEvent) => { e.preventDefault() }
+    // 시트 컨테이너의 pointerdown → setPointerCapture 를 차단해 mouse 이벤트가 포스터에 유지되게 함
+    const onPointerDown = (e: PointerEvent) => { e.stopPropagation() }
 
+    el.addEventListener('pointerdown', onPointerDown)
     el.addEventListener('mousedown',  onDown)
     el.addEventListener('mousemove',  onMove)
     el.addEventListener('mouseup',    onUp)
@@ -407,6 +412,7 @@ export function TheaterSheet({
     el.addEventListener('touchend',   onUp)
     el.addEventListener('wheel',      onWheel, { passive: false })
     return () => {
+      el.removeEventListener('pointerdown', onPointerDown)
       el.removeEventListener('mousedown',  onDown)
       el.removeEventListener('mousemove',  onMove)
       el.removeEventListener('mouseup',    onUp)
@@ -438,6 +444,8 @@ export function TheaterSheet({
     : effectiveTranslate
 
   const handlePointerDown = (e: React.PointerEvent) => {
+    // 버튼, 링크, 입력 요소 클릭은 드래그로 처리하지 않음
+    if ((e.target as Element).closest('button, a, input, select, textarea')) return
     // expanded 모드: 스크롤 영역 내부 터치는 네이티브 스크롤에 맡김
     // collapsed 모드: 어디서든 드래그 가능
     if (expanded) {
@@ -549,6 +557,8 @@ export function TheaterSheet({
   }
 
   return (
+    <>
+    <Toast message="복사되었습니다" trigger={copyCount} />
     <div
       ref={containerRef}
       onPointerDown={handlePointerDown}
@@ -695,7 +705,20 @@ export function TheaterSheet({
                   {theater.address}
                 </div>
                 <button
-                  onClick={() => navigator.clipboard.writeText(theater.address)}
+                  onClick={() => {
+                    if (navigator.clipboard) {
+                      navigator.clipboard.writeText(theater.address)
+                    } else {
+                      const el = document.createElement('textarea')
+                      el.value = theater.address
+                      el.style.cssText = 'position:fixed;opacity:0'
+                      document.body.appendChild(el)
+                      el.select()
+                      document.execCommand('copy')
+                      document.body.removeChild(el)
+                    }
+                    setCopyCount(c => c + 1)
+                  }}
                   style={{
                     padding: 0, border: 'none', background: 'none',
                     cursor: 'pointer', flexShrink: 0,
@@ -898,5 +921,6 @@ export function TheaterSheet({
         </div>
       )}
     </div>
+    </>
   )
 }
