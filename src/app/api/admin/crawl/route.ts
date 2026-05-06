@@ -1,10 +1,17 @@
 import type { CrawlRequestPayload, CrawlRun } from '@/types/admin'
+import { adminAuthErrorResponse, requireAdminSessionUser } from '@/lib/admin/auth'
 import { crawlDtryxReservationApi, parseShowtimeCandidates, resolveCrawlInput } from '@/lib/admin/crawler'
 import { getAdminSource, saveCrawlRun } from '@/lib/admin/store'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
+  try {
+    await requireAdminSessionUser(request)
+  } catch (error) {
+    return adminAuthErrorResponse(error)
+  }
+
   const payload = (await request.json()) as Partial<CrawlRequestPayload>
   const source = payload.sourceId ? await getAdminSource(payload.sourceId) : null
 

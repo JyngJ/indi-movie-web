@@ -8,6 +8,7 @@ export interface AdminTheaterSource {
   id: string
   theaterId: string
   theaterName: string
+  matchedTheaterId?: string
   homepageUrl: string
   listingUrl: string
   parser: 'jsonLdEvent' | 'tableText' | 'timelineCard' | 'dtryxReservationApi' | 'csv'
@@ -40,6 +41,10 @@ export interface CrawledShowtimeCandidate {
   warnings: string[]
   status: AdminShowtimeStatus
   fingerprint: string
+  matchedTheaterId?: string
+  matchedMovieId?: string
+  approvedAt?: string
+  approvedBy?: string
 }
 
 export interface CrawlRun {
@@ -62,6 +67,134 @@ export interface ShowtimeApprovalPayload {
   status: AdminShowtimeStatus
 }
 
+export interface ShowtimeApprovalResult {
+  approved: Array<{
+    candidateId: string
+    showtimeId?: string
+  }>
+  failed: Array<{
+    candidateId: string
+    reason: string
+  }>
+}
+
+export interface AdminMatchOption {
+  id: string
+  label: string
+  description?: string
+}
+
+export interface AdminMatchOptions {
+  theaters: AdminMatchOption[]
+  movies: AdminMatchOption[]
+}
+
+export interface CandidateMatchPayload {
+  candidateId: string
+  matchedTheaterId?: string
+  matchedMovieId?: string
+}
+
+export interface AdminMovieInput {
+  id?: string
+  title: string
+  year: number
+  originalTitle?: string
+  genre?: string[]
+  director?: string[]
+  kobisMovieCd?: string
+}
+
+export interface AdminMovie {
+  id: string
+  title: string
+  year: number
+  originalTitle?: string
+  genre: string[]
+  director: string[]
+  kobisMovieCd?: string
+}
+
+export interface AdminExternalMovie {
+  provider: 'kobis'
+  externalId: string
+  title: string
+  originalTitle?: string
+  year: number
+  openDate?: string
+  genre: string[]
+  director: string[]
+  nation?: string
+}
+
+export interface AdminTheater {
+  id: string
+  name: string
+  lat: number
+  lng: number
+  address: string
+  city: string
+  phone?: string
+  website?: string
+  screenCount: number
+  seatCount?: number
+}
+
+export interface AdminTheaterInput {
+  id?: string
+  name: string
+  lat: number
+  lng: number
+  address: string
+  city: string
+  phone?: string
+  website?: string
+  screenCount?: number
+  seatCount?: number
+}
+
+export interface AdminServiceShowtime {
+  id: string
+  theaterId: string
+  theaterName: string
+  movieId: string
+  movieTitle: string
+  screenName: string
+  showDate: string
+  showTime: string
+  endTime?: string
+  formatType: ShowtimeFormat
+  language: ShowtimeLanguage
+  seatAvailable: number
+  seatTotal: number
+  price: number
+  bookingUrl?: string
+  isActive: boolean
+}
+
+export interface AdminShowtimeInput {
+  id: string
+  theaterId: string
+  movieId: string
+  screenName: string
+  showDate: string
+  showTime: string
+  endTime?: string
+  formatType: ShowtimeFormat
+  language: ShowtimeLanguage
+  seatAvailable: number
+  seatTotal: number
+  price: number
+  bookingUrl?: string
+  isActive: boolean
+}
+
+export interface CandidateAutoMatchResult {
+  matched: number
+  needsReview: number
+  updated: CrawledShowtimeCandidate[]
+}
+
 export interface CrawlRequestPayload {
   sourceId: string
   inputKind: CrawlInputKind
@@ -71,6 +204,7 @@ export interface CrawlRequestPayload {
 
 export interface AdminTheaterSourceInput {
   theaterName: string
+  matchedTheaterId?: string
   homepageUrl: string
   listingUrl: string
   parser: AdminTheaterSource['parser']
