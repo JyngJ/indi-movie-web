@@ -9,8 +9,8 @@ import type { Map as LeafletMap } from 'leaflet'
 import { useUserLocation } from '@/hooks/useUserLocation'
 import { SearchBarButton, SearchBar, FabRound } from '@/components/primitives'
 import { MapPin, PosterThumb, TheaterSheet, FilterBar } from '@/components/domain'
-import { MOCK_THEATERS, type MockTheater } from '@/mocks/theaters'
-import { MOCK_MOVIES } from '@/mocks/movies'
+import { useTheaters } from '@/lib/supabase/queries'
+import type { Theater } from '@/types/api'
 
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
 const IcoPlus = () => (
@@ -99,7 +99,7 @@ const GAP = 4
 const DOT = 22
 const ANCHOR_Y = LABEL_H + GAP + DOT / 2
 
-const TOTAL_MOVIES = MOCK_MOVIES.length
+const TOTAL_MOVIES = 3  // 핀 포스터 그리드 기본 표시 수
 
 function makePinIcon(name: string, selected: boolean, zoom: number, posterOffsetX = 0) {
   const count = posterCountForZoom(zoom)
@@ -128,7 +128,7 @@ function makePinIcon(name: string, selected: boolean, zoom: number, posterOffset
 /* ── 클러스터 타입 ─────────────────────────────────────────────── */
 interface TheaterCluster {
   id: string
-  theaters: MockTheater[]
+  theaters: Theater[]
   lat: number
   lng: number
 }
@@ -143,7 +143,7 @@ function clusterRadiusForZoom(zoom: number): number {
 
 /* ── 픽셀 거리 기반 클러스터 계산 ─────────────────────────────── */
 function computeClusters(
-  theaters: MockTheater[],
+  theaters: Theater[],
   map: LeafletMap,
   zoom: number,
 ): TheaterCluster[] {
@@ -226,7 +226,7 @@ function makeClusterIcon(count: number) {
 
 /* ── 클러스터가 분리되는 최소 줌 계산 ── */
 function findSplitZoom(
-  theaters: MockTheater[],
+  theaters: Theater[],
   map: LeafletMap,
   currentZoom: number,
 ): number {
@@ -286,6 +286,7 @@ function useIsDark() {
 export default function MapView() {
   const { coords, refetch } = useUserLocation()
   const isDark = useIsDark()
+  const { data: theaters = [], isLoading: theatersLoading } = useTheaters()
   const mapRef = useRef<LeafletMap | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [zoom, setZoom] = useState(14)
@@ -316,30 +317,27 @@ export default function MapView() {
 
   // 바텀시트 상태
   const [sheetExpanded, setSheetExpanded] = useState(false)
-  const [selectedMovieId, setSelectedMovieId] = useState(MOCK_MOVIES[0].id)
+  const [selectedMovieId, setSelectedMovieId] = useState('')
   const [sheetExiting, setSheetExiting] = useState(false)
   // displayedId: 퇴장 애니메이션 중에도 이전 극장을 유지하기 위한 지연 참조
   const [displayedId, setDisplayedId] = useState<string | null>(null)
   const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const defaultCenter: [number, number] = [37.5665, 126.978]
-  const selectedTheater = MOCK_THEATERS.find((t) => t.id === (displayedId ?? selectedId)) ?? null
+  const selectedTheater = theaters.find((t) => t.id === (displayedId ?? selectedId)) ?? null
 
   /* ── 클러스터 & 포스터 오프셋 ── */
-  // 초기값: 전체 극장을 개별 클러스터로 (map 준비 전)
-  const [clusters, setClusters] = useState<TheaterCluster[]>(() =>
-    MOCK_THEATERS.map((t) => ({ id: t.id, theaters: [t], lat: t.lat, lng: t.lng }))
-  )
+  const [clusters, setClusters] = useState<TheaterCluster[]>([])
   const [posterOffsets, setPosterOffsets] = useState<Map<string, number>>(new Map())
 
   const recompute = useCallback(() => {
     const map = mapRef.current
     if (!map) return
-    const c = computeClusters(MOCK_THEATERS, map, zoom)
+    const c = computeClusters(theaters, map, zoom)
     const o = computePosterOffsets(c, map, zoom)
     setClusters(c)
     setPosterOffsets(o)
-  }, [zoom])
+  }, [zoom, theaters])
 
   // zoom 변경 시 재계산 (줌 애니메이션 끝난 뒤)
   useEffect(() => {
@@ -384,10 +382,10 @@ export default function MapView() {
       setSheetExiting(false)
       setSelectedId(theaterId)
       setDisplayedId(theaterId)
-      setSelectedMovieId(MOCK_MOVIES[0].id)
+      setSelectedMovieId('')
       setSheetExpanded(false)
       const currentZoom = mapRef.current?.getZoom() ?? 15
-      const theater = MOCK_THEATERS.find((t) => t.id === theaterId)
+      const theater = theaters.find((t) => t.id === theaterId)
       if (theater) {
         mapRef.current?.flyTo(
           [theater.lat, theater.lng],
@@ -404,6 +402,26 @@ export default function MapView() {
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100dvh' }}>
+      {/* 영화관 데이터 로딩 인디케이터 */}
+      {theatersLoading && (
+        <div style={{
+          position: 'absolute',
+          top: 'max(72px, calc(env(safe-area-inset-top) + 56px))',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 1100,
+          background: 'var(--color-surface-sheet)',
+          border: '1px solid var(--color-border)',
+          borderRadius: 999,
+          padding: '6px 16px',
+          fontSize: 12,
+          color: 'var(--color-text-sub)',
+          boxShadow: 'var(--shadow-sheet)',
+          pointerEvents: 'none',
+        }}>
+          영화관 불러오는 중…
+        </div>
+      )}
       {/* iOS 키보드 트릭용 hidden dummy input — 항상 DOM에 존재 */}
       <input
         ref={dummyInputRef}
