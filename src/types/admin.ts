@@ -102,7 +102,12 @@ export interface AdminMovieInput {
   originalTitle?: string
   genre?: string[]
   director?: string[]
-  kobisMovieCd?: string
+  kmdbId?: string
+  kmdbMovieSeq?: string
+  posterUrl?: string
+  synopsis?: string
+  runtimeMinutes?: number
+  certification?: string
 }
 
 export interface AdminMovie {
@@ -112,12 +117,19 @@ export interface AdminMovie {
   originalTitle?: string
   genre: string[]
   director: string[]
-  kobisMovieCd?: string
+  kmdbId?: string
+  kmdbMovieSeq?: string
+  posterUrl?: string
+  synopsis?: string
+  runtimeMinutes?: number
+  certification?: string
 }
 
 export interface AdminExternalMovie {
-  provider: 'kobis'
+  provider: 'kmdb'
   externalId: string
+  movieId: string
+  movieSeq: string
   title: string
   originalTitle?: string
   year: number
@@ -125,6 +137,11 @@ export interface AdminExternalMovie {
   genre: string[]
   director: string[]
   nation?: string
+  posterUrl?: string
+  stillUrl?: string
+  synopsis?: string
+  runtimeMinutes?: number
+  certification?: string
 }
 
 export interface AdminTheater {

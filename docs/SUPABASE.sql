@@ -44,8 +44,8 @@ CREATE TABLE IF NOT EXISTS movies (
   title            TEXT NOT NULL,
   original_title   TEXT,
   year             INTEGER NOT NULL,
-  kobis_movie_cd   TEXT UNIQUE,
-  kmdb_id          TEXT UNIQUE,
+  kmdb_id          TEXT,
+  kmdb_movie_seq   TEXT,
   tmdb_id          INTEGER UNIQUE,
   poster_url       TEXT,
   genre            TEXT[] NOT NULL DEFAULT '{}',
@@ -62,7 +62,20 @@ CREATE INDEX IF NOT EXISTS idx_movies_title_trgm ON movies USING GIN(title gin_t
 CREATE INDEX IF NOT EXISTS idx_movies_year ON movies(year DESC);
 
 ALTER TABLE movies
-  ADD COLUMN IF NOT EXISTS kobis_movie_cd TEXT UNIQUE;
+  ADD COLUMN IF NOT EXISTS kmdb_id TEXT,
+  ADD COLUMN IF NOT EXISTS kmdb_movie_seq TEXT,
+  ADD COLUMN IF NOT EXISTS poster_url TEXT,
+  ADD COLUMN IF NOT EXISTS synopsis TEXT,
+  ADD COLUMN IF NOT EXISTS runtime_minutes INTEGER,
+  ADD COLUMN IF NOT EXISTS certification TEXT;
+
+ALTER TABLE movies
+  DROP CONSTRAINT IF EXISTS movies_kmdb_id_key,
+  DROP CONSTRAINT IF EXISTS movies_kobis_movie_cd_key;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_movies_kmdb_identity
+  ON movies(kmdb_id, kmdb_movie_seq)
+  WHERE kmdb_id IS NOT NULL AND kmdb_movie_seq IS NOT NULL;
 
 DROP TRIGGER IF EXISTS trg_movies_updated_at ON movies;
 CREATE TRIGGER trg_movies_updated_at

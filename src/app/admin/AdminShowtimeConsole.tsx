@@ -334,6 +334,40 @@ export function AdminShowtimeConsole() {
     }
   }
 
+  async function deleteSource() {
+    if (!selectedSource) {
+      setMessage('삭제할 크롤링 소스를 먼저 선택하세요.')
+      return
+    }
+
+    const confirmed = window.confirm(`${selectedSource.theaterName} 크롤링 소스와 관련 후보/실행 로그를 삭제할까요?`)
+    if (!confirmed) return
+
+    setLoading(true)
+    setMessage('크롤링 소스를 삭제하는 중입니다.')
+
+    try {
+      const response = await fetch(`/api/admin/sources?id=${encodeURIComponent(selectedSource.id)}`, {
+        method: 'DELETE',
+      })
+      const result = (await response.json()) as { deleted?: { id: string }; error?: { message: string } }
+
+      if (!response.ok || !result.deleted) {
+        throw new Error(result.error?.message ?? '크롤링 소스를 삭제하지 못했습니다.')
+      }
+
+      setSelectedSourceId('')
+      setUrl('')
+      setSelectedIds([])
+      await refresh()
+      setMessage(`${selectedSource.theaterName} 크롤링 소스를 삭제했습니다.`)
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : '크롤링 소스를 삭제하지 못했습니다.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   async function saveCandidateMatch(candidateId: string) {
     const draft = matchDrafts[candidateId]
     const candidate = payload.candidates.find((item) => item.id === candidateId)
@@ -379,12 +413,12 @@ export function AdminShowtimeConsole() {
 
   async function searchMovies() {
     if (movieSearchQuery.trim().length < 2) {
-      setMessage('KOBIS 검색어는 2자 이상 입력하세요.')
+      setMessage('KMDB 검색어는 2자 이상 입력하세요.')
       return
     }
 
     setLoading(true)
-    setMessage('KOBIS에서 영화를 검색하는 중입니다.')
+    setMessage('KMDB에서 영화를 검색하는 중입니다.')
 
     try {
       const response = await fetch(`/api/admin/movies/search?q=${encodeURIComponent(movieSearchQuery)}`, {
@@ -396,27 +430,27 @@ export function AdminShowtimeConsole() {
       }
 
       if (!response.ok || !result.movies) {
-        throw new Error(result.error?.message ?? 'KOBIS 영화 검색에 실패했습니다.')
+        throw new Error(result.error?.message ?? 'KMDB 영화 검색에 실패했습니다.')
       }
 
       setMovieSearchResults(result.movies)
-      setMessage(`KOBIS 검색 결과 ${result.movies.length}건을 불러왔습니다.`)
+      setMessage(`KMDB 검색 결과 ${result.movies.length}건을 불러왔습니다.`)
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'KOBIS 영화 검색에 실패했습니다.')
+      setMessage(error instanceof Error ? error.message : 'KMDB 영화 검색에 실패했습니다.')
     } finally {
       setLoading(false)
     }
   }
 
-  async function importMovieFromKobis(movie: AdminExternalMovie) {
+  async function importMovieFromKmdb(movie: AdminExternalMovie) {
     setLoading(true)
-    setMessage(`${movie.title} 정보를 KOBIS에서 가져오는 중입니다.`)
+    setMessage(`${movie.title} 정보를 KMDB에서 가져오는 중입니다.`)
 
     try {
       const response = await fetch('/api/admin/movies/import', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ kobisMovieCd: movie.externalId }),
+        body: JSON.stringify({ kmdbMovieId: movie.movieId, kmdbMovieSeq: movie.movieSeq }),
       })
       const result = (await response.json()) as {
         movie?: AdminMatchOptions['movies'][number]
@@ -438,7 +472,7 @@ export function AdminShowtimeConsole() {
       await refreshAdminMovies()
       setMessage(`${importedMovie.label} 영화를 추가했습니다.`)
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'KOBIS 영화를 가져오지 못했습니다.')
+      setMessage(error instanceof Error ? error.message : 'KMDB 영화를 가져오지 못했습니다.')
     } finally {
       setLoading(false)
     }
@@ -660,9 +694,14 @@ export function AdminShowtimeConsole() {
         <aside className={styles.panel}>
           <div className={styles.panelHeader}>
             <h2>크롤링 소스</h2>
-            <button className={styles.linkButton} onClick={() => setSourceFormOpen((open) => !open)}>
-              {sourceFormOpen ? '닫기' : '새 소스'}
-            </button>
+            <div className={styles.sourceHeaderActions}>
+              <button className={styles.linkButton} onClick={() => setSourceFormOpen((open) => !open)}>
+                {sourceFormOpen ? '닫기' : '새 소스'}
+              </button>
+              <button className={styles.dangerLinkButton} disabled={!selectedSource || loading} onClick={deleteSource}>
+                삭제
+              </button>
+            </div>
           </div>
 
           {sourceFormOpen && (
@@ -812,7 +851,7 @@ export function AdminShowtimeConsole() {
             </div>
             <div className={styles.reviewActions}>
               <button className={styles.linkButton} onClick={() => setMovieFormOpen((open) => !open)}>
-                {movieFormOpen ? 'KOBIS 닫기' : 'KOBIS 영화'}
+                {movieFormOpen ? 'KMDB 닫기' : 'KMDB 영화'}
               </button>
               <Button variant="secondary" size="sm" loading={loading} onClick={autoMatchCandidates}>자동 매칭</Button>
               <Button variant="secondary" size="sm" onClick={() => updateStatus('needs_review')}>재검수</Button>
@@ -827,7 +866,7 @@ export function AdminShowtimeConsole() {
             <div className={styles.movieSearchBox}>
               <div className={styles.inlineForm}>
                 <label>
-                  KOBIS 영화 검색
+                  KMDB 영화 검색
                   <input
                     value={movieSearchQuery}
                     onChange={(event) => setMovieSearchQuery(event.target.value)}
@@ -843,12 +882,13 @@ export function AdminShowtimeConsole() {
                       <span>
                         <strong>{movie.title}</strong>
                         <small>
-                          KOBIS {movie.externalId} · {movie.year}
+                          KMDB {movie.movieId}{movie.movieSeq} · {movie.year}
                           {movie.openDate ? ` · ${movie.openDate}` : ''}
                           {movie.director.length ? ` · ${movie.director.join(', ')}` : ''}
+                          {movie.posterUrl ? ' · 포스터 있음' : ''}
                         </small>
                       </span>
-                      <Button variant="secondary" size="sm" loading={loading} onClick={() => importMovieFromKobis(movie)}>
+                      <Button variant="secondary" size="sm" loading={loading} onClick={() => importMovieFromKmdb(movie)}>
                         가져오기
                       </Button>
                     </article>
@@ -1142,7 +1182,7 @@ export function AdminShowtimeConsole() {
           <div className={styles.serviceDetailHeader}>
             <div>
               <strong>영화 DB</strong>
-              <span>KOBIS로 가져온 내부 영화 레코드를 조회하고 수정합니다.</span>
+              <span>KMDB로 가져온 내부 영화 레코드를 조회하고 수정합니다.</span>
             </div>
             <Button variant="ghost" size="sm" onClick={refreshAdminMovies}>영화 새로고침</Button>
           </div>
@@ -1159,12 +1199,17 @@ export function AdminShowtimeConsole() {
                     originalTitle: movie.originalTitle ?? '',
                     genre: movie.genre,
                     director: movie.director,
-                    kobisMovieCd: movie.kobisMovieCd,
+                    kmdbId: movie.kmdbId,
+                    kmdbMovieSeq: movie.kmdbMovieSeq,
+                    posterUrl: movie.posterUrl,
+                    synopsis: movie.synopsis,
+                    runtimeMinutes: movie.runtimeMinutes,
+                    certification: movie.certification,
                   })}
                 >
                   <span>
                     <strong>{movie.title}</strong>
-                    <small>{movie.year} · {movie.director.join(', ') || '감독 미입력'}{movie.kobisMovieCd ? ` · KOBIS ${movie.kobisMovieCd}` : ''}</small>
+                    <small>{movie.year} · {movie.director.join(', ') || '감독 미입력'}{movie.kmdbId ? ` · KMDB ${movie.kmdbId}${movie.kmdbMovieSeq ?? ''}` : ''}{movie.posterUrl ? ' · 포스터 있음' : ''}</small>
                   </span>
                 </button>
               ))}
@@ -1186,8 +1231,24 @@ export function AdminShowtimeConsole() {
                   <input value={movieEditForm.originalTitle ?? ''} onChange={(event) => setMovieEditForm((current) => current ? { ...current, originalTitle: event.target.value } : current)} />
                 </label>
                 <label>
-                  KOBIS 코드
-                  <input value={movieEditForm.kobisMovieCd ?? ''} onChange={(event) => setMovieEditForm((current) => current ? { ...current, kobisMovieCd: event.target.value } : current)} />
+                  KMDB ID
+                  <input value={movieEditForm.kmdbId ?? ''} onChange={(event) => setMovieEditForm((current) => current ? { ...current, kmdbId: event.target.value } : current)} />
+                </label>
+                <label>
+                  KMDB Seq
+                  <input value={movieEditForm.kmdbMovieSeq ?? ''} onChange={(event) => setMovieEditForm((current) => current ? { ...current, kmdbMovieSeq: event.target.value } : current)} />
+                </label>
+                <label>
+                  포스터 URL
+                  <input value={movieEditForm.posterUrl ?? ''} onChange={(event) => setMovieEditForm((current) => current ? { ...current, posterUrl: event.target.value } : current)} />
+                </label>
+                <label>
+                  관람등급
+                  <input value={movieEditForm.certification ?? ''} onChange={(event) => setMovieEditForm((current) => current ? { ...current, certification: event.target.value } : current)} />
+                </label>
+                <label>
+                  러닝타임
+                  <input type="number" min={0} value={movieEditForm.runtimeMinutes ?? ''} onChange={(event) => setMovieEditForm((current) => current ? { ...current, runtimeMinutes: event.target.value ? Number(event.target.value) : undefined } : current)} />
                 </label>
                 <label>
                   장르
@@ -1196,6 +1257,10 @@ export function AdminShowtimeConsole() {
                 <label>
                   감독
                   <input value={(movieEditForm.director ?? []).join(', ')} onChange={(event) => setMovieEditForm((current) => current ? { ...current, director: splitListInput(event.target.value) } : current)} />
+                </label>
+                <label className={styles.wideField}>
+                  줄거리
+                  <textarea value={movieEditForm.synopsis ?? ''} onChange={(event) => setMovieEditForm((current) => current ? { ...current, synopsis: event.target.value } : current)} />
                 </label>
                 <Button size="sm" loading={loading} onClick={saveMovie}>영화 수정</Button>
               </div>
