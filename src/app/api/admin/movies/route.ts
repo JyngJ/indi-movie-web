@@ -36,7 +36,12 @@ export async function PATCH(request: Request) {
       originalTitle: payload.originalTitle,
       genre: payload.genre,
       director: payload.director,
-      kobisMovieCd: payload.kobisMovieCd,
+      kmdbId: payload.kmdbId,
+      kmdbMovieSeq: payload.kmdbMovieSeq,
+      posterUrl: payload.posterUrl,
+      synopsis: payload.synopsis,
+      runtimeMinutes: payload.runtimeMinutes === undefined ? undefined : Number(payload.runtimeMinutes),
+      certification: payload.certification,
     })
 
     return Response.json({ movie })

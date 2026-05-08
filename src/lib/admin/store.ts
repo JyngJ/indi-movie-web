@@ -93,7 +93,12 @@ interface MovieRow {
   title: string
   original_title?: string | null
   year?: number | null
-  kobis_movie_cd?: string | null
+  kmdb_id?: string | null
+  kmdb_movie_seq?: string | null
+  poster_url?: string | null
+  synopsis?: string | null
+  runtime_minutes?: number | null
+  certification?: string | null
   genre?: string[] | null
   director?: string[] | null
 }
@@ -182,6 +187,35 @@ export async function createAdminSource(input: AdminTheaterSourceInput) {
   return sourceFromRow(data as CrawlSourceRow)
 }
 
+export async function deleteAdminSource(sourceId: string) {
+  const normalizedSourceId = sourceId.trim()
+  if (!normalizedSourceId) throw new Error('삭제할 크롤링 소스 ID가 필요합니다.')
+
+  const supabase = createSupabaseAdminClient()
+  const { error: candidateError } = await supabase
+    .from('showtime_candidates')
+    .delete()
+    .eq('source_id', normalizedSourceId)
+
+  if (candidateError) throw new Error(candidateError.message)
+
+  const { error: runError } = await supabase
+    .from('crawl_runs')
+    .delete()
+    .eq('source_id', normalizedSourceId)
+
+  if (runError) throw new Error(runError.message)
+
+  const { error: sourceError } = await supabase
+    .from('crawl_sources')
+    .delete()
+    .eq('id', normalizedSourceId)
+
+  if (sourceError) throw new Error(sourceError.message)
+
+  return { id: normalizedSourceId }
+}
+
 export async function saveCrawlRun(run: CrawlRun) {
   const supabase = createSupabaseAdminClient()
   const { error: runError } = await supabase
@@ -268,11 +302,21 @@ export async function listAdminMovies(): Promise<AdminMovie[]> {
   const supabase = createSupabaseAdminClient()
   const { data, error } = await supabase
     .from('movies')
-    .select('id, title, original_title, year, kobis_movie_cd, genre, director')
+    .select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, poster_url, synopsis, runtime_minutes, certification, genre, director')
     .order('title', { ascending: true })
     .limit(1000)
 
-  if (error) throw new Error(error.message)
+  if (error) {
+    const fallback = await supabase
+      .from('movies')
+      .select('id, title, original_title, year, genre, director')
+      .order('title', { ascending: true })
+      .limit(1000)
+
+    if (fallback.error) throw new Error(error.message)
+
+    return ((fallback.data ?? []) as MovieRow[]).map(movieFromRow)
+  }
 
   return ((data ?? []) as MovieRow[]).map(movieFromRow)
 }
@@ -293,12 +337,17 @@ export async function updateAdminMovie(input: AdminMovieInput) {
       title,
       original_title: input.originalTitle?.trim() || null,
       year: input.year,
-      kobis_movie_cd: input.kobisMovieCd?.trim() || null,
+      kmdb_id: input.kmdbId?.trim() || null,
+      kmdb_movie_seq: input.kmdbMovieSeq?.trim() || null,
+      poster_url: input.posterUrl?.trim() || null,
+      synopsis: input.synopsis?.trim() || null,
+      runtime_minutes: input.runtimeMinutes ?? null,
+      certification: input.certification?.trim() || null,
       genre: input.genre ?? [],
       director: input.director ?? [],
     })
     .eq('id', input.id)
-    .select('id, title, original_title, year, kobis_movie_cd, genre, director')
+    .select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, poster_url, synopsis, runtime_minutes, certification, genre, director')
     .single()
 
   if (error) throw new Error(error.message)
@@ -531,9 +580,14 @@ export async function createAdminMovie(input: AdminMovieInput) {
       year: input.year,
       genre: input.genre ?? [],
       director: input.director ?? [],
-      kobis_movie_cd: input.kobisMovieCd?.trim() || null,
+      kmdb_id: input.kmdbId?.trim() || null,
+      kmdb_movie_seq: input.kmdbMovieSeq?.trim() || null,
+      poster_url: input.posterUrl?.trim() || null,
+      synopsis: input.synopsis?.trim() || null,
+      runtime_minutes: input.runtimeMinutes ?? null,
+      certification: input.certification?.trim() || null,
     })
-    .select('id, title, original_title, year, kobis_movie_cd, genre, director')
+    .select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, poster_url, synopsis, runtime_minutes, certification, genre, director')
     .single()
 
   if (error) {
@@ -554,22 +608,33 @@ export async function createAdminMovie(input: AdminMovieInput) {
 
 export async function importAdminExternalMovie(input: AdminExternalMovie) {
   const supabase = createSupabaseAdminClient()
-  const { data, error } = await supabase
+  const row = {
+    title: input.title,
+    original_title: input.originalTitle ?? null,
+    year: input.year,
+    kmdb_id: input.movieId,
+    kmdb_movie_seq: input.movieSeq,
+    poster_url: input.posterUrl ?? null,
+    synopsis: input.synopsis ?? null,
+    runtime_minutes: input.runtimeMinutes ?? null,
+    certification: input.certification ?? null,
+    genre: input.genre,
+    director: input.director,
+  }
+  const { data: existing, error: existingError } = await supabase
     .from('movies')
-    .upsert(
-      {
-        title: input.title,
-        original_title: input.originalTitle ?? null,
-        year: input.year,
-        kobis_movie_cd: input.externalId,
-        genre: input.genre,
-        director: input.director,
-      },
-      {
-        onConflict: 'kobis_movie_cd',
-      },
-    )
-    .select('id, title, year, kobis_movie_cd')
+    .select('id')
+    .eq('kmdb_id', input.movieId)
+    .eq('kmdb_movie_seq', input.movieSeq)
+    .maybeSingle()
+
+  if (existingError) throw new Error(existingError.message)
+
+  const query = existing
+    ? supabase.from('movies').update(row).eq('id', (existing as { id: string }).id)
+    : supabase.from('movies').insert(row)
+  const { data, error } = await query
+    .select('id, title, year, kmdb_id, kmdb_movie_seq')
     .single()
 
   if (error) throw new Error(error.message)
@@ -578,7 +643,7 @@ export async function importAdminExternalMovie(input: AdminExternalMovie) {
   return {
     id: movie.id,
     label: movie.title,
-    description: movie.year ? `KOBIS ${movie.kobis_movie_cd ?? ''} · ${movie.year}` : `KOBIS ${movie.kobis_movie_cd ?? ''}`,
+    description: movie.year ? `KMDB ${movie.kmdb_id ?? ''}${movie.kmdb_movie_seq ?? ''} · ${movie.year}` : `KMDB ${movie.kmdb_id ?? ''}${movie.kmdb_movie_seq ?? ''}`,
   }
 }
 
@@ -843,7 +908,12 @@ function movieFromRow(row: MovieRow): AdminMovie {
     year: row.year ?? new Date().getFullYear(),
     genre: row.genre ?? [],
     director: row.director ?? [],
-    kobisMovieCd: row.kobis_movie_cd ?? undefined,
+    kmdbId: row.kmdb_id ?? undefined,
+    kmdbMovieSeq: row.kmdb_movie_seq ?? undefined,
+    posterUrl: row.poster_url ?? undefined,
+    synopsis: row.synopsis ?? undefined,
+    runtimeMinutes: row.runtime_minutes ?? undefined,
+    certification: row.certification ?? undefined,
   }
 }
 

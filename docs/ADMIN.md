@@ -36,14 +36,14 @@ fingerprint 기준 중복 제거
 | `src/app/admin/page.tsx` | 관리자 페이지 진입점 |
 | `src/app/admin/AdminShowtimeConsole.tsx` | 수집 실행, 검수, 승인 UI |
 | `src/app/api/admin/crawl/route.ts` | 크롤링 실행 API |
-| `src/app/api/admin/sources/route.ts` | 크롤링 소스 조회/추가 API |
+| `src/app/api/admin/sources/route.ts` | 크롤링 소스 조회/추가/삭제 API |
 | `src/app/api/admin/showtimes/route.ts` | 검수 대기열 조회/상태 변경 API |
 | `src/app/api/admin/showtimes/matches/route.ts` | 후보 극장/영화 매칭 저장, 새 영화 후보 생성 API |
 | `src/app/api/admin/showtimes/auto-match/route.ts` | 후보 극장/영화 자동 매칭 API |
 | `src/app/api/admin/showtimes/approve/route.ts` | 승인 후보를 실제 `showtimes`로 upsert하는 API |
 | `src/app/api/admin/movies/route.ts` | 내부 영화 DB 조회/수정 API |
-| `src/app/api/admin/movies/search/route.ts` | KOBIS 영화 검색 API |
-| `src/app/api/admin/movies/import/route.ts` | KOBIS 영화를 내부 `movies` 테이블로 가져오는 API |
+| `src/app/api/admin/movies/search/route.ts` | KMDB 영화 검색 API |
+| `src/app/api/admin/movies/import/route.ts` | KMDB 영화를 내부 `movies` 테이블로 가져오는 API |
 | `src/app/api/admin/theaters/route.ts` | 실제 극장 조회/생성/수정 API |
 | `src/app/api/admin/theaters/[id]/showtimes/route.ts` | 실제 극장별 승인 시간표 조회/수정 API |
 | `src/lib/admin/sources.ts` | 극장별 크롤링 소스 설정과 샘플 원본 |
@@ -111,14 +111,14 @@ movies.id    ← showtimes.movie_id
 
 극장도 같은 방식이다. 후보의 `theater_name`은 크롤링 원문 텍스트이고, 실제 서비스 극장은 좌표, 주소, 도시, 웹사이트를 가진 `theaters` 레코드다. 승인 시 후보는 `matched_theater_id`를 통해 실제 극장과 연결된다.
 
-## KOBIS 영화 DB 연동
+## KMDB 영화 DB 연동
 
-영화 DB는 수동으로 전부 입력하지 않는다. KOBIS를 메인 소스로 사용하고, 운영자가 필요한 영화만 내부 `movies` 테이블에 가져온다.
+영화 DB는 수동으로 전부 입력하지 않는다. KMDB를 메인 소스로 사용하고, 운영자가 필요한 영화만 내부 `movies` 테이블에 가져온다.
 
 필요 환경변수:
 
 ```env
-KOBIS_API_KEY=...
+KMDB_SERVICE_KEY=...
 ```
 
 운영 흐름:
@@ -126,18 +126,18 @@ KOBIS_API_KEY=...
 ```text
 후보 movie_title
   ↓
-관리자 KOBIS 검색
+관리자 KMDB 검색
   ↓
-KOBIS 결과 선택
+KMDB 결과 선택
   ↓
-movies 테이블에 kobis_movie_cd 기준 upsert
+movies 테이블에 kmdb_id, kmdb_movie_seq 기준 저장
   ↓
 candidate.matched_movie_id 저장
   ↓
 승인 시 showtimes.movie_id로 연결
 ```
 
-KOBIS는 한국 영화 코드, 제목, 제작연도, 개봉일, 장르, 감독 정보에 강하다. 포스터 이미지는 제공하지 않으므로, 사용자 화면에서 포스터가 필요해질 때 TMDB를 보조 소스로 붙인다.
+KMDB는 한국 영화 코드, 제목, 제작연도, 개봉일, 장르, 감독, 줄거리, 러닝타임, 관람등급과 포스터 URL을 함께 제공한다. 가져온 포스터는 `movies.poster_url`에 저장한다.
 
 ## 관리자 인증
 
@@ -218,7 +218,7 @@ ALTER TABLE showtimes
 - 극장 select는 `theaters`의 `id`, `name`, `city`를 사용한다.
 - 영화 select는 `movies`의 `id`, `title`, `year`를 사용한다.
 - `저장`은 `PATCH /api/admin/showtimes/matches`로 `matched_theater_id`, `matched_movie_id`를 저장한다.
-- `KOBIS 영화`는 `GET /api/admin/movies/search`로 KOBIS를 검색하고, `POST /api/admin/movies/import`로 내부 `movies`에 가져온다.
+- `KMDB 영화`는 `GET /api/admin/movies/search`로 KMDB를 검색하고, `POST /api/admin/movies/import`로 내부 `movies`에 가져온다.
 
 이 UI는 위 SQL의 `showtime_candidates.matched_theater_id`, `showtime_candidates.matched_movie_id` 컬럼이 적용된 뒤 저장까지 동작한다. SQL 적용 전에는 화면 빌드는 가능하지만 매칭 저장 API는 DB 컬럼 오류를 반환한다.
 
@@ -229,9 +229,10 @@ ALTER TABLE showtimes
 - `새 극장`: `theaters`에 극장명, 도시, 좌표, 주소, 연락처, 웹사이트, 상영관 수, 좌석 수를 생성한다.
 - `극장 수정`: 선택한 실제 극장 레코드를 수정한다.
 - 크롤링 소스: 새 소스 생성 시 실제 극장을 선택하면 `crawl_sources.matched_theater_id`에 저장되고, 해당 소스에서 수집한 후보는 처음부터 그 극장으로 매칭된다.
+- 크롤링 소스 삭제: 선택한 소스와 연결된 후보, 실행 로그를 함께 삭제한다.
 - 극장 선택: 해당 극장의 `showtimes`를 `movies`와 조인해 조회한다.
 - 시간표 수정: 영화 연결, 날짜, 시작/종료 시간, 상영관, 좌석, 가격, 노출 여부를 수정한다.
-- 영화 DB: KOBIS로 가져온 내부 영화 레코드를 조회하고 제목, 연도, 원제, KOBIS 코드, 장르, 감독을 수정한다.
+- 영화 DB: KMDB로 가져온 내부 영화 레코드를 조회하고 제목, 연도, 원제, KMDB ID/Seq, 포스터, 줄거리, 러닝타임, 관람등급, 장르, 감독을 수정한다.
 
 새 상영시간표 생성은 아직 승인 파이프라인을 기본 경로로 둔다. 운영자가 수동 생성까지 필요해지면 같은 API에 `POST`를 추가하면 된다.
 

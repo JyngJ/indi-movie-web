@@ -1,5 +1,5 @@
 import { adminAuthErrorResponse, requireAdminSessionUser } from '@/lib/admin/auth'
-import { getKobisMovie } from '@/lib/admin/kobis'
+import { getKmdbMovie } from '@/lib/admin/kmdb'
 import { importAdminExternalMovie } from '@/lib/admin/store'
 
 export const dynamic = 'force-dynamic'
@@ -11,18 +11,19 @@ export async function POST(request: Request) {
     return adminAuthErrorResponse(error)
   }
 
-  const payload = (await request.json()) as Partial<{ kobisMovieCd: string }>
-  const kobisMovieCd = payload.kobisMovieCd?.trim()
+  const payload = (await request.json()) as Partial<{ kmdbMovieId: string; kmdbMovieSeq: string }>
+  const kmdbMovieId = payload.kmdbMovieId?.trim()
+  const kmdbMovieSeq = payload.kmdbMovieSeq?.trim()
 
-  if (!kobisMovieCd) {
+  if (!kmdbMovieId || !kmdbMovieSeq) {
     return Response.json(
-      { error: { code: 'INVALID_KOBIS_IMPORT_PAYLOAD', message: 'KOBIS 영화 코드가 필요합니다.' } },
+      { error: { code: 'INVALID_KMDB_IMPORT_PAYLOAD', message: 'KMDB movieId와 movieSeq가 필요합니다.' } },
       { status: 400 },
     )
   }
 
   try {
-    const externalMovie = await getKobisMovie(kobisMovieCd)
+    const externalMovie = await getKmdbMovie(kmdbMovieId, kmdbMovieSeq)
     const movie = await importAdminExternalMovie(externalMovie)
 
     return Response.json({ movie })
@@ -30,8 +31,8 @@ export async function POST(request: Request) {
     return Response.json(
       {
         error: {
-          code: 'KOBIS_MOVIE_IMPORT_ERROR',
-          message: error instanceof Error ? error.message : 'KOBIS 영화를 가져오지 못했습니다.',
+          code: 'KMDB_MOVIE_IMPORT_ERROR',
+          message: error instanceof Error ? error.message : 'KMDB 영화를 가져오지 못했습니다.',
         },
       },
       { status: 500 },

@@ -1,5 +1,5 @@
 import { adminAuthErrorResponse, requireAdminSessionUser } from '@/lib/admin/auth'
-import { searchKobisMovies } from '@/lib/admin/kobis'
+import { searchKmdbMovies } from '@/lib/admin/kmdb'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,14 +14,14 @@ export async function GET(request: Request) {
   const query = url.searchParams.get('q') ?? ''
 
   try {
-    const movies = await searchKobisMovies(query)
+    const movies = await searchKmdbMovies(query)
     return Response.json({ movies })
   } catch (error) {
     return Response.json(
       {
         error: {
-          code: 'KOBIS_MOVIE_SEARCH_ERROR',
-          message: error instanceof Error ? error.message : 'KOBIS 영화 검색에 실패했습니다.',
+          code: 'KMDB_MOVIE_SEARCH_ERROR',
+          message: error instanceof Error ? error.message : 'KMDB 영화 검색에 실패했습니다.',
         },
       },
       { status: 500 },
