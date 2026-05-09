@@ -1,6 +1,8 @@
 import type { ShowtimeApprovalPayload } from '@/types/admin'
+import { adminAuthErrorResponse, requireAdminSessionUser } from '@/lib/admin/auth'
 import {
   listAdminSources,
+  listAdminMatchOptions,
   listCrawlRuns,
   listReviewCandidates,
   updateCandidateStatuses,
@@ -9,6 +11,12 @@ import {
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
+  try {
+    await requireAdminSessionUser(request)
+  } catch (error) {
+    return adminAuthErrorResponse(error)
+  }
+
   const url = new URL(request.url)
   const status = url.searchParams.get('status') ?? undefined
   const normalizedStatus =
@@ -17,13 +25,14 @@ export async function GET(request: Request) {
       : undefined
 
   try {
-    const [sources, runs, candidates] = await Promise.all([
+    const [sources, runs, candidates, matchOptions] = await Promise.all([
       listAdminSources(),
       listCrawlRuns(),
       listReviewCandidates(normalizedStatus),
+      listAdminMatchOptions(),
     ])
 
-    return Response.json({ sources, runs, candidates })
+    return Response.json({ sources, runs, candidates, matchOptions })
   } catch (error) {
     return Response.json(
       {
@@ -38,6 +47,12 @@ export async function GET(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  try {
+    await requireAdminSessionUser(request)
+  } catch (error) {
+    return adminAuthErrorResponse(error)
+  }
+
   const payload = (await request.json()) as Partial<ShowtimeApprovalPayload>
 
   if (!payload.ids?.length || !payload.status) {
