@@ -1,393 +1,487 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
-import { Chip } from '@/components/primitives'
+import { useState, useRef, useCallback, useEffect } from 'react'
 
-/* ── 마우스 드래그 스크롤 ── */
-function useDragScroll() {
-  const ref = useRef<HTMLDivElement>(null)
-  const isDragging = useRef(false)
-  const startX = useRef(0)
-  const scrollLeft = useRef(0)
+/* ── 날짜 헬퍼 ──────────────────────────────────────────────────── */
+const DOW = ['일', '월', '화', '수', '목', '금', '토']
 
-  const onMouseDown = useCallback((e: React.MouseEvent) => {
-    isDragging.current = true
-    startX.current = e.pageX - (ref.current?.offsetLeft ?? 0)
-    scrollLeft.current = ref.current?.scrollLeft ?? 0
-    if (ref.current) ref.current.style.cursor = 'grabbing'
-  }, [])
-
-  const onMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isDragging.current || !ref.current) return
-    e.preventDefault()
-    const x = e.pageX - ref.current.offsetLeft
-    ref.current.scrollLeft = scrollLeft.current - (x - startX.current)
-  }, [])
-
-  const onMouseUp = useCallback(() => {
-    isDragging.current = false
-    if (ref.current) ref.current.style.cursor = ''
-  }, [])
-
-  return { ref, onMouseDown, onMouseMove, onMouseUp, onMouseLeave: onMouseUp }
+function today() {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+function addDays(d: Date, n: number) {
+  const r = new Date(d)
+  r.setDate(r.getDate() + n)
+  return r
+}
+function fmtFull(d: Date) {
+  return `${d.getMonth() + 1}월 ${d.getDate()}일 (${DOW[d.getDay()]})`
+}
+function fmtShortDow(d: Date) {
+  return `${d.getMonth() + 1}/${d.getDate()} ${DOW[d.getDay()]}`
+}
+function fmtMD(d: Date) {
+  return `${d.getMonth() + 1}/${d.getDate()}`
 }
 
-/* ── 상수 ── */
-const GENRES = [
-  '드라마', '멜로/로맨스', '스릴러', '코미디',
-  'SF', '판타지', '공포/호러', '액션', '다큐멘터리',
-] as const
+function buildDateOptions(t = today()) {
+  const dow = t.getDay() // 0=Sun
+  // 이번 주 토요일 (Sun-Sat 주 기준)
+  const daysToSat = dow === 0 ? 6 : 6 - dow
+  const sat0 = addDays(t, daysToSat)
+  const sun0 = addDays(sat0, 1)
+  const sat1 = addDays(sat0, 7)
+  const sun1 = addDays(sat1, 1)
+  // 이번 주 일요일 (주 끝)
+  const weekEnd = dow === 0 ? addDays(t, 6) : addDays(t, 7 - dow)
+  const monthEnd = new Date(t.getFullYear(), t.getMonth() + 1, 0)
 
-const DATE_PRESETS = ['오늘', '내일', '이번 주말', '다음 주'] as const
-type DatePreset = typeof DATE_PRESETS[number]
-
-/* ── 유틸 ── */
-function fmt(d: Date) {
-  return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`
+  return [
+    { id: 'today',        label: '오늘',       sub: fmtFull(t) },
+    { id: 'tomorrow',     label: '내일',       sub: fmtFull(addDays(t, 1)) },
+    { id: 'this-weekend', label: '이번 주말',  sub: `${fmtShortDow(sat0)} — ${fmtShortDow(sun0)}` },
+    { id: 'next-weekend', label: '다음 주말',  sub: `${fmtShortDow(sat1)} — ${fmtShortDow(sun1)}` },
+    { id: 'this-week',    label: '이번 주 전체', sub: `${fmtMD(t)} — ${fmtMD(weekEnd)}` },
+    { id: 'this-month',   label: '이번 달',    sub: `${t.getMonth() + 1}월 전체` },
+  ] as const
 }
 
-function sameDay(a: Date, b: Date) {
-  return a.getFullYear() === b.getFullYear()
-    && a.getMonth() === b.getMonth()
-    && a.getDate() === b.getDate()
-}
+type DateId = 'today' | 'tomorrow' | 'this-weekend' | 'next-weekend' | 'this-week' | 'this-month' | null
 
-/* ── 타입 ── */
-type DateFilter =
-  | { type: 'preset'; label: DatePreset }
-  | { type: 'custom'; start: Date; end: Date }
-  | null
+/* ── 장르 ──────────────────────────────────────────────────────── */
+const GENRES = ['드라마', '다큐멘터리', '애니메이션', '스릴러/호러', '코미디', '실험/예술', '단편', '로맨스'] as const
 
+/* ── 타입 ──────────────────────────────────────────────────────── */
 export interface FilterState {
-  date: DateFilter
+  dateId: DateId
+  genres: string[]
   bookable: boolean
   indie: boolean
-  genres: string[]
 }
 
-/* ───────────────────────────────────────────
-   캘린더
-─────────────────────────────────────────── */
-function Calendar({ onConfirm, onCancel }: {
-  onConfirm: (start: Date, end: Date) => void
-  onCancel: () => void
+/* ── 아이콘 ─────────────────────────────────────────────────────── */
+const IcoCheck = () => (
+  <svg width={11} height={11} viewBox="0 0 12 12" fill="none">
+    <polyline points="2,6.5 4.5,9 10,3" stroke="white" strokeWidth={2.2}
+      strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+)
+
+const IcoChevron = ({ open }: { open: boolean }) => (
+  <svg width={11} height={11} viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"
+    style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 180ms ease' }}>
+    <path d="M6 9l6 6 6-6" />
+  </svg>
+)
+
+const IcoClose = ({ color = 'var(--color-text-sub)' }: { color?: string }) => (
+  <svg width={10} height={10} viewBox="0 0 24 24" fill="none"
+    stroke={color} strokeWidth={2.5} strokeLinecap="round">
+    <path d="M18 6L6 18M6 6l12 12" />
+  </svg>
+)
+
+const IcoCalendar = () => (
+  <svg width={14} height={14} viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="4" width="18" height="18" rx="2" />
+    <path d="M16 2v4M8 2v4M3 10h18" />
+  </svg>
+)
+
+const IcoArrowRight = () => (
+  <svg width={13} height={13} viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 18l6-6-6-6" />
+  </svg>
+)
+
+/* ── DropdownRow ────────────────────────────────────────────────── */
+interface DropdownRowProps {
+  kind: 'radio' | 'checkbox'
+  label: string
+  sub?: string
+  selected: boolean
+  onClick: () => void
+  isLast?: boolean
+}
+
+function DropdownRow({ kind, label, sub, selected, onClick, isLast }: DropdownRowProps) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: 'flex',
+        alignItems: sub ? 'flex-start' : 'center',
+        gap: 12,
+        padding: '12px 14px',
+        width: '100%',
+        background: selected ? 'rgba(74,99,128,0.13)' : 'transparent',
+        border: 'none',
+        borderBottom: isLast ? 'none' : '1px solid var(--color-border)',
+        cursor: 'pointer',
+        textAlign: 'left',
+        minHeight: 'unset',
+      }}
+    >
+      {/* indicator */}
+      <div style={{
+        width: 22, height: 22, flexShrink: 0,
+        borderRadius: kind === 'radio' ? '50%' : 5,
+        background: selected ? 'var(--color-primary-base)' : 'var(--color-surface-raised)',
+        border: selected ? 'none' : '1px solid var(--filter-indicator-bd)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        marginTop: sub ? 1 : 0,
+        transition: 'background 150ms',
+      }}>
+        {selected && <IcoCheck />}
+      </div>
+
+      {/* text */}
+      <div>
+        <div style={{
+          fontSize: 13,
+          fontWeight: selected ? 600 : 500,
+          color: selected ? 'var(--filter-row-label-sel)' : 'var(--color-text-body)',
+          lineHeight: 1.3,
+        }}>
+          {label}
+        </div>
+        {sub && (
+          <div style={{ fontSize: 11, color: 'var(--color-text-caption)', marginTop: 2 }}>
+            {sub}
+          </div>
+        )}
+      </div>
+    </button>
+  )
+}
+
+/* ── DateDropdown ───────────────────────────────────────────────── */
+function DateDropdown({ selectedId, onSelect, style }: {
+  selectedId: DateId
+  onSelect: (id: DateId) => void
+  style?: React.CSSProperties
 }) {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  const options = buildDateOptions()
+  return (
+    <div style={{
+      position: 'absolute',
+      width: 252,
+      background: 'var(--color-surface-card)',
+      border: '1px solid var(--color-border)',
+      borderRadius: 16,
+      overflow: 'hidden',
+      boxShadow: '0 12px 40px rgba(0,0,0,0.72)',
+      zIndex: 200,
+      ...style,
+    }}>
+      {options.map((opt, i) => (
+        <DropdownRow
+          key={opt.id}
+          kind="radio"
+          label={opt.label}
+          sub={opt.sub}
+          selected={selectedId === opt.id}
+          onClick={() => onSelect(opt.id as DateId)}
+          isLast={false}
+        />
+      ))}
 
-  const [year, setYear] = useState(today.getFullYear())
-  const [month, setMonth] = useState(today.getMonth())
-  const [start, setStart] = useState<Date | null>(null)
-  const [end, setEnd]     = useState<Date | null>(null)
-  const [hover, setHover] = useState<Date | null>(null)
+      {/* 날짜 직접 선택 */}
+      <button
+        style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '13px 14px', width: '100%',
+          background: 'var(--color-surface-raised)',
+          border: 'none', borderTop: '1px solid var(--color-border)',
+          cursor: 'pointer', minHeight: 'unset',
+          color: 'var(--color-text-body)',
+        }}
+      >
+        <IcoCalendar />
+        <span style={{ flex: 1, fontSize: 13, fontWeight: 500, textAlign: 'left' }}>
+          날짜 직접 선택
+        </span>
+        <IcoArrowRight />
+      </button>
+    </div>
+  )
+}
 
-  const daysInMonth = new Date(year, month + 1, 0).getDate()
-  const firstDay    = new Date(year, month, 1).getDay()
+/* ── GenreDropdown ──────────────────────────────────────────────── */
+function GenreDropdown({ initialSelected, onApply, style }: {
+  initialSelected: string[]
+  onApply: (genres: string[]) => void
+  style?: React.CSSProperties
+}) {
+  const [draft, setDraft] = useState(initialSelected)
 
-  const inRange = (d: Date) => {
-    const hi = end ?? hover
-    if (!start || !hi) return false
-    const lo  = start <= hi ? start : hi
-    const hiD = start <= hi ? hi    : start
-    return d > lo && d < hiD
-  }
-
-  const handleDay = (d: Date) => {
-    if (!start || (start && end)) {
-      setStart(d); setEnd(null)
-    } else if (d < start) {
-      setEnd(start); setStart(d)
-    } else {
-      setEnd(d)
-    }
-  }
-
-  const prevMonth = () => {
-    if (month === 0) { setMonth(11); setYear(y => y - 1) } else setMonth(m => m - 1)
-  }
-  const nextMonth = () => {
-    if (month === 11) { setMonth(0); setYear(y => y + 1) } else setMonth(m => m + 1)
-  }
-
-  const canConfirm = start !== null && end !== null
+  const toggle = (g: string) =>
+    setDraft(prev => prev.includes(g) ? prev.filter(x => x !== g) : [...prev, g])
 
   return (
     <div style={{
-      backgroundColor: 'var(--color-surface-card)',
-      borderRadius: 12,
-      boxShadow: '0 4px 20px rgba(0,0,0,0.14)',
-      padding: 16,
-      margin: '8px 16px 0',
+      position: 'absolute',
+      width: 236,
+      background: 'var(--color-surface-card)',
+      border: '1px solid var(--color-border)',
+      borderRadius: 16,
+      overflow: 'hidden',
+      boxShadow: '0 12px 40px rgba(0,0,0,0.72)',
+      zIndex: 200,
+      ...style,
     }}>
-      {/* 월 네비 */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-        <button onClick={prevMonth} style={navBtn}>‹</button>
-        <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-text-primary)' }}>
-          {year}년 {month + 1}월
+      {/* hint header */}
+      <div style={{
+        padding: '9px 14px',
+        fontSize: 11, color: 'var(--color-text-caption)',
+        borderBottom: '1px solid var(--color-border)',
+      }}>
+        복수 선택 가능
+      </div>
+
+      {GENRES.map((g, i) => (
+        <DropdownRow
+          key={g}
+          kind="checkbox"
+          label={g}
+          selected={draft.includes(g)}
+          onClick={() => toggle(g)}
+          isLast={i === GENRES.length - 1}
+        />
+      ))}
+
+      {/* footer */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '8px 12px 8px 14px',
+        background: 'var(--color-surface-raised)',
+        borderTop: '1px solid var(--color-border)',
+      }}>
+        <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>
+          {draft.length > 0 ? `${draft.length}개 선택됨` : ''}
         </span>
-        <button onClick={nextMonth} style={navBtn}>›</button>
-      </div>
-
-      {/* 요일 헤더 */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 4 }}>
-        {['일','월','화','수','목','금','토'].map(d => (
-          <div key={d} style={{ textAlign: 'center', fontSize: 11, color: 'var(--color-text-caption)', padding: '4px 0' }}>
-            {d}
-          </div>
-        ))}
-      </div>
-
-      {/* 날짜 그리드 */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 }}>
-        {Array.from({ length: firstDay }).map((_, i) => <div key={`e${i}`} />)}
-        {Array.from({ length: daysInMonth }).map((_, i) => {
-          const d       = new Date(year, month, i + 1)
-          const isStart = start ? sameDay(d, start) : false
-          const isEnd   = end   ? sameDay(d, end)   : false
-          const rangeIn = inRange(d)
-          const isPast  = d < today && !sameDay(d, today)
-          const isEdge  = isStart || isEnd
-
-          return (
-            <button
-              key={i}
-              disabled={isPast}
-              onClick={() => handleDay(d)}
-              onMouseEnter={() => { if (!end) setHover(d) }}
-              onMouseLeave={() => setHover(null)}
-              style={{
-                aspectRatio: '1',
-                border: 'none',
-                borderRadius: '50%',
-                cursor: isPast ? 'default' : 'pointer',
-                fontSize: 13,
-                fontWeight: isEdge ? 700 : 400,
-                backgroundColor: isEdge
-                  ? 'var(--color-primary-base)'
-                  : rangeIn ? 'var(--color-primary-subtle-l)' : 'transparent',
-                color: isEdge ? '#fff' : isPast ? 'var(--color-text-disabled)' : 'var(--color-text-primary)',
-                minHeight: 'unset',
-                padding: 0,
-              }}
-            >
-              {i + 1}
-            </button>
-          )
-        })}
-      </div>
-
-      {/* 선택 범위 미리보기 */}
-      <div style={{ textAlign: 'center', fontSize: 13, color: 'var(--color-text-caption)', margin: '10px 0 4px', minHeight: 20 }}>
-        {start ? `${fmt(start)} → ${end ? fmt(end) : '종료일 선택'}` : '시작일을 선택하세요'}
-      </div>
-
-      {/* 버튼 */}
-      <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-        <button onClick={onCancel} style={cancelBtn}>취소</button>
         <button
-          disabled={!canConfirm}
-          onClick={() => start && end && onConfirm(start, end)}
+          onClick={() => onApply(draft)}
           style={{
-            ...confirmBtn,
-            opacity: canConfirm ? 1 : 0.4,
-            cursor: canConfirm ? 'pointer' : 'default',
+            height: 28, padding: '0 14px', borderRadius: 999,
+            background: 'var(--color-primary-base)',
+            border: 'none', color: '#fff',
+            fontSize: 12, fontWeight: 600,
+            cursor: 'pointer', minHeight: 'unset',
           }}
         >
-          확인
+          적용
         </button>
       </div>
     </div>
   )
 }
 
-const navBtn: React.CSSProperties = {
-  background: 'none', border: 'none', cursor: 'pointer',
-  fontSize: 22, color: 'var(--color-text-body)', padding: '0 14px', minHeight: 'unset',
-}
-const cancelBtn: React.CSSProperties = {
-  flex: 1, padding: 10, borderRadius: 8,
-  border: '1px solid var(--color-border)',
-  backgroundColor: 'var(--color-surface-raised)',
-  cursor: 'pointer', fontSize: 14, color: 'var(--color-text-body)', minHeight: 'unset',
-}
-const confirmBtn: React.CSSProperties = {
-  flex: 1, padding: 10, borderRadius: 8, border: 'none',
-  backgroundColor: 'var(--color-primary-base)',
-  color: '#fff', fontSize: 14, fontWeight: 600, minHeight: 'unset',
+/* ── FilterChip ─────────────────────────────────────────────────── */
+interface FilterChipProps {
+  label: string
+  value?: string          // 선택된 값 텍스트 (드롭다운 칩만)
+  open?: boolean          // 드롭다운 열림
+  selected?: boolean      // 값 선택된 상태
+  hasDropdown?: boolean
+  onClick: () => void
+  onClear?: () => void    // × 버튼 (드롭다운 칩 전용)
+  chipRef?: React.Ref<HTMLButtonElement>
 }
 
-/* ───────────────────────────────────────────
-   FilterBar
-─────────────────────────────────────────── */
-interface FilterBarProps {
+function FilterChip({ label, value, open, selected, hasDropdown, onClick, onClear, chipRef }: FilterChipProps) {
+  let bg = 'transparent'
+  let border = '1px solid var(--color-border)'
+  let pl = '14px'
+  let pr = hasDropdown ? '10px' : '14px'
+
+  if (open && !selected) {
+    bg = 'var(--color-primary-subtle-l)'
+    border = '1.5px solid var(--color-primary-hover-l)'
+  } else if (selected) {
+    bg = 'var(--color-primary-subtle-l)'
+    border = '1.5px solid var(--color-primary-base)'
+    if (onClear) pr = '6px'
+  }
+
+  return (
+    <button
+      ref={chipRef}
+      onClick={onClick}
+      style={{
+        display: 'inline-flex', alignItems: 'center',
+        height: 36, paddingLeft: pl, paddingRight: pr,
+        borderRadius: 999, background: bg, border,
+        cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap',
+        gap: 4, minHeight: 'unset',
+        transition: 'background 150ms, border-color 150ms',
+      }}
+    >
+      {/* label / value */}
+      {selected && value ? (
+        <>
+          <span style={{ fontSize: 13, fontWeight: 400, color: 'var(--color-text-sub)' }}>
+            {label}
+          </span>
+          <span style={{ fontSize: 13, color: 'var(--color-text-sub)' }}>&nbsp;·&nbsp;</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--filter-chip-value)' }}>
+            {value}
+          </span>
+        </>
+      ) : (
+        <span style={{
+          fontSize: 13,
+          fontWeight: open ? 600 : 500,
+          color: open ? 'var(--filter-chip-open-text)' : 'var(--color-text-body)',
+        }}>
+          {label}
+        </span>
+      )}
+
+      {/* 우측 버튼: × or 캐럿 */}
+      {selected && onClear ? (
+        <span
+          role="button"
+          onClick={(e) => { e.stopPropagation(); onClear() }}
+          style={{
+            width: 20, height: 20, borderRadius: '50%',
+            background: 'var(--filter-dismiss-bg)',
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', marginLeft: 4, flexShrink: 0,
+          }}
+        >
+          <IcoClose />
+        </span>
+      ) : hasDropdown ? (
+        <span style={{
+          display: 'inline-flex', alignItems: 'center', marginLeft: 2, flexShrink: 0,
+          color: open ? 'var(--filter-chip-open-caret)' : 'var(--color-text-caption)',
+        }}>
+          <IcoChevron open={!!open} />
+        </span>
+      ) : null}
+    </button>
+  )
+}
+
+/* ── FilterBar ──────────────────────────────────────────────────── */
+export interface FilterBarProps {
   onChange?: (state: FilterState) => void
 }
 
-export function FilterBar({ onChange: _onChange }: FilterBarProps) {
-  const [date,     setDate]     = useState<DateFilter>(null)
+export function FilterBar({ onChange }: FilterBarProps) {
+  const [dateId,   setDateId]   = useState<DateId>(null)
+  const [genres,   setGenres]   = useState<string[]>([])
   const [bookable, setBookable] = useState(false)
   const [indie,    setIndie]    = useState(false)
-  const [genres,   setGenres]   = useState<string[]>([])
-  const [panel,    setPanel]    = useState<'date' | 'genre' | 'calendar' | null>(null)
-  const mainDrag  = useDragScroll()
-  const subDrag   = useDragScroll()
+  const [openPanel, setOpenPanel] = useState<'date' | 'genre' | null>(null)
+  const [dropdownLeft, setDropdownLeft] = useState(16)
 
-  /* 패널 토글 */
-  const toggleDate  = () => setPanel(p => (p === 'date' || p === 'calendar') ? null : 'date')
-  const toggleGenre = () => setPanel(p => p === 'genre' ? null : 'genre')
+  const wrapperRef   = useRef<HTMLDivElement>(null)
+  const dateChipRef  = useRef<HTMLButtonElement>(null)
+  const genreChipRef = useRef<HTMLButtonElement>(null)
 
-  /* 날짜 */
-  const selectPreset = (preset: DatePreset) => {
-    setDate({ type: 'preset', label: preset })
-    setPanel(null)
-  }
-  const confirmCustom = (s: Date, e: Date) => {
-    setDate({ type: 'custom', start: s, end: e })
-    setPanel(null)
-  }
-  const clearDate = () => { setDate(null); setPanel(null) }
+  // 외부 클릭 시 드롭다운 닫기
+  useEffect(() => {
+    if (!openPanel) return
+    const handler = (e: MouseEvent) => {
+      if (!wrapperRef.current?.contains(e.target as Node)) setOpenPanel(null)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [openPanel])
 
-  const clearGenres = () => { setGenres([]); setPanel(null) }
+  const openDropdown = useCallback((
+    panel: 'date' | 'genre',
+    chipRef: React.RefObject<HTMLButtonElement | null>,
+  ) => {
+    if (openPanel === panel) { setOpenPanel(null); return }
+    const wrapper = wrapperRef.current
+    const chip    = chipRef.current
+    if (wrapper && chip) {
+      const wRect = wrapper.getBoundingClientRect()
+      const cRect = chip.getBoundingClientRect()
+      setDropdownLeft(Math.max(8, cRect.left - wRect.left))
+    }
+    setOpenPanel(panel)
+  }, [openPanel])
 
-  /* 장르 */
-  const toggleGenreItem = (g: string) => {
-    setGenres(prev => prev.includes(g) ? prev.filter(x => x !== g) : [...prev, g])
-  }
+  const selectDate = (id: DateId) => { setDateId(id); setOpenPanel(null) }
+  const clearDate  = () => { setDateId(null); setOpenPanel(null) }
+  const applyGenres = (g: string[]) => { setGenres(g); setOpenPanel(null) }
+  const clearGenres = () => { setGenres([]); setOpenPanel(null) }
 
-  /* 라벨 계산 */
-  const dateLabel = !date ? null
-    : date.type === 'preset' ? date.label
-    : `${fmt(date.start)}-${fmt(date.end)}`
+  const dateOptions = buildDateOptions()
+  const dateLabel   = dateOptions.find(o => o.id === dateId)?.label ?? undefined
 
-  const genreLabel = genres.length === 0 ? null
+  const genreLabel = genres.length === 0 ? undefined
     : genres.length === 1 ? genres[0]
     : `${genres[0]} 외 ${genres.length - 1}`
 
-  const isDatePanelOpen = panel === 'date' || panel === 'calendar'
-
   return (
-    <div>
-      {/* ── 메인 필터 칩 row ── */}
+    <div ref={wrapperRef} style={{ position: 'relative' }}>
+      {/* 칩 스크롤 행 — overflow-x:auto, 드롭다운은 여기 밖에 있어야 잘리지 않음 */}
       <div
-        ref={mainDrag.ref}
         className="no-scrollbar"
-        style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '0 16px', alignItems: 'center', cursor: 'grab' }}
-        onMouseDown={mainDrag.onMouseDown}
-        onMouseMove={mainDrag.onMouseMove}
-        onMouseUp={mainDrag.onMouseUp}
-        onMouseLeave={mainDrag.onMouseLeave}
+        style={{
+          display: 'flex', gap: 8,
+          padding: '8px 16px 10px',
+          overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          background: 'var(--color-surface-bg)',
+        }}
       >
-        {/* 상영 일정 */}
-        {dateLabel ? (
-          <Chip selected onDismiss={clearDate} onClick={clearDate} style={{ flexShrink: 0 }}>
-            {dateLabel}
-          </Chip>
-        ) : (
-          <Chip selected={isDatePanelOpen} onClick={toggleDate} style={{ flexShrink: 0 }}>
-            상영 일정
-          </Chip>
-        )}
-
-        {/* 예매 가능 */}
-        <Chip
-          selected={bookable}
-          onDismiss={bookable ? () => setBookable(false) : undefined}
-          onClick={() => setBookable(b => !b)}
-          style={{ flexShrink: 0 }}
-        >
-          예매 가능
-        </Chip>
-
-        {/* 독립영화관 */}
-        <Chip
-          selected={indie}
-          onDismiss={indie ? () => setIndie(false) : undefined}
-          onClick={() => setIndie(b => !b)}
-          style={{ flexShrink: 0 }}
-        >
-          독립영화관
-        </Chip>
-
-        {/* 장르 — TODO: Phase 3 실제 데이터 연결 후 활성화 */}
-        {/* <Chip
+        <FilterChip
+          label="상영 일정"
+          value={dateLabel}
+          open={openPanel === 'date'}
+          selected={!!dateId}
+          hasDropdown
+          chipRef={dateChipRef}
+          onClick={() => openDropdown('date', dateChipRef)}
+          onClear={dateId ? clearDate : undefined}
+        />
+        <FilterChip
+          label="장르"
+          value={genreLabel}
+          open={openPanel === 'genre'}
           selected={genres.length > 0}
-          onClick={toggleGenre}
-          style={{ flexShrink: 0 }}
-        >
-          <svg width={12} height={12} viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"
-            style={{ flexShrink: 0, transform: panel === 'genre' ? 'rotate(180deg)' : 'none', transition: 'transform 150ms ease' }}>
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-          {genreLabel ?? '장르'}
-        </Chip> */}
+          hasDropdown
+          chipRef={genreChipRef}
+          onClick={() => openDropdown('genre', genreChipRef)}
+          onClear={genres.length > 0 ? clearGenres : undefined}
+        />
+        <FilterChip
+          label="예매 가능"
+          selected={bookable}
+          onClick={() => setBookable(b => !b)}
+        />
+        <FilterChip
+          label="독립영화관"
+          selected={indie}
+          onClick={() => setIndie(b => !b)}
+        />
       </div>
 
-      {/* ── 날짜 서브 row ── */}
-      {isDatePanelOpen && (
-        <div
-          ref={subDrag.ref}
-          className="no-scrollbar"
-          style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '8px 16px 0', alignItems: 'center', cursor: 'grab' }}
-          onMouseDown={subDrag.onMouseDown}
-          onMouseMove={subDrag.onMouseMove}
-          onMouseUp={subDrag.onMouseUp}
-          onMouseLeave={subDrag.onMouseLeave}
-        >
-          {DATE_PRESETS.map(preset => (
-            <Chip
-              key={preset}
-              selected={date?.type === 'preset' && date.label === preset}
-              onClick={() => selectPreset(preset)}
-              style={{ flexShrink: 0 }}
-            >
-              {preset}
-            </Chip>
-          ))}
-          <Chip
-            selected={panel === 'calendar' || date?.type === 'custom'}
-            onClick={() => setPanel('calendar')}
-            style={{ flexShrink: 0 }}
-          >
-            다른 일정
-          </Chip>
-        </div>
-      )}
-
-      {/* ── 장르 서브 row ── */}
-      {/* 장르 서브 row — TODO: Phase 3 활성화 시 주석 해제
-      {panel === 'genre' && (
-        <div
-          ref={subDrag.ref}
-          className="no-scrollbar"
-          style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '8px 16px 0', alignItems: 'center', cursor: 'grab' }}
-          onMouseDown={subDrag.onMouseDown}
-          onMouseMove={subDrag.onMouseMove}
-          onMouseUp={subDrag.onMouseUp}
-          onMouseLeave={subDrag.onMouseLeave}
-        >
-          {GENRES.map(g => (
-            <Chip
-              key={g}
-              selected={genres.includes(g)}
-              onDismiss={genres.includes(g) ? () => toggleGenreItem(g) : undefined}
-              onClick={() => toggleGenreItem(g)}
-              style={{ flexShrink: 0 }}
-            >
-              {g}
-            </Chip>
-          ))}
-        </div>
-      )} */}
-
-      {/* ── 캘린더 ── */}
-      {panel === 'calendar' && (
-        <Calendar
-          onConfirm={confirmCustom}
-          onCancel={() => setPanel('date')}
+      {/* 드롭다운 — position:absolute, 칩 행 바깥에 렌더 (overflow clipping 방지) */}
+      {openPanel === 'date' && (
+        <DateDropdown
+          selectedId={dateId}
+          onSelect={selectDate}
+          style={{ top: 52, left: dropdownLeft }}
         />
       )}
-
+      {openPanel === 'genre' && (
+        <GenreDropdown
+          initialSelected={genres}
+          onApply={applyGenres}
+          style={{ top: 52, left: dropdownLeft }}
+        />
+      )}
     </div>
   )
 }
