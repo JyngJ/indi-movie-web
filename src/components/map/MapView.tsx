@@ -1,7 +1,7 @@
 'use client'
 
 import 'leaflet/dist/leaflet.css'
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { GeoJSON, MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -29,8 +29,8 @@ interface SubwayLineProperties {
   호선?: string
 }
 
-const SUBWAY_LINE_MIN_ZOOM = 13
-const STATION_PIN_MIN_ZOOM = 13
+const SUBWAY_LINE_MIN_ZOOM = 15
+const STATION_PIN_MIN_ZOOM = 15
 const SEOUL_SUBWAY_LINE_COLORS: Record<string, { light: string; dark: string }> = {
   '1': { light: '#0052A4', dark: '#4C8ED1' },
   '1호선': { light: '#0052A4', dark: '#4C8ED1' },
@@ -129,7 +129,7 @@ function subwayLineStyle(feature: Feature<Geometry, SubwayLineProperties> | unde
   return {
     color: subwayLineColor(feature?.properties, isDark),
     weight: 2,
-    opacity: 0.72,
+    opacity: 0.7,
     lineCap: 'round' as const,
     lineJoin: 'round' as const,
   }
@@ -160,7 +160,7 @@ function makeStationIcon(station: Station, isDark: boolean) {
   const coreSize = DOT - (outerStroke + innerStroke) * 2
   const html = `
     <div title="${escapeHtml(station.name)}" style="width:120px;display:flex;flex-direction:column;align-items:center;gap:${GAP}px;overflow:visible;position:relative;">
-      <div style="width:${DOT}px;height:${DOT}px;border-radius:50%;background:#111;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.2);">
+      <div style="width:${DOT}px;height:${DOT}px;border-radius:50%;background:#111;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.2);opacity:0.7;">
         <div style="width:${DOT - outerStroke * 2}px;height:${DOT - outerStroke * 2}px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;">
           <div style="width:${coreSize}px;height:${coreSize}px;border-radius:50%;background:${color};"></div>
         </div>
@@ -177,6 +177,28 @@ function makeStationIcon(station: Station, isDark: boolean) {
     iconSize: [120, LABEL_H + GAP + DOT],
     iconAnchor: [60, ANCHOR_Y],
   })
+}
+
+function normalizeSearchText(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '')
+    .replace(/역$/g, '')
+}
+
+function stationSearchScore(station: Station, query: string): number {
+  const normalizedQuery = normalizeSearchText(query)
+  if (!normalizedQuery) return 0
+
+  const names = [station.name, ...station.aliases].map(normalizeSearchText)
+  let best = 0
+  for (const name of names) {
+    if (name === normalizedQuery) best = Math.max(best, 100)
+    else if (name.startsWith(normalizedQuery)) best = Math.max(best, 80)
+    else if (name.includes(normalizedQuery)) best = Math.max(best, 60)
+  }
+  return best
 }
 
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
@@ -865,6 +887,24 @@ export default function MapView() {
     setSearchQuery('')
   }, [])
 
+  const stationResults = useMemo(() => {
+    if (!searchQuery.trim()) return []
+    return stations
+      .map((station) => ({ station, score: stationSearchScore(station, searchQuery) }))
+      .filter((result) => result.score > 0)
+      .sort((a, b) => b.score - a.score || a.station.name.localeCompare(b.station.name, 'ko'))
+      .slice(0, 20)
+      .map((result) => result.station)
+  }, [searchQuery, stations])
+
+  const focusStation = useCallback((station: Station) => {
+    closeSearch()
+    setSelectedId(null)
+    setDisplayedId(null)
+    setSheetExpanded(false)
+    mapRef.current?.flyTo([station.lat, station.lng], 16, { duration: 0.75 })
+  }, [closeSearch])
+
   // 바텀시트 상태
   const [sheetExpanded, setSheetExpanded] = useState(false)
   const [selectedMovieId, setSelectedMovieId] = useState('')
@@ -1156,17 +1196,112 @@ export default function MapView() {
             />
           </div>
 
-          {/* 결과 영역 (Phase 3에서 실제 결과로 교체) */}
+          {/* 결과 영역 */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px' }}>
             {searchQuery === '' ? (
               <p style={{ textAlign: 'center', marginTop: 60, fontSize: 14, color: 'var(--color-text-caption)' }}>
                 극장명, 영화 제목, 감독 이름으로 검색하세요
               </p>
+            ) : stationResults.length > 0 ? (
+              <section>
+                <h2 style={{
+                  margin: '0 0 10px',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: 'var(--color-text-caption)',
+                }}>
+                  지하철역
+                </h2>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  {stationResults.map((station) => (
+                    <button
+                      key={station.id}
+                      type="button"
+                      onClick={() => focusStation(station)}
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        padding: '12px 0',
+                        border: 0,
+                        borderBottom: '1px solid var(--color-border)',
+                        background: 'transparent',
+                        color: 'var(--color-text-primary)',
+                        textAlign: 'left',
+                      }}
+                    >
+                      <span style={{
+                        width: 38,
+                        height: 38,
+                        borderRadius: 10,
+                        flexShrink: 0,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: 'var(--color-surface-card)',
+                        border: '1px solid var(--color-border)',
+                      }}>
+                        <span style={{
+                          width: 15,
+                          height: 15,
+                          borderRadius: '50%',
+                          backgroundColor: '#111',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}>
+                          <span style={{
+                            width: 13,
+                            height: 13,
+                            borderRadius: '50%',
+                            backgroundColor: '#fff',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}>
+                            <span style={{
+                              width: 9,
+                              height: 9,
+                              borderRadius: '50%',
+                              backgroundColor: subwayLineColor({ name: station.lines[0] }, isDark),
+                            }} />
+                          </span>
+                        </span>
+                      </span>
+                      <span style={{ minWidth: 0, flex: 1 }}>
+                        <span style={{ display: 'block', fontSize: 15, fontWeight: 700 }}>
+                          {station.name}
+                        </span>
+                        <span style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 5 }}>
+                          {station.lines.map((line) => (
+                            <span
+                              key={line}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                height: 18,
+                                padding: '0 6px',
+                                borderRadius: 4,
+                                fontSize: 11,
+                                fontWeight: 700,
+                                color: '#fff',
+                                backgroundColor: subwayLineColor({ name: line }, isDark),
+                              }}
+                            >
+                              {line}
+                            </span>
+                          ))}
+                        </span>
+                      </span>
+                      <span style={{ color: 'var(--color-text-caption)', fontSize: 18, lineHeight: 1 }}>›</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
             ) : (
               <p style={{ textAlign: 'center', marginTop: 60, fontSize: 14, color: 'var(--color-text-caption)' }}>
-                &ldquo;{searchQuery}&rdquo; 검색 결과
-                <br />
-                <span style={{ fontSize: 12, marginTop: 8, display: 'block' }}>(Phase 3 연결 예정)</span>
+                &ldquo;{searchQuery}&rdquo;와 일치하는 지하철역이 없습니다
               </p>
             )}
           </div>
