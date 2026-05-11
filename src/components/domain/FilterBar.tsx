@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 
-/* ── 날짜 헬퍼 ──────────────────────────────────────────────────── */
+/* -- 날짜 헬퍼 ---------------------------------------------------- */
 const DOW = ['일', '월', '화', '수', '목', '금', '토']
 
 function today() {
@@ -24,43 +24,48 @@ function fmtShortDow(d: Date) {
 function fmtMD(d: Date) {
   return `${d.getMonth() + 1}/${d.getDate()}`
 }
+function isSameDay(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear()
+    && a.getMonth() === b.getMonth()
+    && a.getDate() === b.getDate()
+}
 
 function buildDateOptions(t = today()) {
-  const dow = t.getDay() // 0=Sun
-  // 이번 주 토요일 (Sun-Sat 주 기준)
+  const dow = t.getDay()
   const daysToSat = dow === 0 ? 6 : 6 - dow
   const sat0 = addDays(t, daysToSat)
   const sun0 = addDays(sat0, 1)
   const sat1 = addDays(sat0, 7)
   const sun1 = addDays(sat1, 1)
-  // 이번 주 일요일 (주 끝)
   const weekEnd = dow === 0 ? addDays(t, 6) : addDays(t, 7 - dow)
-  const monthEnd = new Date(t.getFullYear(), t.getMonth() + 1, 0)
 
   return [
-    { id: 'today',        label: '오늘',       sub: fmtFull(t) },
-    { id: 'tomorrow',     label: '내일',       sub: fmtFull(addDays(t, 1)) },
-    { id: 'this-weekend', label: '이번 주말',  sub: `${fmtShortDow(sat0)} — ${fmtShortDow(sun0)}` },
-    { id: 'next-weekend', label: '다음 주말',  sub: `${fmtShortDow(sat1)} — ${fmtShortDow(sun1)}` },
-    { id: 'this-week',    label: '이번 주 전체', sub: `${fmtMD(t)} — ${fmtMD(weekEnd)}` },
-    { id: 'this-month',   label: '이번 달',    sub: `${t.getMonth() + 1}월 전체` },
+    { id: 'today', label: '오늘', sub: fmtFull(t) },
+    { id: 'tomorrow', label: '내일', sub: fmtFull(addDays(t, 1)) },
+    { id: 'this-weekend', label: '이번 주말', sub: `${fmtShortDow(sat0)} - ${fmtShortDow(sun0)}` },
+    { id: 'next-weekend', label: '다음 주말', sub: `${fmtShortDow(sat1)} - ${fmtShortDow(sun1)}` },
+    { id: 'this-week', label: '이번 주 전체', sub: `${fmtMD(t)} - ${fmtMD(weekEnd)}` },
+    { id: 'this-month', label: '이번 달', sub: `${t.getMonth() + 1}월 전체` },
   ] as const
 }
 
-type DateId = 'today' | 'tomorrow' | 'this-weekend' | 'next-weekend' | 'this-week' | 'this-month' | null
+type DateId = 'today' | 'tomorrow' | 'this-weekend' | 'next-weekend' | 'this-week' | 'this-month' | 'custom' | null
+type OpenPanel = 'date' | 'genre' | 'calendar' | null
 
-/* ── 장르 ──────────────────────────────────────────────────────── */
+/* -- 장르 -------------------------------------------------------- */
 const GENRES = ['드라마', '다큐멘터리', '애니메이션', '스릴러/호러', '코미디', '실험/예술', '단편', '로맨스'] as const
 
-/* ── 타입 ──────────────────────────────────────────────────────── */
+/* -- 타입 -------------------------------------------------------- */
 export interface FilterState {
   dateId: DateId
+  customStart: Date | null
+  customEnd: Date | null
   genres: string[]
   bookable: boolean
   indie: boolean
 }
 
-/* ── 아이콘 ─────────────────────────────────────────────────────── */
+/* -- 아이콘 ------------------------------------------------------- */
 const IcoCheck = () => (
   <svg width={11} height={11} viewBox="0 0 12 12" fill="none">
     <polyline points="2,6.5 4.5,9 10,3" stroke="white" strokeWidth={2.2}
@@ -98,7 +103,21 @@ const IcoArrowRight = () => (
   </svg>
 )
 
-/* ── DropdownRow ────────────────────────────────────────────────── */
+const IcoNavPrev = () => (
+  <svg width={16} height={16} viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M15 18l-6-6 6-6" />
+  </svg>
+)
+
+const IcoNavNext = () => (
+  <svg width={16} height={16} viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 18l6-6-6-6" />
+  </svg>
+)
+
+/* -- DropdownRow -------------------------------------------------- */
 interface DropdownRowProps {
   kind: 'radio' | 'checkbox'
   label: string
@@ -126,7 +145,6 @@ function DropdownRow({ kind, label, sub, selected, onClick, isLast }: DropdownRo
         minHeight: 'unset',
       }}
     >
-      {/* indicator */}
       <div style={{
         width: 22, height: 22, flexShrink: 0,
         borderRadius: kind === 'radio' ? '50%' : 5,
@@ -138,8 +156,6 @@ function DropdownRow({ kind, label, sub, selected, onClick, isLast }: DropdownRo
       }}>
         {selected && <IcoCheck />}
       </div>
-
-      {/* text */}
       <div>
         <div style={{
           fontSize: 13,
@@ -159,10 +175,214 @@ function DropdownRow({ kind, label, sub, selected, onClick, isLast }: DropdownRo
   )
 }
 
-/* ── DateDropdown ───────────────────────────────────────────────── */
-function DateDropdown({ selectedId, onSelect, style }: {
+/* -- CalendarPicker (범위 선택) ----------------------------------- */
+function CalendarPicker({ startDate, endDate, onApply, onCancel, style }: {
+  startDate: Date | null
+  endDate: Date | null
+  onApply: (start: Date, end: Date) => void
+  onCancel: () => void
+  style?: React.CSSProperties
+}) {
+  const todayDate = today()
+  const [rangeStart, setRangeStart] = useState<Date | null>(startDate)
+  const [rangeEnd, setRangeEnd] = useState<Date | null>(endDate)
+  const [hovered, setHovered] = useState<Date | null>(null)
+  const [viewMonth, setViewMonth] = useState(() => {
+    const base = startDate ?? todayDate
+    return new Date(base.getFullYear(), base.getMonth(), 1)
+  })
+
+  const year = viewMonth.getFullYear()
+  const month = viewMonth.getMonth()
+  const firstDow = new Date(year, month, 1).getDay()
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const cells: (number | null)[] = [
+    ...Array(firstDow).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ]
+  while (cells.length % 7 !== 0) cells.push(null)
+
+  const previewEnd = rangeStart && !rangeEnd && hovered ? hovered : rangeEnd
+  const lo = rangeStart && previewEnd ? (rangeStart <= previewEnd ? rangeStart : previewEnd) : rangeStart
+  const hi = rangeStart && previewEnd ? (rangeStart <= previewEnd ? previewEnd : rangeStart) : null
+  const canApply = !!rangeStart && !!rangeEnd
+  const hint = !rangeStart ? '시작일을 선택하세요'
+    : !rangeEnd ? '종료일을 선택하세요'
+    : `${fmtMD(rangeStart)} (${DOW[rangeStart.getDay()]}) - ${fmtMD(rangeEnd)} (${DOW[rangeEnd.getDay()]})`
+
+  function handleDayClick(d: Date) {
+    if (d < todayDate) return
+    if (!rangeStart || rangeEnd) {
+      setRangeStart(d)
+      setRangeEnd(null)
+      return
+    }
+    const [s, e] = d >= rangeStart ? [rangeStart, d] : [d, rangeStart]
+    setRangeStart(s)
+    setRangeEnd(e)
+  }
+
+  const navBtn: React.CSSProperties = {
+    width: 36, height: 36, borderRadius: '50%',
+    background: 'transparent', border: 'none',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    cursor: 'pointer', color: 'var(--color-text-body)', minHeight: 'unset',
+  }
+
+  return (
+    <div style={{
+      position: 'absolute',
+      background: 'var(--color-surface-card)',
+      border: '1px solid var(--color-border)',
+      borderRadius: 16,
+      overflow: 'hidden',
+      boxShadow: '0 12px 40px rgba(0,0,0,0.72)',
+      zIndex: 9999,
+      ...style,
+    }}>
+      <div style={{ padding: '14px 14px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+          <button style={navBtn} onClick={() => setViewMonth(new Date(year, month - 1, 1))}>
+            <IcoNavPrev />
+          </button>
+          <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-text-primary)' }}>
+            {year}년 {month + 1}월
+          </span>
+          <button style={navBtn} onClick={() => setViewMonth(new Date(year, month + 1, 1))}>
+            <IcoNavNext />
+          </button>
+        </div>
+        <div style={{
+          textAlign: 'center', fontSize: 13,
+          color: rangeStart && !rangeEnd ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
+          marginBottom: 12, fontWeight: rangeStart && !rangeEnd ? 600 : 400,
+          minHeight: 18,
+        }}>
+          {hint}
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 4 }}>
+          {DOW.map((d, i) => (
+            <div key={d} style={{
+              textAlign: 'center', fontSize: 11, fontWeight: 600,
+              color: i === 0 ? '#E30613' : i === 6 ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
+              padding: '3px 0',
+            }}>
+              {d}
+            </div>
+          ))}
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 8 }}>
+          {cells.map((day, i) => {
+            if (day === null) return <div key={i} style={{ height: 38 }} />
+
+            const cellDate = new Date(year, month, day)
+            const isPast = cellDate < todayDate
+            const isToday = isSameDay(cellDate, todayDate)
+            const isStart = !!rangeStart && isSameDay(cellDate, rangeStart)
+            const isEnd = !!rangeEnd && isSameDay(cellDate, rangeEnd)
+            const isEndPreview = !rangeEnd && !!hovered && !!rangeStart
+              && isSameDay(cellDate, hovered >= rangeStart ? hovered : rangeStart)
+            const isStartPreview = !rangeEnd && !!hovered && !!rangeStart
+              && hovered < rangeStart && isSameDay(cellDate, rangeStart)
+            const inRange = !!lo && !!hi && cellDate > lo && cellDate < hi
+            const colIdx = (firstDow + day - 1) % 7
+            const isSun = colIdx === 0
+            const isSat = colIdx === 6
+            const barActive = isStart || isEnd || isStartPreview || isEndPreview || inRange
+            const isRangeStart = isStart || isStartPreview
+            const isRangeEnd = isEnd || isEndPreview
+            const isDot = isStart || isEnd || isStartPreview || isEndPreview
+
+            let textColor = 'var(--color-text-body)'
+            if (isPast) textColor = 'var(--color-text-placeholder)'
+            else if (isSun) textColor = '#E30613'
+            else if (isSat) textColor = 'var(--color-primary-base)'
+            if (isDot) textColor = '#fff'
+
+            return (
+              <div
+                key={i}
+                onMouseEnter={() => !isPast && setHovered(cellDate)}
+                onMouseLeave={() => setHovered(null)}
+                style={{ position: 'relative', height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                {barActive && (
+                  <div style={{
+                    position: 'absolute', top: 4, bottom: 4,
+                    left: isRangeStart ? '50%' : 0,
+                    right: isRangeEnd ? '50%' : 0,
+                    background: 'var(--color-primary-subtle-l)',
+                    pointerEvents: 'none',
+                  }} />
+                )}
+                <button
+                  disabled={isPast}
+                  onClick={() => handleDayClick(cellDate)}
+                  style={{
+                    position: 'relative', zIndex: 1,
+                    width: 34, height: 34, borderRadius: '50%',
+                    background: isDot ? 'var(--color-primary-base)' : 'transparent',
+                    color: textColor,
+                    fontWeight: isDot ? 700 : isToday ? 700 : 400,
+                    fontSize: 14,
+                    border: isToday && !isDot ? '1.5px solid var(--color-primary-base)' : 'none',
+                    cursor: isPast ? 'default' : 'pointer',
+                    minHeight: 'unset', flexShrink: 0,
+                    transition: 'background 100ms',
+                  }}
+                >
+                  {day}
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+      <div style={{
+        display: 'flex', gap: 8,
+        padding: '12px 14px',
+        borderTop: '1px solid var(--color-border)',
+        background: 'var(--color-surface-raised)',
+      }}>
+        <button
+          onClick={onCancel}
+          style={{
+            flex: 1, height: 40, borderRadius: 999,
+            background: 'transparent',
+            border: '1px solid var(--color-border)',
+            fontSize: 14, fontWeight: 500,
+            color: 'var(--color-text-body)',
+            cursor: 'pointer', minHeight: 'unset',
+          }}
+        >
+          취소
+        </button>
+        <button
+          disabled={!canApply}
+          onClick={() => canApply && onApply(rangeStart!, rangeEnd!)}
+          style={{
+            flex: 2, height: 40, borderRadius: 999,
+            background: canApply ? 'var(--color-primary-base)' : 'var(--color-surface-raised)',
+            border: canApply ? 'none' : '1px solid var(--color-border)',
+            fontSize: 14, fontWeight: 600,
+            color: canApply ? '#fff' : 'var(--color-text-placeholder)',
+            cursor: canApply ? 'pointer' : 'default',
+            transition: 'background 150ms, color 150ms',
+            minHeight: 'unset',
+          }}
+        >
+          적용
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/* -- DateDropdown ------------------------------------------------- */
+function DateDropdown({ selectedId, onSelect, onPickCustom, style }: {
   selectedId: DateId
   onSelect: (id: DateId) => void
+  onPickCustom: () => void
   style?: React.CSSProperties
 }) {
   const options = buildDateOptions()
@@ -175,10 +395,10 @@ function DateDropdown({ selectedId, onSelect, style }: {
       borderRadius: 16,
       overflow: 'hidden',
       boxShadow: '0 12px 40px rgba(0,0,0,0.72)',
-      zIndex: 200,
+      zIndex: 9999,
       ...style,
     }}>
-      {options.map((opt, i) => (
+      {options.map((opt) => (
         <DropdownRow
           key={opt.id}
           kind="radio"
@@ -189,9 +409,8 @@ function DateDropdown({ selectedId, onSelect, style }: {
           isLast={false}
         />
       ))}
-
-      {/* 날짜 직접 선택 */}
       <button
+        onClick={onPickCustom}
         style={{
           display: 'flex', alignItems: 'center', gap: 10,
           padding: '13px 14px', width: '100%',
@@ -211,16 +430,14 @@ function DateDropdown({ selectedId, onSelect, style }: {
   )
 }
 
-/* ── GenreDropdown ──────────────────────────────────────────────── */
-function GenreDropdown({ initialSelected, onApply, style }: {
-  initialSelected: string[]
-  onApply: (genres: string[]) => void
+/* -- GenreDropdown ------------------------------------------------ */
+function GenreDropdown({ draftGenres, setDraftGenres, style }: {
+  draftGenres: string[]
+  setDraftGenres: React.Dispatch<React.SetStateAction<string[]>>
   style?: React.CSSProperties
 }) {
-  const [draft, setDraft] = useState(initialSelected)
-
   const toggle = (g: string) =>
-    setDraft(prev => prev.includes(g) ? prev.filter(x => x !== g) : [...prev, g])
+    setDraftGenres(prev => prev.includes(g) ? prev.filter(x => x !== g) : [...prev, g])
 
   return (
     <div style={{
@@ -231,70 +448,60 @@ function GenreDropdown({ initialSelected, onApply, style }: {
       borderRadius: 16,
       overflow: 'hidden',
       boxShadow: '0 12px 40px rgba(0,0,0,0.72)',
-      zIndex: 200,
+      zIndex: 9999,
       ...style,
     }}>
-      {/* hint header */}
-      <div style={{
-        padding: '9px 14px',
-        fontSize: 11, color: 'var(--color-text-caption)',
-        borderBottom: '1px solid var(--color-border)',
-      }}>
-        복수 선택 가능
-      </div>
-
       {GENRES.map((g, i) => (
         <DropdownRow
           key={g}
           kind="checkbox"
           label={g}
-          selected={draft.includes(g)}
+          selected={draftGenres.includes(g)}
           onClick={() => toggle(g)}
           isLast={i === GENRES.length - 1}
         />
       ))}
-
-      {/* footer */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '8px 12px 8px 14px',
+        padding: '10px 14px',
         background: 'var(--color-surface-raised)',
         borderTop: '1px solid var(--color-border)',
+        minHeight: 40,
       }}>
         <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>
-          {draft.length > 0 ? `${draft.length}개 선택됨` : ''}
+          {draftGenres.length > 0 ? `${draftGenres.length}개 선택됨` : ''}
         </span>
-        <button
-          onClick={() => onApply(draft)}
-          style={{
-            height: 28, padding: '0 14px', borderRadius: 999,
-            background: 'var(--color-primary-base)',
-            border: 'none', color: '#fff',
-            fontSize: 12, fontWeight: 600,
-            cursor: 'pointer', minHeight: 'unset',
-          }}
-        >
-          적용
-        </button>
+        {draftGenres.length > 0 && (
+          <button
+            onClick={() => setDraftGenres([])}
+            style={{
+              background: 'none', border: 'none', padding: 0,
+              fontSize: 12, fontWeight: 500, color: 'var(--color-primary-base)',
+              cursor: 'pointer', minHeight: 'unset',
+            }}
+          >
+            모두 선택 해제
+          </button>
+        )}
       </div>
     </div>
   )
 }
 
-/* ── FilterChip ─────────────────────────────────────────────────── */
+/* -- FilterChip --------------------------------------------------- */
 interface FilterChipProps {
   label: string
-  value?: string          // 선택된 값 텍스트 (드롭다운 칩만)
-  open?: boolean          // 드롭다운 열림
-  selected?: boolean      // 값 선택된 상태
+  value?: string
+  open?: boolean
+  selected?: boolean
   hasDropdown?: boolean
   onClick: () => void
-  onClear?: () => void    // × 버튼 (드롭다운 칩 전용)
+  onClear?: () => void
   chipRef?: React.Ref<HTMLButtonElement>
 }
 
 function FilterChip({ label, value, open, selected, hasDropdown, onClick, onClear, chipRef }: FilterChipProps) {
-  let bg = 'transparent'
+  let bg = 'var(--color-surface-card)'
   let border = '1px solid var(--color-border)'
   let pl = '14px'
   let pr = hasDropdown ? '10px' : '14px'
@@ -321,7 +528,6 @@ function FilterChip({ label, value, open, selected, hasDropdown, onClick, onClea
         transition: 'background 150ms, border-color 150ms',
       }}
     >
-      {/* label / value */}
       {selected && value ? (
         <>
           <span style={{ fontSize: 13, fontWeight: 400, color: 'var(--color-text-sub)' }}>
@@ -341,14 +547,13 @@ function FilterChip({ label, value, open, selected, hasDropdown, onClick, onClea
           {label}
         </span>
       )}
-
-      {/* 우측 버튼: × or 캐럿 */}
       {selected && onClear ? (
         <span
           role="button"
           onClick={(e) => { e.stopPropagation(); onClear() }}
           style={{
-            width: 20, height: 20, borderRadius: '50%',
+            width: 20, height: 20, minWidth: 20, minHeight: 20,
+            borderRadius: '50%',
             background: 'var(--filter-dismiss-bg)',
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer', marginLeft: 4, flexShrink: 0,
@@ -368,63 +573,115 @@ function FilterChip({ label, value, open, selected, hasDropdown, onClick, onClea
   )
 }
 
-/* ── FilterBar ──────────────────────────────────────────────────── */
+/* -- FilterBar ---------------------------------------------------- */
 export interface FilterBarProps {
   onChange?: (state: FilterState) => void
 }
 
 export function FilterBar({ onChange }: FilterBarProps) {
-  const [dateId,   setDateId]   = useState<DateId>(null)
-  const [genres,   setGenres]   = useState<string[]>([])
+  const [dateId, setDateId] = useState<DateId>(null)
+  const [customStart, setCustomStart] = useState<Date | null>(null)
+  const [customEnd, setCustomEnd] = useState<Date | null>(null)
+  const [genres, setGenres] = useState<string[]>([])
+  const [draftGenres, setDraftGenres] = useState<string[]>([])
   const [bookable, setBookable] = useState(false)
-  const [indie,    setIndie]    = useState(false)
-  const [openPanel, setOpenPanel] = useState<'date' | 'genre' | null>(null)
+  const [indie, setIndie] = useState(false)
+  const [openPanel, setOpenPanel] = useState<OpenPanel>(null)
   const [dropdownLeft, setDropdownLeft] = useState(16)
 
-  const wrapperRef   = useRef<HTMLDivElement>(null)
-  const dateChipRef  = useRef<HTMLButtonElement>(null)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const dateChipRef = useRef<HTMLButtonElement>(null)
   const genreChipRef = useRef<HTMLButtonElement>(null)
+  const openPanelRef = useRef(openPanel)
+  const draftGenresRef = useRef(draftGenres)
 
-  // 외부 클릭 시 드롭다운 닫기
+  useEffect(() => { openPanelRef.current = openPanel }, [openPanel])
+  useEffect(() => { draftGenresRef.current = draftGenres }, [draftGenres])
+  useEffect(() => {
+    onChange?.({ dateId, customStart, customEnd, genres, bookable, indie })
+  }, [onChange, dateId, customStart, customEnd, genres, bookable, indie])
+
   useEffect(() => {
     if (!openPanel) return
     const handler = (e: MouseEvent) => {
-      if (!wrapperRef.current?.contains(e.target as Node)) setOpenPanel(null)
+      if (wrapperRef.current?.contains(e.target as Node)) return
+      if (openPanelRef.current === 'genre') setGenres(draftGenresRef.current)
+      setOpenPanel(null)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [openPanel])
 
+  const calcDropdownLeft = (
+    chipRef: React.RefObject<HTMLButtonElement | null>,
+    dropdownWidth: number,
+  ) => {
+    const wrapper = wrapperRef.current
+    const chip = chipRef.current
+    if (wrapper && chip) {
+      const wRect = wrapper.getBoundingClientRect()
+      const cRect = chip.getBoundingClientRect()
+      const raw = cRect.left - wRect.left
+      const maxLeft = wRect.width - dropdownWidth - 8
+      setDropdownLeft(Math.max(8, Math.min(raw, maxLeft)))
+    }
+  }
+
   const openDropdown = useCallback((
     panel: 'date' | 'genre',
     chipRef: React.RefObject<HTMLButtonElement | null>,
   ) => {
-    if (openPanel === panel) { setOpenPanel(null); return }
-    const wrapper = wrapperRef.current
-    const chip    = chipRef.current
-    if (wrapper && chip) {
-      const wRect = wrapper.getBoundingClientRect()
-      const cRect = chip.getBoundingClientRect()
-      setDropdownLeft(Math.max(8, cRect.left - wRect.left))
+    if (openPanel === panel || (panel === 'date' && (openPanel === 'date' || openPanel === 'calendar'))) {
+      if (panel === 'genre') setGenres(draftGenresRef.current)
+      setOpenPanel(null)
+      return
     }
+    if (panel === 'genre') setDraftGenres(genres)
+    const widthMap = { date: 252, genre: 236 }
+    calcDropdownLeft(chipRef, widthMap[panel])
     setOpenPanel(panel)
-  }, [openPanel])
+  }, [openPanel, genres])
 
   const selectDate = (id: DateId) => { setDateId(id); setOpenPanel(null) }
-  const clearDate  = () => { setDateId(null); setOpenPanel(null) }
-  const applyGenres = (g: string[]) => { setGenres(g); setOpenPanel(null) }
-  const clearGenres = () => { setGenres([]); setOpenPanel(null) }
+  const clearDate = () => {
+    setDateId(null)
+    setCustomStart(null)
+    setCustomEnd(null)
+    setOpenPanel(null)
+  }
+  const openCalendar = () => setOpenPanel('calendar')
+  const selectCustomRange = (start: Date, end: Date) => {
+    setDateId('custom')
+    setCustomStart(start)
+    setCustomEnd(end)
+    setOpenPanel(null)
+  }
+  const clearGenres = () => {
+    setGenres([])
+    setDraftGenres([])
+    setOpenPanel(null)
+  }
 
   const dateOptions = buildDateOptions()
-  const dateLabel   = dateOptions.find(o => o.id === dateId)?.label ?? undefined
+  const dateLabel = (() => {
+    if (dateId === 'custom') {
+      if (customStart && customEnd) {
+        return isSameDay(customStart, customEnd)
+          ? fmtFull(customStart)
+          : `${fmtMD(customStart)} - ${fmtMD(customEnd)}`
+      }
+      return customStart ? `${fmtMD(customStart)}~` : undefined
+    }
+    return dateOptions.find(o => o.id === dateId)?.label
+  })()
 
   const genreLabel = genres.length === 0 ? undefined
     : genres.length === 1 ? genres[0]
     : `${genres[0]} 외 ${genres.length - 1}`
+  const isDateOpen = openPanel === 'date' || openPanel === 'calendar'
 
   return (
     <div ref={wrapperRef} style={{ position: 'relative' }}>
-      {/* 칩 스크롤 행 — overflow-x:auto, 드롭다운은 여기 밖에 있어야 잘리지 않음 */}
       <div
         className="no-scrollbar"
         style={{
@@ -432,13 +689,13 @@ export function FilterBar({ onChange }: FilterBarProps) {
           padding: '8px 16px 10px',
           overflowX: 'auto',
           WebkitOverflowScrolling: 'touch',
-          background: 'var(--color-surface-bg)',
+          background: 'transparent',
         }}
       >
         <FilterChip
           label="상영 일정"
           value={dateLabel}
-          open={openPanel === 'date'}
+          open={isDateOpen}
           selected={!!dateId}
           hasDropdown
           chipRef={dateChipRef}
@@ -467,19 +724,28 @@ export function FilterBar({ onChange }: FilterBarProps) {
         />
       </div>
 
-      {/* 드롭다운 — position:absolute, 칩 행 바깥에 렌더 (overflow clipping 방지) */}
       {openPanel === 'date' && (
         <DateDropdown
           selectedId={dateId}
           onSelect={selectDate}
+          onPickCustom={openCalendar}
           style={{ top: 52, left: dropdownLeft }}
         />
       )}
       {openPanel === 'genre' && (
         <GenreDropdown
-          initialSelected={genres}
-          onApply={applyGenres}
+          draftGenres={draftGenres}
+          setDraftGenres={setDraftGenres}
           style={{ top: 52, left: dropdownLeft }}
+        />
+      )}
+      {openPanel === 'calendar' && (
+        <CalendarPicker
+          startDate={customStart}
+          endDate={customEnd}
+          onApply={selectCustomRange}
+          onCancel={() => setOpenPanel(null)}
+          style={{ top: 52, left: 8, right: 8 }}
         />
       )}
     </div>

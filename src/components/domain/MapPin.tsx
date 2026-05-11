@@ -59,13 +59,15 @@ export function MapPin({ kind = 'indie', selected = false, label, onClick }: Map
           whiteSpace: 'nowrap',
           padding: '2px 6px',
           borderRadius: 4,
-          color: '#1A1714',
-          backgroundColor: 'rgba(255,255,255,0.88)',
-          boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
+          color: 'var(--color-text-primary)',
+          backgroundColor: 'var(--color-surface-card)',
+          border: '1.5px solid var(--color-border)',
+          boxShadow: 'var(--shadow-sm)',
           position: 'relative',
           zIndex: 1,
+          isolation: 'isolate',
         }}>
-          {label}
+          <span style={{ position: 'relative', zIndex: 1 }}>{label}</span>
         </div>
       )}
 
@@ -75,7 +77,7 @@ export function MapPin({ kind = 'indie', selected = false, label, onClick }: Map
         height: DOT,
         borderRadius: '50%',
         backgroundColor: dot,
-        border: '2px solid #FFFFFF',
+        border: '2px solid var(--color-surface-bg)',
         boxShadow: '0 2px 6px rgba(0,0,0,0.18)',
         position: 'relative',
         zIndex: 1,

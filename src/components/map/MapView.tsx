@@ -46,20 +46,56 @@ function posterCountForZoom(zoom: number): number {
 }
 
 /* ── 포스터 그리드 ──────────────────────────────────────────────── */
-function PosterGrid({ count, total }: { count: number; total: number }) {
+function PosterGrid({ count, total, tailDir, tailOffset = 0 }: {
+  count: number
+  total: number
+  tailDir?: 'up' | 'right'
+  tailOffset?: number
+}) {
   const overflow = total > count ? total - count : 0
   const perRow = count === 6 ? 3 : count
+  const cardWidth = perRow * 44 + Math.max(0, perRow - 1) * 4 + 16
+  const tailInset = 14
+  const tailX = Math.max(tailInset, Math.min(cardWidth - tailInset, cardWidth / 2 - tailOffset))
+
+  const tailStyle: React.CSSProperties | null = tailDir === 'up' ? {
+    position: 'absolute',
+    width: 10, height: 10,
+    backgroundColor: 'var(--color-surface-card)',
+    borderTop: '1.5px solid var(--color-border)',
+    borderRight: '1.5px solid var(--color-border)',
+    borderTopRightRadius: 2,
+    top: -6,
+    left: tailX,
+    transform: 'translateX(-50%) rotate(45deg)',
+    zIndex: 0,
+    pointerEvents: 'none',
+  } : tailDir === 'right' ? {
+    position: 'absolute',
+    width: 10, height: 10,
+    backgroundColor: 'var(--color-surface-card)',
+    borderRight: '1.5px solid var(--color-border)',
+    borderBottom: '1.5px solid var(--color-border)',
+    borderBottomRightRadius: 2,
+    top: '50%',
+    right: -6,
+    transform: 'translateY(-50%) rotate(45deg)',
+    zIndex: 0,
+    pointerEvents: 'none',
+  } : null
 
   return (
     <div style={{ position: 'relative', marginTop: 6 }}>
-      {/* 흰 카드 배경 */}
+      {tailStyle && <div style={tailStyle} />}
       <div style={{
-        backgroundColor: 'rgba(255,255,255,0.92)',
+        backgroundColor: 'var(--color-surface-card)',
+        border: '1.5px solid var(--color-border)',
         borderRadius: 8,
         padding: '8px 8px 8px',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.18)',
+        boxShadow: 'var(--shadow-md)',
         display: 'inline-block',
         position: 'relative',
+        zIndex: 1,
       }}>
         <div style={{
           position: 'absolute', top: -7, left: 4,
@@ -68,7 +104,7 @@ function PosterGrid({ count, total }: { count: number; total: number }) {
           letterSpacing: '0.3px', whiteSpace: 'nowrap', zIndex: 1,
         }}>MOCK</div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, position: 'relative', zIndex: 1 }}>
           {Array.from({ length: count === 6 ? 2 : 1 }).map((_, row) => (
             <div key={row} style={{ display: 'flex', gap: 4 }}>
               {Array.from({ length: perRow }).map((_, col) => {
@@ -104,14 +140,36 @@ const TOTAL_MOVIES = 3  // 핀 포스터 그리드 기본 표시 수
 function makePinIcon(name: string, selected: boolean, zoom: number, posterOffsetX = 0) {
   const count = posterCountForZoom(zoom)
   const numRows = count === 6 ? 2 : count > 0 ? 1 : 0
-  const posterH = numRows > 0 ? 66 * numRows + 4 * (numRows - 1) + 6 : 0
+  const usePosterLeft = count > 0 && posterOffsetX < -50
+  const posterH = usePosterLeft || numRows === 0 ? 0 : 66 * numRows + 4 * (numRows - 1) + 6
 
-  const posterHtml = count > 0
-    ? `<div style="position:relative;left:${Math.round(posterOffsetX)}px">${renderToStaticMarkup(<PosterGrid count={count} total={TOTAL_MOVIES} />)}</div>`
-    : ''
+  let posterHtml = ''
+  if (count > 0) {
+    const posterMarkup = renderToStaticMarkup(
+      <PosterGrid
+        count={count}
+        total={TOTAL_MOVIES}
+        tailDir={usePosterLeft ? 'right' : 'up'}
+        tailOffset={usePosterLeft ? 0 : posterOffsetX}
+      />
+    )
+    if (usePosterLeft) {
+      posterHtml =
+        `<div style="position:absolute;` +
+        `right:calc(50% + ${DOT / 2 + 4}px);` +
+        `top:${ANCHOR_Y}px;` +
+        `transform:translateY(-50%);">` +
+        posterMarkup +
+        `</div>`
+    } else {
+      posterHtml = `<div style="position:relative;left:${Math.round(posterOffsetX)}px">` +
+        posterMarkup +
+        `</div>`
+    }
+  }
 
   const html = `
-    <div style="width:140px;display:flex;flex-direction:column;align-items:center;overflow:visible;">
+    <div style="width:140px;display:flex;flex-direction:column;align-items:center;overflow:visible;position:relative;">
       ${renderToStaticMarkup(<MapPin kind="indie" selected={selected} label={name} />)}
       ${posterHtml}
     </div>
@@ -121,7 +179,7 @@ function makePinIcon(name: string, selected: boolean, zoom: number, posterOffset
     html,
     className: '',
     iconSize: [140, LABEL_H + GAP + DOT + posterH],
-    iconAnchor: [70, ANCHOR_Y],   // dot 중심 — zoom/포스터 수 무관 고정
+    iconAnchor: [70, ANCHOR_Y],
   })
 }
 
@@ -132,6 +190,46 @@ interface TheaterCluster {
   lat: number
   lng: number
   isCoLocation?: boolean  // 동일 건물 — 클릭 시 CO_LOCATE_SPLIT_ZOOM으로 이동
+}
+
+type LabelDir = 'top' | 'right' | 'bottom' | 'left'
+
+// 3개 이하 클러스터 이름카드 방향 계산. 먼저 배치된 카드와 겹치지 않는 방향을 고른다.
+function computeLabelDirections(
+  clusters: TheaterCluster[],
+  map: LeafletMap,
+): Map<string, LabelDir> {
+  const CARD_W = 130
+  const CARD_GAP = 6
+  const DOT_R = 14
+  type Rect = [number, number, number, number]
+  const hit = (a: Rect, b: Rect, margin = 4): boolean =>
+    a[0] < b[2] + margin && a[2] > b[0] - margin && a[1] < b[3] + margin && a[3] > b[1] - margin
+  const result = new Map<string, LabelDir>()
+  const placed: Rect[] = []
+
+  for (const c of clusters) {
+    if (c.theaters.length <= 1 || c.theaters.length > 3) continue
+    const { x: cx, y: cy } = map.latLngToContainerPoint([c.lat, c.lng])
+    const cardH = 18 * c.theaters.length + 12
+    const cands: Record<LabelDir, Rect> = {
+      top: [cx - CARD_W / 2, cy - DOT_R - CARD_GAP - cardH, cx + CARD_W / 2, cy - DOT_R - CARD_GAP],
+      bottom: [cx - CARD_W / 2, cy + DOT_R + CARD_GAP, cx + CARD_W / 2, cy + DOT_R + CARD_GAP + cardH],
+      right: [cx + DOT_R + CARD_GAP, cy - cardH / 2, cx + DOT_R + CARD_GAP + CARD_W, cy + cardH / 2],
+      left: [cx - DOT_R - CARD_GAP - CARD_W, cy - cardH / 2, cx - DOT_R - CARD_GAP, cy + cardH / 2],
+    }
+
+    let best: LabelDir = 'top'
+    for (const dir of ['top', 'bottom', 'right', 'left'] as LabelDir[]) {
+      if (!placed.some(rect => hit(cands[dir], rect))) {
+        best = dir
+        break
+      }
+    }
+    result.set(c.id, best)
+    placed.push(cands[best])
+  }
+  return result
 }
 
 /* ── 줌 레벨에서 클러스터링 반경(px) ── */
@@ -285,16 +383,80 @@ function computePosterOffsets(
 }
 
 /* ── 클러스터 아이콘 ────────────────────────────────────────────── */
-function makeClusterIcon(count: number) {
+function makeClusterIcon(theaters: Theater[], labelDir: LabelDir = 'top') {
+  const count = theaters.length
+  const DOT_D = 28
+  const DOT_R = DOT_D / 2
+  const CARD_GAP = 8
+  const CANVAS_W = 220
+  const CANVAS_H = 148
+  const CENTER_X = CANVAS_W / 2
+  const CENTER_Y = CANVAS_H / 2
+
+  if (count <= 3) {
+    const LINE_H = 18
+    const PY = 6
+    const names = theaters.map(t =>
+      `<div style="font-size:11px;font-weight:600;line-height:${LINE_H}px;` +
+      `white-space:nowrap;color:var(--color-text-primary);">${t.name}</div>`
+    ).join('')
+    const cardStyle =
+      `position:relative;background:var(--color-surface-card);` +
+      `border:1.5px solid var(--color-border);border-radius:8px;` +
+      `padding:${PY}px 10px;box-shadow:var(--shadow-sm);` +
+      `display:flex;flex-direction:column;align-items:center;gap:2px;` +
+      `z-index:2;`
+    const tailBase =
+      `position:absolute;width:10px;height:10px;background:var(--color-surface-card);` +
+      `pointer-events:none;z-index:1;`
+    const tailStyles: Record<LabelDir, string> = {
+      bottom: `top:-6px;left:50%;transform:translateX(-50%) rotate(45deg);` +
+        `border-top:1.5px solid var(--color-border);border-right:1.5px solid var(--color-border);border-top-right-radius:2px;`,
+      top: `bottom:-6px;left:50%;transform:translateX(-50%) rotate(45deg);` +
+        `border-bottom:1.5px solid var(--color-border);border-left:1.5px solid var(--color-border);border-bottom-left-radius:2px;`,
+      right: `top:50%;left:-6px;transform:translateY(-50%) rotate(45deg);` +
+        `border-top:1.5px solid var(--color-border);border-left:1.5px solid var(--color-border);border-top-left-radius:2px;`,
+      left: `top:50%;right:-6px;transform:translateY(-50%) rotate(45deg);` +
+        `border-right:1.5px solid var(--color-border);border-bottom:1.5px solid var(--color-border);border-bottom-right-radius:2px;`,
+    }
+    const offset = DOT_R + CARD_GAP
+    const cardPos: Record<LabelDir, string> = {
+      top: `left:${CENTER_X}px;bottom:${CANVAS_H - CENTER_Y + offset}px;transform:translateX(-50%);`,
+      bottom: `left:${CENTER_X}px;top:${CENTER_Y + offset}px;transform:translateX(-50%);`,
+      right: `left:${CENTER_X + offset}px;top:${CENTER_Y}px;transform:translateY(-50%);`,
+      left: `right:${CANVAS_W - CENTER_X + offset}px;top:${CENTER_Y}px;transform:translateY(-50%);`,
+    }
+    const wrapperStyle = `position:absolute;${cardPos[labelDir]}width:max-content;max-width:180px;z-index:2;`
+    const html =
+      `<div style="position:relative;width:${CANVAS_W}px;height:${CANVAS_H}px;overflow:visible;">` +
+      `<div style="${wrapperStyle}">` +
+      `<div style="${tailBase}${tailStyles[labelDir]}"></div>` +
+      `<div style="${cardStyle}">${names}</div>` +
+      `</div>` +
+      `<div style="position:absolute;width:${DOT_D}px;height:${DOT_D}px;` +
+      `top:${CENTER_Y - DOT_R}px;left:${CENTER_X - DOT_R}px;` +
+      `border-radius:50%;background:var(--color-primary-base);` +
+      `border:2px solid var(--color-surface-bg);box-shadow:var(--shadow-sm);` +
+      `display:flex;align-items:center;justify-content:center;` +
+      `color:#fff;font-weight:700;font-size:12px;z-index:1;">${count}</div>` +
+      `</div>`
+
+    return L.divIcon({
+      html,
+      className: '',
+      iconSize: [CANVAS_W, CANVAS_H],
+      iconAnchor: [CENTER_X, CENTER_Y],
+    })
+  }
+
   const SIZE = 40
-  const html = `<div style="
-    width:${SIZE}px;height:${SIZE}px;border-radius:50%;
-    background:#2C3E50;
-    display:flex;align-items:center;justify-content:center;
-    color:#fff;font-weight:700;font-size:16px;line-height:1;
-    box-shadow:0 2px 10px rgba(0,0,0,0.35);
-    border:2.5px solid rgba(255,255,255,0.85);
-  ">${count}</div>`
+  const html =
+    `<div style="width:${SIZE}px;height:${SIZE}px;border-radius:50%;` +
+    `background:var(--color-primary-base);` +
+    `display:flex;align-items:center;justify-content:center;` +
+    `color:#fff;font-weight:700;font-size:16px;line-height:1;` +
+    `box-shadow:var(--shadow-md);` +
+    `border:2.5px solid var(--color-surface-bg);">${count}</div>`
   return L.divIcon({ html, className: '', iconSize: [SIZE, SIZE], iconAnchor: [SIZE / 2, SIZE / 2] })
 }
 
@@ -405,6 +567,7 @@ export default function MapView() {
   const [posterOffsets, setPosterOffsets] = useState<Map<string, number>>(new Map())
   // 동일 좌표 극장의 픽셀 고정 오프셋 (줌 변경 시마다 재계산)
   const [coLocationOffsets, setCoLocationOffsets] = useState<Map<string, { lat: number; lng: number }>>(new Map())
+  const [labelDirections, setLabelDirections] = useState<Map<string, LabelDir>>(new Map())
 
   const recompute = useCallback(() => {
     const map = mapRef.current
@@ -419,9 +582,11 @@ export default function MapView() {
     })
     const c = computeClusters(adjustedTheaters, map, zoom, splitIds, coLocGroups)
     const o = computePosterOffsets(c, map, zoom)
+    const d = computeLabelDirections(c, map)
     setClusters(c)
     setPosterOffsets(o)
     setCoLocationOffsets(coLoc)
+    setLabelDirections(d)
   }, [zoom, theaters])
 
   // zoom 변경 시 재계산 (줌 애니메이션 끝난 뒤)
@@ -550,7 +715,7 @@ export default function MapView() {
               <Marker
                 key={`cluster-${cluster.id}`}
                 position={[cluster.lat, cluster.lng]}
-                icon={makeClusterIcon(cluster.theaters.length)}
+                icon={makeClusterIcon(cluster.theaters, labelDirections.get(cluster.id))}
                 eventHandlers={{
                   click: () => {
                     const map = mapRef.current
@@ -598,7 +763,7 @@ export default function MapView() {
         position: 'absolute',
         top: 'max(0px, env(safe-area-inset-top))',
         left: 0, right: 0,
-        zIndex: 1000,
+        zIndex: 1001,
         pointerEvents: 'none',
       }}>
         {/* 검색창 */}
