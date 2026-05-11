@@ -31,6 +31,7 @@ interface SubwayLineProperties {
 
 const SUBWAY_LINE_MIN_ZOOM = 15
 const STATION_PIN_MIN_ZOOM = 15
+const STATION_PIN_FULL_ZOOM = 17
 const SEOUL_SUBWAY_LINE_COLORS: Record<string, { light: string; dark: string }> = {
   '1': { light: '#0052A4', dark: '#4C8ED1' },
   '1호선': { light: '#0052A4', dark: '#4C8ED1' },
@@ -148,16 +149,19 @@ function escapeHtml(value: string): string {
     .replace(/'/g, '&#39;')
 }
 
-function makeStationIcon(station: Station, isDark: boolean) {
-  const DOT = 15
-  const LABEL_H = 16
-  const GAP = 4
+function makeStationIcon(station: Station, isDark: boolean, zoom: number) {
+  const compact = zoom < STATION_PIN_FULL_ZOOM
+  const DOT = compact ? 11 : 15
+  const LABEL_H = compact ? 12 : 16
+  const GAP = compact ? 2 : 4
+  const FONT_SIZE = compact ? 9 : 11
+  const FONT_WEIGHT = compact ? 600 : 600
   const ANCHOR_Y = DOT / 2
   const lineLabel = stationLineLabel(station)
   const color = subwayLineColor({ name: station.lines[0] }, isDark)
-  const outerStroke = 1
-  const innerStroke = 2
-  const coreSize = DOT - (outerStroke + innerStroke) * 2
+  const outerStroke = compact ? 0.75 : 1
+  const innerStroke = compact ? 1.5 : 2
+  const coreSize = Math.max(3, DOT - (outerStroke + innerStroke) * 2)
   const html = `
     <div title="${escapeHtml(station.name)}" style="width:120px;display:flex;flex-direction:column;align-items:center;gap:${GAP}px;overflow:visible;position:relative;">
       <div style="width:${DOT}px;height:${DOT}px;border-radius:50%;background:#111;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.2);opacity:0.7;">
@@ -165,7 +169,7 @@ function makeStationIcon(station: Station, isDark: boolean) {
           <div style="width:${coreSize}px;height:${coreSize}px;border-radius:50%;background:${color};"></div>
         </div>
       </div>
-      <div style="-webkit-text-stroke:0.7px rgba(0,0,0,0.88);paint-order:stroke fill;font-size:11px;font-weight:600;white-space:nowrap;color:#fff;line-height:${LABEL_H}px;text-shadow:0 1px 1px rgba(0,0,0,0.45);">
+      <div style="-webkit-text-stroke:${compact ? 0.55 : 0.7}px rgba(0,0,0,0.88);paint-order:stroke fill;font-size:${FONT_SIZE}px;font-weight:${FONT_WEIGHT};white-space:nowrap;color:#fff;line-height:${LABEL_H}px;text-shadow:0 1px 1px rgba(0,0,0,0.45);">
         ${escapeHtml(lineLabel)}
       </div>
     </div>
@@ -1078,7 +1082,7 @@ export default function MapView() {
           <Marker
             key={`station-${station.id}`}
             position={[station.lat, station.lng]}
-            icon={makeStationIcon(station, isDark)}
+            icon={makeStationIcon(station, isDark, zoom)}
             interactive={false}
             zIndexOffset={-1000}
           />
