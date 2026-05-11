@@ -131,6 +131,7 @@ interface TheaterCluster {
   theaters: Theater[]
   lat: number
   lng: number
+  isCoLocation?: boolean  // 동일 건물 — 클릭 시 CO_LOCATE_SPLIT_ZOOM으로 이동
 }
 
 /* ── 줌 레벨에서 클러스터링 반경(px) ── */
@@ -141,14 +142,75 @@ function clusterRadiusForZoom(zoom: number): number {
   return 80
 }
 
+/* ── 동일 좌표 극장 분리 설정 ───────────────────────────────────── */
+// 줌 17~19(마지막 3단계)에서만 분리. 그 아래에선 일반 클러스터로 묶임.
+const CO_LOCATE_SPLIT_ZOOM = 17
+const CO_LOCATE_PIXEL_RADIUS = 12  // 분리 시 화면 픽셀 반경
+
+// 동일 좌표 그룹을 항상 계산 (줌 무관) — id → 좌표키
+// 그룹 키가 같으면 같은 건물
+function findCoLocationGroups(theaters: Theater[]): Map<string, string> {
+  const key = (t: Theater) => `${t.lat.toFixed(6)},${t.lng.toFixed(6)}`
+  const counts = new Map<string, number>()
+  for (const t of theaters) counts.set(key(t), (counts.get(key(t)) ?? 0) + 1)
+  const result = new Map<string, string>()
+  for (const t of theaters) {
+    if ((counts.get(key(t)) ?? 0) > 1) result.set(t.id, key(t))
+  }
+  return result
+}
+
+// zoom >= CO_LOCATE_SPLIT_ZOOM 일 때만 픽셀 오프셋 반환.
+// 반환된 ID들은 computeClusters에서 일반 클러스터링 대상에서 제외됨.
+function computeCoLocationOffsets(
+  theaters: Theater[],
+  map: LeafletMap,
+  zoom: number,
+): Map<string, { lat: number; lng: number }> {
+  const result = new Map<string, { lat: number; lng: number }>()
+  if (zoom < CO_LOCATE_SPLIT_ZOOM) return result
+
+  const key = (t: Theater) => `${t.lat.toFixed(6)},${t.lng.toFixed(6)}`
+  const groups = new Map<string, Theater[]>()
+  for (const t of theaters) {
+    const k = key(t)
+    if (!groups.has(k)) groups.set(k, [])
+    groups.get(k)!.push(t)
+  }
+
+  for (const group of groups.values()) {
+    if (group.length === 1) continue
+    const center = group[0]
+    const centerPx = map.latLngToContainerPoint([center.lat, center.lng] as [number, number])
+    group.forEach((t, idx) => {
+      const angle = (2 * Math.PI * idx) / group.length
+      const offsetPx = L.point(
+        centerPx.x + CO_LOCATE_PIXEL_RADIUS * Math.sin(angle),
+        centerPx.y - CO_LOCATE_PIXEL_RADIUS * Math.cos(angle),
+      )
+      const adjusted = map.containerPointToLatLng(offsetPx)
+      result.set(t.id, { lat: adjusted.lat, lng: adjusted.lng })
+    })
+  }
+
+  return result
+}
+
 /* ── 픽셀 거리 기반 클러스터 계산 ─────────────────────────────── */
+// splitIds: 줌 >= CO_LOCATE_SPLIT_ZOOM 에서 분리된 ID — 일반 클러스터링 제외
+// coLocGroupKey: id → 좌표키 — 클러스터가 순수 동일 건물인지 판별에 사용
 function computeClusters(
   theaters: Theater[],
   map: LeafletMap,
   zoom: number,
+  splitIds: Set<string> = new Set(),
+  coLocGroupKey: Map<string, string> = new Map(),
 ): TheaterCluster[] {
   const radiusPx = clusterRadiusForZoom(zoom)
-  const pts = theaters.map((t) => ({
+
+  // 분리 대상이 아닌 극장만 클러스터링
+  const clusterableTheaters = theaters.filter((t) => !splitIds.has(t.id))
+  const pts = clusterableTheaters.map((t) => ({
     t,
     px: map.latLngToContainerPoint([t.lat, t.lng] as [number, number]),
   }))
@@ -168,7 +230,19 @@ function computeClusters(
     }
     const lat = group.reduce((s, g) => s + g.t.lat, 0) / group.length
     const lng = group.reduce((s, g) => s + g.t.lng, 0) / group.length
-    clusters.push({ id: a.t.id, theaters: group.map((g) => g.t), lat, lng })
+
+    // 클러스터 전체가 동일 건물인지 — 클릭 시 CO_LOCATE_SPLIT_ZOOM으로 이동
+    const firstKey = coLocGroupKey.get(group[0].t.id)
+    const isCoLocation = group.length > 1 &&
+      !!firstKey &&
+      group.every((g) => coLocGroupKey.get(g.t.id) === firstKey)
+
+    clusters.push({ id: a.t.id, theaters: group.map((g) => g.t), lat, lng, isCoLocation })
+  }
+
+  // 분리 대상은 개별 마커로 추가 (coLocationOffsets 적용 좌표 사용)
+  for (const t of theaters.filter((t) => splitIds.has(t.id))) {
+    clusters.push({ id: t.id, theaters: [t], lat: t.lat, lng: t.lng })
   }
 
   return clusters
@@ -326,17 +400,28 @@ export default function MapView() {
   const defaultCenter: [number, number] = [37.5665, 126.978]
   const selectedTheater = theaters.find((t) => t.id === (displayedId ?? selectedId)) ?? null
 
-  /* ── 클러스터 & 포스터 오프셋 ── */
+  /* ── 클러스터 & 오프셋 ── */
   const [clusters, setClusters] = useState<TheaterCluster[]>([])
   const [posterOffsets, setPosterOffsets] = useState<Map<string, number>>(new Map())
+  // 동일 좌표 극장의 픽셀 고정 오프셋 (줌 변경 시마다 재계산)
+  const [coLocationOffsets, setCoLocationOffsets] = useState<Map<string, { lat: number; lng: number }>>(new Map())
 
   const recompute = useCallback(() => {
     const map = mapRef.current
     if (!map) return
-    const c = computeClusters(theaters, map, zoom)
+    const coLocGroups = findCoLocationGroups(theaters)
+    const coLoc = computeCoLocationOffsets(theaters, map, zoom)
+    const splitIds = new Set(coLoc.keys())
+    // 분리 대상은 오프셋 적용 좌표로 교체 후 클러스터 계산
+    const adjustedTheaters = theaters.map((t) => {
+      const off = coLoc.get(t.id)
+      return off ? { ...t, lat: off.lat, lng: off.lng } : t
+    })
+    const c = computeClusters(adjustedTheaters, map, zoom, splitIds, coLocGroups)
     const o = computePosterOffsets(c, map, zoom)
     setClusters(c)
     setPosterOffsets(o)
+    setCoLocationOffsets(coLoc)
   }, [zoom, theaters])
 
   // zoom 변경 시 재계산 (줌 애니메이션 끝난 뒤)
@@ -470,13 +555,16 @@ export default function MapView() {
                   click: () => {
                     const map = mapRef.current
                     if (!map) return
+                    // 동일 건물 클러스터: 바로 분리 줌으로 이동
+                    if (cluster.isCoLocation) {
+                      map.flyTo([cluster.lat, cluster.lng], CO_LOCATE_SPLIT_ZOOM, { duration: 0.6 })
+                      return
+                    }
                     const currentZoom = map.getZoom()
                     const splitZoom = findSplitZoom(cluster.theaters, map, currentZoom)
                     const bounds = L.latLngBounds(
                       cluster.theaters.map((t) => [t.lat, t.lng] as [number, number])
                     )
-                    // fitBounds로 전체가 뷰포트 안에 들어오는 줌/센터 계산
-                    // maxZoom을 splitZoom으로 제한 → 분리 가능하면 분리, 아니면 화면 내 최대로
                     map.flyToBounds(bounds, {
                       padding: [80, 80],
                       maxZoom: splitZoom,
@@ -487,13 +575,17 @@ export default function MapView() {
               />
             )
           }
-          // 단일 마커 — 포스터 오프셋 적용
+          // 단일 마커 — 동일 좌표 오프셋 + 포스터 오프셋 적용
           const theater = cluster.theaters[0]
+          const coOff = coLocationOffsets.get(theater.id)
+          const position: [number, number] = coOff
+            ? [coOff.lat, coOff.lng]
+            : [theater.lat, theater.lng]
           const offsetX = posterOffsets.get(theater.id) ?? 0
           return (
             <Marker
               key={theater.id}
-              position={[theater.lat, theater.lng]}
+              position={position}
               icon={makePinIcon(theater.name, selectedId === theater.id, zoom, offsetX)}
               eventHandlers={{ click: () => handlePinClick(theater.id) }}
             />
