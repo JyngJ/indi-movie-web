@@ -37,13 +37,13 @@ export function SearchBarButton({
         paddingLeft: 'var(--comp-search-px)',
         paddingRight: 'var(--comp-search-px)',
         borderRadius: 'var(--comp-search-radius)',
-        backgroundColor: 'var(--color-surface-raised)',
+        backgroundColor: 'var(--color-surface-card)',
         borderColor: 'var(--color-border)',
         cursor: 'pointer',
         minHeight: 'unset',  // globals.css button min-height 44px 재정의
       }}
     >
-      <span className="flex-shrink-0" style={{ color: 'var(--color-text-caption)' }}>
+      <span className="flex-shrink-0" style={{ color: 'var(--color-text-body)' }}>
         <IconSearch />
       </span>
       <span className="flex-1 text-[14px]" style={{ color: 'var(--color-text-placeholder)' }}>
@@ -78,7 +78,7 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(function S
         paddingLeft: onBack ? 4 : 'var(--comp-search-px)',
         paddingRight: 'var(--comp-search-px)',
         borderRadius: 'var(--comp-search-radius)',
-        backgroundColor: 'var(--color-surface-raised)',
+        backgroundColor: 'var(--color-surface-card)',
         borderColor: 'var(--color-border)',
       }}
     >
@@ -105,7 +105,7 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(function S
       ) : (
         <span
           className="flex-shrink-0"
-          style={{ color: hasValue ? 'var(--color-text-body)' : 'var(--color-text-caption)' }}
+          style={{ color: 'var(--color-text-body)' }}
         >
           <IconSearch />
         </span>
@@ -126,7 +126,7 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(function S
           type="button"
           onClick={onClear}
           className="flex-shrink-0 flex items-center justify-center"
-          style={{ color: 'var(--color-text-caption)', minHeight: 'unset' }}
+          style={{ color: 'var(--color-text-body)', minHeight: 'unset' }}
           aria-label="검색어 지우기"
         >
           <IconClose />

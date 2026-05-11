@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { createSupabaseBrowserClient } from './browser'
-import type { Theater, Movie, Showtime } from '@/types/api'
+import type { Theater, Movie, Showtime, Station } from '@/types/api'
 
 function supabase() {
   return createSupabaseBrowserClient()
@@ -40,6 +40,35 @@ export function useTheaters() {
       }))
     },
     staleTime: 5 * 60 * 1000,
+  })
+}
+
+/* ── 지하철역 목록 ─────────────────────────────────────────────── */
+export function useStations() {
+  return useQuery<Station[]>({
+    queryKey: ['stations'],
+    queryFn: async () => {
+      const { data, error } = await supabase()
+        .from('stations')
+        .select('id,source_id,name,lines,lat,lng,city,district,neighborhood,aliases')
+        .order('name')
+
+      if (error) throw error
+
+      return (data ?? []).map((r) => ({
+        id: r.id,
+        sourceId: r.source_id ?? undefined,
+        name: r.name,
+        lines: (r.lines as string[] | null) ?? [],
+        lat: Number(r.lat),
+        lng: Number(r.lng),
+        city: r.city,
+        district: r.district ?? undefined,
+        neighborhood: r.neighborhood ?? undefined,
+        aliases: (r.aliases as string[] | null) ?? [],
+      }))
+    },
+    staleTime: 10 * 60 * 1000,
   })
 }
 

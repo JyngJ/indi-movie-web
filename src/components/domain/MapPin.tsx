@@ -22,6 +22,7 @@ const AURA = 44
 
 export function MapPin({ kind = 'indie', selected = false, label, labelOffset, onClick }: MapPinProps) {
   const { dot, aura } = PIN_COLORS[kind]
+  const tailShiftX = labelOffset ? Math.max(-36, Math.min(36, -labelOffset.x)) : 0
 
   return (
     <div
@@ -55,6 +56,25 @@ export function MapPin({ kind = 'indie', selected = false, label, labelOffset, o
       {/* 라벨 */}
       {label && (
         <div style={{
+          position: 'relative',
+          zIndex: 1,
+          transform: labelOffset ? `translate(${labelOffset.x}px, ${labelOffset.y}px)` : undefined,
+        }}>
+          <div style={{
+            position: 'absolute',
+            width: 10,
+            height: 10,
+            backgroundColor: 'var(--color-surface-card)',
+            borderRight: '1.5px solid var(--color-border)',
+            borderBottom: '1.5px solid var(--color-border)',
+            borderBottomRightRadius: 2,
+            bottom: -5,
+            left: `calc(50% + ${tailShiftX}px)`,
+            transform: 'translateX(-50%) rotate(45deg)',
+            zIndex: 0,
+            pointerEvents: 'none',
+          }} />
+          <div style={{
           fontSize: 11,
           fontWeight: 600,
           whiteSpace: 'nowrap',
@@ -66,10 +86,9 @@ export function MapPin({ kind = 'indie', selected = false, label, labelOffset, o
           boxShadow: 'var(--shadow-sm)',
           position: 'relative',
           zIndex: 1,
-          isolation: 'isolate',
-          transform: labelOffset ? `translate(${labelOffset.x}px, ${labelOffset.y}px)` : undefined,
         }}>
           <span style={{ position: 'relative', zIndex: 1 }}>{label}</span>
+          </div>
         </div>
       )}
 
