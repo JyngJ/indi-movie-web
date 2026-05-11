@@ -6,6 +6,7 @@ interface MapPinProps {
   kind?: PinKind
   selected?: boolean
   label?: string
+  labelOffset?: { x: number; y: number }
   onClick?: () => void
 }
 
@@ -19,7 +20,7 @@ const PIN_COLORS: Record<PinKind, { dot: string; aura: string }> = {
 const DOT = 22
 const AURA = 44
 
-export function MapPin({ kind = 'indie', selected = false, label, onClick }: MapPinProps) {
+export function MapPin({ kind = 'indie', selected = false, label, labelOffset, onClick }: MapPinProps) {
   const { dot, aura } = PIN_COLORS[kind]
 
   return (
@@ -66,6 +67,7 @@ export function MapPin({ kind = 'indie', selected = false, label, onClick }: Map
           position: 'relative',
           zIndex: 1,
           isolation: 'isolate',
+          transform: labelOffset ? `translate(${labelOffset.x}px, ${labelOffset.y}px)` : undefined,
         }}>
           <span style={{ position: 'relative', zIndex: 1 }}>{label}</span>
         </div>

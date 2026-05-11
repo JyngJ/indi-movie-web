@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import { renderToStaticMarkup } from 'react-dom/server'
-import type { Map as LeafletMap } from 'leaflet'
+import type { Map as LeafletMap, Point as LeafletPoint } from 'leaflet'
 import { useUserLocation } from '@/hooks/useUserLocation'
 import { SearchBarButton, SearchBar, FabRound } from '@/components/primitives'
 import { MapPin, PosterThumb, TheaterSheet, FilterBar } from '@/components/domain'
@@ -137,7 +137,15 @@ const ANCHOR_Y = LABEL_H + GAP + DOT / 2
 
 const TOTAL_MOVIES = 3  // 핀 포스터 그리드 기본 표시 수
 
-function makePinIcon(name: string, selected: boolean, zoom: number, posterOffsetX = 0) {
+type LabelOffset = { x: number; y: number }
+
+function makePinIcon(
+  name: string,
+  selected: boolean,
+  zoom: number,
+  posterOffsetX = 0,
+  labelOffset: LabelOffset = { x: 0, y: 0 },
+) {
   const count = posterCountForZoom(zoom)
   const numRows = count === 6 ? 2 : count > 0 ? 1 : 0
   const usePosterLeft = count > 0 && posterOffsetX < -50
@@ -170,7 +178,7 @@ function makePinIcon(name: string, selected: boolean, zoom: number, posterOffset
 
   const html = `
     <div style="width:140px;display:flex;flex-direction:column;align-items:center;overflow:visible;position:relative;">
-      ${renderToStaticMarkup(<MapPin kind="indie" selected={selected} label={name} />)}
+      ${renderToStaticMarkup(<MapPin kind="indie" selected={selected} label={name} labelOffset={labelOffset} />)}
       ${posterHtml}
     </div>
   `
@@ -230,6 +238,85 @@ function computeLabelDirections(
     placed.push(cands[best])
   }
   return result
+}
+
+function estimateLabelWidth(label: string) {
+  return Math.min(180, Math.max(42, label.length * 12 + 14))
+}
+
+function computeNameLabelOffsets(
+  clusters: TheaterCluster[],
+  map: LeafletMap,
+  labelDirections: Map<string, LabelDir>,
+): Map<string, LabelOffset> {
+  type Rect = [number, number, number, number]
+  type LabelItem = { id: string; priority: number; rect: Rect }
+  const margin = 4
+  const hit = (a: Rect, b: Rect): boolean =>
+    a[0] < b[2] + margin && a[2] > b[0] - margin && a[1] < b[3] + margin && a[3] > b[1] - margin
+  const move = (r: Rect, o: LabelOffset): Rect => [r[0] + o.x, r[1] + o.y, r[2] + o.x, r[3] + o.y]
+  const items: LabelItem[] = []
+
+  for (const c of clusters) {
+    const { x: cx, y: cy } = map.latLngToContainerPoint([c.lat, c.lng] as [number, number])
+    if (c.theaters.length === 1) {
+      const labelW = estimateLabelWidth(c.theaters[0].name)
+      items.push({
+        id: c.id,
+        priority: 1,
+        rect: [cx - labelW / 2, cy - ANCHOR_Y, cx + labelW / 2, cy - ANCHOR_Y + LABEL_H],
+      })
+      continue
+    }
+
+    if (c.theaters.length <= 3) {
+      const dotR = 14
+      const cardGap = 8
+      const cardW = Math.min(180, Math.max(...c.theaters.map(t => estimateLabelWidth(t.name))))
+      const cardH = 18 * c.theaters.length + 12
+      const dir = labelDirections.get(c.id) ?? 'top'
+      const rects: Record<LabelDir, Rect> = {
+        top: [cx - cardW / 2, cy - dotR - cardGap - cardH, cx + cardW / 2, cy - dotR - cardGap],
+        bottom: [cx - cardW / 2, cy + dotR + cardGap, cx + cardW / 2, cy + dotR + cardGap + cardH],
+        right: [cx + dotR + cardGap, cy - cardH / 2, cx + dotR + cardGap + cardW, cy + cardH / 2],
+        left: [cx - dotR - cardGap - cardW, cy - cardH / 2, cx - dotR - cardGap, cy + cardH / 2],
+      }
+      items.push({ id: c.id, priority: 0, rect: rects[dir] })
+    }
+  }
+
+  const offsets = new Map<string, LabelOffset>()
+  const placed: Rect[] = []
+  const candidates: LabelOffset[] = [
+    { x: 0, y: 0 },
+    { x: 0, y: -16 },
+    { x: 0, y: 16 },
+    { x: -24, y: 0 },
+    { x: 24, y: 0 },
+    { x: -24, y: -14 },
+    { x: 24, y: -14 },
+    { x: -24, y: 14 },
+    { x: 24, y: 14 },
+    { x: 0, y: -28 },
+    { x: 0, y: 28 },
+  ]
+
+  for (const item of items.sort((a, b) => a.priority - b.priority)) {
+    let chosen = candidates[0]
+    let chosenRect = item.rect
+    for (const candidate of candidates) {
+      const rect = move(item.rect, candidate)
+      if (!placed.some(p => hit(rect, p))) {
+        chosen = candidate
+        chosenRect = rect
+        break
+      }
+    }
+    offsets.set(item.id, chosen)
+    placed.push(chosenRect)
+  }
+
+  return offsets
 }
 
 /* ── 줌 레벨에서 클러스터링 반경(px) ── */
@@ -347,35 +434,88 @@ function computeClusters(
 }
 
 /* ── 포스터 겹침 방지 오프셋 계산 ─────────────────────────────── */
-// 단일 마커끼리 포스터(140px)가 겹치면 양쪽을 수평으로 밀어냄
+// 단일 마커끼리, 또는 단일 포스터와 클러스터 표시 영역이 가로/세로 모두 1/4 이상 겹칠 때만 수평으로 밀어냄
 function computePosterOffsets(
   clusters: TheaterCluster[],
   map: LeafletMap,
   zoom: number,
+  labelDirections: Map<string, LabelDir> = new Map(),
 ): Map<string, number> {
   const offsets = new Map<string, number>()
   if (posterCountForZoom(zoom) === 0) return offsets
 
+  type Rect = [number, number, number, number]
+  const overlap = (a: Rect, b: Rect) => ({
+    x: Math.min(a[2], b[2]) - Math.max(a[0], b[0]),
+    y: Math.min(a[3], b[3]) - Math.max(a[1], b[1]),
+  })
+
   const POSTER_W = 140
+  const count = posterCountForZoom(zoom)
+  const rowCount = count === 6 ? 2 : 1
+  const POSTER_H = 66 * rowCount + 4 * Math.max(0, rowCount - 1) + 16 + 6
+  const POSTER_TOP_FROM_PIN = DOT / 2 + 6
+  const MIN_OVERLAP_X_TO_SHIFT = POSTER_W / 4
+  const MIN_OVERLAP_Y_TO_SHIFT = POSTER_H / 4
   const singles = clusters
     .filter((c) => c.theaters.length === 1)
     .map((c) => ({
       id: c.id,
       px: map.latLngToContainerPoint([c.lat, c.lng] as [number, number]),
     }))
+  const posterRect = (single: { id: string; px: LeafletPoint }, offset = offsets.get(single.id) ?? 0): Rect => [
+    single.px.x - POSTER_W / 2 + offset,
+    single.px.y + POSTER_TOP_FROM_PIN,
+    single.px.x + POSTER_W / 2 + offset,
+    single.px.y + POSTER_TOP_FROM_PIN + POSTER_H,
+  ]
 
   for (let i = 0; i < singles.length; i++) {
     for (let j = i + 1; j < singles.length; j++) {
       const a = singles[i]
       const b = singles[j]
+      const o = overlap(posterRect(a), posterRect(b))
+      if (o.x < MIN_OVERLAP_X_TO_SHIFT || o.y < MIN_OVERLAP_Y_TO_SHIFT) continue
+      const shift = o.x / 2 + 8
       const dx = b.px.x - a.px.x
-      const dy = Math.abs(b.px.y - a.px.y)
-      if (dy > 120) continue
-      const overlap = POSTER_W - Math.abs(dx)
-      if (overlap <= 0) continue
-      const shift = overlap / 2 + 8
       offsets.set(a.id, (offsets.get(a.id) ?? 0) + (dx >= 0 ? -shift : shift))
       offsets.set(b.id, (offsets.get(b.id) ?? 0) + (dx >= 0 ? shift : -shift))
+    }
+  }
+
+  const clusterBlockers: { centerX: number; rect: Rect }[] = []
+  for (const c of clusters) {
+    if (c.theaters.length <= 1) continue
+    const { x: cx, y: cy } = map.latLngToContainerPoint([c.lat, c.lng] as [number, number])
+
+    if (c.theaters.length > 3) {
+      clusterBlockers.push({ centerX: cx, rect: [cx - 20, cy - 20, cx + 20, cy + 20] })
+      continue
+    }
+
+    const dotR = 14
+    const cardGap = 8
+    const cardW = 180
+    const cardH = 18 * c.theaters.length + 12
+    const dir = labelDirections.get(c.id) ?? 'top'
+
+    clusterBlockers.push({ centerX: cx, rect: [cx - dotR, cy - dotR, cx + dotR, cy + dotR] })
+    const cardRect: Record<LabelDir, Rect> = {
+      top: [cx - cardW / 2, cy - dotR - cardGap - cardH, cx + cardW / 2, cy - dotR - cardGap],
+      bottom: [cx - cardW / 2, cy + dotR + cardGap, cx + cardW / 2, cy + dotR + cardGap + cardH],
+      right: [cx + dotR + cardGap, cy - cardH / 2, cx + dotR + cardGap + cardW, cy + cardH / 2],
+      left: [cx - dotR - cardGap - cardW, cy - cardH / 2, cx - dotR - cardGap, cy + cardH / 2],
+    }
+    clusterBlockers.push({ centerX: cx, rect: cardRect[dir] })
+  }
+
+  for (const single of singles) {
+    for (const blocker of clusterBlockers) {
+      const rect = posterRect(single)
+      const o = overlap(rect, blocker.rect)
+      if (o.x < MIN_OVERLAP_X_TO_SHIFT || o.y < MIN_OVERLAP_Y_TO_SHIFT) continue
+      const direction = (single.px.x + (offsets.get(single.id) ?? 0)) < blocker.centerX ? -1 : 1
+      offsets.set(single.id, (offsets.get(single.id) ?? 0) + direction * (o.x - MIN_OVERLAP_X_TO_SHIFT + 8))
     }
   }
 
@@ -383,7 +523,11 @@ function computePosterOffsets(
 }
 
 /* ── 클러스터 아이콘 ────────────────────────────────────────────── */
-function makeClusterIcon(theaters: Theater[], labelDir: LabelDir = 'top') {
+function makeClusterIcon(
+  theaters: Theater[],
+  labelDir: LabelDir = 'top',
+  labelOffset: LabelOffset = { x: 0, y: 0 },
+) {
   const count = theaters.length
   const DOT_D = 28
   const DOT_R = DOT_D / 2
@@ -426,7 +570,9 @@ function makeClusterIcon(theaters: Theater[], labelDir: LabelDir = 'top') {
       right: `left:${CENTER_X + offset}px;top:${CENTER_Y}px;transform:translateY(-50%);`,
       left: `right:${CANVAS_W - CENTER_X + offset}px;top:${CENTER_Y}px;transform:translateY(-50%);`,
     }
-    const wrapperStyle = `position:absolute;${cardPos[labelDir]}width:max-content;max-width:180px;z-index:2;`
+    const wrapperStyle =
+      `position:absolute;${cardPos[labelDir]}width:max-content;max-width:180px;z-index:2;` +
+      `margin-left:${labelOffset.x}px;margin-top:${labelOffset.y}px;`
     const html =
       `<div style="position:relative;width:${CANVAS_W}px;height:${CANVAS_H}px;overflow:visible;">` +
       `<div style="${wrapperStyle}">` +
@@ -568,6 +714,7 @@ export default function MapView() {
   // 동일 좌표 극장의 픽셀 고정 오프셋 (줌 변경 시마다 재계산)
   const [coLocationOffsets, setCoLocationOffsets] = useState<Map<string, { lat: number; lng: number }>>(new Map())
   const [labelDirections, setLabelDirections] = useState<Map<string, LabelDir>>(new Map())
+  const [labelOffsets, setLabelOffsets] = useState<Map<string, LabelOffset>>(new Map())
 
   const recompute = useCallback(() => {
     const map = mapRef.current
@@ -581,12 +728,14 @@ export default function MapView() {
       return off ? { ...t, lat: off.lat, lng: off.lng } : t
     })
     const c = computeClusters(adjustedTheaters, map, zoom, splitIds, coLocGroups)
-    const o = computePosterOffsets(c, map, zoom)
     const d = computeLabelDirections(c, map)
+    const labelO = computeNameLabelOffsets(c, map, d)
+    const o = computePosterOffsets(c, map, zoom, d)
     setClusters(c)
     setPosterOffsets(o)
     setCoLocationOffsets(coLoc)
     setLabelDirections(d)
+    setLabelOffsets(labelO)
   }, [zoom, theaters])
 
   // zoom 변경 시 재계산 (줌 애니메이션 끝난 뒤)
@@ -715,7 +864,11 @@ export default function MapView() {
               <Marker
                 key={`cluster-${cluster.id}`}
                 position={[cluster.lat, cluster.lng]}
-                icon={makeClusterIcon(cluster.theaters, labelDirections.get(cluster.id))}
+                icon={makeClusterIcon(
+                  cluster.theaters,
+                  labelDirections.get(cluster.id),
+                  labelOffsets.get(cluster.id),
+                )}
                 eventHandlers={{
                   click: () => {
                     const map = mapRef.current
@@ -751,7 +904,13 @@ export default function MapView() {
             <Marker
               key={theater.id}
               position={position}
-              icon={makePinIcon(theater.name, selectedId === theater.id, zoom, offsetX)}
+              icon={makePinIcon(
+                theater.name,
+                selectedId === theater.id,
+                zoom,
+                offsetX,
+                labelOffsets.get(theater.id),
+              )}
               eventHandlers={{ click: () => handlePinClick(theater.id) }}
             />
           )
