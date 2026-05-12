@@ -747,13 +747,13 @@ export function TheaterSheet({
               lineHeight: 1.12,
               letterSpacing: '-0.2px',
               display: 'flex',
-              alignItems: 'flex-start',
+              alignItems: 'center',
               gap: 2,
               paddingRight: 84,
             }}>
               <span style={{ minWidth: 0 }}>{theater.name}</span>
               {theater.website && (
-                <button style={{ ...inlineIconBtn, marginTop: 1 }} onClick={openWebsite} aria-label="사이트 보기">
+                <button style={inlineIconBtn} onClick={openWebsite} aria-label="사이트 보기">
                   <IconExternal size={10} />
                 </button>
               )}
@@ -832,7 +832,7 @@ export function TheaterSheet({
           {/* 2행: 극장 정보 + 액션 버튼 */}
           <div style={{ padding: '4px 20px 12px', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 4 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <div style={{
                   fontSize: 23, fontWeight: 700,
                   color: 'var(--color-text-primary)',
@@ -843,7 +843,7 @@ export function TheaterSheet({
                   {theater.name}
                 </div>
                 {theater.website && (
-                  <button style={{ ...inlineIconBtn, marginTop: 2 }} onClick={openWebsite} aria-label="사이트 보기">
+                  <button style={inlineIconBtn} onClick={openWebsite} aria-label="사이트 보기">
                     <IconExternal size={10} />
                   </button>
                 )}
