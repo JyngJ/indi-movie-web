@@ -6,6 +6,7 @@ export type TimeFilter = '전체' | '오전' | '오후' | '18시 이후' | '심�
 export interface Day {
   dow: string
   date: string
+  isoDate: string   // 'YYYY-MM-DD' — API 쿼리용
   type: DayType
   disabled?: boolean
 }

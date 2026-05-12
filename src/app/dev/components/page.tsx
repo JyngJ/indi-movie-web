@@ -17,13 +17,13 @@ const IcoExpand = () => <svg width={16} height={16} viewBox="0 0 24 24" fill="no
 
 /* ── 샘플 데이터 ─────────────────────────────────────────────── */
 const SAMPLE_DAYS = [
-  { dow: '오늘', date: '29', type: 'today'    as const },
-  { dow: '목',   date: '30', type: 'weekday'  as const },
-  { dow: '금',   date: '1',  type: 'holiday'  as const },
-  { dow: '토',   date: '2',  type: 'saturday' as const },
-  { dow: '일',   date: '3',  type: 'sunday'   as const },
-  { dow: '월',   date: '4',  type: 'weekday'  as const },
-  { dow: '화',   date: '5',  type: 'weekday'  as const },
+  { dow: '오늘', date: '29', isoDate: '2026-04-29', type: 'today'    as const },
+  { dow: '목',   date: '30', isoDate: '2026-04-30', type: 'weekday'  as const },
+  { dow: '금',   date: '1',  isoDate: '2026-05-01', type: 'holiday'  as const },
+  { dow: '토',   date: '2',  isoDate: '2026-05-02', type: 'saturday' as const },
+  { dow: '일',   date: '3',  isoDate: '2026-05-03', type: 'sunday'   as const },
+  { dow: '월',   date: '4',  isoDate: '2026-05-04', type: 'weekday'  as const },
+  { dow: '화',   date: '5',  isoDate: '2026-05-05', type: 'weekday'  as const },
 ]
 
 const SAMPLE_MOVIES = [
@@ -309,7 +309,7 @@ export default function ComponentsPage() {
         <Section title="05 · 바텀시트 — 극장 카드">
           <div style={{ position: 'relative', height: 400, overflow: 'hidden', borderRadius: 16, background: '#e0ddd6' }}>
             <TheaterSheet
-              theater={{ id: 'dev', name: '더숲 아트시네마', address: '서울특별시 노원구 화랑로 123', lat: 37.6, lng: 127.0, kind: 'indie' }}
+              theater={{ id: 'dev', name: '더숲 아트시네마', address: '서울특별시 노원구 화랑로 123', lat: 37.6, lng: 127.0, city: '서울', createdAt: '', updatedAt: '' }}
               expanded={false}
               selectedMovieId={selectedMovie}
               favorited={favorited}

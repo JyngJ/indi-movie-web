@@ -56,6 +56,44 @@ export interface MapBounds {
   maxLng: number
 }
 
+// --- Places ---
+
+export type AreaType = 'city' | 'district' | 'neighborhood'
+
+export interface Station {
+  id: string
+  sourceId?: string
+  name: string
+  lines: string[]
+  lat: number
+  lng: number
+  city: string
+  district?: string
+  neighborhood?: string
+  aliases: string[]
+}
+
+export interface Area {
+  id: string
+  sourceId?: string
+  name: string
+  type: AreaType
+  city: string
+  district?: string
+  lat: number
+  lng: number
+  aliases: string[]
+}
+
+export interface SubwayLine {
+  id: string
+  sourceId?: string
+  name: string
+  lineCode: string
+  color?: string
+  geometry: unknown
+}
+
 // --- Movie ---
 
 export interface Movie {
