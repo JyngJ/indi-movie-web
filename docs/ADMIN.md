@@ -60,7 +60,7 @@ fingerprint 기준 중복 제거
 
 - 극장명
 - 상영시간표 URL
-- 파서 유형: `tableText`, `timelineCard`, `dtryxReservationApi`, `movielandProductOptions`, `seoulArtTimetable`, `jsonLdEvent`, `csv`
+- 파서 유형: `tableText`, `timelineCard`, `dtryxReservationApi`, `movieeTicketApi`, `movielandProductOptions`, `seoulArtTimetable`, `jsonLdEvent`, `csv`
 - 수집 주기: `manual`, `daily`, `twice_daily`
 
 홈페이지 URL은 비워두면 상영시간표 URL의 origin으로 대체한다. 새 소스를 저장하면 즉시 선택 상태가 되고 입력 방식은 `URL 크롤링`으로 전환된다.
@@ -79,6 +79,8 @@ HTML 파서는 우선 JSON-LD `Event` 블록을 읽고, 없거나 부족하면 `
 인디스페이스처럼 표가 아니라 날짜 라벨과 시간축 카드로 렌더링되는 페이지는 `timelineCard` 패턴으로 처리한다. 이 파서는 `dateLabel` 아래의 `cardContainer`를 순회하며 `nameBox`, `schedule`, `salingInfo`, `venue` 텍스트에서 제목, 상영시간, 잔여석, 상영관 힌트를 추출한다.
 
 디트릭스 계열 예매 페이지는 `dtryxReservationApi`로 처리한다. 이 어댑터는 예매 페이지 URL의 `cgid`를 추출하고 `/reserve/main_list.do`에서 영화관, 영화, 날짜 목록을 받은 뒤 `/reserve/showseq_list.do`를 조합 호출하여 `Showseqlist`를 후보 레코드로 정규화한다.
+
+무비애 계열 예매 페이지는 `movieeTicketApi`로 처리한다. 이 어댑터는 URL의 `tid` 또는 `thsynid`를 추출하고 `/api/TicketApi/GetPlayDateList`, `/api/TicketApi/GetPlayTimeList`를 호출해 영화명, 관, 날짜, 시간, 좌석 정보를 후보 레코드로 정규화한다.
 
 무비랜드는 `movielandProductOptions`로 처리한다. 이 어댑터는 Now Showing 목록에서 상품 상세 URL을 수집하고, Cafe24 상품 상세 HTML의 `option_stock_data`에 들어있는 `Date / Time / Seat` 조합을 날짜·시간별로 그룹핑해 잔여 좌석과 총 좌석을 계산한다.
 

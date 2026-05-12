@@ -798,6 +798,7 @@ export function AdminShowtimeConsole() {
                     <option value="tableText">HTML 테이블</option>
                     <option value="timelineCard">타임라인 카드</option>
                     <option value="dtryxReservationApi">디트릭스 예매 API</option>
+                    <option value="movieeTicketApi">무비애 예매 API</option>
                     <option value="movielandProductOptions">무비랜드 상품 옵션</option>
                     <option value="seoulArtTimetable">서울아트시네마 시간표</option>
                     <option value="jsonLdEvent">JSON-LD Event</option>

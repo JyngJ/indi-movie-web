@@ -58,6 +58,28 @@ interface DtryxShowtimeDetail {
   ShowSeq?: string
 }
 
+interface MovieePlayDate {
+  PLAY_DT?: string
+  PLAY_DT_STR?: string
+}
+
+interface MovieeShowtime {
+  PT_ID?: string
+  TS_NM?: string
+  PLAY_TIME?: string
+  END_TIME?: string
+  SEAT_CNT?: string | number
+  REMAINSEAT_CNT?: string | number
+  T_ID?: string
+  T_NM?: string
+  M_ID?: string
+  M_NM?: string
+  PLAY_DT?: string
+  SUBTITLE?: string
+  TICKET_STOP_YN?: string
+  RESERVE_YN?: string
+}
+
 interface MovielandOptionStock {
   option_value?: string
   option_value_orginal?: string[]
@@ -113,6 +135,10 @@ export function parseShowtimeCandidates(
 export async function crawlShowtimeCandidates(context: ParseContext) {
   if (context.source.parser === 'dtryxReservationApi') {
     return crawlDtryxReservationApi(context)
+  }
+
+  if (context.source.parser === 'movieeTicketApi') {
+    return crawlMovieeTicketApi(context)
   }
 
   if (context.source.parser === 'movielandProductOptions') {
@@ -214,6 +240,73 @@ export async function crawlDtryxReservationApi(context: ParseContext) {
   )
 
   const candidateGroups = await mapWithConcurrency(tasks, 6)
+
+  return dedupeCandidates(candidateGroups.flat())
+}
+
+export async function crawlMovieeTicketApi(context: ParseContext) {
+  const sourceUrl = context.sourceUrl ?? context.source.listingUrl
+  const tid = extractMovieeTheaterId(sourceUrl)
+  const baseUrl = new URL(sourceUrl)
+  const origin = baseUrl.origin
+  const headers = {
+    'user-agent': 'Mozilla/5.0 (compatible; indi-movie-web-admin-crawler/0.1)',
+    accept: 'application/json, text/javascript, */*; q=0.01',
+    'accept-language': 'ko-KR,ko;q=0.9,en;q=0.8',
+    'x-requested-with': 'XMLHttpRequest',
+    referer: sourceUrl,
+  }
+  const dateParams = createMovieePlayDateParams(tid)
+  const dateData = await fetchJson<{
+    ResCd?: string
+    ResData?: { Table?: MovieePlayDate[] }
+  }>(`${origin}/api/TicketApi/GetPlayDateList?${dateParams}`, headers)
+  const playDates = (dateData.ResData?.Table ?? [])
+    .map((date) => date.PLAY_DT)
+    .filter((date): date is string => Boolean(date))
+    .slice(0, 14)
+
+  const tasks = playDates.map((playDate) => async () => {
+    const params = createMovieeTimeParams(tid, playDate)
+    const timeData = await fetchJson<{
+      ResCd?: string
+      ResData?: { Table?: MovieeShowtime[] }
+    }>(`${origin}/api/TicketApi/GetPlayTimeList?${params}`, headers)
+    const rows = timeData.ResData?.Table ?? []
+
+    return rows.flatMap((row) => {
+      const showTime = normalizeCompactTime(row.PLAY_TIME)
+      const movieTitle = normalizeMovieeMovieTitle(row.M_NM)
+      const screenName = normalizeScreenName(row.TS_NM, context.source.theaterName)
+
+      if (!showTime || !movieTitle) return []
+
+      const closed = row.TICKET_STOP_YN === '1' || row.RESERVE_YN === '0'
+      const warnings = [
+        ...(closed ? ['예매 종료 또는 예매 불가 회차입니다.'] : []),
+        ...(screenName === '상영관 확인 필요' ? ['상영관을 확인해야 합니다.'] : []),
+      ]
+
+      return [buildCandidate({
+        context,
+        movieTitle,
+        showDate: row.PLAY_DT ?? playDate,
+        showTime,
+        endTime: normalizeCompactTime(row.END_TIME),
+        screenName,
+        formatText: [row.M_NM, row.SUBTITLE].filter(Boolean).join(' '),
+        seatAvailable: toInt(row.REMAINSEAT_CNT, DEFAULT_SEAT_TOTAL),
+        seatTotal: toInt(row.SEAT_CNT, DEFAULT_SEAT_TOTAL),
+        price: DEFAULT_PRICE,
+        bookingUrl: `${origin}/Movie/Ticket?tid=${encodeURIComponent(tid)}`,
+        rawText: JSON.stringify(row),
+        confidence: warnings.length ? 0.82 : 0.96,
+        warnings,
+      })]
+    })
+  })
+
+  const candidateGroups = await mapWithConcurrency(tasks, 4)
 
   return dedupeCandidates(candidateGroups.flat())
 }
@@ -772,6 +865,19 @@ function extractDtryxCgid(url: string) {
   throw new Error('디트릭스 예매 URL에서 cgid를 찾지 못했습니다.')
 }
 
+function extractMovieeTheaterId(url: string) {
+  try {
+    const parsed = new URL(url)
+    const tid = parsed.searchParams.get('tid') ?? parsed.searchParams.get('thsynid')
+    if (tid) return tid
+  } catch {
+    const tid = url.match(/[?&](?:tid|thsynid)=([^&]+)/i)?.[1]
+    if (tid) return decodeURIComponent(tid)
+  }
+
+  throw new Error('무비애 예매 URL에서 tid 또는 thsynid를 찾지 못했습니다.')
+}
+
 function createDtryxParams(cgid: string, overrides: Partial<Record<string, string>> = {}) {
   return new URLSearchParams({
     cgid,
@@ -786,6 +892,27 @@ function createDtryxParams(cgid: string, overrides: Partial<Record<string, strin
     TabRegionCd: 'all',
     TabMovieType: 'all',
     ...overrides,
+  })
+}
+
+function createMovieePlayDateParams(tid: string) {
+  return new URLSearchParams({
+    tIdList: tid,
+    mId: '',
+    groupCd: '-1',
+    mode: '0',
+    gId: '',
+    pId: '',
+  })
+}
+
+function createMovieeTimeParams(tid: string, playDate: string) {
+  return new URLSearchParams({
+    tId: tid,
+    mId: '',
+    playDt: playDate,
+    ntId: '',
+    gId: '',
   })
 }
 
@@ -808,6 +935,20 @@ function normalizeDtryxTime(value: unknown) {
   if (!match) return undefined
 
   return `${match[1].padStart(2, '0')}:${match[2]}`
+}
+
+function normalizeCompactTime(value: unknown) {
+  const text = String(value ?? '').trim()
+  const compact = text.match(/^(\d{1,2})(\d{2})$/)
+  if (compact) return `${compact[1].padStart(2, '0')}:${compact[2]}`
+
+  return normalizeDtryxTime(text)
+}
+
+function normalizeMovieeMovieTitle(value: unknown) {
+  return String(value ?? '')
+    .replace(/\((?:2D|3D|4D|영문자막|한글자막|자막|더빙|굿즈패키지|GV|시네토크|씨네토크)\)\s*$/i, '')
+    .trim()
 }
 
 function splitByDateLabel(content: string) {
