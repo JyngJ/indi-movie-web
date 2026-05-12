@@ -579,7 +579,7 @@ export interface FilterBarProps {
 }
 
 export function FilterBar({ onChange }: FilterBarProps) {
-  const [dateId, setDateId] = useState<DateId>(null)
+  const [dateId, setDateId] = useState<DateId>('this-week')
   const [customStart, setCustomStart] = useState<Date | null>(null)
   const [customEnd, setCustomEnd] = useState<Date | null>(null)
   const [genres, setGenres] = useState<string[]>([])

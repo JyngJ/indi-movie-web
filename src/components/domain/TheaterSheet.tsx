@@ -41,6 +41,51 @@ const IconChevronLeft = () => (
   </svg>
 )
 
+const IconExternal = ({ size = 16 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+    <polyline points="15 3 21 3 21 9" />
+    <line x1="10" y1="14" x2="21" y2="3" />
+  </svg>
+)
+
+const IconCopy = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+  </svg>
+)
+
+const IconRoute = ({ size = 15 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 6h5l4 12h9" />
+    <circle cx="5" cy="6" r="2" />
+    <circle cx="19" cy="18" r="2" />
+  </svg>
+)
+
+const IconShare = ({ size = 15 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="18" cy="5" r="3" />
+    <circle cx="6" cy="12" r="3" />
+    <circle cx="18" cy="19" r="3" />
+    <path d="M8.6 10.6l6.8-4.2M8.6 13.4l6.8 4.2" />
+  </svg>
+)
+
+const IconInstagram = ({ size = 15 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="18" height="18" rx="5" />
+    <circle cx="12" cy="12" r="4" />
+    <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+  </svg>
+)
+
 /* ── 시놉시스 카드 ──────────────────────────────────────────────── */
 interface SynopsisCardProps {
   synopsis: string
@@ -522,6 +567,66 @@ export function TheaterSheet({
   /* ── 상영시간 필터링 ─────────────────────────────────────────── */
   const filteredShowtimes = showtimes.filter((s) => s.movieId === selectedMovieId)
 
+  const openWebsite = () => {
+    if (!theater.website) return
+    window.open(theater.website, '_blank', 'noopener')
+  }
+
+  const copyAddress = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(theater.address)
+    } else {
+      const el = document.createElement('textarea')
+      el.value = theater.address
+      el.style.cssText = 'position:fixed;opacity:0'
+      document.body.appendChild(el)
+      el.select()
+      document.execCommand('copy')
+      document.body.removeChild(el)
+    }
+    setCopyCount(c => c + 1)
+  }
+
+  const openDirections = () => {
+    const url = `nmap://route/public?dlat=${theater.lat}&dlng=${theater.lng}&dname=${encodeURIComponent(theater.name)}&appname=kr.indi.movie`
+    const fallback = `https://map.naver.com/v5/directions/-/-/-/transit?c=${theater.lng},${theater.lat},15,0,0,0,dh`
+    const a = document.createElement('a')
+    a.href = url
+    a.click()
+    setTimeout(() => window.open(fallback, '_blank', 'noopener'), 1500)
+  }
+
+  const shareTheater = async () => {
+    const shareUrl = typeof window !== 'undefined'
+      ? `${window.location.origin}${window.location.pathname}?theater=${encodeURIComponent(theater.id)}`
+      : ''
+    const payload = {
+      title: theater.name,
+      text: `${theater.name} · ${theater.address}`,
+      url: shareUrl,
+    }
+
+    if (navigator.share) {
+      try {
+        await navigator.share(payload)
+        return
+      } catch {
+        return
+      }
+    }
+
+    if (navigator.clipboard && shareUrl) {
+      await navigator.clipboard.writeText(shareUrl)
+      setCopyCount(c => c + 1)
+    }
+  }
+
+  const openInstagram = () => {
+    const instagramUrl = (theater as Theater & { instagramUrl?: string }).instagramUrl
+    const url = instagramUrl || `https://www.instagram.com/explore/search/keyword/?q=${encodeURIComponent(theater.name)}`
+    window.open(url, '_blank', 'noopener')
+  }
+
   /* ── 공통 아이콘 버튼 스타일 ─────────────────────────────────── */
   const iconBtn: React.CSSProperties = {
     // flex: '0 0 36px' — 너비/높이 동시에 고정. flex 환경에서 찌그러짐 방지
@@ -537,6 +642,41 @@ export function TheaterSheet({
     alignItems: 'center',
     justifyContent: 'center',
     color: 'var(--color-text-body)',
+  }
+
+  const actionBtn: React.CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    minHeight: 30,
+    padding: '0 10px',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-full)',
+    background: 'var(--color-surface-card)',
+    color: 'var(--color-text-body)',
+    fontSize: 12,
+    fontWeight: 600,
+    lineHeight: 1,
+    whiteSpace: 'nowrap',
+    cursor: 'pointer',
+  }
+
+  const inlineIconBtn: React.CSSProperties = {
+    flex: '0 0 16px',
+    width: 16,
+    height: 16,
+    padding: 0,
+    boxSizing: 'border-box',
+    border: 'none',
+    background: 'none',
+    borderRadius: '50%',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: 'var(--color-text-caption)',
+    verticalAlign: 'middle',
   }
 
   return (
@@ -597,30 +737,68 @@ export function TheaterSheet({
         /* Collapsed 헤더 */
         <div style={{
           padding: '0 20px 12px',
-          display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'space-between',
-          gap: 8,
+          position: 'relative',
           flexShrink: 0,
         }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div>
             <div style={{
-              fontSize: 20, fontWeight: 700,
+              fontSize: 21, fontWeight: 700,
               color: 'var(--color-text-primary)',
-              lineHeight: 1.2,
+              lineHeight: 1.12,
               letterSpacing: '-0.2px',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 2,
+              paddingRight: 84,
             }}>
-              {theater.name}
+              <span style={{ minWidth: 0 }}>{theater.name}</span>
+              {theater.website && (
+                <button style={{ ...inlineIconBtn, marginTop: 1 }} onClick={openWebsite} aria-label="사이트 보기">
+                  <IconExternal size={10} />
+                </button>
+              )}
             </div>
             <div style={{
               fontSize: 13,
               color: 'var(--color-text-sub)',
-              marginTop: 4,
+              marginTop: 1,
+              lineHeight: 1.25,
+              display: 'flex',
+              alignItems: 'baseline',
+              gap: 2,
             }}>
-              {theater.address}
+              <span style={{ minWidth: 0 }}>{theater.address}</span>
+              <button style={inlineIconBtn} onClick={copyAddress} aria-label="주소 복사">
+                <IconCopy size={10} />
+              </button>
+            </div>
+            <div style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 6,
+              marginTop: 5,
+            }}>
+              <button style={actionBtn} onClick={openDirections}>
+                <IconRoute size={13} />
+                길찾기
+              </button>
+              <button style={actionBtn} onClick={shareTheater}>
+                <IconShare size={13} />
+                공유
+              </button>
+              <button style={actionBtn} onClick={openInstagram}>
+                <IconInstagram size={13} />
+                인스타그램
+              </button>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+          <div style={{
+            position: 'absolute',
+            top: -2,
+            right: 20,
+            display: 'flex',
+            gap: 6,
+          }}>
             <button style={iconBtn} onClick={onFavorite}>
               <IconStar filled={favorited} />
             </button>
@@ -651,99 +829,58 @@ export function TheaterSheet({
               </button>
             </div>
           </div>
-          {/* 2행: 극장 정보 + 외부 링크 버튼 */}
-          <div style={{ padding: '7px 20px 12px', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+          {/* 2행: 극장 정보 + 액션 버튼 */}
+          <div style={{ padding: '4px 20px 12px', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              {/* 극장명 + 외부링크 아이콘 */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 4 }}>
                 <div style={{
-                  fontSize: 22, fontWeight: 700,
+                  fontSize: 23, fontWeight: 700,
                   color: 'var(--color-text-primary)',
-                  lineHeight: 1.2,
+                  lineHeight: 1.12,
                   letterSpacing: '-0.3px',
+                  minWidth: 0,
                 }}>
                   {theater.name}
                 </div>
                 {theater.website && (
-                  <button
-                    onClick={() => window.open(theater.website, '_blank', 'noopener')}
-                    style={{
-                      padding: 0, border: 'none', background: 'none',
-                      cursor: 'pointer', flexShrink: 0,
-                      color: 'var(--color-text-caption)',
-                      display: 'flex', alignItems: 'center',
-                    }}
-                  >
-                    <svg width={16} height={16} viewBox="0 0 24 24" fill="none"
-                      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
-                      <polyline points="15 3 21 3 21 9" />
-                      <line x1="10" y1="14" x2="21" y2="3" />
-                    </svg>
+                  <button style={{ ...inlineIconBtn, marginTop: 2 }} onClick={openWebsite} aria-label="사이트 보기">
+                    <IconExternal size={10} />
                   </button>
                 )}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 5 }}>
-                <div style={{ fontSize: 13, color: 'var(--color-text-sub)' }}>
-                  {theater.address}
-                </div>
-                <button
-                  onClick={() => {
-                    if (navigator.clipboard) {
-                      navigator.clipboard.writeText(theater.address)
-                    } else {
-                      const el = document.createElement('textarea')
-                      el.value = theater.address
-                      el.style.cssText = 'position:fixed;opacity:0'
-                      document.body.appendChild(el)
-                      el.select()
-                      document.execCommand('copy')
-                      document.body.removeChild(el)
-                    }
-                    setCopyCount(c => c + 1)
-                  }}
-                  style={{
-                    padding: 0, border: 'none', background: 'none',
-                    cursor: 'pointer', flexShrink: 0,
-                    color: 'var(--color-text-caption)',
-                    display: 'flex', alignItems: 'center',
-                    minHeight: 'unset',
-                  }}
-                  aria-label="주소 복사"
-                >
-                  <svg width={14} height={14} viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                  </svg>
+              <div style={{
+                fontSize: 13,
+                color: 'var(--color-text-sub)',
+                marginTop: 1,
+                lineHeight: 1.25,
+                display: 'flex',
+                alignItems: 'baseline',
+                gap: 2,
+              }}>
+                <span style={{ minWidth: 0 }}>{theater.address}</span>
+                <button style={inlineIconBtn} onClick={copyAddress} aria-label="주소 복사">
+                  <IconCopy size={10} />
                 </button>
               </div>
-            </div>
-            {/* 길찾기 버튼 */}
-            <div style={{ flexShrink: 0 }}>
-              <button
-                onClick={() => {
-                  const url = `nmap://route/public?dlat=${theater.lat}&dlng=${theater.lng}&dname=${encodeURIComponent(theater.name)}&appname=kr.indi.movie`
-                  const fallback = `https://map.naver.com/v5/directions/-/-/-/transit?c=${theater.lng},${theater.lat},15,0,0,0,dh`
-                  const a = document.createElement('a')
-                  a.href = url
-                  a.click()
-                  setTimeout(() => window.open(fallback, '_blank', 'noopener'), 1500)
-                }}
-                style={{
-                  fontSize: 13, fontWeight: 500,
-                  padding: '5px 12px',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: 'var(--radius-full)',
-                  background: 'none',
-                  color: 'var(--color-text-body)',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  minHeight: 'unset',
-                }}
-              >
-                길 찾기
-              </button>
+              <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 6,
+                marginTop: 5,
+              }}>
+                <button style={actionBtn} onClick={openDirections}>
+                  <IconRoute size={13} />
+                  길찾기
+                </button>
+                <button style={actionBtn} onClick={shareTheater}>
+                  <IconShare size={13} />
+                  공유
+                </button>
+                <button style={actionBtn} onClick={openInstagram}>
+                  <IconInstagram size={13} />
+                  인스타그램
+                </button>
+              </div>
             </div>
           </div>
         </div>

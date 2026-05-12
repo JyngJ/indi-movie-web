@@ -10,7 +10,8 @@ import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import { useUserLocation } from '@/hooks/useUserLocation'
 import { SearchBarButton, SearchBar, FabRound } from '@/components/primitives'
 import { MapPin, PosterThumb, TheaterSheet, FilterBar } from '@/components/domain'
-import { useActiveMovieIds, useMovies, useStations, useTheaters } from '@/lib/supabase/queries'
+import type { FilterState } from '@/components/domain'
+import { useActiveMovieIds, useMapShowtimes, useMovies, useStations, useTheaters } from '@/lib/supabase/queries'
 import type { Movie, Station, Theater } from '@/types/api'
 import subwayLinesData from '@/data/subway-lines.json'
 
@@ -33,6 +34,11 @@ const SUBWAY_LINE_MIN_ZOOM = 15
 const STATION_PIN_MIN_ZOOM = 15
 const STATION_PIN_FULL_ZOOM = 17
 const SEARCH_CROSS_RESULT_LIMIT = 5
+const DATE_FORMATTER = new Intl.DateTimeFormat('en-CA', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+})
 const SEOUL_SUBWAY_LINE_COLORS: Record<string, { light: string; dark: string }> = {
   '1': { light: '#0052A4', dark: '#4C8ED1' },
   '1호선': { light: '#0052A4', dark: '#4C8ED1' },
@@ -150,6 +156,65 @@ function escapeHtml(value: string): string {
     .replace(/'/g, '&#39;')
 }
 
+function startOfLocalDay(date: Date) {
+  const next = new Date(date)
+  next.setHours(0, 0, 0, 0)
+  return next
+}
+
+function addDays(date: Date, days: number) {
+  const next = new Date(date)
+  next.setDate(next.getDate() + days)
+  return next
+}
+
+function endOfMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0)
+}
+
+function formatDateParam(date: Date) {
+  return DATE_FORMATTER.format(date)
+}
+
+function dateRangeForFilter(filter: FilterState) {
+  const today = startOfLocalDay(new Date())
+  switch (filter.dateId) {
+    case 'today':
+      return { start: today, end: today }
+    case 'tomorrow': {
+      const tomorrow = addDays(today, 1)
+      return { start: tomorrow, end: tomorrow }
+    }
+    case 'this-weekend': {
+      const dow = today.getDay()
+      const daysToSat = dow === 0 ? 6 : 6 - dow
+      const saturday = addDays(today, daysToSat)
+      return { start: saturday, end: addDays(saturday, 1) }
+    }
+    case 'next-weekend': {
+      const dow = today.getDay()
+      const daysToSat = dow === 0 ? 6 : 6 - dow
+      const saturday = addDays(today, daysToSat + 7)
+      return { start: saturday, end: addDays(saturday, 1) }
+    }
+    case 'this-month':
+      return { start: today, end: endOfMonth(today) }
+    case 'custom':
+      return {
+        start: filter.customStart ? startOfLocalDay(filter.customStart) : today,
+        end: filter.customEnd ? startOfLocalDay(filter.customEnd) : filter.customStart ? startOfLocalDay(filter.customStart) : addDays(today, 7),
+      }
+    case null:
+      return { start: today, end: addDays(today, 30) }
+    case 'this-week':
+    default: {
+      const dow = today.getDay()
+      const weekEnd = dow === 0 ? addDays(today, 6) : addDays(today, 7 - dow)
+      return { start: today, end: weekEnd }
+    }
+  }
+}
+
 function makeStationIcon(station: Station, isDark: boolean, zoom: number) {
   const compact = zoom < STATION_PIN_FULL_ZOOM
   const DOT = compact ? 11 : 15
@@ -192,6 +257,10 @@ function normalizeSearchText(value: string): string {
     .replace(/역$/g, '')
 }
 
+function finiteNumber(value: number, fallback = 0): number {
+  return Number.isFinite(value) ? value : fallback
+}
+
 function stationSearchScore(station: Station, query: string): number {
   const normalizedQuery = normalizeSearchText(query)
   if (!normalizedQuery) return 0
@@ -232,6 +301,22 @@ function directorSearchScore(director: string, query: string): number {
   return 0
 }
 
+function theaterSearchScore(theater: Theater, query: string): number {
+  const normalizedQuery = normalizeSearchText(query)
+  if (!normalizedQuery) return 0
+
+  const fields = [theater.name, theater.address, theater.city ?? '']
+    .map(normalizeSearchText)
+    .filter(Boolean)
+  let best = 0
+  for (const field of fields) {
+    if (field === normalizedQuery) best = Math.max(best, 100)
+    else if (field.startsWith(normalizedQuery)) best = Math.max(best, 82)
+    else if (field.includes(normalizedQuery)) best = Math.max(best, 58)
+  }
+  return best
+}
+
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
 const IcoPlus = () => (
   <svg width={18} height={18} viewBox="0 0 24 24" fill="none"
@@ -246,10 +331,11 @@ const IcoMinus = () => (
   </svg>
 )
 const IcoLocate = () => (
-  <svg width={18} height={18} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-    <circle cx={12} cy={12} r={4} />
-    <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+  <svg width={20} height={20} viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round">
+    <circle cx={12} cy={12} r={6.5} />
+    <circle cx={12} cy={12} r={1.7} fill="currentColor" stroke="none" />
+    <path d="M12 2.8v4M12 17.2v4M2.8 12h4M17.2 12h4" />
   </svg>
 )
 
@@ -266,17 +352,47 @@ function posterCountForZoom(zoom: number): number {
 }
 
 /* ── 포스터 그리드 ──────────────────────────────────────────────── */
-function PosterGrid({ count, total, tailDir, tailOffset = 0 }: {
-  count: number
-  total: number
+interface TheaterPosterMovie {
+  id: string
+  title: string
+  posterUrl?: string
+  showtimeCount: number
+}
+
+interface PosterSlot {
+  movie?: TheaterPosterMovie
+  overflow?: number
+  countLabel?: string
+}
+
+function posterSlotsForZoom(movies: TheaterPosterMovie[], zoom: number): PosterSlot[] {
+  const capacity = posterCountForZoom(zoom)
+  if (capacity === 0 || movies.length === 0) return []
+  if (capacity === 1) {
+    return movies.length === 1
+      ? [{ movie: movies[0] }]
+      : [{ countLabel: `${movies.length}편` }]
+  }
+  if (movies.length <= capacity) return movies.slice(0, capacity).map((movie) => ({ movie }))
+
+  const visiblePosterCount = capacity - 1
+  return [
+    ...movies.slice(0, visiblePosterCount).map((movie) => ({ movie })),
+    { movie: movies[visiblePosterCount], overflow: movies.length - visiblePosterCount },
+  ]
+}
+
+function PosterGrid({ slots, tailDir, tailOffset = 0 }: {
+  slots: PosterSlot[]
   tailDir?: 'up' | 'right'
   tailOffset?: number
 }) {
-  const overflow = total > count ? total - count : 0
-  const perRow = count === 6 ? 3 : count
+  const count = slots.length
+  const perRow = count > 3 ? 3 : count
   const cardWidth = perRow * 44 + Math.max(0, perRow - 1) * 4 + 16
   const tailInset = 14
-  const tailX = Math.max(tailInset, Math.min(cardWidth - tailInset, cardWidth / 2 - tailOffset))
+  const safeTailOffset = finiteNumber(tailOffset)
+  const tailX = Math.max(tailInset, Math.min(cardWidth - tailInset, cardWidth / 2 - safeTailOffset))
 
   const tailStyle: React.CSSProperties | null = tailDir === 'up' ? {
     position: 'absolute',
@@ -317,26 +433,45 @@ function PosterGrid({ count, total, tailDir, tailOffset = 0 }: {
         position: 'relative',
         zIndex: 1,
       }}>
-        <div style={{
-          position: 'absolute', top: -7, left: 4,
-          fontSize: 9, fontWeight: 700, padding: '1px 4px', borderRadius: 3,
-          backgroundColor: 'rgba(255,180,0,0.9)', color: '#1A1714',
-          letterSpacing: '0.3px', whiteSpace: 'nowrap', zIndex: 1,
-        }}>MOCK</div>
-
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, position: 'relative', zIndex: 1 }}>
-          {Array.from({ length: count === 6 ? 2 : 1 }).map((_, row) => (
+          {Array.from({ length: count > 3 ? 2 : 1 }).map((_, row) => (
             <div key={row} style={{ display: 'flex', gap: 4 }}>
               {Array.from({ length: perRow }).map((_, col) => {
                 const idx = row * perRow + col
+                const slot = slots[idx]
+                if (!slot) return null
                 return (
-                  <PosterThumb
-                    key={idx}
-                    width={44}
-                    height={66}
-                    size="sm"
-                    overflow={idx === count - 1 && overflow > 0 ? overflow : undefined}
-                  />
+                  slot.countLabel ? (
+                    <div
+                      key={idx}
+                      style={{
+                        width: 44,
+                        height: 66,
+                        borderRadius: 'var(--comp-poster-radius)',
+                        backgroundColor: 'var(--color-primary-base)',
+                        color: '#fff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 15,
+                        fontWeight: 800,
+                        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.18)',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {slot.countLabel}
+                    </div>
+                  ) : (
+                    <PosterThumb
+                      key={idx}
+                      src={slot.movie?.posterUrl}
+                      alt={slot.movie?.title ?? ''}
+                      width={44}
+                      height={66}
+                      size="sm"
+                      overflow={slot.overflow}
+                    />
+                  )
                 )
               })}
             </div>
@@ -355,30 +490,29 @@ const GAP = 4
 const DOT = 22
 const ANCHOR_Y = LABEL_H + GAP + DOT / 2
 
-const TOTAL_MOVIES = 3  // 핀 포스터 그리드 기본 표시 수
-
 type LabelOffset = { x: number; y: number }
 
 function makePinIcon(
   name: string,
   selected: boolean,
   zoom: number,
+  posterMovies: TheaterPosterMovie[],
   posterOffsetX = 0,
   labelOffset: LabelOffset = { x: 0, y: 0 },
 ) {
-  const count = posterCountForZoom(zoom)
-  const numRows = count === 6 ? 2 : count > 0 ? 1 : 0
-  const usePosterLeft = count > 0 && posterOffsetX < -50
+  const safePosterOffsetX = finiteNumber(posterOffsetX)
+  const slots = posterSlotsForZoom(posterMovies, zoom)
+  const numRows = slots.length > 3 ? 2 : slots.length > 0 ? 1 : 0
+  const usePosterLeft = slots.length > 0 && safePosterOffsetX < -50
   const posterH = usePosterLeft || numRows === 0 ? 0 : 66 * numRows + 4 * (numRows - 1) + 6
 
   let posterHtml = ''
-  if (count > 0) {
+  if (slots.length > 0) {
     const posterMarkup = renderToStaticMarkup(
       <PosterGrid
-        count={count}
-        total={TOTAL_MOVIES}
+        slots={slots}
         tailDir={usePosterLeft ? 'right' : 'up'}
-        tailOffset={usePosterLeft ? 0 : posterOffsetX}
+        tailOffset={usePosterLeft ? 0 : safePosterOffsetX}
       />
     )
     if (usePosterLeft) {
@@ -390,7 +524,7 @@ function makePinIcon(
         posterMarkup +
         `</div>`
     } else {
-      posterHtml = `<div style="position:relative;left:${Math.round(posterOffsetX)}px">` +
+      posterHtml = `<div style="position:relative;left:${Math.round(safePosterOffsetX)}px">` +
         posterMarkup +
         `</div>`
     }
@@ -660,6 +794,7 @@ function computePosterOffsets(
   map: LeafletMap,
   zoom: number,
   labelDirections: Map<string, LabelDir> = new Map(),
+  posterMoviesByTheater: Map<string, TheaterPosterMovie[]> = new Map(),
 ): Map<string, number> {
   const offsets = new Map<string, number>()
   if (posterCountForZoom(zoom) === 0) return offsets
@@ -678,15 +813,16 @@ function computePosterOffsets(
   const MIN_OVERLAP_X_TO_SHIFT = POSTER_W / 4
   const MIN_OVERLAP_Y_TO_SHIFT = POSTER_H / 4
   const singles = clusters
-    .filter((c) => c.theaters.length === 1)
-    .map((c) => ({
-      id: c.id,
-      px: map.latLngToContainerPoint([c.lat, c.lng] as [number, number]),
-    }))
+    .filter((c) => c.theaters.length === 1 && (posterMoviesByTheater.get(c.theaters[0].id)?.length ?? 0) > 0)
+    .map((c) => {
+      const px = map.latLngToContainerPoint([c.lat, c.lng] as [number, number])
+      return { id: c.theaters[0].id, px }
+    })
+    .filter((single) => Number.isFinite(single.px.x) && Number.isFinite(single.px.y))
   const posterRect = (single: { id: string; px: LeafletPoint }, offset = offsets.get(single.id) ?? 0): Rect => [
-    single.px.x - POSTER_W / 2 + offset,
+    single.px.x - POSTER_W / 2 + finiteNumber(offset),
     single.px.y + POSTER_TOP_FROM_PIN,
-    single.px.x + POSTER_W / 2 + offset,
+    single.px.x + POSTER_W / 2 + finiteNumber(offset),
     single.px.y + POSTER_TOP_FROM_PIN + POSTER_H,
   ]
 
@@ -707,6 +843,7 @@ function computePosterOffsets(
   for (const c of clusters) {
     if (c.theaters.length <= 1) continue
     const { x: cx, y: cy } = map.latLngToContainerPoint([c.lat, c.lng] as [number, number])
+    if (!Number.isFinite(cx) || !Number.isFinite(cy)) continue
 
     if (c.theaters.length > 3) {
       clusterBlockers.push({ centerX: cx, rect: [cx - 20, cy - 20, cx + 20, cy + 20] })
@@ -734,7 +871,8 @@ function computePosterOffsets(
       const rect = posterRect(single)
       const o = overlap(rect, blocker.rect)
       if (o.x < MIN_OVERLAP_X_TO_SHIFT || o.y < MIN_OVERLAP_Y_TO_SHIFT) continue
-      const direction = (single.px.x + (offsets.get(single.id) ?? 0)) < blocker.centerX ? -1 : 1
+      const currentOffset = finiteNumber(offsets.get(single.id) ?? 0)
+      const direction = (single.px.x + currentOffset) < blocker.centerX ? -1 : 1
       offsets.set(single.id, (offsets.get(single.id) ?? 0) + direction * (o.x - MIN_OVERLAP_X_TO_SHIFT + 8))
     }
   }
@@ -892,6 +1030,18 @@ export default function MapView() {
   const { data: stations = [] } = useStations()
   const { data: movies = [] } = useMovies()
   const { data: activeMovieIds = [] } = useActiveMovieIds()
+  const [filters, setFilters] = useState<FilterState>({
+    dateId: 'this-week',
+    customStart: null,
+    customEnd: null,
+    genres: [],
+    bookable: false,
+    indie: false,
+  })
+  const selectedDateRange = useMemo(() => dateRangeForFilter(filters), [filters])
+  const mapShowtimeStart = formatDateParam(selectedDateRange.start)
+  const mapShowtimeEnd = formatDateParam(selectedDateRange.end)
+  const { data: mapShowtimes = [] } = useMapShowtimes(mapShowtimeStart, mapShowtimeEnd)
   const mapRef = useRef<LeafletMap | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [zoom, setZoom] = useState(14)
@@ -930,7 +1080,53 @@ export default function MapView() {
       .map((result) => result.station)
   }, [searchQuery, stations])
 
+  const theaterResults = useMemo(() => {
+    if (!searchQuery.trim()) return []
+    return theaters
+      .map((theater) => ({ theater, score: theaterSearchScore(theater, searchQuery) }))
+      .filter((result) => result.score > 0)
+      .sort((a, b) => b.score - a.score || a.theater.name.localeCompare(b.theater.name, 'ko'))
+      .slice(0, 20)
+      .map((result) => result.theater)
+  }, [searchQuery, theaters])
+
   const activeMovieIdSet = useMemo(() => new Set(activeMovieIds), [activeMovieIds])
+
+  const theaterPosterMovies = useMemo(() => {
+    const byTheater = new Map<string, Map<string, TheaterPosterMovie>>()
+
+    for (const showtime of mapShowtimes) {
+      if (!showtime.movie) continue
+      let theaterMovies = byTheater.get(showtime.theaterId)
+      if (!theaterMovies) {
+        theaterMovies = new Map()
+        byTheater.set(showtime.theaterId, theaterMovies)
+      }
+
+      const current = theaterMovies.get(showtime.movieId)
+      if (current) {
+        current.showtimeCount += 1
+      } else {
+        theaterMovies.set(showtime.movieId, {
+          id: showtime.movie.id,
+          title: showtime.movie.title,
+          posterUrl: showtime.movie.posterUrl,
+          showtimeCount: 1,
+        })
+      }
+    }
+
+    const result = new Map<string, TheaterPosterMovie[]>()
+    for (const [theaterId, movieMap] of byTheater) {
+      result.set(
+        theaterId,
+        Array.from(movieMap.values()).sort((a, b) =>
+          b.showtimeCount - a.showtimeCount || a.title.localeCompare(b.title, 'ko')
+        ),
+      )
+    }
+    return result
+  }, [mapShowtimes])
 
   const titleMovieResults = useMemo(() => {
     if (!searchQuery.trim()) return []
@@ -1004,10 +1200,18 @@ export default function MapView() {
   const searchSections = useMemo(() => {
     const bestMovieScore = Math.max(0, ...titleMovieResults.map((movie) => movieSearchScore(movie, searchQuery)))
     const bestDirectorScore = Math.max(0, ...directorResults.map((director) => director.score))
-    return bestDirectorScore > bestMovieScore
-      ? ['directors', 'movies', 'stations'] as const
-      : ['movies', 'directors', 'stations'] as const
-  }, [directorResults, searchQuery, titleMovieResults])
+    const bestStationScore = Math.max(0, ...stationResults.map((station) => stationSearchScore(station, searchQuery)))
+    const bestTheaterScore = Math.max(0, ...theaterResults.map((theater) => theaterSearchScore(theater, searchQuery)))
+    return [
+      { id: 'theaters', score: bestTheaterScore, priority: 0 },
+      { id: 'movies', score: bestMovieScore, priority: 1 },
+      { id: 'directors', score: bestDirectorScore, priority: 2 },
+      { id: 'stations', score: bestStationScore, priority: 3 },
+    ]
+      .filter((section) => section.score > 0)
+      .sort((a, b) => b.score - a.score || a.priority - b.priority)
+      .map((section) => section.id)
+  }, [directorResults, searchQuery, stationResults, theaterResults, titleMovieResults])
 
   const focusStation = useCallback((station: Station) => {
     closeSearch()
@@ -1050,13 +1254,13 @@ export default function MapView() {
     const c = computeClusters(adjustedTheaters, map, zoom, splitIds, coLocGroups)
     const d = computeLabelDirections(c, map)
     const labelO = computeNameLabelOffsets(c, map, d)
-    const o = computePosterOffsets(c, map, zoom, d)
+    const o = computePosterOffsets(c, map, zoom, d, theaterPosterMovies)
     setClusters(c)
     setPosterOffsets(o)
     setCoLocationOffsets(coLoc)
     setLabelDirections(d)
     setLabelOffsets(labelO)
-  }, [zoom, theaters])
+  }, [zoom, theaters, theaterPosterMovies])
 
   // zoom 변경 시 재계산 (줌 애니메이션 끝난 뒤)
   useEffect(() => {
@@ -1092,6 +1296,22 @@ export default function MapView() {
     }, 400)
   }, [])
 
+  const focusTheater = useCallback((theater: Theater) => {
+    closeSearch()
+    if (exitTimerRef.current) clearTimeout(exitTimerRef.current)
+    setSheetExiting(false)
+    setSelectedId(theater.id)
+    setDisplayedId(theater.id)
+    setSelectedMovieId('')
+    setSheetExpanded(false)
+    const currentZoom = mapRef.current?.getZoom() ?? 15
+    mapRef.current?.flyTo(
+      [theater.lat, theater.lng],
+      Math.max(currentZoom, 15),
+      { duration: 0.75 },
+    )
+  }, [closeSearch])
+
   // 극장 선택 시 → 첫 번째 영화 선택 + 시트 collapsed로 열기
   const handlePinClick = useCallback((theaterId: string) => {
     if (selectedId === theaterId) {
@@ -1117,8 +1337,88 @@ export default function MapView() {
 
   // FAB 버튼 bottom: collapsed = COLLAPSED_H(300) + 여유 16 = 316
   // expanded / 시트 없음 = safe area 위 32px
-  const fabBottom = selectedTheater && !sheetExpanded ? 316 : 32
-  const hasSearchResults = stationResults.length > 0 || movieResults.length > 0 || relatedDirectorResults.length > 0
+  const fabBottom = selectedTheater && !sheetExpanded && !sheetExiting ? 316 : 32
+  const hasSearchResults = theaterResults.length > 0 || stationResults.length > 0 || movieResults.length > 0 || relatedDirectorResults.length > 0
+
+  const renderTheaterSearchSection = () => {
+    if (theaterResults.length === 0) return null
+    return (
+      <section>
+        <h2 style={{
+          margin: '0 0 10px',
+          fontSize: 12,
+          fontWeight: 700,
+          color: 'var(--color-text-caption)',
+        }}>
+          극장
+        </h2>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {theaterResults.map((theater) => (
+            <button
+              key={theater.id}
+              type="button"
+              onClick={() => focusTheater(theater)}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '12px 0',
+                border: 0,
+                borderBottom: '1px solid var(--color-border)',
+                background: 'transparent',
+                color: 'var(--color-text-primary)',
+                textAlign: 'left',
+              }}
+            >
+              <span style={{
+                width: 38,
+                height: 38,
+                borderRadius: 10,
+                flexShrink: 0,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'var(--color-surface-card)',
+                border: '1px solid var(--color-border)',
+                color: 'var(--color-text-sub)',
+              }}>
+                <svg width={17} height={17} viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 21s7-5.2 7-11a7 7 0 10-14 0c0 5.8 7 11 7 11z" />
+                  <circle cx="12" cy="10" r="2.5" />
+                </svg>
+              </span>
+              <span style={{ minWidth: 0, flex: 1 }}>
+                <span style={{
+                  display: 'block',
+                  fontSize: 15,
+                  fontWeight: 700,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {theater.name}
+                </span>
+                <span style={{
+                  display: 'block',
+                  marginTop: 4,
+                  fontSize: 12,
+                  color: 'var(--color-text-caption)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {theater.address}
+                </span>
+              </span>
+              <span style={{ color: 'var(--color-text-caption)', fontSize: 18, lineHeight: 1 }}>›</span>
+            </button>
+          ))}
+        </div>
+      </section>
+    )
+  }
 
   const renderMovieSearchSection = () => {
     if (movieResults.length === 0) return null
@@ -1201,7 +1501,15 @@ export default function MapView() {
                   )}
                 </div>
                 {movie.originalTitle && (
-                  <div style={{ marginTop: 2, fontSize: 12, fontStyle: 'italic', color: 'var(--color-text-caption)' }}>
+                  <div style={{
+                    marginTop: 2,
+                    fontFamily: 'var(--font-serif-en)',
+                    fontSize: 'var(--text-bask-meta)',
+                    fontStyle: 'normal',
+                    fontWeight: 400,
+                    color: 'var(--color-text-caption)',
+                    lineHeight: 1.35,
+                  }}>
                     {movie.originalTitle}
                   </div>
                 )}
@@ -1501,6 +1809,7 @@ export default function MapView() {
             ? [coOff.lat, coOff.lng]
             : [theater.lat, theater.lng]
           const offsetX = posterOffsets.get(theater.id) ?? 0
+          const posterMovies = theaterPosterMovies.get(theater.id) ?? []
           return (
             <Marker
               key={theater.id}
@@ -1509,6 +1818,7 @@ export default function MapView() {
                 theater.name,
                 selectedId === theater.id,
                 zoom,
+                posterMovies,
                 offsetX,
                 labelOffsets.get(theater.id),
               )}
@@ -1537,7 +1847,7 @@ export default function MapView() {
         </div>
         {/* 필터 칩 */}
         <div style={{ marginTop: 8, pointerEvents: 'auto' }}>
-          <FilterBar />
+          <FilterBar onChange={setFilters} />
         </div>
       </div>
 
@@ -1583,7 +1893,9 @@ export default function MapView() {
                     ? renderMovieSearchSection()
                     : section === 'directors'
                       ? renderDirectorSearchSection()
-                      : renderStationSearchSection()
+                      : section === 'theaters'
+                        ? renderTheaterSearchSection()
+                        : renderStationSearchSection()
                   return node ? <div key={section}>{node}</div> : null
                 })}
               </div>
@@ -1603,7 +1915,7 @@ export default function MapView() {
         bottom: fabBottom,
         zIndex: 1000,
         display: 'flex', flexDirection: 'column', gap: 8,
-        transition: 'bottom 0.35s cubic-bezier(0.32, 0.72, 0, 1)',
+        transition: 'bottom 0.38s cubic-bezier(0.32, 0.72, 0, 1)',
       }}>
         <FabRound onClick={() => mapRef.current?.zoomIn()}><IcoPlus /></FabRound>
         <FabRound onClick={() => mapRef.current?.zoomOut()}><IcoMinus /></FabRound>
