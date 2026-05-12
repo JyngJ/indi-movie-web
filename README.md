@@ -26,7 +26,7 @@ npm run dev
 | 클라이언트 상태 | Zustand v5 | 테마, UI 상태 |
 | 스타일 | Tailwind CSS v4 + CSS Variables | 디자인 토큰 기반 |
 | 지도 | Leaflet + react-leaflet v5 | Carto Voyager 타일 |
-| 데이터베이스 | **미정** (백엔드 팀 협의 필요) | Supabase 또는 자체 서버 |
+| 데이터베이스 | Supabase PostgreSQL | 극장/영화/상영시간표/지하철역 데이터 |
 
 ---
 
@@ -51,7 +51,10 @@ src/
 │   │   ├── PosterThumb     # 영화 포스터
 │   │   └── TheaterSheet    # 극장 정보 바텀시트
 │   └── map/
-│       └── MapView.tsx     # 전체화면 지도 + 오버레이
+│       └── MapView.tsx     # 전체화면 지도 + 검색/지하철 오버레이
+│
+├── data/
+│   └── subway-lines.json   # 지도 지하철 노선 GeoJSON. .geojson import 금지
 │
 ├── hooks/
 │   ├── useUserLocation.ts  # Geolocation → 지도 중심 좌표
@@ -59,6 +62,7 @@ src/
 │   └── mutations/          # React Query write hooks (예정)
 │
 ├── lib/
+│   ├── supabase/           # Supabase browser client + React Query hooks
 │   ├── adapters/
 │   │   ├── location.ts     # Geolocation API (추후 RN 교체 가능)
 │   │   └── storage.ts      # localStorage (추후 AsyncStorage 교체 가능)
@@ -75,8 +79,8 @@ src/
 
 > 상세 스펙: [`docs/API.md`](./docs/API.md)
 
-백엔드 구현 방식 결정 전이므로, 아래는 **엔드포인트 인터페이스 계약**입니다.
-구현체(Supabase RPC / Express / FastAPI 등)는 백엔드 팀이 선택 후 작성합니다.
+현재 앱의 주요 읽기 화면은 Supabase React Query hooks로 직접 연결되어 있습니다.
+아래 REST 엔드포인트는 장기 API 계약 초안이며, 구현 방식은 기능별로 조정될 수 있습니다.
 
 ### 주요 엔드포인트
 
@@ -95,13 +99,14 @@ src/
 { "error": { "code": "ERR_CODE", "message": "설명" } }
 ```
 
-### 프론트 React Query Hooks (예정)
+### 프론트 React Query Hooks
 
 ```ts
-useTheaters(bounds)               // 지도 범위 극장
-useTheater(theaterId)             // 극장 상세
-useMovies(query)                  // 영화 검색
-useShowtimes(theaterId, date)     // 상영시간표
+useTheaters()                     // 전체 극장 목록
+useStations()                     // 지하철역 목록
+useMovies()                       // 전체 영화 목록
+useActiveMovieIds()               // 오늘 포함 미래 상영 스케줄이 있는 영화 ID
+useTheaterShowtimes(theaterId, date)
 useFavorites()                    // 즐겨찾기 목록
 useToggleFavorite({ type, id })   // 즐겨찾기 토글
 ```
@@ -117,13 +122,13 @@ useToggleFavorite({ type, id })   // 즐겨찾기 토글
 | `theaters` | id, name, lat, lng, address, screen_count |
 | `movies` | id, title, kmdb_id, tmdb_id, genre[], poster_url |
 | `showtimes` | theater_id, movie_id, show_date, show_time, seat_total, seat_available |
+| `stations` | name, lines[], lat, lng, city, district, neighborhood, aliases |
+| `areas` | name, type, city, district, lat, lng, aliases |
+| `subway_lines` | name, line_code, geometry |
 | `users` | id (→ auth), email, preferred_city |
 | `favorites` | user_id, item_type ('theater'\|'movie'), item_id |
 
-**구현 전 백엔드 팀과 확인 필요:**
-- DB 엔진 선택 → SQL 마이그레이션 스크립트 작성
-- Supabase 선택 시: RLS 정책 설정
-- 외부 API(KMDB/TMDB) 연동 위치 (프론트 직접 vs 백엔드 프록시)
+현재 Supabase 스키마 초안은 `docs/SUPABASE.sql`에 있고, 지하철 테이블만 따로 적용할 때는 `docs/SUPABASE_STATIONS.sql`을 사용할 수 있습니다.
 
 ---
 
@@ -132,8 +137,8 @@ useToggleFavorite({ type, id })   // 즐겨찾기 토글
 | Phase | 내용 | 상태 |
 |-------|------|------|
 | 1 | 프로젝트 초기화, 디자인 토큰, 컴포넌트 시스템 | ✅ 완료 |
-| 2 | 지도 뷰, 위치 기반 극장 탐색, 극장 상세 | 🔄 진행중 |
-| 3 | 영화 검색, 상영시간표 UI | 예정 |
+| 2 | 지도 뷰, 위치 기반 극장 탐색, 극장 상세, 지하철 오버레이 | ✅ 주요 기능 완료 |
+| 3 | 영화/감독 검색, 상영시간표 UI | 🔄 일부 진행 |
 | 4 | 사용자 인증, 즐겨찾기 | 예정 |
 | 5 | 성능 최적화, Capacitor 앱 확장 준비 | 예정 |
 
@@ -178,3 +183,5 @@ useToggleFavorite({ type, id })   // 즐겨찾기 토글
 ## 지도 데이터 저작권
 
 지도 타일: © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, © [CARTO](https://carto.com/attributions)
+
+지하철 노선/역 데이터는 Kaggle Seoul Subway Geospatial Data 계열의 CC0 Public Domain 데이터를 기준으로 정리했습니다. 앱 번들에는 `src/data/subway-lines.json`만 import합니다. Turbopack은 `.geojson` import를 기본 처리하지 않으므로 `@/data/subway-lines.geojson`로 되돌리지 마세요.

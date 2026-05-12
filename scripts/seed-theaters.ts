@@ -88,7 +88,7 @@ const THEATERS = [
     name: '아리랑시네센터',
     lat: 37.6032391, lng: 127.0133181,
     address: '서울 성북구 아리랑로 82',
-    city: '서울', website: 'https://www.arirang.or.kr', screenCount: 2,
+    city: '서울', website: 'https://cine.arirang.go.kr:8443/arirang/index.do', screenCount: 2,
   },
 ]
 

@@ -30,7 +30,7 @@ export const MOCK_THEATERS: MockTheater[] = [
   { id: 'nangman',        name: '낭만극장',              address: '서울 종로구 삼일대로 428 낙원빌딩 4층',                  lat: 37.5712,            lng: 126.9881,            kind: 'indie' },
   { id: 'hollywood',      name: '허리우드클래식',        address: '서울 종로구 삼일대로 428 낙원빌딩 4층',                  lat: 37.5712 + 0.0003,   lng: 126.9881 + 0.0002,   kind: 'indie' },
   { id: 'cinecube',       name: '씨네큐브 광화문',       address: '서울 종로구 새문안로 68 흥국생명빌딩 지하 2층',          lat: 37.5712 - 0.0003,   lng: 126.9706,            kind: 'indie', website: 'https://www.cinecube.co.kr' },
-  { id: 'arirang',        name: '아리랑시네센터',        address: '서울 성북구 아리랑로 82',                                lat: 37.5944,            lng: 127.0163,            kind: 'indie', website: 'https://www.arirang.or.kr' },
+  { id: 'arirang',        name: '아리랑시네센터',        address: '서울 성북구 아리랑로 82',                                lat: 37.5944,            lng: 127.0163,            kind: 'indie', website: 'https://cine.arirang.go.kr:8443/arirang/index.do' },
 
   // ── 경기 ──────────────────────────────────────────────────────
   { id: 'gyeonggi-indie', name: '경기인디시네마',        address: '경기 수원시 영통구 도청로 10 롯데몰 광교 4층',          lat: 37.2854,            lng: 127.0516,            kind: 'indie' },

@@ -2,12 +2,11 @@
 
 > 예술영화관 상영 통합 조회 서비스 — 데이터 모델 정의서
 
-**⚠️ TBD**: 아래는 **논리적 데이터 모델**입니다.  
-DB 선택 후 백엔드 팀이 실제 마이그레이션 스크립트 작성합니다.
+현재 구현은 Supabase PostgreSQL 기준입니다. 아래는 논리 모델이며, 실제 적용용 SQL은 `docs/SUPABASE.sql`을 우선 확인합니다.
 
 | DB 선택지 | 비고 |
 |-----------|------|
-| **Supabase** | PostgreSQL SQL 그대로 실행 가능 |
+| **Supabase** | 현재 사용 중 |
 | **자체 PostgreSQL** | 동일 |
 | **MySQL** | 문법 변환 필요 (`TEXT[]` → JSON 등) |
 | **MongoDB** | 컬렉션 구조로 재설계 필요 |
@@ -105,6 +104,80 @@ CREATE INDEX idx_showtimes_theater_date ON showtimes(theater_id, show_date);
 CREATE INDEX idx_showtimes_movie_date   ON showtimes(movie_id,   show_date);
 CREATE INDEX idx_showtimes_datetime     ON showtimes(show_date,  show_time);
 ```
+
+현재 `상영중` UI 태그는 `is_active = true`만 보지 않고 `show_date >= 오늘` 조건까지 만족하는 영화에만 표시합니다.
+
+---
+
+## stations (지하철역)
+
+```sql
+CREATE TABLE stations (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  source_id     VARCHAR(100),
+  name          VARCHAR(255) NOT NULL,
+  lines         TEXT[]       DEFAULT '{}',
+  lat           NUMERIC(10,8) NOT NULL,
+  lng           NUMERIC(11,8) NOT NULL,
+  city          VARCHAR(50)  NOT NULL,
+  district      VARCHAR(50),
+  neighborhood  VARCHAR(100),
+  aliases       TEXT[]       DEFAULT '{}',
+  created_at    TIMESTAMP    DEFAULT NOW(),
+  updated_at    TIMESTAMP    DEFAULT NOW()
+);
+
+CREATE INDEX idx_stations_name_trgm ON stations USING GIN(name gin_trgm_ops);
+CREATE INDEX idx_stations_lines     ON stations USING GIN(lines);
+```
+
+용도:
+- 검색 오버레이의 `지하철역` 섹션
+- 역 선택 시 지도 `flyTo`
+- 지도 줌 15 이상에서 역 핀/라벨 표시
+
+---
+
+## areas (지역/동네)
+
+```sql
+CREATE TABLE areas (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  source_id   VARCHAR(100),
+  name        VARCHAR(255) NOT NULL,
+  type        VARCHAR(50)  NOT NULL, -- city|district|neighborhood
+  city        VARCHAR(50)  NOT NULL,
+  district    VARCHAR(50),
+  lat         NUMERIC(10,8) NOT NULL,
+  lng         NUMERIC(11,8) NOT NULL,
+  aliases     TEXT[]       DEFAULT '{}',
+  created_at  TIMESTAMP    DEFAULT NOW(),
+  updated_at  TIMESTAMP    DEFAULT NOW()
+);
+
+CREATE INDEX idx_areas_name_trgm ON areas USING GIN(name gin_trgm_ops);
+CREATE INDEX idx_areas_type      ON areas(type);
+```
+
+현재 스키마 초안은 있으나 앱 검색 연결은 아직 남아 있습니다.
+
+---
+
+## subway_lines (지하철 노선 geometry)
+
+```sql
+CREATE TABLE subway_lines (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  source_id   VARCHAR(100),
+  name        VARCHAR(255) NOT NULL,
+  line_code   VARCHAR(50)  NOT NULL,
+  geometry    JSONB        NOT NULL,
+  created_at  TIMESTAMP    DEFAULT NOW(),
+  updated_at  TIMESTAMP    DEFAULT NOW()
+);
+```
+
+현재 지도 노선 오버레이는 DB에서 geometry를 읽지 않고 `src/data/subway-lines.json` 정적 파일을 import합니다. Turbopack이 `.geojson` import를 기본 처리하지 않으므로 앱 번들 파일 확장자는 `.json`으로 유지합니다.
 
 ---
 
