@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/primitives'
 import type {
@@ -58,6 +58,7 @@ export function AdminShowtimeConsole() {
   const [url, setUrl] = useState('')
   const [content, setContent] = useState('')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const selectAllRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [matchDrafts, setMatchDrafts] = useState<Record<string, CandidateMatchPayload>>({})
@@ -107,12 +108,22 @@ export function AdminShowtimeConsole() {
   const reviewCount = payload.candidates.filter((candidate) => candidate.status === 'needs_review').length
   const approvedCount = payload.candidates.filter((candidate) => candidate.status === 'approved').length
   const matchedCount = payload.candidates.filter((candidate) => candidate.matchedTheaterId && candidate.matchedMovieId).length
+  const candidateIds = useMemo(() => payload.candidates.map((candidate) => candidate.id), [payload.candidates])
+  const selectedCandidateCount = candidateIds.filter((id) => selectedIds.includes(id)).length
+  const allCandidatesSelected = candidateIds.length > 0 && selectedCandidateCount === candidateIds.length
+  const someCandidatesSelected = selectedCandidateCount > 0 && selectedCandidateCount < candidateIds.length
   const selectedAdminTheater = adminTheaters.find((theater) => theater.id === selectedAdminTheaterId)
   const averageConfidence = useMemo(() => {
     if (!payload.candidates.length) return 0
     const total = payload.candidates.reduce((sum, candidate) => sum + candidate.confidence, 0)
     return Math.round((total / payload.candidates.length) * 100)
   }, [payload.candidates])
+
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = someCandidatesSelected
+    }
+  }, [someCandidatesSelected])
 
   async function refresh() {
     const response = await fetch('/api/admin/showtimes', { cache: 'no-store' })
@@ -662,6 +673,14 @@ export function AdminShowtimeConsole() {
     )
   }
 
+  function toggleAllCandidates() {
+    setSelectedIds((current) => {
+      const visibleIds = new Set(candidateIds)
+      const hiddenIds = current.filter((id) => !visibleIds.has(id))
+      return allCandidatesSelected ? hiddenIds : [...hiddenIds, ...candidateIds]
+    })
+  }
+
   function selectSource(sourceId: string) {
     const source = payload.sources.find((item) => item.id === sourceId)
     setSelectedSourceId(sourceId)
@@ -902,7 +921,16 @@ export function AdminShowtimeConsole() {
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th aria-label="선택" />
+                  <th aria-label="전체 선택">
+                    <input
+                      ref={selectAllRef}
+                      type="checkbox"
+                      checked={allCandidatesSelected}
+                      disabled={candidateIds.length === 0}
+                      aria-label="검수 대기열 전체 선택"
+                      onChange={toggleAllCandidates}
+                    />
+                  </th>
                   <th>상영 정보</th>
                   <th>극장</th>
                   <th>매칭</th>

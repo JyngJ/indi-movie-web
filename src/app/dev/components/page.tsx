@@ -27,10 +27,16 @@ const SAMPLE_DAYS = [
 ]
 
 const SAMPLE_MOVIES = [
-  { id: '1', title: '파과',      director: '오멸' },
-  { id: '2', title: '소풍',      director: '이준익' },
-  { id: '3', title: '수라',      director: '장윤미' },
-  { id: '4', title: '비밀의 언덕', director: '박두호' },
+  { id: '1', title: '파과',      director: '오멸', tags: ['드라마'] },
+  { id: '2', title: '소풍',      director: '이준익', tags: ['드라마'] },
+  { id: '3', title: '수라',      director: '장윤미', tags: ['다큐멘터리'] },
+  { id: '4', title: '비밀의 언덕', director: '박두호', tags: ['한국독립'] },
+]
+
+const SAMPLE_SHOWTIMES = [
+  { id: 'sample-1', theaterId: 'dev', movieId: '1', showDate: new Date().toISOString().slice(0, 10), startTime: '10:30', endTime: '12:15', seatAvailable: 54, seatTotal: 80, screenName: '1관', kind: 'normal' as const },
+  { id: 'sample-2', theaterId: 'dev', movieId: '2', showDate: new Date().toISOString().slice(0, 10), startTime: '14:00', endTime: '15:45', seatAvailable: 9, seatTotal: 80, screenName: '2관', kind: 'low' as const },
+  { id: 'sample-3', theaterId: 'dev', movieId: '3', showDate: new Date().toISOString().slice(0, 10), startTime: '23:20', endTime: '01:02', seatAvailable: 22, seatTotal: 60, screenName: '1관', kind: 'late' as const },
 ]
 
 /* ── Foundation colors ───────────────────────────────────────────── */
@@ -309,7 +315,9 @@ export default function ComponentsPage() {
         <Section title="05 · 바텀시트 — 극장 카드">
           <div style={{ position: 'relative', height: 400, overflow: 'hidden', borderRadius: 16, background: '#e0ddd6' }}>
             <TheaterSheet
-              theater={{ id: 'dev', name: '더숲 아트시네마', address: '서울특별시 노원구 화랑로 123', lat: 37.6, lng: 127.0, kind: 'indie' }}
+              theater={{ id: 'dev', name: '더숲 아트시네마', address: '서울특별시 노원구 화랑로 123', city: '서울', lat: 37.6, lng: 127.0, kind: 'indie' }}
+              movies={SAMPLE_MOVIES}
+              showtimes={SAMPLE_SHOWTIMES}
               expanded={false}
               selectedMovieId={selectedMovie}
               favorited={favorited}

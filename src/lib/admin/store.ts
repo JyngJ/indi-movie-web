@@ -16,6 +16,7 @@ import type {
   CrawlRun,
   ShowtimeApprovalResult,
 } from '@/types/admin'
+import { searchKmdbMovies } from '@/lib/admin/kmdb'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 
 interface CrawlSourceRow {
@@ -674,7 +675,7 @@ export async function approveShowtimeCandidates(
 
   const [{ data: theaterRows, error: theaterError }, { data: movieRows, error: movieError }] = await Promise.all([
     supabase.from('theaters').select('id, name'),
-    supabase.from('movies').select('id, title'),
+    supabase.from('movies').select('id, title, kmdb_id, kmdb_movie_seq'),
   ])
 
   if (theaterError) throw new Error(theaterError.message)
@@ -685,14 +686,15 @@ export async function approveShowtimeCandidates(
 
   for (const candidate of candidates) {
     const theater = resolveTheater(candidate, theaters)
-    const movie = resolveMovie(candidate, movies)
+    const movieResult = await resolveMovieForApproval(candidate, movies)
+    const movie = movieResult.movie
 
     if (!theater || !movie) {
       result.failed.push({
         candidateId: candidate.id,
         reason: [
           theater ? null : `극장 매칭 실패: ${candidate.theaterName}`,
-          movie ? null : `영화 매칭 실패: ${candidate.movieTitle}`,
+          movie ? null : movieResult.reason,
         ].filter(Boolean).join(' / '),
       })
       continue
@@ -724,6 +726,14 @@ export async function approveShowtimeCandidates(
       .eq('id', candidate.id)
 
     if (updateError) {
+      if (isMissingUpdatedAtTriggerError(updateError.message)) {
+        result.approved.push({
+          candidateId: candidate.id,
+          showtimeId: (upserted as { id?: string } | null)?.id,
+        })
+        continue
+      }
+
       result.failed.push({ candidateId: candidate.id, reason: updateError.message })
       continue
     }
@@ -985,11 +995,67 @@ function resolveMovie(candidate: CrawledShowtimeCandidate, movies: MovieRow[]) {
     if (matched) return matched
   }
 
-  const exact = movies.find((movie) => movie.title.trim() === candidate.movieTitle.trim())
+  return resolveMovieByTitle(candidate.movieTitle, movies)
+}
+
+async function resolveMovieForApproval(candidate: CrawledShowtimeCandidate, movies: MovieRow[]) {
+  const localMovie = resolveMovie(candidate, movies)
+  if (localMovie) return { movie: localMovie }
+
+  const titles = candidateMovieTitleCandidates(candidate.movieTitle)
+  for (const title of titles) {
+    const localByCleanTitle = resolveMovieByTitle(title, movies)
+    if (localByCleanTitle) return { movie: localByCleanTitle }
+  }
+
+  try {
+    for (const title of titles) {
+      const externalMovies = await searchKmdbMovies(title)
+      const externalMovie = pickExactExternalMovie(title, externalMovies)
+      if (!externalMovie) continue
+
+      const imported = await importAdminExternalMovie(externalMovie)
+      const movie = {
+        id: imported.id,
+        title: imported.label,
+        kmdb_id: externalMovie.movieId,
+        kmdb_movie_seq: externalMovie.movieSeq,
+      }
+      movies.push(movie)
+      return { movie }
+    }
+  } catch (error) {
+    return {
+      movie: undefined,
+      reason: `KMDB 자동 매칭 실패: ${candidate.movieTitle} (${error instanceof Error ? error.message : '알 수 없는 오류'})`,
+    }
+  }
+
+  return { movie: undefined, reason: `영화 매칭 실패: ${candidate.movieTitle}` }
+}
+
+function resolveMovieByTitle(title: string, movies: MovieRow[]) {
+  const exact = movies.find((movie) => movie.title.trim() === title.trim())
   if (exact) return exact
 
-  const normalizedTitle = normalizeMatchText(candidate.movieTitle)
+  const normalizedTitle = normalizeMatchText(title)
   return movies.find((movie) => normalizeMatchText(movie.title) === normalizedTitle)
+}
+
+function candidateMovieTitleCandidates(title: string) {
+  return Array.from(new Set([
+    title.trim(),
+    title.trim().replace(/\s+(?:\d{1,2}[./-]\d{1,2})(?:\s.*)?$/, '').trim(),
+    title.trim().replace(/\s+(?:\d{1,2}월\s*\d{1,2}일)(?:\s.*)?$/, '').trim(),
+  ].filter(Boolean)))
+}
+
+function pickExactExternalMovie(title: string, movies: AdminExternalMovie[]) {
+  const normalizedTitle = normalizeMatchText(title)
+  return movies.find((movie) =>
+    normalizeMatchText(movie.title) === normalizedTitle ||
+    (movie.originalTitle ? normalizeMatchText(movie.originalTitle) === normalizedTitle : false),
+  )
 }
 
 function showtimeRowFromCandidate(
@@ -1020,6 +1086,10 @@ function normalizeMatchText(value: string) {
     .toLowerCase()
     .normalize('NFKC')
     .replace(/[\s"'‘’“”()[\]{}:;,.!?·ㆍ・_-]+/g, '')
+}
+
+function isMissingUpdatedAtTriggerError(message: string) {
+  return message.includes('record "new" has no field "updated_at"')
 }
 
 function mergeWarnings(current: string[], next: Array<string | undefined>) {

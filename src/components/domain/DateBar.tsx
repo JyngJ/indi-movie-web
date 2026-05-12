@@ -6,6 +6,7 @@ export type TimeFilter = '전체' | '오전' | '오후' | '18시 이후' | '심�
 export interface Day {
   dow: string
   date: string
+  value?: string
   type: DayType
   disabled?: boolean
 }
@@ -51,7 +52,8 @@ export function DateBar({
       {/* 날짜 행 */}
       <div className="flex justify-between gap-1">
         {days.map((d) => {
-          const isSelected = d.date === selectedDate
+          const value = d.value ?? d.date
+          const isSelected = value === selectedDate
           const isDisabled = !!d.disabled
           // disabled이면 선택 불가 → 선택 상태도 해제해서 보여줌
           const active     = isSelected && !isDisabled
@@ -76,7 +78,7 @@ export function DateBar({
                 opacity: isDisabled ? 0.4 : 1,
                 position: 'relative',
               }}
-              onClick={isDisabled ? undefined : () => onSelectDate?.(d.date)}
+              onClick={isDisabled ? undefined : () => onSelectDate?.(value)}
             >
               <span
                 style={{

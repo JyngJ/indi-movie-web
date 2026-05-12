@@ -2,6 +2,7 @@
 
 import 'leaflet/dist/leaflet.css'
 import { useEffect, useRef, useState, useCallback } from 'react'
+import type { MutableRefObject, ReactNode } from 'react'
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -9,8 +10,8 @@ import type { Map as LeafletMap } from 'leaflet'
 import { useUserLocation } from '@/hooks/useUserLocation'
 import { SearchBarButton, SearchBar, FabRound } from '@/components/primitives'
 import { MapPin, PosterThumb, TheaterSheet, FilterBar } from '@/components/domain'
-import { MOCK_THEATERS, type MockTheater } from '@/mocks/theaters'
-import { MOCK_MOVIES } from '@/mocks/movies'
+import { useCatalog } from '@/lib/catalog/client'
+import type { CatalogMovie, CatalogTheater } from '@/types/catalog'
 
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
 const IcoPlus = () => (
@@ -61,13 +62,6 @@ function PosterGrid({ count, total }: { count: number; total: number }) {
         display: 'inline-block',
         position: 'relative',
       }}>
-        <div style={{
-          position: 'absolute', top: -7, left: 4,
-          fontSize: 9, fontWeight: 700, padding: '1px 4px', borderRadius: 3,
-          backgroundColor: 'rgba(255,180,0,0.9)', color: '#1A1714',
-          letterSpacing: '0.3px', whiteSpace: 'nowrap', zIndex: 1,
-        }}>MOCK</div>
-
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {Array.from({ length: count === 6 ? 2 : 1 }).map((_, row) => (
             <div key={row} style={{ display: 'flex', gap: 4 }}>
@@ -99,15 +93,13 @@ const GAP = 4
 const DOT = 22
 const ANCHOR_Y = LABEL_H + GAP + DOT / 2
 
-const TOTAL_MOVIES = MOCK_MOVIES.length
-
-function makePinIcon(name: string, selected: boolean, zoom: number, posterOffsetX = 0) {
+function makePinIcon(name: string, selected: boolean, zoom: number, totalMovies: number, posterOffsetX = 0) {
   const count = posterCountForZoom(zoom)
   const numRows = count === 6 ? 2 : count > 0 ? 1 : 0
   const posterH = numRows > 0 ? 66 * numRows + 4 * (numRows - 1) + 6 : 0
 
   const posterHtml = count > 0
-    ? `<div style="position:relative;left:${Math.round(posterOffsetX)}px">${renderToStaticMarkup(<PosterGrid count={count} total={TOTAL_MOVIES} />)}</div>`
+    ? `<div style="position:relative;left:${Math.round(posterOffsetX)}px">${renderToStaticMarkup(<PosterGrid count={count} total={totalMovies} />)}</div>`
     : ''
 
   const html = `
@@ -128,7 +120,7 @@ function makePinIcon(name: string, selected: boolean, zoom: number, posterOffset
 /* ── 클러스터 타입 ─────────────────────────────────────────────── */
 interface TheaterCluster {
   id: string
-  theaters: MockTheater[]
+  theaters: CatalogTheater[]
   lat: number
   lng: number
 }
@@ -143,7 +135,7 @@ function clusterRadiusForZoom(zoom: number): number {
 
 /* ── 픽셀 거리 기반 클러스터 계산 ─────────────────────────────── */
 function computeClusters(
-  theaters: MockTheater[],
+  theaters: CatalogTheater[],
   map: LeafletMap,
   zoom: number,
 ): TheaterCluster[] {
@@ -226,7 +218,7 @@ function makeClusterIcon(count: number) {
 
 /* ── 클러스터가 분리되는 최소 줌 계산 ── */
 function findSplitZoom(
-  theaters: MockTheater[],
+  theaters: CatalogTheater[],
   map: LeafletMap,
   currentZoom: number,
 ): number {
@@ -263,14 +255,73 @@ function ZoomTracker({ onZoom }: { onZoom: (z: number) => void }) {
 }
 
 /* ── mapRef 주입 ────────────────────────────────────────────────── */
-function MapRefSetter({ mapRef }: { mapRef: React.MutableRefObject<LeafletMap | null> }) {
+function MapRefSetter({ mapRef }: { mapRef: MutableRefObject<LeafletMap | null> }) {
   mapRef.current = useMap()
   return null
+}
+
+function SearchSection({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section>
+      <h2 style={{
+        margin: '0 0 8px',
+        fontSize: 12,
+        fontWeight: 700,
+        color: 'var(--color-text-caption)',
+      }}>
+        {title}
+      </h2>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {children}
+      </div>
+    </section>
+  )
+}
+
+function SearchResultButton({
+  title,
+  subtitle,
+  disabled = false,
+  onClick,
+}: {
+  title: string
+  subtitle?: string
+  disabled?: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      style={{
+        width: '100%',
+        minHeight: 56,
+        border: '1px solid var(--color-border)',
+        borderRadius: 8,
+        backgroundColor: 'var(--color-surface-card)',
+        padding: '10px 12px',
+        textAlign: 'left',
+        opacity: disabled ? 0.45 : 1,
+        cursor: disabled ? 'default' : 'pointer',
+      }}
+    >
+      <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)' }}>{title}</div>
+      {subtitle && (
+        <div style={{ marginTop: 4, fontSize: 12, color: 'var(--color-text-sub)' }}>{subtitle}</div>
+      )}
+    </button>
+  )
 }
 
 /* ── 메인 컴포넌트 ──────────────────────────────────────────────── */
 export default function MapView() {
   const { coords, refetch } = useUserLocation()
+  const { data: catalog, isError: catalogError, isPlaceholderData } = useCatalog()
+  const theaters = catalog?.theaters ?? []
+  const movies = catalog?.movies ?? []
+  const showtimes = catalog?.showtimes ?? []
+  const fallbackMovieId = movies[0]?.id ?? ''
   const mapRef = useRef<LeafletMap | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [zoom, setZoom] = useState(14)
@@ -299,32 +350,77 @@ export default function MapView() {
     setSearchQuery('')
   }, [])
 
+  const normalizedSearchQuery = searchQuery.trim().toLocaleLowerCase('ko-KR')
+  const matchedTheaters = normalizedSearchQuery
+    ? theaters.filter((theater) =>
+        [theater.name, theater.address, theater.city].some((value) =>
+          value.toLocaleLowerCase('ko-KR').includes(normalizedSearchQuery),
+        ),
+      ).slice(0, 8)
+    : []
+  const matchedMovies = normalizedSearchQuery
+    ? movies.filter((movie) =>
+        [movie.title, movie.originalTitle, movie.director].some((value) =>
+          value?.toLocaleLowerCase('ko-KR').includes(normalizedSearchQuery),
+        ),
+      ).slice(0, 8)
+    : []
+
   // 바텀시트 상태
   const [sheetExpanded, setSheetExpanded] = useState(false)
-  const [selectedMovieId, setSelectedMovieId] = useState(MOCK_MOVIES[0].id)
+  const [selectedMovieId, setSelectedMovieId] = useState('')
   const [sheetExiting, setSheetExiting] = useState(false)
   // displayedId: 퇴장 애니메이션 중에도 이전 극장을 유지하기 위한 지연 참조
   const [displayedId, setDisplayedId] = useState<string | null>(null)
   const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const defaultCenter: [number, number] = [37.5665, 126.978]
-  const selectedTheater = MOCK_THEATERS.find((t) => t.id === (displayedId ?? selectedId)) ?? null
+  const selectedTheater = theaters.find((t) => t.id === (displayedId ?? selectedId)) ?? null
+  const selectedTheaterShowtimes = selectedTheater
+    ? showtimes.filter((showtime) => showtime.theaterId === selectedTheater.id)
+    : []
+  const selectedTheaterMovieIds = new Set(selectedTheaterShowtimes.map((showtime) => showtime.movieId))
+  const selectedTheaterMovies = movies.filter((movie) => selectedTheaterMovieIds.has(movie.id))
+  const sheetMovies = selectedTheaterMovies.length > 0 ? selectedTheaterMovies : movies
 
   /* ── 클러스터 & 포스터 오프셋 ── */
   // 초기값: 전체 극장을 개별 클러스터로 (map 준비 전)
-  const [clusters, setClusters] = useState<TheaterCluster[]>(() =>
-    MOCK_THEATERS.map((t) => ({ id: t.id, theaters: [t], lat: t.lat, lng: t.lng }))
-  )
+  const [clusters, setClusters] = useState<TheaterCluster[]>([])
   const [posterOffsets, setPosterOffsets] = useState<Map<string, number>>(new Map())
 
   const recompute = useCallback(() => {
     const map = mapRef.current
     if (!map) return
-    const c = computeClusters(MOCK_THEATERS, map, zoom)
+    const c = computeClusters(theaters, map, zoom)
     const o = computePosterOffsets(c, map, zoom)
     setClusters(c)
     setPosterOffsets(o)
-  }, [zoom])
+  }, [theaters, zoom])
+
+  useEffect(() => {
+    setClusters(theaters.map((t) => ({ id: t.id, theaters: [t], lat: t.lat, lng: t.lng })))
+  }, [theaters])
+
+  useEffect(() => {
+    if (!fallbackMovieId) return
+    setSelectedMovieId((current) => current || fallbackMovieId)
+  }, [fallbackMovieId])
+
+  useEffect(() => {
+    if (!selectedTheater) return
+    const firstAvailableMovieId = selectedTheaterShowtimes[0]?.movieId ?? fallbackMovieId
+    if (firstAvailableMovieId && !sheetMovies.some((movie) => movie.id === selectedMovieId)) {
+      setSelectedMovieId(firstAvailableMovieId)
+    }
+  }, [fallbackMovieId, selectedMovieId, selectedTheater, selectedTheaterShowtimes, sheetMovies])
+
+  useEffect(() => {
+    if (!selectedId) return
+    if (!theaters.some((theater) => theater.id === selectedId)) {
+      setSelectedId(null)
+      setDisplayedId(null)
+    }
+  }, [selectedId, theaters])
 
   // zoom 변경 시 재계산 (줌 애니메이션 끝난 뒤)
   useEffect(() => {
@@ -369,10 +465,11 @@ export default function MapView() {
       setSheetExiting(false)
       setSelectedId(theaterId)
       setDisplayedId(theaterId)
-      setSelectedMovieId(MOCK_MOVIES[0].id)
+      const firstMovieId = showtimes.find((showtime) => showtime.theaterId === theaterId)?.movieId ?? fallbackMovieId
+      setSelectedMovieId(firstMovieId)
       setSheetExpanded(false)
       const currentZoom = mapRef.current?.getZoom() ?? 15
-      const theater = MOCK_THEATERS.find((t) => t.id === theaterId)
+      const theater = theaters.find((t) => t.id === theaterId)
       if (theater) {
         mapRef.current?.flyTo(
           [theater.lat, theater.lng],
@@ -381,7 +478,28 @@ export default function MapView() {
         )
       }
     }
-  }, [selectedId, closeSheet])
+  }, [selectedId, closeSheet, fallbackMovieId, showtimes, theaters])
+
+  const selectTheaterFromSearch = useCallback((theater: CatalogTheater) => {
+    closeSearch()
+    setSelectedId(theater.id)
+    setDisplayedId(theater.id)
+    setSelectedMovieId(showtimes.find((showtime) => showtime.theaterId === theater.id)?.movieId ?? fallbackMovieId)
+    setSheetExpanded(false)
+    mapRef.current?.flyTo([theater.lat, theater.lng], Math.max(mapRef.current?.getZoom() ?? 15, 15), { duration: 0.5 })
+  }, [closeSearch, fallbackMovieId, showtimes])
+
+  const selectMovieFromSearch = useCallback((movie: CatalogMovie) => {
+    const showtime = showtimes.find((item) => item.movieId === movie.id)
+    const theater = showtime ? theaters.find((item) => item.id === showtime.theaterId) : undefined
+    if (!theater) return
+    closeSearch()
+    setSelectedId(theater.id)
+    setDisplayedId(theater.id)
+    setSelectedMovieId(movie.id)
+    setSheetExpanded(true)
+    mapRef.current?.flyTo([theater.lat, theater.lng], Math.max(mapRef.current?.getZoom() ?? 15, 15), { duration: 0.5 })
+  }, [closeSearch, showtimes, theaters])
 
   // FAB 버튼 bottom: collapsed = COLLAPSED_H(300) + 여유 16 = 316
   // expanded / 시트 없음 = safe area 위 32px
@@ -455,7 +573,7 @@ export default function MapView() {
             <Marker
               key={theater.id}
               position={[theater.lat, theater.lng]}
-              icon={makePinIcon(theater.name, selectedId === theater.id, zoom, offsetX)}
+              icon={makePinIcon(theater.name, selectedId === theater.id, zoom, movies.length, offsetX)}
               eventHandlers={{ click: () => handlePinClick(theater.id) }}
             />
           )
@@ -514,20 +632,67 @@ export default function MapView() {
             />
           </div>
 
-          {/* 결과 영역 (Phase 3에서 실제 결과로 교체) */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px' }}>
             {searchQuery === '' ? (
               <p style={{ textAlign: 'center', marginTop: 60, fontSize: 14, color: 'var(--color-text-caption)' }}>
                 극장명, 영화 제목, 감독 이름으로 검색하세요
               </p>
-            ) : (
+            ) : matchedTheaters.length === 0 && matchedMovies.length === 0 ? (
               <p style={{ textAlign: 'center', marginTop: 60, fontSize: 14, color: 'var(--color-text-caption)' }}>
-                &ldquo;{searchQuery}&rdquo; 검색 결과
-                <br />
-                <span style={{ fontSize: 12, marginTop: 8, display: 'block' }}>(Phase 3 연결 예정)</span>
+                &ldquo;{searchQuery}&rdquo;에 맞는 결과가 없습니다.
               </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+                {matchedTheaters.length > 0 && (
+                  <SearchSection title="극장">
+                    {matchedTheaters.map((theater) => (
+                      <SearchResultButton
+                        key={theater.id}
+                        title={theater.name}
+                        subtitle={theater.address}
+                        onClick={() => selectTheaterFromSearch(theater)}
+                      />
+                    ))}
+                  </SearchSection>
+                )}
+                {matchedMovies.length > 0 && (
+                  <SearchSection title="영화">
+                    {matchedMovies.map((movie) => {
+                      const count = showtimes.filter((showtime) => showtime.movieId === movie.id).length
+                      return (
+                        <SearchResultButton
+                          key={movie.id}
+                          title={movie.title}
+                          subtitle={[movie.director, count > 0 ? `${count}회 상영` : '상영 정보 없음'].filter(Boolean).join(' · ')}
+                          disabled={count === 0}
+                          onClick={() => selectMovieFromSearch(movie)}
+                        />
+                      )
+                    })}
+                  </SearchSection>
+                )}
+              </div>
             )}
           </div>
+        </div>
+      )}
+
+      {(catalogError || isPlaceholderData) && (
+        <div style={{
+          position: 'absolute',
+          left: 16,
+          bottom: selectedTheater ? fabBottom + 160 : 24,
+          zIndex: 1000,
+          maxWidth: 260,
+          borderRadius: 8,
+          padding: '8px 10px',
+          backgroundColor: 'rgba(26, 23, 20, 0.78)',
+          color: '#fff',
+          fontSize: 12,
+          lineHeight: 1.4,
+          pointerEvents: 'none',
+        }}>
+          {catalogError ? '실제 DB 연결 실패: 임시 데이터 표시 중' : '실제 DB 불러오는 중'}
         </div>
       )}
 
@@ -550,6 +715,8 @@ export default function MapView() {
       {selectedTheater && (
         <TheaterSheet
           theater={selectedTheater}
+          movies={sheetMovies}
+          showtimes={selectedTheaterShowtimes}
           expanded={sheetExpanded}
           exiting={sheetExiting}
           selectedMovieId={selectedMovieId}

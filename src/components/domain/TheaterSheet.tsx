@@ -1,14 +1,12 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
+import type { CSSProperties, PointerEvent } from 'react'
 import { PosterThumb } from './PosterThumb'
 import { DateBar, type Day, type DayType, type TimeFilter } from './DateBar'
 import { ShowtimeCell } from './ShowtimeCell'
 import { Button } from '@/components/primitives/Button'
-import { Chip } from '@/components/primitives/Chip'
-import { MOCK_MOVIES } from '@/mocks/movies'
-import { MOCK_SHOWTIMES } from '@/mocks/showtimes'
-import type { MockTheater } from '@/mocks/theaters'
+import type { CatalogMovie, CatalogShowtime, CatalogTheater } from '@/types/catalog'
 
 /* ── 상수 ──────────────────────────────────────────────────────── */
 // 접힌 상태에서 보이는 높이 = 핸들(20) + 헤더(54) + 포스터스트립(196)
@@ -133,13 +131,16 @@ function buildDays(count = 7, availableDates?: Set<string>): Day[] {
     const isoDate = d.toISOString().slice(0, 10)   // 'YYYY-MM-DD'
     const disabled = availableDates ? !availableDates.has(isoDate) : false
 
-    return { dow, date, type, disabled }
+    const label = String(d.getDate())
+    return { dow, date: label, value: isoDate, type, disabled }
   })
 }
 
 /* ── Props ──────────────────────────────────────────────────────── */
 interface TheaterSheetProps {
-  theater: MockTheater
+  theater: CatalogTheater
+  movies: CatalogMovie[]
+  showtimes: CatalogShowtime[]
   expanded: boolean
   exiting?: boolean           // true이면 아래로 퇴장 애니메이션
   selectedMovieId: string
@@ -154,6 +155,8 @@ interface TheaterSheetProps {
 /* ── 메인 컴포넌트 ──────────────────────────────────────────────── */
 export function TheaterSheet({
   theater,
+  movies,
+  showtimes,
   expanded,
   exiting = false,
   selectedMovieId,
@@ -236,29 +239,21 @@ export function TheaterSheet({
   }, [expanded])
 
   /* ── 날짜 / 필터 상태 ── */
-  // 선택된 영화의 상영 날짜 Set 계산 (목업: movieId의 홀짝으로 날짜 분배)
-  // 실제 데이터 연결 시 API 응답의 show_date Set으로 교체
   const availableDates = useMemo<Set<string>>(() => {
-    const today = new Date()
-    const set = new Set<string>()
-    // 목업: m1/m3/m5(홀수) → 오늘·내일·3일후·5일후 / m2/m4/m6(짝수) → 오늘·2일후·4일후·6일후
-    const movieIndex = MOCK_MOVIES.findIndex((m) => m.id === selectedMovieId)
-    const offsets = movieIndex % 2 === 0 ? [0, 1, 3, 5] : [0, 2, 4, 6]
-    offsets.forEach((n) => {
-      const d = new Date(today)
-      d.setDate(today.getDate() + n)
-      set.add(d.toISOString().slice(0, 10))
-    })
-    return set
-  }, [selectedMovieId])
+    return new Set(
+      showtimes
+        .filter((showtime) => showtime.movieId === selectedMovieId)
+        .map((showtime) => showtime.showDate),
+    )
+  }, [selectedMovieId, showtimes])
 
-  const days = buildDays(7, availableDates)
+  const days = useMemo(() => buildDays(7, availableDates), [availableDates])
 
-  const [selectedDate, setSelectedDate] = useState(days[0].date)
+  const [selectedDate, setSelectedDate] = useState(days[0].value ?? days[0].date)
 
   // 영화 바뀌면: 현재 선택일이 available이면 유지, disabled면 가장 가까운 날로 이동
   useEffect(() => {
-    const currentIdx = days.findIndex((d) => d.date === selectedDate)
+    const currentIdx = days.findIndex((d) => (d.value ?? d.date) === selectedDate)
     if (currentIdx !== -1 && !days[currentIdx].disabled) return  // 그대로 유지
 
     // 현재 선택일이 disabled → 가장 가까운 available 날짜 탐색 (양방향)
@@ -274,9 +269,8 @@ export function TheaterSheet({
     const nearest = availableIndices.reduce((best, idx) =>
       Math.abs(idx - base) < Math.abs(best - base) ? idx : best
     )
-    setSelectedDate(days[nearest].date)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedMovieId])
+    setSelectedDate(days[nearest].value ?? days[nearest].date)
+  }, [selectedDate, selectedMovieId, days])
 
   const [selectedTime, setSelectedTime] = useState<TimeFilter>('전체')
 
@@ -412,7 +406,7 @@ export function TheaterSheet({
     ? viewportHeight
     : effectiveTranslate
 
-  const handlePointerDown = (e: React.PointerEvent) => {
+  const handlePointerDown = (e: PointerEvent) => {
     // expanded 모드: 스크롤 영역 내부 터치는 네이티브 스크롤에 맡김
     // collapsed 모드: 어디서든 드래그 가능
     if (expanded) {
@@ -427,7 +421,7 @@ export function TheaterSheet({
     setDragging(true)
   }
 
-  const handlePointerMove = (e: React.PointerEvent) => {
+  const handlePointerMove = (e: PointerEvent) => {
     if (!dragActive.current) return
     const delta    = e.clientY - dragStartY.current
     const newTrans = Math.max(0, Math.min(getMaxOffset(), dragStartOffset.current + delta))
@@ -439,7 +433,7 @@ export function TheaterSheet({
     if (buf.length > 5) buf.shift()
   }
 
-  const handlePointerUp = (e: React.PointerEvent) => {
+  const handlePointerUp = (e: PointerEvent) => {
     if (!dragActive.current) return
     dragActive.current = false
     setDragging(false)
@@ -485,14 +479,19 @@ export function TheaterSheet({
     velocityBuffer.current = []
   }
 
-  /* ── 선택 영화 정보 ─────────────────────────────────────────── */
-  const selectedMovie = MOCK_MOVIES.find((m) => m.id === selectedMovieId)
-
   /* ── 상영시간 필터링 ─────────────────────────────────────────── */
-  const showtimes = MOCK_SHOWTIMES.filter((s) => s.movieId === selectedMovieId)
+  const filteredShowtimes = showtimes.filter((showtime) => {
+    if (showtime.movieId !== selectedMovieId) return false
+    if (showtime.showDate !== selectedDate) return false
+    if (selectedTime === '오전') return showtime.startTime < '12:00'
+    if (selectedTime === '오후') return showtime.startTime >= '12:00' && showtime.startTime < '18:00'
+    if (selectedTime === '18시 이후') return showtime.startTime >= '18:00' && showtime.startTime < '23:00'
+    if (selectedTime === '심야') return showtime.kind === 'late' || showtime.startTime >= '23:00'
+    return true
+  })
 
   /* ── 공통 아이콘 버튼 스타일 ─────────────────────────────────── */
-  const iconBtn: React.CSSProperties = {
+  const iconBtn: CSSProperties = {
     // flex: '0 0 36px' — 너비/높이 동시에 고정. flex 환경에서 찌그러짐 방지
     flex: '0 0 36px',
     width: 36, height: 36,
@@ -716,7 +715,7 @@ export function TheaterSheet({
             touchAction: 'none',
           }}
         >
-          {MOCK_MOVIES.map((movie) => (
+          {movies.map((movie) => (
             <div
               key={movie.id}
               style={{
@@ -732,6 +731,8 @@ export function TheaterSheet({
                 transform: `scale(${1 - 0.5 * posterProgress})`,  // scale 1 → 0.5
               }}>
                 <PosterThumb
+                  src={movie.posterUrl}
+                  alt={movie.title}
                   width={88}
                   height={132}
                   size="lg"
@@ -792,7 +793,7 @@ export function TheaterSheet({
         >
           {/* 시놉시스 아코디언 */}
           {(() => {
-            const displayedMovie = MOCK_MOVIES.find((m) => m.id === displayedSynopsisId)
+            const displayedMovie = movies.find((m) => m.id === displayedSynopsisId)
             return displayedMovie?.synopsis ? (
               <SynopsisCard
                 synopsis={displayedMovie.synopsis}
@@ -805,18 +806,18 @@ export function TheaterSheet({
 
           {/* 상영시간표 */}
           <div style={{ padding: '20px 20px 40px' }}>
-            {showtimes.length === 0 ? (
+            {filteredShowtimes.length === 0 ? (
               <div style={{
                 paddingTop: 32,
                 textAlign: 'center',
                 color: 'var(--color-text-caption)',
                 fontSize: 13,
               }}>
-                선택한 날짜에 상영 정보가 없습니다.
+                선택한 조건에 맞는 상영 정보가 없습니다.
               </div>
             ) : (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {showtimes.map((st) => (
+                {filteredShowtimes.map((st) => (
                   <ShowtimeCell
                     key={st.id}
                     startTime={st.startTime}
@@ -825,7 +826,6 @@ export function TheaterSheet({
                     seatTotal={st.seatTotal}
                     screenName={st.screenName}
                     kind={st.kind}
-                    promo={st.promo}
                   />
                 ))}
               </div>
