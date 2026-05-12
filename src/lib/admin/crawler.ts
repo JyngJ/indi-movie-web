@@ -119,6 +119,10 @@ export async function crawlShowtimeCandidates(context: ParseContext) {
     return crawlMovielandProductOptions(context)
   }
 
+  if (context.source.parser === 'seoulArtTimetable') {
+    return crawlSeoulArtTimetable(context)
+  }
+
   const content = await resolveCrawlInput(
     context.inputKind,
     context.content,
@@ -232,6 +236,94 @@ export async function crawlMovielandProductOptions(context: ParseContext) {
   const candidateGroups = await mapWithConcurrency(tasks, 4)
 
   return dedupeCandidates(candidateGroups.flat())
+}
+
+export async function crawlSeoulArtTimetable(context: ParseContext) {
+  const sourceUrl = context.sourceUrl ?? context.source.listingUrl
+  const content = await resolveCrawlInput(context.inputKind, context.content, sourceUrl)
+
+  return parseSeoulArtTimetable(content, context)
+}
+
+function parseSeoulArtTimetable(content: string, context: ParseContext) {
+  const dateLabels = Array.from(content.matchAll(/<td[^>]*>\s*<strong>\s*(\d{2}\.\d{2}\.[A-Za-z]{3})\s*<\/strong>\s*<\/td>/gi))
+    .map((match) => match[1])
+  const showDates = dateLabels.map(parseSeoulArtDate).filter((date): date is string => Boolean(date))
+
+  if (showDates.length === 0) {
+    throw new Error('서울아트시네마 상영시간표에서 날짜 헤더를 찾지 못했습니다.')
+  }
+
+  const rows = Array.from(content.matchAll(/<tr[^>]+class=["'][^"']*event[^"']*["'][^>]*>([\s\S]*?)<\/tr>/gi))
+  const candidates: CrawledShowtimeCandidate[] = []
+
+  rows.forEach((row) => {
+    const cells = extractTableCells(row[1])
+    const dayCells = cells.length > showDates.length ? cells.slice(cells.length - showDates.length) : cells
+
+    dayCells.forEach((cell, index) => {
+      const showDate = showDates[index]
+      const showTime = normalizeDtryxTime(cell.match(/<strong>\s*(\d{1,2}:\d{2})\s*<\/strong>/i)?.[1])
+      const bookingUrl = decodeHtmlEntity(cell.match(/<a[^>]+href=["']([^"']+)["']/i)?.[1] ?? '')
+      const titleHtml = cell.match(/<p[^>]*class=["'][^"']*["'][^>]*>([\s\S]*?)<\/p>/i)?.[1] ?? ''
+      const movieTitle = normalizeSeoulArtMovieTitle(titleHtml)
+
+      if (!showDate || showDate < todayIsoDate() || !showTime || !movieTitle) return
+
+      const warnings = [
+        ...(isSeoulArtEventTitle(movieTitle) ? ['영화 본편이 아닌 행사/강연 회차일 수 있습니다.'] : []),
+      ]
+
+      candidates.push(buildCandidate({
+        context,
+        movieTitle,
+        showDate,
+        showTime,
+        screenName: context.source.theaterName || '서울아트시네마',
+        formatText: movieTitle,
+        seatAvailable: DEFAULT_SEAT_TOTAL,
+        seatTotal: DEFAULT_SEAT_TOTAL,
+        price: DEFAULT_PRICE,
+        bookingUrl: bookingUrl || context.sourceUrl || context.source.listingUrl,
+        rawText: normalizeWhitespace(stripHtml(cell)),
+        confidence: warnings.length ? 0.72 : 0.93,
+        warnings,
+      }))
+    })
+  })
+
+  return dedupeCandidates(candidates)
+}
+
+function extractTableCells(row: string) {
+  return Array.from(row.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)).map((match) => match[1])
+}
+
+function parseSeoulArtDate(value: string | undefined) {
+  const match = String(value ?? '').match(/(\d{2})\.(\d{2})\./)
+  if (!match) return undefined
+
+  const today = new Date()
+  const month = Number.parseInt(match[1], 10)
+  const day = Number.parseInt(match[2], 10)
+  let year = today.getFullYear()
+  const candidate = new Date(year, month - 1, day)
+  const staleThreshold = new Date(today)
+  staleThreshold.setDate(today.getDate() - 30)
+
+  if (candidate < staleThreshold) year += 1
+
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+}
+
+function normalizeSeoulArtMovieTitle(titleHtml: string) {
+  return normalizeWhitespace(stripHtml(titleHtml))
+    .replace(/\(\d+\s*min\).*$/i, '')
+    .trim()
+}
+
+function isSeoulArtEventTitle(title: string) {
+  return /섹션\s*\d+|시네토크|씨네토크|관객과의\s*대화|강연|포럼|토크|대담|특강/i.test(title)
 }
 
 function extractMovielandProductUrls(content: string, sourceUrl: string) {
