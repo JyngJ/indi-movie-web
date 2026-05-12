@@ -11,7 +11,7 @@ export interface AdminTheaterSource {
   matchedTheaterId?: string
   homepageUrl: string
   listingUrl: string
-  parser: 'jsonLdEvent' | 'tableText' | 'timelineCard' | 'dtryxReservationApi' | 'csv'
+  parser: 'jsonLdEvent' | 'tableText' | 'timelineCard' | 'dtryxReservationApi' | 'movielandProductOptions' | 'csv'
   enabled: boolean
   cadence: 'manual' | 'daily' | 'twice_daily'
   lastCrawledAt?: string

@@ -12,6 +12,7 @@ interface ParseContext {
   source: AdminTheaterSource
   inputKind: CrawlInputKind
   sourceUrl?: string
+  content?: string
 }
 
 interface DtryxMovie {
@@ -55,6 +56,17 @@ interface DtryxShowtimeDetail {
   SaleCloseYn?: string
   ScreenCd?: string
   ShowSeq?: string
+}
+
+interface MovielandOptionStock {
+  option_value?: string
+  option_value_orginal?: string[]
+  stock_number?: number | string
+  option_price?: number | string
+  is_display?: string
+  is_selling?: string
+  use_soldout?: string
+  use_soldout_original?: string
 }
 
 export async function resolveCrawlInput(
@@ -103,9 +115,13 @@ export async function crawlShowtimeCandidates(context: ParseContext) {
     return crawlDtryxReservationApi(context)
   }
 
+  if (context.source.parser === 'movielandProductOptions') {
+    return crawlMovielandProductOptions(context)
+  }
+
   const content = await resolveCrawlInput(
     context.inputKind,
-    undefined,
+    context.content,
     context.sourceUrl ?? context.source.listingUrl,
   )
 
@@ -196,6 +212,167 @@ export async function crawlDtryxReservationApi(context: ParseContext) {
   const candidateGroups = await mapWithConcurrency(tasks, 6)
 
   return dedupeCandidates(candidateGroups.flat())
+}
+
+export async function crawlMovielandProductOptions(context: ParseContext) {
+  const sourceUrl = context.sourceUrl ?? context.source.listingUrl
+  const content = await resolveCrawlInput(context.inputKind, context.content, sourceUrl)
+  const productUrls = sourceUrl.includes('/product/')
+    ? [sourceUrl]
+    : extractMovielandProductUrls(content, sourceUrl)
+
+  if (productUrls.length === 0) {
+    throw new Error('무비랜드 Now Showing 페이지에서 상품 상세 URL을 찾지 못했습니다.')
+  }
+
+  const tasks = productUrls.map((productUrl) => async () => {
+    const html = productUrl === sourceUrl ? content : await fetchText(productUrl)
+    return parseMovielandProduct(html, productUrl, context)
+  })
+  const candidateGroups = await mapWithConcurrency(tasks, 4)
+
+  return dedupeCandidates(candidateGroups.flat())
+}
+
+function extractMovielandProductUrls(content: string, sourceUrl: string) {
+  const origin = new URL(sourceUrl).origin
+  const urls = Array.from(content.matchAll(/href=["']([^"']*\/product\/[^"']+\/category\/\d+\/[^"']*)["']/gi))
+    .map((match) => absolutizeUrl(match[1], origin))
+    .filter((url): url is string => Boolean(url))
+
+  return Array.from(new Set(urls)).slice(0, 60)
+}
+
+function parseMovielandProduct(content: string, productUrl: string, context: ParseContext) {
+  const stockData = parseMovielandOptionStockData(content)
+  const movieTitle = extractMovielandMovieTitle(content)
+  const price = extractMovielandPrice(content)
+  const eventWarning = isMovielandEventProduct(movieTitle, content)
+    ? '무비토크/GV 등 영화 본편이 아닌 이벤트 상품일 수 있습니다.'
+    : undefined
+  const showtimes = new Map<string, {
+    showDate: string
+    showTime: string
+    seatTotal: number
+    seatAvailable: number
+    rawItems: MovielandOptionStock[]
+  }>()
+
+  for (const option of Object.values(stockData)) {
+    const values = option.option_value_orginal ?? option.option_value?.split('-') ?? []
+    const dateLabel = values[0]
+    const timeLabel = values[1]
+    const seatLabel = values[2]
+    const showDate = parseMovielandDate(dateLabel)
+    const showTime = normalizeDtryxTime(timeLabel)
+
+    if (!showDate || !showTime || !seatLabel) continue
+    if (showDate < todayIsoDate()) continue
+
+    const key = `${showDate}|${showTime}`
+    const current = showtimes.get(key) ?? {
+      showDate,
+      showTime,
+      seatTotal: 0,
+      seatAvailable: 0,
+      rawItems: [],
+    }
+    const isDisplay = option.is_display !== 'F'
+    const isSelling = option.is_selling !== 'F'
+    const stockNumber = toInt(option.stock_number, 0)
+
+    current.seatTotal += 1
+    if (isDisplay && isSelling && stockNumber > 0) {
+      current.seatAvailable += 1
+    }
+    current.rawItems.push(option)
+    showtimes.set(key, current)
+  }
+
+  return Array.from(showtimes.values()).map((showtime) => {
+    const warnings = [
+      ...(showtime.seatAvailable === 0 ? ['무비랜드 상품 옵션상 매진 또는 판매 중지 회차입니다.'] : []),
+      ...(movieTitle === '제목 확인 필요' ? ['영화 제목을 확인해야 합니다.'] : []),
+      ...(eventWarning ? [eventWarning] : []),
+    ]
+
+    return buildCandidate({
+      context: { ...context, sourceUrl: productUrl },
+      movieTitle,
+      showDate: showtime.showDate,
+      showTime: showtime.showTime,
+      screenName: context.source.theaterName || '무비랜드',
+      formatText: 'standard',
+      seatAvailable: showtime.seatAvailable,
+      seatTotal: showtime.seatTotal || DEFAULT_SEAT_TOTAL,
+      price,
+      bookingUrl: productUrl,
+      rawText: JSON.stringify({
+        productUrl,
+        options: showtime.rawItems.map((item) => item.option_value),
+      }),
+      confidence: eventWarning ? 0.72 : warnings.length ? 0.78 : 0.95,
+      warnings,
+    })
+  })
+}
+
+function parseMovielandOptionStockData(content: string) {
+  const encoded = content.match(/var\s+option_stock_data\s*=\s*'([\s\S]*?)';\s*var\s+stock_manage/)?.[1]
+  if (!encoded) return {}
+
+  try {
+    return JSON.parse(decodeJsStringLiteral(encoded)) as Record<string, MovielandOptionStock>
+  } catch {
+    return {}
+  }
+}
+
+function decodeJsStringLiteral(value: string) {
+  return value
+    .replace(/\\"/g, '"')
+    .replace(/\\\//g, '/')
+}
+
+function extractMovielandMovieTitle(content: string) {
+  const text = normalizeWhitespace(stripHtml(content))
+  const koreanTitle =
+    text.match(/영문상품명\s*([가-힣A-Za-z0-9\s:;,.!?'"()[\]-]{2,80})\s*판매가/)?.[1]?.trim() ??
+    text.match(/상품요약정보\s*:?\s*([가-힣A-Za-z0-9\s:;,.!?'"()[\]-]{2,80})\s+\d{4}/)?.[1]?.trim()
+  const heading = normalizeWhitespace(stripHtml(content.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1] ?? ''))
+  const ogTitle = decodeHtmlEntity(content.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i)?.[1] ?? '')
+    .replace(/\s*\|\s*영화 예매.*$/i, '')
+    .trim()
+
+  return koreanTitle || heading || ogTitle || '제목 확인 필요'
+}
+
+function extractMovielandPrice(content: string) {
+  const text = normalizeWhitespace(stripHtml(content))
+  return parsePrice(text.match(/판매가\s*([0-9,]+원)/)?.[1] ?? text)
+}
+
+function isMovielandEventProduct(movieTitle: string, content: string) {
+  const ogTitle = decodeHtmlEntity(content.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i)?.[1] ?? '')
+  const heading = normalizeWhitespace(stripHtml(content.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1] ?? ''))
+  return /무비\s*(토크|로크)|무비토크|movie\s*talk|\bgv\b|관객과의\s*대화/i.test(`${movieTitle} ${ogTitle} ${heading}`)
+}
+
+function parseMovielandDate(value: string | undefined) {
+  const match = String(value ?? '').match(/(\d{1,2})\.(\d{1,2})/)
+  if (!match) return undefined
+
+  const today = new Date()
+  const month = Number.parseInt(match[1], 10)
+  const day = Number.parseInt(match[2], 10)
+  let year = today.getFullYear()
+  const candidate = new Date(year, month - 1, day)
+  const staleThreshold = new Date(today)
+  staleThreshold.setDate(today.getDate() - 30)
+
+  if (candidate < staleThreshold) year += 1
+
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
 function parseJsonLdEvents(content: string, context: ParseContext) {
@@ -453,6 +630,21 @@ async function fetchJson<T>(url: string, headers: Record<string, string>): Promi
   return response.json() as Promise<T>
 }
 
+async function fetchText(url: string) {
+  const response = await fetch(url, {
+    headers: {
+      'user-agent': 'Mozilla/5.0 (compatible; indi-movie-web-admin-crawler/0.1)',
+    },
+    cache: 'no-store',
+  })
+
+  if (!response.ok) {
+    throw new Error(`무비랜드 상품 페이지 요청 실패: ${response.status}`)
+  }
+
+  return response.text()
+}
+
 async function mapWithConcurrency<T>(
   tasks: Array<() => Promise<T>>,
   concurrency: number,
@@ -619,6 +811,15 @@ function stripHtml(value: string) {
   return value.replace(/<[^>]*>/g, ' ')
 }
 
+function decodeHtmlEntity(value: string) {
+  return value
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+}
+
 function normalizeWhitespace(value: string) {
   return value.replace(/\s+/g, ' ').trim()
 }
@@ -639,6 +840,14 @@ function stableId(value: string) {
     hash |= 0
   }
   return `st_${Math.abs(hash).toString(36)}`
+}
+
+function absolutizeUrl(value: string, origin: string) {
+  try {
+    return new URL(value, origin).toString()
+  } catch {
+    return undefined
+  }
 }
 
 function dedupeCandidates(candidates: CrawledShowtimeCandidate[]) {

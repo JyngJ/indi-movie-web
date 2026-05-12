@@ -58,6 +58,7 @@ export function AdminShowtimeConsole() {
   const [url, setUrl] = useState('')
   const [content, setContent] = useState('')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [candidateSearchQuery, setCandidateSearchQuery] = useState('')
   const selectAllRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
@@ -108,7 +109,23 @@ export function AdminShowtimeConsole() {
   const reviewCount = payload.candidates.filter((candidate) => candidate.status === 'needs_review').length
   const approvedCount = payload.candidates.filter((candidate) => candidate.status === 'approved').length
   const matchedCount = payload.candidates.filter((candidate) => candidate.matchedTheaterId && candidate.matchedMovieId).length
-  const candidateIds = useMemo(() => payload.candidates.map((candidate) => candidate.id), [payload.candidates])
+  const visibleCandidates = useMemo(() => {
+    const query = normalizeSearchText(candidateSearchQuery)
+    if (!query) return payload.candidates
+
+    return payload.candidates.filter((candidate) => normalizeSearchText([
+      candidate.movieTitle,
+      candidate.theaterName,
+      candidate.sourceId,
+      candidate.screenName,
+      candidate.showDate,
+      candidate.showTime,
+      candidate.rawText,
+      candidate.warnings.join(' '),
+      candidate.status,
+    ].join(' ')).includes(query))
+  }, [candidateSearchQuery, payload.candidates])
+  const candidateIds = useMemo(() => visibleCandidates.map((candidate) => candidate.id), [visibleCandidates])
   const selectedCandidateCount = candidateIds.filter((id) => selectedIds.includes(id)).length
   const allCandidatesSelected = candidateIds.length > 0 && selectedCandidateCount === candidateIds.length
   const someCandidatesSelected = selectedCandidateCount > 0 && selectedCandidateCount < candidateIds.length
@@ -781,6 +798,7 @@ export function AdminShowtimeConsole() {
                     <option value="tableText">HTML 테이블</option>
                     <option value="timelineCard">타임라인 카드</option>
                     <option value="dtryxReservationApi">디트릭스 예매 API</option>
+                    <option value="movielandProductOptions">무비랜드 상품 옵션</option>
                     <option value="jsonLdEvent">JSON-LD Event</option>
                     <option value="csv">CSV</option>
                   </select>
@@ -881,6 +899,18 @@ export function AdminShowtimeConsole() {
 
           {message && <p className={styles.message}>{message}</p>}
 
+          <div className={styles.reviewToolbar}>
+            <input
+              aria-label="검수 대기열 검색"
+              value={candidateSearchQuery}
+              onChange={(event) => setCandidateSearchQuery(event.target.value)}
+              placeholder="영화명, 극장, 날짜, 경고 검색"
+            />
+            <span>
+              {visibleCandidates.length}/{payload.candidates.length}건
+            </span>
+          </div>
+
           {movieFormOpen && (
             <div className={styles.movieSearchBox}>
               <div className={styles.inlineForm}>
@@ -940,7 +970,7 @@ export function AdminShowtimeConsole() {
                 </tr>
               </thead>
               <tbody>
-                {payload.candidates.map((candidate) => (
+                {visibleCandidates.map((candidate) => (
                   <tr key={candidate.id}>
                     <td>
                       <input
@@ -1019,6 +1049,11 @@ export function AdminShowtimeConsole() {
             {payload.candidates.length === 0 && (
               <div className={styles.empty}>
                 수집 실행을 누르면 샘플 크롤링 결과가 이곳에 표시됩니다.
+              </div>
+            )}
+            {payload.candidates.length > 0 && visibleCandidates.length === 0 && (
+              <div className={styles.empty}>
+                검색 조건에 맞는 검수 후보가 없습니다.
               </div>
             )}
           </div>
@@ -1331,6 +1366,10 @@ function StatusBadge({ status }: { status: AdminShowtimeStatus }) {
   }[status]
 
   return <span className={`${styles.status} ${styles[status]}`}>{label}</span>
+}
+
+function normalizeSearchText(value: string) {
+  return value.replace(/\s+/g, ' ').trim().toLowerCase()
 }
 
 function upsertOption<T extends { id: string }>(options: T[], option: T) {
