@@ -10,8 +10,8 @@ import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import { useUserLocation } from '@/hooks/useUserLocation'
 import { SearchBarButton, SearchBar, FabRound } from '@/components/primitives'
 import { MapPin, PosterThumb, TheaterSheet, FilterBar } from '@/components/domain'
-import { useStations, useTheaters } from '@/lib/supabase/queries'
-import type { Station, Theater } from '@/types/api'
+import { useActiveMovieIds, useMovies, useStations, useTheaters } from '@/lib/supabase/queries'
+import type { Movie, Station, Theater } from '@/types/api'
 import subwayLinesData from '@/data/subway-lines.json'
 
 interface SubwayLineProperties {
@@ -32,6 +32,7 @@ interface SubwayLineProperties {
 const SUBWAY_LINE_MIN_ZOOM = 15
 const STATION_PIN_MIN_ZOOM = 15
 const STATION_PIN_FULL_ZOOM = 17
+const SEARCH_CROSS_RESULT_LIMIT = 5
 const SEOUL_SUBWAY_LINE_COLORS: Record<string, { light: string; dark: string }> = {
   '1': { light: '#0052A4', dark: '#4C8ED1' },
   '1호선': { light: '#0052A4', dark: '#4C8ED1' },
@@ -203,6 +204,32 @@ function stationSearchScore(station: Station, query: string): number {
     else if (name.includes(normalizedQuery)) best = Math.max(best, 60)
   }
   return best
+}
+
+function movieSearchScore(movie: Movie, query: string): number {
+  const normalizedQuery = normalizeSearchText(query)
+  if (!normalizedQuery) return 0
+
+  const titles = [movie.title, movie.originalTitle ?? ''].map(normalizeSearchText).filter(Boolean)
+  let best = 0
+  for (const title of titles) {
+    if (title === normalizedQuery) best = Math.max(best, 100)
+    else if (title.startsWith(normalizedQuery)) best = Math.max(best, 80)
+    else if (title.includes(normalizedQuery)) best = Math.max(best, 60)
+  }
+  return best
+}
+
+function directorSearchScore(director: string, query: string): number {
+  const normalizedQuery = normalizeSearchText(query)
+  if (!normalizedQuery) return 0
+
+  const normalizedDirector = normalizeSearchText(director)
+  if (!normalizedDirector) return 0
+  if (normalizedDirector === normalizedQuery) return 100
+  if (normalizedDirector.startsWith(normalizedQuery)) return 80
+  if (normalizedDirector.includes(normalizedQuery)) return 60
+  return 0
 }
 
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
@@ -863,6 +890,8 @@ export default function MapView() {
   const isDark = useIsDark()
   const { data: theaters = [], isLoading: theatersLoading } = useTheaters()
   const { data: stations = [] } = useStations()
+  const { data: movies = [] } = useMovies()
+  const { data: activeMovieIds = [] } = useActiveMovieIds()
   const mapRef = useRef<LeafletMap | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [zoom, setZoom] = useState(14)
@@ -900,6 +929,85 @@ export default function MapView() {
       .slice(0, 20)
       .map((result) => result.station)
   }, [searchQuery, stations])
+
+  const activeMovieIdSet = useMemo(() => new Set(activeMovieIds), [activeMovieIds])
+
+  const titleMovieResults = useMemo(() => {
+    if (!searchQuery.trim()) return []
+    return movies
+      .map((movie) => ({ movie, score: movieSearchScore(movie, searchQuery) }))
+      .filter((result) => result.score > 0)
+      .sort((a, b) => b.score - a.score || a.movie.title.localeCompare(b.movie.title, 'ko'))
+      .slice(0, 20)
+      .map((result) => result.movie)
+  }, [movies, searchQuery])
+
+  const directorResults = useMemo(() => {
+    if (!searchQuery.trim()) return []
+
+    const byDirector = new Map<string, { name: string; score: number; movies: Movie[] }>()
+    for (const movie of movies) {
+      for (const director of movie.director) {
+        const score = directorSearchScore(director, searchQuery)
+        if (score <= 0) continue
+        const current = byDirector.get(director) ?? { name: director, score, movies: [] }
+        current.score = Math.max(current.score, score)
+        current.movies.push(movie)
+        byDirector.set(director, current)
+      }
+    }
+
+    return Array.from(byDirector.values())
+      .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, 'ko'))
+      .slice(0, 20)
+  }, [movies, searchQuery])
+
+  const relatedDirectorResults = useMemo(() => {
+    if (titleMovieResults.length === 0 || titleMovieResults.length > SEARCH_CROSS_RESULT_LIMIT) {
+      return directorResults
+    }
+
+    const byDirector = new Map<string, { name: string; score: number; movies: Movie[] }>()
+    for (const result of directorResults) {
+      byDirector.set(result.name, { ...result, movies: [...result.movies] })
+    }
+    for (const movie of titleMovieResults) {
+      for (const director of movie.director) {
+        const current = byDirector.get(director) ?? { name: director, score: 0, movies: [] }
+        if (!current.movies.some((m) => m.id === movie.id)) current.movies.push(movie)
+        byDirector.set(director, current)
+      }
+    }
+
+    return Array.from(byDirector.values())
+      .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, 'ko'))
+      .slice(0, 20)
+  }, [directorResults, titleMovieResults])
+
+  const movieResults = useMemo(() => {
+    const byMovie = new Map<string, Movie>()
+    for (const movie of titleMovieResults) byMovie.set(movie.id, movie)
+
+    if (directorResults.length > 0 && directorResults.length <= SEARCH_CROSS_RESULT_LIMIT) {
+      for (const director of directorResults) {
+        for (const movie of director.movies) byMovie.set(movie.id, movie)
+      }
+    }
+
+    return Array.from(byMovie.values()).sort((a, b) => {
+      const titleScoreDiff = movieSearchScore(b, searchQuery) - movieSearchScore(a, searchQuery)
+      if (titleScoreDiff !== 0) return titleScoreDiff
+      return a.title.localeCompare(b.title, 'ko')
+    }).slice(0, 20)
+  }, [directorResults, searchQuery, titleMovieResults])
+
+  const searchSections = useMemo(() => {
+    const bestMovieScore = Math.max(0, ...titleMovieResults.map((movie) => movieSearchScore(movie, searchQuery)))
+    const bestDirectorScore = Math.max(0, ...directorResults.map((director) => director.score))
+    return bestDirectorScore > bestMovieScore
+      ? ['directors', 'movies', 'stations'] as const
+      : ['movies', 'directors', 'stations'] as const
+  }, [directorResults, searchQuery, titleMovieResults])
 
   const focusStation = useCallback((station: Station) => {
     closeSearch()
@@ -1010,6 +1118,268 @@ export default function MapView() {
   // FAB 버튼 bottom: collapsed = COLLAPSED_H(300) + 여유 16 = 316
   // expanded / 시트 없음 = safe area 위 32px
   const fabBottom = selectedTheater && !sheetExpanded ? 316 : 32
+  const hasSearchResults = stationResults.length > 0 || movieResults.length > 0 || relatedDirectorResults.length > 0
+
+  const renderMovieSearchSection = () => {
+    if (movieResults.length === 0) return null
+    return (
+      <section>
+        <h2 style={{
+          margin: '0 0 10px',
+          fontSize: 12,
+          fontWeight: 700,
+          color: 'var(--color-text-caption)',
+        }}>
+          영화
+        </h2>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {movieResults.map((movie) => (
+            <div
+              key={movie.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '12px 0',
+                borderBottom: '1px solid var(--color-border)',
+              }}
+            >
+              <div style={{
+                width: 48,
+                height: 68,
+                borderRadius: 6,
+                overflow: 'hidden',
+                flexShrink: 0,
+                backgroundColor: 'var(--color-surface-card)',
+                border: '1px solid var(--color-border)',
+              }}>
+                {movie.posterUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={movie.posterUrl}
+                    alt=""
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
+                ) : (
+                  <div style={{
+                    width: '100%',
+                    height: '100%',
+                    background: 'repeating-linear-gradient(135deg, rgba(255,255,255,0.08) 0 7px, transparent 7px 14px)',
+                  }} />
+                )}
+              </div>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{
+                    minWidth: 0,
+                    flex: 1,
+                    fontSize: 15,
+                    fontWeight: 700,
+                    color: 'var(--color-text-primary)',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {movie.title}
+                  </div>
+                  {activeMovieIdSet.has(movie.id) && (
+                    <span style={{
+                      flexShrink: 0,
+                      height: 20,
+                      padding: '0 7px',
+                      borderRadius: 5,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: 'var(--color-primary-base)',
+                      backgroundColor: 'var(--color-primary-subtle-l)',
+                      border: '1px solid color-mix(in srgb, var(--color-primary-base) 38%, transparent)',
+                    }}>
+                      상영중
+                    </span>
+                  )}
+                </div>
+                {movie.originalTitle && (
+                  <div style={{ marginTop: 2, fontSize: 12, fontStyle: 'italic', color: 'var(--color-text-caption)' }}>
+                    {movie.originalTitle}
+                  </div>
+                )}
+                <div style={{ marginTop: 4, fontSize: 12, color: 'var(--color-text-caption)' }}>
+                  {(movie.director.length > 0 ? movie.director.join(', ') : '감독 미입력')} · {movie.year}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  const renderDirectorSearchSection = () => {
+    if (relatedDirectorResults.length === 0) return null
+    return (
+      <section>
+        <h2 style={{
+          margin: '0 0 10px',
+          fontSize: 12,
+          fontWeight: 700,
+          color: 'var(--color-text-caption)',
+        }}>
+          감독
+        </h2>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {relatedDirectorResults.map((director) => (
+            <div
+              key={director.name}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '12px 0',
+                borderBottom: '1px solid var(--color-border)',
+              }}
+            >
+              <div style={{
+                width: 42,
+                height: 42,
+                borderRadius: 12,
+                flexShrink: 0,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'var(--color-surface-card)',
+                border: '1px solid var(--color-border)',
+                color: 'var(--color-text-sub)',
+                fontSize: 18,
+                fontWeight: 800,
+              }}>
+                {director.name.slice(0, 1)}
+              </div>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+                  {director.name}
+                </div>
+                <div style={{
+                  marginTop: 4,
+                  fontSize: 12,
+                  color: 'var(--color-text-caption)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {director.movies.slice(0, 3).map((movie) => movie.title).join(', ')}
+                  {director.movies.length > 3 ? ` 외 ${director.movies.length - 3}편` : ''}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  const renderStationSearchSection = () => {
+    if (stationResults.length === 0) return null
+    return (
+      <section>
+        <h2 style={{
+          margin: '0 0 10px',
+          fontSize: 12,
+          fontWeight: 700,
+          color: 'var(--color-text-caption)',
+        }}>
+          지하철역
+        </h2>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {stationResults.map((station) => (
+            <button
+              key={station.id}
+              type="button"
+              onClick={() => focusStation(station)}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '12px 0',
+                border: 0,
+                borderBottom: '1px solid var(--color-border)',
+                background: 'transparent',
+                color: 'var(--color-text-primary)',
+                textAlign: 'left',
+              }}
+            >
+              <span style={{
+                width: 38,
+                height: 38,
+                borderRadius: 10,
+                flexShrink: 0,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'var(--color-surface-card)',
+                border: '1px solid var(--color-border)',
+              }}>
+                <span style={{
+                  width: 15,
+                  height: 15,
+                  borderRadius: '50%',
+                  backgroundColor: '#111',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  <span style={{
+                    width: 13,
+                    height: 13,
+                    borderRadius: '50%',
+                    backgroundColor: '#fff',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    <span style={{
+                      width: 9,
+                      height: 9,
+                      borderRadius: '50%',
+                      backgroundColor: subwayLineColor({ name: station.lines[0] }, isDark),
+                    }} />
+                  </span>
+                </span>
+              </span>
+              <span style={{ minWidth: 0, flex: 1 }}>
+                <span style={{ display: 'block', fontSize: 15, fontWeight: 700 }}>
+                  {station.name}
+                </span>
+                <span style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 5 }}>
+                  {station.lines.map((line) => (
+                    <span
+                      key={line}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        height: 18,
+                        padding: '0 6px',
+                        borderRadius: 4,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: '#fff',
+                        backgroundColor: subwayLineColor({ name: line }, isDark),
+                      }}
+                    >
+                      {line}
+                    </span>
+                  ))}
+                </span>
+              </span>
+              <span style={{ color: 'var(--color-text-caption)', fontSize: 18, lineHeight: 1 }}>›</span>
+            </button>
+          ))}
+        </div>
+      </section>
+    )
+  }
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100dvh' }}>
@@ -1206,106 +1576,20 @@ export default function MapView() {
               <p style={{ textAlign: 'center', marginTop: 60, fontSize: 14, color: 'var(--color-text-caption)' }}>
                 극장명, 영화 제목, 감독 이름으로 검색하세요
               </p>
-            ) : stationResults.length > 0 ? (
-              <section>
-                <h2 style={{
-                  margin: '0 0 10px',
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: 'var(--color-text-caption)',
-                }}>
-                  지하철역
-                </h2>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  {stationResults.map((station) => (
-                    <button
-                      key={station.id}
-                      type="button"
-                      onClick={() => focusStation(station)}
-                      style={{
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 12,
-                        padding: '12px 0',
-                        border: 0,
-                        borderBottom: '1px solid var(--color-border)',
-                        background: 'transparent',
-                        color: 'var(--color-text-primary)',
-                        textAlign: 'left',
-                      }}
-                    >
-                      <span style={{
-                        width: 38,
-                        height: 38,
-                        borderRadius: 10,
-                        flexShrink: 0,
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: 'var(--color-surface-card)',
-                        border: '1px solid var(--color-border)',
-                      }}>
-                        <span style={{
-                          width: 15,
-                          height: 15,
-                          borderRadius: '50%',
-                          backgroundColor: '#111',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}>
-                          <span style={{
-                            width: 13,
-                            height: 13,
-                            borderRadius: '50%',
-                            backgroundColor: '#fff',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}>
-                            <span style={{
-                              width: 9,
-                              height: 9,
-                              borderRadius: '50%',
-                              backgroundColor: subwayLineColor({ name: station.lines[0] }, isDark),
-                            }} />
-                          </span>
-                        </span>
-                      </span>
-                      <span style={{ minWidth: 0, flex: 1 }}>
-                        <span style={{ display: 'block', fontSize: 15, fontWeight: 700 }}>
-                          {station.name}
-                        </span>
-                        <span style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 5 }}>
-                          {station.lines.map((line) => (
-                            <span
-                              key={line}
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                height: 18,
-                                padding: '0 6px',
-                                borderRadius: 4,
-                                fontSize: 11,
-                                fontWeight: 700,
-                                color: '#fff',
-                                backgroundColor: subwayLineColor({ name: line }, isDark),
-                              }}
-                            >
-                              {line}
-                            </span>
-                          ))}
-                        </span>
-                      </span>
-                      <span style={{ color: 'var(--color-text-caption)', fontSize: 18, lineHeight: 1 }}>›</span>
-                    </button>
-                  ))}
-                </div>
-              </section>
+            ) : hasSearchResults ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+                {searchSections.map((section) => {
+                  const node = section === 'movies'
+                    ? renderMovieSearchSection()
+                    : section === 'directors'
+                      ? renderDirectorSearchSection()
+                      : renderStationSearchSection()
+                  return node ? <div key={section}>{node}</div> : null
+                })}
+              </div>
             ) : (
               <p style={{ textAlign: 'center', marginTop: 60, fontSize: 14, color: 'var(--color-text-caption)' }}>
-                &ldquo;{searchQuery}&rdquo;와 일치하는 지하철역이 없습니다
+                &ldquo;{searchQuery}&rdquo;와 일치하는 결과가 없습니다
               </p>
             )}
           </div>

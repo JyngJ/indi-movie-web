@@ -6,6 +6,13 @@ function supabase() {
   return createSupabaseBrowserClient()
 }
 
+function formatLocalDate(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 /* ── 영화관 목록 ────────────────────────────────────────────────── */
 export function useTheaters() {
   return useQuery<Theater[]>({
@@ -69,6 +76,59 @@ export function useStations() {
       }))
     },
     staleTime: 10 * 60 * 1000,
+  })
+}
+
+/* ── 영화 목록 ────────────────────────────────────────────────── */
+export function useMovies() {
+  return useQuery<Movie[]>({
+    queryKey: ['movies'],
+    queryFn: async () => {
+      const { data, error } = await supabase()
+        .from('movies')
+        .select('id,title,original_title,year,poster_url,genre,director,synopsis,runtime_minutes,certification,kmdb_id,tmdb_id,rating')
+        .order('title')
+
+      if (error) throw error
+
+      return (data ?? []).map((r) => ({
+        id: r.id,
+        title: r.title,
+        originalTitle: r.original_title ?? undefined,
+        year: r.year,
+        posterUrl: r.poster_url ?? undefined,
+        genre: (r.genre as string[] | null) ?? [],
+        director: (r.director as string[] | null) ?? [],
+        synopsis: r.synopsis ?? undefined,
+        runtimeMinutes: r.runtime_minutes ?? undefined,
+        certification: r.certification ?? undefined,
+        kmdbId: r.kmdb_id ?? undefined,
+        tmdbId: r.tmdb_id ?? undefined,
+        rating: r.rating ?? undefined,
+      }))
+    },
+    staleTime: 10 * 60 * 1000,
+  })
+}
+
+/* ── 오늘 포함 미래 상영 스케줄이 있는 영화 ID 목록 ─────────────── */
+export function useActiveMovieIds() {
+  const today = formatLocalDate(new Date())
+
+  return useQuery<string[]>({
+    queryKey: ['active-movie-ids', today],
+    queryFn: async () => {
+      const { data, error } = await supabase()
+        .from('showtimes')
+        .select('movie_id')
+        .eq('is_active', true)
+        .gte('show_date', today)
+
+      if (error) throw error
+
+      return Array.from(new Set((data ?? []).map((r) => r.movie_id).filter(Boolean)))
+    },
+    staleTime: 2 * 60 * 1000,
   })
 }
 
