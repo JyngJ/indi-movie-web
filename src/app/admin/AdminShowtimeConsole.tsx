@@ -1159,7 +1159,19 @@ export function AdminShowtimeConsole() {
                 <span>{selectedAdminTheater ? `${selectedAdminTheater.city} · ${selectedAdminTheater.address}` : '왼쪽 목록에서 실제 극장을 선택하면 시간표가 표시됩니다.'}</span>
               </div>
               {selectedAdminTheater && (
-                <Button variant="secondary" size="sm" onClick={() => editTheater(selectedAdminTheater)}>극장 수정</Button>
+                <div className={styles.serviceHeaderActions}>
+                  {selectedAdminTheater.website && (
+                    <a
+                      className={styles.linkButton}
+                      href={selectedAdminTheater.website}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      사이트 보기
+                    </a>
+                  )}
+                  <Button variant="secondary" size="sm" onClick={() => editTheater(selectedAdminTheater)}>극장 수정</Button>
+                </div>
               )}
             </div>
 

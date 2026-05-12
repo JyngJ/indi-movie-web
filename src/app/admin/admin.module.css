@@ -695,6 +695,14 @@
   font-size: 12px;
 }
 
+.serviceHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .showtimeEditGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
