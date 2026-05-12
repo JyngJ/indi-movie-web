@@ -217,7 +217,7 @@ CREATE TABLE IF NOT EXISTS crawl_sources (
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
-  CONSTRAINT crawl_sources_parser_check CHECK (parser IN ('jsonLdEvent', 'tableText', 'timelineCard', 'dtryxReservationApi', 'movielandProductOptions', 'csv')),
+  CONSTRAINT crawl_sources_parser_check CHECK (parser IN ('jsonLdEvent', 'tableText', 'timelineCard', 'dtryxReservationApi', 'movieeTicketApi', 'movielandProductOptions', 'seoulArtTimetable', 'csv')),
   CONSTRAINT crawl_sources_cadence_check CHECK (cadence IN ('manual', 'daily', 'twice_daily')),
   CONSTRAINT crawl_sources_health_check CHECK (health IN ('healthy', 'degraded', 'broken'))
 );
@@ -230,13 +230,13 @@ CREATE TRIGGER trg_crawl_sources_updated_at
 ALTER TABLE crawl_sources
   ADD COLUMN IF NOT EXISTS matched_theater_id UUID REFERENCES theaters(id) ON DELETE SET NULL;
 
--- Existing DB migration for Movieland crawler parser support.
+-- Existing DB migration for custom crawler parser support.
 ALTER TABLE crawl_sources
   DROP CONSTRAINT IF EXISTS crawl_sources_parser_check;
 
 ALTER TABLE crawl_sources
   ADD CONSTRAINT crawl_sources_parser_check
-  CHECK (parser IN ('jsonLdEvent', 'tableText', 'timelineCard', 'dtryxReservationApi', 'movielandProductOptions', 'csv'));
+  CHECK (parser IN ('jsonLdEvent', 'tableText', 'timelineCard', 'dtryxReservationApi', 'movieeTicketApi', 'movielandProductOptions', 'seoulArtTimetable', 'csv'));
 
 CREATE INDEX IF NOT EXISTS idx_crawl_sources_matched_theater
   ON crawl_sources(matched_theater_id);

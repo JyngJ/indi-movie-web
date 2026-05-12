@@ -1851,6 +1851,39 @@ export default function MapView() {
         </div>
       </div>
 
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          left: '50%',
+          bottom: 'max(20px, env(safe-area-inset-bottom))',
+          transform: 'translateX(-50%)',
+          zIndex: 550,
+          height: 'calc(var(--comp-search-height) * 0.8)',
+          width: 109,
+          pointerEvents: 'none',
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundColor: isDark ? 'var(--color-neutral-50)' : 'var(--color-neutral-900)',
+            WebkitMaskImage: 'url(/logo.svg)',
+            maskImage: 'url(/logo.svg)',
+            WebkitMaskRepeat: 'no-repeat',
+            maskRepeat: 'no-repeat',
+            WebkitMaskPosition: 'center',
+            maskPosition: 'center',
+            WebkitMaskSize: 'contain',
+            maskSize: 'contain',
+            filter: isDark
+              ? 'drop-shadow(0 4px 14px rgba(0, 0, 0, 0.85)) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.95))'
+              : 'drop-shadow(0 4px 14px rgba(0, 0, 0, 0.42)) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5))',
+          }}
+        />
+      </div>
+
       {/* 검색 오버레이 — same page, iOS 키보드 대응 */}
       {searchOpen && (
         <div style={{
