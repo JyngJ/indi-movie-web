@@ -18,10 +18,22 @@ const THEATERS = [
     city: '서울', website: 'https://www.indiespace.kr', screenCount: 2,
   },
   {
+    name: 'KU시네마테크',
+    lat: 37.5418470, lng: 127.0771149,
+    address: '서울 광진구 능동로 120 건국대학교 예술문화관 B108호',
+    city: '서울', website: 'https://kucinema.net', screenCount: 1,
+  },
+  {
     name: '아트나인',
     lat: 37.4846834, lng: 126.9816811,
-    address: '서울 동작구 동작대로 89',
-    city: '서울', screenCount: 1,
+    address: '서울 동작구 동작대로 89 골든시네마타워 12층',
+    city: '서울', website: 'https://linktr.ee/artnine', screenCount: 1,
+  },
+  {
+    name: '필름포럼',
+    lat: 37.5637404, lng: 126.9441643,
+    address: '서울 서대문구 성산로 527 하늬솔빌딩 A동 지하1층 1호',
+    city: '서울', website: 'http://filmforum.co.kr/', screenCount: 2,
   },
   {
     name: '에무시네마',
@@ -48,10 +60,28 @@ const THEATERS = [
     city: '서울', website: 'https://artmomo.ewha.ac.kr', screenCount: 1,
   },
   {
-    name: 'KT&G 상상마당 시네마',
+    name: 'KT&G 상상마당 시네마 홍대',
     lat: 37.5509886, lng: 126.9210678,
     address: '서울 마포구 어울마당로 65',
-    city: '서울', website: 'https://www.sangsangmadang.com', screenCount: 1,
+    city: '서울', website: 'https://www.sangsangmadang.com/movie/list', screenCount: 1,
+  },
+  {
+    name: 'KT&G 상상마당 시네마 대치',
+    lat: 37.5065771, lng: 127.0653312,
+    address: '서울 강남구 영동대로 416 KT&G 타워 3층',
+    city: '서울', website: 'https://www.sangsangmadang.com/movie/list', screenCount: 1,
+  },
+  {
+    name: '무비랜드',
+    lat: 37.5441570, lng: 127.0503281,
+    address: '서울 성동구 연무장길 5-5',
+    city: '서울', website: 'https://movieland.co', screenCount: 1,
+  },
+  {
+    name: '오르페오',
+    lat: 37.5337083, lng: 127.0020493,
+    address: '서울 용산구 대사관로 35 사운즈한남 5층',
+    city: '서울', website: 'https://www.orfeo.co.kr/', screenCount: 1,
   },
   {
     name: '더숲 아트시네마',
@@ -88,7 +118,7 @@ const THEATERS = [
     name: '아리랑시네센터',
     lat: 37.6032391, lng: 127.0133181,
     address: '서울 성북구 아리랑로 82',
-    city: '서울', website: 'https://www.arirang.or.kr', screenCount: 2,
+    city: '서울', website: 'https://cine.arirang.go.kr:8443/arirang/index.do', screenCount: 2,
   },
 ]
 

@@ -132,6 +132,69 @@ export function useActiveMovieIds() {
   })
 }
 
+export interface MapShowtimeMovie {
+  id: string
+  title: string
+  posterUrl?: string
+}
+
+export interface MapShowtime {
+  id: string
+  theaterId: string
+  movieId: string
+  showDate: string
+  showTime: string
+  movie: MapShowtimeMovie | null
+}
+
+/* ── 지도 포스터 집계용 상영 시간표 ─────────────────────────────── */
+export function useMapShowtimes(startDate: string, endDate: string) {
+  return useQuery<MapShowtime[]>({
+    queryKey: ['map-showtimes', startDate, endDate],
+    queryFn: async () => {
+      const { data, error } = await supabase()
+        .from('showtimes')
+        .select(`
+          id,
+          theater_id,
+          movie_id,
+          show_date,
+          show_time,
+          movies (
+            id,
+            title,
+            poster_url
+          )
+        `)
+        .eq('is_active', true)
+        .gte('show_date', startDate)
+        .lte('show_date', endDate)
+        .order('show_date', { ascending: true })
+        .order('show_time', { ascending: true })
+        .limit(5000)
+
+      if (error) throw error
+
+      return (data ?? []).map((r) => {
+        const movie = r.movies as unknown as Record<string, unknown> | null
+        return {
+          id: r.id,
+          theaterId: r.theater_id,
+          movieId: r.movie_id,
+          showDate: r.show_date,
+          showTime: r.show_time,
+          movie: movie ? {
+            id: String(movie.id),
+            title: String(movie.title),
+            posterUrl: movie.poster_url ? String(movie.poster_url) : undefined,
+          } : null,
+        }
+      })
+    },
+    staleTime: 2 * 60 * 1000,
+  })
+}
+
 /* ── 특정 영화관의 상영 시간표 ──────────────────────────────────── */
 export function useTheaterShowtimes(theaterId: string | null, date: string) {
   return useQuery<{ movies: Movie[]; showtimes: Showtime[] }>({
