@@ -157,6 +157,15 @@
   --comp-sheet-handle-height: 4px;
   --comp-sheet-handle-radius: 2px;
 
+  /* ── Filter UI (라이트 모드) ── */
+  --filter-chip-height:     36px;
+  --filter-chip-value:      #2B3D50;           /* 칩 선택값 텍스트 */
+  --filter-chip-open-text:  #2B3D50;           /* 드롭다운 열림 칩 라벨 */
+  --filter-chip-open-caret: var(--color-primary-hover-l);   /* 열림 캐럿 */
+  --filter-row-label-sel:   #2B3D50;           /* 선택된 드롭다운 행 라벨 */
+  --filter-dismiss-bg:      rgba(0,0,0,0.08);  /* × 버튼 배경 */
+  --filter-indicator-bd:    rgba(0,0,0,0.1);   /* 미선택 인디케이터 테두리 */
+
   /* ── Shadows ── */
   --shadow-sm:    0 2px 6px rgba(20, 15, 10, 0.06);
   --shadow-md:    0 4px 12px rgba(20, 15, 10, 0.08);
@@ -203,6 +212,14 @@
 
   /* 활성 칩 텍스트 — 다크 배경에서 읽히는 밝은 파란색 */
   --color-primary-text:     #B8C7D8;
+
+  /* ── Filter UI (다크 모드 오버라이드) ── */
+  --filter-chip-value:      #E4F0FA;
+  --filter-chip-open-text:  #B8CDE0;
+  --filter-chip-open-caret: #7AA8C8;
+  --filter-row-label-sel:   #D0E4F4;
+  --filter-dismiss-bg:      rgba(255,255,255,0.1);
+  --filter-indicator-bd:    rgba(255,255,255,0.08);
 
   /* ── Shadows ── */
   --shadow-sm:    0 2px 6px rgba(0, 0, 0, 0.30);

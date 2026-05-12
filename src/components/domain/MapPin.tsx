@@ -6,6 +6,7 @@ interface MapPinProps {
   kind?: PinKind
   selected?: boolean
   label?: string
+  labelOffset?: { x: number; y: number }
   onClick?: () => void
 }
 
@@ -19,8 +20,9 @@ const PIN_COLORS: Record<PinKind, { dot: string; aura: string }> = {
 const DOT = 22
 const AURA = 44
 
-export function MapPin({ kind = 'indie', selected = false, label, onClick }: MapPinProps) {
+export function MapPin({ kind = 'indie', selected = false, label, labelOffset, onClick }: MapPinProps) {
   const { dot, aura } = PIN_COLORS[kind]
+  const tailShiftX = labelOffset ? Math.max(-36, Math.min(36, -labelOffset.x)) : 0
 
   return (
     <div
@@ -54,18 +56,39 @@ export function MapPin({ kind = 'indie', selected = false, label, onClick }: Map
       {/* 라벨 */}
       {label && (
         <div style={{
+          position: 'relative',
+          zIndex: 1,
+          transform: labelOffset ? `translate(${labelOffset.x}px, ${labelOffset.y}px)` : undefined,
+        }}>
+          <div style={{
+            position: 'absolute',
+            width: 10,
+            height: 10,
+            backgroundColor: 'var(--color-surface-card)',
+            borderRight: '1.5px solid var(--color-border)',
+            borderBottom: '1.5px solid var(--color-border)',
+            borderBottomRightRadius: 2,
+            bottom: -5,
+            left: `calc(50% + ${tailShiftX}px)`,
+            transform: 'translateX(-50%) rotate(45deg)',
+            zIndex: 0,
+            pointerEvents: 'none',
+          }} />
+          <div style={{
           fontSize: 11,
           fontWeight: 600,
           whiteSpace: 'nowrap',
           padding: '2px 6px',
           borderRadius: 4,
-          color: '#1A1714',
-          backgroundColor: 'rgba(255,255,255,0.88)',
-          boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
+          color: 'var(--color-text-primary)',
+          backgroundColor: 'var(--color-surface-card)',
+          border: '1.5px solid var(--color-border)',
+          boxShadow: 'var(--shadow-sm)',
           position: 'relative',
           zIndex: 1,
         }}>
-          {label}
+          <span style={{ position: 'relative', zIndex: 1 }}>{label}</span>
+          </div>
         </div>
       )}
 
@@ -75,7 +98,7 @@ export function MapPin({ kind = 'indie', selected = false, label, onClick }: Map
         height: DOT,
         borderRadius: '50%',
         backgroundColor: dot,
-        border: '2px solid #FFFFFF',
+        border: '2px solid var(--color-surface-bg)',
         boxShadow: '0 2px 6px rgba(0,0,0,0.18)',
         position: 'relative',
         zIndex: 1,

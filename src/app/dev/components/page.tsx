@@ -17,26 +17,20 @@ const IcoExpand = () => <svg width={16} height={16} viewBox="0 0 24 24" fill="no
 
 /* ── 샘플 데이터 ─────────────────────────────────────────────── */
 const SAMPLE_DAYS = [
-  { dow: '오늘', date: '29', type: 'today'    as const },
-  { dow: '목',   date: '30', type: 'weekday'  as const },
-  { dow: '금',   date: '1',  type: 'holiday'  as const },
-  { dow: '토',   date: '2',  type: 'saturday' as const },
-  { dow: '일',   date: '3',  type: 'sunday'   as const },
-  { dow: '월',   date: '4',  type: 'weekday'  as const },
-  { dow: '화',   date: '5',  type: 'weekday'  as const },
+  { dow: '오늘', date: '29', isoDate: '2026-04-29', type: 'today'    as const },
+  { dow: '목',   date: '30', isoDate: '2026-04-30', type: 'weekday'  as const },
+  { dow: '금',   date: '1',  isoDate: '2026-05-01', type: 'holiday'  as const },
+  { dow: '토',   date: '2',  isoDate: '2026-05-02', type: 'saturday' as const },
+  { dow: '일',   date: '3',  isoDate: '2026-05-03', type: 'sunday'   as const },
+  { dow: '월',   date: '4',  isoDate: '2026-05-04', type: 'weekday'  as const },
+  { dow: '화',   date: '5',  isoDate: '2026-05-05', type: 'weekday'  as const },
 ]
 
 const SAMPLE_MOVIES = [
-  { id: '1', title: '파과',      director: '오멸', tags: ['드라마'] },
-  { id: '2', title: '소풍',      director: '이준익', tags: ['드라마'] },
-  { id: '3', title: '수라',      director: '장윤미', tags: ['다큐멘터리'] },
-  { id: '4', title: '비밀의 언덕', director: '박두호', tags: ['한국독립'] },
-]
-
-const SAMPLE_SHOWTIMES = [
-  { id: 'sample-1', theaterId: 'dev', movieId: '1', showDate: new Date().toISOString().slice(0, 10), startTime: '10:30', endTime: '12:15', seatAvailable: 54, seatTotal: 80, screenName: '1관', kind: 'normal' as const },
-  { id: 'sample-2', theaterId: 'dev', movieId: '2', showDate: new Date().toISOString().slice(0, 10), startTime: '14:00', endTime: '15:45', seatAvailable: 9, seatTotal: 80, screenName: '2관', kind: 'low' as const },
-  { id: 'sample-3', theaterId: 'dev', movieId: '3', showDate: new Date().toISOString().slice(0, 10), startTime: '23:20', endTime: '01:02', seatAvailable: 22, seatTotal: 60, screenName: '1관', kind: 'late' as const },
+  { id: '1', title: '파과',      director: '오멸' },
+  { id: '2', title: '소풍',      director: '이준익' },
+  { id: '3', title: '수라',      director: '장윤미' },
+  { id: '4', title: '비밀의 언덕', director: '박두호' },
 ]
 
 /* ── Foundation colors ───────────────────────────────────────────── */
@@ -315,9 +309,7 @@ export default function ComponentsPage() {
         <Section title="05 · 바텀시트 — 극장 카드">
           <div style={{ position: 'relative', height: 400, overflow: 'hidden', borderRadius: 16, background: '#e0ddd6' }}>
             <TheaterSheet
-              theater={{ id: 'dev', name: '더숲 아트시네마', address: '서울특별시 노원구 화랑로 123', city: '서울', lat: 37.6, lng: 127.0, kind: 'indie' }}
-              movies={SAMPLE_MOVIES}
-              showtimes={SAMPLE_SHOWTIMES}
+              theater={{ id: 'dev', name: '더숲 아트시네마', address: '서울특별시 노원구 화랑로 123', lat: 37.6, lng: 127.0, city: '서울', createdAt: '', updatedAt: '' }}
               expanded={false}
               selectedMovieId={selectedMovie}
               favorited={favorited}
