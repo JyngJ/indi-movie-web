@@ -248,6 +248,102 @@ export function useMapShowtimes(startDate: string, endDate: string) {
   })
 }
 
+/* ── 특정 영화관의 전체 상영 영화 (날짜 무관, 7일 범위) ─────────── */
+export interface TheaterMovieEntry {
+  movie: Movie
+  showtimeCount: number
+  earliestDate: string
+  availableDates: Set<string>
+}
+
+export function useTheaterAllMovies(theaterId: string | null) {
+  const today = formatLocalDate(new Date())
+  const endDate = formatLocalDate(new Date(Date.now() + 6 * 24 * 60 * 60 * 1000))
+
+  return useQuery<TheaterMovieEntry[]>({
+    queryKey: ['theater-all-movies', theaterId, today],
+    enabled: !!theaterId,
+    queryFn: async () => {
+      const primary = await supabase()
+        .from('showtimes')
+        .select(`
+          movie_id,
+          show_date,
+          movies (
+            id, title, original_title, year, poster_url, genre, director,
+            nation, synopsis, runtime_minutes, certification, kmdb_id, tmdb_id, rating
+          )
+        `)
+        .eq('theater_id', theaterId!)
+        .eq('is_active', true)
+        .gte('show_date', today)
+        .lte('show_date', endDate)
+        .order('show_date')
+        .limit(1000)
+
+      const { data, error } = primary.error && isMissingColumnError(primary.error, 'nation')
+        ? await supabase()
+          .from('showtimes')
+          .select(`
+            movie_id,
+            show_date,
+            movies (
+              id, title, original_title, year, poster_url, genre, director,
+              synopsis, runtime_minutes, certification, kmdb_id, tmdb_id, rating
+            )
+          `)
+          .eq('theater_id', theaterId!)
+          .eq('is_active', true)
+          .gte('show_date', today)
+          .lte('show_date', endDate)
+          .order('show_date')
+          .limit(1000)
+        : primary
+
+      if (error) throw error
+
+      const entryMap = new Map<string, TheaterMovieEntry>()
+      for (const r of data ?? []) {
+        const m = r.movies as unknown as Record<string, unknown> | null
+        if (!m) continue
+        const movieId = String(m.id)
+
+        if (!entryMap.has(movieId)) {
+          entryMap.set(movieId, {
+            movie: {
+              id: movieId,
+              title: String(m.title),
+              originalTitle: m.original_title ? String(m.original_title) : undefined,
+              year: Number(m.year),
+              posterUrl: m.poster_url ? String(m.poster_url) : undefined,
+              genre: (m.genre as string[]) ?? [],
+              director: (m.director as string[]) ?? [],
+              nation: m.nation ? String(m.nation) : undefined,
+              synopsis: m.synopsis ? String(m.synopsis) : undefined,
+              runtimeMinutes: m.runtime_minutes ? Number(m.runtime_minutes) : undefined,
+              certification: m.certification ? String(m.certification) : undefined,
+              kmdbId: m.kmdb_id ? String(m.kmdb_id) : undefined,
+              tmdbId: m.tmdb_id ? Number(m.tmdb_id) : undefined,
+              rating: m.rating ? Number(m.rating) : undefined,
+            },
+            showtimeCount: 0,
+            earliestDate: r.show_date,
+            availableDates: new Set(),
+          })
+        }
+
+        const entry = entryMap.get(movieId)!
+        entry.showtimeCount++
+        entry.availableDates.add(r.show_date)
+        if (r.show_date < entry.earliestDate) entry.earliestDate = r.show_date
+      }
+
+      return Array.from(entryMap.values()).sort((a, b) => b.showtimeCount - a.showtimeCount)
+    },
+    staleTime: 2 * 60 * 1000,
+  })
+}
+
 /* ── 특정 영화관의 상영 시간표 ──────────────────────────────────── */
 export function useTheaterShowtimes(theaterId: string | null, date: string) {
   return useQuery<{ movies: Movie[]; showtimes: Showtime[] }>({

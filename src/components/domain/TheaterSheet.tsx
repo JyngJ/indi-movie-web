@@ -7,14 +7,14 @@ import { ShowtimeCell } from './ShowtimeCell'
 import { Button } from '@/components/primitives/Button'
 import { Chip } from '@/components/primitives/Chip'
 import { Toast } from '@/components/primitives/Toast'
-import { useTheaterShowtimes } from '@/lib/supabase/queries'
-import type { Theater, Movie, Showtime } from '@/types/api'
+import { useTheaterShowtimes, useTheaterAllMovies } from '@/lib/supabase/queries'
+import type { TheaterMovieEntry } from '@/lib/supabase/queries'
+import type { Theater, Showtime } from '@/types/api'
 import { Skeleton } from '@/components/primitives/Skeleton'
 
 /* ── 상수 ──────────────────────────────────────────────────────── */
-// 접힌 상태에서 보이는 높이 = 핸들(20) + 헤더(54) + 포스터스트립(196)
-// 접힌 상태에서 보이는 높이 = 핸들(20) + 헤더(56) + 포스터스트립(224, safe area 포함)
-const COLLAPSED_H = 300
+// 접힌 상태에서 보이는 높이 = 핸들(20) + 헤더(88, 액션버튼 포함) + 포스터스트립(228) + 테두리(2) + 여유(6)
+const COLLAPSED_H = 344
 
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
 const IconStar = ({ filled = false }: { filled?: boolean }) => (
@@ -290,21 +290,29 @@ export function TheaterSheet({
     theater.id,
     selectedIsoDate,
   )
-  const movies: Movie[] = showtimeData?.movies ?? []
   const showtimes: Showtime[] = showtimeData?.showtimes ?? []
 
-  /* ── 영화 바뀌면 selectedMovieId 초기화 ── */
+  /* ── 전체 상영 영화 (날짜 무관, 7일 범위) ── */
+  const { data: allMovieEntries = [], isLoading: allMoviesLoading } = useTheaterAllMovies(theater.id)
+
+  /* ── selectedMovieId 초기화 — 전체 목록 기준 ── */
   useEffect(() => {
-    if (movies.length > 0 && !movies.find((m) => m.id === selectedMovieId)) {
-      onMovieSelect(movies[0].id)
+    if (allMovieEntries.length > 0 && !allMovieEntries.find((e) => e.movie.id === selectedMovieId)) {
+      onMovieSelect(allMovieEntries[0].movie.id)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [movies])
+  }, [allMovieEntries])
 
   /* ── 날짜 바 — 7일, 상영 있는 날만 활성 ── */
-  // 실제로는 해당 영화관의 전체 날짜 범위를 별도 쿼리로 가져오는 게 이상적이나,
-  // 현재는 모든 날짜 활성화 (선택 날짜로 쿼리 → 없으면 빈 상태)
-  const days = buildDays(7)
+  const theaterAvailableDates = useMemo(() => {
+    const dates = new Set<string>()
+    for (const entry of allMovieEntries) {
+      for (const d of entry.availableDates) dates.add(d)
+    }
+    return dates
+  }, [allMovieEntries])
+
+  const days = buildDays(7, theaterAvailableDates)
   const selectedDate = days.find((d) => d.isoDate === selectedIsoDate)?.date ?? days[0].date
 
   const [selectedTime, setSelectedTime] = useState<TimeFilter>('전체')
@@ -385,19 +393,27 @@ export function TheaterSheet({
     }
   }, [onCollapse, expanded])   // expanded 바뀔 때 ref 재등록
 
-  /* 포스터 가로 드래그 — native 이벤트 (preventDefault 필요) */
+  /* 포스터 가로 드래그 + momentum — native 이벤트 (preventDefault 필요) */
   useEffect(() => {
     const el = posterScrollRef.current
     if (!el) return
 
     let startY = 0
+    let momentumId = 0
+    const velBuf: Array<{ t: number; x: number }> = []
+
+    const cancelMomentum = () => {
+      if (momentumId) { cancelAnimationFrame(momentumId); momentumId = 0 }
+    }
 
     const onDown = (e: MouseEvent | TouchEvent) => {
+      cancelMomentum()
       const x = 'touches' in e ? e.touches[0].pageX : e.pageX
       startY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY
       posterDrag.current = { active: false, startX: x, scrollLeft: el.scrollLeft }
       posterTouching.current = true
       el.style.cursor = 'grabbing'
+      velBuf.length = 0
     }
     const onMove = (e: MouseEvent | TouchEvent) => {
       if (!posterTouching.current) return
@@ -406,49 +422,75 @@ export function TheaterSheet({
       const dx = Math.abs(x - posterDrag.current.startX)
       const dy = y - startY
 
-      // 방향 미확정 상태: 가로/세로 판단
       if (!posterDrag.current.active) {
-        if (dx < 6 && Math.abs(dy) < 6) return  // 아직 판단 불가
+        if (dx < 4 && Math.abs(dy) < 4) return
         if (Math.abs(dy) > dx) {
-          // 세로 방향 — 포스터 스크롤 포기, 시트에 맡김
           posterTouching.current = false
           return
         }
-        // 가로 방향 확정
         posterDrag.current.active = true
       }
 
       e.preventDefault()
       el.scrollLeft = posterDrag.current.scrollLeft - (x - posterDrag.current.startX)
+
+      // 속도 계산용 버퍼
+      velBuf.push({ t: Date.now(), x })
+      if (velBuf.length > 6) velBuf.shift()
     }
     const onUp = () => {
+      const wasActive = posterDrag.current.active
       posterDrag.current.active = false
       posterTouching.current = false
       el.style.cursor = 'grab'
+
+      if (!wasActive) { velBuf.length = 0; return }
+
+      // momentum — 마지막 200ms 이내 이벤트로 속도 계산
+      if (velBuf.length >= 2) {
+        const first = velBuf[0]
+        const last  = velBuf[velBuf.length - 1]
+        const dt    = last.t - first.t
+        if (dt > 0 && dt < 200) {
+          let vel = -(last.x - first.x) / dt * 16  // px per 16ms frame
+          const run = () => {
+            if (Math.abs(vel) < 0.5) { momentumId = 0; return }
+            el.scrollLeft += vel
+            vel *= 0.93
+            momentumId = requestAnimationFrame(run)
+          }
+          momentumId = requestAnimationFrame(run)
+        }
+      }
+      velBuf.length = 0
     }
-    const onWheel = (e: WheelEvent) => { e.preventDefault() }
-    // 시트 컨테이너의 pointerdown → setPointerCapture 를 차단해 mouse 이벤트가 포스터에 유지되게 함
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault()
+      cancelMomentum()
+      el.scrollLeft += e.deltaX || e.deltaY
+    }
     const onPointerDown = (e: PointerEvent) => { e.stopPropagation() }
 
     el.addEventListener('pointerdown', onPointerDown)
-    el.addEventListener('mousedown',  onDown)
-    el.addEventListener('mousemove',  onMove)
-    el.addEventListener('mouseup',    onUp)
-    el.addEventListener('mouseleave', onUp)
-    el.addEventListener('touchstart', onDown, { passive: false })
-    el.addEventListener('touchmove',  onMove, { passive: false })
-    el.addEventListener('touchend',   onUp)
-    el.addEventListener('wheel',      onWheel, { passive: false })
+    el.addEventListener('mousedown',   onDown)
+    el.addEventListener('mousemove',   onMove)
+    el.addEventListener('mouseup',     onUp)
+    el.addEventListener('mouseleave',  onUp)
+    el.addEventListener('touchstart',  onDown, { passive: false })
+    el.addEventListener('touchmove',   onMove, { passive: false })
+    el.addEventListener('touchend',    onUp)
+    el.addEventListener('wheel',       onWheel, { passive: false })
     return () => {
+      cancelMomentum()
       el.removeEventListener('pointerdown', onPointerDown)
-      el.removeEventListener('mousedown',  onDown)
-      el.removeEventListener('mousemove',  onMove)
-      el.removeEventListener('mouseup',    onUp)
-      el.removeEventListener('mouseleave', onUp)
-      el.removeEventListener('touchstart', onDown)
-      el.removeEventListener('touchmove',  onMove)
-      el.removeEventListener('touchend',   onUp)
-      el.removeEventListener('wheel',      onWheel)
+      el.removeEventListener('mousedown',   onDown)
+      el.removeEventListener('mousemove',   onMove)
+      el.removeEventListener('mouseup',     onUp)
+      el.removeEventListener('mouseleave',  onUp)
+      el.removeEventListener('touchstart',  onDown)
+      el.removeEventListener('touchmove',   onMove)
+      el.removeEventListener('touchend',    onUp)
+      el.removeEventListener('wheel',       onWheel)
     }
   }, [])
 
@@ -560,9 +602,6 @@ export function TheaterSheet({
     setDragOffset(0)
     velocityBuffer.current = []
   }
-
-  /* ── 선택 영화 정보 ─────────────────────────────────────────── */
-  const selectedMovie = movies.find((m) => m.id === selectedMovieId)
 
   /* ── 상영시간 필터링 ─────────────────────────────────────────── */
   const filteredShowtimes = showtimes.filter((s) => s.movieId === selectedMovieId)
@@ -926,7 +965,7 @@ export function TheaterSheet({
             touchAction: 'none',
           }}
         >
-          {showtimesLoading
+          {allMoviesLoading
             ? Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} style={{ flexShrink: 0, width: 88 }}>
                   <Skeleton width={88} height={132} style={{ borderRadius: 6 }} />
@@ -934,7 +973,7 @@ export function TheaterSheet({
                   <Skeleton width={50} height={10} style={{ marginTop: 3, borderRadius: 4 }} />
                 </div>
               ))
-            : movies.length === 0
+            : allMovieEntries.length === 0
               ? (
                   <div style={{
                     flex: 1,
@@ -947,68 +986,101 @@ export function TheaterSheet({
                     minWidth: '100%',
                   }}>
                     <img src="/closed.svg" alt="" style={{ width: 72, height: 92, opacity: 0.5 }} />
-                    <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>오늘 상영 정보가 없습니다</span>
+                    <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>상영 예정 정보가 없습니다</span>
                   </div>
                 )
-              : movies.map((movie) => (
-                  <div
-                    key={movie.id}
-                    style={{
-                      flexShrink: 0,
-                      width: 88 - 44 * posterProgress,
-                      overflow: 'visible',
-                    }}
-                  >
-                    <div style={{
-                      width: 88,
-                      transformOrigin: 'top left',
-                      transform: `scale(${1 - 0.5 * posterProgress})`,
-                    }}>
-                      <PosterThumb
-                        width={88}
-                        height={132}
-                        size="lg"
-                        src={movie.posterUrl}
-                        selected={expanded && selectedMovieId === movie.id}
-                        onClick={() => {
-                          onMovieSelect(movie.id)
-                          if (!expanded) onExpand()
-                          if (postersCollapsed) {
-                            scrollAreaRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
-                          }
-                        }}
-                      />
-                      <div style={{
-                        marginTop: 6,
-                        fontSize: 11,
-                        fontWeight: 600,
-                        color: 'var(--color-text-primary)',
-                        fontFamily: 'var(--font-serif)',
-                        lineHeight: 1.35,
-                        overflow: 'hidden',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        opacity: Math.max(0, 1 - posterProgress * 2.5),
-                      }}>
-                        {movie.title}
-                      </div>
-                      {movie.director && movie.director.length > 0 && (
+              : (() => {
+                  return allMovieEntries.map((entry) => {
+                    const { movie } = entry
+                    const unavailable = expanded && !entry.availableDates.has(selectedIsoDate)
+
+                    return (
+                      <div
+                        key={movie.id}
+                        style={{ flexShrink: 0, width: 88 - 44 * posterProgress, overflow: 'visible' }}
+                      >
                         <div style={{
-                          marginTop: 3,
-                          fontSize: 10,
-                          color: 'var(--color-text-caption)',
-                          overflow: 'hidden',
-                          whiteSpace: 'nowrap',
-                          textOverflow: 'ellipsis',
-                          opacity: Math.max(0, 1 - posterProgress * 2.5),
+                          width: 88,
+                          transformOrigin: 'top left',
+                          transform: `scale(${1 - 0.5 * posterProgress})`,
                         }}>
-                          {movie.director[0]}
+                          <div style={{ position: 'relative' }}>
+                            <PosterThumb
+                              width={88}
+                              height={132}
+                              size="lg"
+                              src={movie.posterUrl}
+                              selected={expanded && selectedMovieId === movie.id}
+                              onClick={unavailable ? undefined : () => {
+                                onMovieSelect(movie.id)
+                                if (!expanded) onExpand()
+                                if (postersCollapsed) {
+                                  scrollAreaRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+                                }
+                              }}
+                            />
+                            {/* 선택일 상영 없는 영화 오버레이 */}
+                            {unavailable && (
+                              <div
+                                onClick={() => onMovieSelect(movie.id)}
+                                style={{
+                                  position: 'absolute',
+                                  inset: 0,
+                                  borderRadius: 'var(--comp-poster-sheet-radius)',
+                                  background: 'rgba(10, 8, 6, 0.72)',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                <span style={{
+                                  fontSize: 9,
+                                  fontWeight: 600,
+                                  color: 'rgba(255,255,255,0.75)',
+                                  textAlign: 'center',
+                                  lineHeight: 1.4,
+                                  padding: '0 4px',
+                                }}>
+                                  상영 일정<br />없음
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <div style={{
+                            marginTop: 6,
+                            fontSize: 11,
+                            fontWeight: 600,
+                            color: 'var(--color-text-primary)',
+                            fontFamily: 'var(--font-serif)',
+                            lineHeight: 1.35,
+                            overflow: 'hidden',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            opacity: unavailable ? 0.4 : Math.max(0, 1 - posterProgress * 2.5),
+                          }}>
+                            {movie.title}
+                          </div>
+                          {movie.director && movie.director.length > 0 && (
+                            <div style={{
+                              marginTop: 3,
+                              fontSize: 10,
+                              color: 'var(--color-text-caption)',
+                              overflow: 'hidden',
+                              whiteSpace: 'nowrap',
+                              textOverflow: 'ellipsis',
+                              opacity: unavailable ? 0.3 : Math.max(0, 1 - posterProgress * 2.5),
+                            }}>
+                              {movie.director[0]}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </div>
-                ))
+                      </div>
+                    )
+                  })
+                })()
           }
         </div>
       </div>
@@ -1026,7 +1098,7 @@ export function TheaterSheet({
         >
           {/* 시놉시스 아코디언 */}
           {(() => {
-            const displayedMovie = movies.find((m) => m.id === displayedSynopsisId)
+            const displayedMovie = allMovieEntries.find((e) => e.movie.id === displayedSynopsisId)?.movie
             return displayedMovie?.synopsis ? (
               <SynopsisCard
                 synopsis={displayedMovie.synopsis}
