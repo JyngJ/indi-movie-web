@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { PosterThumb } from './PosterThumb'
-import { DateBar, type Day, type DayType, type TimeFilter } from './DateBar'
+import { DateBar, type Day, type DayType } from './DateBar'
 import { ShowtimeCell } from './ShowtimeCell'
 import { Button } from '@/components/primitives/Button'
 import { Chip } from '@/components/primitives/Chip'
@@ -315,8 +315,6 @@ export function TheaterSheet({
   const days = buildDays(7, theaterAvailableDates)
   const selectedDate = days.find((d) => d.isoDate === selectedIsoDate)?.date ?? days[0].date
 
-  const [selectedTime, setSelectedTime] = useState<TimeFilter>('전체')
-
   /* ── 드래그 상태 ── */
   const containerRef    = useRef<HTMLDivElement>(null)
   const dragActive      = useRef(false)
@@ -602,6 +600,30 @@ export function TheaterSheet({
     setDragOffset(0)
     velocityBuffer.current = []
   }
+
+  /* ── 매진 영화 ID 집합 (선택일 기준) ── */
+  const soldoutMovieIds = useMemo(() => {
+    const byMovie = new Map<string, number[]>()
+    for (const st of showtimes) {
+      if (!byMovie.has(st.movieId)) byMovie.set(st.movieId, [])
+      byMovie.get(st.movieId)!.push(st.seatAvailable)
+    }
+    const ids = new Set<string>()
+    for (const [id, seats] of byMovie) {
+      if (seats.length > 0 && seats.every((s) => s === 0)) ids.add(id)
+    }
+    return ids
+  }, [showtimes])
+
+  /* ── 펼칠 때 오늘 상영 없으면 가장 빠른 날로 자동 이동 ── */
+  useEffect(() => {
+    if (!expanded || allMoviesLoading) return
+    if (selectedIsoDate !== todayIso) return
+    if (theaterAvailableDates.has(todayIso)) return
+    const earliest = Array.from(theaterAvailableDates).sort()[0]
+    if (earliest) setSelectedIsoDate(earliest)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expanded, allMoviesLoading, theaterAvailableDates])
 
   /* ── 상영시간 필터링 ─────────────────────────────────────────── */
   const filteredShowtimes = showtimes.filter((s) => s.movieId === selectedMovieId)
@@ -930,12 +952,10 @@ export function TheaterSheet({
         <DateBar
           days={days}
           selectedDate={selectedDate}
-          selectedTime={selectedTime}
           onSelectDate={(date) => {
             const day = days.find((d) => d.date === date)
             if (day) setSelectedIsoDate(day.isoDate)
           }}
-          onSelectTime={setSelectedTime}
         />
       )}
 
@@ -993,6 +1013,7 @@ export function TheaterSheet({
                   return allMovieEntries.map((entry) => {
                     const { movie } = entry
                     const unavailable = expanded && !entry.availableDates.has(selectedIsoDate)
+                    const soldout = !unavailable && soldoutMovieIds.has(movie.id)
 
                     return (
                       <div
@@ -1019,6 +1040,28 @@ export function TheaterSheet({
                                 }
                               }}
                             />
+                            {/* 매진 배지 */}
+                            {soldout && (
+                              <div style={{
+                                position: 'absolute',
+                                bottom: 6,
+                                right: 6,
+                                height: 20,
+                                padding: '0 6px',
+                                borderRadius: 4,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                fontSize: 10,
+                                fontWeight: 700,
+                                color: '#fff',
+                                backgroundColor: 'var(--color-error)',
+                                border: '1px solid color-mix(in srgb, var(--color-error) 60%, transparent)',
+                                pointerEvents: 'none',
+                                zIndex: 2,
+                              }}>
+                                매진
+                              </div>
+                            )}
                             {/* 선택일 상영 없는 영화 오버레이 */}
                             {unavailable && (
                               <div
