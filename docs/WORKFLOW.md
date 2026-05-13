@@ -105,10 +105,10 @@ git push
 **검증**:
 - [x] 지도에 마커 표시 확인
 - [x] 위치 권한 거부 시 서울 시청 fallback
-- [ ] TypeScript 컴파일: `npm run build`
+- [x] TypeScript 컴파일: `npm run build`
 - [ ] 모바일 375px 렌더링 확인
 
-현재 `npm run build`는 앱 컴파일 후 TypeScript 단계에서 `pipeline/src/discord-bot.ts`의 `discord.js` 미설치 등 pipeline 쪽 오류로 실패한다. 앱 코드 검증과 별개로 pipeline 의존성/tsconfig 정리가 필요하다.
+현재 앱 `tsconfig.json`은 `pipeline`을 제외하며, `npm run build`는 Webpack 모드로 앱 빌드와 TypeScript 검증을 통과한다.
 
 ---
 
@@ -164,6 +164,8 @@ git push
 ---
 
 ## 명령어 모음
+
+> Next.js 명령은 Turbopack을 쓰지 않습니다. `package.json`의 `dev`/`build` 스크립트는 반드시 `--webpack` 플래그를 유지하세요.
 
 ```bash
 # 개발 서버

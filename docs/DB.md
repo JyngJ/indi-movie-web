@@ -56,11 +56,13 @@ CREATE TABLE movies (
   title            VARCHAR(500)  NOT NULL,
   original_title   VARCHAR(500),
   year             INTEGER       NOT NULL,
-  kmdb_id          VARCHAR(50)   UNIQUE,
+  kmdb_id          VARCHAR(50),
+  kmdb_movie_seq   VARCHAR(50),
   tmdb_id          INTEGER       UNIQUE,
   poster_url       VARCHAR(500),
-  genre            TEXT[],
-  director         TEXT[],
+  genre            TEXT[]        NOT NULL DEFAULT '{}',
+  director         TEXT[]        NOT NULL DEFAULT '{}',
+  nation           VARCHAR(100),
   synopsis         TEXT,
   runtime_minutes  INTEGER,
   certification    VARCHAR(10),      -- '전체', '12세', '15세', '청불'
@@ -73,7 +75,14 @@ CREATE TABLE movies (
 CREATE INDEX idx_movies_title_trgm ON movies USING GIN(title gin_trgm_ops);
 CREATE INDEX idx_movies_year       ON movies(year DESC);
 CREATE INDEX idx_movies_genre      ON movies USING GIN(genre);
+CREATE UNIQUE INDEX idx_movies_kmdb_identity
+  ON movies(kmdb_id, kmdb_movie_seq)
+  WHERE kmdb_id IS NOT NULL AND kmdb_movie_seq IS NOT NULL;
 ```
+
+KMDB import는 `kmdb_id + kmdb_movie_seq` 조합을 내부 영화 식별자로 사용한다. 가져오기 시 같은 조합의 레코드가 있으면 갱신하고, 없으면 새로 추가한다.
+
+현재 코드가 KMDB에서 받아 `movies`에 저장하는 값은 `title`, `original_title`, `year`, `kmdb_id`, `kmdb_movie_seq`, `poster_url`, `synopsis`, `runtime_minutes`, `certification`, `genre`, `director`, `nation`이다. KMDB 응답의 개봉일(`openDate`)과 스틸컷(`stillUrl`)은 관리자 후보 데이터에는 남지만 현재 `movies` 테이블에는 저장하지 않는다. `tmdb_id`와 숫자 평점 `rating`도 KMDB import 경로에서는 채우지 않는다.
 
 ---
 

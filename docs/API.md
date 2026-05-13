@@ -112,6 +112,7 @@
     posterUrl?: string
     genre: string[]
     director: string[]
+    nation?: string
     synopsis?: string
     runtimeMinutes?: number
     certification?: string   // "전체", "12세", "15세", "청불"

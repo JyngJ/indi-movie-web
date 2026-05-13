@@ -1276,6 +1276,7 @@ export function AdminShowtimeConsole() {
                     originalTitle: movie.originalTitle ?? '',
                     genre: movie.genre,
                     director: movie.director,
+                    nation: movie.nation,
                     kmdbId: movie.kmdbId,
                     kmdbMovieSeq: movie.kmdbMovieSeq,
                     posterUrl: movie.posterUrl,
@@ -1286,7 +1287,7 @@ export function AdminShowtimeConsole() {
                 >
                   <span>
                     <strong>{movie.title}</strong>
-                    <small>{movie.year} · {movie.director.join(', ') || '감독 미입력'}{movie.kmdbId ? ` · KMDB ${movie.kmdbId}${movie.kmdbMovieSeq ?? ''}` : ''}{movie.posterUrl ? ' · 포스터 있음' : ''}</small>
+                    <small>{movie.year}{movie.nation ? ` · ${movie.nation}` : ''} · {movie.director.join(', ') || '감독 미입력'}{movie.kmdbId ? ` · KMDB ${movie.kmdbId}${movie.kmdbMovieSeq ?? ''}` : ''}{movie.posterUrl ? ' · 포스터 있음' : ''}</small>
                   </span>
                 </button>
               ))}
@@ -1322,6 +1323,10 @@ export function AdminShowtimeConsole() {
                 <label>
                   관람등급
                   <input value={movieEditForm.certification ?? ''} onChange={(event) => setMovieEditForm((current) => current ? { ...current, certification: event.target.value } : current)} />
+                </label>
+                <label>
+                  국가
+                  <input value={movieEditForm.nation ?? ''} onChange={(event) => setMovieEditForm((current) => current ? { ...current, nation: event.target.value } : current)} />
                 </label>
                 <label>
                   러닝타임

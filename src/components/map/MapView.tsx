@@ -356,6 +356,8 @@ interface TheaterPosterMovie {
   id: string
   title: string
   posterUrl?: string
+  genre: string[]
+  nation?: string
   showtimeCount: number
 }
 
@@ -1035,6 +1037,7 @@ export default function MapView() {
     customStart: null,
     customEnd: null,
     genres: [],
+    nations: [],
     bookable: false,
     indie: false,
   })
@@ -1091,12 +1094,19 @@ export default function MapView() {
   }, [searchQuery, theaters])
 
   const activeMovieIdSet = useMemo(() => new Set(activeMovieIds), [activeMovieIds])
+  const nationOptions = useMemo(() => {
+    return Array.from(new Set(movies.map((movie) => movie.nation).filter((nation): nation is string => !!nation)))
+      .sort((a, b) => a.localeCompare(b, 'ko'))
+  }, [movies])
 
   const theaterPosterMovies = useMemo(() => {
     const byTheater = new Map<string, Map<string, TheaterPosterMovie>>()
 
     for (const showtime of mapShowtimes) {
       if (!showtime.movie) continue
+      if (filters.bookable && showtime.seatAvailable <= 0) continue
+      if (filters.genres.length > 0 && !showtime.movie.genre.some((genre) => filters.genres.includes(genre))) continue
+      if (filters.nations.length > 0 && (!showtime.movie.nation || !filters.nations.includes(showtime.movie.nation))) continue
       let theaterMovies = byTheater.get(showtime.theaterId)
       if (!theaterMovies) {
         theaterMovies = new Map()
@@ -1111,6 +1121,8 @@ export default function MapView() {
           id: showtime.movie.id,
           title: showtime.movie.title,
           posterUrl: showtime.movie.posterUrl,
+          genre: showtime.movie.genre,
+          nation: showtime.movie.nation,
           showtimeCount: 1,
         })
       }
@@ -1126,7 +1138,7 @@ export default function MapView() {
       )
     }
     return result
-  }, [mapShowtimes])
+  }, [filters.bookable, filters.genres, filters.nations, mapShowtimes])
 
   const titleMovieResults = useMemo(() => {
     if (!searchQuery.trim()) return []
@@ -1847,7 +1859,7 @@ export default function MapView() {
         </div>
         {/* 필터 칩 */}
         <div style={{ marginTop: 8, pointerEvents: 'auto' }}>
-          <FilterBar onChange={setFilters} />
+          <FilterBar onChange={setFilters} nationOptions={nationOptions} />
         </div>
       </div>
 

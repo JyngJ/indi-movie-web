@@ -102,6 +102,7 @@ export interface AdminMovieInput {
   originalTitle?: string
   genre?: string[]
   director?: string[]
+  nation?: string
   kmdbId?: string
   kmdbMovieSeq?: string
   posterUrl?: string
@@ -117,6 +118,7 @@ export interface AdminMovie {
   originalTitle?: string
   genre: string[]
   director: string[]
+  nation?: string
   kmdbId?: string
   kmdbMovieSeq?: string
   posterUrl?: string

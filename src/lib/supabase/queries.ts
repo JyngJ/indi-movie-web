@@ -13,6 +13,12 @@ function formatLocalDate(date: Date) {
   return `${year}-${month}-${day}`
 }
 
+function isMissingColumnError(error: unknown, column: string) {
+  if (!error || typeof error !== 'object' || !('message' in error)) return false
+  const message = String(error.message).toLowerCase()
+  return message.includes(column.toLowerCase()) && (message.includes('column') || message.includes('schema cache'))
+}
+
 /* ── 영화관 목록 ────────────────────────────────────────────────── */
 export function useTheaters() {
   return useQuery<Theater[]>({
@@ -84,28 +90,38 @@ export function useMovies() {
   return useQuery<Movie[]>({
     queryKey: ['movies'],
     queryFn: async () => {
-      const { data, error } = await supabase()
+      const primary = await supabase()
         .from('movies')
-        .select('id,title,original_title,year,poster_url,genre,director,synopsis,runtime_minutes,certification,kmdb_id,tmdb_id,rating')
+        .select('id,title,original_title,year,poster_url,genre,director,nation,synopsis,runtime_minutes,certification,kmdb_id,tmdb_id,rating')
         .order('title')
+      const { data, error } = primary.error && isMissingColumnError(primary.error, 'nation')
+        ? await supabase()
+          .from('movies')
+          .select('id,title,original_title,year,poster_url,genre,director,synopsis,runtime_minutes,certification,kmdb_id,tmdb_id,rating')
+          .order('title')
+        : primary
 
       if (error) throw error
 
-      return (data ?? []).map((r) => ({
-        id: r.id,
-        title: r.title,
-        originalTitle: r.original_title ?? undefined,
-        year: r.year,
-        posterUrl: r.poster_url ?? undefined,
-        genre: (r.genre as string[] | null) ?? [],
-        director: (r.director as string[] | null) ?? [],
-        synopsis: r.synopsis ?? undefined,
-        runtimeMinutes: r.runtime_minutes ?? undefined,
-        certification: r.certification ?? undefined,
-        kmdbId: r.kmdb_id ?? undefined,
-        tmdbId: r.tmdb_id ?? undefined,
-        rating: r.rating ?? undefined,
-      }))
+      return (data ?? []).map((r) => {
+        const row = r as Record<string, unknown>
+        return {
+          id: String(row.id),
+          title: String(row.title),
+          originalTitle: row.original_title ? String(row.original_title) : undefined,
+          year: Number(row.year),
+          posterUrl: row.poster_url ? String(row.poster_url) : undefined,
+          genre: (row.genre as string[] | null) ?? [],
+          director: (row.director as string[] | null) ?? [],
+          nation: row.nation ? String(row.nation) : undefined,
+          synopsis: row.synopsis ? String(row.synopsis) : undefined,
+          runtimeMinutes: row.runtime_minutes ? Number(row.runtime_minutes) : undefined,
+          certification: row.certification ? String(row.certification) : undefined,
+          kmdbId: row.kmdb_id ? String(row.kmdb_id) : undefined,
+          tmdbId: row.tmdb_id ? Number(row.tmdb_id) : undefined,
+          rating: row.rating ? Number(row.rating) : undefined,
+        }
+      })
     },
     staleTime: 10 * 60 * 1000,
   })
@@ -136,6 +152,8 @@ export interface MapShowtimeMovie {
   id: string
   title: string
   posterUrl?: string
+  genre: string[]
+  nation?: string
 }
 
 export interface MapShowtime {
@@ -144,6 +162,8 @@ export interface MapShowtime {
   movieId: string
   showDate: string
   showTime: string
+  seatAvailable: number
+  bookingUrl?: string
   movie: MapShowtimeMovie | null
 }
 
@@ -152,7 +172,7 @@ export function useMapShowtimes(startDate: string, endDate: string) {
   return useQuery<MapShowtime[]>({
     queryKey: ['map-showtimes', startDate, endDate],
     queryFn: async () => {
-      const { data, error } = await supabase()
+      const primary = await supabase()
         .from('showtimes')
         .select(`
           id,
@@ -160,10 +180,14 @@ export function useMapShowtimes(startDate: string, endDate: string) {
           movie_id,
           show_date,
           show_time,
+          seat_available,
+          booking_url,
           movies (
             id,
             title,
-            poster_url
+            poster_url,
+            genre,
+            nation
           )
         `)
         .eq('is_active', true)
@@ -172,6 +196,31 @@ export function useMapShowtimes(startDate: string, endDate: string) {
         .order('show_date', { ascending: true })
         .order('show_time', { ascending: true })
         .limit(5000)
+      const { data, error } = primary.error && isMissingColumnError(primary.error, 'nation')
+        ? await supabase()
+          .from('showtimes')
+          .select(`
+            id,
+            theater_id,
+            movie_id,
+            show_date,
+            show_time,
+            seat_available,
+            booking_url,
+            movies (
+              id,
+              title,
+              poster_url,
+              genre
+            )
+          `)
+          .eq('is_active', true)
+          .gte('show_date', startDate)
+          .lte('show_date', endDate)
+          .order('show_date', { ascending: true })
+          .order('show_time', { ascending: true })
+          .limit(5000)
+        : primary
 
       if (error) throw error
 
@@ -183,10 +232,14 @@ export function useMapShowtimes(startDate: string, endDate: string) {
           movieId: r.movie_id,
           showDate: r.show_date,
           showTime: r.show_time,
+          seatAvailable: Number(r.seat_available ?? 0),
+          bookingUrl: r.booking_url ?? undefined,
           movie: movie ? {
             id: String(movie.id),
             title: String(movie.title),
             posterUrl: movie.poster_url ? String(movie.poster_url) : undefined,
+            genre: (movie.genre as string[] | null) ?? [],
+            nation: movie.nation ? String(movie.nation) : undefined,
           } : null,
         }
       })
@@ -201,7 +254,7 @@ export function useTheaterShowtimes(theaterId: string | null, date: string) {
     queryKey: ['theater-showtimes', theaterId, date],
     enabled: !!theaterId,
     queryFn: async () => {
-      const { data, error } = await supabase()
+      const primary = await supabase()
         .from('showtimes')
         .select(`
           id,
@@ -224,6 +277,7 @@ export function useTheaterShowtimes(theaterId: string | null, date: string) {
             poster_url,
             genre,
             director,
+            nation,
             synopsis,
             runtime_minutes,
             certification,
@@ -236,6 +290,43 @@ export function useTheaterShowtimes(theaterId: string | null, date: string) {
         .eq('show_date', date)
         .eq('is_active', true)
         .order('show_time')
+      const { data, error } = primary.error && isMissingColumnError(primary.error, 'nation')
+        ? await supabase()
+          .from('showtimes')
+          .select(`
+            id,
+            screen_name,
+            show_date,
+            show_time,
+            end_time,
+            format_type,
+            language,
+            seat_available,
+            seat_total,
+            price,
+            booking_url,
+            movie_id,
+            movies (
+              id,
+              title,
+              original_title,
+              year,
+              poster_url,
+              genre,
+              director,
+              synopsis,
+              runtime_minutes,
+              certification,
+              kmdb_id,
+              tmdb_id,
+              rating
+            )
+          `)
+          .eq('theater_id', theaterId!)
+          .eq('show_date', date)
+          .eq('is_active', true)
+          .order('show_time')
+        : primary
 
       if (error) throw error
 
@@ -254,6 +345,7 @@ export function useTheaterShowtimes(theaterId: string | null, date: string) {
           posterUrl: m.poster_url ? String(m.poster_url) : undefined,
           genre: (m.genre as string[]) ?? [],
           director: (m.director as string[]) ?? [],
+          nation: m.nation ? String(m.nation) : undefined,
           synopsis: m.synopsis ? String(m.synopsis) : undefined,
           runtimeMinutes: m.runtime_minutes ? Number(m.runtime_minutes) : undefined,
           certification: m.certification ? String(m.certification) : undefined,

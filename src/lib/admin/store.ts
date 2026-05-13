@@ -102,6 +102,7 @@ interface MovieRow {
   certification?: string | null
   genre?: string[] | null
   director?: string[] | null
+  nation?: string | null
 }
 
 interface ShowtimeRow {
@@ -303,7 +304,7 @@ export async function listAdminMovies(): Promise<AdminMovie[]> {
   const supabase = createSupabaseAdminClient()
   const { data, error } = await supabase
     .from('movies')
-    .select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, poster_url, synopsis, runtime_minutes, certification, genre, director')
+    .select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, poster_url, synopsis, runtime_minutes, certification, genre, director, nation')
     .order('title', { ascending: true })
     .limit(1000)
 
@@ -346,9 +347,10 @@ export async function updateAdminMovie(input: AdminMovieInput) {
       certification: input.certification?.trim() || null,
       genre: input.genre ?? [],
       director: input.director ?? [],
+      nation: input.nation?.trim() || null,
     })
     .eq('id', input.id)
-    .select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, poster_url, synopsis, runtime_minutes, certification, genre, director')
+    .select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, poster_url, synopsis, runtime_minutes, certification, genre, director, nation')
     .single()
 
   if (error) throw new Error(error.message)
@@ -587,8 +589,9 @@ export async function createAdminMovie(input: AdminMovieInput) {
       synopsis: input.synopsis?.trim() || null,
       runtime_minutes: input.runtimeMinutes ?? null,
       certification: input.certification?.trim() || null,
+      nation: input.nation?.trim() || null,
     })
-    .select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, poster_url, synopsis, runtime_minutes, certification, genre, director')
+    .select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, poster_url, synopsis, runtime_minutes, certification, genre, director, nation')
     .single()
 
   if (error) {
@@ -621,6 +624,7 @@ export async function importAdminExternalMovie(input: AdminExternalMovie) {
     certification: input.certification ?? null,
     genre: input.genre,
     director: input.director,
+    nation: input.nation ?? null,
   }
   const { data: existing, error: existingError } = await supabase
     .from('movies')
@@ -918,6 +922,7 @@ function movieFromRow(row: MovieRow): AdminMovie {
     year: row.year ?? new Date().getFullYear(),
     genre: row.genre ?? [],
     director: row.director ?? [],
+    nation: row.nation ?? undefined,
     kmdbId: row.kmdb_id ?? undefined,
     kmdbMovieSeq: row.kmdb_movie_seq ?? undefined,
     posterUrl: row.poster_url ?? undefined,

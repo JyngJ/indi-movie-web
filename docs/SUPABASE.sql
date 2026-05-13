@@ -118,6 +118,7 @@ CREATE TABLE IF NOT EXISTS movies (
   poster_url       TEXT,
   genre            TEXT[] NOT NULL DEFAULT '{}',
   director         TEXT[] NOT NULL DEFAULT '{}',
+  nation           TEXT,
   synopsis         TEXT,
   runtime_minutes  INTEGER,
   certification    TEXT,
@@ -133,6 +134,7 @@ ALTER TABLE movies
   ADD COLUMN IF NOT EXISTS kmdb_id TEXT,
   ADD COLUMN IF NOT EXISTS kmdb_movie_seq TEXT,
   ADD COLUMN IF NOT EXISTS poster_url TEXT,
+  ADD COLUMN IF NOT EXISTS nation TEXT,
   ADD COLUMN IF NOT EXISTS synopsis TEXT,
   ADD COLUMN IF NOT EXISTS runtime_minutes INTEGER,
   ADD COLUMN IF NOT EXISTS certification TEXT;

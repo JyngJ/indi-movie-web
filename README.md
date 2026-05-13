@@ -13,6 +13,7 @@ npm run dev
 ```
 
 > Node 18+ 필요. 환경 변수는 `.env.local` 참고 (`.env.example` 예정).
+> 이 프로젝트는 Turbopack을 사용하지 않습니다. `npm run dev`와 `npm run build`는 Webpack 모드(`--webpack`)로 실행되어야 합니다.
 
 ---
 
@@ -20,7 +21,7 @@ npm run dev
 
 | 영역 | 도구 | 비고 |
 |------|------|------|
-| 프레임워크 | Next.js 16 (App Router) | Turbopack 사용 |
+| 프레임워크 | Next.js 16 (App Router) | Webpack 사용 (`--webpack`, Turbopack 금지) |
 | 언어 | TypeScript | strict 모드 |
 | 서버 상태 | TanStack React Query v5 | 캐싱·동기화 |
 | 클라이언트 상태 | Zustand v5 | 테마, UI 상태 |
@@ -120,7 +121,7 @@ useToggleFavorite({ type, id })   // 즐겨찾기 토글
 | 테이블 | 핵심 컬럼 |
 |--------|-----------|
 | `theaters` | id, name, lat, lng, address, screen_count |
-| `movies` | id, title, kmdb_id, tmdb_id, genre[], poster_url |
+| `movies` | id, title, kmdb_id, kmdb_movie_seq, nation, genre[], poster_url |
 | `showtimes` | theater_id, movie_id, show_date, show_time, seat_total, seat_available |
 | `stations` | name, lines[], lat, lng, city, district, neighborhood, aliases |
 | `areas` | name, type, city, district, lat, lng, aliases |
