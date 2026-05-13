@@ -63,8 +63,8 @@ export function DateBar({ days, selectedDate, onSelectDate }: DateBarProps) {
                 backgroundColor: active ? 'var(--color-primary-base)' : 'transparent',
                 cursor: isDisabled ? 'default' : 'pointer',
                 border: (d.type === 'today' && !active)
-                  ? '1px solid color-mix(in srgb, var(--color-primary-base) 35%, transparent)'
-                  : '1px solid transparent',
+                  ? '1.5px solid color-mix(in srgb, var(--color-primary-base) 50%, transparent)'
+                  : '1.5px solid transparent',
                 opacity: isDisabled ? 0.4 : 1,
                 position: 'relative',
               }}
