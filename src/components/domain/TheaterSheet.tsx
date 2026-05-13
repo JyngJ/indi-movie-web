@@ -936,8 +936,18 @@ export function TheaterSheet({
               ))
             : movies.length === 0
               ? (
-                  <div style={{ padding: '20px 0', fontSize: 13, color: 'var(--color-text-caption)' }}>
-                    오늘 상영 정보가 없습니다
+                  <div style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '6px 0 12px',
+                    gap: 8,
+                    minWidth: '100%',
+                  }}>
+                    <img src="/closed.svg" alt="" style={{ width: 72, height: 92, opacity: 0.5 }} />
+                    <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>오늘 상영 정보가 없습니다</span>
                   </div>
                 )
               : movies.map((movie) => (

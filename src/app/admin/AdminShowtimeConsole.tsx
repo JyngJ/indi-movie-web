@@ -67,6 +67,7 @@ export function AdminShowtimeConsole() {
   const [movieSearchQuery, setMovieSearchQuery] = useState('')
   const [movieSearchResults, setMovieSearchResults] = useState<AdminExternalMovie[]>([])
   const [movieEditForm, setMovieEditForm] = useState<AdminMovieInput | null>(null)
+  const [movieEditRaw, setMovieEditRaw] = useState({ director: '', genre: '' })
   const [theaterFormOpen, setTheaterFormOpen] = useState(false)
   const [theaterForm, setTheaterForm] = useState<AdminTheaterInput>({
     name: '',
@@ -577,10 +578,15 @@ export function AdminShowtimeConsole() {
 
     setLoading(true)
     try {
+      const payload = {
+        ...movieEditForm,
+        genre: splitListInput(movieEditRaw.genre),
+        director: splitListInput(movieEditRaw.director),
+      }
       const response = await fetch('/api/admin/movies', {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(movieEditForm),
+        body: JSON.stringify(payload),
       })
       const result = (await response.json()) as { movie?: AdminMovie; error?: { message: string } }
 
@@ -1269,7 +1275,9 @@ export function AdminShowtimeConsole() {
                 <button
                   key={movie.id}
                   className={`${styles.sourceItem} ${movieEditForm?.id === movie.id ? styles.sourceItemActive : ''}`}
-                  onClick={() => setMovieEditForm({
+                  onClick={() => {
+                    setMovieEditRaw({ director: movie.director.join(', '), genre: movie.genre.join(', ') })
+                    setMovieEditForm({
                     id: movie.id,
                     title: movie.title,
                     year: movie.year,
@@ -1283,7 +1291,7 @@ export function AdminShowtimeConsole() {
                     synopsis: movie.synopsis,
                     runtimeMinutes: movie.runtimeMinutes,
                     certification: movie.certification,
-                  })}
+                  })}}
                 >
                   <span>
                     <strong>{movie.title}</strong>
@@ -1334,11 +1342,19 @@ export function AdminShowtimeConsole() {
                 </label>
                 <label>
                   장르
-                  <input value={(movieEditForm.genre ?? []).join(', ')} onChange={(event) => setMovieEditForm((current) => current ? { ...current, genre: splitListInput(event.target.value) } : current)} />
+                  <input
+                    value={movieEditRaw.genre}
+                    onChange={(e) => setMovieEditRaw((r) => ({ ...r, genre: e.target.value }))}
+                    onBlur={(e) => setMovieEditForm((f) => f ? { ...f, genre: splitListInput(e.target.value) } : f)}
+                  />
                 </label>
                 <label>
                   감독
-                  <input value={(movieEditForm.director ?? []).join(', ')} onChange={(event) => setMovieEditForm((current) => current ? { ...current, director: splitListInput(event.target.value) } : current)} />
+                  <input
+                    value={movieEditRaw.director}
+                    onChange={(e) => setMovieEditRaw((r) => ({ ...r, director: e.target.value }))}
+                    onBlur={(e) => setMovieEditForm((f) => f ? { ...f, director: splitListInput(e.target.value) } : f)}
+                  />
                 </label>
                 <label className={styles.wideField}>
                   줄거리

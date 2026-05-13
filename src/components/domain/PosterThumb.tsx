@@ -46,16 +46,25 @@ export function PosterThumb({
     >
       {/* 포스터 */}
       <div
-        className="w-full h-full overflow-hidden"
-        style={{ borderRadius: radiusVar }}
+        style={{
+          width: '100%',
+          height: '100%',
+          overflow: 'hidden',
+          borderRadius: radiusVar,
+        }}
       >
         {src ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={src} alt={alt} className="w-full h-full object-cover" />
+          <img
+            src={src}
+            alt={alt}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
         ) : (
           <div
-            className="w-full h-full"
             style={{
+              width: '100%',
+              height: '100%',
               background: 'oklch(0.32 0.04 220)',
               backgroundImage:
                 'repeating-linear-gradient(135deg, oklch(0.38 0.04 220) 0 6px, transparent 6px 14px)',
