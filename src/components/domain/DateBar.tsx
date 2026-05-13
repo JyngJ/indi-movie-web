@@ -77,7 +77,7 @@ export function DateBar({ days, selectedDate, onSelectDate }: DateBarProps) {
                   color: active ? 'rgba(255,255,255,0.85)' : textColor,
                 }}
               >
-                {d.dow}
+                {d.type === 'today' ? '오늘' : d.dow}
               </span>
               <span
                 style={{
