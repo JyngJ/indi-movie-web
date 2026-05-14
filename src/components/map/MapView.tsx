@@ -1155,6 +1155,8 @@ export default function MapView() {
     return result
   }, [filters.bookable, filters.genres, filters.nations, mapShowtimes])
 
+  const filtersActive = filters.bookable || filters.genres.length > 0 || filters.nations.length > 0
+
   const titleMovieResults = useMemo(() => {
     if (!searchQuery.trim()) return []
     return movies
@@ -1815,10 +1817,14 @@ export default function MapView() {
         {clusters.map((cluster) => {
           // 클러스터 마커 (2개 이상) — 클릭 시 줌인
           if (cluster.theaters.length > 1) {
+            const clusterDimmed = filtersActive && cluster.theaters.every(
+              (t) => (theaterPosterMovies.get(t.id) ?? []).length === 0
+            )
             return (
               <Marker
                 key={`cluster-${cluster.id}`}
                 position={[cluster.lat, cluster.lng]}
+                opacity={clusterDimmed ? 0.7 : 1}
                 icon={makeClusterIcon(
                   cluster.theaters,
                   labelDirections.get(cluster.id),
@@ -1856,10 +1862,12 @@ export default function MapView() {
             : [theater.lat, theater.lng]
           const offsetX = posterOffsets.get(theater.id) ?? 0
           const posterMovies = theaterPosterMovies.get(theater.id) ?? []
+          const dimmed = filtersActive && posterMovies.length === 0
           return (
             <Marker
               key={theater.id}
               position={position}
+              opacity={dimmed ? 0.7 : 1}
               icon={makePinIcon(
                 theater.name,
                 selectedId === theater.id,

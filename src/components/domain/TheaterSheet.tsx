@@ -486,7 +486,8 @@ export function TheaterSheet({
       el.removeEventListener('touchend',    onUp)
       el.removeEventListener('wheel',       onWheel)
     }
-  }, [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expanded])  // expanded 전환 시 ref가 새 DOM을 가리키므로 재등록 필요
 
   /* ── 수직 드래그 (핸들) ─────────────────────────────────────────── */
   // containerRef.clientHeight는 마운트 전 0이라 잘못된 값이 나옴.
