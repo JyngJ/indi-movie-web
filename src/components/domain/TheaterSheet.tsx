@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { PosterThumb } from './PosterThumb'
 import { DateBar, type Day, type DayType } from './DateBar'
 import { ShowtimeCell } from './ShowtimeCell'
@@ -83,6 +84,21 @@ const IconInstagram = ({ size = 15 }: { size?: number }) => (
     <rect x="3" y="3" width="18" height="18" rx="5" />
     <circle cx="12" cy="12" r="4" />
     <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+  </svg>
+)
+
+const IconSearch = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="8" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
+)
+
+const IconChevronRight = ({ size = 13 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 18l6-6-6-6" />
   </svg>
 )
 
@@ -211,6 +227,8 @@ export function TheaterSheet({
   onFavorite,
 }: TheaterSheetProps) {
 
+  const router = useRouter()
+
   /* ── 진입 애니메이션 ─────────────────────────────────────────── */
   // 마운트 직후 translateY = window.innerHeight → 다음 프레임에 정상 위치로 전환
   const enterDone = useRef(false)
@@ -234,43 +252,6 @@ export function TheaterSheet({
   }, [])
 
   /* ── 시놉시스 아코디언 상태 ──────────────────────────────────── */
-  // displayedSynopsisId: 현재 화면에 표시 중인 영화 ID (전환 중엔 이전 값 유지)
-  const [displayedSynopsisId, setDisplayedSynopsisId] = useState(selectedMovieId)
-  const [synopsisVisible, setSynopsisVisible] = useState(false)
-  const [synopsisTextOpen] = useState(false)   // reserved for future use
-  const synopsisTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  // expanded 상태 변화: 펼쳐지면 시놉시스 열기, 접히면 닫기
-  useEffect(() => {
-    if (synopsisTimerRef.current) clearTimeout(synopsisTimerRef.current)
-    if (expanded) {
-      setDisplayedSynopsisId(selectedMovieId)
-      // 약간의 딜레이 후 열기 (시트 펼침 애니메이션과 겹치지 않게)
-      synopsisTimerRef.current = setTimeout(() => setSynopsisVisible(true), 180)
-    } else {
-      setSynopsisVisible(false)
-      void synopsisTextOpen   // reserved
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [expanded])
-
-  // 영화 전환: 닫기 → 교체 → 열기
-  useEffect(() => {
-    if (!expanded) {
-      setDisplayedSynopsisId(selectedMovieId)
-      return
-    }
-    if (synopsisTimerRef.current) clearTimeout(synopsisTimerRef.current)
-    setSynopsisVisible(false)
-    synopsisTimerRef.current = setTimeout(() => {
-      setDisplayedSynopsisId(selectedMovieId)
-      setSynopsisVisible(true)
-    }, 340)   // 닫힘 애니메이션(320ms) 끝난 뒤 열기
-    return () => {
-      if (synopsisTimerRef.current) clearTimeout(synopsisTimerRef.current)
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedMovieId])
 
   /* ── 포스터 축소 진행도 (0 = 풀사이즈, 1 = 미니) — 스크롤에 비례 ── */
   const posterProgress = 0
@@ -334,7 +315,9 @@ export function TheaterSheet({
   const posterTouching  = useRef(false)  // 포스터 영역 터치 중 (방향 미확정 포함)
 
   /* ── 확장 시 스크롤 영역 ── */
-  const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const scrollAreaRef   = useRef<HTMLDivElement>(null)
+  const theaterNameRef  = useRef<HTMLDivElement>(null)
+  const [nameInNav, setNameInNav] = useState(false)
 
   /* Leaflet 이벤트 차단 — 시트 영역에서 map 이벤트가 발동되지 않게 */
   useEffect(() => {
@@ -358,6 +341,20 @@ export function TheaterSheet({
       el.removeEventListener('touchmove',  preventPageScroll)
     }
   }, [])
+
+  /* 극장 이름이 nav 위로 스크롤되면 nav에 이름 표시 */
+  useEffect(() => {
+    const scrollEl = scrollAreaRef.current
+    if (!scrollEl || !expanded) { setNameInNav(false); return }
+    const onScroll = () => {
+      const nameEl = theaterNameRef.current
+      if (!nameEl) return
+      setNameInNav(nameEl.getBoundingClientRect().bottom < 60)
+    }
+    scrollEl.addEventListener('scroll', onScroll, { passive: true })
+    setNameInNav(false)
+    return () => scrollEl.removeEventListener('scroll', onScroll)
+  }, [expanded])
 
   /* 확장 시 스크롤 최상단에서 아래로 드래그 → 시트 접기 */
   useEffect(() => {
@@ -874,94 +871,37 @@ export function TheaterSheet({
           </div>
         </div>
       ) : (
-        /* Expanded 헤더 — 2행: 버튼 행 + 극장 정보 행 */
-        <div style={{ flexShrink: 0 }}>
-          {/* 1행: < 버튼 / ★ X 버튼 */}
-          <div style={{
-            padding: '0 12px 8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
+        /* Expanded 헤더 — nav row만 고정 (극장 정보는 스크롤 안으로) */
+        <div style={{
+          flexShrink: 0,
+          padding: '0 12px 8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}>
+          <button style={iconBtn} onClick={onCollapse}>
+            <IconChevronLeft />
+          </button>
+          <span style={{
+            flex: 1, textAlign: 'center',
+            fontSize: 15, fontWeight: 600,
+            color: 'var(--color-text-primary)',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            padding: '0 6px',
+            opacity: nameInNav ? 1 : 0,
+            transition: 'opacity 180ms ease',
           }}>
-            <button style={iconBtn} onClick={onCollapse}>
-              <IconChevronLeft />
+            {theater.name}
+          </span>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button style={iconBtn} onClick={onFavorite}>
+              <IconStar filled={favorited} />
             </button>
-            <div style={{ display: 'flex', gap: 6 }}>
-              <button style={iconBtn} onClick={onFavorite}>
-                <IconStar filled={favorited} />
-              </button>
-              <button style={iconBtn} onClick={onClose}>
-                <IconClose />
-              </button>
-            </div>
-          </div>
-          {/* 2행: 극장 정보 + 액션 버튼 */}
-          <div style={{ padding: '4px 20px 12px', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <div style={{
-                  fontSize: 23, fontWeight: 700,
-                  color: 'var(--color-text-primary)',
-                  lineHeight: 1.12,
-                  letterSpacing: '-0.3px',
-                  minWidth: 0,
-                }}>
-                  {theater.name}
-                </div>
-                {theater.website && (
-                  <button style={inlineIconBtn} onClick={openWebsite} aria-label="사이트 보기">
-                    <IconExternal size={10} />
-                  </button>
-                )}
-              </div>
-              <div style={{
-                fontSize: 13,
-                color: 'var(--color-text-sub)',
-                marginTop: 1,
-                lineHeight: 1.25,
-                display: 'flex',
-                alignItems: 'baseline',
-                gap: 2,
-              }}>
-                <span style={{ minWidth: 0 }}>{theater.address}</span>
-                <button style={inlineIconBtn} onClick={copyAddress} aria-label="주소 복사">
-                  <IconCopy size={10} />
-                </button>
-              </div>
-              <div style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 6,
-                marginTop: 5,
-              }}>
-                <button style={actionBtn} onClick={openDirections}>
-                  <IconRoute size={13} />
-                  길찾기
-                </button>
-                <button style={actionBtn} onClick={shareTheater}>
-                  <IconShare size={13} />
-                  공유
-                </button>
-                <button style={actionBtn} onClick={openInstagram}>
-                  <IconInstagram size={13} />
-                  인스타그램
-                </button>
-              </div>
-            </div>
+            <button style={iconBtn} onClick={onClose}>
+              <IconClose />
+            </button>
           </div>
         </div>
-      )}
-
-      {/* ── DateBar — expanded에서만 표시 ─────────────────────── */}
-      {expanded && (
-        <DateBar
-          days={days}
-          selectedDate={selectedDate}
-          onSelectDate={(date) => {
-            const day = days.find((d) => d.date === date)
-            if (day) setSelectedIsoDate(day.isoDate)
-          }}
-        />
       )}
 
       {/* ── 포스터 가로 스크롤 — collapsed 전용 ── */}
@@ -1130,12 +1070,67 @@ export function TheaterSheet({
         </div>
       </div>}
 
-      {/* ── 시놉시스 + 상영시간표 — expanded에서 함께 스크롤 ──── */}
+      {/* ── expanded: 극장 정보 + DateBar + 포스터 + 내용 한 스크롤 ── */}
       {expanded && (
         <div
           ref={scrollAreaRef}
           style={{ flex: 1, overflowY: 'scroll', WebkitOverflowScrolling: 'touch' as never, overscrollBehavior: 'none' }}
         >
+          {/* 극장 정보 — 스크롤 시 위로 밀림 */}
+          <div ref={theaterNameRef} style={{ padding: '4px 20px 14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <div style={{
+                fontSize: 23, fontWeight: 700,
+                color: 'var(--color-text-primary)',
+                lineHeight: 1.12, letterSpacing: '-0.3px', minWidth: 0,
+              }}>
+                {theater.name}
+              </div>
+              {theater.website && (
+                <button style={inlineIconBtn} onClick={openWebsite} aria-label="사이트 보기">
+                  <IconExternal size={10} />
+                </button>
+              )}
+            </div>
+            <div style={{
+              fontSize: 13, color: 'var(--color-text-sub)',
+              marginTop: 1, lineHeight: 1.25,
+              display: 'flex', alignItems: 'baseline', gap: 2,
+            }}>
+              <span style={{ minWidth: 0 }}>{theater.address}</span>
+              <button style={inlineIconBtn} onClick={copyAddress} aria-label="주소 복사">
+                <IconCopy size={10} />
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+              <button style={actionBtn} onClick={openDirections}>
+                <IconRoute size={13} />길찾기
+              </button>
+              <button style={actionBtn} onClick={shareTheater}>
+                <IconShare size={13} />공유
+              </button>
+              <button style={actionBtn} onClick={openInstagram}>
+                <IconInstagram size={13} />인스타그램
+              </button>
+            </div>
+          </div>
+
+          {/* DateBar — sticky */}
+          <div style={{
+            position: 'sticky', top: 0, zIndex: 10,
+            backgroundColor: 'var(--color-surface-raised)',
+            borderTop: '1px solid var(--color-border)',
+          }}>
+            <DateBar
+              days={days}
+              selectedDate={selectedDate}
+              onSelectDate={(date) => {
+                const day = days.find((d) => d.date === date)
+                if (day) setSelectedIsoDate(day.isoDate)
+              }}
+            />
+          </div>
+
           {/* ── 포스터 가로 스크롤 — expanded에서 스크롤과 함께 ── */}
           <div style={{
             borderBottom: '1px solid var(--color-border)',
@@ -1239,17 +1234,100 @@ export function TheaterSheet({
             </div>
           </div>
 
-          {/* 시놉시스 아코디언 */}
+          {/* 선택된 영화 카드 */}
           {(() => {
-            const displayedMovie = allMovieEntries.find((e) => e.movie.id === displayedSynopsisId)?.movie
-            return displayedMovie?.synopsis ? (
-              <SynopsisCard
-                synopsis={displayedMovie.synopsis}
-                tags={displayedMovie.genre}
-                visible={synopsisVisible}
-                onSearchTheaters={() => { /* Phase 3: 영화별 상영관 검색 */ }}
-              />
-            ) : null
+            const entry = allMovieEntries.find(e => e.movie.id === selectedMovieId)
+            if (!entry) return null
+            const { movie } = entry
+            return (
+              <div style={{
+                margin: '12px 16px',
+                border: '1px solid var(--color-border)',
+                borderRadius: 12,
+                overflow: 'hidden',
+                backgroundColor: 'var(--color-surface-card)',
+              }}>
+                <div style={{ display: 'flex', gap: 12, padding: '12px 12px 10px' }}>
+                  {/* 포스터 */}
+                  <div style={{ flexShrink: 0, width: 60, height: 90, borderRadius: 6, overflow: 'hidden', backgroundColor: 'var(--color-neutral-700)' }}>
+                    {movie.posterUrl && (
+                      <img src={movie.posterUrl} alt={movie.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    )}
+                  </div>
+                  {/* 영화 정보 */}
+                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <div style={{
+                      fontSize: 15, fontWeight: 700,
+                      color: 'var(--color-text-primary)',
+                      lineHeight: 1.3,
+                      overflow: 'hidden',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                    }}>
+                      {movie.title}
+                    </div>
+                    {movie.director && movie.director.length > 0 && (
+                      <div style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>
+                        {movie.director[0]}
+                      </div>
+                    )}
+                    {movie.runtimeMinutes && (
+                      <div style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>
+                        {movie.runtimeMinutes}분
+                      </div>
+                    )}
+                    {movie.genre && movie.genre.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 2 }}>
+                        {movie.genre.map(g => (
+                          <span key={g} style={{
+                            fontSize: 10, fontWeight: 500,
+                            padding: '2px 8px',
+                            borderRadius: 999,
+                            border: '1px solid var(--color-border)',
+                            color: 'var(--color-text-sub)',
+                          }}>
+                            {g}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {/* 액션 버튼 */}
+                <div style={{ borderTop: '1px solid var(--color-border)', display: 'flex' }}>
+                  <button
+                    onClick={() => router.push(`/movie/${movie.id}?theater=${theater.id}`)}
+                    style={{
+                      flex: 1, padding: '10px 0',
+                      fontSize: 12, fontWeight: 600,
+                      color: 'var(--color-text-body)',
+                      background: 'none', border: 'none',
+                      cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                    }}
+                  >
+                    <IconChevronRight size={13} />
+                    영화 상세 정보
+                  </button>
+                  <div style={{ width: 1, backgroundColor: 'var(--color-border)' }} />
+                  <button
+                    onClick={() => { /* 추후 구현 */ }}
+                    style={{
+                      flex: 1, padding: '10px 0',
+                      fontSize: 12, fontWeight: 600,
+                      color: 'var(--color-text-caption)',
+                      background: 'none', border: 'none',
+                      cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                    }}
+                  >
+                    <IconSearch size={13} />
+                    지도에서 이 영화 검색
+                  </button>
+                </div>
+              </div>
+            )
           })()}
 
           {/* 상영시간표 */}

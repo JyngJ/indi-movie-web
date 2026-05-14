@@ -1339,6 +1339,21 @@ export default function MapView() {
     )
   }, [closeSearch])
 
+  // 영화 상세 페이지에서 뒤로가기 시 ?theater= 파라미터로 극장 시트 복원
+  const restoredTheaterRef = useRef(false)
+  useEffect(() => {
+    if (restoredTheaterRef.current || theaters.length === 0) return
+    const theaterParam = new URLSearchParams(window.location.search).get('theater')
+    if (!theaterParam) { restoredTheaterRef.current = true; return }
+    const theater = theaters.find((t) => t.id === theaterParam)
+    if (!theater) return
+    restoredTheaterRef.current = true
+    focusTheater(theater)
+    const url = new URL(window.location.href)
+    url.searchParams.delete('theater')
+    window.history.replaceState({}, '', url.toString())
+  }, [theaters, focusTheater])
+
   // 극장 선택 시 → 첫 번째 영화 선택 + 시트 collapsed로 열기
   const handlePinClick = useCallback((theaterId: string) => {
     if (selectedId === theaterId) {

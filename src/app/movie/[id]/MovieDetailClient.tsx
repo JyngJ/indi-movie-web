@@ -212,7 +212,7 @@ function InfoTab({ movie, onDirectorClick }: { movie: MovieDetail; onDirectorCli
     <div style={{ paddingBottom: 52 }}>
       {movie.synopsis && (
         <div style={{ padding: '24px 20px' }}>
-          <p style={sectionLabel}>줄거리</p>
+          <p style={sectionLabel}>시놉시스</p>
           <p style={{ margin: 0, fontSize: 14, lineHeight: 1.8, color: 'var(--color-text-body)', wordBreak: 'keep-all' }}>
             {movie.synopsis}
           </p>
@@ -393,7 +393,7 @@ function TheatersTab({ movieId, onMapClick }: { movieId: string; onMapClick: () 
 }
 
 /* ── 메인 ── */
-export function MovieDetailClient({ movieId }: { movieId: string }) {
+export function MovieDetailClient({ movieId, theaterId }: { movieId: string; theaterId?: string }) {
   const router = useRouter()
   const [tab, setTab] = useState<'info' | 'theaters'>('info')
   const [starred, setStarred] = useState(false)
@@ -417,7 +417,7 @@ export function MovieDetailClient({ movieId }: { movieId: string }) {
     return () => window.removeEventListener('scroll', onScroll)
   }, [movie])
 
-  const handleBack = () => router.back()
+  const handleBack = () => theaterId ? router.push(`/?theater=${theaterId}`) : router.back()
   const handleDirectorClick = (name: string) => router.push(`/director/${encodeURIComponent(name)}`)
   const handleMapClick = () => router.push(`/?movie=${movieId}`)
 
