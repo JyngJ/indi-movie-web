@@ -1097,14 +1097,16 @@ export default function MapView() {
 
   const activeMovieIdSet = useMemo(() => new Set(activeMovieIds), [activeMovieIds])
   const nationOptions = useMemo(() => {
-    const set = new Set<string>()
+    const counts = new Map<string, number>()
     for (const movie of movies) {
       if (!movie.nation) continue
       for (const n of movie.nation.split(/[,，/·]+/).map(s => s.trim()).filter(Boolean)) {
-        set.add(n)
+        counts.set(n, (counts.get(n) ?? 0) + 1)
       }
     }
-    return Array.from(set).sort((a, b) => a.localeCompare(b, 'ko'))
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'ko'))
+      .map(([n]) => n)
   }, [movies])
 
   const theaterPosterMovies = useMemo(() => {
