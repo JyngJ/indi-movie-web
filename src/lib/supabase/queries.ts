@@ -476,3 +476,82 @@ export function useTheaterShowtimes(theaterId: string | null, date: string) {
     staleTime: 2 * 60 * 1000,
   })
 }
+
+/* ── 영화별 상영 영화관 + 오늘 상영시간 ─────────────────────────── */
+export interface MovieTheaterEntry {
+  theaterId: string
+  theaterName: string
+  theaterAddress: string
+  showtimes: Showtime[]
+}
+
+export function useMovieTheaterShowtimes(movieId: string | null) {
+  const today = formatLocalDate(new Date())
+
+  return useQuery<MovieTheaterEntry[]>({
+    queryKey: ['movie-theater-showtimes', movieId, today],
+    enabled: !!movieId,
+    queryFn: async () => {
+      const { data, error } = await supabase()
+        .from('showtimes')
+        .select(`
+          id,
+          theater_id,
+          show_date,
+          show_time,
+          end_time,
+          seat_available,
+          seat_total,
+          booking_url,
+          screen_name,
+          theaters (
+            id,
+            name,
+            address
+          )
+        `)
+        .eq('movie_id', movieId!)
+        .eq('is_active', true)
+        .eq('show_date', today)
+        .order('show_time')
+        .limit(500)
+
+      if (error) throw error
+
+      const theaterMap = new Map<string, MovieTheaterEntry>()
+      for (const r of data ?? []) {
+        const th = r.theaters as unknown as { id: string; name: string; address: string } | null
+        if (!th) continue
+
+        if (!theaterMap.has(th.id)) {
+          theaterMap.set(th.id, {
+            theaterId: th.id,
+            theaterName: th.name,
+            theaterAddress: th.address,
+            showtimes: [],
+          })
+        }
+
+        theaterMap.get(th.id)!.showtimes.push({
+          id: r.id,
+          movieId: movieId!,
+          movieTitle: '',
+          theaterId: th.id,
+          screenName: r.screen_name,
+          showDate: r.show_date,
+          showTime: r.show_time,
+          endTime: r.end_time ?? undefined,
+          formatType: 'standard' as const,
+          language: 'korean' as const,
+          seatAvailable: Number(r.seat_available ?? 0),
+          seatTotal: Number(r.seat_total ?? 0),
+          price: 0,
+          bookingUrl: r.booking_url ?? undefined,
+        })
+      }
+
+      return Array.from(theaterMap.values())
+    },
+    staleTime: 2 * 60 * 1000,
+  })
+}

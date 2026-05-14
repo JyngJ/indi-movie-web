@@ -2,6 +2,7 @@
 
 import 'leaflet/dist/leaflet.css'
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { GeoJSON, MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -1026,6 +1027,7 @@ function useIsDark() {
 }
 
 export default function MapView() {
+  const router = useRouter()
   const { coords, refetch } = useUserLocation()
   const isDark = useIsDark()
   const { data: theaters = [], isLoading: theatersLoading } = useTheaters()
@@ -1448,12 +1450,14 @@ export default function MapView() {
           {movieResults.map((movie) => (
             <div
               key={movie.id}
+              onClick={() => { closeSearch(); router.push(`/movie/${movie.id}`) }}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: 12,
                 padding: '12px 0',
                 borderBottom: '1px solid var(--color-border)',
+                cursor: 'pointer',
               }}
             >
               <div style={{
@@ -1552,12 +1556,14 @@ export default function MapView() {
           {relatedDirectorResults.map((director) => (
             <div
               key={director.name}
+              onClick={() => { closeSearch(); router.push(`/director/${encodeURIComponent(director.name)}`) }}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: 12,
                 padding: '12px 0',
                 borderBottom: '1px solid var(--color-border)',
+                cursor: 'pointer',
               }}
             >
               <div style={{
@@ -1852,7 +1858,7 @@ export default function MapView() {
         <div style={{ padding: '16px 16px 0', pointerEvents: 'auto' }}>
           <div style={{ boxShadow: 'var(--shadow-sheet)', borderRadius: 'var(--comp-search-radius)' }}>
             <SearchBarButton
-              placeholder="극장 또는 영화 검색"
+              placeholder="영화, 감독, 역, 영화관 검색"
               onClick={openSearch}
             />
           </div>
@@ -1918,7 +1924,7 @@ export default function MapView() {
             <SearchBar
               ref={searchInputRef}
               value={searchQuery}
-              placeholder="극장 또는 영화 검색"
+              placeholder="영화, 감독, 역, 영화관 검색"
               onChange={(e) => setSearchQuery(e.target.value)}
               onClear={() => setSearchQuery('')}
               onBack={closeSearch}
@@ -1928,9 +1934,44 @@ export default function MapView() {
           {/* 결과 영역 */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px' }}>
             {searchQuery === '' ? (
-              <p style={{ textAlign: 'center', marginTop: 60, fontSize: 14, color: 'var(--color-text-caption)' }}>
-                극장명, 영화 제목, 감독 이름으로 검색하세요
-              </p>
+              <div style={{ marginTop: 24 }}>
+                <p style={{ fontSize: 12, color: 'var(--color-text-caption)', marginBottom: 14, marginLeft: 2 }}>
+                  검색할 수 있어요
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {[
+                    { label: '영화관', example: '서울아트' },
+                    { label: '영화', example: '레오파드' },
+                    { label: '감독', example: '홍상수' },
+                    { label: '지하철역', example: '혜화역' },
+                  ].map(({ label, example }) => (
+                    <button
+                      key={label}
+                      onClick={() => setSearchQuery(example)}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        height: 36,
+                        padding: '0 14px',
+                        borderRadius: 'var(--radius-full)',
+                        border: '1px solid var(--color-border)',
+                        backgroundColor: 'var(--color-surface-card)',
+                        color: 'var(--color-text-body)',
+                        fontSize: 13,
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {label}
+                      <span style={{ fontSize: 11, color: 'var(--color-text-caption)' }}>
+                        예) {example}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             ) : hasSearchResults ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
                 {searchSections.map((section) => {

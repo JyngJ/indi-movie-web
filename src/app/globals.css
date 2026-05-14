@@ -74,6 +74,16 @@ img {
   display: none;
 }
 
+/* 상세 페이지 슬라이드 인 (오른쪽에서) */
+@keyframes slideInFromRight {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.page-slide-in {
+  animation: slideInFromRight 220ms ease both;
+}
+
 /* prefers-reduced-motion 지원 */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
