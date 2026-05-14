@@ -4,6 +4,13 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
+## Next.js Runtime Rules
+
+- Do not use Turbopack for local development or build verification in this project.
+- Use the npm scripts in `package.json`; they must keep `next dev --webpack` and `next build --webpack`.
+- If you need to run Next.js directly, pass `--webpack` explicitly.
+- Before changing Next.js CLI flags or bundler behavior, read `node_modules/next/dist/docs/01-app/03-api-reference/06-cli/next.md` and update this section plus `README.md`.
+
 ## Branching Rules
 
 - Do all non-trivial work on a dedicated branch. Do not implement directly on `main`.

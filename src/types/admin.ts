@@ -11,7 +11,7 @@ export interface AdminTheaterSource {
   matchedTheaterId?: string
   homepageUrl: string
   listingUrl: string
-  parser: 'jsonLdEvent' | 'tableText' | 'timelineCard' | 'dtryxReservationApi' | 'csv'
+  parser: 'jsonLdEvent' | 'tableText' | 'timelineCard' | 'dtryxReservationApi' | 'movieeTicketApi' | 'movielandProductOptions' | 'seoulArtTimetable' | 'csv'
   enabled: boolean
   cadence: 'manual' | 'daily' | 'twice_daily'
   lastCrawledAt?: string
@@ -102,6 +102,7 @@ export interface AdminMovieInput {
   originalTitle?: string
   genre?: string[]
   director?: string[]
+  nation?: string
   kmdbId?: string
   kmdbMovieSeq?: string
   posterUrl?: string
@@ -117,6 +118,7 @@ export interface AdminMovie {
   originalTitle?: string
   genre: string[]
   director: string[]
+  nation?: string
   kmdbId?: string
   kmdbMovieSeq?: string
   posterUrl?: string

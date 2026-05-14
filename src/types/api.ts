@@ -104,6 +104,7 @@ export interface Movie {
   posterUrl?: string
   genre: string[]
   director: string[]
+  nation?: string
   synopsis?: string
   runtimeMinutes?: number
   certification?: string

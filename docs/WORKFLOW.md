@@ -64,39 +64,51 @@ main         ← 프로덕션 (안정)
 
 ## Phase 2: 극장/지도 기능
 
-**브랜치**: `feature/phase-2-map` (develop에서 분기)
+**브랜치**: `feature/phase-2-map`
 
 **시작 방법**:
 ```bash
-git checkout develop
+git checkout main
+git pull
 git checkout -b feature/phase-2-map
 ```
 
 **체크리스트**:
-- [ ] `useUserLocation` Hook — Location Adapter 연결
-- [ ] `useTheaters(bounds)` Hook — API 연결 (백엔드 준비 전까지 Mock)
+- [x] `useUserLocation` Hook — Location Adapter 연결
+- [x] `useTheaters()` Hook — Supabase 연결
+- [x] `useStations()` Hook — Supabase 연결
+- [x] `useMovies()` Hook — Supabase 연결
+- [x] `useActiveMovieIds()` Hook — 오늘 포함 미래 상영 스케줄 기준
 - [ ] `useTheater(id)` Hook
 - [ ] `useTheaterSearch(query)` Hook
-- [ ] 지도 컴포넌트 (`src/components/map/Map.tsx`) — Leaflet dynamic import
-- [ ] 지도에 현재 위치 마커
-- [ ] 지도에 극장 마커 표시
-- [ ] 극장 카드 Primitive + Domain 컴포넌트
-- [ ] 홈 페이지 (`/`) — 지도 + 극장 목록
+- [x] 지도 컴포넌트 (`src/components/map/MapView.tsx`) — Leaflet/react-leaflet
+- [x] 지도에 현재 위치 이동
+- [x] 지도에 극장 마커 표시
+- [x] 극장 바텀시트 Domain 컴포넌트
+- [x] 홈 페이지 (`/`) — 지도 메인
 - [ ] 극장 상세 페이지 (`/theater/:id`)
 - [ ] 극장 검색 기능
+- [x] 동일 건물 클러스터 분리
+- [x] 클러스터 라벨/포스터 겹침 완화
+- [x] 지하철 노선 오버레이
+- [x] 지하철역 핀/라벨 표시
+- [x] 지하철역 검색 및 선택 시 지도 이동
+- [x] 영화/감독 검색 결과 표시
+- [x] 상영중 영화 태그 표시
 
 **완료 후**:
 ```bash
 git commit -m "feat: Phase 2 - 극장/지도 기능"
-git checkout develop
-git merge feature/phase-2-map
+git push
 ```
 
 **검증**:
-- [ ] 지도에 마커 표시 확인
-- [ ] 위치 권한 거부 시 서울 시청으로 fallback
-- [ ] TypeScript 컴파일: `npm run build`
+- [x] 지도에 마커 표시 확인
+- [x] 위치 권한 거부 시 서울 시청 fallback
+- [x] TypeScript 컴파일: `npm run build`
 - [ ] 모바일 375px 렌더링 확인
+
+현재 앱 `tsconfig.json`은 `pipeline`을 제외하며, `npm run build`는 Webpack 모드로 앱 빌드와 TypeScript 검증을 통과한다.
 
 ---
 
@@ -106,15 +118,16 @@ git merge feature/phase-2-map
 
 **체크리스트**:
 - [ ] KMDB/TMDB 통합 정규화 레이어 (`src/lib/movie-api.ts`)
-- [ ] `useMovies(query)` Hook
+- [x] `useMovies()` Hook
 - [ ] `useMovie(id)` Hook
 - [ ] `useTrendingMovies(type)` Hook
-- [ ] `useShowtimes(theaterId, date)` Hook
+- [x] `useTheaterShowtimes(theaterId, date)` Hook
 - [ ] `useTheatersByMovie(movieId, date)` Hook
 - [ ] 영화 카드 컴포넌트 (`MovieCard`)
-- [ ] 상영시간표 셀 컴포넌트 (`ShowtimeCell`)
-- [ ] 날짜 선택 컴포넌트 (`DatePicker`)
-- [ ] 영화 검색 페이지 (`/search`)
+- [x] 상영시간표 셀 컴포넌트 (`ShowtimeCell`)
+- [x] 날짜/필터 선택 UI (`FilterBar`, `DateBar`)
+- [x] 지도 검색 오버레이 안의 영화/감독 검색 결과
+- [ ] 독립 영화 검색 페이지 (`/search`)
 - [ ] 영화 상세 페이지 (`/movie/:id`)
 - [ ] 홈 개선: "가까운 극장", "지금 상영중", "곧 개봉"
 
@@ -151,6 +164,8 @@ git merge feature/phase-2-map
 ---
 
 ## 명령어 모음
+
+> Next.js 명령은 Turbopack을 쓰지 않습니다. `package.json`의 `dev`/`build` 스크립트는 반드시 `--webpack` 플래그를 유지하세요.
 
 ```bash
 # 개발 서버

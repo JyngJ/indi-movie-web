@@ -1,6 +1,6 @@
 import type { CrawlRequestPayload, CrawlRun } from '@/types/admin'
 import { adminAuthErrorResponse, requireAdminSessionUser } from '@/lib/admin/auth'
-import { crawlDtryxReservationApi, parseShowtimeCandidates, resolveCrawlInput } from '@/lib/admin/crawler'
+import { crawlShowtimeCandidates } from '@/lib/admin/crawler'
 import { getAdminSource, saveCrawlRun } from '@/lib/admin/store'
 
 export const dynamic = 'force-dynamic'
@@ -28,12 +28,10 @@ export async function POST(request: Request) {
 
   try {
     const context = { source, inputKind, sourceUrl }
-    const candidates = source.parser === 'dtryxReservationApi'
-      ? await crawlDtryxReservationApi(context)
-      : parseShowtimeCandidates(
-          await resolveCrawlInput(inputKind, payload.content, sourceUrl),
-          context,
-        )
+    const candidates = await crawlShowtimeCandidates({
+      ...context,
+      content: payload.content,
+    })
     const run: CrawlRun = {
       id: `run_${Date.now().toString(36)}`,
       sourceId: source.id,

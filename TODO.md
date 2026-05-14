@@ -6,6 +6,12 @@
 
 ## 릴리즈 전 필수
 
+### 제보/추가요청 버튼
+- 실제 서비스 전 report/제보/추가요청 버튼 추가 필요
+- 대상: 극장 정보 오류, 좌표 오류, 사이트 링크 오류, 상영시간표 오류, 누락 극장/영화 추가 요청
+- 초기 구현은 폼 제출 또는 이메일/관리자 확인 큐로 연결
+- 장기적으로 `reports` 테이블에 저장하고 관리자 화면에서 처리 상태를 관리
+
 ### 극장 좌표 검증 및 교체
 - `src/mocks/theaters.ts`의 모든 좌표는 임의로 입력한 값으로 정확하지 않음
 - Google Maps Geocoding API / 네이버지도 / 카카오맵 API로 실제 좌표 검증·교체 필요
@@ -14,6 +20,10 @@
 ---
 
 ## 바텀시트
+
+### 상영작 먼저 보기 버튼
+- 바텀시트 expanded 상태 포스터 스트립에 토글 버튼 추가
+- 누르면 선택한 날짜에 상영 가능한 영화를 앞으로 정렬, 다시 누르면 기본 순서(상영 횟수 순) 복원
 
 ### 스크롤 가능 영역 시각적 힌트
 - 바텀시트 expanded 시 시놉시스/시간표 스크롤 영역이 처음에 안 보이는 경우 스크롤 가능 여부를 알 수 없음
@@ -24,6 +34,20 @@
 ## 지도 UX
 
 ### 검색 오버레이 고도화
+- 현재 완료:
+  - 검색 오버레이 진입 시 모바일 키보드 자동 표시를 시도한다.
+  - 지하철역 검색 결과를 표시하고, 역 선택 시 검색 오버레이를 닫고 해당 좌표로 `flyTo(..., 16)` 이동한다.
+  - 영화 제목/원제 검색 결과를 표시한다.
+  - 감독명 검색 결과를 표시하고, 감독 검색 결과가 적으면 해당 감독의 영화도 같이 보여준다.
+  - 영화 검색 결과가 적으면 해당 영화들의 감독 섹션도 같이 보여준다.
+  - 영화 결과에는 포스터, 원제, 감독, 연도를 표시한다.
+  - `상영중` 태그는 `showtimes.is_active = true`이고 `show_date >= 오늘`인 스케줄이 있는 영화에만 표시한다.
+- 현재 한계:
+  - 최근 검색 저장/삭제는 아직 미구현.
+  - 극장/동네/지역 자동완성은 아직 미구현.
+  - 영화 결과 터치 시 영화 필터 칩 적용은 아직 미구현.
+  - 영화별 상영 극장 3개/더보기 섹션은 아직 미구현.
+  - 감독 터치는 의도대로 `to be implemented`.
 - 구현 범위:
   - 현재 `MapView` 내부 검색 오버레이를 실제 검색 화면으로 확장한다.
   - 검색창은 `+/-` FAB와 같은 색상 계열을 유지한다: `--color-surface-card`, `--color-border`, `--color-text-body`.
@@ -42,9 +66,9 @@
   - 규모가 커지면 Supabase RPC + Postgres `pg_trgm` similarity / full text search로 이전한다.
 - 결과 섹션 우선순위:
   - 가장 높은 점수의 후보 타입을 대표 타입으로 보고 해당 섹션을 최상단에 배치한다.
-  - 역 검색: `지하철역` → `지역` → `근처 극장`.
+  - 역 검색: `지하철역` → `지역` → `근처 극장`. 현재는 `지하철역` 섹션과 지도 이동만 구현됨.
   - 감독 검색: `감독` → `영화`.
-  - 영화 검색: `영화` → `상영 중인 극장 최대 3개` → 3개 초과 시 `상영관 더보기`.
+  - 영화 검색: `영화` → `상영 중인 극장 최대 3개` → 3개 초과 시 `상영관 더보기`. 현재는 영화/감독 섹션과 상영중 태그만 구현됨.
   - 지역 검색: `지역` → `지역/근처 극장`.
   - 극장 검색: `극장`.
 - 터치 인터랙션:
@@ -84,19 +108,62 @@
 
 ## 데이터
 
+### 포스터 없는 영화 TMDB 폴백
+- 포스터 없는 6편: 박하향 소다수, 불안, 여행자, 용호의 결투, 침묵의 빛, 핵전략 사령부
+- `.env.local`에 `TMDB_API_KEY` 추가 후 `npx tsx --env-file=.env.local scripts/fill-poster-tmdb.ts --apply` 실행
+
+### 시놉시스 채우기
+- 44편 전부 synopsis 비어있음 — KMDB `plots.plot[].plotText` 필드 사용 (기존 스크립트는 `hit.plot` 잘못 참조)
+- `scripts/fill-synopsis-kmdb.ts` 작성 후 실행 필요
+
+### 크롤링 후보 제목 정규화
+- 서울아트시네마처럼 `영화 제목 + 시네토크/GV/강연자`가 한 문자열로 내려오는 회차는 현재 경고를 붙여 검수 대기 처리한다.
+- 이후 승인/자동 매칭 품질을 위해 후보 생성 단계에서 `+ 시네토크 ...`, `+ 씨네토크 ...`, `+ GV ...` 같은 부가 행사 문구를 별도 메모로 분리하고 `movie_title`에는 본편 제목만 남기는 정규화가 필요하다.
+
+### 인디스페이스 크롤링 방식 재검토
+- 최신 주간 상영시간표 게시글은 본문 시간표가 이미지로 내려와 일반 HTML 파서로 날짜/시간/제목을 안정적으로 추출할 수 없다.
+- 단기 구현 후보:
+  - OCR 파이프라인으로 주간 시간표 이미지를 읽는다.
+  - `작품별 상영일정` 게시글들을 따라가고 `og:description`/본문 텍스트에서 일정 문구를 추출한다.
+- OCR은 운영 복잡도가 크고, 작품별 게시글 크롤링은 누락/중복 관리가 필요하므로 별도 설계 후 진행한다.
+
+### 필름포럼 크롤링 소스 분류
+- 공식 사이트 상영시간표/상영작 URL은 서버 WAF(WebKnight)가 자동 요청을 `999`로 차단한다.
+- 예매/극장 데이터는 Moviee `https://moviee.co.kr/Theater/Index?thsynid=130`에서 확인한다.
+- 전용 HTML 파서가 아니라 Moviee 계열 크롤러/연동 대상으로 분류한다.
+
+### KU시네마테크 크롤링 소스 분류
+- `/timetable`은 주간 시간표 이미지이고 `/reservation`은 `https://moviee.co.kr/Movie/Ticket?tid=121`로 연결된다.
+- 전용 어댑터보다 기존 Moviee 계열 크롤러/연동 대상으로 분류한다.
+
+### 라이카시네마 크롤링 소스 분류
+- 공식 `/schedule`은 이미지 시간표지만 예매 링크가 Dtryx로 연결된다.
+- `https://www.dtryx.com/cinema/main.do?cgid=FE8EF4D2-F22D-4802-A39A-D58F23A29C1E&BrandCd=spacedog&CinemaCd=000072`
+- 전용 어댑터가 아니라 기존 `dtryxReservationApi` 크롤링 소스로 등록해서 검증한다.
+
 ### 지하철/지역 데이터 연결
 - 완료:
   - `stations`, `areas`, `subway_lines` Supabase 스키마 초안 추가.
   - `scripts/seed-subway-data.ts` 추가. `data/subway/stations.json`, `data/subway/lines.geojson`을 읽어 upsert한다.
+  - Kaggle 기반 역/노선 데이터를 정리하고 `stations` DB에 seed했다.
   - 지도 지하철 노선 오버레이는 `src/data/subway-lines.json`을 사용하고 줌 15 이상에서만 표시한다.
+  - 역 핀/라벨도 줌 15 이상에서 표시한다. 줌 15~16은 작은 핀/폰트, 줌 17 이상은 큰 핀/폰트.
+  - 노선/역 핀 투명도는 0.7이고, 극장 핀/포스터/라벨보다 낮은 z-index로 표시한다.
+  - 역 핀은 노선도 스타일의 이중 stroke 원형 마커를 사용한다.
+  - Turbopack이 `.geojson` import를 처리하지 않으므로 앱 import 파일은 반드시 `src/data/subway-lines.json`으로 둔다.
 - 남은 작업:
-  - CC0/Public Domain 등 사용 가능한 원본 데이터 파일을 `data/subway/`에 내려받아 필드 매핑을 확인한다.
-  - 필요 노선만 `src/data/subway-lines.json`으로 export/copy한다. Turbopack이 `.geojson` import를 기본 처리하지 않으므로 확장자는 `.json`으로 둔다.
-  - 검색 화면 구현 시 `stations`/`areas` query와 거리 계산을 연결한다.
+  - 지역/동네(`areas`) 데이터 seed 및 검색 연결.
+  - 역/지역 검색 결과의 현재 위치 기준 거리 표시.
+  - 역 선택 시 주변 지역/근처 극장 섹션 연결.
+  - 노선 geometry 품질 개선이 필요하면 같은 CC0/Public Domain 조건의 더 정확한 원본을 찾아 `src/data/subway-lines.json`을 재생성한다.
 
 ### Mock → 실제 API 연결
-- `src/mocks/` 데이터를 실제 백엔드 API로 교체 (Phase 3)
-- React Query hooks 연결 (`useTheaters`, `useShowtimes`)
+- 완료:
+  - `useTheaters`, `useStations`, `useMovies`, `useActiveMovieIds`, `useTheaterShowtimes`가 Supabase에 연결됨.
+- 남은 작업:
+  - 남아있는 mock/임시 포스터 표시 제거.
+  - 영화 필터 칩과 영화별 상영 극장 조회 연결.
+  - `pipeline` TypeScript 오류 정리 또는 앱 빌드 대상에서 제외.
 
 ---
 

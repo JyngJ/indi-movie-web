@@ -60,7 +60,7 @@ fingerprint 기준 중복 제거
 
 - 극장명
 - 상영시간표 URL
-- 파서 유형: `tableText`, `timelineCard`, `dtryxReservationApi`, `jsonLdEvent`, `csv`
+- 파서 유형: `tableText`, `timelineCard`, `dtryxReservationApi`, `movieeTicketApi`, `movielandProductOptions`, `seoulArtTimetable`, `jsonLdEvent`, `csv`
 - 수집 주기: `manual`, `daily`, `twice_daily`
 
 홈페이지 URL은 비워두면 상영시간표 URL의 origin으로 대체한다. 새 소스를 저장하면 즉시 선택 상태가 되고 입력 방식은 `URL 크롤링`으로 전환된다.
@@ -79,6 +79,14 @@ HTML 파서는 우선 JSON-LD `Event` 블록을 읽고, 없거나 부족하면 `
 인디스페이스처럼 표가 아니라 날짜 라벨과 시간축 카드로 렌더링되는 페이지는 `timelineCard` 패턴으로 처리한다. 이 파서는 `dateLabel` 아래의 `cardContainer`를 순회하며 `nameBox`, `schedule`, `salingInfo`, `venue` 텍스트에서 제목, 상영시간, 잔여석, 상영관 힌트를 추출한다.
 
 디트릭스 계열 예매 페이지는 `dtryxReservationApi`로 처리한다. 이 어댑터는 예매 페이지 URL의 `cgid`를 추출하고 `/reserve/main_list.do`에서 영화관, 영화, 날짜 목록을 받은 뒤 `/reserve/showseq_list.do`를 조합 호출하여 `Showseqlist`를 후보 레코드로 정규화한다.
+
+무비애 계열 예매 페이지는 `movieeTicketApi`로 처리한다. 이 어댑터는 URL의 `tid` 또는 `thsynid`를 추출하고 `/api/TicketApi/GetPlayDateList`, `/api/TicketApi/GetPlayTimeList`를 호출해 영화명, 관, 날짜, 시간, 좌석 정보를 후보 레코드로 정규화한다.
+
+무비랜드는 `movielandProductOptions`로 처리한다. 이 어댑터는 Now Showing 목록에서 상품 상세 URL을 수집하고, Cafe24 상품 상세 HTML의 `option_stock_data`에 들어있는 `Date / Time / Seat` 조합을 날짜·시간별로 그룹핑해 잔여 좌석과 총 좌석을 계산한다.
+
+서울아트시네마는 `seoulArtTimetable`로 처리한다. 이 어댑터는 공식 `상영시간표` 페이지의 주간 표에서 날짜 헤더와 각 열의 TinyTicket 링크, 시간, 제목을 읽어 후보 회차로 정규화한다.
+
+기존 DB에 `movielandProductOptions` 파서가 저장되지 않으면 `docs/SUPABASE.sql`의 `crawl_sources_parser_check` 갱신 SQL을 먼저 적용해야 한다.
 
 - `confidence`: 날짜, 시간, 제목, 상영관 추출 품질 기준의 0-1 점수
 - `warnings`: 상영관/제목/시간 누락 등 운영자 확인이 필요한 항목
@@ -138,6 +146,38 @@ candidate.matched_movie_id 저장
 ```
 
 KMDB는 한국 영화 코드, 제목, 제작연도, 개봉일, 장르, 감독, 줄거리, 러닝타임, 관람등급과 포스터 URL을 함께 제공한다. 가져온 포스터는 `movies.poster_url`에 저장한다.
+
+현재 구현 기준:
+
+- 검색 API: `GET /api/admin/movies/search?q=...`
+  - `src/lib/admin/kmdb.ts`의 `searchKmdbMovies()`가 KMDB `search_json2.jsp`에 `collection=kmdb_new2`, `detail=Y`, `query`, `listCount=20`, `sort=RANK,1`로 요청한다.
+  - 응답은 관리자 화면 후보 선택용 `AdminExternalMovie`로 정규화한다.
+- 가져오기 API: `POST /api/admin/movies/import`
+  - 요청 body는 `{ kmdbMovieId, kmdbMovieSeq }`만 받는다.
+  - `getKmdbMovie()`가 같은 KMDB API를 `movieId`, `movieSeq`, `detail=Y`로 다시 조회한다.
+  - 내부 `movies` 테이블에는 `kmdb_id + kmdb_movie_seq` 조합 기준으로 기존 레코드를 찾고, 있으면 update, 없으면 insert한다.
+- 환경 변수는 `KMDB_SERVICE_KEY`를 우선 사용하고, 없으면 `KMDB_API_KEY`도 허용한다.
+
+KMDB → 내부 필드 매핑:
+
+| KMDB 필드 | 내부/관리자 필드 | DB 컬럼 | 비고 |
+| --- | --- | --- | --- |
+| `movieId` | `movieId`, `kmdbId` | `movies.kmdb_id` | KMDB 영화 ID |
+| `movieSeq` | `movieSeq`, `kmdbMovieSeq` | `movies.kmdb_movie_seq` | 같은 `movieId` 내 세부 식별자 |
+| `title` | `title` | `movies.title` | `!HS`, `!HE` 검색 하이라이트 제거 |
+| `titleOrg` 또는 `titleEng` | `originalTitle` | `movies.original_title` | `titleOrg` 우선 |
+| `prodYear` 또는 개봉일 연도 | `year` | `movies.year` | 없으면 현재 연도로 fallback |
+| `repRlsDate` 또는 `releaseDate` | `openDate` | 저장 안 함 | `YYYY-MM-DD`로 정규화하지만 현재 DB에는 미저장 |
+| `genre` | `genre[]` | `movies.genre` | 쉼표/파이프 기준 분리 |
+| `directorNm` | `director[]` | `movies.director` | 쉼표/파이프 기준 분리 |
+| `nation` | `nation` | `movies.nation` | KMDB 국가 문자열 원문 저장 |
+| `posterUrl` 또는 `posters` | `posterUrl` | `movies.poster_url` | 파이프 구분 URL 중 첫 번째만 저장 |
+| `stillUrl` 또는 `stlls` | `stillUrl` | 저장 안 함 | 현재 후보 데이터에만 존재 |
+| `plot` | `synopsis` | `movies.synopsis` | 공백 정규화 |
+| `runtime` | `runtimeMinutes` | `movies.runtime_minutes` | 양의 정수일 때만 저장 |
+| `rating` | `certification` | `movies.certification` | KMDB 등급 문자열 원문 저장 |
+
+현재 KMDB import는 `tmdb_id`, `rating`(숫자 평점), `open_date`, `still_url`을 `movies`에 저장하지 않는다.
 
 ## 관리자 인증
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/primitives'
 import type {
@@ -58,6 +58,8 @@ export function AdminShowtimeConsole() {
   const [url, setUrl] = useState('')
   const [content, setContent] = useState('')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [candidateSearchQuery, setCandidateSearchQuery] = useState('')
+  const selectAllRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [matchDrafts, setMatchDrafts] = useState<Record<string, CandidateMatchPayload>>({})
@@ -65,6 +67,7 @@ export function AdminShowtimeConsole() {
   const [movieSearchQuery, setMovieSearchQuery] = useState('')
   const [movieSearchResults, setMovieSearchResults] = useState<AdminExternalMovie[]>([])
   const [movieEditForm, setMovieEditForm] = useState<AdminMovieInput | null>(null)
+  const [movieEditRaw, setMovieEditRaw] = useState({ director: '', genre: '' })
   const [theaterFormOpen, setTheaterFormOpen] = useState(false)
   const [theaterForm, setTheaterForm] = useState<AdminTheaterInput>({
     name: '',
@@ -107,12 +110,38 @@ export function AdminShowtimeConsole() {
   const reviewCount = payload.candidates.filter((candidate) => candidate.status === 'needs_review').length
   const approvedCount = payload.candidates.filter((candidate) => candidate.status === 'approved').length
   const matchedCount = payload.candidates.filter((candidate) => candidate.matchedTheaterId && candidate.matchedMovieId).length
+  const visibleCandidates = useMemo(() => {
+    const query = normalizeSearchText(candidateSearchQuery)
+    if (!query) return payload.candidates
+
+    return payload.candidates.filter((candidate) => normalizeSearchText([
+      candidate.movieTitle,
+      candidate.theaterName,
+      candidate.sourceId,
+      candidate.screenName,
+      candidate.showDate,
+      candidate.showTime,
+      candidate.rawText,
+      candidate.warnings.join(' '),
+      candidate.status,
+    ].join(' ')).includes(query))
+  }, [candidateSearchQuery, payload.candidates])
+  const candidateIds = useMemo(() => visibleCandidates.map((candidate) => candidate.id), [visibleCandidates])
+  const selectedCandidateCount = candidateIds.filter((id) => selectedIds.includes(id)).length
+  const allCandidatesSelected = candidateIds.length > 0 && selectedCandidateCount === candidateIds.length
+  const someCandidatesSelected = selectedCandidateCount > 0 && selectedCandidateCount < candidateIds.length
   const selectedAdminTheater = adminTheaters.find((theater) => theater.id === selectedAdminTheaterId)
   const averageConfidence = useMemo(() => {
     if (!payload.candidates.length) return 0
     const total = payload.candidates.reduce((sum, candidate) => sum + candidate.confidence, 0)
     return Math.round((total / payload.candidates.length) * 100)
   }, [payload.candidates])
+
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = someCandidatesSelected
+    }
+  }, [someCandidatesSelected])
 
   async function refresh() {
     const response = await fetch('/api/admin/showtimes', { cache: 'no-store' })
@@ -549,10 +578,15 @@ export function AdminShowtimeConsole() {
 
     setLoading(true)
     try {
+      const payload = {
+        ...movieEditForm,
+        genre: splitListInput(movieEditRaw.genre),
+        director: splitListInput(movieEditRaw.director),
+      }
       const response = await fetch('/api/admin/movies', {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(movieEditForm),
+        body: JSON.stringify(payload),
       })
       const result = (await response.json()) as { movie?: AdminMovie; error?: { message: string } }
 
@@ -662,6 +696,14 @@ export function AdminShowtimeConsole() {
     )
   }
 
+  function toggleAllCandidates() {
+    setSelectedIds((current) => {
+      const visibleIds = new Set(candidateIds)
+      const hiddenIds = current.filter((id) => !visibleIds.has(id))
+      return allCandidatesSelected ? hiddenIds : [...hiddenIds, ...candidateIds]
+    })
+  }
+
   function selectSource(sourceId: string) {
     const source = payload.sources.find((item) => item.id === sourceId)
     setSelectedSourceId(sourceId)
@@ -762,6 +804,9 @@ export function AdminShowtimeConsole() {
                     <option value="tableText">HTML 테이블</option>
                     <option value="timelineCard">타임라인 카드</option>
                     <option value="dtryxReservationApi">디트릭스 예매 API</option>
+                    <option value="movieeTicketApi">무비애 예매 API</option>
+                    <option value="movielandProductOptions">무비랜드 상품 옵션</option>
+                    <option value="seoulArtTimetable">서울아트시네마 시간표</option>
                     <option value="jsonLdEvent">JSON-LD Event</option>
                     <option value="csv">CSV</option>
                   </select>
@@ -862,6 +907,18 @@ export function AdminShowtimeConsole() {
 
           {message && <p className={styles.message}>{message}</p>}
 
+          <div className={styles.reviewToolbar}>
+            <input
+              aria-label="검수 대기열 검색"
+              value={candidateSearchQuery}
+              onChange={(event) => setCandidateSearchQuery(event.target.value)}
+              placeholder="영화명, 극장, 날짜, 경고 검색"
+            />
+            <span>
+              {visibleCandidates.length}/{payload.candidates.length}건
+            </span>
+          </div>
+
           {movieFormOpen && (
             <div className={styles.movieSearchBox}>
               <div className={styles.inlineForm}>
@@ -902,7 +959,16 @@ export function AdminShowtimeConsole() {
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th aria-label="선택" />
+                  <th aria-label="전체 선택">
+                    <input
+                      ref={selectAllRef}
+                      type="checkbox"
+                      checked={allCandidatesSelected}
+                      disabled={candidateIds.length === 0}
+                      aria-label="검수 대기열 전체 선택"
+                      onChange={toggleAllCandidates}
+                    />
+                  </th>
                   <th>상영 정보</th>
                   <th>극장</th>
                   <th>매칭</th>
@@ -912,7 +978,7 @@ export function AdminShowtimeConsole() {
                 </tr>
               </thead>
               <tbody>
-                {payload.candidates.map((candidate) => (
+                {visibleCandidates.map((candidate) => (
                   <tr key={candidate.id}>
                     <td>
                       <input
@@ -991,6 +1057,11 @@ export function AdminShowtimeConsole() {
             {payload.candidates.length === 0 && (
               <div className={styles.empty}>
                 수집 실행을 누르면 샘플 크롤링 결과가 이곳에 표시됩니다.
+              </div>
+            )}
+            {payload.candidates.length > 0 && visibleCandidates.length === 0 && (
+              <div className={styles.empty}>
+                검색 조건에 맞는 검수 후보가 없습니다.
               </div>
             )}
           </div>
@@ -1096,7 +1167,19 @@ export function AdminShowtimeConsole() {
                 <span>{selectedAdminTheater ? `${selectedAdminTheater.city} · ${selectedAdminTheater.address}` : '왼쪽 목록에서 실제 극장을 선택하면 시간표가 표시됩니다.'}</span>
               </div>
               {selectedAdminTheater && (
-                <Button variant="secondary" size="sm" onClick={() => editTheater(selectedAdminTheater)}>극장 수정</Button>
+                <div className={styles.serviceHeaderActions}>
+                  {selectedAdminTheater.website && (
+                    <a
+                      className={styles.linkButton}
+                      href={selectedAdminTheater.website}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      사이트 보기
+                    </a>
+                  )}
+                  <Button variant="secondary" size="sm" onClick={() => editTheater(selectedAdminTheater)}>극장 수정</Button>
+                </div>
               )}
             </div>
 
@@ -1192,24 +1275,27 @@ export function AdminShowtimeConsole() {
                 <button
                   key={movie.id}
                   className={`${styles.sourceItem} ${movieEditForm?.id === movie.id ? styles.sourceItemActive : ''}`}
-                  onClick={() => setMovieEditForm({
+                  onClick={() => {
+                    setMovieEditRaw({ director: movie.director.join(', '), genre: movie.genre.join(', ') })
+                    setMovieEditForm({
                     id: movie.id,
                     title: movie.title,
                     year: movie.year,
                     originalTitle: movie.originalTitle ?? '',
                     genre: movie.genre,
                     director: movie.director,
+                    nation: movie.nation,
                     kmdbId: movie.kmdbId,
                     kmdbMovieSeq: movie.kmdbMovieSeq,
                     posterUrl: movie.posterUrl,
                     synopsis: movie.synopsis,
                     runtimeMinutes: movie.runtimeMinutes,
                     certification: movie.certification,
-                  })}
+                  })}}
                 >
                   <span>
                     <strong>{movie.title}</strong>
-                    <small>{movie.year} · {movie.director.join(', ') || '감독 미입력'}{movie.kmdbId ? ` · KMDB ${movie.kmdbId}${movie.kmdbMovieSeq ?? ''}` : ''}{movie.posterUrl ? ' · 포스터 있음' : ''}</small>
+                    <small>{movie.year}{movie.nation ? ` · ${movie.nation}` : ''} · {movie.director.join(', ') || '감독 미입력'}{movie.kmdbId ? ` · KMDB ${movie.kmdbId}${movie.kmdbMovieSeq ?? ''}` : ''}{movie.posterUrl ? ' · 포스터 있음' : ''}</small>
                   </span>
                 </button>
               ))}
@@ -1247,16 +1333,28 @@ export function AdminShowtimeConsole() {
                   <input value={movieEditForm.certification ?? ''} onChange={(event) => setMovieEditForm((current) => current ? { ...current, certification: event.target.value } : current)} />
                 </label>
                 <label>
+                  국가
+                  <input value={movieEditForm.nation ?? ''} onChange={(event) => setMovieEditForm((current) => current ? { ...current, nation: event.target.value } : current)} />
+                </label>
+                <label>
                   러닝타임
                   <input type="number" min={0} value={movieEditForm.runtimeMinutes ?? ''} onChange={(event) => setMovieEditForm((current) => current ? { ...current, runtimeMinutes: event.target.value ? Number(event.target.value) : undefined } : current)} />
                 </label>
                 <label>
                   장르
-                  <input value={(movieEditForm.genre ?? []).join(', ')} onChange={(event) => setMovieEditForm((current) => current ? { ...current, genre: splitListInput(event.target.value) } : current)} />
+                  <input
+                    value={movieEditRaw.genre}
+                    onChange={(e) => setMovieEditRaw((r) => ({ ...r, genre: e.target.value }))}
+                    onBlur={(e) => setMovieEditForm((f) => f ? { ...f, genre: splitListInput(e.target.value) } : f)}
+                  />
                 </label>
                 <label>
                   감독
-                  <input value={(movieEditForm.director ?? []).join(', ')} onChange={(event) => setMovieEditForm((current) => current ? { ...current, director: splitListInput(event.target.value) } : current)} />
+                  <input
+                    value={movieEditRaw.director}
+                    onChange={(e) => setMovieEditRaw((r) => ({ ...r, director: e.target.value }))}
+                    onBlur={(e) => setMovieEditForm((f) => f ? { ...f, director: splitListInput(e.target.value) } : f)}
+                  />
                 </label>
                 <label className={styles.wideField}>
                   줄거리
@@ -1303,6 +1401,10 @@ function StatusBadge({ status }: { status: AdminShowtimeStatus }) {
   }[status]
 
   return <span className={`${styles.status} ${styles[status]}`}>{label}</span>
+}
+
+function normalizeSearchText(value: string) {
+  return value.replace(/\s+/g, ' ').trim().toLowerCase()
 }
 
 function upsertOption<T extends { id: string }>(options: T[], option: T) {
