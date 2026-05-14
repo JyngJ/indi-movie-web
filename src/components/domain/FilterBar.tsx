@@ -817,11 +817,13 @@ export function FilterBar({ onChange, nationOptions = EMPTY_NATION_OPTIONS }: Fi
           selected={bookable}
           onClick={() => setBookable(b => !b)}
         />
+        {/* 독립영화관 필터 — 미구현, 비활성화
         <FilterChip
           label="독립영화관"
           selected={indie}
           onClick={() => setIndie(b => !b)}
         />
+        */}
       </div>
 
       {openPanel === 'date' && (

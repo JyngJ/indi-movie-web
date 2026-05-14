@@ -862,9 +862,11 @@ export function TheaterSheet({
             display: 'flex',
             gap: 6,
           }}>
+            {/* 즐겨찾기 — 계정 기능 구현 전 비활성화
             <button style={iconBtn} onClick={onFavorite}>
               <IconStar filled={favorited} />
             </button>
+            */}
             <button style={iconBtn} onClick={onClose}>
               <IconClose />
             </button>
@@ -894,9 +896,11 @@ export function TheaterSheet({
             {theater.name}
           </span>
           <div style={{ display: 'flex', gap: 6 }}>
+            {/* 즐겨찾기 — 계정 기능 구현 전 비활성화
             <button style={iconBtn} onClick={onFavorite}>
               <IconStar filled={favorited} />
             </button>
+            */}
             <button style={iconBtn} onClick={onClose}>
               <IconClose />
             </button>

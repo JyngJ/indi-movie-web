@@ -396,7 +396,7 @@ function TheatersTab({ movieId, onMapClick }: { movieId: string; onMapClick: () 
 export function MovieDetailClient({ movieId, theaterId }: { movieId: string; theaterId?: string }) {
   const router = useRouter()
   const [tab, setTab] = useState<'info' | 'theaters'>('info')
-  const [starred, setStarred] = useState(false)
+  // const [starred, setStarred] = useState(false) // 즐겨찾기 — 계정 기능 구현 전 비활성화
   const [titleInNav, setTitleInNav] = useState(false)
   const titleRef = useRef<HTMLHeadingElement>(null)
 
@@ -433,7 +433,7 @@ export function MovieDetailClient({ movieId, theaterId }: { movieId: string; the
     return (
       <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ position: 'sticky', top: 0, zIndex: 50, paddingTop: 'env(safe-area-inset-top)', backgroundColor: 'var(--color-surface-bg)' }}>
-          <NavBar title="영화 정보" titleVisible onBack={handleBack} starred={starred} onStar={() => setStarred(!starred)} />
+          <NavBar title="영화 정보" titleVisible onBack={handleBack} />
         </div>
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}>
           <span style={{ fontSize: 14, color: 'var(--color-text-caption)' }}>영화를 찾을 수 없습니다</span>
@@ -454,12 +454,11 @@ export function MovieDetailClient({ movieId, theaterId }: { movieId: string; the
         paddingTop: 'env(safe-area-inset-top)',
         backgroundColor: 'var(--color-surface-bg)',
       }}>
+        {/* starred / onStar — 즐겨찾기 계정 기능 구현 전 비활성화 */}
         <NavBar
           title={movie.title}
           titleVisible={titleInNav}
           onBack={handleBack}
-          starred={starred}
-          onStar={() => setStarred(!starred)}
         />
       </div>
 

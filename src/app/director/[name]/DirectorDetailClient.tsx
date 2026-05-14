@@ -199,7 +199,7 @@ function FilmographyRow({
 /* ── 메인 ── */
 export function DirectorDetailClient({ directorName }: { directorName: string }) {
   const router = useRouter()
-  const [starred, setStarred] = useState(false)
+  // const [starred, setStarred] = useState(false) // 즐겨찾기 — 계정 기능 구현 전 비활성화
   const [sort, setSort] = useState<SortKey>('newest')
   const [expanded, setExpanded] = useState(false)
   const COLLAPSED_COUNT = 4
@@ -238,7 +238,8 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
         paddingTop: 'env(safe-area-inset-top)',
       }}
     >
-      <NavBar onBack={() => router.back()} starred={starred} onStar={() => setStarred(!starred)} />
+      {/* starred / onStar — 즐겨찾기 계정 기능 구현 전 비활성화 */}
+      <NavBar onBack={() => router.back()} />
 
       <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' as never }}>
         <ProfileHero name={directorName} />
