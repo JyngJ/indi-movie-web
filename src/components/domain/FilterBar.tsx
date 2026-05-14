@@ -586,9 +586,11 @@ function FilterChip({ label, value, open, selected, hasDropdown, onClick, onClea
 export interface FilterBarProps {
   onChange?: (state: FilterState) => void
   nationOptions?: string[]
+  movieFilter?: { id: string; title: string } | null
+  onMovieFilterClear?: () => void
 }
 
-export function FilterBar({ onChange, nationOptions = EMPTY_NATION_OPTIONS }: FilterBarProps) {
+export function FilterBar({ onChange, nationOptions = EMPTY_NATION_OPTIONS, movieFilter, onMovieFilterClear }: FilterBarProps) {
   const [dateId, setDateId] = useState<DateId>('this-week')
   const [customStart, setCustomStart] = useState<Date | null>(null)
   const [customEnd, setCustomEnd] = useState<Date | null>(null)
@@ -780,6 +782,15 @@ export function FilterBar({ onChange, nationOptions = EMPTY_NATION_OPTIONS }: Fi
           background: 'transparent',
         }}
       >
+        {movieFilter && (
+          <FilterChip
+            label="영화"
+            value={movieFilter.title.length > 10 ? movieFilter.title.slice(0, 10) + '…' : movieFilter.title}
+            selected
+            onClick={() => {}}
+            onClear={onMovieFilterClear}
+          />
+        )}
         <FilterChip
           label="상영 일정"
           value={dateLabel}

@@ -1918,43 +1918,13 @@ export default function MapView() {
         </div>
         {/* 필터 칩 */}
         <div style={{ marginTop: 8, pointerEvents: 'auto' }}>
-          <FilterBar onChange={setFilters} nationOptions={nationOptions} />
+          <FilterBar
+            onChange={setFilters}
+            nationOptions={nationOptions}
+            movieFilter={movieFilter}
+            onMovieFilterClear={() => setMovieFilter(null)}
+          />
         </div>
-        {/* 영화 필터 칩 */}
-        {movieFilter && (
-          <div style={{ paddingLeft: 12, marginTop: 6, pointerEvents: 'auto' }}>
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              height: 30, paddingLeft: 12, paddingRight: 6,
-              backgroundColor: 'var(--color-primary-base)',
-              borderRadius: 999,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
-              maxWidth: 'calc(100vw - 24px)',
-            }}>
-              <span style={{
-                fontSize: 12, fontWeight: 600, color: '#fff',
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                maxWidth: 180,
-              }}>
-                🎬 {movieFilter.title}
-              </span>
-              <button
-                onClick={() => setMovieFilter(null)}
-                style={{
-                  flexShrink: 0,
-                  width: 20, height: 20,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  border: 'none', background: 'rgba(255,255,255,0.25)',
-                  borderRadius: '50%', cursor: 'pointer',
-                  color: '#fff', fontSize: 12, lineHeight: 1,
-                }}
-                aria-label="영화 필터 해제"
-              >
-                ×
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
       <div

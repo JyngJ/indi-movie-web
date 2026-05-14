@@ -1319,7 +1319,7 @@ export function TheaterSheet({
                   </button>
                   <div style={{ width: 1, backgroundColor: 'var(--color-border)' }} />
                   <button
-                    onClick={() => onMovieSearch?.(movie.id, movie.title)}
+                    onClick={() => { onMovieSearch?.(movie.id, movie.title); onClose() }}
                     style={{
                       flex: 1, padding: '10px 0',
                       fontSize: 12, fontWeight: 600,
