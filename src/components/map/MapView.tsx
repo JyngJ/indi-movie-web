@@ -364,7 +364,7 @@ interface TheaterPosterMovie {
 
 interface PosterSlot {
   movie?: TheaterPosterMovie
-  overflow?: number
+  overflow?: number | string
   countLabel?: string
 }
 
@@ -374,7 +374,7 @@ function posterSlotsForZoom(movies: TheaterPosterMovie[], zoom: number): PosterS
   if (capacity === 1) {
     return movies.length === 1
       ? [{ movie: movies[0] }]
-      : [{ countLabel: `${movies.length}편` }]
+      : [{ movie: movies[0], overflow: `${movies.length}편` }]
   }
   if (movies.length <= capacity) return movies.slice(0, capacity).map((movie) => ({ movie }))
 

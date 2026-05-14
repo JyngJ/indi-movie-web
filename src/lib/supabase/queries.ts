@@ -85,19 +85,20 @@ export function useStations() {
   })
 }
 
-/* ── 영화 목록 ────────────────────────────────────────────────── */
+/* ── 영화 목록 (경량 — 지도/검색용) ────────────────────────────── */
+// synopsis, runtime, certification, cast 는 movie_details 테이블로 분리됨
 export function useMovies() {
   return useQuery<Movie[]>({
     queryKey: ['movies'],
     queryFn: async () => {
       const primary = await supabase()
         .from('movies')
-        .select('id,title,original_title,year,poster_url,genre,director,nation,synopsis,runtime_minutes,certification,kmdb_id,tmdb_id,rating')
+        .select('id,title,original_title,year,poster_url,genre,director,nation,kmdb_id,tmdb_id,rating')
         .order('title')
       const { data, error } = primary.error && isMissingColumnError(primary.error, 'nation')
         ? await supabase()
           .from('movies')
-          .select('id,title,original_title,year,poster_url,genre,director,synopsis,runtime_minutes,certification,kmdb_id,tmdb_id,rating')
+          .select('id,title,original_title,year,poster_url,genre,director,kmdb_id,tmdb_id,rating')
           .order('title')
         : primary
 
@@ -114,14 +115,67 @@ export function useMovies() {
           genre: (row.genre as string[] | null) ?? [],
           director: (row.director as string[] | null) ?? [],
           nation: row.nation ? String(row.nation) : undefined,
-          synopsis: row.synopsis ? String(row.synopsis) : undefined,
-          runtimeMinutes: row.runtime_minutes ? Number(row.runtime_minutes) : undefined,
-          certification: row.certification ? String(row.certification) : undefined,
           kmdbId: row.kmdb_id ? String(row.kmdb_id) : undefined,
           tmdbId: row.tmdb_id ? Number(row.tmdb_id) : undefined,
           rating: row.rating ? Number(row.rating) : undefined,
         }
       })
+    },
+    staleTime: 10 * 60 * 1000,
+  })
+}
+
+/* ── 영화 상세 (movie_details 조인) ────────────────────────────── */
+export interface MovieDetail extends Movie {
+  synopsis?: string
+  runtimeMinutes?: number
+  certification?: string
+  cast: Array<{ name: string; character?: string; profileUrl?: string }>
+}
+
+export function useMovieDetail(movieId: string | null) {
+  return useQuery<MovieDetail | null>({
+    queryKey: ['movie-detail', movieId],
+    enabled: !!movieId,
+    queryFn: async () => {
+      const { data, error } = await supabase()
+        .from('movies')
+        .select(`
+          id, title, original_title, year, poster_url, genre, director,
+          nation, kmdb_id, tmdb_id, rating,
+          movie_details (
+            synopsis,
+            runtime_minutes,
+            certification,
+            cast
+          )
+        `)
+        .eq('id', movieId!)
+        .single()
+
+      if (error) throw error
+      if (!data) return null
+
+      const row = data as Record<string, unknown>
+      const details = row.movie_details as Record<string, unknown> | null
+
+      return {
+        id: String(row.id),
+        title: String(row.title),
+        originalTitle: row.original_title ? String(row.original_title) : undefined,
+        year: Number(row.year),
+        posterUrl: row.poster_url ? String(row.poster_url) : undefined,
+        genre: (row.genre as string[] | null) ?? [],
+        director: (row.director as string[] | null) ?? [],
+        nation: row.nation ? String(row.nation) : undefined,
+        kmdbId: row.kmdb_id ? String(row.kmdb_id) : undefined,
+        tmdbId: row.tmdb_id ? Number(row.tmdb_id) : undefined,
+        rating: row.rating ? Number(row.rating) : undefined,
+        synopsis: details?.synopsis ? String(details.synopsis) : undefined,
+        runtimeMinutes: details?.runtime_minutes ? Number(details.runtime_minutes) : undefined,
+        certification: details?.certification ? String(details.certification) : undefined,
+        cast: (details?.cast as MovieDetail['cast'] | null) ?? [],
+      }
     },
     staleTime: 10 * 60 * 1000,
   })

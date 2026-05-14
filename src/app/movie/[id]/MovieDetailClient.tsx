@@ -2,9 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useMovies, useMovieTheaterShowtimes, useActiveMovieIds } from '@/lib/supabase/queries'
-import type { Movie } from '@/types/api'
-import type { MovieTheaterEntry } from '@/lib/supabase/queries'
+import { useMovieDetail, useMovieTheaterShowtimes, useActiveMovieIds } from '@/lib/supabase/queries'
+import type { MovieDetail, MovieTheaterEntry } from '@/lib/supabase/queries'
 
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
 const IcoChevronLeft = () => (
@@ -92,7 +91,7 @@ function NavBar({ title, onBack, starred, onStar }: { title: string; onBack: () 
 }
 
 /* ── HeroSection ── */
-function HeroSection({ movie }: { movie: Movie }) {
+function HeroSection({ movie }: { movie: MovieDetail }) {
   return (
     <div style={{
       background: 'linear-gradient(to bottom, var(--color-primary-subtle-l) 0%, var(--color-surface-bg) 100%)',
@@ -200,7 +199,7 @@ function TabBar({ active, onChange }: { active: 'info' | 'theaters'; onChange: (
 }
 
 /* ── InfoTab ── */
-function InfoTab({ movie, onDirectorClick }: { movie: Movie; onDirectorClick: (name: string) => void }) {
+function InfoTab({ movie, onDirectorClick }: { movie: MovieDetail; onDirectorClick: (name: string) => void }) {
   const sectionLabel: React.CSSProperties = {
     fontSize: 11, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase',
     color: 'var(--color-text-caption)', marginBottom: 10,
@@ -438,11 +437,9 @@ export function MovieDetailClient({ movieId }: { movieId: string }) {
   const [tab, setTab] = useState<'info' | 'theaters'>('info')
   const [starred, setStarred] = useState(false)
 
-  const { data: movies = [], isLoading } = useMovies()
+  const { data: movie, isLoading } = useMovieDetail(movieId)
   const { data: activeIds = [] } = useActiveMovieIds()
   void activeIds
-
-  const movie = movies.find((m) => m.id === movieId)
 
   const handleBack = () => router.back()
   const handleDirectorClick = (name: string) => router.push(`/director/${encodeURIComponent(name)}`)
