@@ -1097,8 +1097,14 @@ export default function MapView() {
 
   const activeMovieIdSet = useMemo(() => new Set(activeMovieIds), [activeMovieIds])
   const nationOptions = useMemo(() => {
-    return Array.from(new Set(movies.map((movie) => movie.nation).filter((nation): nation is string => !!nation)))
-      .sort((a, b) => a.localeCompare(b, 'ko'))
+    const set = new Set<string>()
+    for (const movie of movies) {
+      if (!movie.nation) continue
+      for (const n of movie.nation.split(/[,，/·]+/).map(s => s.trim()).filter(Boolean)) {
+        set.add(n)
+      }
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'ko'))
   }, [movies])
 
   const theaterPosterMovies = useMemo(() => {
@@ -1108,7 +1114,12 @@ export default function MapView() {
       if (!showtime.movie) continue
       if (filters.bookable && showtime.seatAvailable <= 0) continue
       if (filters.genres.length > 0 && !showtime.movie.genre.some((genre) => filters.genres.includes(genre))) continue
-      if (filters.nations.length > 0 && (!showtime.movie.nation || !filters.nations.includes(showtime.movie.nation))) continue
+      if (filters.nations.length > 0) {
+        const movieNations = showtime.movie.nation
+          ? showtime.movie.nation.split(/[,，/·]+/).map(s => s.trim()).filter(Boolean)
+          : []
+        if (!movieNations.some(n => filters.nations.includes(n))) continue
+      }
       let theaterMovies = byTheater.get(showtime.theaterId)
       if (!theaterMovies) {
         theaterMovies = new Map()
