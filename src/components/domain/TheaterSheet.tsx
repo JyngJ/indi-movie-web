@@ -273,12 +273,11 @@ export function TheaterSheet({
   }, [selectedMovieId])
 
   /* ── 포스터 축소 진행도 (0 = 풀사이즈, 1 = 미니) — 스크롤에 비례 ── */
-  const [posterProgress, setPosterProgress] = useState(0)
-  const postersCollapsed = posterProgress > 0.5  // 클릭 판단용 threshold
+  const posterProgress = 0
 
   // 시트가 접힐 때 포스터 복원
   useEffect(() => {
-    if (!expanded) setPosterProgress(0)
+    void posterProgress
   }, [expanded])
 
   /* ── 날짜 선택 상태 (ISO date 기준) ── */
@@ -965,8 +964,8 @@ export function TheaterSheet({
         />
       )}
 
-      {/* ── 포스터 가로 스크롤 — 항상 표시 (collapsed에서 핵심) ── */}
-      <div style={{
+      {/* ── 포스터 가로 스크롤 — collapsed 전용 ── */}
+      {!expanded && <div style={{
         borderTop: '1px solid var(--color-border)',
         borderBottom: '1px solid var(--color-border)',
         backgroundColor: 'var(--color-surface-bg)',
@@ -986,7 +985,7 @@ export function TheaterSheet({
             paddingRight: 20,
             paddingBottom: 14 - 6 * posterProgress, // 14 → 8
             scrollbarWidth: 'none',
-            cursor: postersCollapsed ? 'pointer' : 'grab',
+            cursor: 'grab',
             userSelect: 'none',
             touchAction: 'none',
           }}
@@ -1041,9 +1040,6 @@ export function TheaterSheet({
                               onClick={unavailable ? undefined : () => {
                                 onMovieSelect(movie.id)
                                 if (!expanded) onExpand()
-                                if (postersCollapsed) {
-                                  scrollAreaRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
-                                }
                               }}
                             />
                             {/* 매진 배지 */}
@@ -1132,18 +1128,117 @@ export function TheaterSheet({
                 })()
           }
         </div>
-      </div>
+      </div>}
 
       {/* ── 시놉시스 + 상영시간표 — expanded에서 함께 스크롤 ──── */}
       {expanded && (
         <div
           ref={scrollAreaRef}
           style={{ flex: 1, overflowY: 'scroll', WebkitOverflowScrolling: 'touch' as never, overscrollBehavior: 'none' }}
-          onScroll={(e) => {
-            const top = e.currentTarget.scrollTop
-            setPosterProgress(Math.min(1, Math.max(0, top / 120)))
-          }}
         >
+          {/* ── 포스터 가로 스크롤 — expanded에서 스크롤과 함께 ── */}
+          <div style={{
+            borderBottom: '1px solid var(--color-border)',
+            backgroundColor: 'var(--color-surface-bg)',
+          }}>
+            <div
+              ref={posterScrollRef}
+              style={{
+                display: 'flex',
+                gap: 12,
+                overflowX: 'auto',
+                paddingTop: 22,
+                paddingLeft: 20,
+                paddingRight: 20,
+                paddingBottom: 14,
+                scrollbarWidth: 'none',
+                cursor: 'grab',
+                userSelect: 'none',
+                touchAction: 'none',
+              }}
+            >
+              {allMoviesLoading
+                ? Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} style={{ flexShrink: 0, width: 88 }}>
+                      <Skeleton width={88} height={132} style={{ borderRadius: 6 }} />
+                      <Skeleton width={70} height={11} style={{ marginTop: 6, borderRadius: 4 }} />
+                      <Skeleton width={50} height={10} style={{ marginTop: 3, borderRadius: 4 }} />
+                    </div>
+                  ))
+                : allMovieEntries.length === 0
+                  ? (
+                      <div style={{
+                        flex: 1, display: 'flex', flexDirection: 'column',
+                        alignItems: 'center', justifyContent: 'center',
+                        padding: '6px 0 12px', gap: 8, minWidth: '100%',
+                      }}>
+                        <img src="/closed.svg" alt="" style={{ width: 72, height: 92, opacity: 0.5 }} />
+                        <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>상영 예정 정보가 없습니다</span>
+                      </div>
+                    )
+                  : allMovieEntries.map((entry) => {
+                      const { movie } = entry
+                      const unavailable = !entry.availableDates.has(selectedIsoDate)
+                      const soldout = !unavailable && soldoutMovieIds.has(movie.id)
+                      return (
+                        <div key={movie.id} style={{ flexShrink: 0, width: 88, overflow: 'visible' }}>
+                          <div style={{ width: 88 }}>
+                            <div style={{ position: 'relative' }}>
+                              <PosterThumb
+                                width={88} height={132} size="lg"
+                                src={movie.posterUrl}
+                                selected={selectedMovieId === movie.id}
+                                onClick={unavailable ? undefined : () => { onMovieSelect(movie.id) }}
+                              />
+                              {soldout && (
+                                <div style={{
+                                  position: 'absolute', bottom: 6, right: 6,
+                                  height: 20, padding: '0 6px', borderRadius: 4,
+                                  display: 'inline-flex', alignItems: 'center',
+                                  fontSize: 10, fontWeight: 700, color: '#fff',
+                                  backgroundColor: 'var(--color-error)',
+                                  pointerEvents: 'none', zIndex: 2,
+                                }}>매진</div>
+                              )}
+                              {unavailable && (
+                                <div
+                                  onClick={() => onMovieSelect(movie.id)}
+                                  style={{
+                                    position: 'absolute', inset: 0,
+                                    borderRadius: 'var(--comp-poster-sheet-radius)',
+                                    background: 'rgba(10, 8, 6, 0.72)',
+                                    display: 'flex', flexDirection: 'column',
+                                    alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                                  }}
+                                >
+                                  <span style={{ fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.75)', textAlign: 'center', lineHeight: 1.4, padding: '0 4px' }}>
+                                    상영 일정<br />없음
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            <div style={{
+                              marginTop: 6, fontSize: 11, fontWeight: 600,
+                              color: 'var(--color-text-primary)', fontFamily: 'var(--font-serif)',
+                              lineHeight: 1.35, overflow: 'hidden',
+                              display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+                              opacity: unavailable ? 0.4 : 1,
+                            }}>{movie.title}</div>
+                            {movie.director && movie.director.length > 0 && (
+                              <div style={{
+                                marginTop: 3, fontSize: 10, color: 'var(--color-text-caption)',
+                                overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
+                                opacity: unavailable ? 0.3 : 1,
+                              }}>{movie.director[0]}</div>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })
+              }
+            </div>
+          </div>
+
           {/* 시놉시스 아코디언 */}
           {(() => {
             const displayedMovie = allMovieEntries.find((e) => e.movie.id === displayedSynopsisId)?.movie
