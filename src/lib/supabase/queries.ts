@@ -325,7 +325,7 @@ export function useTheaterAllMovies(theaterId: string | null) {
           show_date,
           movies (
             id, title, original_title, year, poster_url, genre, director,
-            nation, synopsis, runtime_minutes, certification, kmdb_id, tmdb_id, rating
+            nation, kmdb_id, tmdb_id, rating
           )
         `)
         .eq('theater_id', theaterId!)
@@ -343,7 +343,7 @@ export function useTheaterAllMovies(theaterId: string | null) {
             show_date,
             movies (
               id, title, original_title, year, poster_url, genre, director,
-              synopsis, runtime_minutes, certification, kmdb_id, tmdb_id, rating
+              kmdb_id, tmdb_id, rating
             )
           `)
           .eq('theater_id', theaterId!)
@@ -373,9 +373,6 @@ export function useTheaterAllMovies(theaterId: string | null) {
               genre: (m.genre as string[]) ?? [],
               director: (m.director as string[]) ?? [],
               nation: m.nation ? String(m.nation) : undefined,
-              synopsis: m.synopsis ? String(m.synopsis) : undefined,
-              runtimeMinutes: m.runtime_minutes ? Number(m.runtime_minutes) : undefined,
-              certification: m.certification ? String(m.certification) : undefined,
               kmdbId: m.kmdb_id ? String(m.kmdb_id) : undefined,
               tmdbId: m.tmdb_id ? Number(m.tmdb_id) : undefined,
               rating: m.rating ? Number(m.rating) : undefined,
@@ -428,9 +425,6 @@ export function useTheaterShowtimes(theaterId: string | null, date: string) {
             genre,
             director,
             nation,
-            synopsis,
-            runtime_minutes,
-            certification,
             kmdb_id,
             tmdb_id,
             rating
@@ -464,9 +458,6 @@ export function useTheaterShowtimes(theaterId: string | null, date: string) {
               poster_url,
               genre,
               director,
-              synopsis,
-              runtime_minutes,
-              certification,
               kmdb_id,
               tmdb_id,
               rating
@@ -496,9 +487,6 @@ export function useTheaterShowtimes(theaterId: string | null, date: string) {
           genre: (m.genre as string[]) ?? [],
           director: (m.director as string[]) ?? [],
           nation: m.nation ? String(m.nation) : undefined,
-          synopsis: m.synopsis ? String(m.synopsis) : undefined,
-          runtimeMinutes: m.runtime_minutes ? Number(m.runtime_minutes) : undefined,
-          certification: m.certification ? String(m.certification) : undefined,
           kmdbId: m.kmdb_id ? String(m.kmdb_id) : undefined,
           tmdbId: m.tmdb_id ? Number(m.tmdb_id) : undefined,
           rating: m.rating ? Number(m.rating) : undefined,
