@@ -625,6 +625,12 @@ export function TheaterSheet({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expanded, allMoviesLoading, theaterAvailableDates])
 
+  /* ── 선택된 상영 회차 ── */
+  const [selectedShowtimeId, setSelectedShowtimeId] = useState<string | null>(null)
+
+  useEffect(() => { setSelectedShowtimeId(null) }, [selectedMovieId])
+  useEffect(() => { if (!expanded) setSelectedShowtimeId(null) }, [expanded])
+
   /* ── 상영시간 필터링 ─────────────────────────────────────────── */
   const filteredShowtimes = showtimes.filter((s) => s.movieId === selectedMovieId)
 
@@ -1135,7 +1141,6 @@ export function TheaterSheet({
           style={{ flex: 1, overflowY: 'scroll', WebkitOverflowScrolling: 'touch' as never, overscrollBehavior: 'none' }}
           onScroll={(e) => {
             const top = e.currentTarget.scrollTop
-            // 스크롤 0→120px 구간에서 0→1로 선형 매핑
             setPosterProgress(Math.min(1, Math.max(0, top / 120)))
           }}
         >
@@ -1153,7 +1158,7 @@ export function TheaterSheet({
           })()}
 
           {/* 상영시간표 */}
-          <div style={{ padding: '20px 20px 40px' }}>
+          <div style={{ padding: `20px 20px ${selectedShowtimeId ? 88 : 40}px` }}>
             {showtimesLoading ? (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {Array.from({ length: 4 }).map((_, i) => (
@@ -1187,6 +1192,8 @@ export function TheaterSheet({
                       seatTotal={st.seatTotal}
                       screenName={st.screenName}
                       kind={kind}
+                      selected={st.id === selectedShowtimeId}
+                      onClick={kind !== 'soldout' ? () => setSelectedShowtimeId((prev) => prev === st.id ? null : st.id) : undefined}
                     />
                   )
                 })}
@@ -1195,6 +1202,44 @@ export function TheaterSheet({
           </div>
         </div>
       )}
+      {/* ── 예매 바 — 회차 선택 시 하단에서 슬라이드 업 ── */}
+      {expanded && (() => {
+        const selectedSt = filteredShowtimes.find((st) => st.id === selectedShowtimeId)
+        return (
+          <div style={{
+            position: 'absolute',
+            left: 0, right: 0, bottom: 0,
+            transform: selectedShowtimeId ? 'translateY(0)' : 'translateY(100%)',
+            transition: 'transform 0.28s cubic-bezier(0.32, 0.72, 0, 1)',
+            backgroundColor: 'var(--color-surface-card)',
+            borderTop: '1px solid var(--color-border)',
+            padding: '12px 20px',
+            paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
+            zIndex: 10,
+          }}>
+            <button
+              disabled={!selectedSt?.bookingUrl}
+              onClick={() => {
+                if (selectedSt?.bookingUrl) window.open(selectedSt.bookingUrl, '_blank', 'noopener')
+              }}
+              style={{
+                width: '100%',
+                height: 50,
+                borderRadius: 'var(--radius-full)',
+                backgroundColor: selectedSt?.bookingUrl ? 'var(--color-primary-base)' : 'var(--color-neutral-600)',
+                color: '#fff',
+                fontSize: 16,
+                fontWeight: 700,
+                border: 'none',
+                cursor: selectedSt?.bookingUrl ? 'pointer' : 'default',
+                letterSpacing: '-0.2px',
+              }}
+            >
+              예매하러가기
+            </button>
+          </div>
+        )
+      })()}
     </div>
     </>
   )
