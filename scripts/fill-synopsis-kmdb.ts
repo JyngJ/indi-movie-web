@@ -71,11 +71,11 @@ async function main() {
     title: string
     kmdb_id: string
     kmdb_movie_seq: string
-    movie_details: { synopsis: string | null } | null
+    movie_details: { synopsis: string | null }[] | null
   }
 
-  const targets = (movies as MovieRow[]).filter(m => {
-    const s = m.movie_details?.synopsis
+  const targets = (movies as unknown as MovieRow[]).filter(m => {
+    const s = Array.isArray(m.movie_details) ? m.movie_details[0]?.synopsis : (m.movie_details as { synopsis?: string } | null)?.synopsis
     return !s || s.trim().length === 0
   })
 
