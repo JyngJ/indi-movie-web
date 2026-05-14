@@ -147,7 +147,7 @@ export function useMovieDetail(movieId: string | null) {
             synopsis,
             runtime_minutes,
             certification,
-            cast
+            cast_members
           )
         `)
         .eq('id', movieId!)
@@ -174,7 +174,7 @@ export function useMovieDetail(movieId: string | null) {
         synopsis: details?.synopsis ? String(details.synopsis) : undefined,
         runtimeMinutes: details?.runtime_minutes ? Number(details.runtime_minutes) : undefined,
         certification: details?.certification ? String(details.certification) : undefined,
-        cast: (details?.cast as MovieDetail['cast'] | null) ?? [],
+        cast: (details?.cast_members as MovieDetail['cast'] | null) ?? [],
       }
     },
     staleTime: 10 * 60 * 1000,

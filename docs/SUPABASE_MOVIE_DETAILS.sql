@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS movie_details (
   certification   TEXT,
 
   /* 출연진 — [{name, character, profile_url}] */
-  cast            JSONB NOT NULL DEFAULT '[]'::jsonb,
+  cast_members    JSONB NOT NULL DEFAULT '[]'::jsonb,
 
   /* 예고편 URL, 수상 이력 등 향후 확장용 */
   trailer_url     TEXT,
