@@ -360,35 +360,48 @@ interface TheaterPosterMovie {
   genre: string[]
   nation?: string
   showtimeCount: number
+  hasAvailableSeats: boolean
+  matchesFilter: boolean
 }
 
 interface PosterSlot {
   movie?: TheaterPosterMovie
   overflow?: number | string
   countLabel?: string
+  dimmed?: boolean
 }
 
-function posterSlotsForZoom(movies: TheaterPosterMovie[], zoom: number): PosterSlot[] {
+function posterSlotsForZoom(movies: TheaterPosterMovie[], zoom: number, filtersActive = false): PosterSlot[] {
   const capacity = posterCountForZoom(zoom)
   if (capacity === 0 || movies.length === 0) return []
+
+  // 매칭 영화 먼저, 미매칭 나중
+  const sorted = filtersActive
+    ? [...movies].sort((a, b) => Number(b.matchesFilter) - Number(a.matchesFilter))
+    : movies
+
+  const dim = (m: TheaterPosterMovie) => filtersActive && !m.matchesFilter
+
   if (capacity === 1) {
-    return movies.length === 1
-      ? [{ movie: movies[0] }]
-      : [{ movie: movies[0], overflow: `${movies.length}편` }]
+    return sorted.length === 1
+      ? [{ movie: sorted[0], dimmed: dim(sorted[0]) }]
+      : [{ movie: sorted[0], overflow: `${sorted.length}편`, dimmed: dim(sorted[0]) }]
   }
-  if (movies.length <= capacity) return movies.slice(0, capacity).map((movie) => ({ movie }))
+  if (sorted.length <= capacity) return sorted.map((m) => ({ movie: m, dimmed: dim(m) }))
 
   const visiblePosterCount = capacity - 1
   return [
-    ...movies.slice(0, visiblePosterCount).map((movie) => ({ movie })),
-    { movie: movies[visiblePosterCount], overflow: movies.length - visiblePosterCount },
+    ...sorted.slice(0, visiblePosterCount).map((m) => ({ movie: m, dimmed: dim(m) })),
+    { movie: sorted[visiblePosterCount], overflow: sorted.length - visiblePosterCount, dimmed: dim(sorted[visiblePosterCount]) },
   ]
 }
 
-function PosterGrid({ slots, tailDir, tailOffset = 0 }: {
+function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filtersActive = false }: {
   slots: PosterSlot[]
   tailDir?: 'up' | 'right'
   tailOffset?: number
+  matchCount?: number
+  filtersActive?: boolean
 }) {
   const count = slots.length
   const perRow = count > 3 ? 3 : count
@@ -436,6 +449,25 @@ function PosterGrid({ slots, tailDir, tailOffset = 0 }: {
         position: 'relative',
         zIndex: 1,
       }}>
+        {filtersActive && matchCount != null && matchCount > 0 && (
+          <div style={{
+            position: 'absolute',
+            top: -8,
+            right: -8,
+            backgroundColor: 'var(--color-primary-base)',
+            color: '#fff',
+            borderRadius: 999,
+            padding: '2px 7px',
+            fontSize: 10,
+            fontWeight: 700,
+            zIndex: 10,
+            whiteSpace: 'nowrap',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+            border: '1.5px solid var(--color-surface-bg)',
+          }}>
+            {matchCount}편 일치
+          </div>
+        )}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, position: 'relative', zIndex: 1 }}>
           {Array.from({ length: count > 3 ? 2 : 1 }).map((_, row) => (
             <div key={row} style={{ display: 'flex', gap: 4 }}>
@@ -465,15 +497,31 @@ function PosterGrid({ slots, tailDir, tailOffset = 0 }: {
                       {slot.countLabel}
                     </div>
                   ) : (
-                    <PosterThumb
-                      key={idx}
-                      src={slot.movie?.posterUrl}
-                      alt={slot.movie?.title ?? ''}
-                      width={44}
-                      height={66}
-                      size="sm"
-                      overflow={slot.overflow}
-                    />
+                    <div key={idx} style={{ position: 'relative', width: 44, height: 66, opacity: slot.dimmed ? 0.5 : 1 }}>
+                      <PosterThumb
+                        src={slot.movie?.posterUrl}
+                        alt={slot.movie?.title ?? ''}
+                        width={44}
+                        height={66}
+                        size="sm"
+                        overflow={slot.overflow}
+                      />
+                      {slot.dimmed && (
+                        <div style={{
+                          position: 'absolute',
+                          inset: 0,
+                          borderRadius: 'var(--comp-poster-radius)',
+                          backgroundColor: 'rgba(0,0,0,0.45)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}>
+                          <span style={{ fontSize: 8, fontWeight: 700, color: 'rgba(255,255,255,0.85)', textAlign: 'center', lineHeight: 1.3 }}>
+                            조건{'\n'}외
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   )
                 )
               })}
@@ -500,11 +548,13 @@ function makePinIcon(
   selected: boolean,
   zoom: number,
   posterMovies: TheaterPosterMovie[],
+  filtersActive = false,
   posterOffsetX = 0,
   labelOffset: LabelOffset = { x: 0, y: 0 },
 ) {
   const safePosterOffsetX = finiteNumber(posterOffsetX)
-  const slots = posterSlotsForZoom(posterMovies, zoom)
+  const slots = posterSlotsForZoom(posterMovies, zoom, filtersActive)
+  const matchCount = filtersActive ? posterMovies.filter(m => m.matchesFilter).length : undefined
   const numRows = slots.length > 3 ? 2 : slots.length > 0 ? 1 : 0
   const usePosterLeft = slots.length > 0 && safePosterOffsetX < -50
   const posterH = usePosterLeft || numRows === 0 ? 0 : 66 * numRows + 4 * (numRows - 1) + 6
@@ -516,6 +566,8 @@ function makePinIcon(
         slots={slots}
         tailDir={usePosterLeft ? 'right' : 'up'}
         tailOffset={usePosterLeft ? 0 : safePosterOffsetX}
+        matchCount={matchCount}
+        filtersActive={filtersActive}
       />
     )
     if (usePosterLeft) {
@@ -725,7 +777,7 @@ function computeCoLocationOffsets(
     const center = group[0]
     const centerPx = map.latLngToContainerPoint([center.lat, center.lng] as [number, number])
     group.forEach((t, idx) => {
-      const angle = (2 * Math.PI * idx) / group.length
+      const angle = (2 * Math.PI * idx) / group.length + Math.PI / 4
       const offsetPx = L.point(
         centerPx.x + CO_LOCATE_PIXEL_RADIUS * Math.sin(angle),
         centerPx.y - CO_LOCATE_PIXEL_RADIUS * Math.cos(angle),
@@ -1115,25 +1167,26 @@ export default function MapView() {
 
     for (const showtime of mapShowtimes) {
       if (!showtime.movie) continue
-      if (movieFilter && showtime.movieId !== movieFilter.id) continue
-      if (filters.bookable && showtime.seatAvailable <= 0) continue
-      if (filters.genres.length > 0 && !showtime.movie.genre.some((genre) => filters.genres.includes(genre))) continue
-      if (filters.nations.length > 0) {
-        const movieNations = showtime.movie.nation
-          ? showtime.movie.nation.split(/[,，/·]+/).map(s => s.trim()).filter(Boolean)
-          : []
-        if (!movieNations.some(n => filters.nations.includes(n))) continue
-      }
+
       let theaterMovies = byTheater.get(showtime.theaterId)
       if (!theaterMovies) {
         theaterMovies = new Map()
         byTheater.set(showtime.theaterId, theaterMovies)
       }
 
+      const hasSeats = showtime.seatAvailable > 0
       const current = theaterMovies.get(showtime.movieId)
       if (current) {
         current.showtimeCount += 1
+        if (hasSeats) current.hasAvailableSeats = true
       } else {
+        const matchesMovieFilter = !movieFilter || showtime.movieId === movieFilter.id
+        const matchesGenre = filters.genres.length === 0 || showtime.movie.genre.some(g => filters.genres.includes(g))
+        const matchesNation = (() => {
+          if (filters.nations.length === 0) return true
+          const ns = showtime.movie.nation?.split(/[,，/·]+/).map(s => s.trim()).filter(Boolean) ?? []
+          return ns.some(n => filters.nations.includes(n))
+        })()
         theaterMovies.set(showtime.movieId, {
           id: showtime.movie.id,
           title: showtime.movie.title,
@@ -1141,12 +1194,17 @@ export default function MapView() {
           genre: showtime.movie.genre,
           nation: showtime.movie.nation,
           showtimeCount: 1,
+          hasAvailableSeats: hasSeats,
+          matchesFilter: matchesMovieFilter && matchesGenre && matchesNation,
         })
       }
     }
 
     const result = new Map<string, TheaterPosterMovie[]>()
     for (const [theaterId, movieMap] of byTheater) {
+      for (const movie of movieMap.values()) {
+        if (filters.bookable && !movie.hasAvailableSeats) movie.matchesFilter = false
+      }
       result.set(
         theaterId,
         Array.from(movieMap.values()).sort((a, b) =>
@@ -1835,7 +1893,7 @@ export default function MapView() {
           // 클러스터 마커 (2개 이상) — 클릭 시 줌인
           if (cluster.theaters.length > 1) {
             const clusterDimmed = filtersActive && cluster.theaters.every(
-              (t) => (theaterPosterMovies.get(t.id) ?? []).length === 0
+              (t) => (theaterPosterMovies.get(t.id) ?? []).every(m => !m.matchesFilter)
             )
             return (
               <Marker
@@ -1879,7 +1937,7 @@ export default function MapView() {
             : [theater.lat, theater.lng]
           const offsetX = posterOffsets.get(theater.id) ?? 0
           const posterMovies = theaterPosterMovies.get(theater.id) ?? []
-          const dimmed = filtersActive && posterMovies.length === 0
+          const dimmed = filtersActive && posterMovies.every(m => !m.matchesFilter)
           return (
             <Marker
               key={theater.id}
@@ -1890,6 +1948,7 @@ export default function MapView() {
                 selectedId === theater.id,
                 zoom,
                 posterMovies,
+                filtersActive,
                 offsetX,
                 labelOffsets.get(theater.id),
               )}
@@ -2081,6 +2140,7 @@ export default function MapView() {
           onMovieSearch={(movieId, movieTitle) => setMovieFilter({ id: movieId, title: movieTitle })}
           favorited={false}
           onFavorite={() => { /* Phase 4 */ }}
+          mapFilters={{ genres: filters.genres, nations: filters.nations }}
         />
       )}
     </div>

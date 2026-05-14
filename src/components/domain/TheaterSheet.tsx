@@ -102,6 +102,13 @@ const IconChevronRight = ({ size = 13 }: { size?: number }) => (
   </svg>
 )
 
+const IconFilter = ({ size = 13 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+  </svg>
+)
+
 /* ── 시놉시스 카드 ──────────────────────────────────────────────── */
 interface SynopsisCardProps {
   synopsis: string
@@ -199,6 +206,13 @@ function buildDays(count = 7, availableDates?: Set<string>): Day[] {
   })
 }
 
+/* ── Sheet filter ───────────────────────────────────────────────── */
+interface SheetFilterState {
+  genres: string[]
+  nations: string[]
+  bookable: boolean
+}
+
 /* ── Props ──────────────────────────────────────────────────────── */
 interface TheaterSheetProps {
   theater: Theater
@@ -212,6 +226,7 @@ interface TheaterSheetProps {
   onMovieSearch?: (movieId: string, movieTitle: string) => void
   favorited?: boolean
   onFavorite?: () => void
+  mapFilters?: { genres: string[]; nations: string[] }
 }
 
 /* ── 메인 컴포넌트 ──────────────────────────────────────────────── */
@@ -227,9 +242,15 @@ export function TheaterSheet({
   onMovieSearch,
   favorited = false,
   onFavorite,
+  mapFilters,
 }: TheaterSheetProps) {
 
   const router = useRouter()
+
+  /* ── Sheet filter state ─────────────────────────────────────── */
+  const [sheetFilters, setSheetFilters] = useState<SheetFilterState>({ genres: [], nations: [], bookable: false })
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false)
+  const [pendingFilters, setPendingFilters] = useState<SheetFilterState>({ genres: [], nations: [], bookable: false })
 
   /* ── 진입 애니메이션 ─────────────────────────────────────────── */
   // 마운트 직후 translateY = window.innerHeight → 다음 프레임에 정상 위치로 전환
@@ -296,6 +317,34 @@ export function TheaterSheet({
 
   const days = buildDays(7, theaterAvailableDates)
   const selectedDate = days.find((d) => d.isoDate === selectedIsoDate)?.date ?? days[0].date
+
+  /* ── 바텀시트 필터 — 이 극장 영화에서만 가능한 장르/국가 ── */
+  const availableGenres = useMemo(() => {
+    const s = new Set<string>()
+    for (const entry of allMovieEntries) for (const g of entry.movie.genre) s.add(g)
+    return Array.from(s)
+  }, [allMovieEntries])
+
+  const availableNations = useMemo(() => {
+    const s = new Set<string>()
+    for (const entry of allMovieEntries) {
+      if (!entry.movie.nation) continue
+      for (const n of entry.movie.nation.split(/[,，/·]+/).map(x => x.trim()).filter(Boolean)) s.add(n)
+    }
+    return Array.from(s)
+  }, [allMovieEntries])
+
+  /* 펼칠 때 지도 필터 상속, 접을 때 초기화 */
+  useEffect(() => {
+    if (expanded) {
+      setSheetFilters({ genres: mapFilters?.genres ?? [], nations: mapFilters?.nations ?? [], bookable: false })
+    } else {
+      setSheetFilters({ genres: [], nations: [], bookable: false })
+      setFilterSheetOpen(false)
+    }
+    // mapFilters는 open 시점에만 읽음
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expanded])
 
   /* ── 드래그 상태 ── */
   const containerRef    = useRef<HTMLDivElement>(null)
@@ -614,6 +663,31 @@ export function TheaterSheet({
     return ids
   }, [showtimes])
 
+  /* ── 바텀시트 필터 적용 결과 ── */
+  const bookableMovieIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (const entry of allMovieEntries) {
+      if (!entry.availableDates.has(selectedIsoDate)) continue
+      if (soldoutMovieIds.has(entry.movie.id)) continue
+      ids.add(entry.movie.id)
+    }
+    return ids
+  }, [allMovieEntries, selectedIsoDate, soldoutMovieIds])
+
+  const filteredMovieEntries = useMemo(() => {
+    const { genres, nations, bookable } = sheetFilters
+    if (genres.length === 0 && nations.length === 0 && !bookable) return allMovieEntries
+    return allMovieEntries.filter(entry => {
+      const matchesGenre = genres.length === 0 || entry.movie.genre.some(g => genres.includes(g))
+      const matchesNation = nations.length === 0 || (() => {
+        const ns = entry.movie.nation?.split(/[,，/·]+/).map(x => x.trim()).filter(Boolean) ?? []
+        return ns.some(n => nations.includes(n))
+      })()
+      const matchesBookable = !bookable || bookableMovieIds.has(entry.movie.id)
+      return matchesGenre && matchesNation && matchesBookable
+    })
+  }, [allMovieEntries, sheetFilters, bookableMovieIds])
+
   /* ── 펼칠 때 오늘 상영 없으면 가장 빠른 날로 자동 이동 ── */
   useEffect(() => {
     if (!expanded || allMoviesLoading) return
@@ -689,8 +763,19 @@ export function TheaterSheet({
 
   const openInstagram = () => {
     const instagramUrl = (theater as Theater & { instagramUrl?: string }).instagramUrl
-    const url = instagramUrl || `https://www.instagram.com/explore/search/keyword/?q=${encodeURIComponent(theater.name)}`
-    window.open(url, '_blank', 'noopener')
+    const username = instagramUrl?.match(/instagram\.com\/([^/?#]+)/)?.[1]
+
+    if (!username) {
+      const webUrl = instagramUrl || `https://www.instagram.com/explore/search/keyword/?q=${encodeURIComponent(theater.name)}`
+      window.open(webUrl, '_blank', 'noopener')
+      return
+    }
+
+    // 앱 딥링크 시도 — 앱이 열리면 window blur 발생 → fallback 취소
+    const webUrl = `https://www.instagram.com/${username}/`
+    const fallback = setTimeout(() => window.open(webUrl, '_blank', 'noopener'), 1500)
+    window.addEventListener('blur', () => clearTimeout(fallback), { once: true })
+    window.location.href = `instagram://user?username=${username}`
   }
 
   /* ── 공통 아이콘 버튼 스타일 ─────────────────────────────────── */
@@ -1139,17 +1224,115 @@ export function TheaterSheet({
           </div>
 
           {/* ── 포스터 가로 스크롤 — expanded에서 스크롤과 함께 ── */}
+          {(() => {
+            const activeCount = sheetFilters.genres.length + sheetFilters.nations.length + (sheetFilters.bookable ? 1 : 0)
+            const filtersOn = activeCount > 0
+            const total = allMovieEntries.length
+            const matched = filteredMovieEntries.length
+            const matchedIds = filtersOn ? new Set(filteredMovieEntries.map(e => e.movie.id)) : null
+            const nonMatchingEntries = filtersOn ? allMovieEntries.filter(e => !matchedIds!.has(e.movie.id)) : []
+            return (
           <div style={{
             borderBottom: '1px solid var(--color-border)',
             backgroundColor: 'var(--color-surface-bg)',
           }}>
+            {/* 필터 행 */}
+            {(availableGenres.length > 0 || availableNations.length > 0) && (
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                paddingLeft: 16, paddingRight: 16, paddingTop: 8, paddingBottom: 2,
+              }}>
+                {/* 왼쪽: 편수 + 활성 칩들 */}
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, overflowX: 'auto', scrollbarWidth: 'none' }}>
+                  <span style={{
+                    flexShrink: 0, fontSize: 13, fontWeight: 600,
+                    color: filtersOn ? 'var(--color-primary-base)' : 'var(--color-text-sub)',
+                    whiteSpace: 'nowrap',
+                    lineHeight: 1,
+                  }}>
+                    {filtersOn ? `${matched}/${total}편` : `${total}편 상영`}
+                  </span>
+                  {sheetFilters.genres.map(g => (
+                    <button
+                      key={`g:${g}`}
+                      onClick={() => setSheetFilters(prev => ({ ...prev, genres: prev.genres.filter(x => x !== g) }))}
+                      style={{
+                        flexShrink: 0, height: 22, padding: '0 6px 0 8px',
+                        borderRadius: 999,
+                        border: '1px solid var(--color-primary-base)',
+                        backgroundColor: 'var(--color-primary-subtle-l)',
+                        color: 'var(--color-primary-base)',
+                        fontSize: 10, fontWeight: 600, cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: 3, minHeight: 'auto',
+                      }}
+                    >
+                      {g}
+                      <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+                    </button>
+                  ))}
+                  {sheetFilters.nations.map(n => (
+                    <button
+                      key={`n:${n}`}
+                      onClick={() => setSheetFilters(prev => ({ ...prev, nations: prev.nations.filter(x => x !== n) }))}
+                      style={{
+                        flexShrink: 0, height: 22, padding: '0 6px 0 8px',
+                        borderRadius: 999,
+                        border: '1px solid var(--color-primary-base)',
+                        backgroundColor: 'var(--color-primary-subtle-l)',
+                        color: 'var(--color-primary-base)',
+                        fontSize: 10, fontWeight: 600, cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: 3, minHeight: 'auto',
+                      }}
+                    >
+                      {n}
+                      <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+                    </button>
+                  ))}
+                  {sheetFilters.bookable && (
+                    <button
+                      onClick={() => setSheetFilters(prev => ({ ...prev, bookable: false }))}
+                      style={{
+                        flexShrink: 0, height: 22, padding: '0 6px 0 8px',
+                        borderRadius: 999,
+                        border: '1px solid var(--color-primary-base)',
+                        backgroundColor: 'var(--color-primary-subtle-l)',
+                        color: 'var(--color-primary-base)',
+                        fontSize: 10, fontWeight: 600, cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: 3, minHeight: 'auto',
+                      }}
+                    >
+                      예매가능
+                      <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+                    </button>
+                  )}
+                </div>
+                {/* 오른쪽: 필터 버튼 */}
+                <button
+                  onClick={() => { setPendingFilters(sheetFilters); setFilterSheetOpen(true) }}
+                  style={{
+                    flexShrink: 0, height: 26, padding: '0 10px',
+                    borderRadius: 999,
+                    border: '1px solid',
+                    borderColor: filtersOn ? 'var(--color-primary-base)' : 'var(--color-border)',
+                    backgroundColor: filtersOn ? 'var(--color-primary-subtle-l)' : 'transparent',
+                    color: filtersOn ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
+                    fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 4, minHeight: 'auto',
+                  }}
+                >
+                  <IconFilter size={11} />
+                  필터{activeCount > 0 ? ` ${activeCount}` : ''}
+                </button>
+              </div>
+            )}
+
             <div
               ref={posterScrollRef}
               style={{
                 display: 'flex',
                 gap: 12,
                 overflowX: 'auto',
-                paddingTop: 22,
+                paddingTop: 14,
                 paddingLeft: 20,
                 paddingRight: 20,
                 paddingBottom: 14,
@@ -1178,68 +1361,118 @@ export function TheaterSheet({
                         <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>상영 예정 정보가 없습니다</span>
                       </div>
                     )
-                  : allMovieEntries.map((entry) => {
-                      const { movie } = entry
-                      const unavailable = !entry.availableDates.has(selectedIsoDate)
-                      const soldout = !unavailable && soldoutMovieIds.has(movie.id)
-                      return (
-                        <div key={movie.id} style={{ flexShrink: 0, width: 88, overflow: 'visible' }}>
-                          <div style={{ width: 88 }}>
-                            <div style={{ position: 'relative' }}>
-                              <PosterThumb
-                                width={88} height={132} size="lg"
-                                src={movie.posterUrl}
-                                selected={selectedMovieId === movie.id}
-                                onClick={unavailable ? undefined : () => { onMovieSelect(movie.id) }}
-                              />
-                              {soldout && (
+                  : <>
+                      {/* 조건 일치 영화 */}
+                      {filteredMovieEntries.map((entry) => {
+                        const { movie } = entry
+                        const unavailable = !entry.availableDates.has(selectedIsoDate)
+                        const soldout = !unavailable && soldoutMovieIds.has(movie.id)
+                        return (
+                          <div key={movie.id} style={{ flexShrink: 0, width: 88, overflow: 'visible' }}>
+                            <div style={{ width: 88 }}>
+                              <div style={{ position: 'relative' }}>
+                                <PosterThumb
+                                  width={88} height={132} size="lg"
+                                  src={movie.posterUrl}
+                                  selected={selectedMovieId === movie.id}
+                                  onClick={unavailable ? undefined : () => { onMovieSelect(movie.id) }}
+                                />
+                                {soldout && (
+                                  <div style={{
+                                    position: 'absolute', bottom: 6, right: 6,
+                                    height: 20, padding: '0 6px', borderRadius: 4,
+                                    display: 'inline-flex', alignItems: 'center',
+                                    fontSize: 10, fontWeight: 700, color: '#fff',
+                                    backgroundColor: 'var(--color-error)',
+                                    pointerEvents: 'none', zIndex: 2,
+                                  }}>매진</div>
+                                )}
+                                {unavailable && (
+                                  <div
+                                    onClick={() => onMovieSelect(movie.id)}
+                                    style={{
+                                      position: 'absolute', inset: 0,
+                                      borderRadius: 'var(--comp-poster-sheet-radius)',
+                                      background: 'rgba(10, 8, 6, 0.72)',
+                                      display: 'flex', flexDirection: 'column',
+                                      alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                                    }}
+                                  >
+                                    <span style={{ fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.75)', textAlign: 'center', lineHeight: 1.4, padding: '0 4px' }}>
+                                      상영 일정<br />없음
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                              <div style={{
+                                marginTop: 6, fontSize: 11, fontWeight: 600,
+                                color: 'var(--color-text-primary)', fontFamily: 'var(--font-serif)',
+                                lineHeight: 1.35, overflow: 'hidden',
+                                display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+                                opacity: unavailable ? 0.4 : 1,
+                              }}>{movie.title}</div>
+                              {movie.director && movie.director.length > 0 && (
                                 <div style={{
-                                  position: 'absolute', bottom: 6, right: 6,
-                                  height: 20, padding: '0 6px', borderRadius: 4,
-                                  display: 'inline-flex', alignItems: 'center',
-                                  fontSize: 10, fontWeight: 700, color: '#fff',
-                                  backgroundColor: 'var(--color-error)',
-                                  pointerEvents: 'none', zIndex: 2,
-                                }}>매진</div>
-                              )}
-                              {unavailable && (
-                                <div
-                                  onClick={() => onMovieSelect(movie.id)}
-                                  style={{
-                                    position: 'absolute', inset: 0,
-                                    borderRadius: 'var(--comp-poster-sheet-radius)',
-                                    background: 'rgba(10, 8, 6, 0.72)',
-                                    display: 'flex', flexDirection: 'column',
-                                    alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                                  }}
-                                >
-                                  <span style={{ fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.75)', textAlign: 'center', lineHeight: 1.4, padding: '0 4px' }}>
-                                    상영 일정<br />없음
-                                  </span>
-                                </div>
+                                  marginTop: 3, fontSize: 10, color: 'var(--color-text-caption)',
+                                  overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
+                                  opacity: unavailable ? 0.3 : 1,
+                                }}>{movie.director[0]}</div>
                               )}
                             </div>
-                            <div style={{
-                              marginTop: 6, fontSize: 11, fontWeight: 600,
-                              color: 'var(--color-text-primary)', fontFamily: 'var(--font-serif)',
-                              lineHeight: 1.35, overflow: 'hidden',
-                              display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-                              opacity: unavailable ? 0.4 : 1,
-                            }}>{movie.title}</div>
-                            {movie.director && movie.director.length > 0 && (
-                              <div style={{
-                                marginTop: 3, fontSize: 10, color: 'var(--color-text-caption)',
-                                overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
-                                opacity: unavailable ? 0.3 : 1,
-                              }}>{movie.director[0]}</div>
-                            )}
                           </div>
-                        </div>
-                      )
-                    })
+                        )
+                      })}
+                      {/* 조건 외 구분선 + 반투명 영화 */}
+                      {filtersOn && nonMatchingEntries.length > 0 && (
+                        <>
+                          <div style={{
+                            flexShrink: 0, width: 1, height: 132,
+                            alignSelf: 'flex-start', marginTop: 0,
+                            backgroundColor: 'var(--color-border)',
+                            marginLeft: 4, marginRight: 4,
+                          }} />
+                          {nonMatchingEntries.map((entry) => {
+                            const { movie } = entry
+                            return (
+                              <div key={movie.id} style={{ flexShrink: 0, width: 88, overflow: 'visible', opacity: 0.38 }}>
+                                <div style={{ width: 88 }}>
+                                  <div style={{ position: 'relative' }}>
+                                    <PosterThumb width={88} height={132} size="lg" src={movie.posterUrl} />
+                                    <div style={{
+                                      position: 'absolute', inset: 0,
+                                      borderRadius: 'var(--comp-poster-sheet-radius)',
+                                      background: 'rgba(0,0,0,0.45)',
+                                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    }}>
+                                      <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.9)', textAlign: 'center', lineHeight: 1.3 }}>
+                                        조건 외
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div style={{
+                                    marginTop: 6, fontSize: 11, fontWeight: 600,
+                                    color: 'var(--color-text-primary)', fontFamily: 'var(--font-serif)',
+                                    lineHeight: 1.35, overflow: 'hidden',
+                                    display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+                                  }}>{movie.title}</div>
+                                  {movie.director && movie.director.length > 0 && (
+                                    <div style={{
+                                      marginTop: 3, fontSize: 10, color: 'var(--color-text-caption)',
+                                      overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
+                                    }}>{movie.director[0]}</div>
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </>
+                      )}
+                    </>
               }
             </div>
           </div>
+            )
+          })()}
 
           {/* 선택된 영화 카드 */}
           {(() => {
@@ -1420,6 +1653,147 @@ export function TheaterSheet({
           </div>
         )
       })()}
+
+      {/* ── 영화 필터 팝업 ── */}
+      {filterSheetOpen && (
+        <div
+          style={{
+            position: 'absolute', inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.45)',
+            zIndex: 200,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+          onClick={() => setFilterSheetOpen(false)}
+        >
+          <div
+            style={{
+              width: 'calc(100% - 48px)', maxWidth: 360,
+              backgroundColor: 'var(--color-surface-card)',
+              borderRadius: 16,
+              overflow: 'hidden',
+              boxShadow: 'var(--shadow-sheet)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* 헤더 */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '18px 18px 12px',
+            }}>
+              <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text-primary)' }}>영화 필터</span>
+              <button
+                onClick={() => setPendingFilters({ genres: [], nations: [], bookable: false })}
+                style={{ border: 'none', background: 'none', fontSize: 12, color: 'var(--color-text-caption)', cursor: 'pointer', padding: '4px 0' }}
+              >
+                모두 선택해제
+              </button>
+            </div>
+
+            {/* 본문 (스크롤) */}
+            <div style={{ padding: '0 18px', maxHeight: '50vh', overflowY: 'auto' }}>
+              {/* 장르 */}
+              {availableGenres.length > 0 && (
+                <>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-sub)', marginBottom: 10 }}>장르</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 18 }}>
+                    {availableGenres.map(g => (
+                      <button
+                        key={g}
+                        onClick={() => setPendingFilters(prev => ({
+                          ...prev,
+                          genres: prev.genres.includes(g) ? prev.genres.filter(x => x !== g) : [...prev.genres, g],
+                        }))}
+                        style={{
+                          height: 34, padding: '0 14px', borderRadius: 999,
+                          border: '1px solid',
+                          borderColor: pendingFilters.genres.includes(g) ? 'var(--color-primary-base)' : 'var(--color-border)',
+                          backgroundColor: pendingFilters.genres.includes(g) ? 'var(--color-primary-subtle-l)' : 'var(--color-surface-bg)',
+                          color: pendingFilters.genres.includes(g) ? 'var(--color-primary-base)' : 'var(--color-text-body)',
+                          fontSize: 13, fontWeight: pendingFilters.genres.includes(g) ? 600 : 400,
+                          cursor: 'pointer', minHeight: 'auto',
+                        }}
+                      >{g}</button>
+                    ))}
+                  </div>
+                </>
+              )}
+              {/* 국가 */}
+              {availableNations.length > 0 && (
+                <>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-sub)', marginBottom: 10 }}>국가</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 18 }}>
+                    {availableNations.map(n => (
+                      <button
+                        key={n}
+                        onClick={() => setPendingFilters(prev => ({
+                          ...prev,
+                          nations: prev.nations.includes(n) ? prev.nations.filter(x => x !== n) : [...prev.nations, n],
+                        }))}
+                        style={{
+                          height: 34, padding: '0 14px', borderRadius: 999,
+                          border: '1px solid',
+                          borderColor: pendingFilters.nations.includes(n) ? 'var(--color-primary-base)' : 'var(--color-border)',
+                          backgroundColor: pendingFilters.nations.includes(n) ? 'var(--color-primary-subtle-l)' : 'var(--color-surface-bg)',
+                          color: pendingFilters.nations.includes(n) ? 'var(--color-primary-base)' : 'var(--color-text-body)',
+                          fontSize: 13, fontWeight: pendingFilters.nations.includes(n) ? 600 : 400,
+                          cursor: 'pointer', minHeight: 'auto',
+                        }}
+                      >{n}</button>
+                    ))}
+                  </div>
+                </>
+              )}
+              {/* 예매 가능한 영화만 토글 */}
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                paddingTop: 4, paddingBottom: 18,
+                borderTop: '1px solid var(--color-border)',
+              }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>예매 가능한 영화만</div>
+                  <div style={{ fontSize: 11, color: 'var(--color-text-caption)', marginTop: 3 }}>잔여석이 있는 상영회만 표시</div>
+                </div>
+                <div
+                  onClick={() => setPendingFilters(prev => ({ ...prev, bookable: !prev.bookable }))}
+                  style={{
+                    flexShrink: 0,
+                    width: 44, height: 26, borderRadius: 999,
+                    backgroundColor: pendingFilters.bookable ? 'var(--color-primary-base)' : 'var(--color-neutral-500)',
+                    position: 'relative', cursor: 'pointer',
+                    transition: 'background-color 180ms',
+                    marginLeft: 16,
+                  }}
+                >
+                  <div style={{
+                    position: 'absolute',
+                    top: 3,
+                    left: pendingFilters.bookable ? 21 : 3,
+                    width: 20, height: 20,
+                    borderRadius: '50%', backgroundColor: '#fff',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                    transition: 'left 180ms',
+                  }} />
+                </div>
+              </div>
+            </div>
+
+            {/* 적용하기 버튼 */}
+            <div style={{ padding: '0 18px 18px' }}>
+              <button
+                onClick={() => { setSheetFilters(pendingFilters); setFilterSheetOpen(false) }}
+                style={{
+                  width: '100%', height: 50, borderRadius: 12,
+                  border: 'none', backgroundColor: 'var(--color-primary-base)',
+                  color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer',
+                  letterSpacing: '-0.2px',
+                }}
+              >
+                적용하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
     </>
   )
