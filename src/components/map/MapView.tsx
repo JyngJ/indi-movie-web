@@ -1043,6 +1043,7 @@ export default function MapView() {
     bookable: false,
     indie: false,
   })
+  const [movieFilter, setMovieFilter] = useState<{ id: string; title: string } | null>(null)
   const selectedDateRange = useMemo(() => dateRangeForFilter(filters), [filters])
   const mapShowtimeStart = formatDateParam(selectedDateRange.start)
   const mapShowtimeEnd = formatDateParam(selectedDateRange.end)
@@ -1114,6 +1115,7 @@ export default function MapView() {
 
     for (const showtime of mapShowtimes) {
       if (!showtime.movie) continue
+      if (movieFilter && showtime.movieId !== movieFilter.id) continue
       if (filters.bookable && showtime.seatAvailable <= 0) continue
       if (filters.genres.length > 0 && !showtime.movie.genre.some((genre) => filters.genres.includes(genre))) continue
       if (filters.nations.length > 0) {
@@ -1153,9 +1155,9 @@ export default function MapView() {
       )
     }
     return result
-  }, [filters.bookable, filters.genres, filters.nations, mapShowtimes])
+  }, [filters.bookable, filters.genres, filters.nations, movieFilter, mapShowtimes])
 
-  const filtersActive = filters.bookable || filters.genres.length > 0 || filters.nations.length > 0
+  const filtersActive = filters.bookable || filters.genres.length > 0 || filters.nations.length > 0 || !!movieFilter
 
   const titleMovieResults = useMemo(() => {
     if (!searchQuery.trim()) return []
@@ -1355,6 +1357,21 @@ export default function MapView() {
     url.searchParams.delete('theater')
     window.history.replaceState({}, '', url.toString())
   }, [theaters, focusTheater])
+
+  // 영화 상세 / 바텀시트에서 ?movie= 파라미터로 영화 필터 복원
+  const restoredMovieRef = useRef(false)
+  useEffect(() => {
+    if (restoredMovieRef.current || movies.length === 0) return
+    const movieParam = new URLSearchParams(window.location.search).get('movie')
+    if (!movieParam) { restoredMovieRef.current = true; return }
+    const movie = movies.find((m) => m.id === movieParam)
+    if (!movie) return
+    restoredMovieRef.current = true
+    setMovieFilter({ id: movie.id, title: movie.title })
+    const url = new URL(window.location.href)
+    url.searchParams.delete('movie')
+    window.history.replaceState({}, '', url.toString())
+  }, [movies])
 
   // 극장 선택 시 → 첫 번째 영화 선택 + 시트 collapsed로 열기
   const handlePinClick = useCallback((theaterId: string) => {
@@ -1903,6 +1920,41 @@ export default function MapView() {
         <div style={{ marginTop: 8, pointerEvents: 'auto' }}>
           <FilterBar onChange={setFilters} nationOptions={nationOptions} />
         </div>
+        {/* 영화 필터 칩 */}
+        {movieFilter && (
+          <div style={{ paddingLeft: 12, marginTop: 6, pointerEvents: 'auto' }}>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              height: 30, paddingLeft: 12, paddingRight: 6,
+              backgroundColor: 'var(--color-primary-base)',
+              borderRadius: 999,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+              maxWidth: 'calc(100vw - 24px)',
+            }}>
+              <span style={{
+                fontSize: 12, fontWeight: 600, color: '#fff',
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                maxWidth: 180,
+              }}>
+                🎬 {movieFilter.title}
+              </span>
+              <button
+                onClick={() => setMovieFilter(null)}
+                style={{
+                  flexShrink: 0,
+                  width: 20, height: 20,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  border: 'none', background: 'rgba(255,255,255,0.25)',
+                  borderRadius: '50%', cursor: 'pointer',
+                  color: '#fff', fontSize: 12, lineHeight: 1,
+                }}
+                aria-label="영화 필터 해제"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div
@@ -2056,6 +2108,7 @@ export default function MapView() {
           onExpand={() => setSheetExpanded(true)}
           onCollapse={() => setSheetExpanded(false)}
           onClose={closeSheet}
+          onMovieSearch={(movieId, movieTitle) => setMovieFilter({ id: movieId, title: movieTitle })}
           favorited={false}
           onFavorite={() => { /* Phase 4 */ }}
         />

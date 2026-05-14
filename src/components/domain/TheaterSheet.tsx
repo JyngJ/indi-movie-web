@@ -209,6 +209,7 @@ interface TheaterSheetProps {
   onExpand: () => void
   onCollapse: () => void
   onClose: () => void
+  onMovieSearch?: (movieId: string, movieTitle: string) => void
   favorited?: boolean
   onFavorite?: () => void
 }
@@ -223,6 +224,7 @@ export function TheaterSheet({
   onExpand,
   onCollapse,
   onClose,
+  onMovieSearch,
   favorited = false,
   onFavorite,
 }: TheaterSheetProps) {
@@ -1317,11 +1319,11 @@ export function TheaterSheet({
                   </button>
                   <div style={{ width: 1, backgroundColor: 'var(--color-border)' }} />
                   <button
-                    onClick={() => { /* 추후 구현 */ }}
+                    onClick={() => onMovieSearch?.(movie.id, movie.title)}
                     style={{
                       flex: 1, padding: '10px 0',
                       fontSize: 12, fontWeight: 600,
-                      color: 'var(--color-text-caption)',
+                      color: 'var(--color-text-body)',
                       background: 'none', border: 'none',
                       cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
