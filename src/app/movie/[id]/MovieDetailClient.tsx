@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useMovieDetail, useMovieTheaterShowtimes, useActiveMovieIds } from '@/lib/supabase/queries'
 import type { MovieDetail, MovieTheaterEntry } from '@/lib/supabase/queries'
@@ -41,35 +41,24 @@ const IcoUser = () => (
   </svg>
 )
 
-/* ── 포스터 플레이스홀더 ── */
-function PosterPlaceholder({ width, height, radius }: { width: number; height: number; radius: number }) {
-  return (
-    <div style={{
-      width,
-      height,
-      borderRadius: radius,
-      backgroundColor: 'var(--color-surface-raised)',
-      border: '1px solid var(--color-border)',
-      overflow: 'hidden',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}>
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        background: 'repeating-linear-gradient(135deg, rgba(128,128,128,0.08) 0 7px, transparent 7px 14px)',
-      }} />
-      <span style={{ fontSize: 10, color: 'var(--color-text-placeholder)', position: 'relative', zIndex: 1 }}>POSTER</span>
-    </div>
-  )
-}
-
 /* ── NavBar ── */
-function NavBar({ title, onBack, starred, onStar }: { title: string; onBack: () => void; starred?: boolean; onStar?: () => void }) {
+function NavBar({
+  title,
+  titleVisible,
+  onBack,
+  starred,
+  onStar,
+}: {
+  title: string
+  titleVisible: boolean
+  onBack: () => void
+  starred?: boolean
+  onStar?: () => void
+}) {
   const btn: React.CSSProperties = {
     width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center',
     border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-text-body)',
+    flexShrink: 0,
   }
   return (
     <div style={{
@@ -81,17 +70,30 @@ function NavBar({ title, onBack, starred, onStar }: { title: string; onBack: () 
       paddingRight: 4,
       borderBottom: '1px solid var(--color-border)',
       backgroundColor: 'var(--color-surface-bg)',
-      flexShrink: 0,
     }}>
       <button style={btn} onClick={onBack}><IcoChevronLeft /></button>
-      <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-text-primary)' }}>{title}</span>
+      <span style={{
+        flex: 1,
+        textAlign: 'center',
+        fontSize: 15,
+        fontWeight: 600,
+        color: 'var(--color-text-primary)',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        padding: '0 4px',
+        opacity: titleVisible ? 1 : 0,
+        transition: 'opacity 180ms ease',
+      }}>
+        {title}
+      </span>
       <button style={btn} onClick={onStar}><IcoStar filled={starred} /></button>
     </div>
   )
 }
 
 /* ── HeroSection ── */
-function HeroSection({ movie }: { movie: MovieDetail }) {
+function HeroSection({ movie, titleRef }: { movie: MovieDetail; titleRef: React.Ref<HTMLHeadingElement> }) {
   return (
     <div style={{
       background: 'linear-gradient(to bottom, var(--color-primary-subtle-l) 0%, var(--color-surface-bg) 100%)',
@@ -110,13 +112,21 @@ function HeroSection({ movie }: { movie: MovieDetail }) {
             style={{ width: 96, height: 144, borderRadius: 8, objectFit: 'cover', display: 'block', boxShadow: '0 8px 28px rgba(0,0,0,0.45)' }}
           />
         ) : (
-          <PosterPlaceholder width={96} height={144} radius={8} />
+          <div style={{
+            width: 96, height: 144, borderRadius: 8,
+            backgroundColor: 'var(--color-surface-raised)',
+            border: '1px solid var(--color-border)',
+            background: 'repeating-linear-gradient(135deg, rgba(128,128,128,0.08) 0 7px, transparent 7px 14px)',
+          }} />
         )}
       </div>
 
       {/* 텍스트 */}
       <div style={{ flex: 1, minWidth: 0, paddingTop: 4 }}>
-        <h1 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 21, fontWeight: 700, lineHeight: 1.2, color: 'var(--color-text-primary)', wordBreak: 'keep-all' }}>
+        <h1
+          ref={titleRef}
+          style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 21, fontWeight: 700, lineHeight: 1.2, color: 'var(--color-text-primary)', wordBreak: 'keep-all' }}
+        >
           {movie.title}
         </h1>
         {movie.originalTitle && (
@@ -124,18 +134,13 @@ function HeroSection({ movie }: { movie: MovieDetail }) {
             {movie.originalTitle}
           </div>
         )}
-        {/* 장르 칩 */}
         {movie.genre.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 10 }}>
             {movie.genre.map((g) => (
               <span key={g} style={{
-                height: 22,
-                padding: '0 9px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                borderRadius: 999,
-                fontSize: 11,
-                fontWeight: 500,
+                height: 22, padding: '0 9px',
+                display: 'inline-flex', alignItems: 'center',
+                borderRadius: 999, fontSize: 11, fontWeight: 500,
                 backgroundColor: 'var(--color-primary-subtle-l)',
                 border: '1px solid color-mix(in srgb, var(--color-primary-base) 40%, transparent)',
                 color: 'var(--color-primary-base)',
@@ -143,11 +148,9 @@ function HeroSection({ movie }: { movie: MovieDetail }) {
             ))}
           </div>
         )}
-        {/* 메타 */}
         <div style={{ marginTop: 10, fontSize: 13, color: 'var(--color-text-sub)', lineHeight: 1.5 }}>
           {[movie.nation, movie.year, movie.runtimeMinutes ? `${movie.runtimeMinutes}분` : null].filter(Boolean).join(' · ')}
         </div>
-        {/* 별점 */}
         {movie.rating != null && (
           <div style={{ marginTop: 8, display: 'flex', alignItems: 'baseline', gap: 4 }}>
             <span style={{ color: 'var(--color-warning)', fontSize: 14 }}>★</span>
@@ -169,7 +172,9 @@ function TabBar({ active, onChange }: { active: 'info' | 'theaters'; onChange: (
   ]
   return (
     <div style={{
-      position: 'sticky', top: 0, zIndex: 10,
+      position: 'sticky',
+      top: 'calc(env(safe-area-inset-top) + 52px)',
+      zIndex: 40,
       display: 'flex',
       borderBottom: '1px solid var(--color-border)',
       backgroundColor: 'var(--color-surface-bg)',
@@ -179,11 +184,8 @@ function TabBar({ active, onChange }: { active: 'info' | 'theaters'; onChange: (
           key={t.key}
           onClick={() => onChange(t.key)}
           style={{
-            flex: 1,
-            height: 44,
-            border: 'none',
-            background: 'none',
-            cursor: 'pointer',
+            flex: 1, height: 44,
+            border: 'none', background: 'none', cursor: 'pointer',
             fontSize: 14,
             fontWeight: active === t.key ? 600 : 400,
             color: active === t.key ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
@@ -208,7 +210,6 @@ function InfoTab({ movie, onDirectorClick }: { movie: MovieDetail; onDirectorCli
 
   return (
     <div style={{ paddingBottom: 52 }}>
-      {/* 줄거리 */}
       {movie.synopsis && (
         <div style={{ padding: '24px 20px' }}>
           <p style={sectionLabel}>줄거리</p>
@@ -218,7 +219,6 @@ function InfoTab({ movie, onDirectorClick }: { movie: MovieDetail; onDirectorCli
         </div>
       )}
 
-      {/* 감독 카드 */}
       {movie.director.length > 0 && (
         <>
           <div style={divider} />
@@ -229,28 +229,19 @@ function InfoTab({ movie, onDirectorClick }: { movie: MovieDetail; onDirectorCli
                 key={name}
                 onClick={() => onDirectorClick(name)}
                 style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 14,
-                  padding: '14px 16px',
-                  borderRadius: 12,
+                  width: '100%', display: 'flex', alignItems: 'center', gap: 14,
+                  padding: '14px 16px', borderRadius: 12,
                   border: '1px solid var(--color-border)',
                   backgroundColor: 'var(--color-surface-card)',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  marginBottom: 10,
-                  minHeight: 'auto',
+                  cursor: 'pointer', textAlign: 'left', marginBottom: 10, minHeight: 'auto',
                 }}
               >
-                {/* 프로필 자리 */}
                 <div style={{
                   width: 52, height: 52, borderRadius: '50%',
                   backgroundColor: 'var(--color-surface-raised)',
                   border: '1px solid var(--color-border)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0,
-                  color: 'var(--color-text-caption)',
+                  flexShrink: 0, color: 'var(--color-text-caption)',
                 }}>
                   <IcoUser />
                 </div>
@@ -265,7 +256,6 @@ function InfoTab({ movie, onDirectorClick }: { movie: MovieDetail; onDirectorCli
         </>
       )}
 
-      {/* 상세 정보 테이블 */}
       <div style={divider} />
       <div style={{ padding: '20px 20px' }}>
         <p style={sectionLabel}>상세 정보</p>
@@ -277,9 +267,7 @@ function InfoTab({ movie, onDirectorClick }: { movie: MovieDetail; onDirectorCli
             { key: '장르', value: movie.genre.join(', ') || undefined },
           ].filter((r) => r.value).map((row, i, arr) => (
             <div key={row.key} style={{
-              display: 'flex',
-              alignItems: 'center',
-              padding: '13px 16px',
+              display: 'flex', alignItems: 'center', padding: '13px 16px',
               borderBottom: i < arr.length - 1 ? '1px solid var(--color-border)' : 'none',
             }}>
               <span style={{ width: 72, flexShrink: 0, fontSize: 13, color: 'var(--color-text-sub)', fontWeight: 500 }}>{row.key}</span>
@@ -296,15 +284,10 @@ function InfoTab({ movie, onDirectorClick }: { movie: MovieDetail; onDirectorCli
 function TheaterShowtimeChips({ entry }: { entry: MovieTheaterEntry }) {
   return (
     <div>
-      {/* 극장 헤더 */}
       <div style={{ padding: '14px 16px 12px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
         <span style={{
-          marginTop: 5,
-          width: 8, height: 8,
-          borderRadius: '50%',
-          backgroundColor: 'var(--color-primary-base)',
-          flexShrink: 0,
-          display: 'block',
+          marginTop: 5, width: 8, height: 8, borderRadius: '50%',
+          backgroundColor: 'var(--color-primary-base)', flexShrink: 0, display: 'block',
         }} />
         <div style={{ minWidth: 0 }}>
           <div style={{ fontFamily: 'var(--font-serif)', fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)' }}>
@@ -316,27 +299,23 @@ function TheaterShowtimeChips({ entry }: { entry: MovieTheaterEntry }) {
           </div>
         </div>
       </div>
-      {/* 시간표 칩 */}
       <div style={{ borderTop: '1px solid var(--color-border)', padding: '12px 16px', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
         {entry.showtimes.map((st) => {
           const soldout = st.seatAvailable === 0
           const low = !soldout && st.seatAvailable <= 20
           const seatColor = soldout ? 'var(--color-error)' : low ? 'var(--color-warning)' : 'var(--color-primary-base)'
-
           return (
             <button
               key={st.id}
               disabled={soldout}
               onClick={st.bookingUrl ? () => window.open(st.bookingUrl!, '_blank', 'noopener') : undefined}
               style={{
-                padding: '10px 14px',
-                borderRadius: 10,
+                padding: '10px 14px', borderRadius: 10,
                 border: '1px solid var(--color-border)',
                 backgroundColor: 'var(--color-surface-raised)',
                 cursor: soldout ? 'default' : (st.bookingUrl ? 'pointer' : 'default'),
                 opacity: soldout ? 0.5 : 1,
-                textAlign: 'left',
-                minHeight: 'auto',
+                textAlign: 'left', minHeight: 'auto',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
@@ -352,12 +331,8 @@ function TheaterShowtimeChips({ entry }: { entry: MovieTheaterEntry }) {
               <div style={{ marginTop: 4, fontSize: 12, fontFeatureSettings: '"tnum"' }}>
                 <span style={{ fontWeight: 600, color: seatColor }}>{st.seatAvailable}</span>
                 <span style={{ color: 'var(--color-text-sub)' }}>/{st.seatTotal}석</span>
-                {low && !soldout && (
-                  <span style={{ marginLeft: 4, fontSize: 10, color: 'var(--color-warning)', fontWeight: 600 }}>잔여↓</span>
-                )}
-                {soldout && (
-                  <span style={{ marginLeft: 4, fontSize: 10, color: 'var(--color-error)', fontWeight: 700 }}>매진</span>
-                )}
+                {low && !soldout && <span style={{ marginLeft: 4, fontSize: 10, color: 'var(--color-warning)', fontWeight: 600 }}>잔여↓</span>}
+                {soldout && <span style={{ marginLeft: 4, fontSize: 10, color: 'var(--color-error)', fontWeight: 700 }}>매진</span>}
               </div>
             </button>
           )
@@ -370,41 +345,29 @@ function TheaterShowtimeChips({ entry }: { entry: MovieTheaterEntry }) {
 /* ── TheatersTab ── */
 function TheatersTab({ movieId, onMapClick }: { movieId: string; onMapClick: () => void }) {
   const { data: theaters = [], isLoading } = useMovieTheaterShowtimes(movieId)
-
   return (
     <div style={{ padding: '20px 20px 52px' }}>
-      {/* 지도 CTA */}
       <button
         onClick={onMapClick}
         style={{
-          width: '100%',
-          height: 44,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 8,
-          borderRadius: 10,
-          border: '1px solid var(--color-primary-base)',
+          width: '100%', height: 44,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          borderRadius: 10, border: '1px solid var(--color-primary-base)',
           backgroundColor: 'var(--color-primary-subtle-l)',
-          color: 'var(--color-primary-base)',
-          fontSize: 14,
-          fontWeight: 600,
-          cursor: 'pointer',
-          marginBottom: 20,
+          color: 'var(--color-primary-base)', fontSize: 14, fontWeight: 600,
+          cursor: 'pointer', marginBottom: 20,
         }}
       >
         <IcoMap />
         상영중인 영화관 지도에서 보기
       </button>
 
-      {/* 상영 중 극장 수 */}
       {!isLoading && (
         <p style={{ margin: '0 0 14px', fontSize: 12, fontWeight: 600, letterSpacing: '0.4px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>
           상영 중 · {theaters.length}곳
         </p>
       )}
 
-      {/* 극장 카드 리스트 */}
       {isLoading ? (
         <div style={{ height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-caption)', fontSize: 13 }}>
           불러오는 중…
@@ -417,10 +380,8 @@ function TheatersTab({ movieId, onMapClick }: { movieId: string; onMapClick: () 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {theaters.map((entry) => (
             <div key={entry.theaterId} style={{
-              borderRadius: 12,
-              border: '1px solid var(--color-border)',
-              backgroundColor: 'var(--color-surface-card)',
-              overflow: 'hidden',
+              borderRadius: 12, border: '1px solid var(--color-border)',
+              backgroundColor: 'var(--color-surface-card)', overflow: 'hidden',
             }}>
               <TheaterShowtimeChips entry={entry} />
             </div>
@@ -436,10 +397,25 @@ export function MovieDetailClient({ movieId }: { movieId: string }) {
   const router = useRouter()
   const [tab, setTab] = useState<'info' | 'theaters'>('info')
   const [starred, setStarred] = useState(false)
+  const [titleInNav, setTitleInNav] = useState(false)
+  const titleRef = useRef<HTMLHeadingElement>(null)
 
   const { data: movie, isLoading } = useMovieDetail(movieId)
   const { data: activeIds = [] } = useActiveMovieIds()
   void activeIds
+
+  // 제목이 sticky NavBar 아래로 스크롤되면 NavBar에 영화 제목 표시
+  useEffect(() => {
+    if (!movie) return
+    const el = titleRef.current
+    if (!el) return
+    const onScroll = () => {
+      setTitleInNav(el.getBoundingClientRect().bottom < 60)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [movie])
 
   const handleBack = () => router.back()
   const handleDirectorClick = (name: string) => router.push(`/director/${encodeURIComponent(name)}`)
@@ -447,7 +423,7 @@ export function MovieDetailClient({ movieId }: { movieId: string }) {
 
   if (isLoading) {
     return (
-      <div style={{ position: 'fixed', inset: 0, backgroundColor: 'var(--color-surface-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <span style={{ fontSize: 13, color: 'var(--color-text-caption)' }}>불러오는 중…</span>
       </div>
     )
@@ -455,8 +431,10 @@ export function MovieDetailClient({ movieId }: { movieId: string }) {
 
   if (!movie) {
     return (
-      <div style={{ position: 'fixed', inset: 0, backgroundColor: 'var(--color-surface-bg)', display: 'flex', flexDirection: 'column' }}>
-        <NavBar title="영화 정보" onBack={handleBack} starred={starred} onStar={() => setStarred(!starred)} />
+      <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ position: 'sticky', top: 0, zIndex: 50, paddingTop: 'env(safe-area-inset-top)', backgroundColor: 'var(--color-surface-bg)' }}>
+          <NavBar title="영화 정보" titleVisible onBack={handleBack} starred={starred} onStar={() => setStarred(!starred)} />
+        </div>
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}>
           <span style={{ fontSize: 14, color: 'var(--color-text-caption)' }}>영화를 찾을 수 없습니다</span>
           <button onClick={handleBack} style={{ fontSize: 13, color: 'var(--color-primary-base)', border: 'none', background: 'none', cursor: 'pointer' }}>돌아가기</button>
@@ -468,24 +446,33 @@ export function MovieDetailClient({ movieId }: { movieId: string }) {
   return (
     <div
       className="page-slide-in"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'var(--color-surface-bg)',
-        display: 'flex',
-        flexDirection: 'column',
-        paddingTop: 'env(safe-area-inset-top)',
-      }}
+      style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}
     >
-      <NavBar title="영화 정보" onBack={handleBack} starred={starred} onStar={() => setStarred(!starred)} />
-      <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' as never }}>
-        <HeroSection movie={movie} />
-        <TabBar active={tab} onChange={setTab} />
-        {tab === 'info'
-          ? <InfoTab movie={movie} onDirectorClick={handleDirectorClick} />
-          : <TheatersTab movieId={movieId} onMapClick={handleMapClick} />
-        }
+      {/* Sticky 상단 바: safe-area + NavBar */}
+      <div style={{
+        position: 'sticky', top: 0, zIndex: 50,
+        paddingTop: 'env(safe-area-inset-top)',
+        backgroundColor: 'var(--color-surface-bg)',
+      }}>
+        <NavBar
+          title={movie.title}
+          titleVisible={titleInNav}
+          onBack={handleBack}
+          starred={starred}
+          onStar={() => setStarred(!starred)}
+        />
       </div>
+
+      <HeroSection movie={movie} titleRef={titleRef} />
+
+      <TabBar active={tab} onChange={setTab} />
+
+      {tab === 'info'
+        ? <InfoTab movie={movie} onDirectorClick={handleDirectorClick} />
+        : <TheatersTab movieId={movieId} onMapClick={handleMapClick} />
+      }
+
+      <div style={{ height: 'env(safe-area-inset-bottom)' }} />
     </div>
   )
 }
