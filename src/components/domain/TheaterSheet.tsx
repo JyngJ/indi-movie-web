@@ -376,9 +376,11 @@ export function TheaterSheet({
   const posterTouching  = useRef(false)  // 포스터 영역 터치 중 (방향 미확정 포함)
 
   /* ── 확장 시 스크롤 영역 ── */
-  const scrollAreaRef   = useRef<HTMLDivElement>(null)
-  const theaterNameRef  = useRef<HTMLDivElement>(null)
+  const scrollAreaRef      = useRef<HTMLDivElement>(null)
+  const theaterNameRef     = useRef<HTMLDivElement>(null)
+  const showtimeSectionRef = useRef<HTMLDivElement>(null)
   const [nameInNav, setNameInNav] = useState(false)
+  const [showtimeInView, setShowtimeInView] = useState(true)
 
   /* Leaflet 이벤트 차단 — 시트 영역에서 map 이벤트가 발동되지 않게 */
   useEffect(() => {
@@ -415,6 +417,20 @@ export function TheaterSheet({
     scrollEl.addEventListener('scroll', onScroll, { passive: true })
     setNameInNav(false)
     return () => scrollEl.removeEventListener('scroll', onScroll)
+  }, [expanded])
+
+  /* 상영시간표 섹션 뷰포트 진입/이탈 감지 → 예매 바 표시 제어 */
+  useEffect(() => {
+    setShowtimeInView(true)
+    const target = showtimeSectionRef.current
+    const root   = scrollAreaRef.current
+    if (!target || !root) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowtimeInView(entry.isIntersecting),
+      { root, threshold: 0 },
+    )
+    observer.observe(target)
+    return () => observer.disconnect()
   }, [expanded])
 
   /* 확장 시 스크롤 최상단에서 아래로 드래그 → 시트 접기 */
@@ -479,7 +495,8 @@ export function TheaterSheet({
 
       if (!posterDrag.current.active) {
         if (dx < 4 && Math.abs(dy) < 4) return
-        if (Math.abs(dy) > dx) {
+        // 수직 이동이 수평보다 1.5배 이상 크고 10px 이상이어야 시트 드래그로 전환
+        if (Math.abs(dy) > dx * 1.5 && Math.abs(dy) > 10) {
           posterTouching.current = false
           return
         }
@@ -534,6 +551,7 @@ export function TheaterSheet({
     el.addEventListener('touchstart',  onDown, { passive: false })
     el.addEventListener('touchmove',   onMove, { passive: false })
     el.addEventListener('touchend',    onUp)
+    el.addEventListener('touchcancel', onUp)
     el.addEventListener('wheel',       onWheel, { passive: false })
     return () => {
       cancelMomentum()
@@ -545,6 +563,7 @@ export function TheaterSheet({
       el.removeEventListener('touchstart',  onDown)
       el.removeEventListener('touchmove',   onMove)
       el.removeEventListener('touchend',    onUp)
+      el.removeEventListener('touchcancel', onUp)
       el.removeEventListener('wheel',       onWheel)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -606,13 +625,9 @@ export function TheaterSheet({
     if (!dragActive.current) return
     dragActive.current = false
     setDragging(false)
-
-    // 포스터 영역 터치 중이었으면 snap 로직 없이 그냥 종료
-    if (posterTouching.current) {
-      setDragOffset(0)
-      velocityBuffer.current = []
-      return
-    }
+    // posterTouching은 항상 리셋 (cancel 시 touchend 없이 stuck되는 케이스 방어)
+    posterTouching.current = false
+    posterDrag.current.active = false
 
     // 이동 거리가 8px 미만이면 tap으로 간주 — snap 없이 원위치
     if (Math.abs(e.clientY - dragStartY.current) < 8) {
@@ -639,20 +654,25 @@ export function TheaterSheet({
     const isFlickDown = velocityPxPerSec >  VELOCITY_THRESHOLD
     const posRatio    = effectiveTranslate / max   // 0 = 완전 펼침, 1 = 완전 접힘
 
-    let shouldExpand: boolean
     if (expanded) {
-      // 현재 펼쳐진 상태: 위로 flick이거나 포지션이 THRESHOLD 미만이면 유지
-      shouldExpand = !isFlickDown && posRatio < POSITION_THRESHOLD
+      if (isFlickDown) {
+        // 빠른 아래 플릭 → 바로 닫기
+        onClose()
+      } else if (posRatio >= POSITION_THRESHOLD) {
+        // 25% 이상 내렸으면 → 접기 (collapsed 상태로)
+        onCollapse()
+      }
+      // 그 외 → 원위치 (expanded 유지)
     } else {
-      // 현재 접힌 상태: 위로 flick이거나 충분히 올렸으면 펼치기
-      shouldExpand = isFlickUp || posRatio < (1 - POSITION_THRESHOLD)
-    }
-
-    if (shouldExpand && !expanded) onExpand()
-    else if (!shouldExpand && expanded) onCollapse()
-    else if (!shouldExpand && !expanded) {
-      // collapsed 상태에서 아래로 flick하거나 충분히 내리면 닫기
-      if (isFlickDown || posRatio > POSITION_THRESHOLD) onClose()
+      // 현재 접힌 상태
+      if (isFlickUp || posRatio < (1 - POSITION_THRESHOLD)) {
+        // 위로 flick 또는 충분히 올렸으면 → 펼치기
+        onExpand()
+      } else if (isFlickDown || posRatio > (1 - POSITION_THRESHOLD + 0.2)) {
+        // 아래로 flick 또는 충분히 내렸으면 → 닫기
+        onClose()
+      }
+      // 그 외 → 원위치 (collapsed 유지)
     }
 
     setDragOffset(0)
@@ -1347,7 +1367,7 @@ export function TheaterSheet({
                 paddingTop: 14,
                 paddingLeft: 20,
                 paddingRight: 20,
-                paddingBottom: 14,
+                paddingBottom: 6,
                 scrollbarWidth: 'none',
                 cursor: 'grab',
                 userSelect: 'none',
@@ -1493,7 +1513,7 @@ export function TheaterSheet({
             const { movie } = entry
             return (
               <div style={{
-                margin: '12px 16px',
+                margin: '8px 8px',
                 border: '1px solid var(--color-border)',
                 borderRadius: 12,
                 overflow: 'hidden',
@@ -1583,7 +1603,7 @@ export function TheaterSheet({
           })()}
 
           {/* 상영시간표 */}
-          <div style={{ padding: `20px 20px ${selectedShowtimeId ? 88 : 40}px` }}>
+          <div ref={showtimeSectionRef} style={{ padding: `8px 20px ${selectedShowtimeId ? 88 : 40}px` }}>
             {showtimesLoading ? (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {Array.from({ length: 4 }).map((_, i) => (
@@ -1634,21 +1654,39 @@ export function TheaterSheet({
           <div style={{
             position: 'absolute',
             left: 0, right: 0, bottom: 0,
-            transform: selectedShowtimeId ? 'translateY(0)' : 'translateY(100%)',
+            transform: (selectedShowtimeId && showtimeInView) ? 'translateY(0)' : 'translateY(100%)',
             transition: 'transform 0.28s cubic-bezier(0.32, 0.72, 0, 1)',
             backgroundColor: 'var(--color-surface-card)',
             borderTop: '1px solid var(--color-border)',
             padding: '12px 20px',
             paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
             zIndex: 10,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
           }}>
+            <button
+              onClick={() => setSelectedShowtimeId(null)}
+              style={{
+                flexShrink: 0,
+                width: 44, height: 50,
+                borderRadius: 'var(--radius-full)',
+                border: '1px solid var(--color-border)',
+                backgroundColor: 'var(--color-surface-bg)',
+                color: 'var(--color-text-body)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer',
+              }}
+            >
+              <IconClose />
+            </button>
             <button
               disabled={!selectedSt?.bookingUrl}
               onClick={() => {
                 if (selectedSt?.bookingUrl) window.open(selectedSt.bookingUrl, '_blank', 'noopener')
               }}
               style={{
-                width: '100%',
+                flex: 1,
                 height: 50,
                 borderRadius: 'var(--radius-full)',
                 backgroundColor: selectedSt?.bookingUrl ? 'var(--color-primary-base)' : 'var(--color-neutral-600)',

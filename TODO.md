@@ -120,6 +120,33 @@
 
 ---
 
+## 분석 / UX 리서치
+
+### GA4 연동
+- Google Analytics 4 측정 ID 발급 후 Next.js에 삽입
+- 방법: `src/app/layout.tsx`에 `<Script>` 태그로 gtag.js 추가, 또는 `@next/third-parties/google`의 `GoogleAnalytics` 컴포넌트 사용 (Next.js 공식 권장)
+  ```tsx
+  // src/app/layout.tsx
+  import { GoogleAnalytics } from '@next/third-parties/google'
+  // ...
+  <GoogleAnalytics gaId="G-XXXXXXXXXX" />
+  ```
+- 환경변수 `NEXT_PUBLIC_GA_ID`로 관리, Vercel에도 추가
+
+### 주요 이벤트 트래킹 후보
+- 극장 핀 클릭 (`theater_pin_click`)
+- 영화 검색 (`search`, `search_type: movie|area|station|director`)
+- 영화 상세 진입 (`movie_detail_view`)
+- 예매 링크 클릭 (`booking_click`)
+- 필터 사용 (`filter_apply`, `filter_type: date|genre|nation|movie`)
+- 공유 버튼 클릭 (`share`)
+
+### Hotjar / Microsoft Clarity (선택)
+- 세션 녹화 + 히트맵으로 실제 사용 패턴 파악
+- Clarity는 무료 무제한, 설치 방법은 GA4와 동일하게 `<Script>` 삽입
+
+---
+
 ## 지도 저작권
 
 - 서비스 소개 또는 설정 페이지에 표기 필요
