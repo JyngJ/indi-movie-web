@@ -98,12 +98,13 @@ interface MovieRow {
   kmdb_id?: string | null
   kmdb_movie_seq?: string | null
   poster_url?: string | null
-  synopsis?: string | null
-  runtime_minutes?: number | null
-  certification?: string | null
   genre?: string[] | null
   director?: string[] | null
   nation?: string | null
+  // movie_details join (optional)
+  synopsis?: string | null
+  runtime_minutes?: number | null
+  certification?: string | null
 }
 
 interface ShowtimeRow {
@@ -305,23 +306,16 @@ export async function listAdminMovies(): Promise<AdminMovie[]> {
   const supabase = createSupabaseAdminClient()
   const { data, error } = await supabase
     .from('movies')
-    .select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, poster_url, synopsis, runtime_minutes, certification, genre, director, nation')
+    .select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, poster_url, genre, director, nation, movie_details(synopsis, runtime_minutes, certification)')
     .order('title', { ascending: true })
     .limit(1000)
 
-  if (error) {
-    const fallback = await supabase
-      .from('movies')
-      .select('id, title, original_title, year, genre, director')
-      .order('title', { ascending: true })
-      .limit(1000)
+  if (error) throw new Error(error.message)
 
-    if (fallback.error) throw new Error(error.message)
-
-    return ((fallback.data ?? []) as MovieRow[]).map(movieFromRow)
-  }
-
-  return ((data ?? []) as MovieRow[]).map(movieFromRow)
+  return ((data ?? []) as unknown as (MovieRow & { movie_details: { synopsis?: string | null; runtime_minutes?: number | null; certification?: string | null } | null })[]).map((row) => {
+    const details = Array.isArray(row.movie_details) ? row.movie_details[0] : row.movie_details
+    return movieFromRow({ ...row, ...details })
+  })
 }
 
 export async function updateAdminMovie(input: AdminMovieInput) {
@@ -343,18 +337,25 @@ export async function updateAdminMovie(input: AdminMovieInput) {
       kmdb_id: input.kmdbId?.trim() || null,
       kmdb_movie_seq: input.kmdbMovieSeq?.trim() || null,
       poster_url: input.posterUrl?.trim() || null,
-      synopsis: input.synopsis?.trim() || null,
-      runtime_minutes: input.runtimeMinutes ?? null,
-      certification: input.certification?.trim() || null,
       genre: input.genre ?? [],
       director: input.director ?? [],
       nation: input.nation?.trim() || null,
     })
     .eq('id', input.id)
-    .select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, poster_url, synopsis, runtime_minutes, certification, genre, director, nation')
+    .select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, poster_url, genre, director, nation')
     .single()
 
   if (error) throw new Error(error.message)
+
+  const hasDetails = input.synopsis || input.runtimeMinutes || input.certification
+  if (hasDetails) {
+    await supabase.from('movie_details').upsert({
+      movie_id: input.id,
+      synopsis: input.synopsis?.trim() || null,
+      runtime_minutes: input.runtimeMinutes ?? null,
+      certification: input.certification?.trim() || null,
+    }, { onConflict: 'movie_id' })
+  }
 
   return movieFromRow(data as MovieRow)
 }
@@ -587,12 +588,9 @@ export async function createAdminMovie(input: AdminMovieInput) {
       kmdb_id: input.kmdbId?.trim() || null,
       kmdb_movie_seq: input.kmdbMovieSeq?.trim() || null,
       poster_url: input.posterUrl?.trim() || null,
-      synopsis: input.synopsis?.trim() || null,
-      runtime_minutes: input.runtimeMinutes ?? null,
-      certification: input.certification?.trim() || null,
       nation: input.nation?.trim() || null,
     })
-    .select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, poster_url, synopsis, runtime_minutes, certification, genre, director, nation')
+    .select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, poster_url, genre, director, nation')
     .single()
 
   if (error) {
@@ -604,6 +602,17 @@ export async function createAdminMovie(input: AdminMovieInput) {
   }
 
   const movie = data as MovieRow
+
+  const hasDetails = input.synopsis || input.runtimeMinutes || input.certification
+  if (hasDetails) {
+    await supabase.from('movie_details').upsert({
+      movie_id: movie.id,
+      synopsis: input.synopsis?.trim() || null,
+      runtime_minutes: input.runtimeMinutes ?? null,
+      certification: input.certification?.trim() || null,
+    }, { onConflict: 'movie_id' })
+  }
+
   return {
     id: movie.id,
     label: movie.title,
@@ -613,20 +622,18 @@ export async function createAdminMovie(input: AdminMovieInput) {
 
 export async function importAdminExternalMovie(input: AdminExternalMovie) {
   const supabase = createSupabaseAdminClient()
-  const row = {
+  const movieRow = {
     title: input.title,
     original_title: input.originalTitle ?? null,
     year: input.year,
     kmdb_id: input.movieId,
     kmdb_movie_seq: input.movieSeq,
     poster_url: input.posterUrl ?? null,
-    synopsis: input.synopsis ?? null,
-    runtime_minutes: input.runtimeMinutes ?? null,
-    certification: input.certification ?? null,
     genre: input.genre,
     director: input.director,
     nation: input.nation ?? null,
   }
+
   const { data: existing, error: existingError } = await supabase
     .from('movies')
     .select('id')
@@ -637,8 +644,8 @@ export async function importAdminExternalMovie(input: AdminExternalMovie) {
   if (existingError) throw new Error(existingError.message)
 
   const query = existing
-    ? supabase.from('movies').update(row).eq('id', (existing as { id: string }).id)
-    : supabase.from('movies').insert(row)
+    ? supabase.from('movies').update(movieRow).eq('id', (existing as { id: string }).id)
+    : supabase.from('movies').insert(movieRow)
   const { data, error } = await query
     .select('id, title, year, kmdb_id, kmdb_movie_seq')
     .single()
@@ -646,6 +653,17 @@ export async function importAdminExternalMovie(input: AdminExternalMovie) {
   if (error) throw new Error(error.message)
 
   const movie = data as MovieRow
+
+  const hasDetails = input.synopsis || input.runtimeMinutes || input.certification
+  if (hasDetails) {
+    await supabase.from('movie_details').upsert({
+      movie_id: movie.id,
+      synopsis: input.synopsis ?? null,
+      runtime_minutes: input.runtimeMinutes ?? null,
+      certification: input.certification ?? null,
+    }, { onConflict: 'movie_id' })
+  }
+
   return {
     id: movie.id,
     label: movie.title,
