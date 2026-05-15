@@ -8,7 +8,7 @@ interface PosterThumbProps {
   /** 'sm' = radius 6px (기본), 'lg' = radius 8px (바텀시트용) */
   size?: 'sm' | 'lg'
   selected?: boolean
-  overflow?: number
+  overflow?: number | string
   onClick?: () => void
 }
 
@@ -72,13 +72,13 @@ export function PosterThumb({
           />
         )}
 
-        {/* +N 오버레이 */}
+        {/* 오버레이 (숫자면 +N, 문자열이면 그대로) */}
         {overflow != null && (
           <div
-            className="absolute inset-0 flex items-center justify-center font-semibold text-[18px] text-white"
+            className="absolute inset-0 flex items-center justify-center font-semibold text-[15px] text-white"
             style={{ background: 'rgba(15,12,9,0.62)', borderRadius: radiusVar }}
           >
-            +{overflow}
+            {typeof overflow === 'string' ? overflow : `+${overflow}`}
           </div>
         )}
 

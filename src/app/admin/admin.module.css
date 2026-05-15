@@ -92,6 +92,152 @@
   flex-wrap: wrap;
 }
 
+/* ── 탭 내비게이션 ───────────────────────────────────────────────── */
+.tabNav {
+  display: flex;
+  gap: 4px;
+  margin: 0 auto 20px;
+  max-width: 1320px;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 0;
+}
+
+.tabBtn {
+  position: relative;
+  padding: 8px 18px 10px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-sub);
+  cursor: pointer;
+  transition: color 120ms, border-color 120ms;
+  white-space: nowrap;
+}
+
+.tabBtn:hover {
+  color: var(--color-text-primary);
+}
+
+.tabBtnActive {
+  color: var(--color-text-primary);
+  font-weight: 700;
+  border-bottom-color: var(--color-primary-base);
+}
+
+.tabBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: 6px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--color-warning);
+  color: #fff;
+  vertical-align: middle;
+}
+
+/* ── DB 현황 탭 ─────────────────────────────────────────────────── */
+.statusGrid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 auto 20px;
+  max-width: 1320px;
+}
+
+.statusSection {
+  margin: 0 auto 20px;
+  max-width: 1320px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.statusTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.statusTable th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-caption);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.statusTable td {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.statusTable tr:last-child td {
+  border-bottom: none;
+}
+
+.healthBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.healthHealthy {
+  background: color-mix(in srgb, var(--color-success) 15%, transparent);
+  color: var(--color-success);
+}
+
+.healthDegraded {
+  background: color-mix(in srgb, var(--color-warning) 15%, transparent);
+  color: var(--color-warning);
+}
+
+.healthBroken {
+  background: color-mix(in srgb, var(--color-error, #e53) 15%, transparent);
+  color: var(--color-error, #e53);
+}
+
+.qualityList {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.qualityItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-bg);
+  font-size: 13px;
+}
+
+.qualityDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 .metrics {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -795,4 +941,134 @@
   .wideField {
     grid-column: span 1;
   }
+}
+
+/* ── 후보 필터 탭 ──────────────────────────────────────────────── */
+.candidateFilterRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 20px 0 14px 2px;
+  flex-wrap: wrap;
+}
+
+.candidateFilterTabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 10px;
+  background: var(--color-surface-overlay);
+  border: 1px solid var(--color-border);
+  width: fit-content;
+}
+
+.filterTab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.filterTab:hover {
+  color: var(--color-text-primary);
+  background: color-mix(in srgb, var(--color-surface-card) 60%, transparent);
+}
+
+.filterTabActive {
+  background: var(--color-surface-card);
+  color: var(--color-text-primary);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.filterTabActive[data-key="unmatched"] { color: #e74c3c; }
+.filterTabActive[data-key="warning"]   { color: #e67e22; }
+.filterTabActive[data-key="soldout"]   { color: #95a5a6; }
+
+.filterTabDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.filterTabBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 16px;
+  padding: 0 5px;
+  border-radius: 5px;
+  background: var(--color-surface-overlay);
+  color: var(--color-text-secondary);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.filterTabActive .filterTabBadge {
+  background: color-mix(in srgb, currentColor 15%, var(--color-surface-overlay));
+  color: currentColor;
+}
+
+/* ── 색상 범례 ─────────────────────────────────────────────────── */
+.candidateLegend {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+.legendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.legendDotRed    { background: #e74c3c; opacity: 0.7; }
+.legendDotYellow { background: #e67e22; opacity: 0.7; }
+.legendDotGray   { background: #7f8c8d; opacity: 0.7; }
+
+/* ── 행 강조 ───────────────────────────────────────────────────── */
+.rowUnmatched td {
+  background: color-mix(in srgb, #e74c3c 6%, transparent);
+}
+
+.rowWarning td {
+  background: color-mix(in srgb, #e67e22 6%, transparent);
+}
+
+.rowSoldout td {
+  background: color-mix(in srgb, #7f8c8d 8%, transparent);
+  opacity: 0.7;
+}
+
+.soldoutTag {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #7f8c8d;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
 }

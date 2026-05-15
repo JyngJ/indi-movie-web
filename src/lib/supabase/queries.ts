@@ -26,7 +26,7 @@ export function useTheaters() {
     queryFn: async () => {
       const { data, error } = await supabase()
         .from('theaters')
-        .select('id,name,lat,lng,address,city,phone,website,screen_count,seat_count,parking,restaurant,accessibility,rating,created_at,updated_at')
+        .select('id,name,lat,lng,address,city,phone,website,instagram_url,screen_count,seat_count,parking,restaurant,accessibility,rating,created_at,updated_at')
         .order('name')
 
       if (error) throw error
@@ -40,6 +40,7 @@ export function useTheaters() {
         city: r.city,
         phone: r.phone ?? undefined,
         website: r.website ?? undefined,
+        instagramUrl: r.instagram_url ?? undefined,
         screenCount: r.screen_count,
         seatCount: r.seat_count ?? undefined,
         amenities: {
@@ -85,19 +86,20 @@ export function useStations() {
   })
 }
 
-/* ── 영화 목록 ────────────────────────────────────────────────── */
+/* ── 영화 목록 (경량 — 지도/검색용) ────────────────────────────── */
+// synopsis, runtime, certification, cast 는 movie_details 테이블로 분리됨
 export function useMovies() {
   return useQuery<Movie[]>({
     queryKey: ['movies'],
     queryFn: async () => {
       const primary = await supabase()
         .from('movies')
-        .select('id,title,original_title,year,poster_url,genre,director,nation,synopsis,runtime_minutes,certification,kmdb_id,tmdb_id,rating')
+        .select('id,title,original_title,year,poster_url,genre,director,nation,kmdb_id,tmdb_id,rating')
         .order('title')
       const { data, error } = primary.error && isMissingColumnError(primary.error, 'nation')
         ? await supabase()
           .from('movies')
-          .select('id,title,original_title,year,poster_url,genre,director,synopsis,runtime_minutes,certification,kmdb_id,tmdb_id,rating')
+          .select('id,title,original_title,year,poster_url,genre,director,kmdb_id,tmdb_id,rating')
           .order('title')
         : primary
 
@@ -114,14 +116,67 @@ export function useMovies() {
           genre: (row.genre as string[] | null) ?? [],
           director: (row.director as string[] | null) ?? [],
           nation: row.nation ? String(row.nation) : undefined,
-          synopsis: row.synopsis ? String(row.synopsis) : undefined,
-          runtimeMinutes: row.runtime_minutes ? Number(row.runtime_minutes) : undefined,
-          certification: row.certification ? String(row.certification) : undefined,
           kmdbId: row.kmdb_id ? String(row.kmdb_id) : undefined,
           tmdbId: row.tmdb_id ? Number(row.tmdb_id) : undefined,
           rating: row.rating ? Number(row.rating) : undefined,
         }
       })
+    },
+    staleTime: 10 * 60 * 1000,
+  })
+}
+
+/* ── 영화 상세 (movie_details 조인) ────────────────────────────── */
+export interface MovieDetail extends Movie {
+  synopsis?: string
+  runtimeMinutes?: number
+  certification?: string
+  cast: Array<{ name: string; character?: string; profileUrl?: string }>
+}
+
+export function useMovieDetail(movieId: string | null) {
+  return useQuery<MovieDetail | null>({
+    queryKey: ['movie-detail', movieId],
+    enabled: !!movieId,
+    queryFn: async () => {
+      const { data, error } = await supabase()
+        .from('movies')
+        .select(`
+          id, title, original_title, year, poster_url, genre, director,
+          nation, kmdb_id, tmdb_id, rating,
+          movie_details (
+            synopsis,
+            runtime_minutes,
+            certification,
+            cast_members
+          )
+        `)
+        .eq('id', movieId!)
+        .single()
+
+      if (error) throw error
+      if (!data) return null
+
+      const row = data as Record<string, unknown>
+      const details = row.movie_details as Record<string, unknown> | null
+
+      return {
+        id: String(row.id),
+        title: String(row.title),
+        originalTitle: row.original_title ? String(row.original_title) : undefined,
+        year: Number(row.year),
+        posterUrl: row.poster_url ? String(row.poster_url) : undefined,
+        genre: (row.genre as string[] | null) ?? [],
+        director: (row.director as string[] | null) ?? [],
+        nation: row.nation ? String(row.nation) : undefined,
+        kmdbId: row.kmdb_id ? String(row.kmdb_id) : undefined,
+        tmdbId: row.tmdb_id ? Number(row.tmdb_id) : undefined,
+        rating: row.rating ? Number(row.rating) : undefined,
+        synopsis: details?.synopsis ? String(details.synopsis) : undefined,
+        runtimeMinutes: details?.runtime_minutes ? Number(details.runtime_minutes) : undefined,
+        certification: details?.certification ? String(details.certification) : undefined,
+        cast: (details?.cast_members as MovieDetail['cast'] | null) ?? [],
+      }
     },
     staleTime: 10 * 60 * 1000,
   })
@@ -271,7 +326,8 @@ export function useTheaterAllMovies(theaterId: string | null) {
           show_date,
           movies (
             id, title, original_title, year, poster_url, genre, director,
-            nation, synopsis, runtime_minutes, certification, kmdb_id, tmdb_id, rating
+            nation, kmdb_id, tmdb_id, rating,
+            movie_details(synopsis, runtime_minutes, certification)
           )
         `)
         .eq('theater_id', theaterId!)
@@ -289,7 +345,8 @@ export function useTheaterAllMovies(theaterId: string | null) {
             show_date,
             movies (
               id, title, original_title, year, poster_url, genre, director,
-              synopsis, runtime_minutes, certification, kmdb_id, tmdb_id, rating
+              kmdb_id, tmdb_id, rating,
+              movie_details(synopsis, runtime_minutes, certification)
             )
           `)
           .eq('theater_id', theaterId!)
@@ -309,6 +366,7 @@ export function useTheaterAllMovies(theaterId: string | null) {
         const movieId = String(m.id)
 
         if (!entryMap.has(movieId)) {
+          const details = m.movie_details as Record<string, unknown> | null
           entryMap.set(movieId, {
             movie: {
               id: movieId,
@@ -319,9 +377,9 @@ export function useTheaterAllMovies(theaterId: string | null) {
               genre: (m.genre as string[]) ?? [],
               director: (m.director as string[]) ?? [],
               nation: m.nation ? String(m.nation) : undefined,
-              synopsis: m.synopsis ? String(m.synopsis) : undefined,
-              runtimeMinutes: m.runtime_minutes ? Number(m.runtime_minutes) : undefined,
-              certification: m.certification ? String(m.certification) : undefined,
+              synopsis: details?.synopsis ? String(details.synopsis) : undefined,
+              runtimeMinutes: details?.runtime_minutes ? Number(details.runtime_minutes) : undefined,
+              certification: details?.certification ? String(details.certification) : undefined,
               kmdbId: m.kmdb_id ? String(m.kmdb_id) : undefined,
               tmdbId: m.tmdb_id ? Number(m.tmdb_id) : undefined,
               rating: m.rating ? Number(m.rating) : undefined,
@@ -374,12 +432,10 @@ export function useTheaterShowtimes(theaterId: string | null, date: string) {
             genre,
             director,
             nation,
-            synopsis,
-            runtime_minutes,
-            certification,
             kmdb_id,
             tmdb_id,
-            rating
+            rating,
+            movie_details(synopsis, runtime_minutes, certification)
           )
         `)
         .eq('theater_id', theaterId!)
@@ -410,12 +466,10 @@ export function useTheaterShowtimes(theaterId: string | null, date: string) {
               poster_url,
               genre,
               director,
-              synopsis,
-              runtime_minutes,
-              certification,
               kmdb_id,
               tmdb_id,
-              rating
+              rating,
+              movie_details(synopsis, runtime_minutes, certification)
             )
           `)
           .eq('theater_id', theaterId!)
@@ -433,6 +487,7 @@ export function useTheaterShowtimes(theaterId: string | null, date: string) {
       for (const r of rows) {
         const m = r.movies as unknown as Record<string, unknown> | null
         if (!m || movieMap.has(r.movie_id)) continue
+        const details = m.movie_details as Record<string, unknown> | null
         movieMap.set(r.movie_id, {
           id: String(m.id),
           title: String(m.title),
@@ -442,9 +497,9 @@ export function useTheaterShowtimes(theaterId: string | null, date: string) {
           genre: (m.genre as string[]) ?? [],
           director: (m.director as string[]) ?? [],
           nation: m.nation ? String(m.nation) : undefined,
-          synopsis: m.synopsis ? String(m.synopsis) : undefined,
-          runtimeMinutes: m.runtime_minutes ? Number(m.runtime_minutes) : undefined,
-          certification: m.certification ? String(m.certification) : undefined,
+          synopsis: details?.synopsis ? String(details.synopsis) : undefined,
+          runtimeMinutes: details?.runtime_minutes ? Number(details.runtime_minutes) : undefined,
+          certification: details?.certification ? String(details.certification) : undefined,
           kmdbId: m.kmdb_id ? String(m.kmdb_id) : undefined,
           tmdbId: m.tmdb_id ? Number(m.tmdb_id) : undefined,
           rating: m.rating ? Number(m.rating) : undefined,
@@ -472,6 +527,85 @@ export function useTheaterShowtimes(theaterId: string | null, date: string) {
         movies: Array.from(movieMap.values()),
         showtimes,
       }
+    },
+    staleTime: 2 * 60 * 1000,
+  })
+}
+
+/* ── 영화별 상영 영화관 + 오늘 상영시간 ─────────────────────────── */
+export interface MovieTheaterEntry {
+  theaterId: string
+  theaterName: string
+  theaterAddress: string
+  showtimes: Showtime[]
+}
+
+export function useMovieTheaterShowtimes(movieId: string | null) {
+  const today = formatLocalDate(new Date())
+
+  return useQuery<MovieTheaterEntry[]>({
+    queryKey: ['movie-theater-showtimes', movieId, today],
+    enabled: !!movieId,
+    queryFn: async () => {
+      const { data, error } = await supabase()
+        .from('showtimes')
+        .select(`
+          id,
+          theater_id,
+          show_date,
+          show_time,
+          end_time,
+          seat_available,
+          seat_total,
+          booking_url,
+          screen_name,
+          theaters (
+            id,
+            name,
+            address
+          )
+        `)
+        .eq('movie_id', movieId!)
+        .eq('is_active', true)
+        .eq('show_date', today)
+        .order('show_time')
+        .limit(500)
+
+      if (error) throw error
+
+      const theaterMap = new Map<string, MovieTheaterEntry>()
+      for (const r of data ?? []) {
+        const th = r.theaters as unknown as { id: string; name: string; address: string } | null
+        if (!th) continue
+
+        if (!theaterMap.has(th.id)) {
+          theaterMap.set(th.id, {
+            theaterId: th.id,
+            theaterName: th.name,
+            theaterAddress: th.address,
+            showtimes: [],
+          })
+        }
+
+        theaterMap.get(th.id)!.showtimes.push({
+          id: r.id,
+          movieId: movieId!,
+          movieTitle: '',
+          theaterId: th.id,
+          screenName: r.screen_name,
+          showDate: r.show_date,
+          showTime: r.show_time,
+          endTime: r.end_time ?? undefined,
+          formatType: 'standard' as const,
+          language: 'korean' as const,
+          seatAvailable: Number(r.seat_available ?? 0),
+          seatTotal: Number(r.seat_total ?? 0),
+          price: 0,
+          bookingUrl: r.booking_url ?? undefined,
+        })
+      }
+
+      return Array.from(theaterMap.values())
     },
     staleTime: 2 * 60 * 1000,
   })

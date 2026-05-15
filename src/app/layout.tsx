@@ -5,8 +5,8 @@ import { Providers } from './providers'
 import { initTheme } from '@/store/themeStore'
 
 export const metadata: Metadata = {
-  title: '예술영화관 상영 통합 조회',
-  description: '서울 독립·예술영화관 상영 정보 통합 조회 서비스',
+  title: '영화볼지도',
+  description: '서울 독립·예술영화관 상영 정보를 지도에서 한눈에',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',

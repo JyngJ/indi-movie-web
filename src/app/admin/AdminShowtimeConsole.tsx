@@ -77,10 +77,13 @@ export function AdminShowtimeConsole() {
     city: '',
     phone: '',
     website: '',
+    instagramUrl: '',
     screenCount: 0,
     seatCount: undefined,
   })
   const [showtimeDrafts, setShowtimeDrafts] = useState<Record<string, AdminShowtimeInput>>({})
+  const [activeTab, setActiveTab] = useState<'crawl' | 'status' | 'manage'>('crawl')
+  const [candidateFilter, setCandidateFilter] = useState<'all' | 'unmatched' | 'warning' | 'soldout'>('all')
   const [sourceFormOpen, setSourceFormOpen] = useState(false)
   const [sourceForm, setSourceForm] = useState({
     theaterName: '',
@@ -110,11 +113,20 @@ export function AdminShowtimeConsole() {
   const reviewCount = payload.candidates.filter((candidate) => candidate.status === 'needs_review').length
   const approvedCount = payload.candidates.filter((candidate) => candidate.status === 'approved').length
   const matchedCount = payload.candidates.filter((candidate) => candidate.matchedTheaterId && candidate.matchedMovieId).length
-  const visibleCandidates = useMemo(() => {
-    const query = normalizeSearchText(candidateSearchQuery)
-    if (!query) return payload.candidates
+  const unmatchedCount = payload.candidates.filter((c) => !c.matchedTheaterId || !c.matchedMovieId).length
+  const warningCount = payload.candidates.filter((c) => c.warnings.length > 0).length
+  const soldoutCount = payload.candidates.filter((c) => c.seatAvailable === 0).length
 
-    return payload.candidates.filter((candidate) => normalizeSearchText([
+  const visibleCandidates = useMemo(() => {
+    let list = payload.candidates
+    if (candidateFilter === 'unmatched') list = list.filter((c) => !c.matchedTheaterId || !c.matchedMovieId)
+    else if (candidateFilter === 'warning') list = list.filter((c) => c.warnings.length > 0)
+    else if (candidateFilter === 'soldout') list = list.filter((c) => c.seatAvailable === 0)
+
+    const query = normalizeSearchText(candidateSearchQuery)
+    if (!query) return list
+
+    return list.filter((candidate) => normalizeSearchText([
       candidate.movieTitle,
       candidate.theaterName,
       candidate.sourceId,
@@ -125,7 +137,7 @@ export function AdminShowtimeConsole() {
       candidate.warnings.join(' '),
       candidate.status,
     ].join(' ')).includes(query))
-  }, [candidateSearchQuery, payload.candidates])
+  }, [candidateFilter, candidateSearchQuery, payload.candidates])
   const candidateIds = useMemo(() => visibleCandidates.map((candidate) => candidate.id), [visibleCandidates])
   const selectedCandidateCount = candidateIds.filter((id) => selectedIds.includes(id)).length
   const allCandidatesSelected = candidateIds.length > 0 && selectedCandidateCount === candidateIds.length
@@ -639,6 +651,7 @@ export function AdminShowtimeConsole() {
       city: theater.city,
       phone: theater.phone ?? '',
       website: theater.website ?? '',
+      instagramUrl: theater.instagramUrl ?? '',
       screenCount: theater.screenCount,
       seatCount: theater.seatCount,
     })
@@ -653,6 +666,7 @@ export function AdminShowtimeConsole() {
       city: '',
       phone: '',
       website: '',
+      instagramUrl: '',
       screenCount: 0,
       seatCount: undefined,
     })
@@ -724,15 +738,41 @@ export function AdminShowtimeConsole() {
         </div>
       </header>
 
-      <section className={styles.metrics} aria-label="상영시간표 운영 지표">
-        <Metric label="수집 후보" value={payload.candidates.length} />
-        <Metric label="검수 필요" value={reviewCount} tone={reviewCount ? 'warning' : 'default'} />
-        <Metric label="승인 완료" value={approvedCount} tone="success" />
-        <Metric label="매칭 완료" value={matchedCount} tone={matchedCount ? 'success' : 'default'} />
-        <Metric label="평균 신뢰도" value={`${averageConfidence}%`} />
-      </section>
+      <nav className={styles.tabNav}>
+        <button
+          className={`${styles.tabBtn} ${activeTab === 'crawl' ? styles.tabBtnActive : ''}`}
+          onClick={() => setActiveTab('crawl')}
+        >
+          크롤링
+          {reviewCount > 0 && <span className={styles.tabBadge}>{reviewCount}</span>}
+        </button>
+        <button
+          className={`${styles.tabBtn} ${activeTab === 'status' ? styles.tabBtnActive : ''}`}
+          onClick={() => setActiveTab('status')}
+        >
+          DB 현황
+        </button>
+        <button
+          className={`${styles.tabBtn} ${activeTab === 'manage' ? styles.tabBtnActive : ''}`}
+          onClick={() => setActiveTab('manage')}
+        >
+          관리
+        </button>
+      </nav>
 
-      <section className={styles.workspace}>
+      {activeTab === 'crawl' && (
+        <>
+          <section className={styles.metrics} aria-label="상영시간표 운영 지표">
+            <Metric label="수집 후보" value={payload.candidates.length} />
+            <Metric label="검수 필요" value={reviewCount} tone={reviewCount ? 'warning' : 'default'} />
+            <Metric label="승인 완료" value={approvedCount} tone="success" />
+            <Metric label="매칭 완료" value={matchedCount} tone={matchedCount ? 'success' : 'default'} />
+            <Metric label="평균 신뢰도" value={`${averageConfidence}%`} />
+          </section>
+        </>
+      )}
+
+      {activeTab === 'crawl' && <section className={styles.workspace}>
         <aside className={styles.panel}>
           <div className={styles.panelHeader}>
             <h2>크롤링 소스</h2>
@@ -820,6 +860,7 @@ export function AdminShowtimeConsole() {
                     <option value="manual">수동</option>
                     <option value="daily">매일</option>
                     <option value="twice_daily">하루 2회</option>
+                    <option value="four_daily">하루 4회</option>
                   </select>
                 </label>
               </div>
@@ -907,6 +948,33 @@ export function AdminShowtimeConsole() {
 
           {message && <p className={styles.message}>{message}</p>}
 
+          <div className={styles.candidateFilterRow}>
+            <div className={styles.candidateFilterTabs}>
+              {([
+                { key: 'all',       label: '전체',     count: payload.candidates.length, dot: '' },
+                { key: 'unmatched', label: '매칭 필요', count: unmatchedCount,            dot: '#e74c3c' },
+                { key: 'warning',   label: '경고',     count: warningCount,              dot: '#e67e22' },
+                { key: 'soldout',   label: '매진',     count: soldoutCount,              dot: '#7f8c8d' },
+              ] as const).map(({ key, label, count, dot }) => (
+                <button
+                  key={key}
+                  data-key={key}
+                  className={`${styles.filterTab} ${candidateFilter === key ? styles.filterTabActive : ''}`}
+                  onClick={() => setCandidateFilter(key)}
+                >
+                  {dot && <span className={styles.filterTabDot} style={{ background: dot }} />}
+                  {label}
+                  {count > 0 && <span className={styles.filterTabBadge}>{count}</span>}
+                </button>
+              ))}
+            </div>
+            <div className={styles.candidateLegend}>
+              <span className={styles.legendItem}><span className={`${styles.legendDot} ${styles.legendDotRed}`} />매칭 안 됨</span>
+              <span className={styles.legendItem}><span className={`${styles.legendDot} ${styles.legendDotYellow}`} />경고 있음</span>
+              <span className={styles.legendItem}><span className={`${styles.legendDot} ${styles.legendDotGray}`} />매진</span>
+            </div>
+          </div>
+
           <div className={styles.reviewToolbar}>
             <input
               aria-label="검수 대기열 검색"
@@ -978,8 +1046,13 @@ export function AdminShowtimeConsole() {
                 </tr>
               </thead>
               <tbody>
-                {visibleCandidates.map((candidate) => (
-                  <tr key={candidate.id}>
+                {visibleCandidates.map((candidate) => {
+                  const isUnmatched = !candidate.matchedTheaterId || !candidate.matchedMovieId
+                  const hasWarning = candidate.warnings.length > 0
+                  const isSoldout = candidate.seatAvailable === 0
+                  const rowClass = isUnmatched ? styles.rowUnmatched : hasWarning ? styles.rowWarning : isSoldout ? styles.rowSoldout : ''
+                  return (
+                  <tr key={candidate.id} className={rowClass}>
                     <td>
                       <input
                         type="checkbox"
@@ -1049,9 +1122,13 @@ export function AdminShowtimeConsole() {
                         </ul>
                       )}
                     </td>
-                    <td><StatusBadge status={candidate.status} /></td>
+                    <td>
+                      <StatusBadge status={candidate.status} />
+                      {isSoldout && <span className={styles.soldoutTag}>매진</span>}
+                    </td>
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
             {payload.candidates.length === 0 && (
@@ -1066,25 +1143,33 @@ export function AdminShowtimeConsole() {
             )}
           </div>
         </section>
-      </section>
+      </section>}
 
-      <section className={styles.runLog}>
-        <div className={styles.panelHeader}>
-          <h2>최근 수집 로그</h2>
-          <span>{latestRun ? latestRun.finishedAt : '아직 실행 전'}</span>
-        </div>
-        <div className={styles.logGrid}>
-          {payload.runs.slice(0, 5).map((run) => (
-            <article key={run.id} className={styles.logItem}>
-              <strong>{run.sourceName}</strong>
-              <span>{run.inputKind} · {run.status} · 후보 {run.createdCount}개 · 경고 {run.warningCount}개</span>
-            </article>
-          ))}
-          {payload.runs.length === 0 && <p className={styles.emptyLog}>크롤링 이력이 없습니다.</p>}
-        </div>
-      </section>
+      {activeTab === 'crawl' && (
+        <section className={styles.runLog}>
+          <div className={styles.panelHeader}>
+            <h2>최근 수집 로그</h2>
+            <span>{latestRun ? latestRun.finishedAt : '아직 실행 전'}</span>
+          </div>
+          <div className={styles.logGrid}>
+            {payload.runs.slice(0, 5).map((run) => (
+              <article key={run.id} className={styles.logItem}>
+                <strong>{run.sourceName}</strong>
+                <span>{run.inputKind} · {run.status} · 후보 {run.createdCount}개 · 경고 {run.warningCount}개</span>
+              </article>
+            ))}
+            {payload.runs.length === 0 && <p className={styles.emptyLog}>크롤링 이력이 없습니다.</p>}
+          </div>
+        </section>
+      )}
 
-      <section className={styles.servicePanel}>
+      {activeTab === 'status' && <DbStatusTab
+        theaters={adminTheaters}
+        movies={adminMovies}
+        sources={payload.sources}
+      />}
+
+      {activeTab === 'manage' && <section className={styles.servicePanel}>
         <div className={styles.panelHeader}>
           <div>
             <h2>실제 서비스 DB</h2>
@@ -1130,6 +1215,10 @@ export function AdminShowtimeConsole() {
             <label>
               웹사이트
               <input value={theaterForm.website ?? ''} onChange={(event) => setTheaterForm((current) => ({ ...current, website: event.target.value }))} />
+            </label>
+            <label>
+              인스타그램 URL
+              <input placeholder="아이디 입력 (예: seoulartcinema)" value={theaterForm.instagramUrl ?? ''} onChange={(event) => setTheaterForm((current) => ({ ...current, instagramUrl: event.target.value }))} />
             </label>
             <label>
               상영관 수
@@ -1365,7 +1454,7 @@ export function AdminShowtimeConsole() {
             )}
           </div>
         </section>
-      </section>
+      </section>}
     </main>
   )
 }
@@ -1415,4 +1504,122 @@ function upsertOption<T extends { id: string }>(options: T[], option: T) {
 
 function splitListInput(value: string) {
   return value.split(',').map((item) => item.trim()).filter(Boolean)
+}
+
+function DbStatusTab({ theaters, movies, sources }: {
+  theaters: AdminTheater[]
+  movies: AdminMovie[]
+  sources: AdminTheaterSource[]
+}) {
+  const moviesNoPoster = movies.filter(m => !m.posterUrl)
+  const moviesNoSynopsis = movies.filter(m => !m.synopsis)
+  const sourcesUnhealthy = sources.filter(s => s.health !== 'healthy')
+
+  // 극장별 소스 매핑
+  const sourcesByTheater = new Map<string, AdminTheaterSource[]>()
+  for (const src of sources) {
+    const list = sourcesByTheater.get(src.theaterName) ?? []
+    list.push(src)
+    sourcesByTheater.set(src.theaterName, list)
+  }
+
+  const healthLabel: Record<AdminTheaterSource['health'], string> = {
+    healthy: '정상',
+    degraded: '저하',
+    broken: '오류',
+  }
+  const healthClass: Record<AdminTheaterSource['health'], string> = {
+    healthy: styles.healthHealthy,
+    degraded: styles.healthDegraded,
+    broken: styles.healthBroken,
+  }
+
+  return (
+    <>
+      <div className={styles.statusGrid}>
+        <Metric label="등록 극장" value={theaters.length} />
+        <Metric label="등록 영화" value={movies.length} />
+        <Metric label="크롤링 소스" value={sources.length} />
+        <Metric label="소스 이상" value={sourcesUnhealthy.length} tone={sourcesUnhealthy.length ? 'warning' : 'default'} />
+        <Metric label="포스터 없음" value={moviesNoPoster.length} tone={moviesNoPoster.length ? 'warning' : 'default'} />
+        <Metric label="시놉시스 없음" value={moviesNoSynopsis.length} tone={moviesNoSynopsis.length ? 'warning' : 'default'} />
+      </div>
+
+      <div className={styles.statusSection}>
+        <div className={styles.panelHeader}>
+          <h2>크롤링 소스 상태</h2>
+          <span>{sources.length}개 소스</span>
+        </div>
+        <table className={styles.statusTable}>
+          <thead>
+            <tr>
+              <th>극장</th>
+              <th>파서</th>
+              <th>주기</th>
+              <th>마지막 수집</th>
+              <th>상태</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sources.length === 0 && (
+              <tr><td colSpan={5} style={{ textAlign: 'center', color: 'var(--color-text-caption)', padding: '24px' }}>등록된 소스가 없습니다.</td></tr>
+            )}
+            {sources.map(src => (
+              <tr key={src.id}>
+                <td style={{ fontWeight: 600 }}>{src.theaterName}</td>
+                <td style={{ color: 'var(--color-text-sub)', fontFamily: 'monospace', fontSize: 12 }}>{src.parser}</td>
+                <td style={{ color: 'var(--color-text-sub)' }}>
+                  {{ manual: '수동', daily: '매일', twice_daily: '하루 2회', four_daily: '하루 4회' }[src.cadence] ?? src.cadence}
+                </td>
+                <td style={{ color: 'var(--color-text-caption)', fontSize: 12 }}>
+                  {src.lastCrawledAt ? new Date(src.lastCrawledAt).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                </td>
+                <td>
+                  <span className={`${styles.healthBadge} ${healthClass[src.health]}`}>
+                    {healthLabel[src.health]}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {moviesNoPoster.length > 0 && (
+        <div className={styles.statusSection}>
+          <div className={styles.panelHeader}>
+            <h2>포스터 없는 영화</h2>
+            <span>{moviesNoPoster.length}편</span>
+          </div>
+          <div className={styles.qualityList}>
+            {moviesNoPoster.map(m => (
+              <div key={m.id} className={styles.qualityItem}>
+                <div className={styles.qualityDot} style={{ background: 'var(--color-warning)' }} />
+                <span style={{ fontWeight: 600 }}>{m.title}</span>
+                <span style={{ color: 'var(--color-text-caption)', fontSize: 12 }}>{m.year} · {m.director.join(', ') || '감독 미입력'}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {moviesNoSynopsis.length > 0 && (
+        <div className={styles.statusSection}>
+          <div className={styles.panelHeader}>
+            <h2>시놉시스 없는 영화</h2>
+            <span>{moviesNoSynopsis.length}편</span>
+          </div>
+          <div className={styles.qualityList}>
+            {moviesNoSynopsis.map(m => (
+              <div key={m.id} className={styles.qualityItem}>
+                <div className={styles.qualityDot} style={{ background: 'var(--color-text-caption)' }} />
+                <span style={{ fontWeight: 600 }}>{m.title}</span>
+                <span style={{ color: 'var(--color-text-caption)', fontSize: 12 }}>{m.year}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  )
 }

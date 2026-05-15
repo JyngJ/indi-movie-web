@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { GENRES } from '@/lib/genres'
+import { withFlag } from '@/lib/nations'
 
 /* -- 날짜 헬퍼 ---------------------------------------------------- */
 const DOW = ['일', '월', '화', '수', '목', '금', '토']
@@ -52,8 +54,6 @@ function buildDateOptions(t = today()) {
 type DateId = 'today' | 'tomorrow' | 'this-weekend' | 'next-weekend' | 'this-week' | 'this-month' | 'custom' | null
 type OpenPanel = 'date' | 'genre' | 'nation' | 'calendar' | null
 
-/* -- 장르 -------------------------------------------------------- */
-const GENRES = ['드라마', '다큐멘터리', '애니메이션', '스릴러/호러', '코미디', '실험/예술', '단편', '로맨스'] as const
 const EMPTY_NATION_OPTIONS: string[] = []
 
 /* -- 타입 -------------------------------------------------------- */
@@ -452,24 +452,30 @@ function MultiSelectDropdown({ options, selectedValues, setSelectedValues, style
       overflow: 'hidden',
       boxShadow: '0 12px 40px rgba(0,0,0,0.72)',
       zIndex: 9999,
+      display: 'flex',
+      flexDirection: 'column',
+      maxHeight: 320,
       ...style,
     }}>
-      {options.map((option, i) => (
-        <DropdownRow
-          key={option}
-          kind="checkbox"
-          label={option}
-          selected={selectedValues.includes(option)}
-          onClick={() => toggle(option)}
-          isLast={i === options.length - 1}
-        />
-      ))}
+      <div style={{ overflowY: 'auto', flex: 1 }}>
+        {options.map((option, i) => (
+          <DropdownRow
+            key={option}
+            kind="checkbox"
+            label={option}
+            selected={selectedValues.includes(option)}
+            onClick={() => toggle(option)}
+            isLast={i === options.length - 1}
+          />
+        ))}
+      </div>
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '10px 14px',
         background: 'var(--color-surface-raised)',
         borderTop: '1px solid var(--color-border)',
         minHeight: 40,
+        flexShrink: 0,
       }}>
         <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>
           {selectedValues.length > 0 ? `${selectedValues.length}개 선택됨` : ''}
@@ -580,9 +586,11 @@ function FilterChip({ label, value, open, selected, hasDropdown, onClick, onClea
 export interface FilterBarProps {
   onChange?: (state: FilterState) => void
   nationOptions?: string[]
+  movieFilter?: { id: string; title: string } | null
+  onMovieFilterClear?: () => void
 }
 
-export function FilterBar({ onChange, nationOptions = EMPTY_NATION_OPTIONS }: FilterBarProps) {
+export function FilterBar({ onChange, nationOptions = EMPTY_NATION_OPTIONS, movieFilter, onMovieFilterClear }: FilterBarProps) {
   const [dateId, setDateId] = useState<DateId>('this-week')
   const [customStart, setCustomStart] = useState<Date | null>(null)
   const [customEnd, setCustomEnd] = useState<Date | null>(null)
@@ -741,8 +749,8 @@ export function FilterBar({ onChange, nationOptions = EMPTY_NATION_OPTIONS }: Fi
     : genres.length === 1 ? genres[0]
     : `${genres[0]} 외 ${genres.length - 1}`
   const nationLabel = nations.length === 0 ? undefined
-    : nations.length === 1 ? nations[0]
-    : `${nations[0]} 외 ${nations.length - 1}`
+    : nations.length === 1 ? withFlag(nations[0])
+    : `${withFlag(nations[0])} 외 ${nations.length - 1}`
   const isDateOpen = openPanel === 'date' || openPanel === 'calendar'
 
   return (
@@ -774,6 +782,15 @@ export function FilterBar({ onChange, nationOptions = EMPTY_NATION_OPTIONS }: Fi
           background: 'transparent',
         }}
       >
+        {movieFilter && (
+          <FilterChip
+            label="영화"
+            value={movieFilter.title.length > 10 ? movieFilter.title.slice(0, 10) + '…' : movieFilter.title}
+            selected
+            onClick={() => {}}
+            onClear={onMovieFilterClear}
+          />
+        )}
         <FilterChip
           label="상영 일정"
           value={dateLabel}
@@ -811,11 +828,13 @@ export function FilterBar({ onChange, nationOptions = EMPTY_NATION_OPTIONS }: Fi
           selected={bookable}
           onClick={() => setBookable(b => !b)}
         />
+        {/* 독립영화관 필터 — 미구현, 비활성화
         <FilterChip
           label="독립영화관"
           selected={indie}
           onClick={() => setIndie(b => !b)}
         />
+        */}
       </div>
 
       {openPanel === 'date' && (
