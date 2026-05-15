@@ -1427,13 +1427,10 @@ export default function MapView() {
       >
         <TileLayer
           url={isDark
-            ? 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png'
+            ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
             : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
           }
-          attribution={isDark
-            ? '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; OpenStreetMap contributors'
-            : '&copy; OpenStreetMap contributors &copy; CARTO'
-          }
+          attribution="&copy; OpenStreetMap contributors &copy; CARTO"
           maxZoom={19}
         />
         <MapRefSetter mapRef={mapRef} />

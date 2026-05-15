@@ -124,6 +124,19 @@
 
 ---
 
+## 지도 타일
+
+### 다크 모드 타일 고도화
+- 현재: CartoDB `dark_all` (무료, API 키 불필요, 순수 검정)
+- 목표: Stadia Maps `AlidadeSmoothDark` — 뮤트된 다크 네이비 톤으로 교체
+- 방법:
+  1. [client.stadiamaps.com](https://client.stadiamaps.com) 무료 계정 가입 → API 키 발급
+  2. `.env.local` + Vercel 환경변수에 `NEXT_PUBLIC_STADIA_MAPS_API_KEY=발급받은키` 추가
+  3. `MapView.tsx` TileLayer URL을 `https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png?api_key=${process.env.NEXT_PUBLIC_STADIA_MAPS_API_KEY}` 로 교체
+- 무료 플랜: 월 200,000 타일 요청 허용
+
+---
+
 ## 지도 저작권
 
 ### 정보 페이지 OSM/Carto 저작권 표기
