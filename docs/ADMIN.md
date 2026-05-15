@@ -147,6 +147,38 @@ candidate.matched_movie_id 저장
 
 KMDB는 한국 영화 코드, 제목, 제작연도, 개봉일, 장르, 감독, 줄거리, 러닝타임, 관람등급과 포스터 URL을 함께 제공한다. 가져온 포스터는 `movies.poster_url`에 저장한다.
 
+현재 구현 기준:
+
+- 검색 API: `GET /api/admin/movies/search?q=...`
+  - `src/lib/admin/kmdb.ts`의 `searchKmdbMovies()`가 KMDB `search_json2.jsp`에 `collection=kmdb_new2`, `detail=Y`, `query`, `listCount=20`, `sort=RANK,1`로 요청한다.
+  - 응답은 관리자 화면 후보 선택용 `AdminExternalMovie`로 정규화한다.
+- 가져오기 API: `POST /api/admin/movies/import`
+  - 요청 body는 `{ kmdbMovieId, kmdbMovieSeq }`만 받는다.
+  - `getKmdbMovie()`가 같은 KMDB API를 `movieId`, `movieSeq`, `detail=Y`로 다시 조회한다.
+  - 내부 `movies` 테이블에는 `kmdb_id + kmdb_movie_seq` 조합 기준으로 기존 레코드를 찾고, 있으면 update, 없으면 insert한다.
+- 환경 변수는 `KMDB_SERVICE_KEY`를 우선 사용하고, 없으면 `KMDB_API_KEY`도 허용한다.
+
+KMDB → 내부 필드 매핑:
+
+| KMDB 필드 | 내부/관리자 필드 | DB 컬럼 | 비고 |
+| --- | --- | --- | --- |
+| `movieId` | `movieId`, `kmdbId` | `movies.kmdb_id` | KMDB 영화 ID |
+| `movieSeq` | `movieSeq`, `kmdbMovieSeq` | `movies.kmdb_movie_seq` | 같은 `movieId` 내 세부 식별자 |
+| `title` | `title` | `movies.title` | `!HS`, `!HE` 검색 하이라이트 제거 |
+| `titleOrg` 또는 `titleEng` | `originalTitle` | `movies.original_title` | `titleOrg` 우선 |
+| `prodYear` 또는 개봉일 연도 | `year` | `movies.year` | 없으면 현재 연도로 fallback |
+| `repRlsDate` 또는 `releaseDate` | `openDate` | 저장 안 함 | `YYYY-MM-DD`로 정규화하지만 현재 DB에는 미저장 |
+| `genre` | `genre[]` | `movies.genre` | 쉼표/파이프 기준 분리 |
+| `directorNm` | `director[]` | `movies.director` | 쉼표/파이프 기준 분리 |
+| `nation` | `nation` | `movies.nation` | KMDB 국가 문자열 원문 저장 |
+| `posterUrl` 또는 `posters` | `posterUrl` | `movies.poster_url` | 파이프 구분 URL 중 첫 번째만 저장 |
+| `stillUrl` 또는 `stlls` | `stillUrl` | 저장 안 함 | 현재 후보 데이터에만 존재 |
+| `plot` | `synopsis` | `movies.synopsis` | 공백 정규화 |
+| `runtime` | `runtimeMinutes` | `movies.runtime_minutes` | 양의 정수일 때만 저장 |
+| `rating` | `certification` | `movies.certification` | KMDB 등급 문자열 원문 저장 |
+
+현재 KMDB import는 `tmdb_id`, `rating`(숫자 평점), `open_date`, `still_url`을 `movies`에 저장하지 않는다.
+
 ## 관리자 인증
 
 `/admin`은 Supabase Auth 로그인 후 서버가 발급한 httpOnly 쿠키가 있어야 접근할 수 있다. 로그인 흐름은 아래와 같다.

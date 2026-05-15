@@ -67,6 +67,7 @@ export function AdminShowtimeConsole() {
   const [movieSearchQuery, setMovieSearchQuery] = useState('')
   const [movieSearchResults, setMovieSearchResults] = useState<AdminExternalMovie[]>([])
   const [movieEditForm, setMovieEditForm] = useState<AdminMovieInput | null>(null)
+  const [movieEditRaw, setMovieEditRaw] = useState({ director: '', genre: '' })
   const [theaterFormOpen, setTheaterFormOpen] = useState(false)
   const [theaterForm, setTheaterForm] = useState<AdminTheaterInput>({
     name: '',
@@ -76,6 +77,7 @@ export function AdminShowtimeConsole() {
     city: '',
     phone: '',
     website: '',
+    instagramUrl: '',
     screenCount: 0,
     seatCount: undefined,
   })
@@ -577,10 +579,15 @@ export function AdminShowtimeConsole() {
 
     setLoading(true)
     try {
+      const payload = {
+        ...movieEditForm,
+        genre: splitListInput(movieEditRaw.genre),
+        director: splitListInput(movieEditRaw.director),
+      }
       const response = await fetch('/api/admin/movies', {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(movieEditForm),
+        body: JSON.stringify(payload),
       })
       const result = (await response.json()) as { movie?: AdminMovie; error?: { message: string } }
 
@@ -633,6 +640,7 @@ export function AdminShowtimeConsole() {
       city: theater.city,
       phone: theater.phone ?? '',
       website: theater.website ?? '',
+      instagramUrl: theater.instagramUrl ?? '',
       screenCount: theater.screenCount,
       seatCount: theater.seatCount,
     })
@@ -647,6 +655,7 @@ export function AdminShowtimeConsole() {
       city: '',
       phone: '',
       website: '',
+      instagramUrl: '',
       screenCount: 0,
       seatCount: undefined,
     })
@@ -814,6 +823,7 @@ export function AdminShowtimeConsole() {
                     <option value="manual">수동</option>
                     <option value="daily">매일</option>
                     <option value="twice_daily">하루 2회</option>
+                    <option value="four_daily">하루 4회</option>
                   </select>
                 </label>
               </div>
@@ -1126,6 +1136,10 @@ export function AdminShowtimeConsole() {
               <input value={theaterForm.website ?? ''} onChange={(event) => setTheaterForm((current) => ({ ...current, website: event.target.value }))} />
             </label>
             <label>
+              인스타그램 URL
+              <input placeholder="아이디 입력 (예: seoulartcinema)" value={theaterForm.instagramUrl ?? ''} onChange={(event) => setTheaterForm((current) => ({ ...current, instagramUrl: event.target.value }))} />
+            </label>
+            <label>
               상영관 수
               <input type="number" min={0} value={theaterForm.screenCount ?? 0} onChange={(event) => setTheaterForm((current) => ({ ...current, screenCount: Number(event.target.value) }))} />
             </label>
@@ -1269,24 +1283,27 @@ export function AdminShowtimeConsole() {
                 <button
                   key={movie.id}
                   className={`${styles.sourceItem} ${movieEditForm?.id === movie.id ? styles.sourceItemActive : ''}`}
-                  onClick={() => setMovieEditForm({
+                  onClick={() => {
+                    setMovieEditRaw({ director: movie.director.join(', '), genre: movie.genre.join(', ') })
+                    setMovieEditForm({
                     id: movie.id,
                     title: movie.title,
                     year: movie.year,
                     originalTitle: movie.originalTitle ?? '',
                     genre: movie.genre,
                     director: movie.director,
+                    nation: movie.nation,
                     kmdbId: movie.kmdbId,
                     kmdbMovieSeq: movie.kmdbMovieSeq,
                     posterUrl: movie.posterUrl,
                     synopsis: movie.synopsis,
                     runtimeMinutes: movie.runtimeMinutes,
                     certification: movie.certification,
-                  })}
+                  })}}
                 >
                   <span>
                     <strong>{movie.title}</strong>
-                    <small>{movie.year} · {movie.director.join(', ') || '감독 미입력'}{movie.kmdbId ? ` · KMDB ${movie.kmdbId}${movie.kmdbMovieSeq ?? ''}` : ''}{movie.posterUrl ? ' · 포스터 있음' : ''}</small>
+                    <small>{movie.year}{movie.nation ? ` · ${movie.nation}` : ''} · {movie.director.join(', ') || '감독 미입력'}{movie.kmdbId ? ` · KMDB ${movie.kmdbId}${movie.kmdbMovieSeq ?? ''}` : ''}{movie.posterUrl ? ' · 포스터 있음' : ''}</small>
                   </span>
                 </button>
               ))}
@@ -1324,16 +1341,28 @@ export function AdminShowtimeConsole() {
                   <input value={movieEditForm.certification ?? ''} onChange={(event) => setMovieEditForm((current) => current ? { ...current, certification: event.target.value } : current)} />
                 </label>
                 <label>
+                  국가
+                  <input value={movieEditForm.nation ?? ''} onChange={(event) => setMovieEditForm((current) => current ? { ...current, nation: event.target.value } : current)} />
+                </label>
+                <label>
                   러닝타임
                   <input type="number" min={0} value={movieEditForm.runtimeMinutes ?? ''} onChange={(event) => setMovieEditForm((current) => current ? { ...current, runtimeMinutes: event.target.value ? Number(event.target.value) : undefined } : current)} />
                 </label>
                 <label>
                   장르
-                  <input value={(movieEditForm.genre ?? []).join(', ')} onChange={(event) => setMovieEditForm((current) => current ? { ...current, genre: splitListInput(event.target.value) } : current)} />
+                  <input
+                    value={movieEditRaw.genre}
+                    onChange={(e) => setMovieEditRaw((r) => ({ ...r, genre: e.target.value }))}
+                    onBlur={(e) => setMovieEditForm((f) => f ? { ...f, genre: splitListInput(e.target.value) } : f)}
+                  />
                 </label>
                 <label>
                   감독
-                  <input value={(movieEditForm.director ?? []).join(', ')} onChange={(event) => setMovieEditForm((current) => current ? { ...current, director: splitListInput(event.target.value) } : current)} />
+                  <input
+                    value={movieEditRaw.director}
+                    onChange={(e) => setMovieEditRaw((r) => ({ ...r, director: e.target.value }))}
+                    onBlur={(e) => setMovieEditForm((f) => f ? { ...f, director: splitListInput(e.target.value) } : f)}
+                  />
                 </label>
                 <label className={styles.wideField}>
                   줄거리

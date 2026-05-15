@@ -48,7 +48,10 @@ CREATE INDEX idx_theaters_name_trgm  ON theaters USING GIN(name gin_trgm_ops);
 
 ---
 
-## movies (영화)
+## movies (영화 — 경량 목록용)
+
+> 지도/검색 성능을 위해 목록 쿼리에 필요한 필드만 유지합니다.  
+> 상세 정보(`synopsis`, `runtime_minutes`, `certification`, `cast_members`)는 `movie_details` 테이블로 분리되었습니다.
 
 ```sql
 CREATE TABLE movies (
@@ -56,14 +59,13 @@ CREATE TABLE movies (
   title            VARCHAR(500)  NOT NULL,
   original_title   VARCHAR(500),
   year             INTEGER       NOT NULL,
-  kmdb_id          VARCHAR(50)   UNIQUE,
+  kmdb_id          VARCHAR(50),
+  kmdb_movie_seq   VARCHAR(50),
   tmdb_id          INTEGER       UNIQUE,
   poster_url       VARCHAR(500),
-  genre            TEXT[],
-  director         TEXT[],
-  synopsis         TEXT,
-  runtime_minutes  INTEGER,
-  certification    VARCHAR(10),      -- '전체', '12세', '15세', '청불'
+  genre            TEXT[]        NOT NULL DEFAULT '{}',
+  director         TEXT[]        NOT NULL DEFAULT '{}',
+  nation           VARCHAR(100),
   rating           NUMERIC(3,2),
   created_at       TIMESTAMP     DEFAULT NOW(),
   updated_at       TIMESTAMP     DEFAULT NOW()
@@ -73,7 +75,46 @@ CREATE TABLE movies (
 CREATE INDEX idx_movies_title_trgm ON movies USING GIN(title gin_trgm_ops);
 CREATE INDEX idx_movies_year       ON movies(year DESC);
 CREATE INDEX idx_movies_genre      ON movies USING GIN(genre);
+CREATE UNIQUE INDEX idx_movies_kmdb_identity
+  ON movies(kmdb_id, kmdb_movie_seq)
+  WHERE kmdb_id IS NOT NULL AND kmdb_movie_seq IS NOT NULL;
 ```
+
+KMDB import는 `kmdb_id + kmdb_movie_seq` 조합을 내부 영화 식별자로 사용한다. 가져오기 시 같은 조합의 레코드가 있으면 갱신하고, 없으면 새로 추가한다.
+
+현재 코드가 KMDB에서 받아 `movies`에 저장하는 값은 `title`, `original_title`, `year`, `kmdb_id`, `kmdb_movie_seq`, `poster_url`, `genre`, `director`, `nation`이다. `synopsis`, `runtime_minutes`, `certification`은 `movie_details`로 분리되었다. KMDB 응답의 개봉일(`openDate`)과 스틸컷(`stillUrl`)은 관리자 후보 데이터에는 남지만 현재 테이블에는 저장하지 않는다. `tmdb_id`와 숫자 평점 `rating`도 KMDB import 경로에서는 채우지 않는다.
+
+---
+
+## movie_details (영화 상세 — 온디맨드)
+
+> 영화 상세 페이지 진입 시에만 join해서 가져옵니다. (`useMovieDetail(id)`)  
+> 적용 SQL: `docs/SUPABASE_MOVIE_DETAILS.sql`
+
+```sql
+CREATE TABLE movie_details (
+  movie_id        UUID PRIMARY KEY REFERENCES movies(id) ON DELETE CASCADE,
+
+  synopsis        TEXT,
+  runtime_minutes INTEGER,
+  certification   VARCHAR(10),       -- '전체', '12세', '15세', '청불'
+
+  -- [{name, character, profile_url}]
+  cast_members    JSONB NOT NULL DEFAULT '[]'::jsonb,
+
+  trailer_url     TEXT,
+  awards          TEXT[] NOT NULL DEFAULT '{}',
+
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_movie_details_movie_id ON movie_details(movie_id);
+```
+
+**쿼리 패턴**:
+- 목록/지도: `movies` 테이블만 select → 경량
+- 상세 페이지: `movies` + `movie_details(synopsis, runtime_minutes, certification, cast_members)` join → `useMovieDetail(id)`
 
 ---
 
