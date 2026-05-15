@@ -77,6 +77,7 @@ export function AdminShowtimeConsole() {
     city: '',
     phone: '',
     website: '',
+    instagramUrl: '',
     screenCount: 0,
     seatCount: undefined,
   })
@@ -639,6 +640,7 @@ export function AdminShowtimeConsole() {
       city: theater.city,
       phone: theater.phone ?? '',
       website: theater.website ?? '',
+      instagramUrl: theater.instagramUrl ?? '',
       screenCount: theater.screenCount,
       seatCount: theater.seatCount,
     })
@@ -653,6 +655,7 @@ export function AdminShowtimeConsole() {
       city: '',
       phone: '',
       website: '',
+      instagramUrl: '',
       screenCount: 0,
       seatCount: undefined,
     })
@@ -1130,6 +1133,10 @@ export function AdminShowtimeConsole() {
             <label>
               웹사이트
               <input value={theaterForm.website ?? ''} onChange={(event) => setTheaterForm((current) => ({ ...current, website: event.target.value }))} />
+            </label>
+            <label>
+              인스타그램 URL
+              <input placeholder="아이디 입력 (예: seoulartcinema)" value={theaterForm.instagramUrl ?? ''} onChange={(event) => setTheaterForm((current) => ({ ...current, instagramUrl: event.target.value }))} />
             </label>
             <label>
               상영관 수

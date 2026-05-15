@@ -26,7 +26,7 @@ export function useTheaters() {
     queryFn: async () => {
       const { data, error } = await supabase()
         .from('theaters')
-        .select('id,name,lat,lng,address,city,phone,website,screen_count,seat_count,parking,restaurant,accessibility,rating,created_at,updated_at')
+        .select('id,name,lat,lng,address,city,phone,website,instagram_url,screen_count,seat_count,parking,restaurant,accessibility,rating,created_at,updated_at')
         .order('name')
 
       if (error) throw error
@@ -40,6 +40,7 @@ export function useTheaters() {
         city: r.city,
         phone: r.phone ?? undefined,
         website: r.website ?? undefined,
+        instagramUrl: r.instagram_url ?? undefined,
         screenCount: r.screen_count,
         seatCount: r.seat_count ?? undefined,
         amenities: {

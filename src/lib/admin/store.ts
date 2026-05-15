@@ -85,6 +85,7 @@ interface TheaterRow {
   address?: string | null
   phone?: string | null
   website?: string | null
+  instagram_url?: string | null
   screen_count?: number | null
   seat_count?: number | null
 }
@@ -362,7 +363,7 @@ export async function listAdminTheaters(): Promise<AdminTheater[]> {
   const supabase = createSupabaseAdminClient()
   const { data, error } = await supabase
     .from('theaters')
-    .select('id, name, lat, lng, address, city, phone, website, screen_count, seat_count')
+    .select('id, name, lat, lng, address, city, phone, website, instagram_url, screen_count, seat_count')
     .order('name', { ascending: true })
 
   if (error) throw new Error(error.message)
@@ -375,7 +376,7 @@ export async function createAdminTheater(input: AdminTheaterInput) {
   const { data, error } = await supabase
     .from('theaters')
     .insert(theaterToRow(input))
-    .select('id, name, lat, lng, address, city, phone, website, screen_count, seat_count')
+    .select('id, name, lat, lng, address, city, phone, website, instagram_url, screen_count, seat_count')
     .single()
 
   if (error) throw new Error(error.message)
@@ -391,7 +392,7 @@ export async function updateAdminTheater(input: AdminTheaterInput) {
     .from('theaters')
     .update(theaterToRow(input))
     .eq('id', input.id)
-    .select('id, name, lat, lng, address, city, phone, website, screen_count, seat_count')
+    .select('id, name, lat, lng, address, city, phone, website, instagram_url, screen_count, seat_count')
     .single()
 
   if (error) throw new Error(error.message)
@@ -884,9 +885,20 @@ function theaterFromRow(row: TheaterRow): AdminTheater {
     city: row.city ?? '',
     phone: row.phone ?? undefined,
     website: row.website ?? undefined,
+    instagramUrl: row.instagram_url ?? undefined,
     screenCount: row.screen_count ?? 0,
     seatCount: row.seat_count ?? undefined,
   }
+}
+
+function normalizeInstagramUrl(value?: string): string | null {
+  const raw = value?.trim()
+  if (!raw) return null
+  // 이미 URL 형태면 username만 추출
+  const fromUrl = raw.match(/instagram\.com\/([^/?#\s]+)/)?.[1]
+  const username = fromUrl ?? raw.replace(/^@/, '')
+  if (!username) return null
+  return `https://www.instagram.com/${username}/`
 }
 
 function theaterToRow(input: AdminTheaterInput) {
@@ -909,6 +921,7 @@ function theaterToRow(input: AdminTheaterInput) {
     city,
     phone: input.phone?.trim() || null,
     website: input.website?.trim() || null,
+    instagram_url: normalizeInstagramUrl(input.instagramUrl),
     screen_count: input.screenCount ?? 0,
     seat_count: input.seatCount ?? null,
   }

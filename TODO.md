@@ -4,6 +4,14 @@
 
 ---
 
+## 확인 필요
+
+### 공유 버튼 HTTPS 테스트
+- `navigator.share`는 secure context(HTTPS)에서만 동작
+- 로컬 `http://192.168.x.x:3000`에서는 작동 안 함 — Vercel 배포 URL로 검증 필요
+
+---
+
 ## 릴리즈 전 필수
 
 ### 제보/추가요청 버튼

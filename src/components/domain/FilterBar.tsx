@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { GENRES } from '@/lib/genres'
 
 /* -- 날짜 헬퍼 ---------------------------------------------------- */
 const DOW = ['일', '월', '화', '수', '목', '금', '토']
@@ -52,8 +53,6 @@ function buildDateOptions(t = today()) {
 type DateId = 'today' | 'tomorrow' | 'this-weekend' | 'next-weekend' | 'this-week' | 'this-month' | 'custom' | null
 type OpenPanel = 'date' | 'genre' | 'nation' | 'calendar' | null
 
-/* -- 장르 -------------------------------------------------------- */
-const GENRES = ['드라마', '다큐멘터리', '애니메이션', '스릴러/호러', '코미디', '실험/예술', '단편', '로맨스'] as const
 const EMPTY_NATION_OPTIONS: string[] = []
 
 /* -- 타입 -------------------------------------------------------- */

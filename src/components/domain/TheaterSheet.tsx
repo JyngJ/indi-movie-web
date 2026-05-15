@@ -12,6 +12,7 @@ import { useTheaterShowtimes, useTheaterAllMovies } from '@/lib/supabase/queries
 import type { TheaterMovieEntry } from '@/lib/supabase/queries'
 import type { Theater, Showtime } from '@/types/api'
 import { Skeleton } from '@/components/primitives/Skeleton'
+import { GENRES, normalizeGenre } from '@/lib/genres'
 
 /* ── 상수 ──────────────────────────────────────────────────────── */
 // 접힌 상태에서 보이는 높이 = 핸들(20) + 헤더(88, 액션버튼 포함) + 포스터스트립(228) + 테두리(2) + 여유(6)
@@ -252,6 +253,11 @@ export function TheaterSheet({
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
   const [pendingFilters, setPendingFilters] = useState<SheetFilterState>({ genres: [], nations: [], bookable: false })
 
+  const applySheetFilters = (next: SheetFilterState) => {
+    setSheetFilters(next)
+    if (posterScrollRef.current) posterScrollRef.current.scrollLeft = 0
+  }
+
   /* ── 진입 애니메이션 ─────────────────────────────────────────── */
   // 마운트 직후 translateY = window.innerHeight → 다음 프레임에 정상 위치로 전환
   const enterDone = useRef(false)
@@ -320,9 +326,13 @@ export function TheaterSheet({
 
   /* ── 바텀시트 필터 — 이 극장 영화에서만 가능한 장르/국가 ── */
   const availableGenres = useMemo(() => {
-    const s = new Set<string>()
-    for (const entry of allMovieEntries) for (const g of entry.movie.genre) s.add(g)
-    return Array.from(s)
+    const found = new Set<string>()
+    for (const entry of allMovieEntries)
+      for (const raw of entry.movie.genre) {
+        const g = normalizeGenre(raw)
+        if (g) found.add(g)
+      }
+    return GENRES.filter(g => found.has(g))
   }, [allMovieEntries])
 
   const availableNations = useMemo(() => {
@@ -678,7 +688,10 @@ export function TheaterSheet({
     const { genres, nations, bookable } = sheetFilters
     if (genres.length === 0 && nations.length === 0 && !bookable) return allMovieEntries
     return allMovieEntries.filter(entry => {
-      const matchesGenre = genres.length === 0 || entry.movie.genre.some(g => genres.includes(g))
+      const matchesGenre = genres.length === 0 || entry.movie.genre.some(g => {
+        const normalized = normalizeGenre(g)
+        return normalized !== null && genres.includes(normalized)
+      })
       const matchesNation = nations.length === 0 || (() => {
         const ns = entry.movie.nation?.split(/[,，/·]+/).map(x => x.trim()).filter(Boolean) ?? []
         return ns.some(n => nations.includes(n))
@@ -736,37 +749,36 @@ export function TheaterSheet({
     setTimeout(() => window.open(fallback, '_blank', 'noopener'), 1500)
   }
 
-  const shareTheater = async () => {
-    const shareUrl = typeof window !== 'undefined'
-      ? `${window.location.origin}${window.location.pathname}?theater=${encodeURIComponent(theater.id)}`
-      : ''
-    const payload = {
-      title: theater.name,
-      text: `${theater.name} · ${theater.address}`,
-      url: shareUrl,
-    }
+  const shareTheater = () => {
+    const shareUrl = `${window.location.origin}/?theater=${encodeURIComponent(theater.id)}`
+    // text + url 동시에 넘기면 iOS Safari가 url을 무시하는 버그 있음 → title + url만 사용
+    const payload = { title: theater.name, url: shareUrl }
 
-    if (navigator.share) {
-      try {
-        await navigator.share(payload)
-        return
-      } catch {
-        return
+    const copyFallback = () => {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(shareUrl).then(() => setCopyCount(c => c + 1))
       }
     }
 
-    if (navigator.clipboard && shareUrl) {
-      await navigator.clipboard.writeText(shareUrl)
-      setCopyCount(c => c + 1)
+    const canUseShare = typeof navigator.share === 'function'
+      && (typeof navigator.canShare !== 'function' || navigator.canShare(payload))
+
+    if (canUseShare) {
+      navigator.share(payload).catch((e: unknown) => {
+        if (e instanceof DOMException && e.name === 'AbortError') return
+        copyFallback()
+      })
+      return
     }
+
+    copyFallback()
   }
 
   const openInstagram = () => {
-    const instagramUrl = (theater as Theater & { instagramUrl?: string }).instagramUrl
-    const username = instagramUrl?.match(/instagram\.com\/([^/?#]+)/)?.[1]
+    const username = theater.instagramUrl?.match(/instagram\.com\/([^/?#]+)/)?.[1]
 
     if (!username) {
-      const webUrl = instagramUrl || `https://www.instagram.com/explore/search/keyword/?q=${encodeURIComponent(theater.name)}`
+      const webUrl = theater.instagramUrl || `https://www.instagram.com/explore/search/keyword/?q=${encodeURIComponent(theater.name)}`
       window.open(webUrl, '_blank', 'noopener')
       return
     }
@@ -1255,7 +1267,7 @@ export function TheaterSheet({
                   {sheetFilters.genres.map(g => (
                     <button
                       key={`g:${g}`}
-                      onClick={() => setSheetFilters(prev => ({ ...prev, genres: prev.genres.filter(x => x !== g) }))}
+                      onClick={() => applySheetFilters({ ...sheetFilters, genres: sheetFilters.genres.filter(x => x !== g) })}
                       style={{
                         flexShrink: 0, height: 22, padding: '0 6px 0 8px',
                         borderRadius: 999,
@@ -1273,7 +1285,7 @@ export function TheaterSheet({
                   {sheetFilters.nations.map(n => (
                     <button
                       key={`n:${n}`}
-                      onClick={() => setSheetFilters(prev => ({ ...prev, nations: prev.nations.filter(x => x !== n) }))}
+                      onClick={() => applySheetFilters({ ...sheetFilters, nations: sheetFilters.nations.filter(x => x !== n) })}
                       style={{
                         flexShrink: 0, height: 22, padding: '0 6px 0 8px',
                         borderRadius: 999,
@@ -1290,7 +1302,7 @@ export function TheaterSheet({
                   ))}
                   {sheetFilters.bookable && (
                     <button
-                      onClick={() => setSheetFilters(prev => ({ ...prev, bookable: false }))}
+                      onClick={() => applySheetFilters({ ...sheetFilters, bookable: false })}
                       style={{
                         flexShrink: 0, height: 22, padding: '0 6px 0 8px',
                         borderRadius: 999,
@@ -1780,7 +1792,7 @@ export function TheaterSheet({
             {/* 적용하기 버튼 */}
             <div style={{ padding: '0 18px 18px' }}>
               <button
-                onClick={() => { setSheetFilters(pendingFilters); setFilterSheetOpen(false) }}
+                onClick={() => { applySheetFilters(pendingFilters); setFilterSheetOpen(false) }}
                 style={{
                   width: '100%', height: 50, borderRadius: 12,
                   border: 'none', backgroundColor: 'var(--color-primary-base)',

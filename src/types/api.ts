@@ -23,6 +23,7 @@ export interface Theater {
   city: string
   phone?: string
   website?: string
+  instagramUrl?: string
   screenCount?: number
   seatCount?: number
   amenities?: {

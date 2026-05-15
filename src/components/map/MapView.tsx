@@ -15,6 +15,7 @@ import type { FilterState } from '@/components/domain'
 import { useActiveMovieIds, useMapShowtimes, useMovies, useStations, useTheaters } from '@/lib/supabase/queries'
 import type { Movie, Station, Theater } from '@/types/api'
 import subwayLinesData from '@/data/subway-lines.json'
+import { normalizeGenre } from '@/lib/genres'
 
 interface SubwayLineProperties {
   line?: string
@@ -1181,7 +1182,10 @@ export default function MapView() {
         if (hasSeats) current.hasAvailableSeats = true
       } else {
         const matchesMovieFilter = !movieFilter || showtime.movieId === movieFilter.id
-        const matchesGenre = filters.genres.length === 0 || showtime.movie.genre.some(g => filters.genres.includes(g))
+        const matchesGenre = filters.genres.length === 0 || showtime.movie.genre.some(g => {
+          const normalized = normalizeGenre(g)
+          return normalized !== null && filters.genres.includes(normalized)
+        })
         const matchesNation = (() => {
           if (filters.nations.length === 0) return true
           const ns = showtime.movie.nation?.split(/[,，/·]+/).map(s => s.trim()).filter(Boolean) ?? []

@@ -155,6 +155,7 @@ export interface AdminTheater {
   city: string
   phone?: string
   website?: string
+  instagramUrl?: string
   screenCount: number
   seatCount?: number
 }
@@ -168,6 +169,7 @@ export interface AdminTheaterInput {
   city: string
   phone?: string
   website?: string
+  instagramUrl?: string
   screenCount?: number
   seatCount?: number
 }
