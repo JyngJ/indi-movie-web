@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useMovieDetail, useMovieTheaterShowtimes, useActiveMovieIds } from '@/lib/supabase/queries'
 import type { MovieDetail, MovieTheaterEntry } from '@/lib/supabase/queries'
+import { withFlagsRaw } from '@/lib/nations'
 
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
 const IcoChevronLeft = () => (
@@ -149,7 +150,7 @@ function HeroSection({ movie, titleRef }: { movie: MovieDetail; titleRef: React.
           </div>
         )}
         <div style={{ marginTop: 10, fontSize: 13, color: 'var(--color-text-sub)', lineHeight: 1.5 }}>
-          {[movie.nation, movie.year, movie.runtimeMinutes ? `${movie.runtimeMinutes}분` : null].filter(Boolean).join(' · ')}
+          {[movie.nation ? withFlagsRaw(movie.nation) : undefined, movie.year, movie.runtimeMinutes ? `${movie.runtimeMinutes}분` : null].filter(Boolean).join(' · ')}
         </div>
         {movie.rating != null && (
           <div style={{ marginTop: 8, display: 'flex', alignItems: 'baseline', gap: 4 }}>
@@ -261,7 +262,7 @@ function InfoTab({ movie, onDirectorClick }: { movie: MovieDetail; onDirectorCli
         <p style={sectionLabel}>상세 정보</p>
         <div style={{ borderRadius: 10, border: '1px solid var(--color-border)', overflow: 'hidden' }}>
           {[
-            { key: '국가', value: movie.nation },
+            { key: '국가', value: movie.nation ? withFlagsRaw(movie.nation) : undefined },
             { key: '개봉', value: movie.year ? String(movie.year) : undefined },
             { key: '상영 시간', value: movie.runtimeMinutes ? `${movie.runtimeMinutes}분` : undefined },
             { key: '장르', value: movie.genre.join(', ') || undefined },

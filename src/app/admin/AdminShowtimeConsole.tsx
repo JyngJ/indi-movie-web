@@ -823,6 +823,7 @@ export function AdminShowtimeConsole() {
                     <option value="manual">수동</option>
                     <option value="daily">매일</option>
                     <option value="twice_daily">하루 2회</option>
+                    <option value="four_daily">하루 4회</option>
                   </select>
                 </label>
               </div>

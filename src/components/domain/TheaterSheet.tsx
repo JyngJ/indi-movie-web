@@ -12,6 +12,7 @@ import type { TheaterMovieEntry } from '@/lib/supabase/queries'
 import type { Theater, Showtime } from '@/types/api'
 import { Skeleton } from '@/components/primitives/Skeleton'
 import { GENRES, normalizeGenre } from '@/lib/genres'
+import { withFlag } from '@/lib/nations'
 
 /* ── 상수 ──────────────────────────────────────────────────────── */
 // 접힌 상태에서 보이는 높이 = 핸들(20) + 헤더(88, 액션버튼 포함) + 포스터스트립(228) + 테두리(2) + 여유(6)
@@ -1295,7 +1296,7 @@ export function TheaterSheet({
                         display: 'flex', alignItems: 'center', gap: 3, minHeight: 'auto',
                       }}
                     >
-                      {n}
+                      {withFlag(n)}
                       <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
                     </button>
                   ))}
@@ -1749,7 +1750,7 @@ export function TheaterSheet({
                           fontSize: 13, fontWeight: pendingFilters.nations.includes(n) ? 600 : 400,
                           cursor: 'pointer', minHeight: 'auto',
                         }}
-                      >{n}</button>
+                      >{withFlag(n)}</button>
                     ))}
                   </div>
                 </>

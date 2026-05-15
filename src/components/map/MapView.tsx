@@ -15,6 +15,7 @@ import type { FilterState } from '@/components/domain'
 import { useActiveMovieIds, useMapShowtimes, useMovies, useStations, useTheaters } from '@/lib/supabase/queries'
 import type { Movie, Station, Theater } from '@/types/api'
 import subwayLinesData from '@/data/subway-lines.json'
+import { SEOUL_GU, SEOUL_DONG } from '@/data/seoul-areas'
 import { normalizeGenre } from '@/lib/genres'
 
 interface SubwayLineProperties {
@@ -251,12 +252,55 @@ function makeStationIcon(station: Station, isDark: boolean, zoom: number) {
   })
 }
 
+// 한국어 모음 혼동 정규화: ㅐ→ㅔ, ㅒ→ㅖ (발음 동일 처리)
+// Hangul 음절 = 0xAC00 + (초성*21 + 중성)*28 + 종성
+function normalizeKoreanVowels(str: string): string {
+  let result = ''
+  for (let i = 0; i < str.length; i++) {
+    const code = str.charCodeAt(i)
+    if (code < 0xAC00 || code > 0xD7A3) { result += str[i]; continue }
+    const offset = code - 0xAC00
+    const jong = offset % 28
+    const jung = Math.floor(offset / 28) % 21
+    const cho = Math.floor(offset / 588)
+    // ㅐ(1)→ㅔ(5), ㅒ(3)→ㅖ(7)
+    const normJung = jung === 1 ? 5 : jung === 3 ? 7 : jung
+    result += String.fromCharCode(0xAC00 + cho * 588 + normJung * 28 + jong)
+  }
+  return result
+}
+
 function normalizeSearchText(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '')
-    .replace(/역$/g, '')
+  return normalizeKoreanVowels(
+    value.trim().toLowerCase().replace(/\s+/g, '').replace(/역$/g, '')
+  )
+}
+
+// 서브시퀀스 퍼지 매칭: 쿼리 글자들이 타겟 안에 순서대로 등장하면 점수 반환 (10-35)
+function fuzzyScore(target: string, query: string): number {
+  let qi = 0
+  for (let ti = 0; ti < target.length && qi < query.length; ti++) {
+    if (target[ti] === query[qi]) qi++
+  }
+  return qi === query.length ? Math.max(10, Math.floor(35 * query.length / target.length)) : 0
+}
+
+/* ── localStorage 최근 검색 ─────────────────────────────────────── */
+const RECENT_KEY = 'movie:recent-searches:v1'
+function loadRecentSearches(): string[] {
+  try { return JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]') } catch { return [] }
+}
+function addToRecent(query: string, list: string[]): string[] {
+  const q = query.trim()
+  if (!q) return list
+  const next = [q, ...list.filter(x => x !== q)].slice(0, 8)
+  try { localStorage.setItem(RECENT_KEY, JSON.stringify(next)) } catch {}
+  return next
+}
+function removeFromRecent(query: string, list: string[]): string[] {
+  const next = list.filter(x => x !== query)
+  try { localStorage.setItem(RECENT_KEY, JSON.stringify(next)) } catch {}
+  return next
 }
 
 function finiteNumber(value: number, fallback = 0): number {
@@ -273,6 +317,7 @@ function stationSearchScore(station: Station, query: string): number {
     if (name === normalizedQuery) best = Math.max(best, 100)
     else if (name.startsWith(normalizedQuery)) best = Math.max(best, 80)
     else if (name.includes(normalizedQuery)) best = Math.max(best, 60)
+    else best = Math.max(best, fuzzyScore(name, normalizedQuery))
   }
   return best
 }
@@ -287,6 +332,7 @@ function movieSearchScore(movie: Movie, query: string): number {
     if (title === normalizedQuery) best = Math.max(best, 100)
     else if (title.startsWith(normalizedQuery)) best = Math.max(best, 80)
     else if (title.includes(normalizedQuery)) best = Math.max(best, 60)
+    else best = Math.max(best, fuzzyScore(title, normalizedQuery))
   }
   return best
 }
@@ -300,7 +346,7 @@ function directorSearchScore(director: string, query: string): number {
   if (normalizedDirector === normalizedQuery) return 100
   if (normalizedDirector.startsWith(normalizedQuery)) return 80
   if (normalizedDirector.includes(normalizedQuery)) return 60
-  return 0
+  return fuzzyScore(normalizedDirector, normalizedQuery)
 }
 
 function theaterSearchScore(theater: Theater, query: string): number {
@@ -315,8 +361,19 @@ function theaterSearchScore(theater: Theater, query: string): number {
     if (field === normalizedQuery) best = Math.max(best, 100)
     else if (field.startsWith(normalizedQuery)) best = Math.max(best, 82)
     else if (field.includes(normalizedQuery)) best = Math.max(best, 58)
+    else best = Math.max(best, fuzzyScore(field, normalizedQuery))
   }
   return best
+}
+
+function areaSearchScore(name: string, query: string): number {
+  const nq = normalizeSearchText(query)
+  const na = normalizeSearchText(name)
+  if (!nq || !na) return 0
+  if (na === nq) return 100
+  if (na.startsWith(nq)) return 78
+  if (na.includes(nq)) return 55
+  return fuzzyScore(na, nq)
 }
 
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
@@ -1108,9 +1165,12 @@ export default function MapView() {
   // 검색 오버레이
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [recentSearches, setRecentSearches] = useState<string[]>([])
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   const dummyInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => { setRecentSearches(loadRecentSearches()) }, [])
 
   const openSearch = useCallback(() => {
     // iOS Safari: 키보드는 반드시 클릭 핸들러 안에서 동기적으로 focus()가 불려야 열림
@@ -1162,6 +1222,66 @@ export default function MapView() {
       .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'ko'))
       .map(([n]) => n)
   }, [movies])
+
+  // 극장 주소에서 구 단위 지역 파생 (추가 DB 없이 자동완성 + 인근 극장 제공)
+  const derivedAreas = useMemo(() => {
+    // 극장 주소에서 구 단위 실제 좌표 + 극장 목록 파생
+    const theaterByGu = new Map<string, { lat: number; lng: number; n: number; theaters: Theater[] }>()
+    for (const t of theaters) {
+      const match = t.address.match(/([가-힣]+[구])/)
+      if (!match) continue
+      const name = match[1]
+      const d = theaterByGu.get(name) ?? { lat: 0, lng: 0, n: 0, theaters: [] }
+      d.lat += t.lat; d.lng += t.lng; d.n++
+      d.theaters.push(t)
+      theaterByGu.set(name, d)
+    }
+
+    type AreaItem = { name: string; lat: number; lng: number; theaters: Theater[]; aliases: string[] }
+    const result = new Map<string, AreaItem>()
+
+    // 정적 구 데이터 (극장 있으면 실제 좌표로 덮어씀)
+    for (const entry of SEOUL_GU) {
+      const d = theaterByGu.get(entry.name)
+      result.set(entry.name, {
+        name: entry.name,
+        lat: d ? d.lat / d.n : entry.lat,
+        lng: d ? d.lng / d.n : entry.lng,
+        theaters: d?.theaters ?? [],
+        aliases: entry.aliases ?? [],
+      })
+    }
+
+    // 정적 동네 데이터 (별칭 포함)
+    for (const entry of SEOUL_DONG) {
+      if (!result.has(entry.name)) {
+        result.set(entry.name, {
+          name: entry.name,
+          lat: entry.lat,
+          lng: entry.lng,
+          theaters: [],
+          aliases: entry.aliases ?? [],
+        })
+      }
+    }
+
+    return Array.from(result.values())
+  }, [theaters])
+
+  const areaResults = useMemo(() => {
+    if (!searchQuery.trim()) return []
+    return derivedAreas
+      .map(area => ({
+        area,
+        score: Math.max(
+          areaSearchScore(area.name, searchQuery),
+          ...area.aliases.map(a => areaSearchScore(a, searchQuery)),
+        ),
+      }))
+      .filter(r => r.score > 0)
+      .sort((a, b) => b.score - a.score || a.area.name.localeCompare(b.area.name, 'ko'))
+      .map(r => r.area)
+  }, [searchQuery, derivedAreas])
 
   const theaterPosterMovies = useMemo(() => {
     const byTheater = new Map<string, Map<string, TheaterPosterMovie>>()
@@ -1295,24 +1415,36 @@ export default function MapView() {
     const bestDirectorScore = Math.max(0, ...directorResults.map((director) => director.score))
     const bestStationScore = Math.max(0, ...stationResults.map((station) => stationSearchScore(station, searchQuery)))
     const bestTheaterScore = Math.max(0, ...theaterResults.map((theater) => theaterSearchScore(theater, searchQuery)))
+    const bestAreaScore = Math.max(0, ...areaResults.map(a => Math.max(areaSearchScore(a.name, searchQuery), ...a.aliases.map(al => areaSearchScore(al, searchQuery)))))
     return [
       { id: 'theaters', score: bestTheaterScore, priority: 0 },
       { id: 'movies', score: bestMovieScore, priority: 1 },
       { id: 'directors', score: bestDirectorScore, priority: 2 },
       { id: 'stations', score: bestStationScore, priority: 3 },
+      { id: 'areas', score: bestAreaScore, priority: 4 },
     ]
       .filter((section) => section.score > 0)
       .sort((a, b) => b.score - a.score || a.priority - b.priority)
       .map((section) => section.id)
-  }, [directorResults, searchQuery, stationResults, theaterResults, titleMovieResults])
+  }, [areaResults, directorResults, searchQuery, stationResults, theaterResults, titleMovieResults])
 
   const focusStation = useCallback((station: Station) => {
+    setRecentSearches(prev => addToRecent(searchQuery, prev))
     closeSearch()
     setSelectedId(null)
     setDisplayedId(null)
     setSheetExpanded(false)
     mapRef.current?.flyTo([station.lat, station.lng], 16, { duration: 0.75 })
-  }, [closeSearch])
+  }, [closeSearch, searchQuery])
+
+  const focusArea = useCallback((area: { name: string; lat: number; lng: number }) => {
+    setRecentSearches(prev => addToRecent(searchQuery, prev))
+    closeSearch()
+    setSelectedId(null)
+    setDisplayedId(null)
+    setSheetExpanded(false)
+    mapRef.current?.flyTo([area.lat, area.lng], 15, { duration: 0.75 })
+  }, [closeSearch, searchQuery])
 
   // 바텀시트 상태
   const [sheetExpanded, setSheetExpanded] = useState(false)
@@ -1390,6 +1522,7 @@ export default function MapView() {
   }, [])
 
   const focusTheater = useCallback((theater: Theater) => {
+    setRecentSearches(prev => addToRecent(searchQuery, prev))
     closeSearch()
     if (exitTimerRef.current) clearTimeout(exitTimerRef.current)
     setSheetExiting(false)
@@ -1403,7 +1536,7 @@ export default function MapView() {
       Math.max(currentZoom, 15),
       { duration: 0.75 },
     )
-  }, [closeSearch])
+  }, [closeSearch, searchQuery])
 
   // 영화 상세 페이지에서 뒤로가기 시 ?theater= 파라미터로 극장 시트 복원
   const restoredTheaterRef = useRef(false)
@@ -1461,7 +1594,7 @@ export default function MapView() {
   // FAB 버튼 bottom: collapsed = COLLAPSED_H(300) + 여유 16 = 316
   // expanded / 시트 없음 = safe area 위 32px
   const fabBottom = selectedTheater && !sheetExpanded && !sheetExiting ? 316 : 32
-  const hasSearchResults = theaterResults.length > 0 || stationResults.length > 0 || movieResults.length > 0 || relatedDirectorResults.length > 0
+  const hasSearchResults = theaterResults.length > 0 || stationResults.length > 0 || movieResults.length > 0 || relatedDirectorResults.length > 0 || areaResults.length > 0
 
   const renderTheaterSearchSection = () => {
     if (theaterResults.length === 0) return null
@@ -1559,7 +1692,11 @@ export default function MapView() {
           {movieResults.map((movie) => (
             <div
               key={movie.id}
-              onClick={() => { closeSearch(); router.push(`/movie/${movie.id}`) }}
+              onClick={() => {
+                setRecentSearches(prev => addToRecent(searchQuery, prev))
+                setMovieFilter({ id: movie.id, title: movie.title })
+                closeSearch()
+              }}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -1665,7 +1802,11 @@ export default function MapView() {
           {relatedDirectorResults.map((director) => (
             <div
               key={director.name}
-              onClick={() => { closeSearch(); router.push(`/director/${encodeURIComponent(director.name)}`) }}
+              onClick={() => {
+                setRecentSearches(prev => addToRecent(searchQuery, prev))
+                closeSearch()
+                router.push(`/director/${encodeURIComponent(director.name)}`)
+              }}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -1810,6 +1951,83 @@ export default function MapView() {
               </span>
               <span style={{ color: 'var(--color-text-caption)', fontSize: 18, lineHeight: 1 }}>›</span>
             </button>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  const renderAreaSearchSection = () => {
+    if (areaResults.length === 0) return null
+    return (
+      <section>
+        <h2 style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 700, color: 'var(--color-text-caption)' }}>
+          지역
+        </h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+          {areaResults.map(area => (
+            <div key={area.name}>
+              <button
+                type="button"
+                onClick={() => focusArea(area)}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+                  padding: '12px 0', border: 0,
+                  borderBottom: area.theaters.length > 0 ? 'none' : '1px solid var(--color-border)',
+                  background: 'transparent', color: 'var(--color-text-primary)', textAlign: 'left',
+                }}
+              >
+                <span style={{
+                  width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  backgroundColor: 'var(--color-surface-card)', border: '1px solid var(--color-border)',
+                  color: 'var(--color-text-sub)',
+                }}>
+                  <svg width={16} height={16} viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="8" height="8" rx="1.5" />
+                    <rect x="13" y="3" width="8" height="8" rx="1.5" />
+                    <rect x="3" y="13" width="8" height="8" rx="1.5" />
+                    <rect x="13" y="13" width="8" height="8" rx="1.5" />
+                  </svg>
+                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 15, fontWeight: 700 }}>{area.name}</div>
+                  <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 2 }}>
+                    영화관 {area.theaters.length}곳
+                  </div>
+                </div>
+                <span style={{ color: 'var(--color-text-caption)', fontSize: 18, lineHeight: 1 }}>›</span>
+              </button>
+              {area.theaters.length > 0 && (
+                <div style={{
+                  marginLeft: 50,
+                  paddingBottom: 12,
+                  borderBottom: '1px solid var(--color-border)',
+                }}>
+                  {area.theaters.map(t => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => focusTheater(t)}
+                      style={{
+                        width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+                        padding: '6px 0', border: 0, background: 'transparent',
+                        color: 'var(--color-text-body)', textAlign: 'left', cursor: 'pointer',
+                      }}
+                    >
+                      <svg width={12} height={12} viewBox="0 0 24 24" fill="none"
+                        stroke="var(--color-text-caption)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                        style={{ flexShrink: 0 }}>
+                        <path d="M12 21s7-5.2 7-11a7 7 0 10-14 0c0 5.8 7 11 7 11z" />
+                        <circle cx="12" cy="10" r="2.5" />
+                      </svg>
+                      <span style={{ fontSize: 13 }}>{t.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
         </div>
       </section>
@@ -2055,8 +2273,50 @@ export default function MapView() {
           {/* 결과 영역 */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px' }}>
             {searchQuery === '' ? (
-              <div style={{ marginTop: 24 }}>
-                <p style={{ fontSize: 12, color: 'var(--color-text-caption)', marginBottom: 14, marginLeft: 2 }}>
+              <div style={{ marginTop: 8 }}>
+                {recentSearches.length > 0 && (
+                  <div style={{ marginBottom: 24 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                      <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-caption)', margin: 0 }}>최근 검색</p>
+                      <button
+                        onClick={() => {
+                          setRecentSearches([])
+                          try { localStorage.removeItem(RECENT_KEY) } catch {}
+                        }}
+                        style={{ fontSize: 12, color: 'var(--color-text-caption)', background: 'none', border: 0, cursor: 'pointer', padding: 0 }}
+                      >
+                        전체 삭제
+                      </button>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      {recentSearches.map(q => (
+                        <div
+                          key={q}
+                          style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--color-border)' }}
+                        >
+                          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-caption)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                            <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+                          </svg>
+                          <button
+                            onClick={() => setSearchQuery(q)}
+                            style={{ flex: 1, background: 'none', border: 0, cursor: 'pointer', textAlign: 'left', padding: 0, fontSize: 14, color: 'var(--color-text-body)' }}
+                          >
+                            {q}
+                          </button>
+                          <button
+                            onClick={() => setRecentSearches(prev => removeFromRecent(q, prev))}
+                            style={{ background: 'none', border: 0, cursor: 'pointer', padding: 4, color: 'var(--color-text-caption)', lineHeight: 1, flexShrink: 0 }}
+                          >
+                            <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                              <path d="M6 6l12 12M18 6 6 18" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <p style={{ fontSize: 12, color: 'var(--color-text-caption)', marginBottom: 12, marginLeft: 2 }}>
                   검색할 수 있어요
                 </p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -2070,25 +2330,15 @@ export default function MapView() {
                       key={label}
                       onClick={() => setSearchQuery(example)}
                       style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 6,
-                        height: 36,
-                        padding: '0 14px',
-                        borderRadius: 'var(--radius-full)',
-                        border: '1px solid var(--color-border)',
-                        backgroundColor: 'var(--color-surface-card)',
-                        color: 'var(--color-text-body)',
-                        fontSize: 13,
-                        fontWeight: 500,
-                        cursor: 'pointer',
-                        whiteSpace: 'nowrap',
+                        display: 'inline-flex', alignItems: 'center', gap: 6, height: 36,
+                        padding: '0 14px', borderRadius: 'var(--radius-full)',
+                        border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)',
+                        color: 'var(--color-text-body)', fontSize: 13, fontWeight: 500,
+                        cursor: 'pointer', whiteSpace: 'nowrap',
                       }}
                     >
                       {label}
-                      <span style={{ fontSize: 11, color: 'var(--color-text-caption)' }}>
-                        예) {example}
-                      </span>
+                      <span style={{ fontSize: 11, color: 'var(--color-text-caption)' }}>예) {example}</span>
                     </button>
                   ))}
                 </div>
@@ -2102,7 +2352,9 @@ export default function MapView() {
                       ? renderDirectorSearchSection()
                       : section === 'theaters'
                         ? renderTheaterSearchSection()
-                        : renderStationSearchSection()
+                        : section === 'areas'
+                          ? renderAreaSearchSection()
+                          : renderStationSearchSection()
                   return node ? <div key={section}>{node}</div> : null
                 })}
               </div>

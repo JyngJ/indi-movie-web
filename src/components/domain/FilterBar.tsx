@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { GENRES } from '@/lib/genres'
+import { withFlag } from '@/lib/nations'
 
 /* -- 날짜 헬퍼 ---------------------------------------------------- */
 const DOW = ['일', '월', '화', '수', '목', '금', '토']
@@ -748,8 +749,8 @@ export function FilterBar({ onChange, nationOptions = EMPTY_NATION_OPTIONS, movi
     : genres.length === 1 ? genres[0]
     : `${genres[0]} 외 ${genres.length - 1}`
   const nationLabel = nations.length === 0 ? undefined
-    : nations.length === 1 ? nations[0]
-    : `${nations[0]} 외 ${nations.length - 1}`
+    : nations.length === 1 ? withFlag(nations[0])
+    : `${withFlag(nations[0])} 외 ${nations.length - 1}`
   const isDateOpen = openPanel === 'date' || openPanel === 'calendar'
 
   return (
