@@ -1079,19 +1079,32 @@ function resolveMovieByTitle(title: string, movies: MovieRow[]) {
 }
 
 function candidateMovieTitleCandidates(title: string) {
+  const base = title.trim()
   return Array.from(new Set([
-    title.trim(),
-    title.trim().replace(/\s+(?:\d{1,2}[./-]\d{1,2})(?:\s.*)?$/, '').trim(),
-    title.trim().replace(/\s+(?:\d{1,2}월\s*\d{1,2}일)(?:\s.*)?$/, '').trim(),
+    base,
+    // 날짜 패턴 제거 (05/15, 5월 15일)
+    base.replace(/\s+(?:\d{1,2}[./-]\d{1,2})(?:\s.*)?$/, '').trim(),
+    base.replace(/\s+(?:\d{1,2}월\s*\d{1,2}일)(?:\s.*)?$/, '').trim(),
+    // 파트 표시 제거 (1부, 2부, 상, 하, 1, 2부)
+    base.replace(/\s+(?:\d+,\s*\d+부|\d+부|상편|하편|[상하])\s*$/, '').trim(),
+    // 쉼표 이후 파트 표시 통째로 제거 (영화사 1, 2부 → 영화사)
+    base.replace(/,?\s*\d+[,\s]*\d*부?\s*$/, '').trim(),
   ].filter(Boolean)))
 }
 
 function pickExactExternalMovie(title: string, movies: AdminExternalMovie[]) {
   const normalizedTitle = normalizeMatchText(title)
-  return movies.find((movie) =>
+  // 1순위: 정규화 exact match
+  const exact = movies.find((movie) =>
     normalizeMatchText(movie.title) === normalizedTitle ||
     (movie.originalTitle ? normalizeMatchText(movie.originalTitle) === normalizedTitle : false),
   )
+  if (exact) return exact
+  // 2순위: KMDB 제목이 검색어를 포함하거나, 검색어가 KMDB 제목을 포함 (부분 일치)
+  return movies.find((movie) => {
+    const t = normalizeMatchText(movie.title)
+    return t.includes(normalizedTitle) || normalizedTitle.includes(t)
+  })
 }
 
 function showtimeRowFromCandidate(

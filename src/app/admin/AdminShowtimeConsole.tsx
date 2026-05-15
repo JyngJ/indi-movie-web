@@ -83,6 +83,7 @@ export function AdminShowtimeConsole() {
   })
   const [showtimeDrafts, setShowtimeDrafts] = useState<Record<string, AdminShowtimeInput>>({})
   const [activeTab, setActiveTab] = useState<'crawl' | 'status' | 'manage'>('crawl')
+  const [candidateFilter, setCandidateFilter] = useState<'all' | 'unmatched' | 'warning' | 'soldout'>('all')
   const [sourceFormOpen, setSourceFormOpen] = useState(false)
   const [sourceForm, setSourceForm] = useState({
     theaterName: '',
@@ -112,11 +113,20 @@ export function AdminShowtimeConsole() {
   const reviewCount = payload.candidates.filter((candidate) => candidate.status === 'needs_review').length
   const approvedCount = payload.candidates.filter((candidate) => candidate.status === 'approved').length
   const matchedCount = payload.candidates.filter((candidate) => candidate.matchedTheaterId && candidate.matchedMovieId).length
-  const visibleCandidates = useMemo(() => {
-    const query = normalizeSearchText(candidateSearchQuery)
-    if (!query) return payload.candidates
+  const unmatchedCount = payload.candidates.filter((c) => !c.matchedTheaterId || !c.matchedMovieId).length
+  const warningCount = payload.candidates.filter((c) => c.warnings.length > 0).length
+  const soldoutCount = payload.candidates.filter((c) => c.seatAvailable === 0).length
 
-    return payload.candidates.filter((candidate) => normalizeSearchText([
+  const visibleCandidates = useMemo(() => {
+    let list = payload.candidates
+    if (candidateFilter === 'unmatched') list = list.filter((c) => !c.matchedTheaterId || !c.matchedMovieId)
+    else if (candidateFilter === 'warning') list = list.filter((c) => c.warnings.length > 0)
+    else if (candidateFilter === 'soldout') list = list.filter((c) => c.seatAvailable === 0)
+
+    const query = normalizeSearchText(candidateSearchQuery)
+    if (!query) return list
+
+    return list.filter((candidate) => normalizeSearchText([
       candidate.movieTitle,
       candidate.theaterName,
       candidate.sourceId,
@@ -127,7 +137,7 @@ export function AdminShowtimeConsole() {
       candidate.warnings.join(' '),
       candidate.status,
     ].join(' ')).includes(query))
-  }, [candidateSearchQuery, payload.candidates])
+  }, [candidateFilter, candidateSearchQuery, payload.candidates])
   const candidateIds = useMemo(() => visibleCandidates.map((candidate) => candidate.id), [visibleCandidates])
   const selectedCandidateCount = candidateIds.filter((id) => selectedIds.includes(id)).length
   const allCandidatesSelected = candidateIds.length > 0 && selectedCandidateCount === candidateIds.length
@@ -938,6 +948,33 @@ export function AdminShowtimeConsole() {
 
           {message && <p className={styles.message}>{message}</p>}
 
+          <div className={styles.candidateFilterRow}>
+            <div className={styles.candidateFilterTabs}>
+              {([
+                { key: 'all',       label: '전체',     count: payload.candidates.length, dot: '' },
+                { key: 'unmatched', label: '매칭 필요', count: unmatchedCount,            dot: '#e74c3c' },
+                { key: 'warning',   label: '경고',     count: warningCount,              dot: '#e67e22' },
+                { key: 'soldout',   label: '매진',     count: soldoutCount,              dot: '#7f8c8d' },
+              ] as const).map(({ key, label, count, dot }) => (
+                <button
+                  key={key}
+                  data-key={key}
+                  className={`${styles.filterTab} ${candidateFilter === key ? styles.filterTabActive : ''}`}
+                  onClick={() => setCandidateFilter(key)}
+                >
+                  {dot && <span className={styles.filterTabDot} style={{ background: dot }} />}
+                  {label}
+                  {count > 0 && <span className={styles.filterTabBadge}>{count}</span>}
+                </button>
+              ))}
+            </div>
+            <div className={styles.candidateLegend}>
+              <span className={styles.legendItem}><span className={`${styles.legendDot} ${styles.legendDotRed}`} />매칭 안 됨</span>
+              <span className={styles.legendItem}><span className={`${styles.legendDot} ${styles.legendDotYellow}`} />경고 있음</span>
+              <span className={styles.legendItem}><span className={`${styles.legendDot} ${styles.legendDotGray}`} />매진</span>
+            </div>
+          </div>
+
           <div className={styles.reviewToolbar}>
             <input
               aria-label="검수 대기열 검색"
@@ -1009,8 +1046,13 @@ export function AdminShowtimeConsole() {
                 </tr>
               </thead>
               <tbody>
-                {visibleCandidates.map((candidate) => (
-                  <tr key={candidate.id}>
+                {visibleCandidates.map((candidate) => {
+                  const isUnmatched = !candidate.matchedTheaterId || !candidate.matchedMovieId
+                  const hasWarning = candidate.warnings.length > 0
+                  const isSoldout = candidate.seatAvailable === 0
+                  const rowClass = isUnmatched ? styles.rowUnmatched : hasWarning ? styles.rowWarning : isSoldout ? styles.rowSoldout : ''
+                  return (
+                  <tr key={candidate.id} className={rowClass}>
                     <td>
                       <input
                         type="checkbox"
@@ -1080,9 +1122,13 @@ export function AdminShowtimeConsole() {
                         </ul>
                       )}
                     </td>
-                    <td><StatusBadge status={candidate.status} /></td>
+                    <td>
+                      <StatusBadge status={candidate.status} />
+                      {isSoldout && <span className={styles.soldoutTag}>매진</span>}
+                    </td>
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
             {payload.candidates.length === 0 && (
