@@ -1,32 +1,55 @@
-# 예술영화관 상영 통합 조회
+# 영화볼지도 — 서울 독립·예술영화관 상영 통합 조회
 
-서울 독립·예술영화관 상영 정보를 한 곳에서 조회하는 모바일 웹 서비스 (MVP).
+서울 각지에 흩어진 독립·예술영화관의 상영 정보를 한 곳에서 찾을 수 없다는 불편함에서 시작한 개인 프로젝트입니다. 디자이너가 기획·디자인·프론트엔드·백엔드·데이터 파이프라인까지 단독으로 설계·구현했으며, AI 코딩 도구(Claude Code)를 실무 흐름에 통합해 1인 개발의 한계를 실질적으로 넘어서는 방식을 실험했습니다.
 
 ---
 
-## 빠른 시작
+## 핵심 기능
 
-```bash
-npm install
-npm run dev
-# → http://localhost:3000
-```
+**지도 기반 탐색**
+- 서울 전체 독립·예술영화관 핀 표시, 클러스터링, 극장 선택 시 바텀시트 슬라이드 인
+- 핀에 상영 중인 영화 포스터를 직접 렌더링 (줌 레벨 연동)
+- 장르·국가·예매 가능 여부 필터 — 필터 적용 시 해당 안 되는 영화는 반투명 오버레이로 구분
 
-> Node 18+ 필요. 환경 변수는 `.env.local` 참고 (`.env.example` 예정).
+**극장 바텀시트**
+- 영화 포스터 스트립, 날짜별 상영시간표, 길찾기·공유·인스타그램 딥링크
+- 지도 필터 상태를 바텀시트 필터로 자동 인계, 독립적으로 재조정 가능
+- 필터 팝업: 장르(12개 표준 분류) / 국가 / 예매 가능 여부
+
+**데이터 파이프라인**
+- 극장별 웹사이트 크롤러(어댑터 패턴) + KMDB API 매칭으로 자동 수집
+- 어드민 콘솔에서 후보 검수·승인 후 DB 반영
+- KMDB raw 장르값 → 12개 표준 카테고리 정규화 (멜로/로맨스 → 로맨스 등)
 
 ---
 
 ## 기술 스택
 
-| 영역 | 도구 | 비고 |
+| 영역 | 선택 | 이유 |
 |------|------|------|
-| 프레임워크 | Next.js 16 (App Router) | Turbopack 사용 |
-| 언어 | TypeScript | strict 모드 |
-| 서버 상태 | TanStack React Query v5 | 캐싱·동기화 |
-| 클라이언트 상태 | Zustand v5 | 테마, UI 상태 |
-| 스타일 | Tailwind CSS v4 + CSS Variables | 디자인 토큰 기반 |
-| 지도 | Leaflet + react-leaflet v5 | Carto Voyager 타일 |
-| 데이터베이스 | Supabase PostgreSQL | 극장/영화/상영시간표/지하철역 데이터 |
+| 프레임워크 | Next.js 16 App Router | SSR + React Query 조합, 향후 서버 액션 확장 |
+| 언어 | TypeScript (strict) | 1인 프로젝트일수록 타입이 문서 역할 |
+| 서버 상태 | TanStack React Query v5 | 캐시·재검증 전략을 선언적으로 관리 |
+| 스타일 | Tailwind CSS v4 + CSS Variables | 디자인 토큰 기반, 라이트/다크 모드 |
+| 지도 | Leaflet + react-leaflet v5 | 커스텀 DivIcon으로 포스터 핀 렌더링 |
+| DB | Supabase PostgreSQL | RLS, 실시간, 인증을 한 곳에서 |
+| 클라이언트 상태 | Zustand v5 | 테마, 지도 UI 상태 |
+
+---
+
+## 구현 하이라이트
+
+### 포스터 핀 렌더링
+지도 핀 내부에 영화 포스터를 직접 그리기 위해 Leaflet `DivIcon` + `renderToStaticMarkup`을 조합했습니다. 줌 레벨에 따라 포스터 수·크기가 동적으로 결정되고, 필터가 활성화된 경우 매칭되지 않는 영화는 반투명 처리 + "조건 외" 오버레이로 표시합니다. 같은 건물에 위치한 극장은 원형 배치로 핀이 겹치지 않도록 오프셋을 계산합니다.
+
+### 바텀시트 필터 상태 설계
+지도 필터(장르·국가)를 바텀시트가 열릴 때만 단방향으로 인계하고, 바텀시트에서 변경해도 지도에는 영향이 없습니다. "지도에서 필터 설정 → 바텀시트로 상세 확인 → 필터 조정" 흐름이 자연스럽게 이어지도록 설계했습니다.
+
+### 크롤러 어댑터 패턴
+극장마다 다른 웹사이트 구조를 `CrawlerAdapter` 인터페이스로 추상화했습니다. 새 극장을 추가할 때 어댑터 하나만 작성하면 파이프라인 전체에 연결됩니다. HTML 파서, Dtryx 예매 API, Moviee API 등 여러 방식을 동일한 인터페이스로 정규화합니다.
+
+### AI 도구 실무 통합
+Claude Code를 단순 코드 생성 도구가 아닌 설계 파트너로 활용했습니다. 복잡한 상태 설계(필터 흐름, 바텀시트 애니메이션), 크롤러 어댑터 아키텍처, 장르 정규화 매핑 등 의사결정이 필요한 지점에서 트레이드오프를 함께 검토하고 구현했습니다. 덕분에 기획·디자인·구현을 혼자 병행하면서도 코드 품질과 구조를 일정 수준 이상 유지할 수 있었습니다.
 
 ---
 
@@ -34,154 +57,58 @@ npm run dev
 
 ```
 src/
-├── app/                    # 페이지 (Next.js App Router)
+├── app/                    # Next.js App Router 페이지
 │   ├── page.tsx            # 홈 (지도 뷰)
-│   └── dev/components/     # 디자인 시스템 쇼케이스 (/dev/components)
+│   ├── movie/[id]/         # 영화 상세
+│   ├── director/[name]/    # 감독 필모그래피
+│   └── admin/              # 크롤링 후보 검수·어드민 콘솔
 │
 ├── components/
-│   ├── primitives/         # 재사용 UI 원자 — 비즈니스 로직 없음
-│   │   ├── Button, Chip, Badge, Card
-│   │   ├── Input, SearchBar
-│   │   ├── FAB (FabRound)
-│   │   └── BottomSheet, Skeleton
+│   ├── primitives/         # 재사용 UI 원자 (Button, BottomSheet, Toast …)
 │   ├── domain/             # 서비스 도메인 컴포넌트
-│   │   ├── ShowtimeCell    # 상영 시간 셀
-│   │   ├── DateBar         # 날짜/시간 선택 바
-│   │   ├── MapPin          # 지도 마커
-│   │   ├── PosterThumb     # 영화 포스터
-│   │   └── TheaterSheet    # 극장 정보 바텀시트
+│   │   ├── FilterBar       # 날짜·장르·국가·예매 가능 필터 바
+│   │   ├── TheaterSheet    # 극장 바텀시트 (포스터·시간표·필터)
+│   │   ├── MapPin          # 포스터 핀
+│   │   └── PosterThumb     # 영화 포스터 썸네일
 │   └── map/
-│       └── MapView.tsx     # 전체화면 지도 + 검색/지하철 오버레이
-│
-├── data/
-│   └── subway-lines.json   # 지도 지하철 노선 GeoJSON. .geojson import 금지
-│
-├── hooks/
-│   ├── useUserLocation.ts  # Geolocation → 지도 중심 좌표
-│   ├── queries/            # React Query read hooks (useTheaters 등, 예정)
-│   └── mutations/          # React Query write hooks (예정)
+│       └── MapView.tsx     # 전체화면 지도 + 검색 + 지하철 오버레이
 │
 ├── lib/
-│   ├── supabase/           # Supabase browser client + React Query hooks
-│   ├── adapters/
-│   │   ├── location.ts     # Geolocation API (추후 RN 교체 가능)
-│   │   └── storage.ts      # localStorage (추후 AsyncStorage 교체 가능)
-│   └── query-client.ts     # React Query 전역 설정
+│   ├── genres.ts           # KMDB raw 장르 → 12개 표준 분류 정규화
+│   ├── supabase/           # Supabase client + React Query hooks
+│   ├── admin/              # 크롤러·KMDB·어드민 로직
+│   └── adapters/           # 크롤러 어댑터 (극장별 파서)
 │
-├── store/                  # Zustand 스토어 (테마, 유저 등)
-├── styles/tokens.css       # CSS Variables 디자인 토큰 (라이트/다크)
 └── types/                  # 공유 TypeScript 타입
 ```
 
 ---
 
-## API 계약 (프론트 ↔ 백엔드)
-
-> 상세 스펙: [`docs/API.md`](./docs/API.md)
-
-현재 앱의 주요 읽기 화면은 Supabase React Query hooks로 직접 연결되어 있습니다.
-아래 REST 엔드포인트는 장기 API 계약 초안이며, 구현 방식은 기능별로 조정될 수 있습니다.
-
-### 주요 엔드포인트
-
-| 엔드포인트 | 용도 | 캐시 |
-|-----------|------|------|
-| `GET /api/theaters/search` | 지도 범위 내 극장 목록 (바운딩박스) | 30분 |
-| `GET /api/theaters/:id` | 극장 상세 정보 | 1시간 |
-| `GET /api/movies/search` | 영화 검색 (KMDB/TMDB) | 30분 |
-| `GET /api/movies/trending` | 현재 상영중 / 개봉 예정 | 6시간 |
-| `GET /api/showtimes/theater/:id` | 극장별 상영시간표 | 10분 |
-| `GET /api/showtimes/movie/:id` | 영화별 상영 극장 | 15분 |
-| `POST /api/favorites` | 즐겨찾기 추가 (인증 필요) | — |
-
-**에러 형식 통일:**
-```json
-{ "error": { "code": "ERR_CODE", "message": "설명" } }
-```
-
-### 프론트 React Query Hooks
-
-```ts
-useTheaters()                     // 전체 극장 목록
-useStations()                     // 지하철역 목록
-useMovies()                       // 전체 영화 목록
-useActiveMovieIds()               // 오늘 포함 미래 상영 스케줄이 있는 영화 ID
-useTheaterShowtimes(theaterId, date)
-useFavorites()                    // 즐겨찾기 목록
-useToggleFavorite({ type, id })   // 즐겨찾기 토글
-```
-
----
-
-## DB 스키마 (논리 모델)
-
-> 상세 스펙: [`docs/DB.md`](./docs/DB.md)
-
-| 테이블 | 핵심 컬럼 |
-|--------|-----------|
-| `theaters` | id, name, lat, lng, address, screen_count |
-| `movies` | id, title, kmdb_id, tmdb_id, genre[], poster_url |
-| `showtimes` | theater_id, movie_id, show_date, show_time, seat_total, seat_available |
-| `stations` | name, lines[], lat, lng, city, district, neighborhood, aliases |
-| `areas` | name, type, city, district, lat, lng, aliases |
-| `subway_lines` | name, line_code, geometry |
-| `users` | id (→ auth), email, preferred_city |
-| `favorites` | user_id, item_type ('theater'\|'movie'), item_id |
-
-현재 Supabase 스키마 초안은 `docs/SUPABASE.sql`에 있고, 지하철 테이블만 따로 적용할 때는 `docs/SUPABASE_STATIONS.sql`을 사용할 수 있습니다.
-
----
-
-## 개발 로드맵
+## 로드맵
 
 | Phase | 내용 | 상태 |
 |-------|------|------|
-| 1 | 프로젝트 초기화, 디자인 토큰, 컴포넌트 시스템 | ✅ 완료 |
-| 2 | 지도 뷰, 위치 기반 극장 탐색, 극장 상세, 지하철 오버레이 | ✅ 주요 기능 완료 |
-| 3 | 영화/감독 검색, 상영시간표 UI | 🔄 일부 진행 |
+| 1 | 디자인 시스템, 토큰, 컴포넌트 | ✅ 완료 |
+| 2 | 지도, 극장 탐색, 바텀시트, 지하철 오버레이 | ✅ 완료 |
+| 3 | 영화·감독 검색, 상영시간표, 필터 시스템 | 🔄 진행 중 |
 | 4 | 사용자 인증, 즐겨찾기 | 예정 |
-| 5 | 성능 최적화, Capacitor 앱 확장 준비 | 예정 |
+| 5 | 성능 최적화, 네이티브 앱(Capacitor) 확장 | 예정 |
 
 ---
 
-## 디자인 시스템
+## 로컬 실행
 
-컴포넌트 전체 확인: **http://localhost:3000/dev/components**
+```bash
+npm install
+npm run dev   # → http://localhost:3000
+```
 
-- 모든 색상·간격·폰트는 `src/styles/tokens.css`의 CSS Variables로 정의
-- 라이트/다크 모드 모두 지원 (`[data-theme="dark"]`)
-- 모바일 375px 기준, 터치 타겟 최소 44px
-- 자세한 내용: [`docs/DESIGN.md`](./docs/DESIGN.md)
-
----
-
-## 웹 → 앱 확장 구조
-
-`src/lib/adapters/`의 인터페이스를 교체하는 것만으로 React Native 전환 가능:
-
-| 어댑터 | 웹 | React Native (예정) |
-|--------|-----|---------------------|
-| `location.ts` | Geolocation API | RN Geolocation |
-| `storage.ts` | localStorage | AsyncStorage |
+> Node 18+, `.env.local` 환경 변수 필요 (Supabase URL·키).  
+> 이 프로젝트는 Turbopack을 사용하지 않습니다 (`--webpack` 강제).
 
 ---
 
-## 문서
+## 저작권
 
-| 파일 | 내용 |
-|------|------|
-| [`docs/API.md`](./docs/API.md) | REST API 상세 스펙 & 에러 코드 |
-| [`docs/DB.md`](./docs/DB.md) | DB 테이블 스키마 (논리 모델) |
-| [`docs/DESIGN.md`](./docs/DESIGN.md) | 디자인 토큰 & 컴포넌트 가이드 |
-| [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | 폴더 구조 & Adapter 패턴 |
-| [`docs/INFRA.md`](./docs/INFRA.md) | 환경 변수 & 배포 |
-| [`docs/WORKFLOW.md`](./docs/WORKFLOW.md) | 브랜치 전략 & Phase 체크리스트 |
-| [`CLAUDE.md`](./CLAUDE.md) | AI 코딩 어시스턴트(Claude Code) 설정 |
-
----
-
-## 지도 데이터 저작권
-
-지도 타일: © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, © [CARTO](https://carto.com/attributions)
-
-지하철 노선/역 데이터는 Kaggle Seoul Subway Geospatial Data 계열의 CC0 Public Domain 데이터를 기준으로 정리했습니다. 앱 번들에는 `src/data/subway-lines.json`만 import합니다. Turbopack은 `.geojson` import를 기본 처리하지 않으므로 `@/data/subway-lines.geojson`로 되돌리지 마세요.
+지도 타일: © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, © [CARTO](https://carto.com/attributions)  
+지하철 데이터: Kaggle Seoul Subway Geospatial Data (CC0 Public Domain)

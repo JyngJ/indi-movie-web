@@ -118,6 +118,7 @@ CREATE TABLE IF NOT EXISTS movies (
   poster_url       TEXT,
   genre            TEXT[] NOT NULL DEFAULT '{}',
   director         TEXT[] NOT NULL DEFAULT '{}',
+  nation           TEXT,
   synopsis         TEXT,
   runtime_minutes  INTEGER,
   certification    TEXT,
@@ -133,6 +134,7 @@ ALTER TABLE movies
   ADD COLUMN IF NOT EXISTS kmdb_id TEXT,
   ADD COLUMN IF NOT EXISTS kmdb_movie_seq TEXT,
   ADD COLUMN IF NOT EXISTS poster_url TEXT,
+  ADD COLUMN IF NOT EXISTS nation TEXT,
   ADD COLUMN IF NOT EXISTS synopsis TEXT,
   ADD COLUMN IF NOT EXISTS runtime_minutes INTEGER,
   ADD COLUMN IF NOT EXISTS certification TEXT;
@@ -217,7 +219,7 @@ CREATE TABLE IF NOT EXISTS crawl_sources (
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
-  CONSTRAINT crawl_sources_parser_check CHECK (parser IN ('jsonLdEvent', 'tableText', 'timelineCard', 'dtryxReservationApi', 'csv')),
+  CONSTRAINT crawl_sources_parser_check CHECK (parser IN ('jsonLdEvent', 'tableText', 'timelineCard', 'dtryxReservationApi', 'movieeTicketApi', 'movielandProductOptions', 'seoulArtTimetable', 'csv')),
   CONSTRAINT crawl_sources_cadence_check CHECK (cadence IN ('manual', 'daily', 'twice_daily')),
   CONSTRAINT crawl_sources_health_check CHECK (health IN ('healthy', 'degraded', 'broken'))
 );
@@ -229,6 +231,14 @@ CREATE TRIGGER trg_crawl_sources_updated_at
 
 ALTER TABLE crawl_sources
   ADD COLUMN IF NOT EXISTS matched_theater_id UUID REFERENCES theaters(id) ON DELETE SET NULL;
+
+-- Existing DB migration for custom crawler parser support.
+ALTER TABLE crawl_sources
+  DROP CONSTRAINT IF EXISTS crawl_sources_parser_check;
+
+ALTER TABLE crawl_sources
+  ADD CONSTRAINT crawl_sources_parser_check
+  CHECK (parser IN ('jsonLdEvent', 'tableText', 'timelineCard', 'dtryxReservationApi', 'movieeTicketApi', 'movielandProductOptions', 'seoulArtTimetable', 'csv'));
 
 CREATE INDEX IF NOT EXISTS idx_crawl_sources_matched_theater
   ON crawl_sources(matched_theater_id);
@@ -303,7 +313,8 @@ ALTER TABLE showtime_candidates
   ADD COLUMN IF NOT EXISTS matched_theater_id UUID REFERENCES theaters(id) ON DELETE SET NULL,
   ADD COLUMN IF NOT EXISTS matched_movie_id UUID REFERENCES movies(id) ON DELETE SET NULL,
   ADD COLUMN IF NOT EXISTS approved_at TIMESTAMPTZ,
-  ADD COLUMN IF NOT EXISTS approved_by UUID REFERENCES auth.users(id) ON DELETE SET NULL;
+  ADD COLUMN IF NOT EXISTS approved_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
 
 DO $$
 BEGIN

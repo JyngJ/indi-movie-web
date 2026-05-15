@@ -16,6 +16,7 @@ import type {
   CrawlRun,
   ShowtimeApprovalResult,
 } from '@/types/admin'
+import { searchKmdbMovies } from '@/lib/admin/kmdb'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 
 interface CrawlSourceRow {
@@ -84,6 +85,7 @@ interface TheaterRow {
   address?: string | null
   phone?: string | null
   website?: string | null
+  instagram_url?: string | null
   screen_count?: number | null
   seat_count?: number | null
 }
@@ -101,6 +103,7 @@ interface MovieRow {
   certification?: string | null
   genre?: string[] | null
   director?: string[] | null
+  nation?: string | null
 }
 
 interface ShowtimeRow {
@@ -302,7 +305,7 @@ export async function listAdminMovies(): Promise<AdminMovie[]> {
   const supabase = createSupabaseAdminClient()
   const { data, error } = await supabase
     .from('movies')
-    .select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, poster_url, synopsis, runtime_minutes, certification, genre, director')
+    .select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, poster_url, synopsis, runtime_minutes, certification, genre, director, nation')
     .order('title', { ascending: true })
     .limit(1000)
 
@@ -345,9 +348,10 @@ export async function updateAdminMovie(input: AdminMovieInput) {
       certification: input.certification?.trim() || null,
       genre: input.genre ?? [],
       director: input.director ?? [],
+      nation: input.nation?.trim() || null,
     })
     .eq('id', input.id)
-    .select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, poster_url, synopsis, runtime_minutes, certification, genre, director')
+    .select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, poster_url, synopsis, runtime_minutes, certification, genre, director, nation')
     .single()
 
   if (error) throw new Error(error.message)
@@ -359,7 +363,7 @@ export async function listAdminTheaters(): Promise<AdminTheater[]> {
   const supabase = createSupabaseAdminClient()
   const { data, error } = await supabase
     .from('theaters')
-    .select('id, name, lat, lng, address, city, phone, website, screen_count, seat_count')
+    .select('id, name, lat, lng, address, city, phone, website, instagram_url, screen_count, seat_count')
     .order('name', { ascending: true })
 
   if (error) throw new Error(error.message)
@@ -372,7 +376,7 @@ export async function createAdminTheater(input: AdminTheaterInput) {
   const { data, error } = await supabase
     .from('theaters')
     .insert(theaterToRow(input))
-    .select('id, name, lat, lng, address, city, phone, website, screen_count, seat_count')
+    .select('id, name, lat, lng, address, city, phone, website, instagram_url, screen_count, seat_count')
     .single()
 
   if (error) throw new Error(error.message)
@@ -388,7 +392,7 @@ export async function updateAdminTheater(input: AdminTheaterInput) {
     .from('theaters')
     .update(theaterToRow(input))
     .eq('id', input.id)
-    .select('id, name, lat, lng, address, city, phone, website, screen_count, seat_count')
+    .select('id, name, lat, lng, address, city, phone, website, instagram_url, screen_count, seat_count')
     .single()
 
   if (error) throw new Error(error.message)
@@ -586,8 +590,9 @@ export async function createAdminMovie(input: AdminMovieInput) {
       synopsis: input.synopsis?.trim() || null,
       runtime_minutes: input.runtimeMinutes ?? null,
       certification: input.certification?.trim() || null,
+      nation: input.nation?.trim() || null,
     })
-    .select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, poster_url, synopsis, runtime_minutes, certification, genre, director')
+    .select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, poster_url, synopsis, runtime_minutes, certification, genre, director, nation')
     .single()
 
   if (error) {
@@ -620,6 +625,7 @@ export async function importAdminExternalMovie(input: AdminExternalMovie) {
     certification: input.certification ?? null,
     genre: input.genre,
     director: input.director,
+    nation: input.nation ?? null,
   }
   const { data: existing, error: existingError } = await supabase
     .from('movies')
@@ -674,7 +680,7 @@ export async function approveShowtimeCandidates(
 
   const [{ data: theaterRows, error: theaterError }, { data: movieRows, error: movieError }] = await Promise.all([
     supabase.from('theaters').select('id, name'),
-    supabase.from('movies').select('id, title'),
+    supabase.from('movies').select('id, title, kmdb_id, kmdb_movie_seq'),
   ])
 
   if (theaterError) throw new Error(theaterError.message)
@@ -685,14 +691,15 @@ export async function approveShowtimeCandidates(
 
   for (const candidate of candidates) {
     const theater = resolveTheater(candidate, theaters)
-    const movie = resolveMovie(candidate, movies)
+    const movieResult = await resolveMovieForApproval(candidate, movies)
+    const movie = movieResult.movie
 
     if (!theater || !movie) {
       result.failed.push({
         candidateId: candidate.id,
         reason: [
           theater ? null : `극장 매칭 실패: ${candidate.theaterName}`,
-          movie ? null : `영화 매칭 실패: ${candidate.movieTitle}`,
+          movie ? null : movieResult.reason,
         ].filter(Boolean).join(' / '),
       })
       continue
@@ -724,6 +731,14 @@ export async function approveShowtimeCandidates(
       .eq('id', candidate.id)
 
     if (updateError) {
+      if (isMissingUpdatedAtTriggerError(updateError.message)) {
+        result.approved.push({
+          candidateId: candidate.id,
+          showtimeId: (upserted as { id?: string } | null)?.id,
+        })
+        continue
+      }
+
       result.failed.push({ candidateId: candidate.id, reason: updateError.message })
       continue
     }
@@ -870,9 +885,20 @@ function theaterFromRow(row: TheaterRow): AdminTheater {
     city: row.city ?? '',
     phone: row.phone ?? undefined,
     website: row.website ?? undefined,
+    instagramUrl: row.instagram_url ?? undefined,
     screenCount: row.screen_count ?? 0,
     seatCount: row.seat_count ?? undefined,
   }
+}
+
+function normalizeInstagramUrl(value?: string): string | null {
+  const raw = value?.trim()
+  if (!raw) return null
+  // 이미 URL 형태면 username만 추출
+  const fromUrl = raw.match(/instagram\.com\/([^/?#\s]+)/)?.[1]
+  const username = fromUrl ?? raw.replace(/^@/, '')
+  if (!username) return null
+  return `https://www.instagram.com/${username}/`
 }
 
 function theaterToRow(input: AdminTheaterInput) {
@@ -895,6 +921,7 @@ function theaterToRow(input: AdminTheaterInput) {
     city,
     phone: input.phone?.trim() || null,
     website: input.website?.trim() || null,
+    instagram_url: normalizeInstagramUrl(input.instagramUrl),
     screen_count: input.screenCount ?? 0,
     seat_count: input.seatCount ?? null,
   }
@@ -908,6 +935,7 @@ function movieFromRow(row: MovieRow): AdminMovie {
     year: row.year ?? new Date().getFullYear(),
     genre: row.genre ?? [],
     director: row.director ?? [],
+    nation: row.nation ?? undefined,
     kmdbId: row.kmdb_id ?? undefined,
     kmdbMovieSeq: row.kmdb_movie_seq ?? undefined,
     posterUrl: row.poster_url ?? undefined,
@@ -985,11 +1013,67 @@ function resolveMovie(candidate: CrawledShowtimeCandidate, movies: MovieRow[]) {
     if (matched) return matched
   }
 
-  const exact = movies.find((movie) => movie.title.trim() === candidate.movieTitle.trim())
+  return resolveMovieByTitle(candidate.movieTitle, movies)
+}
+
+async function resolveMovieForApproval(candidate: CrawledShowtimeCandidate, movies: MovieRow[]) {
+  const localMovie = resolveMovie(candidate, movies)
+  if (localMovie) return { movie: localMovie }
+
+  const titles = candidateMovieTitleCandidates(candidate.movieTitle)
+  for (const title of titles) {
+    const localByCleanTitle = resolveMovieByTitle(title, movies)
+    if (localByCleanTitle) return { movie: localByCleanTitle }
+  }
+
+  try {
+    for (const title of titles) {
+      const externalMovies = await searchKmdbMovies(title)
+      const externalMovie = pickExactExternalMovie(title, externalMovies)
+      if (!externalMovie) continue
+
+      const imported = await importAdminExternalMovie(externalMovie)
+      const movie = {
+        id: imported.id,
+        title: imported.label,
+        kmdb_id: externalMovie.movieId,
+        kmdb_movie_seq: externalMovie.movieSeq,
+      }
+      movies.push(movie)
+      return { movie }
+    }
+  } catch (error) {
+    return {
+      movie: undefined,
+      reason: `KMDB 자동 매칭 실패: ${candidate.movieTitle} (${error instanceof Error ? error.message : '알 수 없는 오류'})`,
+    }
+  }
+
+  return { movie: undefined, reason: `영화 매칭 실패: ${candidate.movieTitle}` }
+}
+
+function resolveMovieByTitle(title: string, movies: MovieRow[]) {
+  const exact = movies.find((movie) => movie.title.trim() === title.trim())
   if (exact) return exact
 
-  const normalizedTitle = normalizeMatchText(candidate.movieTitle)
+  const normalizedTitle = normalizeMatchText(title)
   return movies.find((movie) => normalizeMatchText(movie.title) === normalizedTitle)
+}
+
+function candidateMovieTitleCandidates(title: string) {
+  return Array.from(new Set([
+    title.trim(),
+    title.trim().replace(/\s+(?:\d{1,2}[./-]\d{1,2})(?:\s.*)?$/, '').trim(),
+    title.trim().replace(/\s+(?:\d{1,2}월\s*\d{1,2}일)(?:\s.*)?$/, '').trim(),
+  ].filter(Boolean)))
+}
+
+function pickExactExternalMovie(title: string, movies: AdminExternalMovie[]) {
+  const normalizedTitle = normalizeMatchText(title)
+  return movies.find((movie) =>
+    normalizeMatchText(movie.title) === normalizedTitle ||
+    (movie.originalTitle ? normalizeMatchText(movie.originalTitle) === normalizedTitle : false),
+  )
 }
 
 function showtimeRowFromCandidate(
@@ -1020,6 +1104,10 @@ function normalizeMatchText(value: string) {
     .toLowerCase()
     .normalize('NFKC')
     .replace(/[\s"'‘’“”()[\]{}:;,.!?·ㆍ・_-]+/g, '')
+}
+
+function isMissingUpdatedAtTriggerError(message: string) {
+  return message.includes('record "new" has no field "updated_at"')
 }
 
 function mergeWarnings(current: string[], next: Array<string | undefined>) {

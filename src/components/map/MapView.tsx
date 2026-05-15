@@ -2,6 +2,7 @@
 
 import 'leaflet/dist/leaflet.css'
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { GeoJSON, MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -10,9 +11,12 @@ import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import { useUserLocation } from '@/hooks/useUserLocation'
 import { SearchBarButton, SearchBar, FabRound } from '@/components/primitives'
 import { MapPin, PosterThumb, TheaterSheet, FilterBar } from '@/components/domain'
-import { useActiveMovieIds, useMovies, useStations, useTheaters } from '@/lib/supabase/queries'
+import type { FilterState } from '@/components/domain'
+import { useActiveMovieIds, useMapShowtimes, useMovies, useStations, useTheaters } from '@/lib/supabase/queries'
 import type { Movie, Station, Theater } from '@/types/api'
 import subwayLinesData from '@/data/subway-lines.json'
+import { SEOUL_GU, SEOUL_DONG } from '@/data/seoul-areas'
+import { normalizeGenre } from '@/lib/genres'
 
 interface SubwayLineProperties {
   line?: string
@@ -33,6 +37,11 @@ const SUBWAY_LINE_MIN_ZOOM = 15
 const STATION_PIN_MIN_ZOOM = 15
 const STATION_PIN_FULL_ZOOM = 17
 const SEARCH_CROSS_RESULT_LIMIT = 5
+const DATE_FORMATTER = new Intl.DateTimeFormat('en-CA', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+})
 const SEOUL_SUBWAY_LINE_COLORS: Record<string, { light: string; dark: string }> = {
   '1': { light: '#0052A4', dark: '#4C8ED1' },
   '1호선': { light: '#0052A4', dark: '#4C8ED1' },
@@ -150,6 +159,65 @@ function escapeHtml(value: string): string {
     .replace(/'/g, '&#39;')
 }
 
+function startOfLocalDay(date: Date) {
+  const next = new Date(date)
+  next.setHours(0, 0, 0, 0)
+  return next
+}
+
+function addDays(date: Date, days: number) {
+  const next = new Date(date)
+  next.setDate(next.getDate() + days)
+  return next
+}
+
+function endOfMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0)
+}
+
+function formatDateParam(date: Date) {
+  return DATE_FORMATTER.format(date)
+}
+
+function dateRangeForFilter(filter: FilterState) {
+  const today = startOfLocalDay(new Date())
+  switch (filter.dateId) {
+    case 'today':
+      return { start: today, end: today }
+    case 'tomorrow': {
+      const tomorrow = addDays(today, 1)
+      return { start: tomorrow, end: tomorrow }
+    }
+    case 'this-weekend': {
+      const dow = today.getDay()
+      const daysToSat = dow === 0 ? 6 : 6 - dow
+      const saturday = addDays(today, daysToSat)
+      return { start: saturday, end: addDays(saturday, 1) }
+    }
+    case 'next-weekend': {
+      const dow = today.getDay()
+      const daysToSat = dow === 0 ? 6 : 6 - dow
+      const saturday = addDays(today, daysToSat + 7)
+      return { start: saturday, end: addDays(saturday, 1) }
+    }
+    case 'this-month':
+      return { start: today, end: endOfMonth(today) }
+    case 'custom':
+      return {
+        start: filter.customStart ? startOfLocalDay(filter.customStart) : today,
+        end: filter.customEnd ? startOfLocalDay(filter.customEnd) : filter.customStart ? startOfLocalDay(filter.customStart) : addDays(today, 7),
+      }
+    case null:
+      return { start: today, end: addDays(today, 30) }
+    case 'this-week':
+    default: {
+      const dow = today.getDay()
+      const weekEnd = dow === 0 ? addDays(today, 6) : addDays(today, 7 - dow)
+      return { start: today, end: weekEnd }
+    }
+  }
+}
+
 function makeStationIcon(station: Station, isDark: boolean, zoom: number) {
   const compact = zoom < STATION_PIN_FULL_ZOOM
   const DOT = compact ? 11 : 15
@@ -184,12 +252,59 @@ function makeStationIcon(station: Station, isDark: boolean, zoom: number) {
   })
 }
 
+// 한국어 모음 혼동 정규화: ㅐ→ㅔ, ㅒ→ㅖ (발음 동일 처리)
+// Hangul 음절 = 0xAC00 + (초성*21 + 중성)*28 + 종성
+function normalizeKoreanVowels(str: string): string {
+  let result = ''
+  for (let i = 0; i < str.length; i++) {
+    const code = str.charCodeAt(i)
+    if (code < 0xAC00 || code > 0xD7A3) { result += str[i]; continue }
+    const offset = code - 0xAC00
+    const jong = offset % 28
+    const jung = Math.floor(offset / 28) % 21
+    const cho = Math.floor(offset / 588)
+    // ㅐ(1)→ㅔ(5), ㅒ(3)→ㅖ(7)
+    const normJung = jung === 1 ? 5 : jung === 3 ? 7 : jung
+    result += String.fromCharCode(0xAC00 + cho * 588 + normJung * 28 + jong)
+  }
+  return result
+}
+
 function normalizeSearchText(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '')
-    .replace(/역$/g, '')
+  return normalizeKoreanVowels(
+    value.trim().toLowerCase().replace(/\s+/g, '').replace(/역$/g, '')
+  )
+}
+
+// 서브시퀀스 퍼지 매칭: 쿼리 글자들이 타겟 안에 순서대로 등장하면 점수 반환 (10-35)
+function fuzzyScore(target: string, query: string): number {
+  let qi = 0
+  for (let ti = 0; ti < target.length && qi < query.length; ti++) {
+    if (target[ti] === query[qi]) qi++
+  }
+  return qi === query.length ? Math.max(10, Math.floor(35 * query.length / target.length)) : 0
+}
+
+/* ── localStorage 최근 검색 ─────────────────────────────────────── */
+const RECENT_KEY = 'movie:recent-searches:v1'
+function loadRecentSearches(): string[] {
+  try { return JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]') } catch { return [] }
+}
+function addToRecent(query: string, list: string[]): string[] {
+  const q = query.trim()
+  if (!q) return list
+  const next = [q, ...list.filter(x => x !== q)].slice(0, 8)
+  try { localStorage.setItem(RECENT_KEY, JSON.stringify(next)) } catch {}
+  return next
+}
+function removeFromRecent(query: string, list: string[]): string[] {
+  const next = list.filter(x => x !== query)
+  try { localStorage.setItem(RECENT_KEY, JSON.stringify(next)) } catch {}
+  return next
+}
+
+function finiteNumber(value: number, fallback = 0): number {
+  return Number.isFinite(value) ? value : fallback
 }
 
 function stationSearchScore(station: Station, query: string): number {
@@ -202,6 +317,7 @@ function stationSearchScore(station: Station, query: string): number {
     if (name === normalizedQuery) best = Math.max(best, 100)
     else if (name.startsWith(normalizedQuery)) best = Math.max(best, 80)
     else if (name.includes(normalizedQuery)) best = Math.max(best, 60)
+    else best = Math.max(best, fuzzyScore(name, normalizedQuery))
   }
   return best
 }
@@ -216,6 +332,7 @@ function movieSearchScore(movie: Movie, query: string): number {
     if (title === normalizedQuery) best = Math.max(best, 100)
     else if (title.startsWith(normalizedQuery)) best = Math.max(best, 80)
     else if (title.includes(normalizedQuery)) best = Math.max(best, 60)
+    else best = Math.max(best, fuzzyScore(title, normalizedQuery))
   }
   return best
 }
@@ -229,7 +346,34 @@ function directorSearchScore(director: string, query: string): number {
   if (normalizedDirector === normalizedQuery) return 100
   if (normalizedDirector.startsWith(normalizedQuery)) return 80
   if (normalizedDirector.includes(normalizedQuery)) return 60
-  return 0
+  return fuzzyScore(normalizedDirector, normalizedQuery)
+}
+
+function theaterSearchScore(theater: Theater, query: string): number {
+  const normalizedQuery = normalizeSearchText(query)
+  if (!normalizedQuery) return 0
+
+  const fields = [theater.name, theater.address, theater.city ?? '']
+    .map(normalizeSearchText)
+    .filter(Boolean)
+  let best = 0
+  for (const field of fields) {
+    if (field === normalizedQuery) best = Math.max(best, 100)
+    else if (field.startsWith(normalizedQuery)) best = Math.max(best, 82)
+    else if (field.includes(normalizedQuery)) best = Math.max(best, 58)
+    else best = Math.max(best, fuzzyScore(field, normalizedQuery))
+  }
+  return best
+}
+
+function areaSearchScore(name: string, query: string): number {
+  const nq = normalizeSearchText(query)
+  const na = normalizeSearchText(name)
+  if (!nq || !na) return 0
+  if (na === nq) return 100
+  if (na.startsWith(nq)) return 78
+  if (na.includes(nq)) return 55
+  return fuzzyScore(na, nq)
 }
 
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
@@ -246,10 +390,11 @@ const IcoMinus = () => (
   </svg>
 )
 const IcoLocate = () => (
-  <svg width={18} height={18} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-    <circle cx={12} cy={12} r={4} />
-    <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+  <svg width={20} height={20} viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round">
+    <circle cx={12} cy={12} r={6.5} />
+    <circle cx={12} cy={12} r={1.7} fill="currentColor" stroke="none" />
+    <path d="M12 2.8v4M12 17.2v4M2.8 12h4M17.2 12h4" />
   </svg>
 )
 
@@ -266,17 +411,62 @@ function posterCountForZoom(zoom: number): number {
 }
 
 /* ── 포스터 그리드 ──────────────────────────────────────────────── */
-function PosterGrid({ count, total, tailDir, tailOffset = 0 }: {
-  count: number
-  total: number
+interface TheaterPosterMovie {
+  id: string
+  title: string
+  posterUrl?: string
+  genre: string[]
+  nation?: string
+  showtimeCount: number
+  hasAvailableSeats: boolean
+  matchesFilter: boolean
+}
+
+interface PosterSlot {
+  movie?: TheaterPosterMovie
+  overflow?: number | string
+  countLabel?: string
+  dimmed?: boolean
+}
+
+function posterSlotsForZoom(movies: TheaterPosterMovie[], zoom: number, filtersActive = false): PosterSlot[] {
+  const capacity = posterCountForZoom(zoom)
+  if (capacity === 0 || movies.length === 0) return []
+
+  // 매칭 영화 먼저, 미매칭 나중
+  const sorted = filtersActive
+    ? [...movies].sort((a, b) => Number(b.matchesFilter) - Number(a.matchesFilter))
+    : movies
+
+  const dim = (m: TheaterPosterMovie) => filtersActive && !m.matchesFilter
+
+  if (capacity === 1) {
+    return sorted.length === 1
+      ? [{ movie: sorted[0], dimmed: dim(sorted[0]) }]
+      : [{ movie: sorted[0], overflow: `${sorted.length}편`, dimmed: dim(sorted[0]) }]
+  }
+  if (sorted.length <= capacity) return sorted.map((m) => ({ movie: m, dimmed: dim(m) }))
+
+  const visiblePosterCount = capacity - 1
+  return [
+    ...sorted.slice(0, visiblePosterCount).map((m) => ({ movie: m, dimmed: dim(m) })),
+    { movie: sorted[visiblePosterCount], overflow: sorted.length - visiblePosterCount, dimmed: dim(sorted[visiblePosterCount]) },
+  ]
+}
+
+function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filtersActive = false }: {
+  slots: PosterSlot[]
   tailDir?: 'up' | 'right'
   tailOffset?: number
+  matchCount?: number
+  filtersActive?: boolean
 }) {
-  const overflow = total > count ? total - count : 0
-  const perRow = count === 6 ? 3 : count
+  const count = slots.length
+  const perRow = count > 3 ? 3 : count
   const cardWidth = perRow * 44 + Math.max(0, perRow - 1) * 4 + 16
   const tailInset = 14
-  const tailX = Math.max(tailInset, Math.min(cardWidth - tailInset, cardWidth / 2 - tailOffset))
+  const safeTailOffset = finiteNumber(tailOffset)
+  const tailX = Math.max(tailInset, Math.min(cardWidth - tailInset, cardWidth / 2 - safeTailOffset))
 
   const tailStyle: React.CSSProperties | null = tailDir === 'up' ? {
     position: 'absolute',
@@ -317,26 +507,80 @@ function PosterGrid({ count, total, tailDir, tailOffset = 0 }: {
         position: 'relative',
         zIndex: 1,
       }}>
-        <div style={{
-          position: 'absolute', top: -7, left: 4,
-          fontSize: 9, fontWeight: 700, padding: '1px 4px', borderRadius: 3,
-          backgroundColor: 'rgba(255,180,0,0.9)', color: '#1A1714',
-          letterSpacing: '0.3px', whiteSpace: 'nowrap', zIndex: 1,
-        }}>MOCK</div>
-
+        {filtersActive && matchCount != null && matchCount > 0 && (
+          <div style={{
+            position: 'absolute',
+            top: -8,
+            right: -8,
+            backgroundColor: 'var(--color-primary-base)',
+            color: '#fff',
+            borderRadius: 999,
+            padding: '2px 7px',
+            fontSize: 10,
+            fontWeight: 700,
+            zIndex: 10,
+            whiteSpace: 'nowrap',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+            border: '1.5px solid var(--color-surface-bg)',
+          }}>
+            {matchCount}편 일치
+          </div>
+        )}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, position: 'relative', zIndex: 1 }}>
-          {Array.from({ length: count === 6 ? 2 : 1 }).map((_, row) => (
+          {Array.from({ length: count > 3 ? 2 : 1 }).map((_, row) => (
             <div key={row} style={{ display: 'flex', gap: 4 }}>
               {Array.from({ length: perRow }).map((_, col) => {
                 const idx = row * perRow + col
+                const slot = slots[idx]
+                if (!slot) return null
                 return (
-                  <PosterThumb
-                    key={idx}
-                    width={44}
-                    height={66}
-                    size="sm"
-                    overflow={idx === count - 1 && overflow > 0 ? overflow : undefined}
-                  />
+                  slot.countLabel ? (
+                    <div
+                      key={idx}
+                      style={{
+                        width: 44,
+                        height: 66,
+                        borderRadius: 'var(--comp-poster-radius)',
+                        backgroundColor: 'var(--color-primary-base)',
+                        color: '#fff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 15,
+                        fontWeight: 800,
+                        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.18)',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {slot.countLabel}
+                    </div>
+                  ) : (
+                    <div key={idx} style={{ position: 'relative', width: 44, height: 66, opacity: slot.dimmed ? 0.5 : 1 }}>
+                      <PosterThumb
+                        src={slot.movie?.posterUrl}
+                        alt={slot.movie?.title ?? ''}
+                        width={44}
+                        height={66}
+                        size="sm"
+                        overflow={slot.overflow}
+                      />
+                      {slot.dimmed && (
+                        <div style={{
+                          position: 'absolute',
+                          inset: 0,
+                          borderRadius: 'var(--comp-poster-radius)',
+                          backgroundColor: 'rgba(0,0,0,0.45)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}>
+                          <span style={{ fontSize: 8, fontWeight: 700, color: 'rgba(255,255,255,0.85)', textAlign: 'center', lineHeight: 1.3 }}>
+                            조건{'\n'}외
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )
                 )
               })}
             </div>
@@ -355,30 +599,33 @@ const GAP = 4
 const DOT = 22
 const ANCHOR_Y = LABEL_H + GAP + DOT / 2
 
-const TOTAL_MOVIES = 3  // 핀 포스터 그리드 기본 표시 수
-
 type LabelOffset = { x: number; y: number }
 
 function makePinIcon(
   name: string,
   selected: boolean,
   zoom: number,
+  posterMovies: TheaterPosterMovie[],
+  filtersActive = false,
   posterOffsetX = 0,
   labelOffset: LabelOffset = { x: 0, y: 0 },
 ) {
-  const count = posterCountForZoom(zoom)
-  const numRows = count === 6 ? 2 : count > 0 ? 1 : 0
-  const usePosterLeft = count > 0 && posterOffsetX < -50
+  const safePosterOffsetX = finiteNumber(posterOffsetX)
+  const slots = posterSlotsForZoom(posterMovies, zoom, filtersActive)
+  const matchCount = filtersActive ? posterMovies.filter(m => m.matchesFilter).length : undefined
+  const numRows = slots.length > 3 ? 2 : slots.length > 0 ? 1 : 0
+  const usePosterLeft = slots.length > 0 && safePosterOffsetX < -50
   const posterH = usePosterLeft || numRows === 0 ? 0 : 66 * numRows + 4 * (numRows - 1) + 6
 
   let posterHtml = ''
-  if (count > 0) {
+  if (slots.length > 0) {
     const posterMarkup = renderToStaticMarkup(
       <PosterGrid
-        count={count}
-        total={TOTAL_MOVIES}
+        slots={slots}
         tailDir={usePosterLeft ? 'right' : 'up'}
-        tailOffset={usePosterLeft ? 0 : posterOffsetX}
+        tailOffset={usePosterLeft ? 0 : safePosterOffsetX}
+        matchCount={matchCount}
+        filtersActive={filtersActive}
       />
     )
     if (usePosterLeft) {
@@ -390,7 +637,7 @@ function makePinIcon(
         posterMarkup +
         `</div>`
     } else {
-      posterHtml = `<div style="position:relative;left:${Math.round(posterOffsetX)}px">` +
+      posterHtml = `<div style="position:relative;left:${Math.round(safePosterOffsetX)}px">` +
         posterMarkup +
         `</div>`
     }
@@ -588,7 +835,7 @@ function computeCoLocationOffsets(
     const center = group[0]
     const centerPx = map.latLngToContainerPoint([center.lat, center.lng] as [number, number])
     group.forEach((t, idx) => {
-      const angle = (2 * Math.PI * idx) / group.length
+      const angle = (2 * Math.PI * idx) / group.length + Math.PI / 4
       const offsetPx = L.point(
         centerPx.x + CO_LOCATE_PIXEL_RADIUS * Math.sin(angle),
         centerPx.y - CO_LOCATE_PIXEL_RADIUS * Math.cos(angle),
@@ -660,6 +907,7 @@ function computePosterOffsets(
   map: LeafletMap,
   zoom: number,
   labelDirections: Map<string, LabelDir> = new Map(),
+  posterMoviesByTheater: Map<string, TheaterPosterMovie[]> = new Map(),
 ): Map<string, number> {
   const offsets = new Map<string, number>()
   if (posterCountForZoom(zoom) === 0) return offsets
@@ -678,15 +926,16 @@ function computePosterOffsets(
   const MIN_OVERLAP_X_TO_SHIFT = POSTER_W / 4
   const MIN_OVERLAP_Y_TO_SHIFT = POSTER_H / 4
   const singles = clusters
-    .filter((c) => c.theaters.length === 1)
-    .map((c) => ({
-      id: c.id,
-      px: map.latLngToContainerPoint([c.lat, c.lng] as [number, number]),
-    }))
+    .filter((c) => c.theaters.length === 1 && (posterMoviesByTheater.get(c.theaters[0].id)?.length ?? 0) > 0)
+    .map((c) => {
+      const px = map.latLngToContainerPoint([c.lat, c.lng] as [number, number])
+      return { id: c.theaters[0].id, px }
+    })
+    .filter((single) => Number.isFinite(single.px.x) && Number.isFinite(single.px.y))
   const posterRect = (single: { id: string; px: LeafletPoint }, offset = offsets.get(single.id) ?? 0): Rect => [
-    single.px.x - POSTER_W / 2 + offset,
+    single.px.x - POSTER_W / 2 + finiteNumber(offset),
     single.px.y + POSTER_TOP_FROM_PIN,
-    single.px.x + POSTER_W / 2 + offset,
+    single.px.x + POSTER_W / 2 + finiteNumber(offset),
     single.px.y + POSTER_TOP_FROM_PIN + POSTER_H,
   ]
 
@@ -707,6 +956,7 @@ function computePosterOffsets(
   for (const c of clusters) {
     if (c.theaters.length <= 1) continue
     const { x: cx, y: cy } = map.latLngToContainerPoint([c.lat, c.lng] as [number, number])
+    if (!Number.isFinite(cx) || !Number.isFinite(cy)) continue
 
     if (c.theaters.length > 3) {
       clusterBlockers.push({ centerX: cx, rect: [cx - 20, cy - 20, cx + 20, cy + 20] })
@@ -734,7 +984,8 @@ function computePosterOffsets(
       const rect = posterRect(single)
       const o = overlap(rect, blocker.rect)
       if (o.x < MIN_OVERLAP_X_TO_SHIFT || o.y < MIN_OVERLAP_Y_TO_SHIFT) continue
-      const direction = (single.px.x + (offsets.get(single.id) ?? 0)) < blocker.centerX ? -1 : 1
+      const currentOffset = finiteNumber(offsets.get(single.id) ?? 0)
+      const direction = (single.px.x + currentOffset) < blocker.centerX ? -1 : 1
       offsets.set(single.id, (offsets.get(single.id) ?? 0) + direction * (o.x - MIN_OVERLAP_X_TO_SHIFT + 8))
     }
   }
@@ -886,12 +1137,27 @@ function useIsDark() {
 }
 
 export default function MapView() {
+  const router = useRouter()
   const { coords, refetch } = useUserLocation()
   const isDark = useIsDark()
   const { data: theaters = [], isLoading: theatersLoading } = useTheaters()
   const { data: stations = [] } = useStations()
   const { data: movies = [] } = useMovies()
   const { data: activeMovieIds = [] } = useActiveMovieIds()
+  const [filters, setFilters] = useState<FilterState>({
+    dateId: 'this-week',
+    customStart: null,
+    customEnd: null,
+    genres: [],
+    nations: [],
+    bookable: false,
+    indie: false,
+  })
+  const [movieFilter, setMovieFilter] = useState<{ id: string; title: string } | null>(null)
+  const selectedDateRange = useMemo(() => dateRangeForFilter(filters), [filters])
+  const mapShowtimeStart = formatDateParam(selectedDateRange.start)
+  const mapShowtimeEnd = formatDateParam(selectedDateRange.end)
+  const { data: mapShowtimes = [] } = useMapShowtimes(mapShowtimeStart, mapShowtimeEnd)
   const mapRef = useRef<LeafletMap | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [zoom, setZoom] = useState(14)
@@ -899,9 +1165,12 @@ export default function MapView() {
   // 검색 오버레이
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [recentSearches, setRecentSearches] = useState<string[]>([])
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   const dummyInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => { setRecentSearches(loadRecentSearches()) }, [])
 
   const openSearch = useCallback(() => {
     // iOS Safari: 키보드는 반드시 클릭 핸들러 안에서 동기적으로 focus()가 불려야 열림
@@ -930,7 +1199,147 @@ export default function MapView() {
       .map((result) => result.station)
   }, [searchQuery, stations])
 
+  const theaterResults = useMemo(() => {
+    if (!searchQuery.trim()) return []
+    return theaters
+      .map((theater) => ({ theater, score: theaterSearchScore(theater, searchQuery) }))
+      .filter((result) => result.score > 0)
+      .sort((a, b) => b.score - a.score || a.theater.name.localeCompare(b.theater.name, 'ko'))
+      .slice(0, 20)
+      .map((result) => result.theater)
+  }, [searchQuery, theaters])
+
   const activeMovieIdSet = useMemo(() => new Set(activeMovieIds), [activeMovieIds])
+  const nationOptions = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const movie of movies) {
+      if (!movie.nation) continue
+      for (const n of movie.nation.split(/[,，/·]+/).map(s => s.trim()).filter(Boolean)) {
+        counts.set(n, (counts.get(n) ?? 0) + 1)
+      }
+    }
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'ko'))
+      .map(([n]) => n)
+  }, [movies])
+
+  // 극장 주소에서 구 단위 지역 파생 (추가 DB 없이 자동완성 + 인근 극장 제공)
+  const derivedAreas = useMemo(() => {
+    // 극장 주소에서 구 단위 실제 좌표 + 극장 목록 파생
+    const theaterByGu = new Map<string, { lat: number; lng: number; n: number; theaters: Theater[] }>()
+    for (const t of theaters) {
+      const match = t.address.match(/([가-힣]+[구])/)
+      if (!match) continue
+      const name = match[1]
+      const d = theaterByGu.get(name) ?? { lat: 0, lng: 0, n: 0, theaters: [] }
+      d.lat += t.lat; d.lng += t.lng; d.n++
+      d.theaters.push(t)
+      theaterByGu.set(name, d)
+    }
+
+    type AreaItem = { name: string; lat: number; lng: number; theaters: Theater[]; aliases: string[] }
+    const result = new Map<string, AreaItem>()
+
+    // 정적 구 데이터 (극장 있으면 실제 좌표로 덮어씀)
+    for (const entry of SEOUL_GU) {
+      const d = theaterByGu.get(entry.name)
+      result.set(entry.name, {
+        name: entry.name,
+        lat: d ? d.lat / d.n : entry.lat,
+        lng: d ? d.lng / d.n : entry.lng,
+        theaters: d?.theaters ?? [],
+        aliases: entry.aliases ?? [],
+      })
+    }
+
+    // 정적 동네 데이터 (별칭 포함)
+    for (const entry of SEOUL_DONG) {
+      if (!result.has(entry.name)) {
+        result.set(entry.name, {
+          name: entry.name,
+          lat: entry.lat,
+          lng: entry.lng,
+          theaters: [],
+          aliases: entry.aliases ?? [],
+        })
+      }
+    }
+
+    return Array.from(result.values())
+  }, [theaters])
+
+  const areaResults = useMemo(() => {
+    if (!searchQuery.trim()) return []
+    return derivedAreas
+      .map(area => ({
+        area,
+        score: Math.max(
+          areaSearchScore(area.name, searchQuery),
+          ...area.aliases.map(a => areaSearchScore(a, searchQuery)),
+        ),
+      }))
+      .filter(r => r.score > 0)
+      .sort((a, b) => b.score - a.score || a.area.name.localeCompare(b.area.name, 'ko'))
+      .map(r => r.area)
+  }, [searchQuery, derivedAreas])
+
+  const theaterPosterMovies = useMemo(() => {
+    const byTheater = new Map<string, Map<string, TheaterPosterMovie>>()
+
+    for (const showtime of mapShowtimes) {
+      if (!showtime.movie) continue
+
+      let theaterMovies = byTheater.get(showtime.theaterId)
+      if (!theaterMovies) {
+        theaterMovies = new Map()
+        byTheater.set(showtime.theaterId, theaterMovies)
+      }
+
+      const hasSeats = showtime.seatAvailable > 0
+      const current = theaterMovies.get(showtime.movieId)
+      if (current) {
+        current.showtimeCount += 1
+        if (hasSeats) current.hasAvailableSeats = true
+      } else {
+        const matchesMovieFilter = !movieFilter || showtime.movieId === movieFilter.id
+        const matchesGenre = filters.genres.length === 0 || showtime.movie.genre.some(g => {
+          const normalized = normalizeGenre(g)
+          return normalized !== null && filters.genres.includes(normalized)
+        })
+        const matchesNation = (() => {
+          if (filters.nations.length === 0) return true
+          const ns = showtime.movie.nation?.split(/[,，/·]+/).map(s => s.trim()).filter(Boolean) ?? []
+          return ns.some(n => filters.nations.includes(n))
+        })()
+        theaterMovies.set(showtime.movieId, {
+          id: showtime.movie.id,
+          title: showtime.movie.title,
+          posterUrl: showtime.movie.posterUrl,
+          genre: showtime.movie.genre,
+          nation: showtime.movie.nation,
+          showtimeCount: 1,
+          hasAvailableSeats: hasSeats,
+          matchesFilter: matchesMovieFilter && matchesGenre && matchesNation,
+        })
+      }
+    }
+
+    const result = new Map<string, TheaterPosterMovie[]>()
+    for (const [theaterId, movieMap] of byTheater) {
+      for (const movie of movieMap.values()) {
+        if (filters.bookable && !movie.hasAvailableSeats) movie.matchesFilter = false
+      }
+      result.set(
+        theaterId,
+        Array.from(movieMap.values()).sort((a, b) =>
+          b.showtimeCount - a.showtimeCount || a.title.localeCompare(b.title, 'ko')
+        ),
+      )
+    }
+    return result
+  }, [filters.bookable, filters.genres, filters.nations, movieFilter, mapShowtimes])
+
+  const filtersActive = filters.bookable || filters.genres.length > 0 || filters.nations.length > 0 || !!movieFilter
 
   const titleMovieResults = useMemo(() => {
     if (!searchQuery.trim()) return []
@@ -1004,18 +1413,38 @@ export default function MapView() {
   const searchSections = useMemo(() => {
     const bestMovieScore = Math.max(0, ...titleMovieResults.map((movie) => movieSearchScore(movie, searchQuery)))
     const bestDirectorScore = Math.max(0, ...directorResults.map((director) => director.score))
-    return bestDirectorScore > bestMovieScore
-      ? ['directors', 'movies', 'stations'] as const
-      : ['movies', 'directors', 'stations'] as const
-  }, [directorResults, searchQuery, titleMovieResults])
+    const bestStationScore = Math.max(0, ...stationResults.map((station) => stationSearchScore(station, searchQuery)))
+    const bestTheaterScore = Math.max(0, ...theaterResults.map((theater) => theaterSearchScore(theater, searchQuery)))
+    const bestAreaScore = Math.max(0, ...areaResults.map(a => Math.max(areaSearchScore(a.name, searchQuery), ...a.aliases.map(al => areaSearchScore(al, searchQuery)))))
+    return [
+      { id: 'theaters', score: bestTheaterScore, priority: 0 },
+      { id: 'movies', score: bestMovieScore, priority: 1 },
+      { id: 'directors', score: bestDirectorScore, priority: 2 },
+      { id: 'stations', score: bestStationScore, priority: 3 },
+      { id: 'areas', score: bestAreaScore, priority: 4 },
+    ]
+      .filter((section) => section.score > 0)
+      .sort((a, b) => b.score - a.score || a.priority - b.priority)
+      .map((section) => section.id)
+  }, [areaResults, directorResults, searchQuery, stationResults, theaterResults, titleMovieResults])
 
   const focusStation = useCallback((station: Station) => {
+    setRecentSearches(prev => addToRecent(searchQuery, prev))
     closeSearch()
     setSelectedId(null)
     setDisplayedId(null)
     setSheetExpanded(false)
     mapRef.current?.flyTo([station.lat, station.lng], 16, { duration: 0.75 })
-  }, [closeSearch])
+  }, [closeSearch, searchQuery])
+
+  const focusArea = useCallback((area: { name: string; lat: number; lng: number }) => {
+    setRecentSearches(prev => addToRecent(searchQuery, prev))
+    closeSearch()
+    setSelectedId(null)
+    setDisplayedId(null)
+    setSheetExpanded(false)
+    mapRef.current?.flyTo([area.lat, area.lng], 15, { duration: 0.75 })
+  }, [closeSearch, searchQuery])
 
   // 바텀시트 상태
   const [sheetExpanded, setSheetExpanded] = useState(false)
@@ -1050,13 +1479,13 @@ export default function MapView() {
     const c = computeClusters(adjustedTheaters, map, zoom, splitIds, coLocGroups)
     const d = computeLabelDirections(c, map)
     const labelO = computeNameLabelOffsets(c, map, d)
-    const o = computePosterOffsets(c, map, zoom, d)
+    const o = computePosterOffsets(c, map, zoom, d, theaterPosterMovies)
     setClusters(c)
     setPosterOffsets(o)
     setCoLocationOffsets(coLoc)
     setLabelDirections(d)
     setLabelOffsets(labelO)
-  }, [zoom, theaters])
+  }, [zoom, theaters, theaterPosterMovies])
 
   // zoom 변경 시 재계산 (줌 애니메이션 끝난 뒤)
   useEffect(() => {
@@ -1092,6 +1521,53 @@ export default function MapView() {
     }, 400)
   }, [])
 
+  const focusTheater = useCallback((theater: Theater) => {
+    setRecentSearches(prev => addToRecent(searchQuery, prev))
+    closeSearch()
+    if (exitTimerRef.current) clearTimeout(exitTimerRef.current)
+    setSheetExiting(false)
+    setSelectedId(theater.id)
+    setDisplayedId(theater.id)
+    setSelectedMovieId('')
+    setSheetExpanded(false)
+    const currentZoom = mapRef.current?.getZoom() ?? 15
+    mapRef.current?.flyTo(
+      [theater.lat, theater.lng],
+      Math.max(currentZoom, 15),
+      { duration: 0.75 },
+    )
+  }, [closeSearch, searchQuery])
+
+  // 영화 상세 페이지에서 뒤로가기 시 ?theater= 파라미터로 극장 시트 복원
+  const restoredTheaterRef = useRef(false)
+  useEffect(() => {
+    if (restoredTheaterRef.current || theaters.length === 0) return
+    const theaterParam = new URLSearchParams(window.location.search).get('theater')
+    if (!theaterParam) { restoredTheaterRef.current = true; return }
+    const theater = theaters.find((t) => t.id === theaterParam)
+    if (!theater) return
+    restoredTheaterRef.current = true
+    focusTheater(theater)
+    const url = new URL(window.location.href)
+    url.searchParams.delete('theater')
+    window.history.replaceState({}, '', url.toString())
+  }, [theaters, focusTheater])
+
+  // 영화 상세 / 바텀시트에서 ?movie= 파라미터로 영화 필터 복원
+  const restoredMovieRef = useRef(false)
+  useEffect(() => {
+    if (restoredMovieRef.current || movies.length === 0) return
+    const movieParam = new URLSearchParams(window.location.search).get('movie')
+    if (!movieParam) { restoredMovieRef.current = true; return }
+    const movie = movies.find((m) => m.id === movieParam)
+    if (!movie) return
+    restoredMovieRef.current = true
+    setMovieFilter({ id: movie.id, title: movie.title })
+    const url = new URL(window.location.href)
+    url.searchParams.delete('movie')
+    window.history.replaceState({}, '', url.toString())
+  }, [movies])
+
   // 극장 선택 시 → 첫 번째 영화 선택 + 시트 collapsed로 열기
   const handlePinClick = useCallback((theaterId: string) => {
     if (selectedId === theaterId) {
@@ -1117,8 +1593,88 @@ export default function MapView() {
 
   // FAB 버튼 bottom: collapsed = COLLAPSED_H(300) + 여유 16 = 316
   // expanded / 시트 없음 = safe area 위 32px
-  const fabBottom = selectedTheater && !sheetExpanded ? 316 : 32
-  const hasSearchResults = stationResults.length > 0 || movieResults.length > 0 || relatedDirectorResults.length > 0
+  const fabBottom = selectedTheater && !sheetExpanded && !sheetExiting ? 316 : 32
+  const hasSearchResults = theaterResults.length > 0 || stationResults.length > 0 || movieResults.length > 0 || relatedDirectorResults.length > 0 || areaResults.length > 0
+
+  const renderTheaterSearchSection = () => {
+    if (theaterResults.length === 0) return null
+    return (
+      <section>
+        <h2 style={{
+          margin: '0 0 10px',
+          fontSize: 12,
+          fontWeight: 700,
+          color: 'var(--color-text-caption)',
+        }}>
+          극장
+        </h2>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {theaterResults.map((theater) => (
+            <button
+              key={theater.id}
+              type="button"
+              onClick={() => focusTheater(theater)}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '12px 0',
+                border: 0,
+                borderBottom: '1px solid var(--color-border)',
+                background: 'transparent',
+                color: 'var(--color-text-primary)',
+                textAlign: 'left',
+              }}
+            >
+              <span style={{
+                width: 38,
+                height: 38,
+                borderRadius: 10,
+                flexShrink: 0,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'var(--color-surface-card)',
+                border: '1px solid var(--color-border)',
+                color: 'var(--color-text-sub)',
+              }}>
+                <svg width={17} height={17} viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 21s7-5.2 7-11a7 7 0 10-14 0c0 5.8 7 11 7 11z" />
+                  <circle cx="12" cy="10" r="2.5" />
+                </svg>
+              </span>
+              <span style={{ minWidth: 0, flex: 1 }}>
+                <span style={{
+                  display: 'block',
+                  fontSize: 15,
+                  fontWeight: 700,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {theater.name}
+                </span>
+                <span style={{
+                  display: 'block',
+                  marginTop: 4,
+                  fontSize: 12,
+                  color: 'var(--color-text-caption)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {theater.address}
+                </span>
+              </span>
+              <span style={{ color: 'var(--color-text-caption)', fontSize: 18, lineHeight: 1 }}>›</span>
+            </button>
+          ))}
+        </div>
+      </section>
+    )
+  }
 
   const renderMovieSearchSection = () => {
     if (movieResults.length === 0) return null
@@ -1136,12 +1692,18 @@ export default function MapView() {
           {movieResults.map((movie) => (
             <div
               key={movie.id}
+              onClick={() => {
+                setRecentSearches(prev => addToRecent(searchQuery, prev))
+                setMovieFilter({ id: movie.id, title: movie.title })
+                closeSearch()
+              }}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: 12,
                 padding: '12px 0',
                 borderBottom: '1px solid var(--color-border)',
+                cursor: 'pointer',
               }}
             >
               <div style={{
@@ -1201,7 +1763,15 @@ export default function MapView() {
                   )}
                 </div>
                 {movie.originalTitle && (
-                  <div style={{ marginTop: 2, fontSize: 12, fontStyle: 'italic', color: 'var(--color-text-caption)' }}>
+                  <div style={{
+                    marginTop: 2,
+                    fontFamily: 'var(--font-serif-en)',
+                    fontSize: 'var(--text-bask-meta)',
+                    fontStyle: 'normal',
+                    fontWeight: 400,
+                    color: 'var(--color-text-caption)',
+                    lineHeight: 1.35,
+                  }}>
                     {movie.originalTitle}
                   </div>
                 )}
@@ -1232,12 +1802,18 @@ export default function MapView() {
           {relatedDirectorResults.map((director) => (
             <div
               key={director.name}
+              onClick={() => {
+                setRecentSearches(prev => addToRecent(searchQuery, prev))
+                closeSearch()
+                router.push(`/director/${encodeURIComponent(director.name)}`)
+              }}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: 12,
                 padding: '12px 0',
                 borderBottom: '1px solid var(--color-border)',
+                cursor: 'pointer',
               }}
             >
               <div style={{
@@ -1381,6 +1957,83 @@ export default function MapView() {
     )
   }
 
+  const renderAreaSearchSection = () => {
+    if (areaResults.length === 0) return null
+    return (
+      <section>
+        <h2 style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 700, color: 'var(--color-text-caption)' }}>
+          지역
+        </h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+          {areaResults.map(area => (
+            <div key={area.name}>
+              <button
+                type="button"
+                onClick={() => focusArea(area)}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+                  padding: '12px 0', border: 0,
+                  borderBottom: area.theaters.length > 0 ? 'none' : '1px solid var(--color-border)',
+                  background: 'transparent', color: 'var(--color-text-primary)', textAlign: 'left',
+                }}
+              >
+                <span style={{
+                  width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  backgroundColor: 'var(--color-surface-card)', border: '1px solid var(--color-border)',
+                  color: 'var(--color-text-sub)',
+                }}>
+                  <svg width={16} height={16} viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="8" height="8" rx="1.5" />
+                    <rect x="13" y="3" width="8" height="8" rx="1.5" />
+                    <rect x="3" y="13" width="8" height="8" rx="1.5" />
+                    <rect x="13" y="13" width="8" height="8" rx="1.5" />
+                  </svg>
+                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 15, fontWeight: 700 }}>{area.name}</div>
+                  <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 2 }}>
+                    영화관 {area.theaters.length}곳
+                  </div>
+                </div>
+                <span style={{ color: 'var(--color-text-caption)', fontSize: 18, lineHeight: 1 }}>›</span>
+              </button>
+              {area.theaters.length > 0 && (
+                <div style={{
+                  marginLeft: 50,
+                  paddingBottom: 12,
+                  borderBottom: '1px solid var(--color-border)',
+                }}>
+                  {area.theaters.map(t => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => focusTheater(t)}
+                      style={{
+                        width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+                        padding: '6px 0', border: 0, background: 'transparent',
+                        color: 'var(--color-text-body)', textAlign: 'left', cursor: 'pointer',
+                      }}
+                    >
+                      <svg width={12} height={12} viewBox="0 0 24 24" fill="none"
+                        stroke="var(--color-text-caption)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                        style={{ flexShrink: 0 }}>
+                        <path d="M12 21s7-5.2 7-11a7 7 0 10-14 0c0 5.8 7 11 7 11z" />
+                        <circle cx="12" cy="10" r="2.5" />
+                      </svg>
+                      <span style={{ fontSize: 13 }}>{t.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
   return (
     <div style={{ position: 'relative', width: '100%', height: '100dvh' }}>
       {/* 영화관 데이터 로딩 인디케이터 */}
@@ -1458,10 +2111,14 @@ export default function MapView() {
         {clusters.map((cluster) => {
           // 클러스터 마커 (2개 이상) — 클릭 시 줌인
           if (cluster.theaters.length > 1) {
+            const clusterDimmed = filtersActive && cluster.theaters.every(
+              (t) => (theaterPosterMovies.get(t.id) ?? []).every(m => !m.matchesFilter)
+            )
             return (
               <Marker
                 key={`cluster-${cluster.id}`}
                 position={[cluster.lat, cluster.lng]}
+                opacity={clusterDimmed ? 0.7 : 1}
                 icon={makeClusterIcon(
                   cluster.theaters,
                   labelDirections.get(cluster.id),
@@ -1498,14 +2155,19 @@ export default function MapView() {
             ? [coOff.lat, coOff.lng]
             : [theater.lat, theater.lng]
           const offsetX = posterOffsets.get(theater.id) ?? 0
+          const posterMovies = theaterPosterMovies.get(theater.id) ?? []
+          const dimmed = filtersActive && posterMovies.every(m => !m.matchesFilter)
           return (
             <Marker
               key={theater.id}
               position={position}
+              opacity={dimmed ? 0.7 : 1}
               icon={makePinIcon(
                 theater.name,
                 selectedId === theater.id,
                 zoom,
+                posterMovies,
+                filtersActive,
                 offsetX,
                 labelOffsets.get(theater.id),
               )}
@@ -1527,15 +2189,53 @@ export default function MapView() {
         <div style={{ padding: '16px 16px 0', pointerEvents: 'auto' }}>
           <div style={{ boxShadow: 'var(--shadow-sheet)', borderRadius: 'var(--comp-search-radius)' }}>
             <SearchBarButton
-              placeholder="극장 또는 영화 검색"
+              placeholder="영화, 감독, 역, 영화관 검색"
               onClick={openSearch}
             />
           </div>
         </div>
         {/* 필터 칩 */}
         <div style={{ marginTop: 8, pointerEvents: 'auto' }}>
-          <FilterBar />
+          <FilterBar
+            onChange={setFilters}
+            nationOptions={nationOptions}
+            movieFilter={movieFilter}
+            onMovieFilterClear={() => setMovieFilter(null)}
+          />
         </div>
+      </div>
+
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          left: '50%',
+          bottom: 'max(20px, env(safe-area-inset-bottom))',
+          transform: 'translateX(-50%)',
+          zIndex: 550,
+          height: 'calc(var(--comp-search-height) * 0.8)',
+          width: 109,
+          pointerEvents: 'none',
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundColor: isDark ? 'var(--color-neutral-50)' : 'var(--color-neutral-900)',
+            WebkitMaskImage: 'url(/logo.svg)',
+            maskImage: 'url(/logo.svg)',
+            WebkitMaskRepeat: 'no-repeat',
+            maskRepeat: 'no-repeat',
+            WebkitMaskPosition: 'center',
+            maskPosition: 'center',
+            WebkitMaskSize: 'contain',
+            maskSize: 'contain',
+            filter: isDark
+              ? 'drop-shadow(0 4px 14px rgba(0, 0, 0, 0.85)) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.95))'
+              : 'drop-shadow(0 4px 14px rgba(0, 0, 0, 0.42)) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5))',
+          }}
+        />
       </div>
 
       {/* 검색 오버레이 — same page, iOS 키보드 대응 */}
@@ -1560,7 +2260,7 @@ export default function MapView() {
             <SearchBar
               ref={searchInputRef}
               value={searchQuery}
-              placeholder="극장 또는 영화 검색"
+              placeholder="영화, 감독, 역, 영화관 검색"
               onChange={(e) => setSearchQuery(e.target.value)}
               onClear={() => setSearchQuery('')}
               onBack={closeSearch}
@@ -1570,9 +2270,76 @@ export default function MapView() {
           {/* 결과 영역 */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px' }}>
             {searchQuery === '' ? (
-              <p style={{ textAlign: 'center', marginTop: 60, fontSize: 14, color: 'var(--color-text-caption)' }}>
-                극장명, 영화 제목, 감독 이름으로 검색하세요
-              </p>
+              <div style={{ marginTop: 8 }}>
+                {recentSearches.length > 0 && (
+                  <div style={{ marginBottom: 24 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                      <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-caption)', margin: 0 }}>최근 검색</p>
+                      <button
+                        onClick={() => {
+                          setRecentSearches([])
+                          try { localStorage.removeItem(RECENT_KEY) } catch {}
+                        }}
+                        style={{ fontSize: 12, color: 'var(--color-text-caption)', background: 'none', border: 0, cursor: 'pointer', padding: 0 }}
+                      >
+                        전체 삭제
+                      </button>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      {recentSearches.map(q => (
+                        <div
+                          key={q}
+                          style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--color-border)' }}
+                        >
+                          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-caption)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                            <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+                          </svg>
+                          <button
+                            onClick={() => setSearchQuery(q)}
+                            style={{ flex: 1, background: 'none', border: 0, cursor: 'pointer', textAlign: 'left', padding: 0, fontSize: 14, color: 'var(--color-text-body)' }}
+                          >
+                            {q}
+                          </button>
+                          <button
+                            onClick={() => setRecentSearches(prev => removeFromRecent(q, prev))}
+                            style={{ background: 'none', border: 0, cursor: 'pointer', padding: 4, color: 'var(--color-text-caption)', lineHeight: 1, flexShrink: 0 }}
+                          >
+                            <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                              <path d="M6 6l12 12M18 6 6 18" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <p style={{ fontSize: 12, color: 'var(--color-text-caption)', marginBottom: 12, marginLeft: 2 }}>
+                  검색할 수 있어요
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {[
+                    { label: '영화관', example: '서울아트' },
+                    { label: '영화', example: '레오파드' },
+                    { label: '감독', example: '홍상수' },
+                    { label: '지하철역', example: '혜화역' },
+                  ].map(({ label, example }) => (
+                    <button
+                      key={label}
+                      onClick={() => setSearchQuery(example)}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 6, height: 36,
+                        padding: '0 14px', borderRadius: 'var(--radius-full)',
+                        border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)',
+                        color: 'var(--color-text-body)', fontSize: 13, fontWeight: 500,
+                        cursor: 'pointer', whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {label}
+                      <span style={{ fontSize: 11, color: 'var(--color-text-caption)' }}>예) {example}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             ) : hasSearchResults ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
                 {searchSections.map((section) => {
@@ -1580,7 +2347,11 @@ export default function MapView() {
                     ? renderMovieSearchSection()
                     : section === 'directors'
                       ? renderDirectorSearchSection()
-                      : renderStationSearchSection()
+                      : section === 'theaters'
+                        ? renderTheaterSearchSection()
+                        : section === 'areas'
+                          ? renderAreaSearchSection()
+                          : renderStationSearchSection()
                   return node ? <div key={section}>{node}</div> : null
                 })}
               </div>
@@ -1600,7 +2371,7 @@ export default function MapView() {
         bottom: fabBottom,
         zIndex: 1000,
         display: 'flex', flexDirection: 'column', gap: 8,
-        transition: 'bottom 0.35s cubic-bezier(0.32, 0.72, 0, 1)',
+        transition: 'bottom 0.38s cubic-bezier(0.32, 0.72, 0, 1)',
       }}>
         <FabRound onClick={() => mapRef.current?.zoomIn()}><IcoPlus /></FabRound>
         <FabRound onClick={() => mapRef.current?.zoomOut()}><IcoMinus /></FabRound>
@@ -1619,8 +2390,10 @@ export default function MapView() {
           onExpand={() => setSheetExpanded(true)}
           onCollapse={() => setSheetExpanded(false)}
           onClose={closeSheet}
+          onMovieSearch={(movieId, movieTitle) => setMovieFilter({ id: movieId, title: movieTitle })}
           favorited={false}
           onFavorite={() => { /* Phase 4 */ }}
+          mapFilters={{ genres: filters.genres, nations: filters.nations }}
         />
       )}
     </div>

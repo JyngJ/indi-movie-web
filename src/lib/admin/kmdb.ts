@@ -31,11 +31,12 @@ interface KmdbMovieItem {
   stlls?: string
 }
 
-const kmdbBaseUrl = 'http://api.koreafilm.or.kr/openapi-data2/wisenut/search_api/search_json2.jsp'
+const kmdbBaseUrl = 'https://api.koreafilm.or.kr/openapi-data2/wisenut/search_api/search_json2.jsp'
+const kmdbFetchTimeoutMs = 8000
 
 export async function searchKmdbMovies(query: string): Promise<AdminExternalMovie[]> {
   const normalizedQuery = query.trim()
-  if (normalizedQuery.length < 2) return []
+  if (normalizedQuery.length < 1) return []
 
   const payload = await fetchKmdb({
     query: normalizedQuery,
@@ -82,7 +83,7 @@ async function fetchKmdb(params: Record<string, string>) {
     if (value) url.searchParams.set(key, value)
   })
 
-  const response = await fetch(url, { cache: 'no-store' })
+  const response = await fetchWithRetry(url)
   const payload = (await response.json()) as KmdbSearchResponse
 
   if (!response.ok) {
@@ -90,6 +91,36 @@ async function fetchKmdb(params: Record<string, string>) {
   }
 
   return payload
+}
+
+async function fetchWithRetry(url: URL) {
+  let lastError: unknown
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), kmdbFetchTimeoutMs)
+
+    try {
+      return await fetch(url, { cache: 'no-store', signal: controller.signal })
+    } catch (error) {
+      lastError = error
+    } finally {
+      clearTimeout(timeout)
+    }
+  }
+
+  throw new Error(`KMDB API 연결 실패: ${formatFetchError(lastError)}`)
+}
+
+function formatFetchError(error: unknown) {
+  if (!(error instanceof Error)) return '알 수 없는 오류'
+
+  const cause = error.cause
+  if (cause && typeof cause === 'object' && 'code' in cause && typeof cause.code === 'string') {
+    return cause.code
+  }
+
+  return error.name === 'AbortError' ? '요청 시간 초과' : error.message
 }
 
 function movieFromItem(item: KmdbMovieItem): AdminExternalMovie {

@@ -112,12 +112,11 @@
     posterUrl?: string
     genre: string[]
     director: string[]
-    synopsis?: string
-    runtimeMinutes?: number
-    certification?: string   // "전체", "12세", "15세", "청불"
+    nation?: string
     kmdbId?: string
     tmdbId?: number
     rating?: number
+    // synopsis, runtimeMinutes, certification 은 movie_details 테이블 분리 — /api/movies/:id 에서만 반환
   }>
 }
 ```
@@ -127,7 +126,20 @@
 ---
 
 ### `GET /api/movies/:id`
-영화 상세  
+영화 상세 — `movie_details` join 포함
+
+**응답 추가 필드** (목록 응답 + 아래):
+```ts
+{
+  synopsis?: string
+  runtimeMinutes?: number
+  certification?: string   // "전체", "12세", "15세", "청불"
+  cast: Array<{ name: string; character?: string; profileUrl?: string }>
+  trailerUrl?: string
+  awards?: string[]
+}
+```
+
 **캐시**: staleTime 2시간
 
 ---
@@ -223,8 +235,8 @@ useTheater(id: string)                         → GET /api/theaters/:id
 useTheaterSearch(query: string)                → GET /api/theaters/search/name
 
 // Movie
-useMovies(query: string)                       → GET /api/movies/search
-useMovie(id: string)                           → GET /api/movies/:id
+useMovies()                                    → 경량 목록 (id, title, poster, genre, director, nation, rating)
+useMovieDetail(id: string)                     → movies + movie_details join (synopsis, cast_members 포함)
 useTrendingMovies(type)                        → GET /api/movies/trending
 
 // Showtime

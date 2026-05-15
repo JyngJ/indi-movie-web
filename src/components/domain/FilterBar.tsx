@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { GENRES } from '@/lib/genres'
+import { withFlag } from '@/lib/nations'
 
 /* -- 날짜 헬퍼 ---------------------------------------------------- */
 const DOW = ['일', '월', '화', '수', '목', '금', '토']
@@ -50,10 +52,9 @@ function buildDateOptions(t = today()) {
 }
 
 type DateId = 'today' | 'tomorrow' | 'this-weekend' | 'next-weekend' | 'this-week' | 'this-month' | 'custom' | null
-type OpenPanel = 'date' | 'genre' | 'calendar' | null
+type OpenPanel = 'date' | 'genre' | 'nation' | 'calendar' | null
 
-/* -- 장르 -------------------------------------------------------- */
-const GENRES = ['드라마', '다큐멘터리', '애니메이션', '스릴러/호러', '코미디', '실험/예술', '단편', '로맨스'] as const
+const EMPTY_NATION_OPTIONS: string[] = []
 
 /* -- 타입 -------------------------------------------------------- */
 export interface FilterState {
@@ -61,6 +62,7 @@ export interface FilterState {
   customStart: Date | null
   customEnd: Date | null
   genres: string[]
+  nations: string[]
   bookable: boolean
   indie: boolean
 }
@@ -430,14 +432,15 @@ function DateDropdown({ selectedId, onSelect, onPickCustom, style }: {
   )
 }
 
-/* -- GenreDropdown ------------------------------------------------ */
-function GenreDropdown({ draftGenres, setDraftGenres, style }: {
-  draftGenres: string[]
-  setDraftGenres: React.Dispatch<React.SetStateAction<string[]>>
+/* -- MultiSelectDropdown ----------------------------------------- */
+function MultiSelectDropdown({ options, selectedValues, setSelectedValues, style }: {
+  options: readonly string[]
+  selectedValues: string[]
+  setSelectedValues: React.Dispatch<React.SetStateAction<string[]>>
   style?: React.CSSProperties
 }) {
-  const toggle = (g: string) =>
-    setDraftGenres(prev => prev.includes(g) ? prev.filter(x => x !== g) : [...prev, g])
+  const toggle = (value: string) =>
+    setSelectedValues(prev => prev.includes(value) ? prev.filter(x => x !== value) : [...prev, value])
 
   return (
     <div style={{
@@ -449,31 +452,37 @@ function GenreDropdown({ draftGenres, setDraftGenres, style }: {
       overflow: 'hidden',
       boxShadow: '0 12px 40px rgba(0,0,0,0.72)',
       zIndex: 9999,
+      display: 'flex',
+      flexDirection: 'column',
+      maxHeight: 320,
       ...style,
     }}>
-      {GENRES.map((g, i) => (
-        <DropdownRow
-          key={g}
-          kind="checkbox"
-          label={g}
-          selected={draftGenres.includes(g)}
-          onClick={() => toggle(g)}
-          isLast={i === GENRES.length - 1}
-        />
-      ))}
+      <div style={{ overflowY: 'auto', flex: 1 }}>
+        {options.map((option, i) => (
+          <DropdownRow
+            key={option}
+            kind="checkbox"
+            label={option}
+            selected={selectedValues.includes(option)}
+            onClick={() => toggle(option)}
+            isLast={i === options.length - 1}
+          />
+        ))}
+      </div>
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '10px 14px',
         background: 'var(--color-surface-raised)',
         borderTop: '1px solid var(--color-border)',
         minHeight: 40,
+        flexShrink: 0,
       }}>
         <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>
-          {draftGenres.length > 0 ? `${draftGenres.length}개 선택됨` : ''}
+          {selectedValues.length > 0 ? `${selectedValues.length}개 선택됨` : ''}
         </span>
-        {draftGenres.length > 0 && (
+        {selectedValues.length > 0 && (
           <button
-            onClick={() => setDraftGenres([])}
+            onClick={() => setSelectedValues([])}
             style={{
               background: 'none', border: 'none', padding: 0,
               fontSize: 12, fontWeight: 500, color: 'var(--color-primary-base)',
@@ -576,36 +585,63 @@ function FilterChip({ label, value, open, selected, hasDropdown, onClick, onClea
 /* -- FilterBar ---------------------------------------------------- */
 export interface FilterBarProps {
   onChange?: (state: FilterState) => void
+  nationOptions?: string[]
+  movieFilter?: { id: string; title: string } | null
+  onMovieFilterClear?: () => void
 }
 
-export function FilterBar({ onChange }: FilterBarProps) {
-  const [dateId, setDateId] = useState<DateId>(null)
+export function FilterBar({ onChange, nationOptions = EMPTY_NATION_OPTIONS, movieFilter, onMovieFilterClear }: FilterBarProps) {
+  const [dateId, setDateId] = useState<DateId>('this-week')
   const [customStart, setCustomStart] = useState<Date | null>(null)
   const [customEnd, setCustomEnd] = useState<Date | null>(null)
   const [genres, setGenres] = useState<string[]>([])
   const [draftGenres, setDraftGenres] = useState<string[]>([])
+  const [nations, setNations] = useState<string[]>([])
+  const [draftNations, setDraftNations] = useState<string[]>([])
   const [bookable, setBookable] = useState(false)
   const [indie, setIndie] = useState(false)
   const [openPanel, setOpenPanel] = useState<OpenPanel>(null)
   const [dropdownLeft, setDropdownLeft] = useState(16)
 
   const wrapperRef = useRef<HTMLDivElement>(null)
+  const chipRowRef = useRef<HTMLDivElement>(null)
   const dateChipRef = useRef<HTMLButtonElement>(null)
   const genreChipRef = useRef<HTMLButtonElement>(null)
+  const nationChipRef = useRef<HTMLButtonElement>(null)
   const openPanelRef = useRef(openPanel)
   const draftGenresRef = useRef(draftGenres)
+  const draftNationsRef = useRef(draftNations)
+  const scrollFrameRef = useRef<number | null>(null)
 
   useEffect(() => { openPanelRef.current = openPanel }, [openPanel])
   useEffect(() => { draftGenresRef.current = draftGenres }, [draftGenres])
+  useEffect(() => { draftNationsRef.current = draftNations }, [draftNations])
   useEffect(() => {
-    onChange?.({ dateId, customStart, customEnd, genres, bookable, indie })
-  }, [onChange, dateId, customStart, customEnd, genres, bookable, indie])
+    if (nationOptions.length === 0) {
+      setNations((current) => current.length === 0 ? current : [])
+      setDraftNations((current) => current.length === 0 ? current : [])
+      return
+    }
+    const optionSet = new Set(nationOptions)
+    setNations((current) => {
+      const next = current.filter((nation) => optionSet.has(nation))
+      return next.length === current.length ? current : next
+    })
+    setDraftNations((current) => {
+      const next = current.filter((nation) => optionSet.has(nation))
+      return next.length === current.length ? current : next
+    })
+  }, [nationOptions])
+  useEffect(() => {
+    onChange?.({ dateId, customStart, customEnd, genres, nations, bookable, indie })
+  }, [onChange, dateId, customStart, customEnd, genres, nations, bookable, indie])
 
   useEffect(() => {
     if (!openPanel) return
     const handler = (e: MouseEvent) => {
       if (wrapperRef.current?.contains(e.target as Node)) return
       if (openPanelRef.current === 'genre') setGenres(draftGenresRef.current)
+      if (openPanelRef.current === 'nation') setNations(draftNationsRef.current)
       setOpenPanel(null)
     }
     document.addEventListener('mousedown', handler)
@@ -627,20 +663,49 @@ export function FilterBar({ onChange }: FilterBarProps) {
     }
   }
 
+  const syncOpenDropdownPosition = useCallback(() => {
+    const panel = openPanelRef.current
+    if (!panel || panel === 'calendar') return
+
+    if (panel === 'date') {
+      calcDropdownLeft(dateChipRef, 252)
+    } else if (panel === 'genre') {
+      calcDropdownLeft(genreChipRef, 236)
+    } else if (panel === 'nation') {
+      calcDropdownLeft(nationChipRef, 236)
+    }
+  }, [])
+
+  const handleChipRowScroll = useCallback(() => {
+    if (scrollFrameRef.current !== null) return
+    scrollFrameRef.current = requestAnimationFrame(() => {
+      scrollFrameRef.current = null
+      syncOpenDropdownPosition()
+    })
+  }, [syncOpenDropdownPosition])
+
+  useEffect(() => {
+    return () => {
+      if (scrollFrameRef.current !== null) cancelAnimationFrame(scrollFrameRef.current)
+    }
+  }, [])
+
   const openDropdown = useCallback((
-    panel: 'date' | 'genre',
+    panel: 'date' | 'genre' | 'nation',
     chipRef: React.RefObject<HTMLButtonElement | null>,
   ) => {
     if (openPanel === panel || (panel === 'date' && (openPanel === 'date' || openPanel === 'calendar'))) {
       if (panel === 'genre') setGenres(draftGenresRef.current)
+      if (panel === 'nation') setNations(draftNationsRef.current)
       setOpenPanel(null)
       return
     }
     if (panel === 'genre') setDraftGenres(genres)
-    const widthMap = { date: 252, genre: 236 }
+    if (panel === 'nation') setDraftNations(nations)
+    const widthMap = { date: 252, genre: 236, nation: 236 }
     calcDropdownLeft(chipRef, widthMap[panel])
     setOpenPanel(panel)
-  }, [openPanel, genres])
+  }, [openPanel, genres, nations])
 
   const selectDate = (id: DateId) => { setDateId(id); setOpenPanel(null) }
   const clearDate = () => {
@@ -661,6 +726,11 @@ export function FilterBar({ onChange }: FilterBarProps) {
     setDraftGenres([])
     setOpenPanel(null)
   }
+  const clearNations = () => {
+    setNations([])
+    setDraftNations([])
+    setOpenPanel(null)
+  }
 
   const dateOptions = buildDateOptions()
   const dateLabel = (() => {
@@ -678,20 +748,49 @@ export function FilterBar({ onChange }: FilterBarProps) {
   const genreLabel = genres.length === 0 ? undefined
     : genres.length === 1 ? genres[0]
     : `${genres[0]} 외 ${genres.length - 1}`
+  const nationLabel = nations.length === 0 ? undefined
+    : nations.length === 1 ? withFlag(nations[0])
+    : `${withFlag(nations[0])} 외 ${nations.length - 1}`
   const isDateOpen = openPanel === 'date' || openPanel === 'calendar'
 
   return (
-    <div ref={wrapperRef} style={{ position: 'relative' }}>
+    <div
+      ref={wrapperRef}
+      style={{
+        position: 'relative',
+        width: '100%',
+        maxWidth: '100%',
+        minWidth: 0,
+        overflow: 'visible',
+      }}
+    >
       <div
+        ref={chipRowRef}
         className="no-scrollbar"
+        onScroll={handleChipRowScroll}
         style={{
           display: 'flex', gap: 8,
+          width: '100%',
+          maxWidth: '100%',
+          boxSizing: 'border-box',
           padding: '8px 16px 10px',
           overflowX: 'auto',
+          overflowY: 'hidden',
+          overscrollBehaviorX: 'contain',
+          touchAction: 'pan-x',
           WebkitOverflowScrolling: 'touch',
           background: 'transparent',
         }}
       >
+        {movieFilter && (
+          <FilterChip
+            label="영화"
+            value={movieFilter.title.length > 10 ? movieFilter.title.slice(0, 10) + '…' : movieFilter.title}
+            selected
+            onClick={() => {}}
+            onClear={onMovieFilterClear}
+          />
+        )}
         <FilterChip
           label="상영 일정"
           value={dateLabel}
@@ -712,16 +811,30 @@ export function FilterBar({ onChange }: FilterBarProps) {
           onClick={() => openDropdown('genre', genreChipRef)}
           onClear={genres.length > 0 ? clearGenres : undefined}
         />
+        {nationOptions.length > 0 && (
+          <FilterChip
+            label="국가"
+            value={nationLabel}
+            open={openPanel === 'nation'}
+            selected={nations.length > 0}
+            hasDropdown
+            chipRef={nationChipRef}
+            onClick={() => openDropdown('nation', nationChipRef)}
+            onClear={nations.length > 0 ? clearNations : undefined}
+          />
+        )}
         <FilterChip
           label="예매 가능"
           selected={bookable}
           onClick={() => setBookable(b => !b)}
         />
+        {/* 독립영화관 필터 — 미구현, 비활성화
         <FilterChip
           label="독립영화관"
           selected={indie}
           onClick={() => setIndie(b => !b)}
         />
+        */}
       </div>
 
       {openPanel === 'date' && (
@@ -733,9 +846,18 @@ export function FilterBar({ onChange }: FilterBarProps) {
         />
       )}
       {openPanel === 'genre' && (
-        <GenreDropdown
-          draftGenres={draftGenres}
-          setDraftGenres={setDraftGenres}
+        <MultiSelectDropdown
+          options={GENRES}
+          selectedValues={draftGenres}
+          setSelectedValues={setDraftGenres}
+          style={{ top: 52, left: dropdownLeft }}
+        />
+      )}
+      {openPanel === 'nation' && (
+        <MultiSelectDropdown
+          options={nationOptions}
+          selectedValues={draftNations}
+          setSelectedValues={setDraftNations}
           style={{ top: 52, left: dropdownLeft }}
         />
       )}

@@ -83,9 +83,9 @@
   --text-date:    16px;   /* 날짜 / tnum / 700 */
 
   /* Libre Baskerville 전용 */
-  --text-bask-title: 18px;   /* 영문 원제 (italic) */
-  --text-bask-meta:  13px;   /* 감독명/연도 (italic) */
-  --text-bask-xs:    10px;   /* 썸네일 원제 (italic) */
+  --text-bask-title: 18px;   /* 영문 원제 / regular */
+  --text-bask-meta:  13px;   /* 감독명/연도 / regular */
+  --text-bask-xs:    10px;   /* 썸네일 원제 / regular */
 
   /* ── Spacing ── */
   --spacing-1: 4px;
