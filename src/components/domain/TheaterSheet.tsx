@@ -1600,22 +1600,34 @@ export function TheaterSheet({
                                     pointerEvents: 'none', zIndex: 2,
                                   }}>매진</div>
                                 )}
-                                {unavailable && (
-                                  <div
-                                    onClick={() => onMovieSelect(movie.id)}
-                                    style={{
-                                      position: 'absolute', inset: 0,
-                                      borderRadius: 'var(--comp-poster-sheet-radius)',
-                                      background: 'rgba(10, 8, 6, 0.72)',
-                                      display: 'flex', flexDirection: 'column',
-                                      alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                                    }}
-                                  >
-                                    <span style={{ fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.75)', textAlign: 'center', lineHeight: 1.4, padding: '0 4px' }}>
-                                      상영 일정<br />없음
-                                    </span>
-                                  </div>
-                                )}
+                                {unavailable && (() => {
+                                  const nextDates = [...entry.availableDates].filter(d => d > selectedIsoDate).sort()
+                                  const nextLabel = nextDates.length > 0 ? (() => {
+                                    const [y, m, d] = nextDates[0].split('-').map(Number)
+                                    const dt = new Date(y, m - 1, d)
+                                    return `${dt.getDate()}일(${'일월화수목금토'[dt.getDay()]})`
+                                  })() : null
+                                  return (
+                                    <div
+                                      onClick={() => onMovieSelect(movie.id)}
+                                      style={{
+                                        position: 'absolute', inset: 0,
+                                        borderRadius: 'var(--comp-poster-sheet-radius)',
+                                        background: 'rgba(10, 8, 6, 0.72)',
+                                        display: 'flex', flexDirection: 'column',
+                                        alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                                        gap: 2,
+                                      }}
+                                    >
+                                      <span style={{ fontSize: 8, fontWeight: 500, color: 'rgba(255,255,255,0.55)', textAlign: 'center' }}>
+                                        다음 상영
+                                      </span>
+                                      <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.85)', textAlign: 'center', lineHeight: 1.3 }}>
+                                        {nextLabel ?? '일정 없음'}
+                                      </span>
+                                    </div>
+                                  )
+                                })()}
                               </div>
                               <div style={{
                                 marginTop: 6, fontSize: 11, fontWeight: 600,
@@ -1905,7 +1917,10 @@ export function TheaterSheet({
             zIndex: 200,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}
-          onClick={() => setFilterSheetOpen(false)}
+          onClick={() => { setPendingFilters(sheetFilters); setFilterSheetOpen(false) }}
+          onTouchStart={e => e.stopPropagation()}
+          onTouchMove={e => e.stopPropagation()}
+          onTouchEnd={e => { e.stopPropagation(); setPendingFilters(sheetFilters); setFilterSheetOpen(false) }}
         >
           <div
             style={{
@@ -1916,6 +1931,9 @@ export function TheaterSheet({
               boxShadow: 'var(--shadow-sheet)',
             }}
             onClick={e => e.stopPropagation()}
+            onTouchStart={e => e.stopPropagation()}
+            onTouchMove={e => e.stopPropagation()}
+            onTouchEnd={e => e.stopPropagation()}
           >
             {/* 헤더 */}
             <div style={{
