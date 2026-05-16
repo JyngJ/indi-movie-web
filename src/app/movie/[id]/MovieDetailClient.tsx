@@ -6,15 +6,31 @@ import { useMovieDetail, useMovieTheaterShowtimes, useActiveMovieIds } from '@/l
 import type { MovieDetail, MovieTheaterEntry } from '@/lib/supabase/queries'
 import { withFlagsRaw } from '@/lib/nations'
 
+function useIsDesktopDetail() {
+  const [isDesktop, setIsDesktop] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches,
+  )
+
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 1024px)')
+    const update = () => setIsDesktop(media.matches)
+    update()
+    media.addEventListener('change', update)
+    return () => media.removeEventListener('change', update)
+  }, [])
+
+  return isDesktop
+}
+
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
 const IcoChevronLeft = () => (
   <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M15 18l-6-6 6-6" />
   </svg>
 )
-const IcoStar = ({ filled }: { filled?: boolean }) => (
-  <svg width={22} height={22} viewBox="0 0 24 24" fill={filled ? 'var(--color-primary-base)' : 'none'} stroke={filled ? 'var(--color-primary-base)' : 'currentColor'} strokeWidth="1.8" strokeLinejoin="round">
-    <path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.9 6.8 19.6l1-5.8L3.5 9.7l5.9-.8z" />
+const IcoClose = () => (
+  <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <path d="M18 6L6 18M6 6l12 12" />
   </svg>
 )
 const IcoChevronRight = () => (
@@ -47,14 +63,12 @@ function NavBar({
   title,
   titleVisible,
   onBack,
-  starred,
-  onStar,
+  onClose,
 }: {
   title: string
   titleVisible: boolean
   onBack: () => void
-  starred?: boolean
-  onStar?: () => void
+  onClose: () => void
 }) {
   const btn: React.CSSProperties = {
     width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -88,33 +102,43 @@ function NavBar({
       }}>
         {title}
       </span>
-      <button style={btn} onClick={onStar}><IcoStar filled={starred} /></button>
+      <button style={btn} onClick={onClose}><IcoClose /></button>
     </div>
   )
 }
 
 /* ── HeroSection ── */
-function HeroSection({ movie, titleRef }: { movie: MovieDetail; titleRef: React.Ref<HTMLHeadingElement> }) {
+function HeroSection({ movie, titleRef, desktop = false }: { movie: MovieDetail; titleRef: React.Ref<HTMLHeadingElement>; desktop?: boolean }) {
+  const posterW = desktop ? 220 : 96
+  const posterH = desktop ? 330 : 144
   return (
     <div style={{
-      background: 'linear-gradient(to bottom, var(--color-primary-subtle-l) 0%, var(--color-surface-bg) 100%)',
-      padding: '24px 20px 20px',
+      maxWidth: desktop ? 1120 : undefined,
+      margin: desktop ? '28px auto 0' : undefined,
+      border: desktop ? '1px solid var(--color-border)' : undefined,
+      borderRadius: desktop ? 20 : 0,
+      overflow: desktop ? 'hidden' : undefined,
+      background: desktop
+        ? 'linear-gradient(135deg, var(--color-surface-card) 0%, var(--color-primary-subtle-l) 100%)'
+        : 'linear-gradient(to bottom, var(--color-primary-subtle-l) 0%, var(--color-surface-bg) 100%)',
+      boxShadow: desktop ? '0 18px 54px rgba(20, 15, 10, 0.10)' : undefined,
+      padding: desktop ? 32 : '24px 20px 20px',
       display: 'flex',
-      gap: 16,
+      gap: desktop ? 34 : 16,
       alignItems: 'flex-start',
     }}>
       {/* 포스터 */}
-      <div style={{ flexShrink: 0, position: 'relative', width: 96, height: 144 }}>
+      <div style={{ flexShrink: 0, position: 'relative', width: posterW, height: posterH }}>
         {movie.posterUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={movie.posterUrl}
             alt=""
-            style={{ width: 96, height: 144, borderRadius: 8, objectFit: 'cover', display: 'block', boxShadow: '0 8px 28px rgba(0,0,0,0.45)' }}
+            style={{ width: posterW, height: posterH, borderRadius: desktop ? 12 : 8, objectFit: 'cover', display: 'block', boxShadow: desktop ? '0 18px 46px rgba(0,0,0,0.28)' : '0 8px 28px rgba(0,0,0,0.45)' }}
           />
         ) : (
           <div style={{
-            width: 96, height: 144, borderRadius: 8,
+            width: posterW, height: posterH, borderRadius: desktop ? 12 : 8,
             backgroundColor: 'var(--color-surface-raised)',
             border: '1px solid var(--color-border)',
             background: 'repeating-linear-gradient(135deg, rgba(128,128,128,0.08) 0 7px, transparent 7px 14px)',
@@ -123,25 +147,25 @@ function HeroSection({ movie, titleRef }: { movie: MovieDetail; titleRef: React.
       </div>
 
       {/* 텍스트 */}
-      <div style={{ flex: 1, minWidth: 0, paddingTop: 4 }}>
+      <div style={{ flex: 1, minWidth: 0, paddingTop: desktop ? 8 : 4, maxWidth: desktop ? 720 : undefined }}>
         <h1
           ref={titleRef}
-          style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 21, fontWeight: 700, lineHeight: 1.2, color: 'var(--color-text-primary)', wordBreak: 'keep-all' }}
+          style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: desktop ? 36 : 21, fontWeight: 700, lineHeight: desktop ? 1.12 : 1.2, color: 'var(--color-text-primary)', wordBreak: 'keep-all' }}
         >
           {movie.title}
         </h1>
         {movie.originalTitle && (
-          <div style={{ marginTop: 4, fontFamily: 'var(--font-serif-en)', fontStyle: 'italic', fontSize: 11, color: 'var(--color-text-caption)', lineHeight: 1.4 }}>
+          <div style={{ marginTop: desktop ? 8 : 4, fontFamily: 'var(--font-serif-en)', fontStyle: 'italic', fontSize: desktop ? 15 : 11, color: 'var(--color-text-caption)', lineHeight: 1.4 }}>
             {movie.originalTitle}
           </div>
         )}
         {movie.genre.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 10 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: desktop ? 8 : 5, marginTop: desktop ? 18 : 10 }}>
             {movie.genre.map((g) => (
               <span key={g} style={{
-                height: 22, padding: '0 9px',
+                height: desktop ? 28 : 22, padding: desktop ? '0 12px' : '0 9px',
                 display: 'inline-flex', alignItems: 'center',
-                borderRadius: 999, fontSize: 11, fontWeight: 500,
+                borderRadius: 999, fontSize: desktop ? 13 : 11, fontWeight: 500,
                 backgroundColor: 'var(--color-primary-subtle-l)',
                 border: '1px solid color-mix(in srgb, var(--color-primary-base) 40%, transparent)',
                 color: 'var(--color-primary-base)',
@@ -149,13 +173,13 @@ function HeroSection({ movie, titleRef }: { movie: MovieDetail; titleRef: React.
             ))}
           </div>
         )}
-        <div style={{ marginTop: 10, fontSize: 13, color: 'var(--color-text-sub)', lineHeight: 1.5 }}>
+        <div style={{ marginTop: desktop ? 18 : 10, fontSize: desktop ? 15 : 13, color: 'var(--color-text-sub)', lineHeight: 1.5 }}>
           {[movie.nation ? withFlagsRaw(movie.nation) : undefined, movie.year, movie.runtimeMinutes ? `${movie.runtimeMinutes}분` : null].filter(Boolean).join(' · ')}
         </div>
         {movie.rating != null && (
-          <div style={{ marginTop: 8, display: 'flex', alignItems: 'baseline', gap: 4 }}>
-            <span style={{ color: 'var(--color-warning)', fontSize: 14 }}>★</span>
-            <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text-primary)', fontFeatureSettings: '"tnum"' }}>{movie.rating.toFixed(1)}</span>
+          <div style={{ marginTop: desktop ? 18 : 8, display: 'flex', alignItems: 'baseline', gap: 4 }}>
+            <span style={{ color: 'var(--color-warning)', fontSize: desktop ? 18 : 14 }}>★</span>
+            <span style={{ fontSize: desktop ? 22 : 16, fontWeight: 700, color: 'var(--color-text-primary)', fontFeatureSettings: '"tnum"' }}>{movie.rating.toFixed(1)}</span>
             <span style={{ fontSize: 12, color: 'var(--color-text-sub)' }}>&nbsp;/ 10</span>
             <span style={{ fontSize: 11, color: 'var(--color-text-caption)' }}>관객 평점</span>
           </div>
@@ -166,7 +190,7 @@ function HeroSection({ movie, titleRef }: { movie: MovieDetail; titleRef: React.
 }
 
 /* ── TabBar ── */
-function TabBar({ active, onChange }: { active: 'info' | 'theaters'; onChange: (t: 'info' | 'theaters') => void }) {
+function TabBar({ active, onChange, desktop = false }: { active: 'info' | 'theaters'; onChange: (t: 'info' | 'theaters') => void; desktop?: boolean }) {
   const tabs: Array<{ key: 'info' | 'theaters'; label: string }> = [
     { key: 'info', label: '영화 정보' },
     { key: 'theaters', label: '상영 영화관' },
@@ -177,6 +201,11 @@ function TabBar({ active, onChange }: { active: 'info' | 'theaters'; onChange: (
       top: 'calc(env(safe-area-inset-top) + 52px)',
       zIndex: 40,
       display: 'flex',
+      maxWidth: desktop ? 1120 : undefined,
+      margin: desktop ? '18px auto 0' : undefined,
+      border: desktop ? '1px solid var(--color-border)' : undefined,
+      borderRadius: desktop ? 14 : 0,
+      overflow: desktop ? 'hidden' : undefined,
       borderBottom: '1px solid var(--color-border)',
       backgroundColor: 'var(--color-surface-bg)',
     }}>
@@ -202,7 +231,7 @@ function TabBar({ active, onChange }: { active: 'info' | 'theaters'; onChange: (
 }
 
 /* ── InfoTab ── */
-function InfoTab({ movie, onDirectorClick }: { movie: MovieDetail; onDirectorClick: (name: string) => void }) {
+function InfoTab({ movie, onDirectorClick, desktop = false }: { movie: MovieDetail; onDirectorClick: (name: string) => void; desktop?: boolean }) {
   const sectionLabel: React.CSSProperties = {
     fontSize: 11, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase',
     color: 'var(--color-text-caption)', marginBottom: 10,
@@ -210,9 +239,9 @@ function InfoTab({ movie, onDirectorClick }: { movie: MovieDetail; onDirectorCli
   const divider: React.CSSProperties = { borderTop: '1px solid var(--color-border)', margin: '0 20px' }
 
   return (
-    <div style={{ paddingBottom: 52 }}>
+    <div style={{ paddingBottom: 52, maxWidth: desktop ? 860 : undefined, margin: desktop ? '0 auto' : undefined }}>
       {movie.synopsis && (
-        <div style={{ padding: '24px 20px' }}>
+        <div style={{ padding: desktop ? '34px 0 28px' : '24px 20px' }}>
           <p style={sectionLabel}>시놉시스</p>
           <p style={{ margin: 0, fontSize: 14, lineHeight: 1.8, color: 'var(--color-text-body)', wordBreak: 'keep-all' }}>
             {movie.synopsis}
@@ -248,7 +277,7 @@ function InfoTab({ movie, onDirectorClick }: { movie: MovieDetail; onDirectorCli
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: 'var(--font-serif)', fontSize: 17, fontWeight: 700, color: 'var(--color-text-primary)' }}>{name}</div>
-                  <div style={{ marginTop: 4, fontSize: 11, color: 'var(--color-primary-base)', fontWeight: 500 }}>감독 페이지 보기 →</div>
+                  <div style={{ marginTop: 4, fontSize: 11, color: 'var(--color-primary-base)', fontWeight: 500, textDecoration: 'underline' }}>감독 페이지 보기</div>
                 </div>
                 <IcoChevronRight />
               </button>
@@ -344,10 +373,10 @@ function TheaterShowtimeChips({ entry }: { entry: MovieTheaterEntry }) {
 }
 
 /* ── TheatersTab ── */
-function TheatersTab({ movieId, onMapClick }: { movieId: string; onMapClick: () => void }) {
+function TheatersTab({ movieId, onMapClick, desktop = false }: { movieId: string; onMapClick: () => void; desktop?: boolean }) {
   const { data: theaters = [], isLoading } = useMovieTheaterShowtimes(movieId)
   return (
-    <div style={{ padding: '20px 20px 52px' }}>
+    <div style={{ padding: desktop ? '26px 0 64px' : '20px 20px 52px', maxWidth: desktop ? 1040 : undefined, margin: desktop ? '0 auto' : undefined }}>
       <button
         onClick={onMapClick}
         style={{
@@ -378,7 +407,7 @@ function TheatersTab({ movieId, onMapClick }: { movieId: string; onMapClick: () 
           오늘 상영 중인 영화관이 없습니다
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: desktop ? 'repeat(2, minmax(0, 1fr))' : '1fr', gap: 12 }}>
           {theaters.map((entry) => (
             <div key={entry.theaterId} style={{
               borderRadius: 12, border: '1px solid var(--color-border)',
@@ -396,6 +425,7 @@ function TheatersTab({ movieId, onMapClick }: { movieId: string; onMapClick: () 
 /* ── 메인 ── */
 export function MovieDetailClient({ movieId, theaterId }: { movieId: string; theaterId?: string }) {
   const router = useRouter()
+  const isDesktop = useIsDesktopDetail()
   const [tab, setTab] = useState<'info' | 'theaters'>('info')
   // const [starred, setStarred] = useState(false) // 즐겨찾기 — 계정 기능 구현 전 비활성화
   const [titleInNav, setTitleInNav] = useState(false)
@@ -418,7 +448,8 @@ export function MovieDetailClient({ movieId, theaterId }: { movieId: string; the
     return () => window.removeEventListener('scroll', onScroll)
   }, [movie])
 
-  const handleBack = () => theaterId ? router.push(`/?theater=${theaterId}`) : router.back()
+  const handleBack = () => router.back()
+  const handleClose = () => theaterId ? router.push(`/?theater=${theaterId}`) : router.push('/')
   const handleDirectorClick = (name: string) => router.push(`/director/${encodeURIComponent(name)}`)
   const handleMapClick = () => router.push(`/?movie=${movieId}`)
 
@@ -434,7 +465,7 @@ export function MovieDetailClient({ movieId, theaterId }: { movieId: string; the
     return (
       <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ position: 'sticky', top: 0, zIndex: 50, paddingTop: 'env(safe-area-inset-top)', backgroundColor: 'var(--color-surface-bg)' }}>
-          <NavBar title="영화 정보" titleVisible onBack={handleBack} />
+          <NavBar title="영화 정보" titleVisible onBack={handleBack} onClose={handleClose} />
         </div>
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}>
           <span style={{ fontSize: 14, color: 'var(--color-text-caption)' }}>영화를 찾을 수 없습니다</span>
@@ -447,29 +478,37 @@ export function MovieDetailClient({ movieId, theaterId }: { movieId: string; the
   return (
     <div
       className="page-slide-in"
-      style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}
+      style={{
+        minHeight: '100svh',
+        backgroundColor: 'var(--color-surface-bg)',
+        paddingLeft: isDesktop ? 28 : 0,
+        paddingRight: isDesktop ? 28 : 0,
+        paddingBottom: isDesktop ? 40 : 0,
+      }}
     >
       {/* Sticky 상단 바: safe-area + NavBar */}
       <div style={{
         position: 'sticky', top: 0, zIndex: 50,
         paddingTop: 'env(safe-area-inset-top)',
         backgroundColor: 'var(--color-surface-bg)',
+        marginLeft: isDesktop ? -28 : 0,
+        marginRight: isDesktop ? -28 : 0,
       }}>
-        {/* starred / onStar — 즐겨찾기 계정 기능 구현 전 비활성화 */}
         <NavBar
           title={movie.title}
           titleVisible={titleInNav}
           onBack={handleBack}
+          onClose={handleClose}
         />
       </div>
 
-      <HeroSection movie={movie} titleRef={titleRef} />
+      <HeroSection movie={movie} titleRef={titleRef} desktop={isDesktop} />
 
-      <TabBar active={tab} onChange={setTab} />
+      <TabBar active={tab} onChange={setTab} desktop={isDesktop} />
 
       {tab === 'info'
-        ? <InfoTab movie={movie} onDirectorClick={handleDirectorClick} />
-        : <TheatersTab movieId={movieId} onMapClick={handleMapClick} />
+        ? <InfoTab movie={movie} onDirectorClick={handleDirectorClick} desktop={isDesktop} />
+        : <TheatersTab movieId={movieId} onMapClick={handleMapClick} desktop={isDesktop} />
       }
 
       <div style={{ height: 'env(safe-area-inset-bottom)' }} />

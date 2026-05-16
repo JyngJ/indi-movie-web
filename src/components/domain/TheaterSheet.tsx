@@ -200,7 +200,8 @@ function buildDays(count = 7, availableDates?: Set<string>): Day[] {
       : 'weekday'
 
     // availableDates가 주어지면 없는 날짜는 disabled
-    const isoDate = d.toISOString().slice(0, 10)   // 'YYYY-MM-DD'
+    // toISOString()은 UTC 기준 — 한국 자정(00:00~09:00 KST)에 하루 밀림 → 로컬 날짜로 계산
+    const isoDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     const disabled = availableDates ? !availableDates.has(isoDate) : false
 
     return { dow, date, isoDate, type, disabled }
@@ -219,12 +220,15 @@ interface TheaterSheetProps {
   theater: Theater
   expanded: boolean
   exiting?: boolean           // true이면 아래로 퇴장 애니메이션
+  presentation?: 'sheet' | 'panel'
   selectedMovieId: string
   onMovieSelect: (id: string) => void
   onExpand: () => void
   onCollapse: () => void
   onClose: () => void
   onMovieSearch?: (movieId: string, movieTitle: string) => void
+  onMovieDetailOpen?: (movieId: string) => void
+  onDirectorOpen?: (name: string) => void
   favorited?: boolean
   onFavorite?: () => void
   mapFilters?: { genres: string[]; nations: string[] }
@@ -235,20 +239,26 @@ export function TheaterSheet({
   theater,
   expanded,
   exiting = false,
+  presentation = 'sheet',
   selectedMovieId,
   onMovieSelect,
   onExpand,
   onCollapse,
   onClose,
   onMovieSearch,
+  onMovieDetailOpen,
+  onDirectorOpen,
   favorited = false,
   onFavorite,
   mapFilters,
 }: TheaterSheetProps) {
 
   const router = useRouter()
+  const panelMode = presentation === 'panel'
+  const shownExpanded = panelMode || expanded
 
   /* ── Sheet filter state ─────────────────────────────────────── */
+  // const [showTodayFirst, setShowTodayFirst] = useState(false) // TODO: 이 날 상영 필터 — UX 재검토 필요 (todo.md 참고)
   const [sheetFilters, setSheetFilters] = useState<SheetFilterState>({ genres: [], nations: [], bookable: false })
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
   const [pendingFilters, setPendingFilters] = useState<SheetFilterState>({ genres: [], nations: [], bookable: false })
@@ -288,10 +298,13 @@ export function TheaterSheet({
   // 시트가 접힐 때 포스터 복원
   useEffect(() => {
     void posterProgress
-  }, [expanded])
+  }, [shownExpanded])
 
   /* ── 날짜 선택 상태 (ISO date 기준) ── */
-  const todayIso = useMemo(() => new Date().toISOString().slice(0, 10), [])
+  const todayIso = useMemo(() => {
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  }, [])
   const [selectedIsoDate, setSelectedIsoDate] = useState(todayIso)
 
   /* ── Supabase 상영 데이터 ── */
@@ -346,7 +359,7 @@ export function TheaterSheet({
 
   /* 펼칠 때 지도 필터 상속, 접을 때 초기화 */
   useEffect(() => {
-    if (expanded) {
+    if (shownExpanded) {
       setSheetFilters({ genres: mapFilters?.genres ?? [], nations: mapFilters?.nations ?? [], bookable: false })
     } else {
       setSheetFilters({ genres: [], nations: [], bookable: false })
@@ -354,7 +367,7 @@ export function TheaterSheet({
     }
     // mapFilters는 open 시점에만 읽음
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [expanded])
+  }, [shownExpanded])
 
   /* ── 드래그 상태 ── */
   const containerRef    = useRef<HTMLDivElement>(null)
@@ -408,7 +421,7 @@ export function TheaterSheet({
   /* 극장 이름이 nav 위로 스크롤되면 nav에 이름 표시 */
   useEffect(() => {
     const scrollEl = scrollAreaRef.current
-    if (!scrollEl || !expanded) { setNameInNav(false); return }
+    if (!scrollEl || !shownExpanded) { setNameInNav(false); return }
     const onScroll = () => {
       const nameEl = theaterNameRef.current
       if (!nameEl) return
@@ -417,7 +430,7 @@ export function TheaterSheet({
     scrollEl.addEventListener('scroll', onScroll, { passive: true })
     setNameInNav(false)
     return () => scrollEl.removeEventListener('scroll', onScroll)
-  }, [expanded])
+  }, [shownExpanded])
 
   /* 상영시간표 섹션 뷰포트 진입/이탈 감지 → 예매 바 표시 제어 */
   useEffect(() => {
@@ -431,10 +444,11 @@ export function TheaterSheet({
     )
     observer.observe(target)
     return () => observer.disconnect()
-  }, [expanded])
+  }, [shownExpanded])
 
   /* 확장 시 스크롤 최상단에서 아래로 드래그 → 시트 접기 */
   useEffect(() => {
+    if (panelMode) return
     const el = scrollAreaRef.current
     if (!el) return
     let startY = 0
@@ -462,14 +476,15 @@ export function TheaterSheet({
       el.removeEventListener('touchstart', onDown)
       el.removeEventListener('touchmove',  onMove)
     }
-  }, [onCollapse, expanded])   // expanded 바뀔 때 ref 재등록
+  }, [onCollapse, panelMode, shownExpanded])   // expanded 전환 시 ref가 새 DOM을 가리키므로 재등록 필요
 
   /* 포스터 가로 드래그 + momentum — native 이벤트 (preventDefault 필요) */
   useEffect(() => {
     const el = posterScrollRef.current
     if (!el) return
 
-    let startY = 0
+    // null = 아직 미결정, 'h' = 가로 고정, 'v' = 세로 고정
+    let dirLock: 'h' | 'v' | null = null
     let momentumId = 0
     const velBuf: Array<{ t: number; x: number }> = []
 
@@ -477,12 +492,14 @@ export function TheaterSheet({
       if (momentumId) { cancelAnimationFrame(momentumId); momentumId = 0 }
     }
 
+    let startY = 0
     const onDown = (e: MouseEvent | TouchEvent) => {
       cancelMomentum()
       const x = 'touches' in e ? e.touches[0].pageX : e.pageX
       startY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY
       posterDrag.current = { active: false, startX: x, scrollLeft: el.scrollLeft }
       posterTouching.current = true
+      dirLock = null
       el.style.cursor = 'grabbing'
       velBuf.length = 0
     }
@@ -491,19 +508,24 @@ export function TheaterSheet({
       const x = 'touches' in e ? e.touches[0].pageX : e.pageX
       const y = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY
       const dx = Math.abs(x - posterDrag.current.startX)
-      const dy = y - startY
+      const dy = Math.abs(y - startY)
 
-      if (!posterDrag.current.active) {
-        if (dx < 4 && Math.abs(dy) < 4) return
-        // 수직 이동이 수평보다 1.5배 이상 크고 10px 이상이어야 시트 드래그로 전환
-        if (Math.abs(dy) > dx * 1.5 && Math.abs(dy) > 10) {
-          posterTouching.current = false
-          return
-        }
-        posterDrag.current.active = true
+      // 방향 미결정: 8px 이상 움직이면 방향 고정. 그 전까진 버블링 차단해서 시트 collapse 방지
+      if (dirLock === null) {
+        if (dx < 8 && dy < 8) { e.stopPropagation(); return }
+        dirLock = dx >= dy ? 'h' : 'v'
       }
 
+      if (dirLock === 'v') {
+        // 세로 확정 → 포스터 포기, 이벤트 올려보내서 시트/스크롤이 처리하게
+        posterTouching.current = false
+        return
+      }
+
+      // 가로 확정 → 시트 핸들러까지 버블링 차단
+      posterDrag.current.active = true
       e.preventDefault()
+      e.stopPropagation()
       el.scrollLeft = posterDrag.current.scrollLeft - (x - posterDrag.current.startX)
 
       // 속도 계산용 버퍼
@@ -514,6 +536,7 @@ export function TheaterSheet({
       const wasActive = posterDrag.current.active
       posterDrag.current.active = false
       posterTouching.current = false
+      dirLock = null
       el.style.cursor = 'grab'
 
       if (!wasActive) { velBuf.length = 0; return }
@@ -567,7 +590,7 @@ export function TheaterSheet({
       el.removeEventListener('wheel',       onWheel)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [expanded])  // expanded 전환 시 ref가 새 DOM을 가리키므로 재등록 필요
+  }, [shownExpanded])  // expanded 전환 시 ref가 새 DOM을 가리키므로 재등록 필요
 
   /* ── 수직 드래그 (핸들) ─────────────────────────────────────────── */
   // containerRef.clientHeight는 마운트 전 0이라 잘못된 값이 나옴.
@@ -576,7 +599,7 @@ export function TheaterSheet({
     return Math.max(0, viewportHeight - COLLAPSED_H)
   }, [viewportHeight])
 
-  const baseTranslate = expanded ? 0 : getMaxOffset()
+  const baseTranslate = shownExpanded ? 0 : getMaxOffset()
 
   const effectiveTranslate = Math.max(
     0,
@@ -584,16 +607,19 @@ export function TheaterSheet({
   )
 
   // 진입: enterDone 전엔 화면 아래 / 퇴장: exiting이면 화면 아래
-  const finalTranslate = (!enterDone.current || exiting)
+  const finalTranslate = panelMode
+    ? 0
+    : (!enterDone.current || exiting)
     ? viewportHeight
     : effectiveTranslate
 
   const handlePointerDown = (e: React.PointerEvent) => {
+    if (panelMode) return
     // 버튼, 링크, 입력 요소 클릭은 드래그로 처리하지 않음
     if ((e.target as Element).closest('button, a, input, select, textarea')) return
     // expanded 모드: 스크롤 영역 내부 터치는 네이티브 스크롤에 맡김
     // collapsed 모드: 어디서든 드래그 가능
-    if (expanded) {
+    if (shownExpanded) {
       const scrollEl = scrollAreaRef.current
       if (scrollEl?.contains(e.target as Element)) return
     }
@@ -611,7 +637,7 @@ export function TheaterSheet({
     if (posterTouching.current) return
     const delta    = e.clientY - dragStartY.current
     // collapsed 상태: 아래로 더 내려가는 것 허용 (닫기 제스처)
-    const maxTrans = expanded ? getMaxOffset() : getMaxOffset() + 120
+    const maxTrans = shownExpanded ? getMaxOffset() : getMaxOffset() + 120
     const newTrans = Math.max(0, Math.min(maxTrans, dragStartOffset.current + delta))
     setDragOffset(newTrans - baseTranslate)
 
@@ -654,7 +680,7 @@ export function TheaterSheet({
     const isFlickDown = velocityPxPerSec >  VELOCITY_THRESHOLD
     const posRatio    = effectiveTranslate / max   // 0 = 완전 펼침, 1 = 완전 접힘
 
-    if (expanded) {
+    if (shownExpanded) {
       if (isFlickDown) {
         // 빠른 아래 플릭 → 바로 닫기
         onClose()
@@ -721,21 +747,38 @@ export function TheaterSheet({
     })
   }, [allMovieEntries, sheetFilters, bookableMovieIds])
 
+  /* ── 이 날 상영 영화 우선 정렬 (비활성화 — todo.md 참고) ── */
+  // const sortedAllEntries = useMemo(() => {
+  //   if (!showTodayFirst) return allMovieEntries
+  //   const playing = allMovieEntries.filter(e => e.availableDates.has(selectedIsoDate))
+  //   const notPlaying = allMovieEntries.filter(e => !e.availableDates.has(selectedIsoDate))
+  //   return [...playing, ...notPlaying]
+  // }, [allMovieEntries, selectedIsoDate, showTodayFirst])
+  const sortedAllEntries = allMovieEntries
+
+  // const sortedFilteredEntries = useMemo(() => {
+  //   if (!showTodayFirst) return filteredMovieEntries
+  //   const playing = filteredMovieEntries.filter(e => e.availableDates.has(selectedIsoDate))
+  //   const notPlaying = filteredMovieEntries.filter(e => !e.availableDates.has(selectedIsoDate))
+  //   return [...playing, ...notPlaying]
+  // }, [filteredMovieEntries, selectedIsoDate, showTodayFirst])
+  const sortedFilteredEntries = filteredMovieEntries
+
   /* ── 펼칠 때 오늘 상영 없으면 가장 빠른 날로 자동 이동 ── */
   useEffect(() => {
-    if (!expanded || allMoviesLoading) return
+    if (!shownExpanded || allMoviesLoading) return
     if (selectedIsoDate !== todayIso) return
     if (theaterAvailableDates.has(todayIso)) return
     const earliest = Array.from(theaterAvailableDates).sort()[0]
     if (earliest) setSelectedIsoDate(earliest)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [expanded, allMoviesLoading, theaterAvailableDates])
+  }, [shownExpanded, allMoviesLoading, theaterAvailableDates])
 
   /* ── 선택된 상영 회차 ── */
   const [selectedShowtimeId, setSelectedShowtimeId] = useState<string | null>(null)
 
   useEffect(() => { setSelectedShowtimeId(null) }, [selectedMovieId])
-  useEffect(() => { if (!expanded) setSelectedShowtimeId(null) }, [expanded])
+  useEffect(() => { if (!shownExpanded) setSelectedShowtimeId(null) }, [shownExpanded])
 
   /* ── 상영시간 필터링 ─────────────────────────────────────────── */
   const filteredShowtimes = showtimes.filter((s) => s.movieId === selectedMovieId)
@@ -873,39 +916,54 @@ export function TheaterSheet({
       onPointerCancel={(e) => handlePointerUp(e)}
       style={{
         position: 'absolute',
-        left: 0, right: 0, bottom: 0,
-        height: '100dvh',
-        transform: `translateY(${finalTranslate}px)`,
+        left: panelMode ? 'auto' : 0,
+        right: panelMode ? 16 : 0,
+        top: panelMode ? 16 : 'auto',
+        bottom: panelMode ? 16 : 0,
+        width: panelMode ? 440 : 'auto',
+        maxWidth: panelMode ? 'calc(100vw - 32px)' : undefined,
+        height: panelMode ? 'auto' : '100dvh',
+        transform: panelMode
+          ? (exiting ? 'translateX(calc(100% + 24px))' : 'translateX(0)')
+          : `translateY(${finalTranslate}px)`,
+        opacity: panelMode && exiting ? 0 : 1,
         // 드래그 중엔 transition 없음, 진입/퇴장/snap엔 항상 transition
-        transition: (dragging && enterDone.current && !exiting)
+        transition: panelMode
+          ? 'transform 0.24s ease, opacity 0.2s ease'
+          : (dragging && enterDone.current && !exiting)
           ? 'none'
           : 'transform 0.38s cubic-bezier(0.32, 0.72, 0, 1)',
         zIndex: 1100,
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: 'var(--color-surface-raised)',
-        borderRadius: effectiveTranslate === 0
+        backgroundColor: panelMode ? 'var(--color-surface-card)' : 'var(--color-surface-raised)',
+        border: panelMode ? '1px solid var(--color-border)' : undefined,
+        borderRadius: panelMode
+          ? 18
+          : effectiveTranslate === 0
           ? '0'
           : 'var(--comp-sheet-radius)',
-        boxShadow: 'var(--shadow-sheet)',
+        boxShadow: panelMode
+          ? '0 22px 70px rgba(20, 15, 10, 0.22), 0 3px 14px rgba(20, 15, 10, 0.10)'
+          : 'var(--shadow-sheet)',
         overflow: 'hidden',
         // collapsed 모드: 컨테이너 전체가 드래그 대상이므로 native scroll 차단
-        touchAction: expanded ? 'auto' : 'none',
-        cursor: dragging ? 'grabbing' : (expanded ? 'auto' : 'grab'),
+        touchAction: panelMode || shownExpanded ? 'auto' : 'none',
+        cursor: panelMode ? 'auto' : dragging ? 'grabbing' : (shownExpanded ? 'auto' : 'grab'),
         userSelect: 'none',
       }}
     >
       {/* ── 드래그 핸들 바 — expanded이면 숨김 ── */}
-      <div
+      {!panelMode && <div
         style={{
-          padding: expanded ? '4px 0' : '8px 0 6px',
+          padding: shownExpanded ? '4px 0' : '8px 0 6px',
           display: 'flex',
           justifyContent: 'center',
           flexShrink: 0,
           pointerEvents: 'none',   // 컨테이너가 드래그 처리
         }}
       >
-        {!expanded && (
+        {!shownExpanded && (
           <div style={{
             width: 'var(--comp-sheet-handle-width)',
             height: 'var(--comp-sheet-handle-height)',
@@ -913,10 +971,10 @@ export function TheaterSheet({
             backgroundColor: 'var(--color-border)',
           }} />
         )}
-      </div>
+      </div>}
 
       {/* ── 헤더 — collapsed: 이름+주소+버튼 / expanded: 메뉴바 ── */}
-      {!expanded ? (
+      {!shownExpanded ? (
         /* Collapsed 헤더 */
         <div style={{
           padding: '0 20px 12px',
@@ -992,6 +1050,88 @@ export function TheaterSheet({
             </button>
           </div>
         </div>
+      ) : panelMode ? (
+        /* PC 패널 헤더 — 극장 정보 고정 */
+        <div style={{
+          flexShrink: 0,
+          padding: '18px 18px 14px',
+          borderBottom: '1px solid var(--color-border)',
+          backgroundColor: 'var(--color-surface-card)',
+          boxShadow: '0 1px 0 rgba(0,0,0,0.02)',
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 12,
+          }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <h2 style={{
+                  margin: 0,
+                  minWidth: 0,
+                  fontSize: 22,
+                  fontWeight: 800,
+                  lineHeight: 1.16,
+                  color: 'var(--color-text-primary)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {theater.name}
+                </h2>
+                {theater.website && (
+                  <button style={inlineIconBtn} onClick={openWebsite} aria-label="사이트 보기">
+                    <IconExternal size={11} />
+                  </button>
+                )}
+              </div>
+              <div style={{
+                display: 'flex',
+                alignItems: 'baseline',
+                gap: 3,
+                marginTop: 5,
+                minWidth: 0,
+                color: 'var(--color-text-sub)',
+                fontSize: 13,
+                lineHeight: 1.35,
+              }}>
+                <span style={{
+                  minWidth: 0,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {theater.address}
+                </span>
+                <button style={inlineIconBtn} onClick={copyAddress} aria-label="주소 복사">
+                  <IconCopy size={10} />
+                </button>
+              </div>
+            </div>
+            <button style={iconBtn} onClick={onClose} aria-label="닫기">
+              <IconClose />
+            </button>
+          </div>
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 7,
+            marginTop: 14,
+          }}>
+            <button style={actionBtn} onClick={openDirections}>
+              <IconRoute size={13} />
+              길찾기
+            </button>
+            <button style={actionBtn} onClick={shareTheater}>
+              <IconShare size={13} />
+              공유
+            </button>
+            <button style={actionBtn} onClick={openInstagram}>
+              <IconInstagram size={13} />
+              인스타그램
+            </button>
+          </div>
+        </div>
       ) : (
         /* Expanded 헤더 — nav row만 고정 (극장 정보는 스크롤 안으로) */
         <div style={{
@@ -1029,7 +1169,7 @@ export function TheaterSheet({
       )}
 
       {/* ── 포스터 가로 스크롤 — collapsed 전용 ── */}
-      {!expanded && <div style={{
+      {!shownExpanded && <div style={{
         borderTop: '1px solid var(--color-border)',
         borderBottom: '1px solid var(--color-border)',
         backgroundColor: 'var(--color-surface-bg)',
@@ -1038,6 +1178,18 @@ export function TheaterSheet({
         maxHeight: 228 - 138 * posterProgress,
         overflow: 'hidden',
       }}>
+        {/* 이 날 상영 필터 체크박스 — 비활성화 (todo.md 참고) */}
+        {/* <label style={{
+          display: 'flex', alignItems: 'center', gap: 7,
+          padding: '6px 20px 0',
+          cursor: 'pointer', fontSize: 11, userSelect: 'none',
+          color: showTodayFirst ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
+          fontWeight: showTodayFirst ? 600 : 400,
+        }}>
+          <input type="checkbox" checked={showTodayFirst} onChange={e => setShowTodayFirst(e.target.checked)}
+            style={{ width: 13, height: 13, cursor: 'pointer', accentColor: 'var(--color-primary-base)', flexShrink: 0 }} />
+          이 날 상영하는 영화만 보기
+        </label> */}
         <div
           ref={posterScrollRef}
           style={{
@@ -1079,9 +1231,9 @@ export function TheaterSheet({
                   </div>
                 )
               : (() => {
-                  return allMovieEntries.map((entry) => {
+                  return sortedAllEntries.map((entry) => {
                     const { movie } = entry
-                    const unavailable = expanded && !entry.availableDates.has(selectedIsoDate)
+                    const unavailable = false // showTodayFirst && !entry.availableDates.has(selectedIsoDate)
                     const soldout = !unavailable && soldoutMovieIds.has(movie.id)
 
                     return (
@@ -1100,10 +1252,10 @@ export function TheaterSheet({
                               height={132}
                               size="lg"
                               src={movie.posterUrl}
-                              selected={expanded && selectedMovieId === movie.id}
+                              selected={shownExpanded && selectedMovieId === movie.id}
                               onClick={unavailable ? undefined : () => {
                                 onMovieSelect(movie.id)
-                                if (!expanded) onExpand()
+                                if (!shownExpanded) onExpand()
                               }}
                             />
                             {/* 매진 배지 */}
@@ -1128,33 +1280,14 @@ export function TheaterSheet({
                                 매진
                               </div>
                             )}
-                            {/* 선택일 상영 없는 영화 오버레이 */}
+                            {/* 이 날 상영 없는 영화 — 반투명 오버레이 */}
                             {unavailable && (
-                              <div
-                                onClick={() => onMovieSelect(movie.id)}
-                                style={{
-                                  position: 'absolute',
-                                  inset: 0,
-                                  borderRadius: 'var(--comp-poster-sheet-radius)',
-                                  background: 'rgba(10, 8, 6, 0.72)',
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  cursor: 'pointer',
-                                }}
-                              >
-                                <span style={{
-                                  fontSize: 9,
-                                  fontWeight: 600,
-                                  color: 'rgba(255,255,255,0.75)',
-                                  textAlign: 'center',
-                                  lineHeight: 1.4,
-                                  padding: '0 4px',
-                                }}>
-                                  상영 일정<br />없음
-                                </span>
-                              </div>
+                              <div style={{
+                                position: 'absolute', inset: 0,
+                                borderRadius: 'var(--comp-poster-sheet-radius)',
+                                background: 'rgba(10, 8, 6, 0.45)',
+                                pointerEvents: 'none',
+                              }} />
                             )}
                           </div>
                           <div style={{
@@ -1169,6 +1302,7 @@ export function TheaterSheet({
                             WebkitLineClamp: 2,
                             WebkitBoxOrient: 'vertical',
                             opacity: unavailable ? 0.4 : Math.max(0, 1 - posterProgress * 2.5),
+                            textDecoration: unavailable ? 'line-through' : 'none',
                           }}>
                             {movie.title}
                           </div>
@@ -1195,13 +1329,20 @@ export function TheaterSheet({
       </div>}
 
       {/* ── expanded: 극장 정보 + DateBar + 포스터 + 내용 한 스크롤 ── */}
-      {expanded && (
+      {shownExpanded && (
         <div
           ref={scrollAreaRef}
-          style={{ flex: 1, overflowY: 'scroll', WebkitOverflowScrolling: 'touch' as never, overscrollBehavior: 'none' }}
+          className={panelMode ? 'theater-panel-scroll themed-scrollbar' : undefined}
+          style={{
+            flex: 1,
+            overflowY: 'scroll',
+            WebkitOverflowScrolling: 'touch' as never,
+            overscrollBehavior: 'none',
+            backgroundColor: panelMode ? 'var(--color-surface-bg)' : undefined,
+          }}
         >
           {/* 극장 정보 — 스크롤 시 위로 밀림 */}
-          <div ref={theaterNameRef} style={{ padding: '4px 20px 14px' }}>
+          {!panelMode && <div ref={theaterNameRef} style={{ padding: '4px 20px 14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <div style={{
                 fontSize: 23, fontWeight: 700,
@@ -1237,13 +1378,14 @@ export function TheaterSheet({
                 <IconInstagram size={13} />인스타그램
               </button>
             </div>
-          </div>
+          </div>}
 
           {/* DateBar — sticky */}
           <div style={{
             position: 'sticky', top: 0, zIndex: 10,
-            backgroundColor: 'var(--color-surface-raised)',
-            borderTop: '1px solid var(--color-border)',
+            backgroundColor: panelMode ? 'var(--color-surface-card)' : 'var(--color-surface-raised)',
+            borderTop: panelMode ? 'none' : '1px solid var(--color-border)',
+            borderBottom: panelMode ? '1px solid var(--color-border)' : undefined,
           }}>
             <DateBar
               days={days}
@@ -1358,6 +1500,51 @@ export function TheaterSheet({
               </div>
             )}
 
+            {/* 이 날 상영 필터 체크박스 — 비활성화 (todo.md 참고) */}
+            {/* <label style={{
+              display: 'flex', alignItems: 'center', gap: 7,
+              padding: '6px 16px',
+              cursor: 'pointer', fontSize: 11, userSelect: 'none',
+              color: showTodayFirst ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
+              fontWeight: showTodayFirst ? 600 : 400,
+            }}>
+              <input type="checkbox" checked={showTodayFirst} onChange={e => setShowTodayFirst(e.target.checked)}
+                style={{ width: 13, height: 13, cursor: 'pointer', accentColor: 'var(--color-primary-base)', flexShrink: 0 }} />
+              이 날 상영하는 영화만 보기
+            </label> */}
+
+            <div style={{ position: 'relative' }}>
+              {/* PC 패널 전용 포스터 좌우 스크롤 버튼 */}
+              {panelMode && (() => {
+                const scrollBy = (dir: 1 | -1) => {
+                  const el = posterScrollRef.current
+                  if (!el) return
+                  const posterW = 88 + 12  // 포스터 width + gap
+                  el.scrollBy({ left: dir * posterW * 3, behavior: 'smooth' })
+                }
+                const btnStyle: React.CSSProperties = {
+                  position: 'absolute', top: '50%', transform: 'translateY(-50%)',
+                  width: 32, height: 32, borderRadius: '50%', zIndex: 2,
+                  border: 'none', cursor: 'pointer',
+                  backgroundColor: 'color-mix(in srgb, var(--color-surface-card) 55%, transparent)',
+                  backdropFilter: 'blur(8px)',
+                  color: 'var(--color-text-body)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: '0 1px 6px rgba(0,0,0,0.10)',
+                  minHeight: 'auto',
+                }
+                return (
+                  <>
+                    <button style={{ ...btnStyle, left: 6 }} onClick={() => scrollBy(-1)}>
+                      <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                    </button>
+                    <button style={{ ...btnStyle, right: 6 }} onClick={() => scrollBy(1)}>
+                      <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                    </button>
+                  </>
+                )
+              })()}
+
             <div
               ref={posterScrollRef}
               style={{
@@ -1395,7 +1582,7 @@ export function TheaterSheet({
                     )
                   : <>
                       {/* 조건 일치 영화 */}
-                      {filteredMovieEntries.map((entry) => {
+                      {sortedFilteredEntries.map((entry) => {
                         const { movie } = entry
                         const unavailable = !entry.availableDates.has(selectedIsoDate)
                         const soldout = !unavailable && soldoutMovieIds.has(movie.id)
@@ -1419,22 +1606,34 @@ export function TheaterSheet({
                                     pointerEvents: 'none', zIndex: 2,
                                   }}>매진</div>
                                 )}
-                                {unavailable && (
-                                  <div
-                                    onClick={() => onMovieSelect(movie.id)}
-                                    style={{
-                                      position: 'absolute', inset: 0,
-                                      borderRadius: 'var(--comp-poster-sheet-radius)',
-                                      background: 'rgba(10, 8, 6, 0.72)',
-                                      display: 'flex', flexDirection: 'column',
-                                      alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                                    }}
-                                  >
-                                    <span style={{ fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.75)', textAlign: 'center', lineHeight: 1.4, padding: '0 4px' }}>
-                                      상영 일정<br />없음
-                                    </span>
-                                  </div>
-                                )}
+                                {unavailable && (() => {
+                                  const nextDates = [...entry.availableDates].filter(d => d > selectedIsoDate).sort()
+                                  const nextLabel = nextDates.length > 0 ? (() => {
+                                    const [y, m, d] = nextDates[0].split('-').map(Number)
+                                    const dt = new Date(y, m - 1, d)
+                                    return `${dt.getDate()}일(${'일월화수목금토'[dt.getDay()]})`
+                                  })() : null
+                                  return (
+                                    <div
+                                      onClick={() => onMovieSelect(movie.id)}
+                                      style={{
+                                        position: 'absolute', inset: 0,
+                                        borderRadius: 'var(--comp-poster-sheet-radius)',
+                                        background: 'rgba(10, 8, 6, 0.72)',
+                                        display: 'flex', flexDirection: 'column',
+                                        alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                                        gap: 2,
+                                      }}
+                                    >
+                                      <span style={{ fontSize: 8, fontWeight: 500, color: 'rgba(255,255,255,0.55)', textAlign: 'center' }}>
+                                        다음 상영
+                                      </span>
+                                      <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.85)', textAlign: 'center', lineHeight: 1.3 }}>
+                                        {nextLabel ?? '일정 없음'}
+                                      </span>
+                                    </div>
+                                  )
+                                })()}
                               </div>
                               <div style={{
                                 marginTop: 6, fontSize: 11, fontWeight: 600,
@@ -1442,6 +1641,7 @@ export function TheaterSheet({
                                 lineHeight: 1.35, overflow: 'hidden',
                                 display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
                                 opacity: unavailable ? 0.4 : 1,
+                                textDecoration: 'none', // (showTodayFirst && unavailable) ? 'line-through' : 'none',
                               }}>{movie.title}</div>
                               {movie.director && movie.director.length > 0 && (
                                 <div style={{
@@ -1502,6 +1702,7 @@ export function TheaterSheet({
                     </>
               }
             </div>
+            </div>{/* position:relative 래퍼 닫기 */}
           </div>
             )
           })()}
@@ -1540,9 +1741,18 @@ export function TheaterSheet({
                       {movie.title}
                     </div>
                     {movie.director && movie.director.length > 0 && (
-                      <div style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>
-                        {movie.director[0]}
-                      </div>
+                      onDirectorOpen ? (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onDirectorOpen(movie.director[0]) }}
+                          style={{ fontSize: 12, color: 'var(--color-primary-base)', fontWeight: 500, background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', textDecoration: 'underline' }}
+                        >
+                          {movie.director[0]}
+                        </button>
+                      ) : (
+                        <div style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>
+                          {movie.director[0]}
+                        </div>
+                      )
                     )}
                     {movie.runtimeMinutes && (
                       <div style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>
@@ -1569,7 +1779,7 @@ export function TheaterSheet({
                 {/* 액션 버튼 */}
                 <div style={{ borderTop: '1px solid var(--color-border)', display: 'flex' }}>
                   <button
-                    onClick={() => router.push(`/movie/${movie.id}?theater=${theater.id}`)}
+                    onClick={() => onMovieDetailOpen ? onMovieDetailOpen(movie.id) : router.push(`/movie/${movie.id}?theater=${theater.id}`)}
                     style={{
                       flex: 1, padding: '10px 0',
                       fontSize: 12, fontWeight: 600,
@@ -1648,7 +1858,7 @@ export function TheaterSheet({
         </div>
       )}
       {/* ── 예매 바 — 회차 선택 시 하단에서 슬라이드 업 ── */}
-      {expanded && (() => {
+      {shownExpanded && (() => {
         const selectedSt = filteredShowtimes.find((st) => st.id === selectedShowtimeId)
         return (
           <div style={{
@@ -1713,7 +1923,10 @@ export function TheaterSheet({
             zIndex: 200,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}
-          onClick={() => setFilterSheetOpen(false)}
+          onClick={() => { setPendingFilters(sheetFilters); setFilterSheetOpen(false) }}
+          onTouchStart={e => e.stopPropagation()}
+          onTouchMove={e => e.stopPropagation()}
+          onTouchEnd={e => { e.stopPropagation(); setPendingFilters(sheetFilters); setFilterSheetOpen(false) }}
         >
           <div
             style={{
@@ -1724,6 +1937,9 @@ export function TheaterSheet({
               boxShadow: 'var(--shadow-sheet)',
             }}
             onClick={e => e.stopPropagation()}
+            onTouchStart={e => e.stopPropagation()}
+            onTouchMove={e => e.stopPropagation()}
+            onTouchEnd={e => e.stopPropagation()}
           >
             {/* 헤더 */}
             <div style={{
