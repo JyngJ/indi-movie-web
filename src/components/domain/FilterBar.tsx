@@ -828,7 +828,7 @@ export function FilterBar({ onChange, nationOptions = EMPTY_NATION_OPTIONS, movi
           width: '100%',
           maxWidth: '100%',
           boxSizing: 'border-box',
-          padding: desktop ? '0 2px 2px 0' : '8px 16px 10px',
+          padding: desktop ? '0 2px 2px 16px' : '8px 16px 10px',
           overflowX: 'auto',
           overflowY: 'hidden',
           overscrollBehaviorX: 'contain',

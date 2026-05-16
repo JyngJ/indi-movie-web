@@ -28,9 +28,9 @@ const IcoChevronLeft = () => (
     <path d="M15 18l-6-6 6-6" />
   </svg>
 )
-const IcoStar = ({ filled }: { filled?: boolean }) => (
-  <svg width={22} height={22} viewBox="0 0 24 24" fill={filled ? 'var(--color-primary-base)' : 'none'} stroke={filled ? 'var(--color-primary-base)' : 'currentColor'} strokeWidth="1.8" strokeLinejoin="round">
-    <path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.9 6.8 19.6l1-5.8L3.5 9.7l5.9-.8z" />
+const IcoClose = () => (
+  <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <path d="M18 6L6 18M6 6l12 12" />
   </svg>
 )
 const IcoChevronRight = () => (
@@ -63,14 +63,12 @@ function NavBar({
   title,
   titleVisible,
   onBack,
-  starred,
-  onStar,
+  onClose,
 }: {
   title: string
   titleVisible: boolean
   onBack: () => void
-  starred?: boolean
-  onStar?: () => void
+  onClose: () => void
 }) {
   const btn: React.CSSProperties = {
     width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -104,7 +102,7 @@ function NavBar({
       }}>
         {title}
       </span>
-      <button style={btn} onClick={onStar}><IcoStar filled={starred} /></button>
+      <button style={btn} onClick={onClose}><IcoClose /></button>
     </div>
   )
 }
@@ -279,7 +277,7 @@ function InfoTab({ movie, onDirectorClick, desktop = false }: { movie: MovieDeta
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: 'var(--font-serif)', fontSize: 17, fontWeight: 700, color: 'var(--color-text-primary)' }}>{name}</div>
-                  <div style={{ marginTop: 4, fontSize: 11, color: 'var(--color-primary-base)', fontWeight: 500 }}>감독 페이지 보기 →</div>
+                  <div style={{ marginTop: 4, fontSize: 11, color: 'var(--color-primary-base)', fontWeight: 500, textDecoration: 'underline' }}>감독 페이지 보기</div>
                 </div>
                 <IcoChevronRight />
               </button>
@@ -450,7 +448,8 @@ export function MovieDetailClient({ movieId, theaterId }: { movieId: string; the
     return () => window.removeEventListener('scroll', onScroll)
   }, [movie])
 
-  const handleBack = () => theaterId ? router.push(`/?theater=${theaterId}`) : router.back()
+  const handleBack = () => router.back()
+  const handleClose = () => theaterId ? router.push(`/?theater=${theaterId}`) : router.push('/')
   const handleDirectorClick = (name: string) => router.push(`/director/${encodeURIComponent(name)}`)
   const handleMapClick = () => router.push(`/?movie=${movieId}`)
 
@@ -466,7 +465,7 @@ export function MovieDetailClient({ movieId, theaterId }: { movieId: string; the
     return (
       <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ position: 'sticky', top: 0, zIndex: 50, paddingTop: 'env(safe-area-inset-top)', backgroundColor: 'var(--color-surface-bg)' }}>
-          <NavBar title="영화 정보" titleVisible onBack={handleBack} />
+          <NavBar title="영화 정보" titleVisible onBack={handleBack} onClose={handleClose} />
         </div>
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}>
           <span style={{ fontSize: 14, color: 'var(--color-text-caption)' }}>영화를 찾을 수 없습니다</span>
@@ -495,11 +494,11 @@ export function MovieDetailClient({ movieId, theaterId }: { movieId: string; the
         marginLeft: isDesktop ? -28 : 0,
         marginRight: isDesktop ? -28 : 0,
       }}>
-        {/* starred / onStar — 즐겨찾기 계정 기능 구현 전 비활성화 */}
         <NavBar
           title={movie.title}
           titleVisible={titleInNav}
           onBack={handleBack}
+          onClose={handleClose}
         />
       </div>
 

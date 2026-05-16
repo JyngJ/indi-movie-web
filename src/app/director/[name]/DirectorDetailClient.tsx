@@ -27,9 +27,9 @@ const IcoChevronLeft = () => (
     <path d="M15 18l-6-6 6-6" />
   </svg>
 )
-const IcoStar = ({ filled }: { filled?: boolean }) => (
-  <svg width={22} height={22} viewBox="0 0 24 24" fill={filled ? 'var(--color-primary-base)' : 'none'} stroke={filled ? 'var(--color-primary-base)' : 'currentColor'} strokeWidth="1.8" strokeLinejoin="round">
-    <path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.9 6.8 19.6l1-5.8L3.5 9.7l5.9-.8z" />
+const IcoClose = () => (
+  <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <path d="M18 6L6 18M6 6l12 12" />
   </svg>
 )
 const IcoChevronRight = () => (
@@ -44,7 +44,7 @@ const IcoChevronDown = ({ flipped }: { flipped?: boolean }) => (
 )
 
 /* ── NavBar ── */
-function NavBar({ onBack, starred, onStar }: { onBack: () => void; starred?: boolean; onStar?: () => void }) {
+function NavBar({ onBack, onClose }: { onBack: () => void; onClose: () => void }) {
   const btn: React.CSSProperties = {
     width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center',
     border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-text-body)',
@@ -59,7 +59,7 @@ function NavBar({ onBack, starred, onStar }: { onBack: () => void; starred?: boo
     }}>
       <button style={btn} onClick={onBack}><IcoChevronLeft /></button>
       <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-text-primary)' }}>감독 정보</span>
-      <button style={btn} onClick={onStar}><IcoStar filled={starred} /></button>
+      <button style={btn} onClick={onClose}><IcoClose /></button>
     </div>
   )
 }
@@ -263,40 +263,37 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
     <div
       className="page-slide-in"
       style={{
-        position: 'fixed',
-        inset: 0,
+        minHeight: '100svh',
         backgroundColor: 'var(--color-surface-bg)',
-        display: 'flex',
-        flexDirection: 'column',
-        paddingTop: 'env(safe-area-inset-top)',
+        paddingLeft: isDesktop ? 28 : 0,
+        paddingRight: isDesktop ? 28 : 0,
+        paddingBottom: isDesktop ? 40 : 0,
       }}
     >
-      {/* starred / onStar — 즐겨찾기 계정 기능 구현 전 비활성화 */}
-      <NavBar onBack={() => router.back()} />
+      <div style={{
+        position: 'sticky', top: 0, zIndex: 50,
+        paddingTop: 'env(safe-area-inset-top)',
+        backgroundColor: 'var(--color-surface-bg)',
+        marginLeft: isDesktop ? -28 : 0,
+        marginRight: isDesktop ? -28 : 0,
+      }}>
+        <NavBar onBack={() => router.back()} onClose={() => router.push('/')} />
+      </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' as never }}>
-        <div style={{
-          maxWidth: isDesktop ? 1120 : undefined,
-          margin: isDesktop ? '28px auto 0' : undefined,
-          padding: isDesktop ? '0 28px 64px' : undefined,
-          display: isDesktop ? 'grid' : 'block',
-          gridTemplateColumns: isDesktop ? '320px minmax(0, 1fr)' : undefined,
-          gap: isDesktop ? 28 : undefined,
-          alignItems: isDesktop ? 'start' : undefined,
-        }}>
-        <div style={{ position: isDesktop ? 'sticky' : undefined, top: isDesktop ? 80 : undefined }}>
-          <ProfileHero name={directorName} count={directorMovies.length} desktop={isDesktop} />
-        </div>
+      <ProfileHero name={directorName} count={directorMovies.length} desktop={isDesktop} />
 
-        {/* 작품 목록 */}
-        <div style={{
-          padding: isDesktop ? 0 : '0 20px 52px',
-          border: isDesktop ? '1px solid var(--color-border)' : undefined,
-          borderRadius: isDesktop ? 20 : undefined,
-          backgroundColor: isDesktop ? 'var(--color-surface-card)' : undefined,
-          boxShadow: isDesktop ? '0 14px 44px rgba(20, 15, 10, 0.08)' : undefined,
-          overflow: isDesktop ? 'hidden' : undefined,
-        }}>
+      {/* 작품 목록 */}
+      <div style={{
+        maxWidth: isDesktop ? 860 : undefined,
+        margin: isDesktop ? '0 auto' : undefined,
+        padding: isDesktop ? '24px 0 64px' : '0 20px 52px',
+        border: isDesktop ? '1px solid var(--color-border)' : undefined,
+        borderRadius: isDesktop ? 20 : undefined,
+        backgroundColor: isDesktop ? 'var(--color-surface-card)' : undefined,
+        boxShadow: isDesktop ? '0 14px 44px rgba(20, 15, 10, 0.08)' : undefined,
+        overflow: isDesktop ? 'hidden' : undefined,
+        marginTop: isDesktop ? 20 : undefined,
+      }}>
           {/* 헤더 */}
           <div style={{
             display: 'flex',
@@ -364,8 +361,8 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
             </div>
           )}
         </div>
-        </div>
-      </div>
+
+      <div style={{ height: 'env(safe-area-inset-bottom)' }} />
     </div>
   )
 }

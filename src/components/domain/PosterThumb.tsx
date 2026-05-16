@@ -82,6 +82,15 @@ export function PosterThumb({
           </div>
         )}
 
+        {/* 포스터 얇은 테두리 (흰/검 포스터 구분용) */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            borderRadius: radiusVar,
+            boxShadow: 'inset 0 0 0 1px var(--comp-poster-border)',
+          }}
+        />
+
         {/* 선택 시 inset 흰 테두리 */}
         {selected && (
           <div

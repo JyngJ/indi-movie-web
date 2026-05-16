@@ -226,6 +226,8 @@ interface TheaterSheetProps {
   onCollapse: () => void
   onClose: () => void
   onMovieSearch?: (movieId: string, movieTitle: string) => void
+  onMovieDetailOpen?: (movieId: string) => void
+  onDirectorOpen?: (name: string) => void
   favorited?: boolean
   onFavorite?: () => void
   mapFilters?: { genres: string[]; nations: string[] }
@@ -243,6 +245,8 @@ export function TheaterSheet({
   onCollapse,
   onClose,
   onMovieSearch,
+  onMovieDetailOpen,
+  onDirectorOpen,
   favorited = false,
   onFavorite,
   mapFilters,
@@ -253,6 +257,7 @@ export function TheaterSheet({
   const shownExpanded = panelMode || expanded
 
   /* ── Sheet filter state ─────────────────────────────────────── */
+  const [showTodayFirst, setShowTodayFirst] = useState(false)
   const [sheetFilters, setSheetFilters] = useState<SheetFilterState>({ genres: [], nations: [], bookable: false })
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
   const [pendingFilters, setPendingFilters] = useState<SheetFilterState>({ genres: [], nations: [], bookable: false })
@@ -738,6 +743,21 @@ export function TheaterSheet({
     })
   }, [allMovieEntries, sheetFilters, bookableMovieIds])
 
+  /* ── 이 날 상영 영화 우선 정렬 ── */
+  const sortedAllEntries = useMemo(() => {
+    if (!showTodayFirst) return allMovieEntries
+    const playing = allMovieEntries.filter(e => e.availableDates.has(selectedIsoDate))
+    const notPlaying = allMovieEntries.filter(e => !e.availableDates.has(selectedIsoDate))
+    return [...playing, ...notPlaying]
+  }, [allMovieEntries, selectedIsoDate, showTodayFirst])
+
+  const sortedFilteredEntries = useMemo(() => {
+    if (!showTodayFirst) return filteredMovieEntries
+    const playing = filteredMovieEntries.filter(e => e.availableDates.has(selectedIsoDate))
+    const notPlaying = filteredMovieEntries.filter(e => !e.availableDates.has(selectedIsoDate))
+    return [...playing, ...notPlaying]
+  }, [filteredMovieEntries, selectedIsoDate, showTodayFirst])
+
   /* ── 펼칠 때 오늘 상영 없으면 가장 빠른 날로 자동 이동 ── */
   useEffect(() => {
     if (!shownExpanded || allMoviesLoading) return
@@ -1152,6 +1172,18 @@ export function TheaterSheet({
         maxHeight: 228 - 138 * posterProgress,
         overflow: 'hidden',
       }}>
+        {/* 이 날 상영 필터 체크박스 */}
+        <label style={{
+          display: 'flex', alignItems: 'center', gap: 7,
+          padding: '6px 20px 0',
+          cursor: 'pointer', fontSize: 11, userSelect: 'none',
+          color: showTodayFirst ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
+          fontWeight: showTodayFirst ? 600 : 400,
+        }}>
+          <input type="checkbox" checked={showTodayFirst} onChange={e => setShowTodayFirst(e.target.checked)}
+            style={{ width: 13, height: 13, cursor: 'pointer', accentColor: 'var(--color-primary-base)', flexShrink: 0 }} />
+          이 날 상영하는 영화만 보기
+        </label>
         <div
           ref={posterScrollRef}
           style={{
@@ -1193,9 +1225,9 @@ export function TheaterSheet({
                   </div>
                 )
               : (() => {
-                  return allMovieEntries.map((entry) => {
+                  return sortedAllEntries.map((entry) => {
                     const { movie } = entry
-                    const unavailable = shownExpanded && !entry.availableDates.has(selectedIsoDate)
+                    const unavailable = showTodayFirst && !entry.availableDates.has(selectedIsoDate)
                     const soldout = !unavailable && soldoutMovieIds.has(movie.id)
 
                     return (
@@ -1242,33 +1274,14 @@ export function TheaterSheet({
                                 매진
                               </div>
                             )}
-                            {/* 선택일 상영 없는 영화 오버레이 */}
+                            {/* 이 날 상영 없는 영화 — 반투명 오버레이 */}
                             {unavailable && (
-                              <div
-                                onClick={() => onMovieSelect(movie.id)}
-                                style={{
-                                  position: 'absolute',
-                                  inset: 0,
-                                  borderRadius: 'var(--comp-poster-sheet-radius)',
-                                  background: 'rgba(10, 8, 6, 0.72)',
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  cursor: 'pointer',
-                                }}
-                              >
-                                <span style={{
-                                  fontSize: 9,
-                                  fontWeight: 600,
-                                  color: 'rgba(255,255,255,0.75)',
-                                  textAlign: 'center',
-                                  lineHeight: 1.4,
-                                  padding: '0 4px',
-                                }}>
-                                  상영 일정<br />없음
-                                </span>
-                              </div>
+                              <div style={{
+                                position: 'absolute', inset: 0,
+                                borderRadius: 'var(--comp-poster-sheet-radius)',
+                                background: 'rgba(10, 8, 6, 0.45)',
+                                pointerEvents: 'none',
+                              }} />
                             )}
                           </div>
                           <div style={{
@@ -1283,6 +1296,7 @@ export function TheaterSheet({
                             WebkitLineClamp: 2,
                             WebkitBoxOrient: 'vertical',
                             opacity: unavailable ? 0.4 : Math.max(0, 1 - posterProgress * 2.5),
+                            textDecoration: unavailable ? 'line-through' : 'none',
                           }}>
                             {movie.title}
                           </div>
@@ -1480,6 +1494,51 @@ export function TheaterSheet({
               </div>
             )}
 
+            {/* 이 날 상영 필터 체크박스 */}
+            <label style={{
+              display: 'flex', alignItems: 'center', gap: 7,
+              padding: '6px 16px',
+              cursor: 'pointer', fontSize: 11, userSelect: 'none',
+              color: showTodayFirst ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
+              fontWeight: showTodayFirst ? 600 : 400,
+            }}>
+              <input type="checkbox" checked={showTodayFirst} onChange={e => setShowTodayFirst(e.target.checked)}
+                style={{ width: 13, height: 13, cursor: 'pointer', accentColor: 'var(--color-primary-base)', flexShrink: 0 }} />
+              이 날 상영하는 영화만 보기
+            </label>
+
+            <div style={{ position: 'relative' }}>
+              {/* PC 패널 전용 포스터 좌우 스크롤 버튼 */}
+              {panelMode && (() => {
+                const scrollBy = (dir: 1 | -1) => {
+                  const el = posterScrollRef.current
+                  if (!el) return
+                  const posterW = 88 + 12  // 포스터 width + gap
+                  el.scrollBy({ left: dir * posterW * 3, behavior: 'smooth' })
+                }
+                const btnStyle: React.CSSProperties = {
+                  position: 'absolute', top: '50%', transform: 'translateY(-50%)',
+                  width: 32, height: 32, borderRadius: '50%', zIndex: 2,
+                  border: 'none', cursor: 'pointer',
+                  backgroundColor: 'color-mix(in srgb, var(--color-surface-card) 55%, transparent)',
+                  backdropFilter: 'blur(8px)',
+                  color: 'var(--color-text-body)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: '0 1px 6px rgba(0,0,0,0.10)',
+                  minHeight: 'auto',
+                }
+                return (
+                  <>
+                    <button style={{ ...btnStyle, left: 6 }} onClick={() => scrollBy(-1)}>
+                      <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                    </button>
+                    <button style={{ ...btnStyle, right: 6 }} onClick={() => scrollBy(1)}>
+                      <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                    </button>
+                  </>
+                )
+              })()}
+
             <div
               ref={posterScrollRef}
               style={{
@@ -1517,7 +1576,7 @@ export function TheaterSheet({
                     )
                   : <>
                       {/* 조건 일치 영화 */}
-                      {filteredMovieEntries.map((entry) => {
+                      {sortedFilteredEntries.map((entry) => {
                         const { movie } = entry
                         const unavailable = !entry.availableDates.has(selectedIsoDate)
                         const soldout = !unavailable && soldoutMovieIds.has(movie.id)
@@ -1564,6 +1623,7 @@ export function TheaterSheet({
                                 lineHeight: 1.35, overflow: 'hidden',
                                 display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
                                 opacity: unavailable ? 0.4 : 1,
+                                textDecoration: (showTodayFirst && unavailable) ? 'line-through' : 'none',
                               }}>{movie.title}</div>
                               {movie.director && movie.director.length > 0 && (
                                 <div style={{
@@ -1624,6 +1684,7 @@ export function TheaterSheet({
                     </>
               }
             </div>
+            </div>{/* position:relative 래퍼 닫기 */}
           </div>
             )
           })()}
@@ -1662,9 +1723,18 @@ export function TheaterSheet({
                       {movie.title}
                     </div>
                     {movie.director && movie.director.length > 0 && (
-                      <div style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>
-                        {movie.director[0]}
-                      </div>
+                      onDirectorOpen ? (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onDirectorOpen(movie.director[0]) }}
+                          style={{ fontSize: 12, color: 'var(--color-primary-base)', fontWeight: 500, background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', textDecoration: 'underline' }}
+                        >
+                          {movie.director[0]}
+                        </button>
+                      ) : (
+                        <div style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>
+                          {movie.director[0]}
+                        </div>
+                      )
                     )}
                     {movie.runtimeMinutes && (
                       <div style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>
@@ -1691,7 +1761,7 @@ export function TheaterSheet({
                 {/* 액션 버튼 */}
                 <div style={{ borderTop: '1px solid var(--color-border)', display: 'flex' }}>
                   <button
-                    onClick={() => router.push(`/movie/${movie.id}?theater=${theater.id}`)}
+                    onClick={() => onMovieDetailOpen ? onMovieDetailOpen(movie.id) : router.push(`/movie/${movie.id}?theater=${theater.id}`)}
                     style={{
                       flex: 1, padding: '10px 0',
                       fontSize: 12, fontWeight: 600,

@@ -135,6 +135,7 @@
   /* 포스터 썸네일 */
   --comp-poster-radius:        var(--radius-md);   /* 6px */
   --comp-poster-sheet-radius:  var(--radius-lg);   /* 8px */
+  --comp-poster-border:        rgba(0, 0, 0, 0.10);
 
   /* 지도 핀 */
   --comp-pin-dot-size:      22px;
@@ -184,6 +185,7 @@
 
 /* ─── Dark Mode ──────────────────────────────────────────────────── */
 [data-theme="dark"] {
+  --comp-poster-border: rgba(255, 255, 255, 0.10);
 
   /* ── Surface ── */
   --color-surface-bg:     #0E0D0B;
