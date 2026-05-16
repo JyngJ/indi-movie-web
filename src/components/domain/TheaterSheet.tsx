@@ -474,7 +474,8 @@ export function TheaterSheet({
     const el = posterScrollRef.current
     if (!el) return
 
-    let startY = 0
+    // null = 아직 미결정, 'h' = 가로 고정, 'v' = 세로 고정
+    let dirLock: 'h' | 'v' | null = null
     let momentumId = 0
     const velBuf: Array<{ t: number; x: number }> = []
 
@@ -482,12 +483,14 @@ export function TheaterSheet({
       if (momentumId) { cancelAnimationFrame(momentumId); momentumId = 0 }
     }
 
+    let startY = 0
     const onDown = (e: MouseEvent | TouchEvent) => {
       cancelMomentum()
       const x = 'touches' in e ? e.touches[0].pageX : e.pageX
       startY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY
       posterDrag.current = { active: false, startX: x, scrollLeft: el.scrollLeft }
       posterTouching.current = true
+      dirLock = null
       el.style.cursor = 'grabbing'
       velBuf.length = 0
     }
@@ -496,19 +499,24 @@ export function TheaterSheet({
       const x = 'touches' in e ? e.touches[0].pageX : e.pageX
       const y = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY
       const dx = Math.abs(x - posterDrag.current.startX)
-      const dy = y - startY
+      const dy = Math.abs(y - startY)
 
-      if (!posterDrag.current.active) {
-        if (dx < 4 && Math.abs(dy) < 4) return
-        // 수직 이동이 수평보다 1.5배 이상 크고 10px 이상이어야 시트 드래그로 전환
-        if (Math.abs(dy) > dx * 1.5 && Math.abs(dy) > 10) {
-          posterTouching.current = false
-          return
-        }
-        posterDrag.current.active = true
+      // 방향 미결정: 8px 이상 움직이면 방향 고정. 그 전까진 버블링 차단해서 시트 collapse 방지
+      if (dirLock === null) {
+        if (dx < 8 && dy < 8) { e.stopPropagation(); return }
+        dirLock = dx >= dy ? 'h' : 'v'
       }
 
+      if (dirLock === 'v') {
+        // 세로 확정 → 포스터 포기, 이벤트 올려보내서 시트/스크롤이 처리하게
+        posterTouching.current = false
+        return
+      }
+
+      // 가로 확정 → 시트 핸들러까지 버블링 차단
+      posterDrag.current.active = true
       e.preventDefault()
+      e.stopPropagation()
       el.scrollLeft = posterDrag.current.scrollLeft - (x - posterDrag.current.startX)
 
       // 속도 계산용 버퍼
@@ -519,6 +527,7 @@ export function TheaterSheet({
       const wasActive = posterDrag.current.active
       posterDrag.current.active = false
       posterTouching.current = false
+      dirLock = null
       el.style.cursor = 'grab'
 
       if (!wasActive) { velBuf.length = 0; return }

@@ -1570,7 +1570,7 @@ export default function MapView() {
     setSheetExiting(false)
     setSelectedId(theater.id)
     setDisplayedId(theater.id)
-    setSelectedMovieId('')
+    setSelectedMovieId(movieFilter?.id ?? '')
     setSheetExpanded(isDesktopLayout)
     const currentZoom = mapRef.current?.getZoom() ?? 15
     mapRef.current?.flyTo(
@@ -1578,7 +1578,7 @@ export default function MapView() {
       Math.max(currentZoom, 15),
       { duration: 0.75 },
     )
-  }, [closeSearch, isDesktopLayout, searchQuery])
+  }, [closeSearch, isDesktopLayout, movieFilter, searchQuery])
 
   useEffect(() => {
     if (isDesktopLayout && selectedTheater) setSheetExpanded(true)
@@ -1623,7 +1623,7 @@ export default function MapView() {
       setSheetExiting(false)
       setSelectedId(theaterId)
       setDisplayedId(theaterId)
-      setSelectedMovieId('')
+      setSelectedMovieId(movieFilter?.id ?? '')
       setSheetExpanded(isDesktopLayout)
       const currentZoom = mapRef.current?.getZoom() ?? 15
       const theater = theaters.find((t) => t.id === theaterId)
@@ -1635,7 +1635,7 @@ export default function MapView() {
         )
       }
     }
-  }, [selectedId, closeSheet, isDesktopLayout, theaters])
+  }, [selectedId, closeSheet, isDesktopLayout, movieFilter, theaters])
 
   // FAB 버튼 bottom: collapsed = COLLAPSED_H(300) + 여유 16 = 316
   // expanded / 시트 없음 = safe area 위 32px
@@ -2086,7 +2086,7 @@ export default function MapView() {
       {theatersLoading && (
         <div style={{
           position: 'absolute',
-          top: 'max(72px, calc(env(safe-area-inset-top) + 56px))',
+          bottom: 'max(100px, calc(env(safe-area-inset-bottom) + 80px))',
           left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 1100,
