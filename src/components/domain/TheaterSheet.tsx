@@ -258,7 +258,7 @@ export function TheaterSheet({
   const shownExpanded = panelMode || expanded
 
   /* ── Sheet filter state ─────────────────────────────────────── */
-  const [showTodayFirst, setShowTodayFirst] = useState(false)
+  // const [showTodayFirst, setShowTodayFirst] = useState(false) // TODO: 이 날 상영 필터 — UX 재검토 필요 (todo.md 참고)
   const [sheetFilters, setSheetFilters] = useState<SheetFilterState>({ genres: [], nations: [], bookable: false })
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
   const [pendingFilters, setPendingFilters] = useState<SheetFilterState>({ genres: [], nations: [], bookable: false })
@@ -747,20 +747,22 @@ export function TheaterSheet({
     })
   }, [allMovieEntries, sheetFilters, bookableMovieIds])
 
-  /* ── 이 날 상영 영화 우선 정렬 ── */
-  const sortedAllEntries = useMemo(() => {
-    if (!showTodayFirst) return allMovieEntries
-    const playing = allMovieEntries.filter(e => e.availableDates.has(selectedIsoDate))
-    const notPlaying = allMovieEntries.filter(e => !e.availableDates.has(selectedIsoDate))
-    return [...playing, ...notPlaying]
-  }, [allMovieEntries, selectedIsoDate, showTodayFirst])
+  /* ── 이 날 상영 영화 우선 정렬 (비활성화 — todo.md 참고) ── */
+  // const sortedAllEntries = useMemo(() => {
+  //   if (!showTodayFirst) return allMovieEntries
+  //   const playing = allMovieEntries.filter(e => e.availableDates.has(selectedIsoDate))
+  //   const notPlaying = allMovieEntries.filter(e => !e.availableDates.has(selectedIsoDate))
+  //   return [...playing, ...notPlaying]
+  // }, [allMovieEntries, selectedIsoDate, showTodayFirst])
+  const sortedAllEntries = allMovieEntries
 
-  const sortedFilteredEntries = useMemo(() => {
-    if (!showTodayFirst) return filteredMovieEntries
-    const playing = filteredMovieEntries.filter(e => e.availableDates.has(selectedIsoDate))
-    const notPlaying = filteredMovieEntries.filter(e => !e.availableDates.has(selectedIsoDate))
-    return [...playing, ...notPlaying]
-  }, [filteredMovieEntries, selectedIsoDate, showTodayFirst])
+  // const sortedFilteredEntries = useMemo(() => {
+  //   if (!showTodayFirst) return filteredMovieEntries
+  //   const playing = filteredMovieEntries.filter(e => e.availableDates.has(selectedIsoDate))
+  //   const notPlaying = filteredMovieEntries.filter(e => !e.availableDates.has(selectedIsoDate))
+  //   return [...playing, ...notPlaying]
+  // }, [filteredMovieEntries, selectedIsoDate, showTodayFirst])
+  const sortedFilteredEntries = filteredMovieEntries
 
   /* ── 펼칠 때 오늘 상영 없으면 가장 빠른 날로 자동 이동 ── */
   useEffect(() => {
@@ -1176,8 +1178,8 @@ export function TheaterSheet({
         maxHeight: 228 - 138 * posterProgress,
         overflow: 'hidden',
       }}>
-        {/* 이 날 상영 필터 체크박스 */}
-        <label style={{
+        {/* 이 날 상영 필터 체크박스 — 비활성화 (todo.md 참고) */}
+        {/* <label style={{
           display: 'flex', alignItems: 'center', gap: 7,
           padding: '6px 20px 0',
           cursor: 'pointer', fontSize: 11, userSelect: 'none',
@@ -1187,7 +1189,7 @@ export function TheaterSheet({
           <input type="checkbox" checked={showTodayFirst} onChange={e => setShowTodayFirst(e.target.checked)}
             style={{ width: 13, height: 13, cursor: 'pointer', accentColor: 'var(--color-primary-base)', flexShrink: 0 }} />
           이 날 상영하는 영화만 보기
-        </label>
+        </label> */}
         <div
           ref={posterScrollRef}
           style={{
@@ -1231,7 +1233,7 @@ export function TheaterSheet({
               : (() => {
                   return sortedAllEntries.map((entry) => {
                     const { movie } = entry
-                    const unavailable = showTodayFirst && !entry.availableDates.has(selectedIsoDate)
+                    const unavailable = false // showTodayFirst && !entry.availableDates.has(selectedIsoDate)
                     const soldout = !unavailable && soldoutMovieIds.has(movie.id)
 
                     return (
@@ -1498,8 +1500,8 @@ export function TheaterSheet({
               </div>
             )}
 
-            {/* 이 날 상영 필터 체크박스 */}
-            <label style={{
+            {/* 이 날 상영 필터 체크박스 — 비활성화 (todo.md 참고) */}
+            {/* <label style={{
               display: 'flex', alignItems: 'center', gap: 7,
               padding: '6px 16px',
               cursor: 'pointer', fontSize: 11, userSelect: 'none',
@@ -1509,7 +1511,7 @@ export function TheaterSheet({
               <input type="checkbox" checked={showTodayFirst} onChange={e => setShowTodayFirst(e.target.checked)}
                 style={{ width: 13, height: 13, cursor: 'pointer', accentColor: 'var(--color-primary-base)', flexShrink: 0 }} />
               이 날 상영하는 영화만 보기
-            </label>
+            </label> */}
 
             <div style={{ position: 'relative' }}>
               {/* PC 패널 전용 포스터 좌우 스크롤 버튼 */}
@@ -1639,7 +1641,7 @@ export function TheaterSheet({
                                 lineHeight: 1.35, overflow: 'hidden',
                                 display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
                                 opacity: unavailable ? 0.4 : 1,
-                                textDecoration: (showTodayFirst && unavailable) ? 'line-through' : 'none',
+                                textDecoration: 'none', // (showTodayFirst && unavailable) ? 'line-through' : 'none',
                               }}>{movie.title}</div>
                               {movie.director && movie.director.length > 0 && (
                                 <div style={{
