@@ -200,7 +200,8 @@ function buildDays(count = 7, availableDates?: Set<string>): Day[] {
       : 'weekday'
 
     // availableDates가 주어지면 없는 날짜는 disabled
-    const isoDate = d.toISOString().slice(0, 10)   // 'YYYY-MM-DD'
+    // toISOString()은 UTC 기준 — 한국 자정(00:00~09:00 KST)에 하루 밀림 → 로컬 날짜로 계산
+    const isoDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     const disabled = availableDates ? !availableDates.has(isoDate) : false
 
     return { dow, date, isoDate, type, disabled }
@@ -300,7 +301,10 @@ export function TheaterSheet({
   }, [shownExpanded])
 
   /* ── 날짜 선택 상태 (ISO date 기준) ── */
-  const todayIso = useMemo(() => new Date().toISOString().slice(0, 10), [])
+  const todayIso = useMemo(() => {
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  }, [])
   const [selectedIsoDate, setSelectedIsoDate] = useState(todayIso)
 
   /* ── Supabase 상영 데이터 ── */
