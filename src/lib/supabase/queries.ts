@@ -284,7 +284,7 @@ export function useMapShowtimes(startDate: string, endDate: string) {
         return {
           id: r.id,
           theaterId: r.theater_id,
-          movieId: r.movie_id,
+          movieId: String(r.movie_id),
           showDate: r.show_date,
           showTime: r.show_time,
           seatAvailable: Number(r.seat_available ?? 0),

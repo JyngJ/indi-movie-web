@@ -15,7 +15,8 @@ interface KmdbMovieItem {
   title?: string
   titleEng?: string
   titleOrg?: string
-  directorNm?: string
+  // directors는 중첩 객체: directors.director[].directorNm
+  directors?: { director?: Array<{ directorNm?: string; directorEnNm?: string; directorId?: string }> }
   nation?: string
   prodYear?: string
   plot?: string
@@ -142,7 +143,7 @@ function movieFromItem(item: KmdbMovieItem): AdminExternalMovie {
     year: parseYear(cleanText(item.prodYear), releaseDate),
     openDate: releaseDate,
     genre: splitKmdbList(item.genre),
-    director: splitKmdbList(item.directorNm),
+    director: (item.directors?.director ?? []).map((d) => cleanText(d.directorNm)).filter(Boolean),
     nation: cleanText(item.nation) || undefined,
     posterUrl,
     stillUrl,
