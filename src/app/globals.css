@@ -59,11 +59,17 @@ img {
   height: auto;
 }
 
-/* 데스크톱에서 모바일 뷰 유지 */
+/* 모바일에서는 앱 폭을 유지하고, 데스크톱에서는 화면 전체를 활용 */
 .mobile-container {
   width: 100%;
   max-width: var(--max-width-mobile);
   margin: 0 auto;
+}
+
+@media (min-width: 1024px) {
+  .mobile-container {
+    max-width: none;
+  }
 }
 
 /* 가로 스크롤 영역 스크롤바 숨김 */
@@ -72,6 +78,31 @@ img {
 }
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+/* PC 패널용 테마 스크롤바 */
+.themed-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-text-caption) 42%, transparent) transparent;
+}
+
+.themed-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.themed-scrollbar::-webkit-scrollbar-track {
+  background: color-mix(in srgb, var(--color-surface-bg) 70%, transparent);
+}
+
+.themed-scrollbar::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-text-caption) 46%, transparent);
+  border: 3px solid var(--color-surface-bg);
+  border-radius: 999px;
+}
+
+.themed-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--color-text-caption) 62%, transparent);
 }
 
 /* 상세 페이지 슬라이드 인 (오른쪽에서) */

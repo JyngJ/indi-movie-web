@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
+import type { MouseEvent as ReactMouseEvent, WheelEvent as ReactWheelEvent } from 'react'
 import { GENRES } from '@/lib/genres'
 import { withFlag } from '@/lib/nations'
 
@@ -588,9 +589,10 @@ export interface FilterBarProps {
   nationOptions?: string[]
   movieFilter?: { id: string; title: string } | null
   onMovieFilterClear?: () => void
+  desktop?: boolean
 }
 
-export function FilterBar({ onChange, nationOptions = EMPTY_NATION_OPTIONS, movieFilter, onMovieFilterClear }: FilterBarProps) {
+export function FilterBar({ onChange, nationOptions = EMPTY_NATION_OPTIONS, movieFilter, onMovieFilterClear, desktop = false }: FilterBarProps) {
   const [dateId, setDateId] = useState<DateId>('this-week')
   const [customStart, setCustomStart] = useState<Date | null>(null)
   const [customEnd, setCustomEnd] = useState<Date | null>(null)
@@ -612,6 +614,8 @@ export function FilterBar({ onChange, nationOptions = EMPTY_NATION_OPTIONS, movi
   const draftGenresRef = useRef(draftGenres)
   const draftNationsRef = useRef(draftNations)
   const scrollFrameRef = useRef<number | null>(null)
+  const chipDragRef = useRef({ active: false, moved: false, startX: 0, scrollLeft: 0 })
+  const [chipRowDragging, setChipRowDragging] = useState(false)
 
   useEffect(() => { openPanelRef.current = openPanel }, [openPanel])
   useEffect(() => { draftGenresRef.current = draftGenres }, [draftGenres])
@@ -683,6 +687,51 @@ export function FilterBar({ onChange, nationOptions = EMPTY_NATION_OPTIONS, movi
       syncOpenDropdownPosition()
     })
   }, [syncOpenDropdownPosition])
+
+  const handleChipRowMouseDown = useCallback((e: ReactMouseEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return
+    const row = chipRowRef.current
+    if (!row || row.scrollWidth <= row.clientWidth) return
+    chipDragRef.current = {
+      active: true,
+      moved: false,
+      startX: e.clientX,
+      scrollLeft: row.scrollLeft,
+    }
+    setChipRowDragging(true)
+  }, [])
+
+  const handleChipRowMouseMove = useCallback((e: ReactMouseEvent<HTMLDivElement>) => {
+    const row = chipRowRef.current
+    const drag = chipDragRef.current
+    if (!row || !drag.active) return
+    const dx = e.clientX - drag.startX
+    if (Math.abs(dx) > 4) drag.moved = true
+    if (drag.moved) {
+      row.scrollLeft = drag.scrollLeft - dx
+      e.preventDefault()
+    }
+  }, [])
+
+  const stopChipRowDrag = useCallback(() => {
+    chipDragRef.current.active = false
+    setChipRowDragging(false)
+  }, [])
+
+  const handleChipRowClickCapture = useCallback((e: ReactMouseEvent<HTMLDivElement>) => {
+    if (!chipDragRef.current.moved) return
+    chipDragRef.current.moved = false
+    e.preventDefault()
+    e.stopPropagation()
+  }, [])
+
+  const handleChipRowWheel = useCallback((e: ReactWheelEvent<HTMLDivElement>) => {
+    const row = chipRowRef.current
+    if (!row || row.scrollWidth <= row.clientWidth) return
+    if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return
+    row.scrollLeft += e.deltaY
+    e.preventDefault()
+  }, [])
 
   useEffect(() => {
     return () => {
@@ -768,18 +817,25 @@ export function FilterBar({ onChange, nationOptions = EMPTY_NATION_OPTIONS, movi
         ref={chipRowRef}
         className="no-scrollbar"
         onScroll={handleChipRowScroll}
+        onMouseDown={handleChipRowMouseDown}
+        onMouseMove={handleChipRowMouseMove}
+        onMouseUp={stopChipRowDrag}
+        onMouseLeave={stopChipRowDrag}
+        onClickCapture={handleChipRowClickCapture}
+        onWheel={handleChipRowWheel}
         style={{
           display: 'flex', gap: 8,
           width: '100%',
           maxWidth: '100%',
           boxSizing: 'border-box',
-          padding: '8px 16px 10px',
+          padding: desktop ? '0 2px 2px 0' : '8px 16px 10px',
           overflowX: 'auto',
           overflowY: 'hidden',
           overscrollBehaviorX: 'contain',
           touchAction: 'pan-x',
           WebkitOverflowScrolling: 'touch',
           background: 'transparent',
+          cursor: chipRowDragging ? 'grabbing' : 'grab',
         }}
       >
         {movieFilter && (

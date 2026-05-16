@@ -219,6 +219,7 @@ interface TheaterSheetProps {
   theater: Theater
   expanded: boolean
   exiting?: boolean           // true이면 아래로 퇴장 애니메이션
+  presentation?: 'sheet' | 'panel'
   selectedMovieId: string
   onMovieSelect: (id: string) => void
   onExpand: () => void
@@ -235,6 +236,7 @@ export function TheaterSheet({
   theater,
   expanded,
   exiting = false,
+  presentation = 'sheet',
   selectedMovieId,
   onMovieSelect,
   onExpand,
@@ -247,6 +249,8 @@ export function TheaterSheet({
 }: TheaterSheetProps) {
 
   const router = useRouter()
+  const panelMode = presentation === 'panel'
+  const shownExpanded = panelMode || expanded
 
   /* ── Sheet filter state ─────────────────────────────────────── */
   const [sheetFilters, setSheetFilters] = useState<SheetFilterState>({ genres: [], nations: [], bookable: false })
@@ -288,7 +292,7 @@ export function TheaterSheet({
   // 시트가 접힐 때 포스터 복원
   useEffect(() => {
     void posterProgress
-  }, [expanded])
+  }, [shownExpanded])
 
   /* ── 날짜 선택 상태 (ISO date 기준) ── */
   const todayIso = useMemo(() => new Date().toISOString().slice(0, 10), [])
@@ -346,7 +350,7 @@ export function TheaterSheet({
 
   /* 펼칠 때 지도 필터 상속, 접을 때 초기화 */
   useEffect(() => {
-    if (expanded) {
+    if (shownExpanded) {
       setSheetFilters({ genres: mapFilters?.genres ?? [], nations: mapFilters?.nations ?? [], bookable: false })
     } else {
       setSheetFilters({ genres: [], nations: [], bookable: false })
@@ -354,7 +358,7 @@ export function TheaterSheet({
     }
     // mapFilters는 open 시점에만 읽음
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [expanded])
+  }, [shownExpanded])
 
   /* ── 드래그 상태 ── */
   const containerRef    = useRef<HTMLDivElement>(null)
@@ -408,7 +412,7 @@ export function TheaterSheet({
   /* 극장 이름이 nav 위로 스크롤되면 nav에 이름 표시 */
   useEffect(() => {
     const scrollEl = scrollAreaRef.current
-    if (!scrollEl || !expanded) { setNameInNav(false); return }
+    if (!scrollEl || !shownExpanded) { setNameInNav(false); return }
     const onScroll = () => {
       const nameEl = theaterNameRef.current
       if (!nameEl) return
@@ -417,7 +421,7 @@ export function TheaterSheet({
     scrollEl.addEventListener('scroll', onScroll, { passive: true })
     setNameInNav(false)
     return () => scrollEl.removeEventListener('scroll', onScroll)
-  }, [expanded])
+  }, [shownExpanded])
 
   /* 상영시간표 섹션 뷰포트 진입/이탈 감지 → 예매 바 표시 제어 */
   useEffect(() => {
@@ -431,10 +435,11 @@ export function TheaterSheet({
     )
     observer.observe(target)
     return () => observer.disconnect()
-  }, [expanded])
+  }, [shownExpanded])
 
   /* 확장 시 스크롤 최상단에서 아래로 드래그 → 시트 접기 */
   useEffect(() => {
+    if (panelMode) return
     const el = scrollAreaRef.current
     if (!el) return
     let startY = 0
@@ -462,7 +467,7 @@ export function TheaterSheet({
       el.removeEventListener('touchstart', onDown)
       el.removeEventListener('touchmove',  onMove)
     }
-  }, [onCollapse, expanded])   // expanded 바뀔 때 ref 재등록
+  }, [onCollapse, panelMode, shownExpanded])   // expanded 전환 시 ref가 새 DOM을 가리키므로 재등록 필요
 
   /* 포스터 가로 드래그 + momentum — native 이벤트 (preventDefault 필요) */
   useEffect(() => {
@@ -567,7 +572,7 @@ export function TheaterSheet({
       el.removeEventListener('wheel',       onWheel)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [expanded])  // expanded 전환 시 ref가 새 DOM을 가리키므로 재등록 필요
+  }, [shownExpanded])  // expanded 전환 시 ref가 새 DOM을 가리키므로 재등록 필요
 
   /* ── 수직 드래그 (핸들) ─────────────────────────────────────────── */
   // containerRef.clientHeight는 마운트 전 0이라 잘못된 값이 나옴.
@@ -576,7 +581,7 @@ export function TheaterSheet({
     return Math.max(0, viewportHeight - COLLAPSED_H)
   }, [viewportHeight])
 
-  const baseTranslate = expanded ? 0 : getMaxOffset()
+  const baseTranslate = shownExpanded ? 0 : getMaxOffset()
 
   const effectiveTranslate = Math.max(
     0,
@@ -584,16 +589,19 @@ export function TheaterSheet({
   )
 
   // 진입: enterDone 전엔 화면 아래 / 퇴장: exiting이면 화면 아래
-  const finalTranslate = (!enterDone.current || exiting)
+  const finalTranslate = panelMode
+    ? 0
+    : (!enterDone.current || exiting)
     ? viewportHeight
     : effectiveTranslate
 
   const handlePointerDown = (e: React.PointerEvent) => {
+    if (panelMode) return
     // 버튼, 링크, 입력 요소 클릭은 드래그로 처리하지 않음
     if ((e.target as Element).closest('button, a, input, select, textarea')) return
     // expanded 모드: 스크롤 영역 내부 터치는 네이티브 스크롤에 맡김
     // collapsed 모드: 어디서든 드래그 가능
-    if (expanded) {
+    if (shownExpanded) {
       const scrollEl = scrollAreaRef.current
       if (scrollEl?.contains(e.target as Element)) return
     }
@@ -611,7 +619,7 @@ export function TheaterSheet({
     if (posterTouching.current) return
     const delta    = e.clientY - dragStartY.current
     // collapsed 상태: 아래로 더 내려가는 것 허용 (닫기 제스처)
-    const maxTrans = expanded ? getMaxOffset() : getMaxOffset() + 120
+    const maxTrans = shownExpanded ? getMaxOffset() : getMaxOffset() + 120
     const newTrans = Math.max(0, Math.min(maxTrans, dragStartOffset.current + delta))
     setDragOffset(newTrans - baseTranslate)
 
@@ -654,7 +662,7 @@ export function TheaterSheet({
     const isFlickDown = velocityPxPerSec >  VELOCITY_THRESHOLD
     const posRatio    = effectiveTranslate / max   // 0 = 완전 펼침, 1 = 완전 접힘
 
-    if (expanded) {
+    if (shownExpanded) {
       if (isFlickDown) {
         // 빠른 아래 플릭 → 바로 닫기
         onClose()
@@ -723,19 +731,19 @@ export function TheaterSheet({
 
   /* ── 펼칠 때 오늘 상영 없으면 가장 빠른 날로 자동 이동 ── */
   useEffect(() => {
-    if (!expanded || allMoviesLoading) return
+    if (!shownExpanded || allMoviesLoading) return
     if (selectedIsoDate !== todayIso) return
     if (theaterAvailableDates.has(todayIso)) return
     const earliest = Array.from(theaterAvailableDates).sort()[0]
     if (earliest) setSelectedIsoDate(earliest)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [expanded, allMoviesLoading, theaterAvailableDates])
+  }, [shownExpanded, allMoviesLoading, theaterAvailableDates])
 
   /* ── 선택된 상영 회차 ── */
   const [selectedShowtimeId, setSelectedShowtimeId] = useState<string | null>(null)
 
   useEffect(() => { setSelectedShowtimeId(null) }, [selectedMovieId])
-  useEffect(() => { if (!expanded) setSelectedShowtimeId(null) }, [expanded])
+  useEffect(() => { if (!shownExpanded) setSelectedShowtimeId(null) }, [shownExpanded])
 
   /* ── 상영시간 필터링 ─────────────────────────────────────────── */
   const filteredShowtimes = showtimes.filter((s) => s.movieId === selectedMovieId)
@@ -873,39 +881,54 @@ export function TheaterSheet({
       onPointerCancel={(e) => handlePointerUp(e)}
       style={{
         position: 'absolute',
-        left: 0, right: 0, bottom: 0,
-        height: '100dvh',
-        transform: `translateY(${finalTranslate}px)`,
+        left: panelMode ? 'auto' : 0,
+        right: panelMode ? 16 : 0,
+        top: panelMode ? 16 : 'auto',
+        bottom: panelMode ? 16 : 0,
+        width: panelMode ? 440 : 'auto',
+        maxWidth: panelMode ? 'calc(100vw - 32px)' : undefined,
+        height: panelMode ? 'auto' : '100dvh',
+        transform: panelMode
+          ? (exiting ? 'translateX(calc(100% + 24px))' : 'translateX(0)')
+          : `translateY(${finalTranslate}px)`,
+        opacity: panelMode && exiting ? 0 : 1,
         // 드래그 중엔 transition 없음, 진입/퇴장/snap엔 항상 transition
-        transition: (dragging && enterDone.current && !exiting)
+        transition: panelMode
+          ? 'transform 0.24s ease, opacity 0.2s ease'
+          : (dragging && enterDone.current && !exiting)
           ? 'none'
           : 'transform 0.38s cubic-bezier(0.32, 0.72, 0, 1)',
         zIndex: 1100,
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: 'var(--color-surface-raised)',
-        borderRadius: effectiveTranslate === 0
+        backgroundColor: panelMode ? 'var(--color-surface-card)' : 'var(--color-surface-raised)',
+        border: panelMode ? '1px solid var(--color-border)' : undefined,
+        borderRadius: panelMode
+          ? 18
+          : effectiveTranslate === 0
           ? '0'
           : 'var(--comp-sheet-radius)',
-        boxShadow: 'var(--shadow-sheet)',
+        boxShadow: panelMode
+          ? '0 22px 70px rgba(20, 15, 10, 0.22), 0 3px 14px rgba(20, 15, 10, 0.10)'
+          : 'var(--shadow-sheet)',
         overflow: 'hidden',
         // collapsed 모드: 컨테이너 전체가 드래그 대상이므로 native scroll 차단
-        touchAction: expanded ? 'auto' : 'none',
-        cursor: dragging ? 'grabbing' : (expanded ? 'auto' : 'grab'),
+        touchAction: panelMode || shownExpanded ? 'auto' : 'none',
+        cursor: panelMode ? 'auto' : dragging ? 'grabbing' : (shownExpanded ? 'auto' : 'grab'),
         userSelect: 'none',
       }}
     >
       {/* ── 드래그 핸들 바 — expanded이면 숨김 ── */}
-      <div
+      {!panelMode && <div
         style={{
-          padding: expanded ? '4px 0' : '8px 0 6px',
+          padding: shownExpanded ? '4px 0' : '8px 0 6px',
           display: 'flex',
           justifyContent: 'center',
           flexShrink: 0,
           pointerEvents: 'none',   // 컨테이너가 드래그 처리
         }}
       >
-        {!expanded && (
+        {!shownExpanded && (
           <div style={{
             width: 'var(--comp-sheet-handle-width)',
             height: 'var(--comp-sheet-handle-height)',
@@ -913,10 +936,10 @@ export function TheaterSheet({
             backgroundColor: 'var(--color-border)',
           }} />
         )}
-      </div>
+      </div>}
 
       {/* ── 헤더 — collapsed: 이름+주소+버튼 / expanded: 메뉴바 ── */}
-      {!expanded ? (
+      {!shownExpanded ? (
         /* Collapsed 헤더 */
         <div style={{
           padding: '0 20px 12px',
@@ -992,6 +1015,88 @@ export function TheaterSheet({
             </button>
           </div>
         </div>
+      ) : panelMode ? (
+        /* PC 패널 헤더 — 극장 정보 고정 */
+        <div style={{
+          flexShrink: 0,
+          padding: '18px 18px 14px',
+          borderBottom: '1px solid var(--color-border)',
+          backgroundColor: 'var(--color-surface-card)',
+          boxShadow: '0 1px 0 rgba(0,0,0,0.02)',
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 12,
+          }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <h2 style={{
+                  margin: 0,
+                  minWidth: 0,
+                  fontSize: 22,
+                  fontWeight: 800,
+                  lineHeight: 1.16,
+                  color: 'var(--color-text-primary)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {theater.name}
+                </h2>
+                {theater.website && (
+                  <button style={inlineIconBtn} onClick={openWebsite} aria-label="사이트 보기">
+                    <IconExternal size={11} />
+                  </button>
+                )}
+              </div>
+              <div style={{
+                display: 'flex',
+                alignItems: 'baseline',
+                gap: 3,
+                marginTop: 5,
+                minWidth: 0,
+                color: 'var(--color-text-sub)',
+                fontSize: 13,
+                lineHeight: 1.35,
+              }}>
+                <span style={{
+                  minWidth: 0,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {theater.address}
+                </span>
+                <button style={inlineIconBtn} onClick={copyAddress} aria-label="주소 복사">
+                  <IconCopy size={10} />
+                </button>
+              </div>
+            </div>
+            <button style={iconBtn} onClick={onClose} aria-label="닫기">
+              <IconClose />
+            </button>
+          </div>
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 7,
+            marginTop: 14,
+          }}>
+            <button style={actionBtn} onClick={openDirections}>
+              <IconRoute size={13} />
+              길찾기
+            </button>
+            <button style={actionBtn} onClick={shareTheater}>
+              <IconShare size={13} />
+              공유
+            </button>
+            <button style={actionBtn} onClick={openInstagram}>
+              <IconInstagram size={13} />
+              인스타그램
+            </button>
+          </div>
+        </div>
       ) : (
         /* Expanded 헤더 — nav row만 고정 (극장 정보는 스크롤 안으로) */
         <div style={{
@@ -1029,7 +1134,7 @@ export function TheaterSheet({
       )}
 
       {/* ── 포스터 가로 스크롤 — collapsed 전용 ── */}
-      {!expanded && <div style={{
+      {!shownExpanded && <div style={{
         borderTop: '1px solid var(--color-border)',
         borderBottom: '1px solid var(--color-border)',
         backgroundColor: 'var(--color-surface-bg)',
@@ -1081,7 +1186,7 @@ export function TheaterSheet({
               : (() => {
                   return allMovieEntries.map((entry) => {
                     const { movie } = entry
-                    const unavailable = expanded && !entry.availableDates.has(selectedIsoDate)
+                    const unavailable = shownExpanded && !entry.availableDates.has(selectedIsoDate)
                     const soldout = !unavailable && soldoutMovieIds.has(movie.id)
 
                     return (
@@ -1100,10 +1205,10 @@ export function TheaterSheet({
                               height={132}
                               size="lg"
                               src={movie.posterUrl}
-                              selected={expanded && selectedMovieId === movie.id}
+                              selected={shownExpanded && selectedMovieId === movie.id}
                               onClick={unavailable ? undefined : () => {
                                 onMovieSelect(movie.id)
-                                if (!expanded) onExpand()
+                                if (!shownExpanded) onExpand()
                               }}
                             />
                             {/* 매진 배지 */}
@@ -1195,13 +1300,20 @@ export function TheaterSheet({
       </div>}
 
       {/* ── expanded: 극장 정보 + DateBar + 포스터 + 내용 한 스크롤 ── */}
-      {expanded && (
+      {shownExpanded && (
         <div
           ref={scrollAreaRef}
-          style={{ flex: 1, overflowY: 'scroll', WebkitOverflowScrolling: 'touch' as never, overscrollBehavior: 'none' }}
+          className={panelMode ? 'theater-panel-scroll themed-scrollbar' : undefined}
+          style={{
+            flex: 1,
+            overflowY: 'scroll',
+            WebkitOverflowScrolling: 'touch' as never,
+            overscrollBehavior: 'none',
+            backgroundColor: panelMode ? 'var(--color-surface-bg)' : undefined,
+          }}
         >
           {/* 극장 정보 — 스크롤 시 위로 밀림 */}
-          <div ref={theaterNameRef} style={{ padding: '4px 20px 14px' }}>
+          {!panelMode && <div ref={theaterNameRef} style={{ padding: '4px 20px 14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <div style={{
                 fontSize: 23, fontWeight: 700,
@@ -1237,13 +1349,14 @@ export function TheaterSheet({
                 <IconInstagram size={13} />인스타그램
               </button>
             </div>
-          </div>
+          </div>}
 
           {/* DateBar — sticky */}
           <div style={{
             position: 'sticky', top: 0, zIndex: 10,
-            backgroundColor: 'var(--color-surface-raised)',
-            borderTop: '1px solid var(--color-border)',
+            backgroundColor: panelMode ? 'var(--color-surface-card)' : 'var(--color-surface-raised)',
+            borderTop: panelMode ? 'none' : '1px solid var(--color-border)',
+            borderBottom: panelMode ? '1px solid var(--color-border)' : undefined,
           }}>
             <DateBar
               days={days}
@@ -1648,7 +1761,7 @@ export function TheaterSheet({
         </div>
       )}
       {/* ── 예매 바 — 회차 선택 시 하단에서 슬라이드 업 ── */}
-      {expanded && (() => {
+      {shownExpanded && (() => {
         const selectedSt = filteredShowtimes.find((st) => st.id === selectedShowtimeId)
         return (
           <div style={{

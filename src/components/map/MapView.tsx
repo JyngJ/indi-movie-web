@@ -17,6 +17,7 @@ import type { Movie, Station, Theater } from '@/types/api'
 import subwayLinesData from '@/data/subway-lines.json'
 import { SEOUL_GU, SEOUL_DONG } from '@/data/seoul-areas'
 import { normalizeGenre } from '@/lib/genres'
+import { useThemeStore } from '@/store/themeStore'
 
 interface SubwayLineProperties {
   line?: string
@@ -395,6 +396,19 @@ const IcoLocate = () => (
     <circle cx={12} cy={12} r={6.5} />
     <circle cx={12} cy={12} r={1.7} fill="currentColor" stroke="none" />
     <path d="M12 2.8v4M12 17.2v4M2.8 12h4M17.2 12h4" />
+  </svg>
+)
+const IcoSun = () => (
+  <svg width={18} height={18} viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round">
+    <circle cx={12} cy={12} r={4} />
+    <path d="M12 2.8v2.4M12 18.8v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.8 12h2.4M18.8 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7" />
+  </svg>
+)
+const IcoMoon = () => (
+  <svg width={18} height={18} viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20.2 14.4A7.6 7.6 0 0 1 9.6 3.8 8.7 8.7 0 1 0 20.2 14.4z" />
   </svg>
 )
 
@@ -1136,10 +1150,28 @@ function useIsDark() {
   return isDark
 }
 
+function useIsDesktopLayout() {
+  const [isDesktop, setIsDesktop] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches
+  )
+
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 1024px)')
+    const update = () => setIsDesktop(media.matches)
+    update()
+    media.addEventListener('change', update)
+    return () => media.removeEventListener('change', update)
+  }, [])
+
+  return isDesktop
+}
+
 export default function MapView() {
   const router = useRouter()
   const { coords, refetch } = useUserLocation()
   const isDark = useIsDark()
+  const isDesktopLayout = useIsDesktopLayout()
+  const { setTheme } = useThemeStore()
   const { data: theaters = [], isLoading: theatersLoading } = useTheaters()
   const { data: stations = [] } = useStations()
   const { data: movies = [] } = useMovies()
@@ -1171,6 +1203,12 @@ export default function MapView() {
   const dummyInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { setRecentSearches(loadRecentSearches()) }, [])
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('movie-app-theme')
+      if (stored === 'light' || stored === 'dark' || stored === 'system') void setTheme(stored)
+    } catch {}
+  }, [setTheme])
 
   const openSearch = useCallback(() => {
     // iOS Safari: 키보드는 반드시 클릭 핸들러 안에서 동기적으로 focus()가 불려야 열림
@@ -1509,6 +1547,10 @@ export default function MapView() {
     }
   }, [coords, refetch])
 
+  const toggleTheme = useCallback(() => {
+    void setTheme(isDark ? 'light' : 'dark')
+  }, [isDark, setTheme])
+
   // 퇴장 애니메이션 후 완전히 언마운트
   const closeSheet = useCallback(() => {
     if (exitTimerRef.current) clearTimeout(exitTimerRef.current)
@@ -1529,14 +1571,18 @@ export default function MapView() {
     setSelectedId(theater.id)
     setDisplayedId(theater.id)
     setSelectedMovieId('')
-    setSheetExpanded(false)
+    setSheetExpanded(isDesktopLayout)
     const currentZoom = mapRef.current?.getZoom() ?? 15
     mapRef.current?.flyTo(
       [theater.lat, theater.lng],
       Math.max(currentZoom, 15),
       { duration: 0.75 },
     )
-  }, [closeSearch, searchQuery])
+  }, [closeSearch, isDesktopLayout, searchQuery])
+
+  useEffect(() => {
+    if (isDesktopLayout && selectedTheater) setSheetExpanded(true)
+  }, [isDesktopLayout, selectedTheater])
 
   // 영화 상세 페이지에서 뒤로가기 시 ?theater= 파라미터로 극장 시트 복원
   const restoredTheaterRef = useRef(false)
@@ -1578,7 +1624,7 @@ export default function MapView() {
       setSelectedId(theaterId)
       setDisplayedId(theaterId)
       setSelectedMovieId('')
-      setSheetExpanded(false)
+      setSheetExpanded(isDesktopLayout)
       const currentZoom = mapRef.current?.getZoom() ?? 15
       const theater = theaters.find((t) => t.id === theaterId)
       if (theater) {
@@ -1589,11 +1635,11 @@ export default function MapView() {
         )
       }
     }
-  }, [selectedId, closeSheet])
+  }, [selectedId, closeSheet, isDesktopLayout, theaters])
 
   // FAB 버튼 bottom: collapsed = COLLAPSED_H(300) + 여유 16 = 316
   // expanded / 시트 없음 = safe area 위 32px
-  const fabBottom = selectedTheater && !sheetExpanded && !sheetExiting ? 316 : 32
+  const fabBottom = !isDesktopLayout && selectedTheater && !sheetExpanded && !sheetExiting ? 316 : 32
   const hasSearchResults = theaterResults.length > 0 || stationResults.length > 0 || movieResults.length > 0 || relatedDirectorResults.length > 0 || areaResults.length > 0
 
   const renderTheaterSearchSection = () => {
@@ -2178,32 +2224,109 @@ export default function MapView() {
       </MapContainer>
 
       {/* 검색창 + 필터 칩 */}
-      <div style={{
-        position: 'absolute',
-        top: 'max(0px, env(safe-area-inset-top))',
-        left: 0, right: 0,
-        zIndex: 1001,
-        pointerEvents: 'none',
-      }}>
-        {/* 검색창 */}
-        <div style={{ padding: '16px 16px 0', pointerEvents: 'auto' }}>
-          <div style={{ boxShadow: 'var(--shadow-sheet)', borderRadius: 'var(--comp-search-radius)' }}>
+      {isDesktopLayout ? (
+        <div style={{
+          position: 'absolute',
+          top: 24,
+          left: 24,
+          width: 440,
+          maxWidth: 'calc(100vw - 520px)',
+          minWidth: 360,
+          zIndex: 1001,
+          pointerEvents: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 14,
+          padding: 16,
+          borderRadius: 18,
+          border: '1px solid var(--color-border)',
+          backgroundColor: 'color-mix(in srgb, var(--color-surface-card) 94%, transparent)',
+          boxShadow: '0 18px 48px rgba(20, 15, 10, 0.16), 0 2px 10px rgba(20, 15, 10, 0.08)',
+          backdropFilter: 'blur(12px)',
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-start',
+          }}>
+            <div style={{ minWidth: 0 }}>
+              <div
+                aria-label="영화볼지도"
+                role="img"
+                style={{
+                  width: 112,
+                  height: 38,
+                  backgroundColor: 'var(--color-text-primary)',
+                  WebkitMaskImage: 'url(/logo.svg)',
+                  maskImage: 'url(/logo.svg)',
+                  WebkitMaskRepeat: 'no-repeat',
+                  maskRepeat: 'no-repeat',
+                  WebkitMaskPosition: 'left center',
+                  maskPosition: 'left center',
+                  WebkitMaskSize: 'contain',
+                  maskSize: 'contain',
+                }}
+              />
+              <div style={{
+                marginTop: 2,
+                fontSize: 12,
+                color: 'var(--color-text-caption)',
+                whiteSpace: 'nowrap',
+              }}>
+                서울 독립·예술영화관
+              </div>
+            </div>
+          </div>
+
+          <div style={{ boxShadow: 'var(--shadow-md)', borderRadius: 'var(--comp-search-radius)' }}>
             <SearchBarButton
               placeholder="영화, 감독, 역, 영화관 검색"
               onClick={openSearch}
             />
           </div>
+
+          <div style={{
+            paddingTop: 2,
+            borderTop: '1px solid var(--color-border)',
+            minWidth: 0,
+          }}>
+            <FilterBar
+              desktop
+              onChange={setFilters}
+              nationOptions={nationOptions}
+              movieFilter={movieFilter}
+              onMovieFilterClear={() => setMovieFilter(null)}
+            />
+          </div>
         </div>
-        {/* 필터 칩 */}
-        <div style={{ marginTop: 8, pointerEvents: 'auto' }}>
-          <FilterBar
-            onChange={setFilters}
-            nationOptions={nationOptions}
-            movieFilter={movieFilter}
-            onMovieFilterClear={() => setMovieFilter(null)}
-          />
+      ) : (
+        <div style={{
+          position: 'absolute',
+          top: 'max(0px, env(safe-area-inset-top))',
+          left: 0, right: 0,
+          zIndex: 1001,
+          pointerEvents: 'none',
+        }}>
+          {/* 검색창 */}
+          <div style={{ padding: '16px 16px 0', pointerEvents: 'auto' }}>
+            <div style={{ boxShadow: 'var(--shadow-sheet)', borderRadius: 'var(--comp-search-radius)' }}>
+              <SearchBarButton
+                placeholder="영화, 감독, 역, 영화관 검색"
+                onClick={openSearch}
+              />
+            </div>
+          </div>
+          {/* 필터 칩 */}
+          <div style={{ marginTop: 8, pointerEvents: 'auto' }}>
+            <FilterBar
+              onChange={setFilters}
+              nationOptions={nationOptions}
+              movieFilter={movieFilter}
+              onMovieFilterClear={() => setMovieFilter(null)}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       <div
         aria-hidden
@@ -2242,11 +2365,17 @@ export default function MapView() {
       {searchOpen && (
         <div style={{
           position: 'absolute',
-          inset: 0,
+          inset: isDesktopLayout ? '16px auto 16px 16px' : 0,
+          width: isDesktopLayout ? 440 : 'auto',
+          maxWidth: isDesktopLayout ? 'calc(100vw - 32px)' : undefined,
           backgroundColor: 'var(--color-surface-bg)',
           display: 'flex',
           flexDirection: 'column',
           zIndex: 2000,
+          border: isDesktopLayout ? '1px solid var(--color-border)' : undefined,
+          borderRadius: isDesktopLayout ? 20 : 0,
+          boxShadow: isDesktopLayout ? 'var(--shadow-sheet)' : undefined,
+          overflow: 'hidden',
         }}>
           {/* 검색바 헤더 */}
           <div style={{
@@ -2367,16 +2496,23 @@ export default function MapView() {
       {/* 줌 + 현위치 */}
       <div style={{
         position: 'absolute',
-        right: 16,
+        right: isDesktopLayout && selectedTheater ? 472 : 16,
         bottom: fabBottom,
         zIndex: 1000,
         display: 'flex', flexDirection: 'column', gap: 8,
-        transition: 'bottom 0.38s cubic-bezier(0.32, 0.72, 0, 1)',
+        transition: 'right 0.24s ease, bottom 0.38s cubic-bezier(0.32, 0.72, 0, 1)',
       }}>
         <FabRound onClick={() => mapRef.current?.zoomIn()}><IcoPlus /></FabRound>
         <FabRound onClick={() => mapRef.current?.zoomOut()}><IcoMinus /></FabRound>
         <div style={{ height: 8 }} />
         <FabRound onClick={handleLocate}><IcoLocate /></FabRound>
+        <FabRound
+          onClick={toggleTheme}
+          aria-label={isDark ? '밝은 테마로 전환' : '어두운 테마로 전환'}
+          title={isDark ? '밝은 테마' : '어두운 테마'}
+        >
+          {isDark ? <IcoSun /> : <IcoMoon />}
+        </FabRound>
       </div>
 
       {/* 드래그 바텀시트 — TheaterSheet가 자체적으로 Leaflet 이벤트 차단 */}
@@ -2385,6 +2521,7 @@ export default function MapView() {
           theater={selectedTheater}
           expanded={sheetExpanded}
           exiting={sheetExiting}
+          presentation={isDesktopLayout ? 'panel' : 'sheet'}
           selectedMovieId={selectedMovieId}
           onMovieSelect={setSelectedMovieId}
           onExpand={() => setSheetExpanded(true)}

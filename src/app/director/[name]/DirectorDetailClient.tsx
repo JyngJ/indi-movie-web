@@ -1,9 +1,25 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useMovies, useActiveMovieIds } from '@/lib/supabase/queries'
 import type { Movie } from '@/types/api'
+
+function useIsDesktopDetail() {
+  const [isDesktop, setIsDesktop] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches,
+  )
+
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 1024px)')
+    const update = () => setIsDesktop(media.matches)
+    update()
+    media.addEventListener('change', update)
+    return () => media.removeEventListener('change', update)
+  }, [])
+
+  return isDesktop
+}
 
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
 const IcoChevronLeft = () => (
@@ -49,23 +65,28 @@ function NavBar({ onBack, starred, onStar }: { onBack: () => void; starred?: boo
 }
 
 /* ── ProfileHero ── */
-function ProfileHero({ name }: { name: string }) {
+function ProfileHero({ name, count, desktop = false }: { name: string; count?: number; desktop?: boolean }) {
   return (
     <div style={{
-      background: 'linear-gradient(to bottom, var(--color-primary-subtle-l) 0%, var(--color-surface-bg) 100%)',
-      padding: '32px 20px 24px',
+      background: desktop
+        ? 'linear-gradient(135deg, var(--color-surface-card) 0%, var(--color-primary-subtle-l) 100%)'
+        : 'linear-gradient(to bottom, var(--color-primary-subtle-l) 0%, var(--color-surface-bg) 100%)',
+      padding: desktop ? '34px 28px' : '32px 20px 24px',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
       textAlign: 'center',
+      border: desktop ? '1px solid var(--color-border)' : undefined,
+      borderRadius: desktop ? 20 : 0,
+      boxShadow: desktop ? '0 18px 54px rgba(20, 15, 10, 0.10)' : undefined,
     }}>
       {/* 프로필 아바타 */}
       <div style={{
-        width: 96, height: 96, borderRadius: '50%',
+        width: desktop ? 128 : 96, height: desktop ? 128 : 96, borderRadius: '50%',
         backgroundColor: 'var(--color-surface-raised)',
         border: '1px solid var(--color-border)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        marginBottom: 16,
+        marginBottom: desktop ? 22 : 16,
         color: 'var(--color-text-caption)',
       }}>
         <svg width={44} height={44} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
@@ -73,9 +94,18 @@ function ProfileHero({ name }: { name: string }) {
           <circle cx="12" cy="7" r="4" />
         </svg>
       </div>
-      <h1 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 24, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+      <h1 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: desktop ? 34 : 24, fontWeight: 700, color: 'var(--color-text-primary)' }}>
         {name}
       </h1>
+      {typeof count === 'number' && (
+        <div style={{
+          marginTop: 10,
+          fontSize: 13,
+          color: 'var(--color-text-sub)',
+        }}>
+          등록 작품 {count}편
+        </div>
+      )}
     </div>
   )
 }
@@ -133,11 +163,13 @@ function FilmographyRow({
   isLast,
   isActive,
   onClick,
+  desktop = false,
 }: {
   movie: Movie
   isLast: boolean
   isActive: boolean
   onClick: () => void
+  desktop?: boolean
 }) {
   return (
     <button
@@ -146,7 +178,7 @@ function FilmographyRow({
         display: 'flex',
         alignItems: 'center',
         gap: 12,
-        padding: '14px 16px',
+        padding: desktop ? '16px 18px' : '14px 16px',
         backgroundColor: 'transparent',
         borderWidth: 0,
         borderBottomWidth: isLast ? 0 : 1,
@@ -169,7 +201,7 @@ function FilmographyRow({
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
-            maxWidth: 160,
+            maxWidth: desktop ? 360 : 160,
           }}>
             {movie.title}
           </span>
@@ -199,6 +231,7 @@ function FilmographyRow({
 /* ── 메인 ── */
 export function DirectorDetailClient({ directorName }: { directorName: string }) {
   const router = useRouter()
+  const isDesktop = useIsDesktopDetail()
   // const [starred, setStarred] = useState(false) // 즐겨찾기 — 계정 기능 구현 전 비활성화
   const [sort, setSort] = useState<SortKey>('newest')
   const [expanded, setExpanded] = useState(false)
@@ -242,12 +275,37 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
       <NavBar onBack={() => router.back()} />
 
       <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' as never }}>
-        <ProfileHero name={directorName} />
+        <div style={{
+          maxWidth: isDesktop ? 1120 : undefined,
+          margin: isDesktop ? '28px auto 0' : undefined,
+          padding: isDesktop ? '0 28px 64px' : undefined,
+          display: isDesktop ? 'grid' : 'block',
+          gridTemplateColumns: isDesktop ? '320px minmax(0, 1fr)' : undefined,
+          gap: isDesktop ? 28 : undefined,
+          alignItems: isDesktop ? 'start' : undefined,
+        }}>
+        <div style={{ position: isDesktop ? 'sticky' : undefined, top: isDesktop ? 80 : undefined }}>
+          <ProfileHero name={directorName} count={directorMovies.length} desktop={isDesktop} />
+        </div>
 
         {/* 작품 목록 */}
-        <div style={{ padding: '0 20px 52px' }}>
+        <div style={{
+          padding: isDesktop ? 0 : '0 20px 52px',
+          border: isDesktop ? '1px solid var(--color-border)' : undefined,
+          borderRadius: isDesktop ? 20 : undefined,
+          backgroundColor: isDesktop ? 'var(--color-surface-card)' : undefined,
+          boxShadow: isDesktop ? '0 14px 44px rgba(20, 15, 10, 0.08)' : undefined,
+          overflow: isDesktop ? 'hidden' : undefined,
+        }}>
           {/* 헤더 */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: isDesktop ? 0 : 14,
+            padding: isDesktop ? '20px 22px' : undefined,
+            borderBottom: isDesktop ? '1px solid var(--color-border)' : undefined,
+          }}>
             <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>
               작품 · {directorMovies.length}편
             </span>
@@ -256,11 +314,16 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
 
           {/* 리스트 */}
           {directorMovies.length === 0 ? (
-            <div style={{ textAlign: 'center', paddingTop: 40, fontSize: 13, color: 'var(--color-text-caption)' }}>
+            <div style={{ textAlign: 'center', padding: isDesktop ? '56px 0' : '40px 0 0', fontSize: 13, color: 'var(--color-text-caption)' }}>
               작품 정보가 없습니다
             </div>
           ) : (
-            <div style={{ borderRadius: 12, border: '1px solid var(--color-border)', overflow: 'hidden', backgroundColor: 'var(--color-surface-card)' }}>
+            <div style={{
+              borderRadius: isDesktop ? 0 : 12,
+              border: isDesktop ? 'none' : '1px solid var(--color-border)',
+              overflow: 'hidden',
+              backgroundColor: 'var(--color-surface-card)',
+            }}>
               {visibleMovies.map((movie, i) => (
                 <FilmographyRow
                   key={movie.id}
@@ -268,6 +331,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
                   isLast={i === visibleMovies.length - 1 && (expanded || hiddenCount <= 0)}
                   isActive={activeIdSet.has(movie.id)}
                   onClick={() => router.push(`/movie/${movie.id}`)}
+                  desktop={isDesktop}
                 />
               ))}
 
@@ -299,6 +363,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
               )}
             </div>
           )}
+        </div>
         </div>
       </div>
     </div>
