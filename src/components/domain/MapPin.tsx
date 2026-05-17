@@ -8,6 +8,8 @@ interface MapPinProps {
   label?: string
   labelOffset?: { x: number; y: number }
   onClick?: () => void
+  dimmed?: boolean
+  isDark?: boolean
 }
 
 const PIN_COLORS: Record<PinKind, { dot: string; aura: string }> = {
@@ -20,8 +22,12 @@ const PIN_COLORS: Record<PinKind, { dot: string; aura: string }> = {
 const DOT = 22
 const AURA = 44
 
-export function MapPin({ kind = 'indie', selected = false, label, labelOffset, onClick }: MapPinProps) {
-  const { dot, aura } = PIN_COLORS[kind]
+const DIMMED_DOT_LIGHT = '#6b7280'
+const DIMMED_DOT_DARK = '#71717a'
+
+export function MapPin({ kind = 'indie', selected = false, label, labelOffset, onClick, dimmed = false, isDark = false }: MapPinProps) {
+  const { dot: activeDot, aura } = PIN_COLORS[kind]
+  const dot = dimmed ? (isDark ? DIMMED_DOT_DARK : DIMMED_DOT_LIGHT) : activeDot
   const tailShiftX = labelOffset ? Math.max(-36, Math.min(36, -labelOffset.x)) : 0
 
   return (
@@ -60,13 +66,14 @@ export function MapPin({ kind = 'indie', selected = false, label, labelOffset, o
           zIndex: 1,
           transform: labelOffset ? `translate(${labelOffset.x}px, ${labelOffset.y}px)` : undefined,
         }}>
+          {/* 라벨 꼬리 */}
           <div style={{
             position: 'absolute',
             width: 10,
             height: 10,
-            backgroundColor: 'var(--color-surface-card)',
-            borderRight: '1.5px solid var(--color-border)',
-            borderBottom: '1.5px solid var(--color-border)',
+            backgroundColor: selected ? 'var(--color-primary-base)' : 'var(--color-surface-card)',
+            borderRight: selected ? '1.5px solid rgba(0,0,0,0.14)' : '1.5px solid var(--color-border)',
+            borderBottom: selected ? '1.5px solid rgba(0,0,0,0.14)' : '1.5px solid var(--color-border)',
             borderBottomRightRadius: 2,
             bottom: -5,
             left: `calc(50% + ${tailShiftX}px)`,
@@ -74,20 +81,21 @@ export function MapPin({ kind = 'indie', selected = false, label, labelOffset, o
             zIndex: 0,
             pointerEvents: 'none',
           }} />
+          {/* 라벨 버블 */}
           <div style={{
-          fontSize: 11,
-          fontWeight: 600,
-          whiteSpace: 'nowrap',
-          padding: '2px 6px',
-          borderRadius: 4,
-          color: 'var(--color-text-primary)',
-          backgroundColor: 'var(--color-surface-card)',
-          border: '1.5px solid var(--color-border)',
-          boxShadow: 'var(--shadow-sm)',
-          position: 'relative',
-          zIndex: 1,
-        }}>
-          <span style={{ position: 'relative', zIndex: 1 }}>{label}</span>
+            fontSize: 12,
+            fontWeight: 700,
+            whiteSpace: 'nowrap',
+            padding: '3px 7px',
+            borderRadius: 5,
+            color: selected ? '#fff' : 'var(--color-text-primary)',
+            backgroundColor: selected ? 'var(--color-primary-base)' : 'var(--color-surface-card)',
+            border: selected ? '1.5px solid rgba(0,0,0,0.14)' : '1.5px solid var(--color-border)',
+            boxShadow: selected ? 'var(--shadow-md)' : 'var(--shadow-sm)',
+            position: 'relative',
+            zIndex: 1,
+          }}>
+            {label}
           </div>
         </div>
       )}
@@ -98,8 +106,10 @@ export function MapPin({ kind = 'indie', selected = false, label, labelOffset, o
         height: DOT,
         borderRadius: '50%',
         backgroundColor: dot,
-        border: '2px solid var(--color-surface-bg)',
-        boxShadow: '0 2px 6px rgba(0,0,0,0.18)',
+        border: selected ? '2.5px solid #fff' : '2px solid var(--color-surface-bg)',
+        boxShadow: selected
+          ? '0 2px 8px rgba(0,0,0,0.28), 0 0 0 2.5px var(--color-primary-base)'
+          : '0 2px 6px rgba(0,0,0,0.18)',
         position: 'relative',
         zIndex: 1,
       }} />

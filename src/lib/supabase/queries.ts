@@ -610,3 +610,37 @@ export function useMovieTheaterShowtimes(movieId: string | null) {
     staleTime: 2 * 60 * 1000,
   })
 }
+
+/* ── 감독 프로필 ─────────────────────────────────────────────────── */
+export interface DirectorProfile {
+  name: string
+  originalName?: string
+  photoUrl?: string
+  bio?: string
+  source?: string
+}
+
+export function useDirectorProfile(name: string | null) {
+  return useQuery<DirectorProfile | null>({
+    queryKey: ['director-profile', name],
+    enabled: !!name,
+    queryFn: async () => {
+      if (!name) return null
+      const { data, error } = await supabase()
+        .from('directors')
+        .select('name, original_name, photo_url, bio, source')
+        .eq('name', name)
+        .single()
+      if (error || !data) return null
+      const row = data as Record<string, unknown>
+      return {
+        name: String(row.name),
+        originalName: row.original_name ? String(row.original_name) : undefined,
+        photoUrl: row.photo_url ? String(row.photo_url) : undefined,
+        bio: row.bio ? String(row.bio) : undefined,
+        source: row.source ? String(row.source) : undefined,
+      }
+    },
+    staleTime: 30 * 60 * 1000,
+  })
+}

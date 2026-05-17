@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { DirectorDetailClient } from './DirectorDetailClient'
 
 export default async function DirectorDetailPage({
@@ -6,5 +7,9 @@ export default async function DirectorDetailPage({
   params: Promise<{ name: string }>
 }) {
   const { name } = await params
-  return <DirectorDetailClient directorName={decodeURIComponent(name)} />
+  return (
+    <Suspense>
+      <DirectorDetailClient directorName={decodeURIComponent(name)} />
+    </Suspense>
+  )
 }

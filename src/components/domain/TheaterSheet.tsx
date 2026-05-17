@@ -325,6 +325,33 @@ export function TheaterSheet({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allMovieEntries])
 
+  /* ── 선택 영화로 포스터 스트립 스크롤 ── */
+  useEffect(() => {
+    const el = posterScrollRef.current
+    if (!el || !selectedMovieId || allMovieEntries.length === 0) return
+
+    // 현재 모드별 포스터 순서 계산
+    let visualEntries: typeof allMovieEntries
+    if (panelMode) {
+      const matchedIds = new Set(filteredMovieEntries.map(e => e.movie.id))
+      const nonMatching = allMovieEntries.filter(e => !matchedIds.has(e.movie.id))
+      visualEntries = [...filteredMovieEntries, ...nonMatching]
+    } else {
+      visualEntries = allMovieEntries
+    }
+
+    const idx = visualEntries.findIndex(e => e.movie.id === selectedMovieId)
+    if (idx < 0) return
+
+    const itemW = 88
+    const gap = 12
+    const paddingLeft = 20
+    const targetLeft = paddingLeft + idx * (itemW + gap)
+    el.scrollLeft = Math.max(0, targetLeft - el.clientWidth / 2 + itemW / 2)
+  // selectedMovieId 변경(외부 진입 포함) + 데이터 로드 시 실행
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedMovieId, allMovieEntries])
+
   /* ── 날짜 바 — 7일, 상영 있는 날만 활성 ── */
   const theaterAvailableDates = useMemo(() => {
     const dates = new Set<string>()
@@ -387,6 +414,22 @@ export function TheaterSheet({
   const posterScrollRef = useRef<HTMLDivElement>(null)
   const posterDrag      = useRef({ active: false, startX: 0, scrollLeft: 0 })
   const posterTouching  = useRef(false)  // 포스터 영역 터치 중 (방향 미확정 포함)
+
+  /* ── 포스터 스크롤 버튼 가시성 ── */
+  const [posterCanScrollLeft,  setPosterCanScrollLeft]  = useState(false)
+  const [posterCanScrollRight, setPosterCanScrollRight] = useState(true)
+  const updatePosterScrollEdge = useCallback(() => {
+    const el = posterScrollRef.current
+    if (!el) return
+    setPosterCanScrollLeft(el.scrollLeft > 4)
+    setPosterCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4)
+  }, [])
+
+  useEffect(() => {
+    updatePosterScrollEdge()
+    const id = setTimeout(updatePosterScrollEdge, 120)
+    return () => clearTimeout(id)
+  }, [allMovieEntries, updatePosterScrollEdge, shownExpanded])
 
   /* ── 확장 시 스크롤 영역 ── */
   const scrollAreaRef      = useRef<HTMLDivElement>(null)
@@ -1177,21 +1220,50 @@ export function TheaterSheet({
         // 스크롤 비례 높이 축소 (228 → 90) — 상단 배지(8px) 여백 포함
         maxHeight: 228 - 138 * posterProgress,
         overflow: 'hidden',
+        position: 'relative',  // 스크롤 버튼 절대 위치 기준
       }}>
-        {/* 이 날 상영 필터 체크박스 — 비활성화 (todo.md 참고) */}
-        {/* <label style={{
-          display: 'flex', alignItems: 'center', gap: 7,
-          padding: '6px 20px 0',
-          cursor: 'pointer', fontSize: 11, userSelect: 'none',
-          color: showTodayFirst ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
-          fontWeight: showTodayFirst ? 600 : 400,
-        }}>
-          <input type="checkbox" checked={showTodayFirst} onChange={e => setShowTodayFirst(e.target.checked)}
-            style={{ width: 13, height: 13, cursor: 'pointer', accentColor: 'var(--color-primary-base)', flexShrink: 0 }} />
-          이 날 상영하는 영화만 보기
-        </label> */}
+        {/* 모바일 포스터 좌우 스크롤 버튼 */}
+        {posterCanScrollLeft && (
+          <button
+            style={{
+              position: 'absolute', top: '50%', left: 6,
+              transform: 'translateY(-50%)',
+              width: 32, height: 32, borderRadius: '50%', zIndex: 3,
+              border: 'none', cursor: 'pointer',
+              backgroundColor: 'color-mix(in srgb, var(--color-surface-card) 72%, transparent)',
+              backdropFilter: 'blur(8px)',
+              color: 'var(--color-text-body)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 1px 6px rgba(0,0,0,0.12)',
+              minHeight: 'auto',
+            }}
+            onClick={() => posterScrollRef.current?.scrollBy({ left: -(88 + 12) * 3, behavior: 'smooth' })}
+          >
+            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+        )}
+        {posterCanScrollRight && (
+          <button
+            style={{
+              position: 'absolute', top: '50%', right: 6,
+              transform: 'translateY(-50%)',
+              width: 32, height: 32, borderRadius: '50%', zIndex: 3,
+              border: 'none', cursor: 'pointer',
+              backgroundColor: 'color-mix(in srgb, var(--color-surface-card) 72%, transparent)',
+              backdropFilter: 'blur(8px)',
+              color: 'var(--color-text-body)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 1px 6px rgba(0,0,0,0.12)',
+              minHeight: 'auto',
+            }}
+            onClick={() => posterScrollRef.current?.scrollBy({ left: (88 + 12) * 3, behavior: 'smooth' })}
+          >
+            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        )}
         <div
           ref={posterScrollRef}
+          onScroll={updatePosterScrollEdge}
           style={{
             display: 'flex',
             gap: 12 - 4 * posterProgress,           // 12 → 8
@@ -1207,11 +1279,11 @@ export function TheaterSheet({
           }}
         >
           {allMoviesLoading
-            ? Array.from({ length: 3 }).map((_, i) => (
+            ? Array.from({ length: 7 }).map((_, i) => (
                 <div key={i} style={{ flexShrink: 0, width: 88 }}>
-                  <Skeleton width={88} height={132} style={{ borderRadius: 6 }} />
-                  <Skeleton width={70} height={11} style={{ marginTop: 6, borderRadius: 4 }} />
-                  <Skeleton width={50} height={10} style={{ marginTop: 3, borderRadius: 4 }} />
+                  <div style={{ width: 88, height: 132, borderRadius: 6, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
+                  <div style={{ width: 70, height: 11, borderRadius: 4, marginTop: 6, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
+                  <div style={{ width: 50, height: 10, borderRadius: 4, marginTop: 3, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
                 </div>
               ))
             : allMovieEntries.length === 0
@@ -1517,10 +1589,7 @@ export function TheaterSheet({
               {/* PC 패널 전용 포스터 좌우 스크롤 버튼 */}
               {panelMode && (() => {
                 const scrollBy = (dir: 1 | -1) => {
-                  const el = posterScrollRef.current
-                  if (!el) return
-                  const posterW = 88 + 12  // 포스터 width + gap
-                  el.scrollBy({ left: dir * posterW * 3, behavior: 'smooth' })
+                  posterScrollRef.current?.scrollBy({ left: dir * (88 + 12) * 3, behavior: 'smooth' })
                 }
                 const btnStyle: React.CSSProperties = {
                   position: 'absolute', top: '50%', transform: 'translateY(-50%)',
@@ -1535,18 +1604,23 @@ export function TheaterSheet({
                 }
                 return (
                   <>
-                    <button style={{ ...btnStyle, left: 6 }} onClick={() => scrollBy(-1)}>
-                      <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-                    </button>
-                    <button style={{ ...btnStyle, right: 6 }} onClick={() => scrollBy(1)}>
-                      <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-                    </button>
+                    {posterCanScrollLeft && (
+                      <button style={{ ...btnStyle, left: 6 }} onClick={() => scrollBy(-1)}>
+                        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                      </button>
+                    )}
+                    {posterCanScrollRight && (
+                      <button style={{ ...btnStyle, right: 6 }} onClick={() => scrollBy(1)}>
+                        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                      </button>
+                    )}
                   </>
                 )
               })()}
 
             <div
               ref={posterScrollRef}
+              onScroll={updatePosterScrollEdge}
               style={{
                 display: 'flex',
                 gap: 12,
@@ -1562,11 +1636,11 @@ export function TheaterSheet({
               }}
             >
               {allMoviesLoading
-                ? Array.from({ length: 3 }).map((_, i) => (
+                ? Array.from({ length: 7 }).map((_, i) => (
                     <div key={i} style={{ flexShrink: 0, width: 88 }}>
-                      <Skeleton width={88} height={132} style={{ borderRadius: 6 }} />
-                      <Skeleton width={70} height={11} style={{ marginTop: 6, borderRadius: 4 }} />
-                      <Skeleton width={50} height={10} style={{ marginTop: 3, borderRadius: 4 }} />
+                      <div style={{ width: 88, height: 132, borderRadius: 6, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
+                      <div style={{ width: 70, height: 11, borderRadius: 4, marginTop: 6, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
+                      <div style={{ width: 50, height: 10, borderRadius: 4, marginTop: 3, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
                     </div>
                   ))
                 : allMovieEntries.length === 0
@@ -1714,7 +1788,7 @@ export function TheaterSheet({
             const { movie } = entry
             return (
               <div style={{
-                margin: '8px 8px',
+                margin: '8px 20px',
                 border: '1px solid var(--color-border)',
                 borderRadius: 12,
                 overflow: 'hidden',
@@ -1728,9 +1802,9 @@ export function TheaterSheet({
                     )}
                   </div>
                   {/* 영화 정보 */}
-                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <div style={{
-                      fontSize: 15, fontWeight: 700,
+                      fontSize: 17, fontWeight: 700,
                       color: 'var(--color-text-primary)',
                       lineHeight: 1.3,
                       overflow: 'hidden',
@@ -1740,31 +1814,30 @@ export function TheaterSheet({
                     }}>
                       {movie.title}
                     </div>
-                    {movie.director && movie.director.length > 0 && (
-                      onDirectorOpen ? (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); onDirectorOpen(movie.director[0]) }}
-                          style={{ fontSize: 12, color: 'var(--color-primary-base)', fontWeight: 500, background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', textDecoration: 'underline' }}
-                        >
-                          {movie.director[0]}
-                        </button>
-                      ) : (
-                        <div style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>
-                          {movie.director[0]}
-                        </div>
-                      )
-                    )}
-                    {movie.runtimeMinutes && (
-                      <div style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>
-                        {movie.runtimeMinutes}분
-                      </div>
-                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      {movie.nation && movie.nation.split(/[,，/·]+/).map(n => n.trim()).filter(Boolean).map(n => (
+                        <span key={n} style={{
+                          fontSize: 10, fontWeight: 500,
+                          padding: '1px 6px',
+                          borderRadius: 999,
+                          border: '1px solid var(--color-border)',
+                          color: 'var(--color-text-sub)',
+                        }}>
+                          {withFlag(n)}
+                        </span>
+                      ))}
+                      {movie.runtimeMinutes && (
+                        <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>
+                          {movie.runtimeMinutes}분
+                        </span>
+                      )}
+                    </div>
                     {movie.genre && movie.genre.length > 0 && (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 2 }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                         {movie.genre.map(g => (
                           <span key={g} style={{
                             fontSize: 10, fontWeight: 500,
-                            padding: '2px 8px',
+                            padding: '1px 6px',
                             borderRadius: 999,
                             border: '1px solid var(--color-border)',
                             color: 'var(--color-text-sub)',
@@ -1776,6 +1849,42 @@ export function TheaterSheet({
                     )}
                   </div>
                 </div>
+                {/* 감독 행 */}
+                {movie.director && movie.director.length > 0 && (
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      if (onDirectorOpen) onDirectorOpen(movie.director[0])
+                      else router.push(`/director/${encodeURIComponent(movie.director[0])}`)
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    style={{
+                      borderTop: '1px solid var(--color-border)',
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '10px 12px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <div style={{
+                      width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+                      backgroundColor: 'var(--color-surface-bg)',
+                      border: '1px solid var(--color-border)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-caption)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="8" r="4" />
+                        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+                      </svg>
+                    </div>
+                    <span style={{ flex: 1, fontSize: 14, fontWeight: 500, color: 'var(--color-text-body)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {movie.director[0]}
+                    </span>
+                    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-caption)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 18l6-6-6-6" />
+                    </svg>
+                  </div>
+                )}
                 {/* 액션 버튼 */}
                 <div style={{ borderTop: '1px solid var(--color-border)', display: 'flex' }}>
                   <button
@@ -1815,9 +1924,9 @@ export function TheaterSheet({
           {/* 상영시간표 */}
           <div ref={showtimeSectionRef} style={{ padding: `8px 20px ${selectedShowtimeId ? 88 : 40}px` }}>
             {showtimesLoading ? (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <Skeleton key={i} width={90} height={60} style={{ borderRadius: 8 }} />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} height={60} style={{ borderRadius: 8 }} />
                 ))}
               </div>
             ) : filteredShowtimes.length === 0 ? (
@@ -1830,7 +1939,7 @@ export function TheaterSheet({
                 선택한 날짜에 상영 정보가 없습니다.
               </div>
             ) : (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                 {filteredShowtimes.map((st) => {
                   const hour = parseInt(st.showTime.slice(0, 2), 10)
                   const kind: import('./ShowtimeCell').ShowtimeKind =
@@ -1871,32 +1980,14 @@ export function TheaterSheet({
             padding: '12px 20px',
             paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
             zIndex: 10,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
           }}>
-            <button
-              onClick={() => setSelectedShowtimeId(null)}
-              style={{
-                flexShrink: 0,
-                width: 44, height: 50,
-                borderRadius: 'var(--radius-full)',
-                border: '1px solid var(--color-border)',
-                backgroundColor: 'var(--color-surface-bg)',
-                color: 'var(--color-text-body)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer',
-              }}
-            >
-              <IconClose />
-            </button>
             <button
               disabled={!selectedSt?.bookingUrl}
               onClick={() => {
                 if (selectedSt?.bookingUrl) window.open(selectedSt.bookingUrl, '_blank', 'noopener')
               }}
               style={{
-                flex: 1,
+                width: '100%',
                 height: 50,
                 borderRadius: 'var(--radius-full)',
                 backgroundColor: selectedSt?.bookingUrl ? 'var(--color-primary-base)' : 'var(--color-neutral-600)',

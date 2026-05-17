@@ -311,7 +311,7 @@ function InfoTab({ movie, onDirectorClick, desktop = false }: { movie: MovieDeta
 }
 
 /* ── TheaterShowtimeChips ── */
-function TheaterShowtimeChips({ entry }: { entry: MovieTheaterEntry }) {
+function TheaterShowtimeChips({ entry, onGoTo }: { entry: MovieTheaterEntry; onGoTo: () => void }) {
   return (
     <div>
       <div style={{ padding: '14px 16px 12px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
@@ -319,9 +319,26 @@ function TheaterShowtimeChips({ entry }: { entry: MovieTheaterEntry }) {
           marginTop: 5, width: 8, height: 8, borderRadius: '50%',
           backgroundColor: 'var(--color-primary-base)', flexShrink: 0, display: 'block',
         }} />
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontFamily: 'var(--font-serif)', fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)' }}>
-            {entry.theaterName}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ fontFamily: 'var(--font-serif)', fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)', flex: 1, minWidth: 0 }}>
+              {entry.theaterName}
+            </div>
+            <button
+              onClick={onGoTo}
+              style={{
+                flexShrink: 0,
+                height: 26, padding: '0 10px',
+                borderRadius: 999,
+                border: '1px solid var(--color-primary-base)',
+                backgroundColor: 'var(--color-primary-subtle-l)',
+                color: 'var(--color-primary-base)',
+                fontSize: 12, fontWeight: 600,
+                cursor: 'pointer', minHeight: 'auto',
+              }}
+            >
+              바로가기
+            </button>
           </div>
           <div style={{ marginTop: 3, display: 'flex', alignItems: 'center', gap: 3, color: 'var(--color-text-sub)', fontSize: 12 }}>
             <IcoPin />
@@ -373,7 +390,7 @@ function TheaterShowtimeChips({ entry }: { entry: MovieTheaterEntry }) {
 }
 
 /* ── TheatersTab ── */
-function TheatersTab({ movieId, onMapClick, desktop = false }: { movieId: string; onMapClick: () => void; desktop?: boolean }) {
+function TheatersTab({ movieId, onMapClick, onGoToTheater, desktop = false }: { movieId: string; onMapClick: () => void; onGoToTheater: (theaterId: string) => void; desktop?: boolean }) {
   const { data: theaters = [], isLoading } = useMovieTheaterShowtimes(movieId)
   return (
     <div style={{ padding: desktop ? '26px 0 64px' : '20px 20px 52px', maxWidth: desktop ? 1040 : undefined, margin: desktop ? '0 auto' : undefined }}>
@@ -413,7 +430,7 @@ function TheatersTab({ movieId, onMapClick, desktop = false }: { movieId: string
               borderRadius: 12, border: '1px solid var(--color-border)',
               backgroundColor: 'var(--color-surface-card)', overflow: 'hidden',
             }}>
-              <TheaterShowtimeChips entry={entry} />
+              <TheaterShowtimeChips entry={entry} onGoTo={() => onGoToTheater(entry.theaterId)} />
             </div>
           ))}
         </div>
@@ -508,7 +525,7 @@ export function MovieDetailClient({ movieId, theaterId }: { movieId: string; the
 
       {tab === 'info'
         ? <InfoTab movie={movie} onDirectorClick={handleDirectorClick} desktop={isDesktop} />
-        : <TheatersTab movieId={movieId} onMapClick={handleMapClick} desktop={isDesktop} />
+        : <TheatersTab movieId={movieId} onMapClick={handleMapClick} onGoToTheater={(tid) => router.push(`/?theater=${tid}&movie=${movieId}`)} desktop={isDesktop} />
       }
 
       <div style={{ height: 'env(safe-area-inset-bottom)' }} />

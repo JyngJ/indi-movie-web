@@ -19,6 +19,57 @@ import type {
 import { searchKmdbMovies } from '@/lib/admin/kmdb'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 
+/* ── 감독 프로필 자동 수집 (Wikipedia) ──────────────────────────── */
+const FILM_KEYWORDS = [
+  '영화 감독', '감독', '영화인', '시나리오', '각본', '다큐멘터리',
+  'director', 'filmmaker', 'film', 'cinema', '연출', '촬영감독',
+]
+
+async function fetchWikipediaBio(name: string): Promise<{ bio?: string; photoUrl?: string }> {
+  try {
+    const res = await fetch(
+      `https://ko.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(name)}`,
+      { headers: { 'User-Agent': 'indi-movie-app/1.0' } },
+    )
+    if (!res.ok) return {}
+    const json = await res.json() as {
+      extract?: string; thumbnail?: { source?: string }
+      type?: string; description?: string
+    }
+    if (json.type === 'disambiguation') return {}
+    const combined = ((json.extract ?? '') + ' ' + (json.description ?? '')).toLowerCase()
+    if (!FILM_KEYWORDS.some(kw => combined.includes(kw.toLowerCase()))) return {}
+    return {
+      bio: json.extract?.split('\n')[0]?.slice(0, 400) || undefined,
+      photoUrl: json.thumbnail?.source || undefined,
+    }
+  } catch { return {} }
+}
+
+async function ensureDirectorProfiles(directors: string[]): Promise<void> {
+  if (!directors.length) return
+  const supabase = createSupabaseAdminClient()
+  try {
+    const { data: existing } = await supabase
+      .from('directors').select('name').in('name', directors)
+    const existingSet = new Set((existing ?? []).map((r: { name: string }) => r.name))
+    const missing = directors.filter(d => !existingSet.has(d))
+    for (const name of missing) {
+      const { bio, photoUrl } = await fetchWikipediaBio(name)
+      await supabase.from('directors').upsert({
+        name,
+        photo_url: photoUrl ?? null,
+        bio: bio ?? null,
+        source: bio || photoUrl ? 'wikipedia' : 'none',
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'name' })
+      await new Promise(r => setTimeout(r, 300))
+    }
+  } catch (e) {
+    console.error('[ensureDirectorProfiles] 실패:', (e as Error).message)
+  }
+}
+
 interface CrawlSourceRow {
   id: string
   theater_id: string
@@ -257,9 +308,11 @@ export async function listCrawlRuns() {
 
 export async function listReviewCandidates(status?: AdminShowtimeStatus) {
   const supabase = createSupabaseAdminClient()
+
   let query = supabase
     .from('showtime_candidates')
     .select('*')
+    .neq('status', 'rejected')
     .order('show_date', { ascending: true })
     .order('show_time', { ascending: true })
 
@@ -469,6 +522,16 @@ export async function updateAdminServiceShowtime(input: AdminShowtimeInput) {
   return serviceShowtimeFromRow(data as unknown as ShowtimeRow)
 }
 
+export async function deleteCandidates(ids: string[]) {
+  const supabase = createSupabaseAdminClient()
+  const { error } = await supabase
+    .from('showtime_candidates')
+    .delete()
+    .in('id', ids)
+
+  if (error) throw new Error(error.message)
+}
+
 export async function updateCandidateStatuses(ids: string[], status: AdminShowtimeStatus) {
   const supabase = createSupabaseAdminClient()
   const { data, error } = await supabase
@@ -613,6 +676,9 @@ export async function createAdminMovie(input: AdminMovieInput) {
     }, { onConflict: 'movie_id' })
   }
 
+  const directors = (input.director ?? []).filter(Boolean)
+  void ensureDirectorProfiles(directors)
+
   return {
     id: movie.id,
     label: movie.title,
@@ -663,6 +729,8 @@ export async function importAdminExternalMovie(input: AdminExternalMovie) {
       certification: input.certification ?? null,
     }, { onConflict: 'movie_id' })
   }
+
+  void ensureDirectorProfiles(input.director ?? [])
 
   return {
     id: movie.id,
@@ -1080,16 +1148,20 @@ function resolveMovieByTitle(title: string, movies: MovieRow[]) {
 
 function candidateMovieTitleCandidates(title: string) {
   const base = title.trim()
-  return Array.from(new Set([
+  // 더블 피처: "A + B" → A, B 각각 시도
+  const plusParts = base.split(/\s*\+\s*/).map(s => s.trim()).filter(Boolean)
+  const variants = [
     base,
     // 날짜 패턴 제거 (05/15, 5월 15일)
     base.replace(/\s+(?:\d{1,2}[./-]\d{1,2})(?:\s.*)?$/, '').trim(),
     base.replace(/\s+(?:\d{1,2}월\s*\d{1,2}일)(?:\s.*)?$/, '').trim(),
-    // 파트 표시 제거 (1부, 2부, 상, 하, 1, 2부)
+    // 파트 표시 제거 (1부, 2부, 상, 하)
     base.replace(/\s+(?:\d+,\s*\d+부|\d+부|상편|하편|[상하])\s*$/, '').trim(),
-    // 쉼표 이후 파트 표시 통째로 제거 (영화사 1, 2부 → 영화사)
     base.replace(/,?\s*\d+[,\s]*\d*부?\s*$/, '').trim(),
-  ].filter(Boolean)))
+    // 더블 피처: + 앞/뒤 각 영화 제목
+    ...(plusParts.length > 1 ? plusParts : []),
+  ]
+  return Array.from(new Set(variants.filter(Boolean)))
 }
 
 function pickExactExternalMovie(title: string, movies: AdminExternalMovie[]) {
