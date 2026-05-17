@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import type { MouseEvent as ReactMouseEvent, WheelEvent as ReactWheelEvent } from 'react'
 import { GENRES } from '@/lib/genres'
 import { withFlag } from '@/lib/nations'
@@ -234,13 +235,11 @@ function CalendarPicker({ startDate, endDate, onApply, onCancel, style }: {
 
   return (
     <div style={{
-      position: 'absolute',
       background: 'var(--color-surface-card)',
       border: '1px solid var(--color-border)',
       borderRadius: 16,
       overflow: 'hidden',
       boxShadow: '0 12px 40px rgba(0,0,0,0.72)',
-      zIndex: 9999,
       ...style,
     }}>
       <div style={{ padding: '14px 14px 0' }}>
@@ -391,14 +390,12 @@ function DateDropdown({ selectedId, onSelect, onPickCustom, style }: {
   const options = buildDateOptions()
   return (
     <div style={{
-      position: 'absolute',
       width: 252,
       background: 'var(--color-surface-card)',
       border: '1px solid var(--color-border)',
       borderRadius: 16,
       overflow: 'hidden',
       boxShadow: '0 12px 40px rgba(0,0,0,0.72)',
-      zIndex: 9999,
       ...style,
     }}>
       {options.map((opt) => (
@@ -445,14 +442,12 @@ function MultiSelectDropdown({ options, selectedValues, setSelectedValues, style
 
   return (
     <div style={{
-      position: 'absolute',
       width: 236,
       background: 'var(--color-surface-card)',
       border: '1px solid var(--color-border)',
       borderRadius: 16,
       overflow: 'hidden',
       boxShadow: '0 12px 40px rgba(0,0,0,0.72)',
-      zIndex: 9999,
       display: 'flex',
       flexDirection: 'column',
       maxHeight: 320,
@@ -603,9 +598,11 @@ export function FilterBar({ onChange, nationOptions = EMPTY_NATION_OPTIONS, movi
   const [bookable, setBookable] = useState(false)
   const [indie, setIndie] = useState(false)
   const [openPanel, setOpenPanel] = useState<OpenPanel>(null)
-  const [dropdownLeft, setDropdownLeft] = useState(16)
+  const [dropdownPos, setDropdownPos] = useState<{ left: number; top: number }>({ left: 16, top: 0 })
+  const [mounted, setMounted] = useState(false)
 
   const wrapperRef = useRef<HTMLDivElement>(null)
+  const portalDropdownRef = useRef<HTMLDivElement>(null)
   const chipRowRef = useRef<HTMLDivElement>(null)
   const dateChipRef = useRef<HTMLButtonElement>(null)
   const genreChipRef = useRef<HTMLButtonElement>(null)
@@ -617,6 +614,7 @@ export function FilterBar({ onChange, nationOptions = EMPTY_NATION_OPTIONS, movi
   const chipDragRef = useRef({ active: false, moved: false, startX: 0, scrollLeft: 0 })
   const [chipRowDragging, setChipRowDragging] = useState(false)
 
+  useEffect(() => { setMounted(true) }, [])
   useEffect(() => { openPanelRef.current = openPanel }, [openPanel])
   useEffect(() => { draftGenresRef.current = draftGenres }, [draftGenres])
   useEffect(() => { draftNationsRef.current = draftNations }, [draftNations])
@@ -644,6 +642,7 @@ export function FilterBar({ onChange, nationOptions = EMPTY_NATION_OPTIONS, movi
     if (!openPanel) return
     const handler = (e: MouseEvent) => {
       if (wrapperRef.current?.contains(e.target as Node)) return
+      if (portalDropdownRef.current?.contains(e.target as Node)) return
       if (openPanelRef.current === 'genre') setGenres(draftGenresRef.current)
       if (openPanelRef.current === 'nation') setNations(draftNationsRef.current)
       setOpenPanel(null)
@@ -656,28 +655,23 @@ export function FilterBar({ onChange, nationOptions = EMPTY_NATION_OPTIONS, movi
     chipRef: React.RefObject<HTMLButtonElement | null>,
     dropdownWidth: number,
   ) => {
-    const wrapper = wrapperRef.current
     const chip = chipRef.current
-    if (wrapper && chip) {
-      const wRect = wrapper.getBoundingClientRect()
+    if (chip) {
       const cRect = chip.getBoundingClientRect()
-      const raw = cRect.left - wRect.left
-      const maxLeft = wRect.width - dropdownWidth - 8
-      setDropdownLeft(Math.max(8, Math.min(raw, maxLeft)))
+      // 화면 오른쪽 넘치면 왼쪽으로 당김
+      const left = Math.min(cRect.left, window.innerWidth - dropdownWidth - 8)
+      const top = cRect.bottom + 8
+      setDropdownPos({ left: Math.max(8, left), top })
     }
   }
 
   const syncOpenDropdownPosition = useCallback(() => {
     const panel = openPanelRef.current
     if (!panel || panel === 'calendar') return
-
-    if (panel === 'date') {
-      calcDropdownLeft(dateChipRef, 252)
-    } else if (panel === 'genre') {
-      calcDropdownLeft(genreChipRef, 236)
-    } else if (panel === 'nation') {
-      calcDropdownLeft(nationChipRef, 236)
-    }
+    if (panel === 'date') calcDropdownLeft(dateChipRef, 252)
+    else if (panel === 'genre') calcDropdownLeft(genreChipRef, 236)
+    else if (panel === 'nation') calcDropdownLeft(nationChipRef, 236)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleChipRowScroll = useCallback(() => {
@@ -893,38 +887,43 @@ export function FilterBar({ onChange, nationOptions = EMPTY_NATION_OPTIONS, movi
         */}
       </div>
 
-      {openPanel === 'date' && (
-        <DateDropdown
-          selectedId={dateId}
-          onSelect={selectDate}
-          onPickCustom={openCalendar}
-          style={{ top: 52, left: dropdownLeft }}
-        />
-      )}
-      {openPanel === 'genre' && (
-        <MultiSelectDropdown
-          options={GENRES}
-          selectedValues={draftGenres}
-          setSelectedValues={setDraftGenres}
-          style={{ top: 52, left: dropdownLeft }}
-        />
-      )}
-      {openPanel === 'nation' && (
-        <MultiSelectDropdown
-          options={nationOptions}
-          selectedValues={draftNations}
-          setSelectedValues={setDraftNations}
-          style={{ top: 52, left: dropdownLeft }}
-        />
-      )}
-      {openPanel === 'calendar' && (
-        <CalendarPicker
-          startDate={customStart}
-          endDate={customEnd}
-          onApply={selectCustomRange}
-          onCancel={() => setOpenPanel(null)}
-          style={{ top: 52, left: 8, right: 8 }}
-        />
+      {mounted && openPanel && createPortal(
+        <div ref={portalDropdownRef}>
+          {openPanel === 'date' && (
+            <DateDropdown
+              selectedId={dateId}
+              onSelect={selectDate}
+              onPickCustom={openCalendar}
+              style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, zIndex: 99999 }}
+            />
+          )}
+          {openPanel === 'genre' && (
+            <MultiSelectDropdown
+              options={GENRES}
+              selectedValues={draftGenres}
+              setSelectedValues={setDraftGenres}
+              style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, zIndex: 99999 }}
+            />
+          )}
+          {openPanel === 'nation' && (
+            <MultiSelectDropdown
+              options={nationOptions}
+              selectedValues={draftNations}
+              setSelectedValues={setDraftNations}
+              style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, zIndex: 99999 }}
+            />
+          )}
+          {openPanel === 'calendar' && (
+            <CalendarPicker
+              startDate={customStart}
+              endDate={customEnd}
+              onApply={selectCustomRange}
+              onCancel={() => setOpenPanel(null)}
+              style={{ position: 'fixed', top: dropdownPos.top, left: 8, right: 8, zIndex: 99999 }}
+            />
+          )}
+        </div>,
+        document.body
       )}
     </div>
   )

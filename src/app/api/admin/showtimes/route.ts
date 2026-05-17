@@ -6,6 +6,7 @@ import {
   listCrawlRuns,
   listReviewCandidates,
   updateCandidateStatuses,
+  deleteCandidates,
 } from '@/lib/admin/store'
 
 export const dynamic = 'force-dynamic'
@@ -60,6 +61,11 @@ export async function PATCH(request: Request) {
       { error: { code: 'INVALID_REVIEW_PAYLOAD', message: '검수할 항목과 상태가 필요합니다.' } },
       { status: 400 },
     )
+  }
+
+  if (payload.status === 'rejected') {
+    await deleteCandidates(payload.ids)
+    return Response.json({ deleted: payload.ids.length })
   }
 
   const updated = await updateCandidateStatuses(payload.ids, payload.status)

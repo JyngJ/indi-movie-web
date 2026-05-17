@@ -54,7 +54,7 @@ export function ShowtimeCell({
   return (
     <div
       style={{
-        minWidth: 112,
+        minWidth: 0,
         paddingTop: 'var(--comp-showtime-p)',
         paddingBottom: 'var(--comp-showtime-p)',
         paddingLeft: 'var(--comp-showtime-p)',

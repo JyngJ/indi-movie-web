@@ -84,6 +84,7 @@ export function AdminShowtimeConsole() {
   const [showtimeDrafts, setShowtimeDrafts] = useState<Record<string, AdminShowtimeInput>>({})
   const [activeTab, setActiveTab] = useState<'crawl' | 'status' | 'manage'>('crawl')
   const [candidateFilter, setCandidateFilter] = useState<'all' | 'unmatched' | 'warning' | 'soldout'>('all')
+  const [candidatePage, setCandidatePage] = useState(0)
   const [sourceFormOpen, setSourceFormOpen] = useState(false)
   const [sourceForm, setSourceForm] = useState({
     theaterName: '',
@@ -117,7 +118,9 @@ export function AdminShowtimeConsole() {
   const warningCount = payload.candidates.filter((c) => c.warnings.length > 0).length
   const soldoutCount = payload.candidates.filter((c) => c.seatAvailable === 0).length
 
-  const visibleCandidates = useMemo(() => {
+  const PAGE_SIZE = 50
+
+  const filteredCandidates = useMemo(() => {
     let list = payload.candidates
     if (candidateFilter === 'unmatched') list = list.filter((c) => !c.matchedTheaterId || !c.matchedMovieId)
     else if (candidateFilter === 'warning') list = list.filter((c) => c.warnings.length > 0)
@@ -138,7 +141,15 @@ export function AdminShowtimeConsole() {
       candidate.status,
     ].join(' ')).includes(query))
   }, [candidateFilter, candidateSearchQuery, payload.candidates])
-  const candidateIds = useMemo(() => visibleCandidates.map((candidate) => candidate.id), [visibleCandidates])
+
+  const totalPages = Math.max(1, Math.ceil(filteredCandidates.length / PAGE_SIZE))
+  const safePage = Math.min(candidatePage, totalPages - 1)
+  const visibleCandidates = useMemo(
+    () => filteredCandidates.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE),
+    [filteredCandidates, safePage],
+  )
+
+  const candidateIds = useMemo(() => filteredCandidates.map((candidate) => candidate.id), [filteredCandidates])
   const selectedCandidateCount = candidateIds.filter((id) => selectedIds.includes(id)).length
   const allCandidatesSelected = candidateIds.length > 0 && selectedCandidateCount === candidateIds.length
   const someCandidatesSelected = selectedCandidateCount > 0 && selectedCandidateCount < candidateIds.length
@@ -248,6 +259,55 @@ export function AdminShowtimeConsole() {
     } finally {
       setLoading(false)
     }
+  }
+
+  async function runAllCrawlers() {
+    const enabledSources = payload.sources.filter((s) => s.enabled)
+    if (enabledSources.length === 0) {
+      setMessage('활성화된 크롤링 소스가 없습니다.')
+      return
+    }
+
+    setLoading(true)
+    setMessage('일괄 수집 중…')
+
+    let totalCandidates = 0
+    let succeeded = 0
+    let failed = 0
+
+    const dtryxSources = enabledSources.filter((s) => s.parser === 'dtryxReservationApi')
+    const otherSources = enabledSources.filter((s) => s.parser !== 'dtryxReservationApi')
+
+    const [dtryxResult, ...otherResults] = await Promise.all([
+      dtryxSources.length > 0
+        ? fetch('/api/admin/crawl/all-dtryx', { method: 'POST' })
+            .then((r) => r.json() as Promise<{ runs?: CrawlRun[]; error?: { message: string } }>)
+            .catch(() => ({ runs: [] as CrawlRun[] }))
+        : Promise.resolve({ runs: [] as CrawlRun[] }),
+      ...otherSources.map((source) =>
+        fetch('/api/admin/crawl', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ sourceId: source.id, inputKind: 'url' }),
+        })
+          .then((r) => (r.ok ? r.json() as Promise<CrawlRun> : Promise.reject()))
+          .catch(() => null),
+      ),
+    ])
+
+    for (const run of dtryxResult.runs ?? []) {
+      if (run.status === 'completed') { succeeded++; totalCandidates += run.createdCount }
+      else failed++
+    }
+
+    for (const run of otherResults) {
+      if (run) { succeeded++; totalCandidates += (run as CrawlRun).createdCount ?? 0 }
+      else failed++
+    }
+
+    await refresh()
+    setMessage(`일괄 수집 완료 — 성공 ${succeeded}개 극장, 실패 ${failed}개 (DB 반영은 검수 대기열 확인)`)
+    setLoading(false)
   }
 
   async function updateStatus(status: AdminShowtimeStatus) {
@@ -734,6 +794,7 @@ export function AdminShowtimeConsole() {
         <div className={styles.headerActions}>
           <Button variant="ghost" size="sm" onClick={signOut}>로그아웃</Button>
           <Button variant="ghost" size="sm" onClick={refresh}>새로고침</Button>
+          <Button variant="secondary" size="sm" loading={loading} onClick={runAllCrawlers}>일괄 수집</Button>
           <Button size="sm" loading={loading} onClick={runCrawler}>수집 실행</Button>
         </div>
       </header>
@@ -960,7 +1021,7 @@ export function AdminShowtimeConsole() {
                   key={key}
                   data-key={key}
                   className={`${styles.filterTab} ${candidateFilter === key ? styles.filterTabActive : ''}`}
-                  onClick={() => setCandidateFilter(key)}
+                  onClick={() => { setCandidateFilter(key); setCandidatePage(0) }}
                 >
                   {dot && <span className={styles.filterTabDot} style={{ background: dot }} />}
                   {label}
@@ -979,11 +1040,11 @@ export function AdminShowtimeConsole() {
             <input
               aria-label="검수 대기열 검색"
               value={candidateSearchQuery}
-              onChange={(event) => setCandidateSearchQuery(event.target.value)}
+              onChange={(event) => { setCandidateSearchQuery(event.target.value); setCandidatePage(0) }}
               placeholder="영화명, 극장, 날짜, 경고 검색"
             />
             <span>
-              {visibleCandidates.length}/{payload.candidates.length}건
+              {filteredCandidates.length}/{payload.candidates.length}건
             </span>
           </div>
 
@@ -1136,12 +1197,31 @@ export function AdminShowtimeConsole() {
                 수집 실행을 누르면 샘플 크롤링 결과가 이곳에 표시됩니다.
               </div>
             )}
-            {payload.candidates.length > 0 && visibleCandidates.length === 0 && (
+            {payload.candidates.length > 0 && filteredCandidates.length === 0 && (
               <div className={styles.empty}>
                 검색 조건에 맞는 검수 후보가 없습니다.
               </div>
             )}
           </div>
+          {totalPages > 1 && (
+            <div className={styles.pagination}>
+              <button
+                className={styles.pageBtn}
+                disabled={safePage === 0}
+                onClick={() => setCandidatePage((p) => Math.max(0, p - 1))}
+              >
+                ‹ 이전
+              </button>
+              <span>{safePage + 1} / {totalPages}</span>
+              <button
+                className={styles.pageBtn}
+                disabled={safePage >= totalPages - 1}
+                onClick={() => setCandidatePage((p) => Math.min(totalPages - 1, p + 1))}
+              >
+                다음 ›
+              </button>
+            </div>
+          )}
         </section>
       </section>}
 
