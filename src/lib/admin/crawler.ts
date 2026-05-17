@@ -244,6 +244,26 @@ function buildDtryxHeaders(referer: string): Record<string, string> {
   }
 }
 
+function buildDtryxBookingUrl(
+  origin: string,
+  cgid: string,
+  brandCd: string,
+  cinemaCd: string,
+  movieCd: string,
+  playSDT: string,
+  showSeq: string | undefined,
+) {
+  const params = new URLSearchParams({
+    cgid,
+    BrandCd: brandCd,
+    CinemaCd: cinemaCd,
+    MovieCd: movieCd,
+    PlaySDT: playSDT,
+    ...(showSeq ? { ShowSeq: showSeq } : {}),
+  })
+  return `${origin}/reserve/movie.do?${params}`
+}
+
 async function fetchDtryxMain(
   origin: string,
   cgid: string,
@@ -308,7 +328,7 @@ async function fetchDtryxShowtimes(
             seatAvailable,
             seatTotal,
             price: DEFAULT_PRICE,
-            bookingUrl: `${origin}/reserve/movie.do?cgid=${encodeURIComponent(cgid)}`,
+            bookingUrl: buildDtryxBookingUrl(origin, cgid, brandCd, targetCinema.CinemaCd, movie.MovieCd, playDate.PlaySDT, detail.ShowSeq),
             rawText: JSON.stringify(detail),
             confidence: warnings.length ? 0.82 : 0.96,
             warnings,

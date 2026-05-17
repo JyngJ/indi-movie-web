@@ -1884,32 +1884,14 @@ export function TheaterSheet({
             padding: '12px 20px',
             paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
             zIndex: 10,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
           }}>
-            <button
-              onClick={() => setSelectedShowtimeId(null)}
-              style={{
-                flexShrink: 0,
-                width: 44, height: 50,
-                borderRadius: 'var(--radius-full)',
-                border: '1px solid var(--color-border)',
-                backgroundColor: 'var(--color-surface-bg)',
-                color: 'var(--color-text-body)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer',
-              }}
-            >
-              <IconClose />
-            </button>
             <button
               disabled={!selectedSt?.bookingUrl}
               onClick={() => {
                 if (selectedSt?.bookingUrl) window.open(selectedSt.bookingUrl, '_blank', 'noopener')
               }}
               style={{
-                flex: 1,
+                width: '100%',
                 height: 50,
                 borderRadius: 'var(--radius-full)',
                 backgroundColor: selectedSt?.bookingUrl ? 'var(--color-primary-base)' : 'var(--color-neutral-600)',
