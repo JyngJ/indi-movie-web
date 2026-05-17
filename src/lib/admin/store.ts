@@ -19,6 +19,57 @@ import type {
 import { searchKmdbMovies } from '@/lib/admin/kmdb'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 
+/* ── 감독 프로필 자동 수집 (Wikipedia) ──────────────────────────── */
+const FILM_KEYWORDS = [
+  '영화 감독', '감독', '영화인', '시나리오', '각본', '다큐멘터리',
+  'director', 'filmmaker', 'film', 'cinema', '연출', '촬영감독',
+]
+
+async function fetchWikipediaBio(name: string): Promise<{ bio?: string; photoUrl?: string }> {
+  try {
+    const res = await fetch(
+      `https://ko.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(name)}`,
+      { headers: { 'User-Agent': 'indi-movie-app/1.0' } },
+    )
+    if (!res.ok) return {}
+    const json = await res.json() as {
+      extract?: string; thumbnail?: { source?: string }
+      type?: string; description?: string
+    }
+    if (json.type === 'disambiguation') return {}
+    const combined = ((json.extract ?? '') + ' ' + (json.description ?? '')).toLowerCase()
+    if (!FILM_KEYWORDS.some(kw => combined.includes(kw.toLowerCase()))) return {}
+    return {
+      bio: json.extract?.split('\n')[0]?.slice(0, 400) || undefined,
+      photoUrl: json.thumbnail?.source || undefined,
+    }
+  } catch { return {} }
+}
+
+async function ensureDirectorProfiles(directors: string[]): Promise<void> {
+  if (!directors.length) return
+  const supabase = createSupabaseAdminClient()
+  try {
+    const { data: existing } = await supabase
+      .from('directors').select('name').in('name', directors)
+    const existingSet = new Set((existing ?? []).map((r: { name: string }) => r.name))
+    const missing = directors.filter(d => !existingSet.has(d))
+    for (const name of missing) {
+      const { bio, photoUrl } = await fetchWikipediaBio(name)
+      await supabase.from('directors').upsert({
+        name,
+        photo_url: photoUrl ?? null,
+        bio: bio ?? null,
+        source: bio || photoUrl ? 'wikipedia' : 'none',
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'name' })
+      await new Promise(r => setTimeout(r, 300))
+    }
+  } catch (e) {
+    console.error('[ensureDirectorProfiles] 실패:', (e as Error).message)
+  }
+}
+
 interface CrawlSourceRow {
   id: string
   theater_id: string
@@ -625,6 +676,9 @@ export async function createAdminMovie(input: AdminMovieInput) {
     }, { onConflict: 'movie_id' })
   }
 
+  const directors = (input.director ?? []).filter(Boolean)
+  void ensureDirectorProfiles(directors)
+
   return {
     id: movie.id,
     label: movie.title,
@@ -675,6 +729,8 @@ export async function importAdminExternalMovie(input: AdminExternalMovie) {
       certification: input.certification ?? null,
     }, { onConflict: 'movie_id' })
   }
+
+  void ensureDirectorProfiles(input.director ?? [])
 
   return {
     id: movie.id,

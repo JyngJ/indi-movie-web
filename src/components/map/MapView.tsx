@@ -426,6 +426,20 @@ function posterCountForZoom(zoom: number): number {
   return 0
 }
 
+// 데스크톱 zoom 17+ 에서 단계별 포스터 확대
+function posterSizeForZoom(zoom: number, isDesktop: boolean): { w: number; h: number } {
+  if (!isDesktop) {
+    if (zoom >= 19) return { w: 58, h: 87 }
+    if (zoom >= 18) return { w: 52, h: 78 }
+    if (zoom >= 17) return { w: 48, h: 72 }
+    return { w: 44, h: 66 }
+  }
+  if (zoom >= 19) return { w: 96, h: 144 }
+  if (zoom >= 18) return { w: 80, h: 120 }
+  if (zoom >= 17) return { w: 66, h: 99 }
+  return { w: 52, h: 78 }
+}
+
 /* ── 포스터 그리드 ──────────────────────────────────────────────── */
 interface TheaterPosterMovie {
   id: string
@@ -445,8 +459,9 @@ interface PosterSlot {
   dimmed?: boolean
 }
 
-function posterSlotsForZoom(movies: TheaterPosterMovie[], zoom: number, filtersActive = false): PosterSlot[] {
-  const capacity = posterCountForZoom(zoom)
+function posterSlotsForZoom(movies: TheaterPosterMovie[], zoom: number, filtersActive = false, forceMinOne = false): PosterSlot[] {
+  const rawCapacity = posterCountForZoom(zoom)
+  const capacity = forceMinOne && rawCapacity === 0 ? 1 : rawCapacity
   if (capacity === 0 || movies.length === 0) return []
 
   // 매칭 영화 먼저, 미매칭 나중
@@ -470,26 +485,32 @@ function posterSlotsForZoom(movies: TheaterPosterMovie[], zoom: number, filtersA
   ]
 }
 
-function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filtersActive = false }: {
+function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filtersActive = false, selected = false, posterW = 44, posterH = 66 }: {
   slots: PosterSlot[]
   tailDir?: 'up' | 'right'
   tailOffset?: number
   matchCount?: number
   filtersActive?: boolean
+  selected?: boolean
+  posterW?: number
+  posterH?: number
 }) {
   const count = slots.length
   const perRow = count > 3 ? 3 : count
-  const cardWidth = perRow * 44 + Math.max(0, perRow - 1) * 4 + 16
+  const cardWidth = perRow * posterW + Math.max(0, perRow - 1) * 4 + 16
   const tailInset = 14
   const safeTailOffset = finiteNumber(tailOffset)
   const tailX = Math.max(tailInset, Math.min(cardWidth - tailInset, cardWidth / 2 - safeTailOffset))
 
+  const tailBg = selected ? 'var(--color-primary-base)' : 'var(--color-surface-card)'
+  const tailBorder = selected ? '1.5px solid rgba(0,0,0,0.14)' : '1.5px solid var(--color-border)'
+
   const tailStyle: React.CSSProperties | null = tailDir === 'up' ? {
     position: 'absolute',
     width: 10, height: 10,
-    backgroundColor: 'var(--color-surface-card)',
-    borderTop: '1.5px solid var(--color-border)',
-    borderRight: '1.5px solid var(--color-border)',
+    backgroundColor: tailBg,
+    borderTop: tailBorder,
+    borderRight: tailBorder,
     borderTopRightRadius: 2,
     top: -6,
     left: tailX,
@@ -499,9 +520,9 @@ function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filtersActive 
   } : tailDir === 'right' ? {
     position: 'absolute',
     width: 10, height: 10,
-    backgroundColor: 'var(--color-surface-card)',
-    borderRight: '1.5px solid var(--color-border)',
-    borderBottom: '1.5px solid var(--color-border)',
+    backgroundColor: tailBg,
+    borderRight: tailBorder,
+    borderBottom: tailBorder,
     borderBottomRightRadius: 2,
     top: '50%',
     right: -6,
@@ -514,11 +535,11 @@ function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filtersActive 
     <div style={{ position: 'relative', marginTop: 6 }}>
       {tailStyle && <div style={tailStyle} />}
       <div style={{
-        backgroundColor: 'var(--color-surface-card)',
-        border: '1.5px solid var(--color-border)',
+        backgroundColor: selected ? 'var(--color-primary-base)' : 'var(--color-surface-card)',
+        border: selected ? '1.5px solid rgba(0,0,0,0.14)' : '1.5px solid var(--color-border)',
         borderRadius: 8,
         padding: '8px 8px 8px',
-        boxShadow: 'var(--shadow-md)',
+        boxShadow: selected ? 'var(--shadow-lg)' : 'var(--shadow-md)',
         display: 'inline-block',
         position: 'relative',
         zIndex: 1,
@@ -554,8 +575,8 @@ function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filtersActive 
                     <div
                       key={idx}
                       style={{
-                        width: 44,
-                        height: 66,
+                        width: posterW,
+                        height: posterH,
                         borderRadius: 'var(--comp-poster-radius)',
                         backgroundColor: 'var(--color-primary-base)',
                         color: '#fff',
@@ -571,14 +592,15 @@ function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filtersActive 
                       {slot.countLabel}
                     </div>
                   ) : (
-                    <div key={idx} style={{ position: 'relative', width: 44, height: 66, opacity: slot.dimmed ? 0.5 : 1 }}>
+                    <div key={idx} style={{ position: 'relative', width: posterW, height: posterH, opacity: slot.dimmed ? 0.5 : 1 }}>
                       <PosterThumb
                         src={slot.movie?.posterUrl}
                         alt={slot.movie?.title ?? ''}
-                        width={44}
-                        height={66}
+                        width={posterW}
+                        height={posterH}
                         size="sm"
                         overflow={slot.overflow}
+                        highlighted={filtersActive && !slot.dimmed && !slot.overflow && !!slot.movie?.matchesFilter}
                       />
                       {slot.dimmed && (
                         <div style={{
@@ -627,13 +649,17 @@ function makePinIcon(
   labelOffset: LabelOffset = { x: 0, y: 0 },
   isDark = false,
   dimmed = false,
+  isDesktop = false,
 ) {
-  const safePosterOffsetX = finiteNumber(posterOffsetX)
-  const slots = posterSlotsForZoom(posterMovies, zoom, filtersActive)
+  // 선택된 극장은 충돌 감지 무시 — 항상 중앙
+  const safePosterOffsetX = selected ? 0 : finiteNumber(posterOffsetX)
+  const forceMinOne = filtersActive && posterMovies.some(m => m.matchesFilter)
+  const slots = posterSlotsForZoom(posterMovies, zoom, filtersActive, forceMinOne)
   const matchCount = filtersActive ? posterMovies.filter(m => m.matchesFilter).length : undefined
   const numRows = slots.length > 3 ? 2 : slots.length > 0 ? 1 : 0
   const usePosterLeft = slots.length > 0 && safePosterOffsetX < -50
-  const posterH = usePosterLeft || numRows === 0 ? 0 : 66 * numRows + 4 * (numRows - 1) + 6
+  const { w: pW, h: pH } = posterSizeForZoom(zoom, isDesktop)
+  const posterH = usePosterLeft || numRows === 0 ? 0 : pH * numRows + 4 * (numRows - 1) + 6
 
   let posterHtml = ''
   if (slots.length > 0) {
@@ -644,6 +670,9 @@ function makePinIcon(
         tailOffset={usePosterLeft ? 0 : safePosterOffsetX}
         matchCount={matchCount}
         filtersActive={filtersActive}
+        selected={selected}
+        posterW={pW}
+        posterH={pH}
       />
     )
     if (usePosterLeft) {
@@ -655,7 +684,10 @@ function makePinIcon(
         posterMarkup +
         `</div>`
     } else {
-      posterHtml = `<div style="position:relative;left:${Math.round(safePosterOffsetX)}px">` +
+      const scaleStyle = selected
+        ? 'transform-origin:center top;transform:scale(1.1);'
+        : ''
+      posterHtml = `<div style="position:relative;left:${Math.round(safePosterOffsetX)}px;${scaleStyle}">` +
         posterMarkup +
         `</div>`
     }
@@ -726,7 +758,7 @@ function computeLabelDirections(
 }
 
 function estimateLabelWidth(label: string) {
-  return Math.min(180, Math.max(42, label.length * 12 + 14))
+  return Math.min(200, Math.max(46, label.length * 13 + 14))
 }
 
 function computeNameLabelOffsets(
@@ -805,7 +837,13 @@ function computeNameLabelOffsets(
 }
 
 /* ── 줌 레벨에서 클러스터링 반경(px) ── */
-function clusterRadiusForZoom(zoom: number): number {
+function clusterRadiusForZoom(zoom: number, isDesktop = false): number {
+  if (isDesktop) {
+    if (zoom >= 16) return 18
+    if (zoom >= 15) return 28
+    if (zoom >= 14) return 38
+    return 52
+  }
   if (zoom >= 16) return 30
   if (zoom >= 15) return 45
   if (zoom >= 14) return 60
@@ -875,8 +913,9 @@ function computeClusters(
   zoom: number,
   splitIds: Set<string> = new Set(),
   coLocGroupKey: Map<string, string> = new Map(),
+  isDesktop = false,
 ): TheaterCluster[] {
-  const radiusPx = clusterRadiusForZoom(zoom)
+  const radiusPx = clusterRadiusForZoom(zoom, isDesktop)
 
   // 분리 대상이 아닌 극장만 클러스터링
   const clusterableTheaters = theaters.filter((t) => !splitIds.has(t.id))
@@ -926,9 +965,34 @@ function computePosterOffsets(
   zoom: number,
   labelDirections: Map<string, LabelDir> = new Map(),
   posterMoviesByTheater: Map<string, TheaterPosterMovie[]> = new Map(),
+  isDesktop = false,
+  filtersActive = false,
 ): Map<string, number> {
   const offsets = new Map<string, number>()
-  if (posterCountForZoom(zoom) === 0) return offsets
+
+  const { w: pW, h: pH } = posterSizeForZoom(zoom, isDesktop)
+  const baseCount = posterCountForZoom(zoom)
+  const POSTER_TOP_FROM_PIN = DOT / 2 + 6
+
+  // 극장별 유효 포스터 슬롯 수 — 필터 매칭 시 zoom이 낮아도 최소 1
+  const theaterCap = (theaterId: string): number => {
+    if (baseCount > 0) return baseCount
+    if (filtersActive) {
+      const movies = posterMoviesByTheater.get(theaterId) ?? []
+      if (movies.length > 0 && movies.some(m => m.matchesFilter)) return 1
+    }
+    return 0
+  }
+
+  // 슬롯 수 → 말풍선 픽셀 크기
+  const dimsForCap = (cap: number) => {
+    const rc = cap === 6 ? 2 : 1
+    const pr = Math.min(cap, 3)
+    return {
+      w: pr * pW + Math.max(0, pr - 1) * 4 + 16,
+      h: pH * rc + 4 * Math.max(0, rc - 1) + 16 + 6,
+    }
+  }
 
   type Rect = [number, number, number, number]
   const overlap = (a: Rect, b: Rect) => ({
@@ -936,33 +1000,45 @@ function computePosterOffsets(
     y: Math.min(a[3], b[3]) - Math.max(a[1], b[1]),
   })
 
-  const POSTER_W = 140
-  const count = posterCountForZoom(zoom)
-  const rowCount = count === 6 ? 2 : 1
-  const POSTER_H = 66 * rowCount + 4 * Math.max(0, rowCount - 1) + 16 + 6
-  const POSTER_TOP_FROM_PIN = DOT / 2 + 6
-  const MIN_OVERLAP_X_TO_SHIFT = POSTER_W / 4
-  const MIN_OVERLAP_Y_TO_SHIFT = POSTER_H / 4
+  // 말풍선이 실제로 보이는 단일 마커 중, 필터 활성 시엔 매칭 극장만 충돌 감지
   const singles = clusters
-    .filter((c) => c.theaters.length === 1 && (posterMoviesByTheater.get(c.theaters[0].id)?.length ?? 0) > 0)
+    .filter((c) => {
+      if (c.theaters.length !== 1) return false
+      const id = c.theaters[0].id
+      const movies = posterMoviesByTheater.get(id) ?? []
+      if (movies.length === 0) return false
+      if (filtersActive && !movies.some(m => m.matchesFilter)) return false
+      return theaterCap(id) > 0
+    })
     .map((c) => {
       const px = map.latLngToContainerPoint([c.lat, c.lng] as [number, number])
-      return { id: c.theaters[0].id, px }
+      const id = c.theaters[0].id
+      return { id, px, cap: theaterCap(id) }
     })
-    .filter((single) => Number.isFinite(single.px.x) && Number.isFinite(single.px.y))
-  const posterRect = (single: { id: string; px: LeafletPoint }, offset = offsets.get(single.id) ?? 0): Rect => [
-    single.px.x - POSTER_W / 2 + finiteNumber(offset),
-    single.px.y + POSTER_TOP_FROM_PIN,
-    single.px.x + POSTER_W / 2 + finiteNumber(offset),
-    single.px.y + POSTER_TOP_FROM_PIN + POSTER_H,
-  ]
+    .filter((s) => Number.isFinite(s.px.x) && Number.isFinite(s.px.y))
+
+  if (singles.length === 0) return offsets
+
+  const posterRect = (s: { id: string; px: LeafletPoint; cap: number }, offset = offsets.get(s.id) ?? 0): Rect => {
+    const { w, h } = dimsForCap(s.cap)
+    return [
+      s.px.x - w / 2 + finiteNumber(offset),
+      s.px.y + POSTER_TOP_FROM_PIN,
+      s.px.x + w / 2 + finiteNumber(offset),
+      s.px.y + POSTER_TOP_FROM_PIN + h,
+    ]
+  }
 
   for (let i = 0; i < singles.length; i++) {
     for (let j = i + 1; j < singles.length; j++) {
       const a = singles[i]
       const b = singles[j]
+      const { w: wA, h: hA } = dimsForCap(a.cap)
+      const { w: wB, h: hB } = dimsForCap(b.cap)
+      const minX = Math.min(wA, wB) / 4
+      const minY = Math.min(hA, hB) / 4
       const o = overlap(posterRect(a), posterRect(b))
-      if (o.x < MIN_OVERLAP_X_TO_SHIFT || o.y < MIN_OVERLAP_Y_TO_SHIFT) continue
+      if (o.x < minX || o.y < minY) continue
       const shift = o.x / 2 + 8
       const dx = b.px.x - a.px.x
       offsets.set(a.id, (offsets.get(a.id) ?? 0) + (dx >= 0 ? -shift : shift))
@@ -998,13 +1074,16 @@ function computePosterOffsets(
   }
 
   for (const single of singles) {
+    const { w: wS, h: hS } = dimsForCap(single.cap)
+    const minX = wS / 4
+    const minY = hS / 4
     for (const blocker of clusterBlockers) {
       const rect = posterRect(single)
       const o = overlap(rect, blocker.rect)
-      if (o.x < MIN_OVERLAP_X_TO_SHIFT || o.y < MIN_OVERLAP_Y_TO_SHIFT) continue
+      if (o.x < minX || o.y < minY) continue
       const currentOffset = finiteNumber(offsets.get(single.id) ?? 0)
       const direction = (single.px.x + currentOffset) < blocker.centerX ? -1 : 1
-      offsets.set(single.id, (offsets.get(single.id) ?? 0) + direction * (o.x - MIN_OVERLAP_X_TO_SHIFT + 8))
+      offsets.set(single.id, (offsets.get(single.id) ?? 0) + direction * (o.x - minX + 8))
     }
   }
 
@@ -1106,9 +1185,10 @@ function findSplitZoom(
   theaters: Theater[],
   map: LeafletMap,
   currentZoom: number,
+  isDesktop = false,
 ): number {
   for (let z = currentZoom + 1; z <= 19; z++) {
-    const radius = clusterRadiusForZoom(z)
+    const radius = clusterRadiusForZoom(z, isDesktop)
     // 이 줌에서 픽셀 거리 계산 (latLngToContainerPoint는 현재 줌 기준이므로 비율로 환산)
     const zoomScale = Math.pow(2, z - currentZoom)
     const pts = theaters.map((t) => {
@@ -1136,6 +1216,29 @@ function findSplitZoom(
 /* ── 줌 트래커 ─────────────────────────────────────────────────── */
 function ZoomTracker({ onZoom }: { onZoom: (z: number) => void }) {
   useMapEvents({ zoomend: (e) => onZoom(e.target.getZoom()) })
+  return null
+}
+
+/* ── 선택 극장 화면 이탈 감지 ────────────────────────────────── */
+function OffScreenTracker({
+  theaterLatLng,
+  onOffScreen,
+}: {
+  theaterLatLng: [number, number] | null
+  onOffScreen: (v: boolean) => void
+}) {
+  const map = useMap()
+  const cbRef = useRef(onOffScreen)
+  cbRef.current = onOffScreen
+  useEffect(() => {
+    const check = () => {
+      if (!theaterLatLng) { cbRef.current(false); return }
+      cbRef.current(!map.getBounds().contains(theaterLatLng))
+    }
+    check()
+    map.on('move', check)
+    return () => { map.off('move', check) }
+  }, [map, theaterLatLng])
   return null
 }
 
@@ -1436,6 +1539,17 @@ export default function MapView() {
 
   const filtersActive = filters.bookable || filters.genres.length > 0 || filters.nations.length > 0 || !!movieFilter
 
+  // 상영일정·예매가능 제외한 검색 필터가 활성화 됐을 때 — 해당 극장은 클러스터링 제외
+  const searchMatchedTheaterIds = useMemo(() => {
+    const isSearchFilter = !!movieFilter || filters.genres.length > 0 || filters.nations.length > 0
+    if (!isSearchFilter) return new Set<string>()
+    const ids = new Set<string>()
+    for (const [theaterId, movies] of theaterPosterMovies) {
+      if (movies.some(m => m.matchesFilter)) ids.add(theaterId)
+    }
+    return ids
+  }, [movieFilter, filters.genres, filters.nations, theaterPosterMovies])
+
   const titleMovieResults = useMemo(() => {
     if (!searchQuery.trim()) return []
     return movies
@@ -1545,6 +1659,7 @@ export default function MapView() {
   const [sheetExpanded, setSheetExpanded] = useState(false)
   const [selectedMovieId, setSelectedMovieId] = useState('')
   const [sheetExiting, setSheetExiting] = useState(false)
+  const [theaterOffScreen, setTheaterOffScreen] = useState(false)
   // displayedId: 퇴장 애니메이션 중에도 이전 극장을 유지하기 위한 지연 참조
   const [displayedId, setDisplayedId] = useState<string | null>(null)
   const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -1565,28 +1680,49 @@ export default function MapView() {
     if (!map) return
     const coLocGroups = findCoLocationGroups(theaters)
     const coLoc = computeCoLocationOffsets(theaters, map, zoom)
-    const splitIds = new Set(coLoc.keys())
+    // 동일좌표 분리 대상 + 검색 매칭 극장(클러스터 제외)
+    const splitIds = new Set([...coLoc.keys(), ...searchMatchedTheaterIds])
     // 분리 대상은 오프셋 적용 좌표로 교체 후 클러스터 계산
     const adjustedTheaters = theaters.map((t) => {
       const off = coLoc.get(t.id)
       return off ? { ...t, lat: off.lat, lng: off.lng } : t
     })
-    const c = computeClusters(adjustedTheaters, map, zoom, splitIds, coLocGroups)
+    const c = computeClusters(adjustedTheaters, map, zoom, splitIds, coLocGroups, isDesktopLayout)
     const d = computeLabelDirections(c, map)
     const labelO = computeNameLabelOffsets(c, map, d)
-    const o = computePosterOffsets(c, map, zoom, d, theaterPosterMovies)
+    const o = computePosterOffsets(c, map, zoom, d, theaterPosterMovies, isDesktopLayout, filtersActive)
     setClusters(c)
     setPosterOffsets(o)
     setCoLocationOffsets(coLoc)
     setLabelDirections(d)
     setLabelOffsets(labelO)
-  }, [zoom, theaters, theaterPosterMovies])
+  }, [zoom, theaters, theaterPosterMovies, isDesktopLayout, searchMatchedTheaterIds, filtersActive])
 
   // zoom 변경 시 재계산 (줌 애니메이션 끝난 뒤)
   useEffect(() => {
     const id = setTimeout(recompute, 80)
     return () => clearTimeout(id)
   }, [recompute])
+
+  // 검색 필터(영화·장르·국가) 적용 시 → 매칭 극장이 모두 보이도록 뷰 이동
+  useEffect(() => {
+    const isSearchFilter = !!movieFilter || filters.genres.length > 0 || filters.nations.length > 0
+    if (!isSearchFilter) return
+    const map = mapRef.current
+    if (!map) return
+    const matchedTheaters = theaters.filter(t => {
+      return (theaterPosterMovies.get(t.id) ?? []).some(m => m.matchesFilter)
+    })
+    if (matchedTheaters.length === 0) return
+    if (matchedTheaters.length === 1) {
+      const t = matchedTheaters[0]
+      map.flyTo([t.lat, t.lng], Math.max(map.getZoom(), 15), { duration: 0.75 })
+      return
+    }
+    const bounds = L.latLngBounds(matchedTheaters.map(t => [t.lat, t.lng] as [number, number]))
+    map.flyToBounds(bounds, { padding: [80, 80], maxZoom: 16, duration: 0.75 })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [movieFilter, filters.genres, filters.nations])
 
   // 위치 첫 수신 시 지도 이동 — 이후엔 무시
   const initialMoved = useRef(false)
@@ -1617,6 +1753,19 @@ export default function MapView() {
     }, 400)
   }, [])
 
+  // 시트/패널이 열릴 때 남은 영역의 중심으로 flyTo
+  const flyToForTheater = useCallback((latlng: [number, number], zoom: number, duration: number) => {
+    const map = mapRef.current
+    if (!map) return
+    // desktop: 오른쪽 패널 440px → 왼쪽으로 220px 이동
+    // mobile:  하단 시트 300px → 위쪽으로 150px 이동
+    const dx = isDesktopLayout ? -220 : 0
+    const dy = isDesktopLayout ? 0 : -150
+    const targetPx = map.project(L.latLng(latlng), zoom)
+    const newCenter = map.unproject(L.point(targetPx.x - dx, targetPx.y - dy), zoom)
+    map.flyTo(newCenter, zoom, { duration })
+  }, [isDesktopLayout])
+
   const focusTheater = useCallback((theater: Theater) => {
     setRecentSearches(prev => addToRecent(searchQuery, prev))
     closeSearch()
@@ -1627,12 +1776,12 @@ export default function MapView() {
     setSelectedMovieId(movieFilter?.id ?? '')
     setSheetExpanded(isDesktopLayout)
     const currentZoom = mapRef.current?.getZoom() ?? 15
-    mapRef.current?.flyTo(
+    flyToForTheater(
       [theater.lat, theater.lng],
-      Math.max(currentZoom, 15),
-      { duration: 0.75 },
+      Math.max(currentZoom, 16),
+      0.75,
     )
-  }, [closeSearch, isDesktopLayout, movieFilter, searchQuery])
+  }, [closeSearch, flyToForTheater, isDesktopLayout, movieFilter, searchQuery])
 
   useEffect(() => {
     if (isDesktopLayout && selectedTheater) setSheetExpanded(true)
@@ -1682,14 +1831,14 @@ export default function MapView() {
       const currentZoom = mapRef.current?.getZoom() ?? 15
       const theater = theaters.find((t) => t.id === theaterId)
       if (theater) {
-        mapRef.current?.flyTo(
+        flyToForTheater(
           [theater.lat, theater.lng],
-          Math.max(currentZoom, 15),
-          { duration: 0.5 },
+          Math.max(currentZoom, 16),
+          0.5,
         )
       }
     }
-  }, [selectedId, closeSheet, isDesktopLayout, movieFilter, theaters])
+  }, [selectedId, closeSheet, flyToForTheater, isDesktopLayout, movieFilter, theaters])
 
   // FAB 버튼 bottom: collapsed = COLLAPSED_H(300) + 여유 16 = 316
   // expanded / 시트 없음 = safe area 위 32px
@@ -2192,6 +2341,10 @@ export default function MapView() {
         />
         <MapRefSetter mapRef={mapRef} />
         <ZoomTracker onZoom={setZoom} />
+        <OffScreenTracker
+          theaterLatLng={selectedTheater ? [selectedTheater.lat, selectedTheater.lng] : null}
+          onOffScreen={setTheaterOffScreen}
+        />
 
         {zoom >= SUBWAY_LINE_MIN_ZOOM && SUBWAY_LINES.features.length > 0 && (
           <GeoJSON
@@ -2223,6 +2376,7 @@ export default function MapView() {
                 key={`cluster-${cluster.id}`}
                 position={[cluster.lat, cluster.lng]}
                 opacity={clusterDimmed ? 0.7 : 1}
+                zIndexOffset={filtersActive ? -500 : 0}
                 icon={makeClusterIcon(
                   cluster.theaters,
                   labelDirections.get(cluster.id),
@@ -2240,7 +2394,7 @@ export default function MapView() {
                       return
                     }
                     const currentZoom = map.getZoom()
-                    const splitZoom = findSplitZoom(cluster.theaters, map, currentZoom)
+                    const splitZoom = findSplitZoom(cluster.theaters, map, currentZoom, isDesktopLayout)
                     const bounds = L.latLngBounds(
                       cluster.theaters.map((t) => [t.lat, t.lng] as [number, number])
                     )
@@ -2268,7 +2422,12 @@ export default function MapView() {
               key={theater.id}
               position={position}
               opacity={dimmed ? 0.7 : 1}
-              zIndexOffset={selectedId === theater.id ? 1000 : 0}
+              zIndexOffset={
+                selectedId === theater.id ? 1000 :
+                filtersActive && !dimmed ? 500 :
+                filtersActive && dimmed ? -500 :
+                0
+              }
               icon={makePinIcon(
                 theater.name,
                 selectedId === theater.id,
@@ -2279,6 +2438,7 @@ export default function MapView() {
                 labelOffsets.get(theater.id),
                 isDark,
                 dimmed,
+                isDesktopLayout,
               )}
               eventHandlers={{ click: () => handlePinClick(theater.id) }}
             />
@@ -2313,7 +2473,7 @@ export default function MapView() {
         }} />
       )}
 
-      {/* 검색바 + 필터칩 — PC/모바일 공통 플로팅 */}
+      {/* 검색바 — PC: maxWidth 440 */}
       <div style={{
         position: 'absolute',
         top: isDesktopLayout ? 16 : 'max(0px, env(safe-area-inset-top))',
@@ -2332,7 +2492,21 @@ export default function MapView() {
             />
           </div>
         </div>
-        <div style={{ marginTop: 8, pointerEvents: 'auto' }}>
+      </div>
+
+      {/* 필터칩 — maxWidth 없음, 드롭다운이 화면 우측까지 자유롭게 펼쳐짐 */}
+      <div style={{
+        position: 'absolute',
+        top: isDesktopLayout
+          ? 16 + 44 + 8  /* searchbar top(16) + height(44) + gap(8) */
+          : 'max(0px, env(safe-area-inset-top))',
+        left: 0,
+        right: 0,
+        zIndex: 1001,
+        pointerEvents: 'none',
+        marginTop: isDesktopLayout ? undefined : 16 + 44 + 8, /* mobile: padding(16) + height(44) + gap(8) */
+      }}>
+        <div style={{ pointerEvents: 'auto' }}>
           <FilterBar
             desktop={isDesktopLayout}
             onChange={setFilters}
@@ -2595,6 +2769,59 @@ export default function MapView() {
         <div style={{ height: 8 }} />
         <FabRound onClick={handleLocate}><IcoLocate /></FabRound>
       </div>
+
+      {/* 선택 극장 화면 이탈 시 돌아가기 pill */}
+      {selectedId && !sheetExiting && !(sheetExpanded && !isDesktopLayout) && theaterOffScreen && !searchOpen && selectedTheater && (
+        <div style={{
+          position: 'absolute',
+          left: 0,
+          right: isDesktopLayout ? 456 : 0,
+          bottom: isDesktopLayout ? 32 : 316,
+          zIndex: 1002,
+          display: 'flex',
+          justifyContent: 'center',
+          pointerEvents: 'none',
+        }}>
+          <button
+            onClick={() => flyToForTheater([selectedTheater.lat, selectedTheater.lng], Math.max(zoom, 16), 0.6)}
+            style={{
+              pointerEvents: 'auto',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              height: 40,
+              paddingLeft: 6,
+              paddingRight: 16,
+              borderRadius: 999,
+              border: '1px solid rgba(0,0,0,0.14)',
+              backgroundColor: 'var(--color-primary-base)',
+              boxShadow: 'var(--shadow-md)',
+              color: '#fff',
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: 'pointer',
+              maxWidth: 'calc(100vw - 48px)',
+              overflow: 'hidden',
+            }}
+          >
+            <div style={{
+              width: 28, height: 28, borderRadius: '50%',
+              backgroundColor: 'rgba(255,255,255,0.18)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <svg width={14} height={14} viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2.5"
+                strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </div>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              &ldquo;{selectedTheater.name}&rdquo;으로 돌아가기
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* 드래그 바텀시트 — TheaterSheet가 자체적으로 Leaflet 이벤트 차단 */}
       {selectedTheater && !desktopPanel && (

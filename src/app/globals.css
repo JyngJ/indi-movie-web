@@ -105,6 +105,26 @@ img {
   background: color-mix(in srgb, var(--color-text-caption) 62%, transparent);
 }
 
+/* 포스터 스트립 로딩 — 차례로 번지는 물결 */
+@keyframes poster-wave {
+  0%, 100% { opacity: 0.1; }
+  50%       { opacity: 0.75; }
+}
+
+/* 핀 선택 애니메이션 */
+@keyframes pin-label-select {
+  from { opacity: 0; transform: scale(0.95) translateY(2px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes pin-dot-select {
+  from { transform: scale(0.9); }
+  to   { transform: scale(1); }
+}
+@keyframes poster-island-select {
+  from { opacity: 0; transform: scale(0.95) translateY(3px); }
+  to   { opacity: 1; transform: scale(1.1) translateY(0); }
+}
+
 /* 상세 페이지 슬라이드 인 (오른쪽에서) */
 @keyframes slideInFromRight {
   from { opacity: 0; transform: translateX(24px); }

@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useMovies, useActiveMovieIds } from '@/lib/supabase/queries'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useMovies, useActiveMovieIds, useDirectorProfile } from '@/lib/supabase/queries'
 import type { Movie } from '@/types/api'
 
 function useIsDesktopDetail() {
@@ -65,45 +65,41 @@ function NavBar({ onBack, onClose }: { onBack: () => void; onClose: () => void }
 }
 
 /* ── ProfileHero ── */
-function ProfileHero({ name, count, desktop = false }: { name: string; count?: number; desktop?: boolean }) {
+function ProfileHero({
+  name, originalName, photoUrl,
+}: {
+  name: string; originalName?: string; photoUrl?: string
+}) {
   return (
     <div style={{
-      background: desktop
-        ? 'linear-gradient(135deg, var(--color-surface-card) 0%, var(--color-primary-subtle-l) 100%)'
-        : 'linear-gradient(to bottom, var(--color-primary-subtle-l) 0%, var(--color-surface-bg) 100%)',
-      padding: desktop ? '34px 28px' : '32px 20px 24px',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      textAlign: 'center',
-      border: desktop ? '1px solid var(--color-border)' : undefined,
-      borderRadius: desktop ? 20 : 0,
-      boxShadow: desktop ? '0 18px 54px rgba(20, 15, 10, 0.10)' : undefined,
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      padding: '32px 20px 24px',
+      background: 'linear-gradient(to bottom, var(--color-primary-subtle-l) 0%, var(--color-surface-bg) 100%)',
     }}>
-      {/* 프로필 아바타 */}
       <div style={{
-        width: desktop ? 128 : 96, height: desktop ? 128 : 96, borderRadius: '50%',
+        width: 112, height: 112, borderRadius: '50%',
         backgroundColor: 'var(--color-surface-raised)',
         border: '1px solid var(--color-border)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        marginBottom: desktop ? 22 : 16,
+        marginBottom: 18, flexShrink: 0, overflow: 'hidden',
         color: 'var(--color-text-caption)',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10)',
       }}>
-        <svg width={44} height={44} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-          <circle cx="12" cy="7" r="4" />
-        </svg>
+        {photoUrl ? (
+          <img src={photoUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
+        ) : (
+          <svg width={48} height={48} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+        )}
       </div>
-      <h1 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: desktop ? 34 : 24, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+      <h1 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 26, fontWeight: 700, color: 'var(--color-text-primary)', textAlign: 'center' }}>
         {name}
       </h1>
-      {typeof count === 'number' && (
-        <div style={{
-          marginTop: 10,
-          fontSize: 13,
-          color: 'var(--color-text-sub)',
-        }}>
-          등록 작품 {count}편
+      {originalName && (
+        <div style={{ marginTop: 5, fontSize: 14, color: 'var(--color-text-sub)', fontStyle: 'italic', textAlign: 'center' }}>
+          {originalName}
         </div>
       )}
     </div>
@@ -146,7 +142,7 @@ function SortChips({ active, onChange }: { active: SortKey; onChange: (k: SortKe
 /* ── 포스터 플레이스홀더 ── */
 function MiniPoster({ src }: { src?: string }) {
   return (
-    <div style={{ width: 44, height: 66, borderRadius: 5, overflow: 'hidden', flexShrink: 0, backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)' }}>
+    <div style={{ width: 52, height: 76, borderRadius: 6, overflow: 'hidden', flexShrink: 0, backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)' }}>
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
@@ -231,6 +227,8 @@ function FilmographyRow({
 /* ── 메인 ── */
 export function DirectorDetailClient({ directorName }: { directorName: string }) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const fromPath = searchParams.get('from')
   const isDesktop = useIsDesktopDetail()
   // const [starred, setStarred] = useState(false) // 즐겨찾기 — 계정 기능 구현 전 비활성화
   const [sort, setSort] = useState<SortKey>('newest')
@@ -239,6 +237,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
 
   const { data: movies = [], isLoading } = useMovies()
   const { data: activeIds = [] } = useActiveMovieIds()
+  const { data: profile } = useDirectorProfile(directorName)
   const activeIdSet = useMemo(() => new Set(activeIds), [activeIds])
 
   const directorMovies = useMemo(() => {
@@ -277,10 +276,19 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
         marginLeft: isDesktop ? -28 : 0,
         marginRight: isDesktop ? -28 : 0,
       }}>
-        <NavBar onBack={() => router.back()} onClose={() => router.push('/')} />
+        <NavBar onBack={() => fromPath ? router.push(fromPath) : router.back()} onClose={() => router.push('/')} />
       </div>
 
-      <ProfileHero name={directorName} count={directorMovies.length} desktop={isDesktop} />
+      <ProfileHero name={directorName} originalName={profile?.originalName} photoUrl={profile?.photoUrl} />
+
+      {/* 약력 */}
+      {profile?.bio && (
+        <div style={{ padding: '16px 20px', borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
+          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.8, color: 'var(--color-text-body)' }}>
+            {profile.bio}
+          </p>
+        </div>
+      )}
 
       {/* 작품 목록 */}
       <div style={{
@@ -300,6 +308,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
             alignItems: 'center',
             justifyContent: 'space-between',
             marginBottom: isDesktop ? 0 : 14,
+            marginTop: isDesktop ? 0 : 20,
             padding: isDesktop ? '20px 22px' : undefined,
             borderBottom: isDesktop ? '1px solid var(--color-border)' : undefined,
           }}>

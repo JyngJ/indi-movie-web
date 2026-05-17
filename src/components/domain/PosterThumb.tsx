@@ -8,6 +8,8 @@ interface PosterThumbProps {
   /** 'sm' = radius 6px (기본), 'lg' = radius 8px (바텀시트용) */
   size?: 'sm' | 'lg'
   selected?: boolean
+  /** selected와 동일한 링·inset 테두리지만 체크 배지 없음 (필터 매칭 강조) */
+  highlighted?: boolean
   overflow?: number | string
   onClick?: () => void
 }
@@ -19,6 +21,7 @@ export function PosterThumb({
   height = 102,
   size = 'sm',
   selected = false,
+  highlighted = false,
   overflow,
   onClick,
 }: PosterThumbProps) {
@@ -35,7 +38,7 @@ export function PosterThumb({
         height,
         borderRadius: radiusVar,
         /* 선택 링: box-shadow는 레이아웃에 영향을 주지 않음 */
-        boxShadow: selected
+        boxShadow: selected || highlighted
           ? '0 0 0 2px var(--color-primary-base)'
           : 'none',
         cursor: onClick ? 'pointer' : 'default',
@@ -91,8 +94,8 @@ export function PosterThumb({
           }}
         />
 
-        {/* 선택 시 inset 흰 테두리 */}
-        {selected && (
+        {/* 선택/강조 시 inset 흰 테두리 */}
+        {(selected || highlighted) && (
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
