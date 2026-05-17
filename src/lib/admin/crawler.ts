@@ -159,21 +159,13 @@ export async function crawlShowtimeCandidates(context: ParseContext) {
 }
 
 export async function crawlDtryxReservationApi(context: ParseContext) {
-  const cgid = extractDtryxCgid(context.sourceUrl ?? context.source.listingUrl)
-  const baseUrl = new URL(context.sourceUrl ?? context.source.listingUrl)
+  const sourceUrl = context.sourceUrl ?? context.source.listingUrl
+  const cgid = extractDtryxCgid(sourceUrl)
+  const baseUrl = new URL(sourceUrl)
   const origin = baseUrl.origin
-  const headers = {
-    'user-agent': 'Mozilla/5.0 (compatible; indi-movie-web-admin-crawler/0.1)',
-    accept: 'application/json, text/javascript, */*; q=0.01',
-    'x-requested-with': 'XMLHttpRequest',
-    referer: context.sourceUrl ?? context.source.listingUrl,
-  }
-  const mainParams = createDtryxParams(cgid)
-  const main = await fetchJson<{
-    MovieList?: DtryxMovie[]
-    CinemaList?: DtryxCinema[]
-    PlaySdtList?: DtryxPlayDate[]
-  }>(`${origin}/reserve/main_list.do?${mainParams}`, headers)
+  const brandCd = baseUrl.searchParams.get('BrandCd') ?? 'dtryx'
+  const headers = buildDtryxHeaders(sourceUrl)
+  const main = await fetchDtryxMain(origin, cgid, brandCd, headers)
   const cinemas = (main.CinemaList ?? []).filter((cinema) => cinema.HiddenYn !== 'Y')
   const movies = (main.MovieList ?? []).filter((movie) => movie.HiddenYn !== 'Y')
   const playDates = (main.PlaySdtList ?? []).filter((date) => date.HiddenYn !== 'Y').slice(0, 14)
@@ -183,6 +175,95 @@ export async function crawlDtryxReservationApi(context: ParseContext) {
     throw new Error(`${context.source.theaterName} 영화관 코드를 찾지 못했습니다.`)
   }
 
+  return fetchDtryxShowtimes(origin, cgid, brandCd, headers, movies, playDates, targetCinema, context)
+}
+
+export async function crawlAllDtryxSources(
+  sources: AdminTheaterSource[],
+): Promise<Array<{ source: AdminTheaterSource; candidates: CrawledShowtimeCandidate[]; error?: string }>> {
+  const groups = new Map<string, { origin: string; cgid: string; brandCd: string; sources: AdminTheaterSource[] }>()
+
+  for (const source of sources) {
+    try {
+      const url = new URL(source.listingUrl)
+      const brandCd = url.searchParams.get('BrandCd') ?? 'dtryx'
+      const cgid = extractDtryxCgid(source.listingUrl)
+      const key = `${url.origin}|${brandCd}`
+      const group = groups.get(key) ?? { origin: url.origin, cgid, brandCd, sources: [] }
+      group.sources.push(source)
+      groups.set(key, group)
+    } catch {
+      // skip malformed URL sources
+    }
+  }
+
+  const brandResults = await Promise.all(
+    Array.from(groups.values()).map(async (group) => {
+      try {
+        const headers = buildDtryxHeaders(`${group.origin}/cinema/main.do?cgid=${group.cgid}&BrandCd=${group.brandCd}`)
+        const main = await fetchDtryxMain(group.origin, group.cgid, group.brandCd, headers)
+        const cinemas = (main.CinemaList ?? []).filter((c) => c.HiddenYn !== 'Y')
+        const movies = (main.MovieList ?? []).filter((m) => m.HiddenYn !== 'Y')
+        const playDates = (main.PlaySdtList ?? []).filter((d) => d.HiddenYn !== 'Y').slice(0, 14)
+
+        return Promise.all(
+          group.sources.map(async (source) => {
+            const targetCinema = pickDtryxCinema(cinemas, source.theaterName)
+            if (!targetCinema) {
+              return { source, candidates: [], error: `${source.theaterName} 영화관 코드를 찾지 못했습니다.` }
+            }
+            const context: ParseContext = {
+              source,
+              inputKind: 'url',
+              sourceUrl: source.listingUrl,
+            }
+            try {
+              const candidates = await fetchDtryxShowtimes(group.origin, group.cgid, group.brandCd, headers, movies, playDates, targetCinema, context)
+              return { source, candidates }
+            } catch (error) {
+              return { source, candidates: [], error: error instanceof Error ? error.message : '크롤링 오류' }
+            }
+          }),
+        )
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : '디트릭스 API 오류'
+        return group.sources.map((source) => ({ source, candidates: [], error: msg }))
+      }
+    }),
+  )
+
+  return brandResults.flat()
+}
+
+function buildDtryxHeaders(referer: string): Record<string, string> {
+  return {
+    'user-agent': 'Mozilla/5.0 (compatible; indi-movie-web-admin-crawler/0.1)',
+    accept: 'application/json, text/javascript, */*; q=0.01',
+    'x-requested-with': 'XMLHttpRequest',
+    referer,
+  }
+}
+
+async function fetchDtryxMain(
+  origin: string,
+  cgid: string,
+  brandCd: string,
+  headers: Record<string, string>,
+): Promise<{ MovieList?: DtryxMovie[]; CinemaList?: DtryxCinema[]; PlaySdtList?: DtryxPlayDate[] }> {
+  const mainParams = createDtryxParams(cgid, {}, brandCd)
+  return fetchJson(`${origin}/reserve/main_list.do?${mainParams}`, headers)
+}
+
+async function fetchDtryxShowtimes(
+  origin: string,
+  cgid: string,
+  brandCd: string,
+  headers: Record<string, string>,
+  movies: DtryxMovie[],
+  playDates: DtryxPlayDate[],
+  targetCinema: DtryxCinema,
+  context: ParseContext,
+): Promise<CrawledShowtimeCandidate[]> {
   const tasks = playDates.flatMap((playDate) =>
     movies.map((movie) => async () => {
       const candidates: CrawledShowtimeCandidate[] = []
@@ -190,7 +271,7 @@ export async function crawlDtryxReservationApi(context: ParseContext) {
         CinemaCd: targetCinema.CinemaCd,
         MovieCd: movie.MovieCd,
         PlaySDT: playDate.PlaySDT,
-      })
+      }, brandCd)
       const data = await fetchJson<{ Showseqlist?: DtryxShowtimeGroup[] }>(
         `${origin}/reserve/showseq_list.do?${params}`,
         headers,
@@ -878,17 +959,17 @@ function extractMovieeTheaterId(url: string) {
   throw new Error('무비애 예매 URL에서 tid 또는 thsynid를 찾지 못했습니다.')
 }
 
-function createDtryxParams(cgid: string, overrides: Partial<Record<string, string>> = {}) {
+function createDtryxParams(cgid: string, overrides: Partial<Record<string, string>> = {}, brandCd = 'dtryx') {
   return new URLSearchParams({
     cgid,
-    BrandCd: 'dtryx',
+    BrandCd: brandCd,
     CinemaCd: 'all',
     MovieCd: 'all',
     PlaySDT: 'all',
     Sort: 'boxoffice',
     ScreenCd: '',
     ShowSeq: '',
-    TabBrandCd: 'dtryx',
+    TabBrandCd: brandCd,
     TabRegionCd: 'all',
     TabMovieType: 'all',
     ...overrides,

@@ -1728,9 +1728,9 @@ export function TheaterSheet({
                     )}
                   </div>
                   {/* 영화 정보 */}
-                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <div style={{
-                      fontSize: 15, fontWeight: 700,
+                      fontSize: 17, fontWeight: 700,
                       color: 'var(--color-text-primary)',
                       lineHeight: 1.3,
                       overflow: 'hidden',
@@ -1744,27 +1744,40 @@ export function TheaterSheet({
                       onDirectorOpen ? (
                         <button
                           onClick={(e) => { e.stopPropagation(); onDirectorOpen(movie.director[0]) }}
-                          style={{ fontSize: 12, color: 'var(--color-primary-base)', fontWeight: 500, background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', textDecoration: 'underline' }}
+                          style={{ fontSize: 13, color: 'var(--color-primary-base)', fontWeight: 500, background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', textDecoration: 'underline' }}
                         >
                           {movie.director[0]}
                         </button>
                       ) : (
-                        <div style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>
+                        <div style={{ fontSize: 13, color: 'var(--color-text-caption)' }}>
                           {movie.director[0]}
                         </div>
                       )
                     )}
-                    {movie.runtimeMinutes && (
-                      <div style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>
-                        {movie.runtimeMinutes}분
-                      </div>
-                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      {movie.nation && (
+                        <span style={{
+                          fontSize: 10, fontWeight: 500,
+                          padding: '1px 6px',
+                          borderRadius: 999,
+                          border: '1px solid var(--color-border)',
+                          color: 'var(--color-text-sub)',
+                        }}>
+                          {withFlag(movie.nation)}
+                        </span>
+                      )}
+                      {movie.runtimeMinutes && (
+                        <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>
+                          {movie.runtimeMinutes}분
+                        </span>
+                      )}
+                    </div>
                     {movie.genre && movie.genre.length > 0 && (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 2 }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                         {movie.genre.map(g => (
                           <span key={g} style={{
                             fontSize: 10, fontWeight: 500,
-                            padding: '2px 8px',
+                            padding: '1px 6px',
                             borderRadius: 999,
                             border: '1px solid var(--color-border)',
                             color: 'var(--color-text-sub)',

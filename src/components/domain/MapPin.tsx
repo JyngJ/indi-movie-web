@@ -8,6 +8,8 @@ interface MapPinProps {
   label?: string
   labelOffset?: { x: number; y: number }
   onClick?: () => void
+  dimmed?: boolean
+  isDark?: boolean
 }
 
 const PIN_COLORS: Record<PinKind, { dot: string; aura: string }> = {
@@ -20,8 +22,12 @@ const PIN_COLORS: Record<PinKind, { dot: string; aura: string }> = {
 const DOT = 22
 const AURA = 44
 
-export function MapPin({ kind = 'indie', selected = false, label, labelOffset, onClick }: MapPinProps) {
-  const { dot, aura } = PIN_COLORS[kind]
+const DIMMED_DOT_LIGHT = '#6b7280'
+const DIMMED_DOT_DARK = '#71717a'
+
+export function MapPin({ kind = 'indie', selected = false, label, labelOffset, onClick, dimmed = false, isDark = false }: MapPinProps) {
+  const { dot: activeDot, aura } = PIN_COLORS[kind]
+  const dot = dimmed ? (isDark ? DIMMED_DOT_DARK : DIMMED_DOT_LIGHT) : activeDot
   const tailShiftX = labelOffset ? Math.max(-36, Math.min(36, -labelOffset.x)) : 0
 
   return (

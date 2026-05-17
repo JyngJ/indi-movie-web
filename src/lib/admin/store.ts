@@ -257,9 +257,11 @@ export async function listCrawlRuns() {
 
 export async function listReviewCandidates(status?: AdminShowtimeStatus) {
   const supabase = createSupabaseAdminClient()
+
   let query = supabase
     .from('showtime_candidates')
     .select('*')
+    .neq('status', 'rejected')
     .order('show_date', { ascending: true })
     .order('show_time', { ascending: true })
 
@@ -467,6 +469,16 @@ export async function updateAdminServiceShowtime(input: AdminShowtimeInput) {
   if (error) throw new Error(error.message)
 
   return serviceShowtimeFromRow(data as unknown as ShowtimeRow)
+}
+
+export async function deleteCandidates(ids: string[]) {
+  const supabase = createSupabaseAdminClient()
+  const { error } = await supabase
+    .from('showtime_candidates')
+    .delete()
+    .in('id', ids)
+
+  if (error) throw new Error(error.message)
 }
 
 export async function updateCandidateStatuses(ids: string[], status: AdminShowtimeStatus) {
@@ -1080,16 +1092,20 @@ function resolveMovieByTitle(title: string, movies: MovieRow[]) {
 
 function candidateMovieTitleCandidates(title: string) {
   const base = title.trim()
-  return Array.from(new Set([
+  // 더블 피처: "A + B" → A, B 각각 시도
+  const plusParts = base.split(/\s*\+\s*/).map(s => s.trim()).filter(Boolean)
+  const variants = [
     base,
     // 날짜 패턴 제거 (05/15, 5월 15일)
     base.replace(/\s+(?:\d{1,2}[./-]\d{1,2})(?:\s.*)?$/, '').trim(),
     base.replace(/\s+(?:\d{1,2}월\s*\d{1,2}일)(?:\s.*)?$/, '').trim(),
-    // 파트 표시 제거 (1부, 2부, 상, 하, 1, 2부)
+    // 파트 표시 제거 (1부, 2부, 상, 하)
     base.replace(/\s+(?:\d+,\s*\d+부|\d+부|상편|하편|[상하])\s*$/, '').trim(),
-    // 쉼표 이후 파트 표시 통째로 제거 (영화사 1, 2부 → 영화사)
     base.replace(/,?\s*\d+[,\s]*\d*부?\s*$/, '').trim(),
-  ].filter(Boolean)))
+    // 더블 피처: + 앞/뒤 각 영화 제목
+    ...(plusParts.length > 1 ? plusParts : []),
+  ]
+  return Array.from(new Set(variants.filter(Boolean)))
 }
 
 function pickExactExternalMovie(title: string, movies: AdminExternalMovie[]) {

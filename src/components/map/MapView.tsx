@@ -625,6 +625,8 @@ function makePinIcon(
   filtersActive = false,
   posterOffsetX = 0,
   labelOffset: LabelOffset = { x: 0, y: 0 },
+  isDark = false,
+  dimmed = false,
 ) {
   const safePosterOffsetX = finiteNumber(posterOffsetX)
   const slots = posterSlotsForZoom(posterMovies, zoom, filtersActive)
@@ -661,7 +663,7 @@ function makePinIcon(
 
   const html = `
     <div style="width:140px;display:flex;flex-direction:column;align-items:center;overflow:visible;position:relative;">
-      ${renderToStaticMarkup(<MapPin kind="indie" selected={selected} label={name} labelOffset={labelOffset} />)}
+      ${renderToStaticMarkup(<MapPin kind="indie" selected={selected} label={name} labelOffset={labelOffset} dimmed={dimmed} isDark={isDark} />)}
       ${posterHtml}
     </div>
   `
@@ -1010,11 +1012,17 @@ function computePosterOffsets(
 }
 
 /* ── 클러스터 아이콘 ────────────────────────────────────────────── */
+const DIMMED_DOT_LIGHT = '#6b7280'
+const DIMMED_DOT_DARK = '#71717a'
+
 function makeClusterIcon(
   theaters: Theater[],
   labelDir: LabelDir = 'top',
   labelOffset: LabelOffset = { x: 0, y: 0 },
+  dimmed = false,
+  isDark = false,
 ) {
+  const dotColor = dimmed ? (isDark ? DIMMED_DOT_DARK : DIMMED_DOT_LIGHT) : 'var(--color-primary-base)'
   const count = theaters.length
   const DOT_D = 28
   const DOT_R = DOT_D / 2
@@ -1068,7 +1076,7 @@ function makeClusterIcon(
       `</div>` +
       `<div style="position:absolute;width:${DOT_D}px;height:${DOT_D}px;` +
       `top:${CENTER_Y - DOT_R}px;left:${CENTER_X - DOT_R}px;` +
-      `border-radius:50%;background:var(--color-primary-base);` +
+      `border-radius:50%;background:${dotColor};` +
       `border:2px solid var(--color-surface-bg);box-shadow:var(--shadow-sm);` +
       `display:flex;align-items:center;justify-content:center;` +
       `color:#fff;font-weight:700;font-size:12px;z-index:1;">${count}</div>` +
@@ -1085,7 +1093,7 @@ function makeClusterIcon(
   const SIZE = 40
   const html =
     `<div style="width:${SIZE}px;height:${SIZE}px;border-radius:50%;` +
-    `background:var(--color-primary-base);` +
+    `background:${dotColor};` +
     `display:flex;align-items:center;justify-content:center;` +
     `color:#fff;font-weight:700;font-size:16px;line-height:1;` +
     `box-shadow:var(--shadow-md);` +
@@ -2219,6 +2227,8 @@ export default function MapView() {
                   cluster.theaters,
                   labelDirections.get(cluster.id),
                   labelOffsets.get(cluster.id),
+                  clusterDimmed,
+                  isDark,
                 )}
                 eventHandlers={{
                   click: () => {
@@ -2267,6 +2277,8 @@ export default function MapView() {
                 filtersActive,
                 offsetX,
                 labelOffsets.get(theater.id),
+                isDark,
+                dimmed,
               )}
               eventHandlers={{ click: () => handlePinClick(theater.id) }}
             />
