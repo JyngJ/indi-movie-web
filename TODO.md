@@ -8,17 +8,14 @@
 - 3일 지난 showtimes 레코드 매일 새벽 3시 자동 삭제
 - Supabase SQL 에디터에서 아래 순서로 실행:
   ```sql
-  -- 1. 익스텐션 활성화 (Dashboard → Database → Extensions에서도 가능)
   CREATE EXTENSION IF NOT EXISTS pg_cron;
 
-  -- 2. 스케줄 등록
   SELECT cron.schedule(
     'cleanup-old-showtimes',
     '0 3 * * *',
     $$DELETE FROM showtimes WHERE show_date < CURRENT_DATE - INTERVAL '3 days'$$
   );
 
-  -- 등록 확인
   SELECT * FROM cron.job;
   ```
 - 수동 즉시 실행: `DELETE FROM showtimes WHERE show_date < CURRENT_DATE - INTERVAL '3 days';`
@@ -28,17 +25,22 @@
 ## 바로 실행 가능 (스크립트 존재)
 
 ### 포스터 없는 영화 TMDB 폴백
-- 포스터 없는 6편: 박하향 소다수, 불안, 여행자, 용호의 결투, 침묵의 빛, 핵전략 사령부
 - `.env.local`에 `TMDB_API_KEY` 추가 후 실행:
   ```
   npx tsx --env-file=.env.local scripts/fill-poster-tmdb.ts --apply
   ```
 
 ### 시놉시스 채우기
-- 44편 전부 synopsis 비어있음
 - KMDB `plots.plot[].plotText` 필드 사용 (기존 스크립트는 `hit.plot` 잘못 참조 — 수정 필요 여부 확인 후 실행):
   ```
   npx tsx --env-file=.env.local scripts/fill-synopsis-kmdb.ts --apply
+  ```
+
+### 감독 프로필 재수집
+- 현재 132명 중 105명 데이터 없음 (Wikipedia 검색 미히트)
+- `--force` 플래그로 재수집하거나, 데이터 없는 감독 수동 입력 검토:
+  ```
+  npx tsx --env-file=.env.local scripts/fill-directors.ts --apply --force
   ```
 
 ---
@@ -63,9 +65,27 @@
 - 초기: 폼 제출 또는 이메일/관리자 확인 큐
 - 장기: `reports` 테이블 + 어드민 처리 화면
 
+### 광고 붙을 경우 지도 타일 제공사 전환
+- 현재 CARTO free tier는 상업 이용 시 유료 전환 필요
+- Stadia Maps (`alidade_smooth_dark`) 월 $14 플랜 또는 다른 상업 허용 제공사로 교체
+
 ---
 
 ## 크롤링
+
+### 크롤링 오류 수정
+- 크롤링 실행 시 발생하는 오류 확인 및 수정
+
+### 어드민 페이지 정리
+- 어드민 UI에서 보기 어렵거나 불편한 부분 파악 후 개선
+
+### 자동 매칭 실패 케이스 수정
+- GV, 시네토크 등 부가 행사가 제목에 붙은 경우 자동 매칭이 안 됨
+- 크롤링 후보 정규화 또는 매칭 로직에서 처리
+
+### 크롤러 GitHub Actions 마이그레이션 검토
+- 현재 수동 실행 → GitHub Actions 스케줄 트리거로 자동화 가능한지 확인
+- Supabase 환경변수 Secrets 등록, 실행 주기 설계 필요
 
 ### 크롤링 후보 제목 정규화
 - `영화 제목 + 시네토크/GV/강연자`가 한 문자열로 내려오는 경우
@@ -124,8 +144,38 @@
 - `src/lib/catalog/client.ts`: mock을 placeholderData로 사용 중
 - `src/app/search/page.tsx`가 `useCatalog()` 사용 — Supabase 기반 쿼리로 교체 필요
 
-### 영화 필터 칩 → 상영 극장 조회 연결
-- 영화 필터 칩 선택 시 해당 영화를 상영 중인 극장만 지도에 표시
+---
+
+## 콘텐츠 / 데이터 확장
+
+### 이벤트 상영 표시 검토
+- 영화제, 무비올나잇, 옥상 상영 등 특별 이벤트를 지도/시트에 표시할지 여부 결정
+- 표시한다면 이벤트 데이터 수집 방식 및 UI 설계 필요
+
+### 감독 상세 페이지 정보 보강
+- 현재 Wikipedia API로 받아오는데 내용 부실, 설명 없는 경우도 있음
+- 대안 소스 검토 (KMDb, KOBIS, 직접 입력 등)
+
+### 영화관별 인스타그램 태그 추가
+- 각 극장 인스타 계정 수집 후 DB에 저장
+- 극장 시트에서 인스타 링크 노출
+
+### 서울 외 지역 영화관 추가
+- 부산, 대구, 광주 등 주요 독립·예술영화관 확장
+- 크롤러 지역 확장 및 지도 초기 위치 설정 검토
+
+---
+
+## 계정 / 앱 전환 검토
+
+### 계정 기능 도입 시 가능한 것들
+- 관심 영화 / 극장 즐겨찾기
+- 관람 기록
+- 개인화 추천 (장르, 감독 기반)
+- 알림 (개봉, 상영 일정 변경 등)
+
+### 앱 전환 검토
+- 계정 기능 붙이는 시점에 PWA 또는 React Native / Expo로 전환 고려
 
 ---
 
@@ -135,9 +185,7 @@
 - Google Analytics 4 측정 ID 발급 후 Next.js에 삽입
 - 방법: `src/app/layout.tsx`에 `<Script>` 태그로 gtag.js 추가, 또는 `@next/third-parties/google`의 `GoogleAnalytics` 컴포넌트 사용 (Next.js 공식 권장)
   ```tsx
-  // src/app/layout.tsx
   import { GoogleAnalytics } from '@next/third-parties/google'
-  // ...
   <GoogleAnalytics gaId="G-XXXXXXXXXX" />
   ```
 - 환경변수 `NEXT_PUBLIC_GA_ID`로 관리, Vercel에도 추가
@@ -153,6 +201,15 @@
 ### Hotjar / Microsoft Clarity (선택)
 - 세션 녹화 + 히트맵으로 실제 사용 패턴 파악
 - Clarity는 무료 무제한, 설치 방법은 GA4와 동일하게 `<Script>` 삽입
+
+---
+
+## 기술 부채
+
+### 전반적 코드 리팩터링
+- MapView.tsx 등 파일 크기가 너무 커진 컴포넌트 분리
+- 중복 로직 정리, 타입 정의 통합
+- Clean Architecture 원칙에 맞게 레이어 재정비
 
 ---
 
