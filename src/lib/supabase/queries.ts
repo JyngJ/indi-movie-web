@@ -209,6 +209,7 @@ export interface MapShowtimeMovie {
   posterUrl?: string
   genre: string[]
   nation?: string
+  director: string[]
 }
 
 export interface MapShowtime {
@@ -242,7 +243,8 @@ export function useMapShowtimes(startDate: string, endDate: string) {
             title,
             poster_url,
             genre,
-            nation
+            nation,
+            director
           )
         `)
         .eq('is_active', true)
@@ -266,7 +268,8 @@ export function useMapShowtimes(startDate: string, endDate: string) {
               id,
               title,
               poster_url,
-              genre
+              genre,
+              director
             )
           `)
           .eq('is_active', true)
@@ -295,6 +298,7 @@ export function useMapShowtimes(startDate: string, endDate: string) {
             posterUrl: movie.poster_url ? String(movie.poster_url) : undefined,
             genre: (movie.genre as string[] | null) ?? [],
             nation: movie.nation ? String(movie.nation) : undefined,
+            director: (movie.director as string[] | null) ?? [],
           } : null,
         }
       })

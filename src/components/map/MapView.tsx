@@ -447,6 +447,7 @@ interface TheaterPosterMovie {
   posterUrl?: string
   genre: string[]
   nation?: string
+  director?: string[]
   showtimeCount: number
   hasAvailableSeats: boolean
   matchesFilter: boolean
@@ -485,7 +486,24 @@ function posterSlotsForZoom(movies: TheaterPosterMovie[], zoom: number, filtersA
   ]
 }
 
-function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filtersActive = false, selected = false, posterW = 44, posterH = 66 }: {
+function MovieListCard({ movies }: { movies: TheaterPosterMovie[] }) {
+  return (
+    <div className="po-list">
+      <div className="po-list-tail" />
+      {movies.slice(0, 10).map((m) => (
+        <div key={m.id} className="po-list-item">
+          <span className="po-list-title">{m.title}</span>
+          {m.director?.[0] && <span className="po-list-director"> — {m.director[0]}</span>}
+        </div>
+      ))}
+      {movies.length > 10 && (
+        <div className="po-list-more">+{movies.length - 10}편 더</div>
+      )}
+    </div>
+  )
+}
+
+function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filtersActive = false, selected = false, posterW = 44, posterH = 66, allMovies }: {
   slots: PosterSlot[]
   tailDir?: 'up' | 'right'
   tailOffset?: number
@@ -494,6 +512,7 @@ function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filtersActive 
   selected?: boolean
   posterW?: number
   posterH?: number
+  allMovies?: TheaterPosterMovie[]
 }) {
   const count = slots.length
   const perRow = count > 3 ? 3 : count
@@ -572,9 +591,8 @@ function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filtersActive 
                 if (!slot) return null
                 return (
                   slot.countLabel ? (
-                    <div
-                      key={idx}
-                      style={{
+                    <div key={idx} className="po-wrap" style={{ position: 'relative', width: posterW, height: posterH }}>
+                      <div style={{
                         width: posterW,
                         height: posterH,
                         borderRadius: 'var(--comp-poster-radius)',
@@ -587,12 +605,13 @@ function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filtersActive 
                         fontWeight: 800,
                         boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.18)',
                         whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {slot.countLabel}
+                      }}>
+                        {slot.countLabel}
+                      </div>
+                      {allMovies && allMovies.length > 0 && <MovieListCard movies={allMovies} />}
                     </div>
                   ) : (
-                    <div key={idx} style={{ position: 'relative', width: posterW, height: posterH, opacity: slot.dimmed ? 0.5 : 1 }}>
+                    <div key={idx} data-movie-id={slot.movie?.id} className={slot.overflow ? 'po-wrap' : 'pm-wrap'} style={{ position: 'relative', width: posterW, height: posterH, opacity: slot.dimmed ? 0.5 : 1 }}>
                       <PosterThumb
                         src={slot.movie?.posterUrl}
                         alt={slot.movie?.title ?? ''}
@@ -617,6 +636,26 @@ function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filtersActive 
                           </span>
                         </div>
                       )}
+                      {slot.movie && !slot.overflow && (
+                        <div className="pm-tip">
+                          <div className="pm-tip-title">{slot.movie.title}</div>
+                          {slot.movie.director?.[0] && (
+                            <div className="pm-tip-director">{slot.movie.director[0]}</div>
+                          )}
+                          {slot.movie.genre.length > 0 && (
+                            <div className="pm-tip-genres">
+                              {slot.movie.genre.slice(0, 3).map((g) => (
+                                <span key={g} className="pm-tip-genre-tag">{g}</span>
+                              ))}
+                            </div>
+                          )}
+                          {slot.movie.nation && (
+                            <div className="pm-tip-nation">{slot.movie.nation.split(/[,，/·]+/)[0].trim()}</div>
+                          )}
+                          <div className="pm-tip-tail" />
+                        </div>
+                      )}
+                      {slot.overflow && allMovies && allMovies.length > 0 && <MovieListCard movies={allMovies} />}
                     </div>
                   )
                 )
@@ -673,6 +712,7 @@ function makePinIcon(
         selected={selected}
         posterW={pW}
         posterH={pH}
+        allMovies={posterMovies}
       />
     )
     if (usePosterLeft) {
@@ -1001,6 +1041,9 @@ function computePosterOffsets(
   })
 
   // 말풍선이 실제로 보이는 단일 마커 중, 필터 활성 시엔 매칭 극장만 충돌 감지
+  // 화면 밖 마커는 어차피 안 보이므로 뷰포트 안의 것만 포함 (여유 200px)
+  const mapSize = map.getSize()
+  const VP_MARGIN = 200
   const singles = clusters
     .filter((c) => {
       if (c.theaters.length !== 1) return false
@@ -1013,13 +1056,18 @@ function computePosterOffsets(
     .map((c) => {
       const px = map.latLngToContainerPoint([c.lat, c.lng] as [number, number])
       const id = c.theaters[0].id
-      return { id, px, cap: theaterCap(id) }
+      const name = c.theaters[0].name
+      return { id, name, px, cap: theaterCap(id) }
     })
-    .filter((s) => Number.isFinite(s.px.x) && Number.isFinite(s.px.y))
+    .filter((s) =>
+      Number.isFinite(s.px.x) && Number.isFinite(s.px.y) &&
+      s.px.x >= -VP_MARGIN && s.px.x <= mapSize.x + VP_MARGIN &&
+      s.px.y >= -VP_MARGIN && s.px.y <= mapSize.y + VP_MARGIN
+    )
 
   if (singles.length === 0) return offsets
 
-  const posterRect = (s: { id: string; px: LeafletPoint; cap: number }, offset = offsets.get(s.id) ?? 0): Rect => {
+  const posterRect = (s: { id: string; name: string; px: LeafletPoint; cap: number }, offset = offsets.get(s.id) ?? 0): Rect => {
     const { w, h } = dimsForCap(s.cap)
     return [
       s.px.x - w / 2 + finiteNumber(offset),
@@ -1046,11 +1094,37 @@ function computePosterOffsets(
     }
   }
 
+  // 포스터 카드가 다른 극장 핀+라벨을 가리는 경우 추가 보정 (2패스로 안정 수렴)
+  // 핀 보호 영역: label 상단(pinY - ANCHOR_Y) ~ dot 하단(pinY + DOT/2), x는 라벨 폭 기준
+  const PIN_PAD = 8
+  for (let pass = 0; pass < 2; pass++) {
+    for (const a of singles) {
+      for (const b of singles) {
+        if (a.id === b.id) continue
+        const rect = posterRect(a)
+        const bLabelW = estimateLabelWidth(b.name)
+        const bProtect: Rect = [
+          b.px.x - bLabelW / 2 - PIN_PAD,
+          b.px.y - ANCHOR_Y - PIN_PAD,
+          b.px.x + bLabelW / 2 + PIN_PAD,
+          b.px.y + DOT / 2 + PIN_PAD,
+        ]
+        const o = overlap(rect, bProtect)
+        if (o.x <= 0 || o.y <= 0) continue
+        // a의 카드 중심이 b의 핀 기준 어느 쪽? → 반대 방향으로 밀기
+        const aCardMidX = a.px.x + finiteNumber(offsets.get(a.id) ?? 0)
+        const direction = aCardMidX < b.px.x ? -1 : 1
+        offsets.set(a.id, (offsets.get(a.id) ?? 0) + direction * (o.x + PIN_PAD))
+      }
+    }
+  }
+
   const clusterBlockers: { centerX: number; rect: Rect }[] = []
   for (const c of clusters) {
     if (c.theaters.length <= 1) continue
     const { x: cx, y: cy } = map.latLngToContainerPoint([c.lat, c.lng] as [number, number])
     if (!Number.isFinite(cx) || !Number.isFinite(cy)) continue
+    if (cx < -VP_MARGIN || cx > mapSize.x + VP_MARGIN || cy < -VP_MARGIN || cy > mapSize.y + VP_MARGIN) continue
 
     if (c.theaters.length > 3) {
       clusterBlockers.push({ centerX: cx, rect: [cx - 20, cy - 20, cx + 20, cy + 20] })
@@ -1219,6 +1293,128 @@ function ZoomTracker({ onZoom }: { onZoom: (z: number) => void }) {
   return null
 }
 
+/* ── PC 줌 슬라이더 ──────────────────────────────────────────────── */
+const SLIDER_SNAP_STEPS = [0, 17, 33, 50, 67, 83, 100]
+const SLIDER_ZOOM_LEVELS = [11, 12, 13, 14, 15, 17, 19]
+const SLIDER_TRACK_H = 88
+
+function snapIndexFromZoom(z: number) {
+  let best = 0, bestDist = Infinity
+  SLIDER_ZOOM_LEVELS.forEach((lv, i) => {
+    const d = Math.abs(lv - z)
+    if (d < bestDist) { bestDist = d; best = i }
+  })
+  return best
+}
+
+function ZoomSlider({
+  zoom,
+  mapRef,
+}: {
+  zoom: number
+  mapRef: React.MutableRefObject<LeafletMap | null>
+}) {
+  const trackRef = useRef<HTMLDivElement>(null)
+  const stepIdx = snapIndexFromZoom(zoom)
+  const pct = SLIDER_SNAP_STEPS[stepIdx]
+
+  const handleTrackMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    const track = trackRef.current
+    if (!track) return
+    const move = (ev: MouseEvent) => {
+      const rect = track.getBoundingClientRect()
+      const raw = 1 - (ev.clientY - rect.top) / rect.height
+      const pctVal = Math.max(0, Math.min(1, raw)) * 100
+      let bestIdx = 0, bestDist = Infinity
+      SLIDER_SNAP_STEPS.forEach((s, i) => {
+        const d = Math.abs(s - pctVal)
+        if (d < bestDist) { bestDist = d; bestIdx = i }
+      })
+      mapRef.current?.setZoom(SLIDER_ZOOM_LEVELS[bestIdx])
+    }
+    const up = () => {
+      window.removeEventListener('mousemove', move)
+      window.removeEventListener('mouseup', up)
+    }
+    window.addEventListener('mousemove', move)
+    window.addEventListener('mouseup', up)
+    move(e.nativeEvent)
+  }, [mapRef])
+
+  const thumbTop = (1 - pct / 100) * SLIDER_TRACK_H - 7
+
+  const stepStep = useCallback((delta: number) => {
+    const next = Math.max(0, Math.min(SLIDER_SNAP_STEPS.length - 1, stepIdx + delta))
+    mapRef.current?.setZoom(SLIDER_ZOOM_LEVELS[next])
+  }, [mapRef, stepIdx])
+
+  const btn: React.CSSProperties = {
+    width: 34, height: 34, fontSize: 20, fontWeight: 300, lineHeight: 1,
+    border: 'none', background: 'none', cursor: 'pointer', minHeight: 'auto',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    color: 'var(--color-text-body)', flexShrink: 0,
+  }
+
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      width: 36, borderRadius: 20,
+      border: '1px solid var(--color-border)',
+      backgroundColor: 'var(--color-surface-card)',
+      boxShadow: 'var(--shadow-md)',
+      userSelect: 'none',
+    }}>
+      <button style={btn} onClick={() => stepStep(1)}>+</button>
+      <div style={{ width: 20, height: 1, backgroundColor: 'var(--color-border)', flexShrink: 0 }} />
+      <div style={{ padding: '12px 0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div
+        ref={trackRef}
+        onMouseDown={handleTrackMouseDown}
+        style={{
+          position: 'relative', width: 4, height: SLIDER_TRACK_H,
+          borderRadius: 2, backgroundColor: 'var(--color-border)', cursor: 'pointer',
+        }}
+      >
+        {/* fill */}
+        <div style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0,
+          height: `${pct}%`, borderRadius: 2,
+          backgroundColor: 'var(--color-primary-base)',
+          transition: 'height 0.08s cubic-bezier(0.34,1.4,0.64,1)',
+        }} />
+        {/* ticks */}
+        {SLIDER_SNAP_STEPS.map((s, i) => (
+          <div key={s} style={{
+            position: 'absolute',
+            left: '50%', top: (1 - s / 100) * SLIDER_TRACK_H - 1,
+            transform: 'translateX(-50%)',
+            width: i === stepIdx ? 10 : 6, height: 2,
+            borderRadius: 1,
+            backgroundColor: s <= pct ? 'rgba(255,255,255,0.55)' : 'var(--color-border)',
+            transition: 'width 0.08s',
+            zIndex: 2, pointerEvents: 'none',
+          }} />
+        ))}
+        {/* thumb */}
+        <div style={{
+          position: 'absolute', left: '50%',
+          top: thumbTop, transform: 'translateX(-50%)',
+          width: 14, height: 14, borderRadius: '50%',
+          backgroundColor: '#fff',
+          border: '2.5px solid var(--color-primary-base)',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.22)',
+          transition: 'top 0.08s cubic-bezier(0.34,1.4,0.64,1)',
+          zIndex: 3, cursor: 'grab', pointerEvents: 'none',
+        }} />
+      </div>
+      </div>
+      <div style={{ width: 20, height: 1, backgroundColor: 'var(--color-border)', flexShrink: 0 }} />
+      <button style={btn} onClick={() => stepStep(-1)}>−</button>
+    </div>
+  )
+}
+
 /* ── 선택 극장 화면 이탈 감지 ────────────────────────────────── */
 function OffScreenTracker({
   theaterLatLng,
@@ -1309,6 +1505,31 @@ export default function MapView() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [zoom, setZoom] = useState(14)
 
+  // 툴팁 방향: 실시간으로 hover 시점에 화면 위치를 보고 tip-l 클래스를 토글
+  const isPanelOpenRef = useRef(false)
+  useEffect(() => {
+    isPanelOpenRef.current = isDesktopLayout && (selectedId !== null || panelStack.length > 0)
+  }, [isDesktopLayout, selectedId, panelStack.length])
+
+  useEffect(() => {
+    const handleOver = (e: Event) => {
+      const target = e.target as HTMLElement | null
+      const wrap = target?.closest('.pm-wrap, .po-wrap') as HTMLElement | null
+      if (!wrap) return
+      const isPm = wrap.classList.contains('pm-wrap')
+      const rect = wrap.getBoundingClientRect()
+      const tipW = isPm ? 200 : 280  // gap(10) + tooltip width
+      const panelW = isPanelOpenRef.current ? 456 : 0
+      const limit = window.innerWidth - panelW
+      wrap.classList.toggle('tip-l', rect.right + tipW > limit)
+    }
+    // leaflet-container가 mount된 뒤 부착 (MapRefSetter가 먼저 실행됨)
+    const container = document.querySelector('.leaflet-container')
+    if (!container) return
+    container.addEventListener('mouseover', handleOver)
+    return () => container.removeEventListener('mouseover', handleOver)
+  }, [])  // once after mount — reads isPanelOpenRef dynamically
+
   // 검색 오버레이
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -1340,12 +1561,15 @@ export default function MapView() {
     return () => window.removeEventListener('popstate', handler)
   }, [])
 
-  // PC ESC 키 → 패널 한 단계 뒤로, 패널 없으면 시트 닫기
+  // PC ESC 키 → 검색 닫기 → 패널 한 단계 뒤로 → 시트 닫기
   useEffect(() => {
     if (!isDesktopLayout) return
     const handler = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
-      if (panelStack.length > 0) {
+      if (searchOpen) {
+        setSearchOpen(false)
+        setSearchQuery('')
+      } else if (panelStack.length > 0) {
         window.history.back()
       } else if (selectedId) {
         setSelectedId(null)
@@ -1353,7 +1577,7 @@ export default function MapView() {
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [isDesktopLayout, panelStack.length, selectedId])
+  }, [isDesktopLayout, searchOpen, panelStack.length, selectedId])
 
   const openDesktopPanel = useCallback((state: DesktopPanelState) => {
     setPanelStack((prev) => {
@@ -1515,6 +1739,7 @@ export default function MapView() {
           posterUrl: showtime.movie.posterUrl,
           genre: showtime.movie.genre,
           nation: showtime.movie.nation,
+          director: showtime.movie.director,
           showtimeCount: 1,
           hasAvailableSeats: hasSeats,
           matchesFilter: matchesMovieFilter && matchesGenre && matchesNation,
@@ -1818,7 +2043,7 @@ export default function MapView() {
   }, [movies])
 
   // 극장 선택 시 → 첫 번째 영화 선택 + 시트 collapsed로 열기
-  const handlePinClick = useCallback((theaterId: string) => {
+  const handlePinClick = useCallback((theaterId: string, clickedMovieId?: string) => {
     if (selectedId === theaterId) {
       closeSheet()
     } else {
@@ -1826,7 +2051,7 @@ export default function MapView() {
       setSheetExiting(false)
       setSelectedId(theaterId)
       setDisplayedId(theaterId)
-      setSelectedMovieId(movieFilter?.id ?? '')
+      setSelectedMovieId(clickedMovieId ?? movieFilter?.id ?? '')
       setSheetExpanded(isDesktopLayout)
       const currentZoom = mapRef.current?.getZoom() ?? 15
       const theater = theaters.find((t) => t.id === theaterId)
@@ -2440,7 +2665,11 @@ export default function MapView() {
                 dimmed,
                 isDesktopLayout,
               )}
-              eventHandlers={{ click: () => handlePinClick(theater.id) }}
+              eventHandlers={{ click: (e) => {
+                const target = e.originalEvent?.target as HTMLElement | null
+                const movieEl = target?.closest('[data-movie-id]') as HTMLElement | null
+                handlePinClick(theater.id, movieEl?.dataset.movieId)
+              } }}
             />
           )
         })}
@@ -2587,6 +2816,7 @@ export default function MapView() {
         </div>
       </button>
 
+      {/* PC 줌 슬라이더 — 테마 토글 아래 우측 */}
       {/* 모바일 지도 하단 로고 워터마크 */}
       {!isDesktopLayout && (
         <div
@@ -2625,6 +2855,38 @@ export default function MapView() {
 
       {/* 검색 오버레이 — same page, iOS 키보드 대응 */}
       {searchOpen && (
+        <>
+        {isDesktopLayout && (
+          <button
+            onClick={closeSearch}
+            aria-label="검색 닫기"
+            style={{
+              position: 'absolute',
+              left: 456,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              zIndex: 2001,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 32,
+              height: 72,
+              background: 'var(--color-surface-card)',
+              border: '1px solid var(--color-border)',
+              borderLeft: 'none',
+              borderRadius: '0 12px 12px 0',
+              boxShadow: '4px 0 12px rgba(0,0,0,0.10)',
+              cursor: 'pointer',
+              color: 'var(--color-text-caption)',
+              padding: 0,
+              minHeight: 'unset',
+            }}
+          >
+            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+        )}
         <div style={{
           position: 'absolute',
           inset: isDesktopLayout ? '16px auto 16px 16px' : 0,
@@ -2753,6 +3015,7 @@ export default function MapView() {
             )}
           </div>
         </div>
+        </>
       )}
 
       {/* 줌 + 현위치 */}
@@ -2761,12 +3024,18 @@ export default function MapView() {
         right: isDesktopLayout && selectedTheater ? 472 : 16,
         bottom: fabBottom,
         zIndex: 1000,
-        display: 'flex', flexDirection: 'column', gap: 8,
+        display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center',
         transition: 'right 0.24s ease, bottom 0.38s cubic-bezier(0.32, 0.72, 0, 1)',
       }}>
-        <FabRound onClick={() => mapRef.current?.zoomIn()}><IcoPlus /></FabRound>
-        <FabRound onClick={() => mapRef.current?.zoomOut()}><IcoMinus /></FabRound>
-        <div style={{ height: 8 }} />
+        {isDesktopLayout ? (
+          <ZoomSlider zoom={zoom} mapRef={mapRef} />
+        ) : (
+          <>
+            <FabRound onClick={() => mapRef.current?.zoomIn()}><IcoPlus /></FabRound>
+            <FabRound onClick={() => mapRef.current?.zoomOut()}><IcoMinus /></FabRound>
+          </>
+        )}
+        <div style={{ height: isDesktopLayout ? 0 : 8 }} />
         <FabRound onClick={handleLocate}><IcoLocate /></FabRound>
       </div>
 
