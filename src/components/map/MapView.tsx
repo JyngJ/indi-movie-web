@@ -1041,6 +1041,9 @@ function computePosterOffsets(
   })
 
   // 말풍선이 실제로 보이는 단일 마커 중, 필터 활성 시엔 매칭 극장만 충돌 감지
+  // 화면 밖 마커는 어차피 안 보이므로 뷰포트 안의 것만 포함 (여유 200px)
+  const mapSize = map.getSize()
+  const VP_MARGIN = 200
   const singles = clusters
     .filter((c) => {
       if (c.theaters.length !== 1) return false
@@ -1053,13 +1056,18 @@ function computePosterOffsets(
     .map((c) => {
       const px = map.latLngToContainerPoint([c.lat, c.lng] as [number, number])
       const id = c.theaters[0].id
-      return { id, px, cap: theaterCap(id) }
+      const name = c.theaters[0].name
+      return { id, name, px, cap: theaterCap(id) }
     })
-    .filter((s) => Number.isFinite(s.px.x) && Number.isFinite(s.px.y))
+    .filter((s) =>
+      Number.isFinite(s.px.x) && Number.isFinite(s.px.y) &&
+      s.px.x >= -VP_MARGIN && s.px.x <= mapSize.x + VP_MARGIN &&
+      s.px.y >= -VP_MARGIN && s.px.y <= mapSize.y + VP_MARGIN
+    )
 
   if (singles.length === 0) return offsets
 
-  const posterRect = (s: { id: string; px: LeafletPoint; cap: number }, offset = offsets.get(s.id) ?? 0): Rect => {
+  const posterRect = (s: { id: string; name: string; px: LeafletPoint; cap: number }, offset = offsets.get(s.id) ?? 0): Rect => {
     const { w, h } = dimsForCap(s.cap)
     return [
       s.px.x - w / 2 + finiteNumber(offset),
@@ -1086,11 +1094,37 @@ function computePosterOffsets(
     }
   }
 
+  // 포스터 카드가 다른 극장 핀+라벨을 가리는 경우 추가 보정 (2패스로 안정 수렴)
+  // 핀 보호 영역: label 상단(pinY - ANCHOR_Y) ~ dot 하단(pinY + DOT/2), x는 라벨 폭 기준
+  const PIN_PAD = 8
+  for (let pass = 0; pass < 2; pass++) {
+    for (const a of singles) {
+      for (const b of singles) {
+        if (a.id === b.id) continue
+        const rect = posterRect(a)
+        const bLabelW = estimateLabelWidth(b.name)
+        const bProtect: Rect = [
+          b.px.x - bLabelW / 2 - PIN_PAD,
+          b.px.y - ANCHOR_Y - PIN_PAD,
+          b.px.x + bLabelW / 2 + PIN_PAD,
+          b.px.y + DOT / 2 + PIN_PAD,
+        ]
+        const o = overlap(rect, bProtect)
+        if (o.x <= 0 || o.y <= 0) continue
+        // a의 카드 중심이 b의 핀 기준 어느 쪽? → 반대 방향으로 밀기
+        const aCardMidX = a.px.x + finiteNumber(offsets.get(a.id) ?? 0)
+        const direction = aCardMidX < b.px.x ? -1 : 1
+        offsets.set(a.id, (offsets.get(a.id) ?? 0) + direction * (o.x + PIN_PAD))
+      }
+    }
+  }
+
   const clusterBlockers: { centerX: number; rect: Rect }[] = []
   for (const c of clusters) {
     if (c.theaters.length <= 1) continue
     const { x: cx, y: cy } = map.latLngToContainerPoint([c.lat, c.lng] as [number, number])
     if (!Number.isFinite(cx) || !Number.isFinite(cy)) continue
+    if (cx < -VP_MARGIN || cx > mapSize.x + VP_MARGIN || cy < -VP_MARGIN || cy > mapSize.y + VP_MARGIN) continue
 
     if (c.theaters.length > 3) {
       clusterBlockers.push({ centerX: cx, rect: [cx - 20, cy - 20, cx + 20, cy + 20] })
