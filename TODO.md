@@ -8,17 +8,14 @@
 - 3일 지난 showtimes 레코드 매일 새벽 3시 자동 삭제
 - Supabase SQL 에디터에서 아래 순서로 실행:
   ```sql
-  -- 1. 익스텐션 활성화 (Dashboard → Database → Extensions에서도 가능)
   CREATE EXTENSION IF NOT EXISTS pg_cron;
 
-  -- 2. 스케줄 등록
   SELECT cron.schedule(
     'cleanup-old-showtimes',
     '0 3 * * *',
     $$DELETE FROM showtimes WHERE show_date < CURRENT_DATE - INTERVAL '3 days'$$
   );
 
-  -- 등록 확인
   SELECT * FROM cron.job;
   ```
 - 수동 즉시 실행: `DELETE FROM showtimes WHERE show_date < CURRENT_DATE - INTERVAL '3 days';`
@@ -28,17 +25,22 @@
 ## 바로 실행 가능 (스크립트 존재)
 
 ### 포스터 없는 영화 TMDB 폴백
-- 포스터 없는 6편: 박하향 소다수, 불안, 여행자, 용호의 결투, 침묵의 빛, 핵전략 사령부
 - `.env.local`에 `TMDB_API_KEY` 추가 후 실행:
   ```
   npx tsx --env-file=.env.local scripts/fill-poster-tmdb.ts --apply
   ```
 
 ### 시놉시스 채우기
-- 44편 전부 synopsis 비어있음
 - KMDB `plots.plot[].plotText` 필드 사용 (기존 스크립트는 `hit.plot` 잘못 참조 — 수정 필요 여부 확인 후 실행):
   ```
   npx tsx --env-file=.env.local scripts/fill-synopsis-kmdb.ts --apply
+  ```
+
+### 감독 프로필 재수집
+- 현재 132명 중 105명 데이터 없음 (Wikipedia 검색 미히트)
+- `--force` 플래그로 재수집하거나, 데이터 없는 감독 수동 입력 검토:
+  ```
+  npx tsx --env-file=.env.local scripts/fill-directors.ts --apply --force
   ```
 
 ---
@@ -62,6 +64,10 @@
 - 극장 정보 오류, 좌표 오류, 누락 극장·영화 추가 요청 창구
 - 초기: 폼 제출 또는 이메일/관리자 확인 큐
 - 장기: `reports` 테이블 + 어드민 처리 화면
+
+### 광고 붙을 경우 지도 타일 제공사 전환
+- 현재 CARTO free tier는 상업 이용 시 유료 전환 필요
+- Stadia Maps (`alidade_smooth_dark`) 월 $14 플랜 또는 다른 상업 허용 제공사로 교체
 
 ---
 
@@ -124,9 +130,6 @@
 - `src/lib/catalog/client.ts`: mock을 placeholderData로 사용 중
 - `src/app/search/page.tsx`가 `useCatalog()` 사용 — Supabase 기반 쿼리로 교체 필요
 
-### 영화 필터 칩 → 상영 극장 조회 연결
-- 영화 필터 칩 선택 시 해당 영화를 상영 중인 극장만 지도에 표시
-
 ---
 
 ## 분석 / UX 리서치
@@ -135,9 +138,7 @@
 - Google Analytics 4 측정 ID 발급 후 Next.js에 삽입
 - 방법: `src/app/layout.tsx`에 `<Script>` 태그로 gtag.js 추가, 또는 `@next/third-parties/google`의 `GoogleAnalytics` 컴포넌트 사용 (Next.js 공식 권장)
   ```tsx
-  // src/app/layout.tsx
   import { GoogleAnalytics } from '@next/third-parties/google'
-  // ...
   <GoogleAnalytics gaId="G-XXXXXXXXXX" />
   ```
 - 환경변수 `NEXT_PUBLIC_GA_ID`로 관리, Vercel에도 추가

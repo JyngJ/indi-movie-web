@@ -418,6 +418,7 @@ export function TheaterSheet({
   /* ── 포스터 스크롤 버튼 가시성 ── */
   const [posterCanScrollLeft,  setPosterCanScrollLeft]  = useState(false)
   const [posterCanScrollRight, setPosterCanScrollRight] = useState(true)
+
   const updatePosterScrollEdge = useCallback(() => {
     const el = posterScrollRef.current
     if (!el) return
@@ -1661,7 +1662,10 @@ export function TheaterSheet({
                         const unavailable = !entry.availableDates.has(selectedIsoDate)
                         const soldout = !unavailable && soldoutMovieIds.has(movie.id)
                         return (
-                          <div key={movie.id} style={{ flexShrink: 0, width: 88, overflow: 'visible' }}>
+                          <div
+                            key={movie.id}
+                            style={{ flexShrink: 0, width: 88, overflow: 'visible' }}
+                          >
                             <div style={{ width: 88 }}>
                               <div style={{ position: 'relative' }}>
                                 <PosterThumb
@@ -1776,6 +1780,7 @@ export function TheaterSheet({
                     </>
               }
             </div>
+
             </div>{/* position:relative 래퍼 닫기 */}
           </div>
             )
