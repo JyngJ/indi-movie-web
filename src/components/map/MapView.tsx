@@ -696,7 +696,7 @@ function makePinIcon(
   const slots = posterSlotsForZoom(posterMovies, zoom, filtersActive, forceMinOne)
   const matchCount = filtersActive ? posterMovies.filter(m => m.matchesFilter).length : undefined
   const numRows = slots.length > 3 ? 2 : slots.length > 0 ? 1 : 0
-  const usePosterLeft = slots.length > 0 && safePosterOffsetX < -50
+  const usePosterLeft = slots.length > 0 && safePosterOffsetX < -80
   const { w: pW, h: pH } = posterSizeForZoom(zoom, isDesktop)
   const posterH = usePosterLeft || numRows === 0 ? 0 : pH * numRows + 4 * (numRows - 1) + 6
 
@@ -716,11 +716,11 @@ function makePinIcon(
       />
     )
     if (usePosterLeft) {
+      // 핀 도트 바로 아래부터 시작 — 라벨/도트를 가리지 않도록
       posterHtml =
         `<div style="position:absolute;` +
         `right:calc(50% + ${DOT / 2 + 4}px);` +
-        `top:${ANCHOR_Y}px;` +
-        `transform:translateY(-50%);">` +
+        `top:${LABEL_H + GAP + DOT}px;">` +
         posterMarkup +
         `</div>`
     } else {
@@ -808,7 +808,8 @@ function computeNameLabelOffsets(
 ): Map<string, LabelOffset> {
   type Rect = [number, number, number, number]
   type LabelItem = { id: string; priority: number; rect: Rect }
-  const margin = 4
+  // 조금 겹쳐도 허용 — 12px 이상 겹칠 때만 이동 시도
+  const margin = -12
   const hit = (a: Rect, b: Rect): boolean =>
     a[0] < b[2] + margin && a[2] > b[0] - margin && a[1] < b[3] + margin && a[3] > b[1] - margin
   const move = (r: Rect, o: LabelOffset): Rect => [r[0] + o.x, r[1] + o.y, r[2] + o.x, r[3] + o.y]
@@ -1013,6 +1014,10 @@ function computePosterOffsets(
   const { w: pW, h: pH } = posterSizeForZoom(zoom, isDesktop)
   const baseCount = posterCountForZoom(zoom)
   const POSTER_TOP_FROM_PIN = DOT / 2 + 6
+  // usePosterLeft 실제 렌더 위치: right:calc(50% + (DOT/2+4)px) from 140px parent
+  // → right edge = pinX + 70 - (70 + DOT/2 + 4) = pinX - (DOT/2 + 4)
+  const POSTER_LEFT_RE = DOT / 2 + 4            // 15px: right edge from pin center X
+  const POSTER_LEFT_TOP = LABEL_H + GAP + DOT - ANCHOR_Y  // 11px: top from pin center Y
 
   // 극장별 유효 포스터 슬롯 수 — 필터 매칭 시 zoom이 낮아도 최소 1
   const theaterCap = (theaterId: string): number => {
@@ -1069,53 +1074,36 @@ function computePosterOffsets(
 
   const posterRect = (s: { id: string; name: string; px: LeafletPoint; cap: number }, offset = offsets.get(s.id) ?? 0): Rect => {
     const { w, h } = dimsForCap(s.cap)
+    const eff = finiteNumber(offset)
+    if (eff < -80) {
+      // usePosterLeft: 렌더는 fixed right 위치 사용 — offset 무시하고 실제 위치로 계산
+      const re = s.px.x - POSTER_LEFT_RE
+      const ty = s.px.y + POSTER_LEFT_TOP
+      return [re - w, ty, re, ty + h]
+    }
     return [
-      s.px.x - w / 2 + finiteNumber(offset),
+      s.px.x - w / 2 + eff,
       s.px.y + POSTER_TOP_FROM_PIN,
-      s.px.x + w / 2 + finiteNumber(offset),
+      s.px.x + w / 2 + eff,
       s.px.y + POSTER_TOP_FROM_PIN + h,
     ]
   }
 
+  // 절반 이상 겹칠 때만 밀어냄
   for (let i = 0; i < singles.length; i++) {
     for (let j = i + 1; j < singles.length; j++) {
       const a = singles[i]
       const b = singles[j]
       const { w: wA, h: hA } = dimsForCap(a.cap)
       const { w: wB, h: hB } = dimsForCap(b.cap)
-      const minX = Math.min(wA, wB) / 4
-      const minY = Math.min(hA, hB) / 4
+      const minX = Math.min(wA, wB) / 2
+      const minY = Math.min(hA, hB) / 2
       const o = overlap(posterRect(a), posterRect(b))
       if (o.x < minX || o.y < minY) continue
       const shift = o.x / 2 + 8
       const dx = b.px.x - a.px.x
       offsets.set(a.id, (offsets.get(a.id) ?? 0) + (dx >= 0 ? -shift : shift))
       offsets.set(b.id, (offsets.get(b.id) ?? 0) + (dx >= 0 ? shift : -shift))
-    }
-  }
-
-  // 포스터 카드가 다른 극장 핀+라벨을 가리는 경우 추가 보정 (2패스로 안정 수렴)
-  // 핀 보호 영역: label 상단(pinY - ANCHOR_Y) ~ dot 하단(pinY + DOT/2), x는 라벨 폭 기준
-  const PIN_PAD = 8
-  for (let pass = 0; pass < 2; pass++) {
-    for (const a of singles) {
-      for (const b of singles) {
-        if (a.id === b.id) continue
-        const rect = posterRect(a)
-        const bLabelW = estimateLabelWidth(b.name)
-        const bProtect: Rect = [
-          b.px.x - bLabelW / 2 - PIN_PAD,
-          b.px.y - ANCHOR_Y - PIN_PAD,
-          b.px.x + bLabelW / 2 + PIN_PAD,
-          b.px.y + DOT / 2 + PIN_PAD,
-        ]
-        const o = overlap(rect, bProtect)
-        if (o.x <= 0 || o.y <= 0) continue
-        // a의 카드 중심이 b의 핀 기준 어느 쪽? → 반대 방향으로 밀기
-        const aCardMidX = a.px.x + finiteNumber(offsets.get(a.id) ?? 0)
-        const direction = aCardMidX < b.px.x ? -1 : 1
-        offsets.set(a.id, (offsets.get(a.id) ?? 0) + direction * (o.x + PIN_PAD))
-      }
     }
   }
 
@@ -1149,8 +1137,8 @@ function computePosterOffsets(
 
   for (const single of singles) {
     const { w: wS, h: hS } = dimsForCap(single.cap)
-    const minX = wS / 4
-    const minY = hS / 4
+    const minX = wS / 2
+    const minY = hS / 2
     for (const blocker of clusterBlockers) {
       const rect = posterRect(single)
       const o = overlap(rect, blocker.rect)
