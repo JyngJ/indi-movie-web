@@ -794,6 +794,18 @@
   display: grid;
   align-content: start;
   gap: 8px;
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+}
+
+.cityGroupLabel {
+  margin: 8px 0 4px;
+  padding: 0 4px;
+  color: var(--color-text-caption);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .serviceDetail {
