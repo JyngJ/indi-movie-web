@@ -9,7 +9,6 @@ export const metadata: Metadata = {
   description: '서울 독립·예술영화관 상영 정보를 지도에서 한눈에',
   icons: {
     icon: '/squarelogo.svg',
-    apple: '/squarelogo.svg',
   },
   openGraph: {
     title: '영화볼지도',
