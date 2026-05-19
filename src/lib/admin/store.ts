@@ -313,6 +313,7 @@ export async function listReviewCandidates(status?: AdminShowtimeStatus) {
     .from('showtime_candidates')
     .select('*')
     .neq('status', 'rejected')
+    .neq('status', 'approved')
     .order('show_date', { ascending: true })
     .order('show_time', { ascending: true })
 
