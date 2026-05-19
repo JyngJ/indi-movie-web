@@ -296,6 +296,7 @@
 .panel,
 .reviewPanel {
   min-height: 620px;
+  overflow: hidden;
 }
 
 .panelHeader {
@@ -394,6 +395,8 @@
   display: grid;
   gap: 8px;
   padding: 12px;
+  max-height: 560px;
+  overflow-y: auto;
 }
 
 .sourceItem {

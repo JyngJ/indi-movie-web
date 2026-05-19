@@ -1099,7 +1099,11 @@ function resolveMovie(candidate: CrawledShowtimeCandidate, movies: MovieRow[]) {
     if (matched) return matched
   }
 
-  return resolveMovieByTitle(candidate.movieTitle, movies)
+  for (const title of candidateMovieTitleCandidates(candidate.movieTitle)) {
+    const movie = resolveMovieByTitle(title, movies)
+    if (movie) return movie
+  }
+  return null
 }
 
 async function resolveMovieForApproval(candidate: CrawledShowtimeCandidate, movies: MovieRow[]) {
@@ -1148,10 +1152,30 @@ function resolveMovieByTitle(title: string, movies: MovieRow[]) {
 
 function candidateMovieTitleCandidates(title: string) {
   const base = title.trim()
-  // 더블 피처: "A + B" → A, B 각각 시도
+
+  // "영화 + 시네토크" / "영화 + GV" → + 앞부분만
+  const beforePlus = base.split(/\s*\+\s*/)[0].trim()
+  // 더블 피처 분리: "A + B" → A, B 각각
   const plusParts = base.split(/\s*\+\s*/).map(s => s.trim()).filter(Boolean)
+
+  // "영화 with 감독이름" / "영화 with Q&A" → with 앞부분만
+  const beforeWith = base.replace(/\s+with\b.*/i, '').trim()
+
+  // "만춘 (1949)" → "만춘"  (제목 뒤 연도 괄호 제거)
+  const withoutYear = base.replace(/\s*\(\d{4}\)\s*$/, '').trim()
+  // "영화제목_기획전명" → "영화제목"  (_ 이후 제거)
+  const beforeUnderscore = base.split('_')[0].trim()
+
   const variants = [
     base,
+    // + 앞부분 (시네토크, GV 등 부가 행사 제거)
+    beforePlus !== base ? beforePlus : undefined,
+    // with 앞부분
+    beforeWith !== base ? beforeWith : undefined,
+    // 연도 괄호 제거
+    withoutYear !== base ? withoutYear : undefined,
+    // _ 이후 제거
+    beforeUnderscore !== base ? beforeUnderscore : undefined,
     // 날짜 패턴 제거 (05/15, 5월 15일)
     base.replace(/\s+(?:\d{1,2}[./-]\d{1,2})(?:\s.*)?$/, '').trim(),
     base.replace(/\s+(?:\d{1,2}월\s*\d{1,2}일)(?:\s.*)?$/, '').trim(),
@@ -1161,7 +1185,7 @@ function candidateMovieTitleCandidates(title: string) {
     // 더블 피처: + 앞/뒤 각 영화 제목
     ...(plusParts.length > 1 ? plusParts : []),
   ]
-  return Array.from(new Set(variants.filter(Boolean)))
+  return Array.from(new Set(variants.filter((v): v is string => Boolean(v))))
 }
 
 function pickExactExternalMovie(title: string, movies: AdminExternalMovie[]) {
