@@ -13,6 +13,7 @@ import type { Theater, Showtime } from '@/types/api'
 import { Skeleton } from '@/components/primitives/Skeleton'
 import { GENRES, normalizeGenre } from '@/lib/genres'
 import { withFlag } from '@/lib/nations'
+import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 
 /* ── 상수 ──────────────────────────────────────────────────────── */
 // 접힌 상태에서 보이는 높이 = 핸들(20) + 헤더(88, 액션버튼 포함) + 포스터스트립(228) + 테두리(2) + 여유(6)
@@ -268,6 +269,17 @@ export function TheaterSheet({
   const [pendingFilters, setPendingFilters] = useState<SheetFilterState>({ genres: [], nations: [], bookable: false })
 
   const applySheetFilters = (next: SheetFilterState) => {
+    trackEvent('map filter changed', {
+      filter_scope: 'theater_sheet',
+      theater_id: theater.id,
+      theater_name: theater.name,
+      selected_movie_id: selectedMovieId || null,
+      genres: next.genres,
+      genres_count: next.genres.length,
+      nations: next.nations,
+      nations_count: next.nations.length,
+      bookable: next.bookable,
+    })
     setSheetFilters(next)
     if (posterScrollRef.current) posterScrollRef.current.scrollLeft = 0
   }
@@ -828,6 +840,41 @@ export function TheaterSheet({
   useEffect(() => { setSelectedShowtimeId(null) }, [selectedMovieId])
   useEffect(() => { if (!shownExpanded) setSelectedShowtimeId(null) }, [shownExpanded])
 
+  const handleMovieSelect = (movieId: string, source: string) => {
+    const entry = allMovieEntries.find((item) => item.movie.id === movieId)
+    trackEvent('theater movie selected', {
+      theater_id: theater.id,
+      theater_name: theater.name,
+      movie_id: movieId,
+      movie_title: entry?.movie.title,
+      source,
+      selected_date: selectedIsoDate,
+    })
+    onMovieSelect(movieId)
+  }
+
+  const handleShowtimeSelect = (showtime: Showtime) => {
+    setSelectedShowtimeId((prev) => {
+      const next = prev === showtime.id ? null : showtime.id
+      if (next) {
+        trackEvent('showtime selected', {
+          theater_id: theater.id,
+          theater_name: theater.name,
+          movie_id: showtime.movieId,
+          movie_title: showtime.movieTitle,
+          showtime_id: showtime.id,
+          show_date: showtime.showDate,
+          show_time: showtime.showTime,
+          seat_available: showtime.seatAvailable,
+          seat_total: showtime.seatTotal,
+          has_booking_url: Boolean(showtime.bookingUrl),
+          source: 'theater_sheet',
+        })
+      }
+      return next
+    })
+  }
+
   /* ── 현재 시각 (1분마다 갱신, 오늘 탭에서만 지난 회차 숨김) ── */
   const [nowMinutes, setNowMinutes] = useState(() => {
     const n = new Date()
@@ -851,6 +898,11 @@ export function TheaterSheet({
 
   const openWebsite = () => {
     if (!theater.website) return
+    trackEvent('website clicked', {
+      theater_id: theater.id,
+      theater_name: theater.name,
+      source: 'theater_sheet',
+    })
     window.open(theater.website, '_blank', 'noopener')
   }
 
@@ -870,6 +922,12 @@ export function TheaterSheet({
   }
 
   const openDirections = () => {
+    trackEvent('directions clicked', {
+      theater_id: theater.id,
+      theater_name: theater.name,
+      selected_movie_id: selectedMovieId || null,
+      source: 'theater_sheet',
+    })
     const url = `nmap://route/public?dlat=${theater.lat}&dlng=${theater.lng}&dname=${encodeURIComponent(theater.name)}&appname=kr.indi.movie`
     const fallback = `https://map.naver.com/v5/directions/-/-/-/transit?c=${theater.lng},${theater.lat},15,0,0,0,dh`
     const a = document.createElement('a')
@@ -879,6 +937,11 @@ export function TheaterSheet({
   }
 
   const shareTheater = () => {
+    trackEvent('share clicked', {
+      theater_id: theater.id,
+      theater_name: theater.name,
+      source: 'theater_sheet',
+    })
     const shareUrl = `${window.location.origin}/?theater=${encodeURIComponent(theater.id)}`
     // text + url 동시에 넘기면 iOS Safari가 url을 무시하는 버그 있음 → title + url만 사용
     const payload = { title: theater.name, url: shareUrl }
@@ -911,6 +974,12 @@ export function TheaterSheet({
     if (!theater.instagramUrl) {
       return
     }
+
+    trackEvent('instagram clicked', {
+      theater_id: theater.id,
+      theater_name: theater.name,
+      source: 'theater_sheet',
+    })
 
     const webUrl = username
       ? `https://www.instagram.com/${username}/`
@@ -1354,7 +1423,7 @@ export function TheaterSheet({
                               src={movie.posterUrl}
                               selected={shownExpanded && selectedMovieId === movie.id}
                               onClick={unavailable ? undefined : () => {
-                                onMovieSelect(movie.id)
+                                handleMovieSelect(movie.id, 'collapsed_poster_strip')
                                 if (!shownExpanded) onExpand()
                               }}
                             />
@@ -1494,7 +1563,21 @@ export function TheaterSheet({
               selectedDate={selectedDate}
               onSelectDate={(date) => {
                 const day = days.find((d) => d.date === date)
-                if (day) setSelectedIsoDate(day.isoDate)
+                if (day) {
+                  trackEvent('theater date changed', {
+                    theater_id: theater.id,
+                    theater_name: theater.name,
+                    from_date: selectedIsoDate,
+                    to_date: day.isoDate,
+                    selected_movie_id: selectedMovieId || null,
+                    source: 'theater_sheet',
+                  })
+                  classifySessionIntent('type_c', {
+                    source: 'theater_sheet',
+                    theater_id: theater.id,
+                  })
+                  setSelectedIsoDate(day.isoDate)
+                }
               }}
             />
           </div>
@@ -1701,7 +1784,7 @@ export function TheaterSheet({
                                   width={88} height={132} size="lg"
                                   src={movie.posterUrl}
                                   selected={selectedMovieId === movie.id}
-                                  onClick={unavailable ? undefined : () => { onMovieSelect(movie.id) }}
+                                  onClick={unavailable ? undefined : () => { handleMovieSelect(movie.id, 'poster_strip') }}
                                 />
                                 {soldout && (
                                   <div style={{
@@ -1722,7 +1805,7 @@ export function TheaterSheet({
                                   })() : null
                                   return (
                                     <div
-                                      onClick={() => onMovieSelect(movie.id)}
+                                      onClick={() => handleMovieSelect(movie.id, 'unavailable_movie_card')}
                                       style={{
                                         position: 'absolute', inset: 0,
                                         borderRadius: 'var(--comp-poster-sheet-radius)',
@@ -1991,7 +2074,7 @@ export function TheaterSheet({
                       screenName={st.screenName}
                       kind={kind}
                       selected={st.id === selectedShowtimeId}
-                      onClick={kind !== 'soldout' ? () => setSelectedShowtimeId((prev) => prev === st.id ? null : st.id) : undefined}
+                      onClick={kind !== 'soldout' ? () => handleShowtimeSelect(st) : undefined}
                     />
                   )
                 })}
@@ -2018,7 +2101,19 @@ export function TheaterSheet({
             <button
               disabled={!selectedSt?.bookingUrl}
               onClick={() => {
-                if (selectedSt?.bookingUrl) window.open(selectedSt.bookingUrl, '_blank', 'noopener')
+                if (selectedSt?.bookingUrl) {
+                  trackEvent('booking clicked', {
+                    theater_id: theater.id,
+                    theater_name: theater.name,
+                    movie_id: selectedSt.movieId,
+                    movie_title: selectedSt.movieTitle,
+                    showtime_id: selectedSt.id,
+                    show_date: selectedSt.showDate,
+                    show_time: selectedSt.showTime,
+                    source: 'theater_sheet',
+                  })
+                  window.open(selectedSt.bookingUrl, '_blank', 'noopener')
+                }
               }}
               style={{
                 width: '100%',
