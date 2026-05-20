@@ -10,7 +10,7 @@ import type { Map as LeafletMap, Point as LeafletPoint } from 'leaflet'
 import { useUserLocation } from '@/hooks/useUserLocation'
 import { useIsDark } from '@/hooks/useIsDark'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
-import { SearchBarButton, SearchBar, FabRound } from '@/components/primitives'
+import { SearchBarButton, SearchBar, FabRound, Toast } from '@/components/primitives'
 import { MapPin, TheaterSheet, FilterBar } from '@/components/domain'
 import { DesktopDetailPanel } from '@/components/domain/DesktopDetailPanel'
 import type { DesktopPanelState } from '@/components/domain/DesktopDetailPanel'
@@ -736,6 +736,8 @@ export default function MapView() {
   const { data: mapShowtimes = [] } = useMapShowtimes(mapShowtimeStart, mapShowtimeEnd)
   const mapRef = useRef<LeafletMap | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [fromMovieId, setFromMovieId] = useState<string | null>(null)
+  const [initialSheetDate, setInitialSheetDate] = useState<string | undefined>(undefined)
   const [zoom, setZoom] = useState(14)
   const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null)
   const [subwayLayerReady, setSubwayLayerReady] = useState(false)
@@ -785,7 +787,8 @@ export default function MapView() {
   const [reportConsent, setReportConsent] = useState(false)
   const [reportFiles, setReportFiles] = useState<File[]>([])
   const [reportSubmitting, setReportSubmitting] = useState(false)
-  const [reportMessage, setReportMessage] = useState('')
+  const [reportError, setReportError] = useState('')
+  const [reportSuccessTrigger, setReportSuccessTrigger] = useState(0)
 
   useEffect(() => { setRecentSearches(loadRecentSearches()) }, [])
   useEffect(() => {
@@ -1275,7 +1278,7 @@ export default function MapView() {
   const handleReportSubmit = useCallback(async () => {
     if (!canSubmitReport) return
     setReportSubmitting(true)
-    setReportMessage('')
+    setReportError('')
 
     try {
       const form = new FormData()
@@ -1297,15 +1300,15 @@ export default function MapView() {
         throw new Error(payload?.error?.message ?? '제보를 제출하지 못했습니다.')
       }
 
-      setReportMessage('제보가 접수됐습니다.')
       setReportCategory('')
       setReportDetail('')
       setReportEmail('')
       setReportConsent(false)
       setReportFiles([])
-      setTimeout(() => setReportOpen(false), 450)
+      setReportOpen(false)
+      setReportSuccessTrigger((n) => n + 1)
     } catch (error) {
-      setReportMessage(error instanceof Error ? error.message : '제보를 제출하지 못했습니다.')
+      setReportError(error instanceof Error ? error.message : '제보를 제출하지 못했습니다.')
     } finally {
       setReportSubmitting(false)
     }
@@ -1376,6 +1379,8 @@ export default function MapView() {
       setDisplayedId(null)
       setSheetExpanded(false)
       setSheetExiting(false)
+      setFromMovieId(null)
+      setInitialSheetDate(undefined)
     }, 400)
   }, [])
 
@@ -1417,14 +1422,21 @@ export default function MapView() {
   const restoredTheaterRef = useRef(false)
   useEffect(() => {
     if (restoredTheaterRef.current || theaters.length === 0) return
-    const theaterParam = new URLSearchParams(window.location.search).get('theater')
+    const params = new URLSearchParams(window.location.search)
+    const theaterParam = params.get('theater')
     if (!theaterParam) { restoredTheaterRef.current = true; return }
     const theater = theaters.find((t) => t.id === theaterParam)
     if (!theater) return
     restoredTheaterRef.current = true
+    const fromMovie = params.get('fromMovie')
+    const dateParam = params.get('date')
+    if (fromMovie) setFromMovieId(fromMovie)
+    if (dateParam) setInitialSheetDate(dateParam)
     focusTheater(theater)
     const url = new URL(window.location.href)
     url.searchParams.delete('theater')
+    url.searchParams.delete('fromMovie')
+    url.searchParams.delete('date')
     window.history.replaceState({}, '', url.toString())
   }, [theaters, focusTheater])
 
@@ -2150,6 +2162,8 @@ export default function MapView() {
             nationOptions={nationOptions}
             movieFilter={movieFilter}
             onMovieFilterClear={() => setMovieFilter(null)}
+            onMovieChipClick={() => setSearchOpen(true)}
+            onDirectorChipClick={() => setSearchOpen(true)}
           />
         </div>
       </div>
@@ -2164,7 +2178,7 @@ export default function MapView() {
         }}>
           <FabRound
             onClick={() => {
-              setReportMessage('')
+              setReportError('')
               setReportOpen(true)
             }}
             aria-label="제보하기"
@@ -2739,15 +2753,15 @@ export default function MapView() {
               >
                 {reportSubmitting ? '제출 중...' : '제출하기'}
               </button>
-              {reportMessage && (
+              {reportError && (
                 <p style={{
                   margin: '-10px 0 0',
                   textAlign: 'center',
                   fontSize: 13,
                   fontWeight: 600,
-                  color: reportMessage.includes('접수') ? 'var(--color-success)' : 'var(--color-error)',
+                  color: 'var(--color-error)',
                 }}>
-                  {reportMessage}
+                  {reportError}
                 </p>
               )}
             </div>
@@ -2757,23 +2771,53 @@ export default function MapView() {
 
       {/* 드래그 바텀시트 — TheaterSheet가 자체적으로 Leaflet 이벤트 차단 */}
       {selectedTheater && !desktopPanel && (
-        <TheaterSheet
-          theater={selectedTheater}
-          expanded={sheetExpanded}
-          exiting={sheetExiting}
-          presentation={isDesktopLayout ? 'panel' : 'sheet'}
-          selectedMovieId={selectedMovieId}
-          onMovieSelect={setSelectedMovieId}
-          onExpand={() => setSheetExpanded(true)}
-          onCollapse={() => setSheetExpanded(false)}
-          onClose={closeSheet}
-          onMovieSearch={(movieId, movieTitle) => setMovieFilter({ id: movieId, title: movieTitle })}
-          onMovieDetailOpen={isDesktopLayout ? (id) => openDesktopPanel({ type: 'movie', id }) : undefined}
-          onDirectorOpen={isDesktopLayout ? (name) => openDesktopPanel({ type: 'director', name }) : undefined}
-          favorited={false}
-          onFavorite={() => { /* Phase 4 */ }}
-          mapFilters={{ genres: filters.genres, nations: filters.nations }}
-        />
+        <>
+          {/* PC 뒤로가기 버튼 — 시트 패널 왼쪽 바깥 */}
+          {isDesktopLayout && fromMovieId && (
+            <button
+              onClick={() => router.push(`/movie/${fromMovieId}?tab=theaters`)}
+              style={{
+                position: 'absolute',
+                right: 456,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                zIndex: 1060,
+                width: 40, height: 40,
+                borderRadius: '50%',
+                border: '1px solid var(--color-border)',
+                backgroundColor: 'var(--color-surface-card)',
+                boxShadow: 'var(--shadow-md)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer',
+                color: 'var(--color-text-body)',
+              }}
+              aria-label="이전으로"
+            >
+              <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+          )}
+          <TheaterSheet
+            theater={selectedTheater}
+            expanded={sheetExpanded}
+            exiting={sheetExiting}
+            presentation={isDesktopLayout ? 'panel' : 'sheet'}
+            selectedMovieId={selectedMovieId}
+            onMovieSelect={setSelectedMovieId}
+            onExpand={() => setSheetExpanded(true)}
+            onCollapse={() => setSheetExpanded(false)}
+            onClose={closeSheet}
+            onMovieSearch={(movieId, movieTitle) => setMovieFilter({ id: movieId, title: movieTitle })}
+            onMovieDetailOpen={isDesktopLayout ? (id) => openDesktopPanel({ type: 'movie', id }) : undefined}
+            onDirectorOpen={isDesktopLayout ? (name) => openDesktopPanel({ type: 'director', name }) : undefined}
+            favorited={false}
+            onFavorite={() => { /* Phase 4 */ }}
+            mapFilters={{ genres: filters.genres, nations: filters.nations }}
+            initialIsoDate={initialSheetDate}
+            onBack={fromMovieId && !isDesktopLayout ? () => router.push(`/movie/${fromMovieId}?tab=theaters`) : undefined}
+          />
+        </>
       )}
 
       {/* PC 영화/감독 상세 패널 */}
@@ -2802,6 +2846,12 @@ export default function MapView() {
           />
         </div>
       )}
+
+      <Toast
+        message="제보해 주셔서 감사합니다 🙏 확인 후 이메일로 답변 드리겠습니다."
+        trigger={reportSuccessTrigger}
+        duration={4000}
+      />
     </div>
   )
 }
