@@ -1,4 +1,4 @@
-import { formatDiscordReport, parseReportAction, reportActionComponents, verifyDiscordSignature } from '@/lib/reports/discord'
+import { formatDiscordReportEmbeds, parseReportAction, reportActionComponents, verifyDiscordSignature } from '@/lib/reports/discord'
 import { updateReportStatus } from '@/lib/reports/store'
 
 export const dynamic = 'force-dynamic'
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     return Response.json({
       type: InteractionResponseType.UpdateMessage,
       data: {
-        content: formatDiscordReport(report, action.status),
+        embeds: formatDiscordReportEmbeds(report, action.status),
         components: reportActionComponents(report.id, true),
         allowed_mentions: { parse: [] },
       },

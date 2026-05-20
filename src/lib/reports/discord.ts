@@ -12,27 +12,34 @@ interface DiscordMessage {
   content: string
 }
 
+interface DiscordUpload {
+  name: string
+  type: string
+  buffer: ArrayBuffer
+}
+
 export function discordReportEnabled() {
   return Boolean(discordReportWebhookUrl() || (discordEnv('DISCORD_BOT_TOKEN') && discordReportChannelId()))
 }
 
-export async function sendReportToDiscord(report: ReportRecord) {
-  const webhookUrl = discordReportWebhookUrl()
-  if (webhookUrl) return sendReportByWebhook(webhookUrl, report)
-
+export async function sendReportToDiscord(report: ReportRecord, uploads: DiscordUpload[] = []) {
   const token = discordEnv('DISCORD_BOT_TOKEN')
   const channelId = discordReportChannelId()
-  if (!token || !channelId) return null
+  if (token && channelId) return sendReportByBot(token, channelId, report, uploads)
 
+  const webhookUrl = discordReportWebhookUrl()
+  if (webhookUrl) return sendReportByWebhook(webhookUrl, report, uploads)
+
+  return null
+}
+
+async function sendReportByBot(token: string, channelId: string, report: ReportRecord, uploads: DiscordUpload[]) {
   const res = await fetch(`${DISCORD_API}/channels/${channelId}/messages`, {
     method: 'POST',
-    headers: {
-      Authorization: `Bot ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      content: formatDiscordReport(report),
-      allowed_mentions: { parse: [] },
+    headers: { Authorization: `Bot ${token}` },
+    body: discordMessageFormData({
+      report,
+      uploads,
       components: reportActionComponents(report.id),
     }),
   })
@@ -41,17 +48,17 @@ export async function sendReportToDiscord(report: ReportRecord) {
   return res.json() as Promise<DiscordMessage>
 }
 
-async function sendReportByWebhook(webhookUrl: string, report: ReportRecord) {
+async function sendReportByWebhook(webhookUrl: string, report: ReportRecord, uploads: DiscordUpload[]) {
   const url = new URL(webhookUrl)
   url.searchParams.set('wait', 'true')
+  url.searchParams.set('with_components', 'true')
 
   const res = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      content: formatDiscordReport(report),
+    body: discordMessageFormData({
+      report,
+      uploads,
       username: 'indi-movie-map',
-      allowed_mentions: { parse: [] },
       components: reportActionComponents(report.id),
     }),
   })
@@ -78,6 +85,28 @@ export function formatDiscordReport(report: ReportRecord, status: ReportStatus =
   return lines.join('\n')
 }
 
+export function formatDiscordReportEmbeds(report: ReportRecord, status: ReportStatus = report.status, imageName?: string) {
+  const fields = [
+    { name: '상태', value: statusLabel(status), inline: true },
+    { name: '유형', value: report.category, inline: true },
+    { name: '이메일', value: report.email || '미입력', inline: true },
+    report.selectedTheaterName ? { name: '관련 극장', value: report.selectedTheaterName, inline: true } : null,
+    report.pageUrl ? { name: '페이지', value: report.pageUrl, inline: false } : null,
+    report.files.length ? { name: '첨부', value: report.files.map((file) => file.name).join('\n'), inline: false } : null,
+    { name: 'Report ID', value: `\`${report.id}\``, inline: false },
+  ].filter((field): field is { name: string; value: string; inline: boolean } => Boolean(field))
+
+  return [{
+    title: '📨 제보하기',
+    description: trimDiscordText(report.detail, 1200),
+    color: statusColor(status),
+    fields,
+    image: imageName ? { url: `attachment://${imageName}` } : undefined,
+    footer: { text: 'indi-movie-map' },
+    timestamp: report.createdAt,
+  }]
+}
+
 export function reportActionComponents(reportId: string, disabled = false) {
   return [
     {
@@ -100,6 +129,37 @@ export function reportActionComponents(reportId: string, disabled = false) {
       ],
     },
   ]
+}
+
+function discordMessageFormData({
+  report,
+  uploads,
+  username,
+  components,
+}: {
+  report: ReportRecord
+  uploads: DiscordUpload[]
+  username?: string
+  components: ReturnType<typeof reportActionComponents>
+}) {
+  const form = new FormData()
+  const safeUploads = uploads.slice(0, 3).map((upload, index) => ({
+    ...upload,
+    name: safeDiscordFilename(upload.name, index),
+  }))
+
+  form.set('payload_json', JSON.stringify({
+    username,
+    embeds: formatDiscordReportEmbeds(report, report.status, safeUploads[0]?.name),
+    allowed_mentions: { parse: [] },
+    components,
+  }))
+
+  safeUploads.forEach((upload, index) => {
+    form.append(`files[${index}]`, new Blob([upload.buffer], { type: upload.type || 'application/octet-stream' }), upload.name)
+  })
+
+  return form
 }
 
 export function parseReportAction(customId: string) {
@@ -141,8 +201,21 @@ function statusLabel(status: ReportStatus) {
   return '대기'
 }
 
+function statusColor(status: ReportStatus) {
+  if (status === 'saved') return 0x4A7C59
+  if (status === 'deleted') return 0xB94A48
+  return 0x4A6380
+}
+
 function trimDiscordText(value: string, max: number) {
   return value.length > max ? `${value.slice(0, max - 1)}…` : value
+}
+
+function safeDiscordFilename(name: string, index: number) {
+  const fallback = `report-${index + 1}`
+  const ext = path.extname(name).slice(0, 12)
+  const base = path.basename(name, ext).replace(/[^\p{L}\p{N}._-]+/gu, '-').replace(/^-+|-+$/g, '').slice(0, 72)
+  return `${base || fallback}${ext || '.jpg'}`
 }
 
 function discordEnv(name: string) {

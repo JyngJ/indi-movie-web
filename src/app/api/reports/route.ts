@@ -9,12 +9,13 @@ export async function POST(request: Request) {
     const form = await request.formData()
     const input = reportInputFromForm(form)
     const report = await createReport(input)
+    const uploads = await discordUploadsFromForm(form)
 
     let discordSent = false
     let discordError: string | undefined
     if (discordReportEnabled()) {
       try {
-        const message = await sendReportToDiscord(report)
+        const message = await sendReportToDiscord(report, uploads)
         if (message?.id) {
           await setReportDiscordMessageId(report.id, message.id)
           discordSent = true
@@ -69,14 +70,25 @@ function reportInputFromForm(form: FormData): CreateReportInput {
 }
 
 function fileMetaFromForm(form: FormData): ReportFileMeta[] {
-  return form.getAll('files')
-    .filter((value): value is File => value instanceof File)
+  return filesFromForm(form)
     .slice(0, 3)
     .map((file) => ({
       name: file.name,
       type: file.type,
       size: file.size,
     }))
+}
+
+async function discordUploadsFromForm(form: FormData) {
+  return Promise.all(filesFromForm(form).slice(0, 3).map(async (file) => ({
+    name: file.name,
+    type: file.type,
+    buffer: await file.arrayBuffer(),
+  })))
+}
+
+function filesFromForm(form: FormData) {
+  return form.getAll('files').filter((value): value is File => value instanceof File)
 }
 
 function stringValue(value: FormDataEntryValue | null) {
