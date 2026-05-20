@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useMovieDetail, useMovieTheaterShowtimes, useMovies, useActiveMovieIds } from '@/lib/supabase/queries'
 import { withFlagsRaw } from '@/lib/nations'
+import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 
 export type DesktopPanelState =
   | { type: 'movie'; id: string }
@@ -130,6 +131,18 @@ function MoviePanel({
   const [tab, setTab] = useState<'info' | 'theaters'>('info')
   const { data: movie, isLoading } = useMovieDetail(movieId)
 
+  useEffect(() => {
+    if (!movie) return
+    trackEvent('movie detail viewed', {
+      movie_id: movie.id,
+      movie_title: movie.title,
+      source: 'desktop_panel',
+      initial_tab: tab,
+    })
+    classifySessionIntent('type_a', { source: 'desktop_panel', movie_id: movie.id })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [movie?.id])
+
   if (isLoading) {
     return (
       <PanelShell onClose={onClose} onBack={onBack}>
@@ -201,7 +214,16 @@ function MoviePanel({
         {(['info', 'theaters'] as const).map((t) => (
           <button
             key={t}
-            onClick={() => setTab(t)}
+            onClick={() => {
+              trackEvent('movie detail tab changed', {
+                movie_id: movie.id,
+                movie_title: movie.title,
+                from_tab: tab,
+                to_tab: t,
+                source: 'desktop_panel',
+              })
+              setTab(t)
+            }}
             style={{
               flex: 1, height: 42, border: 'none', background: 'none', cursor: 'pointer',
               fontSize: 13, fontWeight: tab === t ? 600 : 400,
@@ -302,7 +324,15 @@ function MovieTheatersTab({ movieId, onMapClick }: { movieId: string; onMapClick
   return (
     <div style={{ padding: '20px 20px 32px' }}>
       <button
-        onClick={onMapClick}
+        onClick={() => {
+          trackEvent('movie theaters map opened', {
+            movie_id: movieId,
+            theater_count: theaters.length,
+            source: 'desktop_panel',
+          })
+          classifySessionIntent('type_a', { source: 'desktop_panel', movie_id: movieId })
+          onMapClick()
+        }}
         style={{
           width: '100%', height: 40,
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -332,7 +362,15 @@ function MovieTheatersTab({ movieId, onMapClick }: { movieId: string; onMapClick
                   </div>
                 </div>
                 <button
-                  onClick={onMapClick}
+                  onClick={() => {
+                    trackEvent('movie theater selected', {
+                      movie_id: movieId,
+                      theater_id: entry.theaterId,
+                      theater_name: entry.theaterName,
+                      source: 'desktop_panel',
+                    })
+                    onMapClick()
+                  }}
                   style={{ flexShrink: 0, alignSelf: 'center', height: 26, padding: '0 10px', borderRadius: 999, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-raised)', color: 'var(--color-text-body)', fontSize: 11, fontWeight: 500, cursor: 'pointer', minHeight: 'auto' }}
                 >
                   영화관 보기
@@ -353,7 +391,18 @@ function MovieTheatersTab({ movieId, onMapClick }: { movieId: string; onMapClick
                         <button
                           key={st.id}
                           disabled={soldout}
-                          onClick={soldout ? undefined : onMapClick}
+                          onClick={soldout ? undefined : () => {
+                            trackEvent('movie theater selected', {
+                              movie_id: movieId,
+                              theater_id: entry.theaterId,
+                              theater_name: entry.theaterName,
+                              showtime_id: st.id,
+                              show_date: group.date,
+                              show_time: st.showTime,
+                              source: 'desktop_panel_showtime',
+                            })
+                            onMapClick()
+                          }}
                           style={{ padding: '8px 12px', borderRadius: 9, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-raised)', cursor: soldout ? 'default' : 'pointer', opacity: soldout ? 0.5 : 1, textAlign: 'left', minHeight: 'auto' }}
                         >
                           <div style={{ fontSize: 14, fontWeight: 700, fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>

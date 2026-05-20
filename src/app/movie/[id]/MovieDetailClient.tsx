@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useMovieDetail, useMovieTheaterShowtimes, useActiveMovieIds } from '@/lib/supabase/queries'
 import type { MovieDetail, MovieTheaterEntry } from '@/lib/supabase/queries'
 import { withFlagsRaw } from '@/lib/nations'
+import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 
 function useIsDesktopDetail() {
   const [isDesktop, setIsDesktop] = useState(
@@ -319,7 +320,7 @@ function formatDateLabel(dateStr: string) {
 }
 
 /* ── TheaterShowtimeChips ── */
-function TheaterShowtimeChips({ entry, onGoTo }: { entry: MovieTheaterEntry; onGoTo: (date: string) => void }) {
+function TheaterShowtimeChips({ entry, movieId, onGoTo }: { entry: MovieTheaterEntry; movieId: string; onGoTo: (date: string) => void }) {
   return (
     <div>
       {/* 극장 헤더 */}
@@ -334,7 +335,17 @@ function TheaterShowtimeChips({ entry, onGoTo }: { entry: MovieTheaterEntry; onG
           </div>
         </div>
         <button
-          onClick={() => onGoTo(entry.dateGroups[0]?.date ?? '')}
+          onClick={() => {
+            const date = entry.dateGroups[0]?.date ?? ''
+            trackEvent('movie theater selected', {
+              movie_id: movieId,
+              theater_id: entry.theaterId,
+              theater_name: entry.theaterName,
+              show_date: date,
+              source: 'movie_detail',
+            })
+            onGoTo(date)
+          }}
           style={{
             flexShrink: 0, alignSelf: 'center',
             height: 28, padding: '0 11px',
@@ -365,7 +376,18 @@ function TheaterShowtimeChips({ entry, onGoTo }: { entry: MovieTheaterEntry; onG
                 <button
                   key={st.id}
                   disabled={soldout}
-                  onClick={soldout ? undefined : () => onGoTo(group.date)}
+                  onClick={soldout ? undefined : () => {
+                    trackEvent('movie theater selected', {
+                      movie_id: movieId,
+                      theater_id: entry.theaterId,
+                      theater_name: entry.theaterName,
+                      showtime_id: st.id,
+                      show_date: group.date,
+                      show_time: st.showTime,
+                      source: 'movie_detail_showtime',
+                    })
+                    onGoTo(group.date)
+                  }}
                   style={{
                     padding: '10px 14px', borderRadius: 10,
                     border: '1px solid var(--color-border)',
@@ -409,7 +431,15 @@ function TheatersTab({ movieId, onMapClick, onGoToTheater, desktop = false }: { 
   return (
     <div style={{ padding: desktop ? '26px 0 64px' : '20px 20px 52px', maxWidth: desktop ? 1040 : undefined, margin: desktop ? '0 auto' : undefined }}>
       <button
-        onClick={onMapClick}
+        onClick={() => {
+          trackEvent('movie theaters map opened', {
+            movie_id: movieId,
+            theater_count: theaters.length,
+            source: 'movie_detail',
+          })
+          classifySessionIntent('type_a', { source: 'movie_detail', movie_id: movieId })
+          onMapClick()
+        }}
         style={{
           width: '100%', height: 44,
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -444,7 +474,7 @@ function TheatersTab({ movieId, onMapClick, onGoToTheater, desktop = false }: { 
               borderRadius: 12, border: '1px solid var(--color-border)',
               backgroundColor: 'var(--color-surface-card)', overflow: 'hidden',
             }}>
-              <TheaterShowtimeChips entry={entry} onGoTo={(date) => onGoToTheater(entry.theaterId, date)} />
+              <TheaterShowtimeChips entry={entry} movieId={movieId} onGoTo={(date) => onGoToTheater(entry.theaterId, date)} />
             </div>
           ))}
         </div>
@@ -468,6 +498,22 @@ export function MovieDetailClient({ movieId, theaterId }: { movieId: string; the
   const { data: movie, isLoading } = useMovieDetail(movieId)
   const { data: activeIds = [] } = useActiveMovieIds()
   void activeIds
+
+  useEffect(() => {
+    if (!movie) return
+    trackEvent('movie detail viewed', {
+      movie_id: movie.id,
+      movie_title: movie.title,
+      source: theaterId ? 'theater_sheet' : 'direct',
+      theater_id: theaterId,
+      initial_tab: tab,
+    })
+    classifySessionIntent('type_a', {
+      source: theaterId ? 'theater_sheet' : 'direct',
+      movie_id: movie.id,
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [movie?.id])
 
   // 제목이 sticky NavBar 아래로 스크롤되면 NavBar에 영화 제목 표시
   useEffect(() => {
@@ -538,7 +584,19 @@ export function MovieDetailClient({ movieId, theaterId }: { movieId: string; the
 
       <HeroSection movie={movie} titleRef={titleRef} desktop={isDesktop} />
 
-      <TabBar active={tab} onChange={setTab} desktop={isDesktop} />
+      <TabBar
+        active={tab}
+        onChange={(nextTab) => {
+          trackEvent('movie detail tab changed', {
+            movie_id: movie.id,
+            movie_title: movie.title,
+            from_tab: tab,
+            to_tab: nextTab,
+          })
+          setTab(nextTab)
+        }}
+        desktop={isDesktop}
+      />
 
       {tab === 'info'
         ? <InfoTab movie={movie} onDirectorClick={handleDirectorClick} desktop={isDesktop} />
