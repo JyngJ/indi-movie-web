@@ -536,16 +536,25 @@ export function useTheaterShowtimes(theaterId: string | null, date: string) {
   })
 }
 
-/* ── 영화별 상영 영화관 + 오늘 상영시간 ─────────────────────────── */
+/* ── 영화별 상영 영화관 + 날짜별 상영시간 ───────────────────────── */
+export interface MovieTheaterDateGroup {
+  date: string
+  showtimes: Showtime[]
+}
+
 export interface MovieTheaterEntry {
   theaterId: string
   theaterName: string
   theaterAddress: string
-  showtimes: Showtime[]
+  dateGroups: MovieTheaterDateGroup[]
 }
 
 export function useMovieTheaterShowtimes(movieId: string | null) {
   const today = formatLocalDate(new Date())
+
+  const until = new Date()
+  until.setDate(until.getDate() + 13)
+  const untilDate = formatLocalDate(until)
 
   return useQuery<MovieTheaterEntry[]>({
     queryKey: ['movie-theater-showtimes', movieId, today],
@@ -571,27 +580,26 @@ export function useMovieTheaterShowtimes(movieId: string | null) {
         `)
         .eq('movie_id', movieId!)
         .eq('is_active', true)
-        .eq('show_date', today)
+        .gte('show_date', today)
+        .lte('show_date', untilDate)
+        .order('show_date')
         .order('show_time')
-        .limit(500)
+        .limit(1000)
 
       if (error) throw error
 
-      const theaterMap = new Map<string, MovieTheaterEntry>()
+      // 극장별로 모으고, 극장 내에서 날짜별로 그룹핑
+      const theaterMap = new Map<string, { name: string; address: string; byDate: Map<string, Showtime[]> }>()
       for (const r of data ?? []) {
         const th = r.theaters as unknown as { id: string; name: string; address: string } | null
         if (!th) continue
 
         if (!theaterMap.has(th.id)) {
-          theaterMap.set(th.id, {
-            theaterId: th.id,
-            theaterName: th.name,
-            theaterAddress: th.address,
-            showtimes: [],
-          })
+          theaterMap.set(th.id, { name: th.name, address: th.address, byDate: new Map() })
         }
-
-        theaterMap.get(th.id)!.showtimes.push({
+        const entry = theaterMap.get(th.id)!
+        if (!entry.byDate.has(r.show_date)) entry.byDate.set(r.show_date, [])
+        entry.byDate.get(r.show_date)!.push({
           id: r.id,
           movieId: movieId!,
           movieTitle: '',
@@ -609,7 +617,14 @@ export function useMovieTheaterShowtimes(movieId: string | null) {
         })
       }
 
-      return Array.from(theaterMap.values())
+      return Array.from(theaterMap.entries()).map(([theaterId, { name, address, byDate }]) => ({
+        theaterId,
+        theaterName: name,
+        theaterAddress: address,
+        dateGroups: Array.from(byDate.entries())
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([date, showtimes]) => ({ date, showtimes })),
+      }))
     },
     staleTime: 2 * 60 * 1000,
   })

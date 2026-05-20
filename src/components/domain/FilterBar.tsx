@@ -48,7 +48,7 @@ function buildDateOptions(t = today()) {
     { id: 'tomorrow', label: '내일', sub: fmtFull(addDays(t, 1)) },
     { id: 'this-weekend', label: '이번 주말', sub: `${fmtShortDow(sat0)} - ${fmtShortDow(sun0)}` },
     { id: 'next-weekend', label: '다음 주말', sub: `${fmtShortDow(sat1)} - ${fmtShortDow(sun1)}` },
-    { id: 'this-week', label: '이번 주 전체', sub: `${fmtMD(t)} - ${fmtMD(weekEnd)}` },
+    { id: 'this-week', label: '이번 주', sub: `${fmtMD(t)} - ${fmtMD(weekEnd)}` },
     { id: 'this-month', label: '이번 달', sub: `${t.getMonth() + 1}월 전체` },
   ] as const
 }
@@ -584,10 +584,12 @@ export interface FilterBarProps {
   nationOptions?: string[]
   movieFilter?: { id: string; title: string } | null
   onMovieFilterClear?: () => void
+  onMovieChipClick?: () => void
+  onDirectorChipClick?: () => void
   desktop?: boolean
 }
 
-export function FilterBar({ onChange, nationOptions = EMPTY_NATION_OPTIONS, movieFilter, onMovieFilterClear, desktop = false }: FilterBarProps) {
+export function FilterBar({ onChange, nationOptions = EMPTY_NATION_OPTIONS, movieFilter, onMovieFilterClear, onMovieChipClick, onDirectorChipClick, desktop = false }: FilterBarProps) {
   const [dateId, setDateId] = useState<DateId>('this-week')
   const [customStart, setCustomStart] = useState<Date | null>(null)
   const [customEnd, setCustomEnd] = useState<Date | null>(null)
@@ -851,6 +853,18 @@ export function FilterBar({ onChange, nationOptions = EMPTY_NATION_OPTIONS, movi
           onClick={() => openDropdown('date', dateChipRef)}
           onClear={dateId ? clearDate : undefined}
         />
+        {onMovieChipClick && (
+          <FilterChip
+            label="영화"
+            onClick={onMovieChipClick}
+          />
+        )}
+        {onDirectorChipClick && (
+          <FilterChip
+            label="감독"
+            onClick={onDirectorChipClick}
+          />
+        )}
         <FilterChip
           label="장르"
           value={genreLabel}
