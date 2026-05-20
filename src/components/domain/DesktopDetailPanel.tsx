@@ -290,6 +290,13 @@ function MovieInfoTab({ movie, onDirectorClick }: { movie: NonNullable<ReturnTyp
   )
 }
 
+function formatDateLabel(dateStr: string) {
+  const DOW = ['일', '월', '화', '수', '목', '금', '토']
+  const [, m, d] = dateStr.split('-').map(Number)
+  const dow = DOW[new Date(dateStr + 'T00:00:00').getDay()]
+  return `${m}월 ${d}일(${dow})`
+}
+
 function MovieTheatersTab({ movieId, onMapClick }: { movieId: string; onMapClick: () => void }) {
   const { data: theaters = [], isLoading } = useMovieTheaterShowtimes(movieId)
   return (
@@ -311,45 +318,61 @@ function MovieTheatersTab({ movieId, onMapClick }: { movieId: string; onMapClick
       {isLoading ? (
         <div style={{ height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: 'var(--color-text-caption)' }}>불러오는 중…</div>
       ) : theaters.length === 0 ? (
-        <div style={{ textAlign: 'center', paddingTop: 32, fontSize: 13, color: 'var(--color-text-caption)' }}>오늘 상영 중인 영화관이 없습니다</div>
+        <div style={{ textAlign: 'center', paddingTop: 32, fontSize: 13, color: 'var(--color-text-caption)' }}>상영 중인 영화관이 없습니다</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {theaters.map((entry) => (
             <div key={entry.theaterId} style={{ borderRadius: 12, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', overflow: 'hidden' }}>
-              <div style={{ padding: '12px 14px 10px', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                <span style={{ marginTop: 5, width: 7, height: 7, borderRadius: '50%', backgroundColor: 'var(--color-primary-base)', flexShrink: 0, display: 'block' }} />
-                <div style={{ minWidth: 0 }}>
+              {/* 극장 헤더 */}
+              <div style={{ padding: '12px 14px 10px', display: 'flex', alignItems: 'flex-start' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: 'var(--font-serif)', fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)' }}>{entry.theaterName}</div>
                   <div style={{ marginTop: 2, display: 'flex', alignItems: 'center', gap: 3, color: 'var(--color-text-sub)', fontSize: 11 }}>
                     <IcoPin />{entry.theaterAddress}
                   </div>
                 </div>
+                <button
+                  onClick={onMapClick}
+                  style={{ flexShrink: 0, alignSelf: 'center', height: 26, padding: '0 10px', borderRadius: 999, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-raised)', color: 'var(--color-text-body)', fontSize: 11, fontWeight: 500, cursor: 'pointer', minHeight: 'auto' }}
+                >
+                  영화관 보기
+                </button>
               </div>
-              <div style={{ borderTop: '1px solid var(--color-border)', padding: '10px 14px', display: 'flex', flexWrap: 'wrap', gap: 7 }}>
-                {entry.showtimes.map((st) => {
-                  const soldout = st.seatAvailable === 0
-                  const low = !soldout && st.seatAvailable <= 20
-                  const seatColor = soldout ? 'var(--color-error)' : low ? 'var(--color-warning)' : 'var(--color-primary-base)'
-                  return (
-                    <button
-                      key={st.id}
-                      disabled={soldout}
-                      onClick={st.bookingUrl ? () => window.open(st.bookingUrl!, '_blank', 'noopener') : undefined}
-                      style={{ padding: '8px 12px', borderRadius: 9, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-raised)', cursor: soldout ? 'default' : (st.bookingUrl ? 'pointer' : 'default'), opacity: soldout ? 0.5 : 1, textAlign: 'left', minHeight: 'auto' }}
-                    >
-                      <div style={{ fontSize: 14, fontWeight: 700, fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>
-                        {st.showTime.slice(0, 5)}
-                        {st.endTime && <span style={{ fontSize: 10, color: 'var(--color-text-caption)', marginLeft: 3 }}>-{st.endTime.slice(0, 5)}</span>}
-                      </div>
-                      <div style={{ marginTop: 3, fontSize: 11, fontFeatureSettings: '"tnum"' }}>
-                        <span style={{ fontWeight: 600, color: seatColor }}>{st.seatAvailable}</span>
-                        <span style={{ color: 'var(--color-text-sub)' }}>/{st.seatTotal}석</span>
-                        {soldout && <span style={{ marginLeft: 3, fontSize: 9, color: 'var(--color-error)', fontWeight: 700 }}>매진</span>}
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
+              {/* 날짜별 상영시간 */}
+              {entry.dateGroups.map((group) => (
+                <div key={group.date} style={{ borderTop: '1px solid var(--color-border)', padding: '9px 14px 11px' }}>
+                  <div style={{ marginBottom: 7, fontSize: 10, fontWeight: 600, color: 'var(--color-text-caption)', letterSpacing: '0.3px' }}>
+                    {formatDateLabel(group.date)}
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                    {group.showtimes.map((st) => {
+                      const soldout = st.seatAvailable === 0
+                      const low = !soldout && st.seatAvailable !== null && st.seatAvailable <= 20
+                      const seatColor = soldout ? 'var(--color-error)' : low ? 'var(--color-warning)' : 'var(--color-primary-base)'
+                      return (
+                        <button
+                          key={st.id}
+                          disabled={soldout}
+                          onClick={soldout ? undefined : onMapClick}
+                          style={{ padding: '8px 12px', borderRadius: 9, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-raised)', cursor: soldout ? 'default' : 'pointer', opacity: soldout ? 0.5 : 1, textAlign: 'left', minHeight: 'auto' }}
+                        >
+                          <div style={{ fontSize: 14, fontWeight: 700, fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>
+                            {st.showTime.slice(0, 5)}
+                            {st.endTime && <span style={{ fontSize: 10, color: 'var(--color-text-caption)', marginLeft: 3 }}>-{st.endTime.slice(0, 5)}</span>}
+                          </div>
+                          {st.seatTotal > 0 && (
+                            <div style={{ marginTop: 3, fontSize: 11, fontFeatureSettings: '"tnum"' }}>
+                              <span style={{ fontWeight: 600, color: seatColor }}>{st.seatAvailable}</span>
+                              <span style={{ color: 'var(--color-text-sub)' }}>/{st.seatTotal}석</span>
+                              {soldout && <span style={{ marginLeft: 3, fontSize: 9, color: 'var(--color-error)', fontWeight: 700 }}>매진</span>}
+                            </div>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
           ))}
         </div>

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useMovieDetail, useMovieTheaterShowtimes, useActiveMovieIds } from '@/lib/supabase/queries'
 import type { MovieDetail, MovieTheaterEntry } from '@/lib/supabase/queries'
 import { withFlagsRaw } from '@/lib/nations'
@@ -310,87 +310,101 @@ function InfoTab({ movie, onDirectorClick, desktop = false }: { movie: MovieDeta
   )
 }
 
+/* ── 날짜 포맷 헬퍼 ── */
+function formatDateLabel(dateStr: string) {
+  const DOW = ['일', '월', '화', '수', '목', '금', '토']
+  const [, m, d] = dateStr.split('-').map(Number)
+  const dow = DOW[new Date(dateStr + 'T00:00:00').getDay()]
+  return `${m}월 ${d}일(${dow})`
+}
+
 /* ── TheaterShowtimeChips ── */
-function TheaterShowtimeChips({ entry, onGoTo }: { entry: MovieTheaterEntry; onGoTo: () => void }) {
+function TheaterShowtimeChips({ entry, onGoTo }: { entry: MovieTheaterEntry; onGoTo: (date: string) => void }) {
   return (
     <div>
-      <div style={{ padding: '14px 16px 12px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-        <span style={{
-          marginTop: 5, width: 8, height: 8, borderRadius: '50%',
-          backgroundColor: 'var(--color-primary-base)', flexShrink: 0, display: 'block',
-        }} />
+      {/* 극장 헤더 */}
+      <div style={{ padding: '14px 16px 12px', display: 'flex', alignItems: 'flex-start', gap: 0 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ fontFamily: 'var(--font-serif)', fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)', flex: 1, minWidth: 0 }}>
-              {entry.theaterName}
-            </div>
-            <button
-              onClick={onGoTo}
-              style={{
-                flexShrink: 0,
-                height: 26, padding: '0 10px',
-                borderRadius: 999,
-                border: '1px solid var(--color-primary-base)',
-                backgroundColor: 'var(--color-primary-subtle-l)',
-                color: 'var(--color-primary-base)',
-                fontSize: 12, fontWeight: 600,
-                cursor: 'pointer', minHeight: 'auto',
-              }}
-            >
-              바로가기
-            </button>
+          <div style={{ fontFamily: 'var(--font-serif)', fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.3 }}>
+            {entry.theaterName}
           </div>
-          <div style={{ marginTop: 3, display: 'flex', alignItems: 'center', gap: 3, color: 'var(--color-text-sub)', fontSize: 12 }}>
+          <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 3, color: 'var(--color-text-sub)', fontSize: 12 }}>
             <IcoPin />
             {entry.theaterAddress}
           </div>
         </div>
+        <button
+          onClick={() => onGoTo(entry.dateGroups[0]?.date ?? '')}
+          style={{
+            flexShrink: 0, alignSelf: 'center',
+            height: 28, padding: '0 11px',
+            borderRadius: 999,
+            border: '1px solid var(--color-border)',
+            backgroundColor: 'var(--color-surface-raised)',
+            color: 'var(--color-text-body)',
+            fontSize: 12, fontWeight: 500,
+            cursor: 'pointer', minHeight: 'auto',
+          }}
+        >
+          영화관 보기
+        </button>
       </div>
-      <div style={{ borderTop: '1px solid var(--color-border)', padding: '12px 16px', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-        {entry.showtimes.map((st) => {
-          const soldout = st.seatAvailable === 0
-          const low = !soldout && st.seatAvailable <= 20
-          const seatColor = soldout ? 'var(--color-error)' : low ? 'var(--color-warning)' : 'var(--color-primary-base)'
-          return (
-            <button
-              key={st.id}
-              disabled={soldout}
-              onClick={st.bookingUrl ? () => window.open(st.bookingUrl!, '_blank', 'noopener') : undefined}
-              style={{
-                padding: '10px 14px', borderRadius: 10,
-                border: '1px solid var(--color-border)',
-                backgroundColor: 'var(--color-surface-raised)',
-                cursor: soldout ? 'default' : (st.bookingUrl ? 'pointer' : 'default'),
-                opacity: soldout ? 0.5 : 1,
-                textAlign: 'left', minHeight: 'auto',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
-                <span style={{ fontSize: 16, fontWeight: 700, fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>
-                  {st.showTime.slice(0, 5)}
-                </span>
-                {st.endTime && (
-                  <span style={{ fontSize: 10, color: 'var(--color-text-caption)', fontFeatureSettings: '"tnum"' }}>
-                    -{st.endTime.slice(0, 5)}
-                  </span>
-                )}
-              </div>
-              <div style={{ marginTop: 4, fontSize: 12, fontFeatureSettings: '"tnum"' }}>
-                <span style={{ fontWeight: 600, color: seatColor }}>{st.seatAvailable}</span>
-                <span style={{ color: 'var(--color-text-sub)' }}>/{st.seatTotal}석</span>
-                {low && !soldout && <span style={{ marginLeft: 4, fontSize: 10, color: 'var(--color-warning)', fontWeight: 600 }}>잔여↓</span>}
-                {soldout && <span style={{ marginLeft: 4, fontSize: 10, color: 'var(--color-error)', fontWeight: 700 }}>매진</span>}
-              </div>
-            </button>
-          )
-        })}
-      </div>
+
+      {/* 날짜별 상영시간 */}
+      {entry.dateGroups.map((group) => (
+        <div key={group.date} style={{ borderTop: '1px solid var(--color-border)', padding: '10px 16px 12px' }}>
+          <div style={{ marginBottom: 8, fontSize: 11, fontWeight: 600, color: 'var(--color-text-caption)', letterSpacing: '0.3px' }}>
+            {formatDateLabel(group.date)}
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {group.showtimes.map((st) => {
+              const soldout = st.seatAvailable === 0
+              const low = !soldout && st.seatAvailable !== null && st.seatAvailable <= 20
+              const seatColor = soldout ? 'var(--color-error)' : low ? 'var(--color-warning)' : 'var(--color-primary-base)'
+              return (
+                <button
+                  key={st.id}
+                  disabled={soldout}
+                  onClick={soldout ? undefined : () => onGoTo(group.date)}
+                  style={{
+                    padding: '10px 14px', borderRadius: 10,
+                    border: '1px solid var(--color-border)',
+                    backgroundColor: 'var(--color-surface-raised)',
+                    cursor: soldout ? 'default' : 'pointer',
+                    opacity: soldout ? 0.5 : 1,
+                    textAlign: 'left', minHeight: 'auto',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
+                    <span style={{ fontSize: 16, fontWeight: 700, fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>
+                      {st.showTime.slice(0, 5)}
+                    </span>
+                    {st.endTime && (
+                      <span style={{ fontSize: 10, color: 'var(--color-text-caption)', fontFeatureSettings: '"tnum"' }}>
+                        -{st.endTime.slice(0, 5)}
+                      </span>
+                    )}
+                  </div>
+                  {(st.seatTotal > 0) && (
+                    <div style={{ marginTop: 4, fontSize: 12, fontFeatureSettings: '"tnum"' }}>
+                      <span style={{ fontWeight: 600, color: seatColor }}>{st.seatAvailable}</span>
+                      <span style={{ color: 'var(--color-text-sub)' }}>/{st.seatTotal}석</span>
+                      {low && !soldout && <span style={{ marginLeft: 4, fontSize: 10, color: 'var(--color-warning)', fontWeight: 600 }}>잔여↓</span>}
+                      {soldout && <span style={{ marginLeft: 4, fontSize: 10, color: 'var(--color-error)', fontWeight: 700 }}>매진</span>}
+                    </div>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
 
 /* ── TheatersTab ── */
-function TheatersTab({ movieId, onMapClick, onGoToTheater, desktop = false }: { movieId: string; onMapClick: () => void; onGoToTheater: (theaterId: string) => void; desktop?: boolean }) {
+function TheatersTab({ movieId, onMapClick, onGoToTheater, desktop = false }: { movieId: string; onMapClick: () => void; onGoToTheater: (theaterId: string, date: string) => void; desktop?: boolean }) {
   const { data: theaters = [], isLoading } = useMovieTheaterShowtimes(movieId)
   return (
     <div style={{ padding: desktop ? '26px 0 64px' : '20px 20px 52px', maxWidth: desktop ? 1040 : undefined, margin: desktop ? '0 auto' : undefined }}>
@@ -430,7 +444,7 @@ function TheatersTab({ movieId, onMapClick, onGoToTheater, desktop = false }: { 
               borderRadius: 12, border: '1px solid var(--color-border)',
               backgroundColor: 'var(--color-surface-card)', overflow: 'hidden',
             }}>
-              <TheaterShowtimeChips entry={entry} onGoTo={() => onGoToTheater(entry.theaterId)} />
+              <TheaterShowtimeChips entry={entry} onGoTo={(date) => onGoToTheater(entry.theaterId, date)} />
             </div>
           ))}
         </div>
@@ -442,8 +456,11 @@ function TheatersTab({ movieId, onMapClick, onGoToTheater, desktop = false }: { 
 /* ── 메인 ── */
 export function MovieDetailClient({ movieId, theaterId }: { movieId: string; theaterId?: string }) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const isDesktop = useIsDesktopDetail()
-  const [tab, setTab] = useState<'info' | 'theaters'>('info')
+  const [tab, setTab] = useState<'info' | 'theaters'>(() =>
+    searchParams.get('tab') === 'theaters' ? 'theaters' : 'info'
+  )
   // const [starred, setStarred] = useState(false) // 즐겨찾기 — 계정 기능 구현 전 비활성화
   const [titleInNav, setTitleInNav] = useState(false)
   const titleRef = useRef<HTMLHeadingElement>(null)
@@ -525,7 +542,12 @@ export function MovieDetailClient({ movieId, theaterId }: { movieId: string; the
 
       {tab === 'info'
         ? <InfoTab movie={movie} onDirectorClick={handleDirectorClick} desktop={isDesktop} />
-        : <TheatersTab movieId={movieId} onMapClick={handleMapClick} onGoToTheater={(tid) => router.push(`/?theater=${tid}&movie=${movieId}`)} desktop={isDesktop} />
+        : <TheatersTab
+            movieId={movieId}
+            onMapClick={handleMapClick}
+            onGoToTheater={(tid, date) => router.push(`/?theater=${tid}&movie=${movieId}&date=${date}&fromMovie=${movieId}`)}
+            desktop={isDesktop}
+          />
       }
 
       <div style={{ height: 'env(safe-area-inset-bottom)' }} />

@@ -232,6 +232,8 @@ interface TheaterSheetProps {
   favorited?: boolean
   onFavorite?: () => void
   mapFilters?: { genres: string[]; nations: string[] }
+  initialIsoDate?: string
+  onBack?: () => void
 }
 
 /* ── 메인 컴포넌트 ──────────────────────────────────────────────── */
@@ -251,6 +253,8 @@ export function TheaterSheet({
   favorited = false,
   onFavorite,
   mapFilters,
+  initialIsoDate,
+  onBack,
 }: TheaterSheetProps) {
 
   const router = useRouter()
@@ -305,7 +309,7 @@ export function TheaterSheet({
     const d = new Date()
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   }, [])
-  const [selectedIsoDate, setSelectedIsoDate] = useState(todayIso)
+  const [selectedIsoDate, setSelectedIsoDate] = useState(initialIsoDate ?? todayIso)
 
   /* ── Supabase 상영 데이터 ── */
   const { data: showtimeData, isLoading: showtimesLoading } = useTheaterShowtimes(
@@ -1103,15 +1107,17 @@ export function TheaterSheet({
             display: 'flex',
             gap: 6,
           }}>
-            {/* 즐겨찾기 — 계정 기능 구현 전 비활성화
-            <button style={iconBtn} onClick={onFavorite}>
-              <IconStar filled={favorited} />
-            </button>
-            */}
             <button style={iconBtn} onClick={onClose}>
               <IconClose />
             </button>
           </div>
+          {onBack && (
+            <div style={{ position: 'absolute', top: -2, left: 20 }}>
+              <button style={iconBtn} onClick={onBack} aria-label="이전으로">
+                <IconChevronLeft />
+              </button>
+            </div>
+          )}
         </div>
       ) : panelMode ? (
         /* PC 패널 헤더 — 극장 정보 고정 */
@@ -1206,7 +1212,7 @@ export function TheaterSheet({
           alignItems: 'center',
           justifyContent: 'space-between',
         }}>
-          <button style={iconBtn} onClick={onCollapse}>
+          <button style={iconBtn} onClick={onBack ?? onCollapse}>
             <IconChevronLeft />
           </button>
           <span style={{
