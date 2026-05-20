@@ -872,10 +872,12 @@ export function AdminShowtimeConsole() {
                   }}
                 >
                   <option value="">선택 안 함</option>
-                  {adminTheaters.map((theater) => (
-                    <option key={theater.id} value={theater.id}>
-                      {theater.name} · {theater.city}
-                    </option>
+                  {groupByCity(adminTheaters).map(([city, items]) => (
+                    <optgroup key={city} label={city}>
+                      {items.map((theater) => (
+                        <option key={theater.id} value={theater.id}>{theater.name}</option>
+                      ))}
+                    </optgroup>
                   ))}
                 </select>
               </label>
@@ -1314,17 +1316,22 @@ export function AdminShowtimeConsole() {
 
         <div className={styles.serviceGrid}>
           <aside className={styles.serviceList}>
-            {adminTheaters.map((theater) => (
-              <button
-                key={theater.id}
-                className={`${styles.sourceItem} ${selectedAdminTheaterId === theater.id ? styles.sourceItemActive : ''}`}
-                onClick={() => selectAdminTheater(theater.id)}
-              >
-                <span>
-                  <strong>{theater.name}</strong>
-                  <small>{theater.city} · {theater.address}</small>
-                </span>
-              </button>
+            {groupByCity(adminTheaters).map(([city, items]) => (
+              <div key={city}>
+                <p className={styles.cityGroupLabel}>{city}</p>
+                {items.map((theater) => (
+                  <button
+                    key={theater.id}
+                    className={`${styles.sourceItem} ${selectedAdminTheaterId === theater.id ? styles.sourceItemActive : ''}`}
+                    onClick={() => selectAdminTheater(theater.id)}
+                  >
+                    <span>
+                      <strong>{theater.name}</strong>
+                      <small>{theater.address}</small>
+                    </span>
+                  </button>
+                ))}
+              </div>
             ))}
             {adminTheaters.length === 0 && <p className={styles.emptyLog}>등록된 실제 극장이 없습니다.</p>}
           </aside>
@@ -1537,6 +1544,17 @@ export function AdminShowtimeConsole() {
       </section>}
     </main>
   )
+}
+
+function groupByCity<T extends { city: string }>(items: T[]): [string, T[]][] {
+  const order = (city: string) => city === '서울' ? 0 : 1
+  const map = new Map<string, T[]>()
+  for (const item of items) {
+    const list = map.get(item.city) ?? []
+    list.push(item)
+    map.set(item.city, list)
+  }
+  return Array.from(map.entries()).sort(([a], [b]) => order(a) - order(b) || a.localeCompare(b, 'ko'))
 }
 
 function Metric({ label, value, tone = 'default' }: { label: string; value: string | number; tone?: 'default' | 'warning' | 'success' }) {

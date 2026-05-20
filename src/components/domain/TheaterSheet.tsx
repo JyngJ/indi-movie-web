@@ -824,8 +824,26 @@ export function TheaterSheet({
   useEffect(() => { setSelectedShowtimeId(null) }, [selectedMovieId])
   useEffect(() => { if (!shownExpanded) setSelectedShowtimeId(null) }, [shownExpanded])
 
+  /* ── 현재 시각 (1분마다 갱신, 오늘 탭에서만 지난 회차 숨김) ── */
+  const [nowMinutes, setNowMinutes] = useState(() => {
+    const n = new Date()
+    return n.getHours() * 60 + n.getMinutes()
+  })
+  useEffect(() => {
+    const id = setInterval(() => {
+      const n = new Date()
+      setNowMinutes(n.getHours() * 60 + n.getMinutes())
+    }, 60_000)
+    return () => clearInterval(id)
+  }, [])
+
   /* ── 상영시간 필터링 ─────────────────────────────────────────── */
-  const filteredShowtimes = showtimes.filter((s) => s.movieId === selectedMovieId)
+  const filteredShowtimes = showtimes.filter((s) => {
+    if (s.movieId !== selectedMovieId) return false
+    if (selectedIsoDate !== todayIso) return true
+    const [h, m] = s.showTime.split(':').map(Number)
+    return h * 60 + m >= nowMinutes
+  })
 
   const openWebsite = () => {
     if (!theater.website) return
@@ -881,20 +899,19 @@ export function TheaterSheet({
     copyFallback()
   }
 
+  const hasInstagram = Boolean(theater.instagramUrl)
+
   const openInstagram = () => {
     const username = theater.instagramUrl?.match(/instagram\.com\/([^/?#]+)/)?.[1]
 
-    if (!username) {
-      const webUrl = theater.instagramUrl || `https://www.instagram.com/explore/search/keyword/?q=${encodeURIComponent(theater.name)}`
-      window.open(webUrl, '_blank', 'noopener')
+    if (!theater.instagramUrl) {
       return
     }
 
-    // 앱 딥링크 시도 — 앱이 열리면 window blur 발생 → fallback 취소
-    const webUrl = `https://www.instagram.com/${username}/`
-    const fallback = setTimeout(() => window.open(webUrl, '_blank', 'noopener'), 1500)
-    window.addEventListener('blur', () => clearTimeout(fallback), { once: true })
-    window.location.href = `instagram://user?username=${username}`
+    const webUrl = username
+      ? `https://www.instagram.com/${username}/`
+      : theater.instagramUrl
+    window.open(webUrl, '_blank', 'noopener')
   }
 
   /* ── 공통 아이콘 버튼 스타일 ─────────────────────────────────── */
@@ -1071,10 +1088,12 @@ export function TheaterSheet({
                 <IconShare size={13} />
                 공유
               </button>
-              <button style={actionBtn} onClick={openInstagram}>
-                <IconInstagram size={13} />
-                인스타그램
-              </button>
+              {hasInstagram && (
+                <button style={actionBtn} onClick={openInstagram}>
+                  <IconInstagram size={13} />
+                  인스타그램
+                </button>
+              )}
             </div>
           </div>
           <div style={{
@@ -1170,10 +1189,12 @@ export function TheaterSheet({
               <IconShare size={13} />
               공유
             </button>
-            <button style={actionBtn} onClick={openInstagram}>
-              <IconInstagram size={13} />
-              인스타그램
-            </button>
+            {hasInstagram && (
+              <button style={actionBtn} onClick={openInstagram}>
+                <IconInstagram size={13} />
+                인스타그램
+              </button>
+            )}
           </div>
         </div>
       ) : (
@@ -1447,9 +1468,11 @@ export function TheaterSheet({
               <button style={actionBtn} onClick={shareTheater}>
                 <IconShare size={13} />공유
               </button>
-              <button style={actionBtn} onClick={openInstagram}>
-                <IconInstagram size={13} />인스타그램
-              </button>
+              {hasInstagram && (
+                <button style={actionBtn} onClick={openInstagram}>
+                  <IconInstagram size={13} />인스타그램
+                </button>
+              )}
             </div>
           </div>}
 

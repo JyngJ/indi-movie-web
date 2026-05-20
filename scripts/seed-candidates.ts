@@ -112,7 +112,22 @@ async function importFromKmdb(movieId: string, movieSeq: string): Promise<Movie 
   url.searchParams.set('listCount', '3')
 
   const res = await fetch(url)
-  const json = await res.json() as { Data?: Array<{ Result?: Array<Record<string, string>> }> }
+  interface KmdbDetailItem {
+    title?: string
+    titleOrg?: string
+    titleEng?: string
+    prodYear?: string
+    genre?: string
+    directorNm?: string
+    posterUrl?: string
+    posters?: string
+    nation?: string
+    plot?: string
+    runtime?: string
+    rating?: string
+    plots?: { plot?: Array<{ plotLang?: string; plotText?: string }> }
+  }
+  const json = await res.json() as { Data?: Array<{ Result?: KmdbDetailItem[] }> }
   const item = json.Data?.[0]?.Result?.[0]
   if (!item) return null
 
@@ -123,14 +138,16 @@ async function importFromKmdb(movieId: string, movieSeq: string): Promise<Movie 
   const director = clean(item.directorNm).split(/[,|]/).map(s => s.trim()).filter(Boolean)
   const posterUrl = (clean(item.posterUrl) || clean(item.posters)).split('|').find(Boolean) ?? null
   const nation = clean(item.nation) || null
-  const synopsis = clean(item.plot) || null
+  const plotList = item.plots?.plot ?? []
+  const koPlot = plotList.find(p => clean(p.plotLang) === '한국어') ?? plotList[0]
+  const synopsis = clean(koPlot?.plotText) || clean(item.plot) || null
   const runtimeMinutes = parseInt(item.runtime ?? '') || null
   const certification = clean(item.rating) || null
 
   const row = {
     title, year, genre, director,
     kmdb_id: movieId, kmdb_movie_seq: movieSeq,
-    poster_url: posterUrl, nation, synopsis, runtime_minutes: runtimeMinutes, certification,
+    poster_url: posterUrl, nation,
     original_title: (clean(item.titleOrg) || clean(item.titleEng)) || null,
   }
 
@@ -141,6 +158,7 @@ async function importFromKmdb(movieId: string, movieSeq: string): Promise<Movie 
   if (existing) {
     const { data, error } = await supabase.from('movies').update(row).eq('id', (existing as { id: string }).id).select('id, title').single()
     if (error) { console.error(`  영화 update 실패: ${error.message}`); return null }
+    await upsertMovieDetails((existing as { id: string }).id, synopsis, runtimeMinutes, certification)
     return data as Movie
   }
 
@@ -154,7 +172,28 @@ async function importFromKmdb(movieId: string, movieSeq: string): Promise<Movie 
     console.error(`  영화 insert 실패: ${error.message}`)
     return null
   }
+  await upsertMovieDetails((data as Movie).id, synopsis, runtimeMinutes, certification)
   return data as Movie
+}
+
+async function upsertMovieDetails(
+  movieId: string,
+  synopsis: string | null,
+  runtimeMinutes: number | null,
+  certification: string | null,
+) {
+  if (!synopsis && !runtimeMinutes && !certification) return
+  const row: {
+    movie_id: string
+    synopsis?: string | null
+    runtime_minutes?: number | null
+    certification?: string | null
+  } = { movie_id: movieId }
+  if (synopsis) row.synopsis = synopsis
+  if (runtimeMinutes) row.runtime_minutes = runtimeMinutes
+  if (certification) row.certification = certification
+  const { error } = await supabase.from('movie_details').upsert(row, { onConflict: 'movie_id' })
+  if (error) console.error(`  영화 상세 upsert 실패: ${error.message}`)
 }
 
 // ── 메인 ─────────────────────────────────────────────────────────
