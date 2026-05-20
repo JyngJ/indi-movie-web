@@ -313,6 +313,7 @@ export async function listReviewCandidates(status?: AdminShowtimeStatus) {
     .from('showtime_candidates')
     .select('*')
     .neq('status', 'rejected')
+    .neq('status', 'approved')
     .order('show_date', { ascending: true })
     .order('show_time', { ascending: true })
 
@@ -598,10 +599,11 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
 
   for (const candidate of candidates) {
     const theater = resolveTheater(candidate, theaters)
-    const movie = resolveMovie(candidate, movies)
+    const movieResult = await resolveMovieForApproval(candidate, movies)
+    const movie = movieResult.movie
     const warnings = mergeWarnings(candidate.warnings, [
       theater ? undefined : `자동 극장 매칭 실패: ${candidate.theaterName}`,
-      movie ? undefined : `자동 영화 매칭 실패: ${candidate.movieTitle}`,
+      movie ? undefined : movieResult.reason ?? `자동 영화 매칭 실패: ${candidate.movieTitle}`,
     ])
 
     const { data, error } = await supabase
@@ -722,12 +724,18 @@ export async function importAdminExternalMovie(input: AdminExternalMovie) {
 
   const hasDetails = input.synopsis || input.runtimeMinutes || input.certification
   if (hasDetails) {
-    await supabase.from('movie_details').upsert({
+    const detailsRow: {
+      movie_id: string
+      synopsis?: string | null
+      runtime_minutes?: number | null
+      certification?: string | null
+    } = {
       movie_id: movie.id,
-      synopsis: input.synopsis ?? null,
-      runtime_minutes: input.runtimeMinutes ?? null,
-      certification: input.certification ?? null,
-    }, { onConflict: 'movie_id' })
+    }
+    if (input.synopsis) detailsRow.synopsis = input.synopsis
+    if (input.runtimeMinutes) detailsRow.runtime_minutes = input.runtimeMinutes
+    if (input.certification) detailsRow.certification = input.certification
+    await supabase.from('movie_details').upsert(detailsRow, { onConflict: 'movie_id' })
   }
 
   void ensureDirectorProfiles(input.director ?? [])
@@ -1099,7 +1107,11 @@ function resolveMovie(candidate: CrawledShowtimeCandidate, movies: MovieRow[]) {
     if (matched) return matched
   }
 
-  return resolveMovieByTitle(candidate.movieTitle, movies)
+  for (const title of candidateMovieTitleCandidates(candidate.movieTitle)) {
+    const movie = resolveMovieByTitle(title, movies)
+    if (movie) return movie
+  }
+  return null
 }
 
 async function resolveMovieForApproval(candidate: CrawledShowtimeCandidate, movies: MovieRow[]) {
@@ -1148,10 +1160,30 @@ function resolveMovieByTitle(title: string, movies: MovieRow[]) {
 
 function candidateMovieTitleCandidates(title: string) {
   const base = title.trim()
-  // 더블 피처: "A + B" → A, B 각각 시도
+
+  // "영화 + 시네토크" / "영화 + GV" → + 앞부분만
+  const beforePlus = base.split(/\s*\+\s*/)[0].trim()
+  // 더블 피처 분리: "A + B" → A, B 각각
   const plusParts = base.split(/\s*\+\s*/).map(s => s.trim()).filter(Boolean)
+
+  // "영화 with 감독이름" / "영화 with Q&A" → with 앞부분만
+  const beforeWith = base.replace(/\s+with\b.*/i, '').trim()
+
+  // "만춘 (1949)" → "만춘"  (제목 뒤 연도 괄호 제거)
+  const withoutYear = base.replace(/\s*\(\d{4}\)\s*$/, '').trim()
+  // "영화제목_기획전명" → "영화제목"  (_ 이후 제거)
+  const beforeUnderscore = base.split('_')[0].trim()
+
   const variants = [
     base,
+    // + 앞부분 (시네토크, GV 등 부가 행사 제거)
+    beforePlus !== base ? beforePlus : undefined,
+    // with 앞부분
+    beforeWith !== base ? beforeWith : undefined,
+    // 연도 괄호 제거
+    withoutYear !== base ? withoutYear : undefined,
+    // _ 이후 제거
+    beforeUnderscore !== base ? beforeUnderscore : undefined,
     // 날짜 패턴 제거 (05/15, 5월 15일)
     base.replace(/\s+(?:\d{1,2}[./-]\d{1,2})(?:\s.*)?$/, '').trim(),
     base.replace(/\s+(?:\d{1,2}월\s*\d{1,2}일)(?:\s.*)?$/, '').trim(),
@@ -1161,7 +1193,7 @@ function candidateMovieTitleCandidates(title: string) {
     // 더블 피처: + 앞/뒤 각 영화 제목
     ...(plusParts.length > 1 ? plusParts : []),
   ]
-  return Array.from(new Set(variants.filter(Boolean)))
+  return Array.from(new Set(variants.filter((v): v is string => Boolean(v))))
 }
 
 function pickExactExternalMovie(title: string, movies: AdminExternalMovie[]) {
