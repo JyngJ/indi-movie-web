@@ -20,6 +20,7 @@ interface KmdbMovieItem {
   nation?: string
   prodYear?: string
   plot?: string
+  plots?: { plot?: Array<{ plotLang?: string; plotText?: string }> }
   runtime?: string
   rating?: string
   genre?: string
@@ -147,10 +148,16 @@ function movieFromItem(item: KmdbMovieItem): AdminExternalMovie {
     nation: cleanText(item.nation) || undefined,
     posterUrl,
     stillUrl,
-    synopsis: cleanText(item.plot) || undefined,
+    synopsis: extractSynopsis(item),
     runtimeMinutes: parseRuntime(item.runtime),
     certification: cleanText(item.rating) || undefined,
   }
+}
+
+function extractSynopsis(item: KmdbMovieItem) {
+  const plotList = item.plots?.plot ?? []
+  const koPlot = plotList.find((plot) => cleanText(plot.plotLang) === '한국어') ?? plotList[0]
+  return cleanText(koPlot?.plotText) || cleanText(item.plot) || undefined
 }
 
 function extractResults(payload: KmdbSearchResponse) {

@@ -40,9 +40,13 @@
 
 ### 시놉시스 채우기
 
-- KMDB `plots.plot[].plotText` 필드 사용 (기존 스크립트는 `hit.plot` 잘못 참조 — 수정 필요 여부 확인 후 실행):
+- 상태: 대부분 반영 완료
+- 확인: `scripts/fill-synopsis-kmdb.ts`는 현재 `movie_details.synopsis`와 KMDB `plots.plot[].plotText` 필드를 사용
+- 실행 결과: 171편 중 165편 시놉시스 있음, 6편 없음
+- KMDB 미제공으로 남은 6편: 노스탤지아, 박하향 소다수, 애수의 여로, 용호의 결투, 진홍의 도적, 피어스 브로스넌의 영웅
+- 재실행:
   ```
-  npx tsx --env-file=.env.local scripts/fill-synopsis-kmdb.ts --apply
+  npx tsx --env-file=.env.local scripts/fill-synopsis-kmdb.ts
   ```
 
 ### 감독 프로필 재수집
@@ -63,11 +67,39 @@
 - Google Maps Geocoding API / 네이버지도 / 카카오맵으로 실제 좌표 검증·교체 필요
 - 같은 건물에 입주한 극장(낙원빌딩 등)은 실제 좌표 확인 후 오프셋 제거 여부 결정
 
-### 제보/추가요청 버튼
+### 제보하기 버튼
 
 - 극장 정보 오류, 좌표 오류, 누락 극장·영화 추가 요청 창구
-- 초기: 폼 제출 또는 이메일/관리자 확인 큐
-- 장기: `reports` 테이블 + 어드민 처리 화면
+- 상태: UI/API/Discord 알림 반영, Supabase `reports` 테이블 SQL 적용 필요
+- MVP 위치: 모바일 지도 필터 아래 플로팅 제보 버튼
+- MVP 방식: 앱 내부 팝업 폼 → `reports` 저장 → Discord 요약 알림
+- 제보 유형: 극장 정보 오류, 좌표 오류, 누락 극장, 누락 영화, 상영시간 오류, 기타
+- 제출 정보: 유형, 상세 내용, 이미지 최대 3장, 이메일(선택), 개인정보 수집 동의
+- Discord 버튼: 저장 → `saved`, 삭제 → `deleted`
+- 후속: Discord Developer Portal에 Interaction Endpoint URL 등록 필요
+- 장기: 어드민 처리 화면
+
+### 극장 인스타그램 계정 보정
+
+- 상태: 일부 반영
+- 보정 스크립트: `scripts/fill-theater-instagrams.ts`
+- 실행 결과: 39개 극장 중 22개 인스타그램 있음, 17개 미확인
+- 확인 후 수정: 필름포럼의 불확실한 계정 제거, 씨네Q 신도림/자유로자동차극장 계정 추가
+- 미확인/미보유: KT&G 상상마당 시네마 대치, KU시네마테크, 광주극장, 금성시네마, 낭만극장, 명화극장, 밀양시네마, 씨네인디U, 아리랑시네센터, 애관극장, 오르페오, 인디플러스포항, 제천시네마, 천안인생극장, 필름포럼, 허리우드클래식, 헤이리시네마
+- 재실행:
+  ```
+  npx tsx --env-file=.env.local scripts/fill-theater-instagrams.ts --apply
+  ```
+
+### 지도 성능 확인
+
+- 상태: 일부 반영
+- 반영됨: 극장 핀 `DivIcon` 캐시, 지하철역 아이콘 캐시
+- 반영됨: zoom/bounds 변경을 `ViewportTracker`에서 묶어 처리
+- 반영됨: zoom 15 이상에서 지하철역 마커를 현재 화면 bounds + padding 안의 역만 렌더
+- 반영됨: zoom 15 진입 시 지하철 노선 GeoJSON/역 마커 레이어를 짧게 지연 마운트
+- 미확인: 실제 브라우저에서 zoom 14 → 15 진입 시 DOM 개수, 프레임 드랍, 콘솔 에러 재검증
+- 후속: 그래도 느리면 GeoJSON 노선 단순화 또는 viewport clipping 검토
 
 ### 광고 붙을 경우 지도 타일 제공사 전환
 
@@ -77,6 +109,14 @@
 ---
 
 ## 크롤링
+
+### 신규 영화 자동 등록 + 상세정보 연결
+
+- 상태: 반영
+- 크롤링 후보 자동매칭/승인 시 기존 `movies`에 없는 영화는 KMDB 검색 후 자동 import
+- import 시 `movies` 기본 정보와 `movie_details.synopsis/runtime_minutes/certification`을 함께 upsert
+- KMDB 줄거리는 `plots.plot[].plotText` 한국어 우선, 없으면 첫 번째 plot, 그래도 없으면 `plot` fallback 사용
+- 동일 흐름을 관리자 UI 경로(`src/lib/admin/store.ts`)와 수동 승인 스크립트(`scripts/seed-candidates.ts`)에 모두 반영
 
 ### 크롤링 오류 수정
 
@@ -233,6 +273,13 @@
 - MapView.tsx 등 파일 크기가 너무 커진 컴포넌트 분리
 - 중복 로직 정리, 타입 정의 통합
 - Clean Architecture 원칙에 맞게 레이어 재정비
+
+### 빌드 타입체크 정리
+
+- 상태: 반영 완료
+- `scripts/check-kmdb-plot.ts`를 모듈로 표시해 전역 `main()` 중복 구현 오류 해결
+- `npm run build` 통과 확인
+- 남은 경고: Next.js workspace root 추론 경고, `metadataBase` 미설정 경고
 
 ---
 

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef } from 'react'
 import { useMap, useMapEvents } from 'react-leaflet'
+import L from 'leaflet'
 import type { Map as LeafletMap } from 'leaflet'
 
 /* ── SVG 아이콘 ─────────────────────────────────────────────────── */
@@ -42,6 +43,38 @@ export const IcoMoon = () => (
 /* ── 줌 이벤트 트래커 ───────────────────────────────────────────── */
 export function ZoomTracker({ onZoom }: { onZoom: (z: number) => void }) {
   useMapEvents({ zoomend: (e) => onZoom(e.target.getZoom()) })
+  return null
+}
+
+/* ── 뷰포트 bounds 트래커 ────────────────────────────────────────── */
+export function BoundsTracker({ onBounds }: { onBounds: (b: L.LatLngBounds) => void }) {
+  const map = useMap()
+  const cbRef = useRef(onBounds)
+  cbRef.current = onBounds
+  useMapEvents({ moveend: () => cbRef.current(map.getBounds()) })
+  useEffect(() => { cbRef.current(map.getBounds()) }, [map])
+  return null
+}
+
+/* ── 줌 + 뷰포트 bounds 트래커 ───────────────────────────────────── */
+export function ViewportTracker({
+  onViewport,
+}: {
+  onViewport: (viewport: { zoom: number; bounds: L.LatLngBounds }) => void
+}) {
+  const map = useMap()
+  const cbRef = useRef(onViewport)
+  cbRef.current = onViewport
+  const emit = useCallback(() => {
+    cbRef.current({ zoom: map.getZoom(), bounds: map.getBounds() })
+  }, [map])
+  useMapEvents({ moveend: emit, zoomend: emit })
+  useEffect(() => {
+    let frame = requestAnimationFrame(() => {
+      frame = requestAnimationFrame(emit)
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [emit])
   return null
 }
 

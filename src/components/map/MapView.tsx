@@ -1,9 +1,9 @@
 'use client'
 
 import 'leaflet/dist/leaflet.css'
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo, type CSSProperties } from 'react'
 import { useRouter } from 'next/navigation'
-import { GeoJSON, MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
+import { GeoJSON, MapContainer, TileLayer, Marker } from 'react-leaflet'
 import L from 'leaflet'
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { Map as LeafletMap, Point as LeafletPoint } from 'leaflet'
@@ -20,6 +20,7 @@ import type { Movie, Station, Theater } from '@/types/api'
 import { SEOUL_GU, SEOUL_DONG } from '@/data/seoul-areas'
 import { normalizeGenre } from '@/lib/genres'
 import { useThemeStore } from '@/store/themeStore'
+import { REPORT_CATEGORIES } from '@/lib/reports/types'
 import {
   SUBWAY_LINES, SUBWAY_LINE_MIN_ZOOM, STATION_PIN_MIN_ZOOM,
   subwayLineStyle, subwayLineColor, makeStationIcon,
@@ -29,9 +30,17 @@ import { stationSearchScore, movieSearchScore, directorSearchScore, theaterSearc
 import { posterCountForZoom, posterSizeForZoom, posterSlotsForZoom } from '@/lib/map/posterLogic'
 import type { TheaterPosterMovie } from '@/lib/map/posterLogic'
 import { PosterGrid } from './PosterGrid'
-import { ZoomTracker, ZoomSlider, OffScreenTracker, MapRefSetter, IcoPlus, IcoMinus, IcoLocate, IcoSun, IcoMoon } from './MapControls'
+import { ViewportTracker, ZoomSlider, OffScreenTracker, MapRefSetter, IcoPlus, IcoMinus, IcoLocate, IcoSun, IcoMoon } from './MapControls'
 
 const SEARCH_CROSS_RESULT_LIMIT = 5
+const STATION_BOUNDS_PADDING = 0.25
+const SUBWAY_LAYER_ENTER_DELAY_MS = 120
+const MAP_MIN_ZOOM = 8
+const MAP_MAX_ZOOM = 19
+const KOREA_MAP_BOUNDS: L.LatLngBoundsExpression = [
+  [32.8, 124.2],
+  [39.8, 132.2],
+]
 
 function dateRangeForFilter(filter: FilterState) {
   const today = startOfLocalDay(new Date())
@@ -83,6 +92,16 @@ const ANCHOR_Y = LABEL_H + GAP + DOT / 2
 
 type LabelOffset = { x: number; y: number }
 
+function isMapProjectionReady(map: LeafletMap) {
+  const internalMap = map as LeafletMap & { _loaded?: boolean; _mapPane?: HTMLElement }
+  const container = map.getContainer()
+  const size = map.getSize()
+  return !!internalMap._loaded && !!internalMap._mapPane && container.isConnected && size.x > 0 && size.y > 0
+}
+
+// 동일 입력에 대해 renderToStaticMarkup 중복 호출 방지
+const _pinIconCache = new Map<string, L.DivIcon>()
+
 function makePinIcon(
   name: string,
   selected: boolean,
@@ -95,6 +114,13 @@ function makePinIcon(
   dimmed = false,
   isDesktop = false,
 ) {
+  // 캐시 키: 모든 입력을 직렬화 — 같은 조합이면 renderToStaticMarkup 재사용
+  const moviesKey = posterMovies.map(m => `${m.id}:${m.matchesFilter ? 1 : 0}`).join(',')
+  const loKey = `${Math.round(labelOffset?.x ?? 0)},${Math.round(labelOffset?.y ?? 0)}`
+  const cacheKey = `${name}|${selected ? 1 : 0}|${zoom}|${moviesKey}|${filtersActive ? 1 : 0}|${Math.round(finiteNumber(posterOffsetX) * 2) / 2}|${loKey}|${isDark ? 1 : 0}|${dimmed ? 1 : 0}|${isDesktop ? 1 : 0}`
+  const cached = _pinIconCache.get(cacheKey)
+  if (cached) return cached
+
   // 선택된 극장은 충돌 감지 무시 — 항상 중앙
   const safePosterOffsetX = selected ? 0 : finiteNumber(posterOffsetX)
   const forceMinOne = filtersActive && posterMovies.some(m => m.matchesFilter)
@@ -145,12 +171,14 @@ function makePinIcon(
     </div>
   `
 
-  return L.divIcon({
+  const icon = L.divIcon({
     html,
     className: '',
     iconSize: [140, LABEL_H + GAP + DOT + posterH],
     iconAnchor: [70, ANCHOR_Y],
   })
+  _pinIconCache.set(cacheKey, icon)
+  return icon
 }
 
 /* ── 클러스터 타입 ─────────────────────────────────────────────── */
@@ -709,6 +737,13 @@ export default function MapView() {
   const mapRef = useRef<LeafletMap | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [zoom, setZoom] = useState(14)
+  const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null)
+  const [subwayLayerReady, setSubwayLayerReady] = useState(false)
+  const zoomRef = useRef(14)
+  const recomputeRef = useRef<(() => void) | null>(null)
+  const subwayLayerVisibleRef = useRef(false)
+  const subwayLayerDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const viewportRecomputeDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // 툴팁 방향: 실시간으로 hover 시점에 화면 위치를 보고 tip-l 클래스를 토글
   const isPanelOpenRef = useRef(false)
@@ -742,6 +777,15 @@ export default function MapView() {
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   const dummyInputRef = useRef<HTMLInputElement>(null)
+  const reportFileInputRef = useRef<HTMLInputElement>(null)
+  const [reportOpen, setReportOpen] = useState(false)
+  const [reportCategory, setReportCategory] = useState('')
+  const [reportDetail, setReportDetail] = useState('')
+  const [reportEmail, setReportEmail] = useState('')
+  const [reportConsent, setReportConsent] = useState(false)
+  const [reportFiles, setReportFiles] = useState<File[]>([])
+  const [reportSubmitting, setReportSubmitting] = useState(false)
+  const [reportMessage, setReportMessage] = useState('')
 
   useEffect(() => { setRecentSearches(loadRecentSearches()) }, [])
   useEffect(() => {
@@ -825,6 +869,12 @@ export default function MapView() {
       .slice(0, 20)
       .map((result) => result.station)
   }, [searchQuery, stations])
+
+  const visibleStations = useMemo(() => {
+    if (!mapBounds || zoom < STATION_PIN_MIN_ZOOM || !subwayLayerReady) return []
+    const paddedBounds = mapBounds.pad(STATION_BOUNDS_PADDING)
+    return stations.filter((station) => paddedBounds.contains([station.lat, station.lng]))
+  }, [mapBounds, stations, subwayLayerReady, zoom])
 
   const theaterResults = useMemo(() => {
     if (!searchQuery.trim()) return []
@@ -1108,8 +1158,10 @@ export default function MapView() {
   const recompute = useCallback(() => {
     const map = mapRef.current
     if (!map) return
+    if (!isMapProjectionReady(map)) return
+    const z = zoomRef.current
     const coLocGroups = findCoLocationGroups(theaters)
-    const coLoc = computeCoLocationOffsets(theaters, map, zoom)
+    const coLoc = computeCoLocationOffsets(theaters, map, z)
     // 동일좌표 분리 대상 + 검색 매칭 극장(클러스터 제외)
     const splitIds = new Set([...coLoc.keys(), ...searchMatchedTheaterIds])
     // 분리 대상은 오프셋 적용 좌표로 교체 후 클러스터 계산
@@ -1117,18 +1169,61 @@ export default function MapView() {
       const off = coLoc.get(t.id)
       return off ? { ...t, lat: off.lat, lng: off.lng } : t
     })
-    const c = computeClusters(adjustedTheaters, map, zoom, splitIds, coLocGroups, isDesktopLayout)
+    const c = computeClusters(adjustedTheaters, map, z, splitIds, coLocGroups, isDesktopLayout)
     const d = computeLabelDirections(c, map)
     const labelO = computeNameLabelOffsets(c, map, d)
-    const o = computePosterOffsets(c, map, zoom, d, theaterPosterMovies, isDesktopLayout, filtersActive)
+    const o = computePosterOffsets(c, map, z, d, theaterPosterMovies, isDesktopLayout, filtersActive)
     setClusters(c)
     setPosterOffsets(o)
     setCoLocationOffsets(coLoc)
     setLabelDirections(d)
     setLabelOffsets(labelO)
-  }, [zoom, theaters, theaterPosterMovies, isDesktopLayout, searchMatchedTheaterIds, filtersActive])
+    setMapBounds(map.getBounds())
+    setZoom(z)
+  }, [theaters, theaterPosterMovies, isDesktopLayout, searchMatchedTheaterIds, filtersActive])
 
-  // zoom 변경 시 재계산 (줌 애니메이션 끝난 뒤)
+  // recomputeRef: ViewportTracker 이벤트 핸들러에서 항상 최신 recompute를 참조
+  recomputeRef.current = recompute
+
+  const handleViewport = useCallback(({ zoom: z, bounds }: { zoom: number; bounds: L.LatLngBounds }) => {
+    zoomRef.current = z
+    setMapBounds(bounds)
+
+    const shouldShowSubway = z >= STATION_PIN_MIN_ZOOM
+    if (subwayLayerDelayRef.current) {
+      clearTimeout(subwayLayerDelayRef.current)
+      subwayLayerDelayRef.current = null
+    }
+
+    if (!shouldShowSubway) {
+      subwayLayerVisibleRef.current = false
+      setSubwayLayerReady(false)
+    } else if (!subwayLayerVisibleRef.current) {
+      subwayLayerVisibleRef.current = true
+      setSubwayLayerReady(false)
+      subwayLayerDelayRef.current = setTimeout(() => {
+        subwayLayerDelayRef.current = null
+        setSubwayLayerReady(true)
+      }, SUBWAY_LAYER_ENTER_DELAY_MS)
+    } else {
+      setSubwayLayerReady(true)
+    }
+
+    if (viewportRecomputeDelayRef.current) clearTimeout(viewportRecomputeDelayRef.current)
+    viewportRecomputeDelayRef.current = setTimeout(() => {
+      viewportRecomputeDelayRef.current = null
+      recomputeRef.current?.()
+    }, 80)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (subwayLayerDelayRef.current) clearTimeout(subwayLayerDelayRef.current)
+      if (viewportRecomputeDelayRef.current) clearTimeout(viewportRecomputeDelayRef.current)
+    }
+  }, [])
+
+  // zoom 외 조건(theaters, filters 등) 변경 시 재계산
   useEffect(() => {
     const id = setTimeout(recompute, 80)
     return () => clearTimeout(id)
@@ -1169,6 +1264,107 @@ export default function MapView() {
       mapRef.current.flyTo([coords.lat, coords.lng], 15, { duration: 1 })
     }
   }, [coords, refetch])
+
+  const closeReport = useCallback(() => {
+    if (reportSubmitting) return
+    setReportOpen(false)
+  }, [reportSubmitting])
+  const reportDetailLength = reportDetail.length
+  const canSubmitReport = reportCategory.length > 0 && reportDetail.trim().length > 0 && reportConsent && !reportSubmitting
+
+  const handleReportSubmit = useCallback(async () => {
+    if (!canSubmitReport) return
+    setReportSubmitting(true)
+    setReportMessage('')
+
+    try {
+      const form = new FormData()
+      form.set('category', reportCategory)
+      form.set('detail', reportDetail.trim())
+      form.set('email', reportEmail.trim())
+      form.set('consent', String(reportConsent))
+      form.set('pageUrl', window.location.href)
+      if (selectedTheater) {
+        form.set('selectedTheaterId', selectedTheater.id)
+        form.set('selectedTheaterName', selectedTheater.name)
+      }
+      if (selectedMovieId) form.set('selectedMovieId', selectedMovieId)
+      for (const file of reportFiles.slice(0, 3)) form.append('files', file)
+
+      const response = await fetch('/api/reports', { method: 'POST', body: form })
+      const payload = await response.json().catch(() => null) as { error?: { message?: string } } | null
+      if (!response.ok) {
+        throw new Error(payload?.error?.message ?? '제보를 제출하지 못했습니다.')
+      }
+
+      setReportMessage('제보가 접수됐습니다.')
+      setReportCategory('')
+      setReportDetail('')
+      setReportEmail('')
+      setReportConsent(false)
+      setReportFiles([])
+      setTimeout(() => setReportOpen(false), 450)
+    } catch (error) {
+      setReportMessage(error instanceof Error ? error.message : '제보를 제출하지 못했습니다.')
+    } finally {
+      setReportSubmitting(false)
+    }
+  }, [canSubmitReport, reportCategory, reportConsent, reportDetail, reportEmail, reportFiles, selectedMovieId, selectedTheater])
+
+  const renderThemeToggle = (style?: CSSProperties) => (
+    <button
+      onClick={() => void setTheme(isDark ? 'light' : 'dark')}
+      aria-label={isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}
+      style={{
+        width: 76, height: 40,
+        borderRadius: 999,
+        padding: 4,
+        border: '1px solid var(--color-border)',
+        backgroundColor: isDark ? 'var(--color-surface-card)' : 'var(--color-surface-raised)',
+        boxShadow: 'var(--shadow-md)',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        flexShrink: 0,
+        overflow: 'hidden',
+        position: 'relative',
+        ...style,
+      }}
+    >
+      <div style={{
+        position: 'absolute',
+        width: 32, height: 32,
+        borderRadius: '50%',
+        backgroundColor: 'var(--color-surface-bg)',
+        boxShadow: '0 1px 6px rgba(0,0,0,0.18)',
+        left: isDark ? 40 : 4,
+        transition: 'left 240ms cubic-bezier(0.4, 0, 0.2, 1)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: isDark ? 'var(--color-text-caption)' : 'var(--color-warning)',
+        zIndex: 1,
+      }}>
+        {isDark ? (
+          <svg width={14} height={14} viewBox="0 0 24 24" fill="currentColor">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+          </svg>
+        ) : (
+          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <circle cx="12" cy="12" r="5" fill="currentColor" stroke="none"/>
+            <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+        )}
+      </div>
+      <div style={{ width: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-warning)', opacity: isDark ? 0.25 : 0 }}>
+        <IcoSun />
+      </div>
+      <div style={{ width: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-caption)', opacity: isDark ? 0 : 0.35 }}>
+        <IcoMoon />
+      </div>
+    </button>
+  )
 
 
   // 퇴장 애니메이션 후 완전히 언마운트
@@ -1757,6 +1953,10 @@ export default function MapView() {
       <MapContainer
         center={defaultCenter}
         zoom={14}
+        minZoom={MAP_MIN_ZOOM}
+        maxZoom={MAP_MAX_ZOOM}
+        maxBounds={KOREA_MAP_BOUNDS}
+        maxBoundsViscosity={1}
         zoomControl={false}
         attributionControl={false}
         style={{ width: '100%', height: '100%' }}
@@ -1767,16 +1967,19 @@ export default function MapView() {
             : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
           }
           attribution="&copy; OpenStreetMap contributors &copy; CARTO"
-          maxZoom={19}
+          minZoom={MAP_MIN_ZOOM}
+          maxZoom={MAP_MAX_ZOOM}
+          bounds={KOREA_MAP_BOUNDS}
+          noWrap
         />
         <MapRefSetter mapRef={mapRef} />
-        <ZoomTracker onZoom={setZoom} />
+        <ViewportTracker onViewport={handleViewport} />
         <OffScreenTracker
           theaterLatLng={selectedTheater ? [selectedTheater.lat, selectedTheater.lng] : null}
           onOffScreen={setTheaterOffScreen}
         />
 
-        {zoom >= SUBWAY_LINE_MIN_ZOOM && SUBWAY_LINES.features.length > 0 && (
+        {zoom >= SUBWAY_LINE_MIN_ZOOM && subwayLayerReady && SUBWAY_LINES.features.length > 0 && (
           <GeoJSON
             key={`subway-lines-${zoom >= SUBWAY_LINE_MIN_ZOOM ? 'on' : 'off'}-${isDark ? 'dark' : 'light'}`}
             data={SUBWAY_LINES}
@@ -1785,7 +1988,7 @@ export default function MapView() {
           />
         )}
 
-        {zoom >= STATION_PIN_MIN_ZOOM && stations.map((station) => (
+        {visibleStations.map((station) => (
           <Marker
             key={`station-${station.id}`}
             position={[station.lat, station.lng]}
@@ -1951,75 +2154,34 @@ export default function MapView() {
         </div>
       </div>
 
-      {/* 테마 토글 — PC: 우상단, 모바일: 좌하단 */}
-      {/* TODO: 모바일 테마 토글은 추후 제거 예정 */}
-      <button
-        onClick={() => void setTheme(isDark ? 'light' : 'dark')}
-        aria-label={isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}
-        style={{
-          position: 'absolute',
-          top: isDesktopLayout ? 16 : undefined,
-          right: isDesktopLayout ? 16 : undefined,
-          bottom: isDesktopLayout ? undefined : `max(${fabBottom + 8}px, calc(env(safe-area-inset-bottom) + ${fabBottom + 8}px))`,
-          left: isDesktopLayout ? undefined : 16,
-          zIndex: 1000,
-          width: 76, height: 40,
-          borderRadius: 999,
-          padding: 4,
-          border: '1px solid var(--color-border)',
-          backgroundColor: isDark ? 'var(--color-surface-card)' : 'var(--color-surface-raised)',
-          boxShadow: 'var(--shadow-md)',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          flexShrink: 0,
-          overflow: 'hidden',
-        }}
-      >
-        {/* 슬라이딩 노브 */}
+      {!isDesktopLayout && (
         <div style={{
           position: 'absolute',
-          width: 32, height: 32,
-          borderRadius: '50%',
-          backgroundColor: 'var(--color-surface-bg)',
-          boxShadow: '0 1px 6px rgba(0,0,0,0.18)',
-          left: isDark ? 40 : 4,
-          transition: 'left 240ms cubic-bezier(0.4, 0, 0.2, 1)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: isDark ? 'var(--color-text-caption)' : 'var(--color-warning)',
-          zIndex: 1,
+          top: 'calc(max(0px, env(safe-area-inset-top)) + 122px)',
+          right: 16,
+          zIndex: 1001,
+          pointerEvents: 'auto',
         }}>
-          {isDark ? (
-            <svg width={14} height={14} viewBox="0 0 24 24" fill="currentColor">
-              <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
-            </svg>
-          ) : (
-            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <circle cx="12" cy="12" r="5" fill="currentColor" stroke="none"/>
-              <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
-              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-              <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
-              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-            </svg>
-          )}
+          <FabRound
+            onClick={() => {
+              setReportMessage('')
+              setReportOpen(true)
+            }}
+            aria-label="제보하기"
+            style={{ fontSize: 20, lineHeight: 1 }}
+          >
+            📨
+          </FabRound>
         </div>
-        {/* 배경 아이콘 — 라이트 */}
-        <div style={{ width: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-warning)', opacity: isDark ? 0.25 : 0 }}>
-          <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <circle cx="12" cy="12" r="5" fill="currentColor" stroke="none"/>
-            <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-            <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-          </svg>
-        </div>
-        {/* 배경 아이콘 — 다크 */}
-        <div style={{ width: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-caption)', opacity: isDark ? 0 : 0.35 }}>
-          <svg width={13} height={13} viewBox="0 0 24 24" fill="currentColor">
-            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
-          </svg>
-        </div>
-      </button>
+      )}
+
+      {/* 테마 토글 — PC: 우상단, 모바일: 우측 위치 버튼 아래 */}
+      {isDesktopLayout && renderThemeToggle({
+        position: 'absolute',
+        top: 16,
+        right: 16,
+        zIndex: 1000,
+      })}
 
       {/* PC 줌 슬라이더 — 테마 토글 아래 우측 */}
       {/* 모바일 지도 하단 로고 워터마크 */}
@@ -2242,6 +2404,7 @@ export default function MapView() {
         )}
         <div style={{ height: isDesktopLayout ? 0 : 8 }} />
         <FabRound onClick={handleLocate}><IcoLocate /></FabRound>
+        {!isDesktopLayout && renderThemeToggle({ marginTop: 8 })}
       </div>
 
       {/* 선택 극장 화면 이탈 시 돌아가기 pill */}
@@ -2294,6 +2457,295 @@ export default function MapView() {
               &ldquo;{selectedTheater.name}&rdquo;으로 돌아가기
             </span>
           </button>
+        </div>
+      )}
+
+      {reportOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="report-title"
+          onClick={closeReport}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 2100,
+            height: '100dvh',
+            backgroundColor: 'rgba(0,0,0,0.38)',
+            display: 'flex',
+            alignItems: isDesktopLayout ? 'center' : 'stretch',
+            justifyContent: 'center',
+            padding: isDesktopLayout ? 24 : 0,
+          }}
+        >
+          <div
+            onClick={(event) => event.stopPropagation()}
+            style={{
+              width: isDesktopLayout ? 440 : '100%',
+              maxWidth: isDesktopLayout ? 'calc(100vw - 48px)' : undefined,
+              height: isDesktopLayout ? 'min(720px, calc(100dvh - 48px))' : '100dvh',
+              backgroundColor: 'var(--color-surface-card)',
+              color: 'var(--color-text-primary)',
+              border: isDesktopLayout ? '1px solid var(--color-border)' : 'none',
+              borderRadius: isDesktopLayout ? 20 : 0,
+              boxShadow: 'var(--shadow-sheet)',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+            }}
+          >
+            <div style={{
+              height: 56,
+              padding: 'max(0px, env(safe-area-inset-top)) 16px 0',
+              borderBottom: '1px solid var(--color-border)',
+              display: 'flex',
+              alignItems: 'center',
+              flexShrink: 0,
+            }}>
+              <button
+                type="button"
+                onClick={closeReport}
+                disabled={reportSubmitting}
+                style={{
+                  width: 84,
+                  height: 44,
+                  border: 'none',
+                  background: 'transparent',
+                  color: 'var(--color-text-body)',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: reportSubmitting ? 'not-allowed' : 'pointer',
+                  textAlign: 'left',
+                }}
+              >
+                뒤로가기
+              </button>
+              <h2 id="report-title" style={{
+                flex: 1,
+                margin: 0,
+                textAlign: 'center',
+                fontFamily: 'var(--font-sans)',
+                fontSize: 17,
+                fontWeight: 700,
+              }}>
+                제보하기
+              </h2>
+              <div style={{ width: 84 }} />
+            </div>
+
+            <div className="themed-scrollbar" style={{
+              overflowY: 'auto',
+              padding: '20px 20px calc(env(safe-area-inset-bottom) + 24px)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 22,
+            }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+                  1. 어떤 종류의 제보인가요? <span style={{ color: 'var(--color-error)' }}>(필수)</span>
+                </span>
+                <div role="radiogroup" aria-label="제보 카테고리" style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 8,
+                }}>
+                  {REPORT_CATEGORIES.map((category) => (
+                    <button
+                      key={category}
+                      type="button"
+                      role="radio"
+                      aria-checked={reportCategory === category}
+                      onClick={() => setReportCategory(category)}
+                      style={{
+                        minHeight: 36,
+                        padding: '0 14px',
+                        borderRadius: 999,
+                        border: reportCategory === category ? '1px solid var(--color-primary-base)' : '1px solid var(--color-border)',
+                        backgroundColor: reportCategory === category ? 'var(--color-primary-subtle-l)' : 'var(--color-surface-bg)',
+                        color: reportCategory === category ? 'var(--color-primary-text)' : 'var(--color-text-body)',
+                        fontSize: 13,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+                  2. 상세 내용 <span style={{ color: 'var(--color-error)' }}>(필수)</span>
+                </span>
+                <div style={{ position: 'relative' }}>
+                  <textarea
+                    value={reportDetail}
+                    maxLength={500}
+                    onChange={(event) => setReportDetail(event.currentTarget.value)}
+                    placeholder={'내용을 자세히 적어주세요.\n예: OO역 앞 CGV 추가해 주세요!'}
+                    style={{
+                      width: '100%',
+                      minHeight: 150,
+                      resize: 'vertical',
+                      borderRadius: 12,
+                      border: '1px solid var(--color-border)',
+                      backgroundColor: 'var(--color-surface-bg)',
+                      color: 'var(--color-text-primary)',
+                      padding: '14px 14px 34px',
+                      fontSize: 14,
+                      lineHeight: 1.55,
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                      fontFamily: 'var(--font-sans)',
+                    }}
+                  />
+                  <span style={{
+                    position: 'absolute',
+                    right: 14,
+                    bottom: 12,
+                    fontSize: 12,
+                    color: 'var(--color-text-caption)',
+                  }}>
+                    {reportDetailLength} / 500
+                  </span>
+                </div>
+              </label>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+                  3. 파일 첨부 <span style={{ color: 'var(--color-text-caption)', fontWeight: 500 }}>(선택)</span>
+                </span>
+                <input
+                  ref={reportFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  style={{ display: 'none' }}
+                  onChange={(event) => {
+                    setReportFiles(Array.from(event.currentTarget.files ?? []).slice(0, 3))
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => reportFileInputRef.current?.click()}
+                  style={{
+                    height: 72,
+                    borderRadius: 12,
+                    border: '1px dashed var(--color-border)',
+                    backgroundColor: 'var(--color-surface-bg)',
+                    color: 'var(--color-text-body)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    fontSize: 14,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span aria-hidden style={{ fontSize: 18 }}>📷</span>
+                  이미지 첨부
+                  <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--color-text-caption)' }}>
+                    최대 3장
+                  </span>
+                </button>
+                {reportFiles.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {reportFiles.map((file) => (
+                      <span key={`${file.name}-${file.size}`} style={{
+                        maxWidth: '100%',
+                        height: 28,
+                        padding: '0 10px',
+                        borderRadius: 999,
+                        backgroundColor: 'var(--color-primary-subtle-l)',
+                        color: 'var(--color-primary-text)',
+                        fontSize: 12,
+                        fontWeight: 600,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}>
+                        {file.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+                  4. 답변받을 이메일 <span style={{ color: 'var(--color-text-caption)', fontWeight: 500 }}>(선택)</span>
+                </span>
+                <input
+                  type="email"
+                  value={reportEmail}
+                  onChange={(event) => setReportEmail(event.currentTarget.value)}
+                  placeholder="email@example.com"
+                  style={{
+                    height: 46,
+                    borderRadius: 12,
+                    border: '1px solid var(--color-border)',
+                    backgroundColor: 'var(--color-surface-bg)',
+                    color: 'var(--color-text-primary)',
+                    padding: '0 14px',
+                    fontSize: 14,
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </label>
+
+              <label style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 10,
+                fontSize: 13,
+                lineHeight: 1.45,
+                color: 'var(--color-text-body)',
+              }}>
+                <input
+                  type="checkbox"
+                  checked={reportConsent}
+                  onChange={(event) => setReportConsent(event.currentTarget.checked)}
+                  style={{ width: 18, height: 18, marginTop: 1, accentColor: 'var(--color-primary-base)' }}
+                />
+                <span>서비스 개선을 위한 개인정보 수집 동의 <strong style={{ color: 'var(--color-error)' }}>(필수)</strong></span>
+              </label>
+
+              <button
+                type="button"
+                disabled={!canSubmitReport}
+                onClick={handleReportSubmit}
+                style={{
+                  height: 48,
+                  borderRadius: 999,
+                  border: 'none',
+                  backgroundColor: canSubmitReport ? 'var(--color-primary-base)' : 'var(--color-surface-raised)',
+                  color: canSubmitReport ? 'var(--color-text-inverse)' : 'var(--color-text-placeholder)',
+                  fontSize: 15,
+                  fontWeight: 800,
+                  cursor: canSubmitReport ? 'pointer' : 'not-allowed',
+                  boxShadow: canSubmitReport ? 'var(--shadow-md)' : 'none',
+                }}
+              >
+                {reportSubmitting ? '제출 중...' : '제출하기'}
+              </button>
+              {reportMessage && (
+                <p style={{
+                  margin: '-10px 0 0',
+                  textAlign: 'center',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: reportMessage.includes('접수') ? 'var(--color-success)' : 'var(--color-error)',
+                }}>
+                  {reportMessage}
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       )}
 

@@ -116,8 +116,8 @@ const THEATERS: TheaterEntry[] = [
   },
   {
     name: '멜리에스 빈티지 시네마',
-    city: '경기', address: '경기도 (좌표 미확인)',
-    lat: 37.4138, lng: 127.5183,
+    city: '광주', address: '경기도 광주시 행정타운로 143-9 2층',
+    lat: 37.42677196, lng: 127.24360946,
     website: null,
     cinemaCd: '000161', brand: 'etc', parser: 'dtryxReservationApi',
     listingUrl: `https://www.dtryx.com/cinema/main.do?cgid=${CGID}&BrandCd=etc&CinemaCd=000161`,

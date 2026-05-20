@@ -124,8 +124,13 @@ function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;')
 }
 
+const _stationIconCache = new Map<string, L.DivIcon>()
+
 export function makeStationIcon(station: Station, isDark: boolean, zoom: number) {
   const compact = zoom < STATION_PIN_FULL_ZOOM
+  const cacheKey = `${station.id}|${isDark ? 1 : 0}|${compact ? 1 : 0}`
+  const cached = _stationIconCache.get(cacheKey)
+  if (cached) return cached
   const DOT = compact ? 11 : 15
   const LABEL_H = compact ? 12 : 16
   const GAP = compact ? 2 : 4
@@ -147,5 +152,7 @@ export function makeStationIcon(station: Station, isDark: boolean, zoom: number)
       </div>
     </div>
   `
-  return L.divIcon({ html, className: '', iconSize: [120, LABEL_H + GAP + DOT], iconAnchor: [60, ANCHOR_Y] })
+  const icon = L.divIcon({ html, className: '', iconSize: [120, LABEL_H + GAP + DOT], iconAnchor: [60, ANCHOR_Y] })
+  _stationIconCache.set(cacheKey, icon)
+  return icon
 }

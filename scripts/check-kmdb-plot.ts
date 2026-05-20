@@ -1,3 +1,5 @@
+export {}
+
 async function main() {
   const url = new URL('https://api.koreafilm.or.kr/openapi-data2/wisenut/search_api/search_json2.jsp')
   url.searchParams.set('collection', 'kmdb_new2')

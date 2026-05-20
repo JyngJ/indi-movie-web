@@ -599,10 +599,11 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
 
   for (const candidate of candidates) {
     const theater = resolveTheater(candidate, theaters)
-    const movie = resolveMovie(candidate, movies)
+    const movieResult = await resolveMovieForApproval(candidate, movies)
+    const movie = movieResult.movie
     const warnings = mergeWarnings(candidate.warnings, [
       theater ? undefined : `자동 극장 매칭 실패: ${candidate.theaterName}`,
-      movie ? undefined : `자동 영화 매칭 실패: ${candidate.movieTitle}`,
+      movie ? undefined : movieResult.reason ?? `자동 영화 매칭 실패: ${candidate.movieTitle}`,
     ])
 
     const { data, error } = await supabase
@@ -723,12 +724,18 @@ export async function importAdminExternalMovie(input: AdminExternalMovie) {
 
   const hasDetails = input.synopsis || input.runtimeMinutes || input.certification
   if (hasDetails) {
-    await supabase.from('movie_details').upsert({
+    const detailsRow: {
+      movie_id: string
+      synopsis?: string | null
+      runtime_minutes?: number | null
+      certification?: string | null
+    } = {
       movie_id: movie.id,
-      synopsis: input.synopsis ?? null,
-      runtime_minutes: input.runtimeMinutes ?? null,
-      certification: input.certification ?? null,
-    }, { onConflict: 'movie_id' })
+    }
+    if (input.synopsis) detailsRow.synopsis = input.synopsis
+    if (input.runtimeMinutes) detailsRow.runtime_minutes = input.runtimeMinutes
+    if (input.certification) detailsRow.certification = input.certification
+    await supabase.from('movie_details').upsert(detailsRow, { onConflict: 'movie_id' })
   }
 
   void ensureDirectorProfiles(input.director ?? [])
