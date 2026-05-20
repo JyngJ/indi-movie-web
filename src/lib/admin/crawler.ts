@@ -149,6 +149,10 @@ export async function crawlShowtimeCandidates(context: ParseContext) {
     return crawlSeoulArtTimetable(context)
   }
 
+  if (context.source.parser === 'selfHosted') {
+    return crawlSelfHosted(context)
+  }
+
   const content = await resolveCrawlInput(
     context.inputKind,
     context.content,
@@ -430,6 +434,200 @@ export async function crawlMovielandProductOptions(context: ParseContext) {
   const candidateGroups = await mapWithConcurrency(tasks, 4)
 
   return dedupeCandidates(candidateGroups.flat())
+}
+
+export async function crawlSelfHosted(context: ParseContext) {
+  const url = context.sourceUrl ?? context.source.listingUrl
+  const { hostname } = new URL(url)
+
+  if (hostname.includes('moviee.co.kr')) {
+    return crawlMovieeTicketApi(context)
+  }
+  if (hostname.includes('moonhwain.net') || hostname.includes('moonhwain.kr')) {
+    return crawlMoonhwain(url, context)
+  }
+  if (hostname === 'www.dureraum.org' || hostname === 'dureraum.org') {
+    return crawlDureraum(url, context)
+  }
+
+  throw new Error(`자체예매 시스템 파서가 없습니다: ${hostname}`)
+}
+
+async function crawlMoonhwain(sourceUrl: string, context: ParseContext) {
+  const parsed = new URL(sourceUrl)
+  const origin = parsed.origin
+  const scheduleBase = `${origin}/reservation/01.html`
+
+  const indexHtml = await fetchSelfHosted(scheduleBase)
+
+  const bookingBase = indexHtml.match(
+    /window\.open\(["'](https?:\/\/[^"']+?)\/rsvc\/rsv_mv\.html/,
+  )?.[1] ?? origin
+
+  const availableDates = Array.from(
+    indexHtml.matchAll(/<div[^>]+class="day\s+on"[^>]*>[\s\S]*?<a[^>]+(?:href="[^"]*ss_date=([\d-]+)"|title="([\d-]+)")[^>]*>/g),
+  )
+    .map((m) => m[1] ?? m[2])
+    .filter((d): d is string => Boolean(d))
+    .slice(0, 14)
+
+  if (availableDates.length === 0) {
+    throw new Error(`moonhwain 상영 날짜를 찾지 못했습니다: ${scheduleBase}`)
+  }
+
+  const tasks = availableDates.map((date) => async () => {
+    const html = await fetchSelfHosted(`${scheduleBase}?ss_date=${date}`)
+    return parseMoonhwainDay(html, date, bookingBase, context)
+  })
+
+  const groups = await mapWithConcurrency(tasks, 3)
+  return dedupeCandidates(groups.flat())
+}
+
+function parseMoonhwainDay(
+  html: string,
+  showDate: string,
+  bookingBase: string,
+  context: ParseContext,
+): CrawledShowtimeCandidate[] {
+  const candidates: CrawledShowtimeCandidate[] = []
+  const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi
+  let rowMatch: RegExpExecArray | null
+
+  while ((rowMatch = rowRegex.exec(html)) !== null) {
+    const row = rowMatch[1]
+    if (!/<td/.test(row)) continue
+
+    const movieTitle = normalizeWhitespace(
+      stripHtml(row.match(/<h4[^>]*>([\s\S]*?)<\/h4>/i)?.[1] ?? ''),
+    )
+    if (!movieTitle) continue
+
+    const cells = Array.from(row.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)).map((m) => m[1])
+    const screenType = normalizeWhitespace(stripHtml(cells[1] ?? ''))
+    const screenName = normalizeWhitespace(
+      (cells[2] ?? '').replace(/<!--[\s\S]*?-->/g, ''),
+    ).replace(/\s+/g, ' ').trim() || '상영관 확인 필요'
+
+    const timeMatches = Array.from(
+      row.matchAll(/javascript:wRsvMovie\('([^']+)'\s*,\s*'([^']+)'\s*,\s*'([^']*)'\)[^>]*>(\d{1,2}:\d{2})/g),
+    )
+
+    for (const [, bId, inSsIdx, q, rawTime] of timeMatches) {
+      const showTime = normalizeDtryxTime(rawTime)
+      if (!showTime) continue
+
+      const bookingUrl = `${bookingBase}/rsvc/rsv_mv.html?b_id=${encodeURIComponent(bId)}&q=${encodeURIComponent(q)}&in_ss_idx=${encodeURIComponent(inSsIdx)}`
+      const formatText = [screenType, screenName].filter(Boolean).join(' ')
+      const warnings = screenName === '상영관 확인 필요' ? ['상영관을 확인해야 합니다.'] : []
+
+      candidates.push(buildCandidate({
+        context,
+        movieTitle,
+        showDate,
+        showTime,
+        screenName,
+        formatText,
+        seatAvailable: DEFAULT_SEAT_TOTAL,
+        seatTotal: DEFAULT_SEAT_TOTAL,
+        price: DEFAULT_PRICE,
+        bookingUrl,
+        rawText: JSON.stringify({ movieTitle, showDate, showTime, screenName, bId, inSsIdx }),
+        confidence: warnings.length ? 0.82 : 0.93,
+        warnings,
+      }))
+    }
+  }
+
+  return candidates
+}
+
+async function crawlDureraum(sourceUrl: string, context: ParseContext) {
+  const base = 'https://www.dureraum.org/bcc/mcontents/caleList.do'
+  const today = todayIsoDate()
+  const dates = Array.from({ length: 14 }, (_, i) => {
+    const d = new Date(today)
+    d.setDate(d.getDate() + i)
+    return d.toISOString().slice(0, 10)
+  })
+
+  const tasks = dates.map((date) => async () => {
+    const html = await fetchSelfHosted(`${base}?rbsIdx=37&searchDate=${date}&spage=1`)
+    return parseDurearumDay(html, date, context)
+  })
+
+  const groups = await mapWithConcurrency(tasks, 4)
+  return dedupeCandidates(groups.flat())
+}
+
+function parseDurearumDay(html: string, showDate: string, context: ParseContext): CrawledShowtimeCandidate[] {
+  const candidates: CrawledShowtimeCandidate[] = []
+  const ulRegex = /<ul>\s*<li class="title">([\s\S]*?)<\/ul>/g
+  let ulMatch: RegExpExecArray | null
+
+  while ((ulMatch = ulRegex.exec(html)) !== null) {
+    const block = ulMatch[1]
+
+    const titleAnchor = block.match(/<a[^>]+href="(view\.do[^"]*)"[^>]+title="([^"]+)"/)
+    if (!titleAnchor) continue
+
+    const viewPath = titleAnchor[1]
+    const rawTitle = titleAnchor[2]
+    const movieTitle = rawTitle.trim()
+    const bookingUrl = `https://www.dureraum.org/bcc/mcontents/${viewPath}`
+
+    const screenName = normalizeWhitespace(
+      block.match(/<li class="place">([^<]+)<\/li>/)?.[1] ?? '',
+    ) || '영화의전당'
+
+    const runtimeMatch = block.match(/(\d+)min/)
+    const runtimeText = runtimeMatch ? `${runtimeMatch[1]}분` : ''
+    const formatText = [screenName, runtimeText].filter(Boolean).join(' ')
+
+    const timeMatches = Array.from(block.matchAll(/<li class="time">[\s\S]*?(\d{1,2}:\d{2})[\s\S]*?<\/li>/g))
+    const times = [...new Set(
+      timeMatches.map((m) => normalizeDtryxTime(m[1])).filter((t): t is string => Boolean(t)),
+    )]
+
+    if (times.length === 0) continue
+
+    for (const showTime of times) {
+      candidates.push(buildCandidate({
+        context,
+        movieTitle,
+        showDate,
+        showTime,
+        screenName,
+        formatText,
+        seatAvailable: DEFAULT_SEAT_TOTAL,
+        seatTotal: DEFAULT_SEAT_TOTAL,
+        price: DEFAULT_PRICE,
+        bookingUrl,
+        rawText: JSON.stringify({ movieTitle, showDate, showTime, screenName }),
+        confidence: 0.88,
+        warnings: [],
+      }))
+    }
+  }
+
+  return candidates
+}
+
+async function fetchSelfHosted(url: string): Promise<string> {
+  const response = await fetch(url, {
+    headers: {
+      'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+      accept: 'text/html,application/xhtml+xml',
+      'accept-language': 'ko-KR,ko;q=0.9',
+    },
+    cache: 'no-store',
+  })
+
+  if (!response.ok) {
+    throw new Error(`자체예매 페이지 요청 실패: ${url} (${response.status})`)
+  }
+
+  return response.text()
 }
 
 export async function crawlSeoulArtTimetable(context: ParseContext) {
