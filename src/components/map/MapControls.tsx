@@ -108,9 +108,11 @@ export function MapRefSetter({ mapRef }: { mapRef: React.MutableRefObject<Leafle
 }
 
 /* ── PC 줌 슬라이더 ─────────────────────────────────────────────── */
-const SLIDER_SNAP_STEPS = [0, 17, 33, 50, 67, 83, 100]
-const SLIDER_ZOOM_LEVELS = [11, 12, 13, 14, 15, 17, 19]
-const SLIDER_TRACK_H = 88
+const SLIDER_ZOOM_LEVELS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+const SLIDER_SNAP_STEPS = SLIDER_ZOOM_LEVELS.map((_, index) =>
+  Math.round((index / (SLIDER_ZOOM_LEVELS.length - 1)) * 100)
+)
+const SLIDER_TRACK_H = 132
 
 function snapIndexFromZoom(z: number) {
   let best = 0, bestDist = Infinity

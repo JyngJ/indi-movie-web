@@ -2404,8 +2404,14 @@ export default function MapView() {
         )}
         <div style={{ height: isDesktopLayout ? 0 : 8 }} />
         <FabRound onClick={handleLocate}><IcoLocate /></FabRound>
-        {!isDesktopLayout && renderThemeToggle({ marginTop: 8 })}
       </div>
+
+      {!isDesktopLayout && renderThemeToggle({
+        position: 'absolute',
+        left: 16,
+        bottom: fabBottom,
+        zIndex: 1000,
+      })}
 
       {/* 선택 극장 화면 이탈 시 돌아가기 pill */}
       {selectedId && !sheetExiting && !(sheetExpanded && !isDesktopLayout) && theaterOffScreen && !searchOpen && selectedTheater && (
