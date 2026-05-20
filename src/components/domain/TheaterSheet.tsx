@@ -2018,7 +2018,7 @@ export function TheaterSheet({
             <button
               disabled={!selectedSt?.bookingUrl}
               onClick={() => {
-                if (selectedSt?.bookingUrl) window.open(selectedSt.bookingUrl, '_blank', 'noopener')
+                if (selectedSt?.bookingUrl) window.open(selectedSt.bookingUrl.replace(/^http:\/\//i, 'https://'), '_blank', 'noopener')
               }}
               style={{
                 width: '100%',

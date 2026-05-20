@@ -35,7 +35,7 @@ import { ViewportTracker, ZoomSlider, OffScreenTracker, MapRefSetter, IcoPlus, I
 const SEARCH_CROSS_RESULT_LIMIT = 5
 const STATION_BOUNDS_PADDING = 0.25
 const SUBWAY_LAYER_ENTER_DELAY_MS = 120
-const MAP_MIN_ZOOM = 8
+const MAP_MIN_ZOOM = 7
 const MAP_MAX_ZOOM = 19
 const KOREA_MAP_BOUNDS: L.LatLngBoundsExpression = [
   [32.8, 124.2],
