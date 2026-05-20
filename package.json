@@ -5,7 +5,10 @@
   "scripts": {
     "dev": "next dev --webpack --hostname 0.0.0.0",
     "build": "next build --webpack",
-    "start": "next start"
+    "start": "next start",
+    "seed:theaters": "tsx src/scripts/seed-theaters.ts",
+    "seed:sources": "tsx src/scripts/seed-crawl-sources.ts",
+    "find:duplicates": "tsx src/scripts/find-duplicate-theaters.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.1",

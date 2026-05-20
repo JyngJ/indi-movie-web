@@ -95,6 +95,8 @@ export function AdminShowtimeConsole() {
     cadence: 'manual',
     notes: '',
   })
+  const [crawlProgress, setCrawlProgress] = useState(0)
+  const [crawlTotal, setCrawlTotal] = useState(0)
 
   useEffect(() => {
     refresh()
@@ -232,6 +234,8 @@ export function AdminShowtimeConsole() {
 
   async function runCrawler() {
     setLoading(true)
+    setCrawlProgress(0)
+    setCrawlTotal(1)
     setMessage('크롤링을 실행하는 중입니다.')
 
     try {
@@ -251,6 +255,7 @@ export function AdminShowtimeConsole() {
         throw new Error(result.error ?? '크롤링에 실패했습니다.')
       }
 
+      setCrawlProgress(100)
       await refresh()
       setSelectedIds(result.candidates.map((candidate) => candidate.id))
       setMessage(`${result.sourceName}에서 ${result.candidates.length}개 후보를 수집했습니다.`)
@@ -258,6 +263,10 @@ export function AdminShowtimeConsole() {
       setMessage(error instanceof Error ? error.message : '크롤링에 실패했습니다.')
     } finally {
       setLoading(false)
+      setTimeout(() => {
+        setCrawlProgress(0)
+        setCrawlTotal(0)
+      }, 1500)
     }
   }
 
@@ -269,11 +278,14 @@ export function AdminShowtimeConsole() {
     }
 
     setLoading(true)
-    setMessage('일괄 수집 중…')
+    setCrawlProgress(0)
+    setCrawlTotal(enabledSources.length)
+    setMessage(`일괄 수집 중… (0/${enabledSources.length})`)
 
     let totalCandidates = 0
     let succeeded = 0
     let failed = 0
+    let completed = 0
 
     const dtryxSources = enabledSources.filter((s) => s.parser === 'dtryxReservationApi')
     const otherSources = enabledSources.filter((s) => s.parser !== 'dtryxReservationApi')
@@ -282,6 +294,12 @@ export function AdminShowtimeConsole() {
       dtryxSources.length > 0
         ? fetch('/api/admin/crawl/all-dtryx', { method: 'POST' })
             .then((r) => r.json() as Promise<{ runs?: CrawlRun[]; error?: { message: string } }>)
+            .then((result) => {
+              completed += dtryxSources.length
+              setCrawlProgress(Math.round((completed / enabledSources.length) * 100))
+              setMessage(`일괄 수집 중… (${completed}/${enabledSources.length})`)
+              return result
+            })
             .catch(() => ({ runs: [] as CrawlRun[] }))
         : Promise.resolve({ runs: [] as CrawlRun[] }),
       ...otherSources.map((source) =>
@@ -291,6 +309,12 @@ export function AdminShowtimeConsole() {
           body: JSON.stringify({ sourceId: source.id, inputKind: 'url' }),
         })
           .then((r) => (r.ok ? r.json() as Promise<CrawlRun> : Promise.reject()))
+          .then((run) => {
+            completed++
+            setCrawlProgress(Math.round((completed / enabledSources.length) * 100))
+            setMessage(`일괄 수집 중… (${completed}/${enabledSources.length})`)
+            return run
+          })
           .catch(() => null),
       ),
     ])
@@ -305,9 +329,14 @@ export function AdminShowtimeConsole() {
       else failed++
     }
 
+    setCrawlProgress(100)
     await refresh()
     setMessage(`일괄 수집 완료 — 성공 ${succeeded}개 극장, 실패 ${failed}개 (DB 반영은 검수 대기열 확인)`)
     setLoading(false)
+    setTimeout(() => {
+      setCrawlProgress(0)
+      setCrawlTotal(0)
+    }, 2000)
   }
 
   async function updateStatus(status: AdminShowtimeStatus) {
@@ -940,18 +969,32 @@ export function AdminShowtimeConsole() {
           )}
 
           <div className={styles.sourceList}>
-            {payload.sources.map((source) => (
-              <button
-                key={source.id}
-                className={`${styles.sourceItem} ${selectedSourceId === source.id ? styles.sourceItemActive : ''}`}
-                onClick={() => selectSource(source.id)}
-              >
-                <span>
-                  <strong>{source.theaterName}</strong>
-                  <small>{source.parser} · {source.cadence}{source.matchedTheaterId ? ' · 실제 극장 연결' : ''}</small>
-                </span>
-                <i className={styles[source.health]}>{source.health}</i>
-              </button>
+            {groupByCity(
+              payload.sources.map((s) => {
+                const matched = adminTheaters.find((t) => t.id === s.matchedTheaterId)
+                return { ...s, city: matched?.city || '미지정' }
+              })
+            ).map(([city, sources]) => (
+              <details key={city} className={styles.theaterGroup}>
+                <summary className={styles.theaterGroupSummary}>
+                  {city} ({sources.length}개)
+                </summary>
+                <div className={styles.theaterGroupContent}>
+                  {sources.map((source) => (
+                    <button
+                      key={source.id}
+                      className={`${styles.sourceItem} ${selectedSourceId === source.id ? styles.sourceItemActive : ''}`}
+                      onClick={() => selectSource(source.id)}
+                    >
+                      <span>
+                        <strong>{source.theaterName}</strong>
+                        <small>{source.parser} · {source.cadence}{source.matchedTheaterId ? ' · 실제 극장 연결' : ''}</small>
+                      </span>
+                      <i className={styles[source.health]}>{source.health}</i>
+                    </button>
+                  ))}
+                </div>
+              </details>
             ))}
           </div>
 
@@ -1010,6 +1053,15 @@ export function AdminShowtimeConsole() {
           </div>
 
           {message && <p className={styles.message}>{message}</p>}
+
+          {loading && crawlTotal > 0 && (
+            <div className={styles.progressContainer}>
+              <div className={styles.progressBar}>
+                <div className={styles.progressFill} style={{ width: `${crawlProgress}%` }} />
+              </div>
+              <span className={styles.progressText}>{crawlProgress}%</span>
+            </div>
+          )}
 
           <div className={styles.candidateFilterRow}>
             <div className={styles.candidateFilterTabs}>
@@ -1317,21 +1369,25 @@ export function AdminShowtimeConsole() {
         <div className={styles.serviceGrid}>
           <aside className={styles.serviceList}>
             {groupByCity(adminTheaters).map(([city, items]) => (
-              <div key={city}>
-                <p className={styles.cityGroupLabel}>{city}</p>
-                {items.map((theater) => (
-                  <button
-                    key={theater.id}
-                    className={`${styles.sourceItem} ${selectedAdminTheaterId === theater.id ? styles.sourceItemActive : ''}`}
-                    onClick={() => selectAdminTheater(theater.id)}
-                  >
-                    <span>
-                      <strong>{theater.name}</strong>
-                      <small>{theater.address}</small>
-                    </span>
-                  </button>
-                ))}
-              </div>
+              <details key={city} className={styles.theaterGroup}>
+                <summary className={styles.theaterGroupSummary}>
+                  {city} ({items.length}개)
+                </summary>
+                <div className={styles.theaterGroupContent}>
+                  {items.map((theater) => (
+                    <button
+                      key={theater.id}
+                      className={`${styles.sourceItem} ${selectedAdminTheaterId === theater.id ? styles.sourceItemActive : ''}`}
+                      onClick={() => selectAdminTheater(theater.id)}
+                    >
+                      <span>
+                        <strong>{theater.name}</strong>
+                        <small>{theater.address}</small>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </details>
             ))}
             {adminTheaters.length === 0 && <p className={styles.emptyLog}>등록된 실제 극장이 없습니다.</p>}
           </aside>
