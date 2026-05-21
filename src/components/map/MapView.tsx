@@ -430,8 +430,8 @@ function computeClustersByZoom(
     return clusters
   }
 
-  // 줌 9: 도시별 클러스터링 (광역시만 개별, 나머지는 도/지역으로 묶음)
-  if (zoom === 9) {
+  // 줌 9-10: 도시별 클러스터링 (광역시만 개별, 나머지는 도/지역으로 묶음)
+  if (zoom >= 9 && zoom <= 10) {
     const metropolis = ['서울', '부산', '대구', '인천', '광주', '대전', '울산']
     const groupMap = new Map<string, Theater[]>()
 
@@ -466,7 +466,7 @@ function computeClustersByZoom(
     return clusters
   }
 
-  // 줌 10+: 기존 픽셀 기반 클러스터링
+  // 줌 11+: 기존 픽셀 기반 클러스터링
   const radiusPx = clusterRadiusForZoom(zoom, isDesktop)
   const clusterableTheaters = theaters.filter((t) => !splitIds.has(t.id))
   const pts = clusterableTheaters.map((t) => ({
@@ -2264,6 +2264,8 @@ export default function MapView() {
                   labelOffsets.get(cluster.id),
                   clusterDimmed,
                   isDark,
+                  cluster.regionLabel,
+                  cluster.cityLabel,
                 )}
                 eventHandlers={{
                   click: () => {
