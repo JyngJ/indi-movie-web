@@ -188,6 +188,9 @@ interface TheaterCluster {
   lat: number
   lng: number
   isCoLocation?: boolean  // 동일 건물 — 클릭 시 CO_LOCATE_SPLIT_ZOOM으로 이동
+  regionLabel?: string    // 줌 7-8: 지역명 표시
+  cityLabel?: string      // 줌 9: 도시명 표시
+  clusterCount?: number   // 줌 9: 극장 수 표시
 }
 
 type LabelDir = 'top' | 'right' | 'bottom' | 'left'
@@ -310,6 +313,74 @@ function computeNameLabelOffsets(
   return offsets
 }
 
+/* ── 지역별 중심 좌표 ── */
+const REGION_CENTERS: Record<string, { lat: number; lng: number }> = {
+  // 광역시
+  '서울': { lat: 37.5665, lng: 126.9780 },
+  '부산': { lat: 35.1796, lng: 129.0756 },
+  '대구': { lat: 35.8714, lng: 128.5717 },
+  '인천': { lat: 37.4562, lng: 126.7052 },
+  '광주': { lat: 35.1260, lng: 126.8313 },
+  '대전': { lat: 36.3500, lng: 127.3800 },
+  '울산': { lat: 35.5396, lng: 129.3139 },
+  // 도
+  '경기도 북부': { lat: 37.8000, lng: 127.1500 },
+  '경기도 남부': { lat: 36.9000, lng: 127.0500 },
+  '강원도': { lat: 37.8000, lng: 128.9000 },
+  '충청남도': { lat: 36.6000, lng: 126.7000 },
+  '충청북도': { lat: 36.8000, lng: 127.7000 },
+  '전라북도': { lat: 35.8300, lng: 127.1300 },
+  '전라남도': { lat: 34.8000, lng: 126.8000 },
+  '경상북도': { lat: 36.2000, lng: 129.1000 },
+  '경상남도': { lat: 35.2000, lng: 128.5000 },
+  '제주도': { lat: 33.3886, lng: 126.5626 },
+  '세종': { lat: 36.4800, lng: 127.2400 },
+}
+
+function getRegionGroup(city: string, theater?: Theater): string {
+  // address가 "경기도"로 시작하면 위도로 경기도 남부/북부 판단
+  if (theater?.address?.startsWith('경기도')) {
+    const lat = theater?.lat ?? 37.5
+    return lat >= 37.6 ? '경기도 북부' : '경기도 남부'
+  }
+
+  const metropolis = ['서울', '부산', '대구', '인천', '광주', '대전', '울산']
+  if (metropolis.includes(city)) return city
+
+  // 경기 북부/남부 분리 (위도 37.6을 기준으로)
+  if (city === '경기') {
+    const lat = theater?.lat ?? 37.5
+    return lat >= 37.6 ? '경기도 북부' : '경기도 남부'
+  }
+
+  // 도/특별자치도 매핑 (전체 이름으로 통일)
+  const doGroups: Record<string, string> = {
+    '강원': '강원도',
+    '제천': '강원도',
+    '충북': '충청북도',
+    '충남': '충청남도',
+    '전북': '전라북도',
+    '전주': '전라북도',
+    '전남': '전라남도',
+    '목포': '전라남도',
+    '경북': '경상북도',
+    '경남': '경상남도',
+    '창원': '경상남도',
+    '밀양': '경상남도',
+    '김해': '경상남도',
+    '파주': '경기도 북부',
+    '안산': '경기도 남부',
+    '수원': '경기도 남부',
+    '제주': '제주도',
+    '세종': '세종',
+  }
+  return doGroups[city] || city
+}
+
+function getRegionCenter(region: string): { lat: number; lng: number } {
+  return REGION_CENTERS[region] || { lat: 36.5, lng: 127.5 }
+}
+
 /* ── 줌 레벨에서 클러스터링 반경(px) ── */
 function clusterRadiusForZoom(zoom: number, isDesktop = false): number {
   if (isDesktop) {
@@ -322,6 +393,116 @@ function clusterRadiusForZoom(zoom: number, isDesktop = false): number {
   if (zoom >= 15) return 45
   if (zoom >= 14) return 60
   return 80
+}
+
+/* ── 줌 레벨별 클러스터 계산 ─────────────────────────────── */
+function computeClustersByZoom(
+  theaters: Theater[],
+  map: LeafletMap,
+  zoom: number,
+  splitIds: Set<string> = new Set(),
+  coLocGroupKey: Map<string, string> = new Map(),
+  isDesktop = false,
+): TheaterCluster[] {
+  // 줌 7-8: 지역별 클러스터링 (지역 중심 좌표 사용)
+  if (zoom >= 7 && zoom <= 8) {
+    const regionGroups = new Map<string, Theater[]>()
+    for (const theater of theaters) {
+      const region = getRegionGroup(theater.city, theater)
+      if (!regionGroups.has(region)) {
+        regionGroups.set(region, [])
+      }
+      regionGroups.get(region)!.push(theater)
+    }
+
+    const clusters: TheaterCluster[] = []
+    for (const [region, group] of regionGroups.entries()) {
+      const center = getRegionCenter(region)
+      clusters.push({
+        id: `region-${region}`,
+        theaters: group,
+        lat: center.lat,
+        lng: center.lng,
+        isCoLocation: false,
+        regionLabel: region,
+      })
+    }
+    return clusters
+  }
+
+  // 줌 9: 도시별 클러스터링 (광역시만 개별, 나머지는 도/지역으로 묶음)
+  if (zoom === 9) {
+    const metropolis = ['서울', '부산', '대구', '인천', '광주', '대전', '울산']
+    const groupMap = new Map<string, Theater[]>()
+
+    for (const theater of theaters) {
+      let groupKey: string
+      if (metropolis.includes(theater.city)) {
+        groupKey = theater.city
+      } else {
+        groupKey = getRegionGroup(theater.city, theater)
+      }
+
+      if (!groupMap.has(groupKey)) {
+        groupMap.set(groupKey, [])
+      }
+      groupMap.get(groupKey)!.push(theater)
+    }
+
+    const clusters: TheaterCluster[] = []
+    for (const [groupKey, group] of groupMap.entries()) {
+      const lat = group.reduce((s, t) => s + t.lat, 0) / group.length
+      const lng = group.reduce((s, t) => s + t.lng, 0) / group.length
+      clusters.push({
+        id: `city-${groupKey}`,
+        theaters: group,
+        lat,
+        lng,
+        isCoLocation: false,
+        cityLabel: groupKey,
+        clusterCount: group.length,
+      })
+    }
+    return clusters
+  }
+
+  // 줌 10+: 기존 픽셀 기반 클러스터링
+  const radiusPx = clusterRadiusForZoom(zoom, isDesktop)
+  const clusterableTheaters = theaters.filter((t) => !splitIds.has(t.id))
+  const pts = clusterableTheaters.map((t) => ({
+    t,
+    px: map.latLngToContainerPoint([t.lat, t.lng] as [number, number]),
+  }))
+  const used = new Set<string>()
+  const clusters: TheaterCluster[] = []
+
+  for (const a of pts) {
+    if (used.has(a.t.id)) continue
+    const group = [a]
+    used.add(a.t.id)
+    for (const b of pts) {
+      if (used.has(b.t.id)) continue
+      if (a.px.distanceTo(b.px) < radiusPx) {
+        group.push(b)
+        used.add(b.t.id)
+      }
+    }
+    const lat = group.reduce((s, g) => s + g.t.lat, 0) / group.length
+    const lng = group.reduce((s, g) => s + g.t.lng, 0) / group.length
+
+    const firstKey = coLocGroupKey.get(group[0].t.id)
+    const isCoLocation = group.length > 1 &&
+      !!firstKey &&
+      group.every((g) => coLocGroupKey.get(g.t.id) === firstKey)
+
+    clusters.push({ id: a.t.id, theaters: group.map((g) => g.t), lat, lng, isCoLocation })
+  }
+
+  for (const t of theaters.filter((t) => splitIds.has(t.id))) {
+    clusters.push({ id: t.id, theaters: [t], lat: t.lat, lng: t.lng })
+  }
+
+  return clusters
 }
 
 /* ── 동일 좌표 극장 분리 설정 ───────────────────────────────────── */
@@ -389,46 +570,7 @@ function computeClusters(
   coLocGroupKey: Map<string, string> = new Map(),
   isDesktop = false,
 ): TheaterCluster[] {
-  const radiusPx = clusterRadiusForZoom(zoom, isDesktop)
-
-  // 분리 대상이 아닌 극장만 클러스터링
-  const clusterableTheaters = theaters.filter((t) => !splitIds.has(t.id))
-  const pts = clusterableTheaters.map((t) => ({
-    t,
-    px: map.latLngToContainerPoint([t.lat, t.lng] as [number, number]),
-  }))
-  const used = new Set<string>()
-  const clusters: TheaterCluster[] = []
-
-  for (const a of pts) {
-    if (used.has(a.t.id)) continue
-    const group = [a]
-    used.add(a.t.id)
-    for (const b of pts) {
-      if (used.has(b.t.id)) continue
-      if (a.px.distanceTo(b.px) < radiusPx) {
-        group.push(b)
-        used.add(b.t.id)
-      }
-    }
-    const lat = group.reduce((s, g) => s + g.t.lat, 0) / group.length
-    const lng = group.reduce((s, g) => s + g.t.lng, 0) / group.length
-
-    // 클러스터 전체가 동일 건물인지 — 클릭 시 CO_LOCATE_SPLIT_ZOOM으로 이동
-    const firstKey = coLocGroupKey.get(group[0].t.id)
-    const isCoLocation = group.length > 1 &&
-      !!firstKey &&
-      group.every((g) => coLocGroupKey.get(g.t.id) === firstKey)
-
-    clusters.push({ id: a.t.id, theaters: group.map((g) => g.t), lat, lng, isCoLocation })
-  }
-
-  // 분리 대상은 개별 마커로 추가 (coLocationOffsets 적용 좌표 사용)
-  for (const t of theaters.filter((t) => splitIds.has(t.id))) {
-    clusters.push({ id: t.id, theaters: [t], lat: t.lat, lng: t.lng })
-  }
-
-  return clusters
+  return computeClustersByZoom(theaters, map, zoom, splitIds, coLocGroupKey, isDesktop)
 }
 
 /* ── 포스터 겹침 방지 오프셋 계산 ─────────────────────────────── */
@@ -595,9 +737,103 @@ function makeClusterIcon(
   labelOffset: LabelOffset = { x: 0, y: 0 },
   dimmed = false,
   isDark = false,
+  regionLabel?: string,
+  cityLabel?: string,
 ) {
   const dotColor = dimmed ? (isDark ? DIMMED_DOT_DARK : DIMMED_DOT_LIGHT) : 'var(--color-primary-base)'
   const count = theaters.length
+
+  // 줌 7-8: 원 안에 숫자, 말풍선에 지역명
+  if (regionLabel) {
+    const DOT_SIZE = 50
+    const CANVAS_W = 140
+    const CANVAS_H = 110
+    const CENTER_X = CANVAS_W / 2
+    const CENTER_Y = 70
+    const BALLOON_GAP = 8
+    const DOT_RADIUS = DOT_SIZE / 2
+
+    const balloonStyle =
+      `position:absolute;background:var(--color-surface-card);` +
+      `border:1.5px solid var(--color-border);border-radius:8px;` +
+      `padding:6px 12px;box-shadow:var(--shadow-md);` +
+      `white-space:nowrap;font-weight:600;font-size:12px;` +
+      `color:var(--color-text-primary);z-index:2;` +
+      `top:${CENTER_Y - DOT_RADIUS - BALLOON_GAP - 24}px;left:50%;transform:translateX(-50%);`
+
+    const tailStyle =
+      `position:absolute;width:8px;height:8px;background:var(--color-surface-card);` +
+      `border-right:1.5px solid var(--color-border);` +
+      `border-bottom:1.5px solid var(--color-border);` +
+      `transform:rotate(45deg);` +
+      `top:${CENTER_Y - DOT_RADIUS - BALLOON_GAP - 5}px;left:50%;transform:translateX(-50%) rotate(45deg);` +
+      `z-index:1;pointer-events:none;`
+
+    const html =
+      `<div style="position:relative;width:${CANVAS_W}px;height:${CANVAS_H}px;overflow:visible;">` +
+      `<div style="${balloonStyle}">${regionLabel}</div>` +
+      `<div style="${tailStyle}"></div>` +
+      `<div style="position:absolute;width:${DOT_SIZE}px;height:${DOT_SIZE}px;` +
+      `top:${CENTER_Y - DOT_SIZE/2}px;left:${CENTER_X - DOT_SIZE/2}px;` +
+      `border-radius:50%;background:${dotColor};` +
+      `border:2.5px solid var(--color-surface-bg);box-shadow:var(--shadow-md);` +
+      `display:flex;align-items:center;justify-content:center;` +
+      `color:#fff;font-weight:800;font-size:18px;z-index:3;">${count}</div>` +
+      `</div>`
+
+    return L.divIcon({
+      html,
+      className: '',
+      iconSize: [CANVAS_W, CANVAS_H],
+      iconAnchor: [CENTER_X, CENTER_Y]
+    })
+  }
+
+  // 줌 9: 원 안에 숫자, 말풍선에 도시명
+  if (cityLabel) {
+    const DOT_SIZE = 45
+    const CANVAS_W = 120
+    const CANVAS_H = 100
+    const CENTER_X = CANVAS_W / 2
+    const CENTER_Y = 65
+    const BALLOON_GAP = 6
+    const DOT_RADIUS = DOT_SIZE / 2
+
+    const balloonStyle =
+      `position:absolute;background:var(--color-surface-card);` +
+      `border:1.5px solid var(--color-border);border-radius:8px;` +
+      `padding:4px 10px;box-shadow:var(--shadow-md);` +
+      `white-space:nowrap;font-weight:600;font-size:11px;` +
+      `color:var(--color-text-primary);z-index:2;` +
+      `top:${CENTER_Y - DOT_RADIUS - BALLOON_GAP - 20}px;left:50%;transform:translateX(-50%);`
+
+    const tailStyle =
+      `position:absolute;width:6px;height:6px;background:var(--color-surface-card);` +
+      `border-right:1.5px solid var(--color-border);` +
+      `border-bottom:1.5px solid var(--color-border);` +
+      `top:${CENTER_Y - DOT_RADIUS - BALLOON_GAP - 2}px;left:50%;transform:translateX(-50%) rotate(45deg);` +
+      `z-index:1;pointer-events:none;`
+
+    const html =
+      `<div style="position:relative;width:${CANVAS_W}px;height:${CANVAS_H}px;overflow:visible;">` +
+      `<div style="${balloonStyle}">${cityLabel}</div>` +
+      `<div style="${tailStyle}"></div>` +
+      `<div style="position:absolute;width:${DOT_SIZE}px;height:${DOT_SIZE}px;` +
+      `top:${CENTER_Y - DOT_SIZE/2}px;left:${CENTER_X - DOT_SIZE/2}px;` +
+      `border-radius:50%;background:${dotColor};` +
+      `border:2.5px solid var(--color-surface-bg);box-shadow:var(--shadow-md);` +
+      `display:flex;align-items:center;justify-content:center;` +
+      `color:#fff;font-weight:800;font-size:16px;z-index:3;">${count}</div>` +
+      `</div>`
+
+    return L.divIcon({
+      html,
+      className: '',
+      iconSize: [CANVAS_W, CANVAS_H],
+      iconAnchor: [CENTER_X, CENTER_Y]
+    })
+  }
+
   const DOT_D = 28
   const DOT_R = DOT_D / 2
   const CARD_GAP = 8
