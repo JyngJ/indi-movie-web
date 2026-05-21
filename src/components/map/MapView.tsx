@@ -29,6 +29,7 @@ import { finiteNumber, formatDateParam, startOfLocalDay, addDays, endOfMonth, lo
 import { stationSearchScore, movieSearchScore, directorSearchScore, theaterSearchScore, areaSearchScore } from '@/lib/map/searchScoring'
 import { posterCountForZoom, posterSizeForZoom, posterSlotsForZoom } from '@/lib/map/posterLogic'
 import type { TheaterPosterMovie } from '@/lib/map/posterLogic'
+import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { PosterGrid } from './PosterGrid'
 import { ViewportTracker, ZoomSlider, OffScreenTracker, MapRefSetter, IcoPlus, IcoMinus, IcoLocate, IcoSun, IcoMoon } from './MapControls'
 
@@ -1029,6 +1030,24 @@ export default function MapView() {
   const [reportSubmitting, setReportSubmitting] = useState(false)
   const [reportError, setReportError] = useState('')
   const [reportSuccessTrigger, setReportSuccessTrigger] = useState(0)
+  const mapViewTrackedRef = useRef(false)
+  const lastSearchTelemetryRef = useRef('')
+  const lastFilterTelemetryRef = useRef('')
+
+  useEffect(() => {
+    if (mapViewTrackedRef.current || theatersLoading) return
+    mapViewTrackedRef.current = true
+    const params = new URLSearchParams(window.location.search)
+    trackEvent('map viewed', {
+      theater_count: theaters.length,
+      movie_count: movies.length,
+      source: params.has('theater')
+        ? 'direct_link'
+        : params.has('movie')
+          ? 'movie_detail'
+          : 'direct',
+    })
+  }, [movies.length, theaters.length, theatersLoading])
 
   useEffect(() => { setRecentSearches(loadRecentSearches()) }, [])
   useEffect(() => {
@@ -1087,6 +1106,7 @@ export default function MapView() {
   }, [])
 
   const openSearch = useCallback(() => {
+    trackEvent('search opened', { source: 'map' })
     // iOS Safari: 키보드는 반드시 클릭 핸들러 안에서 동기적으로 focus()가 불려야 열림
     // 1) 클릭 핸들러 동기 컨텍스트 안에서 hidden dummy input 포커스 → iOS가 키보드 세션 시작
     dummyInputRef.current?.focus()
@@ -1261,6 +1281,48 @@ export default function MapView() {
   }, [filters.bookable, filters.genres, filters.nations, movieFilter, mapShowtimes])
 
   const filtersActive = filters.bookable || filters.genres.length > 0 || filters.nations.length > 0 || !!movieFilter
+  const filterResultCount = useMemo(() => {
+    if (!filtersActive) return theaters.length
+    let count = 0
+    for (const theater of theaters) {
+      if ((theaterPosterMovies.get(theater.id) ?? []).some((movie) => movie.matchesFilter)) count += 1
+    }
+    return count
+  }, [filtersActive, theaterPosterMovies, theaters])
+
+  useEffect(() => {
+    const signature = JSON.stringify({
+      dateId: filters.dateId,
+      customStart: filters.customStart ? formatDateParam(filters.customStart) : null,
+      customEnd: filters.customEnd ? formatDateParam(filters.customEnd) : null,
+      genres: filters.genres,
+      nations: filters.nations,
+      bookable: filters.bookable,
+      movieId: movieFilter?.id,
+      resultCount: filterResultCount,
+    })
+    if (!lastFilterTelemetryRef.current) {
+      lastFilterTelemetryRef.current = signature
+      return
+    }
+    if (lastFilterTelemetryRef.current === signature) return
+    lastFilterTelemetryRef.current = signature
+
+    trackEvent('map filter changed', {
+      date_id: filters.dateId,
+      custom_start: filters.customStart ? formatDateParam(filters.customStart) : null,
+      custom_end: filters.customEnd ? formatDateParam(filters.customEnd) : null,
+      genres: filters.genres,
+      genres_count: filters.genres.length,
+      nations: filters.nations,
+      nations_count: filters.nations.length,
+      bookable: filters.bookable,
+      movie_filter_id: movieFilter?.id,
+      movie_filter_title: movieFilter?.title,
+      filter_result_count: filterResultCount,
+      is_zero_result: filterResultCount === 0,
+    })
+  }, [filterResultCount, filters.bookable, filters.customEnd, filters.customStart, filters.dateId, filters.genres, filters.nations, movieFilter])
 
   // 상영일정·예매가능 제외한 검색 필터가 활성화 됐을 때 — 해당 극장은 클러스터링 제외
   const searchMatchedTheaterIds = useMemo(() => {
@@ -1361,6 +1423,12 @@ export default function MapView() {
   }, [areaResults, directorResults, searchQuery, stationResults, theaterResults, titleMovieResults])
 
   const focusStation = useCallback((station: Station) => {
+    trackEvent('search result selected', {
+      result_type: 'station',
+      result_id: station.id,
+      result_name: station.name,
+      search_term: searchQuery.trim(),
+    })
     setRecentSearches(prev => addToRecent(searchQuery, prev))
     closeSearch()
     setSelectedId(null)
@@ -1370,6 +1438,12 @@ export default function MapView() {
   }, [closeSearch, searchQuery])
 
   const focusArea = useCallback((area: { name: string; lat: number; lng: number }) => {
+    trackEvent('search result selected', {
+      result_type: 'area',
+      result_id: area.name,
+      result_name: area.name,
+      search_term: searchQuery.trim(),
+    })
     setRecentSearches(prev => addToRecent(searchQuery, prev))
     closeSearch()
     setSelectedId(null)
@@ -1637,7 +1711,18 @@ export default function MapView() {
     map.flyTo(newCenter, zoom, { duration })
   }, [isDesktopLayout])
 
-  const focusTheater = useCallback((theater: Theater) => {
+  const focusTheater = useCallback((theater: Theater, source: 'search' | 'direct_link' = 'search') => {
+    trackEvent('theater sheet opened', {
+      theater_id: theater.id,
+      theater_name: theater.name,
+      source,
+      has_movie_filter: Boolean(movieFilter),
+      selected_movie_id: movieFilter?.id,
+    })
+    classifySessionIntent(source === 'direct_link' ? 'type_c' : 'type_c', {
+      source,
+      theater_id: theater.id,
+    })
     setRecentSearches(prev => addToRecent(searchQuery, prev))
     closeSearch()
     if (exitTimerRef.current) clearTimeout(exitTimerRef.current)
@@ -1672,7 +1757,7 @@ export default function MapView() {
     const dateParam = params.get('date')
     if (fromMovie) setFromMovieId(fromMovie)
     if (dateParam) setInitialSheetDate(dateParam)
-    focusTheater(theater)
+    focusTheater(theater, 'direct_link')
     const url = new URL(window.location.href)
     url.searchParams.delete('theater')
     url.searchParams.delete('fromMovie')
@@ -1689,6 +1774,7 @@ export default function MapView() {
     const movie = movies.find((m) => m.id === movieParam)
     if (!movie) return
     restoredMovieRef.current = true
+    classifySessionIntent('type_a', { source: 'movie_detail', movie_id: movie.id })
     setMovieFilter({ id: movie.id, title: movie.title })
     const url = new URL(window.location.href)
     url.searchParams.delete('movie')
@@ -1698,6 +1784,7 @@ export default function MapView() {
   // 극장 선택 시 → 첫 번째 영화 선택 + 시트 collapsed로 열기
   const handlePinClick = useCallback((theaterId: string, clickedMovieId?: string) => {
     if (selectedId === theaterId) {
+      trackEvent('theater sheet closed', { theater_id: theaterId, source: 'map' })
       closeSheet()
     } else {
       if (exitTimerRef.current) clearTimeout(exitTimerRef.current)
@@ -1709,6 +1796,25 @@ export default function MapView() {
       const currentZoom = mapRef.current?.getZoom() ?? 15
       const theater = theaters.find((t) => t.id === theaterId)
       if (theater) {
+        trackEvent('map pin clicked', {
+          theater_id: theater.id,
+          theater_name: theater.name,
+          selected_movie_id: clickedMovieId ?? movieFilter?.id,
+          has_movie_filter: Boolean(movieFilter),
+          source: 'map',
+        })
+        trackEvent('theater sheet opened', {
+          theater_id: theater.id,
+          theater_name: theater.name,
+          selected_movie_id: clickedMovieId ?? movieFilter?.id,
+          source: 'map',
+          has_movie_filter: Boolean(movieFilter),
+        })
+        classifySessionIntent(movieFilter || clickedMovieId ? 'type_a' : 'type_b', {
+          source: 'map',
+          theater_id: theater.id,
+          selected_movie_id: clickedMovieId ?? movieFilter?.id,
+        })
         flyToForTheater(
           [theater.lat, theater.lng],
           Math.max(currentZoom, 16),
@@ -1722,6 +1828,43 @@ export default function MapView() {
   // expanded / 시트 없음 = safe area 위 32px
   const fabBottom = !isDesktopLayout && selectedTheater && !sheetExpanded && !sheetExiting ? 316 : 32
   const hasSearchResults = theaterResults.length > 0 || stationResults.length > 0 || movieResults.length > 0 || relatedDirectorResults.length > 0 || areaResults.length > 0
+
+  useEffect(() => {
+    const query = searchQuery.trim()
+    if (!searchOpen || query.length === 0) return
+
+    const signature = JSON.stringify({
+      query,
+      theater: theaterResults.length,
+      movie: movieResults.length,
+      director: relatedDirectorResults.length,
+      station: stationResults.length,
+      area: areaResults.length,
+    })
+    const timer = setTimeout(() => {
+      if (lastSearchTelemetryRef.current === signature) return
+      lastSearchTelemetryRef.current = signature
+      const totalResults = theaterResults.length + movieResults.length + relatedDirectorResults.length + stationResults.length + areaResults.length
+      trackEvent('search performed', {
+        search_term: query,
+        search_length: query.length,
+        total_results: totalResults,
+        theater_results: theaterResults.length,
+        movie_results: movieResults.length,
+        director_results: relatedDirectorResults.length,
+        station_results: stationResults.length,
+        area_results: areaResults.length,
+      })
+      if (totalResults === 0) {
+        trackEvent('search no results', {
+          search_term: query,
+          search_length: query.length,
+        })
+      }
+    }, 700)
+
+    return () => clearTimeout(timer)
+  }, [areaResults.length, movieResults.length, relatedDirectorResults.length, searchOpen, searchQuery, stationResults.length, theaterResults.length])
 
   const renderTheaterSearchSection = () => {
     if (theaterResults.length === 0) return null
@@ -1740,7 +1883,15 @@ export default function MapView() {
             <button
               key={theater.id}
               type="button"
-              onClick={() => focusTheater(theater)}
+              onClick={() => {
+                trackEvent('search result selected', {
+                  result_type: 'theater',
+                  result_id: theater.id,
+                  result_name: theater.name,
+                  search_term: searchQuery.trim(),
+                })
+                focusTheater(theater, 'search')
+              }}
               style={{
                 width: '100%',
                 display: 'flex',
@@ -1820,6 +1971,14 @@ export default function MapView() {
             <div
               key={movie.id}
               onClick={() => {
+                trackEvent('search result selected', {
+                  result_type: 'movie',
+                  result_id: movie.id,
+                  result_name: movie.title,
+                  search_term: searchQuery.trim(),
+                  is_active_movie: activeMovieIdSet.has(movie.id),
+                })
+                classifySessionIntent('type_a', { source: 'search', movie_id: movie.id })
                 setRecentSearches(prev => addToRecent(searchQuery, prev))
                 setMovieFilter({ id: movie.id, title: movie.title })
                 closeSearch()
@@ -1930,6 +2089,12 @@ export default function MapView() {
             <div
               key={director.name}
               onClick={() => {
+                trackEvent('search result selected', {
+                  result_type: 'director',
+                  result_id: director.name,
+                  result_name: director.name,
+                  search_term: searchQuery.trim(),
+                })
                 setRecentSearches(prev => addToRecent(searchQuery, prev))
                 closeSearch()
                 if (isDesktopLayout) {
@@ -2140,7 +2305,16 @@ export default function MapView() {
                     <button
                       key={t.id}
                       type="button"
-                      onClick={() => focusTheater(t)}
+                      onClick={() => {
+                        trackEvent('search result selected', {
+                          result_type: 'theater',
+                          result_id: t.id,
+                          result_name: t.name,
+                          search_term: searchQuery.trim(),
+                          parent_result_type: 'area',
+                        })
+                        focusTheater(t, 'search')
+                      }}
                       style={{
                         width: '100%', display: 'flex', alignItems: 'center', gap: 8,
                         padding: '6px 0', border: 0, background: 'transparent',
@@ -2403,7 +2577,14 @@ export default function MapView() {
             onChange={setFilters}
             nationOptions={nationOptions}
             movieFilter={movieFilter}
-            onMovieFilterClear={() => setMovieFilter(null)}
+            onMovieFilterClear={() => {
+              trackEvent('map filter changed', {
+                action: 'movie_filter_cleared',
+                movie_filter_id: movieFilter?.id,
+                movie_filter_title: movieFilter?.title,
+              })
+              setMovieFilter(null)
+            }}
             onMovieChipClick={() => setSearchOpen(true)}
             onDirectorChipClick={() => setSearchOpen(true)}
           />
@@ -3047,12 +3228,50 @@ export default function MapView() {
             presentation={isDesktopLayout ? 'panel' : 'sheet'}
             selectedMovieId={selectedMovieId}
             onMovieSelect={setSelectedMovieId}
-            onExpand={() => setSheetExpanded(true)}
+            onExpand={() => {
+              trackEvent('theater sheet expanded', {
+                theater_id: selectedTheater.id,
+                selected_movie_id: selectedMovieId,
+              })
+              setSheetExpanded(true)
+            }}
             onCollapse={() => setSheetExpanded(false)}
-            onClose={closeSheet}
-            onMovieSearch={(movieId, movieTitle) => setMovieFilter({ id: movieId, title: movieTitle })}
-            onMovieDetailOpen={isDesktopLayout ? (id) => openDesktopPanel({ type: 'movie', id }) : undefined}
-            onDirectorOpen={isDesktopLayout ? (name) => openDesktopPanel({ type: 'director', name }) : undefined}
+            onClose={() => {
+              trackEvent('theater sheet closed', {
+                theater_id: selectedTheater.id,
+                selected_movie_id: selectedMovieId || null,
+                source: 'theater_sheet',
+              })
+              closeSheet()
+            }}
+            onMovieSearch={(movieId, movieTitle) => {
+              trackEvent('theater movie searched on map', {
+                theater_id: selectedTheater.id,
+                movie_id: movieId,
+                movie_title: movieTitle,
+              })
+              classifySessionIntent('type_a', { source: 'theater_sheet', movie_id: movieId })
+              setMovieFilter({ id: movieId, title: movieTitle })
+            }}
+            onMovieDetailOpen={isDesktopLayout ? (id) => {
+              trackEvent('search result selected', {
+                result_type: 'movie',
+                result_id: id,
+                theater_id: selectedTheater.id,
+                source: 'theater_sheet',
+              })
+              classifySessionIntent('type_a', { source: 'theater_sheet', movie_id: id })
+              openDesktopPanel({ type: 'movie', id })
+            } : undefined}
+            onDirectorOpen={isDesktopLayout ? (name) => {
+              trackEvent('search result selected', {
+                result_type: 'director',
+                result_id: name,
+                result_name: name,
+                source: 'theater_sheet',
+              })
+              openDesktopPanel({ type: 'director', name })
+            } : undefined}
             favorited={false}
             onFavorite={() => { /* Phase 4 */ }}
             mapFilters={{ genres: filters.genres, nations: filters.nations }}
@@ -3082,6 +3301,12 @@ export default function MapView() {
             onBack={panelStack.length > 1 || selectedTheater ? () => window.history.back() : undefined}
             onNavigate={openDesktopPanel}
             onMovieFilterOnMap={(id, title) => {
+              trackEvent('movie theaters map opened', {
+                movie_id: id,
+                movie_title: title,
+                source: 'desktop_panel',
+              })
+              classifySessionIntent('type_a', { source: 'desktop_panel', movie_id: id })
               setMovieFilter({ id, title })
               closeDesktopPanel()
             }}

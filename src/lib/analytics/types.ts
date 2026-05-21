@@ -1,0 +1,42 @@
+export type AnalyticsEventName =
+  | 'search opened'
+  | 'search performed'
+  | 'search no results'
+  | 'search result selected'
+  | 'map viewed'
+  | 'map filter changed'
+  | 'map pin clicked'
+  | 'theater sheet opened'
+  | 'theater sheet expanded'
+  | 'theater sheet closed'
+  | 'theater date changed'
+  | 'theater movie selected'
+  | 'theater movie searched on map'
+  | 'showtime selected'
+  | 'booking clicked'
+  | 'directions clicked'
+  | 'website clicked'
+  | 'instagram clicked'
+  | 'share clicked'
+  | 'movie detail viewed'
+  | 'movie detail tab changed'
+  | 'movie theaters map opened'
+  | 'movie theater selected'
+  | 'session intent classified'
+
+export type AnalyticsSource =
+  | 'direct'
+  | 'map'
+  | 'search'
+  | 'filter'
+  | 'movie_detail'
+  | 'direct_link'
+  | 'theater_sheet'
+  | 'desktop_panel'
+
+export type SessionIntent = 'type_a' | 'type_b' | 'type_c' | 'mixed'
+
+export type AnalyticsProperties = Record<
+  string,
+  string | number | boolean | null | undefined | string[]
+>
