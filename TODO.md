@@ -79,6 +79,18 @@
 
 ---
 
+## 🔧 리팩토링 필요 (긴 파일 정리)
+
+### 파일 분리 필요
+- [ ] **src/components/domain/TheaterSheet.tsx** (~2400줄) 
+  - 드래그 로직, 필터링, UI 섹션 별로 분리 필요
+  - 예: TheaterSheetDrag.ts, TheaterSheetFilters.ts, TheaterSheetUI.tsx
+
+- [ ] **src/components/map/MapView.tsx** (클러스터링 로직)
+  - 줌 레벨별 클러스터링을 별도 모듈로 추출
+
+---
+
 ## 🔗 관련 스크립트
 
 ```bash
