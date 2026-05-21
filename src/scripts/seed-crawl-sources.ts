@@ -5,6 +5,7 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
+import { randomUUID } from 'crypto'
 
 // .env.local 파일 로드
 const envPath = path.resolve(process.cwd(), '.env.local')
@@ -50,7 +51,7 @@ async function seedCrawlSources() {
 
       // 중복 체크: 극장 + URL 조합으로 확인
       const { data: existing } = await supabase
-        .from('theater_sources')
+        .from('crawl_sources')
         .select('id')
         .eq('theater_id', theater.id)
         .eq('listing_url', source.listingUrl)
@@ -64,11 +65,11 @@ async function seedCrawlSources() {
 
       // 크롤링 소스 추가
       const { data, error } = await supabase
-        .from('theater_sources')
+        .from('crawl_sources')
         .insert({
+          id: randomUUID(),
           theater_id: theater.id,
           theater_name: source.theaterName,
-          matched_theater_id: source.matchedTheaterId || null,
           homepage_url: source.homepageUrl,
           listing_url: source.listingUrl,
           parser: source.parser,
@@ -77,8 +78,7 @@ async function seedCrawlSources() {
           health: 'healthy',
           notes: source.notes || null,
         })
-        .select('id')
-        .single()
+        .select()
 
       if (error) {
         console.log(`❌ ${source.theaterName} — 오류: ${error.message}`)
