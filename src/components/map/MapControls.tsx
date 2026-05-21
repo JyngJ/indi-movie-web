@@ -108,7 +108,7 @@ export function MapRefSetter({ mapRef }: { mapRef: React.MutableRefObject<Leafle
 }
 
 /* ── PC 줌 슬라이더 ─────────────────────────────────────────────── */
-const SLIDER_ZOOM_LEVELS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+const SLIDER_ZOOM_LEVELS = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
 const SLIDER_SNAP_STEPS = SLIDER_ZOOM_LEVELS.map((_, index) =>
   Math.round((index / (SLIDER_ZOOM_LEVELS.length - 1)) * 100)
 )

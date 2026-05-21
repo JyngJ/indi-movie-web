@@ -2112,7 +2112,7 @@ export function TheaterSheet({
                     show_time: selectedSt.showTime,
                     source: 'theater_sheet',
                   })
-                  window.open(selectedSt.bookingUrl, '_blank', 'noopener')
+                  window.open(selectedSt.bookingUrl.replace(/^http:\/\//i, 'https://'), '_blank', 'noopener')
                 }
               }}
               style={{

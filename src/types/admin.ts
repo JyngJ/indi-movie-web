@@ -11,7 +11,7 @@ export interface AdminTheaterSource {
   matchedTheaterId?: string
   homepageUrl: string
   listingUrl: string
-  parser: 'jsonLdEvent' | 'tableText' | 'timelineCard' | 'dtryxReservationApi' | 'movieeTicketApi' | 'movielandProductOptions' | 'seoulArtTimetable' | 'csv'
+  parser: 'jsonLdEvent' | 'tableText' | 'timelineCard' | 'dtryxReservationApi' | 'movieeTicketApi' | 'movielandProductOptions' | 'seoulArtTimetable' | 'csv' | 'selfHosted'
   enabled: boolean
   cadence: 'manual' | 'daily' | 'twice_daily' | 'four_daily'
   lastCrawledAt?: string
@@ -65,6 +65,12 @@ export interface CrawlRun {
 export interface ShowtimeApprovalPayload {
   ids: string[]
   status: AdminShowtimeStatus
+}
+
+export interface ShowtimeSeatUpdateInput {
+  id: string
+  seatAvailable: number
+  seatTotal: number
 }
 
 export interface ShowtimeApprovalResult {

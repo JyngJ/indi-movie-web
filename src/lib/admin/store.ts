@@ -15,6 +15,7 @@ import type {
   CrawledShowtimeCandidate,
   CrawlRun,
   ShowtimeApprovalResult,
+  ShowtimeSeatUpdateInput,
 } from '@/types/admin'
 import { searchKmdbMovies } from '@/lib/admin/kmdb'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
@@ -306,7 +307,7 @@ export async function listCrawlRuns() {
   return ((data ?? []) as CrawlRunRow[]).map(runFromRow)
 }
 
-export async function listReviewCandidates(status?: AdminShowtimeStatus) {
+export async function listReviewCandidates(status?: AdminShowtimeStatus, offset: number = 0, limit: number = 1000) {
   const supabase = createSupabaseAdminClient()
 
   let query = supabase
@@ -316,6 +317,7 @@ export async function listReviewCandidates(status?: AdminShowtimeStatus) {
     .neq('status', 'approved')
     .order('show_date', { ascending: true })
     .order('show_time', { ascending: true })
+    .range(offset, offset + limit - 1)
 
   if (status) {
     query = query.eq('status', status)
@@ -521,6 +523,27 @@ export async function updateAdminServiceShowtime(input: AdminShowtimeInput) {
   if (error) throw new Error(error.message)
 
   return serviceShowtimeFromRow(data as unknown as ShowtimeRow)
+}
+
+export async function updateShowtimeSeatsOnly(theaterId: string, updates: ShowtimeSeatUpdateInput[]) {
+  const supabase = createSupabaseAdminClient()
+
+  const results = await Promise.all(
+    updates.map(async (update) => {
+      const { error } = await supabase
+        .from('showtimes')
+        .update({
+          seat_available: update.seatAvailable,
+          seat_total: update.seatTotal,
+        })
+        .eq('id', update.id)
+        .eq('theater_id', theaterId)
+
+      if (error) throw new Error(`${update.id}: ${error.message}`)
+    }),
+  )
+
+  return { updated: updates.length }
 }
 
 export async function deleteCandidates(ids: string[]) {
