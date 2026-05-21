@@ -27,6 +27,7 @@ interface AdminPayload {
   runs: CrawlRun[]
   candidates: CrawledShowtimeCandidate[]
   matchOptions: AdminMatchOptions
+  totalCandidates?: number
 }
 
 const emptyPayload: AdminPayload = {
@@ -853,7 +854,7 @@ export function AdminShowtimeConsole() {
       {activeTab === 'crawl' && (
         <>
           <section className={styles.metrics} aria-label="상영시간표 운영 지표">
-            <Metric label="수집 후보" value={payload.candidates.length} />
+            <Metric label="수집 후보" value={payload.totalCandidates ?? payload.candidates.length} />
             <Metric label="검수 필요" value={reviewCount} tone={reviewCount ? 'warning' : 'default'} />
             <Metric label="승인 완료" value={approvedCount} tone="success" />
             <Metric label="매칭 완료" value={matchedCount} tone={matchedCount ? 'success' : 'default'} />

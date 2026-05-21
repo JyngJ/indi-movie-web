@@ -306,7 +306,7 @@ export async function listCrawlRuns() {
   return ((data ?? []) as CrawlRunRow[]).map(runFromRow)
 }
 
-export async function listReviewCandidates(status?: AdminShowtimeStatus) {
+export async function listReviewCandidates(status?: AdminShowtimeStatus, offset: number = 0, limit: number = 1000) {
   const supabase = createSupabaseAdminClient()
 
   let query = supabase
@@ -316,6 +316,7 @@ export async function listReviewCandidates(status?: AdminShowtimeStatus) {
     .neq('status', 'approved')
     .order('show_date', { ascending: true })
     .order('show_time', { ascending: true })
+    .range(offset, offset + limit - 1)
 
   if (status) {
     query = query.eq('status', status)

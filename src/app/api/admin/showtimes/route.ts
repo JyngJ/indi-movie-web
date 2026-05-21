@@ -1,5 +1,6 @@
 import type { ShowtimeApprovalPayload } from '@/types/admin'
 import { adminAuthErrorResponse, requireAdminSessionUser } from '@/lib/admin/auth'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import {
   listAdminSources,
   listAdminMatchOptions,
@@ -25,15 +26,32 @@ export async function GET(request: Request) {
       ? status
       : undefined
 
+  const offset = url.searchParams.get('offset') ? parseInt(url.searchParams.get('offset')!, 10) : 0
+  const limit = url.searchParams.get('limit') ? parseInt(url.searchParams.get('limit')!, 10) : 1000
+
   try {
     const [sources, runs, candidates, matchOptions] = await Promise.all([
       listAdminSources(),
       listCrawlRuns(),
-      listReviewCandidates(normalizedStatus),
+      listReviewCandidates(normalizedStatus, offset, limit),
       listAdminMatchOptions(),
     ])
 
-    return Response.json({ sources, runs, candidates, matchOptions })
+    // Get total count of candidates matching the filter
+    const supabase = createSupabaseAdminClient()
+    let countQuery = supabase
+      .from('showtime_candidates')
+      .select('*', { count: 'exact', head: true })
+      .neq('status', 'rejected')
+      .neq('status', 'approved')
+
+    if (normalizedStatus) {
+      countQuery = countQuery.eq('status', normalizedStatus)
+    }
+
+    const { count } = await countQuery
+
+    return Response.json({ sources, runs, candidates, matchOptions, totalCandidates: count })
   } catch (error) {
     return Response.json(
       {
