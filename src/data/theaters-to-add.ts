@@ -698,11 +698,12 @@ export const theatersToAdd = [
   {
     name: '시네마라운지MM',
     city: '전남',
-    address: '전남 목포시 영산로59번길 11',
+    address: '전남 목포시 수강로 4번길 19 2층',
     lat: 34.8097,
     lng: 126.3930,
-    phone: '',
+    phone: '061-243-1650',
     website: 'https://cinemamm.petitecine.com',
+    notes: '목포 유일의 독립영화 전문관. 37석 단관.',
   },
   {
     name: '담빛시네마',

@@ -425,6 +425,7 @@ function computeClustersByZoom(
         lng: center.lng,
         isCoLocation: false,
         regionLabel: region,
+        clusterCount: group.length,
       })
     }
     return clusters
