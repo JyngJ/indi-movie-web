@@ -476,7 +476,7 @@ export const theatersToAdd = [
     lng: 127.4065,
     phone: '',
     website: 'https://www.dtryx.com',
-    notes: '2019년 개관. 서대전네거리역 인근.',
+    notes: '2020년 개관. 서대전네거리역 인근. 대전 유일의 독립영화 전문관.',
   },
   {
     name: '소소아트시네마',

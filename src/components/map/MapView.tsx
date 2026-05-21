@@ -437,7 +437,10 @@ function computeClustersByZoom(
 
     for (const theater of theaters) {
       let groupKey: string
-      if (metropolis.includes(theater.city)) {
+      // address가 "경기도"로 시작하면 항상 경기도 남부/북부로 분류
+      if (theater.address?.startsWith('경기도')) {
+        groupKey = getRegionGroup(theater.city, theater)
+      } else if (metropolis.includes(theater.city)) {
         groupKey = theater.city
       } else {
         groupKey = getRegionGroup(theater.city, theater)
