@@ -341,6 +341,42 @@ export function AdminShowtimeConsole() {
     }, 2000)
   }
 
+  async function handleUpdateSeatsOnly() {
+    if (!selectedAdminTheaterId || !serviceShowtimes.length) {
+      setMessage('극장을 선택하고 상영 정보가 있어야 좌석을 업데이트할 수 있습니다.')
+      return
+    }
+
+    setLoading(true)
+    setMessage('좌석 정보를 업데이트 중...')
+
+    try {
+      const updates = serviceShowtimes.map((showtime) => ({
+        id: showtime.id,
+        seatAvailable: showtime.seatAvailable ?? 0,
+        seatTotal: showtime.seatTotal ?? 0,
+      }))
+
+      const response = await fetch(`/api/admin/theaters/${selectedAdminTheaterId}/showtimes/seats`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(updates),
+      })
+
+      const result = (await response.json()) as { updated?: number; error?: { message: string } }
+
+      if (!response.ok || 'error' in result) {
+        throw new Error(result.error?.message ?? '좌석 정보 업데이트에 실패했습니다.')
+      }
+
+      setMessage(`✅ ${result.updated}개 상영의 좌석 정보를 업데이트했습니다.`)
+    } catch (error) {
+      setMessage(`❌ 오류: ${error instanceof Error ? error.message : String(error)}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   async function updateStatus(status: AdminShowtimeStatus) {
     if (!selectedIds.length) {
       setMessage('검수할 상영 회차를 먼저 선택하세요.')
@@ -827,6 +863,7 @@ export function AdminShowtimeConsole() {
           <Button variant="ghost" size="sm" onClick={refresh}>새로고침</Button>
           <Button variant="secondary" size="sm" loading={loading} onClick={runAllCrawlers}>일괄 수집</Button>
           <Button size="sm" loading={loading} onClick={runCrawler}>수집 실행</Button>
+          <Button variant="secondary" size="sm" loading={loading} onClick={handleUpdateSeatsOnly}>좌석만 업데이트</Button>
         </div>
       </header>
 

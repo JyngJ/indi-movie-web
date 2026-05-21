@@ -67,6 +67,12 @@ export interface ShowtimeApprovalPayload {
   status: AdminShowtimeStatus
 }
 
+export interface ShowtimeSeatUpdateInput {
+  id: string
+  seatAvailable: number
+  seatTotal: number
+}
+
 export interface ShowtimeApprovalResult {
   approved: Array<{
     candidateId: string
