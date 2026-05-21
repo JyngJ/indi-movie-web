@@ -37,8 +37,10 @@ export async function GET(request: Request) {
       listAdminMatchOptions(),
     ])
 
-    // Get total count of candidates matching the filter
+    // Get total counts
     const supabase = createSupabaseAdminClient()
+
+    // Total candidates (not rejected/approved)
     let countQuery = supabase
       .from('showtime_candidates')
       .select('*', { count: 'exact', head: true })
@@ -49,9 +51,22 @@ export async function GET(request: Request) {
       countQuery = countQuery.eq('status', normalizedStatus)
     }
 
-    const { count } = await countQuery
+    const { count: totalCount } = await countQuery
 
-    return Response.json({ sources, runs, candidates, matchOptions, totalCandidates: count })
+    // Total candidates needing review
+    const { count: reviewCount } = await supabase
+      .from('showtime_candidates')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'needs_review')
+
+    return Response.json({
+      sources,
+      runs,
+      candidates,
+      matchOptions,
+      totalCandidates: totalCount,
+      totalReviewCandidates: reviewCount,
+    })
   } catch (error) {
     return Response.json(
       {

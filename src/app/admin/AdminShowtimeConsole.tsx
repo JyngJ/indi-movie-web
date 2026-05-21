@@ -28,6 +28,7 @@ interface AdminPayload {
   candidates: CrawledShowtimeCandidate[]
   matchOptions: AdminMatchOptions
   totalCandidates?: number
+  totalReviewCandidates?: number
 }
 
 const emptyPayload: AdminPayload = {
@@ -114,7 +115,7 @@ export function AdminShowtimeConsole() {
 
   const selectedSource = payload.sources.find((source) => source.id === selectedSourceId)
   const latestRun = payload.runs[0]
-  const reviewCount = payload.candidates.filter((candidate) => candidate.status === 'needs_review').length
+  const reviewCount = payload.totalReviewCandidates ?? payload.candidates.filter((candidate) => candidate.status === 'needs_review').length
   const approvedCount = payload.candidates.filter((candidate) => candidate.status === 'approved').length
   const matchedCount = payload.candidates.filter((candidate) => candidate.matchedTheaterId && candidate.matchedMovieId).length
   const unmatchedCount = payload.candidates.filter((c) => !c.matchedTheaterId || !c.matchedMovieId).length
