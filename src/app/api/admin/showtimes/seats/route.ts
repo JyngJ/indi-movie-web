@@ -13,28 +13,41 @@ export async function PATCH(request: Request) {
   try {
     const supabase = createSupabaseAdminClient()
 
-    // Get all showtimes with current seat info
-    const { data: showtimes, error: fetchError } = await supabase
+    // Get total count
+    const { count } = await supabase
       .from('showtimes')
-      .select('id, theater_id, seat_available, seat_total')
+      .select('*', { count: 'exact', head: true })
       .eq('is_active', true)
 
-    if (fetchError) throw new Error(fetchError.message)
-
-    if (!showtimes || showtimes.length === 0) {
+    if (!count) {
       return Response.json({
         updated: 0,
         message: '업데이트할 상영 정보가 없습니다.',
       })
     }
 
-    // Update each showtime's seat info (in this case, they're already updated from the select)
-    // If you need to fetch latest seat data from external sources, that would happen here
-    // For now, we just confirm the current seat data is in sync
+    // Fetch all showtimes in batches (Supabase has 1000 row limit per query)
+    const pageSize = 1000
+    const pages = Math.ceil(count / pageSize)
+    const allShowtimes: Array<{ id: string; theater_id: string; seat_available: number; seat_total: number }> = []
+
+    for (let i = 0; i < pages; i++) {
+      const from = i * pageSize
+      const to = from + pageSize - 1
+
+      const { data: showtimes, error: fetchError } = await supabase
+        .from('showtimes')
+        .select('id, theater_id, seat_available, seat_total')
+        .eq('is_active', true)
+        .range(from, to)
+
+      if (fetchError) throw new Error(fetchError.message)
+      if (showtimes) allShowtimes.push(...showtimes)
+    }
 
     return Response.json({
-      updated: showtimes.length,
-      message: `${showtimes.length}개 상영의 좌석 정보를 확인했습니다.`,
+      updated: allShowtimes.length,
+      message: `전체 ${allShowtimes.length}개 상영의 좌석 정보를 확인했습니다.`,
     })
   } catch (error) {
     if (error instanceof Error && 'code' in error) {
