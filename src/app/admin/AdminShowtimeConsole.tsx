@@ -271,9 +271,9 @@ export function AdminShowtimeConsole() {
   }
 
   async function runAllCrawlers() {
-    const enabledSources = payload.sources.filter((s) => s.enabled)
+    const enabledSources = payload.sources.filter((s) => s.enabled && s.health === 'healthy')
     if (enabledSources.length === 0) {
-      setMessage('활성화된 크롤링 소스가 없습니다.')
+      setMessage('활성화되고 정상인 크롤링 소스가 없습니다.')
       return
     }
 
