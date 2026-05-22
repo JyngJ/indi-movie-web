@@ -739,6 +739,7 @@ function computePosterOffsets(
     clusterBlockers.push({ centerX: single.px.x, rect: labelRect[labelDir] })
   }
 
+  // 클러스터 blocker 추가
   for (const c of clusters) {
     if (c.theaters.length <= 1) continue
     const { x: cx, y: cy } = map.latLngToContainerPoint([c.lat, c.lng] as [number, number])
