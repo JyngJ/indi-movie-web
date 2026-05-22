@@ -74,11 +74,8 @@ function dateRangeForFilter(filter: FilterState) {
     case null:
       return { start: today, end: addDays(today, 30) }
     case 'this-week':
-    default: {
-      const dow = today.getDay()
-      const weekEnd = dow === 0 ? addDays(today, 6) : addDays(today, 7 - dow)
-      return { start: today, end: weekEnd }
-    }
+    default:
+      return { start: today, end: addDays(today, 6) }
   }
 }
 
@@ -588,6 +585,7 @@ function computePosterOffsets(
   posterMoviesByTheater: Map<string, TheaterPosterMovie[]> = new Map(),
   isDesktop = false,
   filtersActive = false,
+  labelOffsets: Map<string, LabelOffset> = new Map(),
 ): Map<string, number> {
   const offsets = new Map<string, number>()
 
@@ -688,6 +686,24 @@ function computePosterOffsets(
   }
 
   const clusterBlockers: { centerX: number; rect: Rect }[] = []
+
+  // 단일 극장 이름표 blocker 추가
+  for (const single of singles) {
+    const labelDir = labelDirections.get(single.id) ?? 'top'
+    const labelOff = labelOffsets.get(single.id) ?? { x: 0, y: 0 }
+    const labelW = 140
+    const labelH = LABEL_H
+    const labelGap = 4
+
+    const labelRect: Record<LabelDir, Rect> = {
+      top: [single.px.x - labelW / 2 + labelOff.x, single.px.y - ANCHOR_Y - labelGap - labelH + labelOff.y, single.px.x + labelW / 2 + labelOff.x, single.px.y - ANCHOR_Y - labelGap + labelOff.y],
+      bottom: [single.px.x - labelW / 2 + labelOff.x, single.px.y + DOT / 2 + labelGap + labelOff.y, single.px.x + labelW / 2 + labelOff.x, single.px.y + DOT / 2 + labelGap + labelH + labelOff.y],
+      right: [single.px.x + DOT / 2 + labelGap + labelOff.x, single.px.y - labelH / 2 + labelOff.y, single.px.x + DOT / 2 + labelGap + labelW + labelOff.x, single.px.y + labelH / 2 + labelOff.y],
+      left: [single.px.x - DOT / 2 - labelGap - labelW + labelOff.x, single.px.y - labelH / 2 + labelOff.y, single.px.x - DOT / 2 - labelGap + labelOff.x, single.px.y + labelH / 2 + labelOff.y],
+    }
+    clusterBlockers.push({ centerX: single.px.x, rect: labelRect[labelDir] })
+  }
+
   for (const c of clusters) {
     if (c.theaters.length <= 1) continue
     const { x: cx, y: cy } = map.latLngToContainerPoint([c.lat, c.lng] as [number, number])
@@ -1492,7 +1508,7 @@ export default function MapView() {
     const c = computeClusters(adjustedTheaters, map, z, splitIds, coLocGroups, isDesktopLayout)
     const d = computeLabelDirections(c, map)
     const labelO = computeNameLabelOffsets(c, map, d)
-    const o = computePosterOffsets(c, map, z, d, theaterPosterMovies, isDesktopLayout, filtersActive)
+    const o = computePosterOffsets(c, map, z, d, theaterPosterMovies, isDesktopLayout, filtersActive, labelO)
     setClusters(c)
     setPosterOffsets(o)
     setCoLocationOffsets(coLoc)
