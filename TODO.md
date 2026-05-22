@@ -31,6 +31,11 @@
   - Schedule: 0 3 * * * (매일 새벽 3시)
   - 수동 실행: `DELETE FROM showtimes WHERE show_date < CURRENT_DATE - INTERVAL '3 days';`
 
+### 데이터 정제 (2026-05-22)
+- ✅ 시놉시스 채우기: 171편 중 165편 완료 (6편은 KMDB 미제공)
+  - KMDB 미제공: 노스탤지아, 박하향 소다수, 애수의 여로, 용호의 결투, 진홍의 도적, 피어스 브로스넌의 영웅
+- ✅ 감독 프로필 재수집 완료 (Wikipedia 검색)
+
 ---
 
 ## 🔴 현재 이슈
@@ -123,25 +128,6 @@ npm run seed:disable-broken
   ```
 - [ ] 그래도 없는 영화는 프로젝트 루트에 이미지 파일 넣으면 Supabase Storage 업로드 후 DB 연결
 - [ ] Naver API: `NAVER_CLIENT_ID` / `NAVER_CLIENT_SECRET` 필요 (developers.naver.com 앱 등록 → 검색 API)
-
-### 시놉시스 채우기
-
-- [ ] 상태: 대부분 반영 완료
-- [ ] 확인: `scripts/fill-synopsis-kmdb.ts`는 현재 `movie_details.synopsis`와 KMDB `plots.plot[].plotText` 필드를 사용
-- [ ] 실행 결과: 171편 중 165편 시놉시스 있음, 6편 없음
-- [ ] KMDB 미제공으로 남은 6편: 노스탤지아, 박하향 소다수, 애수의 여로, 용호의 결투, 진홍의 도적, 피어스 브로스넌의 영웅
-- [ ] 재실행:
-  ```
-  npx tsx --env-file=.env.local scripts/fill-synopsis-kmdb.ts
-  ```
-
-### 감독 프로필 재수집
-
-- [ ] 현재 132명 중 105명 데이터 없음 (Wikipedia 검색 미히트)
-- [ ] `--force` 플래그로 재수집하거나, 데이터 없는 감독 수동 입력 검토:
-  ```
-  npx tsx --env-file=.env.local scripts/fill-directors.ts --apply --force
-  ```
 
 ---
 
