@@ -168,15 +168,7 @@ npm run seed:disable-broken
 
 ---
 
-## 크롤링
-
-### 신규 영화 자동 등록 + 상세정보 연결
-
-- [ ] 상태: 반영
-- [ ] 크롤링 후보 자동매칭/승인 시 기존 `movies`에 없는 영화는 KMDB 검색 후 자동 import
-- [ ] import 시 `movies` 기본 정보와 `movie_details.synopsis/runtime_minutes/certification`을 함께 upsert
-- [ ] KMDB 줄거리는 `plots.plot[].plotText` 한국어 우선, 없으면 첫 번째 plot, 그래도 없으면 `plot` fallback 사용
-- [ ] 동일 흐름을 관리자 UI 경로(`src/lib/admin/store.ts`)와 수동 승인 스크립트(`scripts/seed-candidates.ts`)에 모두 반영
+## 🛠️ 어드민 & 크롤링 시스템
 
 ### 크롤링 오류 수정
 
@@ -191,28 +183,38 @@ npm run seed:disable-broken
 - [ ] GV, 시네토크 등 부가 행사가 제목에 붙은 경우 자동 매칭이 안 됨
 - [ ] 크롤링 후보 정규화 또는 매칭 로직에서 처리
 
-### 크롤러 GitHub Actions 마이그레이션 검토
+### 신규 영화 자동 등록 + 상세정보 연결
 
-- [ ] 현재 수동 실행 → GitHub Actions 스케줄 트리거로 자동화 가능한지 확인
-- [ ] Supabase 환경변수 Secrets 등록, 실행 주기 설계 필요
+- [ ] 상태: 반영
+- [ ] 크롤링 후보 자동매칭/승인 시 기존 `movies`에 없는 영화는 KMDB 검색 후 자동 import
+- [ ] import 시 `movies` 기본 정보와 `movie_details.synopsis/runtime_minutes/certification`을 함께 upsert
+- [ ] KMDB 줄거리는 `plots.plot[].plotText` 한국어 우선, 없으면 첫 번째 plot, 그래도 없으면 `plot` fallback 사용
+- [ ] 동일 흐름을 관리자 UI 경로(`src/lib/admin/store.ts`)와 수동 승인 스크립트(`scripts/seed-candidates.ts`)에 모두 반영
 
 ### 크롤링 후보 제목 정규화
 
 - [ ] `영화 제목 + 시네토크/GV/강연자`가 한 문자열로 내려오는 경우
 - [ ] 후보 생성 단계에서 `+ 시네토크`, `+ GV` 등 부가 행사 문구를 별도 메모로 분리하고 `movie_title`에는 본편 제목만 남기기
 
-### 인디스페이스
+### 크롤러 GitHub Actions 마이그레이션 검토
+
+- [ ] 현재 수동 실행 → GitHub Actions 스케줄 트리거로 자동화 가능한지 확인
+- [ ] Supabase 환경변수 Secrets 등록, 실행 주기 설계 필요
+
+### 특정 극장 어댑터 전환
+
+#### 인디스페이스
 
 - [ ] 최신 주간 상영시간표가 이미지로 내려와 HTML 파서로 추출 불가
 - [ ] 후보: ① OCR 파이프라인, ② `작품별 상영일정` 게시글 본문에서 일정 추출
 - [ ] 별도 설계 필요
 
-### 필름포럼 → Moviee 어댑터로 전환
+#### 필름포럼 → Moviee 어댑터로 전환
 
 - [ ] 공식 사이트 WAF가 자동 요청 차단 (`999`)
 - [ ] Moviee `https://moviee.co.kr/Theater/Index?thsynid=130` 기반 어댑터로 등록
 
-### KU시네마테크 → Moviee 어댑터로 전환
+#### KU시네마테크 → Moviee 어댑터로 전환
 
 - [ ] `/reservation`이 `https://moviee.co.kr/Movie/Ticket?tid=121`로 연결됨
 - [ ] 전용 어댑터 대신 기존 Moviee 어댑터 대상으로 분류
