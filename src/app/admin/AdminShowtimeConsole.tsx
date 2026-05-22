@@ -48,6 +48,26 @@ const inputKinds: Array<{ value: CrawlInputKind; label: string }> = [
   { value: 'csv', label: 'CSV 업로드' },
 ]
 
+type SourceFormState = {
+  theaterName: string
+  matchedTheaterId: string
+  homepageUrl: string
+  listingUrl: string
+  parser: AdminTheaterSource['parser']
+  cadence: AdminTheaterSource['cadence']
+  notes: string
+}
+
+const emptySourceForm: SourceFormState = {
+  theaterName: '',
+  matchedTheaterId: '',
+  homepageUrl: '',
+  listingUrl: '',
+  parser: 'tableText',
+  cadence: 'manual',
+  notes: '',
+}
+
 export function AdminShowtimeConsole() {
   const router = useRouter()
   const [payload, setPayload] = useState<AdminPayload>(emptyPayload)
@@ -85,18 +105,12 @@ export function AdminShowtimeConsole() {
   })
   const [showtimeDrafts, setShowtimeDrafts] = useState<Record<string, AdminShowtimeInput>>({})
   const [activeTab, setActiveTab] = useState<'crawl' | 'status' | 'manage'>('crawl')
-  const [candidateFilter, setCandidateFilter] = useState<'all' | 'unmatched' | 'warning' | 'soldout'>('all')
+  const [candidateFilter, setCandidateFilter] = useState<'all' | 'latest' | 'unmatched' | 'warning' | 'soldout'>('all')
   const [candidatePage, setCandidatePage] = useState(0)
+  const [latestCandidateIds, setLatestCandidateIds] = useState<string[]>([])
   const [sourceFormOpen, setSourceFormOpen] = useState(false)
-  const [sourceForm, setSourceForm] = useState({
-    theaterName: '',
-    matchedTheaterId: '',
-    homepageUrl: '',
-    listingUrl: '',
-    parser: 'tableText',
-    cadence: 'manual',
-    notes: '',
-  })
+  const [editingSourceId, setEditingSourceId] = useState('')
+  const [sourceForm, setSourceForm] = useState<SourceFormState>(emptySourceForm)
   const [crawlProgress, setCrawlProgress] = useState(0)
   const [crawlTotal, setCrawlTotal] = useState(0)
 
@@ -121,12 +135,15 @@ export function AdminShowtimeConsole() {
   const unmatchedCount = payload.candidates.filter((c) => !c.matchedTheaterId || !c.matchedMovieId).length
   const warningCount = payload.candidates.filter((c) => c.warnings.length > 0).length
   const soldoutCount = payload.candidates.filter((c) => c.seatAvailable === 0).length
+  const latestCandidateIdSet = useMemo(() => new Set(latestCandidateIds), [latestCandidateIds])
+  const latestCount = payload.candidates.filter((candidate) => latestCandidateIdSet.has(candidate.id)).length
 
   const PAGE_SIZE = 50
 
   const filteredCandidates = useMemo(() => {
     let list = payload.candidates
-    if (candidateFilter === 'unmatched') list = list.filter((c) => !c.matchedTheaterId || !c.matchedMovieId)
+    if (candidateFilter === 'latest') list = list.filter((c) => latestCandidateIdSet.has(c.id))
+    else if (candidateFilter === 'unmatched') list = list.filter((c) => !c.matchedTheaterId || !c.matchedMovieId)
     else if (candidateFilter === 'warning') list = list.filter((c) => c.warnings.length > 0)
     else if (candidateFilter === 'soldout') list = list.filter((c) => c.seatAvailable === 0)
 
@@ -144,7 +161,7 @@ export function AdminShowtimeConsole() {
       candidate.warnings.join(' '),
       candidate.status,
     ].join(' ')).includes(query))
-  }, [candidateFilter, candidateSearchQuery, payload.candidates])
+  }, [candidateFilter, candidateSearchQuery, latestCandidateIdSet, payload.candidates])
 
   const totalPages = Math.max(1, Math.ceil(filteredCandidates.length / PAGE_SIZE))
   const safePage = Math.min(candidatePage, totalPages - 1)
@@ -238,7 +255,7 @@ export function AdminShowtimeConsole() {
     setLoading(true)
     setCrawlProgress(0)
     setCrawlTotal(1)
-    setMessage('크롤링을 실행하는 중입니다.')
+    setMessage('크롤링 후 영화 자동 매칭을 실행하는 중입니다.')
 
     try {
       const response = await fetch('/api/admin/crawl', {
@@ -259,8 +276,14 @@ export function AdminShowtimeConsole() {
 
       setCrawlProgress(100)
       await refresh()
+      await refreshAdminMovies()
+      mergeCandidatesIntoPayload(result.candidates)
       setSelectedIds(result.candidates.map((candidate) => candidate.id))
-      setMessage(`${result.sourceName}에서 ${result.candidates.length}개 후보를 수집했습니다.`)
+      setLatestCandidateIds(result.candidates.map((candidate) => candidate.id))
+      setCandidateFilter('latest')
+      setCandidatePage(0)
+      const movieMatchedCount = result.candidates.filter((candidate) => candidate.matchedMovieId).length
+      setMessage(`${result.sourceName}에서 ${result.candidates.length}개 후보를 수집하고 영화 ${movieMatchedCount}건을 자동 매칭했습니다.`)
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '크롤링에 실패했습니다.')
     } finally {
@@ -282,7 +305,7 @@ export function AdminShowtimeConsole() {
     setLoading(true)
     setCrawlProgress(0)
     setCrawlTotal(enabledSources.length)
-    setMessage(`일괄 수집 중… (0/${enabledSources.length})`)
+    setMessage(`일괄 수집 및 영화 자동 매칭 중... (0/${enabledSources.length})`)
 
     let totalCandidates = 0
     let succeeded = 0
@@ -299,7 +322,7 @@ export function AdminShowtimeConsole() {
             .then((result) => {
               completed += dtryxSources.length
               setCrawlProgress(Math.round((completed / enabledSources.length) * 100))
-              setMessage(`일괄 수집 중… (${completed}/${enabledSources.length})`)
+              setMessage(`일괄 수집 및 영화 자동 매칭 중... (${completed}/${enabledSources.length})`)
               return result
             })
             .catch(() => ({ runs: [] as CrawlRun[] }))
@@ -314,7 +337,7 @@ export function AdminShowtimeConsole() {
           .then((run) => {
             completed++
             setCrawlProgress(Math.round((completed / enabledSources.length) * 100))
-            setMessage(`일괄 수집 중… (${completed}/${enabledSources.length})`)
+            setMessage(`일괄 수집 및 영화 자동 매칭 중... (${completed}/${enabledSources.length})`)
             return run
           })
           .catch(() => null),
@@ -331,9 +354,27 @@ export function AdminShowtimeConsole() {
       else failed++
     }
 
+    const latestIds = [
+      ...(dtryxResult.runs ?? []).flatMap((run) => run.candidates.map((candidate) => candidate.id)),
+      ...otherResults.flatMap((run) => run ? (run as CrawlRun).candidates.map((candidate) => candidate.id) : []),
+    ]
+
     setCrawlProgress(100)
     await refresh()
-    setMessage(`일괄 수집 완료 — 성공 ${succeeded}개 극장, 실패 ${failed}개 (DB 반영은 검수 대기열 확인)`)
+    await refreshAdminMovies()
+    mergeCandidatesIntoPayload([
+      ...(dtryxResult.runs ?? []).flatMap((run) => run.candidates),
+      ...otherResults.flatMap((run) => run ? (run as CrawlRun).candidates : []),
+    ])
+    setSelectedIds(latestIds)
+    setLatestCandidateIds(latestIds)
+    setCandidateFilter('latest')
+    setCandidatePage(0)
+    const movieMatchedCount = [
+      ...(dtryxResult.runs ?? []).flatMap((run) => run.candidates),
+      ...otherResults.flatMap((run) => run ? (run as CrawlRun).candidates : []),
+    ].filter((candidate) => candidate.matchedMovieId).length
+    setMessage(`일괄 수집 및 영화 자동 매칭 완료 - 성공 ${succeeded}개 극장, 실패 ${failed}개, 영화 매칭 ${movieMatchedCount}건`)
     setLoading(false)
     setTimeout(() => {
       setCrawlProgress(0)
@@ -438,12 +479,9 @@ export function AdminShowtimeConsole() {
         throw new Error(result.error?.message ?? '자동 매칭에 실패했습니다.')
       }
 
-      setPayload((current) => ({
-        ...current,
-        candidates: current.candidates.map((candidate) =>
-          result.updated?.find((updated) => updated.id === candidate.id) ?? candidate,
-        ),
-      }))
+      await refresh()
+      await refreshAdminMovies()
+      mergeCandidatesIntoPayload(result.updated)
       setMessage(`자동 매칭 완료: 성공 ${result.matched ?? 0}건, 확인 필요 ${result.needsReview ?? 0}건`)
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '자동 매칭에 실패했습니다.')
@@ -452,15 +490,41 @@ export function AdminShowtimeConsole() {
     }
   }
 
-  async function createSource() {
+  function openNewSourceForm() {
+    setEditingSourceId('')
+    setSourceForm(emptySourceForm)
+    setSourceFormOpen((open) => !open || Boolean(editingSourceId))
+  }
+
+  function editSelectedSource() {
+    if (!selectedSource) {
+      setMessage('수정할 크롤링 소스를 먼저 선택하세요.')
+      return
+    }
+
+    setEditingSourceId(selectedSource.id)
+    setSourceForm({
+      theaterName: selectedSource.theaterName,
+      matchedTheaterId: selectedSource.matchedTheaterId ?? '',
+      homepageUrl: selectedSource.homepageUrl,
+      listingUrl: selectedSource.listingUrl,
+      parser: selectedSource.parser,
+      cadence: selectedSource.cadence,
+      notes: selectedSource.notes ?? '',
+    })
+    setSourceFormOpen(true)
+  }
+
+  async function saveSource() {
     setLoading(true)
-    setMessage('크롤링 소스를 저장하는 중입니다.')
+    setMessage(editingSourceId ? '크롤링 소스를 수정하는 중입니다.' : '크롤링 소스를 저장하는 중입니다.')
 
     try {
+      const method = editingSourceId ? 'PATCH' : 'POST'
       const response = await fetch('/api/admin/sources', {
-        method: 'POST',
+        method,
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(sourceForm),
+        body: JSON.stringify(editingSourceId ? { ...sourceForm, id: editingSourceId } : sourceForm),
       })
       const result = (await response.json()) as { source?: AdminTheaterSource; error?: { message: string } }
 
@@ -473,16 +537,9 @@ export function AdminShowtimeConsole() {
       setUrl(result.source.listingUrl)
       setInputKind('url')
       setSourceFormOpen(false)
-      setSourceForm({
-        theaterName: '',
-        matchedTheaterId: '',
-        homepageUrl: '',
-        listingUrl: '',
-        parser: 'tableText',
-        cadence: 'manual',
-        notes: '',
-      })
-      setMessage(`${result.source.theaterName} 크롤링 소스를 추가했습니다.`)
+      setEditingSourceId('')
+      setSourceForm(emptySourceForm)
+      setMessage(`${result.source.theaterName} 크롤링 소스를 ${method === 'PATCH' ? '수정' : '추가'}했습니다.`)
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '크롤링 소스를 저장하지 못했습니다.')
     } finally {
@@ -515,6 +572,9 @@ export function AdminShowtimeConsole() {
       setSelectedSourceId('')
       setUrl('')
       setSelectedIds([])
+      setEditingSourceId('')
+      setSourceForm(emptySourceForm)
+      setSourceFormOpen(false)
       await refresh()
       setMessage(`${selectedSource.theaterName} 크롤링 소스를 삭제했습니다.`)
     } catch (error) {
@@ -755,6 +815,24 @@ export function AdminShowtimeConsole() {
     }))
   }
 
+  function mergeCandidatesIntoPayload(candidates: CrawledShowtimeCandidate[]) {
+    if (candidates.length === 0) return
+
+    setPayload((current) => {
+      const byId = new Map(current.candidates.map((candidate) => [candidate.id, candidate]))
+      candidates.forEach((candidate) => byId.set(candidate.id, candidate))
+
+      return {
+        ...current,
+        candidates: Array.from(byId.values()).sort((a, b) => {
+          const left = `${a.showDate} ${a.showTime}`
+          const right = `${b.showDate} ${b.showTime}`
+          return left.localeCompare(right)
+        }),
+      }
+    })
+  }
+
   function editTheater(theater: AdminTheater) {
     setTheaterFormOpen(true)
     setTheaterForm({
@@ -894,8 +972,11 @@ export function AdminShowtimeConsole() {
           <div className={styles.panelHeader}>
             <h2>크롤링 소스</h2>
             <div className={styles.sourceHeaderActions}>
-              <button className={styles.linkButton} onClick={() => setSourceFormOpen((open) => !open)}>
-                {sourceFormOpen ? '닫기' : '새 소스'}
+              <button className={styles.linkButton} onClick={openNewSourceForm}>
+                {sourceFormOpen && !editingSourceId ? '닫기' : '새 소스'}
+              </button>
+              <button className={styles.linkButton} disabled={!selectedSource || loading} onClick={editSelectedSource}>
+                수정
               </button>
               <button className={styles.dangerLinkButton} disabled={!selectedSource || loading} onClick={deleteSource}>
                 삭제
@@ -958,7 +1039,7 @@ export function AdminShowtimeConsole() {
                   파서
                   <select
                     value={sourceForm.parser}
-                    onChange={(event) => setSourceForm((current) => ({ ...current, parser: event.target.value }))}
+                    onChange={(event) => setSourceForm((current) => ({ ...current, parser: event.target.value as AdminTheaterSource['parser'] }))}
                   >
                     <option value="tableText">HTML 테이블</option>
                     <option value="timelineCard">타임라인 카드</option>
@@ -966,6 +1047,7 @@ export function AdminShowtimeConsole() {
                     <option value="movieeTicketApi">무비애 예매 API</option>
                     <option value="movielandProductOptions">무비랜드 상품 옵션</option>
                     <option value="seoulArtTimetable">서울아트시네마 시간표</option>
+                    <option value="selfHosted">자체 호스팅 시간표</option>
                     <option value="jsonLdEvent">JSON-LD Event</option>
                     <option value="csv">CSV</option>
                   </select>
@@ -974,7 +1056,7 @@ export function AdminShowtimeConsole() {
                   주기
                   <select
                     value={sourceForm.cadence}
-                    onChange={(event) => setSourceForm((current) => ({ ...current, cadence: event.target.value }))}
+                    onChange={(event) => setSourceForm((current) => ({ ...current, cadence: event.target.value as AdminTheaterSource['cadence'] }))}
                   >
                     <option value="manual">수동</option>
                     <option value="daily">매일</option>
@@ -991,7 +1073,9 @@ export function AdminShowtimeConsole() {
                   placeholder="로그인 필요 여부, 표 구조, 검수 팁 등"
                 />
               </label>
-              <Button size="sm" fullWidth loading={loading} onClick={createSource}>소스 저장</Button>
+              <Button size="sm" fullWidth loading={loading} onClick={saveSource}>
+                {editingSourceId ? '변경 저장' : '소스 저장'}
+              </Button>
             </div>
           )}
 
@@ -1094,6 +1178,7 @@ export function AdminShowtimeConsole() {
             <div className={styles.candidateFilterTabs}>
               {([
                 { key: 'all',       label: '전체',     count: payload.candidates.length, dot: '' },
+                { key: 'latest',    label: '최근 수집', count: latestCount,                dot: '#3498db' },
                 { key: 'unmatched', label: '매칭 필요', count: unmatchedCount,            dot: '#e74c3c' },
                 { key: 'warning',   label: '경고',     count: warningCount,              dot: '#e67e22' },
                 { key: 'soldout',   label: '매진',     count: soldoutCount,              dot: '#7f8c8d' },

@@ -1,7 +1,7 @@
 import type { CrawlRequestPayload, CrawlRun } from '@/types/admin'
 import { adminAuthErrorResponse, requireAdminSessionUser } from '@/lib/admin/auth'
 import { crawlShowtimeCandidates } from '@/lib/admin/crawler'
-import { getAdminSource, saveCrawlRun } from '@/lib/admin/store'
+import { autoMatchShowtimeCandidates, getAdminSource, saveCrawlRun } from '@/lib/admin/store'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,6 +47,14 @@ export async function POST(request: Request) {
     }
 
     await saveCrawlRun(run)
+
+    if (candidates.length > 0) {
+      const matchResult = await autoMatchShowtimeCandidates(candidates.map((candidate) => candidate.id))
+      run.candidates = candidates.map((candidate) =>
+        matchResult.updated.find((updated) => updated.id === candidate.id) ?? candidate,
+      )
+      run.warningCount = run.candidates.reduce((sum, candidate) => sum + candidate.warnings.length, 0)
+    }
 
     return Response.json(run)
   } catch (error) {
