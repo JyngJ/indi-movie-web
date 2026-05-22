@@ -317,17 +317,53 @@ export async function listReviewCandidates(status?: AdminShowtimeStatus, offset:
     .neq('status', 'approved')
     .order('show_date', { ascending: true })
     .order('show_time', { ascending: true })
-    .range(offset, offset + limit - 1)
 
   if (status) {
     query = query.eq('status', status)
   }
 
-  const { data, error } = await query
+  const { data: candidates, error } = await query
 
   if (error) throw new Error(error.message)
 
-  return ((data ?? []) as CandidateRow[]).map(candidateFromRow).sort((a, b) => {
+  // 기존 showtimes 조회 (극장, 영화, 날짜, 시간으로 중복 감지)
+  const { data: showtimes, error: showError } = await supabase
+    .from('showtimes')
+    .select('theater_id, movie_id, screen_name, show_date, show_time, is_active')
+    .eq('is_active', true)
+
+  if (showError) throw new Error(showError.message)
+
+  // 모든 영화 제목 조회 (캐싱)
+  const { data: movies, error: movieError } = await supabase
+    .from('movies')
+    .select('id, title')
+
+  if (movieError) throw new Error(movieError.message)
+
+  const movieTitleById = new Map<string, string>()
+  movies?.forEach((movie: { id: string; title: string }) => {
+    movieTitleById.set(movie.id, movie.title)
+  })
+
+  // showtimes를 Map으로 구성: "theater_id|movie_title|screen|date|time"
+  const existingShowtimes = new Map<string, true>()
+  showtimes?.forEach((st) => {
+    const movieTitle = movieTitleById.get(st.movie_id) || ''
+    const key = `${st.theater_id}|${movieTitle}|${st.screen_name}|${st.show_date}|${st.show_time}`
+    existingShowtimes.set(key, true)
+  })
+
+  // candidates 중복 제거: 이미 showtimes에 있는 것은 필터링
+  const filtered = ((candidates ?? []) as CandidateRow[]).filter((candidate) => {
+    const key = `${candidate.theater_id}|${candidate.movie_title}|${candidate.screen_name}|${candidate.show_date}|${candidate.show_time}`
+    return !existingShowtimes.has(key)
+  })
+
+  // 페이지네이션 적용
+  const paginated = filtered.slice(offset, offset + limit)
+
+  return paginated.map(candidateFromRow).sort((a, b) => {
     const statusOrder = scoreStatus(a.status) - scoreStatus(b.status)
     if (statusOrder !== 0) return statusOrder
     return `${a.showDate} ${a.showTime}`.localeCompare(`${b.showDate} ${b.showTime}`)
