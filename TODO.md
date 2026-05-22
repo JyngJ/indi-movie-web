@@ -25,6 +25,12 @@
 - petitecine: 시네마라운지MM (1개)
 - scinema.org: 조이앤시네마 전주 (1개)
 
+### DB 관리 (2026-05-22)
+- ✅ pg_cron 설정: 3일 지난 showtimes 매일 새벽 3시 자동 삭제
+  - Job ID: cleanup-old-showtimes
+  - Schedule: 0 3 * * * (매일 새벽 3시)
+  - 수동 실행: `DELETE FROM showtimes WHERE show_date < CURRENT_DATE - INTERVAL '3 days';`
+
 ---
 
 ## 🔴 현재 이슈
@@ -104,29 +110,6 @@ npm run seed:disable-broken
 ---
 
 # 🚀 추가 구현 필요 사항
-
-## DB 관리
-
-### 오래된 시간표 자동 삭제 (pg_cron)
-
-- [ ] 3일 지난 showtimes 레코드 매일 새벽 3시 자동 삭제
-- [ ] Supabase SQL 에디터에서 아래 순서로 실행:
-
-  ```sql
-  CREATE EXTENSION IF NOT EXISTS pg_cron;
-
-  SELECT cron.schedule(
-    'cleanup-old-showtimes',
-    '0 3 * * *',
-    $$DELETE FROM showtimes WHERE show_date < CURRENT_DATE - INTERVAL '3 days'$$
-  );
-
-  SELECT * FROM cron.job;
-  ```
-
-- [ ] 수동 즉시 실행: `DELETE FROM showtimes WHERE show_date < CURRENT_DATE - INTERVAL '3 days';`
-
----
 
 ## 바로 실행 가능 (스크립트 존재)
 
