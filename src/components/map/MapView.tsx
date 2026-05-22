@@ -688,6 +688,25 @@ function computePosterOffsets(
   }
 
   const clusterBlockers: { centerX: number; rect: Rect }[] = []
+
+  // 단일 극장 이름표 blocker 추가
+  for (const single of singles) {
+    const labelDir = labelDirections.get(single.id) ?? 'top'
+    const labelOff = labelOffsets.get(single.id) ?? { x: 0, y: 0 }
+    const labelW = 140
+    const labelH = LABEL_H
+    const labelGap = 4
+
+    const labelRect: Record<LabelDir, Rect> = {
+      top: [single.px.x - labelW / 2 + labelOff.x, single.px.y - ANCHOR_Y - labelGap - labelH + labelOff.y, single.px.x + labelW / 2 + labelOff.x, single.px.y - ANCHOR_Y - labelGap + labelOff.y],
+      bottom: [single.px.x - labelW / 2 + labelOff.x, single.px.y + DOT / 2 + labelGap + labelOff.y, single.px.x + labelW / 2 + labelOff.x, single.px.y + DOT / 2 + labelGap + labelH + labelOff.y],
+      right: [single.px.x + DOT / 2 + labelGap + labelOff.x, single.px.y - labelH / 2 + labelOff.y, single.px.x + DOT / 2 + labelGap + labelW + labelOff.x, single.px.y + labelH / 2 + labelOff.y],
+      left: [single.px.x - DOT / 2 - labelGap - labelW + labelOff.x, single.px.y - labelH / 2 + labelOff.y, single.px.x - DOT / 2 - labelGap + labelOff.x, single.px.y + labelH / 2 + labelOff.y],
+    }
+    clusterBlockers.push({ centerX: single.px.x, rect: labelRect[labelDir] })
+  }
+
+  // 클러스터 blocker 추가
   for (const c of clusters) {
     if (c.theaters.length <= 1) continue
     const { x: cx, y: cy } = map.latLngToContainerPoint([c.lat, c.lng] as [number, number])
