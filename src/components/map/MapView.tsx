@@ -995,6 +995,9 @@ export default function MapView() {
   }, [isDesktopLayout, selectedId, panelStack.length])
 
   useEffect(() => {
+    // 모바일에서는 포스터 호버 정보 표시 안함
+    if (!isDesktopLayout) return
+
     const handleOver = (e: Event) => {
       const target = e.target as HTMLElement | null
       const wrap = target?.closest('.pm-wrap, .po-wrap') as HTMLElement | null
@@ -1011,7 +1014,7 @@ export default function MapView() {
     if (!container) return
     container.addEventListener('mouseover', handleOver)
     return () => container.removeEventListener('mouseover', handleOver)
-  }, [])  // once after mount — reads isPanelOpenRef dynamically
+  }, [isDesktopLayout])
 
   // 검색 오버레이
   const [searchOpen, setSearchOpen] = useState(false)
