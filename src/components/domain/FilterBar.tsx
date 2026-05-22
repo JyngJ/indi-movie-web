@@ -48,7 +48,7 @@ function buildDateOptions(t = today()) {
     { id: 'tomorrow', label: '내일', sub: fmtFull(addDays(t, 1)) },
     { id: 'this-weekend', label: '이번 주말', sub: `${fmtShortDow(sat0)} - ${fmtShortDow(sun0)}` },
     { id: 'next-weekend', label: '다음 주말', sub: `${fmtShortDow(sat1)} - ${fmtShortDow(sun1)}` },
-    { id: 'this-week', label: '이번 주', sub: `${fmtMD(t)} - ${fmtMD(weekEnd)}` },
+    { id: 'this-week', label: '일주일간', sub: `${fmtMD(t)} - ${fmtMD(addDays(t, 6))}` },
     { id: 'this-month', label: '이번 달', sub: `${t.getMonth() + 1}월 전체` },
   ] as const
 }

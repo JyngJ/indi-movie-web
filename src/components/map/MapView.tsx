@@ -74,11 +74,8 @@ function dateRangeForFilter(filter: FilterState) {
     case null:
       return { start: today, end: addDays(today, 30) }
     case 'this-week':
-    default: {
-      const dow = today.getDay()
-      const weekEnd = dow === 0 ? addDays(today, 6) : addDays(today, 7 - dow)
-      return { start: today, end: weekEnd }
-    }
+    default:
+      return { start: today, end: addDays(today, 6) }
   }
 }
 
