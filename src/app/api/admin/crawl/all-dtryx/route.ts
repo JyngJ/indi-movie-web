@@ -1,7 +1,7 @@
 import type { CrawlRun } from '@/types/admin'
 import { adminAuthErrorResponse, requireAdminSessionUser } from '@/lib/admin/auth'
 import { crawlAllDtryxSources } from '@/lib/admin/crawler'
-import { listAdminSources, saveCrawlRun } from '@/lib/admin/store'
+import { autoMatchShowtimeCandidates, listAdminSources, saveCrawlRun } from '@/lib/admin/store'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,6 +45,17 @@ export async function POST(request: Request) {
         return run
       }),
     )
+
+    const candidateIds = runs.flatMap((run) => run.candidates.map((candidate) => candidate.id))
+    if (candidateIds.length > 0) {
+      const matchResult = await autoMatchShowtimeCandidates(candidateIds)
+      const updatedById = new Map(matchResult.updated.map((candidate) => [candidate.id, candidate]))
+
+      runs.forEach((run) => {
+        run.candidates = run.candidates.map((candidate) => updatedById.get(candidate.id) ?? candidate)
+        run.warningCount = run.candidates.reduce((sum, candidate) => sum + candidate.warnings.length, 0)
+      })
+    }
 
     return Response.json({ runs })
   } catch (error) {

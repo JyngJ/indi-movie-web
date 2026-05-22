@@ -178,6 +178,13 @@ interface ShowtimeRow {
   movies?: { title: string } | Array<{ title: string }> | null
 }
 
+interface MovieResolutionResult {
+  movie?: MovieRow
+  reason?: string
+}
+
+type ProviderMovieAliases = Map<string, string>
+
 export async function listAdminSources() {
   const supabase = createSupabaseAdminClient()
   const { data, error } = await supabase
@@ -239,6 +246,39 @@ export async function createAdminSource(input: AdminTheaterSourceInput) {
 
     throw new Error(error.message)
   }
+
+  return sourceFromRow(data as CrawlSourceRow)
+}
+
+export async function updateAdminSource(sourceId: string, input: AdminTheaterSourceInput) {
+  const normalizedSourceId = sourceId.trim()
+  const theaterName = input.theaterName.trim()
+  const listingUrl = input.listingUrl.trim()
+  const homepageUrl = input.homepageUrl.trim() || originFromUrl(listingUrl)
+
+  if (!normalizedSourceId) throw new Error('수정할 크롤링 소스 ID가 필요합니다.')
+  if (!theaterName || !listingUrl) {
+    throw new Error('극장명과 상영시간표 URL은 필수입니다.')
+  }
+
+  const supabase = createSupabaseAdminClient()
+  const { data, error } = await supabase
+    .from('crawl_sources')
+    .update({
+      theater_id: slugify(theaterName),
+      theater_name: theaterName,
+      matched_theater_id: input.matchedTheaterId?.trim() || null,
+      homepage_url: homepageUrl,
+      listing_url: listingUrl,
+      parser: input.parser,
+      cadence: input.cadence,
+      notes: input.notes?.trim() || null,
+    })
+    .eq('id', normalizedSourceId)
+    .select()
+    .single()
+
+  if (error) throw new Error(error.message)
 
   return sourceFromRow(data as CrawlSourceRow)
 }
@@ -639,26 +679,34 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
     { data: candidateRows, error: candidateError },
     { data: theaterRows, error: theaterError },
     { data: movieRows, error: movieError },
+    { data: aliasRows, error: aliasError },
   ] = await Promise.all([
     query,
     supabase.from('theaters').select('id, name'),
-    supabase.from('movies').select('id, title'),
+    supabase.from('movies').select('id, title, original_title, year, kmdb_id, kmdb_movie_seq'),
+    supabase
+      .from('showtime_candidates')
+      .select('raw_text, matched_movie_id')
+      .not('matched_movie_id', 'is', null),
   ])
 
   if (candidateError) throw new Error(candidateError.message)
   if (theaterError) throw new Error(theaterError.message)
   if (movieError) throw new Error(movieError.message)
+  if (aliasError) throw new Error(aliasError.message)
 
   const candidates = ((candidateRows ?? []) as CandidateRow[]).map(candidateFromRow)
   const theaters = (theaterRows ?? []) as TheaterRow[]
   const movies = (movieRows ?? []) as MovieRow[]
   const updated: CrawledShowtimeCandidate[] = []
+  const movieResolutionCache = new Map<string, MovieResolutionResult>()
+  const providerMovieAliases = buildProviderMovieAliases((aliasRows ?? []) as Pick<CandidateRow, 'raw_text' | 'matched_movie_id'>[])
   let matched = 0
   let needsReview = 0
 
   for (const candidate of candidates) {
     const theater = resolveTheater(candidate, theaters)
-    const movieResult = await resolveMovieForApproval(candidate, movies)
+    const movieResult = await resolveMovieForApproval(candidate, movies, movieResolutionCache, providerMovieAliases)
     const movie = movieResult.movie
     const warnings = mergeWarnings(candidate.warnings, [
       theater ? undefined : `자동 극장 매칭 실패: ${candidate.theaterName}`,
@@ -681,6 +729,7 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
 
     if (theater && movie) matched += 1
     else needsReview += 1
+    rememberProviderMovieAlias(candidate, movie, providerMovieAliases)
 
     updated.push(candidateFromRow(data as CandidateRow))
   }
@@ -831,20 +880,31 @@ export async function approveShowtimeCandidates(
     failed: missingIds.map((candidateId) => ({ candidateId, reason: '후보 레코드를 찾을 수 없습니다.' })),
   }
 
-  const [{ data: theaterRows, error: theaterError }, { data: movieRows, error: movieError }] = await Promise.all([
+  const [
+    { data: theaterRows, error: theaterError },
+    { data: movieRows, error: movieError },
+    { data: aliasRows, error: aliasError },
+  ] = await Promise.all([
     supabase.from('theaters').select('id, name'),
-    supabase.from('movies').select('id, title, kmdb_id, kmdb_movie_seq'),
+    supabase.from('movies').select('id, title, original_title, year, kmdb_id, kmdb_movie_seq'),
+    supabase
+      .from('showtime_candidates')
+      .select('raw_text, matched_movie_id')
+      .not('matched_movie_id', 'is', null),
   ])
 
   if (theaterError) throw new Error(theaterError.message)
   if (movieError) throw new Error(movieError.message)
+  if (aliasError) throw new Error(aliasError.message)
 
   const theaters = (theaterRows ?? []) as TheaterRow[]
   const movies = (movieRows ?? []) as MovieRow[]
+  const movieResolutionCache = new Map<string, MovieResolutionResult>()
+  const providerMovieAliases = buildProviderMovieAliases((aliasRows ?? []) as Pick<CandidateRow, 'raw_text' | 'matched_movie_id'>[])
 
   for (const candidate of candidates) {
     const theater = resolveTheater(candidate, theaters)
-    const movieResult = await resolveMovieForApproval(candidate, movies)
+    const movieResult = await resolveMovieForApproval(candidate, movies, movieResolutionCache, providerMovieAliases)
     const movie = movieResult.movie
 
     if (!theater || !movie) {
@@ -900,6 +960,7 @@ export async function approveShowtimeCandidates(
       candidateId: candidate.id,
       showtimeId: (upserted as { id?: string } | null)?.id,
     })
+    rememberProviderMovieAlias(candidate, movie, providerMovieAliases)
   }
 
   return result
@@ -1160,11 +1221,14 @@ function resolveTheater(candidate: CrawledShowtimeCandidate, theaters: TheaterRo
   return theaters.find((theater) => normalizeMatchText(theater.name) === normalizedName)
 }
 
-function resolveMovie(candidate: CrawledShowtimeCandidate, movies: MovieRow[]) {
+function resolveMovie(candidate: CrawledShowtimeCandidate, movies: MovieRow[], providerMovieAliases?: ProviderMovieAliases) {
   if (candidate.matchedMovieId) {
     const matched = movies.find((movie) => movie.id === candidate.matchedMovieId)
     if (matched) return matched
   }
+
+  const providerMovieId = resolveProviderMovieAlias(candidate, movies, providerMovieAliases)
+  if (providerMovieId) return providerMovieId
 
   for (const title of candidateMovieTitleCandidates(candidate.movieTitle)) {
     const movie = resolveMovieByTitle(title, movies)
@@ -1173,8 +1237,13 @@ function resolveMovie(candidate: CrawledShowtimeCandidate, movies: MovieRow[]) {
   return null
 }
 
-async function resolveMovieForApproval(candidate: CrawledShowtimeCandidate, movies: MovieRow[]) {
-  const localMovie = resolveMovie(candidate, movies)
+async function resolveMovieForApproval(
+  candidate: CrawledShowtimeCandidate,
+  movies: MovieRow[],
+  cache?: Map<string, MovieResolutionResult>,
+  providerMovieAliases?: ProviderMovieAliases,
+): Promise<MovieResolutionResult> {
+  const localMovie = resolveMovie(candidate, movies, providerMovieAliases)
   if (localMovie) return { movie: localMovie }
 
   const titles = candidateMovieTitleCandidates(candidate.movieTitle)
@@ -1182,6 +1251,10 @@ async function resolveMovieForApproval(candidate: CrawledShowtimeCandidate, movi
     const localByCleanTitle = resolveMovieByTitle(title, movies)
     if (localByCleanTitle) return { movie: localByCleanTitle }
   }
+
+  const cacheKey = movieResolutionCacheKey(titles)
+  const cached = cache?.get(cacheKey)
+  if (cached) return cached
 
   try {
     for (const title of titles) {
@@ -1197,16 +1270,23 @@ async function resolveMovieForApproval(candidate: CrawledShowtimeCandidate, movi
         kmdb_movie_seq: externalMovie.movieSeq,
       }
       movies.push(movie)
-      return { movie }
+      const result = { movie }
+      cache?.set(cacheKey, result)
+      rememberProviderMovieAlias(candidate, movie, providerMovieAliases)
+      return result
     }
   } catch (error) {
-    return {
+    const result = {
       movie: undefined,
       reason: `KMDB 자동 매칭 실패: ${candidate.movieTitle} (${error instanceof Error ? error.message : '알 수 없는 오류'})`,
     }
+    cache?.set(cacheKey, result)
+    return result
   }
 
-  return { movie: undefined, reason: `영화 매칭 실패: ${candidate.movieTitle}` }
+  const result = { movie: undefined, reason: `영화 매칭 실패: ${candidate.movieTitle}` }
+  cache?.set(cacheKey, result)
+  return result
 }
 
 function resolveMovieByTitle(title: string, movies: MovieRow[]) {
@@ -1214,11 +1294,64 @@ function resolveMovieByTitle(title: string, movies: MovieRow[]) {
   if (exact) return exact
 
   const normalizedTitle = normalizeMatchText(title)
-  return movies.find((movie) => normalizeMatchText(movie.title) === normalizedTitle)
+  const looseTitle = normalizeLooseMovieTitle(title)
+
+  return movies.find((movie) =>
+    normalizeMatchText(movie.title) === normalizedTitle ||
+    (movie.original_title ? normalizeMatchText(movie.original_title) === normalizedTitle : false) ||
+    normalizeLooseMovieTitle(movie.title) === looseTitle ||
+    (movie.original_title ? normalizeLooseMovieTitle(movie.original_title) === looseTitle : false),
+  )
+}
+
+function buildProviderMovieAliases(rows: Array<Pick<CandidateRow, 'raw_text' | 'matched_movie_id'>>) {
+  const aliases: ProviderMovieAliases = new Map()
+
+  for (const row of rows) {
+    if (!row.matched_movie_id) continue
+    const key = extractProviderMovieKey(row.raw_text)
+    if (key) aliases.set(key, row.matched_movie_id)
+  }
+
+  return aliases
+}
+
+function resolveProviderMovieAlias(
+  candidate: CrawledShowtimeCandidate,
+  movies: MovieRow[],
+  aliases?: ProviderMovieAliases,
+) {
+  const key = extractProviderMovieKey(candidate.rawText)
+  const movieId = key ? aliases?.get(key) : undefined
+  return movieId ? movies.find((movie) => movie.id === movieId) : undefined
+}
+
+function rememberProviderMovieAlias(
+  candidate: CrawledShowtimeCandidate,
+  movie: MovieRow | undefined,
+  aliases?: ProviderMovieAliases,
+) {
+  if (!movie?.id || !aliases) return
+  const key = extractProviderMovieKey(candidate.rawText)
+  if (key) aliases.set(key, movie.id)
+}
+
+function extractProviderMovieKey(rawText: string) {
+  try {
+    const raw = JSON.parse(rawText) as {
+      MovieCd?: unknown
+      M_ID?: unknown
+    }
+    if (raw.MovieCd) return `dtryx:${String(raw.MovieCd)}`
+    if (raw.M_ID) return `moviee:${String(raw.M_ID)}`
+  } catch {
+    return undefined
+  }
 }
 
 function candidateMovieTitleCandidates(title: string) {
   const base = title.trim()
+  const decoratedBase = stripMovieTitleDecorations(base)
 
   // "영화 + 시네토크" / "영화 + GV" → + 앞부분만
   const beforePlus = base.split(/\s*\+\s*/)[0].trim()
@@ -1232,17 +1365,28 @@ function candidateMovieTitleCandidates(title: string) {
   const withoutYear = base.replace(/\s*\(\d{4}\)\s*$/, '').trim()
   // "영화제목_기획전명" → "영화제목"  (_ 이후 제거)
   const beforeUnderscore = base.split('_')[0].trim()
+  const beforeDashEvent = base.replace(/\s*[-–—]\s*(?:GV|시네토크|씨네토크|관객과의\s*대화|무대인사|해설|강연).*$/i, '').trim()
+  const knownProgramTitle = stripKnownProgramPrefix(decoratedBase)
+  const slashParts = base.split(/\s*\/\s*/).map(s => s.trim()).filter(Boolean)
 
   const variants = [
     base,
+    decoratedBase !== base ? decoratedBase : undefined,
     // + 앞부분 (시네토크, GV 등 부가 행사 제거)
     beforePlus !== base ? beforePlus : undefined,
+    beforePlus !== base ? stripMovieTitleDecorations(beforePlus) : undefined,
     // with 앞부분
     beforeWith !== base ? beforeWith : undefined,
+    beforeWith !== base ? stripMovieTitleDecorations(beforeWith) : undefined,
     // 연도 괄호 제거
     withoutYear !== base ? withoutYear : undefined,
     // _ 이후 제거
     beforeUnderscore !== base ? beforeUnderscore : undefined,
+    beforeUnderscore !== base ? stripMovieTitleDecorations(beforeUnderscore) : undefined,
+    // 행사 설명 제거
+    beforeDashEvent !== base ? stripMovieTitleDecorations(beforeDashEvent) : undefined,
+    // 알려진 프로그램 접두어 제거
+    knownProgramTitle !== decoratedBase ? knownProgramTitle : undefined,
     // 날짜 패턴 제거 (05/15, 5월 15일)
     base.replace(/\s+(?:\d{1,2}[./-]\d{1,2})(?:\s.*)?$/, '').trim(),
     base.replace(/\s+(?:\d{1,2}월\s*\d{1,2}일)(?:\s.*)?$/, '').trim(),
@@ -1250,24 +1394,48 @@ function candidateMovieTitleCandidates(title: string) {
     base.replace(/\s+(?:\d+,\s*\d+부|\d+부|상편|하편|[상하])\s*$/, '').trim(),
     base.replace(/,?\s*\d+[,\s]*\d*부?\s*$/, '').trim(),
     // 더블 피처: + 앞/뒤 각 영화 제목
-    ...(plusParts.length > 1 ? plusParts : []),
+    ...(plusParts.length > 1 ? plusParts.flatMap((part) => [part, stripMovieTitleDecorations(part)]) : []),
+    // 단편 묶음: 각 작품 제목도 후보로 둔다.
+    ...(slashParts.length > 1 && slashParts.length <= 5 ? slashParts.flatMap((part) => [part, stripMovieTitleDecorations(part)]) : []),
   ]
   return Array.from(new Set(variants.filter((v): v is string => Boolean(v))))
 }
 
 function pickExactExternalMovie(title: string, movies: AdminExternalMovie[]) {
   const normalizedTitle = normalizeMatchText(title)
+  const looseTitle = normalizeLooseMovieTitle(title)
   // 1순위: 정규화 exact match
   const exact = movies.find((movie) =>
     normalizeMatchText(movie.title) === normalizedTitle ||
-    (movie.originalTitle ? normalizeMatchText(movie.originalTitle) === normalizedTitle : false),
+    (movie.originalTitle ? normalizeMatchText(movie.originalTitle) === normalizedTitle : false) ||
+    normalizeLooseMovieTitle(movie.title) === looseTitle ||
+    (movie.originalTitle ? normalizeLooseMovieTitle(movie.originalTitle) === looseTitle : false),
   )
   if (exact) return exact
-  // 2순위: KMDB 제목이 검색어를 포함하거나, 검색어가 KMDB 제목을 포함 (부분 일치)
+
+  // 2순위: 띄어쓰기/조사 차이 정도의 근접 제목만 허용한다.
+  const fuzzy = movies.find((movie) => {
+    const candidates = [movie.title, movie.originalTitle].filter((value): value is string => Boolean(value))
+    return candidates.some((candidate) => {
+      const current = normalizeLooseMovieTitle(candidate)
+      return current.length >= 6 && looseTitle.length >= 6 && titleSimilarity(current, looseTitle) >= 0.88
+    })
+  })
+  if (fuzzy) return fuzzy
+
+  // 3순위: 충분히 긴 검색어에 한해 부분 일치. 짧은 제목은 오매칭 위험이 커서 제외한다.
+  if (normalizedTitle.length < 5) return undefined
   return movies.find((movie) => {
     const t = normalizeMatchText(movie.title)
-    return t.includes(normalizedTitle) || normalizedTitle.includes(t)
+    const original = movie.originalTitle ? normalizeMatchText(movie.originalTitle) : ''
+    return t.includes(normalizedTitle) ||
+      normalizedTitle.includes(t) ||
+      (original.length >= 5 && (original.includes(normalizedTitle) || normalizedTitle.includes(original)))
   })
+}
+
+function movieResolutionCacheKey(titles: string[]) {
+  return titles.map(normalizeLooseMovieTitle).filter(Boolean).join('|')
 }
 
 function showtimeRowFromCandidate(
@@ -1300,13 +1468,72 @@ function normalizeMatchText(value: string) {
     .replace(/[\s"'‘’“”()[\]{}:;,.!?·ㆍ・_-]+/g, '')
 }
 
+function normalizeLooseMovieTitle(value: string) {
+  return normalizeMatchText(value)
+    .replace(/까지의/g, '까지')
+    .replace(/부터의/g, '부터')
+}
+
+function stripMovieTitleDecorations(value: string) {
+  let next = value
+    .trim()
+    .replace(/^\[[^\]]+\]\s*/, '')
+    .replace(/\s*\+\s*(?:시네토크|씨네토크|GV|관객과의\s*대화|무대인사|해설|강연).*/i, '')
+    .replace(/\s+with\s+(?:Q&A|GV|시네토크|씨네토크|관객과의\s*대화).*/i, '')
+
+  for (let index = 0; index < 4; index++) {
+    const stripped = next
+      .replace(/\s*\((?:2D|3D|4D|영문자막|한글자막|자막|더빙|굿즈패키지|GV|시네토크|씨네토크|관객과의\s*대화|무대인사|해설|강연|CT|SIAFF|공연)(?:\s*[-/·,]\s*(?:2D|3D|4D|영문자막|한글자막|자막|더빙|굿즈패키지|GV|시네토크|씨네토크|관객과의\s*대화|무대인사|해설|강연|CT|SIAFF|공연))*\)\s*$/i, '')
+      .trim()
+    if (stripped === next) break
+    next = stripped
+  }
+
+  return next
+}
+
+function stripKnownProgramPrefix(value: string) {
+  return value
+    .replace(/^(?:다양한\s*시선|지역영화상영회|메이드\s*인\s*광주|넥스트\s*웨이브|한국\s*단편\s*쇼케이스\s*\d*|수요단편극장)\s*[:：]\s*/i, '')
+    .trim()
+}
+
+function titleSimilarity(a: string, b: string) {
+  if (a === b) return 1
+  const distance = levenshteinDistance(a, b)
+  return 1 - distance / Math.max(a.length, b.length)
+}
+
+function levenshteinDistance(a: string, b: string) {
+  const previous = Array.from({ length: b.length + 1 }, (_, index) => index)
+
+  for (let i = 0; i < a.length; i++) {
+    let northwest = previous[0]
+    previous[0] = i + 1
+
+    for (let j = 0; j < b.length; j++) {
+      const deletion = previous[j + 1] + 1
+      const insertion = previous[j] + 1
+      const substitution = northwest + (a[i] === b[j] ? 0 : 1)
+      northwest = previous[j + 1]
+      previous[j + 1] = Math.min(deletion, insertion, substitution)
+    }
+  }
+
+  return previous[b.length]
+}
+
 function isMissingUpdatedAtTriggerError(message: string) {
   return message.includes('record "new" has no field "updated_at"')
 }
 
 function mergeWarnings(current: string[], next: Array<string | undefined>) {
   const filteredCurrent = current.filter(
-    (warning) => !warning.startsWith('자동 극장 매칭 실패:') && !warning.startsWith('자동 영화 매칭 실패:'),
+    (warning) =>
+      !warning.startsWith('자동 극장 매칭 실패:') &&
+      !warning.startsWith('자동 영화 매칭 실패:') &&
+      !warning.startsWith('영화 매칭 실패:') &&
+      !warning.startsWith('KMDB 자동 매칭 실패:'),
   )
 
   return Array.from(new Set([...filteredCurrent, ...next.filter((warning): warning is string => Boolean(warning))]))
