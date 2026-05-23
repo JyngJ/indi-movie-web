@@ -998,13 +998,42 @@ export function AdminShowtimeConsole() {
           <div className={styles.sourceList}>
             {groupByCity(
               payload.sources.map((s) => {
-                // matchedTheaterId로 먼저 찾기, 없으면 theaterId로 찾기
+                // 1. matchedTheaterId로 찾기
                 const matched = adminTheaters.find((t) => t.id === s.matchedTheaterId)
+                if (matched?.city) return { ...s, city: matched.city }
+
+                // 2. theaterId로 찾기
                 const original = adminTheaters.find((t) => t.id === s.theaterId)
-                const city = matched?.city || original?.city || s.theaterName.split(/[,\s]+/).find(w =>
+                if (original?.city) return { ...s, city: original.city }
+
+                // 3. 극장명에서 시군구 추출 후 theaters에서 검색
+                const cityKeywords = ['서울', '부산', '대구', '인천', '광주', '대전', '울산', '세종',
+                  '수원', '용인', '성남', '고양', '파주', '이천', '안산', '화성', '여주', '이천', '평택',
+                  '의정부', '남양주', '광주', '군포', '시흥', '오산', '양주', '동두천', '구리', '하남',
+                  '춘천', '원주', '강릉', '동해', '태백', '속초', '삼척', '제천', '평창', '정선',
+                  '청주', '충주', '제천', '옥천', '영동', '증평', '진천', '괴산',
+                  '천안', '공주', '아산', '당진', '금산', '논산', '계룡', '보령', '서산', '태안', '홍성',
+                  '전주', '익산', '정읍', '남원', '김제', '완주', '진안', '무주', '장수', '임실', '순창',
+                  '광주', '나주', '여수', '순천', '목포', '해남', '강진', '영암', '무안', '함평', '영광',
+                  '신안', '화순', '보성', '고흥', '장흥',
+                  '포항', '경주', '김천', '안동', '구미', '영천', '영주', '상주', '문경', '예천',
+                  '봉화', '울진', '청송',
+                  '부산', '양산', '진해', '울주', '거제', '통영', '사천', '고성', '남해', '하동',
+                  '진주', '통영', '사천', '거창', '함양', '산청',
+                  '제주', '서귀포'
+                ]
+                const extractedCity = s.theaterName.split(/[,\s]+/).find(w => cityKeywords.includes(w))
+                if (extractedCity) {
+                  const foundTheater = adminTheaters.find(t => t.name?.includes(extractedCity))
+                  if (foundTheater?.city) return { ...s, city: foundTheater.city }
+                }
+
+                // 4. 광역도명으로 직접 찾기
+                const provinceMatch = s.theaterName.split(/[,\s]+/).find(w =>
                   ['서울', '부산', '대구', '인천', '광주', '대전', '울산', '경기', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주', '세종'].includes(w)
-                ) || '미지정'
-                return { ...s, city }
+                )
+
+                return { ...s, city: provinceMatch || '미지정' }
               })
             ).map(([city, sources]) => (
               <details key={city} className={styles.theaterGroup}>
