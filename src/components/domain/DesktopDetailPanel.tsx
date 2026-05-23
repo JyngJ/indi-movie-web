@@ -233,7 +233,9 @@ function MoviePanel({
               flex: 1, height: 42, border: 'none', background: 'none', cursor: 'pointer',
               fontSize: 13, fontWeight: tab === t ? 600 : 400,
               color: tab === t ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
-              borderBottom: tab === t ? '2px solid var(--color-primary-base)' : '2px solid transparent',
+              borderBottomWidth: 2,
+              borderBottomStyle: 'solid',
+              borderBottomColor: tab === t ? 'var(--color-primary-base)' : 'transparent',
             }}
           >
             {t === 'info' ? '영화 정보' : '상영 영화관'}
@@ -494,11 +496,13 @@ function DirectorPanel({
   onClose,
   onBack,
   onMovieOpen,
+  onDirectorFilterOnMap,
 }: {
   directorName: string
   onClose: () => void
   onBack?: () => void
   onMovieOpen: (id: string) => void
+  onDirectorFilterOnMap: (name: string) => void
 }) {
   const [sort, setSort] = useState<'newest' | 'oldest'>('newest')
   const [expanded, setExpanded] = useState(false)
@@ -539,6 +543,26 @@ function DirectorPanel({
         </div>
       </div>
 
+      <div style={{ padding: '16px 20px 0' }}>
+        <button
+          onClick={() => onDirectorFilterOnMap(directorName)}
+          style={{
+            width: '100%', height: 40,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            borderRadius: 10,
+            border: '1px solid var(--color-primary-base)',
+            backgroundColor: 'var(--color-primary-subtle-l)',
+            color: 'var(--color-primary-base)',
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: 'pointer',
+          }}
+        >
+          <IcoMap />
+          지도에서 필터로 보기
+        </button>
+      </div>
+
       {/* 정렬 + 목록 */}
       <div style={{ padding: '16px 20px 32px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -572,8 +596,11 @@ function DirectorPanel({
                 style={{
                   width: '100%', display: 'flex', alignItems: 'center', gap: 12,
                   padding: '12px 14px',
-                  borderBottom: i < visibleMovies.length - 1 ? '1px solid var(--color-border)' : 'none',
-                  border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', minHeight: 'auto',
+                  borderWidth: 0,
+                  borderBottomWidth: i < visibleMovies.length - 1 ? 1 : 0,
+                  borderBottomStyle: 'solid',
+                  borderBottomColor: 'var(--color-border)',
+                  background: 'none', cursor: 'pointer', textAlign: 'left', minHeight: 'auto',
                 }}
               >
                 {movie.posterUrl ? (
@@ -604,7 +631,10 @@ function DirectorPanel({
               style={{
                 width: '100%', height: 38,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                border: 'none', borderTop: '1px solid var(--color-border)',
+                borderWidth: 0,
+                borderTopWidth: 1,
+                borderTopStyle: 'solid',
+                borderTopColor: 'var(--color-border)',
                 backgroundColor: 'var(--color-surface-raised)',
                 color: 'var(--color-text-sub)', fontSize: 12, fontWeight: 500,
                 cursor: 'pointer', borderRadius: '0 0 12px 12px', minHeight: 'auto',
@@ -627,6 +657,7 @@ export function DesktopDetailPanel({
   onBack,
   onNavigate,
   onMovieFilterOnMap,
+  onDirectorFilterOnMap,
   onTheaterOpen,
 }: {
   panel: DesktopPanelState
@@ -634,6 +665,7 @@ export function DesktopDetailPanel({
   onBack?: () => void
   onNavigate: (next: DesktopPanelState) => void
   onMovieFilterOnMap: (id: string, title: string) => void
+  onDirectorFilterOnMap: (name: string) => void
   onTheaterOpen: (movieId: string, theaterId: string, date: string) => void
 }) {
   if (panel.type === 'movie') {
@@ -655,6 +687,7 @@ export function DesktopDetailPanel({
       onClose={onClose}
       onBack={onBack}
       onMovieOpen={(id) => onNavigate({ type: 'movie', id })}
+      onDirectorFilterOnMap={onDirectorFilterOnMap}
     />
   )
 }

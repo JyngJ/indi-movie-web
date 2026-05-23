@@ -503,9 +503,10 @@ interface FilterChipProps {
   onClick: () => void
   onClear?: () => void
   chipRef?: React.Ref<HTMLButtonElement>
+  separator?: string
 }
 
-function FilterChip({ label, value, open, selected, hasDropdown, onClick, onClear, chipRef }: FilterChipProps) {
+function FilterChip({ label, value, open, selected, hasDropdown, onClick, onClear, chipRef, separator = '·' }: FilterChipProps) {
   let bg = 'var(--color-surface-card)'
   let border = '1px solid var(--color-border)'
   let pl = '14px'
@@ -538,7 +539,7 @@ function FilterChip({ label, value, open, selected, hasDropdown, onClick, onClea
           <span style={{ fontSize: 13, fontWeight: 400, color: 'var(--color-text-sub)' }}>
             {label}
           </span>
-          <span style={{ fontSize: 13, color: 'var(--color-text-sub)' }}>&nbsp;·&nbsp;</span>
+          <span style={{ fontSize: 13, color: 'var(--color-text-sub)' }}>&nbsp;{separator}&nbsp;</span>
           <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--filter-chip-value)' }}>
             {value}
           </span>
@@ -583,13 +584,25 @@ export interface FilterBarProps {
   onChange?: (state: FilterState) => void
   nationOptions?: string[]
   movieFilter?: { id: string; title: string } | null
+  directorFilter?: { name: string } | null
   onMovieFilterClear?: () => void
+  onDirectorFilterClear?: () => void
   onMovieChipClick?: () => void
   onDirectorChipClick?: () => void
   desktop?: boolean
 }
 
-export function FilterBar({ onChange, nationOptions = EMPTY_NATION_OPTIONS, movieFilter, onMovieFilterClear, onMovieChipClick, onDirectorChipClick, desktop = false }: FilterBarProps) {
+export function FilterBar({
+  onChange,
+  nationOptions = EMPTY_NATION_OPTIONS,
+  movieFilter,
+  directorFilter,
+  onMovieFilterClear,
+  onDirectorFilterClear,
+  onMovieChipClick,
+  onDirectorChipClick,
+  desktop = false,
+}: FilterBarProps) {
   const [dateId, setDateId] = useState<DateId>('this-week')
   const [customStart, setCustomStart] = useState<Date | null>(null)
   const [customEnd, setCustomEnd] = useState<Date | null>(null)
@@ -841,6 +854,16 @@ export function FilterBar({ onChange, nationOptions = EMPTY_NATION_OPTIONS, movi
             selected
             onClick={() => {}}
             onClear={onMovieFilterClear}
+          />
+        )}
+        {directorFilter && (
+          <FilterChip
+            label="감독"
+            value={directorFilter.name.length > 10 ? directorFilter.name.slice(0, 10) + '…' : directorFilter.name}
+            selected
+            onClick={() => {}}
+            onClear={onDirectorFilterClear}
+            separator="-"
           />
         )}
         <FilterChip
