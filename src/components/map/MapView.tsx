@@ -1731,26 +1731,10 @@ export default function MapView() {
     const dy = isDesktopLayout ? 0 : -150
     const targetPx = map.project(L.latLng(latlng), zoom)
     const newCenter = map.unproject(L.point(targetPx.x - dx, targetPx.y - dy), zoom)
-    console.log('[flyToForTheater]', {
-      latlng,
-      zoom,
-      isDesktopLayout,
-      dx,
-      dy,
-      targetPx: { x: targetPx.x, y: targetPx.y },
-      newCenter: { lat: newCenter.lat, lng: newCenter.lng },
-    })
     map.flyTo(newCenter, zoom, { duration })
   }, [isDesktopLayout])
 
   const focusTheater = useCallback((theater: Theater, source: 'search' | 'direct_link' = 'search') => {
-    console.log('[focusTheater]', {
-      theater_id: theater.id,
-      theater_name: theater.name,
-      lat: theater.lat,
-      lng: theater.lng,
-      source,
-    })
     trackEvent('theater sheet opened', {
       theater_id: theater.id,
       theater_name: theater.name,
@@ -1778,6 +1762,50 @@ export default function MapView() {
     )
   }, [closeSearch, flyToForTheater, isDesktopLayout, movieFilter, searchQuery])
 
+  const openTheaterForMovie = useCallback((
+    theaterId: string,
+    movieId: string,
+    date?: string,
+    source: 'movie_detail' | 'desktop_panel' = 'movie_detail',
+  ) => {
+    const theater = theaters.find((t) => t.id === theaterId)
+    if (!theater) return
+    const movie = movies.find((m) => m.id === movieId)
+
+    suppressMovieFilterFitRef.current = true
+    closeSearch()
+    closeDesktopPanel()
+    if (exitTimerRef.current) clearTimeout(exitTimerRef.current)
+    setSheetExiting(false)
+    setSelectedId(theater.id)
+    setDisplayedId(theater.id)
+    setSelectedMovieId(movieId)
+    setSheetExpanded(true)
+    setFromMovieId(movieId)
+    setInitialSheetDate(date || undefined)
+    if (movie) setMovieFilter({ id: movie.id, title: movie.title })
+
+    trackEvent('theater sheet opened', {
+      theater_id: theater.id,
+      theater_name: theater.name,
+      selected_movie_id: movieId,
+      source,
+      has_movie_filter: true,
+    })
+    classifySessionIntent('type_a', {
+      source,
+      theater_id: theater.id,
+      selected_movie_id: movieId,
+    })
+
+    const currentZoom = mapRef.current?.getZoom() ?? 15
+    flyToForTheater(
+      [theater.lat, theater.lng],
+      Math.max(currentZoom, 16),
+      0.75,
+    )
+  }, [closeDesktopPanel, closeSearch, flyToForTheater, movies, theaters])
+
   useEffect(() => {
     if (isDesktopLayout && selectedTheater) setSheetExpanded(true)
   }, [isDesktopLayout, selectedTheater])
@@ -1785,58 +1813,59 @@ export default function MapView() {
   // 영화 상세 페이지에서 뒤로가기 시 ?theater= 파라미터로 극장 시트 복원
   const restoredTheaterRef = useRef<string | null>(null)
   useEffect(() => {
-    if (theaters.length === 0 || movies.length === 0) return
+    if (theaters.length === 0) return
     const theaterParam = searchParams.get('theater')
-
-    // 이미 이 극장을 처리했으면 스킵 (중복 처리 방지)
-    if (restoredTheaterRef.current === theaterParam) return
-    if (!theaterParam) { return }
-
+    if (!theaterParam) return
+    const movieParam = searchParams.get('movie') ?? searchParams.get('fromMovie')
+    if (movieParam && movies.length === 0) return
+    const dateParam = searchParams.get('date')
+    const restoreKey = [theaterParam, movieParam ?? '', dateParam ?? ''].join(':')
+    if (restoredTheaterRef.current === restoreKey) return
     const theater = theaters.find((t) => t.id === theaterParam)
     if (!theater) return
-    restoredTheaterRef.current = theaterParam
+
+    restoredTheaterRef.current = restoreKey
     const fromMovie = searchParams.get('fromMovie')
-    const movieParam = searchParams.get('movie')
-    const dateParam = searchParams.get('date')
-
-    // 영화 필터 복원 useEffect 방지
-    restoredMovieRef.current = true
-
-    // 0. 이전 선택 전부 해제
-    setSelectedId(null)
-    setDisplayedId(null)
-
-    // 1. 극장으로 이동 및 시트 펼치기
-    setSelectedId(theater.id)
-    setDisplayedId(theater.id)
-    setSheetExpanded(true)
-
-    // 2. 해당 극장의 해당 영화 선택
     if (movieParam) {
-      setSelectedMovieId(movieParam)
+      openTheaterForMovie(theater.id, movieParam, dateParam ?? undefined, 'movie_detail')
+    } else {
+      suppressMovieFilterFitRef.current = true
+      closeSearch()
+      if (exitTimerRef.current) clearTimeout(exitTimerRef.current)
+      setSheetExiting(false)
+      setSelectedId(theater.id)
+      setDisplayedId(theater.id)
+      setSheetExpanded(true)
+
+      trackEvent('theater sheet opened', {
+        theater_id: theater.id,
+        theater_name: theater.name,
+        source: 'movie_detail',
+        has_movie_filter: false,
+      })
+      classifySessionIntent('type_c', {
+        source: 'movie_detail',
+        theater_id: theater.id,
+      })
+
+      const currentZoom = mapRef.current?.getZoom() ?? 15
+      flyToForTheater(
+        [theater.lat, theater.lng],
+        Math.max(currentZoom, 16),
+        0.75,
+      )
     }
 
+    if (fromMovie || movieParam) setFromMovieId(fromMovie ?? movieParam ?? null)
 
-    if (fromMovie) setFromMovieId(fromMovie)
-    if (dateParam) setInitialSheetDate(dateParam)
-
-    // 4. URL 정리
     const url = new URL(window.location.href)
     url.searchParams.delete('theater')
     url.searchParams.delete('fromMovie')
     url.searchParams.delete('date')
     url.searchParams.delete('movie')
-    url.searchParams.delete('skipMovieFilterFit')
     window.history.replaceState({}, '', url.toString())
 
-    // 5. 극장으로 flyto (focusTheater 로직 인라인화)
-    const currentZoom = mapRef.current?.getZoom() ?? 15
-    flyToForTheater(
-      [theater.lat, theater.lng],
-      Math.max(currentZoom, 16),
-      0.75,
-    )
-  }, [theaters, movies, focusTheater, searchParams])
+  }, [closeSearch, flyToForTheater, movies.length, openTheaterForMovie, searchParams, theaters])
 
 
   // 극장 선택 시 → 첫 번째 영화 선택 + 시트 collapsed로 열기
@@ -3413,8 +3442,10 @@ export default function MapView() {
               })
               classifySessionIntent('type_a', { source: 'desktop_panel', movie_id: id })
               suppressMovieFilterFitRef.current = false
+              setMovieFilter({ id, title })
               closeDesktopPanel()
             }}
+            onTheaterOpen={(movieId, theaterId, date) => openTheaterForMovie(theaterId, movieId, date, 'desktop_panel')}
           />
         </div>
       )}

@@ -124,12 +124,14 @@ function MoviePanel({
   onBack,
   onDirectorOpen,
   onMovieFilterOnMap,
+  onTheaterOpen,
 }: {
   movieId: string
   onClose: () => void
   onBack?: () => void
   onDirectorOpen: (name: string) => void
   onMovieFilterOnMap: (id: string, title: string) => void
+  onTheaterOpen: (theaterId: string, date: string) => void
 }) {
   const [tab, setTab] = useState<'info' | 'theaters'>('info')
   const { data: movie, isLoading } = useMovieDetail(movieId)
@@ -246,6 +248,7 @@ function MoviePanel({
         <MovieTheatersTab
           movieId={movieId}
           onMapClick={() => onMovieFilterOnMap(movie.id, movie.title)}
+          onTheaterOpen={onTheaterOpen}
         />
       )}
     </PanelShell>
@@ -322,7 +325,15 @@ function formatDateLabel(dateStr: string) {
   return `${m}월 ${d}일(${dow})`
 }
 
-function MovieTheatersTab({ movieId, onMapClick }: { movieId: string; onMapClick: () => void }) {
+function MovieTheatersTab({
+  movieId,
+  onMapClick,
+  onTheaterOpen,
+}: {
+  movieId: string
+  onMapClick: () => void
+  onTheaterOpen: (theaterId: string, date: string) => void
+}) {
   const { data: theaters = [], isLoading } = useMovieTheaterShowtimes(movieId)
   const { coords } = useUserLocation()
   const distanceCoords = coords ?? locationAdapter.getDefaultLocation()
@@ -416,7 +427,7 @@ function MovieTheatersTab({ movieId, onMapClick }: { movieId: string; onMapClick
                       theater_name: entry.theaterName,
                       source: 'desktop_panel',
                     })
-                    onMapClick()
+                    onTheaterOpen(entry.theaterId, entry.dateGroups[0]?.date ?? '')
                   }}
                   style={{ flexShrink: 0, alignSelf: 'center', height: 26, padding: '0 10px', borderRadius: 999, border: '1px solid color-mix(in srgb, var(--color-primary-base) 35%, transparent)', backgroundColor: 'var(--color-primary-subtle-l)', color: 'var(--color-primary-base)', fontSize: 11, fontWeight: 700, cursor: 'pointer', minHeight: 'auto' }}
                 >
@@ -448,7 +459,7 @@ function MovieTheatersTab({ movieId, onMapClick }: { movieId: string; onMapClick
                               show_time: st.showTime,
                               source: 'desktop_panel_showtime',
                             })
-                            onMapClick()
+                            onTheaterOpen(entry.theaterId, group.date)
                           }}
                           style={{ padding: '8px 12px', borderRadius: 9, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-raised)', cursor: soldout ? 'default' : 'pointer', opacity: soldout ? 0.5 : 1, textAlign: 'left', minHeight: 'auto' }}
                         >
@@ -616,12 +627,14 @@ export function DesktopDetailPanel({
   onBack,
   onNavigate,
   onMovieFilterOnMap,
+  onTheaterOpen,
 }: {
   panel: DesktopPanelState
   onClose: () => void
   onBack?: () => void
   onNavigate: (next: DesktopPanelState) => void
   onMovieFilterOnMap: (id: string, title: string) => void
+  onTheaterOpen: (movieId: string, theaterId: string, date: string) => void
 }) {
   if (panel.type === 'movie') {
     return (
@@ -631,6 +644,7 @@ export function DesktopDetailPanel({
         onBack={onBack}
         onDirectorOpen={(name) => onNavigate({ type: 'director', name })}
         onMovieFilterOnMap={onMovieFilterOnMap}
+        onTheaterOpen={(theaterId, date) => onTheaterOpen(panel.id, theaterId, date)}
       />
     )
   }
