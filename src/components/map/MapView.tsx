@@ -1485,6 +1485,17 @@ export default function MapView() {
   const defaultCenter: [number, number] = [37.5665, 126.978]
   const selectedTheater = theaters.find((t) => t.id === (displayedId ?? selectedId)) ?? null
 
+  const clearTheaterSelection = useCallback(() => {
+    if (exitTimerRef.current) clearTimeout(exitTimerRef.current)
+    setSelectedId(null)
+    setDisplayedId(null)
+    setSelectedMovieId('')
+    setSheetExpanded(false)
+    setSheetExiting(false)
+    setFromMovieId(null)
+    setInitialSheetDate(undefined)
+  }, [])
+
   /* ── 클러스터 & 오프셋 ── */
   const [clusters, setClusters] = useState<TheaterCluster[]>([])
   const [posterOffsets, setPosterOffsets] = useState<Map<string, number>>(new Map())
@@ -1866,6 +1877,26 @@ export default function MapView() {
     window.history.replaceState({}, '', url.toString())
 
   }, [closeSearch, flyToForTheater, movies.length, openTheaterForMovie, searchParams, theaters])
+
+  // 영화 상세 / 패널에서 ?movie= 파라미터로 지도 필터만 복원
+  const restoredMovieFilterRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (searchParams.has('theater')) return
+    const movieParam = searchParams.get('movie')
+    if (!movieParam || movies.length === 0) return
+    if (restoredMovieFilterRef.current === movieParam) return
+    const movie = movies.find((m) => m.id === movieParam)
+    if (!movie) return
+
+    restoredMovieFilterRef.current = movieParam
+    suppressMovieFilterFitRef.current = false
+    clearTheaterSelection()
+    setMovieFilter({ id: movie.id, title: movie.title })
+
+    const url = new URL(window.location.href)
+    url.searchParams.delete('movie')
+    window.history.replaceState({}, '', url.toString())
+  }, [clearTheaterSelection, movies, searchParams])
 
 
   // 극장 선택 시 → 첫 번째 영화 선택 + 시트 collapsed로 열기
@@ -3442,6 +3473,7 @@ export default function MapView() {
               })
               classifySessionIntent('type_a', { source: 'desktop_panel', movie_id: id })
               suppressMovieFilterFitRef.current = false
+              clearTheaterSelection()
               setMovieFilter({ id, title })
               closeDesktopPanel()
             }}
