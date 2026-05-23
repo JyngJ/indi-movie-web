@@ -998,8 +998,13 @@ export function AdminShowtimeConsole() {
           <div className={styles.sourceList}>
             {groupByCity(
               payload.sources.map((s) => {
+                // matchedTheaterId로 먼저 찾기, 없으면 theaterId로 찾기
                 const matched = adminTheaters.find((t) => t.id === s.matchedTheaterId)
-                return { ...s, city: matched?.city || '미지정' }
+                const original = adminTheaters.find((t) => t.id === s.theaterId)
+                const city = matched?.city || original?.city || s.theaterName.split(/[,\s]+/).find(w =>
+                  ['서울', '부산', '대구', '인천', '광주', '대전', '울산', '경기', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주', '세종'].includes(w)
+                ) || '미지정'
+                return { ...s, city }
               })
             ).map(([city, sources]) => (
               <details key={city} className={styles.theaterGroup}>
