@@ -4,6 +4,9 @@ import { useState, useMemo, useEffect } from 'react'
 import { useMovieDetail, useMovieTheaterShowtimes, useMovies, useActiveMovieIds } from '@/lib/supabase/queries'
 import { withFlagsRaw } from '@/lib/nations'
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
+import { useUserLocation } from '@/hooks/useUserLocation'
+import { locationAdapter } from '@/lib/adapters/location'
+import { calculateAndFormatDistance, calculateDistanceKm } from '@/lib/map/distanceUtils'
 
 export type DesktopPanelState =
   | { type: 'movie'; id: string }
@@ -321,6 +324,19 @@ function formatDateLabel(dateStr: string) {
 
 function MovieTheatersTab({ movieId, onMapClick }: { movieId: string; onMapClick: () => void }) {
   const { data: theaters = [], isLoading } = useMovieTheaterShowtimes(movieId)
+  const { coords } = useUserLocation()
+  const distanceCoords = coords ?? locationAdapter.getDefaultLocation()
+  const sortedTheaters = useMemo(() => {
+    return [...theaters].sort((a, b) => {
+      const aDistance = calculateDistanceKm(distanceCoords.lat, distanceCoords.lng, a.theaterLat, a.theaterLng)
+      const bDistance = calculateDistanceKm(distanceCoords.lat, distanceCoords.lng, b.theaterLat, b.theaterLng)
+      if (aDistance == null && bDistance == null) return a.theaterName.localeCompare(b.theaterName, 'ko')
+      if (aDistance == null) return 1
+      if (bDistance == null) return -1
+      return aDistance - bDistance
+    })
+  }, [distanceCoords.lat, distanceCoords.lng, theaters])
+
   return (
     <div style={{ padding: '20px 20px 32px' }}>
       <button
@@ -351,7 +367,7 @@ function MovieTheatersTab({ movieId, onMapClick }: { movieId: string; onMapClick
         <div style={{ textAlign: 'center', paddingTop: 32, fontSize: 13, color: 'var(--color-text-caption)' }}>상영 중인 영화관이 없습니다</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {theaters.map((entry) => (
+          {sortedTheaters.map((entry) => (
             <div key={entry.theaterId} style={{ borderRadius: 12, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', overflow: 'hidden' }}>
               {/* 극장 헤더 */}
               <div style={{ padding: '12px 14px 10px', display: 'flex', alignItems: 'flex-start' }}>
@@ -361,6 +377,37 @@ function MovieTheatersTab({ movieId, onMapClick }: { movieId: string; onMapClick
                     <IcoPin />{entry.theaterAddress}
                   </div>
                 </div>
+                {(() => {
+                  const distance = calculateAndFormatDistance(
+                    distanceCoords.lat,
+                    distanceCoords.lng,
+                    entry.theaterLat,
+                    entry.theaterLng,
+                  )
+                  return distance ? (
+                    <span style={{
+                      flexShrink: 0,
+                      alignSelf: 'center',
+                      minWidth: 54,
+                      height: 24,
+                      padding: '0 8px',
+                      marginRight: 8,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'flex-start',
+                      borderRadius: 999,
+                      border: '1px solid var(--color-border)',
+                      backgroundColor: 'var(--color-surface-raised)',
+                      color: 'var(--color-text-body)',
+                      fontSize: 11,
+                      fontWeight: 500,
+                      fontFeatureSettings: '"tnum"',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {distance}
+                    </span>
+                  ) : null
+                })()}
                 <button
                   onClick={() => {
                     trackEvent('movie theater selected', {
@@ -371,7 +418,7 @@ function MovieTheatersTab({ movieId, onMapClick }: { movieId: string; onMapClick
                     })
                     onMapClick()
                   }}
-                  style={{ flexShrink: 0, alignSelf: 'center', height: 26, padding: '0 10px', borderRadius: 999, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-raised)', color: 'var(--color-text-body)', fontSize: 11, fontWeight: 500, cursor: 'pointer', minHeight: 'auto' }}
+                  style={{ flexShrink: 0, alignSelf: 'center', height: 26, padding: '0 10px', borderRadius: 999, border: '1px solid color-mix(in srgb, var(--color-primary-base) 35%, transparent)', backgroundColor: 'var(--color-primary-subtle-l)', color: 'var(--color-primary-base)', fontSize: 11, fontWeight: 700, cursor: 'pointer', minHeight: 'auto' }}
                 >
                   영화관 보기
                 </button>

@@ -546,6 +546,8 @@ export interface MovieTheaterEntry {
   theaterId: string
   theaterName: string
   theaterAddress: string
+  theaterLat: number | null
+  theaterLng: number | null
   dateGroups: MovieTheaterDateGroup[]
 }
 
@@ -557,7 +559,7 @@ export function useMovieTheaterShowtimes(movieId: string | null) {
   const untilDate = formatLocalDate(until)
 
   return useQuery<MovieTheaterEntry[]>({
-    queryKey: ['movie-theater-showtimes', movieId, today],
+    queryKey: ['movie-theater-showtimes', movieId, today, 'with-theater-coords'],
     enabled: !!movieId,
     queryFn: async () => {
       const { data, error } = await supabase()
@@ -575,7 +577,9 @@ export function useMovieTheaterShowtimes(movieId: string | null) {
           theaters (
             id,
             name,
-            address
+            address,
+            lat,
+            lng
           )
         `)
         .eq('movie_id', movieId!)
@@ -589,13 +593,21 @@ export function useMovieTheaterShowtimes(movieId: string | null) {
       if (error) throw error
 
       // 극장별로 모으고, 극장 내에서 날짜별로 그룹핑
-      const theaterMap = new Map<string, { name: string; address: string; byDate: Map<string, Showtime[]> }>()
+      const theaterMap = new Map<string, { name: string; address: string; lat: number | null; lng: number | null; byDate: Map<string, Showtime[]> }>()
       for (const r of data ?? []) {
-        const th = r.theaters as unknown as { id: string; name: string; address: string } | null
+        const th = r.theaters as unknown as { id: string; name: string; address: string; lat: number | string | null; lng: number | string | null } | null
         if (!th) continue
 
         if (!theaterMap.has(th.id)) {
-          theaterMap.set(th.id, { name: th.name, address: th.address, byDate: new Map() })
+          const lat = th.lat == null ? null : Number(th.lat)
+          const lng = th.lng == null ? null : Number(th.lng)
+          theaterMap.set(th.id, {
+            name: th.name,
+            address: th.address,
+            lat: lat != null && Number.isFinite(lat) ? lat : null,
+            lng: lng != null && Number.isFinite(lng) ? lng : null,
+            byDate: new Map(),
+          })
         }
         const entry = theaterMap.get(th.id)!
         if (!entry.byDate.has(r.show_date)) entry.byDate.set(r.show_date, [])
@@ -617,10 +629,12 @@ export function useMovieTheaterShowtimes(movieId: string | null) {
         })
       }
 
-      return Array.from(theaterMap.entries()).map(([theaterId, { name, address, byDate }]) => ({
+      return Array.from(theaterMap.entries()).map(([theaterId, { name, address, lat, lng, byDate }]) => ({
         theaterId,
         theaterName: name,
         theaterAddress: address,
+        theaterLat: lat,
+        theaterLng: lng,
         dateGroups: Array.from(byDate.entries())
           .sort(([a], [b]) => a.localeCompare(b))
           .map(([date, showtimes]) => ({ date, showtimes })),

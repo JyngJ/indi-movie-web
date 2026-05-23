@@ -28,6 +28,7 @@ import {
 import { finiteNumber, formatDateParam, startOfLocalDay, addDays, endOfMonth, loadRecentSearches, addToRecent, removeFromRecent } from '@/lib/map/searchUtils'
 import { stationSearchScore, movieSearchScore, directorSearchScore, theaterSearchScore, areaSearchScore } from '@/lib/map/searchScoring'
 import { posterCountForZoom, posterSizeForZoom, posterSlotsForZoom } from '@/lib/map/posterLogic'
+import { calculateAndFormatDistance } from '@/lib/map/distanceUtils'
 import type { TheaterPosterMovie } from '@/lib/map/posterLogic'
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { PosterGrid } from './PosterGrid'
@@ -995,6 +996,7 @@ export default function MapView() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [fromMovieId, setFromMovieId] = useState<string | null>(null)
   const [initialSheetDate, setInitialSheetDate] = useState<string | undefined>(undefined)
+  const suppressMovieFilterFitRef = useRef(false)
   const [zoom, setZoom] = useState(14)
   const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null)
   const [subwayLayerReady, setSubwayLayerReady] = useState(false)
@@ -1569,6 +1571,8 @@ export default function MapView() {
   useEffect(() => {
     const isSearchFilter = !!movieFilter || filters.genres.length > 0 || filters.nations.length > 0
     if (!isSearchFilter) return
+    if (suppressMovieFilterFitRef.current && movieFilter) return
+    if (selectedId) return
     const map = mapRef.current
     if (!map) return
     const matchedTheaters = theaters.filter(t => {
@@ -1583,7 +1587,7 @@ export default function MapView() {
     const bounds = L.latLngBounds(matchedTheaters.map(t => [t.lat, t.lng] as [number, number]))
     map.flyToBounds(bounds, { padding: [80, 80], maxZoom: 16, duration: 0.75 })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [movieFilter, filters.genres, filters.nations])
+  }, [movieFilter, filters.genres, filters.nations, selectedId])
 
   // 위치 첫 수신 시 지도 이동 — 이후엔 무시
   const initialMoved = useRef(false)
@@ -1773,8 +1777,10 @@ export default function MapView() {
     if (!theater) return
     restoredTheaterRef.current = true
     const fromMovie = params.get('fromMovie')
+    const movieParam = params.get('movie')
     const dateParam = params.get('date')
     if (fromMovie) setFromMovieId(fromMovie)
+    if (fromMovie || movieParam) suppressMovieFilterFitRef.current = true
     if (dateParam) setInitialSheetDate(dateParam)
     focusTheater(theater, 'direct_link')
     const url = new URL(window.location.href)
@@ -1965,7 +1971,27 @@ export default function MapView() {
                   {theater.address}
                 </span>
               </span>
-              <span style={{ color: 'var(--color-text-caption)', fontSize: 18, lineHeight: 1 }}>›</span>
+              {(() => {
+                const distance = calculateAndFormatDistance(
+                  coords?.lat,
+                  coords?.lng,
+                  theater.lat,
+                  theater.lng,
+                )
+                return distance ? (
+                  <span style={{
+                    flexShrink: 0,
+                    fontSize: 13,
+                    color: 'var(--color-text-sub)',
+                    fontWeight: 500,
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}>
+                    {distance}
+                  </span>
+                ) : null
+              })()}
+              <span style={{ color: 'var(--color-text-caption)', fontSize: 18, lineHeight: 1, flexShrink: 0 }}>›</span>
             </button>
           ))}
         </div>
@@ -1999,6 +2025,7 @@ export default function MapView() {
                 })
                 classifySessionIntent('type_a', { source: 'search', movie_id: movie.id })
                 setRecentSearches(prev => addToRecent(searchQuery, prev))
+                suppressMovieFilterFitRef.current = false
                 setMovieFilter({ id: movie.id, title: movie.title })
                 closeSearch()
               }}
@@ -2264,7 +2291,27 @@ export default function MapView() {
                   ))}
                 </span>
               </span>
-              <span style={{ color: 'var(--color-text-caption)', fontSize: 18, lineHeight: 1 }}>›</span>
+              {(() => {
+                const distance = calculateAndFormatDistance(
+                  coords?.lat,
+                  coords?.lng,
+                  station.lat,
+                  station.lng,
+                )
+                return distance ? (
+                  <span style={{
+                    flexShrink: 0,
+                    fontSize: 13,
+                    color: 'var(--color-text-sub)',
+                    fontWeight: 500,
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}>
+                    {distance}
+                  </span>
+                ) : null
+              })()}
+              <span style={{ color: 'var(--color-text-caption)', fontSize: 18, lineHeight: 1, flexShrink: 0 }}>›</span>
             </button>
           ))}
         </div>
@@ -2603,6 +2650,7 @@ export default function MapView() {
                 movie_filter_id: movieFilter?.id,
                 movie_filter_title: movieFilter?.title,
               })
+              suppressMovieFilterFitRef.current = false
               setMovieFilter(null)
             }}
             onMovieChipClick={() => setSearchOpen(true)}
@@ -3271,6 +3319,7 @@ export default function MapView() {
                 movie_title: movieTitle,
               })
               classifySessionIntent('type_a', { source: 'theater_sheet', movie_id: movieId })
+              suppressMovieFilterFitRef.current = false
               setMovieFilter({ id: movieId, title: movieTitle })
             }}
             onMovieDetailOpen={isDesktopLayout ? (id) => {
@@ -3327,6 +3376,7 @@ export default function MapView() {
                 source: 'desktop_panel',
               })
               classifySessionIntent('type_a', { source: 'desktop_panel', movie_id: id })
+              suppressMovieFilterFitRef.current = false
               setMovieFilter({ id, title })
               closeDesktopPanel()
             }}
