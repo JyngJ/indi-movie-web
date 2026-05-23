@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import type { MouseEvent as ReactMouseEvent, WheelEvent as ReactWheelEvent } from 'react'
 import { GENRES } from '@/lib/genres'
 import { withFlag } from '@/lib/nations'
+import { REGIONS } from '@/lib/regions'
 
 /* -- 날짜 헬퍼 ---------------------------------------------------- */
 const DOW = ['일', '월', '화', '수', '목', '금', '토']
@@ -54,7 +55,7 @@ function buildDateOptions(t = today()) {
 }
 
 type DateId = 'today' | 'tomorrow' | 'this-weekend' | 'next-weekend' | 'this-week' | 'this-month' | 'custom' | null
-type OpenPanel = 'date' | 'genre' | 'nation' | 'calendar' | null
+type OpenPanel = 'date' | 'genre' | 'nation' | 'region' | 'calendar' | null
 
 const EMPTY_NATION_OPTIONS: string[] = []
 
@@ -67,6 +68,7 @@ export interface FilterState {
   nations: string[]
   bookable: boolean
   indie: boolean
+  regionId: string | null
 }
 
 /* -- 아이콘 ------------------------------------------------------- */
@@ -493,6 +495,56 @@ function MultiSelectDropdown({ options, selectedValues, setSelectedValues, style
   )
 }
 
+/* -- RegionDropdown ----------------------------------------------- */
+function RegionDropdown({ selectedId, onSelect, style }: {
+  selectedId: string | null
+  onSelect: (id: string | null) => void
+  style?: React.CSSProperties
+}) {
+  const METRO = ['서울', '부산', '대구', '인천', '광주', '대전', '울산']
+  const PROVINCES = REGIONS.filter(r => !METRO.includes(r.id))
+  const metros = REGIONS.filter(r => METRO.includes(r.id))
+
+  return (
+    <div style={{
+      width: 220,
+      background: 'var(--color-surface-card)',
+      border: '1px solid var(--color-border)',
+      borderRadius: 16,
+      overflow: 'hidden',
+      boxShadow: '0 12px 40px rgba(0,0,0,0.72)',
+      ...style,
+    }}>
+      <div style={{ padding: '8px 14px 4px', fontSize: 10, fontWeight: 700, color: 'var(--color-text-caption)', letterSpacing: '0.5px' }}>
+        광역시
+      </div>
+      {metros.map((r, i) => (
+        <DropdownRow
+          key={r.id}
+          kind="radio"
+          label={r.label}
+          selected={selectedId === r.id}
+          onClick={() => onSelect(selectedId === r.id ? null : r.id)}
+          isLast={false}
+        />
+      ))}
+      <div style={{ padding: '8px 14px 4px', fontSize: 10, fontWeight: 700, color: 'var(--color-text-caption)', letterSpacing: '0.5px', borderTop: '1px solid var(--color-border)' }}>
+        도·특별자치도
+      </div>
+      {PROVINCES.map((r, i) => (
+        <DropdownRow
+          key={r.id}
+          kind="radio"
+          label={r.label}
+          selected={selectedId === r.id}
+          onClick={() => onSelect(selectedId === r.id ? null : r.id)}
+          isLast={i === PROVINCES.length - 1}
+        />
+      ))}
+    </div>
+  )
+}
+
 /* -- FilterChip --------------------------------------------------- */
 interface FilterChipProps {
   label: string
@@ -590,6 +642,7 @@ export interface FilterBarProps {
   onMovieChipClick?: () => void
   onDirectorChipClick?: () => void
   desktop?: boolean
+  defaultRegionId?: string | null
 }
 
 export function FilterBar({
@@ -602,6 +655,7 @@ export function FilterBar({
   onMovieChipClick,
   onDirectorChipClick,
   desktop = false,
+  defaultRegionId,
 }: FilterBarProps) {
   const [dateId, setDateId] = useState<DateId>('this-week')
   const [customStart, setCustomStart] = useState<Date | null>(null)
@@ -612,6 +666,8 @@ export function FilterBar({
   const [draftNations, setDraftNations] = useState<string[]>([])
   const [bookable, setBookable] = useState(false)
   const [indie, setIndie] = useState(false)
+  const [regionId, setRegionId] = useState<string | null>(null)
+  const autoRegionSetRef = useRef(false)
   const [openPanel, setOpenPanel] = useState<OpenPanel>(null)
   const [dropdownPos, setDropdownPos] = useState<{ left: number; top: number }>({ left: 16, top: 0 })
   const [mounted, setMounted] = useState(false)
@@ -622,6 +678,7 @@ export function FilterBar({
   const dateChipRef = useRef<HTMLButtonElement>(null)
   const genreChipRef = useRef<HTMLButtonElement>(null)
   const nationChipRef = useRef<HTMLButtonElement>(null)
+  const regionChipRef = useRef<HTMLButtonElement>(null)
   const openPanelRef = useRef(openPanel)
   const draftGenresRef = useRef(draftGenres)
   const draftNationsRef = useRef(draftNations)
@@ -650,8 +707,15 @@ export function FilterBar({
     })
   }, [nationOptions])
   useEffect(() => {
-    onChange?.({ dateId, customStart, customEnd, genres, nations, bookable, indie })
-  }, [onChange, dateId, customStart, customEnd, genres, nations, bookable, indie])
+    onChange?.({ dateId, customStart, customEnd, genres, nations, bookable, indie, regionId })
+  }, [onChange, dateId, customStart, customEnd, genres, nations, bookable, indie, regionId])
+
+  useEffect(() => {
+    if (autoRegionSetRef.current) return
+    if (!defaultRegionId) return
+    autoRegionSetRef.current = true
+    setRegionId(defaultRegionId)
+  }, [defaultRegionId])
 
   useEffect(() => {
     if (!openPanel) return
@@ -686,6 +750,7 @@ export function FilterBar({
     if (panel === 'date') calcDropdownLeft(dateChipRef, 252)
     else if (panel === 'genre') calcDropdownLeft(genreChipRef, 236)
     else if (panel === 'nation') calcDropdownLeft(nationChipRef, 236)
+    else if (panel === 'region') calcDropdownLeft(regionChipRef, 220)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -749,7 +814,7 @@ export function FilterBar({
   }, [])
 
   const openDropdown = useCallback((
-    panel: 'date' | 'genre' | 'nation',
+    panel: 'date' | 'genre' | 'nation' | 'region',
     chipRef: React.RefObject<HTMLButtonElement | null>,
   ) => {
     if (openPanel === panel || (panel === 'date' && (openPanel === 'date' || openPanel === 'calendar'))) {
@@ -760,7 +825,7 @@ export function FilterBar({
     }
     if (panel === 'genre') setDraftGenres(genres)
     if (panel === 'nation') setDraftNations(nations)
-    const widthMap = { date: 252, genre: 236, nation: 236 }
+    const widthMap = { date: 252, genre: 236, nation: 236, region: 220 }
     calcDropdownLeft(chipRef, widthMap[panel])
     setOpenPanel(panel)
   }, [openPanel, genres, nations])
@@ -867,6 +932,16 @@ export function FilterBar({
           />
         )}
         <FilterChip
+          label="검색 지역"
+          value={regionId ?? undefined}
+          open={openPanel === 'region'}
+          selected={!!regionId}
+          hasDropdown
+          chipRef={regionChipRef}
+          onClick={() => openDropdown('region', regionChipRef)}
+          onClear={regionId ? () => { setRegionId(null); setOpenPanel(null) } : undefined}
+        />
+        <FilterChip
           label="상영 일정"
           value={dateLabel}
           open={isDateOpen}
@@ -876,18 +951,6 @@ export function FilterBar({
           onClick={() => openDropdown('date', dateChipRef)}
           onClear={dateId ? clearDate : undefined}
         />
-        {onMovieChipClick && (
-          <FilterChip
-            label="영화"
-            onClick={onMovieChipClick}
-          />
-        )}
-        {onDirectorChipClick && (
-          <FilterChip
-            label="감독"
-            onClick={onDirectorChipClick}
-          />
-        )}
         <FilterChip
           label="장르"
           value={genreLabel}
@@ -947,6 +1010,13 @@ export function FilterBar({
               options={nationOptions}
               selectedValues={draftNations}
               setSelectedValues={setDraftNations}
+              style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, zIndex: 99999 }}
+            />
+          )}
+          {openPanel === 'region' && (
+            <RegionDropdown
+              selectedId={regionId}
+              onSelect={(id) => { setRegionId(id); if (id) setOpenPanel(null) }}
               style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, zIndex: 99999 }}
             />
           )}

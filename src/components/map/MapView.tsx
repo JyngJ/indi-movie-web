@@ -19,6 +19,7 @@ import { useActiveMovieIds, useMapShowtimes, useMovies, useStations, useTheaters
 import type { Movie, Station, Theater } from '@/types/api'
 import { SEOUL_GU, SEOUL_DONG } from '@/data/seoul-areas'
 import { normalizeGenre } from '@/lib/genres'
+import { getRegionFromCity, getRegionFromCoords, REGION_BOUNDS } from '@/lib/regions'
 import { useThemeStore } from '@/store/themeStore'
 import { REPORT_CATEGORIES } from '@/lib/reports/types'
 import {
@@ -985,6 +986,7 @@ export default function MapView() {
     nations: [],
     bookable: false,
     indie: false,
+    regionId: null,
   })
   const [movieFilter, setMovieFilter] = useState<{ id: string; title: string } | null>(null)
   const [directorFilter, setDirectorFilter] = useState<{ name: string } | null>(null)
@@ -1597,10 +1599,28 @@ export default function MapView() {
     if (selectedId) return
     const map = mapRef.current
     if (!map) return
-    const matchedTheaters = theaters.filter(t => {
+    let matchedTheaters = theaters.filter(t => {
       return (theaterPosterMovies.get(t.id) ?? []).some(m => m.matchesFilter)
     })
     if (matchedTheaters.length === 0) return
+
+    // 지역 필터가 설정돼 있으면 해당 지역 극장만 범위에 포함
+    if (filters.regionId) {
+      const regionTheaters = matchedTheaters.filter(t => getRegionFromCity(t.city) === filters.regionId)
+      if (regionTheaters.length > 0) matchedTheaters = regionTheaters
+      else {
+        // 지역 내 매칭 없으면 지역 중심 좌표로 이동
+        const rb = REGION_BOUNDS[filters.regionId]
+        if (rb) {
+          map.flyToBounds(
+            [[rb.minLat, rb.minLng], [rb.maxLat, rb.maxLng]],
+            { padding: [60, 60], duration: 0.75 }
+          )
+          return
+        }
+      }
+    }
+
     if (matchedTheaters.length === 1) {
       const t = matchedTheaters[0]
       map.flyTo([t.lat, t.lng], Math.max(map.getZoom(), 15), { duration: 0.75 })
@@ -1609,7 +1629,7 @@ export default function MapView() {
     const bounds = L.latLngBounds(matchedTheaters.map(t => [t.lat, t.lng] as [number, number]))
     map.flyToBounds(bounds, { padding: [80, 80], maxZoom: 16, duration: 0.75 })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [directorFilter, movieFilter, filters.genres, filters.nations, selectedId])
+  }, [directorFilter, movieFilter, filters.genres, filters.nations, filters.regionId, selectedId])
 
   // 위치 첫 수신 시 지도 이동 — 이후엔 무시
   const initialMoved = useRef(false)
@@ -1802,7 +1822,7 @@ export default function MapView() {
     setSelectedId(theater.id)
     setDisplayedId(theater.id)
     setSelectedMovieId(movieId)
-    setSheetExpanded(true)
+    setSheetExpanded(isDesktopLayout)
     setFromMovieId(movieId)
     setInitialSheetDate(date || undefined)
     setDirectorFilter(null)
@@ -1827,7 +1847,7 @@ export default function MapView() {
       Math.max(currentZoom, 16),
       0.75,
     )
-  }, [closeDesktopPanel, closeSearch, flyToForTheater, movies, theaters])
+  }, [closeDesktopPanel, closeSearch, flyToForTheater, isDesktopLayout, movies, theaters])
 
   useEffect(() => {
     if (isDesktopLayout && selectedTheater) setSheetExpanded(true)
@@ -1858,7 +1878,7 @@ export default function MapView() {
       setSheetExiting(false)
       setSelectedId(theater.id)
       setDisplayedId(theater.id)
-      setSheetExpanded(true)
+      setSheetExpanded(isDesktopLayout)
 
       trackEvent('theater sheet opened', {
         theater_id: theater.id,
@@ -1888,7 +1908,7 @@ export default function MapView() {
     url.searchParams.delete('movie')
     window.history.replaceState({}, '', url.toString())
 
-  }, [closeSearch, flyToForTheater, movies.length, openTheaterForMovie, searchParams, theaters])
+  }, [closeSearch, flyToForTheater, isDesktopLayout, movies.length, openTheaterForMovie, searchParams, theaters])
 
   // 영화 상세 / 패널에서 ?movie= 파라미터로 지도 필터만 복원
   const restoredMovieFilterRef = useRef<string | null>(null)
@@ -2766,6 +2786,7 @@ export default function MapView() {
           <FilterBar
             desktop={isDesktopLayout}
             onChange={setFilters}
+            defaultRegionId={coords ? getRegionFromCoords(coords.lat, coords.lng) : null}
             nationOptions={nationOptions}
             movieFilter={movieFilter}
             directorFilter={directorFilter}
@@ -3500,6 +3521,7 @@ export default function MapView() {
         }}>
           <DesktopDetailPanel
             panel={desktopPanel}
+            regionId={filters.regionId}
             onClose={closeDesktopPanel}
             onBack={panelStack.length > 1 || selectedTheater ? () => window.history.back() : undefined}
             onNavigate={openDesktopPanel}
