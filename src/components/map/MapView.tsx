@@ -2444,8 +2444,9 @@ export default function MapView() {
         ))}
 
         {clusters.map((cluster) => {
-          // 클러스터 마커 (2개 이상) — 클릭 시 줌인
-          if (cluster.theaters.length > 1) {
+          // 줌 7-10에서는 항상 클러스터 표시 (1개라도), 줌 11+에서는 2개 이상일 때만 클러스터
+          const shouldShowAsCluster = zoom <= 10 || cluster.theaters.length > 1
+          if (shouldShowAsCluster) {
             const clusterDimmed = filtersActive && cluster.theaters.every(
               (t) => (theaterPosterMovies.get(t.id) ?? []).every(m => !m.matchesFilter)
             )

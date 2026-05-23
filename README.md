@@ -138,6 +138,18 @@ npm run dev   # → http://localhost:3000
 
 ---
 
+## 데이터베이스
+
+### 자동 정리
+
+**3일 이상 지난 상영시간표 자동 삭제** (PostgreSQL pg_cron)
+- 매일 새벽 3시(UTC) 자동 실행
+- 대상: `show_date < CURRENT_DATE - INTERVAL '3 days'`인 `showtimes` 레코드
+- Job ID: `cleanup-old-showtimes`
+- 수동 실행: `DELETE FROM showtimes WHERE show_date < CURRENT_DATE - INTERVAL '3 days';`
+
+---
+
 ## 저작권
 
 지도 타일: © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, © [CARTO](https://carto.com/attributions)  
