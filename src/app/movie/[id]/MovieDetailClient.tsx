@@ -664,7 +664,7 @@ export function MovieDetailClient({ movieId, theaterId }: { movieId: string; the
         : <TheatersTab
             movieId={movieId}
             onMapClick={handleMapClick}
-            onGoToTheater={(tid, date) => router.push(`/?theater=${tid}&movie=${movieId}&date=${date}&fromMovie=${movieId}`)}
+            onGoToTheater={(tid, date) => router.push(`/?theater=${tid}&date=${date}&fromMovie=${movieId}`)}
             desktop={isDesktop}
           />
       }

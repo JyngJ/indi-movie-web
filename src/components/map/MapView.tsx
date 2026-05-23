@@ -2,7 +2,7 @@
 
 import 'leaflet/dist/leaflet.css'
 import { useEffect, useRef, useState, useCallback, useMemo, type CSSProperties } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { GeoJSON, MapContainer, TileLayer, Marker } from 'react-leaflet'
 import L from 'leaflet'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -968,6 +968,7 @@ function findSplitZoom(
 
 export default function MapView() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { coords, refetch } = useUserLocation()
   const isDark = useIsDark()
   const isDesktopLayout = useIsDesktopLayout()
@@ -1058,17 +1059,16 @@ export default function MapView() {
   useEffect(() => {
     if (mapViewTrackedRef.current || theatersLoading) return
     mapViewTrackedRef.current = true
-    const params = new URLSearchParams(window.location.search)
     trackEvent('map viewed', {
       theater_count: theaters.length,
       movie_count: movies.length,
-      source: params.has('theater')
+      source: searchParams.has('theater')
         ? 'direct_link'
-        : params.has('movie')
+        : searchParams.has('movie')
           ? 'movie_detail'
           : 'direct',
     })
-  }, [movies.length, theaters.length, theatersLoading])
+  }, [movies.length, theaters.length, theatersLoading, searchParams])
 
   useEffect(() => { setRecentSearches(loadRecentSearches()) }, [])
   useEffect(() => {
@@ -1731,10 +1731,26 @@ export default function MapView() {
     const dy = isDesktopLayout ? 0 : -150
     const targetPx = map.project(L.latLng(latlng), zoom)
     const newCenter = map.unproject(L.point(targetPx.x - dx, targetPx.y - dy), zoom)
+    console.log('[flyToForTheater]', {
+      latlng,
+      zoom,
+      isDesktopLayout,
+      dx,
+      dy,
+      targetPx: { x: targetPx.x, y: targetPx.y },
+      newCenter: { lat: newCenter.lat, lng: newCenter.lng },
+    })
     map.flyTo(newCenter, zoom, { duration })
   }, [isDesktopLayout])
 
   const focusTheater = useCallback((theater: Theater, source: 'search' | 'direct_link' = 'search') => {
+    console.log('[focusTheater]', {
+      theater_id: theater.id,
+      theater_name: theater.name,
+      lat: theater.lat,
+      lng: theater.lng,
+      source,
+    })
     trackEvent('theater sheet opened', {
       theater_id: theater.id,
       theater_name: theater.name,
@@ -1767,44 +1783,61 @@ export default function MapView() {
   }, [isDesktopLayout, selectedTheater])
 
   // 영화 상세 페이지에서 뒤로가기 시 ?theater= 파라미터로 극장 시트 복원
-  const restoredTheaterRef = useRef(false)
+  const restoredTheaterRef = useRef<string | null>(null)
   useEffect(() => {
-    if (restoredTheaterRef.current || theaters.length === 0) return
-    const params = new URLSearchParams(window.location.search)
-    const theaterParam = params.get('theater')
-    if (!theaterParam) { restoredTheaterRef.current = true; return }
+    if (theaters.length === 0 || movies.length === 0) return
+    const theaterParam = searchParams.get('theater')
+
+    // 이미 이 극장을 처리했으면 스킵 (중복 처리 방지)
+    if (restoredTheaterRef.current === theaterParam) return
+    if (!theaterParam) { return }
+
     const theater = theaters.find((t) => t.id === theaterParam)
     if (!theater) return
-    restoredTheaterRef.current = true
-    const fromMovie = params.get('fromMovie')
-    const movieParam = params.get('movie')
-    const dateParam = params.get('date')
+    restoredTheaterRef.current = theaterParam
+    const fromMovie = searchParams.get('fromMovie')
+    const movieParam = searchParams.get('movie')
+    const dateParam = searchParams.get('date')
+
+    // 영화 필터 복원 useEffect 방지
+    restoredMovieRef.current = true
+
+    // 0. 이전 선택 전부 해제
+    setSelectedId(null)
+    setDisplayedId(null)
+
+    // 1. 극장으로 이동 및 시트 펼치기
+    setSelectedId(theater.id)
+    setDisplayedId(theater.id)
+    setSheetExpanded(true)
+
+    // 2. 해당 극장의 해당 영화 선택
+    if (movieParam) {
+      setSelectedMovieId(movieParam)
+    }
+
+
     if (fromMovie) setFromMovieId(fromMovie)
-    if (fromMovie || movieParam) suppressMovieFilterFitRef.current = true
     if (dateParam) setInitialSheetDate(dateParam)
-    focusTheater(theater, 'direct_link')
+
+    // 4. URL 정리
     const url = new URL(window.location.href)
     url.searchParams.delete('theater')
     url.searchParams.delete('fromMovie')
     url.searchParams.delete('date')
-    window.history.replaceState({}, '', url.toString())
-  }, [theaters, focusTheater])
-
-  // 영화 상세 / 바텀시트에서 ?movie= 파라미터로 영화 필터 복원
-  const restoredMovieRef = useRef(false)
-  useEffect(() => {
-    if (restoredMovieRef.current || movies.length === 0) return
-    const movieParam = new URLSearchParams(window.location.search).get('movie')
-    if (!movieParam) { restoredMovieRef.current = true; return }
-    const movie = movies.find((m) => m.id === movieParam)
-    if (!movie) return
-    restoredMovieRef.current = true
-    classifySessionIntent('type_a', { source: 'movie_detail', movie_id: movie.id })
-    setMovieFilter({ id: movie.id, title: movie.title })
-    const url = new URL(window.location.href)
     url.searchParams.delete('movie')
+    url.searchParams.delete('skipMovieFilterFit')
     window.history.replaceState({}, '', url.toString())
-  }, [movies])
+
+    // 5. 극장으로 flyto (focusTheater 로직 인라인화)
+    const currentZoom = mapRef.current?.getZoom() ?? 15
+    flyToForTheater(
+      [theater.lat, theater.lng],
+      Math.max(currentZoom, 16),
+      0.75,
+    )
+  }, [theaters, movies, focusTheater, searchParams])
+
 
   // 극장 선택 시 → 첫 번째 영화 선택 + 시트 collapsed로 열기
   const handlePinClick = useCallback((theaterId: string, clickedMovieId?: string) => {
@@ -2025,9 +2058,12 @@ export default function MapView() {
                 })
                 classifySessionIntent('type_a', { source: 'search', movie_id: movie.id })
                 setRecentSearches(prev => addToRecent(searchQuery, prev))
-                suppressMovieFilterFitRef.current = false
-                setMovieFilter({ id: movie.id, title: movie.title })
                 closeSearch()
+                if (isDesktopLayout) {
+                  openDesktopPanel({ type: 'movie', id: movie.id })
+                } else {
+                  router.push(`/movie/${movie.id}`)
+                }
               }}
               style={{
                 display: 'flex',
@@ -3377,7 +3413,6 @@ export default function MapView() {
               })
               classifySessionIntent('type_a', { source: 'desktop_panel', movie_id: id })
               suppressMovieFilterFitRef.current = false
-              setMovieFilter({ id, title })
               closeDesktopPanel()
             }}
           />
