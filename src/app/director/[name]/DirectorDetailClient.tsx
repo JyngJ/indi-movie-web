@@ -42,6 +42,13 @@ const IcoChevronDown = ({ flipped }: { flipped?: boolean }) => (
     <path d="M6 9l6 6 6-6" />
   </svg>
 )
+const IcoMap = () => (
+  <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
+    <line x1="8" y1="2" x2="8" y2="18" />
+    <line x1="16" y1="6" x2="16" y2="22" />
+  </svg>
+)
 
 /* ── NavBar ── */
 function NavBar({ onBack, onClose }: { onBack: () => void; onClose: () => void }) {
@@ -289,6 +296,26 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
           </p>
         </div>
       )}
+
+      <div style={{ maxWidth: isDesktop ? 860 : undefined, margin: isDesktop ? '20px auto 0' : undefined, padding: isDesktop ? 0 : '16px 20px 0' }}>
+        <button
+          onClick={() => router.push(`/?director=${encodeURIComponent(directorName)}`)}
+          style={{
+            width: '100%', height: 44,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            borderRadius: 10,
+            border: '1px solid var(--color-primary-base)',
+            backgroundColor: 'var(--color-primary-subtle-l)',
+            color: 'var(--color-primary-base)',
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: 'pointer',
+          }}
+        >
+          <IcoMap />
+          지도에서 필터로 보기
+        </button>
+      </div>
 
       {/* 작품 목록 */}
       <div style={{

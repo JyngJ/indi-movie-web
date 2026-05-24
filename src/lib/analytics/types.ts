@@ -22,6 +22,7 @@ export type AnalyticsEventName =
   | 'movie detail tab changed'
   | 'movie theaters map opened'
   | 'movie theater selected'
+  | 'director theaters map opened'
   | 'session intent classified'
 
 export type AnalyticsSource =

@@ -383,14 +383,14 @@ export const ADMIN_THEATER_SOURCES: AdminTheaterSource[] = [
   {
     id: 'src-corner-etc',
     theaterId: '',
-    theaterName: '모퉁이극장',
+    theaterName: 'BNK부산은행 아트시네마 모퉁이극장',
     homepageUrl: 'https://www.dtryx.com',
     listingUrl: `https://www.dtryx.com/cinema/main.do?cgid=${DTRYX_CGID}&BrandCd=etc&CinemaCd=000097`,
     parser: 'dtryxReservationApi',
     enabled: true,
     cadence: 'daily',
     health: 'healthy',
-    notes: 'theaters-to-add.ts에서 "BNK부산은행 아트시네마 모퉁이극장"으로 등록',
+    notes: 'DB에 "BNK부산은행 아트시네마 모퉁이극장"으로 등록',
   },
 
   // ── 경남 (BrandCd=indieart, www.dtryx.com) ──────────────────────

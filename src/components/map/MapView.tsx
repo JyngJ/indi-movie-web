@@ -2,7 +2,7 @@
 
 import 'leaflet/dist/leaflet.css'
 import { useEffect, useRef, useState, useCallback, useMemo, type CSSProperties } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { GeoJSON, MapContainer, TileLayer, Marker } from 'react-leaflet'
 import L from 'leaflet'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -19,6 +19,7 @@ import { useActiveMovieIds, useMapShowtimes, useMovies, useStations, useTheaters
 import type { Movie, Station, Theater } from '@/types/api'
 import { SEOUL_GU, SEOUL_DONG } from '@/data/seoul-areas'
 import { normalizeGenre } from '@/lib/genres'
+import { getRegionFromCity, getRegionFromCoords, REGION_BOUNDS } from '@/lib/regions'
 import { useThemeStore } from '@/store/themeStore'
 import { REPORT_CATEGORIES } from '@/lib/reports/types'
 import {
@@ -28,6 +29,7 @@ import {
 import { finiteNumber, formatDateParam, startOfLocalDay, addDays, endOfMonth, loadRecentSearches, addToRecent, removeFromRecent } from '@/lib/map/searchUtils'
 import { stationSearchScore, movieSearchScore, directorSearchScore, theaterSearchScore, areaSearchScore } from '@/lib/map/searchScoring'
 import { posterCountForZoom, posterSizeForZoom, posterSlotsForZoom } from '@/lib/map/posterLogic'
+import { calculateAndFormatDistance } from '@/lib/map/distanceUtils'
 import type { TheaterPosterMovie } from '@/lib/map/posterLogic'
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { PosterGrid } from './PosterGrid'
@@ -967,6 +969,7 @@ function findSplitZoom(
 
 export default function MapView() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { coords, refetch } = useUserLocation()
   const isDark = useIsDark()
   const isDesktopLayout = useIsDesktopLayout()
@@ -983,8 +986,10 @@ export default function MapView() {
     nations: [],
     bookable: false,
     indie: false,
+    regionId: null,
   })
   const [movieFilter, setMovieFilter] = useState<{ id: string; title: string } | null>(null)
+  const [directorFilter, setDirectorFilter] = useState<{ name: string } | null>(null)
   const [panelStack, setPanelStack] = useState<DesktopPanelState[]>([])
   const desktopPanel = panelStack[panelStack.length - 1] ?? null
   const selectedDateRange = useMemo(() => dateRangeForFilter(filters), [filters])
@@ -995,6 +1000,7 @@ export default function MapView() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [fromMovieId, setFromMovieId] = useState<string | null>(null)
   const [initialSheetDate, setInitialSheetDate] = useState<string | undefined>(undefined)
+  const suppressMovieFilterFitRef = useRef(false)
   const [zoom, setZoom] = useState(14)
   const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null)
   const [subwayLayerReady, setSubwayLayerReady] = useState(false)
@@ -1056,17 +1062,16 @@ export default function MapView() {
   useEffect(() => {
     if (mapViewTrackedRef.current || theatersLoading) return
     mapViewTrackedRef.current = true
-    const params = new URLSearchParams(window.location.search)
     trackEvent('map viewed', {
       theater_count: theaters.length,
       movie_count: movies.length,
-      source: params.has('theater')
+      source: searchParams.has('theater')
         ? 'direct_link'
-        : params.has('movie')
+        : searchParams.has('movie') || searchParams.has('director')
           ? 'movie_detail'
           : 'direct',
     })
-  }, [movies.length, theaters.length, theatersLoading])
+  }, [movies.length, theaters.length, theatersLoading, searchParams])
 
   useEffect(() => { setRecentSearches(loadRecentSearches()) }, [])
   useEffect(() => {
@@ -1261,6 +1266,7 @@ export default function MapView() {
         if (hasSeats) current.hasAvailableSeats = true
       } else {
         const matchesMovieFilter = !movieFilter || showtime.movieId === movieFilter.id
+        const matchesDirectorFilter = !directorFilter || showtime.movie.director.includes(directorFilter.name)
         const matchesGenre = filters.genres.length === 0 || showtime.movie.genre.some(g => {
           const normalized = normalizeGenre(g)
           return normalized !== null && filters.genres.includes(normalized)
@@ -1279,7 +1285,7 @@ export default function MapView() {
           director: showtime.movie.director,
           showtimeCount: 1,
           hasAvailableSeats: hasSeats,
-          matchesFilter: matchesMovieFilter && matchesGenre && matchesNation,
+          matchesFilter: matchesMovieFilter && matchesDirectorFilter && matchesGenre && matchesNation,
         })
       }
     }
@@ -1297,9 +1303,9 @@ export default function MapView() {
       )
     }
     return result
-  }, [filters.bookable, filters.genres, filters.nations, movieFilter, mapShowtimes])
+  }, [directorFilter, filters.bookable, filters.genres, filters.nations, movieFilter, mapShowtimes])
 
-  const filtersActive = filters.bookable || filters.genres.length > 0 || filters.nations.length > 0 || !!movieFilter
+  const filtersActive = filters.bookable || filters.genres.length > 0 || filters.nations.length > 0 || !!movieFilter || !!directorFilter
   const filterResultCount = useMemo(() => {
     if (!filtersActive) return theaters.length
     let count = 0
@@ -1318,6 +1324,7 @@ export default function MapView() {
       nations: filters.nations,
       bookable: filters.bookable,
       movieId: movieFilter?.id,
+      directorName: directorFilter?.name,
       resultCount: filterResultCount,
     })
     if (!lastFilterTelemetryRef.current) {
@@ -1338,21 +1345,22 @@ export default function MapView() {
       bookable: filters.bookable,
       movie_filter_id: movieFilter?.id,
       movie_filter_title: movieFilter?.title,
+      director_filter_name: directorFilter?.name,
       filter_result_count: filterResultCount,
       is_zero_result: filterResultCount === 0,
     })
-  }, [filterResultCount, filters.bookable, filters.customEnd, filters.customStart, filters.dateId, filters.genres, filters.nations, movieFilter])
+  }, [directorFilter, filterResultCount, filters.bookable, filters.customEnd, filters.customStart, filters.dateId, filters.genres, filters.nations, movieFilter])
 
   // 상영일정·예매가능 제외한 검색 필터가 활성화 됐을 때 — 해당 극장은 클러스터링 제외
   const searchMatchedTheaterIds = useMemo(() => {
-    const isSearchFilter = !!movieFilter || filters.genres.length > 0 || filters.nations.length > 0
+    const isSearchFilter = !!movieFilter || !!directorFilter || filters.genres.length > 0 || filters.nations.length > 0
     if (!isSearchFilter) return new Set<string>()
     const ids = new Set<string>()
     for (const [theaterId, movies] of theaterPosterMovies) {
       if (movies.some(m => m.matchesFilter)) ids.add(theaterId)
     }
     return ids
-  }, [movieFilter, filters.genres, filters.nations, theaterPosterMovies])
+  }, [directorFilter, movieFilter, filters.genres, filters.nations, theaterPosterMovies])
 
   const titleMovieResults = useMemo(() => {
     if (!searchQuery.trim()) return []
@@ -1483,6 +1491,24 @@ export default function MapView() {
   const defaultCenter: [number, number] = [37.5665, 126.978]
   const selectedTheater = theaters.find((t) => t.id === (displayedId ?? selectedId)) ?? null
 
+  const clearTheaterSelection = useCallback(() => {
+    if (exitTimerRef.current) clearTimeout(exitTimerRef.current)
+    setSelectedId(null)
+    setDisplayedId(null)
+    setSelectedMovieId('')
+    setSheetExpanded(false)
+    setSheetExiting(false)
+    setFromMovieId(null)
+    setInitialSheetDate(undefined)
+  }, [])
+
+  const applyDirectorFilter = useCallback((name: string) => {
+    suppressMovieFilterFitRef.current = false
+    clearTheaterSelection()
+    setMovieFilter(null)
+    setDirectorFilter({ name })
+  }, [clearTheaterSelection])
+
   /* ── 클러스터 & 오프셋 ── */
   const [clusters, setClusters] = useState<TheaterCluster[]>([])
   const [posterOffsets, setPosterOffsets] = useState<Map<string, number>>(new Map())
@@ -1565,16 +1591,36 @@ export default function MapView() {
     return () => clearTimeout(id)
   }, [recompute])
 
-  // 검색 필터(영화·장르·국가) 적용 시 → 매칭 극장이 모두 보이도록 뷰 이동
+  // 검색 필터(영화·감독·장르·국가) 적용 시 → 매칭 극장이 모두 보이도록 뷰 이동
   useEffect(() => {
-    const isSearchFilter = !!movieFilter || filters.genres.length > 0 || filters.nations.length > 0
+    const isSearchFilter = !!movieFilter || !!directorFilter || filters.genres.length > 0 || filters.nations.length > 0
     if (!isSearchFilter) return
+    if (suppressMovieFilterFitRef.current && (movieFilter || directorFilter)) return
+    if (selectedId) return
     const map = mapRef.current
     if (!map) return
-    const matchedTheaters = theaters.filter(t => {
+    let matchedTheaters = theaters.filter(t => {
       return (theaterPosterMovies.get(t.id) ?? []).some(m => m.matchesFilter)
     })
     if (matchedTheaters.length === 0) return
+
+    // 지역 필터가 설정돼 있으면 해당 지역 극장만 범위에 포함
+    if (filters.regionId) {
+      const regionTheaters = matchedTheaters.filter(t => getRegionFromCity(t.city) === filters.regionId)
+      if (regionTheaters.length > 0) matchedTheaters = regionTheaters
+      else {
+        // 지역 내 매칭 없으면 지역 중심 좌표로 이동
+        const rb = REGION_BOUNDS[filters.regionId]
+        if (rb) {
+          map.flyToBounds(
+            [[rb.minLat, rb.minLng], [rb.maxLat, rb.maxLng]],
+            { padding: [60, 60], duration: 0.75 }
+          )
+          return
+        }
+      }
+    }
+
     if (matchedTheaters.length === 1) {
       const t = matchedTheaters[0]
       map.flyTo([t.lat, t.lng], Math.max(map.getZoom(), 15), { duration: 0.75 })
@@ -1583,7 +1629,7 @@ export default function MapView() {
     const bounds = L.latLngBounds(matchedTheaters.map(t => [t.lat, t.lng] as [number, number]))
     map.flyToBounds(bounds, { padding: [80, 80], maxZoom: 16, duration: 0.75 })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [movieFilter, filters.genres, filters.nations])
+  }, [directorFilter, movieFilter, filters.genres, filters.nations, filters.regionId, selectedId])
 
   // 위치 첫 수신 시 지도 이동 — 이후엔 무시
   const initialMoved = useRef(false)
@@ -1758,47 +1804,148 @@ export default function MapView() {
     )
   }, [closeSearch, flyToForTheater, isDesktopLayout, movieFilter, searchQuery])
 
+  const openTheaterForMovie = useCallback((
+    theaterId: string,
+    movieId: string,
+    date?: string,
+    source: 'movie_detail' | 'desktop_panel' = 'movie_detail',
+  ) => {
+    const theater = theaters.find((t) => t.id === theaterId)
+    if (!theater) return
+    const movie = movies.find((m) => m.id === movieId)
+
+    suppressMovieFilterFitRef.current = true
+    closeSearch()
+    closeDesktopPanel()
+    if (exitTimerRef.current) clearTimeout(exitTimerRef.current)
+    setSheetExiting(false)
+    setSelectedId(theater.id)
+    setDisplayedId(theater.id)
+    setSelectedMovieId(movieId)
+    setSheetExpanded(isDesktopLayout)
+    setFromMovieId(movieId)
+    setInitialSheetDate(date || undefined)
+    setDirectorFilter(null)
+    if (movie) setMovieFilter({ id: movie.id, title: movie.title })
+
+    trackEvent('theater sheet opened', {
+      theater_id: theater.id,
+      theater_name: theater.name,
+      selected_movie_id: movieId,
+      source,
+      has_movie_filter: true,
+    })
+    classifySessionIntent('type_a', {
+      source,
+      theater_id: theater.id,
+      selected_movie_id: movieId,
+    })
+
+    const currentZoom = mapRef.current?.getZoom() ?? 15
+    flyToForTheater(
+      [theater.lat, theater.lng],
+      Math.max(currentZoom, 16),
+      0.75,
+    )
+  }, [closeDesktopPanel, closeSearch, flyToForTheater, isDesktopLayout, movies, theaters])
+
   useEffect(() => {
     if (isDesktopLayout && selectedTheater) setSheetExpanded(true)
   }, [isDesktopLayout, selectedTheater])
 
   // 영화 상세 페이지에서 뒤로가기 시 ?theater= 파라미터로 극장 시트 복원
-  const restoredTheaterRef = useRef(false)
+  const restoredTheaterRef = useRef<string | null>(null)
   useEffect(() => {
-    if (restoredTheaterRef.current || theaters.length === 0) return
-    const params = new URLSearchParams(window.location.search)
-    const theaterParam = params.get('theater')
-    if (!theaterParam) { restoredTheaterRef.current = true; return }
+    if (theaters.length === 0) return
+    const theaterParam = searchParams.get('theater')
+    if (!theaterParam) return
+    const movieParam = searchParams.get('movie') ?? searchParams.get('fromMovie')
+    if (movieParam && movies.length === 0) return
+    const dateParam = searchParams.get('date')
+    const restoreKey = [theaterParam, movieParam ?? '', dateParam ?? ''].join(':')
+    if (restoredTheaterRef.current === restoreKey) return
     const theater = theaters.find((t) => t.id === theaterParam)
     if (!theater) return
-    restoredTheaterRef.current = true
-    const fromMovie = params.get('fromMovie')
-    const dateParam = params.get('date')
-    if (fromMovie) setFromMovieId(fromMovie)
-    if (dateParam) setInitialSheetDate(dateParam)
-    focusTheater(theater, 'direct_link')
+
+    restoredTheaterRef.current = restoreKey
+    const fromMovie = searchParams.get('fromMovie')
+    if (movieParam) {
+      openTheaterForMovie(theater.id, movieParam, dateParam ?? undefined, 'movie_detail')
+    } else {
+      suppressMovieFilterFitRef.current = true
+      closeSearch()
+      if (exitTimerRef.current) clearTimeout(exitTimerRef.current)
+      setSheetExiting(false)
+      setSelectedId(theater.id)
+      setDisplayedId(theater.id)
+      setSheetExpanded(isDesktopLayout)
+
+      trackEvent('theater sheet opened', {
+        theater_id: theater.id,
+        theater_name: theater.name,
+        source: 'movie_detail',
+        has_movie_filter: false,
+      })
+      classifySessionIntent('type_c', {
+        source: 'movie_detail',
+        theater_id: theater.id,
+      })
+
+      const currentZoom = mapRef.current?.getZoom() ?? 15
+      flyToForTheater(
+        [theater.lat, theater.lng],
+        Math.max(currentZoom, 16),
+        0.75,
+      )
+    }
+
+    if (fromMovie || movieParam) setFromMovieId(fromMovie ?? movieParam ?? null)
+
     const url = new URL(window.location.href)
     url.searchParams.delete('theater')
     url.searchParams.delete('fromMovie')
     url.searchParams.delete('date')
+    url.searchParams.delete('movie')
     window.history.replaceState({}, '', url.toString())
-  }, [theaters, focusTheater])
 
-  // 영화 상세 / 바텀시트에서 ?movie= 파라미터로 영화 필터 복원
-  const restoredMovieRef = useRef(false)
+  }, [closeSearch, flyToForTheater, isDesktopLayout, movies.length, openTheaterForMovie, searchParams, theaters])
+
+  // 영화 상세 / 패널에서 ?movie= 파라미터로 지도 필터만 복원
+  const restoredMovieFilterRef = useRef<string | null>(null)
   useEffect(() => {
-    if (restoredMovieRef.current || movies.length === 0) return
-    const movieParam = new URLSearchParams(window.location.search).get('movie')
-    if (!movieParam) { restoredMovieRef.current = true; return }
+    if (searchParams.has('theater')) return
+    const movieParam = searchParams.get('movie')
+    if (!movieParam || movies.length === 0) return
+    if (restoredMovieFilterRef.current === movieParam) return
     const movie = movies.find((m) => m.id === movieParam)
     if (!movie) return
-    restoredMovieRef.current = true
-    classifySessionIntent('type_a', { source: 'movie_detail', movie_id: movie.id })
+
+    restoredMovieFilterRef.current = movieParam
+    suppressMovieFilterFitRef.current = false
+    clearTheaterSelection()
+    setDirectorFilter(null)
     setMovieFilter({ id: movie.id, title: movie.title })
+
     const url = new URL(window.location.href)
     url.searchParams.delete('movie')
     window.history.replaceState({}, '', url.toString())
-  }, [movies])
+  }, [clearTheaterSelection, movies, searchParams])
+
+  // 감독 상세 / 패널에서 ?director= 파라미터로 지도 필터만 복원
+  const restoredDirectorFilterRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (searchParams.has('theater')) return
+    const directorParam = searchParams.get('director')
+    if (!directorParam) return
+    if (restoredDirectorFilterRef.current === directorParam) return
+    restoredDirectorFilterRef.current = directorParam
+    applyDirectorFilter(directorParam)
+
+    const url = new URL(window.location.href)
+    url.searchParams.delete('director')
+    window.history.replaceState({}, '', url.toString())
+  }, [applyDirectorFilter, searchParams])
+
 
   // 극장 선택 시 → 첫 번째 영화 선택 + 시트 collapsed로 열기
   const handlePinClick = useCallback((theaterId: string, clickedMovieId?: string) => {
@@ -1965,7 +2112,27 @@ export default function MapView() {
                   {theater.address}
                 </span>
               </span>
-              <span style={{ color: 'var(--color-text-caption)', fontSize: 18, lineHeight: 1 }}>›</span>
+              {(() => {
+                const distance = calculateAndFormatDistance(
+                  coords?.lat,
+                  coords?.lng,
+                  theater.lat,
+                  theater.lng,
+                )
+                return distance ? (
+                  <span style={{
+                    flexShrink: 0,
+                    fontSize: 13,
+                    color: 'var(--color-text-sub)',
+                    fontWeight: 500,
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}>
+                    {distance}
+                  </span>
+                ) : null
+              })()}
+              <span style={{ color: 'var(--color-text-caption)', fontSize: 18, lineHeight: 1, flexShrink: 0 }}>›</span>
             </button>
           ))}
         </div>
@@ -1999,8 +2166,12 @@ export default function MapView() {
                 })
                 classifySessionIntent('type_a', { source: 'search', movie_id: movie.id })
                 setRecentSearches(prev => addToRecent(searchQuery, prev))
-                setMovieFilter({ id: movie.id, title: movie.title })
                 closeSearch()
+                if (isDesktopLayout) {
+                  openDesktopPanel({ type: 'movie', id: movie.id })
+                } else {
+                  router.push(`/movie/${movie.id}`)
+                }
               }}
               style={{
                 display: 'flex',
@@ -2264,7 +2435,27 @@ export default function MapView() {
                   ))}
                 </span>
               </span>
-              <span style={{ color: 'var(--color-text-caption)', fontSize: 18, lineHeight: 1 }}>›</span>
+              {(() => {
+                const distance = calculateAndFormatDistance(
+                  coords?.lat,
+                  coords?.lng,
+                  station.lat,
+                  station.lng,
+                )
+                return distance ? (
+                  <span style={{
+                    flexShrink: 0,
+                    fontSize: 13,
+                    color: 'var(--color-text-sub)',
+                    fontWeight: 500,
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}>
+                    {distance}
+                  </span>
+                ) : null
+              })()}
+              <span style={{ color: 'var(--color-text-caption)', fontSize: 18, lineHeight: 1, flexShrink: 0 }}>›</span>
             </button>
           ))}
         </div>
@@ -2595,15 +2786,26 @@ export default function MapView() {
           <FilterBar
             desktop={isDesktopLayout}
             onChange={setFilters}
+            defaultRegionId={coords ? getRegionFromCoords(coords.lat, coords.lng) : null}
             nationOptions={nationOptions}
             movieFilter={movieFilter}
+            directorFilter={directorFilter}
             onMovieFilterClear={() => {
               trackEvent('map filter changed', {
                 action: 'movie_filter_cleared',
                 movie_filter_id: movieFilter?.id,
                 movie_filter_title: movieFilter?.title,
               })
+              suppressMovieFilterFitRef.current = false
               setMovieFilter(null)
+            }}
+            onDirectorFilterClear={() => {
+              trackEvent('map filter changed', {
+                action: 'director_filter_cleared',
+                director_filter_name: directorFilter?.name,
+              })
+              suppressMovieFilterFitRef.current = false
+              setDirectorFilter(null)
             }}
             onMovieChipClick={() => setSearchOpen(true)}
             onDirectorChipClick={() => setSearchOpen(true)}
@@ -3271,6 +3473,8 @@ export default function MapView() {
                 movie_title: movieTitle,
               })
               classifySessionIntent('type_a', { source: 'theater_sheet', movie_id: movieId })
+              suppressMovieFilterFitRef.current = false
+              setDirectorFilter(null)
               setMovieFilter({ id: movieId, title: movieTitle })
             }}
             onMovieDetailOpen={isDesktopLayout ? (id) => {
@@ -3317,6 +3521,7 @@ export default function MapView() {
         }}>
           <DesktopDetailPanel
             panel={desktopPanel}
+            regionId={filters.regionId}
             onClose={closeDesktopPanel}
             onBack={panelStack.length > 1 || selectedTheater ? () => window.history.back() : undefined}
             onNavigate={openDesktopPanel}
@@ -3327,9 +3532,22 @@ export default function MapView() {
                 source: 'desktop_panel',
               })
               classifySessionIntent('type_a', { source: 'desktop_panel', movie_id: id })
+              suppressMovieFilterFitRef.current = false
+              clearTheaterSelection()
+              setDirectorFilter(null)
               setMovieFilter({ id, title })
               closeDesktopPanel()
             }}
+            onDirectorFilterOnMap={(name) => {
+              trackEvent('director theaters map opened', {
+                director_name: name,
+                source: 'desktop_panel',
+              })
+              classifySessionIntent('type_a', { source: 'desktop_panel', director_name: name })
+              applyDirectorFilter(name)
+              closeDesktopPanel()
+            }}
+            onTheaterOpen={(movieId, theaterId, date) => openTheaterForMovie(theaterId, movieId, date, 'desktop_panel')}
           />
         </div>
       )}

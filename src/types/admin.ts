@@ -134,10 +134,12 @@ export interface AdminMovie {
 }
 
 export interface AdminExternalMovie {
-  provider: 'kmdb'
+  provider: 'kmdb' | 'local'
   externalId: string
   movieId: string
   movieSeq: string
+  /** 로컬 DB에 이미 존재하는 경우 DB ID */
+  localId?: string
   title: string
   originalTitle?: string
   year: number

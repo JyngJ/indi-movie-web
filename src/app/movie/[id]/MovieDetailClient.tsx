@@ -1,11 +1,15 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMovieDetail, useMovieTheaterShowtimes, useActiveMovieIds } from '@/lib/supabase/queries'
 import type { MovieDetail, MovieTheaterEntry } from '@/lib/supabase/queries'
 import { withFlagsRaw } from '@/lib/nations'
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
+import { useUserLocation } from '@/hooks/useUserLocation'
+import { locationAdapter } from '@/lib/adapters/location'
+import { calculateAndFormatDistance, calculateDistanceKm } from '@/lib/map/distanceUtils'
+import { getRegionFromAddress, getRegionFromCoords } from '@/lib/regions'
 
 function useIsDesktopDetail() {
   const [isDesktop, setIsDesktop] = useState(
@@ -320,45 +324,85 @@ function formatDateLabel(dateStr: string) {
 }
 
 /* ── TheaterShowtimeChips ── */
-function TheaterShowtimeChips({ entry, movieId, onGoTo }: { entry: MovieTheaterEntry; movieId: string; onGoTo: (date: string) => void }) {
+function TheaterShowtimeChips({
+  entry,
+  movieId,
+  userCoords,
+  onGoTo,
+}: {
+  entry: MovieTheaterEntry
+  movieId: string
+  userCoords: { lat: number; lng: number } | null
+  onGoTo: (date: string) => void
+}) {
+  const distance = calculateAndFormatDistance(
+    userCoords?.lat,
+    userCoords?.lng,
+    entry.theaterLat,
+    entry.theaterLng,
+  )
+
   return (
     <div>
       {/* 극장 헤더 */}
-      <div style={{ padding: '14px 16px 12px', display: 'flex', alignItems: 'flex-start', gap: 0 }}>
+      <div style={{ padding: '14px 16px 12px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: 'var(--font-serif)', fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.3 }}>
             {entry.theaterName}
           </div>
-          <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 3, color: 'var(--color-text-sub)', fontSize: 12 }}>
+          <div style={{ marginTop: 4, display: 'flex', alignItems: 'flex-start', gap: 3, color: 'var(--color-text-sub)', fontSize: 12, lineHeight: 1.45 }}>
             <IcoPin />
-            {entry.theaterAddress}
+            <span style={{ minWidth: 0, wordBreak: 'keep-all' }}>{entry.theaterAddress}</span>
           </div>
         </div>
-        <button
-          onClick={() => {
-            const date = entry.dateGroups[0]?.date ?? ''
-            trackEvent('movie theater selected', {
-              movie_id: movieId,
-              theater_id: entry.theaterId,
-              theater_name: entry.theaterName,
-              show_date: date,
-              source: 'movie_detail',
-            })
-            onGoTo(date)
-          }}
-          style={{
-            flexShrink: 0, alignSelf: 'center',
-            height: 28, padding: '0 11px',
-            borderRadius: 999,
-            border: '1px solid var(--color-border)',
-            backgroundColor: 'var(--color-surface-raised)',
-            color: 'var(--color-text-body)',
-            fontSize: 12, fontWeight: 500,
-            cursor: 'pointer', minHeight: 'auto',
-          }}
-        >
-          영화관 보기
-        </button>
+        <div style={{ flexShrink: 0, alignSelf: 'center', display: 'flex', alignItems: 'center', gap: 8 }}>
+          {distance && (
+            <span style={{
+              minWidth: 58,
+              height: 24,
+              padding: '0 8px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'flex-start',
+              textAlign: 'left',
+              borderRadius: 999,
+              border: '1px solid var(--color-border)',
+              backgroundColor: 'var(--color-surface-raised)',
+              color: 'var(--color-text-body)',
+              fontSize: 12,
+              fontWeight: 500,
+              fontFeatureSettings: '"tnum"',
+              whiteSpace: 'nowrap',
+            }}>
+              {distance}
+            </span>
+          )}
+          <button
+            onClick={() => {
+              const date = entry.dateGroups[0]?.date ?? ''
+              trackEvent('movie theater selected', {
+                movie_id: movieId,
+                theater_id: entry.theaterId,
+                theater_name: entry.theaterName,
+                show_date: date,
+                source: 'movie_detail',
+              })
+              onGoTo(date)
+            }}
+            style={{
+              flexShrink: 0,
+              height: 28, padding: '0 11px',
+              borderRadius: 999,
+              border: '1px solid color-mix(in srgb, var(--color-primary-base) 35%, transparent)',
+              backgroundColor: 'var(--color-primary-subtle-l)',
+              color: 'var(--color-primary-base)',
+              fontSize: 12, fontWeight: 700,
+              cursor: 'pointer', minHeight: 'auto',
+            }}
+          >
+            영화관 보기
+          </button>
+        </div>
       </div>
 
       {/* 날짜별 상영시간 */}
@@ -428,8 +472,80 @@ function TheaterShowtimeChips({ entry, movieId, onGoTo }: { entry: MovieTheaterE
 /* ── TheatersTab ── */
 function TheatersTab({ movieId, onMapClick, onGoToTheater, desktop = false }: { movieId: string; onMapClick: () => void; onGoToTheater: (theaterId: string, date: string) => void; desktop?: boolean }) {
   const { data: theaters = [], isLoading } = useMovieTheaterShowtimes(movieId)
+  const { coords } = useUserLocation()
+  const distanceCoords = coords ?? locationAdapter.getDefaultLocation()
+  const regionId = coords ? getRegionFromCoords(coords.lat, coords.lng) : null
+
+  const sortedTheaters = useMemo(() => {
+    return [...theaters].sort((a, b) => {
+      const aDistance = calculateDistanceKm(distanceCoords.lat, distanceCoords.lng, a.theaterLat, a.theaterLng)
+      const bDistance = calculateDistanceKm(distanceCoords.lat, distanceCoords.lng, b.theaterLat, b.theaterLng)
+      if (aDistance == null && bDistance == null) return a.theaterName.localeCompare(b.theaterName, 'ko')
+      if (aDistance == null) return 1
+      if (bDistance == null) return -1
+      return aDistance - bDistance
+    })
+  }, [distanceCoords.lat, distanceCoords.lng, theaters])
+
+  const { inRegion, otherRegion } = useMemo(() => {
+    if (!regionId) return { inRegion: sortedTheaters, otherRegion: [] }
+    const inRegion = sortedTheaters.filter(e => getRegionFromAddress(e.theaterAddress) === regionId)
+    const otherRegion = sortedTheaters.filter(e => getRegionFromAddress(e.theaterAddress) !== regionId)
+    return { inRegion, otherRegion }
+  }, [regionId, sortedTheaters])
+
+  const theaterCard = (entry: typeof theaters[number]) => (
+    <div key={entry.theaterId} style={{
+      borderRadius: 12, border: '1px solid var(--color-border)',
+      backgroundColor: 'var(--color-surface-card)', overflow: 'hidden',
+    }}>
+      <TheaterShowtimeChips
+        entry={entry}
+        movieId={movieId}
+        userCoords={distanceCoords}
+        onGoTo={(date) => onGoToTheater(entry.theaterId, date)}
+      />
+    </div>
+  )
+
+  const primaryColor = 'var(--color-primary-base)'
+
+  // 지도에서 보기 버튼 아래 상영 카운트 텍스트
+  const countLine = !isLoading && (
+    <p style={{ margin: '6px 0 0', fontSize: 12, color: 'var(--color-text-caption)', lineHeight: 1.5 }}>
+      {regionId && (
+        <>
+          <b style={{ color: primaryColor }}>{regionId}</b>
+          {' 지역 '}
+          <b style={{ color: primaryColor }}>{inRegion.length}</b>
+          {'개 영화관 상영중, '}
+        </>
+      )}
+      {'전국 '}
+      <b style={{ color: primaryColor }}>{theaters.length}</b>
+      {'개 영화관 상영중'}
+    </p>
+  )
+
+  const sectionDivider = (label: string) => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '24px 0 16px' }}>
+      <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
+      <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-caption)', whiteSpace: 'nowrap', letterSpacing: '0.3px' }}>
+        {label}
+      </span>
+      <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
+    </div>
+  )
+
+  const grid = (entries: typeof theaters) => (
+    <div style={{ display: 'grid', gridTemplateColumns: desktop ? 'repeat(2, minmax(0, 1fr))' : '1fr', gap: 12 }}>
+      {entries.map(theaterCard)}
+    </div>
+  )
+
   return (
     <div style={{ padding: desktop ? '26px 0 64px' : '20px 20px 52px', maxWidth: desktop ? 1040 : undefined, margin: desktop ? '0 auto' : undefined }}>
+      {/* 지도에서 보기 버튼 */}
       <button
         onClick={() => {
           trackEvent('movie theaters map opened', {
@@ -446,38 +562,45 @@ function TheatersTab({ movieId, onMapClick, onGoToTheater, desktop = false }: { 
           borderRadius: 10, border: '1px solid var(--color-primary-base)',
           backgroundColor: 'var(--color-primary-subtle-l)',
           color: 'var(--color-primary-base)', fontSize: 14, fontWeight: 600,
-          cursor: 'pointer', marginBottom: 20,
+          cursor: 'pointer', marginBottom: 0,
         }}
       >
         <IcoMap />
         상영중인 영화관 지도에서 보기
       </button>
+      {countLine}
 
-      {!isLoading && (
-        <p style={{ margin: '0 0 14px', fontSize: 12, fontWeight: 600, letterSpacing: '0.4px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>
-          상영 중 · {theaters.length}곳
-        </p>
-      )}
-
+      {/* 목록 */}
       {isLoading ? (
         <div style={{ height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-caption)', fontSize: 13 }}>
           불러오는 중…
         </div>
       ) : theaters.length === 0 ? (
         <div style={{ textAlign: 'center', paddingTop: 40, fontSize: 13, color: 'var(--color-text-caption)' }}>
-          오늘 상영 중인 영화관이 없습니다
+          상영 중인 영화관이 없습니다
         </div>
+      ) : regionId ? (
+        <>
+          {/* 선택 지역 섹션 */}
+          {inRegion.length > 0
+            ? grid(inRegion)
+            : (
+              <div style={{ textAlign: 'center', padding: '28px 0 4px', fontSize: 13, color: 'var(--color-text-caption)' }}>
+                {regionId} 지역 상영 정보가 없습니다
+              </div>
+            )
+          }
+
+          {/* 구분선 + 그 외 지역 */}
+          {otherRegion.length > 0 && (
+            <>
+              {sectionDivider(`${regionId} 외 지역`)}
+              {grid(otherRegion)}
+            </>
+          )}
+        </>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: desktop ? 'repeat(2, minmax(0, 1fr))' : '1fr', gap: 12 }}>
-          {theaters.map((entry) => (
-            <div key={entry.theaterId} style={{
-              borderRadius: 12, border: '1px solid var(--color-border)',
-              backgroundColor: 'var(--color-surface-card)', overflow: 'hidden',
-            }}>
-              <TheaterShowtimeChips entry={entry} movieId={movieId} onGoTo={(date) => onGoToTheater(entry.theaterId, date)} />
-            </div>
-          ))}
-        </div>
+        grid(sortedTheaters)
       )}
     </div>
   )

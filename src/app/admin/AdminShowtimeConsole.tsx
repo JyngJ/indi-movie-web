@@ -629,12 +629,12 @@ export function AdminShowtimeConsole() {
 
   async function searchMovies() {
     if (movieSearchQuery.trim().length < 2) {
-      setMessage('KMDB 검색어는 2자 이상 입력하세요.')
+      setMessage('검색어는 2자 이상 입력하세요.')
       return
     }
 
     setLoading(true)
-    setMessage('KMDB에서 영화를 검색하는 중입니다.')
+    setMessage('영화를 검색하는 중입니다.')
 
     try {
       const response = await fetch(`/api/admin/movies/search?q=${encodeURIComponent(movieSearchQuery)}`, {
@@ -646,13 +646,18 @@ export function AdminShowtimeConsole() {
       }
 
       if (!response.ok || !result.movies) {
-        throw new Error(result.error?.message ?? 'KMDB 영화 검색에 실패했습니다.')
+        throw new Error(result.error?.message ?? '영화 검색에 실패했습니다.')
       }
 
       setMovieSearchResults(result.movies)
-      setMessage(`KMDB 검색 결과 ${result.movies.length}건을 불러왔습니다.`)
+      const kmdbCount = result.movies.filter((m) => m.provider === 'kmdb').length
+      const localCount = result.movies.filter((m) => m.provider === 'local').length
+      const parts = []
+      if (kmdbCount > 0) parts.push(`KMDB ${kmdbCount}건`)
+      if (localCount > 0) parts.push(`로컬 DB ${localCount}건`)
+      setMessage(parts.length ? `검색 결과: ${parts.join(', ')}` : '검색 결과가 없습니다.')
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'KMDB 영화 검색에 실패했습니다.')
+      setMessage(error instanceof Error ? error.message : '영화 검색에 실패했습니다.')
     } finally {
       setLoading(false)
     }
@@ -1268,15 +1273,21 @@ export function AdminShowtimeConsole() {
                       <span>
                         <strong>{movie.title}</strong>
                         <small>
-                          KMDB {movie.movieId}{movie.movieSeq} · {movie.year}
-                          {movie.openDate ? ` · ${movie.openDate}` : ''}
-                          {movie.director.length ? ` · ${movie.director.join(', ')}` : ''}
-                          {movie.posterUrl ? ' · 포스터 있음' : ''}
+                          {movie.provider === 'local'
+                            ? `로컬 DB · ${movie.year}${movie.director.length ? ` · ${movie.director.join(', ')}` : ''}`
+                            : `KMDB ${movie.movieId}${movie.movieSeq} · ${movie.year}${movie.openDate ? ` · ${movie.openDate}` : ''}${movie.director.length ? ` · ${movie.director.join(', ')}` : ''}${movie.posterUrl ? ' · 포스터 있음' : ''}`
+                          }
                         </small>
                       </span>
-                      <Button variant="secondary" size="sm" loading={loading} onClick={() => importMovieFromKmdb(movie)}>
-                        가져오기
-                      </Button>
+                      {movie.provider === 'local' ? (
+                        <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: '#e8f5e9', color: '#2e7d32', fontWeight: 600 }}>
+                          이미 등록됨
+                        </span>
+                      ) : (
+                        <Button variant="secondary" size="sm" loading={loading} onClick={() => importMovieFromKmdb(movie)}>
+                          가져오기
+                        </Button>
+                      )}
                     </article>
                   ))}
                 </div>

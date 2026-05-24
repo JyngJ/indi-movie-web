@@ -434,6 +434,36 @@ export async function listAdminMatchOptions(): Promise<AdminMatchOptions> {
   }
 }
 
+export async function searchLocalMovies(query: string): Promise<AdminExternalMovie[]> {
+  const q = query.trim()
+  if (!q) return []
+
+  const supabase = createSupabaseAdminClient()
+  const { data, error } = await supabase
+    .from('movies')
+    .select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, poster_url, genre, director, nation')
+    .ilike('title', `%${q}%`)
+    .order('title', { ascending: true })
+    .limit(20)
+
+  if (error) throw new Error(error.message)
+
+  return ((data ?? []) as MovieRow[]).map((row) => ({
+    provider: 'local' as const,
+    externalId: `local:${row.id}`,
+    movieId: row.kmdb_id ?? '',
+    movieSeq: row.kmdb_movie_seq ?? '',
+    localId: row.id,
+    title: row.title,
+    originalTitle: row.original_title ?? undefined,
+    year: row.year ?? new Date().getFullYear(),
+    genre: [],
+    director: Array.isArray(row.director) ? (row.director as string[]) : [],
+    nation: row.nation ?? undefined,
+    posterUrl: row.poster_url ?? undefined,
+  }))
+}
+
 export async function listAdminMovies(): Promise<AdminMovie[]> {
   const supabase = createSupabaseAdminClient()
   const { data, error } = await supabase
@@ -1368,6 +1398,8 @@ function candidateMovieTitleCandidates(title: string) {
   const beforeDashEvent = base.replace(/\s*[-–—]\s*(?:GV|시네토크|씨네토크|관객과의\s*대화|무대인사|해설|강연).*$/i, '').trim()
   const knownProgramTitle = stripKnownProgramPrefix(decoratedBase)
   const slashParts = base.split(/\s*\/\s*/).map(s => s.trim()).filter(Boolean)
+  // 미지의 괄호 내용 포함한 모든 trailing 괄호 제거: "마더(고려극장기획)" → "마더"
+  const beforeAnyParen = base.includes('(') ? base.replace(/\s*\(.*$/, '').trim() : base
 
   const variants = [
     base,
@@ -1393,6 +1425,9 @@ function candidateMovieTitleCandidates(title: string) {
     // 파트 표시 제거 (1부, 2부, 상, 하)
     base.replace(/\s+(?:\d+,\s*\d+부|\d+부|상편|하편|[상하])\s*$/, '').trim(),
     base.replace(/,?\s*\d+[,\s]*\d*부?\s*$/, '').trim(),
+    // 미지의 괄호 내용 포함 trailing 괄호 전체 제거
+    beforeAnyParen !== base && beforeAnyParen !== decoratedBase ? beforeAnyParen : undefined,
+    beforeAnyParen !== base && beforeAnyParen !== decoratedBase ? stripMovieTitleDecorations(beforeAnyParen) : undefined,
     // 더블 피처: + 앞/뒤 각 영화 제목
     ...(plusParts.length > 1 ? plusParts.flatMap((part) => [part, stripMovieTitleDecorations(part)]) : []),
     // 단편 묶음: 각 작품 제목도 후보로 둔다.
