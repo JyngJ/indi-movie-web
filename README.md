@@ -134,6 +134,20 @@ npm run dev   # → http://localhost:3000
 > Node 18+, `.env.local` 환경 변수 필요 (Supabase URL·키).  
 > 이 프로젝트는 Turbopack을 사용하지 않습니다 (`--webpack` 강제).
 
+분석 도구 설정과 이벤트/대시보드 정의는 [`docs/ANALYTICS.md`](docs/ANALYTICS.md)에 정리되어 있습니다.
+
+---
+
+## 데이터베이스
+
+### 자동 정리
+
+**3일 이상 지난 상영시간표 자동 삭제** (PostgreSQL pg_cron)
+- 매일 새벽 3시(UTC) 자동 실행
+- 대상: `show_date < CURRENT_DATE - INTERVAL '3 days'`인 `showtimes` 레코드
+- Job ID: `cleanup-old-showtimes`
+- 수동 실행: `DELETE FROM showtimes WHERE show_date < CURRENT_DATE - INTERVAL '3 days';`
+
 ---
 
 ## 저작권

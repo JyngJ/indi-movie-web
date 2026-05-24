@@ -3,6 +3,7 @@ import { ReactNode } from 'react'
 import './globals.css'
 import { Providers } from './providers'
 import { initTheme } from '@/store/themeStore'
+import { AnalyticsScripts } from '@/components/analytics/AnalyticsScripts'
 
 export const metadata: Metadata = {
   title: '영화볼지도',
@@ -47,6 +48,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             {children}
           </div>
         </Providers>
+        <AnalyticsScripts />
       </body>
     </html>
   )

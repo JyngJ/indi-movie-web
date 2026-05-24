@@ -2,7 +2,7 @@
 
 import 'leaflet/dist/leaflet.css'
 import { useEffect, useRef, useState, useCallback, useMemo, type CSSProperties } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { GeoJSON, MapContainer, TileLayer, Marker } from 'react-leaflet'
 import L from 'leaflet'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -19,6 +19,7 @@ import { useActiveMovieIds, useMapShowtimes, useMovies, useStations, useTheaters
 import type { Movie, Station, Theater } from '@/types/api'
 import { SEOUL_GU, SEOUL_DONG } from '@/data/seoul-areas'
 import { normalizeGenre } from '@/lib/genres'
+import { getRegionFromCity, getRegionFromCoords, REGION_BOUNDS } from '@/lib/regions'
 import { useThemeStore } from '@/store/themeStore'
 import { REPORT_CATEGORIES } from '@/lib/reports/types'
 import {
@@ -28,14 +29,16 @@ import {
 import { finiteNumber, formatDateParam, startOfLocalDay, addDays, endOfMonth, loadRecentSearches, addToRecent, removeFromRecent } from '@/lib/map/searchUtils'
 import { stationSearchScore, movieSearchScore, directorSearchScore, theaterSearchScore, areaSearchScore } from '@/lib/map/searchScoring'
 import { posterCountForZoom, posterSizeForZoom, posterSlotsForZoom } from '@/lib/map/posterLogic'
+import { calculateAndFormatDistance } from '@/lib/map/distanceUtils'
 import type { TheaterPosterMovie } from '@/lib/map/posterLogic'
+import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { PosterGrid } from './PosterGrid'
 import { ViewportTracker, ZoomSlider, OffScreenTracker, MapRefSetter, IcoPlus, IcoMinus, IcoLocate, IcoSun, IcoMoon } from './MapControls'
 
 const SEARCH_CROSS_RESULT_LIMIT = 5
 const STATION_BOUNDS_PADDING = 0.25
 const SUBWAY_LAYER_ENTER_DELAY_MS = 120
-const MAP_MIN_ZOOM = 8
+const MAP_MIN_ZOOM = 7
 const MAP_MAX_ZOOM = 19
 const KOREA_MAP_BOUNDS: L.LatLngBoundsExpression = [
   [32.8, 124.2],
@@ -73,11 +76,8 @@ function dateRangeForFilter(filter: FilterState) {
     case null:
       return { start: today, end: addDays(today, 30) }
     case 'this-week':
-    default: {
-      const dow = today.getDay()
-      const weekEnd = dow === 0 ? addDays(today, 6) : addDays(today, 7 - dow)
-      return { start: today, end: weekEnd }
-    }
+    default:
+      return { start: today, end: addDays(today, 6) }
   }
 }
 
@@ -188,6 +188,9 @@ interface TheaterCluster {
   lat: number
   lng: number
   isCoLocation?: boolean  // 동일 건물 — 클릭 시 CO_LOCATE_SPLIT_ZOOM으로 이동
+  regionLabel?: string    // 줌 7-8: 지역명 표시
+  cityLabel?: string      // 줌 9: 도시명 표시
+  clusterCount?: number   // 줌 9: 극장 수 표시
 }
 
 type LabelDir = 'top' | 'right' | 'bottom' | 'left'
@@ -310,6 +313,74 @@ function computeNameLabelOffsets(
   return offsets
 }
 
+/* ── 지역별 중심 좌표 ── */
+const REGION_CENTERS: Record<string, { lat: number; lng: number }> = {
+  // 광역시
+  '서울': { lat: 37.5665, lng: 126.9780 },
+  '부산': { lat: 35.1796, lng: 129.0756 },
+  '대구': { lat: 35.8714, lng: 128.5717 },
+  '인천': { lat: 37.4562, lng: 126.7052 },
+  '광주': { lat: 35.1260, lng: 126.8313 },
+  '대전': { lat: 36.3500, lng: 127.3800 },
+  '울산': { lat: 35.5396, lng: 129.3139 },
+  // 도
+  '경기도 북부': { lat: 37.8000, lng: 127.1500 },
+  '경기도 남부': { lat: 36.9000, lng: 127.0500 },
+  '강원도': { lat: 37.8000, lng: 128.9000 },
+  '충청남도': { lat: 36.6000, lng: 126.7000 },
+  '충청북도': { lat: 36.8000, lng: 127.7000 },
+  '전라북도': { lat: 35.8300, lng: 127.1300 },
+  '전라남도': { lat: 34.8000, lng: 126.8000 },
+  '경상북도': { lat: 36.2000, lng: 129.1000 },
+  '경상남도': { lat: 35.2000, lng: 128.5000 },
+  '제주도': { lat: 33.3886, lng: 126.5626 },
+  '세종': { lat: 36.4800, lng: 127.2400 },
+}
+
+function getRegionGroup(city: string, theater?: Theater): string {
+  // address가 "경기도"로 시작하면 위도로 경기도 남부/북부 판단
+  if (theater?.address?.startsWith('경기도')) {
+    const lat = theater?.lat ?? 37.5
+    return lat >= 37.6 ? '경기도 북부' : '경기도 남부'
+  }
+
+  const metropolis = ['서울', '부산', '대구', '인천', '광주', '대전', '울산']
+  if (metropolis.includes(city)) return city
+
+  // 경기 북부/남부 분리 (위도 37.6을 기준으로)
+  if (city === '경기') {
+    const lat = theater?.lat ?? 37.5
+    return lat >= 37.6 ? '경기도 북부' : '경기도 남부'
+  }
+
+  // 도/특별자치도 매핑 (전체 이름으로 통일)
+  const doGroups: Record<string, string> = {
+    '강원': '강원도',
+    '제천': '강원도',
+    '충북': '충청북도',
+    '충남': '충청남도',
+    '전북': '전라북도',
+    '전주': '전라북도',
+    '전남': '전라남도',
+    '목포': '전라남도',
+    '경북': '경상북도',
+    '경남': '경상남도',
+    '창원': '경상남도',
+    '밀양': '경상남도',
+    '김해': '경상남도',
+    '파주': '경기도 북부',
+    '안산': '경기도 남부',
+    '수원': '경기도 남부',
+    '제주': '제주도',
+    '세종': '세종',
+  }
+  return doGroups[city] || city
+}
+
+function getRegionCenter(region: string): { lat: number; lng: number } {
+  return REGION_CENTERS[region] || { lat: 36.5, lng: 127.5 }
+}
+
 /* ── 줌 레벨에서 클러스터링 반경(px) ── */
 function clusterRadiusForZoom(zoom: number, isDesktop = false): number {
   if (isDesktop) {
@@ -322,6 +393,120 @@ function clusterRadiusForZoom(zoom: number, isDesktop = false): number {
   if (zoom >= 15) return 45
   if (zoom >= 14) return 60
   return 80
+}
+
+/* ── 줌 레벨별 클러스터 계산 ─────────────────────────────── */
+function computeClustersByZoom(
+  theaters: Theater[],
+  map: LeafletMap,
+  zoom: number,
+  splitIds: Set<string> = new Set(),
+  coLocGroupKey: Map<string, string> = new Map(),
+  isDesktop = false,
+): TheaterCluster[] {
+  // 줌 7-8: 지역별 클러스터링 (지역 중심 좌표 사용)
+  if (zoom >= 7 && zoom <= 8) {
+    const regionGroups = new Map<string, Theater[]>()
+    for (const theater of theaters) {
+      const region = getRegionGroup(theater.city, theater)
+      if (!regionGroups.has(region)) {
+        regionGroups.set(region, [])
+      }
+      regionGroups.get(region)!.push(theater)
+    }
+
+    const clusters: TheaterCluster[] = []
+    for (const [region, group] of regionGroups.entries()) {
+      const center = getRegionCenter(region)
+      clusters.push({
+        id: `region-${region}`,
+        theaters: group,
+        lat: center.lat,
+        lng: center.lng,
+        isCoLocation: false,
+        regionLabel: region,
+        clusterCount: group.length,
+      })
+    }
+    return clusters
+  }
+
+  // 줌 9-10: 도시별 클러스터링 (광역시만 개별, 나머지는 도/지역으로 묶음)
+  if (zoom >= 9 && zoom <= 10) {
+    const metropolis = ['서울', '부산', '대구', '인천', '광주', '대전', '울산']
+    const groupMap = new Map<string, Theater[]>()
+
+    for (const theater of theaters) {
+      let groupKey: string
+      // address가 "경기도"로 시작하면 항상 경기도 남부/북부로 분류
+      if (theater.address?.startsWith('경기도')) {
+        groupKey = getRegionGroup(theater.city, theater)
+      } else if (metropolis.includes(theater.city)) {
+        groupKey = theater.city
+      } else {
+        groupKey = getRegionGroup(theater.city, theater)
+      }
+
+      if (!groupMap.has(groupKey)) {
+        groupMap.set(groupKey, [])
+      }
+      groupMap.get(groupKey)!.push(theater)
+    }
+
+    const clusters: TheaterCluster[] = []
+    for (const [groupKey, group] of groupMap.entries()) {
+      const lat = group.reduce((s, t) => s + t.lat, 0) / group.length
+      const lng = group.reduce((s, t) => s + t.lng, 0) / group.length
+      clusters.push({
+        id: `city-${groupKey}`,
+        theaters: group,
+        lat,
+        lng,
+        isCoLocation: false,
+        cityLabel: groupKey,
+        clusterCount: group.length,
+      })
+    }
+    return clusters
+  }
+
+  // 줌 11+: 기존 픽셀 기반 클러스터링
+  const radiusPx = clusterRadiusForZoom(zoom, isDesktop)
+  const clusterableTheaters = theaters.filter((t) => !splitIds.has(t.id))
+  const pts = clusterableTheaters.map((t) => ({
+    t,
+    px: map.latLngToContainerPoint([t.lat, t.lng] as [number, number]),
+  }))
+  const used = new Set<string>()
+  const clusters: TheaterCluster[] = []
+
+  for (const a of pts) {
+    if (used.has(a.t.id)) continue
+    const group = [a]
+    used.add(a.t.id)
+    for (const b of pts) {
+      if (used.has(b.t.id)) continue
+      if (a.px.distanceTo(b.px) < radiusPx) {
+        group.push(b)
+        used.add(b.t.id)
+      }
+    }
+    const lat = group.reduce((s, g) => s + g.t.lat, 0) / group.length
+    const lng = group.reduce((s, g) => s + g.t.lng, 0) / group.length
+
+    const firstKey = coLocGroupKey.get(group[0].t.id)
+    const isCoLocation = group.length > 1 &&
+      !!firstKey &&
+      group.every((g) => coLocGroupKey.get(g.t.id) === firstKey)
+
+    clusters.push({ id: a.t.id, theaters: group.map((g) => g.t), lat, lng, isCoLocation })
+  }
+
+  for (const t of theaters.filter((t) => splitIds.has(t.id))) {
+    clusters.push({ id: t.id, theaters: [t], lat: t.lat, lng: t.lng })
+  }
+
+  return clusters
 }
 
 /* ── 동일 좌표 극장 분리 설정 ───────────────────────────────────── */
@@ -389,46 +574,7 @@ function computeClusters(
   coLocGroupKey: Map<string, string> = new Map(),
   isDesktop = false,
 ): TheaterCluster[] {
-  const radiusPx = clusterRadiusForZoom(zoom, isDesktop)
-
-  // 분리 대상이 아닌 극장만 클러스터링
-  const clusterableTheaters = theaters.filter((t) => !splitIds.has(t.id))
-  const pts = clusterableTheaters.map((t) => ({
-    t,
-    px: map.latLngToContainerPoint([t.lat, t.lng] as [number, number]),
-  }))
-  const used = new Set<string>()
-  const clusters: TheaterCluster[] = []
-
-  for (const a of pts) {
-    if (used.has(a.t.id)) continue
-    const group = [a]
-    used.add(a.t.id)
-    for (const b of pts) {
-      if (used.has(b.t.id)) continue
-      if (a.px.distanceTo(b.px) < radiusPx) {
-        group.push(b)
-        used.add(b.t.id)
-      }
-    }
-    const lat = group.reduce((s, g) => s + g.t.lat, 0) / group.length
-    const lng = group.reduce((s, g) => s + g.t.lng, 0) / group.length
-
-    // 클러스터 전체가 동일 건물인지 — 클릭 시 CO_LOCATE_SPLIT_ZOOM으로 이동
-    const firstKey = coLocGroupKey.get(group[0].t.id)
-    const isCoLocation = group.length > 1 &&
-      !!firstKey &&
-      group.every((g) => coLocGroupKey.get(g.t.id) === firstKey)
-
-    clusters.push({ id: a.t.id, theaters: group.map((g) => g.t), lat, lng, isCoLocation })
-  }
-
-  // 분리 대상은 개별 마커로 추가 (coLocationOffsets 적용 좌표 사용)
-  for (const t of theaters.filter((t) => splitIds.has(t.id))) {
-    clusters.push({ id: t.id, theaters: [t], lat: t.lat, lng: t.lng })
-  }
-
-  return clusters
+  return computeClustersByZoom(theaters, map, zoom, splitIds, coLocGroupKey, isDesktop)
 }
 
 /* ── 포스터 겹침 방지 오프셋 계산 ─────────────────────────────── */
@@ -441,6 +587,7 @@ function computePosterOffsets(
   posterMoviesByTheater: Map<string, TheaterPosterMovie[]> = new Map(),
   isDesktop = false,
   filtersActive = false,
+  labelOffsets: Map<string, LabelOffset> = new Map(),
 ): Map<string, number> {
   const offsets = new Map<string, number>()
 
@@ -541,6 +688,24 @@ function computePosterOffsets(
   }
 
   const clusterBlockers: { centerX: number; rect: Rect }[] = []
+
+  // 단일 극장 이름표 blocker 추가
+  for (const single of singles) {
+    const labelDir = labelDirections.get(single.id) ?? 'top'
+    const labelOff = labelOffsets.get(single.id) ?? { x: 0, y: 0 }
+    const labelW = 140
+    const labelH = LABEL_H
+    const labelGap = 4
+
+    const labelRect: Record<LabelDir, Rect> = {
+      top: [single.px.x - labelW / 2 + labelOff.x, single.px.y - ANCHOR_Y - labelGap - labelH + labelOff.y, single.px.x + labelW / 2 + labelOff.x, single.px.y - ANCHOR_Y - labelGap + labelOff.y],
+      bottom: [single.px.x - labelW / 2 + labelOff.x, single.px.y + DOT / 2 + labelGap + labelOff.y, single.px.x + labelW / 2 + labelOff.x, single.px.y + DOT / 2 + labelGap + labelH + labelOff.y],
+      right: [single.px.x + DOT / 2 + labelGap + labelOff.x, single.px.y - labelH / 2 + labelOff.y, single.px.x + DOT / 2 + labelGap + labelW + labelOff.x, single.px.y + labelH / 2 + labelOff.y],
+      left: [single.px.x - DOT / 2 - labelGap - labelW + labelOff.x, single.px.y - labelH / 2 + labelOff.y, single.px.x - DOT / 2 - labelGap + labelOff.x, single.px.y + labelH / 2 + labelOff.y],
+    }
+    clusterBlockers.push({ centerX: single.px.x, rect: labelRect[labelDir] })
+  }
+
   for (const c of clusters) {
     if (c.theaters.length <= 1) continue
     const { x: cx, y: cy } = map.latLngToContainerPoint([c.lat, c.lng] as [number, number])
@@ -595,9 +760,103 @@ function makeClusterIcon(
   labelOffset: LabelOffset = { x: 0, y: 0 },
   dimmed = false,
   isDark = false,
+  regionLabel?: string,
+  cityLabel?: string,
 ) {
   const dotColor = dimmed ? (isDark ? DIMMED_DOT_DARK : DIMMED_DOT_LIGHT) : 'var(--color-primary-base)'
   const count = theaters.length
+
+  // 줌 7-8: 원 안에 숫자, 말풍선에 지역명
+  if (regionLabel) {
+    const DOT_SIZE = 50
+    const CANVAS_W = 140
+    const CANVAS_H = 110
+    const CENTER_X = CANVAS_W / 2
+    const CENTER_Y = 70
+    const BALLOON_GAP = 8
+    const DOT_RADIUS = DOT_SIZE / 2
+
+    const balloonStyle =
+      `position:absolute;background:var(--color-surface-card);` +
+      `border:1.5px solid var(--color-border);border-radius:8px;` +
+      `padding:6px 12px;box-shadow:var(--shadow-md);` +
+      `white-space:nowrap;font-weight:600;font-size:12px;` +
+      `color:var(--color-text-primary);z-index:2;` +
+      `top:${CENTER_Y - DOT_RADIUS - BALLOON_GAP - 24}px;left:50%;transform:translateX(-50%);`
+
+    const tailStyle =
+      `position:absolute;width:8px;height:8px;background:var(--color-surface-card);` +
+      `border-right:1.5px solid var(--color-border);` +
+      `border-bottom:1.5px solid var(--color-border);` +
+      `transform:rotate(45deg);` +
+      `top:${CENTER_Y - DOT_RADIUS - BALLOON_GAP - 5}px;left:50%;transform:translateX(-50%) rotate(45deg);` +
+      `z-index:1;pointer-events:none;`
+
+    const html =
+      `<div style="position:relative;width:${CANVAS_W}px;height:${CANVAS_H}px;overflow:visible;">` +
+      `<div style="${balloonStyle}">${regionLabel}</div>` +
+      `<div style="${tailStyle}"></div>` +
+      `<div style="position:absolute;width:${DOT_SIZE}px;height:${DOT_SIZE}px;` +
+      `top:${CENTER_Y - DOT_SIZE/2}px;left:${CENTER_X - DOT_SIZE/2}px;` +
+      `border-radius:50%;background:${dotColor};` +
+      `border:2.5px solid var(--color-surface-bg);box-shadow:var(--shadow-md);` +
+      `display:flex;align-items:center;justify-content:center;` +
+      `color:#fff;font-weight:800;font-size:18px;z-index:3;">${count}</div>` +
+      `</div>`
+
+    return L.divIcon({
+      html,
+      className: '',
+      iconSize: [CANVAS_W, CANVAS_H],
+      iconAnchor: [CENTER_X, CENTER_Y]
+    })
+  }
+
+  // 줌 9: 원 안에 숫자, 말풍선에 도시명
+  if (cityLabel) {
+    const DOT_SIZE = 45
+    const CANVAS_W = 120
+    const CANVAS_H = 100
+    const CENTER_X = CANVAS_W / 2
+    const CENTER_Y = 65
+    const BALLOON_GAP = 6
+    const DOT_RADIUS = DOT_SIZE / 2
+
+    const balloonStyle =
+      `position:absolute;background:var(--color-surface-card);` +
+      `border:1.5px solid var(--color-border);border-radius:8px;` +
+      `padding:4px 10px;box-shadow:var(--shadow-md);` +
+      `white-space:nowrap;font-weight:600;font-size:11px;` +
+      `color:var(--color-text-primary);z-index:2;` +
+      `top:${CENTER_Y - DOT_RADIUS - BALLOON_GAP - 20}px;left:50%;transform:translateX(-50%);`
+
+    const tailStyle =
+      `position:absolute;width:6px;height:6px;background:var(--color-surface-card);` +
+      `border-right:1.5px solid var(--color-border);` +
+      `border-bottom:1.5px solid var(--color-border);` +
+      `top:${CENTER_Y - DOT_RADIUS - BALLOON_GAP - 2}px;left:50%;transform:translateX(-50%) rotate(45deg);` +
+      `z-index:1;pointer-events:none;`
+
+    const html =
+      `<div style="position:relative;width:${CANVAS_W}px;height:${CANVAS_H}px;overflow:visible;">` +
+      `<div style="${balloonStyle}">${cityLabel}</div>` +
+      `<div style="${tailStyle}"></div>` +
+      `<div style="position:absolute;width:${DOT_SIZE}px;height:${DOT_SIZE}px;` +
+      `top:${CENTER_Y - DOT_SIZE/2}px;left:${CENTER_X - DOT_SIZE/2}px;` +
+      `border-radius:50%;background:${dotColor};` +
+      `border:2.5px solid var(--color-surface-bg);box-shadow:var(--shadow-md);` +
+      `display:flex;align-items:center;justify-content:center;` +
+      `color:#fff;font-weight:800;font-size:16px;z-index:3;">${count}</div>` +
+      `</div>`
+
+    return L.divIcon({
+      html,
+      className: '',
+      iconSize: [CANVAS_W, CANVAS_H],
+      iconAnchor: [CENTER_X, CENTER_Y]
+    })
+  }
+
   const DOT_D = 28
   const DOT_R = DOT_D / 2
   const CARD_GAP = 8
@@ -710,6 +969,7 @@ function findSplitZoom(
 
 export default function MapView() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { coords, refetch } = useUserLocation()
   const isDark = useIsDark()
   const isDesktopLayout = useIsDesktopLayout()
@@ -726,8 +986,10 @@ export default function MapView() {
     nations: [],
     bookable: false,
     indie: false,
+    regionId: null,
   })
   const [movieFilter, setMovieFilter] = useState<{ id: string; title: string } | null>(null)
+  const [directorFilter, setDirectorFilter] = useState<{ name: string } | null>(null)
   const [panelStack, setPanelStack] = useState<DesktopPanelState[]>([])
   const desktopPanel = panelStack[panelStack.length - 1] ?? null
   const selectedDateRange = useMemo(() => dateRangeForFilter(filters), [filters])
@@ -738,6 +1000,7 @@ export default function MapView() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [fromMovieId, setFromMovieId] = useState<string | null>(null)
   const [initialSheetDate, setInitialSheetDate] = useState<string | undefined>(undefined)
+  const suppressMovieFilterFitRef = useRef(false)
   const [zoom, setZoom] = useState(14)
   const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null)
   const [subwayLayerReady, setSubwayLayerReady] = useState(false)
@@ -754,6 +1017,9 @@ export default function MapView() {
   }, [isDesktopLayout, selectedId, panelStack.length])
 
   useEffect(() => {
+    // 모바일에서는 포스터 호버 정보 표시 안함
+    if (!isDesktopLayout) return
+
     const handleOver = (e: Event) => {
       const target = e.target as HTMLElement | null
       const wrap = target?.closest('.pm-wrap, .po-wrap') as HTMLElement | null
@@ -770,7 +1036,7 @@ export default function MapView() {
     if (!container) return
     container.addEventListener('mouseover', handleOver)
     return () => container.removeEventListener('mouseover', handleOver)
-  }, [])  // once after mount — reads isPanelOpenRef dynamically
+  }, [isDesktopLayout])
 
   // 검색 오버레이
   const [searchOpen, setSearchOpen] = useState(false)
@@ -789,6 +1055,23 @@ export default function MapView() {
   const [reportSubmitting, setReportSubmitting] = useState(false)
   const [reportError, setReportError] = useState('')
   const [reportSuccessTrigger, setReportSuccessTrigger] = useState(0)
+  const mapViewTrackedRef = useRef(false)
+  const lastSearchTelemetryRef = useRef('')
+  const lastFilterTelemetryRef = useRef('')
+
+  useEffect(() => {
+    if (mapViewTrackedRef.current || theatersLoading) return
+    mapViewTrackedRef.current = true
+    trackEvent('map viewed', {
+      theater_count: theaters.length,
+      movie_count: movies.length,
+      source: searchParams.has('theater')
+        ? 'direct_link'
+        : searchParams.has('movie') || searchParams.has('director')
+          ? 'movie_detail'
+          : 'direct',
+    })
+  }, [movies.length, theaters.length, theatersLoading, searchParams])
 
   useEffect(() => { setRecentSearches(loadRecentSearches()) }, [])
   useEffect(() => {
@@ -847,6 +1130,7 @@ export default function MapView() {
   }, [])
 
   const openSearch = useCallback(() => {
+    trackEvent('search opened', { source: 'map' })
     // iOS Safari: 키보드는 반드시 클릭 핸들러 안에서 동기적으로 focus()가 불려야 열림
     // 1) 클릭 핸들러 동기 컨텍스트 안에서 hidden dummy input 포커스 → iOS가 키보드 세션 시작
     dummyInputRef.current?.focus()
@@ -982,6 +1266,7 @@ export default function MapView() {
         if (hasSeats) current.hasAvailableSeats = true
       } else {
         const matchesMovieFilter = !movieFilter || showtime.movieId === movieFilter.id
+        const matchesDirectorFilter = !directorFilter || showtime.movie.director.includes(directorFilter.name)
         const matchesGenre = filters.genres.length === 0 || showtime.movie.genre.some(g => {
           const normalized = normalizeGenre(g)
           return normalized !== null && filters.genres.includes(normalized)
@@ -1000,7 +1285,7 @@ export default function MapView() {
           director: showtime.movie.director,
           showtimeCount: 1,
           hasAvailableSeats: hasSeats,
-          matchesFilter: matchesMovieFilter && matchesGenre && matchesNation,
+          matchesFilter: matchesMovieFilter && matchesDirectorFilter && matchesGenre && matchesNation,
         })
       }
     }
@@ -1018,20 +1303,64 @@ export default function MapView() {
       )
     }
     return result
-  }, [filters.bookable, filters.genres, filters.nations, movieFilter, mapShowtimes])
+  }, [directorFilter, filters.bookable, filters.genres, filters.nations, movieFilter, mapShowtimes])
 
-  const filtersActive = filters.bookable || filters.genres.length > 0 || filters.nations.length > 0 || !!movieFilter
+  const filtersActive = filters.bookable || filters.genres.length > 0 || filters.nations.length > 0 || !!movieFilter || !!directorFilter
+  const filterResultCount = useMemo(() => {
+    if (!filtersActive) return theaters.length
+    let count = 0
+    for (const theater of theaters) {
+      if ((theaterPosterMovies.get(theater.id) ?? []).some((movie) => movie.matchesFilter)) count += 1
+    }
+    return count
+  }, [filtersActive, theaterPosterMovies, theaters])
+
+  useEffect(() => {
+    const signature = JSON.stringify({
+      dateId: filters.dateId,
+      customStart: filters.customStart ? formatDateParam(filters.customStart) : null,
+      customEnd: filters.customEnd ? formatDateParam(filters.customEnd) : null,
+      genres: filters.genres,
+      nations: filters.nations,
+      bookable: filters.bookable,
+      movieId: movieFilter?.id,
+      directorName: directorFilter?.name,
+      resultCount: filterResultCount,
+    })
+    if (!lastFilterTelemetryRef.current) {
+      lastFilterTelemetryRef.current = signature
+      return
+    }
+    if (lastFilterTelemetryRef.current === signature) return
+    lastFilterTelemetryRef.current = signature
+
+    trackEvent('map filter changed', {
+      date_id: filters.dateId,
+      custom_start: filters.customStart ? formatDateParam(filters.customStart) : null,
+      custom_end: filters.customEnd ? formatDateParam(filters.customEnd) : null,
+      genres: filters.genres,
+      genres_count: filters.genres.length,
+      nations: filters.nations,
+      nations_count: filters.nations.length,
+      bookable: filters.bookable,
+      movie_filter_id: movieFilter?.id,
+      movie_filter_title: movieFilter?.title,
+      director_filter_name: directorFilter?.name,
+      filter_result_count: filterResultCount,
+      is_zero_result: filterResultCount === 0,
+    })
+  }, [directorFilter, filterResultCount, filters.bookable, filters.customEnd, filters.customStart, filters.dateId, filters.genres, filters.nations, movieFilter])
 
   // 상영일정·예매가능 제외한 검색 필터가 활성화 됐을 때 — 해당 극장은 클러스터링 제외
   const searchMatchedTheaterIds = useMemo(() => {
-    const isSearchFilter = !!movieFilter || filters.genres.length > 0 || filters.nations.length > 0
+    const isSearchFilter = !!movieFilter || !!directorFilter || filters.genres.length > 0 || filters.nations.length > 0
     if (!isSearchFilter) return new Set<string>()
     const ids = new Set<string>()
     for (const [theaterId, movies] of theaterPosterMovies) {
       if (movies.some(m => m.matchesFilter)) ids.add(theaterId)
     }
     return ids
-  }, [movieFilter, filters.genres, filters.nations, theaterPosterMovies])
+  }, [directorFilter, movieFilter, filters.genres, filters.nations, theaterPosterMovies])
 
   const titleMovieResults = useMemo(() => {
     if (!searchQuery.trim()) return []
@@ -1121,6 +1450,12 @@ export default function MapView() {
   }, [areaResults, directorResults, searchQuery, stationResults, theaterResults, titleMovieResults])
 
   const focusStation = useCallback((station: Station) => {
+    trackEvent('search result selected', {
+      result_type: 'station',
+      result_id: station.id,
+      result_name: station.name,
+      search_term: searchQuery.trim(),
+    })
     setRecentSearches(prev => addToRecent(searchQuery, prev))
     closeSearch()
     setSelectedId(null)
@@ -1130,6 +1465,12 @@ export default function MapView() {
   }, [closeSearch, searchQuery])
 
   const focusArea = useCallback((area: { name: string; lat: number; lng: number }) => {
+    trackEvent('search result selected', {
+      result_type: 'area',
+      result_id: area.name,
+      result_name: area.name,
+      search_term: searchQuery.trim(),
+    })
     setRecentSearches(prev => addToRecent(searchQuery, prev))
     closeSearch()
     setSelectedId(null)
@@ -1149,6 +1490,24 @@ export default function MapView() {
 
   const defaultCenter: [number, number] = [37.5665, 126.978]
   const selectedTheater = theaters.find((t) => t.id === (displayedId ?? selectedId)) ?? null
+
+  const clearTheaterSelection = useCallback(() => {
+    if (exitTimerRef.current) clearTimeout(exitTimerRef.current)
+    setSelectedId(null)
+    setDisplayedId(null)
+    setSelectedMovieId('')
+    setSheetExpanded(false)
+    setSheetExiting(false)
+    setFromMovieId(null)
+    setInitialSheetDate(undefined)
+  }, [])
+
+  const applyDirectorFilter = useCallback((name: string) => {
+    suppressMovieFilterFitRef.current = false
+    clearTheaterSelection()
+    setMovieFilter(null)
+    setDirectorFilter({ name })
+  }, [clearTheaterSelection])
 
   /* ── 클러스터 & 오프셋 ── */
   const [clusters, setClusters] = useState<TheaterCluster[]>([])
@@ -1175,7 +1534,7 @@ export default function MapView() {
     const c = computeClusters(adjustedTheaters, map, z, splitIds, coLocGroups, isDesktopLayout)
     const d = computeLabelDirections(c, map)
     const labelO = computeNameLabelOffsets(c, map, d)
-    const o = computePosterOffsets(c, map, z, d, theaterPosterMovies, isDesktopLayout, filtersActive)
+    const o = computePosterOffsets(c, map, z, d, theaterPosterMovies, isDesktopLayout, filtersActive, labelO)
     setClusters(c)
     setPosterOffsets(o)
     setCoLocationOffsets(coLoc)
@@ -1232,16 +1591,36 @@ export default function MapView() {
     return () => clearTimeout(id)
   }, [recompute])
 
-  // 검색 필터(영화·장르·국가) 적용 시 → 매칭 극장이 모두 보이도록 뷰 이동
+  // 검색 필터(영화·감독·장르·국가) 적용 시 → 매칭 극장이 모두 보이도록 뷰 이동
   useEffect(() => {
-    const isSearchFilter = !!movieFilter || filters.genres.length > 0 || filters.nations.length > 0
+    const isSearchFilter = !!movieFilter || !!directorFilter || filters.genres.length > 0 || filters.nations.length > 0
     if (!isSearchFilter) return
+    if (suppressMovieFilterFitRef.current && (movieFilter || directorFilter)) return
+    if (selectedId) return
     const map = mapRef.current
     if (!map) return
-    const matchedTheaters = theaters.filter(t => {
+    let matchedTheaters = theaters.filter(t => {
       return (theaterPosterMovies.get(t.id) ?? []).some(m => m.matchesFilter)
     })
     if (matchedTheaters.length === 0) return
+
+    // 지역 필터가 설정돼 있으면 해당 지역 극장만 범위에 포함
+    if (filters.regionId) {
+      const regionTheaters = matchedTheaters.filter(t => getRegionFromCity(t.city) === filters.regionId)
+      if (regionTheaters.length > 0) matchedTheaters = regionTheaters
+      else {
+        // 지역 내 매칭 없으면 지역 중심 좌표로 이동
+        const rb = REGION_BOUNDS[filters.regionId]
+        if (rb) {
+          map.flyToBounds(
+            [[rb.minLat, rb.minLng], [rb.maxLat, rb.maxLng]],
+            { padding: [60, 60], duration: 0.75 }
+          )
+          return
+        }
+      }
+    }
+
     if (matchedTheaters.length === 1) {
       const t = matchedTheaters[0]
       map.flyTo([t.lat, t.lng], Math.max(map.getZoom(), 15), { duration: 0.75 })
@@ -1250,7 +1629,7 @@ export default function MapView() {
     const bounds = L.latLngBounds(matchedTheaters.map(t => [t.lat, t.lng] as [number, number]))
     map.flyToBounds(bounds, { padding: [80, 80], maxZoom: 16, duration: 0.75 })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [movieFilter, filters.genres, filters.nations])
+  }, [directorFilter, movieFilter, filters.genres, filters.nations, filters.regionId, selectedId])
 
   // 위치 첫 수신 시 지도 이동 — 이후엔 무시
   const initialMoved = useRef(false)
@@ -1397,7 +1776,18 @@ export default function MapView() {
     map.flyTo(newCenter, zoom, { duration })
   }, [isDesktopLayout])
 
-  const focusTheater = useCallback((theater: Theater) => {
+  const focusTheater = useCallback((theater: Theater, source: 'search' | 'direct_link' = 'search') => {
+    trackEvent('theater sheet opened', {
+      theater_id: theater.id,
+      theater_name: theater.name,
+      source,
+      has_movie_filter: Boolean(movieFilter),
+      selected_movie_id: movieFilter?.id,
+    })
+    classifySessionIntent(source === 'direct_link' ? 'type_c' : 'type_c', {
+      source,
+      theater_id: theater.id,
+    })
     setRecentSearches(prev => addToRecent(searchQuery, prev))
     closeSearch()
     if (exitTimerRef.current) clearTimeout(exitTimerRef.current)
@@ -1414,50 +1804,153 @@ export default function MapView() {
     )
   }, [closeSearch, flyToForTheater, isDesktopLayout, movieFilter, searchQuery])
 
+  const openTheaterForMovie = useCallback((
+    theaterId: string,
+    movieId: string,
+    date?: string,
+    source: 'movie_detail' | 'desktop_panel' = 'movie_detail',
+  ) => {
+    const theater = theaters.find((t) => t.id === theaterId)
+    if (!theater) return
+    const movie = movies.find((m) => m.id === movieId)
+
+    suppressMovieFilterFitRef.current = true
+    closeSearch()
+    closeDesktopPanel()
+    if (exitTimerRef.current) clearTimeout(exitTimerRef.current)
+    setSheetExiting(false)
+    setSelectedId(theater.id)
+    setDisplayedId(theater.id)
+    setSelectedMovieId(movieId)
+    setSheetExpanded(isDesktopLayout)
+    setFromMovieId(movieId)
+    setInitialSheetDate(date || undefined)
+    setDirectorFilter(null)
+    if (movie) setMovieFilter({ id: movie.id, title: movie.title })
+
+    trackEvent('theater sheet opened', {
+      theater_id: theater.id,
+      theater_name: theater.name,
+      selected_movie_id: movieId,
+      source,
+      has_movie_filter: true,
+    })
+    classifySessionIntent('type_a', {
+      source,
+      theater_id: theater.id,
+      selected_movie_id: movieId,
+    })
+
+    const currentZoom = mapRef.current?.getZoom() ?? 15
+    flyToForTheater(
+      [theater.lat, theater.lng],
+      Math.max(currentZoom, 16),
+      0.75,
+    )
+  }, [closeDesktopPanel, closeSearch, flyToForTheater, isDesktopLayout, movies, theaters])
+
   useEffect(() => {
     if (isDesktopLayout && selectedTheater) setSheetExpanded(true)
   }, [isDesktopLayout, selectedTheater])
 
   // 영화 상세 페이지에서 뒤로가기 시 ?theater= 파라미터로 극장 시트 복원
-  const restoredTheaterRef = useRef(false)
+  const restoredTheaterRef = useRef<string | null>(null)
   useEffect(() => {
-    if (restoredTheaterRef.current || theaters.length === 0) return
-    const params = new URLSearchParams(window.location.search)
-    const theaterParam = params.get('theater')
-    if (!theaterParam) { restoredTheaterRef.current = true; return }
+    if (theaters.length === 0) return
+    const theaterParam = searchParams.get('theater')
+    if (!theaterParam) return
+    const movieParam = searchParams.get('movie') ?? searchParams.get('fromMovie')
+    if (movieParam && movies.length === 0) return
+    const dateParam = searchParams.get('date')
+    const restoreKey = [theaterParam, movieParam ?? '', dateParam ?? ''].join(':')
+    if (restoredTheaterRef.current === restoreKey) return
     const theater = theaters.find((t) => t.id === theaterParam)
     if (!theater) return
-    restoredTheaterRef.current = true
-    const fromMovie = params.get('fromMovie')
-    const dateParam = params.get('date')
-    if (fromMovie) setFromMovieId(fromMovie)
-    if (dateParam) setInitialSheetDate(dateParam)
-    focusTheater(theater)
+
+    restoredTheaterRef.current = restoreKey
+    const fromMovie = searchParams.get('fromMovie')
+    if (movieParam) {
+      openTheaterForMovie(theater.id, movieParam, dateParam ?? undefined, 'movie_detail')
+    } else {
+      suppressMovieFilterFitRef.current = true
+      closeSearch()
+      if (exitTimerRef.current) clearTimeout(exitTimerRef.current)
+      setSheetExiting(false)
+      setSelectedId(theater.id)
+      setDisplayedId(theater.id)
+      setSheetExpanded(isDesktopLayout)
+
+      trackEvent('theater sheet opened', {
+        theater_id: theater.id,
+        theater_name: theater.name,
+        source: 'movie_detail',
+        has_movie_filter: false,
+      })
+      classifySessionIntent('type_c', {
+        source: 'movie_detail',
+        theater_id: theater.id,
+      })
+
+      const currentZoom = mapRef.current?.getZoom() ?? 15
+      flyToForTheater(
+        [theater.lat, theater.lng],
+        Math.max(currentZoom, 16),
+        0.75,
+      )
+    }
+
+    if (fromMovie || movieParam) setFromMovieId(fromMovie ?? movieParam ?? null)
+
     const url = new URL(window.location.href)
     url.searchParams.delete('theater')
     url.searchParams.delete('fromMovie')
     url.searchParams.delete('date')
+    url.searchParams.delete('movie')
     window.history.replaceState({}, '', url.toString())
-  }, [theaters, focusTheater])
 
-  // 영화 상세 / 바텀시트에서 ?movie= 파라미터로 영화 필터 복원
-  const restoredMovieRef = useRef(false)
+  }, [closeSearch, flyToForTheater, isDesktopLayout, movies.length, openTheaterForMovie, searchParams, theaters])
+
+  // 영화 상세 / 패널에서 ?movie= 파라미터로 지도 필터만 복원
+  const restoredMovieFilterRef = useRef<string | null>(null)
   useEffect(() => {
-    if (restoredMovieRef.current || movies.length === 0) return
-    const movieParam = new URLSearchParams(window.location.search).get('movie')
-    if (!movieParam) { restoredMovieRef.current = true; return }
+    if (searchParams.has('theater')) return
+    const movieParam = searchParams.get('movie')
+    if (!movieParam || movies.length === 0) return
+    if (restoredMovieFilterRef.current === movieParam) return
     const movie = movies.find((m) => m.id === movieParam)
     if (!movie) return
-    restoredMovieRef.current = true
+
+    restoredMovieFilterRef.current = movieParam
+    suppressMovieFilterFitRef.current = false
+    clearTheaterSelection()
+    setDirectorFilter(null)
     setMovieFilter({ id: movie.id, title: movie.title })
+
     const url = new URL(window.location.href)
     url.searchParams.delete('movie')
     window.history.replaceState({}, '', url.toString())
-  }, [movies])
+  }, [clearTheaterSelection, movies, searchParams])
+
+  // 감독 상세 / 패널에서 ?director= 파라미터로 지도 필터만 복원
+  const restoredDirectorFilterRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (searchParams.has('theater')) return
+    const directorParam = searchParams.get('director')
+    if (!directorParam) return
+    if (restoredDirectorFilterRef.current === directorParam) return
+    restoredDirectorFilterRef.current = directorParam
+    applyDirectorFilter(directorParam)
+
+    const url = new URL(window.location.href)
+    url.searchParams.delete('director')
+    window.history.replaceState({}, '', url.toString())
+  }, [applyDirectorFilter, searchParams])
+
 
   // 극장 선택 시 → 첫 번째 영화 선택 + 시트 collapsed로 열기
   const handlePinClick = useCallback((theaterId: string, clickedMovieId?: string) => {
     if (selectedId === theaterId) {
+      trackEvent('theater sheet closed', { theater_id: theaterId, source: 'map' })
       closeSheet()
     } else {
       if (exitTimerRef.current) clearTimeout(exitTimerRef.current)
@@ -1469,6 +1962,25 @@ export default function MapView() {
       const currentZoom = mapRef.current?.getZoom() ?? 15
       const theater = theaters.find((t) => t.id === theaterId)
       if (theater) {
+        trackEvent('map pin clicked', {
+          theater_id: theater.id,
+          theater_name: theater.name,
+          selected_movie_id: clickedMovieId ?? movieFilter?.id,
+          has_movie_filter: Boolean(movieFilter),
+          source: 'map',
+        })
+        trackEvent('theater sheet opened', {
+          theater_id: theater.id,
+          theater_name: theater.name,
+          selected_movie_id: clickedMovieId ?? movieFilter?.id,
+          source: 'map',
+          has_movie_filter: Boolean(movieFilter),
+        })
+        classifySessionIntent(movieFilter || clickedMovieId ? 'type_a' : 'type_b', {
+          source: 'map',
+          theater_id: theater.id,
+          selected_movie_id: clickedMovieId ?? movieFilter?.id,
+        })
         flyToForTheater(
           [theater.lat, theater.lng],
           Math.max(currentZoom, 16),
@@ -1482,6 +1994,43 @@ export default function MapView() {
   // expanded / 시트 없음 = safe area 위 32px
   const fabBottom = !isDesktopLayout && selectedTheater && !sheetExpanded && !sheetExiting ? 316 : 32
   const hasSearchResults = theaterResults.length > 0 || stationResults.length > 0 || movieResults.length > 0 || relatedDirectorResults.length > 0 || areaResults.length > 0
+
+  useEffect(() => {
+    const query = searchQuery.trim()
+    if (!searchOpen || query.length === 0) return
+
+    const signature = JSON.stringify({
+      query,
+      theater: theaterResults.length,
+      movie: movieResults.length,
+      director: relatedDirectorResults.length,
+      station: stationResults.length,
+      area: areaResults.length,
+    })
+    const timer = setTimeout(() => {
+      if (lastSearchTelemetryRef.current === signature) return
+      lastSearchTelemetryRef.current = signature
+      const totalResults = theaterResults.length + movieResults.length + relatedDirectorResults.length + stationResults.length + areaResults.length
+      trackEvent('search performed', {
+        search_term: query,
+        search_length: query.length,
+        total_results: totalResults,
+        theater_results: theaterResults.length,
+        movie_results: movieResults.length,
+        director_results: relatedDirectorResults.length,
+        station_results: stationResults.length,
+        area_results: areaResults.length,
+      })
+      if (totalResults === 0) {
+        trackEvent('search no results', {
+          search_term: query,
+          search_length: query.length,
+        })
+      }
+    }, 700)
+
+    return () => clearTimeout(timer)
+  }, [areaResults.length, movieResults.length, relatedDirectorResults.length, searchOpen, searchQuery, stationResults.length, theaterResults.length])
 
   const renderTheaterSearchSection = () => {
     if (theaterResults.length === 0) return null
@@ -1500,7 +2049,15 @@ export default function MapView() {
             <button
               key={theater.id}
               type="button"
-              onClick={() => focusTheater(theater)}
+              onClick={() => {
+                trackEvent('search result selected', {
+                  result_type: 'theater',
+                  result_id: theater.id,
+                  result_name: theater.name,
+                  search_term: searchQuery.trim(),
+                })
+                focusTheater(theater, 'search')
+              }}
               style={{
                 width: '100%',
                 display: 'flex',
@@ -1555,7 +2112,27 @@ export default function MapView() {
                   {theater.address}
                 </span>
               </span>
-              <span style={{ color: 'var(--color-text-caption)', fontSize: 18, lineHeight: 1 }}>›</span>
+              {(() => {
+                const distance = calculateAndFormatDistance(
+                  coords?.lat,
+                  coords?.lng,
+                  theater.lat,
+                  theater.lng,
+                )
+                return distance ? (
+                  <span style={{
+                    flexShrink: 0,
+                    fontSize: 13,
+                    color: 'var(--color-text-sub)',
+                    fontWeight: 500,
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}>
+                    {distance}
+                  </span>
+                ) : null
+              })()}
+              <span style={{ color: 'var(--color-text-caption)', fontSize: 18, lineHeight: 1, flexShrink: 0 }}>›</span>
             </button>
           ))}
         </div>
@@ -1580,9 +2157,21 @@ export default function MapView() {
             <div
               key={movie.id}
               onClick={() => {
+                trackEvent('search result selected', {
+                  result_type: 'movie',
+                  result_id: movie.id,
+                  result_name: movie.title,
+                  search_term: searchQuery.trim(),
+                  is_active_movie: activeMovieIdSet.has(movie.id),
+                })
+                classifySessionIntent('type_a', { source: 'search', movie_id: movie.id })
                 setRecentSearches(prev => addToRecent(searchQuery, prev))
-                setMovieFilter({ id: movie.id, title: movie.title })
                 closeSearch()
+                if (isDesktopLayout) {
+                  openDesktopPanel({ type: 'movie', id: movie.id })
+                } else {
+                  router.push(`/movie/${movie.id}`)
+                }
               }}
               style={{
                 display: 'flex',
@@ -1690,6 +2279,12 @@ export default function MapView() {
             <div
               key={director.name}
               onClick={() => {
+                trackEvent('search result selected', {
+                  result_type: 'director',
+                  result_id: director.name,
+                  result_name: director.name,
+                  search_term: searchQuery.trim(),
+                })
                 setRecentSearches(prev => addToRecent(searchQuery, prev))
                 closeSearch()
                 if (isDesktopLayout) {
@@ -1840,7 +2435,27 @@ export default function MapView() {
                   ))}
                 </span>
               </span>
-              <span style={{ color: 'var(--color-text-caption)', fontSize: 18, lineHeight: 1 }}>›</span>
+              {(() => {
+                const distance = calculateAndFormatDistance(
+                  coords?.lat,
+                  coords?.lng,
+                  station.lat,
+                  station.lng,
+                )
+                return distance ? (
+                  <span style={{
+                    flexShrink: 0,
+                    fontSize: 13,
+                    color: 'var(--color-text-sub)',
+                    fontWeight: 500,
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}>
+                    {distance}
+                  </span>
+                ) : null
+              })()}
+              <span style={{ color: 'var(--color-text-caption)', fontSize: 18, lineHeight: 1, flexShrink: 0 }}>›</span>
             </button>
           ))}
         </div>
@@ -1900,7 +2515,16 @@ export default function MapView() {
                     <button
                       key={t.id}
                       type="button"
-                      onClick={() => focusTheater(t)}
+                      onClick={() => {
+                        trackEvent('search result selected', {
+                          result_type: 'theater',
+                          result_id: t.id,
+                          result_name: t.name,
+                          search_term: searchQuery.trim(),
+                          parent_result_type: 'area',
+                        })
+                        focusTheater(t, 'search')
+                      }}
                       style={{
                         width: '100%', display: 'flex', alignItems: 'center', gap: 8,
                         padding: '6px 0', border: 0, background: 'transparent',
@@ -2011,8 +2635,9 @@ export default function MapView() {
         ))}
 
         {clusters.map((cluster) => {
-          // 클러스터 마커 (2개 이상) — 클릭 시 줌인
-          if (cluster.theaters.length > 1) {
+          // 줌 7-10에서는 항상 클러스터 표시 (1개라도), 줌 11+에서는 2개 이상일 때만 클러스터
+          const shouldShowAsCluster = zoom <= 10 || cluster.theaters.length > 1
+          if (shouldShowAsCluster) {
             const clusterDimmed = filtersActive && cluster.theaters.every(
               (t) => (theaterPosterMovies.get(t.id) ?? []).every(m => !m.matchesFilter)
             )
@@ -2028,6 +2653,8 @@ export default function MapView() {
                   labelOffsets.get(cluster.id),
                   clusterDimmed,
                   isDark,
+                  cluster.regionLabel,
+                  cluster.cityLabel,
                 )}
                 eventHandlers={{
                   click: () => {
@@ -2159,9 +2786,27 @@ export default function MapView() {
           <FilterBar
             desktop={isDesktopLayout}
             onChange={setFilters}
+            defaultRegionId={coords ? getRegionFromCoords(coords.lat, coords.lng) : null}
             nationOptions={nationOptions}
             movieFilter={movieFilter}
-            onMovieFilterClear={() => setMovieFilter(null)}
+            directorFilter={directorFilter}
+            onMovieFilterClear={() => {
+              trackEvent('map filter changed', {
+                action: 'movie_filter_cleared',
+                movie_filter_id: movieFilter?.id,
+                movie_filter_title: movieFilter?.title,
+              })
+              suppressMovieFilterFitRef.current = false
+              setMovieFilter(null)
+            }}
+            onDirectorFilterClear={() => {
+              trackEvent('map filter changed', {
+                action: 'director_filter_cleared',
+                director_filter_name: directorFilter?.name,
+              })
+              suppressMovieFilterFitRef.current = false
+              setDirectorFilter(null)
+            }}
             onMovieChipClick={() => setSearchOpen(true)}
             onDirectorChipClick={() => setSearchOpen(true)}
           />
@@ -2805,12 +3450,52 @@ export default function MapView() {
             presentation={isDesktopLayout ? 'panel' : 'sheet'}
             selectedMovieId={selectedMovieId}
             onMovieSelect={setSelectedMovieId}
-            onExpand={() => setSheetExpanded(true)}
+            onExpand={() => {
+              trackEvent('theater sheet expanded', {
+                theater_id: selectedTheater.id,
+                selected_movie_id: selectedMovieId,
+              })
+              setSheetExpanded(true)
+            }}
             onCollapse={() => setSheetExpanded(false)}
-            onClose={closeSheet}
-            onMovieSearch={(movieId, movieTitle) => setMovieFilter({ id: movieId, title: movieTitle })}
-            onMovieDetailOpen={isDesktopLayout ? (id) => openDesktopPanel({ type: 'movie', id }) : undefined}
-            onDirectorOpen={isDesktopLayout ? (name) => openDesktopPanel({ type: 'director', name }) : undefined}
+            onClose={() => {
+              trackEvent('theater sheet closed', {
+                theater_id: selectedTheater.id,
+                selected_movie_id: selectedMovieId || null,
+                source: 'theater_sheet',
+              })
+              closeSheet()
+            }}
+            onMovieSearch={(movieId, movieTitle) => {
+              trackEvent('theater movie searched on map', {
+                theater_id: selectedTheater.id,
+                movie_id: movieId,
+                movie_title: movieTitle,
+              })
+              classifySessionIntent('type_a', { source: 'theater_sheet', movie_id: movieId })
+              suppressMovieFilterFitRef.current = false
+              setDirectorFilter(null)
+              setMovieFilter({ id: movieId, title: movieTitle })
+            }}
+            onMovieDetailOpen={isDesktopLayout ? (id) => {
+              trackEvent('search result selected', {
+                result_type: 'movie',
+                result_id: id,
+                theater_id: selectedTheater.id,
+                source: 'theater_sheet',
+              })
+              classifySessionIntent('type_a', { source: 'theater_sheet', movie_id: id })
+              openDesktopPanel({ type: 'movie', id })
+            } : undefined}
+            onDirectorOpen={isDesktopLayout ? (name) => {
+              trackEvent('search result selected', {
+                result_type: 'director',
+                result_id: name,
+                result_name: name,
+                source: 'theater_sheet',
+              })
+              openDesktopPanel({ type: 'director', name })
+            } : undefined}
             favorited={false}
             onFavorite={() => { /* Phase 4 */ }}
             mapFilters={{ genres: filters.genres, nations: filters.nations }}
@@ -2836,13 +3521,33 @@ export default function MapView() {
         }}>
           <DesktopDetailPanel
             panel={desktopPanel}
+            regionId={filters.regionId}
             onClose={closeDesktopPanel}
             onBack={panelStack.length > 1 || selectedTheater ? () => window.history.back() : undefined}
             onNavigate={openDesktopPanel}
             onMovieFilterOnMap={(id, title) => {
+              trackEvent('movie theaters map opened', {
+                movie_id: id,
+                movie_title: title,
+                source: 'desktop_panel',
+              })
+              classifySessionIntent('type_a', { source: 'desktop_panel', movie_id: id })
+              suppressMovieFilterFitRef.current = false
+              clearTheaterSelection()
+              setDirectorFilter(null)
               setMovieFilter({ id, title })
               closeDesktopPanel()
             }}
+            onDirectorFilterOnMap={(name) => {
+              trackEvent('director theaters map opened', {
+                director_name: name,
+                source: 'desktop_panel',
+              })
+              classifySessionIntent('type_a', { source: 'desktop_panel', director_name: name })
+              applyDirectorFilter(name)
+              closeDesktopPanel()
+            }}
+            onTheaterOpen={(movieId, theaterId, date) => openTheaterForMovie(theaterId, movieId, date, 'desktop_panel')}
           />
         </div>
       )}
