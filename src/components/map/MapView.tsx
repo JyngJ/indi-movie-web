@@ -32,6 +32,7 @@ import { posterCountForZoom, posterSizeForZoom, posterSlotsForZoom } from '@/lib
 import { calculateAndFormatDistance } from '@/lib/map/distanceUtils'
 import type { TheaterPosterMovie } from '@/lib/map/posterLogic'
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
+import { springFlyTo, springFlyToBounds, springActive, setSpringSettledCallback } from '@/lib/mapSpring'
 import { PosterGrid } from './PosterGrid'
 import { ViewportTracker, ZoomSlider, OffScreenTracker, MapRefSetter, IcoPlus, IcoMinus, IcoLocate, IcoSun, IcoMoon } from './MapControls'
 
@@ -992,12 +993,18 @@ export default function MapView() {
   const [directorFilter, setDirectorFilter] = useState<{ name: string } | null>(null)
   const [panelStack, setPanelStack] = useState<DesktopPanelState[]>([])
   const desktopPanel = panelStack[panelStack.length - 1] ?? null
+  const [panelIn, setPanelIn] = useState(false)          // CSS transition 트리거
+  const [panelExiting, setPanelExiting] = useState(false)
+  const [displayedPanel, setDisplayedPanel] = useState<DesktopPanelState | null>(null)
+  const panelExitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const selectedDateRange = useMemo(() => dateRangeForFilter(filters), [filters])
   const mapShowtimeStart = formatDateParam(selectedDateRange.start)
   const mapShowtimeEnd = formatDateParam(selectedDateRange.end)
   const { data: mapShowtimes = [] } = useMapShowtimes(mapShowtimeStart, mapShowtimeEnd)
   const mapRef = useRef<LeafletMap | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const selectedIdRef = useRef<string | null>(null)
+  selectedIdRef.current = selectedId
   const [fromMovieId, setFromMovieId] = useState<string | null>(null)
   const [initialSheetDate, setInitialSheetDate] = useState<string | undefined>(undefined)
   const suppressMovieFilterFitRef = useRef(false)
@@ -1128,6 +1135,29 @@ export default function MapView() {
       return []
     })
   }, [])
+
+  // 패널 열기/닫기 슬라이드 애니메이션
+  useEffect(() => {
+    if (panelExitTimerRef.current) clearTimeout(panelExitTimerRef.current)
+    if (desktopPanel) {
+      setDisplayedPanel(desktopPanel)
+      setPanelIn(false)
+      setPanelExiting(false)
+      // 두 번 중첩 RAF: 첫 번째에서 마운트 paint, 두 번째에서 transition 시작
+      let id = requestAnimationFrame(() => {
+        id = requestAnimationFrame(() => setPanelIn(true))
+      })
+      return () => cancelAnimationFrame(id)
+    } else {
+      setPanelIn(false)
+      setPanelExiting(true)
+      panelExitTimerRef.current = setTimeout(() => {
+        setDisplayedPanel(null)
+        setPanelExiting(false)
+      }, 200)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [desktopPanel])
 
   const openSearch = useCallback(() => {
     trackEvent('search opened', { source: 'map' })
@@ -1461,7 +1491,7 @@ export default function MapView() {
     setSelectedId(null)
     setDisplayedId(null)
     setSheetExpanded(false)
-    mapRef.current?.flyTo([station.lat, station.lng], 16, { duration: 0.75 })
+    if (mapRef.current) springFlyTo(mapRef.current, [station.lat, station.lng], 16)
   }, [closeSearch, searchQuery])
 
   const focusArea = useCallback((area: { name: string; lat: number; lng: number }) => {
@@ -1476,7 +1506,7 @@ export default function MapView() {
     setSelectedId(null)
     setDisplayedId(null)
     setSheetExpanded(false)
-    mapRef.current?.flyTo([area.lat, area.lng], 15, { duration: 0.75 })
+    if (mapRef.current) springFlyTo(mapRef.current, [area.lat, area.lng], 15)
   }, [closeSearch, searchQuery])
 
   // 바텀시트 상태
@@ -1518,6 +1548,7 @@ export default function MapView() {
   const [labelOffsets, setLabelOffsets] = useState<Map<string, LabelOffset>>(new Map())
 
   const recompute = useCallback(() => {
+    if (springActive) return  // 스프링 중 마커 레이아웃 재계산 방지 (번쩍임)
     const map = mapRef.current
     if (!map) return
     if (!isMapProjectionReady(map)) return
@@ -1546,9 +1577,14 @@ export default function MapView() {
 
   // recomputeRef: ViewportTracker 이벤트 핸들러에서 항상 최신 recompute를 참조
   recomputeRef.current = recompute
+  // 스프링 정착 시 즉시 recompute 실행 (handleViewport의 80ms 지연 대신)
+  setSpringSettledCallback(() => recomputeRef.current?.())
 
   const handleViewport = useCallback(({ zoom: z, bounds }: { zoom: number; bounds: L.LatLngBounds }) => {
     zoomRef.current = z
+    // 스프링 애니메이션 중에는 React 상태 업데이트 건너뜀 (60fps setView가 moveend를 연발하므로)
+    // 스프링 종료 시 마지막 setView가 moveend를 한 번 발생시켜 여기서 정상 동기화됨
+    if (springActive) return
     setMapBounds(bounds)
 
     const shouldShowSubway = z >= STATION_PIN_MIN_ZOOM
@@ -1592,11 +1628,12 @@ export default function MapView() {
   }, [recompute])
 
   // 검색 필터(영화·감독·장르·국가) 적용 시 → 매칭 극장이 모두 보이도록 뷰 이동
+  // selectedIdRef로 읽어서 시트 닫힐 때 selectedId 변경으로 재발동되지 않게 함
   useEffect(() => {
     const isSearchFilter = !!movieFilter || !!directorFilter || filters.genres.length > 0 || filters.nations.length > 0
     if (!isSearchFilter) return
     if (suppressMovieFilterFitRef.current && (movieFilter || directorFilter)) return
-    if (selectedId) return
+    if (selectedIdRef.current) return
     const map = mapRef.current
     if (!map) return
     let matchedTheaters = theaters.filter(t => {
@@ -1612,10 +1649,7 @@ export default function MapView() {
         // 지역 내 매칭 없으면 지역 중심 좌표로 이동
         const rb = REGION_BOUNDS[filters.regionId]
         if (rb) {
-          map.flyToBounds(
-            [[rb.minLat, rb.minLng], [rb.maxLat, rb.maxLng]],
-            { padding: [60, 60], duration: 0.75 }
-          )
+          springFlyToBounds(map, L.latLngBounds([[rb.minLat, rb.minLng], [rb.maxLat, rb.maxLng]]), { padding: [60, 60] })
           return
         }
       }
@@ -1623,27 +1657,27 @@ export default function MapView() {
 
     if (matchedTheaters.length === 1) {
       const t = matchedTheaters[0]
-      map.flyTo([t.lat, t.lng], Math.max(map.getZoom(), 15), { duration: 0.75 })
+      springFlyTo(map, [t.lat, t.lng], Math.max(map.getZoom(), 15))
       return
     }
     const bounds = L.latLngBounds(matchedTheaters.map(t => [t.lat, t.lng] as [number, number]))
-    map.flyToBounds(bounds, { padding: [80, 80], maxZoom: 16, duration: 0.75 })
+    springFlyToBounds(map, bounds, { padding: [80, 80], maxZoom: 16 })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [directorFilter, movieFilter, filters.genres, filters.nations, filters.regionId, selectedId])
+  }, [directorFilter, movieFilter, filters.genres, filters.nations, filters.regionId])
 
   // 위치 첫 수신 시 지도 이동 — 이후엔 무시
   const initialMoved = useRef(false)
   useEffect(() => {
     if (coords && !initialMoved.current && mapRef.current) {
       initialMoved.current = true
-      mapRef.current.flyTo([coords.lat, coords.lng], 14, { duration: 1 })
+      springFlyTo(mapRef.current, [coords.lat, coords.lng], 14)
     }
   }, [coords])
 
   const handleLocate = useCallback(() => {
     refetch()
     if (coords && mapRef.current) {
-      mapRef.current.flyTo([coords.lat, coords.lng], 15, { duration: 1 })
+      springFlyTo(mapRef.current, [coords.lat, coords.lng], 15)
     }
   }, [coords, refetch])
 
@@ -1764,7 +1798,7 @@ export default function MapView() {
   }, [])
 
   // 시트/패널이 열릴 때 남은 영역의 중심으로 flyTo
-  const flyToForTheater = useCallback((latlng: [number, number], zoom: number, duration: number) => {
+  const flyToForTheater = useCallback((latlng: [number, number], zoom: number, _duration?: number) => {
     const map = mapRef.current
     if (!map) return
     // desktop: 오른쪽 패널 440px → 왼쪽으로 220px 이동
@@ -1773,7 +1807,7 @@ export default function MapView() {
     const dy = isDesktopLayout ? 0 : -150
     const targetPx = map.project(L.latLng(latlng), zoom)
     const newCenter = map.unproject(L.point(targetPx.x - dx, targetPx.y - dy), zoom)
-    map.flyTo(newCenter, zoom, { duration })
+    springFlyTo(map, [newCenter.lat, newCenter.lng], zoom)
   }, [isDesktopLayout])
 
   const focusTheater = useCallback((theater: Theater, source: 'search' | 'direct_link' = 'search') => {
@@ -2662,7 +2696,7 @@ export default function MapView() {
                     if (!map) return
                     // 동일 건물 클러스터: 바로 분리 줌으로 이동
                     if (cluster.isCoLocation) {
-                      map.flyTo([cluster.lat, cluster.lng], CO_LOCATE_SPLIT_ZOOM, { duration: 0.6 })
+                      springFlyTo(map, [cluster.lat, cluster.lng], CO_LOCATE_SPLIT_ZOOM)
                       return
                     }
                     const currentZoom = map.getZoom()
@@ -2670,11 +2704,7 @@ export default function MapView() {
                     const bounds = L.latLngBounds(
                       cluster.theaters.map((t) => [t.lat, t.lng] as [number, number])
                     )
-                    map.flyToBounds(bounds, {
-                      padding: [80, 80],
-                      maxZoom: splitZoom,
-                      duration: 0.6,
-                    })
+                    springFlyToBounds(map, bounds, { padding: [80, 80], maxZoom: splitZoom })
                   },
                 }}
               />
@@ -3506,7 +3536,7 @@ export default function MapView() {
       )}
 
       {/* PC 영화/감독 상세 패널 */}
-      {isDesktopLayout && desktopPanel && (
+      {isDesktopLayout && displayedPanel && (
         <div style={{
           position: 'absolute',
           top: 16,
@@ -3518,9 +3548,13 @@ export default function MapView() {
           boxShadow: '0 18px 54px rgba(20, 15, 10, 0.18)',
           borderRadius: 20,
           overflow: 'hidden',
+          transform: panelIn ? 'translateX(0)' : 'translateX(calc(100% + 32px))',
+          transition: panelIn
+            ? 'transform 224ms cubic-bezier(0.22, 1, 0.36, 1)'
+            : 'transform 196ms cubic-bezier(0.55, 0, 1, 0.45)',
         }}>
           <DesktopDetailPanel
-            panel={desktopPanel}
+            panel={displayedPanel}
             regionId={filters.regionId}
             onClose={closeDesktopPanel}
             onBack={panelStack.length > 1 || selectedTheater ? () => window.history.back() : undefined}
