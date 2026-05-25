@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/primitives'
 import type {
@@ -27,6 +27,8 @@ interface AdminPayload {
   runs: CrawlRun[]
   candidates: CrawledShowtimeCandidate[]
   matchOptions: AdminMatchOptions
+  totalCandidates?: number
+  totalReviewCandidates?: number
 }
 
 interface OcrShowtime {
@@ -61,6 +63,26 @@ const inputKinds: Array<{ value: CrawlInputKind; label: string }> = [
   { value: 'csv', label: 'CSV 업로드' },
 ]
 
+type SourceFormState = {
+  theaterName: string
+  matchedTheaterId: string
+  homepageUrl: string
+  listingUrl: string
+  parser: AdminTheaterSource['parser']
+  cadence: AdminTheaterSource['cadence']
+  notes: string
+}
+
+const emptySourceForm: SourceFormState = {
+  theaterName: '',
+  matchedTheaterId: '',
+  homepageUrl: '',
+  listingUrl: '',
+  parser: 'tableText',
+  cadence: 'manual',
+  notes: '',
+}
+
 export function AdminShowtimeConsole() {
   const router = useRouter()
   const [payload, setPayload] = useState<AdminPayload>(emptyPayload)
@@ -73,6 +95,8 @@ export function AdminShowtimeConsole() {
   const [url, setUrl] = useState('')
   const [content, setContent] = useState('')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [candidateSearchQuery, setCandidateSearchQuery] = useState('')
+  const selectAllRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [matchDrafts, setMatchDrafts] = useState<Record<string, CandidateMatchPayload>>({})
@@ -80,6 +104,7 @@ export function AdminShowtimeConsole() {
   const [movieSearchQuery, setMovieSearchQuery] = useState('')
   const [movieSearchResults, setMovieSearchResults] = useState<AdminExternalMovie[]>([])
   const [movieEditForm, setMovieEditForm] = useState<AdminMovieInput | null>(null)
+  const [movieEditRaw, setMovieEditRaw] = useState({ director: '', genre: '' })
   const [theaterFormOpen, setTheaterFormOpen] = useState(false)
   const [theaterForm, setTheaterForm] = useState<AdminTheaterInput>({
     name: '',
@@ -89,10 +114,15 @@ export function AdminShowtimeConsole() {
     city: '',
     phone: '',
     website: '',
+    instagramUrl: '',
     screenCount: 0,
     seatCount: undefined,
   })
   const [showtimeDrafts, setShowtimeDrafts] = useState<Record<string, AdminShowtimeInput>>({})
+  const [activeTab, setActiveTab] = useState<'crawl' | 'status' | 'manage' | 'logs'>('crawl')
+  const [candidateFilter, setCandidateFilter] = useState<'all' | 'latest' | 'unmatched' | 'warning' | 'soldout'>('all')
+  const [candidatePage, setCandidatePage] = useState(0)
+  const [latestCandidateIds, setLatestCandidateIds] = useState<string[]>([])
 
   // OCR 업로드
   const [ocrFile, setOcrFile] = useState<File | null>(null)
@@ -101,15 +131,12 @@ export function AdminShowtimeConsole() {
   const [ocrResult, setOcrResult] = useState<OcrResult | null>(null)
   const [ocrMessage, setOcrMessage] = useState('')
   const [sourceFormOpen, setSourceFormOpen] = useState(false)
-  const [sourceForm, setSourceForm] = useState({
-    theaterName: '',
-    matchedTheaterId: '',
-    homepageUrl: '',
-    listingUrl: '',
-    parser: 'tableText',
-    cadence: 'manual',
-    notes: '',
-  })
+  const [editingSourceId, setEditingSourceId] = useState('')
+  const [sourceForm, setSourceForm] = useState<SourceFormState>(emptySourceForm)
+  const [crawlProgress, setCrawlProgress] = useState(0)
+  const [crawlTotal, setCrawlTotal] = useState(0)
+  const [crawlLogs, setCrawlLogs] = useState<CrawlRun[]>([])
+  const [logsLoading, setLogsLoading] = useState(false)
 
   useEffect(() => {
     refresh()
@@ -126,15 +153,74 @@ export function AdminShowtimeConsole() {
 
   const selectedSource = payload.sources.find((source) => source.id === selectedSourceId)
   const latestRun = payload.runs[0]
-  const reviewCount = payload.candidates.filter((candidate) => candidate.status === 'needs_review').length
+  const reviewCount = payload.totalReviewCandidates ?? payload.candidates.filter((candidate) => candidate.status === 'needs_review').length
   const approvedCount = payload.candidates.filter((candidate) => candidate.status === 'approved').length
   const matchedCount = payload.candidates.filter((candidate) => candidate.matchedTheaterId && candidate.matchedMovieId).length
+  const unmatchedCount = payload.candidates.filter((c) => !c.matchedTheaterId || !c.matchedMovieId).length
+  const warningCount = payload.candidates.filter((c) => c.warnings.length > 0).length
+  const soldoutCount = payload.candidates.filter((c) => c.seatAvailable === 0).length
+  const latestCandidateIdSet = useMemo(() => new Set(latestCandidateIds), [latestCandidateIds])
+  const latestCount = payload.candidates.filter((candidate) => latestCandidateIdSet.has(candidate.id)).length
+
+  const PAGE_SIZE = 50
+
+  const filteredCandidates = useMemo(() => {
+    let list = payload.candidates
+    if (candidateFilter === 'latest') list = list.filter((c) => latestCandidateIdSet.has(c.id))
+    else if (candidateFilter === 'unmatched') list = list.filter((c) => !c.matchedTheaterId || !c.matchedMovieId)
+    else if (candidateFilter === 'warning') list = list.filter((c) => c.warnings.length > 0)
+    else if (candidateFilter === 'soldout') list = list.filter((c) => c.seatAvailable === 0)
+
+    const query = normalizeSearchText(candidateSearchQuery)
+    if (!query) return list
+
+    return list.filter((candidate) => normalizeSearchText([
+      candidate.movieTitle,
+      candidate.theaterName,
+      candidate.sourceId,
+      candidate.screenName,
+      candidate.showDate,
+      candidate.showTime,
+      candidate.rawText,
+      candidate.warnings.join(' '),
+      candidate.status,
+    ].join(' ')).includes(query))
+  }, [candidateFilter, candidateSearchQuery, latestCandidateIdSet, payload.candidates])
+
+  const totalPages = Math.max(1, Math.ceil(filteredCandidates.length / PAGE_SIZE))
+  const safePage = Math.min(candidatePage, totalPages - 1)
+  const visibleCandidates = useMemo(
+    () => filteredCandidates.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE),
+    [filteredCandidates, safePage],
+  )
+
+  const candidateIds = useMemo(() => filteredCandidates.map((candidate) => candidate.id), [filteredCandidates])
+  const selectedCandidateCount = candidateIds.filter((id) => selectedIds.includes(id)).length
+  const allCandidatesSelected = candidateIds.length > 0 && selectedCandidateCount === candidateIds.length
+  const someCandidatesSelected = selectedCandidateCount > 0 && selectedCandidateCount < candidateIds.length
   const selectedAdminTheater = adminTheaters.find((theater) => theater.id === selectedAdminTheaterId)
   const averageConfidence = useMemo(() => {
     if (!payload.candidates.length) return 0
     const total = payload.candidates.reduce((sum, candidate) => sum + candidate.confidence, 0)
     return Math.round((total / payload.candidates.length) * 100)
   }, [payload.candidates])
+
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = someCandidatesSelected
+    }
+  }, [someCandidatesSelected])
+
+  async function refreshLogs() {
+    setLogsLoading(true)
+    try {
+      const response = await fetch('/api/admin/crawl/runs?limit=200', { cache: 'no-store' })
+      const result = (await response.json()) as { runs?: CrawlRun[]; error?: { message: string } }
+      if (result.runs) setCrawlLogs(result.runs)
+    } finally {
+      setLogsLoading(false)
+    }
+  }
 
   async function refresh() {
     const response = await fetch('/api/admin/showtimes', { cache: 'no-store' })
@@ -202,7 +288,9 @@ export function AdminShowtimeConsole() {
 
   async function runCrawler() {
     setLoading(true)
-    setMessage('크롤링을 실행하는 중입니다.')
+    setCrawlProgress(0)
+    setCrawlTotal(1)
+    setMessage('크롤링 후 영화 자동 매칭을 실행하는 중입니다.')
 
     try {
       const response = await fetch('/api/admin/crawl', {
@@ -221,11 +309,165 @@ export function AdminShowtimeConsole() {
         throw new Error(result.error ?? '크롤링에 실패했습니다.')
       }
 
+      setCrawlProgress(100)
       await refresh()
+      await refreshAdminMovies()
+      mergeCandidatesIntoPayload(result.candidates)
       setSelectedIds(result.candidates.map((candidate) => candidate.id))
-      setMessage(`${result.sourceName}에서 ${result.candidates.length}개 후보를 수집했습니다.`)
+      setLatestCandidateIds(result.candidates.map((candidate) => candidate.id))
+      setCandidateFilter('latest')
+      setCandidatePage(0)
+      const movieMatchedCount = result.candidates.filter((candidate) => candidate.matchedMovieId).length
+      setMessage(`${result.sourceName}에서 ${result.candidates.length}개 후보를 수집하고 영화 ${movieMatchedCount}건을 자동 매칭했습니다.`)
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '크롤링에 실패했습니다.')
+    } finally {
+      setLoading(false)
+      setTimeout(() => {
+        setCrawlProgress(0)
+        setCrawlTotal(0)
+      }, 1500)
+    }
+  }
+
+  async function runAllCrawlers() {
+    const enabledSources = payload.sources.filter((s) => s.enabled && s.health === 'healthy')
+    if (enabledSources.length === 0) {
+      setMessage('활성화되고 정상인 크롤링 소스가 없습니다.')
+      return
+    }
+
+    setLoading(true)
+    setCrawlProgress(0)
+    setCrawlTotal(enabledSources.length)
+    setMessage(`일괄 수집 및 영화 자동 매칭 중... (0/${enabledSources.length})`)
+
+    let totalCandidates = 0
+    let succeeded = 0
+    let failed = 0
+    let completed = 0
+
+    const dtryxSources = enabledSources.filter((s) => s.parser === 'dtryxReservationApi')
+    const otherSources = enabledSources.filter((s) => s.parser !== 'dtryxReservationApi')
+
+    const [dtryxResult, ...otherResults] = await Promise.all([
+      dtryxSources.length > 0
+        ? fetch('/api/admin/crawl/all-dtryx', { method: 'POST' })
+            .then((r) => r.json() as Promise<{ runs?: CrawlRun[]; error?: { message: string } }>)
+            .then((result) => {
+              completed += dtryxSources.length
+              setCrawlProgress(Math.round((completed / enabledSources.length) * 100))
+              setMessage(`일괄 수집 및 영화 자동 매칭 중... (${completed}/${enabledSources.length})`)
+              return result
+            })
+            .catch(() => ({ runs: [] as CrawlRun[] }))
+        : Promise.resolve({ runs: [] as CrawlRun[] }),
+      ...otherSources.map((source) =>
+        fetch('/api/admin/crawl', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ sourceId: source.id, inputKind: 'url' }),
+        })
+          .then((r) => r.json() as Promise<CrawlRun>)
+          .then((run) => {
+            completed++
+            setCrawlProgress(Math.round((completed / enabledSources.length) * 100))
+            setMessage(`일괄 수집 및 영화 자동 매칭 중... (${completed}/${enabledSources.length})`)
+            return run
+          })
+          .catch((err): CrawlRun => ({
+            id: `err_${source.id}`,
+            sourceId: source.id,
+            sourceName: source.theaterName,
+            inputKind: 'url',
+            status: 'failed',
+            startedAt: new Date().toISOString(),
+            candidates: [],
+            createdCount: 0,
+            updatedCount: 0,
+            warningCount: 0,
+            error: err instanceof Error ? err.message : '네트워크 오류',
+          })),
+      ),
+    ])
+
+    const failedRuns: string[] = []
+
+    for (const run of dtryxResult.runs ?? []) {
+      if (run.status === 'completed') { succeeded++; totalCandidates += run.createdCount }
+      else { failed++; failedRuns.push(run.sourceName) }
+    }
+
+    for (const run of otherResults as CrawlRun[]) {
+      if (run.status === 'failed' || run.id.startsWith('err_')) {
+        failed++
+        failedRuns.push(run.sourceName)
+      } else {
+        succeeded++
+        totalCandidates += run.createdCount ?? 0
+      }
+    }
+
+    const allRuns = [
+      ...(dtryxResult.runs ?? []),
+      ...otherResults as CrawlRun[],
+    ]
+    const latestIds = allRuns.flatMap((run) => run.candidates.map((c) => c.id))
+
+    setCrawlProgress(100)
+    await refresh()
+    await refreshAdminMovies()
+    mergeCandidatesIntoPayload(allRuns.flatMap((run) => run.candidates))
+    setSelectedIds(latestIds)
+    setLatestCandidateIds(latestIds)
+    setCandidateFilter('latest')
+    setCandidatePage(0)
+    const movieMatchedCount = allRuns.flatMap((run) => run.candidates).filter((c) => c.matchedMovieId).length
+    const failedMsg = failedRuns.length > 0 ? ` (실패: ${failedRuns.slice(0, 5).join(', ')}${failedRuns.length > 5 ? ` 외 ${failedRuns.length - 5}개` : ''})` : ''
+    setMessage(`일괄 수집 완료 - 성공 ${succeeded}개, 실패 ${failed}개, 영화 매칭 ${movieMatchedCount}건${failedMsg}`)
+    setLoading(false)
+    setTimeout(() => {
+      setCrawlProgress(0)
+      setCrawlTotal(0)
+    }, 2000)
+  }
+
+  async function handlePurgeExpired() {
+    if (!window.confirm('오늘 이전 날짜의 미승인 후보를 모두 삭제할까요?')) return
+    setLoading(true)
+    setMessage('만료된 후보를 삭제하는 중...')
+    try {
+      const response = await fetch('/api/admin/showtimes', { method: 'DELETE' })
+      const result = (await response.json()) as { deleted?: number; error?: { message: string } }
+      if (!response.ok) throw new Error(result.error?.message ?? '삭제 실패')
+      await refresh()
+      setMessage(`만료 후보 ${result.deleted ?? 0}개를 삭제했습니다.`)
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : '삭제 실패')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleUpdateSeatsOnly() {
+    setLoading(true)
+    setMessage('모든 극장의 좌석 정보를 업데이트 중...')
+
+    try {
+      const response = await fetch('/api/admin/showtimes/seats', {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+      })
+
+      const result = (await response.json()) as { updated?: number; error?: { message: string } }
+
+      if (!response.ok || 'error' in result) {
+        throw new Error(result.error?.message ?? '좌석 정보 업데이트에 실패했습니다.')
+      }
+
+      setMessage(`✅ 전체 ${result.updated}개 상영의 좌석 정보를 업데이트했습니다.`)
+    } catch (error) {
+      setMessage(`❌ 오류: ${error instanceof Error ? error.message : String(error)}`)
     } finally {
       setLoading(false)
     }
@@ -304,12 +546,9 @@ export function AdminShowtimeConsole() {
         throw new Error(result.error?.message ?? '자동 매칭에 실패했습니다.')
       }
 
-      setPayload((current) => ({
-        ...current,
-        candidates: current.candidates.map((candidate) =>
-          result.updated?.find((updated) => updated.id === candidate.id) ?? candidate,
-        ),
-      }))
+      await refresh()
+      await refreshAdminMovies()
+      mergeCandidatesIntoPayload(result.updated)
       setMessage(`자동 매칭 완료: 성공 ${result.matched ?? 0}건, 확인 필요 ${result.needsReview ?? 0}건`)
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '자동 매칭에 실패했습니다.')
@@ -318,15 +557,41 @@ export function AdminShowtimeConsole() {
     }
   }
 
-  async function createSource() {
+  function openNewSourceForm() {
+    setEditingSourceId('')
+    setSourceForm(emptySourceForm)
+    setSourceFormOpen((open) => !open || Boolean(editingSourceId))
+  }
+
+  function editSelectedSource() {
+    if (!selectedSource) {
+      setMessage('수정할 크롤링 소스를 먼저 선택하세요.')
+      return
+    }
+
+    setEditingSourceId(selectedSource.id)
+    setSourceForm({
+      theaterName: selectedSource.theaterName,
+      matchedTheaterId: selectedSource.matchedTheaterId ?? '',
+      homepageUrl: selectedSource.homepageUrl,
+      listingUrl: selectedSource.listingUrl,
+      parser: selectedSource.parser,
+      cadence: selectedSource.cadence,
+      notes: selectedSource.notes ?? '',
+    })
+    setSourceFormOpen(true)
+  }
+
+  async function saveSource() {
     setLoading(true)
-    setMessage('크롤링 소스를 저장하는 중입니다.')
+    setMessage(editingSourceId ? '크롤링 소스를 수정하는 중입니다.' : '크롤링 소스를 저장하는 중입니다.')
 
     try {
+      const method = editingSourceId ? 'PATCH' : 'POST'
       const response = await fetch('/api/admin/sources', {
-        method: 'POST',
+        method,
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(sourceForm),
+        body: JSON.stringify(editingSourceId ? { ...sourceForm, id: editingSourceId } : sourceForm),
       })
       const result = (await response.json()) as { source?: AdminTheaterSource; error?: { message: string } }
 
@@ -339,16 +604,9 @@ export function AdminShowtimeConsole() {
       setUrl(result.source.listingUrl)
       setInputKind('url')
       setSourceFormOpen(false)
-      setSourceForm({
-        theaterName: '',
-        matchedTheaterId: '',
-        homepageUrl: '',
-        listingUrl: '',
-        parser: 'tableText',
-        cadence: 'manual',
-        notes: '',
-      })
-      setMessage(`${result.source.theaterName} 크롤링 소스를 추가했습니다.`)
+      setEditingSourceId('')
+      setSourceForm(emptySourceForm)
+      setMessage(`${result.source.theaterName} 크롤링 소스를 ${method === 'PATCH' ? '수정' : '추가'}했습니다.`)
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '크롤링 소스를 저장하지 못했습니다.')
     } finally {
@@ -381,6 +639,9 @@ export function AdminShowtimeConsole() {
       setSelectedSourceId('')
       setUrl('')
       setSelectedIds([])
+      setEditingSourceId('')
+      setSourceForm(emptySourceForm)
+      setSourceFormOpen(false)
       await refresh()
       setMessage(`${selectedSource.theaterName} 크롤링 소스를 삭제했습니다.`)
     } catch (error) {
@@ -435,12 +696,12 @@ export function AdminShowtimeConsole() {
 
   async function searchMovies() {
     if (movieSearchQuery.trim().length < 2) {
-      setMessage('KMDB 검색어는 2자 이상 입력하세요.')
+      setMessage('검색어는 2자 이상 입력하세요.')
       return
     }
 
     setLoading(true)
-    setMessage('KMDB에서 영화를 검색하는 중입니다.')
+    setMessage('영화를 검색하는 중입니다.')
 
     try {
       const response = await fetch(`/api/admin/movies/search?q=${encodeURIComponent(movieSearchQuery)}`, {
@@ -452,13 +713,18 @@ export function AdminShowtimeConsole() {
       }
 
       if (!response.ok || !result.movies) {
-        throw new Error(result.error?.message ?? 'KMDB 영화 검색에 실패했습니다.')
+        throw new Error(result.error?.message ?? '영화 검색에 실패했습니다.')
       }
 
       setMovieSearchResults(result.movies)
-      setMessage(`KMDB 검색 결과 ${result.movies.length}건을 불러왔습니다.`)
+      const kmdbCount = result.movies.filter((m) => m.provider === 'kmdb').length
+      const localCount = result.movies.filter((m) => m.provider === 'local').length
+      const parts = []
+      if (kmdbCount > 0) parts.push(`KMDB ${kmdbCount}건`)
+      if (localCount > 0) parts.push(`로컬 DB ${localCount}건`)
+      setMessage(parts.length ? `검색 결과: ${parts.join(', ')}` : '검색 결과가 없습니다.')
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'KMDB 영화 검색에 실패했습니다.')
+      setMessage(error instanceof Error ? error.message : '영화 검색에 실패했습니다.')
     } finally {
       setLoading(false)
     }
@@ -571,10 +837,15 @@ export function AdminShowtimeConsole() {
 
     setLoading(true)
     try {
+      const payload = {
+        ...movieEditForm,
+        genre: splitListInput(movieEditRaw.genre),
+        director: splitListInput(movieEditRaw.director),
+      }
       const response = await fetch('/api/admin/movies', {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(movieEditForm),
+        body: JSON.stringify(payload),
       })
       const result = (await response.json()) as { movie?: AdminMovie; error?: { message: string } }
 
@@ -616,6 +887,24 @@ export function AdminShowtimeConsole() {
     }))
   }
 
+  function mergeCandidatesIntoPayload(candidates: CrawledShowtimeCandidate[]) {
+    if (candidates.length === 0) return
+
+    setPayload((current) => {
+      const byId = new Map(current.candidates.map((candidate) => [candidate.id, candidate]))
+      candidates.forEach((candidate) => byId.set(candidate.id, candidate))
+
+      return {
+        ...current,
+        candidates: Array.from(byId.values()).sort((a, b) => {
+          const left = `${a.showDate} ${a.showTime}`
+          const right = `${b.showDate} ${b.showTime}`
+          return left.localeCompare(right)
+        }),
+      }
+    })
+  }
+
   function editTheater(theater: AdminTheater) {
     setTheaterFormOpen(true)
     setTheaterForm({
@@ -627,6 +916,7 @@ export function AdminShowtimeConsole() {
       city: theater.city,
       phone: theater.phone ?? '',
       website: theater.website ?? '',
+      instagramUrl: theater.instagramUrl ?? '',
       screenCount: theater.screenCount,
       seatCount: theater.seatCount,
     })
@@ -641,6 +931,7 @@ export function AdminShowtimeConsole() {
       city: '',
       phone: '',
       website: '',
+      instagramUrl: '',
       screenCount: 0,
       seatCount: undefined,
     })
@@ -682,6 +973,14 @@ export function AdminShowtimeConsole() {
     setSelectedIds((current) =>
       current.includes(id) ? current.filter((selectedId) => selectedId !== id) : [...current, id],
     )
+  }
+
+  function toggleAllCandidates() {
+    setSelectedIds((current) => {
+      const visibleIds = new Set(candidateIds)
+      const hiddenIds = current.filter((id) => !visibleIds.has(id))
+      return allCandidatesSelected ? hiddenIds : [...hiddenIds, ...candidateIds]
+    })
   }
 
   function selectSource(sourceId: string) {
@@ -735,84 +1034,116 @@ export function AdminShowtimeConsole() {
         <div className={styles.headerActions}>
           <Button variant="ghost" size="sm" onClick={signOut}>로그아웃</Button>
           <Button variant="ghost" size="sm" onClick={refresh}>새로고침</Button>
+          <Button variant="secondary" size="sm" loading={loading} onClick={runAllCrawlers}>일괄 수집</Button>
           <Button size="sm" loading={loading} onClick={runCrawler}>수집 실행</Button>
+          <Button variant="secondary" size="sm" loading={loading} onClick={handlePurgeExpired}>만료 정리</Button>
+          <Button variant="secondary" size="sm" loading={loading} onClick={handleUpdateSeatsOnly}>좌석만 업데이트</Button>
         </div>
       </header>
 
-      <section className={styles.metrics} aria-label="상영시간표 운영 지표">
-        <Metric label="수집 후보" value={payload.candidates.length} />
-        <Metric label="검수 필요" value={reviewCount} tone={reviewCount ? 'warning' : 'default'} />
-        <Metric label="승인 완료" value={approvedCount} tone="success" />
-        <Metric label="매칭 완료" value={matchedCount} tone={matchedCount ? 'success' : 'default'} />
-        <Metric label="평균 신뢰도" value={`${averageConfidence}%`} />
-      </section>
+      <nav className={styles.tabNav}>
+        <button
+          className={`${styles.tabBtn} ${activeTab === 'crawl' ? styles.tabBtnActive : ''}`}
+          onClick={() => setActiveTab('crawl')}
+        >
+          크롤링
+          {reviewCount > 0 && <span className={styles.tabBadge}>{reviewCount}</span>}
+        </button>
+        <button
+          className={`${styles.tabBtn} ${activeTab === 'status' ? styles.tabBtnActive : ''}`}
+          onClick={() => setActiveTab('status')}
+        >
+          DB 현황
+        </button>
+        <button
+          className={`${styles.tabBtn} ${activeTab === 'manage' ? styles.tabBtnActive : ''}`}
+          onClick={() => setActiveTab('manage')}
+        >
+          관리
+        </button>
+        <button
+          className={`${styles.tabBtn} ${activeTab === 'logs' ? styles.tabBtnActive : ''}`}
+          onClick={() => { setActiveTab('logs'); if (crawlLogs.length === 0) refreshLogs() }}
+        >
+          로그
+        </button>
+      </nav>
 
-      <section className={styles.ocrSection}>
-        <div className={styles.panelHeader}>
-          <h2>OCR 이미지 업로드</h2>
-          {ocrMessage && <span className={ocrMessage.startsWith('✅') ? styles.ocrMsgOk : styles.ocrMsgErr}>{ocrMessage}</span>}
-        </div>
-        <div className={styles.ocrBody}>
-          <label className={styles.ocrDropzone}>
-            <input
-              type="file"
-              accept="image/*"
-              className={styles.ocrFileInput}
-              onChange={(e) => { setOcrFile(e.target.files?.[0] ?? null); setOcrResult(null); setOcrMessage('') }}
-            />
-            {ocrFile
-              ? <span>{ocrFile.name} ({Math.round(ocrFile.size / 1024)}KB)</span>
-              : <span>이미지 클릭 또는 드래그</span>}
-          </label>
-          <input
-            className={styles.ocrHintInput}
-            placeholder="극장명 힌트 (예: 인디스페이스)"
-            value={ocrTheaterHint}
-            onChange={(e) => setOcrTheaterHint(e.target.value)}
-          />
-          <Button size="sm" disabled={!ocrFile} loading={ocrLoading} onClick={handleOcrParse}>파싱</Button>
-          {ocrResult && (
-            <Button size="sm" loading={ocrLoading} onClick={handleOcrSave}>후보로 저장</Button>
-          )}
-        </div>
-        {ocrResult && (
-          <div className={styles.ocrResultWrap}>
-            <table className={styles.ocrTable}>
-              <thead>
-                <tr>
-                  <th>극장</th>
-                  <th>날짜</th>
-                  <th>시간</th>
-                  <th>영화</th>
-                  <th>관</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ocrResult.showtimes.map((st, i) => (
-                  <tr key={i}>
-                    <td>{ocrResult.theaterName}</td>
-                    <td>{st.showDate}</td>
-                    <td>{st.showTime}</td>
-                    <td>{st.movieTitle}</td>
-                    <td>{st.screenName || '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {ocrResult.corrections.length > 0 && (
-              <p className={styles.ocrCorrections}>⚠ {ocrResult.corrections.join(' / ')}</p>
+      {activeTab === 'crawl' && (
+        <>
+          <section className={styles.metrics} aria-label="상영시간표 운영 지표">
+            <Metric label="수집 후보" value={payload.totalCandidates ?? payload.candidates.length} />
+            <Metric label="검수 필요" value={reviewCount} tone={reviewCount ? 'warning' : 'default'} />
+            <Metric label="승인 완료" value={approvedCount} tone="success" />
+            <Metric label="매칭 완료" value={matchedCount} tone={matchedCount ? 'success' : 'default'} />
+            <Metric label="평균 신뢰도" value={`${averageConfidence}%`} />
+          </section>
+
+          <section className={styles.ocrSection}>
+            <div className={styles.panelHeader}>
+              <h2>OCR 이미지 업로드</h2>
+              {ocrMessage && <span className={ocrMessage.startsWith('✅') ? styles.ocrMsgOk : styles.ocrMsgErr}>{ocrMessage}</span>}
+            </div>
+            <div className={styles.ocrBody}>
+              <label className={styles.ocrDropzone}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className={styles.ocrFileInput}
+                  onChange={(e) => { setOcrFile(e.target.files?.[0] ?? null); setOcrResult(null); setOcrMessage('') }}
+                />
+                {ocrFile
+                  ? <span>{ocrFile.name} ({Math.round(ocrFile.size / 1024)}KB)</span>
+                  : <span>이미지 클릭 또는 드래그</span>}
+              </label>
+              <input
+                className={styles.ocrHintInput}
+                placeholder="극장명 힌트 (예: 인디스페이스)"
+                value={ocrTheaterHint}
+                onChange={(e) => setOcrTheaterHint(e.target.value)}
+              />
+              <Button size="sm" disabled={!ocrFile} loading={ocrLoading} onClick={handleOcrParse}>파싱</Button>
+              {ocrResult && (
+                <Button size="sm" loading={ocrLoading} onClick={handleOcrSave}>후보로 저장</Button>
+              )}
+            </div>
+            {ocrResult && (
+              <div className={styles.ocrResultWrap}>
+                <table className={styles.ocrTable}>
+                  <thead>
+                    <tr><th>극장</th><th>날짜</th><th>시간</th><th>영화</th><th>관</th></tr>
+                  </thead>
+                  <tbody>
+                    {ocrResult.showtimes.map((st, i) => (
+                      <tr key={i}>
+                        <td>{ocrResult.theaterName}</td>
+                        <td>{st.showDate}</td>
+                        <td>{st.showTime}</td>
+                        <td>{st.movieTitle}</td>
+                        <td>{st.screenName || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {ocrResult.corrections.length > 0 && (
+                  <p className={styles.ocrCorrections}>⚠ {ocrResult.corrections.join(' / ')}</p>
+                )}
+              </div>
             )}
-          </div>
-        )}
-      </section>
+          </section>
+        </>
+      )}
 
-      <section className={styles.workspace}>
+      {activeTab === 'crawl' && <section className={styles.workspace}>
         <aside className={styles.panel}>
           <div className={styles.panelHeader}>
             <h2>크롤링 소스</h2>
             <div className={styles.sourceHeaderActions}>
-              <button className={styles.linkButton} onClick={() => setSourceFormOpen((open) => !open)}>
-                {sourceFormOpen ? '닫기' : '새 소스'}
+              <button className={styles.linkButton} onClick={openNewSourceForm}>
+                {sourceFormOpen && !editingSourceId ? '닫기' : '새 소스'}
+              </button>
+              <button className={styles.linkButton} disabled={!selectedSource || loading} onClick={editSelectedSource}>
+                수정
               </button>
               <button className={styles.dangerLinkButton} disabled={!selectedSource || loading} onClick={deleteSource}>
                 삭제
@@ -845,10 +1176,12 @@ export function AdminShowtimeConsole() {
                   }}
                 >
                   <option value="">선택 안 함</option>
-                  {adminTheaters.map((theater) => (
-                    <option key={theater.id} value={theater.id}>
-                      {theater.name} · {theater.city}
-                    </option>
+                  {groupByCity(adminTheaters).map(([city, items]) => (
+                    <optgroup key={city} label={city}>
+                      {items.map((theater) => (
+                        <option key={theater.id} value={theater.id}>{theater.name}</option>
+                      ))}
+                    </optgroup>
                   ))}
                 </select>
               </label>
@@ -873,11 +1206,15 @@ export function AdminShowtimeConsole() {
                   파서
                   <select
                     value={sourceForm.parser}
-                    onChange={(event) => setSourceForm((current) => ({ ...current, parser: event.target.value }))}
+                    onChange={(event) => setSourceForm((current) => ({ ...current, parser: event.target.value as AdminTheaterSource['parser'] }))}
                   >
                     <option value="tableText">HTML 테이블</option>
                     <option value="timelineCard">타임라인 카드</option>
                     <option value="dtryxReservationApi">디트릭스 예매 API</option>
+                    <option value="movieeTicketApi">무비애 예매 API</option>
+                    <option value="movielandProductOptions">무비랜드 상품 옵션</option>
+                    <option value="seoulArtTimetable">서울아트시네마 시간표</option>
+                    <option value="selfHosted">자체 호스팅 시간표</option>
                     <option value="jsonLdEvent">JSON-LD Event</option>
                     <option value="csv">CSV</option>
                   </select>
@@ -886,11 +1223,12 @@ export function AdminShowtimeConsole() {
                   주기
                   <select
                     value={sourceForm.cadence}
-                    onChange={(event) => setSourceForm((current) => ({ ...current, cadence: event.target.value }))}
+                    onChange={(event) => setSourceForm((current) => ({ ...current, cadence: event.target.value as AdminTheaterSource['cadence'] }))}
                   >
                     <option value="manual">수동</option>
                     <option value="daily">매일</option>
                     <option value="twice_daily">하루 2회</option>
+                    <option value="four_daily">하루 4회</option>
                   </select>
                 </label>
               </div>
@@ -902,23 +1240,73 @@ export function AdminShowtimeConsole() {
                   placeholder="로그인 필요 여부, 표 구조, 검수 팁 등"
                 />
               </label>
-              <Button size="sm" fullWidth loading={loading} onClick={createSource}>소스 저장</Button>
+              <Button size="sm" fullWidth loading={loading} onClick={saveSource}>
+                {editingSourceId ? '변경 저장' : '소스 저장'}
+              </Button>
             </div>
           )}
 
           <div className={styles.sourceList}>
-            {payload.sources.map((source) => (
-              <button
-                key={source.id}
-                className={`${styles.sourceItem} ${selectedSourceId === source.id ? styles.sourceItemActive : ''}`}
-                onClick={() => selectSource(source.id)}
-              >
-                <span>
-                  <strong>{source.theaterName}</strong>
-                  <small>{source.parser} · {source.cadence}{source.matchedTheaterId ? ' · 실제 극장 연결' : ''}</small>
-                </span>
-                <i className={styles[source.health]}>{source.health}</i>
-              </button>
+            {groupByCity(
+              payload.sources.map((s) => {
+                // 1. matchedTheaterId로 찾기
+                const matched = adminTheaters.find((t) => t.id === s.matchedTheaterId)
+                if (matched?.city) return { ...s, city: matched.city }
+
+                // 2. theaterId로 찾기
+                const original = adminTheaters.find((t) => t.id === s.theaterId)
+                if (original?.city) return { ...s, city: original.city }
+
+                // 3. 극장명에서 시군구 추출 후 theaters에서 검색
+                const cityKeywords = ['서울', '부산', '대구', '인천', '광주', '대전', '울산', '세종',
+                  '수원', '용인', '성남', '고양', '파주', '이천', '안산', '화성', '여주', '이천', '평택',
+                  '의정부', '남양주', '광주', '군포', '시흥', '오산', '양주', '동두천', '구리', '하남',
+                  '춘천', '원주', '강릉', '동해', '태백', '속초', '삼척', '제천', '평창', '정선',
+                  '청주', '충주', '제천', '옥천', '영동', '증평', '진천', '괴산',
+                  '천안', '공주', '아산', '당진', '금산', '논산', '계룡', '보령', '서산', '태안', '홍성',
+                  '전주', '익산', '정읍', '남원', '김제', '완주', '진안', '무주', '장수', '임실', '순창',
+                  '광주', '나주', '여수', '순천', '목포', '해남', '강진', '영암', '무안', '함평', '영광',
+                  '신안', '화순', '보성', '고흥', '장흥',
+                  '포항', '경주', '김천', '안동', '구미', '영천', '영주', '상주', '문경', '예천',
+                  '봉화', '울진', '청송',
+                  '부산', '양산', '진해', '울주', '거제', '통영', '사천', '고성', '남해', '하동',
+                  '진주', '통영', '사천', '거창', '함양', '산청',
+                  '제주', '서귀포'
+                ]
+                const extractedCity = s.theaterName.split(/[,\s]+/).find(w => cityKeywords.includes(w))
+                if (extractedCity) {
+                  const foundTheater = adminTheaters.find(t => t.name?.includes(extractedCity))
+                  if (foundTheater?.city) return { ...s, city: foundTheater.city }
+                }
+
+                // 4. 광역도명으로 직접 찾기
+                const provinceMatch = s.theaterName.split(/[,\s]+/).find(w =>
+                  ['서울', '부산', '대구', '인천', '광주', '대전', '울산', '경기', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주', '세종'].includes(w)
+                )
+
+                return { ...s, city: provinceMatch || '미지정' }
+              })
+            ).map(([city, sources]) => (
+              <details key={city} className={styles.theaterGroup}>
+                <summary className={styles.theaterGroupSummary}>
+                  {city} ({sources.length}개)
+                </summary>
+                <div className={styles.theaterGroupContent}>
+                  {sources.map((source) => (
+                    <button
+                      key={source.id}
+                      className={`${styles.sourceItem} ${selectedSourceId === source.id ? styles.sourceItemActive : ''}`}
+                      onClick={() => selectSource(source.id)}
+                    >
+                      <span>
+                        <strong>{source.theaterName}</strong>
+                        <small>{source.parser} · {source.cadence}{source.matchedTheaterId ? ' · 실제 극장 연결' : ''}</small>
+                      </span>
+                      <i className={styles[source.health]}>{source.health}</i>
+                    </button>
+                  ))}
+                </div>
+              </details>
             ))}
           </div>
 
@@ -978,6 +1366,55 @@ export function AdminShowtimeConsole() {
 
           {message && <p className={styles.message}>{message}</p>}
 
+          {loading && crawlTotal > 0 && (
+            <div className={styles.progressContainer}>
+              <div className={styles.progressBar}>
+                <div className={styles.progressFill} style={{ width: `${crawlProgress}%` }} />
+              </div>
+              <span className={styles.progressText}>{crawlProgress}%</span>
+            </div>
+          )}
+
+          <div className={styles.candidateFilterRow}>
+            <div className={styles.candidateFilterTabs}>
+              {([
+                { key: 'all',       label: '전체',     count: payload.candidates.length, dot: '' },
+                { key: 'latest',    label: '최근 수집', count: latestCount,                dot: '#3498db' },
+                { key: 'unmatched', label: '매칭 필요', count: unmatchedCount,            dot: '#e74c3c' },
+                { key: 'warning',   label: '경고',     count: warningCount,              dot: '#e67e22' },
+                { key: 'soldout',   label: '매진',     count: soldoutCount,              dot: '#7f8c8d' },
+              ] as const).map(({ key, label, count, dot }) => (
+                <button
+                  key={key}
+                  data-key={key}
+                  className={`${styles.filterTab} ${candidateFilter === key ? styles.filterTabActive : ''}`}
+                  onClick={() => { setCandidateFilter(key); setCandidatePage(0) }}
+                >
+                  {dot && <span className={styles.filterTabDot} style={{ background: dot }} />}
+                  {label}
+                  {count > 0 && <span className={styles.filterTabBadge}>{count}</span>}
+                </button>
+              ))}
+            </div>
+            <div className={styles.candidateLegend}>
+              <span className={styles.legendItem}><span className={`${styles.legendDot} ${styles.legendDotRed}`} />매칭 안 됨</span>
+              <span className={styles.legendItem}><span className={`${styles.legendDot} ${styles.legendDotYellow}`} />경고 있음</span>
+              <span className={styles.legendItem}><span className={`${styles.legendDot} ${styles.legendDotGray}`} />매진</span>
+            </div>
+          </div>
+
+          <div className={styles.reviewToolbar}>
+            <input
+              aria-label="검수 대기열 검색"
+              value={candidateSearchQuery}
+              onChange={(event) => { setCandidateSearchQuery(event.target.value); setCandidatePage(0) }}
+              placeholder="영화명, 극장, 날짜, 경고 검색"
+            />
+            <span>
+              {filteredCandidates.length}/{payload.candidates.length}건
+            </span>
+          </div>
+
           {movieFormOpen && (
             <div className={styles.movieSearchBox}>
               <div className={styles.inlineForm}>
@@ -998,15 +1435,21 @@ export function AdminShowtimeConsole() {
                       <span>
                         <strong>{movie.title}</strong>
                         <small>
-                          KMDB {movie.movieId}{movie.movieSeq} · {movie.year}
-                          {movie.openDate ? ` · ${movie.openDate}` : ''}
-                          {movie.director.length ? ` · ${movie.director.join(', ')}` : ''}
-                          {movie.posterUrl ? ' · 포스터 있음' : ''}
+                          {movie.provider === 'local'
+                            ? `로컬 DB · ${movie.year}${movie.director.length ? ` · ${movie.director.join(', ')}` : ''}`
+                            : `KMDB ${movie.movieId}${movie.movieSeq} · ${movie.year}${movie.openDate ? ` · ${movie.openDate}` : ''}${movie.director.length ? ` · ${movie.director.join(', ')}` : ''}${movie.posterUrl ? ' · 포스터 있음' : ''}`
+                          }
                         </small>
                       </span>
-                      <Button variant="secondary" size="sm" loading={loading} onClick={() => importMovieFromKmdb(movie)}>
-                        가져오기
-                      </Button>
+                      {movie.provider === 'local' ? (
+                        <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: '#e8f5e9', color: '#2e7d32', fontWeight: 600 }}>
+                          이미 등록됨
+                        </span>
+                      ) : (
+                        <Button variant="secondary" size="sm" loading={loading} onClick={() => importMovieFromKmdb(movie)}>
+                          가져오기
+                        </Button>
+                      )}
                     </article>
                   ))}
                 </div>
@@ -1018,7 +1461,16 @@ export function AdminShowtimeConsole() {
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th aria-label="선택" />
+                  <th aria-label="전체 선택">
+                    <input
+                      ref={selectAllRef}
+                      type="checkbox"
+                      checked={allCandidatesSelected}
+                      disabled={candidateIds.length === 0}
+                      aria-label="검수 대기열 전체 선택"
+                      onChange={toggleAllCandidates}
+                    />
+                  </th>
                   <th>상영 정보</th>
                   <th>극장</th>
                   <th>매칭</th>
@@ -1028,8 +1480,13 @@ export function AdminShowtimeConsole() {
                 </tr>
               </thead>
               <tbody>
-                {payload.candidates.map((candidate) => (
-                  <tr key={candidate.id}>
+                {visibleCandidates.map((candidate) => {
+                  const isUnmatched = !candidate.matchedTheaterId || !candidate.matchedMovieId
+                  const hasWarning = candidate.warnings.length > 0
+                  const isSoldout = candidate.seatAvailable === 0
+                  const rowClass = isUnmatched ? styles.rowUnmatched : hasWarning ? styles.rowWarning : isSoldout ? styles.rowSoldout : ''
+                  return (
+                  <tr key={candidate.id} className={rowClass}>
                     <td>
                       <input
                         type="checkbox"
@@ -1099,9 +1556,13 @@ export function AdminShowtimeConsole() {
                         </ul>
                       )}
                     </td>
-                    <td><StatusBadge status={candidate.status} /></td>
+                    <td>
+                      <StatusBadge status={candidate.status} />
+                      {isSoldout && <span className={styles.soldoutTag}>매진</span>}
+                    </td>
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
             {payload.candidates.length === 0 && (
@@ -1109,27 +1570,61 @@ export function AdminShowtimeConsole() {
                 수집 실행을 누르면 샘플 크롤링 결과가 이곳에 표시됩니다.
               </div>
             )}
+            {payload.candidates.length > 0 && filteredCandidates.length === 0 && (
+              <div className={styles.empty}>
+                검색 조건에 맞는 검수 후보가 없습니다.
+              </div>
+            )}
+          </div>
+          {totalPages > 1 && (
+            <div className={styles.pagination}>
+              <button
+                className={styles.pageBtn}
+                disabled={safePage === 0}
+                onClick={() => setCandidatePage((p) => Math.max(0, p - 1))}
+              >
+                ‹ 이전
+              </button>
+              <span>{safePage + 1} / {totalPages}</span>
+              <button
+                className={styles.pageBtn}
+                disabled={safePage >= totalPages - 1}
+                onClick={() => setCandidatePage((p) => Math.min(totalPages - 1, p + 1))}
+              >
+                다음 ›
+              </button>
+            </div>
+          )}
+        </section>
+      </section>}
+
+      {activeTab === 'crawl' && (
+        <section className={styles.runLog}>
+          <div className={styles.panelHeader}>
+            <h2>최근 수집 로그</h2>
+            <span>{latestRun ? latestRun.finishedAt : '아직 실행 전'}</span>
+          </div>
+          <div className={styles.logGrid}>
+            {payload.runs.slice(0, 5).map((run) => (
+              <article key={run.id} className={styles.logItem}>
+                <strong>{run.sourceName}</strong>
+                <span>{run.inputKind} · {run.status} · 후보 {run.createdCount}개 · 경고 {run.warningCount}개</span>
+              </article>
+            ))}
+            {payload.runs.length === 0 && <p className={styles.emptyLog}>크롤링 이력이 없습니다.</p>}
           </div>
         </section>
-      </section>
+      )}
 
-      <section className={styles.runLog}>
-        <div className={styles.panelHeader}>
-          <h2>최근 수집 로그</h2>
-          <span>{latestRun ? latestRun.finishedAt : '아직 실행 전'}</span>
-        </div>
-        <div className={styles.logGrid}>
-          {payload.runs.slice(0, 5).map((run) => (
-            <article key={run.id} className={styles.logItem}>
-              <strong>{run.sourceName}</strong>
-              <span>{run.inputKind} · {run.status} · 후보 {run.createdCount}개 · 경고 {run.warningCount}개</span>
-            </article>
-          ))}
-          {payload.runs.length === 0 && <p className={styles.emptyLog}>크롤링 이력이 없습니다.</p>}
-        </div>
-      </section>
+      {activeTab === 'logs' && <CrawlLogsTab logs={crawlLogs} loading={logsLoading} onRefresh={refreshLogs} />}
 
-      <section className={styles.servicePanel}>
+      {activeTab === 'status' && <DbStatusTab
+        theaters={adminTheaters}
+        movies={adminMovies}
+        sources={payload.sources}
+      />}
+
+      {activeTab === 'manage' && <section className={styles.servicePanel}>
         <div className={styles.panelHeader}>
           <div>
             <h2>실제 서비스 DB</h2>
@@ -1177,6 +1672,10 @@ export function AdminShowtimeConsole() {
               <input value={theaterForm.website ?? ''} onChange={(event) => setTheaterForm((current) => ({ ...current, website: event.target.value }))} />
             </label>
             <label>
+              인스타그램 URL
+              <input placeholder="아이디 입력 (예: seoulartcinema)" value={theaterForm.instagramUrl ?? ''} onChange={(event) => setTheaterForm((current) => ({ ...current, instagramUrl: event.target.value }))} />
+            </label>
+            <label>
               상영관 수
               <input type="number" min={0} value={theaterForm.screenCount ?? 0} onChange={(event) => setTheaterForm((current) => ({ ...current, screenCount: Number(event.target.value) }))} />
             </label>
@@ -1190,17 +1689,26 @@ export function AdminShowtimeConsole() {
 
         <div className={styles.serviceGrid}>
           <aside className={styles.serviceList}>
-            {adminTheaters.map((theater) => (
-              <button
-                key={theater.id}
-                className={`${styles.sourceItem} ${selectedAdminTheaterId === theater.id ? styles.sourceItemActive : ''}`}
-                onClick={() => selectAdminTheater(theater.id)}
-              >
-                <span>
-                  <strong>{theater.name}</strong>
-                  <small>{theater.city} · {theater.address}</small>
-                </span>
-              </button>
+            {groupByCity(adminTheaters).map(([city, items]) => (
+              <details key={city} className={styles.theaterGroup}>
+                <summary className={styles.theaterGroupSummary}>
+                  {city} ({items.length}개)
+                </summary>
+                <div className={styles.theaterGroupContent}>
+                  {items.map((theater) => (
+                    <button
+                      key={theater.id}
+                      className={`${styles.sourceItem} ${selectedAdminTheaterId === theater.id ? styles.sourceItemActive : ''}`}
+                      onClick={() => selectAdminTheater(theater.id)}
+                    >
+                      <span>
+                        <strong>{theater.name}</strong>
+                        <small>{theater.address}</small>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </details>
             ))}
             {adminTheaters.length === 0 && <p className={styles.emptyLog}>등록된 실제 극장이 없습니다.</p>}
           </aside>
@@ -1212,7 +1720,19 @@ export function AdminShowtimeConsole() {
                 <span>{selectedAdminTheater ? `${selectedAdminTheater.city} · ${selectedAdminTheater.address}` : '왼쪽 목록에서 실제 극장을 선택하면 시간표가 표시됩니다.'}</span>
               </div>
               {selectedAdminTheater && (
-                <Button variant="secondary" size="sm" onClick={() => editTheater(selectedAdminTheater)}>극장 수정</Button>
+                <div className={styles.serviceHeaderActions}>
+                  {selectedAdminTheater.website && (
+                    <a
+                      className={styles.linkButton}
+                      href={selectedAdminTheater.website}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      사이트 보기
+                    </a>
+                  )}
+                  <Button variant="secondary" size="sm" onClick={() => editTheater(selectedAdminTheater)}>극장 수정</Button>
+                </div>
               )}
             </div>
 
@@ -1308,24 +1828,27 @@ export function AdminShowtimeConsole() {
                 <button
                   key={movie.id}
                   className={`${styles.sourceItem} ${movieEditForm?.id === movie.id ? styles.sourceItemActive : ''}`}
-                  onClick={() => setMovieEditForm({
+                  onClick={() => {
+                    setMovieEditRaw({ director: movie.director.join(', '), genre: movie.genre.join(', ') })
+                    setMovieEditForm({
                     id: movie.id,
                     title: movie.title,
                     year: movie.year,
                     originalTitle: movie.originalTitle ?? '',
                     genre: movie.genre,
                     director: movie.director,
+                    nation: movie.nation,
                     kmdbId: movie.kmdbId,
                     kmdbMovieSeq: movie.kmdbMovieSeq,
                     posterUrl: movie.posterUrl,
                     synopsis: movie.synopsis,
                     runtimeMinutes: movie.runtimeMinutes,
                     certification: movie.certification,
-                  })}
+                  })}}
                 >
                   <span>
                     <strong>{movie.title}</strong>
-                    <small>{movie.year} · {movie.director.join(', ') || '감독 미입력'}{movie.kmdbId ? ` · KMDB ${movie.kmdbId}${movie.kmdbMovieSeq ?? ''}` : ''}{movie.posterUrl ? ' · 포스터 있음' : ''}</small>
+                    <small>{movie.year}{movie.nation ? ` · ${movie.nation}` : ''} · {movie.director.join(', ') || '감독 미입력'}{movie.kmdbId ? ` · KMDB ${movie.kmdbId}${movie.kmdbMovieSeq ?? ''}` : ''}{movie.posterUrl ? ' · 포스터 있음' : ''}</small>
                   </span>
                 </button>
               ))}
@@ -1363,16 +1886,28 @@ export function AdminShowtimeConsole() {
                   <input value={movieEditForm.certification ?? ''} onChange={(event) => setMovieEditForm((current) => current ? { ...current, certification: event.target.value } : current)} />
                 </label>
                 <label>
+                  국가
+                  <input value={movieEditForm.nation ?? ''} onChange={(event) => setMovieEditForm((current) => current ? { ...current, nation: event.target.value } : current)} />
+                </label>
+                <label>
                   러닝타임
                   <input type="number" min={0} value={movieEditForm.runtimeMinutes ?? ''} onChange={(event) => setMovieEditForm((current) => current ? { ...current, runtimeMinutes: event.target.value ? Number(event.target.value) : undefined } : current)} />
                 </label>
                 <label>
                   장르
-                  <input value={(movieEditForm.genre ?? []).join(', ')} onChange={(event) => setMovieEditForm((current) => current ? { ...current, genre: splitListInput(event.target.value) } : current)} />
+                  <input
+                    value={movieEditRaw.genre}
+                    onChange={(e) => setMovieEditRaw((r) => ({ ...r, genre: e.target.value }))}
+                    onBlur={(e) => setMovieEditForm((f) => f ? { ...f, genre: splitListInput(e.target.value) } : f)}
+                  />
                 </label>
                 <label>
                   감독
-                  <input value={(movieEditForm.director ?? []).join(', ')} onChange={(event) => setMovieEditForm((current) => current ? { ...current, director: splitListInput(event.target.value) } : current)} />
+                  <input
+                    value={movieEditRaw.director}
+                    onChange={(e) => setMovieEditRaw((r) => ({ ...r, director: e.target.value }))}
+                    onBlur={(e) => setMovieEditForm((f) => f ? { ...f, director: splitListInput(e.target.value) } : f)}
+                  />
                 </label>
                 <label className={styles.wideField}>
                   줄거리
@@ -1383,9 +1918,20 @@ export function AdminShowtimeConsole() {
             )}
           </div>
         </section>
-      </section>
+      </section>}
     </main>
   )
+}
+
+function groupByCity<T extends { city: string }>(items: T[]): [string, T[]][] {
+  const order = (city: string) => city === '서울' ? 0 : 1
+  const map = new Map<string, T[]>()
+  for (const item of items) {
+    const list = map.get(item.city) ?? []
+    list.push(item)
+    map.set(item.city, list)
+  }
+  return Array.from(map.entries()).sort(([a], [b]) => order(a) - order(b) || a.localeCompare(b, 'ko'))
 }
 
 function Metric({ label, value, tone = 'default' }: { label: string; value: string | number; tone?: 'default' | 'warning' | 'success' }) {
@@ -1421,6 +1967,10 @@ function StatusBadge({ status }: { status: AdminShowtimeStatus }) {
   return <span className={`${styles.status} ${styles[status]}`}>{label}</span>
 }
 
+function normalizeSearchText(value: string) {
+  return value.replace(/\s+/g, ' ').trim().toLowerCase()
+}
+
 function upsertOption<T extends { id: string }>(options: T[], option: T) {
   return options.some((item) => item.id === option.id)
     ? options.map((item) => (item.id === option.id ? option : item))
@@ -1429,4 +1979,219 @@ function upsertOption<T extends { id: string }>(options: T[], option: T) {
 
 function splitListInput(value: string) {
   return value.split(',').map((item) => item.trim()).filter(Boolean)
+}
+
+function CrawlLogsTab({ logs, loading, onRefresh }: {
+  logs: CrawlRun[]
+  loading: boolean
+  onRefresh: () => void
+}) {
+  const [filter, setFilter] = useState<'all' | 'failed' | 'completed'>('all')
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+
+  const filtered = filter === 'all' ? logs : logs.filter((r) => r.status === filter)
+
+  return (
+    <section style={{ margin: '0 auto', maxWidth: 1320 }}>
+      <div className={styles.panelHeader} style={{ marginBottom: 12 }}>
+        <h2>크롤링 로그</h2>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div className={styles.logFilter}>
+            {(['all', 'completed', 'failed'] as const).map((f) => (
+              <button
+                key={f}
+                className={`${styles.filterTab} ${filter === f ? styles.filterTabActive : ''}`}
+                onClick={() => setFilter(f)}
+              >
+                {f === 'all' ? '전체' : f === 'completed' ? '성공' : '실패'}
+                <span className={styles.filterTabBadge}>
+                  {f === 'all' ? logs.length : logs.filter((r) => r.status === f).length}
+                </span>
+              </button>
+            ))}
+          </div>
+          <Button variant="ghost" size="sm" loading={loading} onClick={onRefresh}>새로고침</Button>
+        </div>
+      </div>
+      {loading && logs.length === 0 && <p className={styles.empty}>로그를 불러오는 중...</p>}
+      {!loading && filtered.length === 0 && <p className={styles.empty}>표시할 로그가 없습니다.</p>}
+      {filtered.length > 0 && (
+        <div className={styles.statusSection}>
+          <table className={styles.logsTable}>
+            <thead>
+              <tr>
+                <th style={{ width: 20 }}></th>
+                <th>극장</th>
+                <th>파서</th>
+                <th>후보</th>
+                <th>경고</th>
+                <th>시작</th>
+                <th>상태</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((run) => {
+                const isExpanded = expandedId === run.id
+                const isFailed = run.status === 'failed'
+                const hasWarn = run.warningCount > 0
+                return (
+                  <>
+                    <tr
+                      key={run.id}
+                      className={`${styles.logRow} ${isFailed ? styles.logRowFailed : styles.logRowOk}`}
+                      onClick={() => setExpandedId(isExpanded ? null : run.id)}
+                      style={{ cursor: run.error ? 'pointer' : 'default' }}
+                    >
+                      <td>
+                        <span className={`${styles.logRunDot} ${isFailed ? styles.logRunFailed : hasWarn ? styles.logRunWarn : styles.logRunOk}`} />
+                      </td>
+                      <td className={styles.logRunName}>{run.sourceName}</td>
+                      <td className={styles.logRunMeta}>{run.inputKind}</td>
+                      <td>{run.createdCount}</td>
+                      <td style={{ color: hasWarn ? 'var(--color-warning)' : undefined }}>{run.warningCount || '—'}</td>
+                      <td className={styles.logRunTime}>
+                        {new Date(run.startedAt).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </td>
+                      <td>
+                        {isFailed
+                          ? <span style={{ color: 'var(--color-error)', fontWeight: 700, fontSize: 12 }}>실패</span>
+                          : <span style={{ color: 'var(--color-success)', fontWeight: 700, fontSize: 12 }}>완료</span>}
+                        {run.error && <span className={styles.logRunErrorInline}> ▾</span>}
+                      </td>
+                    </tr>
+                    {isExpanded && run.error && (
+                      <tr key={`${run.id}-detail`} className={styles.logRowDetail}>
+                        <td colSpan={7}>
+                          <span className={styles.logDetailLabel}>오류:</span>
+                          <span className={styles.logDetailError}>{run.error}</span>
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  )
+}
+
+function DbStatusTab({ theaters, movies, sources }: {
+  theaters: AdminTheater[]
+  movies: AdminMovie[]
+  sources: AdminTheaterSource[]
+}) {
+  const moviesNoPoster = movies.filter(m => !m.posterUrl)
+  const moviesNoSynopsis = movies.filter(m => !m.synopsis)
+  const sourcesUnhealthy = sources.filter(s => s.health !== 'healthy')
+
+  // 극장별 소스 매핑
+  const sourcesByTheater = new Map<string, AdminTheaterSource[]>()
+  for (const src of sources) {
+    const list = sourcesByTheater.get(src.theaterName) ?? []
+    list.push(src)
+    sourcesByTheater.set(src.theaterName, list)
+  }
+
+  const healthLabel: Record<AdminTheaterSource['health'], string> = {
+    healthy: '정상',
+    degraded: '저하',
+    broken: '오류',
+  }
+  const healthClass: Record<AdminTheaterSource['health'], string> = {
+    healthy: styles.healthHealthy,
+    degraded: styles.healthDegraded,
+    broken: styles.healthBroken,
+  }
+
+  return (
+    <>
+      <div className={styles.statusGrid}>
+        <Metric label="등록 극장" value={theaters.length} />
+        <Metric label="등록 영화" value={movies.length} />
+        <Metric label="크롤링 소스" value={sources.length} />
+        <Metric label="소스 이상" value={sourcesUnhealthy.length} tone={sourcesUnhealthy.length ? 'warning' : 'default'} />
+        <Metric label="포스터 없음" value={moviesNoPoster.length} tone={moviesNoPoster.length ? 'warning' : 'default'} />
+        <Metric label="시놉시스 없음" value={moviesNoSynopsis.length} tone={moviesNoSynopsis.length ? 'warning' : 'default'} />
+      </div>
+
+      <div className={styles.statusSection}>
+        <div className={styles.panelHeader}>
+          <h2>크롤링 소스 상태</h2>
+          <span>{sources.length}개 소스</span>
+        </div>
+        <table className={styles.statusTable}>
+          <thead>
+            <tr>
+              <th>극장</th>
+              <th>파서</th>
+              <th>주기</th>
+              <th>마지막 수집</th>
+              <th>상태</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sources.length === 0 && (
+              <tr><td colSpan={5} style={{ textAlign: 'center', color: 'var(--color-text-caption)', padding: '24px' }}>등록된 소스가 없습니다.</td></tr>
+            )}
+            {sources.map(src => (
+              <tr key={src.id}>
+                <td style={{ fontWeight: 600 }}>{src.theaterName}</td>
+                <td style={{ color: 'var(--color-text-sub)', fontFamily: 'monospace', fontSize: 12 }}>{src.parser}</td>
+                <td style={{ color: 'var(--color-text-sub)' }}>
+                  {{ manual: '수동', daily: '매일', twice_daily: '하루 2회', four_daily: '하루 4회' }[src.cadence] ?? src.cadence}
+                </td>
+                <td style={{ color: 'var(--color-text-caption)', fontSize: 12 }}>
+                  {src.lastCrawledAt ? new Date(src.lastCrawledAt).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                </td>
+                <td>
+                  <span className={`${styles.healthBadge} ${healthClass[src.health]}`}>
+                    {healthLabel[src.health]}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {moviesNoPoster.length > 0 && (
+        <div className={styles.statusSection}>
+          <div className={styles.panelHeader}>
+            <h2>포스터 없는 영화</h2>
+            <span>{moviesNoPoster.length}편</span>
+          </div>
+          <div className={styles.qualityList}>
+            {moviesNoPoster.map(m => (
+              <div key={m.id} className={styles.qualityItem}>
+                <div className={styles.qualityDot} style={{ background: 'var(--color-warning)' }} />
+                <span style={{ fontWeight: 600 }}>{m.title}</span>
+                <span style={{ color: 'var(--color-text-caption)', fontSize: 12 }}>{m.year} · {m.director.join(', ') || '감독 미입력'}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {moviesNoSynopsis.length > 0 && (
+        <div className={styles.statusSection}>
+          <div className={styles.panelHeader}>
+            <h2>시놉시스 없는 영화</h2>
+            <span>{moviesNoSynopsis.length}편</span>
+          </div>
+          <div className={styles.qualityList}>
+            {moviesNoSynopsis.map(m => (
+              <div key={m.id} className={styles.qualityItem}>
+                <div className={styles.qualityDot} style={{ background: 'var(--color-text-caption)' }} />
+                <span style={{ fontWeight: 600 }}>{m.title}</span>
+                <span style={{ color: 'var(--color-text-caption)', fontSize: 12 }}>{m.year}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  )
 }

@@ -1,6 +1,6 @@
 // ================================
 // API Types
-// 예술영화관 상영 통합 조회 서비스
+// 영화볼지도 서비스
 // ================================
 
 // --- Common ---
@@ -23,6 +23,7 @@ export interface Theater {
   city: string
   phone?: string
   website?: string
+  instagramUrl?: string
   screenCount?: number
   seatCount?: number
   amenities?: {
@@ -104,6 +105,7 @@ export interface Movie {
   posterUrl?: string
   genre: string[]
   director: string[]
+  nation?: string
   synopsis?: string
   runtimeMinutes?: number
   certification?: string

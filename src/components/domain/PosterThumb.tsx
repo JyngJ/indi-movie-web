@@ -8,7 +8,9 @@ interface PosterThumbProps {
   /** 'sm' = radius 6px (기본), 'lg' = radius 8px (바텀시트용) */
   size?: 'sm' | 'lg'
   selected?: boolean
-  overflow?: number
+  /** selected와 동일한 링·inset 테두리지만 체크 배지 없음 (필터 매칭 강조) */
+  highlighted?: boolean
+  overflow?: number | string
   onClick?: () => void
 }
 
@@ -19,6 +21,7 @@ export function PosterThumb({
   height = 102,
   size = 'sm',
   selected = false,
+  highlighted = false,
   overflow,
   onClick,
 }: PosterThumbProps) {
@@ -35,7 +38,7 @@ export function PosterThumb({
         height,
         borderRadius: radiusVar,
         /* 선택 링: box-shadow는 레이아웃에 영향을 주지 않음 */
-        boxShadow: selected
+        boxShadow: selected || highlighted
           ? '0 0 0 2px var(--color-primary-base)'
           : 'none',
         cursor: onClick ? 'pointer' : 'default',
@@ -46,16 +49,25 @@ export function PosterThumb({
     >
       {/* 포스터 */}
       <div
-        className="w-full h-full overflow-hidden"
-        style={{ borderRadius: radiusVar }}
+        style={{
+          width: '100%',
+          height: '100%',
+          overflow: 'hidden',
+          borderRadius: radiusVar,
+        }}
       >
         {src ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={src} alt={alt} className="w-full h-full object-cover" />
+          <img
+            src={src}
+            alt={alt}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
         ) : (
           <div
-            className="w-full h-full"
             style={{
+              width: '100%',
+              height: '100%',
               background: 'oklch(0.32 0.04 220)',
               backgroundImage:
                 'repeating-linear-gradient(135deg, oklch(0.38 0.04 220) 0 6px, transparent 6px 14px)',
@@ -63,18 +75,27 @@ export function PosterThumb({
           />
         )}
 
-        {/* +N 오버레이 */}
+        {/* 오버레이 (숫자면 +N, 문자열이면 그대로) */}
         {overflow != null && (
           <div
-            className="absolute inset-0 flex items-center justify-center font-semibold text-[18px] text-white"
+            className="absolute inset-0 flex items-center justify-center font-semibold text-[15px] text-white"
             style={{ background: 'rgba(15,12,9,0.62)', borderRadius: radiusVar }}
           >
-            +{overflow}
+            {typeof overflow === 'string' ? overflow : `+${overflow}`}
           </div>
         )}
 
-        {/* 선택 시 inset 흰 테두리 */}
-        {selected && (
+        {/* 포스터 얇은 테두리 (흰/검 포스터 구분용) */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            borderRadius: radiusVar,
+            boxShadow: 'inset 0 0 0 1px var(--comp-poster-border)',
+          }}
+        />
+
+        {/* 선택/강조 시 inset 흰 테두리 */}
+        {(selected || highlighted) && (
           <div
             className="absolute inset-0 pointer-events-none"
             style={{

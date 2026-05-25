@@ -83,6 +83,7 @@ function theaterInputFromPayload(payload: Partial<AdminTheaterInput>): AdminThea
     city: payload.city ?? '',
     phone: payload.phone,
     website: payload.website,
+    instagramUrl: payload.instagramUrl,
     screenCount: Number(payload.screenCount ?? 0),
     seatCount: payload.seatCount === undefined || payload.seatCount === null ? undefined : Number(payload.seatCount),
   }

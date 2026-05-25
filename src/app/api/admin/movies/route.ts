@@ -36,6 +36,7 @@ export async function PATCH(request: Request) {
       originalTitle: payload.originalTitle,
       genre: payload.genre,
       director: payload.director,
+      nation: payload.nation,
       kmdbId: payload.kmdbId,
       kmdbMovieSeq: payload.kmdbMovieSeq,
       posterUrl: payload.posterUrl,

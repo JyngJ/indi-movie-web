@@ -1,32 +1,93 @@
-# 예술영화관 상영 통합 조회
+# 영화볼지도 — 독립·예술영화관 상영 통합 조회
 
-서울 독립·예술영화관 상영 정보를 한 곳에서 조회하는 모바일 웹 서비스 (MVP).
+서울·수도권 각지에 흩어진 독립·예술영화관의 상영 정보를 한 곳에서 찾을 수 없다는 불편함에서 시작한 프로젝트입니다. 디자이너 1인이 기획·디자인을 담당하고, 개발자 1인이 합류해 프론트엔드·백엔드·데이터 파이프라인을 함께 구현했습니다. AI 코딩 도구(Claude Code)를 설계 단계부터 구현까지 실무 흐름에 통합해 소규모 팀의 개발 속도와 코드 품질을 함께 높이는 방식을 실험했습니다.
 
 ---
 
-## 빠른 시작
+## 핵심 기능
 
-```bash
-npm install
-npm run dev
-# → http://localhost:3000
-```
+**지도 기반 탐색**
+- 서울·수도권 독립·예술영화관 핀 표시, 클러스터링, 극장 선택 시 바텀시트 슬라이드 인
+- 핀에 상영 중인 영화 포스터를 직접 렌더링 (줌 레벨 연동)
+- 스프링 물리 기반 지도 이동 애니메이션 — Leaflet flyTo를 RAF 루프로 대체, 줌+팬 동시 보간
+- 지하철 노선·역 오버레이 (줌 15 이상, 뷰포트 컬링으로 성능 최적화)
+- 지역 필터 — 서울/경기/인천/부산 등 권역별 필터, 현재 위치 기반 자동 감지
+- 장르·국가·예매 가능 여부 필터 — 필터 적용 시 해당 안 되는 영화는 반투명 오버레이로 구분
+- 내 위치까지의 거리 표시 (극장 바텀시트·검색 결과)
 
-> Node 18+ 필요. 환경 변수는 `.env.local` 참고 (`.env.example` 예정).
+**통합 검색**
+- 영화 제목·감독명·지하철역·지역명·극장명을 단일 검색창에서 처리
+- 타입별 스코어링 알고리즘 (초성 매칭, 어두 우선, 한영 오타 보정)
+- 감독 검색 시 해당 감독 작품 상영 극장만 지도에 하이라이트
+- 영화 검색 → 상영 극장 핀 필터링, 극장 검색 → 즉시 이동·바텀시트 오픈
+
+**극장 바텀시트**
+- 영화 포스터 스트립, 날짜별 상영시간표, 길찾기·공유·인스타그램 딥링크
+- 지도 필터 상태를 바텀시트 필터로 자동 인계, 독립적으로 재조정 가능
+- 필터 팝업: 장르(12개 표준 분류) / 국가 / 예매 가능 여부
+- PC 레이아웃: 오른쪽 슬라이드인 패널로 영화·감독 상세 정보 표시
+
+**데이터 파이프라인**
+- 극장별 웹사이트 크롤러(어댑터 패턴) + KMDB API 매칭으로 자동 수집
+- 어드민 콘솔에서 후보 검수·승인 후 DB 반영
+- KMDB raw 장르값 → 12개 표준 카테고리 정규화 (멜로/로맨스 → 로맨스 등)
+
+**제보하기**
+- 영화관 추가 요청·버그 제보·데이터 수정 등 카테고리별 인앱 제보 폼
+- 제보 접수 시 Discord 채널에 자동 전송 + 봇 버튼으로 저장/삭제 처리
 
 ---
 
 ## 기술 스택
 
-| 영역 | 도구 | 비고 |
+| 영역 | 선택 | 이유 |
 |------|------|------|
-| 프레임워크 | Next.js 16 (App Router) | Turbopack 사용 |
-| 언어 | TypeScript | strict 모드 |
-| 서버 상태 | TanStack React Query v5 | 캐싱·동기화 |
-| 클라이언트 상태 | Zustand v5 | 테마, UI 상태 |
-| 스타일 | Tailwind CSS v4 + CSS Variables | 디자인 토큰 기반 |
-| 지도 | Leaflet + react-leaflet v5 | Carto Voyager 타일 |
-| 데이터베이스 | Supabase PostgreSQL | 극장/영화/상영시간표/지하철역 데이터 |
+| 프레임워크 | Next.js 16 App Router | SSR + React Query 조합, 향후 서버 액션 확장 |
+| 언어 | TypeScript (strict) | 타입이 문서 역할, 소규모 팀에서 인터페이스 계약 역할 |
+| 서버 상태 | TanStack React Query v5 | 캐시·재검증 전략을 선언적으로 관리 |
+| 스타일 | Tailwind CSS v4 + CSS Variables | 디자인 토큰 기반, 라이트/다크 모드 |
+| 지도 | Leaflet + react-leaflet v5 | 커스텀 DivIcon으로 포스터 핀 렌더링 |
+| DB | Supabase PostgreSQL | RLS, 실시간, 인증을 한 곳에서 |
+| 클라이언트 상태 | Zustand v5 | 테마, 지도 UI 상태 |
+
+---
+
+## 개발 방식
+
+### 디자인 → 개발 워크플로
+
+1. **와이어프레임 정의**: 기획·UX 흐름을 와이어프레임으로 직접 설계
+2. **디자인 시스템 수립**: Claude 디자인 도구로 컴포넌트 시트 및 토큰 체계를 `docs/DESIGN.md`로 정리 — 색상·타이포그래피·간격 토큰, 라이트/다크 모드, 컴포넌트 계층 정의
+3. **컴포넌트 구현**: `DESIGN.md` + `CLAUDE.md`(아키텍처 규칙)를 기반으로 Claude Code와 페어 프로그래밍해 컴포넌트·화면 구성
+
+### AI 도구 실무 통합
+
+Claude Code, OpenAI Codex, Cursor 세 가지 AI 코딩 도구를 용도에 따라 병행해 활용했습니다. Claude Code는 설계 파트너 역할로 — 복잡한 상태 설계(필터 흐름, 바텀시트 애니메이션), 크롤러 어댑터 아키텍처, 지도 핀 렌더링 최적화(icon 캐싱·뷰포트 컬링·줌 배칭), 스프링 애니메이션 물리 구현 등 트레이드오프가 있는 지점을 함께 검토하며 구현했고, Codex는 어드민 크롤링 파이프라인 초기 구현에, Cursor는 인라인 편집·빠른 수정에 활용했습니다. 전체 커밋의 약 2/3에 AI가 공동 기여자로 기록되어 있습니다.
+
+---
+
+## 구현 하이라이트
+
+### 스프링 물리 애니메이션 (`mapSpring.ts`)
+Leaflet의 내장 `flyTo`·`flyToBounds`를 RAF 루프 기반 스프링 물리로 전면 대체했습니다. `v += (-k*(t-1) - d*v) * dt` 공식으로 스칼라 t를 0→1로 구동하고, 위도·경도를 선형 보간합니다. 줌 변화가 있을 때는 `zoomSnap`을 일시 0으로 해제해 fractional zoom을 함께 보간함으로써, 기존 '줌 스냅 선행 → 팬' 방식의 순간 점프를 없앴습니다. `springActive` 플래그로 60fps `setView` 호출이 유발하는 React 상태 갱신 폭주를 차단하고, `settledCallback`으로 정착 즉시 클러스터 재계산을 트리거합니다.
+
+### 포스터 핀 렌더링
+지도 핀 내부에 영화 포스터를 직접 그리기 위해 Leaflet `DivIcon` + `renderToStaticMarkup`을 조합했습니다. 줌 레벨에 따라 포스터 수·크기가 동적으로 결정되고, 필터가 활성화된 경우 매칭되지 않는 영화는 반투명 처리 + "조건 외" 오버레이로 표시합니다. 같은 건물에 위치한 극장은 원형 배치로 핀이 겹치지 않도록 오프셋을 계산합니다.
+
+### 통합 검색 스코어링
+영화·감독·극장·지하철역·지역명을 단일 쿼리로 처리하는 스코어링 엔진을 `searchScoring.ts`에 순수 함수로 구현했습니다. 초성 분리 매칭, 어두(語頭) 가중치, 한영 오타 보정, 타입 우선순위를 조합해 사용자 의도에 맞는 결과를 상위에 노출합니다. 감독 검색과 영화 검색이 교차 연결되어 — 감독을 검색하면 그 감독 작품 상영 극장이 함께 표시됩니다.
+
+### 지역 필터 + 위치 자동 감지
+`regions.ts`에서 권역(서울·경기·인천 등)을 정의하고, GPS 좌표 또는 극장 주소로 매핑합니다. 사용자가 위치 권한을 허용하면 현재 좌표에서 가장 가까운 권역을 자동으로 선택하고, 해당 권역 경계(`REGION_BOUNDS`)를 기준으로 지도 뷰를 fit합니다.
+
+### 지도 성능 최적화
+줌·패닝 시 발생하는 렌더 횟수를 줄이기 위해 `zoomRef` + `recomputeRef` 패턴으로 줌 상태와 클러스터 계산을 한 React 렌더 사이클에 배칭합니다. 지하철 역 마커는 뷰포트 bounds 컬링으로 화면 밖 수백 개의 DOM 노드 생성을 방지하고, 역·핀 아이콘을 모듈 레벨 `Map`으로 캐싱해 줌 변경 시 재계산을 막습니다.
+
+### 바텀시트 필터 상태 설계
+지도 필터(장르·국가)를 바텀시트가 열릴 때만 단방향으로 인계하고, 바텀시트에서 변경해도 지도에는 영향이 없습니다. "지도에서 필터 설정 → 바텀시트로 상세 확인 → 필터 조정" 흐름이 자연스럽게 이어지도록 설계했습니다.
+
+### 크롤러 어댑터 패턴
+극장마다 다른 웹사이트 구조를 `CrawlerAdapter` 인터페이스로 추상화했습니다. 새 극장을 추가할 때 어댑터 하나만 작성하면 파이프라인 전체에 연결됩니다. HTML 파서, Dtryx 예매 API, Moviee API 등 여러 방식을 동일한 인터페이스로 정규화합니다.
 
 ---
 
@@ -34,154 +95,95 @@ npm run dev
 
 ```
 src/
-├── app/                    # 페이지 (Next.js App Router)
+├── app/                    # Next.js App Router 페이지
 │   ├── page.tsx            # 홈 (지도 뷰)
-│   └── dev/components/     # 디자인 시스템 쇼케이스 (/dev/components)
+│   ├── movie/[id]/         # 영화 상세
+│   ├── director/[name]/    # 감독 필모그래피
+│   ├── search/             # 영화·감독 검색 결과
+│   ├── admin/              # 크롤링 후보 검수·어드민 콘솔
+│   └── api/
+│       ├── reports/        # 제보 접수 API
+│       └── discord/        # Discord 봇 인터랙션 처리
 │
 ├── components/
-│   ├── primitives/         # 재사용 UI 원자 — 비즈니스 로직 없음
-│   │   ├── Button, Chip, Badge, Card
-│   │   ├── Input, SearchBar
-│   │   ├── FAB (FabRound)
-│   │   └── BottomSheet, Skeleton
+│   ├── primitives/         # 재사용 UI 원자 (Button, BottomSheet, Toast …)
 │   ├── domain/             # 서비스 도메인 컴포넌트
-│   │   ├── ShowtimeCell    # 상영 시간 셀
-│   │   ├── DateBar         # 날짜/시간 선택 바
-│   │   ├── MapPin          # 지도 마커
-│   │   ├── PosterThumb     # 영화 포스터
-│   │   └── TheaterSheet    # 극장 정보 바텀시트
+│   │   ├── FilterBar       # 날짜·장르·국가·예매 가능 필터 바
+│   │   ├── TheaterSheet    # 극장 바텀시트 (포스터·시간표·필터)
+│   │   ├── DesktopDetailPanel  # PC 슬라이드인 영화·감독 상세 패널
+│   │   ├── MapPin          # 포스터 핀
+│   │   └── PosterThumb     # 영화 포스터 썸네일
 │   └── map/
-│       └── MapView.tsx     # 전체화면 지도 + 검색/지하철 오버레이
-│
-├── data/
-│   └── subway-lines.json   # 지도 지하철 노선 GeoJSON. .geojson import 금지
-│
-├── hooks/
-│   ├── useUserLocation.ts  # Geolocation → 지도 중심 좌표
-│   ├── queries/            # React Query read hooks (useTheaters 등, 예정)
-│   └── mutations/          # React Query write hooks (예정)
+│       ├── MapView.tsx     # 전체화면 지도 + 검색 + 지하철 오버레이
+│       ├── MapControls.tsx # ZoomSlider, ZoomTracker, ViewportTracker, FAB 등
+│       └── PosterGrid.tsx  # 바텀시트 포스터 그리드
 │
 ├── lib/
-│   ├── supabase/           # Supabase browser client + React Query hooks
-│   ├── adapters/
-│   │   ├── location.ts     # Geolocation API (추후 RN 교체 가능)
-│   │   └── storage.ts      # localStorage (추후 AsyncStorage 교체 가능)
-│   └── query-client.ts     # React Query 전역 설정
+│   ├── map/                # 지도 순수 함수
+│   │   ├── posterLogic     # 줌별 포스터 슬롯·크기 계산
+│   │   ├── searchScoring   # 통합 검색 스코어링 (초성·어두·한영 오타)
+│   │   ├── searchUtils     # 날짜 유틸·최근 검색
+│   │   ├── distanceUtils   # 거리 계산·포맷
+│   │   └── subwayUtils     # 지하철 역·노선 필터링
+│   ├── mapSpring.ts        # 스프링 물리 지도 이동 (RAF 루프, fractional zoom 보간)
+│   ├── regions.ts          # 권역 정의·GPS/주소 매핑
+│   ├── genres.ts           # 12개 표준 장르 정규화
+│   ├── nations.ts          # 국가 정규화
+│   ├── catalog/            # 서버사이드 극장·영화·상영 데이터 집계
+│   ├── reports/            # 제보 타입·저장·Discord 전송
+│   ├── supabase/           # Supabase client + React Query hooks
+│   ├── admin/              # 크롤러·KMDB·어드민 로직
+│   ├── analytics/          # 이벤트 트래킹 클라이언트
+│   └── adapters/           # 위치·스토리지 어댑터
 │
-├── store/                  # Zustand 스토어 (테마, 유저 등)
-├── styles/tokens.css       # CSS Variables 디자인 토큰 (라이트/다크)
+├── hooks/                  # 재사용 React 훅 (useIsDark, useIsDesktopLayout …)
+│
 └── types/                  # 공유 TypeScript 타입
 ```
 
 ---
 
-## API 계약 (프론트 ↔ 백엔드)
-
-> 상세 스펙: [`docs/API.md`](./docs/API.md)
-
-현재 앱의 주요 읽기 화면은 Supabase React Query hooks로 직접 연결되어 있습니다.
-아래 REST 엔드포인트는 장기 API 계약 초안이며, 구현 방식은 기능별로 조정될 수 있습니다.
-
-### 주요 엔드포인트
-
-| 엔드포인트 | 용도 | 캐시 |
-|-----------|------|------|
-| `GET /api/theaters/search` | 지도 범위 내 극장 목록 (바운딩박스) | 30분 |
-| `GET /api/theaters/:id` | 극장 상세 정보 | 1시간 |
-| `GET /api/movies/search` | 영화 검색 (KMDB/TMDB) | 30분 |
-| `GET /api/movies/trending` | 현재 상영중 / 개봉 예정 | 6시간 |
-| `GET /api/showtimes/theater/:id` | 극장별 상영시간표 | 10분 |
-| `GET /api/showtimes/movie/:id` | 영화별 상영 극장 | 15분 |
-| `POST /api/favorites` | 즐겨찾기 추가 (인증 필요) | — |
-
-**에러 형식 통일:**
-```json
-{ "error": { "code": "ERR_CODE", "message": "설명" } }
-```
-
-### 프론트 React Query Hooks
-
-```ts
-useTheaters()                     // 전체 극장 목록
-useStations()                     // 지하철역 목록
-useMovies()                       // 전체 영화 목록
-useActiveMovieIds()               // 오늘 포함 미래 상영 스케줄이 있는 영화 ID
-useTheaterShowtimes(theaterId, date)
-useFavorites()                    // 즐겨찾기 목록
-useToggleFavorite({ type, id })   // 즐겨찾기 토글
-```
-
----
-
-## DB 스키마 (논리 모델)
-
-> 상세 스펙: [`docs/DB.md`](./docs/DB.md)
-
-| 테이블 | 핵심 컬럼 |
-|--------|-----------|
-| `theaters` | id, name, lat, lng, address, screen_count |
-| `movies` | id, title, kmdb_id, tmdb_id, genre[], poster_url |
-| `showtimes` | theater_id, movie_id, show_date, show_time, seat_total, seat_available |
-| `stations` | name, lines[], lat, lng, city, district, neighborhood, aliases |
-| `areas` | name, type, city, district, lat, lng, aliases |
-| `subway_lines` | name, line_code, geometry |
-| `users` | id (→ auth), email, preferred_city |
-| `favorites` | user_id, item_type ('theater'\|'movie'), item_id |
-
-현재 Supabase 스키마 초안은 `docs/SUPABASE.sql`에 있고, 지하철 테이블만 따로 적용할 때는 `docs/SUPABASE_STATIONS.sql`을 사용할 수 있습니다.
-
----
-
-## 개발 로드맵
+## 로드맵
 
 | Phase | 내용 | 상태 |
 |-------|------|------|
-| 1 | 프로젝트 초기화, 디자인 토큰, 컴포넌트 시스템 | ✅ 완료 |
-| 2 | 지도 뷰, 위치 기반 극장 탐색, 극장 상세, 지하철 오버레이 | ✅ 주요 기능 완료 |
-| 3 | 영화/감독 검색, 상영시간표 UI | 🔄 일부 진행 |
-| 4 | 사용자 인증, 즐겨찾기 | 예정 |
-| 5 | 성능 최적화, Capacitor 앱 확장 준비 | 예정 |
+| 1 | 디자인 시스템, 토큰, 컴포넌트 | ✅ 완료 |
+| 2 | 지도, 극장 탐색, 바텀시트, 지하철 오버레이 | ✅ 완료 |
+| 3 | 영화·감독 검색, 상영시간표, 필터 시스템 | ✅ 완료 |
+| 4 | 제보하기, Discord 운영 봇, 수도권 극장 확대 | ✅ 완료 |
+| 5 | 지역 필터, 거리 표시, 감독 필터, 스프링 애니메이션 | ✅ 완료 |
+| 6 | 사용자 인증, 즐겨찾기 | 예정 |
+| 7 | 네이티브 앱(Capacitor) 확장 | 예정 |
 
 ---
 
-## 디자인 시스템
+## 로컬 실행
 
-컴포넌트 전체 확인: **http://localhost:3000/dev/components**
+```bash
+npm install
+npm run dev   # → http://localhost:3000
+```
 
-- 모든 색상·간격·폰트는 `src/styles/tokens.css`의 CSS Variables로 정의
-- 라이트/다크 모드 모두 지원 (`[data-theme="dark"]`)
-- 모바일 375px 기준, 터치 타겟 최소 44px
-- 자세한 내용: [`docs/DESIGN.md`](./docs/DESIGN.md)
+> Node 18+, `.env.local` 환경 변수 필요 (Supabase URL·키).  
+> 이 프로젝트는 Turbopack을 사용하지 않습니다 (`--webpack` 강제).
 
----
-
-## 웹 → 앱 확장 구조
-
-`src/lib/adapters/`의 인터페이스를 교체하는 것만으로 React Native 전환 가능:
-
-| 어댑터 | 웹 | React Native (예정) |
-|--------|-----|---------------------|
-| `location.ts` | Geolocation API | RN Geolocation |
-| `storage.ts` | localStorage | AsyncStorage |
+분석 도구 설정과 이벤트/대시보드 정의는 [`docs/ANALYTICS.md`](docs/ANALYTICS.md)에 정리되어 있습니다.
 
 ---
 
-## 문서
+## 데이터베이스
 
-| 파일 | 내용 |
-|------|------|
-| [`docs/API.md`](./docs/API.md) | REST API 상세 스펙 & 에러 코드 |
-| [`docs/DB.md`](./docs/DB.md) | DB 테이블 스키마 (논리 모델) |
-| [`docs/DESIGN.md`](./docs/DESIGN.md) | 디자인 토큰 & 컴포넌트 가이드 |
-| [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | 폴더 구조 & Adapter 패턴 |
-| [`docs/INFRA.md`](./docs/INFRA.md) | 환경 변수 & 배포 |
-| [`docs/WORKFLOW.md`](./docs/WORKFLOW.md) | 브랜치 전략 & Phase 체크리스트 |
-| [`CLAUDE.md`](./CLAUDE.md) | AI 코딩 어시스턴트(Claude Code) 설정 |
+### 자동 정리
+
+**3일 이상 지난 상영시간표 자동 삭제** (PostgreSQL pg_cron)
+- 매일 새벽 3시(UTC) 자동 실행
+- 대상: `show_date < CURRENT_DATE - INTERVAL '3 days'`인 `showtimes` 레코드
+- Job ID: `cleanup-old-showtimes`
+- 수동 실행: `DELETE FROM showtimes WHERE show_date < CURRENT_DATE - INTERVAL '3 days';`
 
 ---
 
-## 지도 데이터 저작권
+## 저작권
 
-지도 타일: © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, © [CARTO](https://carto.com/attributions)
-
-지하철 노선/역 데이터는 Kaggle Seoul Subway Geospatial Data 계열의 CC0 Public Domain 데이터를 기준으로 정리했습니다. 앱 번들에는 `src/data/subway-lines.json`만 import합니다. Turbopack은 `.geojson` import를 기본 처리하지 않으므로 `@/data/subway-lines.geojson`로 되돌리지 마세요.
+지도 타일: © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, © [CARTO](https://carto.com/attributions)  
+지하철 데이터: Kaggle Seoul Subway Geospatial Data (CC0 Public Domain)

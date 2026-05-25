@@ -1,7 +1,7 @@
 import type { CrawlRequestPayload, CrawlRun } from '@/types/admin'
 import { adminAuthErrorResponse, requireAdminSessionUser } from '@/lib/admin/auth'
-import { crawlDtryxReservationApi, parseShowtimeCandidates, resolveCrawlInput } from '@/lib/admin/crawler'
-import { getAdminSource, saveCrawlRun } from '@/lib/admin/store'
+import { crawlShowtimeCandidates } from '@/lib/admin/crawler'
+import { autoMatchShowtimeCandidates, getAdminSource, saveCrawlRun } from '@/lib/admin/store'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,12 +28,10 @@ export async function POST(request: Request) {
 
   try {
     const context = { source, inputKind, sourceUrl }
-    const candidates = source.parser === 'dtryxReservationApi'
-      ? await crawlDtryxReservationApi(context)
-      : parseShowtimeCandidates(
-          await resolveCrawlInput(inputKind, payload.content, sourceUrl),
-          context,
-        )
+    const candidates = await crawlShowtimeCandidates({
+      ...context,
+      content: payload.content,
+    })
     const run: CrawlRun = {
       id: `run_${Date.now().toString(36)}`,
       sourceId: source.id,
@@ -49,6 +47,14 @@ export async function POST(request: Request) {
     }
 
     await saveCrawlRun(run)
+
+    if (candidates.length > 0) {
+      const matchResult = await autoMatchShowtimeCandidates(candidates.map((candidate) => candidate.id))
+      run.candidates = candidates.map((candidate) =>
+        matchResult.updated.find((updated) => updated.id === candidate.id) ?? candidate,
+      )
+      run.warningCount = run.candidates.reduce((sum, candidate) => sum + candidate.warnings.length, 0)
+    }
 
     return Response.json(run)
   } catch (error) {

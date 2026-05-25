@@ -1,6 +1,6 @@
 import type { AdminTheaterSourceInput } from '@/types/admin'
 import { adminAuthErrorResponse, requireAdminSessionUser } from '@/lib/admin/auth'
-import { createAdminSource, deleteAdminSource, listAdminSources } from '@/lib/admin/store'
+import { createAdminSource, deleteAdminSource, listAdminSources, updateAdminSource } from '@/lib/admin/store'
 
 export const dynamic = 'force-dynamic'
 
@@ -50,6 +50,38 @@ export async function POST(request: Request) {
         error: {
           code: 'INVALID_SOURCE',
           message: error instanceof Error ? error.message : '크롤링 소스를 저장하지 못했습니다.',
+        },
+      },
+      { status: 400 },
+    )
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    await requireAdminSessionUser(request)
+    const payload = (await request.json()) as Partial<AdminTheaterSourceInput & { id: string }>
+    const source = await updateAdminSource(payload.id ?? '', {
+      theaterName: payload.theaterName ?? '',
+      matchedTheaterId: payload.matchedTheaterId,
+      homepageUrl: payload.homepageUrl ?? '',
+      listingUrl: payload.listingUrl ?? '',
+      parser: payload.parser ?? 'tableText',
+      cadence: payload.cadence ?? 'manual',
+      notes: payload.notes,
+    })
+
+    return Response.json({ source })
+  } catch (error) {
+    if (error instanceof Error && 'code' in error) {
+      return adminAuthErrorResponse(error)
+    }
+
+    return Response.json(
+      {
+        error: {
+          code: 'SOURCE_UPDATE_ERROR',
+          message: error instanceof Error ? error.message : '크롤링 소스를 수정하지 못했습니다.',
         },
       },
       { status: 400 },

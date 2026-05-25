@@ -59,11 +59,17 @@ img {
   height: auto;
 }
 
-/* 데스크톱에서 모바일 뷰 유지 */
+/* 모바일에서는 앱 폭을 유지하고, 데스크톱에서는 화면 전체를 활용 */
 .mobile-container {
   width: 100%;
   max-width: var(--max-width-mobile);
   margin: 0 auto;
+}
+
+@media (min-width: 1024px) {
+  .mobile-container {
+    max-width: none;
+  }
 }
 
 /* 가로 스크롤 영역 스크롤바 숨김 */
@@ -72,6 +78,262 @@ img {
 }
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+/* PC 패널용 테마 스크롤바 */
+.themed-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-text-caption) 42%, transparent) transparent;
+}
+
+.themed-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.themed-scrollbar::-webkit-scrollbar-track {
+  background: color-mix(in srgb, var(--color-surface-bg) 70%, transparent);
+}
+
+.themed-scrollbar::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-text-caption) 46%, transparent);
+  border: 3px solid var(--color-surface-bg);
+  border-radius: 999px;
+}
+
+.themed-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--color-text-caption) 62%, transparent);
+}
+
+/* 포스터 스트립 로딩 — 차례로 번지는 물결 */
+@keyframes poster-wave {
+  0%, 100% { opacity: 0.1; }
+  50%       { opacity: 0.75; }
+}
+
+/* 핀 선택 애니메이션 */
+@keyframes pin-label-select {
+  from { opacity: 0; transform: scale(0.95) translateY(2px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes pin-dot-select {
+  from { transform: scale(0.9); }
+  to   { transform: scale(1); }
+}
+@keyframes poster-island-select {
+  from { opacity: 0; transform: scale(0.95) translateY(3px); }
+  to   { opacity: 1; transform: scale(1.1) translateY(0); }
+}
+
+/* 호버 중인 마커를 최상위로 올려 팝업이 다른 마커에 안 가려지게 */
+.leaflet-marker-icon:has(.pm-wrap:hover),
+.leaflet-marker-icon:has(.po-wrap:hover) {
+  z-index: 9999 !important;
+}
+
+/* 지도 오버플로우 슬롯 영화 리스트 */
+.po-wrap { position: relative; }
+.po-list {
+  display: none;
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  min-width: 200px;
+  max-width: 260px;
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10);
+  padding: 10px 14px;
+  pointer-events: none;
+  z-index: 9999;
+}
+.po-list--left,
+.po-wrap.tip-l .po-list {
+  left: auto;
+  right: calc(100% + 10px);
+}
+.po-wrap:hover .po-list { display: block; }
+.po-list-tail {
+  position: absolute;
+  left: -5px;
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+  width: 10px;
+  height: 10px;
+  background: var(--color-surface-card);
+  border-left: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  border-bottom-left-radius: 2px;
+}
+.po-list--left .po-list-tail,
+.po-wrap.tip-l .po-list-tail {
+  left: auto;
+  right: -5px;
+  border-left: none;
+  border-bottom: none;
+  border-right: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border);
+  border-bottom-left-radius: 0;
+  border-top-right-radius: 2px;
+}
+.po-list-item {
+  padding: 3px 0;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.po-list-title {
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.po-list-director {
+  color: var(--color-text-caption);
+  font-weight: 400;
+}
+.po-list-more {
+  margin-top: 4px;
+  font-size: 10px;
+  color: var(--color-text-caption);
+}
+
+/* 지도 포스터 아일랜드 호버 카드 */
+.pm-wrap { position: relative; }
+.pm-wrap > div:first-child {
+  transition: transform 0.12s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 0.12s ease;
+}
+.pm-wrap:hover > div:first-child {
+  transform: scale(1.08);
+  box-shadow: 0 0 0 2.5px var(--color-primary-base), 0 4px 12px rgba(0,0,0,0.28);
+  z-index: 1;
+}
+.pm-wrap:hover .pm-tip { display: block; }
+.pm-tip {
+  display: none;
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 180px;
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10);
+  padding: 10px 12px 12px;
+  pointer-events: none;
+  z-index: 9999;
+  white-space: normal;
+}
+/* 왼쪽 방향 오버라이드 */
+.tip-l .pm-tip {
+  left: auto;
+  right: calc(100% + 10px);
+}
+.tip-l .pm-tip-tail {
+  left: auto;
+  right: -5px;
+  border-left: none;
+  border-bottom: none;
+  border-right: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border);
+  border-bottom-left-radius: 0;
+  border-top-right-radius: 2px;
+}
+.pm-tip-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.35;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.pm-tip-director {
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--color-text-sub);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pm-tip-genres {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+.pm-tip-genre-tag {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-sub);
+  background: var(--color-surface-bg);
+}
+.pm-tip-nation {
+  margin-top: 5px;
+  font-size: 10px;
+  color: var(--color-text-caption);
+}
+.pm-tip-tail {
+  position: absolute;
+  left: -5px;
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+  width: 10px;
+  height: 10px;
+  background: var(--color-surface-card);
+  border-left: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  border-bottom-left-radius: 2px;
+}
+
+/* 터치 디바이스에서 호버 카드/리스트 팝업 비활성화 */
+@media (hover: none) {
+  .pm-wrap:hover .pm-tip { display: none; }
+  .pm-wrap:hover > div:first-child { transform: none; box-shadow: none; }
+  .po-wrap:hover .po-list { display: none; }
+  .leaflet-marker-icon:has(.pm-wrap:hover),
+  .leaflet-marker-icon:has(.po-wrap:hover) { z-index: auto !important; }
+}
+
+/* 모바일 가로 회전 차단 오버레이 */
+/* hover:none = 터치 기기, orientation:landscape + max-height:600px = 폰 가로 */
+.rotate-overlay {
+  display: none;
+}
+@media (hover: none) and (orientation: landscape) and (max-height: 600px) {
+  .rotate-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: var(--color-surface-bg, #fff);
+    color: var(--color-text-primary, #111);
+  }
+  .rotate-overlay p {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+  }
+}
+
+/* 상세 페이지 슬라이드 인 (오른쪽에서) */
+@keyframes slideInFromRight {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.page-slide-in {
+  animation: slideInFromRight 220ms ease both;
 }
 
 /* prefers-reduced-motion 지원 */

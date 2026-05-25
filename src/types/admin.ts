@@ -11,9 +11,9 @@ export interface AdminTheaterSource {
   matchedTheaterId?: string
   homepageUrl: string
   listingUrl: string
-  parser: 'jsonLdEvent' | 'tableText' | 'timelineCard' | 'dtryxReservationApi' | 'csv' | 'ocr'
+  parser: 'jsonLdEvent' | 'tableText' | 'timelineCard' | 'dtryxReservationApi' | 'movieeTicketApi' | 'movielandProductOptions' | 'seoulArtTimetable' | 'csv' | 'selfHosted' | 'ocr'
   enabled: boolean
-  cadence: 'manual' | 'daily' | 'twice_daily'
+  cadence: 'manual' | 'daily' | 'twice_daily' | 'four_daily'
   lastCrawledAt?: string
   health: 'healthy' | 'degraded' | 'broken'
   notes?: string
@@ -67,6 +67,12 @@ export interface ShowtimeApprovalPayload {
   status: AdminShowtimeStatus
 }
 
+export interface ShowtimeSeatUpdateInput {
+  id: string
+  seatAvailable: number
+  seatTotal: number
+}
+
 export interface ShowtimeApprovalResult {
   approved: Array<{
     candidateId: string
@@ -102,6 +108,7 @@ export interface AdminMovieInput {
   originalTitle?: string
   genre?: string[]
   director?: string[]
+  nation?: string
   kmdbId?: string
   kmdbMovieSeq?: string
   posterUrl?: string
@@ -117,6 +124,7 @@ export interface AdminMovie {
   originalTitle?: string
   genre: string[]
   director: string[]
+  nation?: string
   kmdbId?: string
   kmdbMovieSeq?: string
   posterUrl?: string
@@ -126,10 +134,12 @@ export interface AdminMovie {
 }
 
 export interface AdminExternalMovie {
-  provider: 'kmdb'
+  provider: 'kmdb' | 'local'
   externalId: string
   movieId: string
   movieSeq: string
+  /** 로컬 DB에 이미 존재하는 경우 DB ID */
+  localId?: string
   title: string
   originalTitle?: string
   year: number
@@ -153,6 +163,7 @@ export interface AdminTheater {
   city: string
   phone?: string
   website?: string
+  instagramUrl?: string
   screenCount: number
   seatCount?: number
 }
@@ -166,6 +177,7 @@ export interface AdminTheaterInput {
   city: string
   phone?: string
   website?: string
+  instagramUrl?: string
   screenCount?: number
   seatCount?: number
 }

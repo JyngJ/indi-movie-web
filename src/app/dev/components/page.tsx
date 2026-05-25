@@ -5,7 +5,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Chip, SearchBar, SearchBarButton, FabRound } from '@/components/primitives'
+import { SearchBar, SearchBarButton, FabRound } from '@/components/primitives'
 import { MapPin, PosterThumb, ShowtimeCell, DateBar, TheaterSheet } from '@/components/domain'
 import { useThemeStore } from '@/store/themeStore'
 
@@ -24,13 +24,6 @@ const SAMPLE_DAYS = [
   { dow: '일',   date: '3',  isoDate: '2026-05-03', type: 'sunday'   as const },
   { dow: '월',   date: '4',  isoDate: '2026-05-04', type: 'weekday'  as const },
   { dow: '화',   date: '5',  isoDate: '2026-05-05', type: 'weekday'  as const },
-]
-
-const SAMPLE_MOVIES = [
-  { id: '1', title: '파과',      director: '오멸' },
-  { id: '2', title: '소풍',      director: '이준익' },
-  { id: '3', title: '수라',      director: '장윤미' },
-  { id: '4', title: '비밀의 언덕', director: '박두호' },
 ]
 
 /* ── Foundation colors ───────────────────────────────────────────── */
@@ -117,7 +110,6 @@ const TYPE_SPEC = [
 /* ── Page ─────────────────────────────────────────────────────────── */
 export default function ComponentsPage() {
   const { theme, setTheme } = useThemeStore()
-  const [selectedChip, setSelectedChip]     = useState('독립영화관')
   const [searchValue, setSearchValue]       = useState('')
   const [selectedMovie, setSelectedMovie]   = useState('1')
   const [selectedShowtime, setSelectedShowtime] = useState<string | null>('normal-0')
@@ -234,23 +226,6 @@ export default function ComponentsPage() {
             onClear={() => {}}
             onBack={() => {}}
           />
-        </Section>
-
-        {/* 02 필터 칩 */}
-        <Section title="02 · 필터 칩">
-          <div className="flex flex-wrap gap-[6px]">
-            {['날짜/시간 구간', '독립영화관', '장르'].map((label) => (
-              <Chip key={label} selected={selectedChip === label}
-                onClick={() => setSelectedChip(label)}>
-                {label}
-              </Chip>
-            ))}
-          </div>
-          <div className="flex flex-wrap gap-[6px]">
-            <Chip selected onDismiss={() => {}}>오늘 18시 이후</Chip>
-            <Chip selected>독립영화관</Chip>
-            <Chip>장르</Chip>
-          </div>
         </Section>
 
         {/* 03 지도 핀 */}
