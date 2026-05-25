@@ -19,7 +19,7 @@ jobs:
             -X POST "${{ secrets.APP_URL }}/api/admin/crawl/seats" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             -H "Content-Type: application/json" \
-            --max-time 30)
+            --max-time 60)
 
           echo "HTTP $STATUS"
           cat /tmp/response.json
