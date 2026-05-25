@@ -1395,13 +1395,14 @@ function absolutizeUrl(value: string, origin: string) {
 }
 
 async function crawlTinyticketEventManager(context: ParseContext): Promise<CrawledShowtimeCandidate[]> {
-  const { chromium } = await import('playwright-chromium')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { chromium } = await import(/* webpackIgnore: true */ 'playwright-chromium' as any)
   const browser = await chromium.launch({ headless: true })
   try {
     const page = await browser.newPage()
     const eventData: Record<string, { name?: string; time?: number; runningTime?: number }> = {}
 
-    page.on('response', async (res) => {
+    page.on('response', async (res: { url(): string; json(): Promise<unknown>; status(): number }) => {
       if (!res.url().includes('api.tinyticket')) return
       try {
         const json = await res.json() as { jsonGraph?: { tinyEventById?: typeof eventData } }
