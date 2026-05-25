@@ -19,12 +19,13 @@ jobs:
             -X POST "${{ secrets.APP_URL }}/api/admin/crawl/seats" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             -H "Content-Type: application/json" \
-            --max-time 130)
+            --max-time 15)
 
           echo "HTTP $STATUS"
           cat /tmp/response.json
 
-          if [ "$STATUS" != "200" ]; then
+          if [ "$STATUS" != "202" ]; then
             echo "좌석 API 실패 (HTTP $STATUS)"
             exit 1
           fi
+          echo "좌석 갱신 시작됨 — 실패 시 Discord로 알림 전송."
