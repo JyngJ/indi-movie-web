@@ -9,6 +9,23 @@ export interface NotifyPayload {
   matched?: number
 }
 
+export async function notifyDiscordStart(title: string) {
+  if (!WEBHOOK_URL) return
+  const now = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
+  await fetch(WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      embeds: [{
+        title: `⏳ ${title} 시작`,
+        description: `수집을 시작합니다.`,
+        color: 0x3498DB,
+        footer: { text: now },
+      }],
+    }),
+  })
+}
+
 export async function notifyDiscord(payload: NotifyPayload) {
   if (!WEBHOOK_URL) return
 
@@ -41,7 +58,10 @@ export async function notifyDiscord(payload: NotifyPayload) {
     : ''
 
   const failedLine = failed.length > 0
-    ? failed.map((r) => `• ${r.sourceName}`).join('\n')
+    ? failed.map((r) => {
+        const err = r.error ? `\n  \`${r.error.slice(0, 120)}\`` : ''
+        return `• ${r.sourceName}${err}`
+      }).join('\n')
     : null
 
   const fields = [
