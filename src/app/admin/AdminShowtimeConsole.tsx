@@ -104,7 +104,7 @@ export function AdminShowtimeConsole() {
     seatCount: undefined,
   })
   const [showtimeDrafts, setShowtimeDrafts] = useState<Record<string, AdminShowtimeInput>>({})
-  const [activeTab, setActiveTab] = useState<'crawl' | 'status' | 'manage'>('crawl')
+  const [activeTab, setActiveTab] = useState<'crawl' | 'status' | 'manage' | 'logs'>('crawl')
   const [candidateFilter, setCandidateFilter] = useState<'all' | 'latest' | 'unmatched' | 'warning' | 'soldout'>('all')
   const [candidatePage, setCandidatePage] = useState(0)
   const [latestCandidateIds, setLatestCandidateIds] = useState<string[]>([])
@@ -113,6 +113,8 @@ export function AdminShowtimeConsole() {
   const [sourceForm, setSourceForm] = useState<SourceFormState>(emptySourceForm)
   const [crawlProgress, setCrawlProgress] = useState(0)
   const [crawlTotal, setCrawlTotal] = useState(0)
+  const [crawlLogs, setCrawlLogs] = useState<CrawlRun[]>([])
+  const [logsLoading, setLogsLoading] = useState(false)
 
   useEffect(() => {
     refresh()
@@ -186,6 +188,17 @@ export function AdminShowtimeConsole() {
       selectAllRef.current.indeterminate = someCandidatesSelected
     }
   }, [someCandidatesSelected])
+
+  async function refreshLogs() {
+    setLogsLoading(true)
+    try {
+      const response = await fetch('/api/admin/crawl/runs?limit=200', { cache: 'no-store' })
+      const result = (await response.json()) as { runs?: CrawlRun[]; error?: { message: string } }
+      if (result.runs) setCrawlLogs(result.runs)
+    } finally {
+      setLogsLoading(false)
+    }
+  }
 
   async function refresh() {
     const response = await fetch('/api/admin/showtimes', { cache: 'no-store' })
@@ -333,53 +346,85 @@ export function AdminShowtimeConsole() {
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ sourceId: source.id, inputKind: 'url' }),
         })
-          .then((r) => (r.ok ? r.json() as Promise<CrawlRun> : Promise.reject()))
+          .then((r) => r.json() as Promise<CrawlRun>)
           .then((run) => {
             completed++
             setCrawlProgress(Math.round((completed / enabledSources.length) * 100))
             setMessage(`일괄 수집 및 영화 자동 매칭 중... (${completed}/${enabledSources.length})`)
             return run
           })
-          .catch(() => null),
+          .catch((err): CrawlRun => ({
+            id: `err_${source.id}`,
+            sourceId: source.id,
+            sourceName: source.theaterName,
+            inputKind: 'url',
+            status: 'failed',
+            startedAt: new Date().toISOString(),
+            candidates: [],
+            createdCount: 0,
+            updatedCount: 0,
+            warningCount: 0,
+            error: err instanceof Error ? err.message : '네트워크 오류',
+          })),
       ),
     ])
 
+    const failedRuns: string[] = []
+
     for (const run of dtryxResult.runs ?? []) {
       if (run.status === 'completed') { succeeded++; totalCandidates += run.createdCount }
-      else failed++
+      else { failed++; failedRuns.push(run.sourceName) }
     }
 
-    for (const run of otherResults) {
-      if (run) { succeeded++; totalCandidates += (run as CrawlRun).createdCount ?? 0 }
-      else failed++
+    for (const run of otherResults as CrawlRun[]) {
+      if (run.status === 'failed' || run.id.startsWith('err_')) {
+        failed++
+        failedRuns.push(run.sourceName)
+      } else {
+        succeeded++
+        totalCandidates += run.createdCount ?? 0
+      }
     }
 
-    const latestIds = [
-      ...(dtryxResult.runs ?? []).flatMap((run) => run.candidates.map((candidate) => candidate.id)),
-      ...otherResults.flatMap((run) => run ? (run as CrawlRun).candidates.map((candidate) => candidate.id) : []),
+    const allRuns = [
+      ...(dtryxResult.runs ?? []),
+      ...otherResults as CrawlRun[],
     ]
+    const latestIds = allRuns.flatMap((run) => run.candidates.map((c) => c.id))
 
     setCrawlProgress(100)
     await refresh()
     await refreshAdminMovies()
-    mergeCandidatesIntoPayload([
-      ...(dtryxResult.runs ?? []).flatMap((run) => run.candidates),
-      ...otherResults.flatMap((run) => run ? (run as CrawlRun).candidates : []),
-    ])
+    mergeCandidatesIntoPayload(allRuns.flatMap((run) => run.candidates))
     setSelectedIds(latestIds)
     setLatestCandidateIds(latestIds)
     setCandidateFilter('latest')
     setCandidatePage(0)
-    const movieMatchedCount = [
-      ...(dtryxResult.runs ?? []).flatMap((run) => run.candidates),
-      ...otherResults.flatMap((run) => run ? (run as CrawlRun).candidates : []),
-    ].filter((candidate) => candidate.matchedMovieId).length
-    setMessage(`일괄 수집 및 영화 자동 매칭 완료 - 성공 ${succeeded}개 극장, 실패 ${failed}개, 영화 매칭 ${movieMatchedCount}건`)
+    const movieMatchedCount = allRuns.flatMap((run) => run.candidates).filter((c) => c.matchedMovieId).length
+    const failedMsg = failedRuns.length > 0 ? ` (실패: ${failedRuns.slice(0, 5).join(', ')}${failedRuns.length > 5 ? ` 외 ${failedRuns.length - 5}개` : ''})` : ''
+    setMessage(`일괄 수집 완료 - 성공 ${succeeded}개, 실패 ${failed}개, 영화 매칭 ${movieMatchedCount}건${failedMsg}`)
     setLoading(false)
     setTimeout(() => {
       setCrawlProgress(0)
       setCrawlTotal(0)
     }, 2000)
+  }
+
+  async function handlePurgeExpired() {
+    if (!window.confirm('오늘 이전 날짜의 미승인 후보를 모두 삭제할까요?')) return
+    setLoading(true)
+    setMessage('만료된 후보를 삭제하는 중...')
+    try {
+      const response = await fetch('/api/admin/showtimes', { method: 'DELETE' })
+      const result = (await response.json()) as { deleted?: number; error?: { message: string } }
+      if (!response.ok) throw new Error(result.error?.message ?? '삭제 실패')
+      await refresh()
+      setMessage(`만료 후보 ${result.deleted ?? 0}개를 삭제했습니다.`)
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : '삭제 실패')
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function handleUpdateSeatsOnly() {
@@ -934,6 +979,7 @@ export function AdminShowtimeConsole() {
           <Button variant="ghost" size="sm" onClick={refresh}>새로고침</Button>
           <Button variant="secondary" size="sm" loading={loading} onClick={runAllCrawlers}>일괄 수집</Button>
           <Button size="sm" loading={loading} onClick={runCrawler}>수집 실행</Button>
+          <Button variant="secondary" size="sm" loading={loading} onClick={handlePurgeExpired}>만료 정리</Button>
           <Button variant="secondary" size="sm" loading={loading} onClick={handleUpdateSeatsOnly}>좌석만 업데이트</Button>
         </div>
       </header>
@@ -957,6 +1003,12 @@ export function AdminShowtimeConsole() {
           onClick={() => setActiveTab('manage')}
         >
           관리
+        </button>
+        <button
+          className={`${styles.tabBtn} ${activeTab === 'logs' ? styles.tabBtnActive : ''}`}
+          onClick={() => { setActiveTab('logs'); if (crawlLogs.length === 0) refreshLogs() }}
+        >
+          로그
         </button>
       </nav>
 
@@ -1454,6 +1506,8 @@ export function AdminShowtimeConsole() {
         </section>
       )}
 
+      {activeTab === 'logs' && <CrawlLogsTab logs={crawlLogs} loading={logsLoading} onRefresh={refreshLogs} />}
+
       {activeTab === 'status' && <DbStatusTab
         theaters={adminTheaters}
         movies={adminMovies}
@@ -1815,6 +1869,103 @@ function upsertOption<T extends { id: string }>(options: T[], option: T) {
 
 function splitListInput(value: string) {
   return value.split(',').map((item) => item.trim()).filter(Boolean)
+}
+
+function CrawlLogsTab({ logs, loading, onRefresh }: {
+  logs: CrawlRun[]
+  loading: boolean
+  onRefresh: () => void
+}) {
+  const [filter, setFilter] = useState<'all' | 'failed' | 'completed'>('all')
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+
+  const filtered = filter === 'all' ? logs : logs.filter((r) => r.status === filter)
+
+  return (
+    <section style={{ margin: '0 auto', maxWidth: 1320 }}>
+      <div className={styles.panelHeader} style={{ marginBottom: 12 }}>
+        <h2>크롤링 로그</h2>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div className={styles.logFilter}>
+            {(['all', 'completed', 'failed'] as const).map((f) => (
+              <button
+                key={f}
+                className={`${styles.filterTab} ${filter === f ? styles.filterTabActive : ''}`}
+                onClick={() => setFilter(f)}
+              >
+                {f === 'all' ? '전체' : f === 'completed' ? '성공' : '실패'}
+                <span className={styles.filterTabBadge}>
+                  {f === 'all' ? logs.length : logs.filter((r) => r.status === f).length}
+                </span>
+              </button>
+            ))}
+          </div>
+          <Button variant="ghost" size="sm" loading={loading} onClick={onRefresh}>새로고침</Button>
+        </div>
+      </div>
+      {loading && logs.length === 0 && <p className={styles.empty}>로그를 불러오는 중...</p>}
+      {!loading && filtered.length === 0 && <p className={styles.empty}>표시할 로그가 없습니다.</p>}
+      {filtered.length > 0 && (
+        <div className={styles.statusSection}>
+          <table className={styles.logsTable}>
+            <thead>
+              <tr>
+                <th style={{ width: 20 }}></th>
+                <th>극장</th>
+                <th>파서</th>
+                <th>후보</th>
+                <th>경고</th>
+                <th>시작</th>
+                <th>상태</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((run) => {
+                const isExpanded = expandedId === run.id
+                const isFailed = run.status === 'failed'
+                const hasWarn = run.warningCount > 0
+                return (
+                  <>
+                    <tr
+                      key={run.id}
+                      className={`${styles.logRow} ${isFailed ? styles.logRowFailed : styles.logRowOk}`}
+                      onClick={() => setExpandedId(isExpanded ? null : run.id)}
+                      style={{ cursor: run.error ? 'pointer' : 'default' }}
+                    >
+                      <td>
+                        <span className={`${styles.logRunDot} ${isFailed ? styles.logRunFailed : hasWarn ? styles.logRunWarn : styles.logRunOk}`} />
+                      </td>
+                      <td className={styles.logRunName}>{run.sourceName}</td>
+                      <td className={styles.logRunMeta}>{run.inputKind}</td>
+                      <td>{run.createdCount}</td>
+                      <td style={{ color: hasWarn ? 'var(--color-warning)' : undefined }}>{run.warningCount || '—'}</td>
+                      <td className={styles.logRunTime}>
+                        {new Date(run.startedAt).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </td>
+                      <td>
+                        {isFailed
+                          ? <span style={{ color: 'var(--color-error)', fontWeight: 700, fontSize: 12 }}>실패</span>
+                          : <span style={{ color: 'var(--color-success)', fontWeight: 700, fontSize: 12 }}>완료</span>}
+                        {run.error && <span className={styles.logRunErrorInline}> ▾</span>}
+                      </td>
+                    </tr>
+                    {isExpanded && run.error && (
+                      <tr key={`${run.id}-detail`} className={styles.logRowDetail}>
+                        <td colSpan={7}>
+                          <span className={styles.logDetailLabel}>오류:</span>
+                          <span className={styles.logDetailError}>{run.error}</span>
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  )
 }
 
 function DbStatusTab({ theaters, movies, sources }: {
