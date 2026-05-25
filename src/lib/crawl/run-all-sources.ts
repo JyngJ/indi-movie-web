@@ -73,8 +73,7 @@ export async function runAllSources(
     }
   }
 
-  // 최대 5개 동시 실행 (34개 소스 → ~7배 빠름)
-  const CONCURRENCY = 5
+  const CONCURRENCY = 15
   const queue = enabled.map((_, i) => i)
   let nextIndex = 0
   async function worker() {
