@@ -292,6 +292,40 @@ img {
   border-bottom-left-radius: 2px;
 }
 
+/* 터치 디바이스에서 호버 카드/리스트 팝업 비활성화 */
+@media (hover: none) {
+  .pm-wrap:hover .pm-tip { display: none; }
+  .pm-wrap:hover > div:first-child { transform: none; box-shadow: none; }
+  .po-wrap:hover .po-list { display: none; }
+  .leaflet-marker-icon:has(.pm-wrap:hover),
+  .leaflet-marker-icon:has(.po-wrap:hover) { z-index: auto !important; }
+}
+
+/* 모바일 가로 회전 차단 오버레이 */
+/* hover:none = 터치 기기, orientation:landscape + max-height:600px = 폰 가로 */
+.rotate-overlay {
+  display: none;
+}
+@media (hover: none) and (orientation: landscape) and (max-height: 600px) {
+  .rotate-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: var(--color-surface-bg, #fff);
+    color: var(--color-text-primary, #111);
+  }
+  .rotate-overlay p {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+  }
+}
+
 /* 상세 페이지 슬라이드 인 (오른쪽에서) */
 @keyframes slideInFromRight {
   from { opacity: 0; transform: translateX(24px); }
