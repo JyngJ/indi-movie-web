@@ -767,7 +767,10 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
       .select()
       .single()
 
-    if (error) throw new Error(error.message)
+    if (error) {
+      needsReview += 1
+      continue
+    }
 
     if (theater && movie) matched += 1
     else needsReview += 1
