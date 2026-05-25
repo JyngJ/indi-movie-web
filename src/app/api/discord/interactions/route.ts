@@ -102,10 +102,10 @@ async function saveOcrToSupabase(schedule: ParsedSchedule) {
     theater_name: schedule.theaterName, matched_theater_id: source!.matched_theater_id ?? null,
     movie_title: st.movieTitle, screen_name: st.screenName || '1관',
     show_date: st.showDate, show_time: st.showTime, end_time: st.endTime ?? null,
-    format_type: 'normal', language: 'korean', seat_available: 0, seat_total: 0,
+    format_type: 'standard', language: 'korean', seat_available: 0, seat_total: 0,
     price: 0, booking_url: null, source_url: null, raw_text: JSON.stringify(st),
     confidence: schedule.confidence, warnings: schedule.corrections, status: 'draft',
-    fingerprint: Buffer.from(`${source!.id}|${st.movieTitle}|${st.showDate}|${st.showTime}`).toString('base64').slice(0, 64),
+    fingerprint: Buffer.from(`${source!.id}|${st.movieTitle}|${st.showDate}|${st.showTime}|${st.screenName || '1관'}`).toString('base64').slice(0, 64),
   }))
 
   const { error } = await supabase.from('showtime_candidates').upsert(rows, { onConflict: 'fingerprint' })
