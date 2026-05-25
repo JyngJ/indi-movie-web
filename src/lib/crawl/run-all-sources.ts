@@ -11,13 +11,15 @@ export interface RunAllResult {
  * enabled된 모든 소스를 순회해서 크롤링 후 DB에 저장.
  * 어드민 API route와 GitHub Actions 스크립트가 모두 이 함수를 호출한다.
  */
-export async function runAllSources(): Promise<RunAllResult> {
+export async function runAllSources(
+  onProgress?: (current: number, total: number, run: CrawlRun) => void,
+): Promise<RunAllResult> {
   const sources = await listAdminSources()
   const enabled = sources.filter((s) => s.enabled)
   const startedAt = Date.now()
   const runs: CrawlRun[] = []
 
-  for (const source of enabled) {
+  for (const [index, source] of enabled.entries()) {
     const runStartedAt = new Date().toISOString()
     try {
       const candidates = await crawlShowtimeCandidates({
@@ -42,6 +44,7 @@ export async function runAllSources(): Promise<RunAllResult> {
 
       await saveCrawlRun(run)
       runs.push(run)
+      onProgress?.(index + 1, enabled.length, run)
     } catch (error) {
       const run: CrawlRun = {
         id: `run_${Date.now().toString(36)}`,
@@ -60,6 +63,7 @@ export async function runAllSources(): Promise<RunAllResult> {
 
       await saveCrawlRun(run)
       runs.push(run)
+      onProgress?.(index + 1, enabled.length, run)
     }
   }
 
