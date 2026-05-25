@@ -1,9 +1,10 @@
 import { waitUntil } from '@vercel/functions'
 import { adminAuthErrorResponse, requireAdminSessionUser } from '@/lib/admin/auth'
 import { runSeatChecks } from '@/lib/crawl/run-seat-checks'
-import { notifyDiscord } from '@/lib/crawl/notify-discord'
+import { notifyDiscord, notifyDiscordStart } from '@/lib/crawl/notify-discord'
 
 export const dynamic = 'force-dynamic'
+export const maxDuration = 300
 
 const CRON_SECRET = process.env.CRON_SECRET
 
@@ -18,12 +19,11 @@ export async function POST(request: Request) {
   }
 
   waitUntil(
-    runSeatChecks().then((result) => {
-      const failed = result.runs.filter((r) => r.status === 'failed')
-      if (failed.length > 0) {
-        return notifyDiscord({ title: '🪑 좌석 갱신 실패', runs: result.runs, durationMs: result.durationMs })
-      }
-    }),
+    notifyDiscordStart('🪑 좌석 갱신').then(() =>
+      runSeatChecks()
+    ).then((result) =>
+      notifyDiscord({ title: '🪑 좌석 갱신', runs: result.runs, durationMs: result.durationMs }),
+    ),
   )
 
   return Response.json({ ok: true, message: '좌석 갱신 시작됨' }, { status: 202 })
