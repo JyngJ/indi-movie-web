@@ -28,13 +28,14 @@ async function main() {
   const failed = result.runs.filter((r) => r.status === 'failed')
   const totalNew = ok.reduce((s, r) => s + r.createdCount, 0)
 
-  console.log(`\n총 ${totalNew}개 후보 수집 (${(result.durationMs / 1000).toFixed(1)}s)`)
+  console.log(`\n총 ${totalNew}개 후보 수집, 자동매칭 ${result.matched}개 (${(result.durationMs / 1000).toFixed(1)}s)`)
   if (failed.length) console.log(`수집 불가 ${failed.length}건: ${failed.map((r) => r.sourceName).join(', ')}`)
 
   await notifyDiscord({
     title: '📽 상영시간표 수집',
     runs: result.runs,
     durationMs: result.durationMs,
+    matched: result.matched,
   })
 
   // fetch failed 같은 네트워크 에러만 있을 경우 workflow를 실패로 처리하지 않음

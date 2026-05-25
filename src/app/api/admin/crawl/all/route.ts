@@ -19,6 +19,6 @@ export async function POST(request: Request) {
   }
 
   const result = await runAllSources()
-  await notifyDiscord({ title: '📽 상영시간표 수집', runs: result.runs, durationMs: result.durationMs })
-  return Response.json({ ok: true, collected: result.runs.reduce((s, r) => s + r.createdCount, 0), durationMs: result.durationMs })
+  await notifyDiscord({ title: '📽 상영시간표 수집', runs: result.runs, durationMs: result.durationMs, matched: result.matched })
+  return Response.json({ ok: true, collected: result.runs.reduce((s, r) => s + r.createdCount, 0), matched: result.matched, durationMs: result.durationMs })
 }

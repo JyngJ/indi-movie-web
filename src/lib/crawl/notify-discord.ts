@@ -6,6 +6,7 @@ export interface NotifyPayload {
   title: string
   runs: CrawlRun[]
   durationMs: number
+  matched?: number
 }
 
 export async function notifyDiscord(payload: NotifyPayload) {
@@ -30,7 +31,8 @@ export async function notifyDiscord(payload: NotifyPayload) {
 
   lines.push('')
   lines.push(`총 **${totalNew}개** 후보 수집${totalWarn ? ` · 경고 ${totalWarn}건` : ''}`)
-  if (failed.length) lines.push(`실패 ${failed.length}건 확인 필요`)
+  if (payload.matched !== undefined) lines.push(`자동매칭 **${payload.matched}개** 완료`)
+  if (failed.length) lines.push(`수집 불가 ${failed.length}건`)
 
   await fetch(WEBHOOK_URL, {
     method: 'POST',
