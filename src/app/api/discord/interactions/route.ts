@@ -5,6 +5,7 @@
  * - MESSAGE_COMPONENT: 제보 리포트 버튼 액션
  */
 
+import { after } from 'next/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { formatDiscordReportEmbeds, parseReportAction, reportActionComponents } from '@/lib/reports/discord'
 import { updateReportStatus } from '@/lib/reports/store'
@@ -162,7 +163,7 @@ export async function POST(request: Request) {
       return Response.json({ type: InteractionResponse.CHANNEL_MESSAGE, data: { content: '❌ 이미지를 첨부해주세요. `/schedule image:파일 theater:극장명`' } })
     }
 
-    void processScheduleCommand(interaction.token, attachment.url, theaterHint)
+    after(() => processScheduleCommand(interaction.token, attachment.url, theaterHint))
     return Response.json({ type: InteractionResponse.DEFERRED_CHANNEL_MESSAGE })
   }
 
