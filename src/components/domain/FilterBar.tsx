@@ -513,6 +513,8 @@ function RegionDropdown({ selectedId, onSelect, style }: {
       borderRadius: 16,
       overflow: 'hidden',
       boxShadow: '0 12px 40px rgba(0,0,0,0.72)',
+      maxHeight: 'min(420px, 70vh)',
+      overflowY: 'auto',
       ...style,
     }}>
       <div style={{ padding: '8px 14px 4px', fontSize: 10, fontWeight: 700, color: 'var(--color-text-caption)', letterSpacing: '0.5px' }}>
