@@ -4,26 +4,27 @@ on:
   schedule:
     # 한국 시간 10:00 / 16:00 / 22:00 (UTC 01:00 / 07:00 / 13:00)
     - cron: '0 1,7,13 * * *'
-  workflow_dispatch: # 수동 실행 허용
+  workflow_dispatch:
 
 jobs:
-  crawl:
+  trigger:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Vercel 크롤 API 트리거
+        run: |
+          echo "크롤 시작 요청..."
+          STATUS=$(curl -s -o /tmp/response.json -w "%{http_code}" \
+            -X POST "${{ secrets.APP_URL }}/api/admin/crawl/all" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --max-time 310)
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
+          echo "HTTP $STATUS"
+          cat /tmp/response.json
 
-      - run: npm ci
-
-      - name: 상영시간표 수집
-        run: npx tsx scripts/crawl-showtimes.ts
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          DISCORD_REPORT_WEBHOOK_URL: ${{ secrets.DISCORD_REPORT_WEBHOOK_URL }}
+          if [ "$STATUS" != "200" ]; then
+            echo "크롤 API 실패 (HTTP $STATUS)"
+            exit 1
+          fi

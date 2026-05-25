@@ -1,10 +1,9 @@
 import { adminAuthErrorResponse, requireAdminSessionUser } from '@/lib/admin/auth'
-import { runAllSources } from '@/lib/crawl/run-all-sources'
+import { runSeatChecks } from '@/lib/crawl/run-seat-checks'
 import { notifyDiscord } from '@/lib/crawl/notify-discord'
 
 export const dynamic = 'force-dynamic'
-// 크롤이 최대 5분 걸릴 수 있으므로 Vercel 타임아웃을 300s로 설정
-export const maxDuration = 300
+export const maxDuration = 120
 
 const CRON_SECRET = process.env.CRON_SECRET
 
@@ -18,7 +17,10 @@ export async function POST(request: Request) {
     try { await requireAdminSessionUser(request) } catch (error) { return adminAuthErrorResponse(error) }
   }
 
-  const result = await runAllSources()
-  await notifyDiscord({ title: '📽 상영시간표 수집', runs: result.runs, durationMs: result.durationMs })
-  return Response.json({ ok: true, collected: result.runs.reduce((s, r) => s + r.createdCount, 0), durationMs: result.durationMs })
+  const result = await runSeatChecks()
+  const failed = result.runs.filter((r) => r.status === 'failed')
+  if (failed.length > 0) {
+    await notifyDiscord({ title: '🪑 좌석 갱신 실패', runs: result.runs, durationMs: result.durationMs })
+  }
+  return Response.json({ ok: true, updated: result.runs.reduce((s, r) => s + r.updatedCount, 0), durationMs: result.durationMs })
 }
