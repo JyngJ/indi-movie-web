@@ -31,7 +31,7 @@ export async function runAllSources(
       )
       const candidates = await Promise.race([crawlPromise, timeoutPromise])
       const run: CrawlRun = {
-        id: `run_${Date.now().toString(36)}`,
+        id: `run_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
         sourceId: source.id,
         sourceName: source.theaterName,
         inputKind: 'url',
@@ -48,7 +48,7 @@ export async function runAllSources(
       onProgress?.(++completed, total, run)
     } catch (error) {
       const run: CrawlRun = {
-        id: `run_${Date.now().toString(36)}`,
+        id: `run_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
         sourceId: source.id,
         sourceName: source.theaterName,
         inputKind: 'url',
