@@ -27,7 +27,7 @@ export async function runAllSources(
         sourceUrl: source.listingUrl,
       })
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('소스 타임아웃 (30s)')), 30000),
+        setTimeout(() => reject(new Error('소스 타임아웃 (90s)')), 90000),
       )
       const candidates = await Promise.race([crawlPromise, timeoutPromise])
       const run: CrawlRun = {
