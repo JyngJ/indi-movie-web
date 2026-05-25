@@ -6,40 +6,41 @@ export interface NotifyPayload {
   title: string
   runs: CrawlRun[]
   durationMs: number
-  matched?: number
 }
 
-export async function notifyDiscordStart(title: string) {
+async function sendEmbed(embed: object) {
   if (!WEBHOOK_URL) return
-  const now = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
   await fetch(WEBHOOK_URL, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      embeds: [{
-        title: `⏳ ${title} 시작`,
-        description: `수집을 시작합니다.`,
-        color: 0x3498DB,
-        footer: { text: now },
-      }],
-    }),
+    body: JSON.stringify({ embeds: [embed] }),
+  })
+}
+
+function nowKST() {
+  return new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
+}
+
+export async function notifyDiscordStart(title: string) {
+  await sendEmbed({
+    title: `⏳ ${title} 시작`,
+    description: '수집을 시작합니다.',
+    color: 0x3498DB,
+    footer: { text: nowKST() },
   })
 }
 
 export async function notifyDiscord(payload: NotifyPayload) {
-  if (!WEBHOOK_URL) return
-
   const ok = payload.runs.filter((r) => r.status === 'completed')
   const failed = payload.runs.filter((r) => r.status === 'failed')
   const totalNew = ok.reduce((s, r) => s + r.createdCount, 0)
   const totalWarn = ok.reduce((s, r) => s + r.warningCount, 0)
   const secs = (payload.durationMs / 1000).toFixed(1)
 
-  const color = failed.length === payload.runs.length ? 0xE74C3C  // 전부 실패 → 빨강
-    : failed.length > 0 ? 0xF39C12                                // 일부 실패 → 주황
-    : 0x2ECC71                                                     // 전부 성공 → 초록
+  const color = failed.length === payload.runs.length ? 0xE74C3C
+    : failed.length > 0 ? 0xF39C12
+    : 0x2ECC71
 
-  // 수집량 많은 순 정렬, 상위 10개만
   const topOk = [...ok]
     .filter((r) => r.createdCount > 0)
     .sort((a, b) => b.createdCount - a.createdCount)
@@ -82,22 +83,34 @@ export async function notifyDiscord(payload: NotifyPayload) {
 
   const summary = [
     `**후보** ${totalNew.toLocaleString()}개`,
-    payload.matched !== undefined ? `**매칭** ${payload.matched.toLocaleString()}개` : null,
     totalWarn > 0 ? `**경고** ${totalWarn}건` : null,
     `**소요** ${secs}s`,
   ].filter(Boolean).join('　·　')
 
-  const embed = {
+  await sendEmbed({
     title: payload.title,
     description: summary,
     color,
     fields,
-    footer: { text: new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }) },
-  }
+    footer: { text: nowKST() },
+  })
+}
 
-  await fetch(WEBHOOK_URL, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ embeds: [embed] }),
+export async function notifyDiscordMatch(matched: number, needsReview: number, durationMs: number) {
+  const secs = (durationMs / 1000).toFixed(1)
+  await sendEmbed({
+    title: '🔗 자동매칭 완료',
+    description: `**매칭** ${matched.toLocaleString()}개　·　**검토필요** ${needsReview.toLocaleString()}개　·　**소요** ${secs}s`,
+    color: matched > 0 ? 0x2ECC71 : 0xF39C12,
+    footer: { text: nowKST() },
+  })
+}
+
+export async function notifyDiscordError(title: string, errorMessage: string) {
+  await sendEmbed({
+    title: `❌ ${title} 오류`,
+    description: `\`\`\`\n${errorMessage.slice(0, 500)}\n\`\`\``,
+    color: 0xE74C3C,
+    footer: { text: nowKST() },
   })
 }
