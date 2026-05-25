@@ -48,6 +48,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             {children}
           </div>
         </Providers>
+        {/* 모바일 가로 회전 차단 오버레이 */}
+        <div className="rotate-overlay" aria-hidden="true">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="4" y="2" width="16" height="20" rx="2" />
+            <path d="M9 22h6" />
+          </svg>
+          <p>화면을 세로로 돌려주세요</p>
+        </div>
         <AnalyticsScripts />
       </body>
     </html>

@@ -341,33 +341,6 @@ export function TheaterSheet({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allMovieEntries])
 
-  /* ── 선택 영화로 포스터 스트립 스크롤 ── */
-  useEffect(() => {
-    const el = posterScrollRef.current
-    if (!el || !selectedMovieId || allMovieEntries.length === 0) return
-
-    // 현재 모드별 포스터 순서 계산
-    let visualEntries: typeof allMovieEntries
-    if (panelMode) {
-      const matchedIds = new Set(filteredMovieEntries.map(e => e.movie.id))
-      const nonMatching = allMovieEntries.filter(e => !matchedIds.has(e.movie.id))
-      visualEntries = [...filteredMovieEntries, ...nonMatching]
-    } else {
-      visualEntries = allMovieEntries
-    }
-
-    const idx = visualEntries.findIndex(e => e.movie.id === selectedMovieId)
-    if (idx < 0) return
-
-    const itemW = 88
-    const gap = 12
-    const paddingLeft = 20
-    const targetLeft = paddingLeft + idx * (itemW + gap)
-    el.scrollLeft = Math.max(0, targetLeft - el.clientWidth / 2 + itemW / 2)
-  // selectedMovieId 변경(외부 진입 포함) + 데이터 로드 시 실행
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedMovieId, allMovieEntries])
-
   /* ── 날짜 바 — 7일, 상영 있는 날만 활성 ── */
   const theaterAvailableDates = useMemo(() => {
     const dates = new Set<string>()
@@ -823,6 +796,33 @@ export function TheaterSheet({
   //   return [...playing, ...notPlaying]
   // }, [filteredMovieEntries, selectedIsoDate, showTodayFirst])
   const sortedFilteredEntries = filteredMovieEntries
+
+  /* ── 선택 영화로 포스터 스트립 스크롤 ── */
+  useEffect(() => {
+    const el = posterScrollRef.current
+    if (!el || !selectedMovieId || allMovieEntries.length === 0) return
+
+    // 현재 모드별 포스터 순서 계산
+    let visualEntries: typeof allMovieEntries
+    if (shownExpanded) {
+      const matchedIds = new Set(filteredMovieEntries.map(e => e.movie.id))
+      const nonMatching = allMovieEntries.filter(e => !matchedIds.has(e.movie.id))
+      visualEntries = [...filteredMovieEntries, ...nonMatching]
+    } else {
+      visualEntries = allMovieEntries
+    }
+
+    const idx = visualEntries.findIndex(e => e.movie.id === selectedMovieId)
+    if (idx < 0) return
+
+    const itemW = 88
+    const gap = 12
+    const paddingLeft = 20
+    const targetLeft = paddingLeft + idx * (itemW + gap)
+    el.scrollLeft = Math.max(0, targetLeft - el.clientWidth / 2 + itemW / 2)
+  // selectedMovieId 변경(외부 진입 포함) + 데이터 로드 시 실행
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedMovieId, allMovieEntries, filteredMovieEntries, shownExpanded])
 
   /* ── 펼칠 때 오늘 상영 없으면 가장 빠른 날로 자동 이동 ── */
   useEffect(() => {
