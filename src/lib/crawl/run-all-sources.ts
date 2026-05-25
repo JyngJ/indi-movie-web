@@ -27,11 +27,11 @@ export async function runAllSources(
         sourceUrl: source.listingUrl,
       })
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('소스 타임아웃 (30s)')), 30000),
+        setTimeout(() => reject(new Error('소스 타임아웃 (90s)')), 90000),
       )
       const candidates = await Promise.race([crawlPromise, timeoutPromise])
       const run: CrawlRun = {
-        id: `run_${Date.now().toString(36)}`,
+        id: `run_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
         sourceId: source.id,
         sourceName: source.theaterName,
         inputKind: 'url',
@@ -48,7 +48,7 @@ export async function runAllSources(
       onProgress?.(++completed, total, run)
     } catch (error) {
       const run: CrawlRun = {
-        id: `run_${Date.now().toString(36)}`,
+        id: `run_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
         sourceId: source.id,
         sourceName: source.theaterName,
         inputKind: 'url',

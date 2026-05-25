@@ -1,6 +1,7 @@
 import type { CrawlRun } from '@/types/admin'
 
 const WEBHOOK_URL = process.env.DISCORD_REPORT_WEBHOOK_URL
+const FIELD_LIMIT = 900
 
 export interface NotifyPayload {
   title: string
@@ -10,15 +11,35 @@ export interface NotifyPayload {
 
 async function sendEmbed(embed: object) {
   if (!WEBHOOK_URL) return
-  await fetch(WEBHOOK_URL, {
+  const res = await fetch(WEBHOOK_URL, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ embeds: [embed] }),
   })
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    console.error(`Discord webhook 실패 ${res.status}: ${body.slice(0, 200)}`)
+  }
 }
 
 function nowKST() {
   return new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
+}
+
+function chunkLines(lines: string[], limit = FIELD_LIMIT): string[] {
+  const chunks: string[] = []
+  let current = ''
+  for (const line of lines) {
+    const added = current ? `${current}\n${line}` : line
+    if (added.length > limit) {
+      if (current) chunks.push(current)
+      current = line
+    } else {
+      current = added
+    }
+  }
+  if (current) chunks.push(current)
+  return chunks
 }
 
 export async function notifyDiscordStart(title: string) {
@@ -41,59 +62,58 @@ export async function notifyDiscord(payload: NotifyPayload) {
     : failed.length > 0 ? 0xF39C12
     : 0x2ECC71
 
-  const topOk = [...ok]
-    .filter((r) => r.createdCount > 0)
-    .sort((a, b) => b.createdCount - a.createdCount)
-    .slice(0, 10)
-
-  const theaterLines = topOk
-    .map((r) => {
-      const warn = r.warningCount > 0 ? ` ⚠️${r.warningCount}` : ''
-      return `\`${r.createdCount.toString().padStart(3)}개\` ${r.sourceName}${warn}`
-    })
-    .join('\n')
-
-  const zeroOk = ok.filter((r) => r.createdCount === 0)
-  const zeroLine = zeroOk.length > 0
-    ? `\n\`  0개\` ${zeroOk.map((r) => r.sourceName).join(', ')}`
-    : ''
-
-  const failedLine = failed.length > 0
-    ? failed.map((r) => {
-        const err = r.error ? `\n  \`${r.error.slice(0, 120)}\`` : ''
-        return `• ${r.sourceName}${err}`
-      }).join('\n')
-    : null
-
-  const fields = [
-    {
-      name: `🎬 수집 결과 (${ok.filter((r) => r.createdCount > 0).length}개 소스)`,
-      value: (theaterLines + zeroLine) || '없음',
-      inline: false,
-    },
-  ]
-
-  if (failedLine) {
-    fields.push({
-      name: `⚠️ 수집 불가 (${failed.length}건)`,
-      value: failedLine,
-      inline: false,
-    })
-  }
-
   const summary = [
     `**후보** ${totalNew.toLocaleString()}개`,
     totalWarn > 0 ? `**경고** ${totalWarn}건` : null,
     `**소요** ${secs}s`,
   ].filter(Boolean).join('　·　')
 
-  await sendEmbed({
-    title: payload.title,
-    description: summary,
-    color,
-    fields,
-    footer: { text: nowKST() },
+  const okLines = [...ok]
+    .sort((a, b) => b.createdCount - a.createdCount)
+    .map((r) => {
+      const warn = r.warningCount > 0 ? ` ⚠️${r.warningCount}` : ''
+      const cnt = r.createdCount.toString().padStart(3)
+      return `\`${cnt}개\` ${r.sourceName}${warn}`
+    })
+
+  const failedLines = failed.map((r) => {
+    const err = r.error ? ` \`${r.error.slice(0, 80)}\`` : ''
+    return `• ${r.sourceName}${err}`
   })
+
+  const fields: { name: string; value: string; inline: boolean }[] = []
+
+  const okChunks = chunkLines(okLines)
+  okChunks.forEach((chunk, i) => {
+    const label = okChunks.length > 1
+      ? `✅ 성공 (${ok.length}개) [${i + 1}/${okChunks.length}]`
+      : `✅ 성공 (${ok.length}개)`
+    fields.push({ name: label, value: chunk || '없음', inline: false })
+  })
+
+  if (failedLines.length > 0) {
+    const failChunks = chunkLines(failedLines)
+    failChunks.forEach((chunk, i) => {
+      const label = failChunks.length > 1
+        ? `⚠️ 실패 (${failed.length}건) [${i + 1}/${failChunks.length}]`
+        : `⚠️ 실패 (${failed.length}건)`
+      fields.push({ name: label, value: chunk, inline: false })
+    })
+  }
+
+  // Discord: max 25 fields per embed — split into multiple messages if needed
+  const FIELD_BATCH = 24
+  for (let i = 0; i < fields.length; i += FIELD_BATCH) {
+    const batch = fields.slice(i, i + FIELD_BATCH)
+    const isFirst = i === 0
+    await sendEmbed({
+      title: isFirst ? payload.title : `${payload.title} (계속)`,
+      description: isFirst ? summary : undefined,
+      color,
+      fields: batch,
+      footer: isFirst ? { text: nowKST() } : undefined,
+    })
+  }
 }
 
 export async function notifyDiscordMatch(matched: number, needsReview: number, durationMs: number) {
