@@ -104,6 +104,7 @@ export async function resolveCrawlInput(
       headers: {
         'user-agent': 'indi-movie-web-admin-crawler/0.1',
       },
+      signal: AbortSignal.timeout(15000),
     })
 
     if (!response.ok) {
@@ -621,6 +622,7 @@ async function fetchSelfHosted(url: string): Promise<string> {
       'accept-language': 'ko-KR,ko;q=0.9',
     },
     cache: 'no-store',
+    signal: AbortSignal.timeout(15000),
   })
 
   if (!response.ok) {
@@ -1105,6 +1107,7 @@ async function fetchJson<T>(url: string, headers: Record<string, string>): Promi
   const response = await fetch(url, {
     headers,
     cache: 'no-store',
+    signal: AbortSignal.timeout(15000),
   })
 
   if (!response.ok) {
@@ -1120,6 +1123,7 @@ async function fetchText(url: string) {
       'user-agent': 'Mozilla/5.0 (compatible; indi-movie-web-admin-crawler/0.1)',
     },
     cache: 'no-store',
+    signal: AbortSignal.timeout(15000),
   })
 
   if (!response.ok) {
