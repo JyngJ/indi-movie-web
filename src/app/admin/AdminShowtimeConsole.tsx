@@ -29,6 +29,21 @@ interface AdminPayload {
   matchOptions: AdminMatchOptions
 }
 
+interface OcrShowtime {
+  movieTitle: string
+  showDate: string
+  showTime: string
+  screenName: string
+  endTime?: string
+}
+
+interface OcrResult {
+  theaterName: string
+  showtimes: OcrShowtime[]
+  corrections: string[]
+  confidence: number
+}
+
 const emptyPayload: AdminPayload = {
   sources: [],
   runs: [],
@@ -78,6 +93,13 @@ export function AdminShowtimeConsole() {
     seatCount: undefined,
   })
   const [showtimeDrafts, setShowtimeDrafts] = useState<Record<string, AdminShowtimeInput>>({})
+
+  // OCR 업로드
+  const [ocrFile, setOcrFile] = useState<File | null>(null)
+  const [ocrTheaterHint, setOcrTheaterHint] = useState('')
+  const [ocrLoading, setOcrLoading] = useState(false)
+  const [ocrResult, setOcrResult] = useState<OcrResult | null>(null)
+  const [ocrMessage, setOcrMessage] = useState('')
   const [sourceFormOpen, setSourceFormOpen] = useState(false)
   const [sourceForm, setSourceForm] = useState({
     theaterName: '',
@@ -668,6 +690,41 @@ export function AdminShowtimeConsole() {
     if (source) setUrl(source.listingUrl)
   }
 
+  async function handleOcrParse() {
+    if (!ocrFile) return
+    setOcrLoading(true)
+    setOcrMessage('')
+    setOcrResult(null)
+    const form = new FormData()
+    form.append('image', ocrFile)
+    form.append('theaterHint', ocrTheaterHint)
+    form.append('action', 'parse')
+    const res = await fetch('/api/admin/ocr', { method: 'POST', body: form })
+    const data = await res.json() as { result?: OcrResult; error?: { message: string } }
+    setOcrLoading(false)
+    if (!res.ok || !data.result) { setOcrMessage(data.error?.message ?? 'OCR 실패'); return }
+    setOcrResult(data.result)
+    setOcrMessage(`${data.result.showtimes.length}개 상영 추출 완료 (신뢰도 ${Math.round(data.result.confidence * 100)}%)`)
+  }
+
+  async function handleOcrSave() {
+    if (!ocrFile || !ocrResult) return
+    setOcrLoading(true)
+    setOcrMessage('')
+    const form = new FormData()
+    form.append('image', ocrFile)
+    form.append('theaterHint', ocrTheaterHint)
+    form.append('action', 'save')
+    const res = await fetch('/api/admin/ocr', { method: 'POST', body: form })
+    const data = await res.json() as { saved?: number; error?: { message: string } }
+    setOcrLoading(false)
+    if (!res.ok) { setOcrMessage(data.error?.message ?? '저장 실패'); return }
+    setOcrMessage(`✅ ${data.saved}개 후보로 저장됨`)
+    setOcrResult(null)
+    setOcrFile(null)
+    refresh()
+  }
+
   return (
     <main className={styles.shell}>
       <header className={styles.header}>
@@ -688,6 +745,65 @@ export function AdminShowtimeConsole() {
         <Metric label="승인 완료" value={approvedCount} tone="success" />
         <Metric label="매칭 완료" value={matchedCount} tone={matchedCount ? 'success' : 'default'} />
         <Metric label="평균 신뢰도" value={`${averageConfidence}%`} />
+      </section>
+
+      <section className={styles.ocrSection}>
+        <div className={styles.panelHeader}>
+          <h2>OCR 이미지 업로드</h2>
+          {ocrMessage && <span className={ocrMessage.startsWith('✅') ? styles.ocrMsgOk : styles.ocrMsgErr}>{ocrMessage}</span>}
+        </div>
+        <div className={styles.ocrBody}>
+          <label className={styles.ocrDropzone}>
+            <input
+              type="file"
+              accept="image/*"
+              className={styles.ocrFileInput}
+              onChange={(e) => { setOcrFile(e.target.files?.[0] ?? null); setOcrResult(null); setOcrMessage('') }}
+            />
+            {ocrFile
+              ? <span>{ocrFile.name} ({Math.round(ocrFile.size / 1024)}KB)</span>
+              : <span>이미지 클릭 또는 드래그</span>}
+          </label>
+          <input
+            className={styles.ocrHintInput}
+            placeholder="극장명 힌트 (예: 인디스페이스)"
+            value={ocrTheaterHint}
+            onChange={(e) => setOcrTheaterHint(e.target.value)}
+          />
+          <Button size="sm" disabled={!ocrFile} loading={ocrLoading} onClick={handleOcrParse}>파싱</Button>
+          {ocrResult && (
+            <Button size="sm" loading={ocrLoading} onClick={handleOcrSave}>후보로 저장</Button>
+          )}
+        </div>
+        {ocrResult && (
+          <div className={styles.ocrResultWrap}>
+            <table className={styles.ocrTable}>
+              <thead>
+                <tr>
+                  <th>극장</th>
+                  <th>날짜</th>
+                  <th>시간</th>
+                  <th>영화</th>
+                  <th>관</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ocrResult.showtimes.map((st, i) => (
+                  <tr key={i}>
+                    <td>{ocrResult.theaterName}</td>
+                    <td>{st.showDate}</td>
+                    <td>{st.showTime}</td>
+                    <td>{st.movieTitle}</td>
+                    <td>{st.screenName || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {ocrResult.corrections.length > 0 && (
+              <p className={styles.ocrCorrections}>⚠ {ocrResult.corrections.join(' / ')}</p>
+            )}
+          </div>
+        )}
       </section>
 
       <section className={styles.workspace}>
