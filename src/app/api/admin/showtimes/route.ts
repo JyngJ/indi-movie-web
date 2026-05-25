@@ -8,6 +8,7 @@ import {
   listReviewCandidates,
   updateCandidateStatuses,
   deleteCandidates,
+  deleteExpiredCandidates,
 } from '@/lib/admin/store'
 
 export const dynamic = 'force-dynamic'
@@ -104,4 +105,22 @@ export async function PATCH(request: Request) {
   const updated = await updateCandidateStatuses(payload.ids, payload.status)
 
   return Response.json({ updated })
+}
+
+export async function DELETE(request: Request) {
+  try {
+    await requireAdminSessionUser(request)
+  } catch (error) {
+    return adminAuthErrorResponse(error)
+  }
+
+  try {
+    const result = await deleteExpiredCandidates()
+    return Response.json(result)
+  } catch (error) {
+    return Response.json(
+      { error: { message: error instanceof Error ? error.message : '삭제 실패' } },
+      { status: 500 },
+    )
+  }
 }

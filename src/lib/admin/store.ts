@@ -334,13 +334,13 @@ export async function saveCrawlRun(run: CrawlRun) {
   return run
 }
 
-export async function listCrawlRuns() {
+export async function listCrawlRuns(limit = 20) {
   const supabase = createSupabaseAdminClient()
   const { data, error } = await supabase
     .from('crawl_runs')
     .select('*')
     .order('started_at', { ascending: false })
-    .limit(20)
+    .limit(limit)
 
   if (error) throw new Error(error.message)
 
@@ -660,6 +660,18 @@ export async function deleteCandidates(ids: string[]) {
     .in('id', ids)
 
   if (error) throw new Error(error.message)
+}
+
+export async function deleteExpiredCandidates() {
+  const supabase = createSupabaseAdminClient()
+  const today = new Date().toISOString().slice(0, 10)
+  const { count, error } = await supabase
+    .from('showtime_candidates')
+    .delete({ count: 'exact' })
+    .lt('show_date', today)
+    .neq('status', 'approved')
+  if (error) throw new Error(error.message)
+  return { deleted: count ?? 0 }
 }
 
 export async function updateCandidateStatuses(ids: string[], status: AdminShowtimeStatus) {

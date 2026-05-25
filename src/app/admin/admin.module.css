@@ -1201,3 +1201,107 @@
   display: grid;
   gap: 6px;
 }
+
+/* ── 로그 탭 ───────────────────────────────────────────────────── */
+.logsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.logsTable th {
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-caption);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.logsTable td {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.logsTable tr:last-child td {
+  border-bottom: none;
+}
+
+.logRow {
+  transition: background 80ms;
+}
+
+.logRow:hover {
+  background: var(--color-surface-bg);
+}
+
+.logRowFailed td:first-child {
+  border-left: 3px solid var(--color-error, #e53);
+}
+
+.logRowOk td:first-child {
+  border-left: 3px solid transparent;
+}
+
+.logRunDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.logRunOk    { background: var(--color-success); }
+.logRunFailed { background: var(--color-error, #e53); }
+.logRunWarn  { background: var(--color-warning); }
+
+.logRunName {
+  font-weight: 600;
+}
+
+.logRunMeta {
+  color: var(--color-text-caption);
+  font-size: 12px;
+  font-family: var(--font-mono, monospace);
+}
+
+.logRunTime {
+  color: var(--color-text-caption);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.logRunErrorInline {
+  color: var(--color-text-caption);
+  font-size: 10px;
+}
+
+.logRowDetail td {
+  background: color-mix(in srgb, var(--color-error, #e53) 5%, transparent);
+  padding: 8px 14px 10px 42px;
+  font-size: 12px;
+}
+
+.logDetailLabel {
+  font-weight: 700;
+  color: var(--color-error, #e53);
+  margin-right: 6px;
+}
+
+.logDetailError {
+  color: var(--color-text-sub);
+  font-family: var(--font-mono, monospace);
+  word-break: break-all;
+}
+
+.logFilter {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 8px;
+  background: var(--color-surface-overlay);
+  border: 1px solid var(--color-border);
+}
