@@ -1237,13 +1237,17 @@ function normalizeDtryxTime(value: unknown) {
 
   if (!match) return undefined
 
-  return `${match[1].padStart(2, '0')}:${match[2]}`
+  const hour = parseInt(match[1], 10) % 24
+  return `${String(hour).padStart(2, '0')}:${match[2]}`
 }
 
 function normalizeCompactTime(value: unknown) {
   const text = String(value ?? '').trim()
   const compact = text.match(/^(\d{1,2})(\d{2})$/)
-  if (compact) return `${compact[1].padStart(2, '0')}:${compact[2]}`
+  if (compact) {
+    const hour = parseInt(compact[1], 10) % 24
+    return `${String(hour).padStart(2, '0')}:${compact[2]}`
+  }
 
   return normalizeDtryxTime(text)
 }
