@@ -19,12 +19,13 @@ jobs:
             -X POST "${{ secrets.APP_URL }}/api/admin/crawl/all" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             -H "Content-Type: application/json" \
-            --max-time 310)
+            --max-time 15)
 
           echo "HTTP $STATUS"
           cat /tmp/response.json
 
-          if [ "$STATUS" != "200" ]; then
+          if [ "$STATUS" != "202" ]; then
             echo "크롤 API 실패 (HTTP $STATUS)"
             exit 1
           fi
+          echo "크롤 시작됨 — 결과는 Discord로 전송됩니다."
