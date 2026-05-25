@@ -27,11 +27,15 @@ export async function runAllSources(
     const source = enabled[index]
     const runStartedAt = new Date().toISOString()
     try {
-      const candidates = await crawlShowtimeCandidates({
+      const crawlPromise = crawlShowtimeCandidates({
         source,
         inputKind: 'url',
         sourceUrl: source.listingUrl,
       })
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('소스 타임아웃 (30s)')), 30000),
+      )
+      const candidates = await Promise.race([crawlPromise, timeoutPromise])
       const run: CrawlRun = {
         id: `run_${Date.now().toString(36)}`,
         sourceId: source.id,
