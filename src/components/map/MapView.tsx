@@ -1679,9 +1679,13 @@ export default function MapView() {
     springFlyTo(mapRef.current, [coords.lat, coords.lng], 14)
   }, [coords])
 
+  // filters를 ref로 유지 — handleUserFilterChange deps에서 filters 제거해 무한루프 방지
+  const filtersRef = useRef(filters)
+  filtersRef.current = filters
+
   // 필터 칩 직접 조작 시 지도 이동 (URL params·코드 프리셋에는 반응 안 함)
   const handleUserFilterChange = useCallback((newFilters: FilterState) => {
-    const prevFilters = filters
+    const prevFilters = filtersRef.current
     setFilters(newFilters)
 
     const map = mapRef.current
@@ -1711,7 +1715,7 @@ export default function MapView() {
     if (genreNationChanged && (newFilters.genres.length > 0 || newFilters.nations.length > 0)) {
       userGenreZoomRef.current = true
     }
-  }, [filters, theaters])
+  }, [theaters])
 
   const handleLocate = useCallback(() => {
     refetch()
