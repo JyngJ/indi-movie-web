@@ -115,7 +115,7 @@ async function saveOcrToSupabase(schedule: ParsedSchedule) {
 }
 
 async function sendFollowup(token: string, content: string) {
-  await fetch(`https://discord.com/api/v10/webhooks/${process.env.DISCORD_APP_ID}/${token}`, {
+  await fetch(`https://discord.com/api/v10/webhooks/${process.env.DISCORD_APPLICATION_ID}/${token}`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ content }),

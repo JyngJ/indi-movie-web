@@ -102,8 +102,12 @@ export function OffScreenTracker({
 }
 
 /* ── mapRef 주입 ────────────────────────────────────────────────── */
-export function MapRefSetter({ mapRef }: { mapRef: React.MutableRefObject<LeafletMap | null> }) {
-  mapRef.current = useMap()
+export function MapRefSetter({ mapRef, onReady }: { mapRef: React.MutableRefObject<LeafletMap | null>; onReady?: () => void }) {
+  const map = useMap()
+  mapRef.current = map
+  // useEffect: 맵이 마운트된 직후 한 번만 onReady 호출
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { onReady?.() }, [])
   return null
 }
 
