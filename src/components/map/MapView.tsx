@@ -1671,30 +1671,31 @@ export default function MapView() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [directorFilter, movieFilter, filters.genres, filters.nations])
 
-  // 위치 첫 수신 시 지도 이동 — 이후엔 무시
+  // 위치 첫 수신 시 지도 이동 — coords 도착 또는 맵 준비 중 늦게 오는 쪽에서 실행
   const initialMoved = useRef(false)
-  useEffect(() => {
-    if (!coords || initialMoved.current || !mapRef.current) return
-    initialMoved.current = true
-    springFlyTo(mapRef.current, [coords.lat, coords.lng], 14)
-  }, [coords])
+  const coordsRef = useRef(coords)
+  coordsRef.current = coords
 
-  // refs로 최신 값 유지 — handleUserFilterChange를 완전히 안정적인 콜백으로 만들기 위함
-  const filtersRef = useRef(filters)
-  filtersRef.current = filters
+  const tryLocationFly = useCallback(() => {
+    if (initialMoved.current || !mapRef.current || !coordsRef.current) return
+    initialMoved.current = true
+    springFlyTo(mapRef.current, [coordsRef.current.lat, coordsRef.current.lng], 14)
+  }, [])
+
+  useEffect(() => { tryLocationFly() }, [coords, tryLocationFly])
+
+  // 칩 직접 조작 시만 호출되는 zoom 함수 — setFilters와 분리됨
   const theatersRef = useRef(theaters)
   theatersRef.current = theaters
+  const filtersRef = useRef(filters)
+  filtersRef.current = filters
 
-  // 필터 칩 직접 조작 시 지도 이동 (URL params·코드 프리셋에는 반응 안 함)
-  // deps [] → FilterBar의 onChange 의존 effect가 재발동되지 않음
-  const handleUserFilterChange = useCallback((newFilters: FilterState) => {
+  const flyToFilter = useCallback((newFilters: FilterState) => {
     const prevFilters = filtersRef.current
-    setFilters(newFilters)
-
     const map = mapRef.current
     if (!map) return
 
-    // 지역 변경 → 즉시 zoom (theaterPosterMovies 불필요)
+    // 지역 변경 → 즉시 zoom
     if (newFilters.regionId !== prevFilters.regionId && newFilters.regionId) {
       const regionTheaters = theatersRef.current.filter(t => getRegionFromCity(t.city) === newFilters.regionId)
       if (regionTheaters.length > 0) {
@@ -2688,7 +2689,7 @@ export default function MapView() {
           bounds={KOREA_MAP_BOUNDS}
           noWrap
         />
-        <MapRefSetter mapRef={mapRef} />
+        <MapRefSetter mapRef={mapRef} onReady={tryLocationFly} />
         <ViewportTracker onViewport={handleViewport} />
         <OffScreenTracker
           theaterLatLng={selectedTheater ? [selectedTheater.lat, selectedTheater.lng] : null}
@@ -2861,7 +2862,8 @@ export default function MapView() {
         <div style={{ pointerEvents: 'auto' }}>
           <FilterBar
             desktop={isDesktopLayout}
-            onChange={handleUserFilterChange}
+            onChange={setFilters}
+            onChipChange={flyToFilter}
             defaultRegionId={coords ? getRegionFromCoords(coords.lat, coords.lng) : null}
             nationOptions={nationOptions}
             movieFilter={movieFilter}
