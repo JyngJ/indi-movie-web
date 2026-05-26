@@ -68,7 +68,7 @@ async function ocrScheduleImage(imageUrl: string, theaterHint: string): Promise<
   const year = new Date().getFullYear()
   const response = await openai.chat.completions.create({
     model: 'gpt-4o',
-    max_tokens: 2048,
+    max_tokens: 4096,
     messages: [{
       role: 'user',
       content: [
@@ -79,6 +79,7 @@ async function ocrScheduleImage(imageUrl: string, theaterHint: string): Promise<
   })
 
   const text = response.choices[0].message.content?.trim() ?? ''
+  if (response.choices[0].finish_reason === 'length') throw new Error('응답이 너무 길어 잘렸습니다. 이미지 한 장에 상영 정보가 너무 많으면 날짜별로 나눠서 전송해주세요.')
   const match = text.match(/\{[\s\S]*\}/)
   if (!match) throw new Error('JSON 파싱 실패')
   return JSON.parse(match[0]) as ParsedSchedule
@@ -107,16 +108,22 @@ async function saveOcrToSupabase(schedule: ParsedSchedule): Promise<{ count: num
     updated_count: 0, warning_count: schedule.corrections.length, error: null,
   })
 
-  const rows = schedule.showtimes.map((st) => ({
-    id: randomUUID(), source_id: source!.id, theater_id: source!.id,
-    theater_name: schedule.theaterName, matched_theater_id: source!.matched_theater_id ?? null,
-    movie_title: st.movieTitle, screen_name: st.screenName || '1관',
-    show_date: st.showDate, show_time: st.showTime, end_time: st.endTime ?? null,
-    format_type: 'standard', language: 'korean', seat_available: 0, seat_total: 0,
-    price: 0, booking_url: null, source_url: null, raw_text: JSON.stringify(st),
-    confidence: schedule.confidence, warnings: schedule.corrections, status: 'draft',
-    fingerprint: Buffer.from(`${source!.id}|${st.movieTitle}|${st.showDate}|${st.showTime}|${st.screenName || '1관'}`).toString('base64').slice(0, 64),
-  }))
+  const seenFingerprints = new Set<string>()
+  const rows = schedule.showtimes.flatMap((st) => {
+    const fingerprint = Buffer.from(`${source!.id}|${st.movieTitle}|${st.showDate}|${st.showTime}|${st.screenName || '1관'}`).toString('base64').slice(0, 64)
+    if (seenFingerprints.has(fingerprint)) return []
+    seenFingerprints.add(fingerprint)
+    return [{
+      id: randomUUID(), source_id: source!.id, theater_id: source!.id,
+      theater_name: schedule.theaterName, matched_theater_id: source!.matched_theater_id ?? null,
+      movie_title: st.movieTitle, screen_name: st.screenName || '1관',
+      show_date: st.showDate, show_time: st.showTime, end_time: st.endTime ?? null,
+      format_type: 'standard', language: 'korean', seat_available: 0, seat_total: 0,
+      price: 0, booking_url: null, source_url: null, raw_text: JSON.stringify(st),
+      confidence: schedule.confidence, warnings: schedule.corrections, status: 'draft',
+      fingerprint,
+    }]
+  })
 
   const { error } = await supabase.from('showtime_candidates').upsert(rows, { onConflict: 'fingerprint' })
   if (error) throw new Error(error.message)
