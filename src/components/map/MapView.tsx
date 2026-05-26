@@ -1627,6 +1627,9 @@ export default function MapView() {
     return () => clearTimeout(id)
   }, [recompute])
 
+  // 필터가 지도를 fly했는지 추적 — 필터 zoom이 위치 zoom보다 우선
+  const filterFlewRef = useRef(false)
+
   // 검색 필터(영화·감독·장르·국가) 적용 시 → 매칭 극장이 모두 보이도록 뷰 이동
   // selectedIdRef로 읽어서 시트 닫힐 때 selectedId 변경으로 재발동되지 않게 함
   useEffect(() => {
@@ -1649,6 +1652,7 @@ export default function MapView() {
         // 지역 내 매칭 없으면 지역 중심 좌표로 이동
         const rb = REGION_BOUNDS[filters.regionId]
         if (rb) {
+          filterFlewRef.current = true
           springFlyToBounds(map, L.latLngBounds([[rb.minLat, rb.minLng], [rb.maxLat, rb.maxLng]]), { padding: [60, 60] })
           return
         }
@@ -1657,9 +1661,11 @@ export default function MapView() {
 
     if (matchedTheaters.length === 1) {
       const t = matchedTheaters[0]
+      filterFlewRef.current = true
       springFlyTo(map, [t.lat, t.lng], Math.max(map.getZoom(), 15))
       return
     }
+    filterFlewRef.current = true
     const bounds = L.latLngBounds(matchedTheaters.map(t => [t.lat, t.lng] as [number, number]))
     springFlyToBounds(map, bounds, { padding: [80, 80], maxZoom: 16 })
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1675,6 +1681,7 @@ export default function MapView() {
 
     const regionTheaters = theaters.filter(t => getRegionFromCity(t.city) === filters.regionId)
     if (regionTheaters.length > 0) {
+      filterFlewRef.current = true
       if (regionTheaters.length === 1) {
         springFlyTo(map, [regionTheaters[0].lat, regionTheaters[0].lng], Math.max(map.getZoom(), 14))
       } else {
@@ -1685,18 +1692,19 @@ export default function MapView() {
     }
     const rb = REGION_BOUNDS[filters.regionId]
     if (rb) {
+      filterFlewRef.current = true
       springFlyToBounds(map, L.latLngBounds([[rb.minLat, rb.minLng], [rb.maxLat, rb.maxLng]]), { padding: [60, 60] })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.regionId])
 
-  // 위치 첫 수신 시 지도 이동 — 이후엔 무시
+  // 위치 첫 수신 시 지도 이동 — 필터 zoom이 이미 실행된 경우 스킵
   const initialMoved = useRef(false)
   useEffect(() => {
-    if (coords && !initialMoved.current && mapRef.current) {
-      initialMoved.current = true
-      springFlyTo(mapRef.current, [coords.lat, coords.lng], 14)
-    }
+    if (!coords || initialMoved.current || !mapRef.current) return
+    initialMoved.current = true
+    if (filterFlewRef.current) return  // 필터가 이미 지도를 위치시킴 — 위치 fly 불필요
+    springFlyTo(mapRef.current, [coords.lat, coords.lng], 14)
   }, [coords])
 
   const handleLocate = useCallback(() => {
