@@ -1627,14 +1627,19 @@ export default function MapView() {
     return () => clearTimeout(id)
   }, [recompute])
 
-  // 필터가 지도를 fly했는지 추적 — 필터 zoom이 위치 zoom보다 우선
-  const filterFlewRef = useRef(false)
+  // 사용자가 직접 장르·국가 칩을 변경했을 때만 zoom — effect에서 확인
+  const userGenreZoomRef = useRef(false)
 
-  // 검색 필터(영화·감독·장르·국가) 적용 시 → 매칭 극장이 모두 보이도록 뷰 이동
-  // selectedIdRef로 읽어서 시트 닫힐 때 selectedId 변경으로 재발동되지 않게 함
+  // 영화·감독 검색 필터 적용 시 → 매칭 극장이 모두 보이도록 뷰 이동 (검색은 항상 유저 액션)
+  // 장르·국가는 handleUserFilterChange에서 userGenreZoomRef를 거쳐야 zoom
   useEffect(() => {
-    const isSearchFilter = !!movieFilter || !!directorFilter || filters.genres.length > 0 || filters.nations.length > 0
-    if (!isSearchFilter) return
+    const isMovieDirectorFilter = !!movieFilter || !!directorFilter
+    const isGenreNationFilter = filters.genres.length > 0 || filters.nations.length > 0
+    if (!isMovieDirectorFilter && !isGenreNationFilter) return
+    if (isGenreNationFilter && !isMovieDirectorFilter) {
+      if (!userGenreZoomRef.current) return  // 칩 직접 조작 시에만
+      userGenreZoomRef.current = false
+    }
     if (suppressMovieFilterFitRef.current && (movieFilter || directorFilter)) return
     if (selectedIdRef.current) return
     const map = mapRef.current
@@ -1644,15 +1649,12 @@ export default function MapView() {
     })
     if (matchedTheaters.length === 0) return
 
-    // 지역 필터가 설정돼 있으면 해당 지역 극장만 범위에 포함
     if (filters.regionId) {
       const regionTheaters = matchedTheaters.filter(t => getRegionFromCity(t.city) === filters.regionId)
       if (regionTheaters.length > 0) matchedTheaters = regionTheaters
       else {
-        // 지역 내 매칭 없으면 지역 중심 좌표로 이동
         const rb = REGION_BOUNDS[filters.regionId]
         if (rb) {
-          filterFlewRef.current = true
           springFlyToBounds(map, L.latLngBounds([[rb.minLat, rb.minLng], [rb.maxLat, rb.maxLng]]), { padding: [60, 60] })
           return
         }
@@ -1661,51 +1663,55 @@ export default function MapView() {
 
     if (matchedTheaters.length === 1) {
       const t = matchedTheaters[0]
-      filterFlewRef.current = true
       springFlyTo(map, [t.lat, t.lng], Math.max(map.getZoom(), 15))
       return
     }
-    filterFlewRef.current = true
     const bounds = L.latLngBounds(matchedTheaters.map(t => [t.lat, t.lng] as [number, number]))
     springFlyToBounds(map, bounds, { padding: [80, 80], maxZoom: 16 })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [directorFilter, movieFilter, filters.genres, filters.nations, filters.regionId])
+  }, [directorFilter, movieFilter, filters.genres, filters.nations])
 
-  // 지역 필터 단독 적용 시 → 해당 지역 극장이 모두 보이도록 뷰 이동
-  useEffect(() => {
-    const isSearchFilter = !!movieFilter || !!directorFilter || filters.genres.length > 0 || filters.nations.length > 0
-    if (isSearchFilter) return  // 장르·영화 등 복합 필터일 때는 위 effect가 처리
-    if (!filters.regionId) return
-    const map = mapRef.current
-    if (!map) return
-
-    const regionTheaters = theaters.filter(t => getRegionFromCity(t.city) === filters.regionId)
-    if (regionTheaters.length > 0) {
-      filterFlewRef.current = true
-      if (regionTheaters.length === 1) {
-        springFlyTo(map, [regionTheaters[0].lat, regionTheaters[0].lng], Math.max(map.getZoom(), 14))
-      } else {
-        const bounds = L.latLngBounds(regionTheaters.map(t => [t.lat, t.lng] as [number, number]))
-        springFlyToBounds(map, bounds, { padding: [80, 80], maxZoom: 14 })
-      }
-      return
-    }
-    const rb = REGION_BOUNDS[filters.regionId]
-    if (rb) {
-      filterFlewRef.current = true
-      springFlyToBounds(map, L.latLngBounds([[rb.minLat, rb.minLng], [rb.maxLat, rb.maxLng]]), { padding: [60, 60] })
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.regionId])
-
-  // 위치 첫 수신 시 지도 이동 — 필터 zoom이 이미 실행된 경우 스킵
+  // 위치 첫 수신 시 지도 이동 — 이후엔 무시
   const initialMoved = useRef(false)
   useEffect(() => {
     if (!coords || initialMoved.current || !mapRef.current) return
     initialMoved.current = true
-    if (filterFlewRef.current) return  // 필터가 이미 지도를 위치시킴 — 위치 fly 불필요
     springFlyTo(mapRef.current, [coords.lat, coords.lng], 14)
   }, [coords])
+
+  // 필터 칩 직접 조작 시 지도 이동 (URL params·코드 프리셋에는 반응 안 함)
+  const handleUserFilterChange = useCallback((newFilters: FilterState) => {
+    const prevFilters = filters
+    setFilters(newFilters)
+
+    const map = mapRef.current
+    if (!map) return
+
+    // 지역 변경 → 즉시 zoom (theaterPosterMovies 불필요)
+    if (newFilters.regionId !== prevFilters.regionId && newFilters.regionId) {
+      const regionTheaters = theaters.filter(t => getRegionFromCity(t.city) === newFilters.regionId)
+      if (regionTheaters.length > 0) {
+        if (regionTheaters.length === 1) {
+          springFlyTo(map, [regionTheaters[0].lat, regionTheaters[0].lng], Math.max(map.getZoom(), 14))
+        } else {
+          const bounds = L.latLngBounds(regionTheaters.map(t => [t.lat, t.lng] as [number, number]))
+          springFlyToBounds(map, bounds, { padding: [80, 80], maxZoom: 14 })
+        }
+      } else {
+        const rb = REGION_BOUNDS[newFilters.regionId]
+        if (rb) springFlyToBounds(map, L.latLngBounds([[rb.minLat, rb.minLng], [rb.maxLat, rb.maxLng]]), { padding: [60, 60] })
+      }
+      return
+    }
+
+    // 장르·국가 변경 → effect에서 theaterPosterMovies 갱신 후 zoom
+    const genreNationChanged =
+      newFilters.genres.join() !== prevFilters.genres.join() ||
+      newFilters.nations.join() !== prevFilters.nations.join()
+    if (genreNationChanged && (newFilters.genres.length > 0 || newFilters.nations.length > 0)) {
+      userGenreZoomRef.current = true
+    }
+  }, [filters, theaters])
 
   const handleLocate = useCallback(() => {
     refetch()
@@ -2848,7 +2854,7 @@ export default function MapView() {
         <div style={{ pointerEvents: 'auto' }}>
           <FilterBar
             desktop={isDesktopLayout}
-            onChange={setFilters}
+            onChange={handleUserFilterChange}
             defaultRegionId={coords ? getRegionFromCoords(coords.lat, coords.lng) : null}
             nationOptions={nationOptions}
             movieFilter={movieFilter}
