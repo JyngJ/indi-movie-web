@@ -1665,6 +1665,31 @@ export default function MapView() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [directorFilter, movieFilter, filters.genres, filters.nations, filters.regionId])
 
+  // 지역 필터 단독 적용 시 → 해당 지역 극장이 모두 보이도록 뷰 이동
+  useEffect(() => {
+    const isSearchFilter = !!movieFilter || !!directorFilter || filters.genres.length > 0 || filters.nations.length > 0
+    if (isSearchFilter) return  // 장르·영화 등 복합 필터일 때는 위 effect가 처리
+    if (!filters.regionId) return
+    const map = mapRef.current
+    if (!map) return
+
+    const regionTheaters = theaters.filter(t => getRegionFromCity(t.city) === filters.regionId)
+    if (regionTheaters.length > 0) {
+      if (regionTheaters.length === 1) {
+        springFlyTo(map, [regionTheaters[0].lat, regionTheaters[0].lng], Math.max(map.getZoom(), 14))
+      } else {
+        const bounds = L.latLngBounds(regionTheaters.map(t => [t.lat, t.lng] as [number, number]))
+        springFlyToBounds(map, bounds, { padding: [80, 80], maxZoom: 14 })
+      }
+      return
+    }
+    const rb = REGION_BOUNDS[filters.regionId]
+    if (rb) {
+      springFlyToBounds(map, L.latLngBounds([[rb.minLat, rb.minLng], [rb.maxLat, rb.maxLng]]), { padding: [60, 60] })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.regionId])
+
   // 위치 첫 수신 시 지도 이동 — 이후엔 무시
   const initialMoved = useRef(false)
   useEffect(() => {
