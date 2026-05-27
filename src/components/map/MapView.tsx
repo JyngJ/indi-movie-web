@@ -1627,11 +1627,19 @@ export default function MapView() {
     return () => clearTimeout(id)
   }, [recompute])
 
-  // 검색 필터(영화·감독·장르·국가) 적용 시 → 매칭 극장이 모두 보이도록 뷰 이동
-  // selectedIdRef로 읽어서 시트 닫힐 때 selectedId 변경으로 재발동되지 않게 함
+  // 사용자가 직접 장르·국가 칩을 변경했을 때만 zoom — effect에서 확인
+  const userGenreZoomRef = useRef(false)
+
+  // 영화·감독 검색 필터 적용 시 → 매칭 극장이 모두 보이도록 뷰 이동 (검색은 항상 유저 액션)
+  // 장르·국가는 handleUserFilterChange에서 userGenreZoomRef를 거쳐야 zoom
   useEffect(() => {
-    const isSearchFilter = !!movieFilter || !!directorFilter || filters.genres.length > 0 || filters.nations.length > 0
-    if (!isSearchFilter) return
+    const isMovieDirectorFilter = !!movieFilter || !!directorFilter
+    const isGenreNationFilter = filters.genres.length > 0 || filters.nations.length > 0
+    if (!isMovieDirectorFilter && !isGenreNationFilter) return
+    if (isGenreNationFilter && !isMovieDirectorFilter) {
+      if (!userGenreZoomRef.current) return  // 칩 직접 조작 시에만
+      userGenreZoomRef.current = false
+    }
     if (suppressMovieFilterFitRef.current && (movieFilter || directorFilter)) return
     if (selectedIdRef.current) return
     const map = mapRef.current
@@ -1641,12 +1649,10 @@ export default function MapView() {
     })
     if (matchedTheaters.length === 0) return
 
-    // 지역 필터가 설정돼 있으면 해당 지역 극장만 범위에 포함
     if (filters.regionId) {
       const regionTheaters = matchedTheaters.filter(t => getRegionFromCity(t.city) === filters.regionId)
       if (regionTheaters.length > 0) matchedTheaters = regionTheaters
       else {
-        // 지역 내 매칭 없으면 지역 중심 좌표로 이동
         const rb = REGION_BOUNDS[filters.regionId]
         if (rb) {
           springFlyToBounds(map, L.latLngBounds([[rb.minLat, rb.minLng], [rb.maxLat, rb.maxLng]]), { padding: [60, 60] })
@@ -1663,16 +1669,57 @@ export default function MapView() {
     const bounds = L.latLngBounds(matchedTheaters.map(t => [t.lat, t.lng] as [number, number]))
     springFlyToBounds(map, bounds, { padding: [80, 80], maxZoom: 16 })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [directorFilter, movieFilter, filters.genres, filters.nations, filters.regionId])
+  }, [directorFilter, movieFilter, filters.genres, filters.nations])
 
-  // 위치 첫 수신 시 지도 이동 — 이후엔 무시
+  // 위치 첫 수신 시 지도 이동 — coords 도착 또는 맵 준비 중 늦게 오는 쪽에서 실행
   const initialMoved = useRef(false)
-  useEffect(() => {
-    if (coords && !initialMoved.current && mapRef.current) {
-      initialMoved.current = true
-      springFlyTo(mapRef.current, [coords.lat, coords.lng], 14)
+  const coordsRef = useRef(coords)
+  coordsRef.current = coords
+
+  const tryLocationFly = useCallback(() => {
+    if (initialMoved.current || !mapRef.current || !coordsRef.current) return
+    initialMoved.current = true
+    springFlyTo(mapRef.current, [coordsRef.current.lat, coordsRef.current.lng], 14)
+  }, [])
+
+  useEffect(() => { tryLocationFly() }, [coords, tryLocationFly])
+
+  // 칩 직접 조작 시만 호출되는 zoom 함수 — setFilters와 분리됨
+  const theatersRef = useRef(theaters)
+  theatersRef.current = theaters
+  const filtersRef = useRef(filters)
+  filtersRef.current = filters
+
+  const flyToFilter = useCallback((newFilters: FilterState) => {
+    const prevFilters = filtersRef.current
+    const map = mapRef.current
+    if (!map) return
+
+    // 지역 변경 → 즉시 zoom
+    if (newFilters.regionId !== prevFilters.regionId && newFilters.regionId) {
+      const regionTheaters = theatersRef.current.filter(t => getRegionFromCity(t.city) === newFilters.regionId)
+      if (regionTheaters.length > 0) {
+        if (regionTheaters.length === 1) {
+          springFlyTo(map, [regionTheaters[0].lat, regionTheaters[0].lng], Math.max(map.getZoom(), 14))
+        } else {
+          const bounds = L.latLngBounds(regionTheaters.map(t => [t.lat, t.lng] as [number, number]))
+          springFlyToBounds(map, bounds, { padding: [80, 80], maxZoom: 14 })
+        }
+      } else {
+        const rb = REGION_BOUNDS[newFilters.regionId]
+        if (rb) springFlyToBounds(map, L.latLngBounds([[rb.minLat, rb.minLng], [rb.maxLat, rb.maxLng]]), { padding: [60, 60] })
+      }
+      return
     }
-  }, [coords])
+
+    // 장르·국가 변경 → effect에서 theaterPosterMovies 갱신 후 zoom
+    const genreNationChanged =
+      newFilters.genres.join() !== prevFilters.genres.join() ||
+      newFilters.nations.join() !== prevFilters.nations.join()
+    if (genreNationChanged && (newFilters.genres.length > 0 || newFilters.nations.length > 0)) {
+      userGenreZoomRef.current = true
+    }
+  }, [])
 
   const handleLocate = useCallback(() => {
     refetch()
@@ -2642,7 +2689,7 @@ export default function MapView() {
           bounds={KOREA_MAP_BOUNDS}
           noWrap
         />
-        <MapRefSetter mapRef={mapRef} />
+        <MapRefSetter mapRef={mapRef} onReady={tryLocationFly} />
         <ViewportTracker onViewport={handleViewport} />
         <OffScreenTracker
           theaterLatLng={selectedTheater ? [selectedTheater.lat, selectedTheater.lng] : null}
@@ -2816,6 +2863,7 @@ export default function MapView() {
           <FilterBar
             desktop={isDesktopLayout}
             onChange={setFilters}
+            onChipChange={flyToFilter}
             defaultRegionId={coords ? getRegionFromCoords(coords.lat, coords.lng) : null}
             nationOptions={nationOptions}
             movieFilter={movieFilter}

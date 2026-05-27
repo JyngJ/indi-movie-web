@@ -408,6 +408,21 @@ export const ADMIN_THEATER_SOURCES: AdminTheaterSource[] = [
     notes: 'theaters-to-add.ts에서 "씨네아트리좀"으로 등록',
   },
 
+  // ── 경기 (BrandCd=indieart, www.dtryx.com) ──────────────────────
+
+  {
+    id: 'src-fantasticcube-indieart',
+    theaterId: '',
+    theaterName: '판타스틱큐브',
+    homepageUrl: 'https://www.dtryx.com',
+    listingUrl: `https://www.dtryx.com/cinema/main.do?cgid=${DTRYX_CGID}&BrandCd=indieart&CinemaCd=000056`,
+    parser: 'dtryxReservationApi',
+    enabled: true,
+    cadence: 'daily',
+    health: 'healthy',
+    notes: 'theaters-to-add.ts에서 "판타스틱 큐브"로 등록. 부천시청 1층. API상 명칭은 "판타스틱큐브"(공백 없음).',
+  },
+
   // ── 경북 (BrandCd=indieart, www.dtryx.com) ──────────────────────
 
   {

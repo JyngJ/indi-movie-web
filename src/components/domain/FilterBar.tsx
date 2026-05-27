@@ -636,6 +636,8 @@ function FilterChip({ label, value, open, selected, hasDropdown, onClick, onClea
 /* -- FilterBar ---------------------------------------------------- */
 export interface FilterBarProps {
   onChange?: (state: FilterState) => void
+  /** 사용자가 칩을 직접 조작했을 때만 호출 — 초기 mount sync에는 호출 안 됨 */
+  onChipChange?: (state: FilterState) => void
   nationOptions?: string[]
   movieFilter?: { id: string; title: string } | null
   directorFilter?: { name: string } | null
@@ -649,6 +651,7 @@ export interface FilterBarProps {
 
 export function FilterBar({
   onChange,
+  onChipChange,
   nationOptions = EMPTY_NATION_OPTIONS,
   movieFilter,
   directorFilter,
@@ -724,13 +727,13 @@ export function FilterBar({
     const handler = (e: MouseEvent) => {
       if (wrapperRef.current?.contains(e.target as Node)) return
       if (portalDropdownRef.current?.contains(e.target as Node)) return
-      if (openPanelRef.current === 'genre') setGenres(draftGenresRef.current)
-      if (openPanelRef.current === 'nation') setNations(draftNationsRef.current)
+      if (openPanelRef.current === 'genre') { setGenres(draftGenresRef.current); chip({ genres: draftGenresRef.current }) }
+      if (openPanelRef.current === 'nation') { setNations(draftNationsRef.current); chip({ nations: draftNationsRef.current }) }
       setOpenPanel(null)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
-  }, [openPanel])
+  }, [openPanel]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const calcDropdownLeft = (
     chipRef: React.RefObject<HTMLButtonElement | null>,
@@ -820,8 +823,8 @@ export function FilterBar({
     chipRef: React.RefObject<HTMLButtonElement | null>,
   ) => {
     if (openPanel === panel || (panel === 'date' && (openPanel === 'date' || openPanel === 'calendar'))) {
-      if (panel === 'genre') setGenres(draftGenresRef.current)
-      if (panel === 'nation') setNations(draftNationsRef.current)
+      if (panel === 'genre') { setGenres(draftGenresRef.current); chip({ genres: draftGenresRef.current }) }
+      if (panel === 'nation') { setNations(draftNationsRef.current); chip({ nations: draftNationsRef.current }) }
       setOpenPanel(null)
       return
     }
@@ -832,29 +835,26 @@ export function FilterBar({
     setOpenPanel(panel)
   }, [openPanel, genres, nations])
 
-  const selectDate = (id: DateId) => { setDateId(id); setOpenPanel(null) }
+  const chip = (overrides: Partial<FilterState>) =>
+    onChipChange?.({ dateId, customStart, customEnd, genres, nations, bookable, indie, regionId, ...overrides })
+
+  const selectDate = (id: DateId) => { setDateId(id); setOpenPanel(null); chip({ dateId: id }) }
   const clearDate = () => {
-    setDateId(null)
-    setCustomStart(null)
-    setCustomEnd(null)
-    setOpenPanel(null)
+    setDateId(null); setCustomStart(null); setCustomEnd(null); setOpenPanel(null)
+    chip({ dateId: null, customStart: null, customEnd: null })
   }
   const openCalendar = () => setOpenPanel('calendar')
   const selectCustomRange = (start: Date, end: Date) => {
-    setDateId('custom')
-    setCustomStart(start)
-    setCustomEnd(end)
-    setOpenPanel(null)
+    setDateId('custom'); setCustomStart(start); setCustomEnd(end); setOpenPanel(null)
+    chip({ dateId: 'custom', customStart: start, customEnd: end })
   }
   const clearGenres = () => {
-    setGenres([])
-    setDraftGenres([])
-    setOpenPanel(null)
+    setGenres([]); setDraftGenres([]); setOpenPanel(null)
+    chip({ genres: [] })
   }
   const clearNations = () => {
-    setNations([])
-    setDraftNations([])
-    setOpenPanel(null)
+    setNations([]); setDraftNations([]); setOpenPanel(null)
+    chip({ nations: [] })
   }
 
   const dateOptions = buildDateOptions()
@@ -941,7 +941,7 @@ export function FilterBar({
           hasDropdown
           chipRef={regionChipRef}
           onClick={() => openDropdown('region', regionChipRef)}
-          onClear={regionId ? () => { setRegionId(null); setOpenPanel(null); userPickedRegionRef.current = false } : undefined}
+          onClear={regionId ? () => { setRegionId(null); setOpenPanel(null); userPickedRegionRef.current = false; chip({ regionId: null }) } : undefined}
         />
         <FilterChip
           label="상영 일정"
@@ -978,7 +978,7 @@ export function FilterBar({
         <FilterChip
           label="예매 가능"
           selected={bookable}
-          onClick={() => setBookable(b => !b)}
+          onClick={() => { setBookable(b => !b); chip({ bookable: !bookable }) }}
         />
         {/* 독립영화관 필터 — 미구현, 비활성화
         <FilterChip
@@ -1018,7 +1018,7 @@ export function FilterBar({
           {openPanel === 'region' && (
             <RegionDropdown
               selectedId={regionId}
-              onSelect={(id) => { userPickedRegionRef.current = !!id; setRegionId(id); if (id) setOpenPanel(null) }}
+              onSelect={(id) => { userPickedRegionRef.current = !!id; setRegionId(id); if (id) setOpenPanel(null); chip({ regionId: id }) }}
               style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, zIndex: 99999 }}
             />
           )}
