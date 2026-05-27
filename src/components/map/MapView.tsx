@@ -7,11 +7,11 @@ import { GeoJSON, MapContainer, TileLayer, Marker } from 'react-leaflet'
 import L from 'leaflet'
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { Map as LeafletMap, Point as LeafletPoint } from 'leaflet'
-import { useUserLocation } from '@/hooks/useUserLocation'
+import { useLocationPermission } from '@/hooks/useLocationPermission'
 import { useIsDark } from '@/hooks/useIsDark'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { SearchBarButton, SearchBar, FabRound, Toast } from '@/components/primitives'
-import { MapPin, TheaterSheet, FilterBar } from '@/components/domain'
+import { MapPin, TheaterSheet, FilterBar, LocationPermissionModal } from '@/components/domain'
 import { DesktopDetailPanel } from '@/components/domain/DesktopDetailPanel'
 import type { DesktopPanelState } from '@/components/domain/DesktopDetailPanel'
 import type { FilterState } from '@/components/domain'
@@ -971,7 +971,7 @@ function findSplitZoom(
 export default function MapView() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { coords, refetch } = useUserLocation()
+  const { state: locPermState, coords, request: locRequest, dismiss: locDismiss, refetch } = useLocationPermission()
   const isDark = useIsDark()
   const isDesktopLayout = useIsDesktopLayout()
   const { setTheme } = useThemeStore()
@@ -3639,6 +3639,15 @@ export default function MapView() {
         trigger={reportSuccessTrigger}
         duration={4000}
       />
+
+      {/* 위치 권한 팝업 */}
+      {(locPermState === 'prompt' || locPermState === 'requesting' || locPermState === 'denied') && (
+        <LocationPermissionModal
+          state={locPermState}
+          onRequest={locRequest}
+          onDismiss={locDismiss}
+        />
+      )}
     </div>
   )
 }
