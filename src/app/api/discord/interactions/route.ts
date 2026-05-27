@@ -59,7 +59,7 @@ async function ocrScheduleImage(imageUrl: string, theaterHint: string): Promise<
   const year = new Date().getFullYear()
   const response = await openai.chat.completions.create({
     model: 'gpt-4o',
-    max_tokens: 2048,
+    max_tokens: 4096,
     messages: [{
       role: 'user',
       content: [
@@ -70,9 +70,18 @@ async function ocrScheduleImage(imageUrl: string, theaterHint: string): Promise<
   })
 
   const text = response.choices[0].message.content?.trim() ?? ''
-  const match = text.match(/\{[\s\S]*\}/)
-  if (!match) throw new Error('JSON 파싱 실패')
-  return JSON.parse(match[0]) as ParsedSchedule
+  // 마크다운 코드블록 제거 후 JSON 추출
+  const stripped = text.replace(/```(?:json)?\s*/g, '').replace(/```/g, '')
+  const match = stripped.match(/\{[\s\S]*\}/)
+  if (!match) throw new Error('JSON 파싱 실패: JSON 형태 없음')
+
+  // 문자열 값 내 raw 제어문자 이스케이프
+  // GPT가 영화 제목 등에 raw \n, \t 를 넣으면 JSON.parse가 실패함
+  const sanitized = match[0].replace(
+    /"((?:[^"\\]|\\.)*)"/g,
+    (_, inner: string) => `"${inner.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t')}"`
+  )
+  return JSON.parse(sanitized) as ParsedSchedule
 }
 
 async function saveOcrToSupabase(schedule: ParsedSchedule) {
