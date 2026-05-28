@@ -1,279 +1,136 @@
-# 영화 예매 지도 - 크롤링 시스템 구축 (2026-05-21)
-
-## ✅ 완료된 작업
-
-### 지도 기능 (2026-05-09)
-- ✅ 줌 레벨 분리: 7-8 / 9 / 10+ (지역별→도시별→픽셀 기반 클러스터링)
-- ✅ 세종 좌표 설정 (극장 개별/지역 클러스터)
-- ✅ 경기도 남부 좌표 조정 (37.2000, 127.1200)
-
-### 극장 데이터 (2026-05-21)
-- ✅ 극장 40개 추가 완료
-- ✅ theaters 테이블에 저장됨
-
-### 크롤링 소스 구축 (2026-05-21)
-- ✅ 크롤링 소스 134개 데이터 작성 (crawl-sources-to-add.ts)
-- ✅ 크롤링 소스 131개 DB에 추가 (npm run seed:sources)
-  - 3개는 극장명 미매칭으로 실패
-- ✅ dtryx 플랫폼 파서 최적화 (tableText → dtryxReservationApi, weekly → daily)
-- ✅ 작동 불가능한 소스 124개 비활성화 (npm run seed:disable-broken)
-- ✅ 어드민 UI 진행도 표시 개선
-
-### 활성화된 크롤링 소스 (10개)
-- dtryx: 밀양, 중앙, 씨네인디유, 모퉁이극장, 애관극장, 금성 (6개)
-- moonhwain: 픽쳐하우스, 전주시네마타운 (2개)
-- petitecine: 시네마라운지MM (1개)
-- scinema.org: 조이앤시네마 전주 (1개)
-
-### DB 관리 (2026-05-22)
-- ✅ pg_cron 설정: 3일 지난 showtimes 매일 새벽 3시 자동 삭제
-  - Job ID: cleanup-old-showtimes
-  - Schedule: 0 3 * * * (매일 새벽 3시)
-  - 수동 실행: `DELETE FROM showtimes WHERE show_date < CURRENT_DATE - INTERVAL '3 days';`
-
-### 데이터 정제 (2026-05-22)
-- ✅ 시놉시스 채우기: 171편 중 165편 완료 (6편은 KMDB 미제공)
-  - KMDB 미제공: 노스탤지아, 박하향 소다수, 애수의 여로, 용호의 결투, 진홍의 도적, 피어스 브로스넌의 영웅
-- ✅ 감독 프로필 재수집 완료 (Wikipedia 검색)
-
----
-
-## 🔴 현재 이슈
-
-### 크롤링 불가능한 소스: 124개 (비활성화)
-```
-원인: tableText 파서로 처리 불가
-- SSL 에러 또는 403 Forbidden (57개)
-- JavaScript 동적 로드 필요 (40개)
-- 웹사이트 접근 불가 또는 폐지됨 (27개)
-```
-
-### 해결 방안 (진행순서)
-1. **현재**: 작동하는 10개 소스만 활성화 상태 유지
-2. **검증 필요**: 10개 소스에서 실제 데이터 수집 여부 확인
-3. **우선순위**:
-   - Phase 1: 10개 활성화 소스 동작 검증 (높음)
-   - Phase 2: 웹사이트 정보 업데이트 후 재활성화 (중간)
-   - Phase 3: JavaScript 렌더링 도구 도입 (낮음)
-
----
-
-## 📋 체크리스트
-
-### Phase 1: 현재 활성화 소스 검증 (우선도: 높음)
-- [ ] 어드민 콘솔에서 10개 소스 일괄 수집 실행
-- [ ] 수집된 데이터 확인 (showtime_candidates 테이블)
-- [ ] 각 소스별 수집 성공/실패 확인
-
-### Phase 2: 웹사이트 정보 수집 및 업데이트 (우선도: 중간)
-- [ ] 124개 극장의 올바른 웹사이트 주소 찾기
-- [ ] crawl_sources 테이블 업데이트
-- [ ] 필요한 경우 파서 변경 후 재활성화
-
-### Phase 3: 크롤링 기술 개선 (우선도: 낮음)
-- [ ] Playwright 도입 검토
-- [ ] 공식 API 활용 검토 (영화진흥위원회 등)
-- [ ] selfHosted 파서 확장
-
----
+# 영화볼지도 TODO (2026-05-29)
 
 ## 📊 현황 요약
 
 | 항목 | 수량 |
 |-----|------|
-| 극장 총 개수 | 40개 |
-| 크롤링 소스 생성 | 134개 |
-| DB 저장 완료 | 131개 |
-| **활성화 상태** | **10개** |
-| 비활성화 (임시) | 124개 |
-| 예상 수집 극장 | 10개 |
+| 극장 | 160개 |
+| 크롤 소스 총 | 169개 |
+| 활성화 소스 | 128개 |
+| healthy 소스 | 39개 |
+| 영화 | 226편 |
+| 상영후보 (candidates) | 4,844건 |
+| 승인된 상영 (showtimes) | 1,050건 |
 
 ---
 
-## 🔧 리팩토링 필요 (긴 파일 정리)
+## ✅ 완료된 작업
 
-### 파일 분리 필요
-- [ ] **src/components/domain/TheaterSheet.tsx** (~2400줄) 
-  - 드래그 로직, 필터링, UI 섹션 별로 분리 필요
-  - 예: TheaterSheetDrag.ts, TheaterSheetFilters.ts, TheaterSheetUI.tsx
+### 지도 기능
+- ✅ 줌 레벨 분리: 7-8 / 9 / 10+ (지역별→도시별→픽셀 기반 클러스터링)
+- ✅ 세종/경기도 남부 좌표 조정
+- ✅ 지역 필터 + 자동 위치 감지 (GPS 연동)
+- ✅ 지하철역 검색 + 핀 표시
+- ✅ 영화/감독 필터
+- ✅ 거리 표시
 
-- [ ] **src/components/map/MapView.tsx** (클러스터링 로직)
-  - 줌 레벨별 클러스터링을 별도 모듈로 추출
+### 크롤링 시스템
+- ✅ 크롤 소스 169개 구축, 128개 활성화
+- ✅ RPi 자동 크롤: 매일 01:00 / 07:00 / 13:00 KST (`pi@100.76.84.97`)
+- ✅ 크롤 완료 시 Discord 알림 (시작/완료/매칭 3단계)
+- ✅ 신규 영화 자동 KMDB import + 시놉시스/포스터 연결
+- ✅ 자동 매칭 (showtime_candidates → showtimes)
+- ✅ tinyticket 파서 (Playwright headless) 추가
+- ✅ tinyticket 소스 6개 추가: 강릉신영, 대전아트, 소소아트, 시네마다방, 인천미림, 목포아트
+
+### Discord OCR 시스템 (`/schedule` 슬래시 커맨드)
+- ✅ 이미지 → GPT-4o OCR → showtime_candidates 저장
+- ✅ `after()` 타이밍 픽스 (응답 후 팔로업 전송)
+- ✅ format_type `standard` 픽스
+- ✅ fingerprint에 screenName 포함
+- ✅ JSON parse 에러 픽스: raw 제어문자 sanitize + max_tokens 4096 (PR #52, 미머지)
+
+### 위치 권한
+- ✅ 위치 권한 팝업 (첫 접속 시): prompt / denied / requesting 상태 (PR #52, 미머지)
+- ✅ 서울 폴백 제거: GPS 실패 시 지역 필터 미설정 (null)
+- ✅ GPS timeout 8s → 15s
+- ✅ 위치 localStorage 캐시 (30분)
+- ✅ FilterBar: userPickedRegionRef — 사용자 수동 선택 시 GPS override 차단
+
+### DB 관리
+- ✅ pg_cron: 3일 지난 showtimes 매일 새벽 3시 자동 삭제
+- ✅ 전주디지털독립영화관 DB 중복 정리 (구 레코드 삭제, 28개 candidates 이전)
+- ✅ RPi crontab 수정: pull 전 `git checkout -- package*.json` 자동 실행
 
 ---
 
-## 🔗 관련 스크립트
+## 🔴 현재 이슈
 
-```bash
-# 크롤링 소스 추가
-npm run seed:sources
+### 크롤 불가 소스 (enabled지만 0개 수집)
+- **인디스페이스**: 상영표가 이미지 → OCR 파이프라인 필요
+- **조이앤시네마 전주**: 사이트 접근 불가
+- **픽쳐하우스**: 502 에러
+- **판타스틱 큐브**: dtryx 영화관 코드 없음
+- **천안인생극장**: 파서 없음
+- **동리시네마**: OCR 전용 (ocr://admin)
+- **tinyticket 4개** (대전아트, 소소아트, 시네마다방, 목포아트): 현재 상영 이벤트 없거나 playwright 미작동 확인 필요
 
-# 작동 불가능한 소스 비활성화  
-npm run seed:disable-broken
-```
+### healthy 소스 39개 / enabled 128개 불일치
+- unhealthy 표시되지만 실제 수집은 되는 소스 다수
+- health 상태 업데이트 로직 개선 필요
 
 ---
 
-# 🚀 추가 구현 필요 사항
+## 📋 할 일
 
-## 바로 실행 가능 (스크립트 존재)
+### 크롤링
+- [ ] tinyticket playwright 소스 RPi에서 정상 동작 확인
+  - node_modules에 playwright-chromium 존재 확인
+  - 대전아트, 소소아트 등 0개 수집 원인 파악
+- [ ] 인디스페이스 처리 방안 결정
+  - ① Discord OCR 파이프라인 활용 (수동)
+  - ② `작품별 상영일정` 게시글 본문 파싱 (자동)
+- [ ] 필름포럼 → Moviee 어댑터 전환 (`https://moviee.co.kr/Theater/Index?thsynid=130`)
+- [ ] KU시네마테크 → Moviee 어댑터 전환 (`https://moviee.co.kr/Movie/Ticket?tid=121`)
+- [ ] health 상태 업데이트 로직: 수집 성공 시 `healthy`로 자동 복구
 
-### 포스터 없는 영화 채우기
+### 자동 매칭
+- [ ] GV / 시네토크 등 부가 행사 제목 분리
+  - `영화 제목 + GV` → `movie_title`에 본편만, 부가행사는 memo 필드
+- [ ] 자동 매칭 실패율 모니터링 (현재 검토 필요 285건)
 
-- [ ] 우선순위: KMDB → Wikipedia → Naver 이미지 검색 순서로 실행
-  ```
+### 어드민
+- [ ] 어드민 UI 개선 (불편한 부분 파악)
+- [ ] 상영후보 검토 UX — 벌크 승인/거부 기능
+
+### 데이터
+- [ ] 포스터 없는 영화 채우기
+  ```bash
   npx tsx --env-file=.env.local scripts/fill-poster-kmdb.ts --apply
   npx tsx --env-file=.env.local scripts/fill-poster-wiki.ts --apply
-  npx tsx --env-file=.env.local scripts/fill-poster-naver.ts --apply
   ```
-- [ ] 그래도 없는 영화는 프로젝트 루트에 이미지 파일 넣으면 Supabase Storage 업로드 후 DB 연결
-- [ ] Naver API: `NAVER_CLIENT_ID` / `NAVER_CLIENT_SECRET` 필요 (developers.naver.com 앱 등록 → 검색 API)
+- [ ] 극장 좌표 검증 (일부 임의값)
+- [ ] 극장 인스타그램 미확인 17개 보정
+
+### 릴리즈 전
+- [ ] 계정 만들기 + 위시리스트 기능
+- [ ] 지도 타일: CARTO → Stadia Maps 전환 (상업 이용 시)
+- [ ] Mock 카탈로그 제거 (`src/lib/catalog/client.ts`)
+
+### 바텀시트
+- [ ] "이 날 상영하는 영화만 보기" UX 재설계 (현재 주석처리)
+- [ ] 스크롤 가능 영역 시각적 힌트 (하단 fade-out)
+- [ ] 상영 편수 표기 — "이 날 N편" 형태로 변경
+
+### 검색
+- [ ] 영화별 상영 극장 섹션 (3개 + 더보기)
+- [ ] 역 선택 → 주변 극장 연결
+- [ ] 필터바 영화/감독 칩 클릭 시 검색창 카테고리 pre-select
 
 ---
 
-## 릴리즈 전 필수
+## 🔗 유용한 커맨드
 
-### 계정 및 위시리스트
+```bash
+# 크롤 수동 실행
+npm run crawl:showtimes
 
-- [ ] 계정 만들기
-- [ ] 위시리스트를 이용해 지도에서 관심 영화/극장 하이라이트 표시
+# RPi SSH
+ssh pi@100.76.84.97
 
-### 극장 좌표 검증 및 교체
+# RPi 크롤 로그 확인
+ssh pi@100.76.84.97 "tail -50 /home/pi/movie/crawl.log"
 
-- [ ] DB에 seed된 좌표 일부가 임의 입력값으로 정확하지 않을 수 있음
-- [ ] Google Maps Geocoding API / 네이버지도 / 카카오맵으로 실제 좌표 검증·교체 필요
-- [ ] 같은 건물에 입주한 극장(낙원빌딩 등)은 실제 좌표 확인 후 오프셋 제거 여부 결정
-
-### 극장 인스타그램 계정 보정
-
-- [ ] 상태: 일부 반영
-- [ ] 보정 스크립트: `scripts/fill-theater-instagrams.ts`
-- [ ] 실행 결과: 39개 극장 중 22개 인스타그램 있음, 17개 미확인
-- [ ] 확인 후 수정: 필름포럼의 불확실한 계정 제거, 씨네Q 신도림/자유로자동차극장 계정 추가
-- [ ] 미확인/미보유: KT&G 상상마당 시네마 대치, KU시네마테크, 광주극장, 금성시네마, 낭만극장, 명화극장, 밀양시네마, 씨네인디U, 아리랑시네센터, 애관극장, 오르페오, 인디플러스포항, 제천시네마, 천안인생극장, 필름포럼, 허리우드클래식, 헤이리시네마
-- [ ] 재실행:
-  ```
-  npx tsx --env-file=.env.local scripts/fill-theater-instagrams.ts --apply
-  ```
-
-### 지도 성능 확인
-
-- [ ] 상태: 일부 반영
-- [ ] 반영됨: 극장 핀 `DivIcon` 캐시, 지하철역 아이콘 캐시
-- [ ] 반영됨: zoom/bounds 변경을 `ViewportTracker`에서 묶어 처리
-- [ ] 반영됨: zoom 15 이상에서 지하철역 마커를 현재 화면 bounds + padding 안의 역만 렌더
-- [ ] 반영됨: zoom 15 진입 시 지하철 노선 GeoJSON/역 마커 레이어를 짧게 지연 마운트
-- [ ] 미확인: 실제 브라우저에서 zoom 14 → 15 진입 시 DOM 개수, 프레임 드랍, 콘솔 에러 재검증
-- [ ] 후속: 그래도 느리면 GeoJSON 노선 단순화 또는 viewport clipping 검토
-
-### 광고 붙을 경우 지도 타일 제공사 전환
-
-- [ ] 현재 CARTO free tier는 상업 이용 시 유료 전환 필요
-- [ ] Stadia Maps (`alidade_smooth_dark`) 월 $14 플랜 또는 다른 상업 허용 제공사로 교체
-
----
-
-## 🛠️ 어드민 & 크롤링 시스템
-
-### 크롤링 오류 수정
-
-- [ ] 크롤링 실행 시 발생하는 오류 확인 및 수정
-
-### 어드민 페이지 정리
-
-- [ ] 어드민 UI에서 보기 어렵거나 불편한 부분 파악 후 개선
-
-### 자동 매칭 실패 케이스 수정
-
-- [ ] GV, 시네토크 등 부가 행사가 제목에 붙은 경우 자동 매칭이 안 됨
-- [ ] 크롤링 후보 정규화 또는 매칭 로직에서 처리
-
-### 신규 영화 자동 등록 + 상세정보 연결
-
-- [ ] 상태: 반영
-- [ ] 크롤링 후보 자동매칭/승인 시 기존 `movies`에 없는 영화는 KMDB 검색 후 자동 import
-- [ ] import 시 `movies` 기본 정보와 `movie_details.synopsis/runtime_minutes/certification`을 함께 upsert
-- [ ] KMDB 줄거리는 `plots.plot[].plotText` 한국어 우선, 없으면 첫 번째 plot, 그래도 없으면 `plot` fallback 사용
-- [ ] 동일 흐름을 관리자 UI 경로(`src/lib/admin/store.ts`)와 수동 승인 스크립트(`scripts/seed-candidates.ts`)에 모두 반영
-
-### 크롤링 후보 제목 정규화
-
-- [ ] `영화 제목 + 시네토크/GV/강연자`가 한 문자열로 내려오는 경우
-- [ ] 후보 생성 단계에서 `+ 시네토크`, `+ GV` 등 부가 행사 문구를 별도 메모로 분리하고 `movie_title`에는 본편 제목만 남기기
-
-### 크롤러 GitHub Actions 마이그레이션 검토
-
-- [ ] 현재 수동 실행 → GitHub Actions 스케줄 트리거로 자동화 가능한지 확인
-- [ ] Supabase 환경변수 Secrets 등록, 실행 주기 설계 필요
-
-### 특정 극장 어댑터 전환
-
-#### 인디스페이스
-
-- [ ] 최신 주간 상영시간표가 이미지로 내려와 HTML 파서로 추출 불가
-- [ ] 후보: ① OCR 파이프라인, ② `작품별 상영일정` 게시글 본문에서 일정 추출
-- [ ] 별도 설계 필요
-
-#### 필름포럼 → Moviee 어댑터로 전환
-
-- [ ] 공식 사이트 WAF가 자동 요청 차단 (`999`)
-- [ ] Moviee `https://moviee.co.kr/Theater/Index?thsynid=130` 기반 어댑터로 등록
-
-#### KU시네마테크 → Moviee 어댑터로 전환
-
-- [ ] `/reservation`이 `https://moviee.co.kr/Movie/Ticket?tid=121`로 연결됨
-- [ ] 전용 어댑터 대신 기존 Moviee 어댑터 대상으로 분류
-
----
-
-## 바텀시트
-
-### 상영 편수 표기 방식 검토
-
-- [ ] 현재 "19편 상영" = 극장 전체 등록 편수인지, 선택일 상영 편수인지 불명확
-- [ ] "이 날 N편 상영" 형태로 선택일 기준으로 바꾸는 게 더 직관적이지 않을까?
-- [ ] 총 편수와 이 날 편수 둘 다 필요한 정보인지도 검토 필요
-
-### "이 날 상영하는 영화만 보기" 체크박스 — UX 재검토 필요
-
-- [ ] 구현은 되어 있으나 현재 주석 처리 비활성화 (TheaterSheet.tsx)
-- [ ] 체크박스 방식보다 더 나은 UX 패턴 검토 필요
-  - [ ] 날짜 선택 시 자동으로 해당 날 상영작 우선 정렬?
-  - [ ] 탭/토글 형태로 "전체 / 이 날만" 전환?
-  - [ ] 상영 없는 영화에 dim + 취소선 대신 아예 숨기는 게 나을지도
-- [ ] 재활성화 전에 인터랙션 방식 확정 후 구현
-
-### 스크롤 가능 영역 시각적 힌트
-
-- [ ] expanded 상태에서 시놉시스/시간표 스크롤 가능 여부가 안 보임
-- [ ] 하단 fade-out 그라디언트 또는 "스크롤하여 더 보기" 표시 추가
-
----
-
-## 검색 오버레이 (미구현 항목)
-
-- [ ] 영화별 상영 극장 3개/더보기 섹션
-- [ ] 역 선택 시 주변 지역/근처 극장 섹션 연결
-- [ ] 필터바 "영화" / "감독" 칩 클릭 시 검색창 UI 다르게 표시 (카테고리 pre-select)
-
----
-
-## 데이터 연결
-
-### Mock 카탈로그 제거
-
-- [ ] `src/lib/catalog/client.ts`: mock을 placeholderData로 사용 중
-- [ ] `src/app/search/page.tsx`가 `useCatalog()` 사용 — Supabase 기반 쿼리로 교체 필요
-
----
-
-## 콘텐츠 / 데이터 확장
-
-### 이벤트 상영 표시 검토
-
-- [ ] 영화제, 무비올나잇, 옥상 상영 등 특별 이벤트를 지도/시트에 표시할지 여부 결정
-- [ ] 표시한다면 이벤트 데이터 수집 방식 및 UI 설계 필요
-
-### 감독 상세 페이지 정보 보강
-
-- [ ] 현재 Wikipedia API로 받아오는데 내용 부실, 설명 없는 경우도 있음
+# DB 통계
+npx tsx --env-file=.env.local scripts/check-todo-stats.ts
+```
