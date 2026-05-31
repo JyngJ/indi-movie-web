@@ -694,7 +694,7 @@ export function FilterBar({
 
   useEffect(() => {
     setMounted(true)
-    if (sessionStorage.getItem('region-hint-dismissed') === '1') setRegionHintDismissed(true)
+    if (sessionStorage.getItem('yh_region_tip') === 'closed') setRegionHintDismissed(true)
   }, [])
   useEffect(() => { openPanelRef.current = openPanel }, [openPanel])
   useEffect(() => { draftGenresRef.current = draftGenres }, [draftGenres])
@@ -994,47 +994,80 @@ export function FilterBar({
       </div>
 
       {mounted && !regionId && !regionHintDismissed && (
-        <div style={{ position: 'relative', padding: '0 16px 8px' }}>
+        <>
+          <style>{`@keyframes tipIn{from{opacity:0;transform:translateY(-6px) scale(0.96)}to{opacity:1;transform:translateY(0) scale(1)}}`}</style>
           <div style={{
             position: 'absolute',
-            top: 0,
-            left: 52,
-            width: 0, height: 0,
-            borderLeft: '6px solid transparent',
-            borderRight: '6px solid transparent',
-            borderBottom: '6px solid var(--color-surface-card)',
-            filter: 'drop-shadow(0 -1px 0 var(--color-border))',
-          }} />
-          <div style={{
-            marginTop: 6,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            background: 'var(--color-surface-card)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 10,
-            padding: '8px 8px 8px 12px',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
+            top: 44,
+            left: 4,
+            zIndex: 60,
+            width: 236,
+            animation: 'tipIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1)',
           }}>
-            <span style={{ fontSize: 12, color: 'var(--color-text-body)', lineHeight: 1.5, flex: 1 }}>
-              지역을 설정해서 내 주변 영화관의<br />상영 정보를 조회하세요
-            </span>
-            <button
-              onClick={() => {
-                sessionStorage.setItem('region-hint-dismissed', '1')
-                setRegionHintDismissed(true)
-              }}
-              style={{
-                background: 'none', border: 'none', padding: 4,
-                cursor: 'pointer', minHeight: 'unset', flexShrink: 0,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                borderRadius: '50%',
-              }}
-            >
-              <IcoClose />
-            </button>
+            {/* 꼬리 */}
+            <div style={{
+              position: 'absolute',
+              top: -5,
+              left: 24,
+              width: 11,
+              height: 11,
+              background: 'var(--color-primary-base)',
+              transform: 'rotate(45deg)',
+              borderRadius: 2,
+            }} />
+            {/* 본체 */}
+            <div style={{
+              position: 'relative',
+              background: 'var(--color-primary-base)',
+              borderRadius: 12,
+              boxShadow: '0 10px 28px rgba(40, 55, 75, 0.34)',
+              padding: '12px 12px 12px 14px',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 10,
+            }}>
+              {/* 핀 아이콘 */}
+              <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              {/* 문구 */}
+              <span style={{
+                flex: 1,
+                fontFamily: 'Pretendard, sans-serif',
+                fontSize: 12.5,
+                lineHeight: 1.55,
+                fontWeight: 500,
+                color: '#fff',
+              }}>
+                지역을 설정해서 내 주변 영화관의 상영 정보를 조회하세요
+              </span>
+              {/* 닫기 버튼 */}
+              <button
+                onClick={() => {
+                  sessionStorage.setItem('yh_region_tip', 'closed')
+                  setRegionHintDismissed(true)
+                }}
+                style={{
+                  width: 18, height: 18, minWidth: 18, minHeight: 18,
+                  borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.2)',
+                  border: 'none',
+                  color: '#fff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  marginTop: -1,
+                  padding: 0,
+                }}
+              >
+                <svg width={8} height={8} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {mounted && openPanel && createPortal(
