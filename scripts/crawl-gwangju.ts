@@ -241,9 +241,9 @@ async function crawlDongguMC() {
       booking_url: null,
       source_url: LISTING_URL,
       raw_text: JSON.stringify({ movieTitle, showDate, showTime, screenName }),
-      confidence: 0.88,
-      warnings: ['좌석/예매 정보 없음'],
-      status: 'needs_review',
+      confidence: 0.92,
+      warnings: [],
+      status: 'draft',
       fingerprint: fp,
     })
   }

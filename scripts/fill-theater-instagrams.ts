@@ -34,6 +34,16 @@ const INSTAGRAM_BY_THEATER: Record<string, string> = {
   '전주디지털독립영화관': 'https://www.instagram.com/jeonjucinecomplex/',
   '자유로자동차극장': 'https://www.instagram.com/garagemovie_/',
   '경기인디시네마': 'https://www.instagram.com/ggfc.or.kr/',
+  'KU시네마테크': 'https://www.instagram.com/kucinema/',
+  '광주극장': 'https://www.instagram.com/cinema_gwangju_1933/',
+  '명화극장': 'https://www.instagram.com/ansan_myounghwa/',
+  '씨네인디U': 'https://www.instagram.com/cineindieu/',
+  '아리랑시네센터': 'https://www.instagram.com/arirang_cine/',
+  '애관극장': 'https://www.instagram.com/aekwan_cinema/',
+  '오르페오': 'https://www.instagram.com/ode.orfeo/',
+  '제천시네마': 'https://www.instagram.com/jecheon_cinema/',
+  '헤이리시네마': 'https://www.instagram.com/heyri_cinema/',
+  '인디플러스 포항': 'https://www.instagram.com/indieplus_pohang/',
 }
 
 const CLEAR_INSTAGRAM_THEATERS = new Set([
