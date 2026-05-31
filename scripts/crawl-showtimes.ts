@@ -39,9 +39,9 @@ async function main() {
   const matchStart = Date.now()
   const matchResult = await autoMatchShowtimeCandidates()
   const matchDuration = Date.now() - matchStart
-  console.log(`자동매칭 완료: ${matchResult.matched}개 매칭, ${matchResult.needsReview}개 검토필요 (${(matchDuration / 1000).toFixed(1)}s)`)
+  console.log(`자동매칭 완료: ${matchResult.autoApproved}개 자동승인, ${matchResult.matched}개 매칭, ${matchResult.needsReview}개 검토필요 (${(matchDuration / 1000).toFixed(1)}s)`)
 
-  await notifyDiscordMatch(matchResult.matched, matchResult.needsReview, matchDuration)
+  await notifyDiscordMatch(matchResult.matched, matchResult.autoApproved, matchResult.needsReview, matchDuration)
 
   if (ok.length === 0) {
     console.error('모든 소스 수집 실패')

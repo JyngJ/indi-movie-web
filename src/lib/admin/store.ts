@@ -744,6 +744,7 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
   const movieResolutionCache = new Map<string, MovieResolutionResult>()
   const providerMovieAliases = buildProviderMovieAliases((aliasRows ?? []) as Pick<CandidateRow, 'raw_text' | 'matched_movie_id'>[])
   let matched = 0
+  let autoApproved = 0
   let needsReview = 0
 
   for (const candidate of candidates) {
@@ -755,13 +756,17 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
       movie ? undefined : movieResult.reason ?? `자동 영화 매칭 실패: ${candidate.movieTitle}`,
     ])
 
+    // 자동 승인 기준: theater + movie 둘 다 매칭 + confidence >= 0.9 + warnings 없음
+    const canAutoApprove = Boolean(theater && movie && candidate.confidence >= 0.9 && warnings.length === 0)
+    const newStatus = canAutoApprove ? 'approved' : 'needs_review'
+
     const { data, error } = await supabase
       .from('showtime_candidates')
       .update({
         matched_theater_id: theater?.id ?? null,
         matched_movie_id: movie?.id ?? null,
         warnings,
-        status: theater && movie ? 'needs_review' : 'needs_review',
+        status: newStatus,
       })
       .eq('id', candidate.id)
       .select()
@@ -772,14 +777,25 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
       continue
     }
 
-    if (theater && movie) matched += 1
-    else needsReview += 1
+    if (canAutoApprove && theater && movie) {
+      // showtimes 테이블에 바로 삽입
+      await supabase
+        .from('showtimes')
+        .upsert(showtimeRowFromCandidate(candidate, theater.id, movie.id), {
+          onConflict: 'theater_id,movie_id,show_date,show_time,screen_name',
+        })
+      autoApproved += 1
+    } else if (theater && movie) {
+      matched += 1
+    } else {
+      needsReview += 1
+    }
     rememberProviderMovieAlias(candidate, movie, providerMovieAliases)
 
     updated.push(candidateFromRow(data as CandidateRow))
   }
 
-  return { matched, needsReview, updated }
+  return { matched, autoApproved, needsReview, updated }
 }
 
 export async function createAdminMovie(input: AdminMovieInput) {

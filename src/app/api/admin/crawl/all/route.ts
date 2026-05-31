@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       // 3단계: 자동매칭
       const matchStart = Date.now()
       const matchResult = await autoMatchShowtimeCandidates()
-      await notifyDiscordMatch(matchResult.matched, matchResult.needsReview, Date.now() - matchStart)
+      await notifyDiscordMatch(matchResult.matched, matchResult.autoApproved, matchResult.needsReview, Date.now() - matchStart)
     })().catch(async (error: unknown) => {
       const msg = error instanceof Error ? error.message : String(error)
       await notifyDiscordError('📽 상영시간표 수집', msg)

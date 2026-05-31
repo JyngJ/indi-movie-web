@@ -116,12 +116,12 @@ export async function notifyDiscord(payload: NotifyPayload) {
   }
 }
 
-export async function notifyDiscordMatch(matched: number, needsReview: number, durationMs: number) {
+export async function notifyDiscordMatch(matched: number, autoApproved: number, needsReview: number, durationMs: number) {
   const secs = (durationMs / 1000).toFixed(1)
   await sendEmbed({
     title: '🔗 자동매칭 완료',
-    description: `**매칭** ${matched.toLocaleString()}개　·　**검토필요** ${needsReview.toLocaleString()}개　·　**소요** ${secs}s`,
-    color: matched > 0 ? 0x2ECC71 : 0xF39C12,
+    description: `**자동승인** ${autoApproved.toLocaleString()}개　·　**매칭** ${matched.toLocaleString()}개　·　**검토필요** ${needsReview.toLocaleString()}개　·　**소요** ${secs}s`,
+    color: autoApproved > 0 ? 0x2ECC71 : matched > 0 ? 0xF39C12 : 0xE74C3C,
     footer: { text: nowKST() },
   })
 }
