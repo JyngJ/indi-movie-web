@@ -1,6 +1,6 @@
 'use client'
 
-export type ShowtimeKind = 'normal' | 'low' | 'soldout' | 'late'
+export type ShowtimeKind = 'normal' | 'low' | 'soldout' | 'late' | 'nowplaying' | 'ended'
 
 interface ShowtimeCellProps {
   startTime: string
@@ -40,10 +40,13 @@ export function ShowtimeCell({
   startTime, endTime, seatAvailable, seatTotal, screenName, promo,
   kind = 'normal', selected = false, onClick,
 }: ShowtimeCellProps) {
-  const isSoldout   = kind === 'soldout'
-  const isLate      = kind === 'late'
-  const isLow       = kind === 'low'
-  const isClickable = onClick && !isSoldout
+  const isSoldout    = kind === 'soldout'
+  const isLate       = kind === 'late'
+  const isLow        = kind === 'low'
+  const isNowPlaying = kind === 'nowplaying'
+  const isEnded      = kind === 'ended'
+  const isPast       = isNowPlaying || isEnded
+  const isClickable  = onClick && !isSoldout && !isPast
 
   const seatColor = isSoldout
     ? 'var(--color-text-primary)'
@@ -65,7 +68,7 @@ export function ShowtimeCell({
           ? '1.5px solid var(--color-primary-base)'
           : '1px solid var(--color-border)',
         position: 'relative',
-        opacity: isSoldout ? 0.45 : 1,
+        opacity: (isSoldout || isPast) ? 0.45 : 1,
         fontFamily: 'var(--font-sans)',
         cursor: isClickable ? 'pointer' : 'default',
         transition: 'border-color 150ms ease, background-color 150ms ease',
@@ -85,7 +88,7 @@ export function ShowtimeCell({
         </span>
       </div>
 
-      {/* 잔여석 */}
+      {/* 잔여석 / 상태 */}
       <div
         className="mt-[6px]"
         style={{
@@ -95,8 +98,16 @@ export function ShowtimeCell({
           whiteSpace: 'nowrap',
         }}
       >
-        <span style={{ color: seatColor, fontWeight: 600 }}>{seatAvailable}</span>
-        <span style={{ color: 'var(--color-text-sub)' }}>/{seatTotal}석</span>
+        {isNowPlaying ? (
+          <span style={{ color: '#F97316', fontWeight: 700 }}>상영중</span>
+        ) : isEnded ? (
+          <span style={{ color: '#EF4444', fontWeight: 700 }}>상영 완료</span>
+        ) : (
+          <>
+            <span style={{ color: seatColor, fontWeight: 600 }}>{seatAvailable}</span>
+            <span style={{ color: 'var(--color-text-sub)' }}>/{seatTotal}석</span>
+          </>
+        )}
       </div>
 
       {/* 상영관 + 심야 배지 같은 줄 */}
