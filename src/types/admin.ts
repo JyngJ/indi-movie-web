@@ -220,6 +220,7 @@ export interface AdminShowtimeInput {
 
 export interface CandidateAutoMatchResult {
   matched: number
+  autoApproved: number
   needsReview: number
   updated: CrawledShowtimeCandidate[]
 }

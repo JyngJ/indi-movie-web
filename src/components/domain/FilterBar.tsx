@@ -677,6 +677,7 @@ export function FilterBar({
   const [openPanel, setOpenPanel] = useState<OpenPanel>(null)
   const [dropdownPos, setDropdownPos] = useState<{ left: number; top: number }>({ left: 16, top: 0 })
   const [mounted, setMounted] = useState(false)
+  const [regionHintDismissed, setRegionHintDismissed] = useState(false)
 
   const wrapperRef = useRef<HTMLDivElement>(null)
   const portalDropdownRef = useRef<HTMLDivElement>(null)
@@ -692,7 +693,10 @@ export function FilterBar({
   const chipDragRef = useRef({ active: false, moved: false, startX: 0, scrollLeft: 0 })
   const [chipRowDragging, setChipRowDragging] = useState(false)
 
-  useEffect(() => { setMounted(true) }, [])
+  useEffect(() => {
+    setMounted(true)
+    if (sessionStorage.getItem('region-hint-dismissed') === '1') setRegionHintDismissed(true)
+  }, [])
   useEffect(() => { openPanelRef.current = openPanel }, [openPanel])
   useEffect(() => { draftGenresRef.current = draftGenres }, [draftGenres])
   useEffect(() => { draftNationsRef.current = draftNations }, [draftNations])
@@ -988,6 +992,50 @@ export function FilterBar({
         />
         */}
       </div>
+
+      {mounted && !regionId && !regionHintDismissed && (
+        <div style={{ position: 'relative', padding: '0 16px 8px' }}>
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 52,
+            width: 0, height: 0,
+            borderLeft: '6px solid transparent',
+            borderRight: '6px solid transparent',
+            borderBottom: '6px solid var(--color-surface-card)',
+            filter: 'drop-shadow(0 -1px 0 var(--color-border))',
+          }} />
+          <div style={{
+            marginTop: 6,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            background: 'var(--color-surface-card)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 10,
+            padding: '8px 8px 8px 12px',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
+          }}>
+            <span style={{ fontSize: 12, color: 'var(--color-text-body)', lineHeight: 1.5, flex: 1 }}>
+              지역을 설정해서 내 주변 영화관의<br />상영 정보를 조회하세요
+            </span>
+            <button
+              onClick={() => {
+                sessionStorage.setItem('region-hint-dismissed', '1')
+                setRegionHintDismissed(true)
+              }}
+              style={{
+                background: 'none', border: 'none', padding: 4,
+                cursor: 'pointer', minHeight: 'unset', flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                borderRadius: '50%',
+              }}
+            >
+              <IcoClose />
+            </button>
+          </div>
+        </div>
+      )}
 
       {mounted && openPanel && createPortal(
         <div ref={portalDropdownRef}>
