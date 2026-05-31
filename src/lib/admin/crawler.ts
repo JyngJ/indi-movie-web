@@ -1182,7 +1182,7 @@ function extractMovieeTheaterId(url: string) {
     if (tid) return decodeURIComponent(tid)
   }
 
-  throw new Error('무비애 예매 URL에서 tid 또는 thsynid를 찾지 못했습니다.')
+  return '' // 서브도메인 사이트는 tid 없이 동작
 }
 
 function createDtryxParams(cgid: string, overrides: Partial<Record<string, string>> = {}, brandCd = 'dtryx') {
