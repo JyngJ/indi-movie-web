@@ -173,18 +173,25 @@ export async function crawlDtryxReservationApi(context: ParseContext) {
   const baseUrl = new URL(sourceUrl)
   const origin = baseUrl.origin
   const brandCd = baseUrl.searchParams.get('BrandCd') ?? 'dtryx'
+  const screenFilter = baseUrl.searchParams.get('screenFilter') ?? null
+  const urlCinemaCd = baseUrl.searchParams.get('CinemaCd') ?? null
   const headers = buildDtryxHeaders(sourceUrl)
   const main = await fetchDtryxMain(origin, cgid, brandCd, headers)
   const cinemas = (main.CinemaList ?? []).filter((cinema) => cinema.HiddenYn !== 'Y')
   const movies = (main.MovieList ?? []).filter((movie) => movie.HiddenYn !== 'Y')
   const playDates = (main.PlaySdtList ?? []).filter((date) => date.HiddenYn !== 'Y').slice(0, 14)
+  // 이름 매칭 실패 시 URL의 CinemaCd 파라미터로 fallback
   const targetCinema = pickDtryxCinema(cinemas, context.source.theaterName)
+    ?? (urlCinemaCd ? cinemas.find((c) => c.CinemaCd === urlCinemaCd) : undefined)
 
   if (!targetCinema) {
     throw new Error(`${context.source.theaterName} 영화관 코드를 찾지 못했습니다.`)
   }
 
-  return fetchDtryxShowtimes(origin, cgid, brandCd, headers, movies, playDates, targetCinema, context)
+  const candidates = await fetchDtryxShowtimes(origin, cgid, brandCd, headers, movies, playDates, targetCinema, context)
+  if (!screenFilter) return candidates
+  // 복합 건물 내 특정 관(screen)만 이 theater에 해당하는 경우 필터링
+  return candidates.filter((c) => c.screenName.includes(screenFilter))
 }
 
 export async function crawlAllDtryxSources(
@@ -1182,7 +1189,7 @@ function extractMovieeTheaterId(url: string) {
     if (tid) return decodeURIComponent(tid)
   }
 
-  throw new Error('무비애 예매 URL에서 tid 또는 thsynid를 찾지 못했습니다.')
+  return '' // 서브도메인 사이트는 tid 없이 동작
 }
 
 function createDtryxParams(cgid: string, overrides: Partial<Record<string, string>> = {}, brandCd = 'dtryx') {
