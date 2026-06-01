@@ -187,21 +187,20 @@ function SynopsisCard({ synopsis, tags, visible, onSearchTheaters }: SynopsisCar
 
 /* ── 날짜 생성 헬퍼 ─────────────────────────────────────────────── */
 // availableDates: 'YYYY-MM-DD' 형태의 Set — 해당 날짜에만 상영 있음
-function buildDays(count = 7, availableDates?: Set<string>): Day[] {
+function buildDays(count = 7, availableDates?: Set<string>, offset = 0): Day[] {
   const today = new Date()
   return Array.from({ length: count }, (_, i) => {
     const d = new Date(today)
-    d.setDate(today.getDate() + i)
+    d.setDate(today.getDate() + offset + i)
     const dow  = ['일', '월', '화', '수', '목', '금', '토'][d.getDay()]
     const date = String(d.getDate())
+    const absIdx = offset + i
     const type: DayType =
-      i === 0            ? 'today'
+      absIdx === 0       ? 'today'
       : d.getDay() === 0 ? 'sunday'
       : d.getDay() === 6 ? 'saturday'
       : 'weekday'
 
-    // availableDates가 주어지면 없는 날짜는 disabled
-    // toISOString()은 UTC 기준 — 한국 자정(00:00~09:00 KST)에 하루 밀림 → 로컬 날짜로 계산
     const isoDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     const disabled = availableDates ? !availableDates.has(isoDate) : false
 
@@ -350,7 +349,8 @@ export function TheaterSheet({
     return dates
   }, [allMovieEntries])
 
-  const days = buildDays(7, theaterAvailableDates)
+  const [dateWindowOffset, setDateWindowOffset] = useState(0)
+  const days = buildDays(7, theaterAvailableDates, dateWindowOffset)
   const selectedDate = days.find((d) => d.isoDate === selectedIsoDate)?.date ?? days[0].date
 
   /* ── 바텀시트 필터 — 이 극장 영화에서만 가능한 장르/국가 ── */
@@ -1561,6 +1561,10 @@ export function TheaterSheet({
             <DateBar
               days={days}
               selectedDate={selectedDate}
+              hasPrev={dateWindowOffset > 0}
+              hasNext={dateWindowOffset < 21}
+              onPrev={() => setDateWindowOffset((o) => Math.max(0, o - 7))}
+              onNext={() => setDateWindowOffset((o) => o + 7)}
               onSelectDate={(date) => {
                 const day = days.find((d) => d.date === date)
                 if (day) {
