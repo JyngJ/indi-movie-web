@@ -171,8 +171,8 @@ function makePinIcon(
 
   const countTagHtml = showCountTag ? (() => {
     const cnt = posterMovies.length
-    const TAG_TOP = LABEL_H + GAP + DOT + 5
-    return `<div style="position:absolute;top:${TAG_TOP}px;left:50%;transform:translateX(-50%);z-index:2;pointer-events:none;">` +
+    const TAG_TOP = LABEL_H + GAP + DOT + 9
+    return `<div style="position:absolute;top:${TAG_TOP}px;left:50%;transform:translateX(-50%);z-index:1;pointer-events:none;">` +
       `<div style="position:absolute;top:-5px;left:50%;transform:translateX(-50%) rotate(45deg);` +
       `width:10px;height:10px;background:var(--color-surface-card);` +
       `border-top:1.5px solid var(--color-border);border-left:1.5px solid var(--color-border);` +
@@ -184,9 +184,10 @@ function makePinIcon(
       `</div></div>`
   })() : ''
 
+  const pinHtml = renderToStaticMarkup(<MapPin kind="indie" selected={selected} label={name} labelOffset={labelOffset} dimmed={dimmed} isDark={isDark} />)
   const html = `
     <div style="width:140px;display:flex;flex-direction:column;align-items:center;overflow:visible;position:relative;">
-      ${renderToStaticMarkup(<MapPin kind="indie" selected={selected} label={name} labelOffset={labelOffset} dimmed={dimmed} isDark={isDark} />)}
+      <div style="position:relative;z-index:3;align-self:center;">${pinHtml}</div>
       ${posterHtml}
       ${countTagHtml}
     </div>
