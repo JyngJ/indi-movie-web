@@ -85,11 +85,30 @@
 
 ### 폰트 패밀리
 
+```
+display(KIMM)  제목·간판 전용. 한국기계연구원 서체(로고타입 기반의 기하학적 디스플레이체).
+               굵기가 Light(300)/Bold(700) 2종뿐이라 본문에는 쓰지 않고,
+               큰 제목·극장명·영화명·지도 라벨 등 "간판처럼 보여야 하는" 곳에만 Bold로 사용.
+               한글 + 라틴(영문 대소문자) + 숫자 + 기호 모두 지원 →
+               한·영 혼용 제목도 KIMM 한 벌로 처리 가능.
+               (뒤의 Pretendard는 폰트 로드 실패 시 폴백용)
+               ※ 출처 표시 필수: "출처 – 한국기계연구원, kimm.re.kr"
+
+latin          영문 원제·감독명을 세리프 이탤릭으로 멋부릴 때 쓰는 선택적 악센트
+               (예: dir. Bong Joon-ho). 굳이 안 써도 되고,
+               영문 제목도 KIMM(display)으로 통일 가능.
+
+ui             UI 전반·본문·12px 이하 작은 텍스트. 한글/영문/숫자 모두.
+
+mono           HEX, 상영 시간, 좌석수 등 정렬이 필요한 수치(tnum).
+```
+
 | JS 키 | CSS 변수 | 폰트 | 용도 |
 |-------|----------|------|------|
 | `type.family.display` | `--font-display` | `'KIMM', 'Pretendard', sans-serif` | 제목·간판·지도 라벨 (KIMM Bold) |
-| `type.family.ui` | `--font-sans` | `'Pretendard', -apple-system, sans-serif` | UI 전반·본문·12px 이하 작은 텍스트 |
-| `type.family.latin` | `--font-serif` | `'Libre Baskerville', serif` | 영문 원제·감독명 이탤릭 (선택적) |
+| `type.family.korean` | `--font-serif` | `'KIMM', 'Pretendard', sans-serif` | = display, 기존 코드 호환 alias |
+| `type.family.ui` | `--font-sans` | `'Pretendard', -apple-system, sans-serif` | UI 전반·본문 |
+| `type.family.latin` | `--font-serif-en` | `'Libre Baskerville', serif` | 영문 원제·감독명 이탤릭 (선택적) |
 | `type.family.mono` | `--font-mono` | `'SF Mono', 'ui-monospace', monospace` | HEX, 상영 시간, 좌석수 |
 
 **KIMM체 출처 표기 필수**: `출처 – 한국기계연구원, kimm.re.kr`

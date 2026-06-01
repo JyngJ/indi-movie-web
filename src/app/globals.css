@@ -2,6 +2,21 @@
 
 @import "tailwindcss";
 
+/* KIMM체 — 한국기계연구원 전용서체 */
+/* 출처 – 한국기계연구원, kimm.re.kr */
+@font-face {
+  font-family: 'KIMM';
+  font-weight: 300;
+  font-display: swap;
+  src: url('/fonts/KIMM_Light.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'KIMM';
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/KIMM_bold.ttf') format('truetype');
+}
+
 /* ================================
    Reset & Base
    ================================ */
