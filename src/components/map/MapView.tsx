@@ -2967,26 +2967,25 @@ export default function MapView() {
         </div>
       </div>
 
-      {!isDesktopLayout && (
-        <div style={{
-          position: 'absolute',
-          top: 'calc(max(0px, env(safe-area-inset-top)) + 122px)',
-          right: 16,
-          zIndex: 1001,
-          pointerEvents: 'auto',
-        }}>
-          <FabRound
-            onClick={() => {
-              setReportError('')
-              setReportOpen(true)
-            }}
-            aria-label="제보하기"
-            style={{ fontSize: 20, lineHeight: 1 }}
-          >
-            📨
-          </FabRound>
-        </div>
-      )}
+      <div style={{
+        position: 'absolute',
+        ...(isDesktopLayout
+          ? { bottom: 90, right: 16 }
+          : { top: 'calc(max(0px, env(safe-area-inset-top)) + 122px)', right: 16 }),
+        zIndex: 1001,
+        pointerEvents: 'auto',
+      }}>
+        <FabRound
+          onClick={() => {
+            setReportError('')
+            setReportOpen(true)
+          }}
+          aria-label="제보하기"
+          style={{ fontSize: 20, lineHeight: 1 }}
+        >
+          📨
+        </FabRound>
+      </div>
 
       {/* 테마 토글 — PC: 우상단, 모바일: 우측 위치 버튼 아래 */}
       {isDesktopLayout && renderThemeToggle({
