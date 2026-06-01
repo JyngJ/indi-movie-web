@@ -1207,6 +1207,7 @@ export function TheaterSheet({
                   minWidth: 0,
                   fontSize: 22,
                   fontWeight: 800,
+                  fontFamily: 'var(--font-display)',
                   lineHeight: 1.16,
                   color: 'var(--color-text-primary)',
                   overflow: 'hidden',
