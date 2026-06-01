@@ -180,8 +180,7 @@ function makePinIcon(
       `<div style="position:relative;background:var(--color-surface-card);` +
       `border:1.5px solid var(--color-border);border-radius:10px;` +
       `padding:3px 8px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.13);z-index:1;">` +
-      `<span style="font-size:11px;font-weight:700;color:var(--color-text-primary);">${cnt}편</span>` +
-      `<span style="font-size:11px;font-weight:400;color:var(--color-text-sub);"> 상영중</span>` +
+      `<span style="font-size:11px;font-weight:700;color:var(--color-primary-base);">${cnt}편</span>` +
       `</div></div>`
   })() : ''
 
@@ -243,7 +242,7 @@ function computeLabelDirections(
     }
 
     let best: LabelDir = 'top'
-    for (const dir of ['top', 'bottom', 'right', 'left'] as LabelDir[]) {
+    for (const dir of ['top', 'right', 'left'] as LabelDir[]) {
       if (!placed.some(rect => hit(cands[dir], rect))) {
         best = dir
         break
@@ -933,8 +932,7 @@ function makeClusterIcon(
         `<div style="position:relative;background:var(--color-surface-card);` +
         `border:1.5px solid var(--color-border);border-radius:10px;` +
         `padding:3px 8px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.13);z-index:1;">` +
-        `<span style="font-size:11px;font-weight:700;color:var(--color-text-primary);">${movieCount}편</span>` +
-        `<span style="font-size:11px;font-weight:400;color:var(--color-text-sub);"> 상영중</span>` +
+        `<span style="font-size:11px;font-weight:700;color:var(--color-primary-base);">${movieCount}편</span>` +
         `</div></div>`
       : ''
     const html =
