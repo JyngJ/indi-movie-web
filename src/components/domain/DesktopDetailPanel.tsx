@@ -99,7 +99,8 @@ function PanelShell({
         <span style={{
           flex: 1,
           fontSize: 14,
-          fontWeight: 600,
+          fontWeight: 700,
+          fontFamily: 'var(--font-display)',
           color: 'var(--color-text-primary)',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
