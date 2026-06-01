@@ -175,14 +175,17 @@ export async function crawlDtryxReservationApi(context: ParseContext) {
   const brandCd = baseUrl.searchParams.get('BrandCd') ?? 'dtryx'
   const screenFilter = baseUrl.searchParams.get('screenFilter') ?? null
   const urlCinemaCd = baseUrl.searchParams.get('CinemaCd') ?? null
-  const headers = buildDtryxHeaders(sourceUrl)
+  // screenFilter 한글 파라미터가 referer 헤더에 포함되지 않도록 제거
+  baseUrl.searchParams.delete('screenFilter')
+  const headers = buildDtryxHeaders(baseUrl.toString())
   const main = await fetchDtryxMain(origin, cgid, brandCd, headers)
   const cinemas = (main.CinemaList ?? []).filter((cinema) => cinema.HiddenYn !== 'Y')
   const movies = (main.MovieList ?? []).filter((movie) => movie.HiddenYn !== 'Y')
   const playDates = (main.PlaySdtList ?? []).filter((date) => date.HiddenYn !== 'Y').slice(0, 14)
-  // 이름 매칭 실패 시 URL의 CinemaCd 파라미터로 fallback
+  // 이름 매칭 → CinemaCd fallback → CinemaList에 없으면 synthetic cinema 생성
   const targetCinema = pickDtryxCinema(cinemas, context.source.theaterName)
     ?? (urlCinemaCd ? cinemas.find((c) => c.CinemaCd === urlCinemaCd) : undefined)
+    ?? (urlCinemaCd ? { CinemaNm: context.source.theaterName, CinemaCd: urlCinemaCd, HiddenYn: 'N' as const } : undefined)
 
   if (!targetCinema) {
     throw new Error(`${context.source.theaterName} 영화관 코드를 찾지 못했습니다.`)
