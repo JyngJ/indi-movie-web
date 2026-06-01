@@ -19,7 +19,7 @@ export const dynamic = 'force-dynamic'
 const DISCORD_PUBLIC_KEY = process.env.DISCORD_PUBLIC_KEY!
 
 const InteractionType = { PING: 1, APPLICATION_COMMAND: 2, MESSAGE_COMPONENT: 3 } as const
-const InteractionResponse = { PONG: 1, CHANNEL_MESSAGE: 4, DEFERRED_CHANNEL_MESSAGE: 5, UPDATE_MESSAGE: 7 } as const
+const InteractionResponse = { PONG: 1, CHANNEL_MESSAGE: 4, DEFERRED_CHANNEL_MESSAGE: 5, DEFERRED_UPDATE_MESSAGE: 6, UPDATE_MESSAGE: 7 } as const
 
 /* ── Discord 서명 검증 ── */
 async function verifyRequest(request: Request): Promise<{ valid: boolean; body: string }> {
@@ -41,10 +41,18 @@ async function verifyRequest(request: Request): Promise<{ valid: boolean; body: 
   }
 }
 
-/* ── Discord 웹훅 메시지 전송 ── */
+/* ── Discord 웹훅 메시지 전송/수정 ── */
 async function sendDiscordWebhook(token: string, payload: Record<string, unknown>) {
   await fetch(`https://discord.com/api/v10/webhooks/${process.env.DISCORD_APPLICATION_ID}/${token}`, {
     method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
+
+async function patchOriginalMessage(token: string, payload: Record<string, unknown>) {
+  await fetch(`https://discord.com/api/v10/webhooks/${process.env.DISCORD_APPLICATION_ID}/${token}/messages/@original`, {
+    method: 'PATCH',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(payload),
   })
@@ -243,31 +251,33 @@ export async function POST(request: Request) {
   if (interaction.type === InteractionType.MESSAGE_COMPONENT) {
     const customId = interaction.data?.custom_id ?? ''
 
-    // OCR 승인/취소
+    // OCR 승인/취소 — 3초 타임아웃 방지: DEFERRED_UPDATE_MESSAGE 즉시 반환 후 비동기 처리
     if (customId.startsWith('ocr_confirm:') || customId.startsWith('ocr_cancel:')) {
       const colonIdx = customId.indexOf(':')
       const action = customId.slice(0, colonIdx)
       const sourceId = customId.slice(colonIdx + 1)
+      const token = interaction.token
 
-      try {
-        const result = action === 'ocr_confirm'
-          ? await handleOcrConfirm(sourceId)
-          : await handleOcrCancel(sourceId)
-
-        return Response.json({
-          type: InteractionResponse.UPDATE_MESSAGE,
-          data: {
-            embeds: [{
-              description: result.message,
-              color: result.ok ? 0x57F287 : 0xED4245,
-            }],
+      after(async () => {
+        try {
+          const result = action === 'ocr_confirm'
+            ? await handleOcrConfirm(sourceId)
+            : await handleOcrCancel(sourceId)
+          await patchOriginalMessage(token, {
+            embeds: [{ description: result.message, color: result.ok ? 0x57F287 : 0xED4245 }],
             components: [],
             allowed_mentions: { parse: [] },
-          },
-        })
-      } catch (error) {
-        return ephemeralResponse(error instanceof Error ? error.message : '처리 중 오류가 발생했습니다.')
-      }
+          })
+        } catch (error) {
+          await patchOriginalMessage(token, {
+            embeds: [{ description: `❌ 오류: ${error instanceof Error ? error.message : String(error)}`, color: 0xED4245 }],
+            components: [],
+            allowed_mentions: { parse: [] },
+          })
+        }
+      })
+
+      return Response.json({ type: InteractionResponse.DEFERRED_UPDATE_MESSAGE })
     }
 
     // 제보 리포트 버튼 액션
