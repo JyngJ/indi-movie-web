@@ -131,15 +131,24 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
                           {slot.movie.director?.[0] && (
                             <div className="pm-tip-director">{slot.movie.director[0]}</div>
                           )}
-                          {slot.movie.genre.length > 0 && (
+                          {(slot.movie.genre.length > 0 || slot.movie.nation) && (
                             <div className="pm-tip-genres">
-                              {slot.movie.genre.slice(0, 3).map((g) => (
+                              {slot.movie.genre.slice(0, 2).map((g) => (
                                 <span key={g} className="pm-tip-genre-tag">{g}</span>
                               ))}
+                              {slot.movie.nation && (
+                                <span className="pm-tip-genre-tag">{slot.movie.nation.split(/[,，/·]+/)[0].trim()}</span>
+                              )}
                             </div>
                           )}
-                          {slot.movie.nation && (
-                            <div className="pm-tip-nation">{slot.movie.nation.split(/[,，/·]+/)[0].trim()}</div>
+                          {slot.movie.showtimesToday && slot.movie.showtimesToday.length > 0 && (
+                            <div className="pm-tip-times">
+                              {slot.movie.showtimesToday.slice(0, 4).map((s, i) => (
+                                <span key={i} className={`pm-tip-time${s.soldout ? ' pm-tip-time--soldout' : ''}`}>
+                                  {s.time}{s.soldout ? ' 매진' : ''}
+                                </span>
+                              ))}
+                            </div>
                           )}
                           <div className="pm-tip-tail" />
                         </div>

@@ -274,10 +274,20 @@ img {
   color: var(--color-text-sub);
   background: var(--color-surface-bg);
 }
-.pm-tip-nation {
-  margin-top: 5px;
-  font-size: 10px;
-  color: var(--color-text-caption);
+.pm-tip-times {
+  margin-top: 7px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.pm-tip-time {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary-base);
+  font-variant-numeric: tabular-nums;
+}
+.pm-tip-time--soldout {
+  color: var(--color-error);
 }
 .pm-tip-tail {
   position: absolute;

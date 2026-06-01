@@ -116,7 +116,7 @@ function makePinIcon(
   isDesktop = false,
 ) {
   // 캐시 키: 모든 입력을 직렬화 — 같은 조합이면 renderToStaticMarkup 재사용
-  const moviesKey = posterMovies.map(m => `${m.id}:${m.matchesFilter ? 1 : 0}`).join(',')
+  const moviesKey = posterMovies.map(m => `${m.id}:${m.matchesFilter ? 1 : 0}:${m.showtimesToday?.map(s => s.time + (s.soldout ? 'x' : '')).join('|') ?? ''}`).join(',')
   const loKey = `${Math.round(labelOffset?.x ?? 0)},${Math.round(labelOffset?.y ?? 0)}`
   const cacheKey = `${name}|${selected ? 1 : 0}|${zoom}|${moviesKey}|${filtersActive ? 1 : 0}|${Math.round(finiteNumber(posterOffsetX) * 2) / 2}|${loKey}|${isDark ? 1 : 0}|${dimmed ? 1 : 0}|${isDesktop ? 1 : 0}`
   const cached = _pinIconCache.get(cacheKey)
@@ -1334,6 +1334,8 @@ export default function MapView() {
 
   const theaterPosterMovies = useMemo(() => {
     const byTheater = new Map<string, Map<string, TheaterPosterMovie>>()
+    // 호버 시간표: 선택 날짜 범위 첫날 기준
+    const todayShowtimes = new Map<string, Map<string, Array<{ time: string; soldout: boolean }>>>()
 
     for (const showtime of mapShowtimes) {
       if (!showtime.movie) continue
@@ -1373,12 +1375,23 @@ export default function MapView() {
           matchesFilter: matchesMovieFilter && matchesDirectorFilter && matchesGenre && matchesNation,
         })
       }
+
+      // 첫날 시간 수집 (호버 tip용)
+      if (showtime.showDate === mapShowtimeStart) {
+        let tMap = todayShowtimes.get(showtime.theaterId)
+        if (!tMap) { tMap = new Map(); todayShowtimes.set(showtime.theaterId, tMap) }
+        const list = tMap.get(showtime.movieId) ?? []
+        list.push({ time: showtime.showTime.slice(0, 5), soldout: showtime.seatAvailable === 0 })
+        tMap.set(showtime.movieId, list)
+      }
     }
 
     const result = new Map<string, TheaterPosterMovie[]>()
     for (const [theaterId, movieMap] of byTheater) {
       for (const movie of movieMap.values()) {
         if (filters.bookable && !movie.hasAvailableSeats) movie.matchesFilter = false
+        const times = todayShowtimes.get(theaterId)?.get(movie.id)
+        if (times?.length) movie.showtimesToday = times
       }
       result.set(
         theaterId,
@@ -1388,7 +1401,7 @@ export default function MapView() {
       )
     }
     return result
-  }, [directorFilter, filters.bookable, filters.genres, filters.nations, movieFilter, mapShowtimes])
+  }, [directorFilter, filters.bookable, filters.genres, filters.nations, movieFilter, mapShowtimes, mapShowtimeStart])
 
   const filtersActive = filters.bookable || filters.genres.length > 0 || filters.nations.length > 0 || !!movieFilter || !!directorFilter
   const filterResultCount = useMemo(() => {
