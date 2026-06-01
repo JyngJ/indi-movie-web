@@ -892,7 +892,7 @@ function makeClusterIcon(
     const LINE_H = 18
     const PY = 6
     const names = theaters.map(t =>
-      `<div style="font-size:11px;font-weight:600;line-height:${LINE_H}px;` +
+      `<div style="font-size:11px;font-weight:700;font-family:var(--font-display);line-height:${LINE_H}px;` +
       `white-space:nowrap;color:var(--color-text-primary);">${t.name}</div>`
     ).join('')
     const cardStyle =
