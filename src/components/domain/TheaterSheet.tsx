@@ -407,15 +407,12 @@ export function TheaterSheet({
   /* ── 포스터 스크롤 버튼 가시성 ── */
   const [posterCanScrollLeft,  setPosterCanScrollLeft]  = useState(false)
   const [posterCanScrollRight, setPosterCanScrollRight] = useState(true)
-  const [posterOverflows, setPosterOverflows] = useState(false)
-  const [posterGridExpanded, setPosterGridExpanded] = useState(false)
 
   const updatePosterScrollEdge = useCallback(() => {
     const el = posterScrollRef.current
     if (!el) return
     setPosterCanScrollLeft(el.scrollLeft > 4)
     setPosterCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4)
-    setPosterOverflows(el.scrollWidth > el.clientWidth + 4)
   }, [])
 
   useEffect(() => {
@@ -1740,51 +1737,11 @@ export function TheaterSheet({
                 )
               })()}
 
-            {/* 그리드 확장 뷰 */}
-            {posterGridExpanded && (
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 88px)',
-                gap: 12,
-                paddingTop: 14,
-                paddingLeft: 20,
-                paddingRight: 20,
-                paddingBottom: 10,
-                justifyContent: 'start',
-              }}>
-                {(allMoviesLoading ? [] : sortedFilteredEntries).map((entry) => {
-                  const { movie } = entry
-                  const unavailable = !entry.availableDates.has(selectedIsoDate)
-                  const soldout = !unavailable && soldoutMovieIds.has(movie.id)
-                  return (
-                    <div key={movie.id} style={{ width: 88 }}>
-                      <div style={{ position: 'relative' }}>
-                        <PosterThumb
-                          width={88} height={132} size="lg"
-                          src={movie.posterUrl}
-                          selected={selectedMovieId === movie.id}
-                          onClick={unavailable ? undefined : () => {
-                            handleMovieSelect(movie.id, 'poster_grid')
-                            setPosterGridExpanded(false)
-                          }}
-                        />
-                        {soldout && (
-                          <div style={{ position: 'absolute', bottom: 6, right: 6, height: 20, padding: '0 6px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', fontSize: 10, fontWeight: 700, color: '#fff', backgroundColor: 'var(--color-error)', pointerEvents: 'none', zIndex: 2 }}>매진</div>
-                        )}
-                      </div>
-                      <div style={{ marginTop: 6, fontSize: 11, fontWeight: 600, fontFamily: 'var(--font-serif)', color: 'var(--color-text-primary)', lineHeight: 1.35, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', opacity: unavailable ? 0.4 : 1 }}>{movie.title}</div>
-                      {movie.director?.[0] && <div style={{ marginTop: 2, fontSize: 10, fontFamily: 'var(--font-display)', color: 'var(--color-text-caption)', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{movie.director[0]}</div>}
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-
             <div
               ref={posterScrollRef}
               onScroll={updatePosterScrollEdge}
               style={{
-                display: posterGridExpanded ? 'none' : 'flex',
+                display: 'flex',
                 gap: 12,
                 overflowX: 'auto',
                 paddingTop: 14,
@@ -1945,31 +1902,6 @@ export function TheaterSheet({
             </div>
 
             </div>{/* position:relative 래퍼 닫기 */}
-
-            {/* 그리드 확장 버튼 — 포스터가 오버플로우될 때만 표시 */}
-            {posterOverflows && (
-              <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: 8 }}>
-                <button
-                  onClick={() => setPosterGridExpanded(v => !v)}
-                  style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    width: 32, height: 32, borderRadius: '50%',
-                    background: 'var(--color-surface-card)',
-                    border: '1.5px solid var(--color-border)',
-                    boxShadow: 'var(--shadow-sm)',
-                    cursor: 'pointer', minHeight: 'unset',
-                    color: 'var(--color-text-sub)',
-                    transition: 'background 120ms',
-                  }}
-                  aria-label={posterGridExpanded ? '접기' : '전체 보기'}
-                >
-                  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round"
-                    style={{ transform: posterGridExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 200ms ease' }}>
-                    <path d="M6 9l6 6 6-6" />
-                  </svg>
-                </button>
-              </div>
-            )}
           </div>
             )
           })()}
