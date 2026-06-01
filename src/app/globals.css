@@ -293,10 +293,11 @@ img {
 }
 
 /* 터치 디바이스에서 호버 카드/리스트 팝업 비활성화 */
-@media (hover: none) {
-  .pm-wrap:hover .pm-tip { display: none; }
-  .pm-wrap:hover > div:first-child { transform: none; box-shadow: none; }
-  .po-wrap:hover .po-list { display: none; }
+@media (hover: none), (pointer: coarse) {
+  .pm-wrap > div:first-child { transition: none !important; }
+  .pm-wrap:hover .pm-tip { display: none !important; }
+  .pm-wrap:hover > div:first-child { transform: none !important; box-shadow: none !important; }
+  .po-wrap:hover .po-list { display: none !important; }
   .leaflet-marker-icon:has(.pm-wrap:hover),
   .leaflet-marker-icon:has(.po-wrap:hover) { z-index: auto !important; }
 }
