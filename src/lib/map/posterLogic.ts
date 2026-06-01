@@ -8,7 +8,7 @@ export interface TheaterPosterMovie {
   showtimeCount: number
   hasAvailableSeats: boolean
   matchesFilter: boolean
-  showtimesToday?: Array<{ time: string; soldout: boolean }>
+  showtimesToday?: Array<{ time: string; soldout: boolean; past: boolean }>
 }
 
 export interface PosterSlot {

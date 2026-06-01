@@ -142,13 +142,16 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
                             </div>
                           )}
                           {slot.movie.showtimesToday && slot.movie.showtimesToday.length > 0 && (
-                            <div className="pm-tip-times">
-                              {slot.movie.showtimesToday.slice(0, 4).map((s, i) => (
-                                <span key={i} className={`pm-tip-time${s.soldout ? ' pm-tip-time--soldout' : ''}`}>
-                                  {s.time}{s.soldout ? ' 매진' : ''}
-                                </span>
-                              ))}
-                            </div>
+                            <>
+                              <div className="pm-tip-today-label">오늘 상영 정보</div>
+                              <div className="pm-tip-times">
+                                {slot.movie.showtimesToday.slice(0, 5).map((s, i) => (
+                                  <span key={i} className={`pm-tip-time${s.soldout ? ' pm-tip-time--soldout' : ''}${s.past ? ' pm-tip-time--past' : ''}`}>
+                                    {s.time}{s.soldout && !s.past ? ' 매진' : ''}
+                                  </span>
+                                ))}
+                              </div>
+                            </>
                           )}
                           <div className="pm-tip-tail" />
                         </div>

@@ -189,7 +189,7 @@ function MoviePanel({
           )}
         </div>
         <div style={{ flex: 1, minWidth: 0, paddingTop: 4 }}>
-          <h1 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 22, fontWeight: 700, lineHeight: 1.2, color: 'var(--color-text-primary)', wordBreak: 'keep-all' }}>
+          <h1 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, lineHeight: 1.2, color: 'var(--color-text-primary)', wordBreak: 'keep-all' }}>
             {movie.title}
           </h1>
           {movie.originalTitle && (
@@ -294,7 +294,7 @@ function MovieInfoTab({ movie, onDirectorClick }: { movie: NonNullable<ReturnTyp
                   <IcoUser />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: 'var(--font-serif)', fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)' }}>{name}</div>
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)' }}>{name}</div>
                   <div style={{ marginTop: 3, fontSize: 11, color: 'var(--color-primary-base)', fontWeight: 500, textDecoration: 'underline' }}>감독 페이지 보기</div>
                 </div>
                 <IcoChevronRight />
@@ -370,7 +370,7 @@ function MovieTheatersTab({
       {/* 극장 헤더 */}
       <div style={{ padding: '12px 14px 10px', display: 'flex', alignItems: 'flex-start' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: 'var(--font-serif)', fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)' }}>{entry.theaterName}</div>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)' }}>{entry.theaterName}</div>
           <div style={{ marginTop: 2, display: 'flex', alignItems: 'center', gap: 3, color: 'var(--color-text-sub)', fontSize: 11 }}>
             <IcoPin />{entry.theaterAddress}
           </div>
@@ -551,7 +551,7 @@ function DirectorPanel({
           <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
         </div>
         <div>
-          <div style={{ fontFamily: 'var(--font-serif)', fontSize: 22, fontWeight: 700, color: 'var(--color-text-primary)' }}>{directorName}</div>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, color: 'var(--color-text-primary)' }}>{directorName}</div>
           <div style={{ marginTop: 4, fontSize: 13, color: 'var(--color-text-caption)' }}>작품 {directorMovies.length}편</div>
         </div>
       </div>

@@ -289,8 +289,15 @@ img {
   color: var(--color-text-sub);
   background: var(--color-surface-bg);
 }
-.pm-tip-times {
+.pm-tip-today-label {
   margin-top: 7px;
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--color-text-placeholder);
+  letter-spacing: 0.3px;
+}
+.pm-tip-times {
+  margin-top: 3px;
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
@@ -303,6 +310,11 @@ img {
 }
 .pm-tip-time--soldout {
   color: var(--color-error);
+}
+.pm-tip-time--past {
+  color: var(--color-text-placeholder);
+  text-decoration: line-through;
+  font-weight: 500;
 }
 .pm-tip-tail {
   position: absolute;

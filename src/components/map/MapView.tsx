@@ -116,7 +116,7 @@ function makePinIcon(
   isDesktop = false,
 ) {
   // 캐시 키: 모든 입력을 직렬화 — 같은 조합이면 renderToStaticMarkup 재사용
-  const moviesKey = posterMovies.map(m => `${m.id}:${m.matchesFilter ? 1 : 0}:${m.showtimesToday?.map(s => s.time + (s.soldout ? 'x' : '')).join('|') ?? ''}`).join(',')
+  const moviesKey = posterMovies.map(m => `${m.id}:${m.matchesFilter ? 1 : 0}:${m.showtimesToday?.map(s => s.time + (s.soldout ? 'x' : '') + (s.past ? 'p' : '')).join('|') ?? ''}`).join(',')
   const loKey = `${Math.round(labelOffset?.x ?? 0)},${Math.round(labelOffset?.y ?? 0)}`
   const cacheKey = `${name}|${selected ? 1 : 0}|${zoom}|${moviesKey}|${filtersActive ? 1 : 0}|${Math.round(finiteNumber(posterOffsetX) * 2) / 2}|${loKey}|${isDark ? 1 : 0}|${dimmed ? 1 : 0}|${isDesktop ? 1 : 0}`
   const cached = _pinIconCache.get(cacheKey)
@@ -1335,7 +1335,7 @@ export default function MapView() {
   const theaterPosterMovies = useMemo(() => {
     const byTheater = new Map<string, Map<string, TheaterPosterMovie>>()
     // 호버 시간표: 선택 날짜 범위 첫날 기준
-    const todayShowtimes = new Map<string, Map<string, Array<{ time: string; soldout: boolean }>>>()
+    const todayShowtimes = new Map<string, Map<string, Array<{ time: string; soldout: boolean; past: boolean }>>>()
 
     for (const showtime of mapShowtimes) {
       if (!showtime.movie) continue
@@ -1381,7 +1381,10 @@ export default function MapView() {
         let tMap = todayShowtimes.get(showtime.theaterId)
         if (!tMap) { tMap = new Map(); todayShowtimes.set(showtime.theaterId, tMap) }
         const list = tMap.get(showtime.movieId) ?? []
-        list.push({ time: showtime.showTime.slice(0, 5), soldout: showtime.seatAvailable === 0 })
+        const [th, tm] = showtime.showTime.split(':').map(Number)
+        const nowNow = new Date()
+        const nowNowMins = nowNow.getHours() * 60 + nowNow.getMinutes()
+        list.push({ time: showtime.showTime.slice(0, 5), soldout: showtime.seatAvailable === 0, past: th * 60 + tm < nowNowMins })
         tMap.set(showtime.movieId, list)
       }
     }

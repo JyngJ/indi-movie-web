@@ -888,12 +888,10 @@ export function TheaterSheet({
     return () => clearInterval(id)
   }, [])
 
-  /* ── 상영시간 필터링 ─────────────────────────────────────────── */
+  /* ── 상영시간 필터링 (오늘은 지난 상영도 포함, disabled로 표시) ── */
   const filteredShowtimes = showtimes.filter((s) => {
     if (s.movieId !== selectedMovieId) return false
-    if (selectedIsoDate !== todayIso) return true
-    const [h, m] = s.showTime.split(':').map(Number)
-    return h * 60 + m >= nowMinutes
+    return true
   })
 
   const openWebsite = () => {
@@ -2067,12 +2065,18 @@ export function TheaterSheet({
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                 {filteredShowtimes.map((st) => {
-                  const hour = parseInt(st.showTime.slice(0, 2), 10)
-                  const kind: import('./ShowtimeCell').ShowtimeKind =
-                    st.seatAvailable === 0 ? 'soldout'
-                    : st.seatAvailable <= st.seatTotal * 0.1 ? 'low'
-                    : hour >= 21 ? 'late'
-                    : 'normal'
+                  const [sh, sm] = st.showTime.split(':').map(Number)
+                  const startMin = sh * 60 + sm
+                  const endMin = st.endTime ? (() => { const [eh, em] = st.endTime!.split(':').map(Number); return eh * 60 + em })() : startMin + 120
+                  const isToday = selectedIsoDate === todayIso
+                  const kind: import('./ShowtimeCell').ShowtimeKind = (() => {
+                    if (isToday && endMin <= nowMinutes) return 'ended'
+                    if (isToday && startMin < nowMinutes && endMin > nowMinutes) return 'nowplaying'
+                    if (st.seatAvailable === 0) return 'soldout'
+                    if (st.seatAvailable <= st.seatTotal * 0.1) return 'low'
+                    if (sh >= 21) return 'late'
+                    return 'normal'
+                  })()
                   return (
                     <ShowtimeCell
                       key={st.id}
@@ -2083,7 +2087,7 @@ export function TheaterSheet({
                       screenName={st.screenName}
                       kind={kind}
                       selected={st.id === selectedShowtimeId}
-                      onClick={kind !== 'soldout' ? () => handleShowtimeSelect(st) : undefined}
+                      onClick={kind !== 'soldout' && kind !== 'ended' ? () => handleShowtimeSelect(st) : undefined}
                     />
                   )
                 })}
