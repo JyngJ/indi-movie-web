@@ -132,6 +132,10 @@ function makePinIcon(
   const { w: pW, h: pH } = posterSizeForZoom(zoom, isDesktop)
   const posterH = usePosterLeft || numRows === 0 ? 0 : pH * numRows + 4 * (numRows - 1) + 6
 
+  // 포스터 없는 줌 구간 (11-13)에서 "N편 상영중" 태그 표시
+  const showCountTag = slots.length === 0 && !forceMinOne && posterMovies.length > 0
+  const COUNT_TAG_H = showCountTag ? 30 : 0
+
   let posterHtml = ''
   if (slots.length > 0) {
     const posterMarkup = renderToStaticMarkup(
@@ -165,17 +169,34 @@ function makePinIcon(
     }
   }
 
+  const countTagHtml = showCountTag ? (() => {
+    const cnt = posterMovies.length
+    const TAG_TOP = LABEL_H + GAP + DOT + 5
+    return `<div style="position:absolute;top:${TAG_TOP}px;left:50%;transform:translateX(-50%);z-index:2;pointer-events:none;">` +
+      `<div style="position:absolute;top:-5px;left:50%;transform:translateX(-50%) rotate(45deg);` +
+      `width:10px;height:10px;background:var(--color-surface-card);` +
+      `border-top:1.5px solid var(--color-border);border-left:1.5px solid var(--color-border);` +
+      `border-top-left-radius:2px;z-index:0;"></div>` +
+      `<div style="position:relative;background:var(--color-surface-card);` +
+      `border:1.5px solid var(--color-border);border-radius:10px;` +
+      `padding:3px 8px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.13);z-index:1;">` +
+      `<span style="font-size:11px;font-weight:700;color:var(--color-text-primary);">${cnt}편</span>` +
+      `<span style="font-size:11px;font-weight:400;color:var(--color-text-sub);"> 상영중</span>` +
+      `</div></div>`
+  })() : ''
+
   const html = `
     <div style="width:140px;display:flex;flex-direction:column;align-items:center;overflow:visible;position:relative;">
       ${renderToStaticMarkup(<MapPin kind="indie" selected={selected} label={name} labelOffset={labelOffset} dimmed={dimmed} isDark={isDark} />)}
       ${posterHtml}
+      ${countTagHtml}
     </div>
   `
 
   const icon = L.divIcon({
     html,
     className: '',
-    iconSize: [140, LABEL_H + GAP + DOT + posterH],
+    iconSize: [140, LABEL_H + GAP + DOT + posterH + COUNT_TAG_H],
     iconAnchor: [70, ANCHOR_Y],
   })
   _pinIconCache.set(cacheKey, icon)
@@ -763,6 +784,7 @@ function makeClusterIcon(
   isDark = false,
   regionLabel?: string,
   cityLabel?: string,
+  movieCount = 0,
 ) {
   const dotColor = dimmed ? (isDark ? DIMMED_DOT_DARK : DIMMED_DOT_LIGHT) : 'var(--color-primary-base)'
   const count = theaters.length
@@ -902,6 +924,19 @@ function makeClusterIcon(
     const wrapperStyle =
       `position:absolute;${cardPos[labelDir]}width:max-content;max-width:180px;z-index:2;` +
       `margin-left:${labelOffset.x}px;margin-top:${labelOffset.y}px;`
+    const countTagBelow = movieCount > 0
+      ? `<div style="position:absolute;top:${CENTER_Y + DOT_R + 5}px;left:${CENTER_X}px;transform:translateX(-50%);z-index:2;pointer-events:none;">` +
+        `<div style="position:absolute;top:-5px;left:50%;transform:translateX(-50%) rotate(45deg);` +
+        `width:10px;height:10px;background:var(--color-surface-card);` +
+        `border-top:1.5px solid var(--color-border);border-left:1.5px solid var(--color-border);` +
+        `border-top-left-radius:2px;z-index:0;"></div>` +
+        `<div style="position:relative;background:var(--color-surface-card);` +
+        `border:1.5px solid var(--color-border);border-radius:10px;` +
+        `padding:3px 8px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.13);z-index:1;">` +
+        `<span style="font-size:11px;font-weight:700;color:var(--color-text-primary);">${movieCount}편</span>` +
+        `<span style="font-size:11px;font-weight:400;color:var(--color-text-sub);"> 상영중</span>` +
+        `</div></div>`
+      : ''
     const html =
       `<div style="position:relative;width:${CANVAS_W}px;height:${CANVAS_H}px;overflow:visible;">` +
       `<div style="${wrapperStyle}">` +
@@ -914,6 +949,7 @@ function makeClusterIcon(
       `border:2px solid var(--color-surface-bg);box-shadow:var(--shadow-sm);` +
       `display:flex;align-items:center;justify-content:center;` +
       `color:#fff;font-weight:700;font-size:12px;z-index:1;">${count}</div>` +
+      countTagBelow +
       `</div>`
 
     return L.divIcon({
@@ -924,15 +960,35 @@ function makeClusterIcon(
     })
   }
 
+  // count > 3: 원형 + 태그
   const SIZE = 40
+  const TAG_H = movieCount > 0 ? 32 : 0
+  const CW = 100, CH = SIZE + TAG_H + 8
+  const cx = CW / 2, cy = SIZE / 2
+  const countTagLarge = movieCount > 0
+    ? `<div style="position:absolute;top:${SIZE + 4}px;left:${cx}px;transform:translateX(-50%);z-index:2;pointer-events:none;">` +
+      `<div style="position:absolute;top:-5px;left:50%;transform:translateX(-50%) rotate(45deg);` +
+      `width:10px;height:10px;background:var(--color-surface-card);` +
+      `border-top:1.5px solid var(--color-border);border-left:1.5px solid var(--color-border);` +
+      `border-top-left-radius:2px;z-index:0;"></div>` +
+      `<div style="position:relative;background:var(--color-surface-card);` +
+      `border:1.5px solid var(--color-border);border-radius:10px;` +
+      `padding:3px 8px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.13);z-index:1;">` +
+      `<span style="font-size:11px;font-weight:700;color:var(--color-text-primary);">${movieCount}편</span>` +
+      `<span style="font-size:11px;font-weight:400;color:var(--color-text-sub);"> 상영중</span>` +
+      `</div></div>`
+    : ''
   const html =
-    `<div style="width:${SIZE}px;height:${SIZE}px;border-radius:50%;` +
-    `background:${dotColor};` +
+    `<div style="position:relative;width:${CW}px;height:${CH}px;overflow:visible;">` +
+    `<div style="position:absolute;width:${SIZE}px;height:${SIZE}px;` +
+    `top:0;left:${cx - SIZE / 2}px;` +
+    `border-radius:50%;background:${dotColor};` +
     `display:flex;align-items:center;justify-content:center;` +
     `color:#fff;font-weight:700;font-size:16px;line-height:1;` +
-    `box-shadow:var(--shadow-md);` +
-    `border:2.5px solid var(--color-surface-bg);">${count}</div>`
-  return L.divIcon({ html, className: '', iconSize: [SIZE, SIZE], iconAnchor: [SIZE / 2, SIZE / 2] })
+    `box-shadow:var(--shadow-md);border:2.5px solid var(--color-surface-bg);">${count}</div>` +
+    countTagLarge +
+    `</div>`
+  return L.divIcon({ html, className: '', iconSize: [CW, CH], iconAnchor: [cx, cy] })
 }
 
 /* ── 클러스터가 분리되는 최소 줌 계산 ── */
@@ -2722,6 +2778,10 @@ export default function MapView() {
             const clusterDimmed = filtersActive && cluster.theaters.every(
               (t) => (theaterPosterMovies.get(t.id) ?? []).every(m => !m.matchesFilter)
             )
+            // 지역/도시 클러스터가 아닐 때만 상영 편수 합산
+            const clusterMovieCount = (!cluster.regionLabel && !cluster.cityLabel)
+              ? cluster.theaters.reduce((sum, t) => sum + (theaterPosterMovies.get(t.id)?.length ?? 0), 0)
+              : 0
             return (
               <Marker
                 key={`cluster-${cluster.id}`}
@@ -2736,6 +2796,7 @@ export default function MapView() {
                   isDark,
                   cluster.regionLabel,
                   cluster.cityLabel,
+                  clusterMovieCount,
                 )}
                 eventHandlers={{
                   click: () => {
