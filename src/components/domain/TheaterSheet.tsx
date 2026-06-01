@@ -1479,6 +1479,7 @@ export function TheaterSheet({
                             <div style={{
                               marginTop: 3,
                               fontSize: 10,
+                              fontFamily: 'var(--font-display)',
                               color: 'var(--color-text-caption)',
                               overflow: 'hidden',
                               whiteSpace: 'nowrap',
@@ -1515,6 +1516,7 @@ export function TheaterSheet({
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <div style={{
                 fontSize: 23, fontWeight: 700,
+                fontFamily: 'var(--font-display)',
                 color: 'var(--color-text-primary)',
                 lineHeight: 1.12, letterSpacing: '-0.3px', minWidth: 0,
               }}>
@@ -1839,7 +1841,8 @@ export function TheaterSheet({
                               }}>{movie.title}</div>
                               {movie.director && movie.director.length > 0 && (
                                 <div style={{
-                                  marginTop: 3, fontSize: 10, color: 'var(--color-text-caption)',
+                                  marginTop: 3, fontSize: 10, fontFamily: 'var(--font-display)',
+                                  color: 'var(--color-text-caption)',
                                   overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
                                   opacity: unavailable ? 0.3 : 1,
                                 }}>{movie.director[0]}</div>
@@ -1883,7 +1886,8 @@ export function TheaterSheet({
                                   }}>{movie.title}</div>
                                   {movie.director && movie.director.length > 0 && (
                                     <div style={{
-                                      marginTop: 3, fontSize: 10, color: 'var(--color-text-caption)',
+                                      marginTop: 3, fontSize: 10, fontFamily: 'var(--font-display)',
+                                      color: 'var(--color-text-caption)',
                                       overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
                                     }}>{movie.director[0]}</div>
                                   )}
@@ -1998,7 +2002,7 @@ export function TheaterSheet({
                         <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
                       </svg>
                     </div>
-                    <span style={{ flex: 1, fontSize: 14, fontWeight: 500, color: 'var(--color-text-body)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <span style={{ flex: 1, fontSize: 14, fontWeight: 500, fontFamily: 'var(--font-display)', color: 'var(--color-text-body)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {movie.director[0]}
                     </span>
                     <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-caption)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
