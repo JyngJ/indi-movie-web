@@ -35,6 +35,7 @@ import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { springFlyTo, springFlyToBounds, springActive, setSpringSettledCallback } from '@/lib/mapSpring'
 import { PosterGrid } from './PosterGrid'
 import { ViewportTracker, ZoomSlider, OffScreenTracker, MapRefSetter, IcoPlus, IcoMinus, IcoLocate, IcoSun, IcoMoon } from './MapControls'
+import { SettingsPanel } from './SettingsPanel'
 
 const SEARCH_CROSS_RESULT_LIMIT = 5
 const STATION_BOUNDS_PADDING = 0.25
@@ -116,7 +117,7 @@ function makePinIcon(
   isDesktop = false,
 ) {
   // 캐시 키: 모든 입력을 직렬화 — 같은 조합이면 renderToStaticMarkup 재사용
-  const moviesKey = posterMovies.map(m => `${m.id}:${m.matchesFilter ? 1 : 0}`).join(',')
+  const moviesKey = posterMovies.map(m => `${m.id}:${m.matchesFilter ? 1 : 0}:${m.showtimesToday?.map(s => s.time + (s.soldout ? 'x' : '') + (s.past ? 'p' : '')).join('|') ?? ''}`).join(',')
   const loKey = `${Math.round(labelOffset?.x ?? 0)},${Math.round(labelOffset?.y ?? 0)}`
   const cacheKey = `${name}|${selected ? 1 : 0}|${zoom}|${moviesKey}|${filtersActive ? 1 : 0}|${Math.round(finiteNumber(posterOffsetX) * 2) / 2}|${loKey}|${isDark ? 1 : 0}|${dimmed ? 1 : 0}|${isDesktop ? 1 : 0}`
   const cached = _pinIconCache.get(cacheKey)
@@ -131,6 +132,10 @@ function makePinIcon(
   const usePosterLeft = slots.length > 0 && safePosterOffsetX < -80
   const { w: pW, h: pH } = posterSizeForZoom(zoom, isDesktop)
   const posterH = usePosterLeft || numRows === 0 ? 0 : pH * numRows + 4 * (numRows - 1) + 6
+
+  // 포스터 없는 줌 구간 (11-13)에서 "N편 상영중" 태그 표시
+  const showCountTag = slots.length === 0 && !forceMinOne && posterMovies.length > 0
+  const COUNT_TAG_H = showCountTag ? 30 : 0
 
   let posterHtml = ''
   if (slots.length > 0) {
@@ -165,17 +170,34 @@ function makePinIcon(
     }
   }
 
+  const countTagHtml = showCountTag ? (() => {
+    const cnt = posterMovies.length
+    const TAG_TOP = LABEL_H + GAP + DOT + 9
+    return `<div style="position:absolute;top:${TAG_TOP}px;left:50%;transform:translateX(-50%);z-index:1;pointer-events:none;">` +
+      `<div style="position:absolute;top:-5px;left:50%;transform:translateX(-50%) rotate(45deg);` +
+      `width:10px;height:10px;background:var(--color-surface-card);` +
+      `border-top:1.5px solid var(--color-border);border-left:1.5px solid var(--color-border);` +
+      `border-top-left-radius:2px;z-index:0;"></div>` +
+      `<div style="position:relative;background:var(--color-surface-card);` +
+      `border:1.5px solid var(--color-border);border-radius:10px;` +
+      `padding:3px 8px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.13);z-index:1;">` +
+      `<span style="font-size:11px;font-weight:700;color:var(--color-primary-base);">${cnt}편</span>` +
+      `</div></div>`
+  })() : ''
+
+  const pinHtml = renderToStaticMarkup(<MapPin kind="indie" selected={selected} label={name} labelOffset={labelOffset} dimmed={dimmed} isDark={isDark} />)
   const html = `
     <div style="width:140px;display:flex;flex-direction:column;align-items:center;overflow:visible;position:relative;">
-      ${renderToStaticMarkup(<MapPin kind="indie" selected={selected} label={name} labelOffset={labelOffset} dimmed={dimmed} isDark={isDark} />)}
+      <div style="position:relative;z-index:3;align-self:center;">${pinHtml}</div>
       ${posterHtml}
+      ${countTagHtml}
     </div>
   `
 
   const icon = L.divIcon({
     html,
     className: '',
-    iconSize: [140, LABEL_H + GAP + DOT + posterH],
+    iconSize: [140, LABEL_H + GAP + DOT + posterH + COUNT_TAG_H],
     iconAnchor: [70, ANCHOR_Y],
   })
   _pinIconCache.set(cacheKey, icon)
@@ -222,7 +244,7 @@ function computeLabelDirections(
     }
 
     let best: LabelDir = 'top'
-    for (const dir of ['top', 'bottom', 'right', 'left'] as LabelDir[]) {
+    for (const dir of ['top', 'right', 'left'] as LabelDir[]) {
       if (!placed.some(rect => hit(cands[dir], rect))) {
         best = dir
         break
@@ -763,6 +785,7 @@ function makeClusterIcon(
   isDark = false,
   regionLabel?: string,
   cityLabel?: string,
+  movieCount = 0,
 ) {
   const dotColor = dimmed ? (isDark ? DIMMED_DOT_DARK : DIMMED_DOT_LIGHT) : 'var(--color-primary-base)'
   const count = theaters.length
@@ -870,7 +893,7 @@ function makeClusterIcon(
     const LINE_H = 18
     const PY = 6
     const names = theaters.map(t =>
-      `<div style="font-size:11px;font-weight:600;line-height:${LINE_H}px;` +
+      `<div style="font-size:11px;font-weight:700;font-family:var(--font-display);line-height:${LINE_H}px;` +
       `white-space:nowrap;color:var(--color-text-primary);">${t.name}</div>`
     ).join('')
     const cardStyle =
@@ -902,6 +925,18 @@ function makeClusterIcon(
     const wrapperStyle =
       `position:absolute;${cardPos[labelDir]}width:max-content;max-width:180px;z-index:2;` +
       `margin-left:${labelOffset.x}px;margin-top:${labelOffset.y}px;`
+    const countTagBelow = movieCount > 0
+      ? `<div style="position:absolute;top:${CENTER_Y + DOT_R + 5}px;left:${CENTER_X}px;transform:translateX(-50%);z-index:2;pointer-events:none;">` +
+        `<div style="position:absolute;top:-5px;left:50%;transform:translateX(-50%) rotate(45deg);` +
+        `width:10px;height:10px;background:var(--color-surface-card);` +
+        `border-top:1.5px solid var(--color-border);border-left:1.5px solid var(--color-border);` +
+        `border-top-left-radius:2px;z-index:0;"></div>` +
+        `<div style="position:relative;background:var(--color-surface-card);` +
+        `border:1.5px solid var(--color-border);border-radius:10px;` +
+        `padding:3px 8px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.13);z-index:1;">` +
+        `<span style="font-size:11px;font-weight:700;color:var(--color-primary-base);">${movieCount}편</span>` +
+        `</div></div>`
+      : ''
     const html =
       `<div style="position:relative;width:${CANVAS_W}px;height:${CANVAS_H}px;overflow:visible;">` +
       `<div style="${wrapperStyle}">` +
@@ -914,6 +949,7 @@ function makeClusterIcon(
       `border:2px solid var(--color-surface-bg);box-shadow:var(--shadow-sm);` +
       `display:flex;align-items:center;justify-content:center;` +
       `color:#fff;font-weight:700;font-size:12px;z-index:1;">${count}</div>` +
+      countTagBelow +
       `</div>`
 
     return L.divIcon({
@@ -924,15 +960,35 @@ function makeClusterIcon(
     })
   }
 
+  // count > 3: 원형 + 태그
   const SIZE = 40
+  const TAG_H = movieCount > 0 ? 32 : 0
+  const CW = 100, CH = SIZE + TAG_H + 8
+  const cx = CW / 2, cy = SIZE / 2
+  const countTagLarge = movieCount > 0
+    ? `<div style="position:absolute;top:${SIZE + 4}px;left:${cx}px;transform:translateX(-50%);z-index:2;pointer-events:none;">` +
+      `<div style="position:absolute;top:-5px;left:50%;transform:translateX(-50%) rotate(45deg);` +
+      `width:10px;height:10px;background:var(--color-surface-card);` +
+      `border-top:1.5px solid var(--color-border);border-left:1.5px solid var(--color-border);` +
+      `border-top-left-radius:2px;z-index:0;"></div>` +
+      `<div style="position:relative;background:var(--color-surface-card);` +
+      `border:1.5px solid var(--color-border);border-radius:10px;` +
+      `padding:3px 8px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.13);z-index:1;">` +
+      `<span style="font-size:11px;font-weight:700;color:var(--color-text-primary);">${movieCount}편</span>` +
+      `<span style="font-size:11px;font-weight:400;color:var(--color-text-sub);"> 상영중</span>` +
+      `</div></div>`
+    : ''
   const html =
-    `<div style="width:${SIZE}px;height:${SIZE}px;border-radius:50%;` +
-    `background:${dotColor};` +
+    `<div style="position:relative;width:${CW}px;height:${CH}px;overflow:visible;">` +
+    `<div style="position:absolute;width:${SIZE}px;height:${SIZE}px;` +
+    `top:0;left:${cx - SIZE / 2}px;` +
+    `border-radius:50%;background:${dotColor};` +
     `display:flex;align-items:center;justify-content:center;` +
     `color:#fff;font-weight:700;font-size:16px;line-height:1;` +
-    `box-shadow:var(--shadow-md);` +
-    `border:2.5px solid var(--color-surface-bg);">${count}</div>`
-  return L.divIcon({ html, className: '', iconSize: [SIZE, SIZE], iconAnchor: [SIZE / 2, SIZE / 2] })
+    `box-shadow:var(--shadow-md);border:2.5px solid var(--color-surface-bg);">${count}</div>` +
+    countTagLarge +
+    `</div>`
+  return L.divIcon({ html, className: '', iconSize: [CW, CH], iconAnchor: [cx, cy] })
 }
 
 /* ── 클러스터가 분리되는 최소 줌 계산 ── */
@@ -1052,16 +1108,7 @@ export default function MapView() {
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   const dummyInputRef = useRef<HTMLInputElement>(null)
-  const reportFileInputRef = useRef<HTMLInputElement>(null)
-  const [reportOpen, setReportOpen] = useState(false)
-  const [reportCategory, setReportCategory] = useState('')
-  const [reportDetail, setReportDetail] = useState('')
-  const [reportEmail, setReportEmail] = useState('')
-  const [reportConsent, setReportConsent] = useState(false)
-  const [reportFiles, setReportFiles] = useState<File[]>([])
-  const [reportSubmitting, setReportSubmitting] = useState(false)
-  const [reportError, setReportError] = useState('')
-  const [reportSuccessTrigger, setReportSuccessTrigger] = useState(0)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const mapViewTrackedRef = useRef(false)
   const lastSearchTelemetryRef = useRef('')
   const lastFilterTelemetryRef = useRef('')
@@ -1279,6 +1326,8 @@ export default function MapView() {
 
   const theaterPosterMovies = useMemo(() => {
     const byTheater = new Map<string, Map<string, TheaterPosterMovie>>()
+    // 호버 시간표: 선택 날짜 범위 첫날 기준
+    const todayShowtimes = new Map<string, Map<string, Array<{ time: string; soldout: boolean; past: boolean }>>>()
 
     for (const showtime of mapShowtimes) {
       if (!showtime.movie) continue
@@ -1318,12 +1367,26 @@ export default function MapView() {
           matchesFilter: matchesMovieFilter && matchesDirectorFilter && matchesGenre && matchesNation,
         })
       }
+
+      // 첫날 시간 수집 (호버 tip용)
+      if (showtime.showDate === mapShowtimeStart) {
+        let tMap = todayShowtimes.get(showtime.theaterId)
+        if (!tMap) { tMap = new Map(); todayShowtimes.set(showtime.theaterId, tMap) }
+        const list = tMap.get(showtime.movieId) ?? []
+        const [th, tm] = showtime.showTime.split(':').map(Number)
+        const nowNow = new Date()
+        const nowNowMins = nowNow.getHours() * 60 + nowNow.getMinutes()
+        list.push({ time: showtime.showTime.slice(0, 5), soldout: showtime.seatAvailable === 0, past: th * 60 + tm < nowNowMins })
+        tMap.set(showtime.movieId, list)
+      }
     }
 
     const result = new Map<string, TheaterPosterMovie[]>()
     for (const [theaterId, movieMap] of byTheater) {
       for (const movie of movieMap.values()) {
         if (filters.bookable && !movie.hasAvailableSeats) movie.matchesFilter = false
+        const times = todayShowtimes.get(theaterId)?.get(movie.id)
+        if (times?.length) movie.showtimesToday = times
       }
       result.set(
         theaterId,
@@ -1333,7 +1396,7 @@ export default function MapView() {
       )
     }
     return result
-  }, [directorFilter, filters.bookable, filters.genres, filters.nations, movieFilter, mapShowtimes])
+  }, [directorFilter, filters.bookable, filters.genres, filters.nations, movieFilter, mapShowtimes, mapShowtimeStart])
 
   const filtersActive = filters.bookable || filters.genres.length > 0 || filters.nations.length > 0 || !!movieFilter || !!directorFilter
   const filterResultCount = useMemo(() => {
@@ -1728,51 +1791,6 @@ export default function MapView() {
     }
   }, [coords, refetch])
 
-  const closeReport = useCallback(() => {
-    if (reportSubmitting) return
-    setReportOpen(false)
-  }, [reportSubmitting])
-  const reportDetailLength = reportDetail.length
-  const canSubmitReport = reportCategory.length > 0 && reportDetail.trim().length > 0 && reportConsent && !reportSubmitting
-
-  const handleReportSubmit = useCallback(async () => {
-    if (!canSubmitReport) return
-    setReportSubmitting(true)
-    setReportError('')
-
-    try {
-      const form = new FormData()
-      form.set('category', reportCategory)
-      form.set('detail', reportDetail.trim())
-      form.set('email', reportEmail.trim())
-      form.set('consent', String(reportConsent))
-      form.set('pageUrl', window.location.href)
-      if (selectedTheater) {
-        form.set('selectedTheaterId', selectedTheater.id)
-        form.set('selectedTheaterName', selectedTheater.name)
-      }
-      if (selectedMovieId) form.set('selectedMovieId', selectedMovieId)
-      for (const file of reportFiles.slice(0, 3)) form.append('files', file)
-
-      const response = await fetch('/api/reports', { method: 'POST', body: form })
-      const payload = await response.json().catch(() => null) as { error?: { message?: string } } | null
-      if (!response.ok) {
-        throw new Error(payload?.error?.message ?? '제보를 제출하지 못했습니다.')
-      }
-
-      setReportCategory('')
-      setReportDetail('')
-      setReportEmail('')
-      setReportConsent(false)
-      setReportFiles([])
-      setReportOpen(false)
-      setReportSuccessTrigger((n) => n + 1)
-    } catch (error) {
-      setReportError(error instanceof Error ? error.message : '제보를 제출하지 못했습니다.')
-    } finally {
-      setReportSubmitting(false)
-    }
-  }, [canSubmitReport, reportCategory, reportConsent, reportDetail, reportEmail, reportFiles, selectedMovieId, selectedTheater])
 
   const renderThemeToggle = (style?: CSSProperties) => (
     <button
@@ -2722,6 +2740,10 @@ export default function MapView() {
             const clusterDimmed = filtersActive && cluster.theaters.every(
               (t) => (theaterPosterMovies.get(t.id) ?? []).every(m => !m.matchesFilter)
             )
+            // 지역/도시 클러스터가 아닐 때만 상영 편수 합산
+            const clusterMovieCount = (!cluster.regionLabel && !cluster.cityLabel)
+              ? cluster.theaters.reduce((sum, t) => sum + (theaterPosterMovies.get(t.id)?.length ?? 0), 0)
+              : 0
             return (
               <Marker
                 key={`cluster-${cluster.id}`}
@@ -2736,6 +2758,7 @@ export default function MapView() {
                   isDark,
                   cluster.regionLabel,
                   cluster.cityLabel,
+                  clusterMovieCount,
                 )}
                 eventHandlers={{
                   click: () => {
@@ -2891,34 +2914,20 @@ export default function MapView() {
         </div>
       </div>
 
-      {!isDesktopLayout && (
-        <div style={{
-          position: 'absolute',
-          top: 'calc(max(0px, env(safe-area-inset-top)) + 122px)',
-          right: 16,
-          zIndex: 1001,
-          pointerEvents: 'auto',
-        }}>
-          <FabRound
-            onClick={() => {
-              setReportError('')
-              setReportOpen(true)
-            }}
-            aria-label="제보하기"
-            style={{ fontSize: 20, lineHeight: 1 }}
-          >
-            📨
-          </FabRound>
-        </div>
-      )}
-
-      {/* 테마 토글 — PC: 우상단, 모바일: 우측 위치 버튼 아래 */}
-      {isDesktopLayout && renderThemeToggle({
+      <div style={{
         position: 'absolute',
-        top: 16,
-        right: 16,
-        zIndex: 1000,
-      })}
+        ...(isDesktopLayout ? { top: 16, right: 16 } : { bottom: 32, left: 16 }),
+        zIndex: 1001,
+        pointerEvents: 'auto',
+      }}>
+        <FabRound onClick={() => setSettingsOpen(true)} aria-label="설정">
+          <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+          </svg>
+        </FabRound>
+      </div>
+
 
       {/* PC 줌 슬라이더 — 테마 토글 아래 우측 */}
       {/* 모바일 지도 하단 로고 워터마크 */}
@@ -3143,12 +3152,6 @@ export default function MapView() {
         <FabRound onClick={handleLocate}><IcoLocate /></FabRound>
       </div>
 
-      {!isDesktopLayout && renderThemeToggle({
-        position: 'absolute',
-        left: 16,
-        bottom: fabBottom,
-        zIndex: 1000,
-      })}
 
       {/* 선택 극장 화면 이탈 시 돌아가기 pill */}
       {selectedId && !sheetExiting && !(sheetExpanded && !isDesktopLayout) && theaterOffScreen && !searchOpen && selectedTheater && (
@@ -3203,294 +3206,6 @@ export default function MapView() {
         </div>
       )}
 
-      {reportOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="report-title"
-          onClick={closeReport}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            zIndex: 2100,
-            height: '100dvh',
-            backgroundColor: 'rgba(0,0,0,0.38)',
-            display: 'flex',
-            alignItems: isDesktopLayout ? 'center' : 'stretch',
-            justifyContent: 'center',
-            padding: isDesktopLayout ? 24 : 0,
-          }}
-        >
-          <div
-            onClick={(event) => event.stopPropagation()}
-            style={{
-              width: isDesktopLayout ? 440 : '100%',
-              maxWidth: isDesktopLayout ? 'calc(100vw - 48px)' : undefined,
-              height: isDesktopLayout ? 'min(720px, calc(100dvh - 48px))' : '100dvh',
-              backgroundColor: 'var(--color-surface-card)',
-              color: 'var(--color-text-primary)',
-              border: isDesktopLayout ? '1px solid var(--color-border)' : 'none',
-              borderRadius: isDesktopLayout ? 20 : 0,
-              boxShadow: 'var(--shadow-sheet)',
-              display: 'flex',
-              flexDirection: 'column',
-              overflow: 'hidden',
-            }}
-          >
-            <div style={{
-              height: 56,
-              padding: 'max(0px, env(safe-area-inset-top)) 16px 0',
-              borderBottom: '1px solid var(--color-border)',
-              display: 'flex',
-              alignItems: 'center',
-              flexShrink: 0,
-            }}>
-              <button
-                type="button"
-                onClick={closeReport}
-                disabled={reportSubmitting}
-                style={{
-                  width: 84,
-                  height: 44,
-                  border: 'none',
-                  background: 'transparent',
-                  color: 'var(--color-text-body)',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: reportSubmitting ? 'not-allowed' : 'pointer',
-                  textAlign: 'left',
-                }}
-              >
-                뒤로가기
-              </button>
-              <h2 id="report-title" style={{
-                flex: 1,
-                margin: 0,
-                textAlign: 'center',
-                fontFamily: 'var(--font-sans)',
-                fontSize: 17,
-                fontWeight: 700,
-              }}>
-                제보하기
-              </h2>
-              <div style={{ width: 84 }} />
-            </div>
-
-            <div className="themed-scrollbar" style={{
-              overflowY: 'auto',
-              padding: '20px 20px calc(env(safe-area-inset-bottom) + 24px)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 22,
-            }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)' }}>
-                  1. 어떤 종류의 제보인가요? <span style={{ color: 'var(--color-error)' }}>(필수)</span>
-                </span>
-                <div role="radiogroup" aria-label="제보 카테고리" style={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: 8,
-                }}>
-                  {REPORT_CATEGORIES.map((category) => (
-                    <button
-                      key={category}
-                      type="button"
-                      role="radio"
-                      aria-checked={reportCategory === category}
-                      onClick={() => setReportCategory(category)}
-                      style={{
-                        minHeight: 36,
-                        padding: '0 14px',
-                        borderRadius: 999,
-                        border: reportCategory === category ? '1px solid var(--color-primary-base)' : '1px solid var(--color-border)',
-                        backgroundColor: reportCategory === category ? 'var(--color-primary-subtle-l)' : 'var(--color-surface-bg)',
-                        color: reportCategory === category ? 'var(--color-primary-text)' : 'var(--color-text-body)',
-                        fontSize: 13,
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      {category}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <label style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)' }}>
-                  2. 상세 내용 <span style={{ color: 'var(--color-error)' }}>(필수)</span>
-                </span>
-                <div style={{ position: 'relative' }}>
-                  <textarea
-                    value={reportDetail}
-                    maxLength={500}
-                    onChange={(event) => setReportDetail(event.currentTarget.value)}
-                    placeholder={'내용을 자세히 적어주세요.\n예: OO역 앞 CGV 추가해 주세요!'}
-                    style={{
-                      width: '100%',
-                      minHeight: 150,
-                      resize: 'vertical',
-                      borderRadius: 12,
-                      border: '1px solid var(--color-border)',
-                      backgroundColor: 'var(--color-surface-bg)',
-                      color: 'var(--color-text-primary)',
-                      padding: '14px 14px 34px',
-                      fontSize: 14,
-                      lineHeight: 1.55,
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                      fontFamily: 'var(--font-sans)',
-                    }}
-                  />
-                  <span style={{
-                    position: 'absolute',
-                    right: 14,
-                    bottom: 12,
-                    fontSize: 12,
-                    color: 'var(--color-text-caption)',
-                  }}>
-                    {reportDetailLength} / 500
-                  </span>
-                </div>
-              </label>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)' }}>
-                  3. 파일 첨부 <span style={{ color: 'var(--color-text-caption)', fontWeight: 500 }}>(선택)</span>
-                </span>
-                <input
-                  ref={reportFileInputRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  style={{ display: 'none' }}
-                  onChange={(event) => {
-                    setReportFiles(Array.from(event.currentTarget.files ?? []).slice(0, 3))
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => reportFileInputRef.current?.click()}
-                  style={{
-                    height: 72,
-                    borderRadius: 12,
-                    border: '1px dashed var(--color-border)',
-                    backgroundColor: 'var(--color-surface-bg)',
-                    color: 'var(--color-text-body)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 8,
-                    fontSize: 14,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                  }}
-                >
-                  <span aria-hidden style={{ fontSize: 18 }}>📷</span>
-                  이미지 첨부
-                  <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--color-text-caption)' }}>
-                    최대 3장
-                  </span>
-                </button>
-                {reportFiles.length > 0 && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                    {reportFiles.map((file) => (
-                      <span key={`${file.name}-${file.size}`} style={{
-                        maxWidth: '100%',
-                        height: 28,
-                        padding: '0 10px',
-                        borderRadius: 999,
-                        backgroundColor: 'var(--color-primary-subtle-l)',
-                        color: 'var(--color-primary-text)',
-                        fontSize: 12,
-                        fontWeight: 600,
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}>
-                        {file.name}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <label style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)' }}>
-                  4. 답변받을 이메일 <span style={{ color: 'var(--color-text-caption)', fontWeight: 500 }}>(선택)</span>
-                </span>
-                <input
-                  type="email"
-                  value={reportEmail}
-                  onChange={(event) => setReportEmail(event.currentTarget.value)}
-                  placeholder="email@example.com"
-                  style={{
-                    height: 46,
-                    borderRadius: 12,
-                    border: '1px solid var(--color-border)',
-                    backgroundColor: 'var(--color-surface-bg)',
-                    color: 'var(--color-text-primary)',
-                    padding: '0 14px',
-                    fontSize: 14,
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                  }}
-                />
-              </label>
-
-              <label style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: 10,
-                fontSize: 13,
-                lineHeight: 1.45,
-                color: 'var(--color-text-body)',
-              }}>
-                <input
-                  type="checkbox"
-                  checked={reportConsent}
-                  onChange={(event) => setReportConsent(event.currentTarget.checked)}
-                  style={{ width: 18, height: 18, marginTop: 1, accentColor: 'var(--color-primary-base)' }}
-                />
-                <span>서비스 개선을 위한 개인정보 수집 동의 <strong style={{ color: 'var(--color-error)' }}>(필수)</strong></span>
-              </label>
-
-              <button
-                type="button"
-                disabled={!canSubmitReport}
-                onClick={handleReportSubmit}
-                style={{
-                  height: 48,
-                  borderRadius: 999,
-                  border: 'none',
-                  backgroundColor: canSubmitReport ? 'var(--color-primary-base)' : 'var(--color-surface-raised)',
-                  color: canSubmitReport ? 'var(--color-text-inverse)' : 'var(--color-text-placeholder)',
-                  fontSize: 15,
-                  fontWeight: 800,
-                  cursor: canSubmitReport ? 'pointer' : 'not-allowed',
-                  boxShadow: canSubmitReport ? 'var(--shadow-md)' : 'none',
-                }}
-              >
-                {reportSubmitting ? '제출 중...' : '제출하기'}
-              </button>
-              {reportError && (
-                <p style={{
-                  margin: '-10px 0 0',
-                  textAlign: 'center',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: 'var(--color-error)',
-                }}>
-                  {reportError}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* 드래그 바텀시트 — TheaterSheet가 자체적으로 Leaflet 이벤트 차단 */}
       {selectedTheater && !desktopPanel && (
@@ -3634,10 +3349,14 @@ export default function MapView() {
         </div>
       )}
 
-      <Toast
-        message="제보해 주셔서 감사합니다 🙏 확인 후 이메일로 답변 드리겠습니다."
-        trigger={reportSuccessTrigger}
-        duration={4000}
+      <SettingsPanel
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        isDesktopLayout={isDesktopLayout}
+        isDark={isDark}
+        onSetTheme={(theme) => void setTheme(theme)}
+        selectedMovieId={selectedMovieId}
+        selectedTheaterName={selectedTheater?.name}
       />
     </div>
   )
