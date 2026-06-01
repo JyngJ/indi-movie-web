@@ -2916,7 +2916,7 @@ export default function MapView() {
 
       <div style={{
         position: 'absolute',
-        bottom: 32, left: 16,
+        ...(isDesktopLayout ? { top: 16, right: 16 } : { bottom: 32, left: 16 }),
         zIndex: 1001,
         pointerEvents: 'auto',
       }}>
