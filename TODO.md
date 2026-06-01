@@ -128,6 +128,18 @@ npm run seed:disable-broken
 
 ---
 
+## 폰트
+
+### KIMM체 (한국기계연구원 전용서체) 적용 검토
+
+- [ ] 파일: `KIMM_bold.ttf`, `KIMM_Light.ttf` (프로젝트 루트)
+- [ ] public/fonts/ 로 이동 후 `@font-face` 등록
+- [ ] 기본 텍스트(`--font-sans`) 또는 제목(`--font-serif`) 대체 적용 검토
+- [ ] **출처 표기 필수**: 서비스 내 어딘가에 `출처 – 한국기계연구원, kimm.re.kr` 표기
+- [ ] Regular weight 없음 (Bold/Light만) — 본문에 Light, 강조에 Bold로 구분
+
+---
+
 ## 릴리즈 전 필수
 
 ### 계정 및 위시리스트
