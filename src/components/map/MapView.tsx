@@ -2970,7 +2970,7 @@ export default function MapView() {
       <div style={{
         position: 'absolute',
         ...(isDesktopLayout
-          ? { bottom: 90, right: 16 }
+          ? { bottom: 32, left: 16 }
           : { top: 'calc(max(0px, env(safe-area-inset-top)) + 122px)', right: 16 }),
         zIndex: 1001,
         pointerEvents: 'auto',
