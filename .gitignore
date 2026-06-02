@@ -44,3 +44,6 @@ next-env.d.ts
 untitled/
 영화 tokens.js
 seat-checker/
+.env*.local
+KIMM_Light.ttf
+KIMM_bold.ttf
