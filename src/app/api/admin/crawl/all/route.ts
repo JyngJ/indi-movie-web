@@ -1,4 +1,5 @@
 import { waitUntil } from '@vercel/functions'
+import { revalidatePath } from 'next/cache'
 import { adminAuthErrorResponse, requireAdminSessionUser } from '@/lib/admin/auth'
 import { autoMatchShowtimeCandidates } from '@/lib/admin/store'
 import { runAllSources } from '@/lib/crawl/run-all-sources'
@@ -32,6 +33,9 @@ export async function POST(request: Request) {
       const matchStart = Date.now()
       const matchResult = await autoMatchShowtimeCandidates()
       await notifyDiscordMatch(matchResult.matched, matchResult.autoApproved, matchResult.needsReview, Date.now() - matchStart)
+
+      // 4단계: CDN 캐시 무효화 (theaters는 거의 안 바뀌므로 theaters 생략, 필요시 추가)
+      revalidatePath('/api/public/stations')
     })().catch(async (error: unknown) => {
       const msg = error instanceof Error ? error.message : String(error)
       await notifyDiscordError('📽 상영시간표 수집', msg)
