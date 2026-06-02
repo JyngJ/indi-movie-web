@@ -158,6 +158,10 @@ export async function crawlShowtimeCandidates(context: ParseContext) {
     return crawlTinyticketEventManager(context)
   }
 
+  if (context.source.parser === 'petitecine') {
+    return crawlPetitecine(context)
+  }
+
   const content = await resolveCrawlInput(
     context.inputKind,
     context.content,
@@ -1496,4 +1500,65 @@ function dedupeCandidates(candidates: CrawledShowtimeCandidate[]) {
     const right = `${b.showDate} ${b.showTime} ${b.movieTitle}`
     return left.localeCompare(right)
   })
+}
+
+/* ── petitecine (/api/W0060.do) ──────────────────────────────── */
+async function crawlPetitecine(context: ParseContext): Promise<CrawledShowtimeCandidate[]> {
+  const cinemaId = new URL(context.source.listingUrl).searchParams.get('cinema_id') ?? ''
+  if (!cinemaId) throw new Error('petitecine: cinema_id 없음')
+
+  const today = new Date()
+  const allCandidates: CrawledShowtimeCandidate[] = []
+
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(today)
+    d.setDate(today.getDate() + i)
+    const yyyy = d.getFullYear()
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    const dateStr = `${yyyy}${mm}${dd}`
+    const showDate = `${yyyy}-${mm}-${dd}`
+
+    const resp = await fetch('https://petitecine.com/api/W0060.do', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'user-agent': 'indi-movie-web-admin-crawler/0.1' },
+      body: JSON.stringify({ req_cmd: 'selectlist', cinema_id: Number(cinemaId), chkCinemaId: 'N', movie_date: dateStr }),
+      signal: AbortSignal.timeout(10000),
+    })
+    const res = await resp.json() as { result: number; data?: Array<Record<string, unknown>> }
+    if (res.result !== 1) continue
+
+    for (const row of res.data ?? []) {
+      if (row['use_yn'] !== 'Y' || row['complete_yn'] === 'Y') continue
+      const rawTime = String(row['movie_time'] ?? '')
+      const rawEnd = String(row['movie_end'] ?? '')
+      if (rawTime.length < 4) continue
+      const showTime = `${rawTime.slice(0, 2)}:${rawTime.slice(2, 4)}`
+      const endTime = rawEnd.length >= 4 ? `${rawEnd.slice(0, 2)}:${rawEnd.slice(2, 4)}` : undefined
+      const movieTitle = String(row['movie_name'] ?? '').replace(/\s*\(.*?\)\s*/g, '').trim()
+      const screenName = String(row['theater_name'] ?? '상영관')
+      const seatAvail = Number(row['ticketing_seat_count'] ?? 0)
+      const seatTotal = Number(row['movie_seat_count'] ?? 0)
+      const closed = seatTotal > 0 && seatAvail === 0
+
+      allCandidates.push(buildCandidate({
+        context,
+        movieTitle,
+        showDate,
+        showTime,
+        endTime,
+        screenName,
+        formatText: '',
+        seatAvailable: seatAvail,
+        seatTotal,
+        price: 0,
+        bookingUrl: context.source.listingUrl,
+        rawText: JSON.stringify(row),
+        confidence: closed ? 0.82 : 0.95,
+        warnings: closed ? ['매진'] : [],
+      }))
+    }
+  }
+
+  return dedupeCandidates(allCandidates)
 }

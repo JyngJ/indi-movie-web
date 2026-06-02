@@ -2774,7 +2774,12 @@ export default function MapView() {
                     const bounds = L.latLngBounds(
                       cluster.theaters.map((t) => [t.lat, t.lng] as [number, number])
                     )
-                    springFlyToBounds(map, bounds, { padding: [80, 80], maxZoom: splitZoom })
+                    // 이미 splitZoom 이상이면 중심으로 추가 줌인
+                    if (currentZoom >= splitZoom) {
+                      springFlyTo(map, [cluster.lat, cluster.lng], currentZoom + 1)
+                    } else {
+                      springFlyToBounds(map, bounds, { padding: [80, 80], maxZoom: splitZoom })
+                    }
                   },
                 }}
               />
