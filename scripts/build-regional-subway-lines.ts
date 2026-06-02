@@ -39,13 +39,7 @@ const LINE_CONFIG: Record<string, { color: string; name: string; order: string[]
 }
 
 async function main() {
-  // DB에서 지역 역 좌표 가져오기
-  const { data: stations } = await sb
-    .from('stations')
-    .select('name, lines, lat, lng')
-    .in('lines', Object.keys(LINE_CONFIG).map(l => [l]), { foreignTable: undefined } as never)
-
-  // 실제 쿼리
+  // DB에서 모든 역 좌표 가져오기
   const { data: stationsData } = await sb
     .from('stations')
     .select('name, lines, lat, lng')
