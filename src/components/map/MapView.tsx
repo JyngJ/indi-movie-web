@@ -975,7 +975,6 @@ function makeClusterIcon(
       `border:1.5px solid var(--color-border);border-radius:10px;` +
       `padding:3px 8px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.13);z-index:1;">` +
       `<span style="font-size:11px;font-weight:700;color:var(--color-text-primary);">${movieCount}편</span>` +
-      `<span style="font-size:11px;font-weight:400;color:var(--color-text-sub);"> 상영중</span>` +
       `</div></div>`
     : ''
   const html =

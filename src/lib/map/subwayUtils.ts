@@ -9,6 +9,8 @@ export interface SubwayLineProperties {
   name?: string
   color?: string
   stroke?: string
+  sourceColor?: string
+  source?: string
   route?: string
   routeName?: string
   line_name?: string
@@ -87,20 +89,22 @@ export function subwayLineColor(properties: SubwayLineProperties = {}, isDark = 
     .sort((a, b) => b[0].length - a[0].length)
     .find(([key]) => normalized.includes(key.replace(/\s+/g, '')))
   if (match) return match[1][isDark ? 'dark' : 'light']
-  const explicitColor = properties.color ?? properties.stroke
+  const explicitColor = properties.color ?? properties.stroke ?? properties.sourceColor
   if (explicitColor && /^#|rgb|hsl|var\(/i.test(explicitColor)) return explicitColor
   return 'var(--color-primary-base)'
 }
 
+const REGIONAL_SUBWAY_PATTERN = /(부산|대구|광주|대전|인천)\d*호선/
 function isSubwayLineFeature(feature: Feature<Geometry, SubwayLineProperties>): boolean {
   const label = subwayLineLabel(feature.properties)
   if (!label) return false
-  if (NON_SUBWAY_LINE_PATTERN.test(label) && !SUBWAY_LINE_PATTERN.test(label)) return false
+  if (feature.properties?.source === 'regional') return true
+  if (NON_SUBWAY_LINE_PATTERN.test(label) && !SUBWAY_LINE_PATTERN.test(label) && !REGIONAL_SUBWAY_PATTERN.test(label)) return false
   const normalized = label.replace(/\s+/g, '')
   const hasKnownCode = Object.keys(SEOUL_SUBWAY_LINE_COLORS)
     .sort((a, b) => b.length - a.length)
     .some((key) => normalized === key.replace(/\s+/g, ''))
-  return hasKnownCode || SUBWAY_LINE_PATTERN.test(label)
+  return hasKnownCode || SUBWAY_LINE_PATTERN.test(label) || REGIONAL_SUBWAY_PATTERN.test(label)
 }
 
 export const SUBWAY_LINES = {
