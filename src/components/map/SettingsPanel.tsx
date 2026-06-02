@@ -397,9 +397,8 @@ function AboutPage() {
       </div>
 
       {/* 카피라이트 */}
-      <div style={{ textAlign: 'center', marginTop: 24, fontSize: 12, color: 'var(--color-text-placeholder)', lineHeight: 1.8 }}>
+      <div style={{ textAlign: 'center', marginTop: 24, fontSize: 12, color: 'var(--color-text-placeholder)' }}>
         <div>© 2026 영화볼지도</div>
-        <div>Made in Seoul</div>
       </div>
     </div>
   )
