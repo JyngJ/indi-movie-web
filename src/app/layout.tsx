@@ -39,7 +39,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ko" suppressHydrationWarning>
       <head>
-        {/* FOUC 방지: 렌더링 전 테마 적용 */}
+        {/* FOUC 방지: 렌더링 전 테마 적용 — React 19 알려진 경고(개발환경 only, 프로덕션 무관) */}
         <script dangerouslySetInnerHTML={{ __html: initTheme() }} />
       </head>
       <body>
