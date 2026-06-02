@@ -121,6 +121,11 @@ img {
 }
 
 /* 포스터 스트립 로딩 — 차례로 번지는 물결 */
+@keyframes tipIn {
+  from { opacity: 0; transform: translateY(-6px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
 @keyframes poster-wave {
   0%, 100% { opacity: 0.1; }
   50%       { opacity: 0.75; }
