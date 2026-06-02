@@ -1343,13 +1343,8 @@ async function resolveMovieForApproval(
       rememberProviderMovieAlias(candidate, movie, providerMovieAliases)
       return result
     }
-  } catch (error) {
-    const result = {
-      movie: undefined,
-      reason: `KMDB 자동 매칭 실패: ${candidate.movieTitle} (${error instanceof Error ? error.message : '알 수 없는 오류'})`,
-    }
-    cache?.set(cacheKey, result)
-    return result
+  } catch {
+    // KMDB 실패 (키 없음 포함) → 씨네21 fallback으로 계속
   }
 
   // KMDB에 없으면 씨네21에서 검색 후 자동 임포트
