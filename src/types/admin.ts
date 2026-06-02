@@ -134,7 +134,7 @@ export interface AdminMovie {
 }
 
 export interface AdminExternalMovie {
-  provider: 'kmdb' | 'local'
+  provider: 'kmdb' | 'local' | 'cine21'
   externalId: string
   movieId: string
   movieSeq: string
