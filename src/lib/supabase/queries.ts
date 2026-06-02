@@ -53,7 +53,7 @@ export function useTheaters() {
         updatedAt: r.updated_at,
       }))
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 60 * 1000,
   })
 }
 
@@ -82,7 +82,7 @@ export function useStations() {
         aliases: (r.aliases as string[] | null) ?? [],
       }))
     },
-    staleTime: 10 * 60 * 1000,
+    staleTime: 60 * 60 * 1000,
   })
 }
 
@@ -122,7 +122,7 @@ export function useMovies() {
         }
       })
     },
-    staleTime: 10 * 60 * 1000,
+    staleTime: 60 * 60 * 1000,
   })
 }
 
