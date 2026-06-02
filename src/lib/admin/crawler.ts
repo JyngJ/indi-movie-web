@@ -162,6 +162,14 @@ export async function crawlShowtimeCandidates(context: ParseContext) {
     return crawlPetitecine(context)
   }
 
+  if (context.source.parser === 'drfa') {
+    return crawlDrfa(context)
+  }
+
+  if (context.source.parser === 'screenshotOcr') {
+    return crawlScreenshotOcr(context)
+  }
+
   const content = await resolveCrawlInput(
     context.inputKind,
     context.content,
@@ -1561,4 +1569,151 @@ async function crawlPetitecine(context: ParseContext): Promise<CrawledShowtimeCa
   }
 
   return dedupeCandidates(allCandidates)
+}
+
+/* ── DRFA (drfa.co.kr XE 캘린더) ────────────────────────────── */
+async function crawlDrfa(context: ParseContext): Promise<CrawledShowtimeCandidate[]> {
+  const url = context.sourceUrl ?? context.source.listingUrl
+  const res = await fetch(url, {
+    headers: { 'user-agent': 'indi-movie-web-admin-crawler/0.1' },
+    signal: AbortSignal.timeout(15000),
+  })
+  if (!res.ok) throw new Error(`DRFA fetch 실패: ${res.status}`)
+  const html = await res.text()
+
+  // 연월 추출
+  const ymMatch = html.match(/(\d{4})년\s*(\d{1,2})월/)
+  const year = ymMatch ? parseInt(ymMatch[1]) : new Date().getFullYear()
+  const month = ymMatch ? parseInt(ymMatch[2]) : new Date().getMonth() + 1
+
+  // <td> 블록에서 날짜 + 상영 추출
+  const tdBlocks = [...html.matchAll(/<td[^>]*>([\s\S]{0,2000}?)<\/td>/g)]
+  const today = new Date().toISOString().slice(0, 10)
+  const candidates: CrawledShowtimeCandidate[] = []
+
+  for (const [, cell] of tdBlocks) {
+    // 날짜 번호
+    const dayMatch = cell.match(/class=['"](?:date|day)[^'"]*['"]>\s*(\d{1,2})\s*</)
+      ?? cell.match(/>(\d{1,2})<\/(?:div|span|td)>/)
+    if (!dayMatch) continue
+    const day = parseInt(dayMatch[1])
+    if (!day || day > 31) continue
+
+    const showDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    if (showDate < today) continue
+
+    // 시간 패턴: "2:00 pm" / "11:00 am"
+    const timeMatches = [...cell.matchAll(/(\d{1,2}:\d{2})\s*(am|pm)/gi)]
+    // 영화 제목 (한국어)
+    const titleMatches = [...cell.matchAll(/<b>[\s\S]{0,20}?<br><br>([\s\S]{2,40}?)<\/font/g)]
+
+    // 잔여좌석
+    const seatMatch = cell.match(/잔여좌석.*?\/(\d+)석/)
+    const seatTotal = seatMatch ? parseInt(seatMatch[1]) : 0
+
+    for (let i = 0; i < timeMatches.length; i++) {
+      const rawTime = timeMatches[i][1]
+      const period = timeMatches[i][2].toLowerCase()
+      const [hStr, mStr] = rawTime.split(':')
+      let h = parseInt(hStr)
+      const m = parseInt(mStr)
+      if (period === 'pm' && h < 12) h += 12
+      if (period === 'am' && h === 12) h = 0
+      const showTime = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+
+      const rawTitle = titleMatches[i]?.[1]?.trim()
+        ?? cell.match(/<b[^>]*>\s*(?:\d{1,2}:\d{2}\s*(?:am|pm)[^<]*<br><br>)?([\s\S]{2,40}?)<\/[^>]+>/i)?.[1]?.trim()
+      const movieTitle = rawTitle
+        ? rawTitle.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
+        : ''
+      if (!movieTitle || movieTitle.length < 2) continue
+
+      candidates.push(buildCandidate({
+        context,
+        movieTitle,
+        showDate,
+        showTime,
+        screenName: '1관',
+        formatText: '',
+        seatAvailable: 0,
+        seatTotal,
+        price: 40000,
+        bookingUrl: url,
+        rawText: cell.slice(0, 200),
+        confidence: 0.88,
+        warnings: [],
+      }))
+    }
+  }
+
+  return dedupeCandidates(candidates)
+}
+
+/* ── screenshotOcr (Playwright + GPT-4o) — gymc 등 JS 렌더링 사이트 ── */
+async function crawlScreenshotOcr(context: ParseContext): Promise<CrawledShowtimeCandidate[]> {
+  const url = context.sourceUrl ?? context.source.listingUrl
+  const theaterName = context.source.theaterName
+
+  const { chromium } = await import(/* webpackIgnore: true */ 'playwright-chromium' as any)
+  const browser = await chromium.launch({ headless: true })
+  const page = await browser.newPage()
+  await page.setViewportSize({ width: 1280, height: 900 })
+
+  let screenshotBase64: string
+  try {
+    await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 })
+    await page.waitForTimeout(2000)
+    const buf = await page.screenshot({ fullPage: true, type: 'png' })
+    screenshotBase64 = buf.toString('base64')
+  } finally {
+    await browser.close()
+  }
+
+  // GPT-4o OCR
+  const OpenAI = (await import('openai')).default
+  const openai = new OpenAI()
+  const year = new Date().getFullYear()
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o',
+    max_tokens: 4096,
+    messages: [{
+      role: 'user',
+      content: [
+        { type: 'image_url', image_url: { url: `data:image/png;base64,${screenshotBase64}` } },
+        { type: 'text', text: `이 이미지는 한국 영화관 "${theaterName}"의 상영시간표입니다.\n모든 상영 정보를 빠짐없이 추출해서 JSON으로만 반환하세요.\n- 날짜: YYYY-MM-DD (연도 없으면 ${year} 사용)\n- 시간: HH:MM (24시간제, "2:00 pm" → "14:00")\n- 대관/휴관 제외\n\n{"theaterName":"${theaterName}","showtimes":[{"movieTitle":"영화 제목","showDate":"${year}-06-01","showTime":"14:00","screenName":"1관","endTime":null}],"corrections":[],"confidence":0.9}` },
+      ],
+    }],
+  })
+
+  const text = response.choices[0].message.content?.trim() ?? ''
+  const match = text.match(/\{[\s\S]*\}/)
+  if (!match) throw new Error('OCR JSON 파싱 실패')
+
+  const schedule = JSON.parse(match[0]) as {
+    showtimes: Array<{ movieTitle: string; showDate: string; showTime: string; screenName?: string; endTime?: string }>
+    confidence: number
+    corrections: string[]
+  }
+
+  const today = new Date().toISOString().slice(0, 10)
+  return dedupeCandidates(
+    schedule.showtimes
+      .filter(st => st.showDate >= today && st.movieTitle?.trim())
+      .map(st => buildCandidate({
+        context,
+        movieTitle: st.movieTitle.trim(),
+        showDate: st.showDate,
+        showTime: st.showTime,
+        endTime: st.endTime ?? undefined,
+        screenName: st.screenName ?? '1관',
+        formatText: '',
+        seatAvailable: 0,
+        seatTotal: 0,
+        price: 0,
+        bookingUrl: url,
+        rawText: JSON.stringify(st),
+        confidence: schedule.confidence ?? 0.88,
+        warnings: schedule.corrections?.length ? schedule.corrections : [],
+      }))
+  )
 }
