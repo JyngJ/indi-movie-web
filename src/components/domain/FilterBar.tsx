@@ -995,7 +995,6 @@ export function FilterBar({
 
       {mounted && !regionId && !regionHintDismissed && (
         <>
-          <style>{`@keyframes tipIn{from{opacity:0;transform:translateY(-6px) scale(0.96)}to{opacity:1;transform:translateY(0) scale(1)}}`}</style>
           <div style={{
             position: 'absolute',
             top: 44,
