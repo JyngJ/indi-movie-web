@@ -859,24 +859,31 @@ export async function createAdminMovie(input: AdminMovieInput) {
 
 export async function importAdminExternalMovie(input: AdminExternalMovie) {
   const supabase = createSupabaseAdminClient()
+  const isCine21 = input.provider === 'cine21'
   const movieRow = {
     title: input.title,
     original_title: input.originalTitle ?? null,
     year: input.year,
-    kmdb_id: input.movieId,
-    kmdb_movie_seq: input.movieSeq,
+    kmdb_id: isCine21 ? null : input.movieId,
+    kmdb_movie_seq: isCine21 ? null : input.movieSeq,
     poster_url: input.posterUrl ?? null,
     genre: input.genre,
     director: input.director,
     nation: input.nation ?? null,
   }
 
-  const { data: existing, error: existingError } = await supabase
-    .from('movies')
-    .select('id')
-    .eq('kmdb_id', input.movieId)
-    .eq('kmdb_movie_seq', input.movieSeq)
-    .maybeSingle()
+  // cine21은 제목+연도로 중복 확인
+  let existing: { id: string } | null = null
+  let existingError: { message: string } | null = null
+  if (isCine21) {
+    const res = await supabase.from('movies').select('id').eq('title', input.title).maybeSingle()
+    existing = res.data as { id: string } | null
+    existingError = res.error
+  } else {
+    const res = await supabase.from('movies').select('id').eq('kmdb_id', input.movieId).eq('kmdb_movie_seq', input.movieSeq).maybeSingle()
+    existing = res.data as { id: string } | null
+    existingError = res.error
+  }
 
   if (existingError) throw new Error(existingError.message)
 
