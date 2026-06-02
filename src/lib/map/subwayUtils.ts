@@ -9,6 +9,8 @@ export interface SubwayLineProperties {
   name?: string
   color?: string
   stroke?: string
+  sourceColor?: string
+  source?: string
   route?: string
   routeName?: string
   line_name?: string
