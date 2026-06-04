@@ -744,6 +744,7 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
   const movieResolutionCache = new Map<string, MovieResolutionResult>()
   const providerMovieAliases = buildProviderMovieAliases((aliasRows ?? []) as Pick<CandidateRow, 'raw_text' | 'matched_movie_id'>[])
   let matched = 0
+  let autoApproved = 0
   let needsReview = 0
 
   for (const candidate of candidates) {
@@ -755,13 +756,17 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
       movie ? undefined : movieResult.reason ?? `자동 영화 매칭 실패: ${candidate.movieTitle}`,
     ])
 
+    // 자동 승인 기준: theater + movie 둘 다 매칭 + confidence >= 0.9 + warnings 없음
+    const canAutoApprove = Boolean(theater && movie && candidate.confidence >= 0.9 && warnings.length === 0)
+    const newStatus = canAutoApprove ? 'approved' : 'needs_review'
+
     const { data, error } = await supabase
       .from('showtime_candidates')
       .update({
         matched_theater_id: theater?.id ?? null,
         matched_movie_id: movie?.id ?? null,
         warnings,
-        status: theater && movie ? 'needs_review' : 'needs_review',
+        status: newStatus,
       })
       .eq('id', candidate.id)
       .select()
@@ -772,14 +777,25 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
       continue
     }
 
-    if (theater && movie) matched += 1
-    else needsReview += 1
+    if (canAutoApprove && theater && movie) {
+      // showtimes 테이블에 바로 삽입
+      await supabase
+        .from('showtimes')
+        .upsert(showtimeRowFromCandidate(candidate, theater.id, movie.id), {
+          onConflict: 'theater_id,movie_id,show_date,show_time,screen_name',
+        })
+      autoApproved += 1
+    } else if (theater && movie) {
+      matched += 1
+    } else {
+      needsReview += 1
+    }
     rememberProviderMovieAlias(candidate, movie, providerMovieAliases)
 
     updated.push(candidateFromRow(data as CandidateRow))
   }
 
-  return { matched, needsReview, updated }
+  return { matched, autoApproved, needsReview, updated }
 }
 
 export async function createAdminMovie(input: AdminMovieInput) {
@@ -843,24 +859,31 @@ export async function createAdminMovie(input: AdminMovieInput) {
 
 export async function importAdminExternalMovie(input: AdminExternalMovie) {
   const supabase = createSupabaseAdminClient()
+  const isCine21 = input.provider === 'cine21'
   const movieRow = {
     title: input.title,
     original_title: input.originalTitle ?? null,
     year: input.year,
-    kmdb_id: input.movieId,
-    kmdb_movie_seq: input.movieSeq,
+    kmdb_id: isCine21 ? null : input.movieId,
+    kmdb_movie_seq: isCine21 ? null : input.movieSeq,
     poster_url: input.posterUrl ?? null,
     genre: input.genre,
     director: input.director,
     nation: input.nation ?? null,
   }
 
-  const { data: existing, error: existingError } = await supabase
-    .from('movies')
-    .select('id')
-    .eq('kmdb_id', input.movieId)
-    .eq('kmdb_movie_seq', input.movieSeq)
-    .maybeSingle()
+  // cine21은 제목+연도로 중복 확인
+  let existing: { id: string } | null = null
+  let existingError: { message: string } | null = null
+  if (isCine21) {
+    const res = await supabase.from('movies').select('id').eq('title', input.title).maybeSingle()
+    existing = res.data as { id: string } | null
+    existingError = res.error
+  } else {
+    const res = await supabase.from('movies').select('id').eq('kmdb_id', input.movieId).eq('kmdb_movie_seq', input.movieSeq).maybeSingle()
+    existing = res.data as { id: string } | null
+    existingError = res.error
+  }
 
   if (existingError) throw new Error(existingError.message)
 
@@ -1320,13 +1343,23 @@ async function resolveMovieForApproval(
       rememberProviderMovieAlias(candidate, movie, providerMovieAliases)
       return result
     }
-  } catch (error) {
-    const result = {
-      movie: undefined,
-      reason: `KMDB 자동 매칭 실패: ${candidate.movieTitle} (${error instanceof Error ? error.message : '알 수 없는 오류'})`,
+  } catch {
+    // KMDB 실패 (키 없음 포함) → 씨네21 fallback으로 계속
+  }
+
+  // KMDB에 없으면 씨네21에서 검색 후 자동 임포트
+  try {
+    for (const title of titles) {
+      const cine21Movie = await searchAndImportCine21(title, createSupabaseAdminClient())
+      if (!cine21Movie) continue
+      movies.push(cine21Movie)
+      const result = { movie: cine21Movie }
+      cache?.set(cacheKey, result)
+      rememberProviderMovieAlias(candidate, cine21Movie, providerMovieAliases)
+      return result
     }
-    cache?.set(cacheKey, result)
-    return result
+  } catch {
+    // 씨네21 실패는 무시
   }
 
   const result = { movie: undefined, reason: `영화 매칭 실패: ${candidate.movieTitle}` }
@@ -1486,6 +1519,60 @@ function pickExactExternalMovie(title: string, movies: AdminExternalMovie[]) {
 
 function movieResolutionCacheKey(titles: string[]) {
   return titles.map(normalizeLooseMovieTitle).filter(Boolean).join('|')
+}
+
+async function searchAndImportCine21(
+  title: string,
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+): Promise<{ id: string; title: string; kmdb_id: string; kmdb_movie_seq: string } | null> {
+  const cleanText = (s: string) => s.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+
+  // 씨네21 검색
+  const searchRes = await fetch(
+    `https://cine21.com/search/result/?q=${encodeURIComponent(title)}`,
+    { headers: { 'user-agent': 'indi-movie-web-admin-crawler/0.1' }, signal: AbortSignal.timeout(8000) },
+  )
+  const searchHtml = await searchRes.text()
+  const movieIds = [...searchHtml.matchAll(/movie_id=(\d+)/g)].map(m => m[1])
+  const movieId = movieIds[0]
+  if (!movieId) return null
+
+  // 상세 페이지
+  const detailRes = await fetch(
+    `https://cine21.com/movie/info/?movie_id=${movieId}`,
+    { headers: { 'user-agent': 'indi-movie-web-admin-crawler/0.1' }, signal: AbortSignal.timeout(8000) },
+  )
+  const html = await detailRes.text()
+
+  const parsedTitle = html.match(/영화 \[(.+?)\]/)?.[1]?.trim()
+  if (!parsedTitle) return null
+
+  // 이름 정규화 비교
+  const normalize = (s: string) => s.replace(/\s+/g, '').toLowerCase()
+  if (!normalize(parsedTitle).includes(normalize(title)) && !normalize(title).includes(normalize(parsedTitle))) return null
+
+  const directors = [...html.matchAll(/감독<\/p>[\s\S]{0,400}?<a[^>]+>([^<]+)<\/a>/g)]
+    .map(m => m[1].trim()).filter(Boolean).filter((v, i, a) => a.indexOf(v) === i)
+  const genreBlock = html.match(/장르<\/p>\s*([\s\S]{0,200}?)<\/li>/)?.[1] ?? ''
+  const genres = cleanText(genreBlock).split(/[,，]/).map(s => s.trim()).filter(Boolean)
+  const nationBlock = html.match(/국가<\/p>\s*([\s\S]{0,100}?)<\/li>/)?.[1] ?? ''
+  const nations = cleanText(nationBlock).split(/[,，]/).map(s => s.trim()).filter(Boolean)
+  const yearMatch = html.match(/제작연도[\s\S]{0,50}?(\d{4})/)
+  const year = yearMatch ? parseInt(yearMatch[1]) : new Date().getFullYear()
+
+  const { data: existing } = await supabase.from('movies').select('id, title').eq('title', parsedTitle).maybeSingle()
+  if (existing) return { id: existing.id as string, title: parsedTitle, kmdb_id: '', kmdb_movie_seq: '' }
+
+  const { data, error } = await supabase.from('movies').insert({
+    title: parsedTitle,
+    director: directors,
+    genre: genres,
+    nation: nations[0] ?? null,
+    year,
+  }).select('id').single()
+  if (error || !data) return null
+
+  return { id: data.id as string, title: parsedTitle, kmdb_id: '', kmdb_movie_seq: '' }
 }
 
 function showtimeRowFromCandidate(

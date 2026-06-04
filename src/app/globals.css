@@ -2,6 +2,21 @@
 
 @import "tailwindcss";
 
+/* KIMM체 — 한국기계연구원 전용서체 */
+/* 출처 – 한국기계연구원, kimm.re.kr */
+@font-face {
+  font-family: 'KIMM';
+  font-weight: 300;
+  font-display: swap;
+  src: url('/fonts/KIMM_Light.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'KIMM';
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/KIMM_bold.ttf') format('truetype');
+}
+
 /* ================================
    Reset & Base
    ================================ */
@@ -106,6 +121,11 @@ img {
 }
 
 /* 포스터 스트립 로딩 — 차례로 번지는 물결 */
+@keyframes tipIn {
+  from { opacity: 0; transform: translateY(-6px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
 @keyframes poster-wave {
   0%, 100% { opacity: 0.1; }
   50%       { opacity: 0.75; }
@@ -274,10 +294,32 @@ img {
   color: var(--color-text-sub);
   background: var(--color-surface-bg);
 }
-.pm-tip-nation {
-  margin-top: 5px;
-  font-size: 10px;
-  color: var(--color-text-caption);
+.pm-tip-today-label {
+  margin-top: 7px;
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--color-text-placeholder);
+  letter-spacing: 0.3px;
+}
+.pm-tip-times {
+  margin-top: 3px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.pm-tip-time {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary-base);
+  font-variant-numeric: tabular-nums;
+}
+.pm-tip-time--soldout {
+  color: var(--color-error);
+}
+.pm-tip-time--past {
+  color: var(--color-text-placeholder);
+  text-decoration: line-through;
+  font-weight: 500;
 }
 .pm-tip-tail {
   position: absolute;
@@ -293,10 +335,11 @@ img {
 }
 
 /* 터치 디바이스에서 호버 카드/리스트 팝업 비활성화 */
-@media (hover: none) {
-  .pm-wrap:hover .pm-tip { display: none; }
-  .pm-wrap:hover > div:first-child { transform: none; box-shadow: none; }
-  .po-wrap:hover .po-list { display: none; }
+@media (hover: none), (pointer: coarse) {
+  .pm-wrap > div:first-child { transition: none !important; }
+  .pm-wrap:hover .pm-tip { display: none !important; }
+  .pm-wrap:hover > div:first-child { transform: none !important; box-shadow: none !important; }
+  .po-wrap:hover .po-list { display: none !important; }
   .leaflet-marker-icon:has(.pm-wrap:hover),
   .leaflet-marker-icon:has(.po-wrap:hover) { z-index: auto !important; }
 }

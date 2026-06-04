@@ -158,6 +158,22 @@ export async function crawlShowtimeCandidates(context: ParseContext) {
     return crawlTinyticketEventManager(context)
   }
 
+  if (context.source.parser === 'petitecine') {
+    return crawlPetitecine(context)
+  }
+
+  if (context.source.parser === 'drfa') {
+    return crawlDrfa(context)
+  }
+
+  if (context.source.parser === 'screenshotOcr') {
+    return crawlScreenshotOcr(context)
+  }
+
+  if (context.source.parser === 'boardImageOcr') {
+    return crawlBoardImageOcr(context)
+  }
+
   const content = await resolveCrawlInput(
     context.inputKind,
     context.content,
@@ -173,18 +189,28 @@ export async function crawlDtryxReservationApi(context: ParseContext) {
   const baseUrl = new URL(sourceUrl)
   const origin = baseUrl.origin
   const brandCd = baseUrl.searchParams.get('BrandCd') ?? 'dtryx'
-  const headers = buildDtryxHeaders(sourceUrl)
+  const screenFilter = baseUrl.searchParams.get('screenFilter') ?? null
+  const urlCinemaCd = baseUrl.searchParams.get('CinemaCd') ?? null
+  // screenFilter 한글 파라미터가 referer 헤더에 포함되지 않도록 제거
+  baseUrl.searchParams.delete('screenFilter')
+  const headers = buildDtryxHeaders(baseUrl.toString())
   const main = await fetchDtryxMain(origin, cgid, brandCd, headers)
   const cinemas = (main.CinemaList ?? []).filter((cinema) => cinema.HiddenYn !== 'Y')
   const movies = (main.MovieList ?? []).filter((movie) => movie.HiddenYn !== 'Y')
   const playDates = (main.PlaySdtList ?? []).filter((date) => date.HiddenYn !== 'Y').slice(0, 14)
+  // 이름 매칭 → CinemaCd fallback → CinemaList에 없으면 synthetic cinema 생성
   const targetCinema = pickDtryxCinema(cinemas, context.source.theaterName)
+    ?? (urlCinemaCd ? cinemas.find((c) => c.CinemaCd === urlCinemaCd) : undefined)
+    ?? (urlCinemaCd ? { CinemaNm: context.source.theaterName, CinemaCd: urlCinemaCd, HiddenYn: 'N' as const } : undefined)
 
   if (!targetCinema) {
     throw new Error(`${context.source.theaterName} 영화관 코드를 찾지 못했습니다.`)
   }
 
-  return fetchDtryxShowtimes(origin, cgid, brandCd, headers, movies, playDates, targetCinema, context)
+  const candidates = await fetchDtryxShowtimes(origin, cgid, brandCd, headers, movies, playDates, targetCinema, context)
+  if (!screenFilter) return candidates
+  // 복합 건물 내 특정 관(screen)만 이 theater에 해당하는 경우 필터링
+  return candidates.filter((c) => c.screenName.includes(screenFilter))
 }
 
 export async function crawlAllDtryxSources(
@@ -1182,7 +1208,7 @@ function extractMovieeTheaterId(url: string) {
     if (tid) return decodeURIComponent(tid)
   }
 
-  throw new Error('무비애 예매 URL에서 tid 또는 thsynid를 찾지 못했습니다.')
+  return '' // 서브도메인 사이트는 tid 없이 동작
 }
 
 function createDtryxParams(cgid: string, overrides: Partial<Record<string, string>> = {}, brandCd = 'dtryx') {
@@ -1486,4 +1512,304 @@ function dedupeCandidates(candidates: CrawledShowtimeCandidate[]) {
     const right = `${b.showDate} ${b.showTime} ${b.movieTitle}`
     return left.localeCompare(right)
   })
+}
+
+/* ── petitecine (/api/W0060.do) ──────────────────────────────── */
+async function crawlPetitecine(context: ParseContext): Promise<CrawledShowtimeCandidate[]> {
+  const cinemaId = new URL(context.source.listingUrl).searchParams.get('cinema_id') ?? ''
+  if (!cinemaId) throw new Error('petitecine: cinema_id 없음')
+
+  const today = new Date()
+  const allCandidates: CrawledShowtimeCandidate[] = []
+
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(today)
+    d.setDate(today.getDate() + i)
+    const yyyy = d.getFullYear()
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    const dateStr = `${yyyy}${mm}${dd}`
+    const showDate = `${yyyy}-${mm}-${dd}`
+
+    const resp = await fetch('https://petitecine.com/api/W0060.do', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'user-agent': 'indi-movie-web-admin-crawler/0.1' },
+      body: JSON.stringify({ req_cmd: 'selectlist', cinema_id: Number(cinemaId), chkCinemaId: 'N', movie_date: dateStr }),
+      signal: AbortSignal.timeout(10000),
+    })
+    const res = await resp.json() as { result: number; data?: Array<Record<string, unknown>> }
+    if (res.result !== 1) continue
+
+    for (const row of res.data ?? []) {
+      if (row['use_yn'] !== 'Y' || row['complete_yn'] === 'Y') continue
+      const rawTime = String(row['movie_time'] ?? '')
+      const rawEnd = String(row['movie_end'] ?? '')
+      if (rawTime.length < 4) continue
+      const showTime = `${rawTime.slice(0, 2)}:${rawTime.slice(2, 4)}`
+      const endTime = rawEnd.length >= 4 ? `${rawEnd.slice(0, 2)}:${rawEnd.slice(2, 4)}` : undefined
+      const movieTitle = String(row['movie_name'] ?? '').replace(/\s*\(.*?\)\s*/g, '').trim()
+      const screenName = String(row['theater_name'] ?? '상영관')
+      const seatAvail = Number(row['ticketing_seat_count'] ?? 0)
+      const seatTotal = Number(row['movie_seat_count'] ?? 0)
+      const closed = seatTotal > 0 && seatAvail === 0
+
+      allCandidates.push(buildCandidate({
+        context,
+        movieTitle,
+        showDate,
+        showTime,
+        endTime,
+        screenName,
+        formatText: '',
+        seatAvailable: seatAvail,
+        seatTotal,
+        price: 0,
+        bookingUrl: context.source.listingUrl,
+        rawText: JSON.stringify(row),
+        confidence: closed ? 0.82 : 0.95,
+        warnings: closed ? ['매진'] : [],
+      }))
+    }
+  }
+
+  return dedupeCandidates(allCandidates)
+}
+
+/* ── DRFA (drfa.co.kr XE 캘린더) ────────────────────────────── */
+async function crawlDrfa(context: ParseContext): Promise<CrawledShowtimeCandidate[]> {
+  const url = context.sourceUrl ?? context.source.listingUrl
+  const res = await fetch(url, {
+    headers: { 'user-agent': 'indi-movie-web-admin-crawler/0.1' },
+    signal: AbortSignal.timeout(15000),
+  })
+  if (!res.ok) throw new Error(`DRFA fetch 실패: ${res.status}`)
+  const html = await res.text()
+
+  // 연월 추출
+  const ymMatch = html.match(/(\d{4})년\s*(\d{1,2})월/)
+  const year = ymMatch ? parseInt(ymMatch[1]) : new Date().getFullYear()
+  const month = ymMatch ? parseInt(ymMatch[2]) : new Date().getMonth() + 1
+
+  // <td> 블록에서 날짜 + 상영 추출
+  const tdBlocks = [...html.matchAll(/<td[^>]*>([\s\S]{0,2000}?)<\/td>/g)]
+  const today = new Date().toISOString().slice(0, 10)
+  const candidates: CrawledShowtimeCandidate[] = []
+
+  for (const [, cell] of tdBlocks) {
+    // 날짜 번호
+    const dayMatch = cell.match(/class=['"](?:date|day)[^'"]*['"]>\s*(\d{1,2})\s*</)
+      ?? cell.match(/>(\d{1,2})<\/(?:div|span|td)>/)
+    if (!dayMatch) continue
+    const day = parseInt(dayMatch[1])
+    if (!day || day > 31) continue
+
+    const showDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    if (showDate < today) continue
+
+    // 시간 패턴: "2:00 pm" / "11:00 am"
+    const timeMatches = [...cell.matchAll(/(\d{1,2}:\d{2})\s*(am|pm)/gi)]
+    // 영화 제목 (한국어)
+    const titleMatches = [...cell.matchAll(/<b>[\s\S]{0,20}?<br><br>([\s\S]{2,40}?)<\/font/g)]
+
+    // 잔여좌석
+    const seatMatch = cell.match(/잔여좌석.*?\/(\d+)석/)
+    const seatTotal = seatMatch ? parseInt(seatMatch[1]) : 0
+
+    for (let i = 0; i < timeMatches.length; i++) {
+      const rawTime = timeMatches[i][1]
+      const period = timeMatches[i][2].toLowerCase()
+      const [hStr, mStr] = rawTime.split(':')
+      let h = parseInt(hStr)
+      const m = parseInt(mStr)
+      if (period === 'pm' && h < 12) h += 12
+      if (period === 'am' && h === 12) h = 0
+      const showTime = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+
+      const rawTitle = titleMatches[i]?.[1]?.trim()
+        ?? cell.match(/<b[^>]*>\s*(?:\d{1,2}:\d{2}\s*(?:am|pm)[^<]*<br><br>)?([\s\S]{2,40}?)<\/[^>]+>/i)?.[1]?.trim()
+      const movieTitle = rawTitle
+        ? rawTitle.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
+        : ''
+      if (!movieTitle || movieTitle.length < 2) continue
+
+      candidates.push(buildCandidate({
+        context,
+        movieTitle,
+        showDate,
+        showTime,
+        screenName: '1관',
+        formatText: '',
+        seatAvailable: 0,
+        seatTotal,
+        price: 40000,
+        bookingUrl: url,
+        rawText: cell.slice(0, 200),
+        confidence: 0.88,
+        warnings: [],
+      }))
+    }
+  }
+
+  return dedupeCandidates(candidates)
+}
+
+/* ── screenshotOcr (Playwright + GPT-4o) — gymc 등 JS 렌더링 사이트 ── */
+async function crawlScreenshotOcr(context: ParseContext): Promise<CrawledShowtimeCandidate[]> {
+  const url = context.sourceUrl ?? context.source.listingUrl
+  const theaterName = context.source.theaterName
+
+  const { chromium } = await import(/* webpackIgnore: true */ 'playwright-chromium' as any)
+  const browser = await chromium.launch({ headless: true })
+  const page = await browser.newPage()
+  await page.setViewportSize({ width: 1280, height: 900 })
+
+  let screenshotBase64: string
+  try {
+    await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 })
+    await page.waitForTimeout(2000)
+    const buf = await page.screenshot({ fullPage: true, type: 'png' })
+    screenshotBase64 = buf.toString('base64')
+  } finally {
+    await browser.close()
+  }
+
+  // GPT-4o OCR
+  const OpenAI = (await import('openai')).default
+  const openai = new OpenAI()
+  const year = new Date().getFullYear()
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o',
+    max_tokens: 4096,
+    messages: [{
+      role: 'user',
+      content: [
+        { type: 'image_url', image_url: { url: `data:image/png;base64,${screenshotBase64}` } },
+        { type: 'text', text: `이 이미지는 한국 영화관 "${theaterName}"의 상영시간표입니다.\n모든 상영 정보를 빠짐없이 추출해서 JSON으로만 반환하세요.\n- 날짜: YYYY-MM-DD (연도 없으면 ${year} 사용)\n- 시간: HH:MM (24시간제, "2:00 pm" → "14:00")\n- 대관/휴관 제외\n\n{"theaterName":"${theaterName}","showtimes":[{"movieTitle":"영화 제목","showDate":"${year}-06-01","showTime":"14:00","screenName":"1관","endTime":null}],"corrections":[],"confidence":0.9}` },
+      ],
+    }],
+  })
+
+  const text = response.choices[0].message.content?.trim() ?? ''
+  const match = text.match(/\{[\s\S]*\}/)
+  if (!match) throw new Error('OCR JSON 파싱 실패')
+
+  const schedule = JSON.parse(match[0]) as {
+    showtimes: Array<{ movieTitle: string; showDate: string; showTime: string; screenName?: string; endTime?: string }>
+    confidence: number
+    corrections: string[]
+  }
+
+  const today = new Date().toISOString().slice(0, 10)
+  return dedupeCandidates(
+    schedule.showtimes
+      .filter(st => st.showDate >= today && st.movieTitle?.trim())
+      .map(st => buildCandidate({
+        context,
+        movieTitle: st.movieTitle.trim(),
+        showDate: st.showDate,
+        showTime: st.showTime,
+        endTime: st.endTime ?? undefined,
+        screenName: st.screenName ?? '1관',
+        formatText: '',
+        seatAvailable: 0,
+        seatTotal: 0,
+        price: 0,
+        bookingUrl: url,
+        rawText: JSON.stringify(st),
+        confidence: schedule.confidence ?? 0.88,
+        warnings: schedule.corrections?.length ? schedule.corrections : [],
+      }))
+  )
+}
+
+/* ── boardImageOcr: 게시판 이미지 다운로드 → GPT-4o OCR ── */
+async function crawlBoardImageOcr(context: ParseContext): Promise<CrawledShowtimeCandidate[]> {
+  const url = context.sourceUrl ?? context.source.listingUrl
+  const theaterName = context.source.theaterName
+
+  // 1) 게시글 HTML 가져오기
+  const pageRes = await fetch(url, {
+    headers: { 'user-agent': 'indi-movie-web-admin-crawler/0.1' },
+    signal: AbortSignal.timeout(12000),
+  })
+  if (!pageRes.ok) throw new Error(`게시글 fetch 실패: ${pageRes.status}`)
+  const html = await pageRes.text()
+
+  // 2) 이미지 URL 추출 (업로드된 첨부 이미지)
+  const imgMatches = [
+    ...html.matchAll(/<img[^>]+src=["']([^"']+)["'][^>]*>/g),
+  ]
+  const base = new URL(url)
+  const imgUrls = imgMatches
+    .map(m => {
+      const src = m[1]
+      if (!src || src.includes('logo') || src.includes('icon') || src.includes('banner') || src.includes('btn')) return null
+      try { return new URL(src, base).toString() } catch { return null }
+    })
+    .filter((u): u is string => Boolean(u))
+    // 콘텐츠 이미지만 (editor/data 경로 우선)
+    .sort((a, b) => {
+      const score = (u: string) => (u.includes('editor') || u.includes('data') || u.includes('upload') || u.includes('attach')) ? 1 : 0
+      return score(b) - score(a)
+    })
+
+  if (!imgUrls.length) throw new Error('게시글에서 이미지를 찾을 수 없습니다')
+
+  // 3) 첫 번째 콘텐츠 이미지 다운로드
+  const imgUrl = imgUrls[0]
+  const imgRes = await fetch(imgUrl, { signal: AbortSignal.timeout(10000) })
+  if (!imgRes.ok) throw new Error(`이미지 다운로드 실패: ${imgRes.status}`)
+  const buf = await imgRes.arrayBuffer()
+  const base64 = Buffer.from(buf).toString('base64')
+  const rawType = imgRes.headers.get('content-type') ?? 'image/jpeg'
+  const mediaType = (['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(rawType)
+    ? rawType : 'image/jpeg') as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'
+
+  // 4) GPT-4o OCR
+  const OpenAI = (await import('openai')).default
+  const openai = new OpenAI()
+  const year = new Date().getFullYear()
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o',
+    max_tokens: 4096,
+    messages: [{
+      role: 'user',
+      content: [
+        { type: 'image_url', image_url: { url: `data:${mediaType};base64,${base64}` } },
+        { type: 'text', text: `이 이미지는 한국 영화관 "${theaterName}"의 상영시간표입니다.\n모든 상영 정보를 빠짐없이 추출해서 JSON으로만 반환하세요.\n- 날짜: YYYY-MM-DD (연도 없으면 ${year} 사용)\n- 시간: HH:MM (24시간제)\n- 대관/휴관 제외\n\n{"theaterName":"${theaterName}","showtimes":[{"movieTitle":"영화 제목","showDate":"${year}-06-01","showTime":"14:00","screenName":"1관","endTime":null}],"corrections":[],"confidence":0.9}` },
+      ],
+    }],
+  })
+
+  const text = response.choices[0].message.content?.trim() ?? ''
+  const match = text.match(/\{[\s\S]*\}/)
+  if (!match) throw new Error('OCR JSON 파싱 실패')
+
+  const schedule = JSON.parse(match[0]) as {
+    showtimes: Array<{ movieTitle: string; showDate: string; showTime: string; screenName?: string; endTime?: string }>
+    confidence: number
+    corrections: string[]
+  }
+
+  const today = new Date().toISOString().slice(0, 10)
+  return dedupeCandidates(
+    schedule.showtimes
+      .filter(st => st.showDate >= today && st.movieTitle?.trim())
+      .map(st => buildCandidate({
+        context,
+        movieTitle: st.movieTitle.trim(),
+        showDate: st.showDate,
+        showTime: st.showTime,
+        endTime: st.endTime ?? undefined,
+        screenName: st.screenName ?? '1관',
+        formatText: '',
+        seatAvailable: 0,
+        seatTotal: 0,
+        price: 0,
+        bookingUrl: url,
+        rawText: `${imgUrl}|${JSON.stringify(st)}`,
+        confidence: schedule.confidence ?? 0.88,
+        warnings: schedule.corrections?.length ? schedule.corrections : [],
+      }))
+  )
 }

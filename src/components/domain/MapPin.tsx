@@ -85,6 +85,7 @@ export function MapPin({ kind = 'indie', selected = false, label, labelOffset, o
           <div style={{
             fontSize: 12,
             fontWeight: 700,
+            fontFamily: 'var(--font-display)',
             whiteSpace: 'nowrap',
             padding: '3px 7px',
             borderRadius: 5,

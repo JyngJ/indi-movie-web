@@ -11,7 +11,7 @@ export interface AdminTheaterSource {
   matchedTheaterId?: string
   homepageUrl: string
   listingUrl: string
-  parser: 'jsonLdEvent' | 'tableText' | 'timelineCard' | 'dtryxReservationApi' | 'movieeTicketApi' | 'movielandProductOptions' | 'seoulArtTimetable' | 'csv' | 'selfHosted' | 'ocr' | 'tinyticketEventManager'
+  parser: 'jsonLdEvent' | 'tableText' | 'timelineCard' | 'dtryxReservationApi' | 'movieeTicketApi' | 'movielandProductOptions' | 'seoulArtTimetable' | 'csv' | 'selfHosted' | 'ocr' | 'tinyticketEventManager' | 'petitecine' | 'drfa' | 'screenshotOcr' | 'boardImageOcr'
   enabled: boolean
   cadence: 'manual' | 'daily' | 'twice_daily' | 'four_daily'
   lastCrawledAt?: string
@@ -134,7 +134,7 @@ export interface AdminMovie {
 }
 
 export interface AdminExternalMovie {
-  provider: 'kmdb' | 'local'
+  provider: 'kmdb' | 'local' | 'cine21'
   externalId: string
   movieId: string
   movieSeq: string
@@ -220,6 +220,7 @@ export interface AdminShowtimeInput {
 
 export interface CandidateAutoMatchResult {
   matched: number
+  autoApproved: number
   needsReview: number
   updated: CrawledShowtimeCandidate[]
 }

@@ -48,10 +48,12 @@ export function ShowtimeCell({
   const isPast       = isNowPlaying || isEnded
   const isClickable  = onClick && !isSoldout && !isPast
 
-  const seatColor = isSoldout
-    ? 'var(--color-text-primary)'
+  const seatColor = isSoldout || isEnded
+    ? 'var(--color-text-placeholder)'
     : isLow
     ? 'var(--color-warning)'
+    : isNowPlaying
+    ? 'var(--color-primary-base)'
     : 'var(--color-primary-base)'
 
   return (
@@ -80,12 +82,17 @@ export function ShowtimeCell({
 
       {/* 시간 */}
       <div className="flex items-baseline gap-1" style={{ color: 'var(--color-text-primary)' }}>
-        <span style={{ fontSize: 'var(--text-time)', fontWeight: 700, fontFeatureSettings: '"tnum"', whiteSpace: 'nowrap' }}>
+        <span style={{
+          fontSize: 'var(--text-time)', fontWeight: 700, fontFeatureSettings: '"tnum"', whiteSpace: 'nowrap',
+          textDecoration: isEnded ? 'line-through' : 'none',
+        }}>
           {startTime}
         </span>
-        <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-sub)', fontFeatureSettings: '"tnum"', whiteSpace: 'nowrap' }}>
-          -{endTime}
-        </span>
+        {endTime && (
+          <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-sub)', fontFeatureSettings: '"tnum"', whiteSpace: 'nowrap' }}>
+            -{endTime}
+          </span>
+        )}
       </div>
 
       {/* 잔여석 / 상태 */}
@@ -94,7 +101,6 @@ export function ShowtimeCell({
         style={{
           fontSize: 'var(--text-seat)',
           fontFeatureSettings: '"tnum"',
-          textDecoration: isSoldout ? 'line-through' : 'none',
           whiteSpace: 'nowrap',
         }}
       >
@@ -104,13 +110,13 @@ export function ShowtimeCell({
           <span style={{ color: '#EF4444', fontWeight: 700 }}>상영 완료</span>
         ) : (
           <>
-            <span style={{ color: seatColor, fontWeight: 600 }}>{seatAvailable}</span>
-            <span style={{ color: 'var(--color-text-sub)' }}>/{seatTotal}석</span>
+            <span style={{ color: seatColor, fontWeight: 600, textDecoration: isSoldout ? 'line-through' : 'none' }}>{seatAvailable}</span>
+            <span style={{ color: 'var(--color-text-sub)', textDecoration: isSoldout ? 'line-through' : 'none' }}>/{seatTotal}석</span>
           </>
         )}
       </div>
 
-      {/* 상영관 + 심야 배지 같은 줄 */}
+      {/* 상영관 + 심야 배지 */}
       {(screenName || isLate) && (
         <div style={{ marginTop: 4, display: 'flex', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
           {screenName && (
@@ -118,11 +124,10 @@ export function ShowtimeCell({
               {screenName}
             </span>
           )}
-          {isLate && <InlineBadge text="심야" color="var(--color-primary-base)" />}
+          {isLate && !isPast && <InlineBadge text="심야" color="var(--color-primary-base)" />}
         </div>
       )}
 
-      {/* 프로모션 */}
       {promo && (
         <div className="mt-[6px]" style={{ fontSize: 10, color: 'var(--color-primary-base)', fontWeight: 500 }}>
           {promo}

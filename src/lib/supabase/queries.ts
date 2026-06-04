@@ -24,36 +24,12 @@ export function useTheaters() {
   return useQuery<Theater[]>({
     queryKey: ['theaters'],
     queryFn: async () => {
-      const { data, error } = await supabase()
-        .from('theaters')
-        .select('id,name,lat,lng,address,city,phone,website,instagram_url,screen_count,seat_count,parking,restaurant,accessibility,rating,created_at,updated_at')
-        .order('name')
-
-      if (error) throw error
-
-      return (data ?? []).map((r) => ({
-        id: r.id,
-        name: r.name,
-        lat: Number(r.lat),
-        lng: Number(r.lng),
-        address: r.address,
-        city: r.city,
-        phone: r.phone ?? undefined,
-        website: r.website ?? undefined,
-        instagramUrl: r.instagram_url ?? undefined,
-        screenCount: r.screen_count,
-        seatCount: r.seat_count ?? undefined,
-        amenities: {
-          parking: r.parking,
-          restaurant: r.restaurant,
-          accessibility: r.accessibility,
-        },
-        rating: r.rating ?? undefined,
-        createdAt: r.created_at,
-        updatedAt: r.updated_at,
-      }))
+      const res = await fetch('/api/public/theaters')
+      if (!res.ok) throw new Error(`theaters fetch 실패: ${res.status}`)
+      return res.json()
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 60 * 1000,
+    gcTime: 120 * 60 * 1000,
   })
 }
 
@@ -62,27 +38,12 @@ export function useStations() {
   return useQuery<Station[]>({
     queryKey: ['stations'],
     queryFn: async () => {
-      const { data, error } = await supabase()
-        .from('stations')
-        .select('id,source_id,name,lines,lat,lng,city,district,neighborhood,aliases')
-        .order('name')
-
-      if (error) throw error
-
-      return (data ?? []).map((r) => ({
-        id: r.id,
-        sourceId: r.source_id ?? undefined,
-        name: r.name,
-        lines: (r.lines as string[] | null) ?? [],
-        lat: Number(r.lat),
-        lng: Number(r.lng),
-        city: r.city,
-        district: r.district ?? undefined,
-        neighborhood: r.neighborhood ?? undefined,
-        aliases: (r.aliases as string[] | null) ?? [],
-      }))
+      const res = await fetch('/api/public/stations')
+      if (!res.ok) throw new Error(`stations fetch 실패: ${res.status}`)
+      return res.json()
     },
-    staleTime: 10 * 60 * 1000,
+    staleTime: 60 * 60 * 1000,
+    gcTime: 120 * 60 * 1000,
   })
 }
 
@@ -122,7 +83,7 @@ export function useMovies() {
         }
       })
     },
-    staleTime: 10 * 60 * 1000,
+    staleTime: 60 * 60 * 1000,
   })
 }
 

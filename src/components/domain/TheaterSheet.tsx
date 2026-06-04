@@ -187,21 +187,20 @@ function SynopsisCard({ synopsis, tags, visible, onSearchTheaters }: SynopsisCar
 
 /* ── 날짜 생성 헬퍼 ─────────────────────────────────────────────── */
 // availableDates: 'YYYY-MM-DD' 형태의 Set — 해당 날짜에만 상영 있음
-function buildDays(count = 7, availableDates?: Set<string>): Day[] {
+function buildDays(count = 7, availableDates?: Set<string>, offset = 0): Day[] {
   const today = new Date()
   return Array.from({ length: count }, (_, i) => {
     const d = new Date(today)
-    d.setDate(today.getDate() + i)
+    d.setDate(today.getDate() + offset + i)
     const dow  = ['일', '월', '화', '수', '목', '금', '토'][d.getDay()]
     const date = String(d.getDate())
+    const absIdx = offset + i
     const type: DayType =
-      i === 0            ? 'today'
+      absIdx === 0       ? 'today'
       : d.getDay() === 0 ? 'sunday'
       : d.getDay() === 6 ? 'saturday'
       : 'weekday'
 
-    // availableDates가 주어지면 없는 날짜는 disabled
-    // toISOString()은 UTC 기준 — 한국 자정(00:00~09:00 KST)에 하루 밀림 → 로컬 날짜로 계산
     const isoDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     const disabled = availableDates ? !availableDates.has(isoDate) : false
 
@@ -350,7 +349,8 @@ export function TheaterSheet({
     return dates
   }, [allMovieEntries])
 
-  const days = buildDays(7, theaterAvailableDates)
+  const [dateWindowOffset, setDateWindowOffset] = useState(0)
+  const days = buildDays(7, theaterAvailableDates, dateWindowOffset)
   const selectedDate = days.find((d) => d.isoDate === selectedIsoDate)?.date ?? days[0].date
 
   /* ── 바텀시트 필터 — 이 극장 영화에서만 가능한 장르/국가 ── */
@@ -888,7 +888,7 @@ export function TheaterSheet({
     return () => clearInterval(id)
   }, [])
 
-  /* ── 상영시간 필터링 ─────────────────────────────────────────── */
+  /* ── 상영시간 필터링 (오늘은 지난 상영도 포함, disabled로 표시) ── */
   const filteredShowtimes = showtimes.filter((s) => {
     if (s.movieId !== selectedMovieId) return false
     return true
@@ -1207,6 +1207,7 @@ export function TheaterSheet({
                   minWidth: 0,
                   fontSize: 22,
                   fontWeight: 800,
+                  fontFamily: 'var(--font-display)',
                   lineHeight: 1.16,
                   color: 'var(--color-text-primary)',
                   overflow: 'hidden',
@@ -1477,6 +1478,7 @@ export function TheaterSheet({
                             <div style={{
                               marginTop: 3,
                               fontSize: 10,
+                              fontFamily: 'var(--font-display)',
                               color: 'var(--color-text-caption)',
                               overflow: 'hidden',
                               whiteSpace: 'nowrap',
@@ -1513,6 +1515,7 @@ export function TheaterSheet({
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <div style={{
                 fontSize: 23, fontWeight: 700,
+                fontFamily: 'var(--font-display)',
                 color: 'var(--color-text-primary)',
                 lineHeight: 1.12, letterSpacing: '-0.3px', minWidth: 0,
               }}>
@@ -1559,6 +1562,10 @@ export function TheaterSheet({
             <DateBar
               days={days}
               selectedDate={selectedDate}
+              hasPrev={dateWindowOffset > 0}
+              hasNext={dateWindowOffset < 21}
+              onPrev={() => setDateWindowOffset((o) => Math.max(0, o - 7))}
+              onNext={() => setDateWindowOffset((o) => o + 7)}
               onSelectDate={(date) => {
                 const day = days.find((d) => d.date === date)
                 if (day) {
@@ -1833,7 +1840,8 @@ export function TheaterSheet({
                               }}>{movie.title}</div>
                               {movie.director && movie.director.length > 0 && (
                                 <div style={{
-                                  marginTop: 3, fontSize: 10, color: 'var(--color-text-caption)',
+                                  marginTop: 3, fontSize: 10, fontFamily: 'var(--font-display)',
+                                  color: 'var(--color-text-caption)',
                                   overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
                                   opacity: unavailable ? 0.3 : 1,
                                 }}>{movie.director[0]}</div>
@@ -1877,7 +1885,8 @@ export function TheaterSheet({
                                   }}>{movie.title}</div>
                                   {movie.director && movie.director.length > 0 && (
                                     <div style={{
-                                      marginTop: 3, fontSize: 10, color: 'var(--color-text-caption)',
+                                      marginTop: 3, fontSize: 10, fontFamily: 'var(--font-display)',
+                                      color: 'var(--color-text-caption)',
                                       overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
                                     }}>{movie.director[0]}</div>
                                   )}
@@ -1920,6 +1929,7 @@ export function TheaterSheet({
                   <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <div style={{
                       fontSize: 17, fontWeight: 700,
+                      fontFamily: 'var(--font-display)',
                       color: 'var(--color-text-primary)',
                       lineHeight: 1.3,
                       overflow: 'hidden',
@@ -1992,7 +2002,7 @@ export function TheaterSheet({
                         <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
                       </svg>
                     </div>
-                    <span style={{ flex: 1, fontSize: 14, fontWeight: 500, color: 'var(--color-text-body)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <span style={{ flex: 1, fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-body)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {movie.director[0]}
                     </span>
                     <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-caption)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -2056,26 +2066,18 @@ export function TheaterSheet({
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                 {filteredShowtimes.map((st) => {
-                  const hour = parseInt(st.showTime.slice(0, 2), 10)
-                  const isToday = selectedIsoDate === todayIso
                   const [sh, sm] = st.showTime.split(':').map(Number)
                   const startMin = sh * 60 + sm
-                  const endMin = st.endTime
-                    ? (() => { const [eh, em] = st.endTime.split(':').map(Number); return eh * 60 + em })()
-                    : null
-
+                  const endMin = st.endTime ? (() => { const [eh, em] = st.endTime!.split(':').map(Number); return eh * 60 + em })() : startMin + 120
+                  const isToday = selectedIsoDate === todayIso
                   const kind: import('./ShowtimeCell').ShowtimeKind = (() => {
-                    if (isToday && startMin < nowMinutes) {
-                      // 상영이 시작된 경우
-                      if (endMin !== null && nowMinutes < endMin) return 'nowplaying'
-                      return 'ended'
-                    }
+                    if (isToday && endMin <= nowMinutes) return 'ended'
+                    if (isToday && startMin < nowMinutes && endMin > nowMinutes) return 'nowplaying'
                     if (st.seatAvailable === 0) return 'soldout'
                     if (st.seatAvailable <= st.seatTotal * 0.1) return 'low'
-                    if (hour >= 21) return 'late'
+                    if (sh >= 21) return 'late'
                     return 'normal'
                   })()
-
                   return (
                     <ShowtimeCell
                       key={st.id}
@@ -2090,6 +2092,18 @@ export function TheaterSheet({
                     />
                   )
                 })}
+              </div>
+            )}
+            {!showtimesLoading && filteredShowtimes.length > 0 && (
+              <div style={{
+                marginTop: 10,
+                fontSize: 11,
+                color: 'var(--color-text-caption)',
+                textAlign: 'center',
+                lineHeight: 1.5,
+                opacity: 0.7,
+              }}>
+                상영 정보는 실시간으로 불러오지 않으므로 실제 좌석 현황과 다를 수 있습니다.
               </div>
             )}
           </div>
