@@ -120,14 +120,34 @@ npm run seed:disable-broken
 
 ### 포스터 없는 영화 채우기
 
-- [ ] 우선순위: KMDB → Wikipedia → Naver 이미지 검색 순서로 실행
-  ```
-  npx tsx --env-file=.env.local scripts/fill-poster-kmdb.ts --apply
-  npx tsx --env-file=.env.local scripts/fill-poster-wiki.ts --apply
-  npx tsx --env-file=.env.local scripts/fill-poster-naver.ts --apply
-  ```
+- [x] KMDB → Wikipedia → Naver 순서로 실행 완료 (2026-06-01)
+  - Wiki 5개, Naver 3개 채움 (총 8개)
+- [ ] 수동 필요 (3개): 간만에 나온 종각 이, 군락, 원더 — KMDB/Wiki/Naver 모두 없음
 - [ ] 그래도 없는 영화는 프로젝트 루트에 이미지 파일 넣으면 Supabase Storage 업로드 후 DB 연결
 - [ ] Naver API: `NAVER_CLIENT_ID` / `NAVER_CLIENT_SECRET` 필요 (developers.naver.com 앱 등록 → 검색 API)
+
+---
+
+## 폰트
+
+### KIMM체 (한국기계연구원 전용서체) 적용 검토
+
+- [ ] 파일: `KIMM_bold.ttf`, `KIMM_Light.ttf` (프로젝트 루트)
+- [ ] public/fonts/ 로 이동 후 `@font-face` 등록
+- [ ] 기본 텍스트(`--font-sans`) 또는 제목(`--font-serif`) 대체 적용 검토
+- [ ] **출처 표기 필수**: 서비스 내 어딘가에 `출처 – 한국기계연구원, kimm.re.kr` 표기
+- [ ] Regular weight 없음 (Bold/Light만) — 본문에 Light, 강조에 Bold로 구분
+
+---
+
+## SEO
+
+### 극장별 OG 이미지 동적 생성 (카카오 공유 미리보기)
+
+- [ ] `src/app/theater/[id]/opengraph-image.tsx` — Next.js ImageResponse API
+- [ ] 극장 이름, 위치, 상영 편수 등을 시각화한 1200×630 이미지 자동 생성
+- [ ] 카카오톡 공유 시 극장별 미리보기 이미지 자동 표시
+- [ ] `feature/seo-optimization` 브랜치에서 이후 PR로 분리
 
 ---
 
@@ -146,15 +166,10 @@ npm run seed:disable-broken
 
 ### 극장 인스타그램 계정 보정
 
-- [ ] 상태: 일부 반영
-- [ ] 보정 스크립트: `scripts/fill-theater-instagrams.ts`
-- [ ] 실행 결과: 39개 극장 중 22개 인스타그램 있음, 17개 미확인
-- [ ] 확인 후 수정: 필름포럼의 불확실한 계정 제거, 씨네Q 신도림/자유로자동차극장 계정 추가
-- [ ] 미확인/미보유: KT&G 상상마당 시네마 대치, KU시네마테크, 광주극장, 금성시네마, 낭만극장, 명화극장, 밀양시네마, 씨네인디U, 아리랑시네센터, 애관극장, 오르페오, 인디플러스포항, 제천시네마, 천안인생극장, 필름포럼, 허리우드클래식, 헤이리시네마
-- [ ] 재실행:
-  ```
-  npx tsx --env-file=.env.local scripts/fill-theater-instagrams.ts --apply
-  ```
+- [x] 2차 보정 완료 (2026-06-01): 11개 추가 반영
+  - 추가됨: KU시네마테크, 광주극장, 명화극장, 모퉁이극장, 씨네인디U, 아리랑시네센터, 애관극장, 오르페오, 인디플러스 포항, 제천시네마, 헤이리시네마
+- [ ] 인스타그램 없는 극장 (계정 미운영): 금성시네마, 낭만극장, 밀양시네마, 천안인생극장(실버극장), 허리우드클래식(실버극장), 필름포럼(계정 불확실 → clear 처리)
+- [ ] KT&G 상상마당 시네마 대치 — DB에 극장 레코드 없음 (추가 필요 시 등록)
 
 ### 지도 성능 확인
 
@@ -250,11 +265,19 @@ npm run seed:disable-broken
 
 ---
 
-## 검색 오버레이 (미구현 항목)
+## 검색 & 지역 필터 (미구현 항목)
 
+### 검색 기능 개선
+- [ ] 영화관 검색 시 현재 위치에서의 거리 표시
 - [ ] 영화별 상영 극장 3개/더보기 섹션
 - [ ] 역 선택 시 주변 지역/근처 극장 섹션 연결
 - [ ] 필터바 "영화" / "감독" 칩 클릭 시 검색창 UI 다르게 표시 (카테고리 pre-select)
+
+### 지역 필터 추가
+- [ ] 지도에 지역 필터 추가 (현재는 장르/국가/예매만 있음)
+- [ ] 지역 선택 시 해당 지역의 극장 + 상영 내용 모두 필터링
+- [ ] 필터 적용 시 카테고리별(장르/국가/지역) 매칭 영화 개수 표시
+- [ ] 각 필터 카테고리에서 "X개 작품" 형태로 표시
 
 ---
 

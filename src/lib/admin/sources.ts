@@ -408,6 +408,21 @@ export const ADMIN_THEATER_SOURCES: AdminTheaterSource[] = [
     notes: 'theaters-to-add.ts에서 "씨네아트리좀"으로 등록',
   },
 
+  // ── 경기 (BrandCd=indieart, www.dtryx.com) ──────────────────────
+
+  {
+    id: 'src-fantasticcube-indieart',
+    theaterId: '',
+    theaterName: '판타스틱큐브',
+    homepageUrl: 'https://www.dtryx.com',
+    listingUrl: `https://www.dtryx.com/cinema/main.do?cgid=${DTRYX_CGID}&BrandCd=indieart&CinemaCd=000056`,
+    parser: 'dtryxReservationApi',
+    enabled: true,
+    cadence: 'daily',
+    health: 'healthy',
+    notes: 'theaters-to-add.ts에서 "판타스틱 큐브"로 등록. 부천시청 1층. API상 명칭은 "판타스틱큐브"(공백 없음).',
+  },
+
   // ── 경북 (BrandCd=indieart, www.dtryx.com) ──────────────────────
 
   {
@@ -611,6 +626,81 @@ export const ADMIN_THEATER_SOURCES: AdminTheaterSource[] = [
     enabled: true,
     cadence: 'daily',
     health: 'healthy',
+  },
+
+  // ── tinyticket.net 예매 (tinyticketEventManager parser) ──────────
+
+  {
+    id: 'src-gangneung-sinnyeong-tinyticket',
+    theaterId: '',
+    theaterName: '강릉독립예술극장 신영',
+    homepageUrl: 'http://www.gncine.kr',
+    listingUrl: 'https://www.tinyticket.net/event-manager/EMyjWIIAEPtn',
+    parser: 'tinyticketEventManager',
+    enabled: true,
+    cadence: 'daily',
+    health: 'healthy',
+    notes: '강원 강릉시. src-gangneung-sinnyeong-selfhosted(disabled)를 tinyticket으로 대체.',
+  },
+  {
+    id: 'src-daejeonart-tinyticket',
+    theaterId: '',
+    theaterName: '대전아트시네마',
+    homepageUrl: 'https://www.tinyticket.net/event-manager/EMZntsyS5135',
+    listingUrl: 'https://www.tinyticket.net/event-manager/EMZntsyS5135',
+    parser: 'tinyticketEventManager',
+    enabled: true,
+    cadence: 'daily',
+    health: 'healthy',
+    notes: '대전 동구 중앙로 192-1 보성당 3층. src-daejeonart-disabled(Dtryx HiddenYn=Y)를 tinyticket으로 대체.',
+  },
+  {
+    id: 'src-sosoa-tinyticket',
+    theaterId: '',
+    theaterName: '소소아트시네마',
+    homepageUrl: 'https://www.tinyticket.net/event-manager/EMnWaoj5QMZK',
+    listingUrl: 'https://www.tinyticket.net/event-manager/EMnWaoj5QMZK',
+    parser: 'tinyticketEventManager',
+    enabled: true,
+    cadence: 'daily',
+    health: 'healthy',
+    notes: '대전 대덕구 한남로 61 3층.',
+  },
+  {
+    id: 'src-cinemadabang-tinyticket',
+    theaterId: '',
+    theaterName: '시네마다방',
+    homepageUrl: 'https://www.tinyticket.net/event-manager/EMi9jJZljVVb',
+    listingUrl: 'https://www.tinyticket.net/event-manager/EMi9jJZljVVb',
+    parser: 'tinyticketEventManager',
+    enabled: true,
+    cadence: 'daily',
+    health: 'healthy',
+    notes: '세종특별자치시 조치원읍 조치원로 59.',
+  },
+  {
+    id: 'src-incheonmirim-tinyticket',
+    theaterId: '',
+    theaterName: '인천미림극장',
+    homepageUrl: 'https://www.tinyticket.net/event-manager/EMdNpL6Jgwni',
+    listingUrl: 'https://www.tinyticket.net/event-manager/EMdNpL6Jgwni',
+    parser: 'tinyticketEventManager',
+    enabled: true,
+    cadence: 'daily',
+    health: 'healthy',
+    notes: '인천광역시 동구 화도진로 31.',
+  },
+  {
+    id: 'src-mokpoart-tinyticket',
+    theaterId: '',
+    theaterName: '목포아트시네마',
+    homepageUrl: 'https://www.tinyticket.net/event-manager/EMBxmOfuPNdC',
+    listingUrl: 'https://www.tinyticket.net/event-manager/EMBxmOfuPNdC',
+    parser: 'tinyticketEventManager',
+    enabled: true,
+    cadence: 'daily',
+    health: 'healthy',
+    notes: '전남 목포시.',
   },
 
 ]

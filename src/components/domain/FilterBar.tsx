@@ -636,6 +636,8 @@ function FilterChip({ label, value, open, selected, hasDropdown, onClick, onClea
 /* -- FilterBar ---------------------------------------------------- */
 export interface FilterBarProps {
   onChange?: (state: FilterState) => void
+  /** 사용자가 칩을 직접 조작했을 때만 호출 — 초기 mount sync에는 호출 안 됨 */
+  onChipChange?: (state: FilterState) => void
   nationOptions?: string[]
   movieFilter?: { id: string; title: string } | null
   directorFilter?: { name: string } | null
@@ -649,6 +651,7 @@ export interface FilterBarProps {
 
 export function FilterBar({
   onChange,
+  onChipChange,
   nationOptions = EMPTY_NATION_OPTIONS,
   movieFilter,
   directorFilter,
@@ -669,10 +672,12 @@ export function FilterBar({
   const [bookable, setBookable] = useState(false)
   const [indie, setIndie] = useState(false)
   const [regionId, setRegionId] = useState<string | null>(null)
-  const autoRegionSetRef = useRef(false)
+  // 사용자가 직접 지역을 선택했으면 GPS auto-set 막기 (clear하면 다시 허용)
+  const userPickedRegionRef = useRef(false)
   const [openPanel, setOpenPanel] = useState<OpenPanel>(null)
   const [dropdownPos, setDropdownPos] = useState<{ left: number; top: number }>({ left: 16, top: 0 })
   const [mounted, setMounted] = useState(false)
+  const [regionHintDismissed, setRegionHintDismissed] = useState(false)
 
   const wrapperRef = useRef<HTMLDivElement>(null)
   const portalDropdownRef = useRef<HTMLDivElement>(null)
@@ -688,7 +693,10 @@ export function FilterBar({
   const chipDragRef = useRef({ active: false, moved: false, startX: 0, scrollLeft: 0 })
   const [chipRowDragging, setChipRowDragging] = useState(false)
 
-  useEffect(() => { setMounted(true) }, [])
+  useEffect(() => {
+    setMounted(true)
+    if (sessionStorage.getItem('yh_region_tip') === 'closed') setRegionHintDismissed(true)
+  }, [])
   useEffect(() => { openPanelRef.current = openPanel }, [openPanel])
   useEffect(() => { draftGenresRef.current = draftGenres }, [draftGenres])
   useEffect(() => { draftNationsRef.current = draftNations }, [draftNations])
@@ -713,10 +721,9 @@ export function FilterBar({
   }, [onChange, dateId, customStart, customEnd, genres, nations, bookable, indie, regionId])
 
   useEffect(() => {
-    if (autoRegionSetRef.current) return
-    if (!defaultRegionId) return
-    autoRegionSetRef.current = true
-    setRegionId(defaultRegionId)
+    // 사용자가 직접 선택한 경우 GPS 값으로 덮어쓰지 않음
+    if (userPickedRegionRef.current) return
+    setRegionId(defaultRegionId ?? null)
   }, [defaultRegionId])
 
   useEffect(() => {
@@ -724,13 +731,13 @@ export function FilterBar({
     const handler = (e: MouseEvent) => {
       if (wrapperRef.current?.contains(e.target as Node)) return
       if (portalDropdownRef.current?.contains(e.target as Node)) return
-      if (openPanelRef.current === 'genre') setGenres(draftGenresRef.current)
-      if (openPanelRef.current === 'nation') setNations(draftNationsRef.current)
+      if (openPanelRef.current === 'genre') { setGenres(draftGenresRef.current); chip({ genres: draftGenresRef.current }) }
+      if (openPanelRef.current === 'nation') { setNations(draftNationsRef.current); chip({ nations: draftNationsRef.current }) }
       setOpenPanel(null)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
-  }, [openPanel])
+  }, [openPanel]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const calcDropdownLeft = (
     chipRef: React.RefObject<HTMLButtonElement | null>,
@@ -820,8 +827,8 @@ export function FilterBar({
     chipRef: React.RefObject<HTMLButtonElement | null>,
   ) => {
     if (openPanel === panel || (panel === 'date' && (openPanel === 'date' || openPanel === 'calendar'))) {
-      if (panel === 'genre') setGenres(draftGenresRef.current)
-      if (panel === 'nation') setNations(draftNationsRef.current)
+      if (panel === 'genre') { setGenres(draftGenresRef.current); chip({ genres: draftGenresRef.current }) }
+      if (panel === 'nation') { setNations(draftNationsRef.current); chip({ nations: draftNationsRef.current }) }
       setOpenPanel(null)
       return
     }
@@ -832,29 +839,26 @@ export function FilterBar({
     setOpenPanel(panel)
   }, [openPanel, genres, nations])
 
-  const selectDate = (id: DateId) => { setDateId(id); setOpenPanel(null) }
+  const chip = (overrides: Partial<FilterState>) =>
+    onChipChange?.({ dateId, customStart, customEnd, genres, nations, bookable, indie, regionId, ...overrides })
+
+  const selectDate = (id: DateId) => { setDateId(id); setOpenPanel(null); chip({ dateId: id }) }
   const clearDate = () => {
-    setDateId(null)
-    setCustomStart(null)
-    setCustomEnd(null)
-    setOpenPanel(null)
+    setDateId(null); setCustomStart(null); setCustomEnd(null); setOpenPanel(null)
+    chip({ dateId: null, customStart: null, customEnd: null })
   }
   const openCalendar = () => setOpenPanel('calendar')
   const selectCustomRange = (start: Date, end: Date) => {
-    setDateId('custom')
-    setCustomStart(start)
-    setCustomEnd(end)
-    setOpenPanel(null)
+    setDateId('custom'); setCustomStart(start); setCustomEnd(end); setOpenPanel(null)
+    chip({ dateId: 'custom', customStart: start, customEnd: end })
   }
   const clearGenres = () => {
-    setGenres([])
-    setDraftGenres([])
-    setOpenPanel(null)
+    setGenres([]); setDraftGenres([]); setOpenPanel(null)
+    chip({ genres: [] })
   }
   const clearNations = () => {
-    setNations([])
-    setDraftNations([])
-    setOpenPanel(null)
+    setNations([]); setDraftNations([]); setOpenPanel(null)
+    chip({ nations: [] })
   }
 
   const dateOptions = buildDateOptions()
@@ -941,7 +945,7 @@ export function FilterBar({
           hasDropdown
           chipRef={regionChipRef}
           onClick={() => openDropdown('region', regionChipRef)}
-          onClear={regionId ? () => { setRegionId(null); setOpenPanel(null) } : undefined}
+          onClear={regionId ? () => { setRegionId(null); setOpenPanel(null); userPickedRegionRef.current = false; chip({ regionId: null }) } : undefined}
         />
         <FilterChip
           label="상영 일정"
@@ -978,7 +982,7 @@ export function FilterBar({
         <FilterChip
           label="예매 가능"
           selected={bookable}
-          onClick={() => setBookable(b => !b)}
+          onClick={() => { setBookable(b => !b); chip({ bookable: !bookable }) }}
         />
         {/* 독립영화관 필터 — 미구현, 비활성화
         <FilterChip
@@ -988,6 +992,82 @@ export function FilterBar({
         />
         */}
       </div>
+
+      {mounted && !regionId && !regionHintDismissed && (
+        <>
+          <div style={{
+            position: 'absolute',
+            top: 44,
+            left: 4,
+            zIndex: 60,
+            width: 236,
+            animation: 'tipIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          }}>
+            {/* 꼬리 */}
+            <div style={{
+              position: 'absolute',
+              top: -5,
+              left: 24,
+              width: 11,
+              height: 11,
+              background: 'var(--color-primary-base)',
+              transform: 'rotate(45deg)',
+              borderRadius: 2,
+            }} />
+            {/* 본체 */}
+            <div style={{
+              position: 'relative',
+              background: 'var(--color-primary-base)',
+              borderRadius: 12,
+              boxShadow: '0 10px 28px rgba(40, 55, 75, 0.34)',
+              padding: '12px 12px 12px 14px',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 10,
+            }}>
+              {/* 핀 아이콘 */}
+              <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              {/* 문구 */}
+              <span style={{
+                flex: 1,
+                fontFamily: 'Pretendard, sans-serif',
+                fontSize: 12.5,
+                lineHeight: 1.55,
+                fontWeight: 500,
+                color: '#fff',
+              }}>
+                지역을 설정해서 내 주변 영화관의 상영 정보를 조회하세요
+              </span>
+              {/* 닫기 버튼 */}
+              <button
+                onClick={() => {
+                  sessionStorage.setItem('yh_region_tip', 'closed')
+                  setRegionHintDismissed(true)
+                }}
+                style={{
+                  width: 18, height: 18, minWidth: 18, minHeight: 18,
+                  borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.2)',
+                  border: 'none',
+                  color: '#fff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  marginTop: -1,
+                  padding: 0,
+                }}
+              >
+                <svg width={8} height={8} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       {mounted && openPanel && createPortal(
         <div ref={portalDropdownRef}>
@@ -1018,7 +1098,7 @@ export function FilterBar({
           {openPanel === 'region' && (
             <RegionDropdown
               selectedId={regionId}
-              onSelect={(id) => { setRegionId(id); if (id) setOpenPanel(null) }}
+              onSelect={(id) => { userPickedRegionRef.current = !!id; setRegionId(id); if (id) setOpenPanel(null); chip({ regionId: id }) }}
               style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, zIndex: 99999 }}
             />
           )}

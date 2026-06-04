@@ -125,7 +125,10 @@ ${theaterHint ? `극장명 힌트: ${theaterHint}` : ''}
       error: null,
     })
 
-    const rows = parsed.showtimes.map((st) => ({
+    const SKIP_TITLES = /^(대관|휴관|행사|이벤트|대관행사|closed|event)/i
+    const rows = parsed.showtimes
+      .filter((st) => !SKIP_TITLES.test(st.movieTitle.trim()))
+      .map((st) => ({
       id: randomUUID(),
       source_id: source!.id,
       theater_id: source!.id,
@@ -136,7 +139,7 @@ ${theaterHint ? `극장명 힌트: ${theaterHint}` : ''}
       show_date: st.showDate,
       show_time: st.showTime,
       end_time: st.endTime ?? null,
-      format_type: 'normal',
+      format_type: 'standard',
       language: 'korean',
       seat_available: 0,
       seat_total: 0,
@@ -147,13 +150,14 @@ ${theaterHint ? `극장명 힌트: ${theaterHint}` : ''}
       confidence: parsed.confidence,
       warnings: parsed.corrections,
       status: 'draft',
-      fingerprint: Buffer.from(`${source!.id}|${st.movieTitle}|${st.showDate}|${st.showTime}`).toString('base64').slice(0, 64),
+      fingerprint: Buffer.from(`${source!.id}|${st.movieTitle}|${st.showDate}|${st.showTime}|${st.screenName || '1관'}`).toString('base64').slice(0, 64),
     }))
 
-    const { error } = await supabase.from('showtime_candidates').upsert(rows, { onConflict: 'fingerprint' })
+    const uniqueRows = [...new Map(rows.map((r) => [r.fingerprint, r])).values()]
+    const { error } = await supabase.from('showtime_candidates').upsert(uniqueRows, { onConflict: 'fingerprint' })
     if (error) return Response.json({ error: { message: error.message } }, { status: 500 })
 
-    return Response.json({ saved: rows.length, result: parsed })
+    return Response.json({ saved: uniqueRows.length, result: parsed })
   }
 
   return Response.json({ result: parsed })

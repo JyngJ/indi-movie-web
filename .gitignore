@@ -43,3 +43,7 @@ next-env.d.ts
 # 디자인 파일 (로컬 전용)
 untitled/
 영화 tokens.js
+seat-checker/
+.env*.local
+KIMM_Light.ttf
+KIMM_bold.ttf

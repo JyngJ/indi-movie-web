@@ -1,18 +1,12 @@
 import type { CrawlRun } from '@/types/admin'
 import { crawlShowtimeCandidates } from '@/lib/admin/crawler'
-import { autoMatchShowtimeCandidates, listAdminSources, saveCrawlRun } from '@/lib/admin/store'
+import { listAdminSources, saveCrawlRun } from '@/lib/admin/store'
 
 export interface RunAllResult {
   runs: CrawlRun[]
   durationMs: number
-  matched: number
 }
 
-/**
- * enabled된 모든 소스를 병렬(최대 5개 동시)로 크롤링 후 DB에 저장,
- * 이후 자동매칭까지 실행한다.
- * 어드민 API route와 GitHub Actions 스크립트가 모두 이 함수를 호출한다.
- */
 export async function runAllSources(
   onProgress?: (current: number, total: number, run: CrawlRun) => void,
 ): Promise<RunAllResult> {
@@ -37,7 +31,7 @@ export async function runAllSources(
       )
       const candidates = await Promise.race([crawlPromise, timeoutPromise])
       const run: CrawlRun = {
-        id: `run_${Date.now().toString(36)}`,
+        id: `run_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
         sourceId: source.id,
         sourceName: source.theaterName,
         inputKind: 'url',
@@ -54,7 +48,7 @@ export async function runAllSources(
       onProgress?.(++completed, total, run)
     } catch (error) {
       const run: CrawlRun = {
-        id: `run_${Date.now().toString(36)}`,
+        id: `run_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
         sourceId: source.id,
         sourceName: source.theaterName,
         inputKind: 'url',
@@ -73,8 +67,7 @@ export async function runAllSources(
     }
   }
 
-  // 최대 5개 동시 실행 (34개 소스 → ~7배 빠름)
-  const CONCURRENCY = 5
+  const CONCURRENCY = 15
   const queue = enabled.map((_, i) => i)
   let nextIndex = 0
   async function worker() {
@@ -84,8 +77,5 @@ export async function runAllSources(
   }
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, total) }, worker))
 
-  // 자동매칭
-  const matchResult = await autoMatchShowtimeCandidates()
-
-  return { runs, durationMs: Date.now() - startedAt, matched: matchResult.matched }
+  return { runs, durationMs: Date.now() - startedAt }
 }

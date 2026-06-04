@@ -14,6 +14,10 @@ interface DateBarProps {
   days: Day[]
   selectedDate?: string
   onSelectDate?: (date: string) => void
+  onPrev?: () => void
+  onNext?: () => void
+  hasPrev?: boolean
+  hasNext?: boolean
 }
 
 function getDayTextColor(type: DayType): string {
@@ -27,19 +31,47 @@ function getDayTextColor(type: DayType): string {
   }
 }
 
-export function DateBar({ days, selectedDate, onSelectDate }: DateBarProps) {
+const NAV_BTN: React.CSSProperties = {
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  width: 28, height: 28, flexShrink: 0,
+  background: 'none', border: 'none',
+  borderRadius: '50%',
+  color: 'var(--color-text-sub)',
+  cursor: 'pointer',
+  padding: 0,
+  minHeight: 'unset',
+  transition: 'background 120ms',
+}
+
+export function DateBar({ days, selectedDate, onSelectDate, onPrev, onNext, hasPrev, hasNext }: DateBarProps) {
   return (
     <div
       style={{
         width: '100%',
-        padding: '12px 16px',
+        padding: '8px 6px',
         backgroundColor: 'var(--color-surface-card)',
         borderTop: '1px solid var(--color-border)',
         borderBottom: '1px solid var(--color-border)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 2,
       }}
     >
+      {/* 이전 버튼 */}
+      <button
+        type="button"
+        onClick={onPrev}
+        disabled={!hasPrev}
+        style={{ ...NAV_BTN, opacity: hasPrev ? 1 : 0.25, cursor: hasPrev ? 'pointer' : 'default' }}
+        aria-label="이전 주"
+      >
+        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
+
       {/* 날짜 행 */}
-      <div className="flex justify-between gap-1">
+      <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between', gap: 2 }}>
         {days.map((d) => {
           const isSelected = d.date === selectedDate
           const isDisabled = !!d.disabled
@@ -100,6 +132,18 @@ export function DateBar({ days, selectedDate, onSelectDate }: DateBarProps) {
         })}
       </div>
 
+      {/* 다음 버튼 */}
+      <button
+        type="button"
+        onClick={onNext}
+        disabled={!hasNext}
+        style={{ ...NAV_BTN, opacity: hasNext ? 1 : 0.25, cursor: hasNext ? 'pointer' : 'default' }}
+        aria-label="다음 주"
+      >
+        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M9 18l6-6-6-6" />
+        </svg>
+      </button>
     </div>
   )
 }
