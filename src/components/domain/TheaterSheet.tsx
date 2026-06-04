@@ -543,10 +543,11 @@ export function TheaterSheet({
       const dx = Math.abs(x - posterDrag.current.startX)
       const dy = Math.abs(y - startY)
 
-      // 방향 미결정: 8px 이상 움직이면 방향 고정. 그 전까진 버블링 차단해서 시트 collapse 방지
+      // 방향 미결정: 8px 이상 움직이면 방향 고정
+      // stopPropagation 제거 — 시트 핸들러가 초기 이벤트 받아야 세로 스크롤 인식
       if (dirLock === null) {
-        if (dx < 8 && dy < 8) { e.stopPropagation(); return }
-        dirLock = dx >= dy ? 'h' : 'v'
+        if (dx < 8 && dy < 8) return
+        dirLock = dx > dy * 1.2 ? 'h' : 'v'
       }
 
       if (dirLock === 'v') {
@@ -1371,7 +1372,7 @@ export function TheaterSheet({
             scrollbarWidth: 'none',
             cursor: 'grab',
             userSelect: 'none',
-            touchAction: 'none',
+            touchAction: 'pan-y',
           }}
         >
           {allMoviesLoading
@@ -1750,7 +1751,7 @@ export function TheaterSheet({
                 scrollbarWidth: 'none',
                 cursor: 'grab',
                 userSelect: 'none',
-                touchAction: 'none',
+                touchAction: 'pan-y',
               }}
             >
               {allMoviesLoading
