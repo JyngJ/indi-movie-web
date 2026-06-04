@@ -875,7 +875,7 @@ export function TheaterSheet({
     })
   }
 
-  /* ── 현재 시각 (1분마다 갱신, 오늘 탭에서만 지난 회차 숨김) ── */
+  /* ── 현재 시각 (1분마다 갱신, 오늘 탭에서 지난 회차 상태 표시) ── */
   const [nowMinutes, setNowMinutes] = useState(() => {
     const n = new Date()
     return n.getHours() * 60 + n.getMinutes()
@@ -2088,7 +2088,7 @@ export function TheaterSheet({
                       screenName={st.screenName}
                       kind={kind}
                       selected={st.id === selectedShowtimeId}
-                      onClick={kind !== 'soldout' && kind !== 'ended' ? () => handleShowtimeSelect(st) : undefined}
+                      onClick={kind !== 'soldout' && kind !== 'nowplaying' && kind !== 'ended' ? () => handleShowtimeSelect(st) : undefined}
                     />
                   )
                 })}

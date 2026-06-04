@@ -88,9 +88,14 @@ async function ocrScheduleImage(imageUrl: string, theaterHint: string): Promise<
 
   const text = response.choices[0].message.content?.trim() ?? ''
   if (response.choices[0].finish_reason === 'length') throw new Error('응답이 너무 길어 잘렸습니다. 이미지 한 장에 상영 정보가 너무 많으면 날짜별로 나눠서 전송해주세요.')
-  const match = text.match(/\{[\s\S]*\}/)
-  if (!match) throw new Error('JSON 파싱 실패')
-  return JSON.parse(match[0]) as ParsedSchedule
+  const stripped = text.replace(/```(?:json)?\s*/g, '').replace(/```/g, '')
+  const match = stripped.match(/\{[\s\S]*\}/)
+  if (!match) throw new Error('JSON 파싱 실패: JSON 형태 없음')
+  const sanitized = match[0].replace(
+    /"((?:[^"\\]|\\.)*)"/g,
+    (_, inner: string) => `"${inner.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t')}"`
+  )
+  return JSON.parse(sanitized) as ParsedSchedule
 }
 
 async function saveOcrToSupabase(schedule: ParsedSchedule): Promise<{ count: number; sourceId: string }> {
