@@ -2094,6 +2094,18 @@ export function TheaterSheet({
                 })}
               </div>
             )}
+            {!showtimesLoading && filteredShowtimes.length > 0 && (
+              <div style={{
+                marginTop: 10,
+                fontSize: 11,
+                color: 'var(--color-text-caption)',
+                textAlign: 'center',
+                lineHeight: 1.5,
+                opacity: 0.7,
+              }}>
+                상영 정보는 실시간으로 불러오지 않으므로 실제 좌석 현황과 다를 수 있습니다.
+              </div>
+            )}
           </div>
         </div>
       )}
