@@ -140,6 +140,17 @@ npm run seed:disable-broken
 
 ---
 
+## SEO
+
+### 극장별 OG 이미지 동적 생성 (카카오 공유 미리보기)
+
+- [ ] `src/app/theater/[id]/opengraph-image.tsx` — Next.js ImageResponse API
+- [ ] 극장 이름, 위치, 상영 편수 등을 시각화한 1200×630 이미지 자동 생성
+- [ ] 카카오톡 공유 시 극장별 미리보기 이미지 자동 표시
+- [ ] `feature/seo-optimization` 브랜치에서 이후 PR로 분리
+
+---
+
 ## 릴리즈 전 필수
 
 ### 계정 및 위시리스트
