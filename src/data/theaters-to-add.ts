@@ -469,16 +469,6 @@ export const theatersToAdd = [
     website: '',
   },
   {
-    name: '씨네 인디유',
-    city: '대전',
-    address: '대전 중구 계백로 1712 기독교연합봉사회관 1층',
-    lat: 36.3298,
-    lng: 127.4065,
-    phone: '',
-    website: 'https://www.dtryx.com',
-    notes: '2020년 개관. 서대전네거리역 인근. 대전 유일의 독립영화 전문관.',
-  },
-  {
     name: '소소아트시네마',
     city: '대전',
     address: '대전 대덕구 한남로 61 3층',
@@ -696,14 +686,15 @@ export const theatersToAdd = [
 
   // ── 전라남도 ──────────────────────────────────────────────────────
   {
-    name: '시네마라운지MM',
+    name: '시네마엠엠',
     city: '전남',
     address: '전남 목포시 수강로 4번길 19 2층',
     lat: 34.8097,
     lng: 126.3930,
     phone: '061-243-1650',
     website: 'https://cinemamm.petitecine.com',
-    notes: '목포 유일의 독립영화 전문관. 37석 단관.',
+    instagramUrl: 'https://www.instagram.com/cinemamm.official',
+    notes: '목포 유일의 독립영화 전문관. 37석 단관. (구명: 시네마라운지MM)',
   },
   {
     name: '담빛시네마',
@@ -1156,16 +1147,6 @@ export const theatersToAdd = [
     website: '',
   },
   {
-    name: '씨네아트리좀',
-    city: '경남',
-    address: '경남 창원시 마산합포구 동서북14길 24',
-    lat: 35.2012,
-    lng: 128.5706,
-    phone: '',
-    website: 'https://espacerhizome.com',
-    notes: '2015년 12월 개관. 현재 정상 운영 중.',
-  },
-  {
     name: '진주시민미디어센터 인디씨네',
     city: '경남',
     address: '경남 진주시 진주대로 506-1 3층',
@@ -1183,15 +1164,6 @@ export const theatersToAdd = [
     lng: 128.0960,
     phone: '',
     website: '',
-  },
-  {
-    name: '밀양시네마',
-    city: '경남',
-    address: '경남 밀양시 백민로 75-1',
-    lat: 35.5035,
-    lng: 128.7474,
-    phone: '',
-    website: 'https://www.dtryx.com',
   },
   {
     name: '합천시네마',

@@ -34,6 +34,8 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
+  colorScheme: 'light dark',
+  interactiveWidget: 'resizes-content',
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {
