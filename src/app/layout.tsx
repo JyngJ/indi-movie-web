@@ -6,6 +6,7 @@ import { initTheme } from '@/store/themeStore'
 import { AnalyticsScripts } from '@/components/analytics/AnalyticsScripts'
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://yeonghwabolzido.com'),
   title: '영화볼지도',
   description: '서울 독립·예술영화관 상영 정보를 지도에서 한눈에',
   icons: {
