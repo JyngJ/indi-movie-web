@@ -492,8 +492,12 @@ function MovieTheatersTab({
           ) : (
             inRegion.map(renderTheaterCard)
           )}
-          {sectionDivider(`${regionId} 외 지역`)}
-          {otherRegion.map(renderTheaterCard)}
+          {otherRegion.length > 0 && (
+            <>
+              {sectionDivider(`${regionId} 외 지역`)}
+              {otherRegion.map(renderTheaterCard)}
+            </>
+          )}
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
