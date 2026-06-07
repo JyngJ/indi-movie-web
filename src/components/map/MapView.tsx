@@ -1102,8 +1102,9 @@ export default function MapView() {
     return () => container.removeEventListener('mouseover', handleOver)
   }, [isDesktopLayout])
 
-  // 검색 오버레이
-  const [searchOpen, setSearchOpen] = useState(false)
+  // 검색 오버레이 — 데스크톱은 좌측 레일의 검색 버튼으로도 토글되므로 공유 스토어 사용
+  const searchOpen = useUIStore((s) => s.isSearchOpen)
+  const setSearchOpen = useUIStore((s) => s.setSearchOpen)
   const [searchQuery, setSearchQuery] = useState('')
   const [recentSearches, setRecentSearches] = useState<string[]>([])
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -1225,6 +1226,11 @@ export default function MapView() {
     setSearchOpen(false)
     setSearchQuery('')
   }, [])
+
+  // 검색 패널이 닫히면 항상 검색어 초기화 — 좌측 레일의 검색 버튼으로 닫혔을 때도 적용
+  useEffect(() => {
+    if (!searchOpen) setSearchQuery('')
+  }, [searchOpen])
 
   const stationResults = useMemo(() => {
     if (!searchQuery.trim()) return []
@@ -2960,55 +2966,21 @@ export default function MapView() {
         </div>
       )}
 
-      {/* 검색 오버레이 — same page, iOS 키보드 대응 */}
+      {/* 검색 패널 — 모바일: 전체화면 오버레이(iOS 키보드 대응) / 데스크톱: 좌측 레일에 붙는 플랫 도크 패널 */}
       {searchOpen && (
-        <>
-        {isDesktopLayout && (
-          <button
-            onClick={closeSearch}
-            aria-label="검색 닫기"
-            style={{
-              position: 'absolute',
-              left: 456,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              zIndex: 2001,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 32,
-              height: 72,
-              background: 'var(--color-surface-card)',
-              border: '1px solid var(--color-border)',
-              borderLeft: 'none',
-              borderRadius: '0 12px 12px 0',
-              boxShadow: '4px 0 12px rgba(0,0,0,0.10)',
-              cursor: 'pointer',
-              color: 'var(--color-text-caption)',
-              padding: 0,
-              minHeight: 'unset',
-            }}
-          >
-            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </button>
-        )}
         <div style={{
           position: 'absolute',
-          inset: isDesktopLayout ? '16px auto 16px 16px' : 0,
-          width: isDesktopLayout ? 440 : 'auto',
-          maxWidth: isDesktopLayout ? 'calc(100vw - 32px)' : undefined,
+          inset: isDesktopLayout ? `0 auto 0 ${GLOBAL_NAV_DESKTOP_WIDTH}px` : 0,
+          width: isDesktopLayout ? 352 /* 440 * 0.8 — 가로폭 축소 */ : 'auto',
+          maxWidth: isDesktopLayout ? `calc(100vw - ${GLOBAL_NAV_DESKTOP_WIDTH}px)` : undefined,
           backgroundColor: 'var(--color-surface-bg)',
           display: 'flex',
           flexDirection: 'column',
           zIndex: 2000,
-          border: isDesktopLayout ? '1px solid var(--color-border)' : undefined,
-          borderRadius: isDesktopLayout ? 20 : 0,
-          boxShadow: isDesktopLayout ? 'var(--shadow-sheet)' : undefined,
+          borderRight: isDesktopLayout ? '1px solid var(--color-border)' : undefined,
           overflow: 'hidden',
         }}>
-          {/* 검색바 헤더 */}
+          {/* 검색바 헤더 — < 버튼은 SearchBar의 onBack 쉐브론이 담당 */}
           <div style={{
             paddingTop: 'max(12px, env(safe-area-inset-top))',
             paddingLeft: 16,
@@ -3021,6 +2993,7 @@ export default function MapView() {
               ref={searchInputRef}
               value={searchQuery}
               placeholder="영화, 감독, 역, 영화관 검색"
+              inputFontSize={isDesktopLayout ? 14 : 16}
               onChange={(e) => setSearchQuery(e.target.value)}
               onClear={() => setSearchQuery('')}
               onBack={closeSearch}
@@ -3122,7 +3095,6 @@ export default function MapView() {
             )}
           </div>
         </div>
-        </>
       )}
 
       {/* 줌 + 현위치 */}

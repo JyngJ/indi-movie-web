@@ -33,6 +33,15 @@ function IconFilm({ size = 23 }: { size?: number }) {
   )
 }
 
+function IconSearch({ size = 21 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8" />
+      <path d="M21 21l-4.35-4.35" />
+    </svg>
+  )
+}
+
 function IconSettings({ size = 21 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
@@ -109,7 +118,10 @@ function MobileTabBar({ pathname }: { pathname: string }) {
 }
 
 function DesktopRail({ pathname }: { pathname: string }) {
+  const isSearchOpen = useUIStore((s) => s.isSearchOpen)
+  const setSearchOpen = useUIStore((s) => s.setSearchOpen)
   const setSettingsOpen = useUIStore((s) => s.setSettingsOpen)
+  const searchColor = isSearchOpen ? ACTIVE_COLOR : INACTIVE_COLOR
 
   return (
     <nav
@@ -137,10 +149,17 @@ function DesktopRail({ pathname }: { pathname: string }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
         {DESKTOP_RAIL_TABS.map(({ key, href, label, Icon }) => {
-          const active = isTabActive(pathname, href)
+          // 검색 패널이 열려있는 동안은 라우트 탭의 활성 표시를 끈다 — 메뉴는 한 번에 하나만 선택 상태
+          const active = !isSearchOpen && isTabActive(pathname, href)
           const color = active ? ACTIVE_COLOR : INACTIVE_COLOR
           return (
-            <Link key={key} href={href} aria-current={active ? 'page' : undefined} style={{ textDecoration: 'none' }}>
+            <Link
+              key={key}
+              href={href}
+              aria-current={active ? 'page' : undefined}
+              onClick={() => { if (isSearchOpen) setSearchOpen(false) }}
+              style={{ textDecoration: 'none' }}
+            >
               <div
                 style={{
                   display: 'flex',
@@ -160,11 +179,39 @@ function DesktopRail({ pathname }: { pathname: string }) {
             </Link>
           )
         })}
+
+        <button
+          type="button"
+          onClick={() => setSearchOpen(!isSearchOpen)}
+          aria-label="검색"
+          aria-pressed={isSearchOpen}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 4,
+            padding: '8px 4px',
+            marginLeft: 8,
+            marginRight: 8,
+            width: 'calc(100% - 16px)',
+            borderRadius: 10,
+            border: 'none',
+            background: isSearchOpen ? 'color-mix(in srgb, var(--color-primary-base) 11%, transparent)' : 'transparent',
+            color: searchColor,
+            cursor: 'pointer',
+          }}
+        >
+          <IconSearch size={21} />
+          <span style={{ fontSize: 10.5, fontWeight: 600 }}>검색</span>
+        </button>
       </div>
 
       <button
         type="button"
-        onClick={() => setSettingsOpen(true)}
+        onClick={() => {
+          if (isSearchOpen) setSearchOpen(false)
+          setSettingsOpen(true)
+        }}
         aria-label="설정"
         style={{
           display: 'flex',
