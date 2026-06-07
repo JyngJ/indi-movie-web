@@ -8,6 +8,9 @@ interface UIStore {
 
   isSearchOpen: boolean
   setSearchOpen: (open: boolean) => void
+
+  isSettingsOpen: boolean
+  setSettingsOpen: (open: boolean) => void
 }
 
 export const useUIStore = create<UIStore>((set) => ({
@@ -20,4 +23,7 @@ export const useUIStore = create<UIStore>((set) => ({
 
   isSearchOpen: false,
   setSearchOpen: (open) => set({ isSearchOpen: open }),
+
+  isSettingsOpen: false,
+  setSettingsOpen: (open) => set({ isSettingsOpen: open }),
 }))

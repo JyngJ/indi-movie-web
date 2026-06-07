@@ -28,8 +28,8 @@ export function useLocationPermission() {
           setState('success')
         })
       } else if (perm === 'denied') {
-        // 차단됨 — 캐시가 있으면 팝업 없이 진행, 없으면 안내 팝업
-        setState(cached ? 'idle' : 'denied')
+        // 차단됨 — 캐시가 있거나 이전에 "괜찮아요/설정했어요"로 닫았으면 팝업 생략
+        setState(cached || localStorage.getItem(SKIP_KEY) ? 'idle' : 'denied')
       } else {
         // 'prompt' or 'unsupported'
         // 이전에 "괜찮아요" 눌렀으면 팝업 생략

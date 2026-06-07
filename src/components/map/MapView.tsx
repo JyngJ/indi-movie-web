@@ -11,6 +11,7 @@ import { useLocationPermission } from '@/hooks/useLocationPermission'
 import { useIsDark } from '@/hooks/useIsDark'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { SearchBarButton, SearchBar, FabRound, Toast } from '@/components/primitives'
+import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { MapPin, TheaterSheet, FilterBar, LocationPermissionModal } from '@/components/domain'
 import { DesktopDetailPanel } from '@/components/domain/DesktopDetailPanel'
 import type { DesktopPanelState } from '@/components/domain/DesktopDetailPanel'
@@ -21,6 +22,7 @@ import { SEOUL_GU, SEOUL_DONG } from '@/data/seoul-areas'
 import { normalizeGenre } from '@/lib/genres'
 import { getRegionFromCity, getRegionFromCoords, REGION_BOUNDS } from '@/lib/regions'
 import { useThemeStore } from '@/store/themeStore'
+import { useUIStore } from '@/store/uiStore'
 import { REPORT_CATEGORIES } from '@/lib/reports/types'
 import {
   SUBWAY_LINES, SUBWAY_LINE_MIN_ZOOM, STATION_PIN_MIN_ZOOM,
@@ -1107,7 +1109,8 @@ export default function MapView() {
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   const dummyInputRef = useRef<HTMLInputElement>(null)
-  const [settingsOpen, setSettingsOpen] = useState(false)
+  const settingsOpen = useUIStore((s) => s.isSettingsOpen)
+  const setSettingsOpen = useUIStore((s) => s.setSettingsOpen)
   const mapViewTrackedRef = useRef(false)
   const lastSearchTelemetryRef = useRef('')
   const lastFilterTelemetryRef = useRef('')
@@ -2089,8 +2092,10 @@ export default function MapView() {
   }, [selectedId, closeSheet, flyToForTheater, isDesktopLayout, movieFilter, theaters])
 
   // FAB 버튼 bottom: collapsed = COLLAPSED_H(300) + 여유 16 = 316
-  // expanded / 시트 없음 = safe area 위 32px
-  const fabBottom = !isDesktopLayout && selectedTheater && !sheetExpanded && !sheetExiting ? 316 : 32
+  // expanded / 시트 없음 = 하단 탭바(모바일 전용 — GlobalNav) 위 32px
+  const fabBottom = !isDesktopLayout
+    ? (selectedTheater && !sheetExpanded && !sheetExiting ? 316 : GLOBAL_NAV_MOBILE_HEIGHT + 32)
+    : 32
   const hasSearchResults = theaterResults.length > 0 || stationResults.length > 0 || movieResults.length > 0 || relatedDirectorResults.length > 0 || areaResults.length > 0
 
   useEffect(() => {
@@ -2853,11 +2858,11 @@ export default function MapView() {
         }} />
       )}
 
-      {/* 검색바 — PC: maxWidth 440 */}
+      {/* 검색바 — PC: maxWidth 440, 좌측 아이콘 레일 폭만큼 비켜서 배치 */}
       <div style={{
         position: 'absolute',
         top: isDesktopLayout ? 16 : 'max(0px, env(safe-area-inset-top))',
-        left: 0,
+        left: isDesktopLayout ? GLOBAL_NAV_DESKTOP_WIDTH : 0,
         right: 0,
         zIndex: 1001,
         pointerEvents: 'none',
@@ -2874,13 +2879,13 @@ export default function MapView() {
         </div>
       </div>
 
-      {/* 필터칩 — maxWidth 없음, 드롭다운이 화면 우측까지 자유롭게 펼쳐짐 */}
+      {/* 필터칩 — maxWidth 없음, 드롭다운이 화면 우측까지 자유롭게 펼쳐짐. 좌측 아이콘 레일 폭만큼 비켜서 배치 */}
       <div style={{
         position: 'absolute',
         top: isDesktopLayout
           ? 16 + 44 + 8  /* searchbar top(16) + height(44) + gap(8) */
           : 'max(0px, env(safe-area-inset-top))',
-        left: 0,
+        left: isDesktopLayout ? GLOBAL_NAV_DESKTOP_WIDTH : 0,
         right: 0,
         zIndex: 1001,
         pointerEvents: 'none',
@@ -2917,21 +2922,6 @@ export default function MapView() {
           />
         </div>
       </div>
-
-      <div style={{
-        position: 'absolute',
-        ...(isDesktopLayout ? { top: 16, right: 16 } : { bottom: 32, left: 16 }),
-        zIndex: 1001,
-        pointerEvents: 'auto',
-      }}>
-        <FabRound onClick={() => setSettingsOpen(true)} aria-label="설정">
-          <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
-          </svg>
-        </FabRound>
-      </div>
-
 
       {/* PC 줌 슬라이더 — 테마 토글 아래 우측 */}
       {/* 모바일 지도 하단 로고 워터마크 */}
@@ -3161,7 +3151,7 @@ export default function MapView() {
       {selectedId && !sheetExiting && !(sheetExpanded && !isDesktopLayout) && theaterOffScreen && !searchOpen && selectedTheater && (
         <div style={{
           position: 'absolute',
-          left: 0,
+          left: isDesktopLayout ? GLOBAL_NAV_DESKTOP_WIDTH : 0,
           right: isDesktopLayout ? 456 : 0,
           bottom: isDesktopLayout ? 32 : 316,
           zIndex: 1002,
@@ -3353,15 +3343,18 @@ export default function MapView() {
         </div>
       )}
 
-      <SettingsPanel
-        isOpen={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        isDesktopLayout={isDesktopLayout}
-        isDark={isDark}
-        onSetTheme={(theme) => void setTheme(theme)}
-        selectedMovieId={selectedMovieId}
-        selectedTheaterName={selectedTheater?.name}
-      />
+      {/* 설정 패널 — 모바일은 설정 탭으로 흡수, 데스크톱은 좌측 레일의 설정 버튼으로 트리거 */}
+      {isDesktopLayout && (
+        <SettingsPanel
+          isOpen={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          isDesktopLayout={isDesktopLayout}
+          isDark={isDark}
+          onSetTheme={(theme) => void setTheme(theme)}
+          selectedMovieId={selectedMovieId}
+          selectedTheaterName={selectedTheater?.name}
+        />
+      )}
 
       {/* 위치 권한 팝업 */}
       {(locPermState === 'prompt' || locPermState === 'requesting' || locPermState === 'denied') && (
