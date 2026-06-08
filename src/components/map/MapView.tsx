@@ -2745,7 +2745,7 @@ export default function MapView() {
   }
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100dvh' }}>
+    <div style={{ position: 'relative', width: '100%', height: '100dvh', overflow: 'hidden' }}>
       {/* 영화관 데이터 로딩 인디케이터 */}
       {theatersLoading && (
         <div style={{

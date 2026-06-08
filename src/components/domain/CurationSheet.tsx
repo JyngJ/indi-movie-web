@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { PosterThumb } from './PosterThumb'
 import { Badge } from '@/components/primitives/Badge'
 import type { HotIndieFilm, RecentlyViewedEntry, ReturningFilm } from '@/lib/curation/types'
@@ -203,6 +204,7 @@ export function CurationSheet({
 }: CurationSheetProps) {
   const containerRef  = useRef<HTMLDivElement>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const handleAreaRef = useRef<HTMLDivElement>(null)
 
   /* ── 뷰포트 높이 — 마운트 전엔 0이라 잘못된 값이 나와 마운트 후 직접 측정 ── */
   const [viewportHeight, setViewportHeight] = useState(900)
@@ -240,14 +242,18 @@ export function CurationSheet({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expandedHeight, snap])
 
-  /* ── 시트 영역 터치가 지도·페이지로 새지 않게 — 시트가 애매한(중간) 위치에 있을 때
-   *  시트 바깥(스크롤 영역 제외)을 밀면 화면 전체가 같이 밀려 올라가는 현상 방지 ── */
+  /* ── 시트 영역 터치가 지도·페이지로 새지 않게 ──
+   *  peek/default: 시트 어디를 잡아도 드래그(시트 이동)만 인식 — 본문(포스터 가로 스크롤 포함)이
+   *  세로 제스처를 가로채 페이지 전체가 스크롤되는 현상을 막는다.
+   *  expanded: 스크롤 영역 터치는 네이티브 스크롤에 맡기고, 그 외 영역만 차단 */
+  const snapRef = useRef(snap)
+  snapRef.current = snap
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
     const stop = (e: Event) => e.stopPropagation()
     const preventPageScroll = (e: TouchEvent) => {
-      if (scrollAreaRef.current?.contains(e.target as Node)) return
+      if (snapRef.current === 'expanded' && scrollAreaRef.current?.contains(e.target as Node)) return
       e.preventDefault()
     }
     el.addEventListener('wheel', stop, { passive: false })
@@ -295,9 +301,10 @@ export function CurationSheet({
   }, [snap, onSnapChange, expandedHeight, defaultOffset])
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    if ((e.target as Element).closest('button, a, input, select, textarea')) return
-    // expanded 상태: 본문 스크롤 영역 터치는 네이티브 스크롤에 맡김
+    // expanded 상태에서만 버튼/링크/스크롤 영역을 드래그 대상에서 제외 — 본문 클릭·스크롤이 자연스럽게 동작하도록
+    // peek/default: 포스터 카드 위에서 시작해도 드래그로 인식 (8px 미만 이동은 handlePointerUp에서 탭으로 처리되어 클릭은 그대로 동작)
     if (snap === 'expanded') {
+      if ((e.target as Element).closest('button, a, input, select, textarea')) return
       const scrollEl = scrollAreaRef.current
       if (scrollEl?.contains(e.target as Element)) return
     }
@@ -325,10 +332,18 @@ export function CurationSheet({
     dragActive.current = false
     setDragging(false)
 
-    // 이동 거리 8px 미만이면 tap으로 간주 — snap 없이 원위치
+    // 이동 거리 8px 미만이면 tap으로 간주
     if (Math.abs(e.clientY - dragStartY.current) < 8) {
       setDragOffset(0)
       velocityBuffer.current = []
+      // peek 상태에서 핸들·타이틀 영역(상단부)을 탭하면 한 번에 default(중간)까지 펼침
+      const handleEl = handleAreaRef.current
+      if (snap === 'peek' && handleEl) {
+        const rect = handleEl.getBoundingClientRect()
+        if (e.clientY >= rect.top && e.clientY <= rect.bottom) {
+          onSnapChange('default', expandedHeight - defaultOffset)
+        }
+      }
       return
     }
 
@@ -395,16 +410,18 @@ export function CurationSheet({
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 8,
-        paddingTop: 8,
-        paddingBottom: 10,
-        flexShrink: 0,
-        pointerEvents: 'none',   // 컨테이너가 드래그 처리
-      }}>
+      <div
+        ref={handleAreaRef}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 8,
+          paddingTop: 8,
+          paddingBottom: 10,
+          flexShrink: 0,
+          pointerEvents: 'none',   // 컨테이너가 드래그·탭 처리 (handlePointerUp에서 영역 판정)
+        }}>
         <div style={{
           width: 'var(--comp-sheet-handle-width)',
           height: 'var(--comp-sheet-handle-height)',
@@ -416,7 +433,14 @@ export function CurationSheet({
           <span style={{ fontSize: 15, fontWeight: 700 }}>큐레이션</span>
         </div>
       </div>
-      <div ref={scrollAreaRef} style={{ paddingTop: 4, paddingBottom: 24, overflowY: 'auto', flex: 1, minHeight: 0 }}>
+      <div ref={scrollAreaRef} style={{
+        paddingTop: 4,
+        // 하단 글로벌 탭바(고정, 시트보다 위 z-index)에 본문 끝부분이 가려지지 않도록 그 높이만큼 여백 확보
+        paddingBottom: `calc(${GLOBAL_NAV_MOBILE_HEIGHT}px + 24px)`,
+        overflowY: 'auto',
+        flex: 1,
+        minHeight: 0,
+      }}>
         <CurationSections
           returningFilms={returningFilms}
           hotIndieFilms={hotIndieFilms}
