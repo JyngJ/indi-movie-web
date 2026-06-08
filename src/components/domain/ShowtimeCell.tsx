@@ -81,7 +81,7 @@ export function ShowtimeCell({
     >
 
       {/* 시간 */}
-      <div className="flex items-baseline gap-1" style={{ color: 'var(--color-text-primary)' }}>
+      <div className="flex items-baseline gap-1 flex-wrap" style={{ color: 'var(--color-text-primary)' }}>
         <span style={{
           fontSize: 'var(--text-time)', fontWeight: 700, fontFeatureSettings: '"tnum"', whiteSpace: 'nowrap',
           textDecoration: isEnded ? 'line-through' : 'none',
@@ -89,7 +89,7 @@ export function ShowtimeCell({
           {startTime}
         </span>
         {endTime && (
-          <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-sub)', fontFeatureSettings: '"tnum"', whiteSpace: 'nowrap' }}>
+          <span style={{ fontSize: 10, color: 'var(--color-text-sub)', fontFeatureSettings: '"tnum"', whiteSpace: 'nowrap' }}>
             -{endTime}
           </span>
         )}

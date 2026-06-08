@@ -8,7 +8,7 @@ import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useUIStore } from '@/store/uiStore'
 
 /** §5 바텀 탭바 표준 높이(safe-area 포함) — 다른 화면 요소가 이 값만큼 비켜야 함 */
-export const GLOBAL_NAV_MOBILE_HEIGHT = 78
+export const GLOBAL_NAV_MOBILE_HEIGHT = 60
 /** §5 아이콘 레일 표준 폭 */
 export const GLOBAL_NAV_DESKTOP_WIDTH = 64
 
@@ -86,7 +86,7 @@ function MobileTabBar({ pathname }: { pathname: string }) {
         display: 'flex',
         background: 'var(--color-surface-card)',
         borderTop: '1px solid var(--color-border)',
-        zIndex: 950,
+        zIndex: 1150,
       }}
     >
       {MOBILE_TABS.map(({ key, href, label, Icon }) => {
@@ -121,7 +121,47 @@ function DesktopRail({ pathname }: { pathname: string }) {
   const isSearchOpen = useUIStore((s) => s.isSearchOpen)
   const setSearchOpen = useUIStore((s) => s.setSearchOpen)
   const setSettingsOpen = useUIStore((s) => s.setSettingsOpen)
+  const toggleMapDockCollapsed = useUIStore((s) => s.toggleMapDockCollapsed)
   const searchColor = isSearchOpen ? ACTIVE_COLOR : INACTIVE_COLOR
+
+  const renderRailTab = ({ key, href, label, Icon }: MobileTab) => {
+    // 검색 패널이 열려있는 동안은 라우트 탭의 활성 표시를 끈다 — 메뉴는 한 번에 하나만 선택 상태
+    const active = !isSearchOpen && isTabActive(pathname, href)
+    const color = active ? ACTIVE_COLOR : INACTIVE_COLOR
+    return (
+      <Link
+        key={key}
+        href={href}
+        aria-current={active ? 'page' : undefined}
+        onClick={() => {
+          if (isSearchOpen) {
+            setSearchOpen(false)
+            return
+          }
+          // 지도 화면에서 '지도' 탭 재클릭 — 좌측 도크를 슬라이드 토글 (검색 오버레이 중엔 제외, 위에서 처리)
+          if (key === 'map' && pathname === '/') toggleMapDockCollapsed()
+        }}
+        style={{ textDecoration: 'none' }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 4,
+            padding: '8px 4px',
+            margin: '0 8px',
+            borderRadius: 10,
+            background: active ? 'color-mix(in srgb, var(--color-primary-base) 11%, transparent)' : 'transparent',
+            color,
+          }}
+        >
+          <Icon size={21} />
+          <span style={{ fontSize: 10.5, fontWeight: 600 }}>{label}</span>
+        </div>
+      </Link>
+    )
+  }
 
   return (
     <nav
@@ -140,45 +180,16 @@ function DesktopRail({ pathname }: { pathname: string }) {
         paddingBottom: 16,
         background: 'var(--color-surface-card)',
         borderRight: '1px solid var(--color-border)',
-        zIndex: 950,
+        zIndex: 1150,
       }}
     >
       <Link href="/" aria-label="지도 홈" style={{ display: 'block' }}>
         <Image src="/icon.svg" alt="" width={38} height={38} style={{ borderRadius: 11 }} />
       </Link>
 
+      {/* 순서: 지도 - 검색 - 영화 */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
-        {DESKTOP_RAIL_TABS.map(({ key, href, label, Icon }) => {
-          // 검색 패널이 열려있는 동안은 라우트 탭의 활성 표시를 끈다 — 메뉴는 한 번에 하나만 선택 상태
-          const active = !isSearchOpen && isTabActive(pathname, href)
-          const color = active ? ACTIVE_COLOR : INACTIVE_COLOR
-          return (
-            <Link
-              key={key}
-              href={href}
-              aria-current={active ? 'page' : undefined}
-              onClick={() => { if (isSearchOpen) setSearchOpen(false) }}
-              style={{ textDecoration: 'none' }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 4,
-                  padding: '8px 4px',
-                  margin: '0 8px',
-                  borderRadius: 10,
-                  background: active ? 'color-mix(in srgb, var(--color-primary-base) 11%, transparent)' : 'transparent',
-                  color,
-                }}
-              >
-                <Icon size={21} />
-                <span style={{ fontSize: 10.5, fontWeight: 600 }}>{label}</span>
-              </div>
-            </Link>
-          )
-        })}
+        {DESKTOP_RAIL_TABS.filter((tab) => tab.key === 'map').map(renderRailTab)}
 
         <button
           type="button"
@@ -204,6 +215,8 @@ function DesktopRail({ pathname }: { pathname: string }) {
           <IconSearch size={21} />
           <span style={{ fontSize: 10.5, fontWeight: 600 }}>검색</span>
         </button>
+
+        {DESKTOP_RAIL_TABS.filter((tab) => tab.key !== 'map').map(renderRailTab)}
       </div>
 
       <button

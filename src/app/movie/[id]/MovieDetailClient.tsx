@@ -90,7 +90,7 @@ function NavBar({
       paddingLeft: 4,
       paddingRight: 4,
       borderBottom: '1px solid var(--color-border)',
-      backgroundColor: 'var(--color-surface-bg)',
+      backgroundColor: 'var(--color-primary-subtle-l)',
     }}>
       <button style={btn} onClick={onBack}><IcoChevronLeft /></button>
       <span style={{

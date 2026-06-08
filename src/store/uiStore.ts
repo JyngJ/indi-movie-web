@@ -11,6 +11,11 @@ interface UIStore {
 
   isSettingsOpen: boolean
   setSettingsOpen: (open: boolean) => void
+
+  /** 데스크톱 지도 화면 좌측 도크 접힘 상태 — 도크 토글 버튼과 GlobalNav '지도' 탭 재클릭이 함께 제어 */
+  isMapDockCollapsed: boolean
+  setMapDockCollapsed: (collapsed: boolean) => void
+  toggleMapDockCollapsed: () => void
 }
 
 export const useUIStore = create<UIStore>((set) => ({
@@ -26,4 +31,8 @@ export const useUIStore = create<UIStore>((set) => ({
 
   isSettingsOpen: false,
   setSettingsOpen: (open) => set({ isSettingsOpen: open }),
+
+  isMapDockCollapsed: false,
+  setMapDockCollapsed: (collapsed) => set({ isMapDockCollapsed: collapsed }),
+  toggleMapDockCollapsed: () => set((s) => ({ isMapDockCollapsed: !s.isMapDockCollapsed })),
 }))

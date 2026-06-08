@@ -997,8 +997,8 @@ export function FilterBar({
         <>
           <div style={{
             position: 'absolute',
-            top: 44,
-            left: 4,
+            top: 52,
+            left: 16,
             zIndex: 60,
             width: 236,
             animation: 'tipIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1)',

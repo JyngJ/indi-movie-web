@@ -1,5 +1,7 @@
 'use client'
 
+import { useState } from 'react'
+
 export type DayType = 'weekday' | 'saturday' | 'sunday' | 'holiday' | 'today'
 
 export interface Day {
@@ -40,7 +42,37 @@ const NAV_BTN: React.CSSProperties = {
   cursor: 'pointer',
   padding: 0,
   minHeight: 'unset',
-  transition: 'background 120ms',
+}
+
+/* 이전/다음 주 이동 버튼 — 누르면 쫀득하게 눌렸다 튕겨 돌아옴(:active는 터치에서 잘 안 먹어 포인터 이벤트로 직접 제어) */
+function DateNavButton({ direction, onClick, enabled, label }: { direction: 'prev' | 'next'; onClick?: () => void; enabled?: boolean; label: string }) {
+  const [pressed, setPressed] = useState(false)
+  const release = () => setPressed(false)
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={!enabled}
+      onPointerDown={() => enabled && setPressed(true)}
+      onPointerUp={release}
+      onPointerLeave={release}
+      onPointerCancel={release}
+      style={{
+        ...NAV_BTN,
+        opacity: enabled ? 1 : 0.25,
+        cursor: enabled ? 'pointer' : 'default',
+        transform: pressed ? 'scale(0.78)' : 'scale(1)',
+        transition: pressed
+          ? 'transform 0.05s ease-out'
+          : 'transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background 120ms',
+      }}
+      aria-label={label}
+    >
+      <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+        <path d={direction === 'prev' ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6'} />
+      </svg>
+    </button>
+  )
 }
 
 export function DateBar({ days, selectedDate, onSelectDate, onPrev, onNext, hasPrev, hasNext }: DateBarProps) {
@@ -58,17 +90,7 @@ export function DateBar({ days, selectedDate, onSelectDate, onPrev, onNext, hasP
       }}
     >
       {/* 이전 버튼 */}
-      <button
-        type="button"
-        onClick={onPrev}
-        disabled={!hasPrev}
-        style={{ ...NAV_BTN, opacity: hasPrev ? 1 : 0.25, cursor: hasPrev ? 'pointer' : 'default' }}
-        aria-label="이전 주"
-      >
-        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
-      </button>
+      <DateNavButton direction="prev" onClick={onPrev} enabled={hasPrev} label="이전 주" />
 
       {/* 날짜 행 */}
       <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between', gap: 2 }}>
@@ -133,17 +155,7 @@ export function DateBar({ days, selectedDate, onSelectDate, onPrev, onNext, hasP
       </div>
 
       {/* 다음 버튼 */}
-      <button
-        type="button"
-        onClick={onNext}
-        disabled={!hasNext}
-        style={{ ...NAV_BTN, opacity: hasNext ? 1 : 0.25, cursor: hasNext ? 'pointer' : 'default' }}
-        aria-label="다음 주"
-      >
-        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-          <path d="M9 18l6-6-6-6" />
-        </svg>
-      </button>
+      <DateNavButton direction="next" onClick={onNext} enabled={hasNext} label="다음 주" />
     </div>
   )
 }

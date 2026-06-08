@@ -12,7 +12,8 @@ import { useIsDark } from '@/hooks/useIsDark'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { SearchBarButton, SearchBar, FabRound, Toast } from '@/components/primitives'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
-import { MapPin, TheaterSheet, FilterBar, LocationPermissionModal } from '@/components/domain'
+import { MapPin, TheaterSheet, CurationSheet, CurationSections, FilterBar, LocationPermissionModal } from '@/components/domain'
+import type { CurationSnap } from '@/components/domain'
 import { DesktopDetailPanel } from '@/components/domain/DesktopDetailPanel'
 import type { DesktopPanelState } from '@/components/domain/DesktopDetailPanel'
 import type { FilterState } from '@/components/domain'
@@ -34,9 +35,10 @@ import { posterCountForZoom, posterSizeForZoom, posterSlotsForZoom } from '@/lib
 import { calculateAndFormatDistance } from '@/lib/map/distanceUtils'
 import type { TheaterPosterMovie } from '@/lib/map/posterLogic'
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
+import { useCurationData } from '@/hooks/useCurationData'
 import { springFlyTo, springFlyToBounds, springActive, setSpringSettledCallback } from '@/lib/mapSpring'
 import { PosterGrid } from './PosterGrid'
-import { ViewportTracker, ZoomSlider, OffScreenTracker, MapRefSetter, IcoPlus, IcoMinus, IcoLocate, IcoSun, IcoMoon } from './MapControls'
+import { ViewportTracker, ZoomSlider, OffScreenTracker, MapRefSetter, MapInteractionTracker, IcoPlus, IcoMinus, IcoLocate, IcoSun, IcoMoon } from './MapControls'
 import { SettingsPanel } from './SettingsPanel'
 
 const SEARCH_CROSS_RESULT_LIMIT = 5
@@ -48,6 +50,9 @@ const KOREA_MAP_BOUNDS: L.LatLngBoundsExpression = [
   [32.8, 124.2],
   [39.8, 132.2],
 ]
+
+/** 데스크톱 좌측 상시 도크 폭 — 검색 패널과 같은 폭(440 * 0.8) */
+const DESKTOP_DOCK_WIDTH = 352
 
 function dateRangeForFilter(filter: FilterState) {
   const today = startOfLocalDay(new Date())
@@ -1074,12 +1079,6 @@ export default function MapView() {
   const subwayLayerDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const viewportRecomputeDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // 툴팁 방향: 실시간으로 hover 시점에 화면 위치를 보고 tip-l 클래스를 토글
-  const isPanelOpenRef = useRef(false)
-  useEffect(() => {
-    isPanelOpenRef.current = isDesktopLayout && (selectedId !== null || panelStack.length > 0)
-  }, [isDesktopLayout, selectedId, panelStack.length])
-
   useEffect(() => {
     // 모바일에서는 포스터 호버 정보 표시 안함
     if (!isDesktopLayout) return
@@ -1091,9 +1090,8 @@ export default function MapView() {
       const isPm = wrap.classList.contains('pm-wrap')
       const rect = wrap.getBoundingClientRect()
       const tipW = isPm ? 200 : 280  // gap(10) + tooltip width
-      const panelW = isPanelOpenRef.current ? 456 : 0
-      const limit = window.innerWidth - panelW
-      wrap.classList.toggle('tip-l', rect.right + tipW > limit)
+      // 우측엔 더 이상 떠있는 패널이 없음(좌측 도크로 이전) — 화면 우측 끝 기준으로만 판단
+      wrap.classList.toggle('tip-l', rect.right + tipW > window.innerWidth)
     }
     // leaflet-container가 mount된 뒤 부착 (MapRefSetter가 먼저 실행됨)
     const container = document.querySelector('.leaflet-container')
@@ -1112,6 +1110,44 @@ export default function MapView() {
   const dummyInputRef = useRef<HTMLInputElement>(null)
   const settingsOpen = useUIStore((s) => s.isSettingsOpen)
   const setSettingsOpen = useUIStore((s) => s.setSettingsOpen)
+  // 모바일 큐레이션 시트 — 진입 시 1/3 노출(default), 드래그로 peek/expanded 오감. visibleHeight는 +/- · 현위치 FAB 위치 계산용
+  const [curationSnap, setCurationSnap] = useState<CurationSnap>('default')
+  const [curationVisibleHeight, setCurationVisibleHeight] = useState(0)
+  const handleCurationSnapChange = useCallback((snap: CurationSnap, visibleHeight: number) => {
+    setCurationSnap(snap)
+    setCurationVisibleHeight(visibleHeight)
+  }, [])
+  // 시트가 default(중간) 상태일 때 지도 조작(터치·드래그·줌·현위치)이 들어오면 가장 아래로 접어 시야 확보
+  const collapseCurationOnMapInteraction = useCallback(() => {
+    setCurationSnap((prev) => (prev === 'default' ? 'peek' : prev))
+  }, [])
+  // 데스크톱 좌측 도크 — 접힘 토글. 전역 스토어에 둬서 GlobalNav '지도' 탭 재클릭으로도 같은 슬라이드 애니메이션으로 토글 가능
+  const dockCollapsed = useUIStore((s) => s.isMapDockCollapsed)
+  const setDockCollapsed = useUIStore((s) => s.setMapDockCollapsed)
+  const toggleDockCollapsed = useUIStore((s) => s.toggleMapDockCollapsed)
+  // 검색 패널 슬라이드 — 도크에 다른 시트(극장/영화·감독 상세)가 없는 채로 열렸을 때만 좌측에서 슬라이드 인/아웃,
+  // 다른 시트가 떠 있는 채로 열렸을 땐 그 위에 바로 겹쳐 표시(애니메이션 없음). 열리는 순간의 상태로 고정해 도중에 바뀌어도 흔들리지 않게 함
+  const [searchSlideMode, setSearchSlideMode] = useState(false)
+  const [displayedSearchOpen, setDisplayedSearchOpen] = useState(false)
+  const [searchIn, setSearchIn] = useState(false)
+  const searchExitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const desktopDockHidden = isDesktopLayout && dockCollapsed && !searchOpen
+  // 도크/검색 패널이 차지하는 폭만큼 비킨 지점 — 칩·로고 등 오버레이를 그 오른쪽에 배치할 때 기준 (도크 접히면 줄어듦)
+  const desktopContentStart = GLOBAL_NAV_DESKTOP_WIDTH + (desktopDockHidden ? 0 : DESKTOP_DOCK_WIDTH)
+  // 데스크톱: 좌측 도크에 항상 노출 / 모바일: 시트가 항상 떠 있음 — 레이아웃 무관하게 항상 로드
+  const curationData = useCurationData(true)
+  const handleCurationMovieSelect = useCallback((movieId: string, movieTitle: string) => {
+    trackEvent('curation movie selected', {
+      movie_id: movieId,
+      movie_title: movieTitle,
+      source: 'curation_sheet',
+    })
+    classifySessionIntent('type_a', { source: 'curation_sheet', movie_id: movieId })
+    suppressMovieFilterFitRef.current = false
+    setDirectorFilter(null)
+    setMovieFilter({ id: movieId, title: movieTitle })
+    setCurationSnap('peek')
+  }, [])
   const mapViewTrackedRef = useRef(false)
   const lastSearchTelemetryRef = useRef('')
   const lastFilterTelemetryRef = useRef('')
@@ -1152,6 +1188,22 @@ export default function MapView() {
     window.addEventListener('popstate', handler)
     return () => window.removeEventListener('popstate', handler)
   }, [])
+
+  // 좌측 도크가 접혀있는 상태에서 극장이 선택되면 — 도크를 펼쳐 극장 상세가 슬라이드 인 되도록 강제로 열고,
+  // 선택 직전의 접힘 상태를 기억해뒀다가 극장 상세를 닫을 때 그 상태로 되돌린다
+  const dockCollapsedBeforeTheaterRef = useRef<boolean | null>(null)
+  useEffect(() => {
+    if (!isDesktopLayout) return
+    if (selectedId !== null) {
+      if (dockCollapsedBeforeTheaterRef.current === null) {
+        dockCollapsedBeforeTheaterRef.current = dockCollapsed
+        if (dockCollapsed) setDockCollapsed(false)
+      }
+    } else if (dockCollapsedBeforeTheaterRef.current !== null) {
+      if (dockCollapsedBeforeTheaterRef.current) setDockCollapsed(true)
+      dockCollapsedBeforeTheaterRef.current = null
+    }
+  }, [isDesktopLayout, selectedId, dockCollapsed, setDockCollapsed])
 
   // PC ESC 키 → 검색 닫기 → 패널 한 단계 뒤로 → 시트 닫기
   useEffect(() => {
@@ -1209,8 +1261,36 @@ export default function MapView() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [desktopPanel])
 
+  // 검색 패널 슬라이드 인/아웃 — 도크가 비어 있는 채로 열렸을 때만 적용(슬라이드 모드는 여는 순간 결정/고정됨)
+  useEffect(() => {
+    if (searchExitTimerRef.current) clearTimeout(searchExitTimerRef.current)
+    if (searchOpen) {
+      setDisplayedSearchOpen(true)
+      if (searchSlideMode) {
+        setSearchIn(false)
+        let id = requestAnimationFrame(() => {
+          id = requestAnimationFrame(() => setSearchIn(true))
+        })
+        return () => cancelAnimationFrame(id)
+      }
+      setSearchIn(true)
+    } else if (searchSlideMode) {
+      setSearchIn(false)
+      searchExitTimerRef.current = setTimeout(() => {
+        setDisplayedSearchOpen(false)
+      }, 220)
+    } else {
+      setDisplayedSearchOpen(false)
+      setSearchIn(false)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchOpen])
+
   const openSearch = useCallback(() => {
     trackEvent('search opened', { source: 'map' })
+    // 도크가 비어 있을 때(다른 시트 없음)만 좌측 슬라이드 — 여는 순간 상태로 고정
+    // (selectedTheater/displayedPanel은 이 함수보다 뒤에 선언되어 deps에 못 넣으므로 동치인 selectedId/desktopPanel로 판단)
+    setSearchSlideMode(isDesktopLayout && selectedId === null && desktopPanel === null)
     // iOS Safari: 키보드는 반드시 클릭 핸들러 안에서 동기적으로 focus()가 불려야 열림
     // 1) 클릭 핸들러 동기 컨텍스트 안에서 hidden dummy input 포커스 → iOS가 키보드 세션 시작
     dummyInputRef.current?.focus()
@@ -1220,7 +1300,7 @@ export default function MapView() {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => searchInputRef.current?.focus())
     })
-  }, [])
+  }, [isDesktopLayout, selectedId, desktopPanel])
 
   const closeSearch = useCallback(() => {
     setSearchOpen(false)
@@ -1793,11 +1873,12 @@ export default function MapView() {
   }, [])
 
   const handleLocate = useCallback(() => {
+    collapseCurationOnMapInteraction()
     refetch()
     if (coords && mapRef.current) {
       springFlyTo(mapRef.current, [coords.lat, coords.lng], 15)
     }
-  }, [coords, refetch])
+  }, [coords, refetch, collapseCurationOnMapInteraction])
 
 
   const renderThemeToggle = (style?: CSSProperties) => (
@@ -1874,9 +1955,9 @@ export default function MapView() {
   const flyToForTheater = useCallback((latlng: [number, number], zoom: number, _duration?: number) => {
     const map = mapRef.current
     if (!map) return
-    // desktop: 오른쪽 패널 440px → 왼쪽으로 220px 이동
+    // desktop: 좌측 도크(64+352=416px)가 가린 영역 피해 오른쪽으로 208px 이동
     // mobile:  하단 시트 300px → 위쪽으로 150px 이동
-    const dx = isDesktopLayout ? -220 : 0
+    const dx = isDesktopLayout ? (GLOBAL_NAV_DESKTOP_WIDTH + DESKTOP_DOCK_WIDTH) / 2 : 0
     const dy = isDesktopLayout ? 0 : -150
     const targetPx = map.project(L.latLng(latlng), zoom)
     const newCenter = map.unproject(L.point(targetPx.x - dx, targetPx.y - dy), zoom)
@@ -2097,10 +2178,15 @@ export default function MapView() {
     }
   }, [selectedId, closeSheet, flyToForTheater, isDesktopLayout, movieFilter, theaters])
 
-  // FAB 버튼 bottom: collapsed = COLLAPSED_H(300) + 여유 16 = 316
-  // expanded / 시트 없음 = 하단 탭바(모바일 전용 — GlobalNav) 위 32px
+  // FAB 버튼 bottom — 모바일: 떠 있는 시트의 보이는 높이 + 여유 16만큼 띄움
+  // 극장 시트 collapsed = COLLAPSED_H(300) + 16 = 316 / 큐레이션 시트 = 현재 보이는 높이(snap에 따라 변함) + 16
+  // 그 외(시트 expanded·시트 없음) = 하단 탭바(모바일 전용 — GlobalNav) 위 32px
   const fabBottom = !isDesktopLayout
-    ? (selectedTheater && !sheetExpanded && !sheetExiting ? 316 : GLOBAL_NAV_MOBILE_HEIGHT + 32)
+    ? (selectedTheater && !sheetExpanded && !sheetExiting
+        ? 316
+        : !selectedTheater && !searchOpen && curationVisibleHeight > 0
+          ? curationVisibleHeight + 16
+          : GLOBAL_NAV_MOBILE_HEIGHT + 32)
     : 32
   const hasSearchResults = theaterResults.length > 0 || stationResults.length > 0 || movieResults.length > 0 || relatedDirectorResults.length > 0 || areaResults.length > 0
 
@@ -2718,6 +2804,7 @@ export default function MapView() {
           noWrap
         />
         <MapRefSetter mapRef={mapRef} onReady={tryLocationFly} />
+        <MapInteractionTracker onInteract={collapseCurationOnMapInteraction} />
         <ViewportTracker onViewport={handleViewport} />
         <OffScreenTracker
           theaterLatLng={selectedTheater ? [selectedTheater.lat, selectedTheater.lng] : null}
@@ -2837,61 +2924,32 @@ export default function MapView() {
         })}
       </MapContainer>
 
-      {/* 검색창 + 필터 칩 */}
-      {/* PC 로고 — 상단 중앙 */}
-      {isDesktopLayout && (
-        <div aria-label="영화볼지도" role="img" style={{
+      {/* 검색바 — 모바일 전용 플로팅(데스크톱은 좌측 큐레이션 도크 헤더에 배치) */}
+      {!isDesktopLayout && (
+        <div style={{
           position: 'absolute',
-          top: 20,
-          left: '50%',
-          transform: 'translateX(-50%)',
+          top: 'max(0px, env(safe-area-inset-top))',
+          left: 0,
+          right: 0,
           zIndex: 1001,
           pointerEvents: 'none',
-          width: 100,
-          height: 34,
-          backgroundColor: 'var(--color-text-primary)',
-          WebkitMaskImage: 'url(/logo.svg)',
-          maskImage: 'url(/logo.svg)',
-          WebkitMaskRepeat: 'no-repeat',
-          maskRepeat: 'no-repeat',
-          WebkitMaskPosition: 'center',
-          maskPosition: 'center',
-          WebkitMaskSize: 'contain',
-          maskSize: 'contain',
-          filter: isDark
-            ? 'drop-shadow(0 2px 8px rgba(0,0,0,0.7))'
-            : 'drop-shadow(0 2px 8px rgba(0,0,0,0.25))',
-        }} />
+        }}>
+          <div style={{ padding: '16px 16px 0', pointerEvents: 'auto' }}>
+            <div style={{ boxShadow: 'var(--shadow-sheet)', borderRadius: 'var(--comp-search-radius)' }}>
+              <SearchBarButton
+                placeholder="영화, 감독, 역, 영화관 검색"
+                onClick={openSearch}
+              />
+            </div>
+          </div>
+        </div>
       )}
 
-      {/* 검색바 — PC: maxWidth 440, 좌측 아이콘 레일 폭만큼 비켜서 배치 */}
+      {/* 필터칩 — 데스크톱: 큐레이션 도크 오른쪽에서 시작 / 모바일: 검색바 아래. maxWidth 없음, 드롭다운이 화면 우측까지 자유롭게 펼쳐짐 */}
       <div style={{
         position: 'absolute',
         top: isDesktopLayout ? 16 : 'max(0px, env(safe-area-inset-top))',
-        left: isDesktopLayout ? GLOBAL_NAV_DESKTOP_WIDTH : 0,
-        right: 0,
-        zIndex: 1001,
-        pointerEvents: 'none',
-        maxWidth: isDesktopLayout ? 440 : undefined,
-        minWidth: isDesktopLayout ? 320 : undefined,
-      }}>
-        <div style={{ padding: isDesktopLayout ? '0 16px' : '16px 16px 0', pointerEvents: 'auto' }}>
-          <div style={{ boxShadow: 'var(--shadow-sheet)', borderRadius: 'var(--comp-search-radius)' }}>
-            <SearchBarButton
-              placeholder="영화, 감독, 역, 영화관 검색"
-              onClick={openSearch}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* 필터칩 — maxWidth 없음, 드롭다운이 화면 우측까지 자유롭게 펼쳐짐. 좌측 아이콘 레일 폭만큼 비켜서 배치 */}
-      <div style={{
-        position: 'absolute',
-        top: isDesktopLayout
-          ? 16 + 44 + 8  /* searchbar top(16) + height(44) + gap(8) */
-          : 'max(0px, env(safe-area-inset-top))',
-        left: isDesktopLayout ? GLOBAL_NAV_DESKTOP_WIDTH : 0,
+        left: isDesktopLayout ? desktopContentStart : 0,
         right: 0,
         zIndex: 1001,
         pointerEvents: 'none',
@@ -2923,62 +2981,71 @@ export default function MapView() {
               suppressMovieFilterFitRef.current = false
               setDirectorFilter(null)
             }}
-            onMovieChipClick={() => setSearchOpen(true)}
-            onDirectorChipClick={() => setSearchOpen(true)}
+            onMovieChipClick={() => {
+              setSearchSlideMode(isDesktopLayout && selectedId === null && desktopPanel === null)
+              setSearchOpen(true)
+            }}
+            onDirectorChipClick={() => {
+              setSearchSlideMode(isDesktopLayout && selectedId === null && desktopPanel === null)
+              setSearchOpen(true)
+            }}
           />
         </div>
       </div>
 
       {/* PC 줌 슬라이더 — 테마 토글 아래 우측 */}
-      {/* 모바일 지도 하단 로고 워터마크 */}
-      {!isDesktopLayout && (
+      {/* 지도 하단 로고 워터마크 — 데스크톱은 도크 기본 폭 기준 고정 위치(접힘/시트 전환과 무관하게 흔들리지 않도록) */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          left: isDesktopLayout ? `calc(50% + ${GLOBAL_NAV_DESKTOP_WIDTH / 2}px)` : '50%',
+          bottom: 'max(20px, env(safe-area-inset-bottom))',
+          transform: 'translateX(-50%)',
+          zIndex: 550,
+          height: 'calc(var(--comp-search-height) * 0.8)',
+          width: 109,
+          pointerEvents: 'none',
+        }}
+      >
         <div
-          aria-hidden
           style={{
             position: 'absolute',
-            left: '50%',
-            bottom: 'max(20px, env(safe-area-inset-bottom))',
-            transform: 'translateX(-50%)',
-            zIndex: 550,
-            height: 'calc(var(--comp-search-height) * 0.8)',
-            width: 109,
-            pointerEvents: 'none',
+            inset: 0,
+            backgroundColor: isDark ? 'var(--color-neutral-50)' : 'var(--color-neutral-900)',
+            WebkitMaskImage: 'url(/logo.svg)',
+            maskImage: 'url(/logo.svg)',
+            WebkitMaskRepeat: 'no-repeat',
+            maskRepeat: 'no-repeat',
+            WebkitMaskPosition: 'center',
+            maskPosition: 'center',
+            WebkitMaskSize: 'contain',
+            maskSize: 'contain',
+            filter: isDark
+              ? 'drop-shadow(0 4px 14px rgba(0, 0, 0, 0.85)) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.95))'
+              : 'drop-shadow(0 4px 14px rgba(0, 0, 0, 0.42)) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5))',
           }}
-        >
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              backgroundColor: isDark ? 'var(--color-neutral-50)' : 'var(--color-neutral-900)',
-              WebkitMaskImage: 'url(/logo.svg)',
-              maskImage: 'url(/logo.svg)',
-              WebkitMaskRepeat: 'no-repeat',
-              maskRepeat: 'no-repeat',
-              WebkitMaskPosition: 'center',
-              maskPosition: 'center',
-              WebkitMaskSize: 'contain',
-              maskSize: 'contain',
-              filter: isDark
-                ? 'drop-shadow(0 4px 14px rgba(0, 0, 0, 0.85)) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.95))'
-                : 'drop-shadow(0 4px 14px rgba(0, 0, 0, 0.42)) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5))',
-            }}
-          />
-        </div>
-      )}
+        />
+      </div>
 
-      {/* 검색 패널 — 모바일: 전체화면 오버레이(iOS 키보드 대응) / 데스크톱: 좌측 레일에 붙는 플랫 도크 패널 */}
-      {searchOpen && (
+      {/* 검색 패널 — 모바일: 전체화면 오버레이(iOS 키보드 대응) / 데스크톱: 좌측 레일에 붙는 플랫 도크 패널.
+          도크가 비어 있던 채로 열렸으면(searchSlideMode) 도크처럼 좌측에서 슬라이드 인/아웃,
+          다른 시트(극장/상세) 위로 열렸으면 애니메이션 없이 바로 겹쳐 표시 */}
+      {displayedSearchOpen && (
         <div style={{
           position: 'absolute',
           inset: isDesktopLayout ? `0 auto 0 ${GLOBAL_NAV_DESKTOP_WIDTH}px` : 0,
-          width: isDesktopLayout ? 352 /* 440 * 0.8 — 가로폭 축소 */ : 'auto',
+          width: isDesktopLayout ? DESKTOP_DOCK_WIDTH : 'auto',
           maxWidth: isDesktopLayout ? `calc(100vw - ${GLOBAL_NAV_DESKTOP_WIDTH}px)` : undefined,
           backgroundColor: 'var(--color-surface-bg)',
           display: 'flex',
           flexDirection: 'column',
-          zIndex: 2000,
+          // 슬라이드 모드일 땐 도크와 같은 슬롯에서 겹치므로 도크보다 살짝 위, 글로벌 내비 레일보단 아래(레일이 항상 최상단)
+          zIndex: searchSlideMode ? 945 : 2000,
           borderRight: isDesktopLayout ? '1px solid var(--color-border)' : undefined,
           overflow: 'hidden',
+          transform: searchSlideMode ? (searchIn ? 'translateX(0)' : 'translateX(-100%)') : undefined,
+          transition: searchSlideMode ? 'transform 220ms cubic-bezier(0.32, 0.72, 0, 1)' : undefined,
         }}>
           {/* 검색바 헤더 — < 버튼은 SearchBar의 onBack 쉐브론이 담당 */}
           <div style={{
@@ -3097,21 +3164,114 @@ export default function MapView() {
         </div>
       )}
 
-      {/* 줌 + 현위치 */}
+      {/* 큐레이션 — 모바일: 항상 떠 있는 드래그 가능한 하단 시트(peek/default/expanded 3단 스냅) */}
+      {!isDesktopLayout && !selectedTheater && !searchOpen && (
+        <CurationSheet
+          snap={curationSnap}
+          onSnapChange={handleCurationSnapChange}
+          returningFilms={curationData.returningFilms}
+          hotIndieFilms={curationData.hotIndieFilms}
+          recentlyViewed={curationData.recentlyViewed}
+          onMovieSelect={handleCurationMovieSelect}
+        />
+      )}
+
+      {/* 큐레이션 도크 — 데스크톱 전용 좌측 상시 패널. 검색 패널·극장 시트와 같은 슬롯·크기를 공유하며 셋 다 비활성일 때만 노출(네이버 지도 레퍼런스) */}
+      {isDesktopLayout && !searchOpen && !selectedTheater && (
+        <div style={{
+          position: 'absolute',
+          inset: `0 auto 0 ${GLOBAL_NAV_DESKTOP_WIDTH}px`,
+          width: DESKTOP_DOCK_WIDTH,
+          maxWidth: `calc(100vw - ${GLOBAL_NAV_DESKTOP_WIDTH}px)`,
+          backgroundColor: 'var(--color-surface-card)',
+          display: 'flex',
+          flexDirection: 'column',
+          zIndex: 900,
+          borderRight: '1px solid var(--color-border)',
+          overflow: 'hidden',
+          transform: dockCollapsed ? 'translateX(-100%)' : 'translateX(0)',
+          transition: 'transform 220ms cubic-bezier(0.32, 0.72, 0, 1)',
+        }}>
+          <div style={{
+            paddingTop: 'max(12px, env(safe-area-inset-top))',
+            paddingLeft: 16,
+            paddingRight: 16,
+            paddingBottom: 12,
+            borderBottom: '1px solid var(--color-border)',
+            flexShrink: 0,
+          }}>
+            <SearchBarButton
+              placeholder="영화, 감독, 역, 영화관 검색"
+              onClick={openSearch}
+            />
+          </div>
+          <div className="themed-scrollbar" style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingTop: 20, paddingBottom: 24 }}>
+            <CurationSections
+              returningFilms={curationData.returningFilms}
+              hotIndieFilms={curationData.hotIndieFilms}
+              recentlyViewed={curationData.recentlyViewed}
+              onMovieSelect={handleCurationMovieSelect}
+              desktop
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 도크 접기/펼치기 토글 — 도크 오른쪽 가장자리에 붙어 폭 변화에 맞춰 같이 이동 (네이버 지도 레퍼런스). 극장 상세가 떠 있을 땐 숨김(항상 펼쳐진 상태로 고정) */}
+      {isDesktopLayout && !searchOpen && !selectedTheater && (
+        <button
+          type="button"
+          onClick={() => toggleDockCollapsed()}
+          aria-label={dockCollapsed ? '큐레이션 패널 펼치기' : '큐레이션 패널 접기'}
+          aria-expanded={!dockCollapsed}
+          style={{
+            position: 'absolute',
+            left: GLOBAL_NAV_DESKTOP_WIDTH + (dockCollapsed ? 0 : DESKTOP_DOCK_WIDTH),
+            top: '50%',
+            transform: 'translateY(-50%)',
+            zIndex: 901,
+            width: 22,
+            height: 56,
+            borderRadius: '0 12px 12px 0',
+            border: '1px solid var(--color-border)',
+            borderLeft: 'none',
+            backgroundColor: 'var(--color-surface-card)',
+            boxShadow: 'var(--shadow-md)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            color: 'var(--color-text-body)',
+            padding: 0,
+            minHeight: 'unset',
+            transition: 'left 220ms cubic-bezier(0.32, 0.72, 0, 1)',
+          }}
+        >
+          <svg
+            width={14} height={14} viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"
+            style={{ transform: dockCollapsed ? 'rotate(180deg)' : undefined, transition: 'transform 220ms' }}
+          >
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
+      )}
+
+      {/* 줌 + 현위치 — 좌측 도크는 지도 위에 겹치지 않으므로(MapView가 그만큼 밀려 시작) 우측 고정 위치 유지 */}
       <div style={{
         position: 'absolute',
-        right: isDesktopLayout && selectedTheater ? 472 : 16,
+        right: 16,
         bottom: fabBottom,
         zIndex: 1000,
         display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center',
-        transition: 'right 0.24s ease, bottom 0.38s cubic-bezier(0.32, 0.72, 0, 1)',
+        transition: 'bottom 0.38s cubic-bezier(0.32, 0.72, 0, 1)',
       }}>
         {isDesktopLayout ? (
           <ZoomSlider zoom={zoom} mapRef={mapRef} />
         ) : (
           <>
-            <FabRound onClick={() => mapRef.current?.zoomIn()}><IcoPlus /></FabRound>
-            <FabRound onClick={() => mapRef.current?.zoomOut()}><IcoMinus /></FabRound>
+            <FabRound onClick={() => { collapseCurationOnMapInteraction(); mapRef.current?.zoomIn() }}><IcoPlus /></FabRound>
+            <FabRound onClick={() => { collapseCurationOnMapInteraction(); mapRef.current?.zoomOut() }}><IcoMinus /></FabRound>
           </>
         )}
         <div style={{ height: isDesktopLayout ? 0 : 8 }} />
@@ -3123,8 +3283,8 @@ export default function MapView() {
       {selectedId && !sheetExiting && !(sheetExpanded && !isDesktopLayout) && theaterOffScreen && !searchOpen && selectedTheater && (
         <div style={{
           position: 'absolute',
-          left: isDesktopLayout ? GLOBAL_NAV_DESKTOP_WIDTH : 0,
-          right: isDesktopLayout ? 456 : 0,
+          left: isDesktopLayout ? GLOBAL_NAV_DESKTOP_WIDTH + DESKTOP_DOCK_WIDTH : 0,
+          right: isDesktopLayout ? 16 : 0,
           bottom: isDesktopLayout ? 32 : 316,
           zIndex: 1002,
           display: 'flex',
@@ -3174,39 +3334,14 @@ export default function MapView() {
 
 
       {/* 드래그 바텀시트 — TheaterSheet가 자체적으로 Leaflet 이벤트 차단 */}
-      {selectedTheater && !desktopPanel && (
-        <>
-          {/* PC 뒤로가기 버튼 — 시트 패널 왼쪽 바깥 */}
-          {isDesktopLayout && fromMovieId && (
-            <button
-              onClick={() => router.push(`/movie/${fromMovieId}?tab=theaters`)}
-              style={{
-                position: 'absolute',
-                right: 456,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                zIndex: 1060,
-                width: 40, height: 40,
-                borderRadius: '50%',
-                border: '1px solid var(--color-border)',
-                backgroundColor: 'var(--color-surface-card)',
-                boxShadow: 'var(--shadow-md)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer',
-                color: 'var(--color-text-body)',
-              }}
-              aria-label="이전으로"
-            >
-              <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-            </button>
-          )}
+      {/* 극장 시트 — 모바일: 풀스크린 드래그 시트 / 데스크톱: 좌측 도크에 내장(영화·감독 상세는 우측에 별도로 플로팅돼 동시 표시 가능) */}
+      {selectedTheater && (() => {
+        const theaterSheet = (
           <TheaterSheet
             theater={selectedTheater}
             expanded={sheetExpanded}
             exiting={sheetExiting}
-            presentation={isDesktopLayout ? 'panel' : 'sheet'}
+            presentation={isDesktopLayout ? 'dock' : 'sheet'}
             selectedMovieId={selectedMovieId}
             onMovieSelect={setSelectedMovieId}
             onExpand={() => {
@@ -3259,25 +3394,44 @@ export default function MapView() {
             onFavorite={() => { /* Phase 4 */ }}
             mapFilters={{ genres: filters.genres, nations: filters.nations }}
             initialIsoDate={initialSheetDate}
-            onBack={fromMovieId && !isDesktopLayout ? () => router.push(`/movie/${fromMovieId}?tab=theaters`) : undefined}
+            onBack={fromMovieId ? () => router.push(`/movie/${fromMovieId}?tab=theaters`) : undefined}
           />
-        </>
-      )}
+        )
+        if (!isDesktopLayout) return theaterSheet
+        return (
+          <div style={{
+            position: 'absolute',
+            inset: `0 auto 0 ${GLOBAL_NAV_DESKTOP_WIDTH}px`,
+            width: DESKTOP_DOCK_WIDTH,
+            maxWidth: `calc(100vw - ${GLOBAL_NAV_DESKTOP_WIDTH}px)`,
+            backgroundColor: 'var(--color-surface-card)',
+            display: 'flex',
+            flexDirection: 'column',
+            zIndex: 900,
+            borderRight: '1px solid var(--color-border)',
+            overflow: 'hidden',
+            transform: dockCollapsed ? 'translateX(-100%)' : 'translateX(0)',
+            transition: 'transform 220ms cubic-bezier(0.32, 0.72, 0, 1)',
+          }}>
+            {theaterSheet}
+          </div>
+        )
+      })()}
 
-      {/* PC 영화/감독 상세 패널 */}
+      {/* PC 영화/감독 상세 패널 — 좌측 도크에 내장(검색·극장 시트와 같은 슬롯을 덮어 표시) */}
       {isDesktopLayout && displayedPanel && (
         <div style={{
           position: 'absolute',
-          top: 16,
-          right: 16,
-          bottom: 16,
-          width: 440,
-          maxWidth: 'calc(100vw - 32px)',
-          zIndex: 1050,
-          boxShadow: '0 18px 54px rgba(20, 15, 10, 0.18)',
-          borderRadius: 20,
+          inset: `0 auto 0 ${GLOBAL_NAV_DESKTOP_WIDTH}px`,
+          width: DESKTOP_DOCK_WIDTH,
+          maxWidth: `calc(100vw - ${GLOBAL_NAV_DESKTOP_WIDTH}px)`,
+          backgroundColor: 'var(--color-surface-card)',
+          display: 'flex',
+          flexDirection: 'column',
+          zIndex: 940,
+          borderRight: '1px solid var(--color-border)',
           overflow: 'hidden',
-          transform: panelIn ? 'translateX(0)' : 'translateX(calc(100% + 32px))',
+          transform: panelIn ? 'translateX(0)' : 'translateX(-100%)',
           transition: panelIn
             ? 'transform 224ms cubic-bezier(0.22, 1, 0.36, 1)'
             : 'transform 196ms cubic-bezier(0.55, 0, 1, 0.45)',
@@ -3285,6 +3439,7 @@ export default function MapView() {
           <DesktopDetailPanel
             panel={displayedPanel}
             regionId={filters.regionId}
+            embedded
             onClose={closeDesktopPanel}
             onBack={panelStack.length > 1 || selectedTheater ? () => window.history.back() : undefined}
             onNavigate={openDesktopPanel}

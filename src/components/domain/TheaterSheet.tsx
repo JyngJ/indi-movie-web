@@ -220,7 +220,7 @@ interface TheaterSheetProps {
   theater: Theater
   expanded: boolean
   exiting?: boolean           // true이면 아래로 퇴장 애니메이션
-  presentation?: 'sheet' | 'panel'
+  presentation?: 'sheet' | 'panel' | 'dock'
   selectedMovieId: string
   onMovieSelect: (id: string) => void
   onExpand: () => void
@@ -258,7 +258,10 @@ export function TheaterSheet({
 }: TheaterSheetProps) {
 
   const router = useRouter()
-  const panelMode = presentation === 'panel'
+  // 'panel'(우측 플로팅 카드) · 'dock'(좌측 도크 내장) — 헤더/스크롤/배경 등 콘텐츠 쪽 스타일은 동일하게 취급
+  const floatingPanel = presentation === 'panel'
+  const dockMode = presentation === 'dock'
+  const panelMode = floatingPanel || dockMode
   const shownExpanded = panelMode || expanded
 
   /* ── Sheet filter state ─────────────────────────────────────── */
@@ -1048,35 +1051,43 @@ export function TheaterSheet({
       onPointerUp={(e) => handlePointerUp(e)}
       onPointerCancel={(e) => handlePointerUp(e)}
       style={{
-        position: 'absolute',
-        left: panelMode ? 'auto' : 0,
-        right: panelMode ? 16 : 0,
-        top: panelMode ? 16 : 'auto',
-        bottom: panelMode ? 16 : 0,
-        width: panelMode ? 440 : 'auto',
-        maxWidth: panelMode ? 'calc(100vw - 32px)' : undefined,
-        height: panelMode ? 'auto' : '100dvh',
-        transform: panelMode
+        position: dockMode ? 'relative' : 'absolute',
+        left: dockMode ? 0 : floatingPanel ? 'auto' : 0,
+        right: dockMode ? 'auto' : floatingPanel ? 16 : 0,
+        top: dockMode ? 'auto' : floatingPanel ? 16 : 'auto',
+        bottom: dockMode ? 'auto' : floatingPanel ? 16 : 0,
+        width: dockMode ? '100%' : floatingPanel ? 440 : 'auto',
+        maxWidth: floatingPanel ? 'calc(100vw - 32px)' : undefined,
+        height: dockMode ? '100%' : floatingPanel ? 'auto' : '100dvh',
+        transform: dockMode
+          ? undefined
+          : floatingPanel
           ? (exiting ? 'translateX(calc(100% + 24px))' : 'translateX(0)')
           : `translateY(${finalTranslate}px)`,
-        opacity: panelMode && exiting ? 0 : 1,
+        opacity: floatingPanel && exiting ? 0 : 1,
         // 드래그 중엔 transition 없음, 진입/퇴장/snap엔 항상 transition
-        transition: panelMode
+        transition: dockMode
+          ? undefined
+          : floatingPanel
           ? 'transform 0.24s ease, opacity 0.2s ease'
           : (dragging && enterDone.current && !exiting)
           ? 'none'
           : 'transform 0.38s cubic-bezier(0.32, 0.72, 0, 1)',
-        zIndex: 1100,
+        zIndex: dockMode ? undefined : 1200,  // GlobalNav 모바일 탭바(zIndex 1150)보다 위 — 시트가 하단 메뉴를 가려야 함
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: panelMode ? 'var(--color-surface-card)' : 'var(--color-surface-raised)',
-        border: panelMode ? '1px solid var(--color-border)' : undefined,
-        borderRadius: panelMode
+        backgroundColor: dockMode ? 'transparent' : panelMode ? 'var(--color-surface-card)' : 'var(--color-surface-raised)',
+        border: dockMode ? undefined : panelMode ? '1px solid var(--color-border)' : undefined,
+        borderRadius: dockMode
+          ? 0
+          : panelMode
           ? 18
           : effectiveTranslate === 0
           ? '0'
           : 'var(--comp-sheet-radius)',
-        boxShadow: panelMode
+        boxShadow: dockMode
+          ? 'none'
+          : panelMode
           ? '0 22px 70px rgba(20, 15, 10, 0.22), 0 3px 14px rgba(20, 15, 10, 0.10)'
           : 'var(--shadow-sheet)',
         overflow: 'hidden',
@@ -1201,6 +1212,11 @@ export function TheaterSheet({
             alignItems: 'flex-start',
             gap: 12,
           }}>
+            {onBack && (
+              <button style={{ ...iconBtn, flexShrink: 0 }} onClick={onBack} aria-label="이전으로">
+                <IconChevronLeft />
+              </button>
+            )}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                 <h2 style={{
@@ -2104,7 +2120,7 @@ export function TheaterSheet({
                 lineHeight: 1.5,
                 opacity: 0.7,
               }}>
-                상영 정보는 실시간으로 불러오지 않으므로 실제 좌석 현황과 다를 수 있습니다.
+                상영 정보는 실시간으로 불러오지 않으므로<br />실제 좌석 현황과 다를 수 있습니다.
               </div>
             )}
           </div>
