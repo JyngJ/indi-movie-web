@@ -12,7 +12,7 @@ import { useIsDark } from '@/hooks/useIsDark'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { SearchBarButton, SearchBar, FabRound, Toast } from '@/components/primitives'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
-import { MapPin, TheaterSheet, CurationSheet, CurationSections, FilterBar, LocationPermissionModal } from '@/components/domain'
+import { MapPin, TheaterSheet, CurationSheet, CurationSections, FilterBar, LocationPermissionModal, CURATION_PEEK_HEIGHT } from '@/components/domain'
 import type { CurationSnap } from '@/components/domain'
 import { DesktopDetailPanel } from '@/components/domain/DesktopDetailPanel'
 import type { DesktopPanelState } from '@/components/domain/DesktopDetailPanel'
@@ -1110,16 +1110,16 @@ export default function MapView() {
   const dummyInputRef = useRef<HTMLInputElement>(null)
   const settingsOpen = useUIStore((s) => s.isSettingsOpen)
   const setSettingsOpen = useUIStore((s) => s.setSettingsOpen)
-  // 모바일 큐레이션 시트 — 진입 시 1/3 노출(default), 드래그로 peek/expanded 오감. visibleHeight는 +/- · 현위치 FAB 위치 계산용
-  const [curationSnap, setCurationSnap] = useState<CurationSnap>('default')
+  // 모바일 큐레이션 시트 — peek(최소, 기본값) ↔ expanded 2단. visibleHeight는 +/- · 현위치 FAB 위치 계산용
+  const [curationSnap, setCurationSnap] = useState<CurationSnap>('peek')
   const [curationVisibleHeight, setCurationVisibleHeight] = useState(0)
   const handleCurationSnapChange = useCallback((snap: CurationSnap, visibleHeight: number) => {
     setCurationSnap(snap)
     setCurationVisibleHeight(visibleHeight)
   }, [])
-  // 시트가 default(중간) 상태일 때 지도 조작(터치·드래그·줌·현위치)이 들어오면 가장 아래로 접어 시야 확보
+  // 시트가 expanded 상태일 때 지도 조작(터치·드래그·줌·현위치)이 들어오면 가장 아래로 접어 시야 확보
   const collapseCurationOnMapInteraction = useCallback(() => {
-    setCurationSnap((prev) => (prev === 'default' ? 'peek' : prev))
+    setCurationSnap((prev) => (prev === 'expanded' ? 'peek' : prev))
   }, [])
   // 데스크톱 좌측 도크 — 접힘 토글. 전역 스토어에 둬서 GlobalNav '지도' 탭 재클릭으로도 같은 슬라이드 애니메이션으로 토글 가능
   const dockCollapsed = useUIStore((s) => s.isMapDockCollapsed)
@@ -2179,12 +2179,13 @@ export default function MapView() {
   }, [selectedId, closeSheet, flyToForTheater, isDesktopLayout, movieFilter, theaters])
 
   // FAB 버튼 bottom — 모바일: 떠 있는 시트의 보이는 높이 + 여유 16만큼 띄움
-  // 극장 시트 collapsed = COLLAPSED_H(300) + 16 = 316 / 큐레이션 시트 = 현재 보이는 높이(snap에 따라 변함) + 16
-  // 그 외(시트 expanded·시트 없음) = 하단 탭바(모바일 전용 — GlobalNav) 위 32px
+  // 극장 시트 collapsed = COLLAPSED_H(300) + 16 = 316 / 큐레이션 시트 peek = 현재 보이는 높이 + 16
+  // 그 외(큐레이션 시트 expanded·극장 시트 expanded·시트 없음) = 하단 탭바(모바일 전용 — GlobalNav) 위 32px 고정
+  //   — 큐레이션 시트가 expanded로 올라오면 더 높은 zIndex로 FAB를 그대로 덮어 가림(따라가지 않음)
   const fabBottom = !isDesktopLayout
     ? (selectedTheater && !sheetExpanded && !sheetExiting
         ? 316
-        : !selectedTheater && !searchOpen && curationVisibleHeight > 0
+        : !selectedTheater && !searchOpen && curationSnap === 'peek' && curationVisibleHeight > 0
           ? curationVisibleHeight + 16
           : GLOBAL_NAV_MOBILE_HEIGHT + 32)
     : 32
@@ -2994,13 +2995,17 @@ export default function MapView() {
       </div>
 
       {/* PC 줌 슬라이더 — 테마 토글 아래 우측 */}
-      {/* 지도 하단 로고 워터마크 — 데스크톱은 도크 기본 폭 기준 고정 위치(접힘/시트 전환과 무관하게 흔들리지 않도록) */}
+      {/* 지도 하단 로고 워터마크 — 데스크톱은 도크 기본 폭 기준 고정 위치(접힘/시트 전환과 무관하게 흔들리지 않도록).
+          모바일은 큐레이션 시트가 peek(최소)일 때 시트 바로 위에 떠 있다가, 시트가 expanded로 올라오면
+          시트(zIndex 960~1010)에 가려지는 오버레이 — 그래서 zIndex는 시트보다 낮게 유지 */}
       <div
         aria-hidden
         style={{
           position: 'absolute',
           left: isDesktopLayout ? `calc(50% + ${GLOBAL_NAV_DESKTOP_WIDTH / 2}px)` : '50%',
-          bottom: 'max(20px, env(safe-area-inset-bottom))',
+          bottom: isDesktopLayout
+            ? 'max(20px, env(safe-area-inset-bottom))'
+            : `${CURATION_PEEK_HEIGHT + 12}px`,
           transform: 'translateX(-50%)',
           zIndex: 550,
           height: 'calc(var(--comp-search-height) * 0.8)',

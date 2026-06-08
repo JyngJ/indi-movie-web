@@ -6,15 +6,15 @@ import { PosterThumb } from './PosterThumb'
 import { Badge } from '@/components/primitives/Badge'
 import type { HotIndieFilm, RecentlyViewedEntry, ReturningFilm } from '@/lib/curation/types'
 
-/** 시트가 도달 가능한 3개 스냅 지점 — peek(최소) / default(진입 시 1/3) / expanded(최대) */
-export type CurationSnap = 'peek' | 'default' | 'expanded'
+/** 시트가 도달 가능한 2개 스냅 지점 — peek(최소, 기본값) / expanded(최대) */
+export type CurationSnap = 'peek' | 'expanded'
 
 /** expanded 상태에서 위로 남기는 여백 ≈ 검색바 + 필터칩 높이 (FilterBar를 가리지 않도록) */
 const TOP_MARGIN = 132
-/** peek 상태에서 보이는 높이 — 기존 COLLAPSED_HEIGHT(88)보다 살짝 크게 */
-const PEEK_HEIGHT = 120
+/** peek 상태에서 보이는 높이 — 시트 위 로고 워터마크 위치 계산에도 사용(MapView에서 export해서 참조) */
+export const CURATION_PEEK_HEIGHT = 120
 const VELOCITY_THRESHOLD = 500   // px/s 이상이면 flick으로 간주
-const SNAP_ORDER: CurationSnap[] = ['expanded', 'default', 'peek']
+const SNAP_ORDER: CurationSnap[] = ['expanded', 'peek']
 
 const IconSparkle = () => (
   <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -217,10 +217,9 @@ export function CurationSheet({
 
   /* ── 스냅 지점별 translateY 오프셋 (0 = 완전 펼침) ── */
   const expandedHeight = Math.max(0, viewportHeight - TOP_MARGIN)
-  const defaultOffset  = Math.max(0, expandedHeight - viewportHeight / 3)
-  const peekOffset     = Math.max(0, expandedHeight - PEEK_HEIGHT)
+  const peekOffset     = Math.max(0, expandedHeight - CURATION_PEEK_HEIGHT)
   const offsetFor = (s: CurationSnap): number =>
-    s === 'expanded' ? 0 : s === 'default' ? defaultOffset : peekOffset
+    s === 'expanded' ? 0 : peekOffset
 
   const minOffset  = 0
   const maxOffset  = peekOffset
@@ -268,7 +267,7 @@ export function CurationSheet({
     }
   }, [])
 
-  /* ── expanded 상태에서 본문 스크롤 최상단 + 아래로 드래그 → default(중간)로 한 단계 접기 ── */
+  /* ── expanded 상태에서 본문 스크롤 최상단 + 아래로 드래그 → peek(최소)로 접기 ── */
   useEffect(() => {
     if (snap !== 'expanded') return
     const el = scrollAreaRef.current
@@ -286,9 +285,9 @@ export function CurationSheet({
       if (collapsing) { e.preventDefault(); return }
       if (startScrollTop > 2) return            // 스크롤 중이면 무시
       const dy = e.touches[0].clientY - startY
-      if (dy > 20) {                             // 20px 아래로 드래그 → 중간으로 한 단계 접기
+      if (dy > 20) {                             // 20px 아래로 드래그 → 최소로 접기
         collapsing = true
-        onSnapChange('default', expandedHeight - defaultOffset)
+        onSnapChange('peek', expandedHeight - peekOffset)
         e.preventDefault()
       }
     }
@@ -298,7 +297,7 @@ export function CurationSheet({
       el.removeEventListener('touchstart', onDown)
       el.removeEventListener('touchmove', onMove)
     }
-  }, [snap, onSnapChange, expandedHeight, defaultOffset])
+  }, [snap, onSnapChange, expandedHeight, peekOffset])
 
   const handlePointerDown = (e: React.PointerEvent) => {
     // expanded 상태에서만 버튼/링크/스크롤 영역을 드래그 대상에서 제외 — 본문 클릭·스크롤이 자연스럽게 동작하도록
@@ -336,12 +335,12 @@ export function CurationSheet({
     if (Math.abs(e.clientY - dragStartY.current) < 8) {
       setDragOffset(0)
       velocityBuffer.current = []
-      // peek 상태에서 핸들·타이틀 영역(상단부)을 탭하면 한 번에 default(중간)까지 펼침
+      // peek 상태에서 핸들·타이틀 영역(상단부)을 탭하면 expanded까지 펼침
       const handleEl = handleAreaRef.current
       if (snap === 'peek' && handleEl) {
         const rect = handleEl.getBoundingClientRect()
         if (e.clientY >= rect.top && e.clientY <= rect.bottom) {
-          onSnapChange('default', expandedHeight - defaultOffset)
+          onSnapChange('expanded', expandedHeight)
         }
       }
       return
@@ -403,7 +402,8 @@ export function CurationSheet({
         overflow: 'hidden',
         transform: `translateY(${effectiveOffset}px)`,
         transition: dragging ? 'none' : 'transform 0.38s cubic-bezier(0.32, 0.72, 0, 1)',
-        zIndex: 960,
+        // expanded일 때는 검색바·필터칩(지역 설정 팝업 포함, zIndex 1001)보다 위로 올라와 가려야 함 — 글로벌 탭바(1150)보다는 아래로 유지
+        zIndex: snap === 'expanded' ? 1010 : 960,
         touchAction: snap === 'expanded' ? 'auto' : 'none',
         cursor: dragging ? 'grabbing' : 'grab',
         userSelect: 'none',
