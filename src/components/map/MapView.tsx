@@ -35,6 +35,8 @@ import { posterCountForZoom, posterSizeForZoom, posterSlotsForZoom } from '@/lib
 import { calculateAndFormatDistance } from '@/lib/map/distanceUtils'
 import type { TheaterPosterMovie } from '@/lib/map/posterLogic'
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
+import { recordRecentlyViewed } from '@/lib/curation/recentlyViewed'
+import { cookieStorageAdapter } from '@/lib/adapters/cookieStorage'
 import { useCurationData } from '@/hooks/useCurationData'
 import { springFlyTo, springFlyToBounds, springActive, setSpringSettledCallback } from '@/lib/mapSpring'
 import { PosterGrid } from './PosterGrid'
@@ -2174,6 +2176,10 @@ export default function MapView() {
           source: 'map',
           theater_id: theater.id,
           selected_movie_id: clickedMovieId ?? movieFilter?.id,
+        })
+        recordRecentlyViewed(cookieStorageAdapter, 'theater', {
+          id: theater.id,
+          title: theater.name,
         })
         flyToForTheater(
           [theater.lat, theater.lng],

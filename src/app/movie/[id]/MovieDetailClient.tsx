@@ -7,6 +7,8 @@ import { useMovieDetail, useMovieTheaterShowtimes, useActiveMovieIds } from '@/l
 import type { MovieDetail, MovieTheaterEntry } from '@/lib/supabase/queries'
 import { withFlagsRaw } from '@/lib/nations'
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
+import { recordRecentlyViewed } from '@/lib/curation/recentlyViewed'
+import { cookieStorageAdapter } from '@/lib/adapters/cookieStorage'
 import { useUserLocation } from '@/hooks/useUserLocation'
 import { locationAdapter } from '@/lib/adapters/location'
 import { calculateAndFormatDistance, calculateDistanceKm } from '@/lib/map/distanceUtils'
@@ -637,6 +639,11 @@ export function MovieDetailClient({ movieId, theaterId, initialData }: { movieId
     classifySessionIntent('type_a', {
       source: theaterId ? 'theater_sheet' : 'direct',
       movie_id: movie.id,
+    })
+    recordRecentlyViewed(cookieStorageAdapter, 'movie', {
+      id: movie.id,
+      title: movie.title,
+      thumbnailKey: movie.posterUrl,
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [movie?.id])
