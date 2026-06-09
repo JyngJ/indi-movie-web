@@ -1,6 +1,6 @@
 'use client'
 
-export type ShowtimeKind = 'normal' | 'low' | 'soldout' | 'late' | 'ended' | 'nowplaying'
+export type ShowtimeKind = 'normal' | 'low' | 'soldout' | 'late' | 'nowplaying' | 'ended'
 
 interface ShowtimeCellProps {
   startTime: string
@@ -43,10 +43,10 @@ export function ShowtimeCell({
   const isSoldout    = kind === 'soldout'
   const isLate       = kind === 'late'
   const isLow        = kind === 'low'
-  const isEnded      = kind === 'ended'
   const isNowPlaying = kind === 'nowplaying'
-  const isPast       = isEnded || isNowPlaying
-  const isClickable  = onClick && !isSoldout && !isEnded
+  const isEnded      = kind === 'ended'
+  const isPast       = isNowPlaying || isEnded
+  const isClickable  = onClick && !isSoldout && !isPast
 
   const seatColor = isSoldout || isEnded
     ? 'var(--color-text-placeholder)'
@@ -70,7 +70,7 @@ export function ShowtimeCell({
           ? '1.5px solid var(--color-primary-base)'
           : '1px solid var(--color-border)',
         position: 'relative',
-        opacity: (isSoldout || isEnded) ? 0.45 : 1,
+        opacity: (isSoldout || isPast) ? 0.45 : 1,
         fontFamily: 'var(--font-sans)',
         cursor: isClickable ? 'pointer' : 'default',
         transition: 'border-color 150ms ease, background-color 150ms ease',
@@ -81,7 +81,7 @@ export function ShowtimeCell({
     >
 
       {/* 시간 */}
-      <div className="flex items-baseline gap-1" style={{ color: 'var(--color-text-primary)' }}>
+      <div className="flex items-baseline gap-1 flex-wrap" style={{ color: 'var(--color-text-primary)' }}>
         <span style={{
           fontSize: 'var(--text-time)', fontWeight: 700, fontFeatureSettings: '"tnum"', whiteSpace: 'nowrap',
           textDecoration: isEnded ? 'line-through' : 'none',
@@ -89,24 +89,28 @@ export function ShowtimeCell({
           {startTime}
         </span>
         {endTime && (
-          <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-sub)', fontFeatureSettings: '"tnum"', whiteSpace: 'nowrap' }}>
+          <span style={{ fontSize: 10, color: 'var(--color-text-sub)', fontFeatureSettings: '"tnum"', whiteSpace: 'nowrap' }}>
             -{endTime}
           </span>
         )}
       </div>
 
       {/* 잔여석 / 상태 */}
-      <div className="mt-[6px]" style={{ fontSize: 'var(--text-seat)', fontFeatureSettings: '"tnum"', whiteSpace: 'nowrap' }}>
-        {isEnded ? (
-          <span style={{ color: 'var(--color-text-placeholder)', fontWeight: 500 }}>지난 상영</span>
-        ) : isNowPlaying ? (
-          <span style={{ color: 'var(--color-primary-base)', fontWeight: 700 }}>상영중</span>
+      <div
+        className="mt-[6px]"
+        style={{
+          fontSize: 'var(--text-seat)',
+          fontFeatureSettings: '"tnum"',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {isNowPlaying ? (
+          <span style={{ color: '#F97316', fontWeight: 700 }}>상영중</span>
+        ) : isEnded ? (
+          <span style={{ color: '#EF4444', fontWeight: 700 }}>상영 완료</span>
         ) : (
           <>
-            <span style={{
-              color: seatColor, fontWeight: 600,
-              textDecoration: isSoldout ? 'line-through' : 'none',
-            }}>{seatAvailable}</span>
+            <span style={{ color: seatColor, fontWeight: 600, textDecoration: isSoldout ? 'line-through' : 'none' }}>{seatAvailable}</span>
             <span style={{ color: 'var(--color-text-sub)', textDecoration: isSoldout ? 'line-through' : 'none' }}>/{seatTotal}석</span>
           </>
         )}
