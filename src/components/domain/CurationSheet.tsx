@@ -146,19 +146,29 @@ function PosterRow({ items, onSelect, emptyText, desktop = false }: {
 
 const SECTION_GAP = 22
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, icon, withLine, children }: { title: string; icon?: string; withLine?: boolean; children: React.ReactNode }) {
   return (
     <section style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <h3 style={{
-        margin: 0,
-        paddingLeft: 20,
-        paddingRight: 20,
-        fontSize: 15,
-        fontWeight: 700,
-        color: 'var(--color-text-primary)',
-      }}>
-        {title}
-      </h3>
+      <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 20, paddingRight: 20, gap: 6 }}>
+        {icon && <span style={{ fontSize: 16, lineHeight: 1 }}>{icon}</span>}
+        <h3 style={{
+          margin: 0,
+          fontSize: 15,
+          fontWeight: 700,
+          color: 'var(--color-text-primary)',
+          flexShrink: 0,
+        }}>
+          {title}
+        </h3>
+        {withLine && (
+          <div style={{
+            flex: 1,
+            height: 1,
+            backgroundColor: 'var(--color-border)',
+            marginLeft: 4,
+          }} />
+        )}
+      </div>
       {children}
     </section>
   )
@@ -201,10 +211,12 @@ export function CurationSections({ returningFilms, newIndieFilms, recentlyViewed
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: SECTION_GAP }}>
-      <Section title="오랜만에 상영하는 영화">
-        <PosterRow items={returningItems} onSelect={onMovieSelect} emptyText="최근 다시 상영을 시작한 영화가 아직 없어요" desktop={desktop} />
-      </Section>
-      <Section title="이번 주 새로 개봉">
+      {returningItems.length > 0 && (
+        <Section title="오랜만에 상영하는 영화">
+          <PosterRow items={returningItems} onSelect={onMovieSelect} emptyText="" desktop={desktop} />
+        </Section>
+      )}
+      <Section title="이번 주 새로 개봉" icon="🎬" withLine>
         <PosterRow items={newIndieItems} onSelect={onMovieSelect} emptyText="이번 주 새로 개봉한 영화가 아직 없어요" desktop={desktop} />
       </Section>
       <Section title="최근 찾아본">
