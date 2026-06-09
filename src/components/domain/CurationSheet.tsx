@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { PosterThumb } from './PosterThumb'
 import { Badge } from '@/components/primitives/Badge'
@@ -145,7 +146,7 @@ function PosterRow({ items, onSelect, emptyText, desktop = false }: {
   )
 }
 
-const SECTION_GAP = 22
+const SECTION_GAP = 16
 
 function Section({ title, icon, withLine, children }: { title: string; icon?: string; withLine?: boolean; children: React.ReactNode }) {
   return (
@@ -188,6 +189,15 @@ function RecentList({
   items: RecentlyViewedEntry[]
   onRemove?: (kind: RecentlyViewedKind, id: string) => void
 }) {
+  const router = useRouter()
+
+  function handleItemClick(item: RecentlyViewedEntry) {
+    if (!item.kind) return
+    if (item.kind === 'movie') router.push(`/movie/${item.id}`)
+    else if (item.kind === 'theater') router.push(`/theater/${item.id}`)
+    else if (item.kind === 'director') router.push(`/director/${encodeURIComponent(item.id)}`)
+  }
+
   if (items.length === 0) {
     return (
       <p style={{ margin: 0, paddingLeft: 20, paddingRight: 20, fontSize: 13, color: 'var(--color-text-caption)' }}>
@@ -203,23 +213,32 @@ function RecentList({
           style={{
             display: 'flex',
             alignItems: 'center',
-            padding: '10px 14px',
-            backgroundColor: 'var(--color-surface-overlay)',
-            borderRadius: 10,
+            padding: '6px 12px',
+            backgroundColor: 'var(--color-border)',
+            borderRadius: 8,
             gap: 10,
           }}
         >
-          <span style={{ flex: 1, fontSize: 14, fontWeight: 500, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {item.title}
-          </span>
-          {item.kind && (
-            <span style={{ fontSize: 11, color: 'var(--color-text-caption)', flexShrink: 0 }}>
-              {KIND_LABEL[item.kind]}
+          <button
+            onClick={() => handleItemClick(item)}
+            style={{
+              flex: 1, minWidth: 0,
+              display: 'flex', alignItems: 'center', gap: 8,
+              border: 'none', background: 'none', cursor: 'pointer', padding: 0, textAlign: 'left',
+            }}
+          >
+            <span style={{ flex: 1, fontSize: 14, fontWeight: 500, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {item.title}
             </span>
-          )}
+            {item.kind && (
+              <span style={{ fontSize: 11, color: 'var(--color-text-caption)', flexShrink: 0 }}>
+                {KIND_LABEL[item.kind]}
+              </span>
+            )}
+          </button>
           {onRemove && item.kind && (
             <button
-              onClick={() => onRemove(item.kind!, item.id)}
+              onClick={(e) => { e.stopPropagation(); onRemove(item.kind!, item.id) }}
               style={{
                 flexShrink: 0,
                 width: 20, height: 20,
@@ -228,7 +247,7 @@ function RecentList({
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: 'var(--color-text-caption)',
                 padding: 0,
-                fontSize: 14,
+                fontSize: 13,
               }}
             >
               ✕

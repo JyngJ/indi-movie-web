@@ -3145,24 +3145,17 @@ export default function MapView() {
                   <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 600, color: 'var(--color-text-caption)' }}>
                     영화관, 영화, 감독, 지하철역을 모두 검색할 수 있어요
                   </p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 10 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', marginTop: 8 }}>
                     {[
                       { label: '영화관', example: '서울아트시네마' },
                       { label: '영화', example: '레오파드' },
                       { label: '감독', example: '홍상수' },
                       { label: '지하철역', example: '혜화역' },
                     ].map(({ label, example }) => (
-                      <button
-                        key={label}
-                        onClick={() => setSearchQuery(example)}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: 10,
-                          border: 'none', background: 'none', cursor: 'pointer', padding: '5px 0', textAlign: 'left',
-                        }}
-                      >
+                      <div key={label} style={{ display: 'flex', alignItems: 'baseline', gap: 10, lineHeight: 1.9 }}>
                         <span style={{ fontSize: 12, color: 'var(--color-text-caption)', width: 44, flexShrink: 0 }}>{label}</span>
-                        <span style={{ fontSize: 13, color: 'var(--color-text-caption)', opacity: 0.7 }}>"{example}"</span>
-                      </button>
+                        <span style={{ fontSize: 12, color: 'var(--color-text-caption)', opacity: 0.6 }}>"{example}"</span>
+                      </div>
                     ))}
                   </div>
                 </div>
