@@ -37,7 +37,7 @@ import type { TheaterPosterMovie } from '@/lib/map/posterLogic'
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { recordRecentlyViewed, removeRecentlyViewed } from '@/lib/curation/recentlyViewed'
 import { cookieStorageAdapter } from '@/lib/adapters/cookieStorage'
-import type { RecentlyViewedKind } from '@/lib/curation/types'
+import type { RecentlyViewedEntry, RecentlyViewedKind } from '@/lib/curation/types'
 import { useCurationData } from '@/hooks/useCurationData'
 import { springFlyTo, springFlyToBounds, springActive, setSpringSettledCallback } from '@/lib/mapSpring'
 import { PosterGrid } from './PosterGrid'
@@ -1252,6 +1252,22 @@ export default function MapView() {
     removeRecentlyViewed(cookieStorageAdapter, kind, id)
       .then(() => setRecentlyViewedKey(k => k + 1))
   }, [])
+
+  const handleRecentItemClick = useCallback((item: RecentlyViewedEntry) => {
+    if (!item.kind) return
+    if (item.kind === 'movie') {
+      handleCurationMovieSelect(item.id, item.title)
+    } else if (item.kind === 'theater') {
+      if (!isDesktopLayout) setCurationSnap('peek')
+      setSelectedId(item.id)
+    } else if (item.kind === 'director') {
+      if (isDesktopLayout) {
+        openDesktopPanel({ type: 'director', name: item.id })
+      } else {
+        router.push(`/director/${encodeURIComponent(item.id)}`)
+      }
+    }
+  }, [handleCurationMovieSelect, isDesktopLayout, openDesktopPanel, setCurationSnap, setSelectedId, router])
 
   // 패널 열기/닫기 슬라이드 애니메이션
   useEffect(() => {
@@ -3194,6 +3210,7 @@ export default function MapView() {
           recentlyViewed={curationData.recentlyViewed}
           onMovieSelect={handleCurationMovieSelect}
           onRemoveRecentlyViewed={handleRemoveRecentlyViewed}
+          onRecentItemClick={handleRecentItemClick}
         />
       )}
 
@@ -3233,6 +3250,7 @@ export default function MapView() {
               recentlyViewed={curationData.recentlyViewed}
               onMovieSelect={handleCurationMovieSelect}
               onRemoveRecentlyViewed={handleRemoveRecentlyViewed}
+              onRecentItemClick={handleRecentItemClick}
               desktop
             />
           </div>

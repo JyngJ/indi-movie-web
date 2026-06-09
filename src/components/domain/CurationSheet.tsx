@@ -40,6 +40,7 @@ interface CurationSheetProps {
   recentlyViewed: RecentlyViewedEntry[]
   onMovieSelect?: (movieId: string, title: string) => void
   onRemoveRecentlyViewed?: (kind: RecentlyViewedKind, id: string) => void
+  onRecentItemClick?: (item: RecentlyViewedEntry) => void
 }
 
 /** 모바일: 가로 스크롤 행 / 데스크톱(도크): 한 줄 3개 고정 그리드 — 도크 폭(352, 좌우 패딩 20) 기준 칸당 96px */
@@ -230,14 +231,20 @@ const KIND_LABEL: Record<RecentlyViewedKind, string> = {
 function RecentList({
   items,
   onRemove,
+  onItemClick,
 }: {
   items: RecentlyViewedEntry[]
   onRemove?: (kind: RecentlyViewedKind, id: string) => void
+  onItemClick?: (item: RecentlyViewedEntry) => void
 }) {
   const router = useRouter()
 
   function handleItemClick(item: RecentlyViewedEntry) {
     if (!item.kind) return
+    if (onItemClick) {
+      onItemClick(item)
+      return
+    }
     if (item.kind === 'movie') router.push(`/movie/${item.id}`)
     else if (item.kind === 'theater') router.push(`/theater/${item.id}`)
     else if (item.kind === 'director') router.push(`/director/${encodeURIComponent(item.id)}`)
@@ -259,7 +266,7 @@ function RecentList({
             display: 'flex',
             alignItems: 'center',
             padding: '6px 12px',
-            backgroundColor: 'var(--color-surface-card)',
+            backgroundColor: 'var(--color-surface-bg)',
             borderRadius: 8,
             gap: 10,
           }}
@@ -310,6 +317,7 @@ interface CurationSectionsProps {
   recentlyViewed: RecentlyViewedEntry[]
   onMovieSelect?: (movieId: string, title: string) => void
   onRemoveRecentlyViewed?: (kind: RecentlyViewedKind, id: string) => void
+  onRecentItemClick?: (item: RecentlyViewedEntry) => void
   /** 데스크톱 도크에서 호출 시 true — 포스터 행을 가로 스크롤 대신 한 줄 3개 그리드로 표시 */
   desktop?: boolean
 }
@@ -320,7 +328,7 @@ function formatOpeningBadge(firstShowDate: string): string {
 }
 
 /** 큐레이션 섹션 3종(오랜만에 상영 / 이번 주 새로 개봉 / 최근 찾아본) — 모바일 시트·데스크톱 도크가 공유하는 본문 */
-export function CurationSections({ returningFilms, newIndieFilms, recentlyViewed, onMovieSelect, onRemoveRecentlyViewed, desktop = false }: CurationSectionsProps) {
+export function CurationSections({ returningFilms, newIndieFilms, recentlyViewed, onMovieSelect, onRemoveRecentlyViewed, onRecentItemClick, desktop = false }: CurationSectionsProps) {
   const returningItems: CurationItem[] = returningFilms.map((film) => ({
     id: film.movie.id,
     title: film.movie.title,
@@ -347,7 +355,7 @@ export function CurationSections({ returningFilms, newIndieFilms, recentlyViewed
         <PosterRow items={newIndieItems} onSelect={onMovieSelect} emptyText="이번 주 새로 개봉한 영화가 아직 없어요" desktop={desktop} />
       </Section>
       <Section title="최근 찾아본" icon="🔎" withLine style={{ marginTop: SECTION_GAP }}>
-        <RecentList items={recentlyViewed} onRemove={onRemoveRecentlyViewed} />
+        <RecentList items={recentlyViewed} onRemove={onRemoveRecentlyViewed} onItemClick={onRecentItemClick} />
       </Section>
     </div>
   )
@@ -363,6 +371,7 @@ export function CurationSheet({
   recentlyViewed,
   onMovieSelect,
   onRemoveRecentlyViewed,
+  onRecentItemClick,
 }: CurationSheetProps) {
   const containerRef  = useRef<HTMLDivElement>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
@@ -609,6 +618,7 @@ export function CurationSheet({
           recentlyViewed={recentlyViewed}
           onMovieSelect={onMovieSelect}
           onRemoveRecentlyViewed={onRemoveRecentlyViewed}
+          onRecentItemClick={onRecentItemClick}
         />
       </div>
     </div>
