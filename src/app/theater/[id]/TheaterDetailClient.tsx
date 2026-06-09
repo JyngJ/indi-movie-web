@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useTheaterAllMovies } from '@/lib/supabase/queries'
 import type { Theater } from '@/types/api'
+import { safeUrl } from '@/lib/seo/safeUrl'
 
 const IcoChevronLeft = () => (
   <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -185,13 +186,13 @@ export function TheaterDetailClient({ theater }: { theater: Theater }) {
         )}
 
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 12 }}>
-          {theater.website && (
-            <a href={theater.website} target="_blank" rel="noopener noreferrer" style={s.link}>
+          {safeUrl(theater.website) && (
+            <a href={safeUrl(theater.website)} target="_blank" rel="noopener noreferrer" style={s.link}>
               웹사이트 <IcoExternal />
             </a>
           )}
-          {theater.instagramUrl && (
-            <a href={theater.instagramUrl} target="_blank" rel="noopener noreferrer" style={s.link}>
+          {safeUrl(theater.instagramUrl) && (
+            <a href={safeUrl(theater.instagramUrl)} target="_blank" rel="noopener noreferrer" style={s.link}>
               <IcoInstagram /> 인스타그램
             </a>
           )}
