@@ -1,7 +1,7 @@
 import type { Movie } from '@/types/api'
 import type {
-  HotIndieFilmCandidate,
-  HotIndieFilmsRepository,
+  NewIndieFilmCandidate,
+  NewIndieFilmsRepository,
   ReturningFilmCandidate,
   ReturningFilmsRepository,
   ScreeningRun,
@@ -31,9 +31,9 @@ export function inMemoryReturningFilmsRepository(
   }
 }
 
-export function inMemoryHotIndieFilmsRepository(
-  candidates: HotIndieFilmCandidate[],
-): HotIndieFilmsRepository {
+export function inMemoryNewIndieFilmsRepository(
+  candidates: NewIndieFilmCandidate[],
+): NewIndieFilmsRepository {
   return {
     async getCandidates() {
       return candidates

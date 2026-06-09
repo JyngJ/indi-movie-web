@@ -5,6 +5,26 @@ import type {
   ScreeningRun,
 } from './types'
 
+/** 정렬된 ISO date 배열을 상영 구간(run) 배열로 묶는다. gapThresholdDays 이하 간격은 같은 run. */
+export function clusterDatesToRuns(sortedDates: string[], gapThresholdDays = 14): ScreeningRun[] {
+  if (sortedDates.length === 0) return []
+  let runStart = sortedDates[0]
+  let runEnd = sortedDates[0]
+  const runs: ScreeningRun[] = []
+  for (let i = 1; i < sortedDates.length; i++) {
+    const gap = (Date.parse(sortedDates[i]) - Date.parse(runEnd)) / 86400000
+    if (gap <= gapThresholdDays) {
+      runEnd = sortedDates[i]
+    } else {
+      runs.push({ startDate: runStart, endDate: runEnd })
+      runStart = sortedDates[i]
+      runEnd = sortedDates[i]
+    }
+  }
+  runs.push({ startDate: runStart, endDate: runEnd })
+  return runs
+}
+
 /** 직전 상영 종료 ↔ 이번 상영 시작 사이의 공백이 이 값(개월) 이상이어야 "오랜만" 으로 간주 */
 export const RETURNING_FILM_MIN_GAP_MONTHS = 12
 

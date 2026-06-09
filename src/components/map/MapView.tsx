@@ -1143,11 +1143,8 @@ export default function MapView() {
       source: 'curation_sheet',
     })
     classifySessionIntent('type_a', { source: 'curation_sheet', movie_id: movieId })
-    suppressMovieFilterFitRef.current = false
-    setDirectorFilter(null)
-    setMovieFilter({ id: movieId, title: movieTitle })
-    setCurationSnap('peek')
-  }, [])
+    router.push(`/movie/${movieId}`)
+  }, [router])
   const mapViewTrackedRef = useRef(false)
   const lastSearchTelemetryRef = useRef('')
   const lastFilterTelemetryRef = useRef('')
@@ -3175,7 +3172,7 @@ export default function MapView() {
           snap={curationSnap}
           onSnapChange={handleCurationSnapChange}
           returningFilms={curationData.returningFilms}
-          hotIndieFilms={curationData.hotIndieFilms}
+          newIndieFilms={curationData.newIndieFilms}
           recentlyViewed={curationData.recentlyViewed}
           onMovieSelect={handleCurationMovieSelect}
         />
@@ -3213,7 +3210,7 @@ export default function MapView() {
           <div className="themed-scrollbar" style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingTop: 20, paddingBottom: 24 }}>
             <CurationSections
               returningFilms={curationData.returningFilms}
-              hotIndieFilms={curationData.hotIndieFilms}
+              newIndieFilms={curationData.newIndieFilms}
               recentlyViewed={curationData.recentlyViewed}
               onMovieSelect={handleCurationMovieSelect}
               desktop

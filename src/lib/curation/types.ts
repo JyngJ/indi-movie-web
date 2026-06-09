@@ -32,34 +32,23 @@ export interface ReturningFilmsRepository {
 }
 
 // ─────────────────────────────────────────────
-// 이번주 가장 핫한 독립영화 (hot indie films)
-// 기준: 매진 영화관 비율 = 매진 상영관 수 / 전체 상영관 수
+// 이번 주 새로 개봉한 독립영화 (new indie films)
+// 기준: 이번 주(월~일)가 DB에 기록된 첫 show_date
 // ─────────────────────────────────────────────
 
-export interface TheaterScreeningStatus {
-  theaterId: string
-  /**
-   * 해당 영화관에서 이 영화의 (랭킹 산정 기간 내) 남은 회차가
-   * 모두 잔여좌석 0이면 true.
-   */
-  soldOut: boolean
-}
-
-export interface HotIndieFilmCandidate {
+export interface NewIndieFilmCandidate {
   movie: Movie
-  theaterStatuses: TheaterScreeningStatus[]
+  /** ISO date "YYYY-MM-DD" — 이 영화의 DB 상 첫 번째 show_date */
+  firstShowDate: string
 }
 
-export interface HotIndieFilmsRepository {
-  getCandidates(): Promise<HotIndieFilmCandidate[]>
+export interface NewIndieFilmsRepository {
+  getCandidates(weekStart: string, weekEnd: string): Promise<NewIndieFilmCandidate[]>
 }
 
-export interface HotIndieFilm {
+export interface NewIndieFilm {
   movie: Movie
-  theaterCount: number
-  soldOutTheaterCount: number
-  /** 0~1 */
-  soldOutRatio: number
+  firstShowDate: string
 }
 
 // ─────────────────────────────────────────────

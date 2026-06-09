@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { PosterThumb } from './PosterThumb'
 import { Badge } from '@/components/primitives/Badge'
-import type { HotIndieFilm, RecentlyViewedEntry, ReturningFilm } from '@/lib/curation/types'
+import type { NewIndieFilm, RecentlyViewedEntry, ReturningFilm } from '@/lib/curation/types'
 
 /** 시트가 도달 가능한 2개 스냅 지점 — peek(최소, 기본값) / expanded(최대) */
 export type CurationSnap = 'peek' | 'expanded'
@@ -34,7 +34,7 @@ interface CurationSheetProps {
   /** 드래그 제스처로 스냅 지점이 바뀔 때 — 부모가 snap 상태를 갱신하고, 함께 보고된 visibleHeight로 FAB 위치를 맞춤 */
   onSnapChange: (snap: CurationSnap, visibleHeight: number) => void
   returningFilms: ReturningFilm[]
-  hotIndieFilms: HotIndieFilm[]
+  newIndieFilms: NewIndieFilm[]
   recentlyViewed: RecentlyViewedEntry[]
   onMovieSelect?: (movieId: string, title: string) => void
 }
@@ -151,26 +151,31 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 interface CurationSectionsProps {
   returningFilms: ReturningFilm[]
-  hotIndieFilms: HotIndieFilm[]
+  newIndieFilms: NewIndieFilm[]
   recentlyViewed: RecentlyViewedEntry[]
   onMovieSelect?: (movieId: string, title: string) => void
   /** 데스크톱 도크에서 호출 시 true — 포스터 행을 가로 스크롤 대신 한 줄 3개 그리드로 표시 */
   desktop?: boolean
 }
 
-/** 큐레이션 섹션 3종(오랜만에 상영 / 핫한 독립영화 / 최근 찾아본) — 모바일 시트·데스크톱 도크가 공유하는 본문 */
-export function CurationSections({ returningFilms, hotIndieFilms, recentlyViewed, onMovieSelect, desktop = false }: CurationSectionsProps) {
+function formatOpeningBadge(firstShowDate: string): string {
+  const [, m, d] = firstShowDate.split('-')
+  return `${Number(m)}/${Number(d)} 개봉`
+}
+
+/** 큐레이션 섹션 3종(오랜만에 상영 / 이번 주 새로 개봉 / 최근 찾아본) — 모바일 시트·데스크톱 도크가 공유하는 본문 */
+export function CurationSections({ returningFilms, newIndieFilms, recentlyViewed, onMovieSelect, desktop = false }: CurationSectionsProps) {
   const returningItems: CurationItem[] = returningFilms.map((film) => ({
     id: film.movie.id,
     title: film.movie.title,
     posterUrl: film.movie.posterUrl,
     badge: film.tagText,
   }))
-  const hotIndieItems: CurationItem[] = hotIndieFilms.map((film) => ({
+  const newIndieItems: CurationItem[] = newIndieFilms.map((film) => ({
     id: film.movie.id,
     title: film.movie.title,
     posterUrl: film.movie.posterUrl,
-    badge: film.soldOutTheaterCount > 0 ? `매진 ${film.soldOutTheaterCount}/${film.theaterCount}` : undefined,
+    badge: formatOpeningBadge(film.firstShowDate),
   }))
   const recentItems: CurationItem[] = recentlyViewed.map((entry) => ({
     id: entry.id,
@@ -182,8 +187,8 @@ export function CurationSections({ returningFilms, hotIndieFilms, recentlyViewed
       <Section title="오랜만에 상영하는 영화">
         <PosterRow items={returningItems} onSelect={onMovieSelect} emptyText="최근 다시 상영을 시작한 영화가 아직 없어요" desktop={desktop} />
       </Section>
-      <Section title="이번주 가장 핫한 독립영화">
-        <PosterRow items={hotIndieItems} onSelect={onMovieSelect} emptyText="이번주 매진 집계가 아직 모이지 않았어요" desktop={desktop} />
+      <Section title="이번 주 새로 개봉">
+        <PosterRow items={newIndieItems} onSelect={onMovieSelect} emptyText="이번 주 새로 개봉한 영화가 아직 없어요" desktop={desktop} />
       </Section>
       <Section title="최근 찾아본">
         <PosterRow items={recentItems} emptyText="최근 찾아본 영화·영화관이 아직 없어요" desktop={desktop} />
@@ -198,7 +203,7 @@ export function CurationSheet({
   snap,
   onSnapChange,
   returningFilms,
-  hotIndieFilms,
+  newIndieFilms,
   recentlyViewed,
   onMovieSelect,
 }: CurationSheetProps) {
@@ -443,7 +448,7 @@ export function CurationSheet({
       }}>
         <CurationSections
           returningFilms={returningFilms}
-          hotIndieFilms={hotIndieFilms}
+          newIndieFilms={newIndieFilms}
           recentlyViewed={recentlyViewed}
           onMovieSelect={onMovieSelect}
         />
