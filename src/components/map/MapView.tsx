@@ -3096,12 +3096,12 @@ export default function MapView() {
           </div>
 
           {/* 결과 영역 */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px' }}>
             {searchQuery === '' ? (
-              <div style={{ marginTop: 8 }}>
+              <div style={{ marginTop: 0 }}>
                 {recentSearches.length > 0 && (
-                  <div style={{ marginBottom: 24 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                       <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-caption)', margin: 0 }}>최근 검색</p>
                       <button
                         onClick={() => {
@@ -3141,31 +3141,30 @@ export default function MapView() {
                     </div>
                   </div>
                 )}
-                <p style={{ fontSize: 12, color: 'var(--color-text-caption)', marginBottom: 12, marginLeft: 2 }}>
-                  검색할 수 있어요
-                </p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {[
-                    { label: '영화관', example: '서울아트' },
-                    { label: '영화', example: '레오파드' },
-                    { label: '감독', example: '홍상수' },
-                    { label: '지하철역', example: '혜화역' },
-                  ].map(({ label, example }) => (
-                    <button
-                      key={label}
-                      onClick={() => setSearchQuery(example)}
-                      style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 6, height: 36,
-                        padding: '0 14px', borderRadius: 'var(--radius-full)',
-                        border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)',
-                        color: 'var(--color-text-body)', fontSize: 13, fontWeight: 500,
-                        cursor: 'pointer', whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {label}
-                      <span style={{ fontSize: 11, color: 'var(--color-text-caption)' }}>예) {example}</span>
-                    </button>
-                  ))}
+                <div style={{ marginTop: 20 }}>
+                  <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 600, color: 'var(--color-text-caption)' }}>
+                    영화관, 영화, 감독, 지하철역을 모두 검색할 수 있어요
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 10 }}>
+                    {[
+                      { label: '영화관', example: '서울아트시네마' },
+                      { label: '영화', example: '레오파드' },
+                      { label: '감독', example: '홍상수' },
+                      { label: '지하철역', example: '혜화역' },
+                    ].map(({ label, example }) => (
+                      <button
+                        key={label}
+                        onClick={() => setSearchQuery(example)}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 10,
+                          border: 'none', background: 'none', cursor: 'pointer', padding: '5px 0', textAlign: 'left',
+                        }}
+                      >
+                        <span style={{ fontSize: 12, color: 'var(--color-text-caption)', width: 44, flexShrink: 0 }}>{label}</span>
+                        <span style={{ fontSize: 13, color: 'var(--color-text-caption)', opacity: 0.7 }}>"{example}"</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             ) : hasSearchResults ? (
