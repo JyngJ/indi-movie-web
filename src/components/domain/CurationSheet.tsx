@@ -219,7 +219,7 @@ export function CurationSections({ returningFilms, newIndieFilms, recentlyViewed
       <Section title="이번 주 새로 개봉" icon="🎬" withLine>
         <PosterRow items={newIndieItems} onSelect={onMovieSelect} emptyText="이번 주 새로 개봉한 영화가 아직 없어요" desktop={desktop} />
       </Section>
-      <Section title="최근 찾아본">
+      <Section title="최근 찾아본" icon="🔎" withLine>
         <PosterRow items={recentItems} emptyText="최근 찾아본 영화·영화관이 아직 없어요" desktop={desktop} />
       </Section>
     </div>
