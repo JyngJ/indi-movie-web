@@ -12,7 +12,7 @@ import { useIsDark } from '@/hooks/useIsDark'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { SearchBarButton, SearchBar, FabRound, Toast } from '@/components/primitives'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
-import { MapPin, TheaterSheet, CurationSheet, CurationSections, FilterBar, LocationPermissionModal, CURATION_PEEK_HEIGHT } from '@/components/domain'
+import { MapPin, TheaterSheet, MovieSheet, CurationSheet, CurationSections, FilterBar, LocationPermissionModal, CURATION_PEEK_HEIGHT } from '@/components/domain'
 import type { CurationSnap } from '@/components/domain'
 import { DesktopDetailPanel } from '@/components/domain/DesktopDetailPanel'
 import type { DesktopPanelState } from '@/components/domain/DesktopDetailPanel'
@@ -1110,6 +1110,8 @@ export default function MapView() {
   const dummyInputRef = useRef<HTMLInputElement>(null)
   const settingsOpen = useUIStore((s) => s.isSettingsOpen)
   const setSettingsOpen = useUIStore((s) => s.setSettingsOpen)
+  // 큐레이션에서 선택한 영화 — MovieSheet를 띄움. null이면 닫힘
+  const [movieSheetId, setMovieSheetId] = useState<string | null>(null)
   // 모바일 큐레이션 시트 — peek(최소, 기본값) ↔ expanded 2단. visibleHeight는 +/- · 현위치 FAB 위치 계산용
   const [curationSnap, setCurationSnap] = useState<CurationSnap>('peek')
   const [curationVisibleHeight, setCurationVisibleHeight] = useState(0)
@@ -1143,8 +1145,9 @@ export default function MapView() {
       source: 'curation_sheet',
     })
     classifySessionIntent('type_a', { source: 'curation_sheet', movie_id: movieId })
-    router.push(`/movie/${movieId}`)
-  }, [router])
+    setCurationSnap('peek')
+    setMovieSheetId(movieId)
+  }, [])
   const mapViewTrackedRef = useRef(false)
   const lastSearchTelemetryRef = useRef('')
   const lastFilterTelemetryRef = useRef('')
@@ -3482,6 +3485,19 @@ export default function MapView() {
           onSetTheme={(theme) => void setTheme(theme)}
           selectedMovieId={selectedMovieId}
           selectedTheaterName={selectedTheater?.name}
+        />
+      )}
+
+      {/* 큐레이션 영화 시트 — 포스터 클릭 시 지도 위에 오버레이로 표시 */}
+      {movieSheetId && !isDesktopLayout && (
+        <MovieSheet
+          movieId={movieSheetId}
+          onClose={() => setMovieSheetId(null)}
+          onTheaterSelect={(theaterId) => {
+            setMovieSheetId(null)
+            const theater = theaters.find(t => t.id === theaterId)
+            if (theater) handlePinClick(theaterId, movieSheetId ?? undefined)
+          }}
         />
       )}
 
