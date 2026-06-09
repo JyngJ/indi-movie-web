@@ -1138,16 +1138,6 @@ export default function MapView() {
   const desktopContentStart = GLOBAL_NAV_DESKTOP_WIDTH + (desktopDockHidden ? 0 : DESKTOP_DOCK_WIDTH)
   // 데스크톱: 좌측 도크에 항상 노출 / 모바일: 시트가 항상 떠 있음 — 레이아웃 무관하게 항상 로드
   const curationData = useCurationData(true)
-  const handleCurationMovieSelect = useCallback((movieId: string, movieTitle: string) => {
-    trackEvent('curation movie selected', {
-      movie_id: movieId,
-      movie_title: movieTitle,
-      source: 'curation_sheet',
-    })
-    classifySessionIntent('type_a', { source: 'curation_sheet', movie_id: movieId })
-    setCurationSnap('peek')
-    setMovieSheetId(movieId)
-  }, [])
   const mapViewTrackedRef = useRef(false)
   const lastSearchTelemetryRef = useRef('')
   const lastFilterTelemetryRef = useRef('')
@@ -1237,6 +1227,22 @@ export default function MapView() {
       return []
     })
   }, [])
+
+  // 데스크톱: DesktopDetailPanel 재사용(검색과 동일) / 모바일: MovieSheet
+  const handleCurationMovieSelect = useCallback((movieId: string, movieTitle: string) => {
+    trackEvent('curation movie selected', {
+      movie_id: movieId,
+      movie_title: movieTitle,
+      source: 'curation_sheet',
+    })
+    classifySessionIntent('type_a', { source: 'curation_sheet', movie_id: movieId })
+    if (isDesktopLayout) {
+      openDesktopPanel({ type: 'movie', id: movieId })
+    } else {
+      setCurationSnap('peek')
+      setMovieSheetId(movieId)
+    }
+  }, [isDesktopLayout, openDesktopPanel])
 
   // 패널 열기/닫기 슬라이드 애니메이션
   useEffect(() => {
@@ -3488,15 +3494,15 @@ export default function MapView() {
         />
       )}
 
-      {/* 큐레이션 영화 시트 — 포스터 클릭 시 지도 위에 오버레이로 표시 */}
+      {/* 큐레이션 영화 시트 — 모바일 전용 (데스크톱은 DesktopDetailPanel이 처리) */}
       {movieSheetId && !isDesktopLayout && (
         <MovieSheet
           movieId={movieSheetId}
           onClose={() => setMovieSheetId(null)}
           onTheaterSelect={(theaterId) => {
+            const mid = movieSheetId
             setMovieSheetId(null)
-            const theater = theaters.find(t => t.id === theaterId)
-            if (theater) handlePinClick(theaterId, movieSheetId ?? undefined)
+            handlePinClick(theaterId, mid)
           }}
         />
       )}
