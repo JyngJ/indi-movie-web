@@ -27,6 +27,7 @@ interface CurationItem {
   title: string
   posterUrl?: string
   badge?: string
+  subtitle?: string
 }
 
 interface CurationSheetProps {
@@ -114,16 +115,29 @@ function PosterRow({ items, onSelect, emptyText, desktop = false }: {
             )}
           </div>
           <span style={{
-            fontSize: 12,
-            fontWeight: 600,
+            fontSize: 13,
+            fontWeight: 700,
+            fontFamily: 'var(--font-display)',
             color: 'var(--color-text-primary)',
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
+            lineHeight: 1.3,
           }}>
             {item.title}
           </span>
+          {item.subtitle && (
+            <span style={{
+              fontSize: 11,
+              color: 'var(--color-text-caption)',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}>
+              {item.subtitle}
+            </span>
+          )}
         </button>
       ))}
     </div>
@@ -171,12 +185,14 @@ export function CurationSections({ returningFilms, newIndieFilms, recentlyViewed
     title: film.movie.title,
     posterUrl: film.movie.posterUrl,
     badge: film.tagText,
+    subtitle: film.movie.director.join(', ') || undefined,
   }))
   const newIndieItems: CurationItem[] = newIndieFilms.map((film) => ({
     id: film.movie.id,
     title: film.movie.title,
     posterUrl: film.movie.posterUrl,
     badge: formatOpeningBadge(film.firstShowDate),
+    subtitle: film.movie.director.join(', ') || undefined,
   }))
   const recentItems: CurationItem[] = recentlyViewed.map((entry) => ({
     id: entry.id,
