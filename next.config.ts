@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   // Next.js 16 reads this env var in getSocialImageMetadataBaseFallback when processing
   // opengraph-image.tsx static metadata routes. DefinePlugin replaces it at compile time.
   env: {
-    VERCEL_PROJECT_PRODUCTION_URL: 'yeonghwabolzido.com',
+    VERCEL_PROJECT_PRODUCTION_URL: 'www.xn--hq1bv8o5phw2d7wt.com',
   },
   images: {
     remotePatterns: [

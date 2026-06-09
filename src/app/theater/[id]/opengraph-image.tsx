@@ -102,7 +102,7 @@ export default async function OgImage({ params }: { params: Promise<{ id: string
             paddingTop: 20,
           }}
         >
-          <div style={{ fontSize: 16, color: '#4A4540' }}>yeonghwabolzido.com</div>
+          <div style={{ fontSize: 16, color: '#4A4540' }}>영화볼지도.com</div>
         </div>
       </div>
     ),

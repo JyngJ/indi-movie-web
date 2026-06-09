@@ -8,7 +8,7 @@ import { TheaterDetailClient } from './TheaterDetailClient'
 
 export const revalidate = 3600
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://yeonghwabolzido.com'
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.xn--hq1bv8o5phw2d7wt.com'
 
 async function fetchTheater(id: string): Promise<Theater | null> {
   const supabase = createSupabaseServerClient()

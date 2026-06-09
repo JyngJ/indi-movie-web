@@ -137,7 +137,7 @@ export default async function OgImage({ params }: { params: Promise<{ id: string
               color: '#4A4540',
             }}
           >
-            yeonghwabolzido.com
+            영화볼지도.com
           </div>
         </div>
       </div>
