@@ -56,11 +56,15 @@ export interface NewIndieFilm {
 // 저장 위치: 쿠키(클라이언트 only, 계정 동기화는 추후 별도)
 // ─────────────────────────────────────────────
 
-export type RecentlyViewedKind = 'movie' | 'theater'
+export type RecentlyViewedKind = 'movie' | 'theater' | 'director'
 
 export interface RecentlyViewedEntry {
   id: string
   title: string
   /** 영화는 포스터 키, 영화관은 마커/썸네일 키 — 도메인엔 불투명한 표시용 값 */
   thumbnailKey?: string
+  /** useCurationData에서 합칠 때 태깅 — 스토리지엔 저장 안 함 */
+  kind?: RecentlyViewedKind
+  /** Date.now() — 최신순 정렬용, 구버전 항목엔 없을 수 있음 */
+  viewedAt?: number
 }

@@ -11,6 +11,7 @@ export const RECENTLY_VIEWED_MAX_ENTRIES = 10
 const STORAGE_KEY: Record<RecentlyViewedKind, string> = {
   movie: 'movie-app-recent-movies',
   theater: 'movie-app-recent-theaters',
+  director: 'movie-app-recent-directors',
 }
 
 async function readEntries(
@@ -48,7 +49,17 @@ export async function recordRecentlyViewed(
   kind: RecentlyViewedKind,
   entry: RecentlyViewedEntry,
 ): Promise<RecentlyViewedEntry[]> {
-  const next = pushRecentlyViewed(await readEntries(storage, kind), entry)
+  const stamped = { ...entry, viewedAt: Date.now() }
+  const next = pushRecentlyViewed(await readEntries(storage, kind), stamped)
   await storage.setItem(STORAGE_KEY[kind], JSON.stringify(next))
   return next
+}
+
+export async function removeRecentlyViewed(
+  storage: IStorageAdapter,
+  kind: RecentlyViewedKind,
+  id: string,
+): Promise<void> {
+  const entries = await readEntries(storage, kind)
+  await storage.setItem(STORAGE_KEY[kind], JSON.stringify(entries.filter(e => e.id !== id)))
 }

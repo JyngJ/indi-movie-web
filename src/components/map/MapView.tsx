@@ -35,8 +35,9 @@ import { posterCountForZoom, posterSizeForZoom, posterSlotsForZoom } from '@/lib
 import { calculateAndFormatDistance } from '@/lib/map/distanceUtils'
 import type { TheaterPosterMovie } from '@/lib/map/posterLogic'
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
-import { recordRecentlyViewed } from '@/lib/curation/recentlyViewed'
+import { recordRecentlyViewed, removeRecentlyViewed } from '@/lib/curation/recentlyViewed'
 import { cookieStorageAdapter } from '@/lib/adapters/cookieStorage'
+import type { RecentlyViewedKind } from '@/lib/curation/types'
 import { useCurationData } from '@/hooks/useCurationData'
 import { springFlyTo, springFlyToBounds, springActive, setSpringSettledCallback } from '@/lib/mapSpring'
 import { PosterGrid } from './PosterGrid'
@@ -1139,7 +1140,8 @@ export default function MapView() {
   // 도크/검색 패널이 차지하는 폭만큼 비킨 지점 — 칩·로고 등 오버레이를 그 오른쪽에 배치할 때 기준 (도크 접히면 줄어듦)
   const desktopContentStart = GLOBAL_NAV_DESKTOP_WIDTH + (desktopDockHidden ? 0 : DESKTOP_DOCK_WIDTH)
   // 데스크톱: 좌측 도크에 항상 노출 / 모바일: 시트가 항상 떠 있음 — 레이아웃 무관하게 항상 로드
-  const curationData = useCurationData(true)
+  const [recentlyViewedKey, setRecentlyViewedKey] = useState(0)
+  const curationData = useCurationData(true, recentlyViewedKey)
   const mapViewTrackedRef = useRef(false)
   const lastSearchTelemetryRef = useRef('')
   const lastFilterTelemetryRef = useRef('')
@@ -1245,6 +1247,11 @@ export default function MapView() {
       setMovieSheetId(movieId)
     }
   }, [isDesktopLayout, openDesktopPanel])
+
+  const handleRemoveRecentlyViewed = useCallback((kind: RecentlyViewedKind, id: string) => {
+    removeRecentlyViewed(cookieStorageAdapter, kind, id)
+      .then(() => setRecentlyViewedKey(k => k + 1))
+  }, [])
 
   // 패널 열기/닫기 슬라이드 애니메이션
   useEffect(() => {
@@ -2180,7 +2187,7 @@ export default function MapView() {
         recordRecentlyViewed(cookieStorageAdapter, 'theater', {
           id: theater.id,
           title: theater.name,
-        })
+        }).then(() => setRecentlyViewedKey(k => k + 1))
         flyToForTheater(
           [theater.lat, theater.lng],
           Math.max(currentZoom, 16),
@@ -2494,6 +2501,10 @@ export default function MapView() {
                   search_term: searchQuery.trim(),
                 })
                 setRecentSearches(prev => addToRecent(searchQuery, prev))
+                recordRecentlyViewed(cookieStorageAdapter, 'director', {
+                  id: director.name,
+                  title: director.name,
+                }).then(() => setRecentlyViewedKey(k => k + 1))
                 closeSearch()
                 if (isDesktopLayout) {
                   openDesktopPanel({ type: 'director', name: director.name })
@@ -3190,6 +3201,7 @@ export default function MapView() {
           newIndieFilms={curationData.newIndieFilms}
           recentlyViewed={curationData.recentlyViewed}
           onMovieSelect={handleCurationMovieSelect}
+          onRemoveRecentlyViewed={handleRemoveRecentlyViewed}
         />
       )}
 
@@ -3228,6 +3240,7 @@ export default function MapView() {
               newIndieFilms={curationData.newIndieFilms}
               recentlyViewed={curationData.recentlyViewed}
               onMovieSelect={handleCurationMovieSelect}
+              onRemoveRecentlyViewed={handleRemoveRecentlyViewed}
               desktop
             />
           </div>

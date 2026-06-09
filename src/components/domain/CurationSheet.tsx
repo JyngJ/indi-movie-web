@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { PosterThumb } from './PosterThumb'
 import { Badge } from '@/components/primitives/Badge'
-import type { NewIndieFilm, RecentlyViewedEntry, ReturningFilm } from '@/lib/curation/types'
+import type { NewIndieFilm, RecentlyViewedEntry, RecentlyViewedKind, ReturningFilm } from '@/lib/curation/types'
 
 /** 시트가 도달 가능한 2개 스냅 지점 — peek(최소, 기본값) / expanded(최대) */
 export type CurationSnap = 'peek' | 'expanded'
@@ -38,6 +38,7 @@ interface CurationSheetProps {
   newIndieFilms: NewIndieFilm[]
   recentlyViewed: RecentlyViewedEntry[]
   onMovieSelect?: (movieId: string, title: string) => void
+  onRemoveRecentlyViewed?: (kind: RecentlyViewedKind, id: string) => void
 }
 
 /** 모바일: 가로 스크롤 행 / 데스크톱(도크): 한 줄 3개 고정 그리드 — 도크 폭(352, 좌우 패딩 20) 기준 칸당 96px */
@@ -174,11 +175,77 @@ function Section({ title, icon, withLine, children }: { title: string; icon?: st
   )
 }
 
+const KIND_LABEL: Record<RecentlyViewedKind, string> = {
+  movie: '영화',
+  theater: '극장',
+  director: '감독',
+}
+
+function RecentList({
+  items,
+  onRemove,
+}: {
+  items: RecentlyViewedEntry[]
+  onRemove?: (kind: RecentlyViewedKind, id: string) => void
+}) {
+  if (items.length === 0) {
+    return (
+      <p style={{ margin: 0, paddingLeft: 20, paddingRight: 20, fontSize: 13, color: 'var(--color-text-caption)' }}>
+        최근 찾아본 영화·극장·감독이 아직 없어요
+      </p>
+    )
+  }
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingLeft: 20, paddingRight: 20 }}>
+      {items.map(item => (
+        <div
+          key={`${item.kind}-${item.id}`}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            padding: '10px 14px',
+            backgroundColor: 'var(--color-surface-overlay)',
+            borderRadius: 10,
+            gap: 10,
+          }}
+        >
+          <span style={{ flex: 1, fontSize: 14, fontWeight: 500, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {item.title}
+          </span>
+          {item.kind && (
+            <span style={{ fontSize: 11, color: 'var(--color-text-caption)', flexShrink: 0 }}>
+              {KIND_LABEL[item.kind]}
+            </span>
+          )}
+          {onRemove && item.kind && (
+            <button
+              onClick={() => onRemove(item.kind!, item.id)}
+              style={{
+                flexShrink: 0,
+                width: 20, height: 20,
+                border: 'none', background: 'none',
+                cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'var(--color-text-caption)',
+                padding: 0,
+                fontSize: 14,
+              }}
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 interface CurationSectionsProps {
   returningFilms: ReturningFilm[]
   newIndieFilms: NewIndieFilm[]
   recentlyViewed: RecentlyViewedEntry[]
   onMovieSelect?: (movieId: string, title: string) => void
+  onRemoveRecentlyViewed?: (kind: RecentlyViewedKind, id: string) => void
   /** 데스크톱 도크에서 호출 시 true — 포스터 행을 가로 스크롤 대신 한 줄 3개 그리드로 표시 */
   desktop?: boolean
 }
@@ -189,7 +256,7 @@ function formatOpeningBadge(firstShowDate: string): string {
 }
 
 /** 큐레이션 섹션 3종(오랜만에 상영 / 이번 주 새로 개봉 / 최근 찾아본) — 모바일 시트·데스크톱 도크가 공유하는 본문 */
-export function CurationSections({ returningFilms, newIndieFilms, recentlyViewed, onMovieSelect, desktop = false }: CurationSectionsProps) {
+export function CurationSections({ returningFilms, newIndieFilms, recentlyViewed, onMovieSelect, onRemoveRecentlyViewed, desktop = false }: CurationSectionsProps) {
   const returningItems: CurationItem[] = returningFilms.map((film) => ({
     id: film.movie.id,
     title: film.movie.title,
@@ -204,10 +271,6 @@ export function CurationSections({ returningFilms, newIndieFilms, recentlyViewed
     badge: formatOpeningBadge(film.firstShowDate),
     subtitle: film.movie.director.join(', ') || undefined,
   }))
-  const recentItems: CurationItem[] = recentlyViewed.map((entry) => ({
-    id: entry.id,
-    title: entry.title,
-  }))
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: SECTION_GAP }}>
@@ -220,7 +283,7 @@ export function CurationSections({ returningFilms, newIndieFilms, recentlyViewed
         <PosterRow items={newIndieItems} onSelect={onMovieSelect} emptyText="이번 주 새로 개봉한 영화가 아직 없어요" desktop={desktop} />
       </Section>
       <Section title="최근 찾아본" icon="🔎" withLine>
-        <PosterRow items={recentItems} emptyText="최근 찾아본 영화·영화관이 아직 없어요" desktop={desktop} />
+        <RecentList items={recentlyViewed} onRemove={onRemoveRecentlyViewed} />
       </Section>
     </div>
   )
@@ -235,6 +298,7 @@ export function CurationSheet({
   newIndieFilms,
   recentlyViewed,
   onMovieSelect,
+  onRemoveRecentlyViewed,
 }: CurationSheetProps) {
   const containerRef  = useRef<HTMLDivElement>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
@@ -480,6 +544,7 @@ export function CurationSheet({
           newIndieFilms={newIndieFilms}
           recentlyViewed={recentlyViewed}
           onMovieSelect={onMovieSelect}
+          onRemoveRecentlyViewed={onRemoveRecentlyViewed}
         />
       </div>
     </div>
