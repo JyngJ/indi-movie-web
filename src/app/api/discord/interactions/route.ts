@@ -18,8 +18,8 @@ export const dynamic = 'force-dynamic'
 
 const DISCORD_PUBLIC_KEY = process.env.DISCORD_PUBLIC_KEY!
 
-const InteractionType = { PING: 1, APPLICATION_COMMAND: 2, MESSAGE_COMPONENT: 3 } as const
-const InteractionResponse = { PONG: 1, CHANNEL_MESSAGE: 4, DEFERRED_CHANNEL_MESSAGE: 5, DEFERRED_UPDATE_MESSAGE: 6, UPDATE_MESSAGE: 7 } as const
+const InteractionType = { PING: 1, APPLICATION_COMMAND: 2, MESSAGE_COMPONENT: 3, MODAL_SUBMIT: 5 } as const
+const InteractionResponse = { PONG: 1, CHANNEL_MESSAGE: 4, DEFERRED_CHANNEL_MESSAGE: 5, DEFERRED_UPDATE_MESSAGE: 6, UPDATE_MESSAGE: 7, MODAL: 9 } as const
 
 /* ── Discord 서명 검증 ── */
 async function verifyRequest(request: Request): Promise<{ valid: boolean; body: string }> {
@@ -193,6 +193,33 @@ async function processScheduleCommand(token: string, imageUrl: string, theaterHi
   }
 }
 
+/* ── 큐레이션 컨펌 ── */
+async function applyCurationPending(excludeIndices: number[] = []) {
+  const supabase = createSupabaseAdminClient()
+  const { data, error } = await supabase.from('curation_pending').select('*').eq('id', 1).single()
+  if (error || !data) throw new Error('pending 데이터 없음. 먼저 crawl:curation을 실행하세요.')
+
+  const excludeSet = new Set(excludeIndices)
+  const allItems = [
+    ...(data.returning_films as unknown[]).map((f, i) => ({ type: 'returning', idx: i + 1, film: f })),
+    ...(data.new_indie_films as unknown[]).map((f, i) => ({ type: 'new', idx: (data.returning_films as unknown[]).length + i + 1, film: f })),
+  ]
+  const kept = allItems.filter(item => !excludeSet.has(item.idx))
+  const returningFilms = kept.filter(item => item.type === 'returning').map(item => item.film)
+  const newIndieFilms = kept.filter(item => item.type === 'new').map(item => item.film)
+
+  const { error: cacheError } = await supabase
+    .from('curation_cache')
+    .upsert({ id: 1, returning_films: returningFilms, new_indie_films: newIndieFilms, computed_at: new Date().toISOString() })
+  if (cacheError) throw cacheError
+
+  const excluded = excludeIndices.length
+  return {
+    ok: true,
+    message: `✅ 큐레이션 반영 완료: **오랜만에 상영 ${returningFilms.length}편**, **이번 주 ${newIndieFilms.length}편**${excluded > 0 ? ` (${excluded}편 제외)` : ''}`,
+  }
+}
+
 /* ── OCR 후보 승인/취소 ── */
 async function handleOcrConfirm(sourceId: string) {
   const supabase = createSupabaseAdminClient()
@@ -256,6 +283,52 @@ export async function POST(request: Request) {
   if (interaction.type === InteractionType.MESSAGE_COMPONENT) {
     const customId = interaction.data?.custom_id ?? ''
 
+    // 큐레이션 전체 반영
+    if (customId === 'curation_confirm:all') {
+      const token = interaction.token
+      after(async () => {
+        try {
+          const result = await applyCurationPending([])
+          await patchOriginalMessage(token, {
+            embeds: [{ description: result.message, color: 0x57F287 }],
+            components: [],
+            allowed_mentions: { parse: [] },
+          })
+        } catch (error) {
+          await patchOriginalMessage(token, {
+            embeds: [{ description: `❌ 오류: ${error instanceof Error ? error.message : String(error)}`, color: 0xED4245 }],
+            components: [],
+            allowed_mentions: { parse: [] },
+          })
+        }
+      })
+      return Response.json({ type: InteractionResponse.DEFERRED_UPDATE_MESSAGE })
+    }
+
+    // 큐레이션 일부 제외 — 모달 오픈
+    if (customId === 'curation_exclude_modal') {
+      return Response.json({
+        type: InteractionResponse.MODAL,
+        data: {
+          custom_id: 'curation_modal_submit',
+          title: '제외할 영화 번호 입력',
+          components: [{
+            type: 1,
+            components: [{
+              type: 4,
+              custom_id: 'exclude_numbers',
+              label: '제외할 번호 (예: 2 4)',
+              style: 1,
+              placeholder: '번호를 공백으로 구분해서 입력하세요',
+              required: true,
+              min_length: 1,
+              max_length: 50,
+            }],
+          }],
+        },
+      })
+    }
+
     // OCR 승인/취소 — 3초 타임아웃 방지: DEFERRED_UPDATE_MESSAGE 즉시 반환 후 비동기 처리
     if (customId.startsWith('ocr_confirm:') || customId.startsWith('ocr_cancel:')) {
       const colonIdx = customId.indexOf(':')
@@ -302,6 +375,30 @@ export async function POST(request: Request) {
     } catch (error) {
       return ephemeralResponse(error instanceof Error ? error.message : '제보 상태를 변경하지 못했습니다.')
     }
+  }
+
+  // 큐레이션 모달 제출 — 제외 번호 파싱 후 반영
+  if (interaction.type === InteractionType.MODAL_SUBMIT && interaction.data?.custom_id === 'curation_modal_submit') {
+    const raw = (interaction.data as unknown as { components: Array<{ components: Array<{ value: string }> }> })
+      ?.components?.[0]?.components?.[0]?.value ?? ''
+    const excludeIndices = raw.split(/[\s,]+/).map(Number).filter(n => Number.isFinite(n) && n > 0)
+    const token = interaction.token
+
+    after(async () => {
+      try {
+        const result = await applyCurationPending(excludeIndices)
+        await sendDiscordWebhook(token, {
+          embeds: [{ description: result.message, color: 0x57F287 }],
+          allowed_mentions: { parse: [] },
+        })
+      } catch (error) {
+        await sendDiscordWebhook(token, {
+          embeds: [{ description: `❌ 오류: ${error instanceof Error ? error.message : String(error)}`, color: 0xED4245 }],
+          allowed_mentions: { parse: [] },
+        })
+      }
+    })
+    return Response.json({ type: InteractionResponse.DEFERRED_CHANNEL_MESSAGE })
   }
 
   return Response.json({ type: InteractionResponse.CHANNEL_MESSAGE, data: { content: '알 수 없는 커맨드입니다.' } })

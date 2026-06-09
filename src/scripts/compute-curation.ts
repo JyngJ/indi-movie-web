@@ -214,6 +214,76 @@ async function computeNewIndieFilms(supabase: ReturnType<typeof createSupabaseAd
   return results
 }
 
+const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN
+const DISCORD_CHANNEL_ID = process.env.DISCORD_REPORT_CHANNEL_ID || process.env.DISCORD_CHANNEL_ID
+
+async function sendCurationPreviewToDiscord(
+  returningFilms: Awaited<ReturnType<typeof computeReturningFilms>>,
+  newIndieFilms: Awaited<ReturnType<typeof computeNewIndieFilms>>,
+) {
+  if (!DISCORD_BOT_TOKEN || !DISCORD_CHANNEL_ID) {
+    console.log('  Discord 봇 토큰/채널 ID 없음 — Discord 전송 건너뜀')
+    return false
+  }
+
+  const lines: string[] = []
+  if (returningFilms.length > 0) {
+    lines.push('**오랜만에 상영하는 영화**')
+    returningFilms.forEach((f, i) => {
+      lines.push(`${i + 1}. ${f.movie.title} (${f.tagText})`)
+    })
+  }
+  if (newIndieFilms.length > 0) {
+    if (lines.length > 0) lines.push('')
+    lines.push('**이번 주 새롭게 상영하는 영화**')
+    const offset = returningFilms.length
+    newIndieFilms.forEach((f, i) => {
+      lines.push(`${offset + i + 1}. ${f.movie.title}`)
+    })
+  }
+
+  if (lines.length === 0) {
+    lines.push('표시할 영화 없음')
+  }
+
+  lines.push('')
+  lines.push('*번호를 보내 일부 제외 가능 (예: 2 4 제외). 없으면 전체 반영.*')
+
+  const total = returningFilms.length + newIndieFilms.length
+  const payload = {
+    embeds: [{
+      title: `🎬 큐레이션 라인업 확인 (총 ${total}편)`,
+      description: lines.join('\n').slice(0, 4096),
+      color: 0x4A6380,
+      footer: { text: new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }) },
+    }],
+    components: [{
+      type: 1,
+      components: [
+        { type: 2, style: 3, label: '✅ 전체 반영', custom_id: 'curation_confirm:all' },
+        { type: 2, style: 2, label: '✏️ 일부 제외', custom_id: 'curation_exclude_modal' },
+      ],
+    }],
+  }
+
+  const res = await fetch(`https://discord.com/api/v10/channels/${DISCORD_CHANNEL_ID}/messages`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bot ${DISCORD_BOT_TOKEN}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  if (!res.ok) {
+    console.error(`  Discord 전송 실패 ${res.status}: ${await res.text().catch(() => '')}`)
+    return false
+  }
+
+  console.log('  Discord 큐레이션 라인업 전송 완료')
+  return true
+}
+
 async function main() {
   console.log('큐레이션 스냅샷 계산 시작')
   const supabase = createSupabaseAdminClient()
@@ -225,13 +295,23 @@ async function main() {
     computeNewIndieFilms(supabase, asOfDate),
   ])
 
-  const { error } = await supabase
-    .from('curation_cache')
-    .upsert({ id: 1, returning_films: returningFilms, new_indie_films: newIndieFilms, computed_at: new Date().toISOString() })
+  // Discord 봇이 설정되어 있으면 pending에 저장 후 컨펌 대기
+  const discordSent = await sendCurationPreviewToDiscord(returningFilms, newIndieFilms)
 
-  if (error) throw error
-
-  console.log(`완료 — 오랜만에 상영 ${returningFilms.length}편, 이번 주 신규 ${newIndieFilms.length}편 저장`)
+  if (discordSent) {
+    const { error } = await supabase
+      .from('curation_pending')
+      .upsert({ id: 1, returning_films: returningFilms, new_indie_films: newIndieFilms, computed_at: new Date().toISOString() })
+    if (error) throw error
+    console.log(`대기 중 — 오랜만에 상영 ${returningFilms.length}편, 이번 주 신규 ${newIndieFilms.length}편 Discord 컨펌 대기`)
+  } else {
+    // Discord 미설정 시 바로 cache에 저장 (기존 동작)
+    const { error } = await supabase
+      .from('curation_cache')
+      .upsert({ id: 1, returning_films: returningFilms, new_indie_films: newIndieFilms, computed_at: new Date().toISOString() })
+    if (error) throw error
+    console.log(`완료 — 오랜만에 상영 ${returningFilms.length}편, 이번 주 신규 ${newIndieFilms.length}편 저장`)
+  }
 }
 
 main().catch((err) => {

@@ -322,11 +322,6 @@ interface CurationSectionsProps {
   desktop?: boolean
 }
 
-function formatOpeningBadge(firstShowDate: string): string {
-  const [, m, d] = firstShowDate.split('-')
-  return `${Number(m)}/${Number(d)} 개봉`
-}
-
 /** 큐레이션 섹션 3종(오랜만에 상영 / 이번 주 새로 개봉 / 최근 찾아본) — 모바일 시트·데스크톱 도크가 공유하는 본문 */
 export function CurationSections({ returningFilms, newIndieFilms, recentlyViewed, onMovieSelect, onRemoveRecentlyViewed, onRecentItemClick, desktop = false }: CurationSectionsProps) {
   const returningItems: CurationItem[] = returningFilms.map((film) => ({
@@ -340,7 +335,6 @@ export function CurationSections({ returningFilms, newIndieFilms, recentlyViewed
     id: film.movie.id,
     title: film.movie.title,
     posterUrl: film.movie.posterUrl,
-    badge: formatOpeningBadge(film.firstShowDate),
     subtitle: film.movie.director.join(', ') || undefined,
   }))
 
@@ -351,8 +345,8 @@ export function CurationSections({ returningFilms, newIndieFilms, recentlyViewed
           <PosterRow items={returningItems} onSelect={onMovieSelect} emptyText="" desktop={desktop} />
         </Section>
       )}
-      <Section title="이번 주 새로 개봉" icon="🎬" withLine>
-        <PosterRow items={newIndieItems} onSelect={onMovieSelect} emptyText="이번 주 새로 개봉한 영화가 아직 없어요" desktop={desktop} />
+      <Section title="이번 주 새롭게 상영하는 영화" icon="🎬" withLine>
+        <PosterRow items={newIndieItems} onSelect={onMovieSelect} emptyText="이번 주 새롭게 상영하는 영화가 아직 없어요" desktop={desktop} />
       </Section>
       <Section title="최근 찾아본" icon="🔎" withLine style={{ marginTop: SECTION_GAP }}>
         <RecentList items={recentlyViewed} onRemove={onRemoveRecentlyViewed} onItemClick={onRecentItemClick} />

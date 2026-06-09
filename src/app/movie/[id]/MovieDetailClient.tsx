@@ -661,7 +661,8 @@ export function MovieDetailClient({ movieId, theaterId, initialData }: { movieId
     return () => window.removeEventListener('scroll', onScroll)
   }, [movie])
 
-  const handleBack = () => router.back()
+  const fromCuration = searchParams.get('from') === 'curation'
+  const handleBack = () => fromCuration ? router.push('/') : router.back()
   const handleClose = () => theaterId ? router.push(`/?theater=${theaterId}`) : router.push('/')
   const handleDirectorClick = (name: string) => router.push(`/director/${encodeURIComponent(name)}`)
   const handleMapClick = () => router.push(`/?movie=${movieId}`)
