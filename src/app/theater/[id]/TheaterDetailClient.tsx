@@ -216,14 +216,23 @@ export function TheaterDetailClient({ theater }: { theater: Theater }) {
               >
                 <div style={s.posterWrap}>
                   {movie.posterUrl ? (
-                    <Image
-                      src={movie.posterUrl}
-                      alt={movie.title}
-                      fill
-                      sizes="(max-width: 480px) 30vw, 140px"
-                      style={{ objectFit: 'cover' }}
-                      loading="lazy"
-                    />
+                    movie.posterUrl.includes('supabase.co') ? (
+                      <Image
+                        src={movie.posterUrl}
+                        alt={movie.title}
+                        fill
+                        sizes="(max-width: 480px) 30vw, 140px"
+                        style={{ objectFit: 'cover' }}
+                        loading="lazy"
+                      />
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={movie.posterUrl}
+                        alt={movie.title}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      />
+                    )
                   ) : (
                     <div style={{ width: '100%', height: '100%', background: 'var(--color-surface-raised)' }} />
                   )}
