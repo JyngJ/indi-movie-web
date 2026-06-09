@@ -486,13 +486,12 @@ function computeClustersByZoom(
 
     const clusters: TheaterCluster[] = []
     for (const [groupKey, group] of groupMap.entries()) {
-      const lat = group.reduce((s, t) => s + t.lat, 0) / group.length
-      const lng = group.reduce((s, t) => s + t.lng, 0) / group.length
+      const center = getRegionCenter(groupKey)
       clusters.push({
         id: `city-${groupKey}`,
         theaters: group,
-        lat,
-        lng,
+        lat: center.lat,
+        lng: center.lng,
         isCoLocation: false,
         cityLabel: groupKey,
         clusterCount: group.length,
