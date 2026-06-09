@@ -60,7 +60,7 @@ interface MobileTab {
 
 const MOBILE_TABS: MobileTab[] = [
   { key: 'map', href: '/', label: '지도', Icon: IconMap },
-  { key: 'films', href: '/films', label: '영화', Icon: IconFilm },
+  // { key: 'films', href: '/films', label: '영화', Icon: IconFilm },  // 미개발
   { key: 'more', href: '/more', label: '설정', Icon: IconSettings },
 ]
 
