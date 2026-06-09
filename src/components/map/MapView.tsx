@@ -386,6 +386,7 @@ function getRegionGroup(city: string, theater?: Theater): string {
   // 도/특별자치도 매핑 (전체 이름으로 통일)
   const doGroups: Record<string, string> = {
     '강원': '강원도',
+    '철원': '강원도',
     '제천': '강원도',
     '충북': '충청북도',
     '충남': '충청남도',
