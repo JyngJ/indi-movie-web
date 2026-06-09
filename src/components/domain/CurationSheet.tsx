@@ -148,9 +148,9 @@ function PosterRow({ items, onSelect, emptyText, desktop = false }: {
 
 const SECTION_GAP = 16
 
-function Section({ title, icon, withLine, children }: { title: string; icon?: string; withLine?: boolean; children: React.ReactNode }) {
+function Section({ title, icon, withLine, style, children }: { title: string; icon?: string; withLine?: boolean; style?: React.CSSProperties; children: React.ReactNode }) {
   return (
-    <section style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <section style={{ display: 'flex', flexDirection: 'column', gap: 10, ...style }}>
       <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 20, paddingRight: 20, gap: 6 }}>
         {icon && <span style={{ fontSize: 16, lineHeight: 1 }}>{icon}</span>}
         <h3 style={{
@@ -214,7 +214,7 @@ function RecentList({
             display: 'flex',
             alignItems: 'center',
             padding: '6px 12px',
-            backgroundColor: 'var(--color-border)',
+            backgroundColor: 'var(--color-surface-raised)',
             borderRadius: 8,
             gap: 10,
           }}
@@ -301,7 +301,7 @@ export function CurationSections({ returningFilms, newIndieFilms, recentlyViewed
       <Section title="이번 주 새로 개봉" icon="🎬" withLine>
         <PosterRow items={newIndieItems} onSelect={onMovieSelect} emptyText="이번 주 새로 개봉한 영화가 아직 없어요" desktop={desktop} />
       </Section>
-      <Section title="최근 찾아본" icon="🔎" withLine>
+      <Section title="최근 찾아본" icon="🔎" withLine style={{ marginTop: SECTION_GAP }}>
         <RecentList items={recentlyViewed} onRemove={onRemoveRecentlyViewed} />
       </Section>
     </div>
