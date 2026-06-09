@@ -259,7 +259,7 @@ function RecentList({
             display: 'flex',
             alignItems: 'center',
             padding: '6px 12px',
-            backgroundColor: 'var(--color-surface-raised)',
+            backgroundColor: 'var(--color-surface-card)',
             borderRadius: 8,
             gap: 10,
           }}
