@@ -165,12 +165,25 @@ async function computeNewIndieFilms(supabase: ReturnType<typeof createSupabaseAd
   const hadPriorIds = new Set((priorRows ?? []).map((r: Record<string, unknown>) => r.movie_id as string).filter(Boolean))
   const newIds = thisWeekIds.filter(id => !hadPriorIds.has(id))
   if (newIds.length === 0) { console.log('  이번 주 신규 개봉작 없음'); return [] }
-  console.log(`  신규 개봉 후보 ${newIds.length}편`)
+
+  // 오늘 이후 상영이 남아있는 영화만 포함
+  const { data: futureRows, error: e2b } = await supabase
+    .from('showtimes')
+    .select('movie_id')
+    .in('movie_id', newIds)
+    .gte('show_date', asOfDate)
+
+  if (e2b) throw e2b
+
+  const hasFutureIds = new Set((futureRows ?? []).map((r: Record<string, unknown>) => r.movie_id as string).filter(Boolean))
+  const activeNewIds = newIds.filter(id => hasFutureIds.has(id))
+  if (activeNewIds.length === 0) { console.log('  오늘 이후 상영 있는 신규 개봉작 없음'); return [] }
+  console.log(`  신규 개봉 후보 ${activeNewIds.length}편 (${newIds.length - activeNewIds.length}편 이미 종료)`)
 
   const { data: movieRows, error: e3 } = await supabase
     .from('movies')
     .select('id, title, original_title, year, poster_url, genre, director, nation, kmdb_id, tmdb_id, rating')
-    .in('id', newIds)
+    .in('id', activeNewIds)
 
   if (e3) throw e3
 
@@ -178,7 +191,7 @@ async function computeNewIndieFilms(supabase: ReturnType<typeof createSupabaseAd
   const { data: firstDateRows, error: e4 } = await supabase
     .from('showtimes')
     .select('movie_id, show_date')
-    .in('movie_id', newIds)
+    .in('movie_id', activeNewIds)
     .gte('show_date', weekStart)
     .order('show_date', { ascending: true })
 
