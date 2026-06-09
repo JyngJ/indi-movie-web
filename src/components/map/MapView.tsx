@@ -1233,7 +1233,7 @@ export default function MapView() {
     })
   }, [])
 
-  // 데스크톱: DesktopDetailPanel 재사용(검색과 동일) / 모바일: MovieSheet
+  // 데스크톱: 영화 상세 페이지로 전체 이동 / 모바일: MovieSheet
   const handleCurationMovieSelect = useCallback((movieId: string, movieTitle: string) => {
     trackEvent('curation movie selected', {
       movie_id: movieId,
@@ -1242,12 +1242,12 @@ export default function MapView() {
     })
     classifySessionIntent('type_a', { source: 'curation_sheet', movie_id: movieId })
     if (isDesktopLayout) {
-      openDesktopPanel({ type: 'movie', id: movieId })
+      router.push(`/movie/${movieId}?from=curation`)
     } else {
       setCurationSnap('peek')
       setMovieSheetId(movieId)
     }
-  }, [isDesktopLayout, openDesktopPanel])
+  }, [isDesktopLayout, router])
 
   const handleRemoveRecentlyViewed = useCallback((kind: RecentlyViewedKind, id: string) => {
     removeRecentlyViewed(cookieStorageAdapter, kind, id)
