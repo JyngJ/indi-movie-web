@@ -850,6 +850,11 @@ function decodeJsStringLiteral(value: string) {
     .replace(/\\\//g, '/')
 }
 
+// 페이지가 아직 JS로 값을 채우기 전이면 "LOADING . . ." 같은 placeholder 텍스트가 그대로 잡힌다 — 제목으로 취급하지 않는다
+function isMovielandPlaceholderTitle(value: string) {
+  return /^loading\b[\s.]*$/i.test(value.trim())
+}
+
 function extractMovielandMovieTitle(content: string) {
   const text = normalizeWhitespace(stripHtml(content))
   const koreanTitle =
@@ -860,7 +865,10 @@ function extractMovielandMovieTitle(content: string) {
     .replace(/\s*\|\s*영화 예매.*$/i, '')
     .trim()
 
-  return koreanTitle || heading || ogTitle || '제목 확인 필요'
+  const candidates = [koreanTitle, heading, ogTitle]
+    .filter((value): value is string => typeof value === 'string' && value.length > 0)
+    .filter((value) => !isMovielandPlaceholderTitle(value))
+  return candidates[0] || '제목 확인 필요'
 }
 
 function extractMovielandPrice(content: string) {

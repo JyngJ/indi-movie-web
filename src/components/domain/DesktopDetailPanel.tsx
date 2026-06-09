@@ -60,11 +60,14 @@ function PanelShell({
   onClose,
   onBack,
   title,
+  embedded,
   children,
 }: {
   onClose: () => void
   onBack?: () => void
   title?: string
+  /** 좌측 도크에 내장될 때 true — 카드 모서리/배경 없이 도크에 꽉 채워 표시 */
+  embedded?: boolean
   children: React.ReactNode
 }) {
   const btn: React.CSSProperties = {
@@ -78,8 +81,8 @@ function PanelShell({
       display: 'flex',
       flexDirection: 'column',
       height: '100%',
-      backgroundColor: 'var(--color-surface-bg)',
-      borderRadius: 20,
+      backgroundColor: embedded ? 'var(--color-surface-card)' : 'var(--color-surface-bg)',
+      borderRadius: embedded ? 0 : 20,
       overflow: 'hidden',
     }}>
       {/* 헤더 */}
@@ -125,6 +128,7 @@ function MoviePanel({
   regionId,
   onClose,
   onBack,
+  embedded,
   onDirectorOpen,
   onMovieFilterOnMap,
   onTheaterOpen,
@@ -133,6 +137,7 @@ function MoviePanel({
   regionId?: string | null
   onClose: () => void
   onBack?: () => void
+  embedded?: boolean
   onDirectorOpen: (name: string) => void
   onMovieFilterOnMap: (id: string, title: string) => void
   onTheaterOpen: (theaterId: string, date: string) => void
@@ -154,7 +159,7 @@ function MoviePanel({
 
   if (isLoading) {
     return (
-      <PanelShell onClose={onClose} onBack={onBack}>
+      <PanelShell onClose={onClose} onBack={onBack} embedded={embedded}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200, fontSize: 13, color: 'var(--color-text-caption)' }}>
           불러오는 중…
         </div>
@@ -163,7 +168,7 @@ function MoviePanel({
   }
   if (!movie) {
     return (
-      <PanelShell onClose={onClose} onBack={onBack} title="영화 정보">
+      <PanelShell onClose={onClose} onBack={onBack} embedded={embedded} title="영화 정보">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200, fontSize: 13, color: 'var(--color-text-caption)' }}>
           영화를 찾을 수 없습니다
         </div>
@@ -172,7 +177,7 @@ function MoviePanel({
   }
 
   return (
-    <PanelShell onClose={onClose} onBack={onBack} title={movie.title}>
+    <PanelShell onClose={onClose} onBack={onBack} embedded={embedded} title={movie.title}>
       {/* 히어로 */}
       <div style={{
         background: 'linear-gradient(135deg, var(--color-surface-card) 0%, var(--color-primary-subtle-l) 100%)',
@@ -513,12 +518,14 @@ function DirectorPanel({
   directorName,
   onClose,
   onBack,
+  embedded,
   onMovieOpen,
   onDirectorFilterOnMap,
 }: {
   directorName: string
   onClose: () => void
   onBack?: () => void
+  embedded?: boolean
   onMovieOpen: (id: string) => void
   onDirectorFilterOnMap: (name: string) => void
 }) {
@@ -540,7 +547,7 @@ function DirectorPanel({
 
   if (isLoading) {
     return (
-      <PanelShell onClose={onClose} onBack={onBack}>
+      <PanelShell onClose={onClose} onBack={onBack} embedded={embedded}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200, fontSize: 13, color: 'var(--color-text-caption)' }}>
           불러오는 중…
         </div>
@@ -549,7 +556,7 @@ function DirectorPanel({
   }
 
   return (
-    <PanelShell onClose={onClose} onBack={onBack} title={directorName}>
+    <PanelShell onClose={onClose} onBack={onBack} embedded={embedded} title={directorName}>
       {/* 감독 헤더 */}
       <div style={{ padding: '28px 20px 20px', display: 'flex', alignItems: 'center', gap: 16, borderBottom: '1px solid var(--color-border)' }}>
         <div style={{ width: 64, height: 64, borderRadius: '50%', backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-caption)', flexShrink: 0 }}>
@@ -674,6 +681,7 @@ export function DesktopDetailPanel({
   regionId,
   onClose,
   onBack,
+  embedded,
   onNavigate,
   onMovieFilterOnMap,
   onDirectorFilterOnMap,
@@ -683,6 +691,8 @@ export function DesktopDetailPanel({
   regionId?: string | null
   onClose: () => void
   onBack?: () => void
+  /** 좌측 도크에 내장될 때 true — 카드 모서리/배경 없이 도크에 꽉 채워 표시 */
+  embedded?: boolean
   onNavigate: (next: DesktopPanelState) => void
   onMovieFilterOnMap: (id: string, title: string) => void
   onDirectorFilterOnMap: (name: string) => void
@@ -695,6 +705,7 @@ export function DesktopDetailPanel({
         regionId={regionId}
         onClose={onClose}
         onBack={onBack}
+        embedded={embedded}
         onDirectorOpen={(name) => onNavigate({ type: 'director', name })}
         onMovieFilterOnMap={onMovieFilterOnMap}
         onTheaterOpen={(theaterId, date) => onTheaterOpen(panel.id, theaterId, date)}
@@ -707,6 +718,7 @@ export function DesktopDetailPanel({
       directorName={panel.name}
       onClose={onClose}
       onBack={onBack}
+      embedded={embedded}
       onMovieOpen={(id) => onNavigate({ type: 'movie', id })}
       onDirectorFilterOnMap={onDirectorFilterOnMap}
     />

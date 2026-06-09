@@ -61,7 +61,7 @@ function NavBar({ onBack, onClose }: { onBack: () => void; onClose: () => void }
       height: 52, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       paddingLeft: 4, paddingRight: 4,
       borderBottom: '1px solid var(--color-border)',
-      backgroundColor: 'var(--color-surface-bg)',
+      backgroundColor: 'var(--color-primary-subtle-l)',
       flexShrink: 0,
     }}>
       <button style={btn} onClick={onBack}><IcoChevronLeft /></button>

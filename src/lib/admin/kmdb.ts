@@ -173,7 +173,12 @@ function getKmdbServiceKey() {
 }
 
 function cleanTitle(value?: string) {
-  return cleanText(value).replace(/\s*!HS\s*/g, '').replace(/\s*!HE\s*/g, '').trim()
+  const cleaned = cleanText(value).replace(/\s*!HS\s*/g, '').replace(/\s*!HE\s*/g, '').trim()
+  // KMDB는 간혹 "제목 : 줄거리…" 형태로 시놉시스가 제목 필드에 그대로 섞여 들어온다.
+  // 콜론 앞이 짧고(≤30자) 뒤가 문장형으로 길면(40자+, 마침표/말줄임 포함) 제목 부분만 취한다.
+  const glued = cleaned.match(/^(.{1,30}?)\s*[:：]\s*(.{40,})$/)
+  if (glued && /[.…!?]/.test(glued[2])) return glued[1].trim()
+  return cleaned
 }
 
 function cleanText(value?: string) {
