@@ -8,6 +8,8 @@ import { Skeleton } from '@/components/primitives/Skeleton'
 import { useMovieDetail, useMovieTheaterShowtimes } from '@/lib/supabase/queries'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { withFlag } from '@/lib/nations'
+import { recordRecentlyViewed } from '@/lib/curation/recentlyViewed'
+import { cookieStorageAdapter } from '@/lib/adapters/cookieStorage'
 import type { Showtime } from '@/types/api'
 
 const TOP_MARGIN = 72  // 검색바 아래에서 시작 — 지도가 살짝 보이게
@@ -45,15 +47,26 @@ interface MovieSheetProps {
   movieId: string
   onClose: () => void
   onTheaterSelect?: (theaterId: string) => void
+  onRecentlyViewed?: () => void
 }
 
-export function MovieSheet({ movieId, onClose, onTheaterSelect }: MovieSheetProps) {
+export function MovieSheet({ movieId, onClose, onTheaterSelect, onRecentlyViewed }: MovieSheetProps) {
   const router = useRouter()
   const { data: movie, isLoading: movieLoading } = useMovieDetail(movieId)
   const { data: theaters = [], isLoading: showsLoading } = useMovieTheaterShowtimes(movieId)
 
   const [visible, setVisible] = useState(false)
   useEffect(() => { const id = requestAnimationFrame(() => setVisible(true)); return () => cancelAnimationFrame(id) }, [])
+
+  useEffect(() => {
+    if (!movie) return
+    recordRecentlyViewed(cookieStorageAdapter, 'movie', {
+      id: movie.id,
+      title: movie.title,
+      thumbnailKey: movie.posterUrl,
+    }).then(() => onRecentlyViewed?.())
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [movie?.id])
 
   const handleClose = () => {
     setVisible(false)

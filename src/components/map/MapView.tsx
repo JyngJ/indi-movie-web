@@ -3510,6 +3510,7 @@ export default function MapView() {
         <MovieSheet
           movieId={movieSheetId}
           onClose={() => setMovieSheetId(null)}
+          onRecentlyViewed={() => setRecentlyViewedKey(k => k + 1)}
           onTheaterSelect={(theaterId) => {
             const mid = movieSheetId
             setMovieSheetId(null)

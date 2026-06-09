@@ -52,6 +52,51 @@ function PosterRow({ items, onSelect, emptyText, desktop = false }: {
   emptyText: string
   desktop?: boolean
 }) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (desktop) return
+    const el = scrollRef.current
+    if (!el) return
+
+    let dirLock: 'h' | 'v' | null = null
+    let startX = 0, startY = 0, startScrollLeft = 0
+    let touching = false
+
+    const onDown = (e: TouchEvent) => {
+      touching = true
+      dirLock = null
+      startX = e.touches[0].pageX
+      startY = e.touches[0].clientY
+      startScrollLeft = el.scrollLeft
+    }
+    const onMove = (e: TouchEvent) => {
+      if (!touching) return
+      const dx = Math.abs(e.touches[0].pageX - startX)
+      const dy = Math.abs(e.touches[0].clientY - startY)
+      if (dirLock === null) {
+        if (dx < 8 && dy < 8) return
+        dirLock = dx > dy * 1.2 ? 'h' : 'v'
+      }
+      if (dirLock === 'v') { touching = false; return }
+      e.preventDefault()
+      e.stopPropagation()
+      el.scrollLeft = startScrollLeft - (e.touches[0].pageX - startX)
+    }
+    const onUp = () => { touching = false; dirLock = null }
+
+    el.addEventListener('touchstart', onDown, { passive: true })
+    el.addEventListener('touchmove', onMove, { passive: false })
+    el.addEventListener('touchend', onUp)
+    el.addEventListener('touchcancel', onUp)
+    return () => {
+      el.removeEventListener('touchstart', onDown)
+      el.removeEventListener('touchmove', onMove)
+      el.removeEventListener('touchend', onUp)
+      el.removeEventListener('touchcancel', onUp)
+    }
+  }, [desktop])
+
   if (items.length === 0) {
     return (
       <p style={{ margin: 0, paddingLeft: 20, paddingRight: 20, fontSize: 13, color: 'var(--color-text-caption)' }}>
@@ -61,7 +106,7 @@ function PosterRow({ items, onSelect, emptyText, desktop = false }: {
   }
   const posterSize = desktop ? POSTER_SIZE_DESKTOP : POSTER_SIZE
   return (
-    <div className={desktop ? undefined : 'themed-scrollbar'} style={desktop ? {
+    <div ref={desktop ? undefined : scrollRef} className={desktop ? undefined : 'themed-scrollbar'} style={desktop ? {
       display: 'grid',
       gridTemplateColumns: 'repeat(3, 1fr)',
       gap: 12,
