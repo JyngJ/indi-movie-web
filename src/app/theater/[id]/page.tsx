@@ -2,12 +2,13 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { toTheaterSchema } from '@/lib/seo/toTheaterSchema'
+import { safeUrl } from '@/lib/seo/safeUrl'
 import type { Theater } from '@/types/api'
 import { TheaterDetailClient } from './TheaterDetailClient'
 
 export const revalidate = 3600
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://yeonghwabolzido.com'
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.xn--hq1bv8o5phw2d7wt.com'
 
 async function fetchTheater(id: string): Promise<Theater | null> {
   const supabase = createSupabaseServerClient()
@@ -27,8 +28,8 @@ async function fetchTheater(id: string): Promise<Theater | null> {
     address: data.address,
     city: data.city,
     phone: data.phone ?? undefined,
-    website: data.website ?? undefined,
-    instagramUrl: data.instagram_url ?? undefined,
+    website: safeUrl(data.website),
+    instagramUrl: safeUrl(data.instagram_url),
     screenCount: data.screen_count,
     seatCount: data.seat_count ?? undefined,
     amenities: {

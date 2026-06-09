@@ -1,4 +1,5 @@
 import type { Theater } from '@/types/api'
+import { safeUrl } from './safeUrl'
 
 export function toTheaterSchema(theater: Theater, baseUrl: string) {
   return {
@@ -17,7 +18,7 @@ export function toTheaterSchema(theater: Theater, baseUrl: string) {
       longitude: theater.lng,
     },
     ...(theater.phone && { telephone: theater.phone }),
-    ...(theater.website && { url: theater.website }),
+    ...(safeUrl(theater.website) && { url: safeUrl(theater.website) }),
     sameAs: `${baseUrl}/theater/${theater.id}`,
   }
 }

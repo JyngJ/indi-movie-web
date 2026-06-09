@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
+import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMovieDetail, useMovieTheaterShowtimes, useActiveMovieIds } from '@/lib/supabase/queries'
 import type { MovieDetail, MovieTheaterEntry } from '@/lib/supabase/queries'
@@ -135,11 +136,13 @@ function HeroSection({ movie, titleRef, desktop = false }: { movie: MovieDetail;
       {/* 포스터 */}
       <div style={{ flexShrink: 0, position: 'relative', width: posterW, height: posterH }}>
         {movie.posterUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={movie.posterUrl}
-            alt=""
-            style={{ width: posterW, height: posterH, borderRadius: desktop ? 12 : 8, objectFit: 'cover', display: 'block', boxShadow: desktop ? '0 18px 46px rgba(0,0,0,0.28)' : '0 8px 28px rgba(0,0,0,0.45)' }}
+            alt={`${movie.title} 포스터`}
+            fill
+            priority
+            sizes={`(min-width: 1024px) ${posterW}px, ${posterW}px`}
+            style={{ borderRadius: desktop ? 12 : 8, objectFit: 'cover', boxShadow: desktop ? '0 18px 46px rgba(0,0,0,0.28)' : '0 8px 28px rgba(0,0,0,0.45)' }}
           />
         ) : (
           <div style={{
@@ -607,7 +610,7 @@ function TheatersTab({ movieId, onMapClick, onGoToTheater, desktop = false }: { 
 }
 
 /* ── 메인 ── */
-export function MovieDetailClient({ movieId, theaterId }: { movieId: string; theaterId?: string }) {
+export function MovieDetailClient({ movieId, theaterId, initialData }: { movieId: string; theaterId?: string; initialData?: MovieDetail }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const isDesktop = useIsDesktopDetail()
@@ -618,7 +621,7 @@ export function MovieDetailClient({ movieId, theaterId }: { movieId: string; the
   const [titleInNav, setTitleInNav] = useState(false)
   const titleRef = useRef<HTMLHeadingElement>(null)
 
-  const { data: movie, isLoading } = useMovieDetail(movieId)
+  const { data: movie, isLoading } = useMovieDetail(movieId, initialData)
   const { data: activeIds = [] } = useActiveMovieIds()
   void activeIds
 
