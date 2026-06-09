@@ -117,9 +117,10 @@ function PosterRow({ items, onSelect, emptyText, desktop = false }: {
             fontSize: 12,
             fontWeight: 600,
             color: 'var(--color-text-primary)',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
           }}>
             {item.title}
           </span>
