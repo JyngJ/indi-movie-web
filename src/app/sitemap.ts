@@ -3,7 +3,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 export const revalidate = 86400
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.xn--hq1bv8o5phw2d7wt.com'
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createSupabaseServerClient()

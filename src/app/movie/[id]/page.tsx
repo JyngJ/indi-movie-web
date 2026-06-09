@@ -6,7 +6,7 @@ import type { MovieDetail } from '@/lib/supabase/queries'
 
 export const revalidate = 3600
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.xn--hq1bv8o5phw2d7wt.com'
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'
 
 async function fetchMovieFull(id: string): Promise<MovieDetail | null> {
   const supabase = createSupabaseServerClient()
