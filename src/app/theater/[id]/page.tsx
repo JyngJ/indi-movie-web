@@ -10,6 +10,34 @@ export const revalidate = 3600
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'
 
+function formatLocalDate(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+/** 오늘 상영 중인 영화 제목 최대 3개 — 메타 description용 */
+async function fetchTodayMovieTitles(theaterId: string): Promise<string[]> {
+  const supabase = createSupabaseServerClient()
+  const { data } = await supabase
+    .from('showtimes')
+    .select('movie_id, movies(title)')
+    .eq('theater_id', theaterId)
+    .eq('is_active', true)
+    .eq('show_date', formatLocalDate(new Date()))
+    .order('show_time', { ascending: true })
+    .limit(20)
+
+  const titles: string[] = []
+  for (const row of data ?? []) {
+    const movie = row.movies as unknown as { title?: string } | null
+    if (movie?.title && !titles.includes(movie.title)) titles.push(movie.title)
+    if (titles.length >= 3) break
+  }
+  return titles
+}
+
 async function fetchTheater(id: string): Promise<Theater | null> {
   const supabase = createSupabaseServerClient()
   const { data } = await supabase
@@ -59,7 +87,10 @@ export async function generateMetadata({
   if (!theater) return { title: '영화볼지도' }
 
   const title = `${theater.name} | 영화볼지도`
-  const description = `${theater.name} 상영 정보. ${theater.address}`
+  const todayTitles = await fetchTodayMovieTitles(theater.id)
+  const description = todayTitles.length > 0
+    ? `${theater.name}에서 이번 주 상영 중: ${todayTitles.join(', ')}. 시간표와 예매 정보를 지도에서 확인하세요.`
+    : `${theater.name} 상영 정보. ${theater.address}`
   const url = `/theater/${theater.id}`
 
   return {
