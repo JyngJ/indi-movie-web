@@ -31,19 +31,16 @@ const IconSparkle = () => (
   </svg>
 )
 
-const IconRefresh = () => (
-  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M3 12a9 9 0 0 1 15.3-6.4L21 8M21 3v5h-5" />
-    <path d="M21 12a9 9 0 0 1-15.3 6.4L3 16M3 21v-5h5" />
-  </svg>
-)
-
 interface CurationItem {
   id: string
   title: string
   posterUrl?: string
   badge?: string
   subtitle?: string
+  /** "지금 출발하면" 섹션 전용 — 클릭 시 해당 극장으로 flyTo + 선택 */
+  theaterId?: string
+  /** 현재 위치로부터의 거리, 예: "1.2 km" — 위치 정보 있을 때만 */
+  distanceLabel?: string
 }
 
 interface CurationSheetProps {
@@ -59,9 +56,12 @@ interface CurationSheetProps {
   newIndieFilms: NewIndieFilm[]
   recentlyViewed: RecentlyViewedEntry[]
   onMovieSelect?: (movieId: string, title: string) => void
+  /** "지금 출발하면" 섹션 전용 — 영화 상세 대신 해당 극장으로 flyTo + 선택 */
+  onTodayShowSelect?: (movieId: string, title: string, theaterId: string) => void
   onRemoveRecentlyViewed?: (kind: RecentlyViewedKind, id: string) => void
   onRecentItemClick?: (item: RecentlyViewedEntry) => void
-  onRefreshRecentlyViewed?: () => void
+  /** 현재 위치 있을 때 극장 ID로 거리 텍스트("1.2 km") 조회 */
+  getTheaterDistance?: (theaterId: string) => string | null
 }
 
 /** 모바일: 가로 스크롤 행 / 데스크톱(도크): 한 줄 3개 고정 그리드 — 도크 폭(352, 좌우 패딩 20) 기준 칸당 96px */
@@ -163,6 +163,18 @@ function PosterRow({ items, onSelect, emptyText, desktop = false }: {
         >
           <div style={{ position: 'relative' }}>
             <PosterThumb src={item.posterUrl} alt={item.title} width={posterSize.width} height={posterSize.height} size="lg" />
+            {item.distanceLabel && (
+              <Badge
+                variant="info"
+                style={{
+                  position: 'absolute',
+                  right: 6,
+                  top: 6,
+                }}
+              >
+                {item.distanceLabel}
+              </Badge>
+            )}
             {item.badge && (
               <Badge
                 variant="info"
@@ -363,9 +375,12 @@ interface CurationSectionsProps {
   newIndieFilms: NewIndieFilm[]
   recentlyViewed: RecentlyViewedEntry[]
   onMovieSelect?: (movieId: string, title: string) => void
+  /** "지금 출발하면" 섹션 전용 — 영화 상세 대신 해당 극장으로 flyTo + 선택 */
+  onTodayShowSelect?: (movieId: string, title: string, theaterId: string) => void
   onRemoveRecentlyViewed?: (kind: RecentlyViewedKind, id: string) => void
   onRecentItemClick?: (item: RecentlyViewedEntry) => void
-  onRefreshRecentlyViewed?: () => void
+  /** 현재 위치 있을 때 극장 ID로 거리 텍스트("1.2 km") 조회 */
+  getTheaterDistance?: (theaterId: string) => string | null
   /** 데스크톱 도크에서 호출 시 true — 포스터 행을 가로 스크롤 대신 한 줄 3개 그리드로 표시 */
   desktop?: boolean
 }
@@ -380,6 +395,15 @@ interface SectionCandidate {
 }
 
 const MAX_CURATION_SECTIONS = 3
+/** 섹션별 첫 노출 개수 — 초과분은 펼치기로 표시 */
+const SECTION_COLLAPSED_COUNT = 6
+
+const IconChevronDown = ({ open }: { open: boolean }) => (
+  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+    style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 180ms ease' }}>
+    <path d="M6 9l6 6 6-6" />
+  </svg>
+)
 
 /** 큐레이션 섹션(우선순위 상위 3개 + 최근 찾아본) — 모바일 시트·데스크톱 도크가 공유하는 본문 */
 export function CurationSections({
@@ -391,9 +415,10 @@ export function CurationSections({
   newIndieFilms,
   recentlyViewed,
   onMovieSelect,
+  onTodayShowSelect,
   onRemoveRecentlyViewed,
   onRecentItemClick,
-  onRefreshRecentlyViewed,
+  getTheaterDistance,
   desktop = false,
 }: CurationSectionsProps) {
   const lastWeekItems: CurationItem[] = lastWeekFilms.map((film) => ({
@@ -408,6 +433,8 @@ export function CurationSections({
     title: film.movie.title,
     posterUrl: film.movie.posterUrl,
     subtitle: film.theaterName,
+    theaterId: film.theaterId,
+    distanceLabel: getTheaterDistance?.(film.theaterId) ?? undefined,
   }))
   const todayShowItems: CurationItem[] = todayShowFilms.map((film) => ({
     id: film.movie.id,
@@ -415,6 +442,8 @@ export function CurationSections({
     posterUrl: film.movie.posterUrl,
     badge: film.nextShowTime,
     subtitle: film.theaterName,
+    theaterId: film.theaterId,
+    distanceLabel: getTheaterDistance?.(film.theaterId) ?? undefined,
   }))
   const newIndieItems: CurationItem[] = newIndieFilms.map((film) => ({
     id: film.movie.id,
@@ -433,50 +462,64 @@ export function CurationSections({
   const candidates: SectionCandidate[] = [
     { key: 'lastWeek', title: '이번 주가 마지막', icon: '⏳', items: lastWeekItems, emptyText: '' },
     { key: 'soloTheater', title: `${soloRegionLabel ?? '이 지역'}에서 단 한 곳`, icon: '📍', items: soloTheaterItems, emptyText: '' },
-    { key: 'todayShow', title: '지금 출발하면 볼 수 있는', icon: '🚗', items: todayShowItems, emptyText: '' },
+    { key: 'todayShow', title: '지금 출발하면 볼 수 있는', icon: '🚗', items: soloRegionLabel ? todayShowItems : [], emptyText: '' },
     { key: 'newIndie', title: '이번 주 새롭게 상영하는 영화', icon: '🎬', items: newIndieItems, emptyText: '' },
     { key: 'returning', title: '오랜만에 상영하는 영화', icon: '🎞️', items: returningItems, emptyText: '' },
   ]
 
   const sections = candidates.filter((c) => c.items.length > 0).slice(0, MAX_CURATION_SECTIONS)
 
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({})
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: SECTION_GAP }}>
-      {sections.map((section) => (
-        <div key={section.key} style={{ display: 'flex', flexDirection: 'column', gap: SECTION_GAP }}>
-          <Section title={section.title} icon={section.icon} withLine>
-            <PosterRow items={section.items} onSelect={onMovieSelect} emptyText={section.emptyText} desktop={desktop} />
-          </Section>
-          <SectionDivider />
-        </div>
-      ))}
-      <Section
-        title="최근 찾아본"
-        icon="🔎"
-        withLine
-        action={onRefreshRecentlyViewed && (
-          <button
-            type="button"
-            onClick={onRefreshRecentlyViewed}
-            aria-label="최근 찾아본 새로고침"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 24,
-              height: 24,
-              border: 'none',
-              background: 'none',
-              cursor: 'pointer',
-              color: 'var(--color-text-caption)',
-              padding: 0,
-              flexShrink: 0,
-            }}
-          >
-            <IconRefresh />
-          </button>
-        )}
-      >
+      <SectionDivider />
+      {sections.map((section) => {
+        const handleSelect = section.key === 'todayShow'
+          ? (id: string, title: string) => {
+              const item = section.items.find((i) => i.id === id)
+              if (item?.theaterId) onTodayShowSelect?.(id, title, item.theaterId)
+            }
+          : onMovieSelect
+        const expanded = expandedSections[section.key] ?? false
+        const hasMore = section.items.length > SECTION_COLLAPSED_COUNT
+        const visibleItems = !expanded
+          ? section.items.slice(0, SECTION_COLLAPSED_COUNT)
+          : section.items
+        return (
+          <div key={section.key} style={{ display: 'flex', flexDirection: 'column', gap: SECTION_GAP }}>
+            <Section title={section.title} icon={section.icon} withLine>
+              <PosterRow items={visibleItems} onSelect={handleSelect} emptyText={section.emptyText} desktop={desktop} />
+              {hasMore && (
+                <button
+                  type="button"
+                  onClick={() => setExpandedSections((prev) => ({ ...prev, [section.key]: !expanded }))}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 4,
+                    margin: '0 20px',
+                    padding: '8px 0',
+                    border: 'none',
+                    borderRadius: 8,
+                    background: 'var(--color-surface-bg)',
+                    color: 'var(--color-text-caption)',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {expanded ? '접기' : '더보기'}
+                  <IconChevronDown open={expanded} />
+                </button>
+              )}
+            </Section>
+            <SectionDivider />
+          </div>
+        )
+      })}
+      <Section title="최근 찾아본" icon="🔎" withLine>
         <RecentList items={recentlyViewed} onRemove={onRemoveRecentlyViewed} onItemClick={onRecentItemClick} />
       </Section>
     </div>
@@ -496,9 +539,10 @@ export function CurationSheet({
   newIndieFilms,
   recentlyViewed,
   onMovieSelect,
+  onTodayShowSelect,
   onRemoveRecentlyViewed,
   onRecentItemClick,
-  onRefreshRecentlyViewed,
+  getTheaterDistance,
 }: CurationSheetProps) {
   const containerRef  = useRef<HTMLDivElement>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
@@ -694,7 +738,7 @@ export function CurationSheet({
         height: expandedHeight,
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: 'var(--color-surface-raised)',
+        backgroundColor: 'var(--color-surface-card)',
         borderRadius: 'var(--comp-sheet-radius)',
         boxShadow: 'var(--shadow-sheet)',
         overflow: 'hidden',
@@ -748,9 +792,10 @@ export function CurationSheet({
           newIndieFilms={newIndieFilms}
           recentlyViewed={recentlyViewed}
           onMovieSelect={onMovieSelect}
+          onTodayShowSelect={onTodayShowSelect}
           onRemoveRecentlyViewed={onRemoveRecentlyViewed}
           onRecentItemClick={onRecentItemClick}
-          onRefreshRecentlyViewed={onRefreshRecentlyViewed}
+          getTheaterDistance={getTheaterDistance}
         />
       </div>
     </div>

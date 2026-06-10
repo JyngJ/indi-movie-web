@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 import { cookieStorageAdapter } from '@/lib/adapters/cookieStorage'
 import { getRecentlyViewed } from '@/lib/curation/recentlyViewed'
+import { getRegionFromCity } from '@/lib/regions'
 import type {
   LastWeekFilm,
   NewIndieFilm,
@@ -35,6 +36,9 @@ const EMPTY_CACHE: Pick<CurationData, 'returningFilms' | 'newIndieFilms' | 'last
 /** "지금 출발하면" 최소 여유시간(분) — 이동 시간 고려, 이 안에 시작하는 회차는 제외 */
 const DEPARTURE_BUFFER_MIN = 30
 
+/** "지금 출발하면" 최대 범위(시간) — 지금으로부터 이 시간 이내에 시작하는 회차만 노출 */
+const LEAVE_NOW_WINDOW_HOURS = 4
+
 function formatLocalDate(date: Date) {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -62,7 +66,7 @@ interface RawTodayShowtime {
   movie_id: string
   show_time: string
   theater_id: string
-  theaters: { id: string; name: string } | null
+  theaters: { id: string; name: string; city: string } | null
   movies: Record<string, unknown> | null
 }
 
@@ -106,7 +110,7 @@ export function useCurationData(open: boolean, regionId: string | null, refreshK
         movie_id,
         show_time,
         theater_id,
-        theaters(id, name),
+        theaters(id, name, city),
         movies(id, title, original_title, year, poster_url, genre, director, nation, kmdb_id, tmdb_id, rating)
       `)
       .eq('show_date', today)
@@ -140,24 +144,28 @@ export function useCurationData(open: boolean, regionId: string | null, refreshK
   const todayShowFilms = useMemo<TodayShowFilm[]>(() => {
     const cutoff = new Date(Date.now() + DEPARTURE_BUFFER_MIN * 60 * 1000)
     const cutoffHHMM = `${String(cutoff.getHours()).padStart(2, '0')}:${String(cutoff.getMinutes()).padStart(2, '0')}`
+    const windowEnd = new Date(Date.now() + LEAVE_NOW_WINDOW_HOURS * 60 * 60 * 1000)
+    const windowEndHHMM = `${String(windowEnd.getHours()).padStart(2, '0')}:${String(windowEnd.getMinutes()).padStart(2, '0')}`
 
     const byMovie = new Map<string, TodayShowFilm>()
     for (const row of todayShowtimes) {
       if (row.show_time <= cutoffHHMM) continue
+      if (row.show_time > windowEndHHMM) continue
       if (byMovie.has(row.movie_id)) continue
       const movieRaw = row.movies
       const theaterRaw = row.theaters
       if (!movieRaw || !theaterRaw) continue
+      if (regionId && getRegionFromCity(theaterRaw.city) !== regionId) continue
       byMovie.set(row.movie_id, {
         movie: rowToMovie(movieRaw),
-        nextShowTime: row.show_time,
+        nextShowTime: row.show_time.slice(0, 5),
         theaterId: theaterRaw.id,
         theaterName: theaterRaw.name,
       })
     }
     return [...byMovie.values()].sort((a, b) => a.nextShowTime.localeCompare(b.nextShowTime))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [todayShowtimes, refreshKey])
+  }, [todayShowtimes, regionId, refreshKey])
 
   const soloTheaterFilms = useMemo<SoloTheaterFilm[]>(() => {
     if (!regionId) return []

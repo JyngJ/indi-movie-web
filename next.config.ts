@@ -17,6 +17,10 @@ const nextConfig: NextConfig = {
         hostname: 'pkmgloiixwvhitqpcfyc.supabase.co',
         pathname: '/storage/**',
       },
+      {
+        protocol: 'http',
+        hostname: 'file.koreafilm.or.kr',
+      },
     ],
   },
 };
