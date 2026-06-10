@@ -101,6 +101,21 @@ export function OffScreenTracker({
   return null
 }
 
+/* ── 사용자의 지도 조작(터치/드래그) 감지 — 지도 컨테이너에서 시작한 pointerdown만 감지하므로
+ *  flyTo·setView 같은 프로그램적 이동에는 반응하지 않음 */
+export function MapInteractionTracker({ onInteract }: { onInteract: () => void }) {
+  const map = useMap()
+  const cbRef = useRef(onInteract)
+  cbRef.current = onInteract
+  useEffect(() => {
+    const el = map.getContainer()
+    const handler = () => cbRef.current()
+    el.addEventListener('pointerdown', handler)
+    return () => el.removeEventListener('pointerdown', handler)
+  }, [map])
+  return null
+}
+
 /* ── mapRef 주입 ────────────────────────────────────────────────── */
 export function MapRefSetter({ mapRef, onReady }: { mapRef: React.MutableRefObject<LeafletMap | null>; onReady?: () => void }) {
   const map = useMap()

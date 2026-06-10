@@ -2,7 +2,8 @@
 
 import { useState, useCallback, useRef } from 'react'
 
-type Page = 'main' | 'report' | 'attribution' | 'about'
+export type SettingsPage = 'main' | 'report' | 'attribution' | 'about'
+type Page = SettingsPage
 
 const REPORT_CATEGORIES = ['지도 오류', '상영 정보 오류', '화면 깨짐', '기능 동작', '기타'] as const
 
@@ -52,7 +53,7 @@ const IcoGitHub = () => (
 )
 
 /* ── 공통 헤더 ── */
-function Header({ title, onBack, onClose, submitting }: { title: string; onBack?: () => void; onClose: () => void; submitting?: boolean }) {
+export function SettingsHeader({ title, onBack, onClose, submitting }: { title: string; onBack?: () => void; onClose?: () => void; submitting?: boolean }) {
   const btn: React.CSSProperties = {
     width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center',
     border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-text-body)',
@@ -72,13 +73,15 @@ function Header({ title, onBack, onClose, submitting }: { title: string; onBack?
       <span style={{ flex: 1, fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {title}
       </span>
-      <button style={btn} onClick={onClose} disabled={submitting}><IcoClose /></button>
+      {onClose && (
+        <button style={btn} onClick={onClose} disabled={submitting}><IcoClose /></button>
+      )}
     </div>
   )
 }
 
 /* ── 설정 메인 ── */
-function MainPage({
+export function SettingsMainPage({
   isDark, onSetTheme, onNavigate,
 }: {
   isDark: boolean
@@ -164,8 +167,19 @@ function MainPage({
   )
 }
 
+/* ── 버그 리포트 전송 완료 ── */
+export function ReportSuccessNotice() {
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32, backgroundColor: 'var(--color-surface-bg)' }}>
+      <div style={{ fontSize: 40 }}>🙏</div>
+      <div style={{ fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>감사합니다!</div>
+      <div style={{ fontSize: 13.5, color: 'var(--color-text-sub)', textAlign: 'center', lineHeight: 1.6 }}>제보해 주셔서 감사합니다.<br/>확인 후 이메일로 답변 드리겠습니다.</div>
+    </div>
+  )
+}
+
 /* ── 버그 리포트 ── */
-function ReportPage({
+export function SettingsReportPage({
   selectedMovieId, selectedTheaterName, onSuccess,
 }: {
   selectedMovieId?: string | null
@@ -300,7 +314,7 @@ function ReportPage({
 }
 
 /* ── 출처 표기 ── */
-function AttributionPage() {
+export function SettingsAttributionPage() {
   const card: React.CSSProperties = {
     margin: '12px 16px 0', borderRadius: 12, overflow: 'hidden',
     border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)',
@@ -357,7 +371,7 @@ function AttributionPage() {
 }
 
 /* ── 만든 사람 ── */
-function AboutPage() {
+export function SettingsAboutPage() {
   const team = [
     { name: '정재용', role: 'Design · Frontend', linkedin: 'https://www.linkedin.com/in/jaeyongjung/', github: null },
     { name: '정재현', role: 'Database · Backend', linkedin: null, github: 'https://github.com/RGLie' },
@@ -457,7 +471,7 @@ export function SettingsPanel({
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
       }}
     >
-      <Header
+      <SettingsHeader
         title={pageTitle[page]}
         onBack={page !== 'main' ? handleBack : undefined}
         onClose={handleClose}
@@ -465,24 +479,18 @@ export function SettingsPanel({
       />
 
       {page === 'main' && (
-        <MainPage isDark={isDark} onSetTheme={onSetTheme} onNavigate={setPage} />
+        <SettingsMainPage isDark={isDark} onSetTheme={onSetTheme} onNavigate={setPage} />
       )}
       {page === 'report' && !reportSuccess && (
-        <ReportPage
+        <SettingsReportPage
           selectedMovieId={selectedMovieId}
           selectedTheaterName={selectedTheaterName}
           onSuccess={() => setReportSuccess(true)}
         />
       )}
-      {page === 'report' && reportSuccess && (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32, backgroundColor: 'var(--color-surface-bg)' }}>
-          <div style={{ fontSize: 40 }}>🙏</div>
-          <div style={{ fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>감사합니다!</div>
-          <div style={{ fontSize: 13.5, color: 'var(--color-text-sub)', textAlign: 'center', lineHeight: 1.6 }}>제보해 주셔서 감사합니다.<br/>확인 후 이메일로 답변 드리겠습니다.</div>
-        </div>
-      )}
-      {page === 'attribution' && <AttributionPage />}
-      {page === 'about' && <AboutPage />}
+      {page === 'report' && reportSuccess && <ReportSuccessNotice />}
+      {page === 'attribution' && <SettingsAttributionPage />}
+      {page === 'about' && <SettingsAboutPage />}
     </div>
   )
 

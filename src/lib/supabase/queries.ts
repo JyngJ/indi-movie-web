@@ -95,10 +95,11 @@ export interface MovieDetail extends Movie {
   cast: Array<{ name: string; character?: string; profileUrl?: string }>
 }
 
-export function useMovieDetail(movieId: string | null) {
+export function useMovieDetail(movieId: string | null, initialData?: MovieDetail) {
   return useQuery<MovieDetail | null>({
     queryKey: ['movie-detail', movieId],
     enabled: !!movieId,
+    initialData: initialData ?? undefined,
     queryFn: async () => {
       const { data, error } = await supabase()
         .from('movies')

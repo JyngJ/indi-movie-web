@@ -57,10 +57,12 @@ export function SearchBarButton({
 interface SearchBarProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
   onClear?: () => void
   onBack?: () => void
+  /** 입력/플레이스홀더 폰트 크기 — 기본 16px(iOS 자동 줌인 방지). 줌인 우려 없는 데스크톱 전용 배치에서만 낮출 것 */
+  inputFontSize?: number
 }
 
 export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(function SearchBar(
-  { placeholder = '영화, 영화관, 감독을 검색하세요', value, onClear, onBack, onChange, className = '', ...props },
+  { placeholder = '영화, 영화관, 감독을 검색하세요', value, onClear, onBack, onChange, className = '', inputFontSize = 16, ...props },
   ref
 ) {
   const isControlled = value !== undefined
@@ -116,7 +118,7 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(function S
         type="search"
         placeholder={placeholder}
         className="flex-1 bg-transparent outline-none border-none"
-        style={{ color: 'var(--color-text-primary)', fontSize: 16 }}  // 16px 미만이면 iOS 자동 줌인
+        style={{ color: 'var(--color-text-primary)', fontSize: inputFontSize }}  // 16px 미만이면 iOS 자동 줌인
         {...inputValueProps}
         {...props}
       />

@@ -672,7 +672,8 @@ export function FilterBar({
   const [bookable, setBookable] = useState(false)
   const [indie, setIndie] = useState(false)
   const [regionId, setRegionId] = useState<string | null>(null)
-  const autoRegionSetRef = useRef(false)
+  // 사용자가 직접 지역을 선택했으면 GPS auto-set 막기 (clear하면 다시 허용)
+  const userPickedRegionRef = useRef(false)
   const [openPanel, setOpenPanel] = useState<OpenPanel>(null)
   const [dropdownPos, setDropdownPos] = useState<{ left: number; top: number }>({ left: 16, top: 0 })
   const [mounted, setMounted] = useState(false)
@@ -720,10 +721,9 @@ export function FilterBar({
   }, [onChange, dateId, customStart, customEnd, genres, nations, bookable, indie, regionId])
 
   useEffect(() => {
-    if (autoRegionSetRef.current) return
-    if (!defaultRegionId) return
-    autoRegionSetRef.current = true
-    setRegionId(defaultRegionId)
+    // 사용자가 직접 선택한 경우 GPS 값으로 덮어쓰지 않음
+    if (userPickedRegionRef.current) return
+    setRegionId(defaultRegionId ?? null)
   }, [defaultRegionId])
 
   useEffect(() => {
@@ -945,7 +945,7 @@ export function FilterBar({
           hasDropdown
           chipRef={regionChipRef}
           onClick={() => openDropdown('region', regionChipRef)}
-          onClear={regionId ? () => { setRegionId(null); setOpenPanel(null); chip({ regionId: null }) } : undefined}
+          onClear={regionId ? () => { setRegionId(null); setOpenPanel(null); userPickedRegionRef.current = false; chip({ regionId: null }) } : undefined}
         />
         <FilterChip
           label="상영 일정"
@@ -997,8 +997,8 @@ export function FilterBar({
         <>
           <div style={{
             position: 'absolute',
-            top: 44,
-            left: 4,
+            top: 52,
+            left: 16,
             zIndex: 60,
             width: 236,
             animation: 'tipIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1)',
@@ -1098,7 +1098,7 @@ export function FilterBar({
           {openPanel === 'region' && (
             <RegionDropdown
               selectedId={regionId}
-              onSelect={(id) => { setRegionId(id); if (id) setOpenPanel(null); chip({ regionId: id }) }}
+              onSelect={(id) => { userPickedRegionRef.current = !!id; setRegionId(id); if (id) setOpenPanel(null); chip({ regionId: id }) }}
               style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, zIndex: 99999 }}
             />
           )}

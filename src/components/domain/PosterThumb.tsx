@@ -71,8 +71,30 @@ export function PosterThumb({
               background: 'oklch(0.32 0.04 220)',
               backgroundImage:
                 'repeating-linear-gradient(135deg, oklch(0.38 0.04 220) 0 6px, transparent 6px 14px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '4px 5px',
             }}
-          />
+          >
+            {alt && (
+              <span style={{
+                color: 'rgba(255,255,255,0.75)',
+                fontSize: Math.max(8, Math.min(10, Math.round(width * 0.16))),
+                fontWeight: 600,
+                textAlign: 'center',
+                lineHeight: 1.3,
+                wordBreak: 'keep-all',
+                overflowWrap: 'break-word',
+                display: '-webkit-box',
+                WebkitLineClamp: 4,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+              }}>
+                {alt}
+              </span>
+            )}
+          </div>
         )}
 
         {/* 오버레이 (숫자면 +N, 문자열이면 그대로) */}
