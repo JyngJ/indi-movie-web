@@ -441,6 +441,15 @@ interface SectionCandidate {
 }
 
 const MAX_CURATION_SECTIONS = 3
+/** 섹션별 첫 노출 개수 — 초과분은 펼치기로 표시 (데스크톱 그리드 전용, 모바일은 가로 스크롤이라 제한 없음) */
+const SECTION_COLLAPSED_COUNT = 6
+
+const IconChevronDown = ({ open }: { open: boolean }) => (
+  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+    style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 180ms ease' }}>
+    <path d="M6 9l6 6 6-6" />
+  </svg>
+)
 
 /** 큐레이션 섹션(우선순위 상위 3개 + 최근 찾아본) — 모바일 시트·데스크톱 도크가 공유하는 본문 */
 export function CurationSections({
@@ -506,6 +515,8 @@ export function CurationSections({
 
   const sections = candidates.filter((c) => c.items.length > 0).slice(0, MAX_CURATION_SECTIONS)
 
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({})
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: SECTION_GAP }}>
       <SectionDivider />
@@ -516,10 +527,39 @@ export function CurationSections({
               if (item?.theaterId) onTodayShowSelect?.(id, title, item.theaterId)
             }
           : onMovieSelect
+        const expanded = expandedSections[section.key] ?? false
+        const hasMore = desktop && section.items.length > SECTION_COLLAPSED_COUNT
+        const visibleItems = hasMore && !expanded
+          ? section.items.slice(0, SECTION_COLLAPSED_COUNT)
+          : section.items
         return (
           <div key={section.key} style={{ display: 'flex', flexDirection: 'column', gap: SECTION_GAP }}>
             <Section title={section.title} icon={section.icon} withLine>
-              <PosterRow items={section.items} onSelect={handleSelect} emptyText={section.emptyText} desktop={desktop} />
+              <PosterRow items={visibleItems} onSelect={handleSelect} emptyText={section.emptyText} desktop={desktop} />
+              {hasMore && (
+                <button
+                  type="button"
+                  onClick={() => setExpandedSections((prev) => ({ ...prev, [section.key]: !expanded }))}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 4,
+                    margin: '0 20px',
+                    padding: '8px 0',
+                    border: 'none',
+                    borderRadius: 8,
+                    background: 'var(--color-surface-bg)',
+                    color: 'var(--color-text-caption)',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {expanded ? '접기' : '더보기'}
+                  <IconChevronDown open={expanded} />
+                </button>
+              )}
             </Section>
             <SectionDivider />
           </div>
