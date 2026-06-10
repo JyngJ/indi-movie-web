@@ -1233,7 +1233,7 @@ export default function MapView() {
     })
   }, [])
 
-  // 데스크톱: 영화 상세 페이지로 전체 이동 / 모바일: MovieSheet
+  // 데스크톱: 좌측 도크에 영화 상세 패널 / 모바일: MovieSheet
   const handleCurationMovieSelect = useCallback((movieId: string, movieTitle: string) => {
     trackEvent('curation movie selected', {
       movie_id: movieId,
@@ -1242,33 +1242,17 @@ export default function MapView() {
     })
     classifySessionIntent('type_a', { source: 'curation_sheet', movie_id: movieId })
     if (isDesktopLayout) {
-      router.push(`/movie/${movieId}?from=curation`)
+      openDesktopPanel({ type: 'movie', id: movieId })
     } else {
       setCurationSnap('peek')
       setMovieSheetId(movieId)
     }
-  }, [isDesktopLayout, router])
+  }, [isDesktopLayout, openDesktopPanel])
 
   const handleRemoveRecentlyViewed = useCallback((kind: RecentlyViewedKind, id: string) => {
     removeRecentlyViewed(cookieStorageAdapter, kind, id)
       .then(() => setRecentlyViewedKey(k => k + 1))
   }, [])
-
-  const handleRecentItemClick = useCallback((item: RecentlyViewedEntry) => {
-    if (!item.kind) return
-    if (item.kind === 'movie') {
-      handleCurationMovieSelect(item.id, item.title)
-    } else if (item.kind === 'theater') {
-      if (!isDesktopLayout) setCurationSnap('peek')
-      setSelectedId(item.id)
-    } else if (item.kind === 'director') {
-      if (isDesktopLayout) {
-        openDesktopPanel({ type: 'director', name: item.id })
-      } else {
-        router.push(`/director/${encodeURIComponent(item.id)}`)
-      }
-    }
-  }, [handleCurationMovieSelect, isDesktopLayout, openDesktopPanel, setCurationSnap, setSelectedId, router])
 
   // 패널 열기/닫기 슬라이드 애니메이션
   useEffect(() => {
@@ -2213,6 +2197,36 @@ export default function MapView() {
       }
     }
   }, [selectedId, closeSheet, flyToForTheater, isDesktopLayout, movieFilter, theaters])
+
+  const handleRecentItemClick = useCallback((item: RecentlyViewedEntry) => {
+    if (!item.kind) return
+    if (item.kind === 'movie') {
+      handleCurationMovieSelect(item.id, item.title)
+    } else if (item.kind === 'theater') {
+      if (!isDesktopLayout) setCurationSnap('peek')
+      handlePinClick(item.id)
+    } else if (item.kind === 'director') {
+      if (isDesktopLayout) {
+        openDesktopPanel({ type: 'director', name: item.id })
+      } else {
+        router.push(`/director/${encodeURIComponent(item.id)}`)
+      }
+    }
+  }, [handleCurationMovieSelect, handlePinClick, isDesktopLayout, openDesktopPanel, setCurationSnap, router])
+
+  // "지금 출발하면" 선택 — 영화 상세 대신 해당 극장으로 flyTo + 그 회차 선택
+  const handleTodayShowSelect = useCallback((movieId: string, _title: string, theaterId: string) => {
+    if (!isDesktopLayout) setCurationSnap('peek')
+    handlePinClick(theaterId, movieId)
+  }, [handlePinClick, isDesktopLayout, setCurationSnap])
+
+  // 큐레이션 카드 — 현재 위치 있을 때 극장까지 거리 텍스트("1.2 km")
+  const getTheaterDistance = useCallback((theaterId: string) => {
+    if (!coords) return null
+    const theater = theaters.find((t) => t.id === theaterId)
+    if (!theater) return null
+    return calculateAndFormatDistance(coords.lat, coords.lng, theater.lat, theater.lng)
+  }, [coords, theaters])
 
   // FAB 버튼 bottom — 모바일: 떠 있는 시트의 보이는 높이 + 여유 16만큼 띄움
   // 극장 시트 collapsed = COLLAPSED_H(300) + 16 = 316 / 큐레이션 시트 peek = 현재 보이는 높이 + 16
@@ -3214,9 +3228,10 @@ export default function MapView() {
           newIndieFilms={curationData.newIndieFilms}
           recentlyViewed={curationData.recentlyViewed}
           onMovieSelect={handleCurationMovieSelect}
+          onTodayShowSelect={handleTodayShowSelect}
+          getTheaterDistance={getTheaterDistance}
           onRemoveRecentlyViewed={handleRemoveRecentlyViewed}
           onRecentItemClick={handleRecentItemClick}
-          onRefreshRecentlyViewed={() => setRecentlyViewedKey(k => k + 1)}
         />
       )}
 
@@ -3259,9 +3274,10 @@ export default function MapView() {
               newIndieFilms={curationData.newIndieFilms}
               recentlyViewed={curationData.recentlyViewed}
               onMovieSelect={handleCurationMovieSelect}
+              onTodayShowSelect={handleTodayShowSelect}
+              getTheaterDistance={getTheaterDistance}
               onRemoveRecentlyViewed={handleRemoveRecentlyViewed}
               onRecentItemClick={handleRecentItemClick}
-              onRefreshRecentlyViewed={() => setRecentlyViewedKey(k => k + 1)}
               desktop
             />
           </div>
