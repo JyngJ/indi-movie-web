@@ -5,8 +5,14 @@ CREATE TABLE IF NOT EXISTS curation_cache (
   id SMALLINT PRIMARY KEY DEFAULT 1,
   returning_films JSONB NOT NULL DEFAULT '[]'::jsonb,
   new_indie_films JSONB NOT NULL DEFAULT '[]'::jsonb,
+  last_week_films JSONB NOT NULL DEFAULT '[]'::jsonb,
+  solo_theater_films JSONB NOT NULL DEFAULT '{}'::jsonb,
   computed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- 기존 테이블에 컬럼 추가 (이미 생성된 환경)
+ALTER TABLE curation_cache ADD COLUMN IF NOT EXISTS last_week_films JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE curation_cache ADD COLUMN IF NOT EXISTS solo_theater_films JSONB NOT NULL DEFAULT '{}'::jsonb;
 
 -- 초기 행 삽입 (upsert 대상이 존재해야 함)
 INSERT INTO curation_cache (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
