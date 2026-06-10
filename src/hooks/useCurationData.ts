@@ -1,28 +1,78 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 import { cookieStorageAdapter } from '@/lib/adapters/cookieStorage'
 import { getRecentlyViewed } from '@/lib/curation/recentlyViewed'
-import type { NewIndieFilm, RecentlyViewedEntry, ReturningFilm } from '@/lib/curation/types'
+import type {
+  LastWeekFilm,
+  NewIndieFilm,
+  RecentlyViewedEntry,
+  ReturningFilm,
+  SoloTheaterFilm,
+  SoloTheaterFilmsByRegion,
+  TodayShowFilm,
+} from '@/lib/curation/types'
+import type { Movie } from '@/types/api'
 
 interface CurationData {
   returningFilms: ReturningFilm[]
   newIndieFilms: NewIndieFilm[]
+  lastWeekFilms: LastWeekFilm[]
+  /** regionId 기준으로 이미 필터링된 결과 */
+  soloTheaterFilms: SoloTheaterFilm[]
+  todayShowFilms: TodayShowFilm[]
   recentlyViewed: RecentlyViewedEntry[]
 }
 
-const EMPTY: CurationData = { returningFilms: [], newIndieFilms: [], recentlyViewed: [] }
+const EMPTY_CACHE: Pick<CurationData, 'returningFilms' | 'newIndieFilms' | 'lastWeekFilms'> & { soloTheaterFilmsByRegion: SoloTheaterFilmsByRegion } = {
+  returningFilms: [],
+  newIndieFilms: [],
+  lastWeekFilms: [],
+  soloTheaterFilmsByRegion: {},
+}
 
-/** curation_cache에서 서버 계산 스냅샷 읽기 + 최근 찾아본 쿠키 로드.
- *  refreshKey가 바뀔 때마다 최근 찾아본만 재로드 (Supabase는 open 첫 진입 시 1회).
+/** "지금 출발하면" 최소 여유시간(분) — 이동 시간 고려, 이 안에 시작하는 회차는 제외 */
+const DEPARTURE_BUFFER_MIN = 30
+
+function formatLocalDate(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function rowToMovie(movieRaw: Record<string, unknown>): Movie {
+  return {
+    id: String(movieRaw.id),
+    title: String(movieRaw.title),
+    originalTitle: movieRaw.original_title != null ? String(movieRaw.original_title) : undefined,
+    year: Number(movieRaw.year ?? 2000),
+    posterUrl: movieRaw.poster_url != null ? String(movieRaw.poster_url) : undefined,
+    genre: (movieRaw.genre as string[]) ?? [],
+    director: (movieRaw.director as string[]) ?? [],
+    nation: movieRaw.nation != null ? String(movieRaw.nation) : undefined,
+    kmdbId: movieRaw.kmdb_id != null ? String(movieRaw.kmdb_id) : undefined,
+    tmdbId: movieRaw.tmdb_id != null ? Number(movieRaw.tmdb_id) : undefined,
+    rating: movieRaw.rating != null ? Number(movieRaw.rating) : undefined,
+  }
+}
+
+interface RawTodayShowtime {
+  movie_id: string
+  show_time: string
+  theater_id: string
+  theaters: { id: string; name: string } | null
+  movies: Record<string, unknown> | null
+}
+
+/** curation_cache에서 서버 계산 스냅샷 읽기 + 오늘 회차/최근 찾아본 클라이언트 로드.
+ *  refreshKey가 바뀌면 최근 찾아본 재로드 + "지금 출발하면" 시각 필터를 다시 계산.
  */
-export function useCurationData(open: boolean, refreshKey = 0): CurationData {
-  const [cacheData, setCacheData] = useState<Pick<CurationData, 'returningFilms' | 'newIndieFilms'>>({
-    returningFilms: [],
-    newIndieFilms: [],
-  })
+export function useCurationData(open: boolean, regionId: string | null, refreshKey = 0): CurationData {
+  const [cacheData, setCacheData] = useState(EMPTY_CACHE)
   const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewedEntry[]>([])
+  const [todayShowtimes, setTodayShowtimes] = useState<RawTodayShowtime[]>([])
 
   // Supabase 스냅샷 — open 첫 진입 시 1회
   useEffect(() => {
@@ -30,7 +80,7 @@ export function useCurationData(open: boolean, refreshKey = 0): CurationData {
     let cancelled = false
     createSupabaseBrowserClient()
       .from('curation_cache')
-      .select('returning_films, new_indie_films')
+      .select('returning_films, new_indie_films, last_week_films, solo_theater_films')
       .eq('id', 1)
       .single()
       .then(({ data }) => {
@@ -38,7 +88,33 @@ export function useCurationData(open: boolean, refreshKey = 0): CurationData {
         setCacheData({
           returningFilms: (data?.returning_films as ReturningFilm[] | null) ?? [],
           newIndieFilms: (data?.new_indie_films as NewIndieFilm[] | null) ?? [],
+          lastWeekFilms: (data?.last_week_films as LastWeekFilm[] | null) ?? [],
+          soloTheaterFilmsByRegion: (data?.solo_theater_films as SoloTheaterFilmsByRegion | null) ?? {},
         })
+      }, () => {})
+    return () => { cancelled = true }
+  }, [open])
+
+  // 오늘 전체 회차 — open 첫 진입 시 1회 (시간 필터는 클라이언트에서 refreshKey마다 재계산)
+  useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    const today = formatLocalDate(new Date())
+    createSupabaseBrowserClient()
+      .from('showtimes')
+      .select(`
+        movie_id,
+        show_time,
+        theater_id,
+        theaters(id, name),
+        movies(id, title, original_title, year, poster_url, genre, director, nation, kmdb_id, tmdb_id, rating)
+      `)
+      .eq('show_date', today)
+      .eq('is_active', true)
+      .order('show_time', { ascending: true })
+      .then(({ data }) => {
+        if (cancelled) return
+        setTodayShowtimes((data as unknown as RawTodayShowtime[] | null) ?? [])
       }, () => {})
     return () => { cancelled = true }
   }, [open])
@@ -60,5 +136,40 @@ export function useCurationData(open: boolean, refreshKey = 0): CurationData {
     }).catch(() => {})
   }, [open, refreshKey])
 
-  return { ...cacheData, recentlyViewed }
+  // "지금 출발하면 볼 수 있는" — 오늘 회차 중 (현재 시각 + 버퍼) 이후 시작하는 회차만, 영화별 가장 빠른 1건
+  const todayShowFilms = useMemo<TodayShowFilm[]>(() => {
+    const cutoff = new Date(Date.now() + DEPARTURE_BUFFER_MIN * 60 * 1000)
+    const cutoffHHMM = `${String(cutoff.getHours()).padStart(2, '0')}:${String(cutoff.getMinutes()).padStart(2, '0')}`
+
+    const byMovie = new Map<string, TodayShowFilm>()
+    for (const row of todayShowtimes) {
+      if (row.show_time <= cutoffHHMM) continue
+      if (byMovie.has(row.movie_id)) continue
+      const movieRaw = row.movies
+      const theaterRaw = row.theaters
+      if (!movieRaw || !theaterRaw) continue
+      byMovie.set(row.movie_id, {
+        movie: rowToMovie(movieRaw),
+        nextShowTime: row.show_time,
+        theaterId: theaterRaw.id,
+        theaterName: theaterRaw.name,
+      })
+    }
+    return [...byMovie.values()].sort((a, b) => a.nextShowTime.localeCompare(b.nextShowTime))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [todayShowtimes, refreshKey])
+
+  const soloTheaterFilms = useMemo<SoloTheaterFilm[]>(() => {
+    if (!regionId) return []
+    return cacheData.soloTheaterFilmsByRegion[regionId] ?? []
+  }, [cacheData.soloTheaterFilmsByRegion, regionId])
+
+  return {
+    returningFilms: cacheData.returningFilms,
+    newIndieFilms: cacheData.newIndieFilms,
+    lastWeekFilms: cacheData.lastWeekFilms,
+    soloTheaterFilms,
+    todayShowFilms,
+    recentlyViewed,
+  }
 }

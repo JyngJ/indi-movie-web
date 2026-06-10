@@ -1142,7 +1142,7 @@ export default function MapView() {
   const desktopContentStart = GLOBAL_NAV_DESKTOP_WIDTH + (desktopDockHidden ? 0 : DESKTOP_DOCK_WIDTH)
   // 데스크톱: 좌측 도크에 항상 노출 / 모바일: 시트가 항상 떠 있음 — 레이아웃 무관하게 항상 로드
   const [recentlyViewedKey, setRecentlyViewedKey] = useState(0)
-  const curationData = useCurationData(true, recentlyViewedKey)
+  const curationData = useCurationData(true, filters.regionId, recentlyViewedKey)
   const mapViewTrackedRef = useRef(false)
   const lastSearchTelemetryRef = useRef('')
   const lastFilterTelemetryRef = useRef('')
@@ -3206,12 +3206,17 @@ export default function MapView() {
         <CurationSheet
           snap={curationSnap}
           onSnapChange={handleCurationSnapChange}
+          lastWeekFilms={curationData.lastWeekFilms}
+          soloTheaterFilms={curationData.soloTheaterFilms}
+          soloRegionLabel={filters.regionId ?? undefined}
+          todayShowFilms={curationData.todayShowFilms}
           returningFilms={curationData.returningFilms}
           newIndieFilms={curationData.newIndieFilms}
           recentlyViewed={curationData.recentlyViewed}
           onMovieSelect={handleCurationMovieSelect}
           onRemoveRecentlyViewed={handleRemoveRecentlyViewed}
           onRecentItemClick={handleRecentItemClick}
+          onRefreshRecentlyViewed={() => setRecentlyViewedKey(k => k + 1)}
         />
       )}
 
@@ -3246,12 +3251,17 @@ export default function MapView() {
           </div>
           <div className="themed-scrollbar" style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingTop: 20, paddingBottom: 24 }}>
             <CurationSections
+              lastWeekFilms={curationData.lastWeekFilms}
+              soloTheaterFilms={curationData.soloTheaterFilms}
+              soloRegionLabel={filters.regionId ?? undefined}
+              todayShowFilms={curationData.todayShowFilms}
               returningFilms={curationData.returningFilms}
               newIndieFilms={curationData.newIndieFilms}
               recentlyViewed={curationData.recentlyViewed}
               onMovieSelect={handleCurationMovieSelect}
               onRemoveRecentlyViewed={handleRemoveRecentlyViewed}
               onRecentItemClick={handleRecentItemClick}
+              onRefreshRecentlyViewed={() => setRecentlyViewedKey(k => k + 1)}
               desktop
             />
           </div>

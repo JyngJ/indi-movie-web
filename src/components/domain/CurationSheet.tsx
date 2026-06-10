@@ -5,7 +5,15 @@ import { useRouter } from 'next/navigation'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { PosterThumb } from './PosterThumb'
 import { Badge } from '@/components/primitives/Badge'
-import type { NewIndieFilm, RecentlyViewedEntry, RecentlyViewedKind, ReturningFilm } from '@/lib/curation/types'
+import type {
+  LastWeekFilm,
+  NewIndieFilm,
+  RecentlyViewedEntry,
+  RecentlyViewedKind,
+  ReturningFilm,
+  SoloTheaterFilm,
+  TodayShowFilm,
+} from '@/lib/curation/types'
 
 /** 시트가 도달 가능한 2개 스냅 지점 — peek(최소, 기본값) / expanded(최대) */
 export type CurationSnap = 'peek' | 'expanded'
@@ -23,6 +31,13 @@ const IconSparkle = () => (
   </svg>
 )
 
+const IconRefresh = () => (
+  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 12a9 9 0 0 1 15.3-6.4L21 8M21 3v5h-5" />
+    <path d="M21 12a9 9 0 0 1-15.3 6.4L3 16M3 21v-5h5" />
+  </svg>
+)
+
 interface CurationItem {
   id: string
   title: string
@@ -35,12 +50,18 @@ interface CurationSheetProps {
   snap: CurationSnap
   /** 드래그 제스처로 스냅 지점이 바뀔 때 — 부모가 snap 상태를 갱신하고, 함께 보고된 visibleHeight로 FAB 위치를 맞춤 */
   onSnapChange: (snap: CurationSnap, visibleHeight: number) => void
+  lastWeekFilms: LastWeekFilm[]
+  soloTheaterFilms: SoloTheaterFilm[]
+  /** soloTheaterFilms 기준이 되는 현재 선택 지역명, 예: "서울" */
+  soloRegionLabel?: string
+  todayShowFilms: TodayShowFilm[]
   returningFilms: ReturningFilm[]
   newIndieFilms: NewIndieFilm[]
   recentlyViewed: RecentlyViewedEntry[]
   onMovieSelect?: (movieId: string, title: string) => void
   onRemoveRecentlyViewed?: (kind: RecentlyViewedKind, id: string) => void
   onRecentItemClick?: (item: RecentlyViewedEntry) => void
+  onRefreshRecentlyViewed?: () => void
 }
 
 /** 모바일: 가로 스크롤 행 / 데스크톱(도크): 한 줄 3개 고정 그리드 — 도크 폭(352, 좌우 패딩 20) 기준 칸당 96px */
@@ -194,7 +215,14 @@ function PosterRow({ items, onSelect, emptyText, desktop = false }: {
 
 const SECTION_GAP = 16
 
-function Section({ title, icon, withLine, style, children }: { title: string; icon?: string; withLine?: boolean; style?: React.CSSProperties; children: React.ReactNode }) {
+function Section({ title, icon, withLine, action, style, children }: {
+  title: string
+  icon?: string
+  withLine?: boolean
+  action?: React.ReactNode
+  style?: React.CSSProperties
+  children: React.ReactNode
+}) {
   return (
     <section style={{ display: 'flex', flexDirection: 'column', gap: 10, ...style }}>
       <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 20, paddingRight: 20, gap: 6 }}>
@@ -216,9 +244,23 @@ function Section({ title, icon, withLine, style, children }: { title: string; ic
             marginLeft: 4,
           }} />
         )}
+        {action}
       </div>
       {children}
     </section>
+  )
+}
+
+/** 섹션 간 구분 — 최근 검색/광고 사이처럼 어두운 띠로 영역을 분리 */
+function SectionDivider() {
+  return (
+    <div style={{
+      height: 8,
+      width: '100%',
+      backgroundColor: 'var(--color-surface-bg)',
+      borderTop: '1px solid var(--color-border)',
+      borderBottom: '1px solid var(--color-border)',
+    }} />
   )
 }
 
@@ -312,24 +354,67 @@ function RecentList({
 }
 
 interface CurationSectionsProps {
+  lastWeekFilms: LastWeekFilm[]
+  soloTheaterFilms: SoloTheaterFilm[]
+  /** soloTheaterFilms 기준이 되는 현재 선택 지역명, 예: "서울" */
+  soloRegionLabel?: string
+  todayShowFilms: TodayShowFilm[]
   returningFilms: ReturningFilm[]
   newIndieFilms: NewIndieFilm[]
   recentlyViewed: RecentlyViewedEntry[]
   onMovieSelect?: (movieId: string, title: string) => void
   onRemoveRecentlyViewed?: (kind: RecentlyViewedKind, id: string) => void
   onRecentItemClick?: (item: RecentlyViewedEntry) => void
+  onRefreshRecentlyViewed?: () => void
   /** 데스크톱 도크에서 호출 시 true — 포스터 행을 가로 스크롤 대신 한 줄 3개 그리드로 표시 */
   desktop?: boolean
 }
 
-/** 큐레이션 섹션 3종(오랜만에 상영 / 이번 주 새로 개봉 / 최근 찾아본) — 모바일 시트·데스크톱 도크가 공유하는 본문 */
-export function CurationSections({ returningFilms, newIndieFilms, recentlyViewed, onMovieSelect, onRemoveRecentlyViewed, onRecentItemClick, desktop = false }: CurationSectionsProps) {
-  const returningItems: CurationItem[] = returningFilms.map((film) => ({
+/** 노출 가능한 큐레이션 섹션 후보 — 우선순위 순. 데이터 있는 섹션을 최대 3개까지 노출 */
+interface SectionCandidate {
+  key: string
+  title: string
+  icon: string
+  items: CurationItem[]
+  emptyText: string
+}
+
+const MAX_CURATION_SECTIONS = 3
+
+/** 큐레이션 섹션(우선순위 상위 3개 + 최근 찾아본) — 모바일 시트·데스크톱 도크가 공유하는 본문 */
+export function CurationSections({
+  lastWeekFilms,
+  soloTheaterFilms,
+  soloRegionLabel,
+  todayShowFilms,
+  returningFilms,
+  newIndieFilms,
+  recentlyViewed,
+  onMovieSelect,
+  onRemoveRecentlyViewed,
+  onRecentItemClick,
+  onRefreshRecentlyViewed,
+  desktop = false,
+}: CurationSectionsProps) {
+  const lastWeekItems: CurationItem[] = lastWeekFilms.map((film) => ({
     id: film.movie.id,
     title: film.movie.title,
     posterUrl: film.movie.posterUrl,
-    badge: film.tagText,
+    badge: film.badgeText,
     subtitle: film.movie.director.join(', ') || undefined,
+  }))
+  const soloTheaterItems: CurationItem[] = soloTheaterFilms.map((film) => ({
+    id: film.movie.id,
+    title: film.movie.title,
+    posterUrl: film.movie.posterUrl,
+    subtitle: film.theaterName,
+  }))
+  const todayShowItems: CurationItem[] = todayShowFilms.map((film) => ({
+    id: film.movie.id,
+    title: film.movie.title,
+    posterUrl: film.movie.posterUrl,
+    badge: film.nextShowTime,
+    subtitle: film.theaterName,
   }))
   const newIndieItems: CurationItem[] = newIndieFilms.map((film) => ({
     id: film.movie.id,
@@ -337,18 +422,61 @@ export function CurationSections({ returningFilms, newIndieFilms, recentlyViewed
     posterUrl: film.movie.posterUrl,
     subtitle: film.movie.director.join(', ') || undefined,
   }))
+  const returningItems: CurationItem[] = returningFilms.map((film) => ({
+    id: film.movie.id,
+    title: film.movie.title,
+    posterUrl: film.movie.posterUrl,
+    badge: film.tagText,
+    subtitle: film.movie.director.join(', ') || undefined,
+  }))
+
+  const candidates: SectionCandidate[] = [
+    { key: 'lastWeek', title: '이번 주가 마지막', icon: '⏳', items: lastWeekItems, emptyText: '' },
+    { key: 'soloTheater', title: `${soloRegionLabel ?? '이 지역'}에서 단 한 곳`, icon: '📍', items: soloTheaterItems, emptyText: '' },
+    { key: 'todayShow', title: '지금 출발하면 볼 수 있는', icon: '🚗', items: todayShowItems, emptyText: '' },
+    { key: 'newIndie', title: '이번 주 새롭게 상영하는 영화', icon: '🎬', items: newIndieItems, emptyText: '' },
+    { key: 'returning', title: '오랜만에 상영하는 영화', icon: '🎞️', items: returningItems, emptyText: '' },
+  ]
+
+  const sections = candidates.filter((c) => c.items.length > 0).slice(0, MAX_CURATION_SECTIONS)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: SECTION_GAP }}>
-      {returningItems.length > 0 && (
-        <Section title="오랜만에 상영하는 영화">
-          <PosterRow items={returningItems} onSelect={onMovieSelect} emptyText="" desktop={desktop} />
-        </Section>
-      )}
-      <Section title="이번 주 새롭게 상영하는 영화" icon="🎬" withLine>
-        <PosterRow items={newIndieItems} onSelect={onMovieSelect} emptyText="이번 주 새롭게 상영하는 영화가 아직 없어요" desktop={desktop} />
-      </Section>
-      <Section title="최근 찾아본" icon="🔎" withLine style={{ marginTop: SECTION_GAP }}>
+      {sections.map((section) => (
+        <div key={section.key} style={{ display: 'flex', flexDirection: 'column', gap: SECTION_GAP }}>
+          <Section title={section.title} icon={section.icon} withLine>
+            <PosterRow items={section.items} onSelect={onMovieSelect} emptyText={section.emptyText} desktop={desktop} />
+          </Section>
+          <SectionDivider />
+        </div>
+      ))}
+      <Section
+        title="최근 찾아본"
+        icon="🔎"
+        withLine
+        action={onRefreshRecentlyViewed && (
+          <button
+            type="button"
+            onClick={onRefreshRecentlyViewed}
+            aria-label="최근 찾아본 새로고침"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 24,
+              height: 24,
+              border: 'none',
+              background: 'none',
+              cursor: 'pointer',
+              color: 'var(--color-text-caption)',
+              padding: 0,
+              flexShrink: 0,
+            }}
+          >
+            <IconRefresh />
+          </button>
+        )}
+      >
         <RecentList items={recentlyViewed} onRemove={onRemoveRecentlyViewed} onItemClick={onRecentItemClick} />
       </Section>
     </div>
@@ -360,12 +488,17 @@ export function CurationSections({ returningFilms, newIndieFilms, recentlyViewed
 export function CurationSheet({
   snap,
   onSnapChange,
+  lastWeekFilms,
+  soloTheaterFilms,
+  soloRegionLabel,
+  todayShowFilms,
   returningFilms,
   newIndieFilms,
   recentlyViewed,
   onMovieSelect,
   onRemoveRecentlyViewed,
   onRecentItemClick,
+  onRefreshRecentlyViewed,
 }: CurationSheetProps) {
   const containerRef  = useRef<HTMLDivElement>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
@@ -607,12 +740,17 @@ export function CurationSheet({
         minHeight: 0,
       }}>
         <CurationSections
+          lastWeekFilms={lastWeekFilms}
+          soloTheaterFilms={soloTheaterFilms}
+          soloRegionLabel={soloRegionLabel}
+          todayShowFilms={todayShowFilms}
           returningFilms={returningFilms}
           newIndieFilms={newIndieFilms}
           recentlyViewed={recentlyViewed}
           onMovieSelect={onMovieSelect}
           onRemoveRecentlyViewed={onRemoveRecentlyViewed}
           onRecentItemClick={onRecentItemClick}
+          onRefreshRecentlyViewed={onRefreshRecentlyViewed}
         />
       </div>
     </div>

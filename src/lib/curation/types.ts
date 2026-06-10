@@ -52,6 +52,49 @@ export interface NewIndieFilm {
 }
 
 // ─────────────────────────────────────────────
+// 이번 주가 마지막 (ending soon)
+// 기준: max(show_date) ≤ today + 7일
+// ─────────────────────────────────────────────
+
+export interface LastWeekFilm {
+  movie: Movie
+  /** ISO date "YYYY-MM-DD" — 이 영화의 마지막 상영일 */
+  maxShowDate: string
+  /** 오늘 기준 남은 일수 (0 = 오늘이 마지막) */
+  daysLeft: number
+  /** 예: "D-3 종영" / "오늘이 마지막" */
+  badgeText: string
+}
+
+// ─────────────────────────────────────────────
+// 선택 지역에서 단 한 곳 (solo theater in region)
+// 기준: 선택 지역 내 상영 극장 수 = 1
+// ─────────────────────────────────────────────
+
+export interface SoloTheaterFilm {
+  movie: Movie
+  theaterId: string
+  theaterName: string
+  theaterCity: string
+}
+
+/** curation_cache.solo_theater_films 의 형태 — regionId 키별 배열 */
+export type SoloTheaterFilmsByRegion = Record<string, SoloTheaterFilm[]>
+
+// ─────────────────────────────────────────────
+// 지금 출발하면 볼 수 있는 (today upcoming shows)
+// 기준: 오늘 show_date + show_time > 현재 시각 + 버퍼
+// ─────────────────────────────────────────────
+
+export interface TodayShowFilm {
+  movie: Movie
+  /** 가장 이른 남은 회차 시간 "HH:MM" */
+  nextShowTime: string
+  theaterId: string
+  theaterName: string
+}
+
+// ─────────────────────────────────────────────
 // 최근 찾아본 영화 / 영화관 (recently viewed)
 // 저장 위치: 쿠키(클라이언트 only, 계정 동기화는 추후 별도)
 // ─────────────────────────────────────────────
