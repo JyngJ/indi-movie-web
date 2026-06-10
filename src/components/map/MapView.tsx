@@ -3264,7 +3264,7 @@ export default function MapView() {
               onClick={openSearch}
             />
           </div>
-          <div className="themed-scrollbar" style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingTop: 20, paddingBottom: 24 }}>
+          <div className="themed-scrollbar" style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingBottom: 24 }}>
             <CurationSections
               lastWeekFilms={curationData.lastWeekFilms}
               soloTheaterFilms={curationData.soloTheaterFilms}
