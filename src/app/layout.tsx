@@ -15,14 +15,14 @@ export const metadata: Metadata = {
   openGraph: {
     title: '영화볼지도 — 독립·예술영화관 상영 정보 지도',
     description: '멀티플렉스엔 없는 영화, 어디서 하는지 몰랐다면. 독립·예술영화관 상영 시간표를 지도에서 바로 확인하세요.',
-    images: [{ url: '/squarelogo.svg', width: 351, height: 351 }],
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     type: 'website',
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: '영화볼지도 — 독립·예술영화관 상영 정보 지도',
     description: '멀티플렉스엔 없는 영화, 어디서 하는지 몰랐다면. 독립·예술영화관 상영 시간표를 지도에서 바로 확인하세요.',
-    images: ['/squarelogo.svg'],
+    images: ['/og-image.png'],
   },
   appleWebApp: {
     capable: true,
