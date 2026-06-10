@@ -76,42 +76,82 @@ function PosterRow({ items, onSelect, emptyText, desktop = false }: {
 }) {
   const scrollRef = useRef<HTMLDivElement>(null)
 
+  // 가로 드래그 + momentum — 극장 시트 포스터 스트립과 동일한 손맛
   useEffect(() => {
     if (desktop) return
     const el = scrollRef.current
     if (!el) return
 
     let dirLock: 'h' | 'v' | null = null
+    let momentumId = 0
     let startX = 0, startY = 0, startScrollLeft = 0
+    let dragActive = false
     let touching = false
+    const velBuf: Array<{ t: number; x: number }> = []
+
+    const cancelMomentum = () => {
+      if (momentumId) { cancelAnimationFrame(momentumId); momentumId = 0 }
+    }
 
     const onDown = (e: TouchEvent) => {
+      cancelMomentum()
       touching = true
       dirLock = null
+      dragActive = false
       startX = e.touches[0].pageX
       startY = e.touches[0].clientY
       startScrollLeft = el.scrollLeft
+      velBuf.length = 0
     }
     const onMove = (e: TouchEvent) => {
       if (!touching) return
-      const dx = Math.abs(e.touches[0].pageX - startX)
-      const dy = Math.abs(e.touches[0].clientY - startY)
+      const x = e.touches[0].pageX
+      const y = e.touches[0].clientY
+      const dx = Math.abs(x - startX)
+      const dy = Math.abs(y - startY)
       if (dirLock === null) {
         if (dx < 8 && dy < 8) return
         dirLock = dx > dy * 1.2 ? 'h' : 'v'
       }
       if (dirLock === 'v') { touching = false; return }
+      dragActive = true
       e.preventDefault()
       e.stopPropagation()
-      el.scrollLeft = startScrollLeft - (e.touches[0].pageX - startX)
+      el.scrollLeft = startScrollLeft - (x - startX)
+      velBuf.push({ t: Date.now(), x })
+      if (velBuf.length > 6) velBuf.shift()
     }
-    const onUp = () => { touching = false; dirLock = null }
+    const onUp = () => {
+      const wasActive = dragActive
+      touching = false
+      dirLock = null
+      dragActive = false
+      if (!wasActive) { velBuf.length = 0; return }
+
+      if (velBuf.length >= 2) {
+        const first = velBuf[0]
+        const last = velBuf[velBuf.length - 1]
+        const dt = last.t - first.t
+        if (dt > 0 && dt < 200) {
+          let vel = -(last.x - first.x) / dt * 16
+          const run = () => {
+            if (Math.abs(vel) < 0.5) { momentumId = 0; return }
+            el.scrollLeft += vel
+            vel *= 0.93
+            momentumId = requestAnimationFrame(run)
+          }
+          momentumId = requestAnimationFrame(run)
+        }
+      }
+      velBuf.length = 0
+    }
 
     el.addEventListener('touchstart', onDown, { passive: true })
     el.addEventListener('touchmove', onMove, { passive: false })
     el.addEventListener('touchend', onUp)
     el.addEventListener('touchcancel', onUp)
     return () => {
+      cancelMomentum()
       el.removeEventListener('touchstart', onDown)
       el.removeEventListener('touchmove', onMove)
       el.removeEventListener('touchend', onUp)
@@ -164,16 +204,22 @@ function PosterRow({ items, onSelect, emptyText, desktop = false }: {
           <div style={{ position: 'relative' }}>
             <PosterThumb src={item.posterUrl} alt={item.title} width={posterSize.width} height={posterSize.height} size="lg" />
             {item.distanceLabel && (
-              <Badge
-                variant="info"
-                style={{
-                  position: 'absolute',
-                  right: 6,
-                  top: 6,
-                }}
-              >
+              <div style={{
+                position: 'absolute',
+                top: -6,
+                right: -6,
+                backgroundColor: 'var(--color-primary-base)',
+                color: '#fff',
+                borderRadius: 999,
+                padding: '2px 7px',
+                fontSize: 10,
+                fontWeight: 700,
+                whiteSpace: 'nowrap',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+                border: '1.5px solid var(--color-surface-bg)',
+              }}>
                 {item.distanceLabel}
-              </Badge>
+              </div>
             )}
             {item.badge && (
               <Badge
@@ -395,7 +441,7 @@ interface SectionCandidate {
 }
 
 const MAX_CURATION_SECTIONS = 3
-/** 섹션별 첫 노출 개수 — 초과분은 펼치기로 표시 */
+/** 섹션별 첫 노출 개수 — 초과분은 펼치기로 표시 (데스크톱 그리드 전용, 모바일은 가로 스크롤이라 제한 없음) */
 const SECTION_COLLAPSED_COUNT = 6
 
 const IconChevronDown = ({ open }: { open: boolean }) => (
@@ -482,8 +528,8 @@ export function CurationSections({
             }
           : onMovieSelect
         const expanded = expandedSections[section.key] ?? false
-        const hasMore = section.items.length > SECTION_COLLAPSED_COUNT
-        const visibleItems = !expanded
+        const hasMore = desktop && section.items.length > SECTION_COLLAPSED_COUNT
+        const visibleItems = hasMore && !expanded
           ? section.items.slice(0, SECTION_COLLAPSED_COUNT)
           : section.items
         return (
