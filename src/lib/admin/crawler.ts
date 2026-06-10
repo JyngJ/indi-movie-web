@@ -3,7 +3,7 @@ import type {
   CrawledShowtimeCandidate,
   CrawlInputKind,
 } from '@/types/admin'
-import { SAMPLE_CRAWL_CSV, SAMPLE_CRAWL_HTML } from './sources'
+import { SAMPLE_CRAWL_CSV, SAMPLE_CRAWL_HTML } from './__fixtures__/sampleCrawl'
 
 const DEFAULT_PRICE = 12000
 const DEFAULT_SEAT_TOTAL = 80
