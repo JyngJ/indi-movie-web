@@ -375,3 +375,20 @@ export function absolutizeUrl(value: string, origin: string) {
     return undefined
   }
 }
+
+export function dedupeCandidates(candidates: CrawledShowtimeCandidate[]) {
+  const seen = new Map<string, CrawledShowtimeCandidate>()
+
+  for (const candidate of candidates) {
+    const existing = seen.get(candidate.fingerprint)
+    if (!existing || candidate.confidence > existing.confidence) {
+      seen.set(candidate.fingerprint, candidate)
+    }
+  }
+
+  return Array.from(seen.values()).sort((a, b) => {
+    const left = `${a.showDate} ${a.showTime} ${a.movieTitle}`
+    const right = `${b.showDate} ${b.showTime} ${b.movieTitle}`
+    return left.localeCompare(right)
+  })
+}
