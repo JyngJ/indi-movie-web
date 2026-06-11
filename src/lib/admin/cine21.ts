@@ -22,6 +22,49 @@ async function fetchHtml(url: string): Promise<string> {
   return res.text()
 }
 
+function extractAudienceRating(html: string): number | undefined {
+  const match = html.match(/관객 별점<\/p>\s*<div class="star_wrap">[\s\S]*?<p class="num">([\d.]+)<\/p>/)
+  if (!match) return undefined
+  const value = parseFloat(match[1])
+  return Number.isFinite(value) ? value : undefined
+}
+
+interface Cine21AutocompleteSuggestion {
+  category: string
+  id: string
+  /** 영화 제작연도 (문자열) */
+  txt2?: string
+}
+
+/** 제목(+연도)으로 cine21을 검색해 관객 별점(10점 만점)을 가져옴. 못 찾으면 undefined */
+export async function fetchCine21Rating(title: string, year?: number): Promise<number | undefined> {
+  if (!title.trim()) return undefined
+
+  const json = await fetchHtml(`${CINE21_BASE}/search/autocomplete?query=${encodeURIComponent(title)}`)
+  const suggestions = (JSON.parse(json).suggestions ?? []) as Cine21AutocompleteSuggestion[]
+
+  const movieIds = suggestions
+    .filter(s => s.category === 'movie')
+    .filter((s) => {
+      if (year == null) return true
+      const detailYear = s.txt2 != null ? parseInt(s.txt2) : NaN
+      // cine21 txt2는 제작연도라 개봉연도와 1~2년 차이날 수 있음
+      return !Number.isFinite(detailYear) || Math.abs(detailYear - year) <= 2
+    })
+    .map(s => s.id)
+    .slice(0, 5)
+
+  for (const movieId of movieIds) {
+    const detailHtml = await fetchHtml(`${CINE21_BASE}/movie/info/?movie_id=${movieId}`).catch(() => null)
+    if (!detailHtml) continue
+
+    const rating = extractAudienceRating(detailHtml)
+    if (rating != null) return rating
+  }
+
+  return undefined
+}
+
 export async function searchCine21Movies(query: string): Promise<AdminExternalMovie[]> {
   if (!query.trim()) return []
 
