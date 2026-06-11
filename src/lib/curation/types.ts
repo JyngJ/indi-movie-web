@@ -25,6 +25,8 @@ export interface ReturningFilm {
   tagText: string
   currentRunStartDate: string
   lastScreenedEndDate: string
+  /** 현재 이 영화를 상영 중인 지역 목록 — 검색 지역 필터에 사용 */
+  regions: string[]
 }
 
 export interface ReturningFilmsRepository {
@@ -49,6 +51,8 @@ export interface NewIndieFilmsRepository {
 export interface NewIndieFilm {
   movie: Movie
   firstShowDate: string
+  /** 현재 이 영화를 상영 중인 지역 목록 — 검색 지역 필터에 사용 */
+  regions: string[]
 }
 
 // ─────────────────────────────────────────────
@@ -64,6 +68,8 @@ export interface LastWeekFilm {
   daysLeft: number
   /** 예: "D-3 종영" / "오늘이 마지막" */
   badgeText: string
+  /** 현재 이 영화를 상영 중인 지역 목록 — 검색 지역 필터에 사용 */
+  regions: string[]
 }
 
 // ─────────────────────────────────────────────

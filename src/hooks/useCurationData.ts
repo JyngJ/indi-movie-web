@@ -172,10 +172,23 @@ export function useCurationData(open: boolean, regionId: string | null, refreshK
     return cacheData.soloTheaterFilmsByRegion[regionId] ?? []
   }, [cacheData.soloTheaterFilmsByRegion, regionId])
 
+  // 검색 지역이 설정되어 있으면 해당 지역에서 상영 중인 영화만 노출
+  const returningFilms = useMemo(() => (
+    regionId ? cacheData.returningFilms.filter(film => film.regions?.includes(regionId)) : cacheData.returningFilms
+  ), [cacheData.returningFilms, regionId])
+
+  const newIndieFilms = useMemo(() => (
+    regionId ? cacheData.newIndieFilms.filter(film => film.regions?.includes(regionId)) : cacheData.newIndieFilms
+  ), [cacheData.newIndieFilms, regionId])
+
+  const lastWeekFilms = useMemo(() => (
+    regionId ? cacheData.lastWeekFilms.filter(film => film.regions?.includes(regionId)) : cacheData.lastWeekFilms
+  ), [cacheData.lastWeekFilms, regionId])
+
   return {
-    returningFilms: cacheData.returningFilms,
-    newIndieFilms: cacheData.newIndieFilms,
-    lastWeekFilms: cacheData.lastWeekFilms,
+    returningFilms,
+    newIndieFilms,
+    lastWeekFilms,
     soloTheaterFilms,
     todayShowFilms,
     recentlyViewed,

@@ -80,6 +80,7 @@ function buildReturningFilm(
     tagText: formatReturningTag(gapMonths),
     currentRunStartDate: pair.current.startDate,
     lastScreenedEndDate: pair.previous.endDate,
+    regions: [],
   }
 }
 

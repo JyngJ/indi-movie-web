@@ -10,5 +10,5 @@ export async function getNewIndieFilms(
   return candidates
     .sort((a, b) => a.firstShowDate.localeCompare(b.firstShowDate))
     .slice(0, limit)
-    .map(c => ({ movie: c.movie, firstShowDate: c.firstShowDate }))
+    .map(c => ({ movie: c.movie, firstShowDate: c.firstShowDate, regions: [] }))
 }

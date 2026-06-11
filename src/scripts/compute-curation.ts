@@ -63,6 +63,39 @@ function getSundayIso(mondayStr: string): string {
   return sun.toISOString().slice(0, 10)
 }
 
+/** 영화별로 현재 상영 중인 지역 목록을 조회 — 큐레이션 섹션의 검색 지역 필터에 사용 */
+async function getRegionsByMovie(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  movieIds: string[],
+  range: { gte?: string; lte?: string } = {},
+): Promise<Map<string, Set<string>>> {
+  const map = new Map<string, Set<string>>()
+  if (movieIds.length === 0) return map
+
+  let query = supabase
+    .from('showtimes')
+    .select('movie_id, theaters(city)')
+    .eq('is_active', true)
+    .in('movie_id', movieIds)
+
+  if (range.gte) query = query.gte('show_date', range.gte)
+  if (range.lte) query = query.lte('show_date', range.lte)
+
+  const { data, error } = await query
+  if (error) throw error
+
+  for (const row of (data ?? []) as Record<string, unknown>[]) {
+    const mid = row.movie_id as string
+    const theaterRaw = row.theaters as Record<string, unknown> | null
+    if (!mid || !theaterRaw) continue
+    const region = getRegionFromCity(String(theaterRaw.city))
+    if (region === '기타') continue
+    if (!map.has(mid)) map.set(mid, new Set())
+    map.get(mid)!.add(region)
+  }
+  return map
+}
+
 function rowToMovie(movieRaw: Record<string, unknown>): Movie {
   return {
     id: String(movieRaw.id),
@@ -133,6 +166,12 @@ async function computeReturningFilms(supabase: ReturnType<typeof createSupabaseA
   }))
 
   const results = await getReturningFilms({ getCandidates: async () => candidates }, asOfDate)
+
+  const regionsMap = await getRegionsByMovie(supabase, results.map(r => r.movie.id), { gte: asOfDate, lte: addMonthsToIso(asOfDate, 1) })
+  for (const result of results) {
+    result.regions = [...(regionsMap.get(result.movie.id) ?? [])]
+  }
+
   console.log(`  결과: ${results.length}편`)
   return results
 }
@@ -211,6 +250,12 @@ async function computeNewIndieFilms(supabase: ReturnType<typeof createSupabaseAd
     }))
 
   const results = await getNewIndieFilms({ getCandidates: async () => candidates }, weekStart, weekEnd)
+
+  const regionsMap = await getRegionsByMovie(supabase, results.map(r => r.movie.id), { gte: asOfDate })
+  for (const result of results) {
+    result.regions = [...(regionsMap.get(result.movie.id) ?? [])]
+  }
+
   console.log(`  결과: ${results.length}편`)
   return results
 }
@@ -307,7 +352,7 @@ async function computeLastWeekFilms(supabase: ReturnType<typeof createSupabaseAd
   // 현재 상영 중인 영화의 max(show_date) 조회
   const { data: rows, error } = await supabase
     .from('showtimes')
-    .select('movie_id, show_date, movies(id, title, original_title, year, poster_url, genre, director, nation, kmdb_id, tmdb_id, rating)')
+    .select('movie_id, show_date, movies(id, title, original_title, year, poster_url, genre, director, nation, kmdb_id, tmdb_id, rating), theaters(city)')
     .eq('is_active', true)
     .gte('show_date', asOfDate)
     .lte('show_date', sevenDaysLater)
@@ -315,18 +360,23 @@ async function computeLastWeekFilms(supabase: ReturnType<typeof createSupabaseAd
 
   if (error) throw error
 
-  // 영화별 max show_date + movie 정보
-  const movieMap = new Map<string, { movie: Movie; maxDate: string }>()
+  // 영화별 max show_date + movie 정보 + 상영 지역
+  const movieMap = new Map<string, { movie: Movie; maxDate: string; regions: Set<string> }>()
   for (const row of (rows ?? []) as Record<string, unknown>[]) {
     const mid = row.movie_id as string
     const date = row.show_date as string
     const movieRaw = row.movies as Record<string, unknown> | null
+    const theaterRaw = row.theaters as Record<string, unknown> | null
     if (!mid || !movieRaw) continue
     const existing = movieMap.get(mid)
     if (!existing) {
-      movieMap.set(mid, { movie: rowToMovie(movieRaw), maxDate: date })
+      movieMap.set(mid, { movie: rowToMovie(movieRaw), maxDate: date, regions: new Set() })
     } else if (date > existing.maxDate) {
       existing.maxDate = date
+    }
+    if (theaterRaw) {
+      const region = getRegionFromCity(String(theaterRaw.city))
+      if (region !== '기타') movieMap.get(mid)!.regions.add(region)
     }
   }
 
@@ -343,10 +393,10 @@ async function computeLastWeekFilms(supabase: ReturnType<typeof createSupabaseAd
   const hasFutureIds = new Set((futureRows ?? []).map((r: Record<string, unknown>) => r.movie_id as string).filter(Boolean))
 
   const results: LastWeekFilm[] = []
-  for (const [mid, { movie, maxDate }] of movieMap.entries()) {
+  for (const [mid, { movie, maxDate, regions }] of movieMap.entries()) {
     if (hasFutureIds.has(mid)) continue   // 7일 이후에도 상영 있음 → 제외
     const { daysLeft, badgeText } = daysLeftBadge(maxDate, asOfDate)
-    results.push({ movie, maxShowDate: maxDate, daysLeft, badgeText })
+    results.push({ movie, maxShowDate: maxDate, daysLeft, badgeText, regions: [...regions] })
   }
 
   // 가장 급한 순 (마지막 날 빠른 순)
