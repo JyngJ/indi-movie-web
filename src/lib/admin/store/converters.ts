@@ -45,6 +45,7 @@ export interface CandidateRow {
   theater_id: string
   theater_name: string
   movie_title: string
+  release_year?: number | null
   screen_name: string
   show_date: string
   show_time: string
@@ -204,6 +205,7 @@ export function candidateFromRow(row: CandidateRow): CrawledShowtimeCandidate {
     theaterId: row.theater_id,
     theaterName: row.theater_name,
     movieTitle: row.movie_title,
+    releaseYear: row.release_year ?? undefined,
     screenName: row.screen_name,
     showDate: row.show_date,
     showTime: normalizeTime(row.show_time),
@@ -234,6 +236,7 @@ export function candidateToRow(candidate: CrawledShowtimeCandidate, matchedTheat
     theater_id: candidate.theaterId,
     theater_name: candidate.theaterName,
     movie_title: candidate.movieTitle,
+    release_year: candidate.releaseYear ?? null,
     screen_name: candidate.screenName,
     show_date: candidate.showDate,
     show_time: candidate.showTime,
