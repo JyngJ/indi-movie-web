@@ -879,7 +879,6 @@ export function TheaterSheet({
               alignItems: 'center',
               gap: 2,
               paddingRight: 84,
-              paddingLeft: onBack ? 40 : 0,
             }}>
               <span style={{ minWidth: 0 }}>{theater.name}</span>
               {theater.website && (
@@ -935,13 +934,6 @@ export function TheaterSheet({
               <IconClose />
             </button>
           </div>
-          {onBack && (
-            <div style={{ position: 'absolute', top: -2, left: 20 }}>
-              <button style={iconBtn} onClick={onBack} aria-label="이전으로">
-                <IconChevronLeft />
-              </button>
-            </div>
-          )}
         </div>
       ) : panelMode ? (
         /* PC 패널 헤더 — 극장 정보 고정 */
