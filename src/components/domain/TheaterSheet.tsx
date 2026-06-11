@@ -16,6 +16,7 @@ import { withFlag } from '@/lib/nations'
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { useDragSheet } from '@/hooks/useDragSheet'
 import { useMomentumScroll } from '@/hooks/useMomentumScroll'
+import { shareAdapter } from '@/lib/adapters/share'
 
 /* ── 상수 ──────────────────────────────────────────────────────── */
 // 접힌 상태에서 보이는 높이 = 핸들(20) + 헤더(88, 액션버튼 포함) + 포스터스트립(228) + 테두리(2) + 여유(6)
@@ -653,17 +654,7 @@ export function TheaterSheet({
   }
 
   const copyAddress = () => {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(theater.address)
-    } else {
-      const el = document.createElement('textarea')
-      el.value = theater.address
-      el.style.cssText = 'position:fixed;opacity:0'
-      document.body.appendChild(el)
-      el.select()
-      document.execCommand('copy')
-      document.body.removeChild(el)
-    }
+    shareAdapter.copyToClipboard(theater.address)
     setCopyCount(c => c + 1)
   }
 
@@ -693,18 +684,14 @@ export function TheaterSheet({
     const payload = { title: theater.name, url: shareUrl }
 
     const copyFallback = () => {
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(shareUrl).then(() => setCopyCount(c => c + 1))
-      }
+      shareAdapter.copyToClipboardAsync(shareUrl).then((ok) => {
+        if (ok) setCopyCount(c => c + 1)
+      })
     }
 
-    const canUseShare = typeof navigator.share === 'function'
-      && (typeof navigator.canShare !== 'function' || navigator.canShare(payload))
-
-    if (canUseShare) {
-      navigator.share(payload).catch((e: unknown) => {
-        if (e instanceof DOMException && e.name === 'AbortError') return
-        copyFallback()
+    if (shareAdapter.canShare(payload)) {
+      shareAdapter.share(payload).then((result) => {
+        if (result === 'error') copyFallback()
       })
       return
     }
