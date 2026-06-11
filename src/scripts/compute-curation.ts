@@ -34,9 +34,13 @@ if (fs.existsSync(envPath)) {
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { clusterDatesToRuns, getReturningFilms } from '@/lib/curation/getReturningFilms'
 import { getNewIndieFilms } from '@/lib/curation/getNewIndieFilms'
+import { fetchCine21Rating } from '@/lib/admin/cine21'
 import type { Movie } from '@/types/api'
 import type { NewIndieFilmCandidate, ReturningFilmCandidate, LastWeekFilm, SoloTheaterFilm, SoloTheaterFilmsByRegion } from '@/lib/curation/types'
 import { getRegionFromCity } from '@/lib/regions'
+
+/** 이 평점 미만인 영화는 큐레이션 섹션에서 제외 (10점 만점, cine21 관객 별점 기준) */
+const RATING_THRESHOLD = 5.0
 
 function todayIso(): string {
   const d = new Date()
@@ -94,6 +98,23 @@ async function getRegionsByMovie(
     map.get(mid)!.add(region)
   }
   return map
+}
+
+/** rating이 비어있는 영화는 cine21에서 평점을 가져와 movies 테이블에 채워둠 */
+async function ensureMovieRatings(supabase: ReturnType<typeof createSupabaseAdminClient>, movies: Movie[]): Promise<void> {
+  for (const movie of movies) {
+    if (movie.rating != null) continue
+    const rating = await fetchCine21Rating(movie.title, movie.year).catch(() => undefined)
+    if (rating == null) continue
+    movie.rating = rating
+    const { error } = await supabase.from('movies').update({ rating }).eq('id', movie.id)
+    if (error) console.error(`  평점 저장 실패 (${movie.title}):`, error.message)
+  }
+}
+
+/** 평점이 RATING_THRESHOLD 미만인 영화는 큐레이션에서 제외 (평점 정보 없으면 통과) */
+function filterByRating<T extends { movie: Movie }>(items: T[]): T[] {
+  return items.filter(({ movie }) => movie.rating == null || movie.rating >= RATING_THRESHOLD)
 }
 
 function rowToMovie(movieRaw: Record<string, unknown>): Movie {
@@ -165,14 +186,17 @@ async function computeReturningFilms(supabase: ReturnType<typeof createSupabaseA
     runs: clusterDatesToRuns([...new Set(dates)].sort()),
   }))
 
-  const results = await getReturningFilms({ getCandidates: async () => candidates }, asOfDate)
+  const allResults = await getReturningFilms({ getCandidates: async () => candidates }, asOfDate)
+
+  await ensureMovieRatings(supabase, allResults.map(r => r.movie))
+  const results = filterByRating(allResults)
 
   const regionsMap = await getRegionsByMovie(supabase, results.map(r => r.movie.id), { gte: asOfDate, lte: addMonthsToIso(asOfDate, 1) })
   for (const result of results) {
     result.regions = [...(regionsMap.get(result.movie.id) ?? [])]
   }
 
-  console.log(`  결과: ${results.length}편`)
+  console.log(`  결과: ${results.length}편 (평점 미달 제외 ${allResults.length - results.length}편)`)
   return results
 }
 
@@ -249,14 +273,17 @@ async function computeNewIndieFilms(supabase: ReturnType<typeof createSupabaseAd
       firstShowDate: firstDateMap.get(String(row.id)) ?? weekStart,
     }))
 
-  const results = await getNewIndieFilms({ getCandidates: async () => candidates }, weekStart, weekEnd)
+  const allResults = await getNewIndieFilms({ getCandidates: async () => candidates }, weekStart, weekEnd)
+
+  await ensureMovieRatings(supabase, allResults.map(r => r.movie))
+  const results = filterByRating(allResults)
 
   const regionsMap = await getRegionsByMovie(supabase, results.map(r => r.movie.id), { gte: asOfDate })
   for (const result of results) {
     result.regions = [...(regionsMap.get(result.movie.id) ?? [])]
   }
 
-  console.log(`  결과: ${results.length}편`)
+  console.log(`  결과: ${results.length}편 (평점 미달 제외 ${allResults.length - results.length}편)`)
   return results
 }
 
@@ -392,16 +419,19 @@ async function computeLastWeekFilms(supabase: ReturnType<typeof createSupabaseAd
 
   const hasFutureIds = new Set((futureRows ?? []).map((r: Record<string, unknown>) => r.movie_id as string).filter(Boolean))
 
-  const results: LastWeekFilm[] = []
+  const allResults: LastWeekFilm[] = []
   for (const [mid, { movie, maxDate, regions }] of movieMap.entries()) {
     if (hasFutureIds.has(mid)) continue   // 7일 이후에도 상영 있음 → 제외
     const { daysLeft, badgeText } = daysLeftBadge(maxDate, asOfDate)
-    results.push({ movie, maxShowDate: maxDate, daysLeft, badgeText, regions: [...regions] })
+    allResults.push({ movie, maxShowDate: maxDate, daysLeft, badgeText, regions: [...regions] })
   }
+
+  await ensureMovieRatings(supabase, allResults.map(r => r.movie))
+  const results = filterByRating(allResults)
 
   // 가장 급한 순 (마지막 날 빠른 순)
   results.sort((a, b) => a.maxShowDate.localeCompare(b.maxShowDate))
-  console.log(`  결과: ${results.length}편`)
+  console.log(`  결과: ${results.length}편 (평점 미달 제외 ${allResults.length - results.length}편)`)
   return results
 }
 

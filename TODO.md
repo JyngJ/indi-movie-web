@@ -303,28 +303,19 @@ npm run seed:disable-broken
 
 ---
 
-## 큐레이션 — 씨네21 평점 기반 필터링 (검토 완료, 2026-06-11)
+## 큐레이션 — 씨네21 평점 기반 필터링 (완료, 2026-06-11, `feature/curation-rating-filter`)
 
 ### 요구사항
-- 씨네21 평점(영화 제목+감독명 매칭) 5점 이하(10점 만점) 영화는 큐레이션에서 제외
+- 씨네21 관객 별점 5.0점 미만(10점 만점) 영화는 "오랜만에 상영"/"이번 주 새롭게 상영"/"이번 주가 마지막" 큐레이션에서 제외
+- 평점 정보 없는 영화는 노출 (필터 통과)
+- 큐레이션 후보로 뽑힐 때마다 평점 없으면 그때 cine21에서 크롤링해 `movies.rating`에 캐싱
 
-### 가능 여부 검토 결과
-- ✅ `src/lib/admin/cine21.ts`에 이미 cine21 상세페이지 파서 존재 (`parseCine21Detail`) — 제목/감독/장르/국가/포스터/시놉시스 추출 중
-- ✅ 영화 상세 페이지(`/movie/info/?movie_id=`)에 "관객 별점" 항목 존재 (예: 6.00 / 10점) — `parseCine21Detail`에 평점 필드 추가만 하면 됨
-- ⚠️ `searchCine21Movies()`(`/search/result/?q=`)가 현재 404 반환 — UTF-8 쿼리 인코딩 문제로 추정, EUC-KR 인코딩 필요할 수 있음. movie_id 검색 자체가 막혀있어 **별도 수정 필요**
-- ⚠️ "전문가 평점"/"기대지수"는 해당 페이지에 없음 — "관객 별점"만 가능
-- ⚠️ 제목+감독명 매칭은 동명이인/리메이크작 등 오매칭 가능성 있음 — KMDB 매칭처럼 매칭 실패 시 보수적으로 "제외 안 함" 처리 필요 (잘못 숨기는 것보다 노출이 안전)
+### 적용한 수정
+- `src/lib/admin/cine21.ts`: `fetchCine21Rating(title, year?)` 추가 — `/search/autocomplete?query=` (실제 자동완성 API, 기존 `searchCine21Movies`가 쓰던 `/search/result/?q=`는 검색결과가 클라이언트 렌더링이라 정적 HTML에 movie_id 없음)로 후보 movie_id 조회 후, 영화 상세 페이지의 "관객 별점" (`<p class="num">X.XX</p>`) 파싱. cine21 `txt2`(제작연도)는 개봉연도와 1~2년 차이날 수 있어 ±2년 허용
+- `src/scripts/compute-curation.ts`: `RATING_THRESHOLD = 5.0`, `ensureMovieRatings()`(rating 없는 영화 cine21 조회 후 `movies.rating` 업데이트), `filterByRating()`(rating < 5.0 제외, null은 통과)를 returning/new-indie/last-week 세 섹션 결과에 적용
 
-### 구현 방향 (제안)
-1. `cine21.ts` 검색 인코딩 수정 (EUC-KR 시도) — 선행 작업
-2. `parseCine21Detail`에 `audienceRating?: number` 필드 추가
-3. `compute-curation.ts` 또는 큐레이션 후보 필터 단계에서 `audienceRating !== undefined && audienceRating <= 5` → 제외
-4. 평점 캐싱 필요 (매번 크롤 시 전체 영화 재조회는 부담 — `movies` 또는 `movie_details`에 `cine21_rating` 컬럼 추가 후 주기적 갱신 검토)
-
-### 미결정 사항
-- [ ] 평점 없음(매칭 실패/신작) 영화 처리 방식 — 기본 노출 vs 기본 숨김
-- [ ] 평점 갱신 주기 (크롤마다 vs 주 1회)
-- [ ] `feature/cine21-rating-filter` 브랜치로 분리 진행 여부
+### 운영 노트
+- `searchCine21Movies()`(admin 영화 검색)도 동일한 `/search/result/?q=` 버그를 가지고 있음 — 이번 작업 범위 밖이라 미수정, 별도 이슈로 분리 필요
 
 ---
 
