@@ -36,15 +36,20 @@ interface Cine21AutocompleteSuggestion {
   txt2?: string
 }
 
+/** cine21 자동완성 API로 영화 후보 검색. `/search/result/?q=`는 클라이언트 렌더링이라 정적 HTML에 movie_id가 없어 사용 불가 */
+async function fetchCine21MovieSuggestions(query: string): Promise<Cine21AutocompleteSuggestion[]> {
+  if (!query.trim()) return []
+
+  const json = await fetchHtml(`${CINE21_BASE}/search/autocomplete?query=${encodeURIComponent(query)}`)
+  const suggestions = (JSON.parse(json).suggestions ?? []) as Cine21AutocompleteSuggestion[]
+  return suggestions.filter(s => s.category === 'movie')
+}
+
 /** 제목(+연도)으로 cine21을 검색해 관객 별점(10점 만점)을 가져옴. 못 찾으면 undefined */
 export async function fetchCine21Rating(title: string, year?: number): Promise<number | undefined> {
-  if (!title.trim()) return undefined
-
-  const json = await fetchHtml(`${CINE21_BASE}/search/autocomplete?query=${encodeURIComponent(title)}`)
-  const suggestions = (JSON.parse(json).suggestions ?? []) as Cine21AutocompleteSuggestion[]
+  const suggestions = await fetchCine21MovieSuggestions(title)
 
   const movieIds = suggestions
-    .filter(s => s.category === 'movie')
     .filter((s) => {
       if (year == null) return true
       const detailYear = s.txt2 != null ? parseInt(s.txt2) : NaN
@@ -66,12 +71,8 @@ export async function fetchCine21Rating(title: string, year?: number): Promise<n
 }
 
 export async function searchCine21Movies(query: string): Promise<AdminExternalMovie[]> {
-  if (!query.trim()) return []
-
-  const html = await fetchHtml(`${CINE21_BASE}/search/result/?q=${encodeURIComponent(query)}`)
-
-  // 검색 결과에서 movie_id 추출
-  const movieIds = [...new Set([...html.matchAll(/movie_id=(\d+)/g)].map(m => m[1]))].slice(0, 5)
+  const suggestions = await fetchCine21MovieSuggestions(query)
+  const movieIds = suggestions.map(s => s.id).slice(0, 5)
   if (!movieIds.length) return []
 
   const results = await Promise.all(movieIds.map(id => parseCine21Detail(id).catch(() => null)))
@@ -93,7 +94,8 @@ async function parseCine21Detail(movieId: string): Promise<AdminExternalMovie | 
   const nationBlock = html.match(/국가<\/p>\s*([\s\S]{0,100}?)<\/li>/)?.[1] ?? ''
   const nations = cleanText(nationBlock).split(/[,，]/).map(s => s.trim()).filter(Boolean)
 
-  const yearMatch = html.match(/제작연도[\s\S]{0,50}?(\d{4})/)
+  // cine21 페이지 개편으로 "제작연도" 표기 사라짐 — "개봉" 날짜에서 연도 추출
+  const yearMatch = html.match(/개봉<\/p>\s*(\d{4})-\d{2}-\d{2}/)
   const year = yearMatch ? parseInt(yearMatch[1]) : new Date().getFullYear()
 
   const posterUrl = buildPosterUrl(html)
