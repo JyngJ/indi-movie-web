@@ -19,6 +19,7 @@ import {
   createMovieeTimeParams,
   pickDtryxCinema,
   normalizeDtryxTime,
+  parseDtryxReleaseYear,
   normalizeCompactTime,
   normalizeMovieeMovieTitle,
   splitByDateLabel,
@@ -49,6 +50,7 @@ interface DtryxMovie {
   RunningTime?: string
   Url?: string
   HiddenYn?: string
+  ReleaseDT?: string
 }
 
 interface DtryxPlayDate {
@@ -352,6 +354,7 @@ async function fetchDtryxShowtimes(
         headers,
       )
       const groups = data.Showseqlist ?? []
+      const releaseYear = parseDtryxReleaseYear(movie.ReleaseDT)
 
       groups.forEach((group) => {
         ;(group.MovieDetail ?? []).forEach((detail) => {
@@ -375,6 +378,7 @@ async function fetchDtryxShowtimes(
           candidates.push(buildCandidate({
             context,
             movieTitle,
+            releaseYear,
             showDate: playDate.PlaySDT,
             showTime: startTime,
             endTime: normalizeDtryxTime(detail.EndTime),

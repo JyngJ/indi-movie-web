@@ -25,6 +25,8 @@ export interface CrawledShowtimeCandidate {
   theaterId: string
   theaterName: string
   movieTitle: string
+  /** 상영관 카탈로그에 표시된 영화 개봉연도 (있는 경우) — 동명이인 영화 매칭 시 참고용 */
+  releaseYear?: number
   screenName: string
   showDate: string
   showTime: string

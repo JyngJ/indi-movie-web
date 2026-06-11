@@ -300,3 +300,47 @@ npm run seed:disable-broken
 ### 감독 상세 페이지 정보 보강
 
 - [ ] 현재 Wikipedia API로 받아오는데 내용 부실, 설명 없는 경우도 있음
+
+---
+
+## 큐레이션 — 씨네21 평점 기반 필터링 (검토 완료, 2026-06-11)
+
+### 요구사항
+- 씨네21 평점(영화 제목+감독명 매칭) 5점 이하(10점 만점) 영화는 큐레이션에서 제외
+
+### 가능 여부 검토 결과
+- ✅ `src/lib/admin/cine21.ts`에 이미 cine21 상세페이지 파서 존재 (`parseCine21Detail`) — 제목/감독/장르/국가/포스터/시놉시스 추출 중
+- ✅ 영화 상세 페이지(`/movie/info/?movie_id=`)에 "관객 별점" 항목 존재 (예: 6.00 / 10점) — `parseCine21Detail`에 평점 필드 추가만 하면 됨
+- ⚠️ `searchCine21Movies()`(`/search/result/?q=`)가 현재 404 반환 — UTF-8 쿼리 인코딩 문제로 추정, EUC-KR 인코딩 필요할 수 있음. movie_id 검색 자체가 막혀있어 **별도 수정 필요**
+- ⚠️ "전문가 평점"/"기대지수"는 해당 페이지에 없음 — "관객 별점"만 가능
+- ⚠️ 제목+감독명 매칭은 동명이인/리메이크작 등 오매칭 가능성 있음 — KMDB 매칭처럼 매칭 실패 시 보수적으로 "제외 안 함" 처리 필요 (잘못 숨기는 것보다 노출이 안전)
+
+### 구현 방향 (제안)
+1. `cine21.ts` 검색 인코딩 수정 (EUC-KR 시도) — 선행 작업
+2. `parseCine21Detail`에 `audienceRating?: number` 필드 추가
+3. `compute-curation.ts` 또는 큐레이션 후보 필터 단계에서 `audienceRating !== undefined && audienceRating <= 5` → 제외
+4. 평점 캐싱 필요 (매번 크롤 시 전체 영화 재조회는 부담 — `movies` 또는 `movie_details`에 `cine21_rating` 컬럼 추가 후 주기적 갱신 검토)
+
+### 미결정 사항
+- [ ] 평점 없음(매칭 실패/신작) 영화 처리 방식 — 기본 노출 vs 기본 숨김
+- [ ] 평점 갱신 주기 (크롤마다 vs 주 1회)
+- [ ] `feature/cine21-rating-filter` 브랜치로 분리 진행 여부
+
+---
+
+## 버그 — 동명이인 영화 매칭 (연도 미확인) (해결, 2026-06-11, `fix/movie-match-year-check`)
+
+### 증상
+- 허리우드 클래식 상영작 "장마"가 1979년 개봉작 "장마"로 잘못 매칭됨 (실제 상영작은 최근 인디 영화)
+
+### 원인
+- `CrawledShowtimeCandidate`에 개봉연도 정보가 없어 `resolveMovieByTitle`/`pickExactExternalMovie`가 제목만으로 매칭
+
+### 적용한 수정
+- dtryx 예매 API(`MovieList[].ReleaseDT`)에서 개봉연도를 파싱해 `CrawledShowtimeCandidate.releaseYear`로 전달 (`crawler/utils.ts`의 `parseDtryxReleaseYear`, `crawler.ts`의 `fetchDtryxShowtimes`) — 낭만극장/허리우드클래식 포함 dtryx 파서 사용 30+ 개 극장 전체 적용
+- `showtime_candidates.release_year` 컬럼 추가 (`docs/SUPABASE.sql`), `converters.ts`에서 row ↔ candidate 변환
+- `store.ts`: `isYearMatch`/`pickMovieMatch`/`pickExternalMovieMatch` 헬퍼 추가, `resolveMovieByTitle`/`pickExactExternalMovie`/`movieResolutionCacheKey`가 `expectedYear`를 받아 후보가 여럿일 때 연도 일치 우선, 후보가 1개뿐이고 연도가 ±1년 넘게 어긋나면 매칭 보류 후 다음 단계로 폴백
+- dtryx 외 파서(`ReleaseDT` 없음)는 `releaseYear`가 `undefined`라 기존 동작 그대로 유지
+
+### 운영 노트
+- Supabase에 기존 `showtime_candidates` 테이블이 있다면 `ALTER TABLE showtime_candidates ADD COLUMN IF NOT EXISTS release_year INTEGER;` 실행 필요

@@ -328,6 +328,7 @@ CREATE TABLE IF NOT EXISTS showtime_candidates (
   theater_id         TEXT NOT NULL,
   theater_name       TEXT NOT NULL,
   movie_title        TEXT NOT NULL,
+  release_year       INTEGER,
   screen_name        TEXT NOT NULL,
   show_date          DATE NOT NULL,
   show_time          TIME NOT NULL,
@@ -373,7 +374,8 @@ ALTER TABLE showtime_candidates
   ADD COLUMN IF NOT EXISTS matched_movie_id UUID REFERENCES movies(id) ON DELETE SET NULL,
   ADD COLUMN IF NOT EXISTS approved_at TIMESTAMPTZ,
   ADD COLUMN IF NOT EXISTS approved_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  ADD COLUMN IF NOT EXISTS release_year INTEGER;
 
 DO $$
 BEGIN

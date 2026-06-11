@@ -978,7 +978,7 @@ function resolveMovie(candidate: CrawledShowtimeCandidate, movies: MovieRow[], p
   if (providerMovieId) return providerMovieId
 
   for (const title of candidateMovieTitleCandidates(candidate.movieTitle)) {
-    const movie = resolveMovieByTitle(title, movies)
+    const movie = resolveMovieByTitle(title, movies, candidate.releaseYear)
     if (movie) return movie
   }
   return null
@@ -995,18 +995,18 @@ async function resolveMovieForApproval(
 
   const titles = candidateMovieTitleCandidates(candidate.movieTitle)
   for (const title of titles) {
-    const localByCleanTitle = resolveMovieByTitle(title, movies)
+    const localByCleanTitle = resolveMovieByTitle(title, movies, candidate.releaseYear)
     if (localByCleanTitle) return { movie: localByCleanTitle }
   }
 
-  const cacheKey = movieResolutionCacheKey(titles)
+  const cacheKey = movieResolutionCacheKey(titles, candidate.releaseYear)
   const cached = cache?.get(cacheKey)
   if (cached) return cached
 
   try {
     for (const title of titles) {
       const externalMovies = await searchKmdbMovies(title)
-      const externalMovie = pickExactExternalMovie(title, externalMovies)
+      const externalMovie = pickExactExternalMovie(title, externalMovies, candidate.releaseYear)
       if (!externalMovie) continue
 
       const imported = await importAdminExternalMovie(externalMovie)
@@ -1046,19 +1046,39 @@ async function resolveMovieForApproval(
   return result
 }
 
-function resolveMovieByTitle(title: string, movies: MovieRow[]) {
-  const exact = movies.find((movie) => movie.title.trim() === title.trim())
+function isYearMatch(movieYear: number | null | undefined, expectedYear?: number) {
+  if (movieYear == null || expectedYear == null) return false
+  return Math.abs(movieYear - expectedYear) <= 1
+}
+
+// 후보가 여러 개면 개봉연도가 맞는 것을 우선한다. 후보가 1개뿐이고 연도가 어긋나면
+// 동명이인 영화로 보고 매칭을 보류해 다음 단계(다음 타이틀 후보, KMDB 검색 등)로 넘긴다.
+function pickMovieMatch(matches: MovieRow[], expectedYear?: number) {
+  if (matches.length === 0) return undefined
+  if (matches.length === 1) {
+    const only = matches[0]
+    if (expectedYear != null && only.year != null && !isYearMatch(only.year, expectedYear)) return undefined
+    return only
+  }
+  return matches.find((movie) => isYearMatch(movie.year, expectedYear)) ??
+    (expectedYear == null ? matches[0] : undefined)
+}
+
+function resolveMovieByTitle(title: string, movies: MovieRow[], expectedYear?: number) {
+  const exactMatches = movies.filter((movie) => movie.title.trim() === title.trim())
+  const exact = pickMovieMatch(exactMatches, expectedYear)
   if (exact) return exact
 
   const normalizedTitle = normalizeMatchText(title)
   const looseTitle = normalizeLooseMovieTitle(title)
 
-  return movies.find((movie) =>
+  const looseMatches = movies.filter((movie) =>
     normalizeMatchText(movie.title) === normalizedTitle ||
     (movie.original_title ? normalizeMatchText(movie.original_title) === normalizedTitle : false) ||
     normalizeLooseMovieTitle(movie.title) === looseTitle ||
     (movie.original_title ? normalizeLooseMovieTitle(movie.original_title) === looseTitle : false),
   )
+  return pickMovieMatch(looseMatches, expectedYear)
 }
 
 function buildProviderMovieAliases(rows: Array<Pick<CandidateRow, 'raw_text' | 'matched_movie_id'>>) {
@@ -1163,41 +1183,59 @@ function candidateMovieTitleCandidates(title: string) {
   return Array.from(new Set(variants.filter((v): v is string => Boolean(v))))
 }
 
-function pickExactExternalMovie(title: string, movies: AdminExternalMovie[]) {
+// 후보가 여러 개면 개봉연도가 맞는 것을 우선한다. 후보가 1개뿐이고 연도가 어긋나면
+// 동명이인 영화로 보고 매칭을 보류해 다음 단계로 넘긴다.
+function pickExternalMovieMatch(matches: AdminExternalMovie[], expectedYear?: number) {
+  if (matches.length === 0) return undefined
+  if (matches.length === 1) {
+    const only = matches[0]
+    if (expectedYear != null && !isYearMatch(only.year, expectedYear)) return undefined
+    return only
+  }
+  return matches.find((movie) => isYearMatch(movie.year, expectedYear)) ??
+    (expectedYear == null ? matches[0] : undefined)
+}
+
+function pickExactExternalMovie(title: string, movies: AdminExternalMovie[], expectedYear?: number) {
   const normalizedTitle = normalizeMatchText(title)
   const looseTitle = normalizeLooseMovieTitle(title)
+
   // 1순위: 정규화 exact match
-  const exact = movies.find((movie) =>
+  const exactMatches = movies.filter((movie) =>
     normalizeMatchText(movie.title) === normalizedTitle ||
     (movie.originalTitle ? normalizeMatchText(movie.originalTitle) === normalizedTitle : false) ||
     normalizeLooseMovieTitle(movie.title) === looseTitle ||
     (movie.originalTitle ? normalizeLooseMovieTitle(movie.originalTitle) === looseTitle : false),
   )
+  const exact = pickExternalMovieMatch(exactMatches, expectedYear)
   if (exact) return exact
 
   // 2순위: 띄어쓰기/조사 차이 정도의 근접 제목만 허용한다.
-  const fuzzy = movies.find((movie) => {
+  const fuzzyMatches = movies.filter((movie) => {
     const candidates = [movie.title, movie.originalTitle].filter((value): value is string => Boolean(value))
     return candidates.some((candidate) => {
       const current = normalizeLooseMovieTitle(candidate)
       return current.length >= 6 && looseTitle.length >= 6 && titleSimilarity(current, looseTitle) >= 0.88
     })
   })
+  const fuzzy = pickExternalMovieMatch(fuzzyMatches, expectedYear)
   if (fuzzy) return fuzzy
 
   // 3순위: 충분히 긴 검색어에 한해 부분 일치. 짧은 제목은 오매칭 위험이 커서 제외한다.
   if (normalizedTitle.length < 5) return undefined
-  return movies.find((movie) => {
+  const partialMatches = movies.filter((movie) => {
     const t = normalizeMatchText(movie.title)
     const original = movie.originalTitle ? normalizeMatchText(movie.originalTitle) : ''
     return t.includes(normalizedTitle) ||
       normalizedTitle.includes(t) ||
       (original.length >= 5 && (original.includes(normalizedTitle) || normalizedTitle.includes(original)))
   })
+  return pickExternalMovieMatch(partialMatches, expectedYear)
 }
 
-function movieResolutionCacheKey(titles: string[]) {
-  return titles.map(normalizeLooseMovieTitle).filter(Boolean).join('|')
+function movieResolutionCacheKey(titles: string[], expectedYear?: number) {
+  const base = titles.map(normalizeLooseMovieTitle).filter(Boolean).join('|')
+  return expectedYear != null ? `${base}#${expectedYear}` : base
 }
 
 async function searchAndImportCine21(

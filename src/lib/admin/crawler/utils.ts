@@ -23,6 +23,7 @@ export interface DtryxCinema {
 export function buildCandidate(input: {
   context: ParseContext
   movieTitle: string
+  releaseYear?: number
   showDate: string
   showTime: string
   endTime?: string
@@ -52,6 +53,7 @@ export function buildCandidate(input: {
     theaterId: input.context.source.theaterId,
     theaterName: input.context.source.theaterName,
     movieTitle: input.movieTitle.trim(),
+    releaseYear: input.releaseYear,
     screenName: input.screenName.trim(),
     showDate: input.showDate,
     showTime: input.showTime,
@@ -225,6 +227,11 @@ export function normalizeDtryxTime(value: unknown) {
 
   const hour = parseInt(match[1], 10) % 24
   return `${String(hour).padStart(2, '0')}:${match[2]}`
+}
+
+export function parseDtryxReleaseYear(value: unknown) {
+  const match = String(value ?? '').match(/^(\d{4})-/)
+  return match ? Number(match[1]) : undefined
 }
 
 export function normalizeCompactTime(value: unknown) {
