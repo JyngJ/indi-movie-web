@@ -68,6 +68,13 @@ interface CurationSheetProps {
 const POSTER_SIZE = { width: 92, height: 138 }
 const POSTER_SIZE_DESKTOP = { width: 96, height: 144 }
 
+/** 감독이 여러 명이면 첫 번째 이름 + "외"로 줄여서 표시 */
+function formatDirectors(directors: string[]): string {
+  if (directors.length === 0) return ''
+  if (directors.length === 1) return directors[0]
+  return `${directors[0]} 외`
+}
+
 function PosterRow({ items, onSelect, emptyText, desktop = false }: {
   items: CurationItem[]
   onSelect?: (id: string, title: string) => void
@@ -190,6 +197,7 @@ function PosterRow({ items, onSelect, emptyText, desktop = false }: {
           style={{
             flexShrink: desktop ? undefined : 0,
             width: desktop ? '100%' : posterSize.width,
+            minWidth: 0,
             display: 'flex',
             flexDirection: 'column',
             gap: 6,
@@ -472,7 +480,7 @@ export function CurationSections({
     title: film.movie.title,
     posterUrl: film.movie.posterUrl,
     badge: film.badgeText,
-    subtitle: film.movie.director.join(', ') || undefined,
+    subtitle: formatDirectors(film.movie.director) || undefined,
   }))
   const soloTheaterItems: CurationItem[] = soloTheaterFilms.map((film) => ({
     id: film.movie.id,
@@ -495,14 +503,14 @@ export function CurationSections({
     id: film.movie.id,
     title: film.movie.title,
     posterUrl: film.movie.posterUrl,
-    subtitle: film.movie.director.join(', ') || undefined,
+    subtitle: formatDirectors(film.movie.director) || undefined,
   }))
   const returningItems: CurationItem[] = returningFilms.map((film) => ({
     id: film.movie.id,
     title: film.movie.title,
     posterUrl: film.movie.posterUrl,
     badge: film.tagText,
-    subtitle: film.movie.director.join(', ') || undefined,
+    subtitle: formatDirectors(film.movie.director) || undefined,
   }))
 
   const candidates: SectionCandidate[] = [
