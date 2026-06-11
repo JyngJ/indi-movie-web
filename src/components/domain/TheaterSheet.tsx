@@ -1453,20 +1453,20 @@ export function TheaterSheet({
             </label> */}
 
             <div style={{ position: 'relative' }}>
-              {/* PC 패널 전용 포스터 좌우 스크롤 버튼 */}
-              {panelMode && (() => {
+              {/* 포스터 좌우 스크롤 버튼 — expanded 전체(모바일/PC 패널) */}
+              {(() => {
                 const scrollBy = (dir: 1 | -1) => {
                   posterScrollRef.current?.scrollBy({ left: dir * (88 + 12) * 3, behavior: 'smooth' })
                 }
                 const btnStyle: React.CSSProperties = {
                   position: 'absolute', top: '50%', transform: 'translateY(-50%)',
-                  width: 32, height: 32, borderRadius: '50%', zIndex: 2,
+                  width: 32, height: 32, borderRadius: '50%', zIndex: panelMode ? 2 : 3,
                   border: 'none', cursor: 'pointer',
-                  backgroundColor: 'color-mix(in srgb, var(--color-surface-card) 55%, transparent)',
+                  backgroundColor: `color-mix(in srgb, var(--color-surface-card) ${panelMode ? 55 : 72}%, transparent)`,
                   backdropFilter: 'blur(8px)',
                   color: 'var(--color-text-body)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: '0 1px 6px rgba(0,0,0,0.10)',
+                  boxShadow: panelMode ? '0 1px 6px rgba(0,0,0,0.10)' : '0 1px 6px rgba(0,0,0,0.12)',
                   minHeight: 'auto',
                 }
                 return (
