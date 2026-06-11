@@ -315,7 +315,7 @@ npm run seed:disable-broken
 - `src/scripts/compute-curation.ts`: `RATING_THRESHOLD = 5.0`, `ensureMovieRatings()`(rating 없는 영화 cine21 조회 후 `movies.rating` 업데이트), `filterByRating()`(rating < 5.0 제외, null은 통과)를 returning/new-indie/last-week 세 섹션 결과에 적용
 
 ### 운영 노트
-- `searchCine21Movies()`(admin 영화 검색)도 동일한 `/search/result/?q=` 버그를 가지고 있음 — 이번 작업 범위 밖이라 미수정, 별도 이슈로 분리 필요
+- `searchCine21Movies()`(admin 영화 검색)도 동일한 `/search/result/?q=` 버그를 가지고 있었음 → `fix/cine21-search-autocomplete`에서 수정 완료
 
 ---
 

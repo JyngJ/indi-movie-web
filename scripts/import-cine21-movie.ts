@@ -50,7 +50,8 @@ async function importCine21Movie(movieId: string) {
   const nationBlock = html.match(/국가<\/p>\s*([\s\S]{0,100}?)<\/li>/)?.[1] ?? ''
   const nations = cleanText(nationBlock).split(/[,，]/).map(s => s.trim()).filter(Boolean)
 
-  const yearMatch = html.match(/제작연도[\s\S]{0,50}?(\d{4})/)
+  // cine21 페이지 개편으로 "제작연도" 표기 사라짐 — "개봉" 날짜에서 연도 추출
+  const yearMatch = html.match(/개봉<\/p>\s*(\d{4})-\d{2}-\d{2}/)
   const year = yearMatch ? parseInt(yearMatch[1]) : new Date().getFullYear()
 
   // 포스터 URL 재구성
