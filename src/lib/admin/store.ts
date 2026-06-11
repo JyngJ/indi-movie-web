@@ -619,8 +619,7 @@ export async function updateCandidateMatch(input: CandidateMatchPayload) {
   return candidateFromRow(data as CandidateRow)
 }
 
-export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<CandidateAutoMatchResult> {
-  const supabase = createSupabaseAdminClient()
+async function fetchAutoMatchInputs(supabase: ReturnType<typeof createSupabaseAdminClient>, ids?: string[]) {
   let query = supabase
     .from('showtime_candidates')
     .select('*')
@@ -651,12 +650,20 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
   if (movieError) throw new Error(movieError.message)
   if (aliasError) throw new Error(aliasError.message)
 
-  const candidates = ((candidateRows ?? []) as CandidateRow[]).map(candidateFromRow)
-  const theaters = (theaterRows ?? []) as TheaterRow[]
-  const movies = (movieRows ?? []) as MovieRow[]
+  return {
+    candidates: ((candidateRows ?? []) as CandidateRow[]).map(candidateFromRow),
+    theaters: (theaterRows ?? []) as TheaterRow[],
+    movies: (movieRows ?? []) as MovieRow[],
+    providerMovieAliases: buildProviderMovieAliases((aliasRows ?? []) as Pick<CandidateRow, 'raw_text' | 'matched_movie_id'>[]),
+  }
+}
+
+export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<CandidateAutoMatchResult> {
+  const supabase = createSupabaseAdminClient()
+  const { candidates, theaters, movies, providerMovieAliases } = await fetchAutoMatchInputs(supabase, ids)
+
   const updated: CrawledShowtimeCandidate[] = []
   const movieResolutionCache = new Map<string, MovieResolutionResult>()
-  const providerMovieAliases = buildProviderMovieAliases((aliasRows ?? []) as Pick<CandidateRow, 'raw_text' | 'matched_movie_id'>[])
   let matched = 0
   let autoApproved = 0
   let needsReview = 0
