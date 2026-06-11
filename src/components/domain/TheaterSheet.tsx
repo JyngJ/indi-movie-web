@@ -879,6 +879,7 @@ export function TheaterSheet({
               alignItems: 'center',
               gap: 2,
               paddingRight: 84,
+              paddingLeft: onBack ? 40 : 0,
             }}>
               <span style={{ minWidth: 0 }}>{theater.name}</span>
               {theater.website && (
