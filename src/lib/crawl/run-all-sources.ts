@@ -67,15 +67,28 @@ export async function runAllSources(
     }
   }
 
-  const CONCURRENCY = 15
-  const queue = enabled.map((_, i) => i)
-  let nextIndex = 0
-  async function worker() {
-    while (nextIndex < queue.length) {
-      await crawlOne(queue[nextIndex++])
+  // dtryx 소스(www.dtryx.com 기반, 40개)는 같은 백엔드를 공유해서 한 번에 많이 몰리면
+  // 서버 응답이 느려져 30s 타임아웃에 걸린다 — 별도의 낮은 동시성 큐로 분리해서 처리
+  const DTRYX_CONCURRENCY = 1
+  const DEFAULT_CONCURRENCY = 12
+
+  const dtryxQueue: number[] = []
+  const defaultQueue: number[] = []
+  enabled.forEach((source, i) => (source.parser === 'dtryxReservationApi' ? dtryxQueue : defaultQueue).push(i))
+
+  function makeWorker(queue: number[]) {
+    let nextIndex = 0
+    return async function worker() {
+      while (nextIndex < queue.length) {
+        await crawlOne(queue[nextIndex++])
+      }
     }
   }
-  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, total) }, worker))
+
+  await Promise.all([
+    ...Array.from({ length: Math.min(DTRYX_CONCURRENCY, dtryxQueue.length) }, makeWorker(dtryxQueue)),
+    ...Array.from({ length: Math.min(DEFAULT_CONCURRENCY, defaultQueue.length) }, makeWorker(defaultQueue)),
+  ])
 
   return { runs, durationMs: Date.now() - startedAt }
 }
