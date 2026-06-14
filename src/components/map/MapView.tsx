@@ -1244,7 +1244,6 @@ export default function MapView() {
     if (isDesktopLayout) {
       openDesktopPanel({ type: 'movie', id: movieId })
     } else {
-      setCurationSnap('peek')
       setMovieSheetId(movieId)
     }
   }, [isDesktopLayout, openDesktopPanel])
@@ -2203,7 +2202,6 @@ export default function MapView() {
     if (item.kind === 'movie') {
       handleCurationMovieSelect(item.id, item.title)
     } else if (item.kind === 'theater') {
-      if (!isDesktopLayout) setCurationSnap('peek')
       handlePinClick(item.id)
     } else if (item.kind === 'director') {
       if (isDesktopLayout) {
@@ -2212,13 +2210,12 @@ export default function MapView() {
         router.push(`/director/${encodeURIComponent(item.id)}`)
       }
     }
-  }, [handleCurationMovieSelect, handlePinClick, isDesktopLayout, openDesktopPanel, setCurationSnap, router])
+  }, [handleCurationMovieSelect, handlePinClick, isDesktopLayout, openDesktopPanel, router])
 
   // "지금 출발하면" 선택 — 영화 상세 대신 해당 극장으로 flyTo + 그 회차 선택
   const handleTodayShowSelect = useCallback((movieId: string, _title: string, theaterId: string) => {
-    if (!isDesktopLayout) setCurationSnap('peek')
     handlePinClick(theaterId, movieId)
-  }, [handlePinClick, isDesktopLayout, setCurationSnap])
+  }, [handlePinClick])
 
   // 큐레이션 카드 — 현재 위치 있을 때 극장까지 거리 텍스트("1.2 km")
   const getTheaterDistance = useCallback((theaterId: string) => {
@@ -2235,7 +2232,7 @@ export default function MapView() {
   const fabBottom = !isDesktopLayout
     ? (selectedTheater && !sheetExpanded && !sheetExiting
         ? 316
-        : !selectedTheater && !searchOpen && curationSnap === 'peek' && curationVisibleHeight > 0
+        : !selectedTheater && !movieSheetId && !searchOpen && curationSnap === 'peek' && curationVisibleHeight > 0
           ? curationVisibleHeight + 16
           : GLOBAL_NAV_MOBILE_HEIGHT + 32)
     : 32
@@ -3216,23 +3213,26 @@ export default function MapView() {
       )}
 
       {/* 큐레이션 — 모바일: 항상 떠 있는 드래그 가능한 하단 시트(peek/default/expanded 3단 스냅) */}
-      {!isDesktopLayout && !selectedTheater && !searchOpen && (
-        <CurationSheet
-          snap={curationSnap}
-          onSnapChange={handleCurationSnapChange}
-          lastWeekFilms={curationData.lastWeekFilms}
-          soloTheaterFilms={curationData.soloTheaterFilms}
-          soloRegionLabel={filters.regionId ?? undefined}
-          todayShowFilms={curationData.todayShowFilms}
-          returningFilms={curationData.returningFilms}
-          newIndieFilms={curationData.newIndieFilms}
-          recentlyViewed={curationData.recentlyViewed}
-          onMovieSelect={handleCurationMovieSelect}
-          onTodayShowSelect={handleTodayShowSelect}
-          getTheaterDistance={getTheaterDistance}
-          onRemoveRecentlyViewed={handleRemoveRecentlyViewed}
-          onRecentItemClick={handleRecentItemClick}
-        />
+      {!isDesktopLayout && !searchOpen && (
+        // 극장/영화 시트가 위에 뜬 동안은 마운트는 유지하고 숨김만 — 닫히면 snap·스크롤 위치 그대로 복원
+        <div style={(selectedTheater || movieSheetId) ? { visibility: 'hidden', pointerEvents: 'none' } : undefined}>
+          <CurationSheet
+            snap={curationSnap}
+            onSnapChange={handleCurationSnapChange}
+            lastWeekFilms={curationData.lastWeekFilms}
+            soloTheaterFilms={curationData.soloTheaterFilms}
+            soloRegionLabel={filters.regionId ?? undefined}
+            todayShowFilms={curationData.todayShowFilms}
+            returningFilms={curationData.returningFilms}
+            newIndieFilms={curationData.newIndieFilms}
+            recentlyViewed={curationData.recentlyViewed}
+            onMovieSelect={handleCurationMovieSelect}
+            onTodayShowSelect={handleTodayShowSelect}
+            getTheaterDistance={getTheaterDistance}
+            onRemoveRecentlyViewed={handleRemoveRecentlyViewed}
+            onRecentItemClick={handleRecentItemClick}
+          />
+        </div>
       )}
 
       {/* 큐레이션 도크 — 데스크톱 전용 좌측 상시 패널. 검색 패널·극장 시트와 같은 슬롯·크기를 공유하며 셋 다 비활성일 때만 노출(네이버 지도 레퍼런스) */}
