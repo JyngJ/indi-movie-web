@@ -37,7 +37,7 @@ interface CurationItem {
   posterUrl?: string
   badge?: string
   subtitle?: string
-  /** "지금 출발하면" 섹션 전용 — 클릭 시 해당 극장으로 flyTo + 선택 */
+  /** "지금 출발하면"/"단 한 곳" 섹션 전용 — 클릭 시 해당 극장으로 flyTo + 선택 */
   theaterId?: string
   /** 현재 위치로부터의 거리, 예: "1.2 km" — 위치 정보 있을 때만 */
   distanceLabel?: string
@@ -56,7 +56,7 @@ interface CurationSheetProps {
   newIndieFilms: NewIndieFilm[]
   recentlyViewed: RecentlyViewedEntry[]
   onMovieSelect?: (movieId: string, title: string) => void
-  /** "지금 출발하면" 섹션 전용 — 영화 상세 대신 해당 극장으로 flyTo + 선택 */
+  /** "지금 출발하면"/"단 한 곳" 섹션 전용 — 영화 상세 대신 해당 극장으로 flyTo + 선택 */
   onTodayShowSelect?: (movieId: string, title: string, theaterId: string) => void
   onRemoveRecentlyViewed?: (kind: RecentlyViewedKind, id: string) => void
   onRecentItemClick?: (item: RecentlyViewedEntry) => void
@@ -429,7 +429,7 @@ interface CurationSectionsProps {
   newIndieFilms: NewIndieFilm[]
   recentlyViewed: RecentlyViewedEntry[]
   onMovieSelect?: (movieId: string, title: string) => void
-  /** "지금 출발하면" 섹션 전용 — 영화 상세 대신 해당 극장으로 flyTo + 선택 */
+  /** "지금 출발하면"/"단 한 곳" 섹션 전용 — 영화 상세 대신 해당 극장으로 flyTo + 선택 */
   onTodayShowSelect?: (movieId: string, title: string, theaterId: string) => void
   onRemoveRecentlyViewed?: (kind: RecentlyViewedKind, id: string) => void
   onRecentItemClick?: (item: RecentlyViewedEntry) => void
@@ -529,7 +529,7 @@ export function CurationSections({
     <div style={{ display: 'flex', flexDirection: 'column', gap: SECTION_GAP }}>
       <SectionDivider />
       {sections.map((section) => {
-        const handleSelect = section.key === 'todayShow'
+        const handleSelect = section.key === 'todayShow' || section.key === 'soloTheater'
           ? (id: string, title: string) => {
               const item = section.items.find((i) => i.id === id)
               if (item?.theaterId) onTodayShowSelect?.(id, title, item.theaterId)
