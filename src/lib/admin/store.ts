@@ -1265,8 +1265,13 @@ async function searchAndImportCine21(
   if (!parsedTitle) return null
 
   // 이름 정규화 비교
+  // 부분 일치는 충분히 긴 검색어에 한해 허용 — 짧은 제목("탑" 등)은 무관한 영화에 포함되어 오매칭될 위험이 크다.
   const normalize = (s: string) => s.replace(/\s+/g, '').toLowerCase()
-  if (!normalize(parsedTitle).includes(normalize(title)) && !normalize(title).includes(normalize(parsedTitle))) return null
+  const normalizedTitle = normalize(title)
+  const normalizedParsed = normalize(parsedTitle)
+  const isMatch = normalizedTitle === normalizedParsed ||
+    (normalizedTitle.length >= 5 && (normalizedParsed.includes(normalizedTitle) || normalizedTitle.includes(normalizedParsed)))
+  if (!isMatch) return null
 
   const directors = [...html.matchAll(/감독<\/p>[\s\S]{0,400}?<a[^>]+>([^<]+)<\/a>/g)]
     .map(m => m[1].trim()).filter(Boolean).filter((v, i, a) => a.indexOf(v) === i)
