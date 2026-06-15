@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
-import { createSupabaseBrowserClient } from './browser'
+import type { CurationListRow } from '@/lib/curation/types'
 import type { Theater, Movie, Showtime, Station } from '@/types/api'
+import { createSupabaseBrowserClient } from './browser'
 
 function supabase() {
   return createSupabaseBrowserClient()
@@ -162,6 +163,32 @@ export function useActiveMovieIds() {
       return Array.from(new Set((data ?? []).map((r) => r.movie_id).filter(Boolean)))
     },
     staleTime: 2 * 60 * 1000,
+  })
+}
+
+/* ── 영화 탭 큐레이션 리스트 (curation_list 테이블) ─────────────── */
+export function useCurationLists() {
+  return useQuery<CurationListRow[]>({
+    queryKey: ['curation-lists'],
+    queryFn: async () => {
+      const { data, error } = await supabase()
+        .from('curation_list')
+        .select('list_id, name_ko, type, query, member_ids, priority_tier, season_trigger, min_n')
+
+      if (error) throw error
+
+      return (data ?? []).map((r) => ({
+        listId: r.list_id,
+        nameKo: r.name_ko,
+        type: r.type as CurationListRow['type'],
+        query: (r.query as CurationListRow['query']) ?? null,
+        memberIds: (r.member_ids as string[] | null) ?? null,
+        priorityTier: r.priority_tier as CurationListRow['priorityTier'],
+        seasonTrigger: (r.season_trigger as CurationListRow['seasonTrigger']) ?? null,
+        minN: r.min_n ?? null,
+      }))
+    },
+    staleTime: 60 * 60 * 1000,
   })
 }
 

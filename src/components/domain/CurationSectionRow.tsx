@@ -16,7 +16,7 @@ const POSTER_SIZE = {
   desktop: { width: 140, height: 210 },
 }
 
-/** 영화 탭 큐레이션 섹션 — 가로 스크롤 포스터 1줄 (구현 1) */
+/** 영화 탭 큐레이션 섹션 — 가로 스크롤 포스터 1줄 (구현 2: 라이브 상영작 교집합, 임계값 없음) */
 export function CurationSectionRow({ title, movies, isDesktop = false }: CurationSectionRowProps) {
   const { width, height } = isDesktop ? POSTER_SIZE.desktop : POSTER_SIZE.mobile
 
@@ -34,6 +34,11 @@ export function CurationSectionRow({ title, movies, isDesktop = false }: Curatio
       >
         {title}
       </h2>
+      {movies.length === 0 ? (
+        <p style={{ margin: 0, padding: '12px 16px', fontSize: 13, color: 'var(--color-text-caption)' }}>
+          지금 상영 중인 영화 없음 (교집합 0편)
+        </p>
+      ) : (
       <div
         className="no-scrollbar"
         style={{
@@ -78,6 +83,7 @@ export function CurationSectionRow({ title, movies, isDesktop = false }: Curatio
           </div>
         ))}
       </div>
+      )}
     </section>
   )
 }
