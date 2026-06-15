@@ -32,10 +32,10 @@ export function posterSizeForZoom(zoom: number, isDesktop: boolean): { w: number
     if (zoom >= 17) return { w: 48, h: 72 }
     return { w: 44, h: 66 }
   }
-  if (zoom >= 19) return { w: 96, h: 144 }
-  if (zoom >= 18) return { w: 80, h: 120 }
-  if (zoom >= 17) return { w: 66, h: 99 }
-  return { w: 52, h: 78 }
+  if (zoom >= 19) return { w: 108, h: 162 }
+  if (zoom >= 18) return { w: 90, h: 135 }
+  if (zoom >= 17) return { w: 74, h: 111 }
+  return { w: 58, h: 87 }
 }
 
 export function posterSlotsForZoom(
