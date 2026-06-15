@@ -1073,6 +1073,7 @@ export default function MapView() {
   selectedIdRef.current = selectedId
   const [fromMovieId, setFromMovieId] = useState<string | null>(null)
   const [initialSheetDate, setInitialSheetDate] = useState<string | undefined>(undefined)
+  const [initialShowtimeId, setInitialShowtimeId] = useState<string | undefined>(undefined)
   const suppressMovieFilterFitRef = useRef(false)
   const [zoom, setZoom] = useState(14)
   const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null)
@@ -1963,6 +1964,7 @@ export default function MapView() {
       setSheetExiting(false)
       setFromMovieId(null)
       setInitialSheetDate(undefined)
+      setInitialShowtimeId(undefined)
     }, 400)
   }, [])
 
@@ -2065,7 +2067,8 @@ export default function MapView() {
     const movieParam = searchParams.get('movie') ?? searchParams.get('fromMovie')
     if (movieParam && movies.length === 0) return
     const dateParam = searchParams.get('date')
-    const restoreKey = [theaterParam, movieParam ?? '', dateParam ?? ''].join(':')
+    const showtimeParam = searchParams.get('showtime')
+    const restoreKey = [theaterParam, movieParam ?? '', dateParam ?? '', showtimeParam ?? ''].join(':')
     if (restoredTheaterRef.current === restoreKey) return
     const theater = theaters.find((t) => t.id === theaterParam)
     if (!theater) return
@@ -2074,6 +2077,7 @@ export default function MapView() {
     const fromMovie = searchParams.get('fromMovie')
     if (movieParam) {
       openTheaterForMovie(theater.id, movieParam, dateParam ?? undefined, 'movie_detail')
+      setInitialShowtimeId(showtimeParam ?? undefined)
     } else {
       suppressMovieFilterFitRef.current = true
       closeSearch()
@@ -2109,6 +2113,7 @@ export default function MapView() {
     url.searchParams.delete('fromMovie')
     url.searchParams.delete('date')
     url.searchParams.delete('movie')
+    url.searchParams.delete('showtime')
     window.history.replaceState({}, '', url.toString())
 
   }, [closeSearch, flyToForTheater, isDesktopLayout, movies.length, openTheaterForMovie, searchParams, theaters])
@@ -3461,6 +3466,7 @@ export default function MapView() {
             onFavorite={() => { /* Phase 4 */ }}
             mapFilters={{ genres: filters.genres, nations: filters.nations }}
             initialIsoDate={initialSheetDate}
+            initialShowtimeId={initialShowtimeId}
             onBack={fromMovieId ? () => router.push(`/movie/${fromMovieId}?tab=theaters`) : undefined}
           />
         )
