@@ -236,6 +236,7 @@ interface TheaterSheetProps {
   onFavorite?: () => void
   mapFilters?: { genres: string[]; nations: string[] }
   initialIsoDate?: string
+  initialShowtimeId?: string
   onBack?: () => void
 }
 
@@ -257,6 +258,7 @@ export function TheaterSheet({
   onFavorite,
   mapFilters,
   initialIsoDate,
+  initialShowtimeId,
   onBack,
 }: TheaterSheetProps) {
 
@@ -584,9 +586,17 @@ export function TheaterSheet({
   }, [shownExpanded, allMoviesLoading, theaterAvailableDates])
 
   /* ── 선택된 상영 회차 ── */
-  const [selectedShowtimeId, setSelectedShowtimeId] = useState<string | null>(null)
+  const [selectedShowtimeId, setSelectedShowtimeId] = useState<string | null>(initialShowtimeId ?? null)
 
-  useEffect(() => { setSelectedShowtimeId(null) }, [selectedMovieId])
+  // 마운트 시점의 selectedMovieId 변경(initialShowtimeId 적용)은 회차 선택을 초기화하지 않는다.
+  const skipShowtimeResetRef = useRef(true)
+  useEffect(() => {
+    if (skipShowtimeResetRef.current) {
+      skipShowtimeResetRef.current = false
+      return
+    }
+    setSelectedShowtimeId(null)
+  }, [selectedMovieId])
   useEffect(() => { if (!shownExpanded) setSelectedShowtimeId(null) }, [shownExpanded])
 
   const handleMovieSelect = (movieId: string, source: string) => {
@@ -674,14 +684,32 @@ export function TheaterSheet({
   }
 
   const shareTheater = () => {
+    const selectedEntry = allMovieEntries.find((e) => e.movie.id === selectedMovieId)
+    const selectedShowtime = filteredShowtimes.find((st) => st.id === selectedShowtimeId)
+
     trackEvent('share clicked', {
       theater_id: theater.id,
       theater_name: theater.name,
+      selected_movie_id: selectedMovieId || null,
+      selected_showtime_id: selectedShowtimeId || null,
       source: 'theater_sheet',
     })
-    const shareUrl = `${window.location.origin}/?theater=${encodeURIComponent(theater.id)}`
+
+    const url = new URL(window.location.origin)
+    url.searchParams.set('theater', theater.id)
+    let title = theater.name
+    if (selectedEntry) {
+      url.searchParams.set('movie', selectedEntry.movie.id)
+      url.searchParams.set('date', selectedIsoDate)
+      title += ` - ${selectedEntry.movie.title}`
+      if (selectedShowtime) {
+        url.searchParams.set('showtime', selectedShowtime.id)
+        title += ` ${selectedShowtime.showTime.slice(0, 5)}`
+      }
+    }
+    const shareUrl = url.toString()
     // text + url 동시에 넘기면 iOS Safari가 url을 무시하는 버그 있음 → title + url만 사용
-    const payload = { title: theater.name, url: shareUrl }
+    const payload = { title, url: shareUrl }
 
     const copyFallback = () => {
       shareAdapter.copyToClipboardAsync(shareUrl).then((ok) => {
