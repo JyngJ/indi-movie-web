@@ -198,6 +198,46 @@ export function useActiveMovieIdsByRegion(regionId: string | null) {
   })
 }
 
+/** 오늘 이후 활성 상영 (movie_id, theater_id) 쌍 — 중복 제거. 특별전 계산에 사용. */
+export function useActiveMovieTheaterPairs(regionId: string | null) {
+  const today = formatLocalDate(new Date())
+  const { data: theaters = [] } = useTheaters()
+
+  const theaterIds = regionId
+    ? theaters.filter((t) => getRegionFromCity(t.city) === regionId).map((t) => t.id)
+    : null
+
+  return useQuery<{ movieId: string; theaterId: string }[]>({
+    queryKey: ['active-movie-theater-pairs', today, regionId ?? 'all'],
+    queryFn: async () => {
+      if (theaterIds !== null && theaterIds.length === 0) return []
+
+      let q = supabase()
+        .from('showtimes')
+        .select('movie_id, theater_id')
+        .eq('is_active', true)
+        .gte('show_date', today)
+
+      if (theaterIds !== null) q = q.in('theater_id', theaterIds)
+
+      const { data, error } = await q
+      if (error) throw error
+
+      const seen = new Set<string>()
+      const result: { movieId: string; theaterId: string }[] = []
+      for (const r of data ?? []) {
+        const key = `${r.theater_id}:${r.movie_id}`
+        if (seen.has(key)) continue
+        seen.add(key)
+        result.push({ movieId: r.movie_id, theaterId: r.theater_id })
+      }
+      return result
+    },
+    staleTime: 2 * 60 * 1000,
+    enabled: regionId === null || theaters.length > 0,
+  })
+}
+
 /* ── 영화 탭 큐레이션 리스트 (curation_list 테이블) ─────────────── */
 export function useCurationLists() {
   return useQuery<CurationListRow[]>({
@@ -696,5 +736,42 @@ export function useDirectorProfile(name: string | null) {
       }
     },
     staleTime: 30 * 60 * 1000,
+  })
+}
+
+/* ── 주간 랭킹 ──────────────────────────────────────────────────── */
+export interface FilmRankingEntry {
+  movie_id: string
+  rank: number
+  prev_rank: number | null
+  score: number
+  theater_count: number
+  showtime_count: number
+  view_count: number
+}
+
+export interface FilmRankingRow {
+  week_start: string
+  rankings: FilmRankingEntry[]
+}
+
+export function useFilmRankings() {
+  return useQuery<FilmRankingRow | null>({
+    queryKey: ['film-rankings'],
+    queryFn: async () => {
+      const { data } = await supabase()
+        .from('film_rankings')
+        .select('week_start, rankings')
+        .order('week_start', { ascending: false })
+        .limit(1)
+        .single()
+      if (!data) return null
+      const row = data as Record<string, unknown>
+      return {
+        week_start: String(row.week_start),
+        rankings: (row.rankings as FilmRankingEntry[]) ?? [],
+      }
+    },
+    staleTime: 60 * 60 * 1000,
   })
 }

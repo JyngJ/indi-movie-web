@@ -43,7 +43,7 @@ VALUES
     1, NULL, NULL
   ),
   (
-    'decade_00s', '2000년대 영화', 'dynamic',
+    'decade_00s', '00년대 영화', 'dynamic',
     '{"yearRange": [2000, 2009]}'::jsonb,
     1, NULL, NULL
   )

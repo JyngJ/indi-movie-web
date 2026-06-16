@@ -2,6 +2,7 @@
 
 import { PosterThumb } from '@/components/domain'
 import { finiteNumber } from '@/lib/map/searchUtils'
+import { withFlag } from '@/lib/nations'
 import type { TheaterPosterMovie, PosterSlot } from '@/lib/map/posterLogic'
 
 export function MovieListCard({ movies }: { movies: TheaterPosterMovie[] }) {
@@ -137,7 +138,7 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
                                 <span key={g} className="pm-tip-genre-tag">{g}</span>
                               ))}
                               {slot.movie.nation && (
-                                <span className="pm-tip-genre-tag">{slot.movie.nation.split(/[,，/·]+/)[0].trim()}</span>
+                                <span className="pm-tip-genre-tag">{withFlag(slot.movie.nation.split(/[,，/·]+/)[0].trim())}</span>
                               )}
                             </div>
                           )}
