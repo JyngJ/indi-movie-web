@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import type { CurationListRow } from '@/lib/curation/types'
 import type { Theater, Movie, Showtime, Station } from '@/types/api'
 import { createSupabaseBrowserClient } from './browser'
+import { getRegionFromCity } from '@/lib/regions'
 
 function supabase() {
   return createSupabaseBrowserClient()
@@ -163,6 +164,37 @@ export function useActiveMovieIds() {
       return Array.from(new Set((data ?? []).map((r) => r.movie_id).filter(Boolean)))
     },
     staleTime: 2 * 60 * 1000,
+  })
+}
+
+/** 지역 필터링된 활성 상영작 ID 목록 (regionId=null이면 전국) */
+export function useActiveMovieIdsByRegion(regionId: string | null) {
+  const today = formatLocalDate(new Date())
+  const { data: theaters = [] } = useTheaters()
+
+  const theaterIds = regionId
+    ? theaters.filter((t) => getRegionFromCity(t.city) === regionId).map((t) => t.id)
+    : null
+
+  return useQuery<string[]>({
+    queryKey: ['active-movie-ids-region', today, regionId ?? 'all'],
+    queryFn: async () => {
+      if (theaterIds !== null && theaterIds.length === 0) return []
+
+      let q = supabase()
+        .from('showtimes')
+        .select('movie_id')
+        .eq('is_active', true)
+        .gte('show_date', today)
+
+      if (theaterIds !== null) q = q.in('theater_id', theaterIds)
+
+      const { data, error } = await q
+      if (error) throw error
+      return Array.from(new Set((data ?? []).map((r) => r.movie_id).filter(Boolean)))
+    },
+    staleTime: 2 * 60 * 1000,
+    enabled: regionId === null || theaters.length > 0,
   })
 }
 
