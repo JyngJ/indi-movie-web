@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import type { MouseEvent as ReactMouseEvent, WheelEvent as ReactWheelEvent } from 'react'
 import { GENRES } from '@/lib/genres'
 import { withFlag } from '@/lib/nations'
+import { getStoredRegion, setStoredRegion } from '@/lib/regionStorage'
 import { type DateId, buildDateOptions, fmtFull, fmtMD, isSameDay } from './filterBar/dateHelpers'
 import { CalendarPicker } from './filterBar/CalendarPicker'
 import { DateDropdown } from './filterBar/DateDropdown'
@@ -118,6 +119,9 @@ export function FilterBar({
   useEffect(() => {
     // 사용자가 직접 선택한 경우 GPS 값으로 덮어쓰지 않음
     if (userPickedRegionRef.current) return
+    // sessionStorage 저장값 > GPS 기본값
+    const stored = getStoredRegion()
+    if (stored) { userPickedRegionRef.current = true; setRegionId(stored); return }
     setRegionId(defaultRegionId ?? null)
   }, [defaultRegionId])
 
@@ -340,7 +344,7 @@ export function FilterBar({
           hasDropdown
           chipRef={regionChipRef}
           onClick={() => openDropdown('region', regionChipRef)}
-          onClear={regionId ? () => { setRegionId(null); setOpenPanel(null); userPickedRegionRef.current = false; chip({ regionId: null }) } : undefined}
+          onClear={regionId ? () => { setRegionId(null); setOpenPanel(null); userPickedRegionRef.current = false; setStoredRegion(null); chip({ regionId: null }) } : undefined}
         />
         <FilterChip
           label="상영 일정"
@@ -493,7 +497,7 @@ export function FilterBar({
           {openPanel === 'region' && (
             <RegionDropdown
               selectedId={regionId}
-              onSelect={(id) => { userPickedRegionRef.current = !!id; setRegionId(id); if (id) setOpenPanel(null); chip({ regionId: id }) }}
+              onSelect={(id) => { userPickedRegionRef.current = !!id; setRegionId(id); setStoredRegion(id); if (id) setOpenPanel(null); chip({ regionId: id }) }}
               style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, zIndex: 99999 }}
             />
           )}

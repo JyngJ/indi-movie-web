@@ -4,14 +4,17 @@ import { useEffect, useRef, useState } from 'react'
 import { CurationSectionRow } from '@/components/domain/CurationSectionRow'
 import { DirectorSpotlightSection } from '@/components/domain/DirectorSpotlightSection'
 import { FilmRankingSection } from '@/components/domain/FilmRankingSection'
+import { LocationPermissionModal } from '@/components/domain/LocationPermissionModal'
 import { FilterChip } from '@/components/domain/filterBar/FilterChip'
 import { RegionDropdown } from '@/components/domain/filterBar/RegionDropdown'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useCurationData } from '@/hooks/useCurationData'
+import { useLocationPermission } from '@/hooks/useLocationPermission'
 import { getFilmsTabCurationSections } from '@/lib/curation/filmsTabLists'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { useActiveMovieIdsByRegion, useActiveMovieTheaterPairs, useCurationLists, useFilmRankings, useMovies, useTheaters } from '@/lib/supabase/queries'
+import { getStoredRegion, setStoredRegion } from '@/lib/regionStorage'
 import type { Theater } from '@/types/api'
 
 export default function FilmsPage() {
@@ -19,18 +22,16 @@ export default function FilmsPage() {
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
 
-  useEffect(() => {
-    if (!navigator.geolocation) return
-    navigator.geolocation.getCurrentPosition(
-      (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => {},
-      { timeout: 5000, maximumAge: 60000 },
-    )
-  }, [])
+  const { state: locState, coords: locCoords, request: requestLoc, dismiss: dismissLoc } = useLocationPermission()
   const isDesktop = mounted && isDesktopLayout
 
-  const [selectedRegion, setSelectedRegion] = useState<string | null>(null)
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [selectedRegion, setSelectedRegion] = useState<string | null>(() => getStoredRegion())
+
+  function pickRegion(id: string | null) {
+    setSelectedRegion(id)
+    setStoredRegion(id)
+  }
+  const userLocation = locCoords
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const chipRef = useRef<HTMLButtonElement>(null)
@@ -72,13 +73,16 @@ export default function FilmsPage() {
 
   const sections = getFilmsTabCurationSections(filteredMovies, new Set(activeMovieIds), curationLists)
 
+  const lastWeekBadgeMap = new Map(lastWeekFilms.map((f) => [f.movie.id, f.daysLeft]))
+
   const realtimeSections = [
     {
       listId: 'realtime_last_week',
       nameKo: '이번 주가 마지막',
       emoji: '⏳',
-      description: '곧 스크린에서 사라지는 영화, 놓치기 전에',
+      description: '한동안 다시 못볼지도 몰라요! 놓치기 전에 여기서',
       displayMode: 'default' as const,
+      posterBadges: lastWeekBadgeMap,
       movies: lastWeekFilms
         .filter((f) => matchesSearch(f.movie.title, f.movie.director))
         .map((f) => f.movie),
@@ -87,7 +91,7 @@ export default function FilmsPage() {
       listId: 'realtime_new_indie',
       nameKo: '이번 주 새롭게 상영하는 영화',
       emoji: '🎬',
-      description: '이번 주 처음으로 극장에 걸린 독립영화들',
+      description: '이번 주 스크린에 새로 오른 영화들',
       displayMode: 'default' as const,
       movies: newIndieFilms
         .filter((f) => matchesSearch(f.movie.title, f.movie.director))
@@ -255,7 +259,7 @@ export default function FilmsPage() {
                 hasDropdown
                 chipRef={chipRef}
                 onClick={() => setDropdownOpen((o) => !o)}
-                onClear={selectedRegion ? () => { setSelectedRegion(null); setDropdownOpen(false) } : undefined}
+                onClear={selectedRegion ? () => { pickRegion(null); setDropdownOpen(false) } : undefined}
               />
               {dropdownOpen && (
                 <div
@@ -264,7 +268,7 @@ export default function FilmsPage() {
                 >
                   <RegionDropdown
                     selectedId={selectedRegion}
-                    onSelect={(id) => { setSelectedRegion(id); setDropdownOpen(false) }}
+                    onSelect={(id) => { pickRegion(id); setDropdownOpen(false) }}
                   />
                 </div>
               )}
@@ -294,7 +298,7 @@ export default function FilmsPage() {
                   hasDropdown
                   chipRef={chipRef}
                   onClick={() => setDropdownOpen((o) => !o)}
-                  onClear={selectedRegion ? () => { setSelectedRegion(null); setDropdownOpen(false) } : undefined}
+                  onClear={selectedRegion ? () => { pickRegion(null); setDropdownOpen(false) } : undefined}
                 />
                 {dropdownOpen && (
                   <div
@@ -303,7 +307,7 @@ export default function FilmsPage() {
                   >
                     <RegionDropdown
                       selectedId={selectedRegion}
-                      onSelect={(id) => { setSelectedRegion(id); setDropdownOpen(false) }}
+                      onSelect={(id) => { pickRegion(id); setDropdownOpen(false) }}
                     />
                   </div>
                 )}
@@ -386,6 +390,14 @@ export default function FilmsPage() {
         <div style={{ marginTop: 16, height: 1, background: 'var(--color-border)' }} />
       </header>
 
+      {(locState === 'prompt' || locState === 'denied' || locState === 'requesting') && (
+        <LocationPermissionModal
+          state={locState}
+          onRequest={requestLoc}
+          onDismiss={dismissLoc}
+        />
+      )}
+
       {filmRankingRow && (
         <FilmRankingSection
           weekStart={filmRankingRow.week_start}
@@ -428,6 +440,7 @@ export default function FilmsPage() {
           displayMode={section.displayMode}
           movies={section.movies}
           isDesktop={isDesktop}
+          posterBadges={section.posterBadges}
         />
       ))}
 

@@ -1059,6 +1059,10 @@ export default function MapView() {
   const [directorFilter, setDirectorFilter] = useState<{ name: string } | null>(null)
   const [panelStack, setPanelStack] = useState<DesktopPanelState[]>([])
   const desktopPanel = panelStack[panelStack.length - 1] ?? null
+  // 큐레이션 영화 선택 시 자동 적용한 지역 필터 → 패널 닫을 때 복원
+  const autoRegionRef = useRef<{ applied: string; prev: string | null } | null>(null)
+  // 큐레이션에서 영화 선택 시 자동 세팅한 movieFilter → 패널 닫을 때 제거
+  const autoMovieFilterRef = useRef(false)
   const [panelIn, setPanelIn] = useState(false)          // CSS transition 트리거
   const [panelExiting, setPanelExiting] = useState(false)
   const [displayedPanel, setDisplayedPanel] = useState<DesktopPanelState | null>(null)
@@ -1186,6 +1190,21 @@ export default function MapView() {
     return () => window.removeEventListener('popstate', handler)
   }, [])
 
+  // 데스크톱 패널 완전히 닫힐 때 → 자동 적용한 지역 필터·영화 필터 복원
+  useEffect(() => {
+    if (panelStack.length === 0) {
+      if (autoRegionRef.current) {
+        const prevRegion = autoRegionRef.current.prev
+        autoRegionRef.current = null
+        setFilters(f => ({ ...f, regionId: prevRegion }))
+      }
+      if (autoMovieFilterRef.current) {
+        autoMovieFilterRef.current = false
+        setMovieFilter(null)
+      }
+    }
+  }, [panelStack.length])
+
   // 좌측 도크가 접혀있는 상태에서 극장이 선택되면 — 도크를 펼쳐 극장 상세가 슬라이드 인 되도록 강제로 열고,
   // 선택 직전의 접힘 상태를 기억해뒀다가 극장 상세를 닫을 때 그 상태로 되돌린다
   const dockCollapsedBeforeTheaterRef = useRef<boolean | null>(null)
@@ -1243,12 +1262,28 @@ export default function MapView() {
       source: 'curation_sheet',
     })
     classifySessionIntent('type_a', { source: 'curation_sheet', movie_id: movieId })
+
+    // 지역 있는 큐레이션 영화면 → 대상 지역 자동 적용 (데스크톱 패널 한정)
     if (isDesktopLayout) {
+      setMovieFilter({ id: movieId, title: movieTitle })
+      autoMovieFilterRef.current = true
+
+      const allCurationFilms = [
+        ...curationData.lastWeekFilms.map(f => ({ id: f.movie.id, regions: f.regions })),
+        ...curationData.newIndieFilms.map(f => ({ id: f.movie.id, regions: f.regions })),
+        ...curationData.returningFilms.map(f => ({ id: f.movie.id, regions: f.regions })),
+      ]
+      const match = allCurationFilms.find(f => f.id === movieId)
+      const targetRegion = match?.regions?.[0] ?? null
+      if (targetRegion && targetRegion !== filters.regionId) {
+        autoRegionRef.current = { applied: targetRegion, prev: filters.regionId }
+        setFilters(f => ({ ...f, regionId: targetRegion }))
+      }
       openDesktopPanel({ type: 'movie', id: movieId })
     } else {
       setMovieSheetId(movieId)
     }
-  }, [isDesktopLayout, openDesktopPanel])
+  }, [isDesktopLayout, openDesktopPanel, curationData, filters.regionId])
 
   const handleRemoveRecentlyViewed = useCallback((kind: RecentlyViewedKind, id: string) => {
     removeRecentlyViewed(cookieStorageAdapter, kind, id)
@@ -3220,25 +3255,24 @@ export default function MapView() {
 
       {/* 큐레이션 — 모바일: 항상 떠 있는 드래그 가능한 하단 시트(peek/default/expanded 3단 스냅) */}
       {!isDesktopLayout && !searchOpen && (
-        // 극장/영화 시트가 위에 뜬 동안은 마운트는 유지하고 숨김만 — 닫히면 snap·스크롤 위치 그대로 복원
-        <div style={(selectedTheater || movieSheetId) ? { visibility: 'hidden', pointerEvents: 'none' } : undefined}>
-          <CurationSheet
-            snap={curationSnap}
-            onSnapChange={handleCurationSnapChange}
-            lastWeekFilms={curationData.lastWeekFilms}
-            soloTheaterFilms={curationData.soloTheaterFilms}
-            soloRegionLabel={filters.regionId ?? undefined}
-            todayShowFilms={curationData.todayShowFilms}
-            returningFilms={curationData.returningFilms}
-            newIndieFilms={curationData.newIndieFilms}
-            recentlyViewed={curationData.recentlyViewed}
-            onMovieSelect={handleCurationMovieSelect}
-            onTodayShowSelect={handleTodayShowSelect}
-            getTheaterDistance={getTheaterDistance}
-            onRemoveRecentlyViewed={handleRemoveRecentlyViewed}
-            onRecentItemClick={handleRecentItemClick}
-          />
-        </div>
+        // 극장/영화 시트가 위에 뜬 동안은 마운트는 유지 — hidden prop으로 슬라이드 애니메이션 제어
+        <CurationSheet
+          snap={curationSnap}
+          onSnapChange={handleCurationSnapChange}
+          hidden={!!(selectedTheater || movieSheetId)}
+          lastWeekFilms={curationData.lastWeekFilms}
+          soloTheaterFilms={curationData.soloTheaterFilms}
+          soloRegionLabel={filters.regionId ?? undefined}
+          todayShowFilms={curationData.todayShowFilms}
+          returningFilms={curationData.returningFilms}
+          newIndieFilms={curationData.newIndieFilms}
+          recentlyViewed={curationData.recentlyViewed}
+          onMovieSelect={handleCurationMovieSelect}
+          onTodayShowSelect={handleTodayShowSelect}
+          getTheaterDistance={getTheaterDistance}
+          onRemoveRecentlyViewed={handleRemoveRecentlyViewed}
+          onRecentItemClick={handleRecentItemClick}
+        />
       )}
 
       {/* 큐레이션 도크 — 데스크톱 전용 좌측 상시 패널. 검색 패널·극장 시트와 같은 슬롯·크기를 공유하며 셋 다 비활성일 때만 노출(네이버 지도 레퍼런스) */}

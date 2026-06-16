@@ -181,9 +181,14 @@ export function useCurationData(open: boolean, regionId: string | null, refreshK
     regionId ? cacheData.newIndieFilms.filter(film => film.regions?.includes(regionId)) : cacheData.newIndieFilms
   ), [cacheData.newIndieFilms, regionId])
 
-  const lastWeekFilms = useMemo(() => (
-    regionId ? cacheData.lastWeekFilms.filter(film => film.regions?.includes(regionId)) : cacheData.lastWeekFilms
-  ), [cacheData.lastWeekFilms, regionId])
+  const lastWeekFilms = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10)
+    return cacheData.lastWeekFilms.filter((film) => {
+      if (film.maxShowDate < today) return false   // 이미 종영 — 제거
+      if (regionId && !film.regions?.includes(regionId)) return false
+      return true
+    })
+  }, [cacheData.lastWeekFilms, regionId])
 
   return {
     returningFilms,

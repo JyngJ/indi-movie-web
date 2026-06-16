@@ -138,7 +138,7 @@ export function DirectorSpotlightSection({
           🏆 감독 스포트라이트
         </h2>
         <p style={{ margin: '3px 0 0', fontSize: 12, color: 'var(--color-text-caption)' }}>
-          지금 주목할 만한 연출자
+          지금 주목할 만한 감독
         </p>
       </div>
 

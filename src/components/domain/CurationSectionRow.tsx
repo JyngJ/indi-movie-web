@@ -14,6 +14,8 @@ interface CurationSectionRowProps {
   displayMode: SectionDisplayMode
   movies: Movie[]
   isDesktop?: boolean
+  /** movieId → 남은 일수 (0 = 오늘이 마지막) — 포스터 우상단 D-N 배지 */
+  posterBadges?: Map<string, number>
 }
 
 const POSTER_SIZE = {
@@ -183,11 +185,13 @@ function MovieCard({
   width,
   height,
   isDesktop,
+  daysLeft,
 }: {
   movie: Movie
   width: number
   height: number
   isDesktop: boolean
+  daysLeft?: number
 }) {
   const cardRef = useRef<HTMLDivElement>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -225,9 +229,24 @@ function MovieCard({
             transform: hovered ? 'scale(1.1)' : 'scale(1)',
             transformOrigin: 'center center',
             borderRadius: 6,
+            position: 'relative',
           }}
         >
           <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} />
+          {daysLeft != null && (
+            <span style={{
+              position: 'absolute', top: 4, right: 4,
+              padding: '2px 6px',
+              borderRadius: 99,
+              fontSize: 10, fontWeight: 700, lineHeight: 1.4,
+              color: '#fff',
+              backgroundColor: daysLeft === 0 ? '#DC2626' : daysLeft === 1 ? '#EA580C' : '#78716C',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
+              whiteSpace: 'nowrap',
+            }}>
+              {daysLeft === 0 ? '오늘' : `D-${daysLeft}`}
+            </span>
+          )}
         </div>
 
         <MovieCardInfo movie={movie} isDesktop={isDesktop} />
@@ -248,6 +267,7 @@ export function CurationSectionRow({
   displayMode,
   movies,
   isDesktop = false,
+  posterBadges,
 }: CurationSectionRowProps) {
   const { width, height } = isDesktop ? POSTER_SIZE.desktop : POSTER_SIZE.mobile
   const scaleBleed = Math.ceil(height * 0.04)
@@ -354,6 +374,7 @@ export function CurationSectionRow({
               width={width}
               height={height}
               isDesktop={isDesktop}
+              daysLeft={posterBadges?.get(movie.id)}
             />
           ))}
         </div>
