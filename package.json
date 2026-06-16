@@ -9,13 +9,15 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "discord-bot": "tsx --env-file=.env.local scripts/discord-ocr-bot.ts",
-    "crawl:showtimes": "tsx --env-file=.env.local scripts/crawl-showtimes.ts",
+    "curate:resolve-pending": "tsx --env-file=.env.local src/scripts/resolve-curation-pending.ts",
+    "crawl:showtimes": "tsx --env-file=.env.local scripts/crawl-showtimes.ts && npm run curate:resolve-pending",
     "crawl:seats": "tsx --env-file=.env.local scripts/crawl-seats.ts",
     "seed:theaters": "tsx src/scripts/seed-theaters.ts",
     "seed:sources": "tsx src/scripts/seed-crawl-sources.ts",
     "seed:disable-broken": "tsx src/scripts/disable-broken-crawl-sources.ts",
     "find:duplicates": "tsx src/scripts/find-duplicate-theaters.ts",
-    "crawl:curation": "tsx --env-file=.env.local src/scripts/compute-curation.ts"
+    "crawl:curation": "tsx --env-file=.env.local src/scripts/compute-curation.ts",
+    "curate:weekly-ranking": "tsx --env-file=.env.local scripts/compute-weekly-ranking.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0",

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { PosterThumb } from './PosterThumb'
@@ -62,6 +62,8 @@ interface CurationSheetProps {
   onRecentItemClick?: (item: RecentlyViewedEntry) => void
   /** 현재 위치 있을 때 극장 ID로 거리 텍스트("1.2 km") 조회 */
   getTheaterDistance?: (theaterId: string) => string | null
+  /** TheaterSheet/MovieSheet가 열려 큐레이션 시트를 숨겨야 할 때 */
+  hidden?: boolean
 }
 
 /** 모바일: 가로 스크롤 행 / 데스크톱(도크): 한 줄 3개 고정 그리드 — 도크 폭(352, 좌우 패딩 20) 기준 칸당 96px */
@@ -597,6 +599,7 @@ export function CurationSheet({
   onRemoveRecentlyViewed,
   onRecentItemClick,
   getTheaterDistance,
+  hidden = false,
 }: CurationSheetProps) {
   const containerRef  = useRef<HTMLDivElement>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
@@ -610,6 +613,23 @@ export function CurationSheet({
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
+
+  /* ── 등장 애니메이션: 첫 마운트 또는 hidden→visible 전환 시 아래에서 슬라이드 업 ── */
+  const [entering, setEntering] = useState(true)  // 초기 마운트는 off-screen 출발
+  const prevHiddenRef = useRef(!!hidden)
+
+  // hidden→visible 감지: 페인트 전에 동기적으로 off-screen 위치 세팅
+  useLayoutEffect(() => {
+    if (prevHiddenRef.current && !hidden) setEntering(true)
+    prevHiddenRef.current = !!hidden
+  }, [hidden])
+
+  // entering=true → 다음 프레임에서 transition 시작
+  useEffect(() => {
+    if (!entering) return
+    const id = requestAnimationFrame(() => setEntering(false))
+    return () => cancelAnimationFrame(id)
+  }, [entering])
 
   /* ── 스냅 지점별 translateY 오프셋 (0 = 완전 펼침) ── */
   const expandedHeight = Math.max(0, viewportHeight - TOP_MARGIN)
@@ -796,8 +816,9 @@ export function CurationSheet({
         borderRadius: 'var(--comp-sheet-radius)',
         boxShadow: 'var(--shadow-sheet)',
         overflow: 'hidden',
-        transform: `translateY(${effectiveOffset}px)`,
-        transition: dragging ? 'none' : 'transform 0.38s cubic-bezier(0.32, 0.72, 0, 1)',
+        transform: `translateY(${(hidden || entering) ? effectiveOffset + CURATION_PEEK_HEIGHT + 20 : effectiveOffset}px)`,
+        transition: (hidden || entering || dragging) ? 'none' : 'transform 0.38s cubic-bezier(0.32, 0.72, 0, 1)',
+        pointerEvents: hidden ? 'none' : undefined,
         // expanded일 때는 검색바·필터칩(지역 설정 팝업 포함, zIndex 1001)보다 위로 올라와 가려야 함 — 글로벌 탭바(1150)보다는 아래로 유지
         zIndex: snap === 'expanded' ? 1010 : 960,
         touchAction: snap === 'expanded' ? 'auto' : 'none',

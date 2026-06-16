@@ -105,6 +105,29 @@ export interface TodayShowFilm {
 // 저장 위치: 쿠키(클라이언트 only, 계정 동기화는 추후 별도)
 // ─────────────────────────────────────────────
 
+// ─────────────────────────────────────────────
+// 영화 탭 큐레이션 리스트 (curation_list 테이블)
+// docs/FILMS_TAB_PLAN.md §4, §6 참고
+// ─────────────────────────────────────────────
+
+export interface CurationListQuery {
+  /** movie.genre[]와 하나 이상 겹치면 매치 */
+  genre?: string[]
+  /** [start, end] — movie.year 포함 범위 */
+  yearRange?: [number, number]
+}
+
+export interface CurationListRow {
+  listId: string
+  nameKo: string
+  type: 'dynamic' | 'static'
+  query: CurationListQuery | null
+  memberIds: string[] | null
+  priorityTier: 1 | 2 | 3
+  seasonTrigger: { start: string; end: string } | null
+  minN: number | null
+}
+
 export type RecentlyViewedKind = 'movie' | 'theater' | 'director'
 
 export interface RecentlyViewedEntry {

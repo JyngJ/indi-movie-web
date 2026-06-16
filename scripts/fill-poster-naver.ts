@@ -1,5 +1,8 @@
 /**
- * 포스터 없는 영화를 Naver 영화 검색 API로 채우기
+ * 포스터 없는 영화를 Naver API로 채우기
+ * 1차: Naver 영화검색 API (/v1/search/movie.json) — 포스터 URL 직접 반환
+ * 2차: Naver 이미지검색 API (/v1/search/image) — fallback
+ *
  * 실행 (dry-run):  npx tsx --env-file=.env.local scripts/fill-poster-naver.ts
  * 실행 (적용):     npx tsx --env-file=.env.local scripts/fill-poster-naver.ts --apply
  */
@@ -14,6 +17,46 @@ const sb = createClient(
 const CLIENT_ID = process.env.NAVER_CLIENT_ID!
 const CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET!
 
+const NAVER_HEADERS = {
+  'X-Naver-Client-Id': CLIENT_ID,
+  'X-Naver-Client-Secret': CLIENT_SECRET,
+}
+
+function stripHtml(s: string) {
+  return s.replace(/<[^>]+>/g, '').trim()
+}
+
+// ── 1차: 네이버 영화 검색 ─────────────────────────────────────────
+interface NaverMovieItem {
+  title: string
+  image: string
+  pubDate: string  // "YYYY" 형식
+  director: string // "이름|" 형식
+}
+
+async function searchNaverMovie(title: string, year: number): Promise<string | null> {
+  const url = `https://openapi.naver.com/v1/search/movie.json?query=${encodeURIComponent(title)}&display=10`
+  const res = await fetch(url, { headers: NAVER_HEADERS })
+  if (!res.ok) return null
+
+  const j = await res.json() as { items?: NaverMovieItem[] }
+  const items = j.items ?? []
+
+  // 연도 일치하는 것 우선, 없으면 첫 번째
+  const sorted = [...items].sort((a, b) => {
+    const aMatch = Math.abs(Number(a.pubDate) - year)
+    const bMatch = Math.abs(Number(b.pubDate) - year)
+    return aMatch - bMatch
+  })
+
+  for (const item of sorted) {
+    const img = item.image?.trim()
+    if (img && img.startsWith('http')) return img
+  }
+  return null
+}
+
+// ── 2차: 네이버 이미지 검색 (fallback) ──────────────────────────
 interface NaverImageItem {
   link: string
   sizewidth: string
@@ -22,57 +65,56 @@ interface NaverImageItem {
 
 async function searchNaverImage(query: string): Promise<NaverImageItem[]> {
   const url = `https://openapi.naver.com/v1/search/image?query=${encodeURIComponent(query)}&display=10&sort=sim`
-  const res = await fetch(url, {
-    headers: {
-      'X-Naver-Client-Id': CLIENT_ID,
-      'X-Naver-Client-Secret': CLIENT_SECRET,
-    },
-  })
+  const res = await fetch(url, { headers: NAVER_HEADERS })
   if (!res.ok) return []
   const j = await res.json() as { items?: NaverImageItem[] }
   return j.items ?? []
 }
 
-async function findPoster(title: string, year: number): Promise<string | null> {
-  // "영화제목 영화 포스터" 쿼리로 검색
+const TRUSTED_DOMAINS = [
+  'justwatch.com', 'watcha.com', 'watchaplay.com',
+  'cgv.co.kr', 'megabox.co.kr', 'lottecinema.co.kr',
+  'kobis.or.kr', 'kmdb.or.kr', 'koreafilm.or.kr',
+  'movie.naver.com', 'indieground.kr', 'kofic.or.kr',
+  'indiestory.com', 'extmovie.com', 'cine21.com',
+  'kmovie.or.kr', 'bifan.kr', 'biff.kr', 'docs.or.kr',
+]
+
+async function findPosterImage(title: string, year: number): Promise<string | null> {
   for (const query of [`${title} 영화 포스터`, `${title} ${year} 포스터`]) {
     const items = await searchNaverImage(query)
-
-    // 신뢰할 수 있는 영화 포스터 도메인 (최우선)
-    const TRUSTED_DOMAINS = [
-      'justwatch.com', 'watcha.com', 'watchaplay.com',
-      'cgv.co.kr', 'megabox.co.kr', 'lottecinema.co.kr',
-      'kobis.or.kr', 'kmdb.or.kr', 'koreafilm.or.kr',
-      'movie.naver.com', 'indieground.kr', 'kofic.or.kr',
-      'indiestory.com', 'extmovie.com', 'cine21.com',
-      'kmovie.or.kr', 'bifan.kr', 'biff.kr', 'docs.or.kr',
-    ]
-
     const isPortrait = (it: NaverImageItem) => {
       const w = parseInt(it.sizewidth), h = parseInt(it.sizeheight)
       return h > 0 && w > 0 && h / w > 1.3 && Math.min(w, h) >= 300
     }
-    const hasPosterKeyword = (url: string) => /poster|film|movie|영화|포스터/i.test(url)
-
     const portraits = items.filter(it => {
       if (!isPortrait(it)) return false
-      // 신뢰 도메인이면 무조건 OK
       if (TRUSTED_DOMAINS.some(d => it.link.includes(d))) return true
-      // 아니면 URL에 포스터 관련 키워드 있을 때만
-      return hasPosterKeyword(it.link)
+      return /poster|film|movie|영화|포스터/i.test(it.link)
     })
-
-    const hit = portraits[0] ?? null
-    if (hit) return hit.link
-
-    await new Promise(r => setTimeout(r, 300))
+    if (portraits[0]) return portraits[0].link
+    await new Promise(r => setTimeout(r, 200))
   }
+  return null
+}
+
+async function findPoster(title: string, year: number): Promise<{ url: string; source: string } | null> {
+  // 1차: 네이버 영화 검색
+  const movieUrl = await searchNaverMovie(title, year)
+  if (movieUrl) return { url: movieUrl, source: 'movie-api' }
+
+  await new Promise(r => setTimeout(r, 200))
+
+  // 2차: 이미지 검색 fallback
+  const imageUrl = await findPosterImage(title, year)
+  if (imageUrl) return { url: imageUrl, source: 'image-api' }
+
   return null
 }
 
 async function main() {
   if (!CLIENT_ID || !CLIENT_SECRET) {
-    console.error('❌ NAVER_CLIENT_ID / NAVER_CLIENT_SECRET 환경변수가 없습니다.')
+    console.error('❌ NAVER_CLIENT_ID / NAVER_CLIENT_SECRET 없음')
     process.exit(1)
   }
 
@@ -96,14 +138,14 @@ async function main() {
   for (const m of targets) {
     process.stdout.write(`  ${m.title} (${m.year}) ... `)
     try {
-      const posterUrl = await findPoster(m.title, m.year)
-      if (!posterUrl) {
+      const result = await findPoster(m.title, m.year)
+      if (!result) {
         console.log('없음')
         missing++
       } else {
-        console.log(posterUrl)
+        console.log(`[${result.source}] ${result.url}`)
         if (apply) {
-          const { error: err } = await sb.from('movies').update({ poster_url: posterUrl }).eq('id', m.id)
+          const { error: err } = await sb.from('movies').update({ poster_url: result.url }).eq('id', m.id)
           if (err) { console.log(`  ❌ 저장 실패: ${err.message}`); failed++ }
           else { console.log(`  ✅ 저장`); filled++ }
         } else {
