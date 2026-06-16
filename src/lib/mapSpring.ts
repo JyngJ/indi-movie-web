@@ -31,6 +31,11 @@ function stopActive() {
   springActive = false
 }
 
+/** 지도 언마운트 시 호출 — 진행 중인 스프링 애니메이션의 rAF를 즉시 취소 */
+export function cancelSpringAnimation() {
+  stopActive()
+}
+
 export function springFlyTo(map: LeafletMap, latlng: [number, number], zoom: number): void {
   stopActive()
   // Leaflet 내부 애니메이션 취소 (map.stop()의 setZoom 부작용 없이)
@@ -53,6 +58,12 @@ export function springFlyTo(map: LeafletMap, latlng: [number, number], zoom: num
   springActive = true
 
   const tick = (time: number) => {
+    // 지도가 언마운트되어 Leaflet이 내부 정리를 마친 경우 — 애니메이션 중단
+    if (!(map as any)._mapPane) {
+      stopActive()
+      return
+    }
+
     const dt = Math.min((time - (lastTime ?? time)) / 1000, 0.05)
     lastTime = time
 

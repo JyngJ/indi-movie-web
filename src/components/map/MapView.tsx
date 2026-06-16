@@ -39,7 +39,7 @@ import { recordRecentlyViewed, removeRecentlyViewed } from '@/lib/curation/recen
 import { cookieStorageAdapter } from '@/lib/adapters/cookieStorage'
 import type { RecentlyViewedEntry, RecentlyViewedKind } from '@/lib/curation/types'
 import { useCurationData } from '@/hooks/useCurationData'
-import { springFlyTo, springFlyToBounds, springActive, setSpringSettledCallback } from '@/lib/mapSpring'
+import { springFlyTo, springFlyToBounds, springActive, setSpringSettledCallback, cancelSpringAnimation } from '@/lib/mapSpring'
 import { PosterGrid } from './PosterGrid'
 import { ViewportTracker, ZoomSlider, OffScreenTracker, MapRefSetter, MapInteractionTracker, IcoPlus, IcoMinus, IcoLocate, IcoSun, IcoMoon } from './MapControls'
 import { SettingsPanel } from './SettingsPanel'
@@ -1068,6 +1068,7 @@ export default function MapView() {
   const mapShowtimeEnd = formatDateParam(selectedDateRange.end)
   const { data: mapShowtimes = [] } = useMapShowtimes(mapShowtimeStart, mapShowtimeEnd)
   const mapRef = useRef<LeafletMap | null>(null)
+  useEffect(() => () => cancelSpringAnimation(), [])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const selectedIdRef = useRef<string | null>(null)
   selectedIdRef.current = selectedId
