@@ -220,18 +220,5 @@ function safeDiscordFilename(name: string, index: number) {
 
 function discordEnv(name: string) {
   if (name === 'DISCORD_PUBLIC_KEY') return process.env.DISCORD_PUBLIC_KEY || DEFAULT_DISCORD_PUBLIC_KEY
-  return process.env[name] || readLocalPipelineEnv(name)
-}
-
-function readLocalPipelineEnv(name: string) {
-  if (process.env.NODE_ENV === 'production') return ''
-
-  try {
-    const envPath = path.join(process.cwd(), 'pipeline', '.env')
-    const text = fs.readFileSync(envPath, 'utf8')
-    const line = text.split(/\r?\n/).find((item) => item.startsWith(`${name}=`))
-    return line?.slice(name.length + 1).trim() ?? ''
-  } catch {
-    return ''
-  }
+  return process.env[name] ?? ''
 }

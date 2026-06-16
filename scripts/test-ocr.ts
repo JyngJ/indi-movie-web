@@ -3,7 +3,8 @@ import fs from 'fs'
 import path from 'path'
 
 async function main() {
-  const imagePath = process.argv[2] ?? path.join(import.meta.dirname, '../pipeline/IMG_7567.PNG')
+  const imagePath = process.argv[2]
+  if (!imagePath) { console.error('사용법: npx tsx scripts/test-ocr.ts <이미지경로> [극장힌트]'); process.exit(1) }
   const theaterHint = process.argv[3] ?? '인디스페이스'
 
   console.log('이미지:', imagePath)
