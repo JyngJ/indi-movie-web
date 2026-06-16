@@ -91,7 +91,7 @@ export async function generateMetadata({
   const description = todayTitles.length > 0
     ? `${theater.name}에서 이번 주 상영 중: ${todayTitles.join(', ')}. 시간표와 예매 정보를 지도에서 확인하세요.`
     : `${theater.name} 상영 정보. ${theater.address}`
-  const url = `/theater/${theater.id}`
+  const url = `${BASE_URL}/theater/${theater.id}`
 
   return {
     title,

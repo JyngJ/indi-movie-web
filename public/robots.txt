@@ -1,3 +1,4 @@
 User-agent: *
 Allow: /
 Sitemap: https://www.영화볼지도.com/sitemap.xml
+Sitemap: https://www.영화볼지도.com/movie/sitemap/0.xml
