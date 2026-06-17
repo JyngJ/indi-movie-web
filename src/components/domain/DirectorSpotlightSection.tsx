@@ -1,6 +1,7 @@
 'use client'
 
 import type { Movie } from '@/types/api'
+import { useDirectorProfile } from '@/lib/supabase/queries'
 
 interface DirectorSpotlight {
   name: string
@@ -50,6 +51,8 @@ function getSpotlight(movies: Movie[], activeMovieIds: ReadonlySet<string>): Dir
 function DirectorCard({ director, isDesktop }: { director: DirectorSpotlight; isDesktop: boolean }) {
   const size = isDesktop ? 80 : 64
   const color = hashColor(director.name)
+  const { data: profile } = useDirectorProfile(director.name)
+  const photoUrl = profile?.photoUrl
 
   return (
     <div
@@ -68,24 +71,34 @@ function DirectorCard({ director, isDesktop }: { director: DirectorSpotlight; is
           width: size,
           height: size,
           borderRadius: '50%',
-          background: color,
+          background: photoUrl ? 'transparent' : color,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           flexShrink: 0,
+          overflow: 'hidden',
         }}
       >
-        <span
-          style={{
-            fontSize: size * 0.38,
-            fontWeight: 700,
-            color: 'rgba(255,255,255,0.55)',
-            fontFamily: 'var(--font-display)',
-            userSelect: 'none',
-          }}
-        >
-          {director.name.charAt(0)}
-        </span>
+        {photoUrl ? (
+          <img
+            src={photoUrl}
+            alt={director.name}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }}
+            loading="lazy"
+          />
+        ) : (
+          <span
+            style={{
+              fontSize: size * 0.38,
+              fontWeight: 700,
+              color: 'rgba(255,255,255,0.55)',
+              fontFamily: 'var(--font-display)',
+              userSelect: 'none',
+            }}
+          >
+            {director.name.charAt(0)}
+          </span>
+        )}
       </div>
 
       <span
