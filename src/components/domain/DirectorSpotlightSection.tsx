@@ -1,6 +1,7 @@
 'use client'
 
 import type { Movie } from '@/types/api'
+import { useDirectorProfile } from '@/lib/supabase/queries'
 
 interface DirectorSpotlight {
   name: string
@@ -11,6 +12,7 @@ interface DirectorSpotlightSectionProps {
   movies: Movie[]
   activeMovieIds: ReadonlySet<string>
   isDesktop: boolean
+  onDirectorClick?: (name: string) => void
 }
 
 const AVATAR_COLORS = [
@@ -47,12 +49,15 @@ function getSpotlight(movies: Movie[], activeMovieIds: ReadonlySet<string>): Dir
     .slice(0, 12)
 }
 
-function DirectorCard({ director, isDesktop }: { director: DirectorSpotlight; isDesktop: boolean }) {
+function DirectorCard({ director, isDesktop, onClick }: { director: DirectorSpotlight; isDesktop: boolean; onClick?: () => void }) {
   const size = isDesktop ? 80 : 64
   const color = hashColor(director.name)
+  const { data: profile } = useDirectorProfile(director.name)
+  const photoUrl = profile?.photoUrl
 
   return (
     <div
+      onClick={onClick}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -60,7 +65,7 @@ function DirectorCard({ director, isDesktop }: { director: DirectorSpotlight; is
         gap: 6,
         width: size + 16,
         flexShrink: 0,
-        cursor: 'pointer',
+        cursor: onClick ? 'pointer' : undefined,
       }}
     >
       <div
@@ -68,24 +73,35 @@ function DirectorCard({ director, isDesktop }: { director: DirectorSpotlight; is
           width: size,
           height: size,
           borderRadius: '50%',
-          background: color,
+          background: photoUrl ? 'transparent' : color,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           flexShrink: 0,
+          overflow: 'hidden',
+          boxShadow: 'inset 0 0 0 1px var(--color-border), 0 2px 8px rgba(0,0,0,0.18)',
         }}
       >
-        <span
-          style={{
-            fontSize: size * 0.38,
-            fontWeight: 700,
-            color: 'rgba(255,255,255,0.55)',
-            fontFamily: 'var(--font-display)',
-            userSelect: 'none',
-          }}
-        >
-          {director.name.charAt(0)}
-        </span>
+        {photoUrl ? (
+          <img
+            src={photoUrl}
+            alt={director.name}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }}
+            loading="lazy"
+          />
+        ) : (
+          <span
+            style={{
+              fontSize: size * 0.38,
+              fontWeight: 700,
+              color: 'rgba(255,255,255,0.55)',
+              fontFamily: 'var(--font-display)',
+              userSelect: 'none',
+            }}
+          >
+            {director.name.charAt(0)}
+          </span>
+        )}
       </div>
 
       <span
@@ -118,6 +134,7 @@ export function DirectorSpotlightSection({
   movies,
   activeMovieIds,
   isDesktop,
+  onDirectorClick,
 }: DirectorSpotlightSectionProps) {
   const directors = getSpotlight(movies, activeMovieIds)
 
@@ -152,7 +169,12 @@ export function DirectorSpotlightSection({
         }}
       >
         {directors.map((dir) => (
-          <DirectorCard key={dir.name} director={dir} isDesktop={isDesktop} />
+          <DirectorCard
+            key={dir.name}
+            director={dir}
+            isDesktop={isDesktop}
+            onClick={onDirectorClick ? () => onDirectorClick(dir.name) : undefined}
+          />
         ))}
       </div>
     </section>
