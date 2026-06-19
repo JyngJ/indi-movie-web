@@ -12,6 +12,7 @@ interface FilmRankingSectionProps {
   rankings: FilmRankingEntry[]
   movies: Movie[]
   isDesktop: boolean
+  onMovieClick?: (movieId: string) => void
 }
 
 const POSTER = { width: 120, height: 180 }
@@ -158,7 +159,7 @@ function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number }) {
 }
 
 // ── 랭킹 카드 ─────────────────────────────────────────────────────
-function RankingCard({ entry, movie, rank, isDesktop }: { entry: FilmRankingEntry; movie?: Movie; rank: number; isDesktop: boolean }) {
+function RankingCard({ entry, movie, rank, isDesktop, gapRight, onClick }: { entry: FilmRankingEntry; movie?: Movie; rank: number; isDesktop: boolean; gapRight: number; onClick?: () => void }) {
   const { width, height } = POSTER
   const cardRef = useRef<HTMLDivElement>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -182,23 +183,30 @@ function RankingCard({ entry, movie, rank, isDesktop }: { entry: FilmRankingEntr
         ref={cardRef}
         onMouseEnter={isDesktop ? onMouseEnter : undefined}
         onMouseLeave={isDesktop ? onMouseLeave : undefined}
-        style={{ display: 'flex', flexDirection: 'column', gap: 8, width, flexShrink: 0, cursor: 'pointer' }}
+        onClick={onClick}
+        style={{ display: 'flex', flexDirection: 'column', gap: 8, width, flexShrink: 0, cursor: onClick ? 'pointer' : undefined, marginRight: gapRight }}
       >
-        <div style={{
-          position: 'relative',
-          transition: 'transform 130ms ease',
-          transform: hovered ? 'scale(1.1)' : 'scale(1)',
-          transformOrigin: 'center center',
-          borderRadius: 6,
-        }}>
-          <PosterThumb src={movie?.posterUrl} alt={movie?.title ?? ''} width={width} height={height} />
-          <div style={{
-            position: 'absolute', bottom: 6, left: 6,
-            width: 24, height: 24, borderRadius: 6,
-            background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(4px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
+        <div style={{ position: 'relative', overflow: 'visible' }}>
+          {/* 순위 — 포스터 왼쪽 뒤에, 반투명 테두리만 */}
+          <span style={{
+            position: 'absolute', bottom: -28, left: rank >= 10 ? -76 : -44,
+            zIndex: 0,
+            fontSize: isDesktop ? 96 : 68, fontWeight: 900, lineHeight: 1,
+            color: 'transparent',
+            WebkitTextStroke: '3px rgba(59,130,246,0.45)',
+            fontFamily: 'var(--font-display)',
+            userSelect: 'none', pointerEvents: 'none',
           }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{rank}</span>
+            {rank}
+          </span>
+          {/* 포스터 — 숫자 위에, 호버시만 확대 */}
+          <div style={{
+            position: 'relative', zIndex: 1, borderRadius: 6, overflow: 'hidden',
+            transition: 'transform 130ms ease',
+            transform: hovered ? 'scale(1.1)' : 'scale(1)',
+            transformOrigin: 'center center',
+          }}>
+            <PosterThumb src={movie?.posterUrl} alt={movie?.title ?? ''} width={width} height={height} />
           </div>
         </div>
 
@@ -221,7 +229,7 @@ function RankingCard({ entry, movie, rank, isDesktop }: { entry: FilmRankingEntr
 }
 
 // ── 메인 섹션 ─────────────────────────────────────────────────────
-export function FilmRankingSection({ weekStart, rankings, movies, isDesktop }: FilmRankingSectionProps) {
+export function FilmRankingSection({ weekStart, rankings, movies, isDesktop, onMovieClick }: FilmRankingSectionProps) {
   const [infoHover, setInfoHover] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
@@ -238,7 +246,15 @@ export function FilmRankingSection({ weekStart, rankings, movies, isDesktop }: F
 
   const movieById = new Map(movies.map((m) => [m.id, m]))
   const label = getKoreanWeekLabel(weekStart)
-  const scrollAmount = (POSTER.width + (isDesktop ? 16 : 12)) * 3
+  const paddingLeft = isDesktop ? 60 : 52
+  const scrollAmount = (POSTER.width + (isDesktop ? 78 : 60)) * 3
+
+  function getGapRight(nextRank: number | undefined): number {
+    if (nextRank == null) return 16
+    return nextRank >= 10
+      ? (isDesktop ? 108 : 84)
+      : (isDesktop ? 78 : 60)
+  }
 
   // 포스터 이미지 영역 세로 중앙: scroll container paddingTop(12) + poster 높이 절반
   const posterMidY = 12 + POSTER.height / 2
@@ -312,18 +328,19 @@ export function FilmRankingSection({ weekStart, rankings, movies, isDesktop }: F
           className="no-scrollbar"
           style={{
             display: 'flex',
-            gap: isDesktop ? 16 : 12,
             overflowX: 'auto',
-            padding: '12px 16px 8px',
+            padding: `12px 16px 8px ${paddingLeft}px`,
           }}
         >
-          {rankings.map((entry) => (
+          {rankings.map((entry, i) => (
             <RankingCard
               key={entry.movie_id}
               entry={entry}
               movie={movieById.get(entry.movie_id)}
               rank={entry.rank}
               isDesktop={isDesktop}
+              gapRight={getGapRight(rankings[i + 1]?.rank)}
+              onClick={onMovieClick && entry.movie_id ? () => onMovieClick(entry.movie_id) : undefined}
             />
           ))}
         </div>

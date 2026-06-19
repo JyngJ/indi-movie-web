@@ -14,12 +14,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'pkmgloiixwvhitqpcfyc.supabase.co',
-        pathname: '/storage/**',
+        hostname: '**',
       },
       {
         protocol: 'http',
-        hostname: 'file.koreafilm.or.kr',
+        hostname: '**',
       },
     ],
   },

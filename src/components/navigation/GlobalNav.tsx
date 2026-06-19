@@ -72,7 +72,8 @@ function isTabActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
-function MobileTabBar({ pathname }: { pathname: string }) {
+function MobileTabBar({ pathname, filmsHref }: { pathname: string; filmsHref: string }) {
+  const tabs = MOBILE_TABS.map((t) => (t.key === 'films' ? { ...t, href: filmsHref } : t))
   return (
     <nav
       aria-label="주요 메뉴"
@@ -89,8 +90,8 @@ function MobileTabBar({ pathname }: { pathname: string }) {
         zIndex: 1150,
       }}
     >
-      {MOBILE_TABS.map(({ key, href, label, Icon }) => {
-        const active = isTabActive(pathname, href)
+      {tabs.map(({ key, href, label, Icon }) => {
+        const active = isTabActive(pathname, key === 'films' ? '/films' : href)
         const color = active ? ACTIVE_COLOR : INACTIVE_COLOR
         return (
           <Link
@@ -117,7 +118,7 @@ function MobileTabBar({ pathname }: { pathname: string }) {
   )
 }
 
-function DesktopRail({ pathname }: { pathname: string }) {
+function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: string }) {
   const isSearchOpen = useUIStore((s) => s.isSearchOpen)
   const setSearchOpen = useUIStore((s) => s.setSearchOpen)
   const setSettingsOpen = useUIStore((s) => s.setSettingsOpen)
@@ -126,12 +127,13 @@ function DesktopRail({ pathname }: { pathname: string }) {
 
   const renderRailTab = ({ key, href, label, Icon }: MobileTab) => {
     // 검색 패널이 열려있는 동안은 라우트 탭의 활성 표시를 끈다 — 메뉴는 한 번에 하나만 선택 상태
-    const active = !isSearchOpen && isTabActive(pathname, href)
+    const active = !isSearchOpen && isTabActive(pathname, key === 'films' ? '/films' : href)
+    const resolvedHref = key === 'films' ? filmsHref : href
     const color = active ? ACTIVE_COLOR : INACTIVE_COLOR
     return (
       <Link
         key={key}
-        href={href}
+        href={resolvedHref}
         aria-current={active ? 'page' : undefined}
         onClick={() => {
           if (isSearchOpen) {
@@ -250,15 +252,31 @@ function DesktopRail({ pathname }: { pathname: string }) {
   )
 }
 
+const FILMS_LAST_PATH_KEY = 'lastFilmsPath'
+
 /** 글로벌 네비게이션 — 모바일: 하단 탭바(지도·영화·설정), 데스크톱: 좌측 아이콘 레일 */
 export function GlobalNav() {
   const isDesktop = useIsDesktopLayout()
   const pathname = usePathname()
-  // 모바일/데스크톱은 DOM 트리 자체가 다름 — 서버는 뷰포트를 모르므로
-  // 마운트 전엔 아무것도 그리지 않아 하이드레이션 불일치를 피한다.
   const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  const [filmsHref, setFilmsHref] = useState('/films')
+
+  useEffect(() => {
+    setMounted(true)
+    const stored = sessionStorage.getItem(FILMS_LAST_PATH_KEY)
+    if (stored) setFilmsHref(stored)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+    if (pathname.startsWith('/films')) {
+      sessionStorage.setItem(FILMS_LAST_PATH_KEY, pathname)
+      setFilmsHref(pathname)
+    }
+  }, [pathname, mounted])
 
   if (!mounted) return null
-  return isDesktop ? <DesktopRail pathname={pathname} /> : <MobileTabBar pathname={pathname} />
+  return isDesktop
+    ? <DesktopRail pathname={pathname} filmsHref={filmsHref} />
+    : <MobileTabBar pathname={pathname} filmsHref={filmsHref} />
 }
