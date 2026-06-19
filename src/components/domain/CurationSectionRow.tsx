@@ -16,6 +16,11 @@ interface CurationSectionRowProps {
   isDesktop?: boolean
   /** movieId → 남은 일수 (0 = 오늘이 마지막) — 포스터 우상단 D-N 배지 */
   posterBadges?: Map<string, number>
+  onMovieClick?: (movieId: string) => void
+  /** true면 h2 제목/설명 영역을 렌더하지 않음 (AnniversarySection 등 외부 헤더 사용 시) */
+  noHeader?: boolean
+  /** compact: 외부 여백 없이 flex item으로 렌더 — 1~2편 섹션을 2열로 묶을 때 사용 */
+  compact?: boolean
 }
 
 const POSTER_SIZE = {
@@ -186,12 +191,14 @@ function MovieCard({
   height,
   isDesktop,
   daysLeft,
+  onClick,
 }: {
   movie: Movie
   width: number
   height: number
   isDesktop: boolean
   daysLeft?: number
+  onClick?: () => void
 }) {
   const cardRef = useRef<HTMLDivElement>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -220,7 +227,8 @@ function MovieCard({
         ref={cardRef}
         onMouseEnter={isDesktop ? onMouseEnter : undefined}
         onMouseLeave={isDesktop ? onMouseLeave : undefined}
-        style={{ display: 'flex', flexDirection: 'column', gap: 6, width, flexShrink: 0, cursor: 'pointer' }}
+        onClick={onClick}
+        style={{ display: 'flex', flexDirection: 'column', gap: 6, width, flexShrink: 0, cursor: onClick ? 'pointer' : undefined }}
       >
         {/* 포스터: scale은 있으나 layout size 유지 → 부모 padding 안에서 visual overflow */}
         <div
@@ -268,6 +276,9 @@ export function CurationSectionRow({
   movies,
   isDesktop = false,
   posterBadges,
+  onMovieClick,
+  noHeader = false,
+  compact = false,
 }: CurationSectionRowProps) {
   const { width, height } = isDesktop ? POSTER_SIZE.desktop : POSTER_SIZE.mobile
   const scaleBleed = Math.ceil(height * 0.04)
@@ -291,6 +302,51 @@ export function CurationSectionRow({
 
   if (movies.length === 0) return null
 
+  // compact 모드: flex item으로 렌더, 1~2편 inline 표시 (스크롤 없음)
+  if (compact) {
+    return (
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' }}>
+        {/* 헤더 */}
+        <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--color-border)', background: 'var(--color-surface-card)' }}>
+          <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>
+            {emoji} {title}
+          </div>
+          {description && (
+            <div style={{ fontSize: 11, color: 'var(--color-text-caption)', marginTop: 2, lineHeight: 1.4 }}>{description}</div>
+          )}
+        </div>
+        {/* 영화 inline */}
+        <div style={{ display: 'flex', gap: 10, padding: '12px 14px', background: 'var(--color-surface-card)', flex: 1 }}>
+          {movies.slice(0, 2).map((movie) => (
+            <div
+              key={movie.id}
+              onClick={onMovieClick ? () => onMovieClick(movie.id) : undefined}
+              style={{ display: 'flex', gap: 10, alignItems: 'flex-start', flex: 1, minWidth: 0, cursor: onMovieClick ? 'pointer' : undefined }}
+            >
+              <div style={{ flexShrink: 0 }}>
+                <PosterThumb src={movie.posterUrl} alt={movie.title} width={52} height={78} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-body)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3 }}>
+                  {normalizeTitle(movie.title)}
+                </span>
+                <span style={{ fontSize: 10, color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {movie.director.length > 0 ? movie.director[0] : '감독 미상'}
+                </span>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {movie.genre.slice(0, 1).map((g) => (
+                    <span key={g} style={{ fontSize: 10, padding: '2px 5px', borderRadius: 99, background: 'var(--color-surface-raised)', color: 'var(--color-text-caption)', border: '1px solid var(--color-border)' }}>{g}</span>
+                  ))}
+                  <span style={{ fontSize: 10, color: 'var(--color-text-caption)', fontWeight: 600 }}>{movie.year}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   // 포스터 이미지 영역 세로 중앙: padding-top + 포스터 높이의 절반
   const posterMidY = scaleBleed + 8 + height / 2
 
@@ -307,20 +363,22 @@ export function CurationSectionRow({
   }
 
   return (
-    <section style={{ paddingTop: 24 }}>
-      <h2
-        style={{
-          margin: 0,
-          padding: '0 16px',
-          fontSize: isDesktop ? 20 : 17,
-          fontWeight: 700,
-          fontFamily: 'var(--font-display)',
-          color: 'var(--color-text-primary)',
-        }}
-      >
-        {emoji} {title}
-      </h2>
-      {description && (
+    <section style={{ paddingTop: noHeader ? 0 : 24 }}>
+      {!noHeader && (
+        <h2
+          style={{
+            margin: 0,
+            padding: '0 16px',
+            fontSize: isDesktop ? 20 : 17,
+            fontWeight: 700,
+            fontFamily: 'var(--font-display)',
+            color: 'var(--color-text-primary)',
+          }}
+        >
+          {emoji} {title}
+        </h2>
+      )}
+      {!noHeader && description && (
         <p
           style={{
             margin: '4px 0 0',
@@ -375,6 +433,7 @@ export function CurationSectionRow({
               height={height}
               isDesktop={isDesktop}
               daysLeft={posterBadges?.get(movie.id)}
+              onClick={onMovieClick ? () => onMovieClick(movie.id) : undefined}
             />
           ))}
         </div>

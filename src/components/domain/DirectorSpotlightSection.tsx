@@ -12,6 +12,7 @@ interface DirectorSpotlightSectionProps {
   movies: Movie[]
   activeMovieIds: ReadonlySet<string>
   isDesktop: boolean
+  onDirectorClick?: (name: string) => void
 }
 
 const AVATAR_COLORS = [
@@ -48,7 +49,7 @@ function getSpotlight(movies: Movie[], activeMovieIds: ReadonlySet<string>): Dir
     .slice(0, 12)
 }
 
-function DirectorCard({ director, isDesktop }: { director: DirectorSpotlight; isDesktop: boolean }) {
+function DirectorCard({ director, isDesktop, onClick }: { director: DirectorSpotlight; isDesktop: boolean; onClick?: () => void }) {
   const size = isDesktop ? 80 : 64
   const color = hashColor(director.name)
   const { data: profile } = useDirectorProfile(director.name)
@@ -56,6 +57,7 @@ function DirectorCard({ director, isDesktop }: { director: DirectorSpotlight; is
 
   return (
     <div
+      onClick={onClick}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -63,7 +65,7 @@ function DirectorCard({ director, isDesktop }: { director: DirectorSpotlight; is
         gap: 6,
         width: size + 16,
         flexShrink: 0,
-        cursor: 'pointer',
+        cursor: onClick ? 'pointer' : undefined,
       }}
     >
       <div
@@ -77,6 +79,7 @@ function DirectorCard({ director, isDesktop }: { director: DirectorSpotlight; is
           justifyContent: 'center',
           flexShrink: 0,
           overflow: 'hidden',
+          boxShadow: 'inset 0 0 0 1px var(--color-border), 0 2px 8px rgba(0,0,0,0.18)',
         }}
       >
         {photoUrl ? (
@@ -131,6 +134,7 @@ export function DirectorSpotlightSection({
   movies,
   activeMovieIds,
   isDesktop,
+  onDirectorClick,
 }: DirectorSpotlightSectionProps) {
   const directors = getSpotlight(movies, activeMovieIds)
 
@@ -165,7 +169,12 @@ export function DirectorSpotlightSection({
         }}
       >
         {directors.map((dir) => (
-          <DirectorCard key={dir.name} director={dir} isDesktop={isDesktop} />
+          <DirectorCard
+            key={dir.name}
+            director={dir}
+            isDesktop={isDesktop}
+            onClick={onDirectorClick ? () => onDirectorClick(dir.name) : undefined}
+          />
         ))}
       </div>
     </section>

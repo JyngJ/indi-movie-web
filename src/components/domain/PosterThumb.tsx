@@ -39,8 +39,8 @@ export function PosterThumb({
         borderRadius: radiusVar,
         /* 선택 링: box-shadow는 레이아웃에 영향을 주지 않음 */
         boxShadow: selected || highlighted
-          ? '0 0 0 2px var(--color-primary-base)'
-          : 'none',
+          ? '0 0 0 2px var(--color-primary-base), 0 2px 8px rgba(0,0,0,0.18)'
+          : '0 2px 8px rgba(0,0,0,0.18)',
         cursor: onClick ? 'pointer' : 'default',
       }}
       onClick={onClick}
