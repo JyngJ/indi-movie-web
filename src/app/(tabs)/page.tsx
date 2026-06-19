@@ -1,10 +1,4 @@
-'use client'
-
-import dynamic from 'next/dynamic'
-
-// Leaflet은 window에 의존 — SSR 비활성화
-const MapView = dynamic(() => import('@/components/map/MapView'), { ssr: false })
-
+// MapView는 (tabs)/layout.tsx에서 항상 마운트 — 탭 간 상태 보존
 export default function Home() {
-  return <MapView />
+  return null
 }

@@ -33,22 +33,22 @@ const MIN_VIEW_COUNT = 5   // 이 미만이면 조회 점수 0으로 처리
 const TOP_N = 20
 
 // ── 날짜 헬퍼 ────────────────────────────────────────────────────────
-/** 가장 최근에 완료된 Mon-Sun 주간 반환 */
-function getLastWeekRange(): { weekStart: string; weekEnd: string } {
+/** 이번 주 월요일 ~ 다음 일요일 반환 (현재 활성 상영 기준) */
+function getCurrentWeekRange(): { weekStart: string; weekEnd: string } {
   const now = new Date()
   const dow = now.getDay() // 0=Sun 1=Mon … 6=Sat
 
-  // last Sunday: dow===0 이면 7일 전, 아니면 dow일 전
-  const daysToLastSunday = dow === 0 ? 7 : dow
-  const lastSunday = new Date(now)
-  lastSunday.setDate(now.getDate() - daysToLastSunday)
+  // 이번 주 월요일
+  const daysToMonday = dow === 0 ? 6 : dow - 1
+  const monday = new Date(now)
+  monday.setDate(now.getDate() - daysToMonday)
 
-  const lastMonday = new Date(lastSunday)
-  lastMonday.setDate(lastSunday.getDate() - 6)
+  const sunday = new Date(monday)
+  sunday.setDate(monday.getDate() + 6)
 
   return {
-    weekStart: lastMonday.toISOString().slice(0, 10),
-    weekEnd: lastSunday.toISOString().slice(0, 10),
+    weekStart: monday.toISOString().slice(0, 10),
+    weekEnd: sunday.toISOString().slice(0, 10),
   }
 }
 
@@ -105,7 +105,7 @@ async function fetchBookingClicks(weekStart: string, weekEnd: string): Promise<M
 
 // ── 메인 ──────────────────────────────────────────────────────────
 async function main() {
-  const { weekStart, weekEnd } = getLastWeekRange()
+  const { weekStart, weekEnd } = getCurrentWeekRange()
   console.log(`집계 기간: ${weekStart} ~ ${weekEnd}`)
 
   const supabase = createSupabaseAdminClient()
