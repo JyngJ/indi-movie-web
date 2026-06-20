@@ -12,7 +12,7 @@ import { getStoredRegion } from '@/lib/regionStorage'
 import { getRegionFromAddress } from '@/lib/regions'
 
 function useIsDesktop() {
-  const [v, setV] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches)
+  const [v, setV] = useState(false)
   useEffect(() => {
     const m = window.matchMedia('(min-width: 1024px)')
     const fn = () => setV(m.matches); fn()
@@ -41,14 +41,24 @@ const IcoMap = () => <svg width={16} height={16} viewBox="0 0 24 24" fill="none"
 const IcoShare = () => <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>
 const IcoPin = () => <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" /></svg>
 const IcoUser = () => <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+const IcoX = () => <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
 
 /* ── ShowtimeChip ──────────────────────────────────────────────── */
-function ShowtimeChip({ st }: { st: Showtime }) {
+function ShowtimeChip({ st, selected, onClick }: { st: Showtime; selected?: boolean; onClick?: () => void }) {
   const soldout = st.seatAvailable === 0
   const low = !soldout && st.seatTotal > 0 && st.seatAvailable <= 20
   const seatColor = soldout ? 'var(--color-error)' : low ? 'var(--color-warning)' : 'var(--color-primary-base)'
   return (
-    <div style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-raised)', opacity: soldout ? 0.5 : 1, minWidth: 100 }}>
+    <div
+      onClick={!soldout && onClick ? onClick : undefined}
+      style={{
+        padding: '10px 14px', borderRadius: 10, minWidth: 100,
+        border: selected ? '2px solid var(--color-primary-base)' : '1px solid var(--color-border)',
+        backgroundColor: selected ? 'var(--color-primary-subtle-l)' : 'var(--color-surface-raised)',
+        opacity: soldout ? 0.5 : 1,
+        cursor: !soldout && onClick ? 'pointer' : 'default',
+      }}
+    >
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
         <span style={{ fontSize: 16, fontWeight: 700, fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>{st.showTime.slice(0, 5)}</span>
         {st.endTime && <span style={{ fontSize: 10, color: 'var(--color-text-caption)', fontFeatureSettings: '"tnum"' }}>-{st.endTime.slice(0, 5)}</span>}
@@ -90,8 +100,36 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
   const dates = useMemo(() => getDateRange(7), [])
   const [selectedDate, setSelectedDate] = useState(dates[0])
   const [regionId, setRegionId] = useState<string | null>(() => getStoredRegion())
+  const [selectedShowtimeId, setSelectedShowtimeId] = useState<string | null>(null)
+  const [selectedTheaterId, setSelectedTheaterId] = useState<string | null>(null)
 
   const { data: theaterEntries = [], isLoading } = useMovieTheaterShowtimes(movie.id)
+
+  // 날짜별 showtimes 유무
+  const activeDates = useMemo(() => {
+    const set = new Set<string>()
+    for (const entry of theaterEntries) {
+      for (const g of entry.dateGroups) set.add(g.date)
+    }
+    return set
+  }, [theaterEntries])
+
+  // 오늘 상영 없으면 가장 빠른 날로 자동 이동 (데이터 로드 후 1회)
+  useEffect(() => {
+    if (activeDates.size === 0) return
+    if (selectedDate !== dates[0]) return  // 이미 다른 날 선택됨
+    if (activeDates.has(selectedDate)) return  // 오늘 상영 있음
+    const earliest = [...activeDates].sort()[0]
+    if (earliest) setSelectedDate(earliest)
+  // activeDates 로드 시점에만 체크
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeDates])
+
+  // 날짜 변경 시 선택 회차 초기화
+  useEffect(() => {
+    setSelectedShowtimeId(null)
+    setSelectedTheaterId(null)
+  }, [selectedDate])
 
   // 선택 날짜에 상영하는 극장+시간표만
   const dayTheaters = useMemo(() => {
@@ -103,15 +141,6 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
       .filter((entry) => entry.showtimes.length > 0)
   }, [theaterEntries, selectedDate])
 
-  // 날짜별 showtimes 유무
-  const activeDates = useMemo(() => {
-    const set = new Set<string>()
-    for (const entry of theaterEntries) {
-      for (const g of entry.dateGroups) set.add(g.date)
-    }
-    return set
-  }, [theaterEntries])
-
   const totalTheaterCount = theaterEntries.length
   const { inRegion: inRegionEntries, otherRegion: otherRegionEntries } = useMemo(() => {
     if (!regionId) return { inRegion: [] as typeof dayTheaters, otherRegion: [] as typeof dayTheaters }
@@ -120,6 +149,15 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
       otherRegion: dayTheaters.filter((e) => getRegionFromAddress(e.theaterAddress) !== regionId),
     }
   }, [dayTheaters, regionId])
+
+  const selectedShowtimeData = useMemo(() => {
+    if (!selectedShowtimeId || !selectedTheaterId) return null
+    const entry = dayTheaters.find((e) => e.theaterId === selectedTheaterId)
+    if (!entry) return null
+    const st = entry.showtimes.find((s) => s.id === selectedShowtimeId)
+    if (!st) return null
+    return { st, theaterName: entry.theaterName, theaterAddress: entry.theaterAddress }
+  }, [selectedShowtimeId, selectedTheaterId, dayTheaters])
 
   const meta = [
     movie.nation ? withFlagsRaw(movie.nation) : undefined,
@@ -218,7 +256,13 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
           <IcoChevronRight />
         </button>
         <div style={{ padding: '10px 16px 14px', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {entry.showtimes.map((st) => <ShowtimeChip key={st.id} st={st} />)}
+          {entry.showtimes.map((st) => (
+            <ShowtimeChip
+              key={st.id} st={st}
+              selected={selectedShowtimeId === st.id}
+              onClick={() => { setSelectedShowtimeId(st.id); setSelectedTheaterId(entry.theaterId) }}
+            />
+          ))}
         </div>
       </div>
     )
@@ -270,7 +314,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
       </div>
 
       {/* 극장별 목록 */}
-      <div style={{ padding: isDesktop ? '16px 0 64px' : '12px 16px 52px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ padding: isDesktop ? '16px 0 64px' : `12px 16px ${selectedShowtimeData ? 148 : 52}px`, display: 'flex', flexDirection: 'column', gap: 12 }}>
         {isLoading ? (
           <div style={{ height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-caption)', fontSize: 13 }}>불러오는 중…</div>
         ) : dayTheaters.length === 0 ? (
@@ -328,6 +372,50 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
     </div>
   ) : null
 
+  const desktopBookingCard = selectedShowtimeData ? (
+    <div style={{ borderRadius: 14, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', boxShadow: '0 6px 24px color-mix(in srgb, var(--color-primary-base) 55%, transparent)', overflow: 'hidden' }}>
+      <div style={{ padding: '14px 14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', color: 'var(--color-text-caption)' }}>회차 선택됨</span>
+          <button onClick={() => { setSelectedShowtimeId(null); setSelectedTheaterId(null) }} style={{ width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--color-border)', background: 'var(--color-surface-raised)', borderRadius: 99, cursor: 'pointer', color: 'var(--color-text-caption)', padding: 0, minHeight: 'auto' }}>
+            <IcoX />
+          </button>
+        </div>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-serif)', lineHeight: 1.3 }}>{movie.title}</div>
+          <div style={{ marginTop: 3, fontSize: 12, fontWeight: 700, color: 'var(--color-primary-base)' }}>{selectedShowtimeData.theaterName}</div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+          <span style={{ fontSize: 24, fontWeight: 700, fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>{selectedShowtimeData.st.showTime.slice(0, 5)}</span>
+          {selectedShowtimeData.st.endTime && <span style={{ fontSize: 12, color: 'var(--color-text-caption)', fontFeatureSettings: '"tnum"' }}>→ {selectedShowtimeData.st.endTime.slice(0, 5)}</span>}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+          {([
+            { key: '날짜', value: selectedDate.slice(5).replace('-', '/') },
+            { key: '상영관', value: selectedShowtimeData.st.screenName || undefined },
+            { key: '포맷', value: selectedShowtimeData.st.formatType !== 'standard' ? selectedShowtimeData.st.formatType.toUpperCase() : undefined },
+            { key: '잔여석', value: selectedShowtimeData.st.seatTotal > 0 ? `${selectedShowtimeData.st.seatAvailable}/${selectedShowtimeData.st.seatTotal}석` : undefined },
+          ] as { key: string; value?: string }[]).filter((r) => r.value).map((row) => (
+            <div key={row.key} style={{ display: 'flex', gap: 8, fontSize: 12 }}>
+              <span style={{ color: 'var(--color-text-caption)', width: 44, flexShrink: 0 }}>{row.key}</span>
+              <span style={{ fontWeight: 600, color: row.key === '잔여석' && selectedShowtimeData.st.seatAvailable <= 20 ? 'var(--color-warning)' : 'var(--color-text-body)' }}>{row.value}</span>
+            </div>
+          ))}
+        </div>
+        {selectedShowtimeData.st.bookingUrl ? (
+          <a href={selectedShowtimeData.st.bookingUrl} target="_blank" rel="noopener noreferrer"
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 44, borderRadius: 10, backgroundColor: 'var(--color-primary-base)', color: '#fff', fontSize: 14, fontWeight: 700, textDecoration: 'none', marginTop: 4 }}>
+            예매하러 가기 →
+          </a>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 40, borderRadius: 10, backgroundColor: 'var(--color-surface-raised)', color: 'var(--color-text-caption)', fontSize: 12, border: '1px solid var(--color-border)', marginTop: 4 }}>
+            예매 링크 없음
+          </div>
+        )}
+      </div>
+    </div>
+  ) : null
+
   if (isDesktop) {
     return (
       <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
@@ -357,6 +445,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
             </div>
             {/* sidebar */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20, paddingTop: 8, position: 'sticky', top: 68 }}>
+              {desktopBookingCard}
               {directorSideCard}
               {detailInfoSection}
             </div>
@@ -384,6 +473,36 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
       {synopsisSection}
       {showtimesSection}
       <div style={{ height: 'env(safe-area-inset-bottom)' }} />
+      {selectedShowtimeData && (
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100, backgroundColor: 'var(--color-surface-card)', borderTop: '1px solid var(--color-border)', padding: '12px 16px', paddingBottom: 'max(16px, env(safe-area-inset-bottom))', boxShadow: '0 -4px 20px rgba(0,0,0,0.12)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>
+                {selectedShowtimeData.st.showTime.slice(0, 5)}
+                {selectedShowtimeData.st.endTime && <span style={{ fontSize: 12, color: 'var(--color-text-caption)', marginLeft: 6, fontWeight: 400 }}>→ {selectedShowtimeData.st.endTime.slice(0, 5)}</span>}
+              </div>
+              <div style={{ marginTop: 2, fontSize: 12, color: 'var(--color-text-sub)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {selectedShowtimeData.theaterName}
+                {selectedShowtimeData.st.screenName ? ` · ${selectedShowtimeData.st.screenName}` : ''}
+                {selectedShowtimeData.st.seatTotal > 0 ? ` · 잔여 ${selectedShowtimeData.st.seatAvailable}석` : ''}
+              </div>
+            </div>
+            <button onClick={() => { setSelectedShowtimeId(null); setSelectedTheaterId(null) }} style={{ marginLeft: 12, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'var(--color-surface-raised)', borderRadius: 99, cursor: 'pointer', color: 'var(--color-text-caption)', flexShrink: 0, minHeight: 'auto' }}>
+              <IcoX />
+            </button>
+          </div>
+          {selectedShowtimeData.st.bookingUrl ? (
+            <a href={selectedShowtimeData.st.bookingUrl} target="_blank" rel="noopener noreferrer"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 48, borderRadius: 12, backgroundColor: 'var(--color-primary-base)', color: '#fff', fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
+              예매하러 가기 →
+            </a>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 48, borderRadius: 12, backgroundColor: 'var(--color-surface-raised)', color: 'var(--color-text-caption)', fontSize: 13, border: '1px solid var(--color-border)' }}>
+              예매 링크 없음
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
