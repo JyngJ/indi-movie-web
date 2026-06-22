@@ -57,7 +57,7 @@ interface EventCrawlResult {
   error?: string
 }
 
-export function AdminEventConsole() {
+export function AdminEventConsole({ tabSlot }: { tabSlot?: React.ReactNode } = {}) {
   const router = useRouter()
   const [sources, setSources] = useState<AdminEventSource[]>([])
   const [candidates, setCandidates] = useState<CrawledEventCandidate[]>([])
@@ -295,6 +295,7 @@ export function AdminEventConsole() {
 
   return (
     <main className={styles.shell}>
+      {tabSlot && <div style={{ maxWidth: 1320, margin: '0 auto 8px' }}>{tabSlot}</div>}
       <header className={styles.header}>
         <div>
           <p className={styles.eyebrow}>운영자 콘솔</p>

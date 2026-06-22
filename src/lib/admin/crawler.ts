@@ -196,6 +196,10 @@ export async function crawlShowtimeCandidates(context: ParseContext) {
     return crawlBoardImageOcr(context)
   }
 
+  if (context.source.parser === 'kofaCinematheque') {
+    return crawlKofaCinematheque(context)
+  }
+
   const content = await resolveCrawlInput(
     context.inputKind,
     context.content,
@@ -213,9 +217,8 @@ export async function crawlDtryxReservationApi(context: ParseContext) {
   const brandCd = baseUrl.searchParams.get('BrandCd') ?? 'dtryx'
   const screenFilter = baseUrl.searchParams.get('screenFilter') ?? null
   const urlCinemaCd = baseUrl.searchParams.get('CinemaCd') ?? null
-  // screenFilter 한글 파라미터가 referer 헤더에 포함되지 않도록 제거
-  baseUrl.searchParams.delete('screenFilter')
-  const headers = buildDtryxHeaders(baseUrl.toString())
+  // referer는 ASCII-safe한 핵심 파라미터만 포함 (한글 파라미터 제외)
+  const headers = buildDtryxHeaders(`${origin}/cinema/main.do?cgid=${cgid}&BrandCd=${brandCd}`)
   const main = await fetchDtryxMain(origin, cgid, brandCd, headers)
   const cinemas = (main.CinemaList ?? []).filter((cinema) => cinema.HiddenYn !== 'Y')
   const movies = (main.MovieList ?? []).filter((movie) => movie.HiddenYn !== 'Y')
@@ -265,7 +268,12 @@ export async function crawlAllDtryxSources(
 
         return Promise.all(
           group.sources.map(async (source) => {
+            const srcUrl = new URL(source.listingUrl)
+            const urlCinemaCd = srcUrl.searchParams.get('CinemaCd')
+            const screenFilter = srcUrl.searchParams.get('screenFilter')
             const targetCinema = pickDtryxCinema(cinemas, source.theaterName)
+              ?? (urlCinemaCd ? cinemas.find((c) => c.CinemaCd === urlCinemaCd) : undefined)
+              ?? (urlCinemaCd ? { CinemaNm: source.theaterName, CinemaCd: urlCinemaCd, HiddenYn: 'N' as const } : undefined)
             if (!targetCinema) {
               return { source, candidates: [], error: `${source.theaterName} 영화관 코드를 찾지 못했습니다.` }
             }
@@ -276,7 +284,7 @@ export async function crawlAllDtryxSources(
             }
             try {
               const candidates = await fetchDtryxShowtimes(group.origin, group.cgid, group.brandCd, headers, movies, playDates, targetCinema, context)
-              return { source, candidates }
+              return { source, candidates: screenFilter ? candidates.filter((c) => c.screenName.includes(screenFilter)) : candidates }
             } catch (error) {
               return { source, candidates: [], error: error instanceof Error ? error.message : '크롤링 오류' }
             }
@@ -414,7 +422,7 @@ export async function crawlMovieeTicketApi(context: ParseContext) {
     accept: 'application/json, text/javascript, */*; q=0.01',
     'accept-language': 'ko-KR,ko;q=0.9,en;q=0.8',
     'x-requested-with': 'XMLHttpRequest',
-    referer: sourceUrl,
+    referer: `${origin}/Theater/Index`,
   }
   const dateParams = createMovieePlayDateParams(tid)
   const dateData = await fetchJson<{
@@ -1229,6 +1237,106 @@ async function crawlDrfa(context: ParseContext): Promise<CrawledShowtimeCandidat
         confidence: 0.88,
         warnings: [],
       }))
+    }
+  }
+
+  return dedupeCandidates(candidates)
+}
+
+/* ── 한국영상자료원 시네마테크 KOFA ──────────────────────────────── */
+// HTML structure (confirmed 2026-06):
+//   dl.list-kofa-calendar-1 > dt.txt-month "06월"
+//   > dd > dl.list-day-1 > dt.txt-day "21.일"
+//   > dd > ul.list-detail-1
+//     > li.txt-time > span.icon-dot "HH:MM"
+//     > li.txt-room "1관"
+//     > li.txt-detail > p.txt-1 > a "영화제목"
+//                                > span.cm-icon-screen-1 (GV flag)
+//     > li.txt-detail > div.comment > span.min "108분"
+async function crawlKofaCinematheque(context: ParseContext): Promise<CrawledShowtimeCandidate[]> {
+  const url = context.source.listingUrl
+  const res = await fetch(url, {
+    headers: {
+      'user-agent': 'Mozilla/5.0 (compatible; indi-movie-web-admin-crawler/0.1)',
+      accept: 'text/html,*/*',
+      'accept-language': 'ko-KR,ko;q=0.9',
+    },
+    cache: 'no-store',
+    signal: AbortSignal.timeout(15_000),
+  })
+  if (!res.ok) throw new Error(`KOFA fetch failed: HTTP ${res.status}`)
+  const html = await res.text()
+
+  const now = new Date()
+  const today = now.toISOString().slice(0, 10)
+  const candidates: CrawledShowtimeCandidate[] = []
+
+  // Parse month blocks
+  for (const calBlock of html.split('<dl class="list-kofa-calendar-1">').slice(1)) {
+    const monthMatch = calBlock.match(/<dt class="txt-month">(\d{1,2})월<\/dt>/)
+    if (!monthMatch) continue
+    const month = parseInt(monthMatch[1], 10)
+    // Roll over to next year if page shows a month far behind current month
+    const nowMonth = now.getMonth() + 1
+    const year = month < nowMonth - 6 ? now.getFullYear() + 1 : now.getFullYear()
+
+    // Parse day blocks within this month
+    for (const dayBlock of calBlock.split('<dl class="list-day-1">').slice(1)) {
+      const dayMatch = dayBlock.match(/<dt class="txt-day">(\d{1,2})\.\S+<\/dt>/)
+      if (!dayMatch) continue
+      const day = parseInt(dayMatch[1], 10)
+      const showDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      if (showDate < today) continue
+
+      // Parse detail blocks (individual screenings)
+      for (const detailBlock of dayBlock.split('<ul class="list-detail-1">').slice(1)) {
+        const timeMatch = detailBlock.match(/<span class="icon-dot">(\d{1,2}:\d{2})<\/span>/)
+        if (!timeMatch) continue
+        const showTime = timeMatch[1].padStart(5, '0')
+
+        const roomMatch = detailBlock.match(/<li class="txt-room">([^<]+)<\/li>/)
+        const screenName = roomMatch ? roomMatch[1].trim() : '상영관'
+
+        const titleMatch = detailBlock.match(/<p class="txt-1"><a[^>]*>([^<]+)<\/a>/)
+        if (!titleMatch) continue
+        const movieTitle = titleMatch[1].trim()
+
+        const runningMatch = detailBlock.match(/<span class="min"><strong[^>]*>러닝타임<\/strong>(\d+)분<\/span>/)
+        const runningMin = runningMatch ? parseInt(runningMatch[1], 10) : 0
+        let endTime: string | undefined
+        if (runningMin > 0) {
+          const [hh, mm] = showTime.split(':').map(Number)
+          const endMins = hh * 60 + mm + runningMin
+          endTime = `${String(Math.floor(endMins / 60) % 24).padStart(2, '0')}:${String(endMins % 60).padStart(2, '0')}`
+        }
+
+        const isGv = detailBlock.includes('cm-icon-screen-1')
+        const warnings: string[] = []
+        if (isGv) warnings.push('GV: 관객과의 대화 (Guest Visit)')
+
+        const screenIconMatch = detailBlock.match(/cm-icon-screen-([A-Za-z0-9]+)/)
+        const screenIcon = screenIconMatch?.[1] ?? ''
+        const formatText = screenIcon === 'E' ? '영어자막' : ''
+
+        candidates.push(
+          buildCandidate({
+            context,
+            movieTitle,
+            showDate,
+            showTime,
+            endTime,
+            screenName,
+            formatText,
+            seatAvailable: 0,
+            seatTotal: 0,
+            price: 0,
+            bookingUrl: url,
+            rawText: detailBlock.slice(0, 300).replace(/\s+/g, ' '),
+            confidence: 0.92,
+            warnings,
+          }),
+        )
+      }
     }
   }
 
