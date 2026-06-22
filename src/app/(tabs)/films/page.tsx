@@ -496,6 +496,7 @@ export default function FilmsPage() {
                   sectionTitle={ann.sectionTitle} sectionDesc={ann.sectionDesc}
                   eventType={ann.eventType} nameKo={ann.nameKo} nameEn={ann.nameEn}
                   birthYear={ann.birthYear} deathYear={ann.deathYear}
+                  month={ann.month} day={ann.day}
                   films={films} isDesktop={isDesktop} onMovieClick={handleMovieClick} />
               ))}
               {rows.map((pair, ri) => (
@@ -505,6 +506,7 @@ export default function FilmsPage() {
                       sectionTitle={ann.sectionTitle} sectionDesc={ann.sectionDesc}
                       eventType={ann.eventType} nameKo={ann.nameKo} nameEn={ann.nameEn}
                       birthYear={ann.birthYear} deathYear={ann.deathYear}
+                      month={ann.month} day={ann.day}
                       films={films} isDesktop={isDesktop} onMovieClick={handleMovieClick} compact />
                   ))}
                 </div>

@@ -28,7 +28,6 @@ const DIMMED_DOT_DARK = '#71717a'
 export function MapPin({ kind = 'indie', selected = false, label, labelOffset, onClick, dimmed = false, isDark = false }: MapPinProps) {
   const { dot: activeDot, aura } = PIN_COLORS[kind]
   const dot = dimmed ? (isDark ? DIMMED_DOT_DARK : DIMMED_DOT_LIGHT) : activeDot
-  const tailShiftX = labelOffset ? Math.max(-36, Math.min(36, -labelOffset.x)) : 0
 
   return (
     <div
@@ -39,7 +38,7 @@ export function MapPin({ kind = 'indie', selected = false, label, labelOffset, o
         display: 'inline-flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: 4,
+        gap: 2,
         position: 'relative',
         cursor: onClick ? 'pointer' : 'default',
       }}
@@ -66,33 +65,13 @@ export function MapPin({ kind = 'indie', selected = false, label, labelOffset, o
           zIndex: 1,
           transform: labelOffset ? `translate(${labelOffset.x}px, ${labelOffset.y}px)` : undefined,
         }}>
-          {/* 라벨 꼬리 */}
           <div style={{
-            position: 'absolute',
-            width: 10,
-            height: 10,
-            backgroundColor: selected ? 'var(--color-primary-base)' : 'var(--color-surface-card)',
-            borderRight: selected ? '1.5px solid rgba(0,0,0,0.14)' : '1.5px solid var(--color-border)',
-            borderBottom: selected ? '1.5px solid rgba(0,0,0,0.14)' : '1.5px solid var(--color-border)',
-            borderBottomRightRadius: 2,
-            bottom: -5,
-            left: `calc(50% + ${tailShiftX}px)`,
-            transform: 'translateX(-50%) rotate(45deg)',
-            zIndex: 0,
-            pointerEvents: 'none',
-          }} />
-          {/* 라벨 버블 */}
-          <div style={{
-            fontSize: 12,
-            fontWeight: 700,
+            fontSize: 13,
+            fontWeight: 800,
             fontFamily: 'var(--font-display)',
             whiteSpace: 'nowrap',
-            padding: '3px 7px',
-            borderRadius: 5,
-            color: selected ? '#fff' : 'var(--color-text-primary)',
-            backgroundColor: selected ? 'var(--color-primary-base)' : 'var(--color-surface-card)',
-            border: selected ? '1.5px solid rgba(0,0,0,0.14)' : '1.5px solid var(--color-border)',
-            boxShadow: selected ? 'var(--shadow-md)' : 'var(--shadow-sm)',
+            color: '#111',
+            textShadow: '-1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff, 0 -1.5px 0 #fff, 0 1.5px 0 #fff, -1.5px 0 0 #fff, 1.5px 0 0 #fff, 0 2px 6px rgba(0,0,0,0.25)',
             position: 'relative',
             zIndex: 1,
           }}>

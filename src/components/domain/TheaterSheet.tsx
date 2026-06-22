@@ -17,6 +17,9 @@ import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { useDragSheet } from '@/hooks/useDragSheet'
 import { useMomentumScroll } from '@/hooks/useMomentumScroll'
 import { shareAdapter } from '@/lib/adapters/share'
+import { GvEventSection } from './GvEventSection'
+import { GvDetailPanel } from './GvDetailPanel'
+import { GV_EVENTS } from '@/data/gv-events'
 
 /* ── 상수 ──────────────────────────────────────────────────────── */
 // 접힌 상태에서 보이는 높이 = 핸들(20) + 헤더(88, 액션버튼 포함) + 포스터스트립(228) + 테두리(2) + 여유(6)
@@ -237,6 +240,7 @@ interface TheaterSheetProps {
   mapFilters?: { genres: string[]; nations: string[] }
   initialIsoDate?: string
   initialShowtimeId?: string
+  initialGvId?: string
   onBack?: () => void
 }
 
@@ -259,6 +263,7 @@ export function TheaterSheet({
   mapFilters,
   initialIsoDate,
   initialShowtimeId,
+  initialGvId,
   onBack,
 }: TheaterSheetProps) {
 
@@ -322,6 +327,12 @@ export function TheaterSheet({
   useEffect(() => {
     void posterProgress
   }, [shownExpanded])
+
+  /* ── GV 상세 서브페이지 ── */
+  const [selGvId, setSelGvId] = useState<string | null>(initialGvId ?? null)
+  useEffect(() => { if (initialGvId) setSelGvId(initialGvId) }, [initialGvId])
+  // Keep last event alive so exit animation can play (panel stays rendered during slide-out)
+  const lastGvEvRef = useRef<typeof GV_EVENTS[0] | undefined>(undefined)
 
   /* ── 날짜 선택 상태 (ISO date 기준) ── */
   const todayIso = useMemo(() => {
@@ -1364,6 +1375,9 @@ export function TheaterSheet({
             />
           </div>
 
+          {/* GV & 이벤트 */}
+          <GvEventSection theaterName={theater.name} selectedIsoDate={selectedIsoDate} onGvOpen={(id) => setSelGvId(id)} />
+
           {/* ── 포스터 가로 스크롤 — expanded에서 스크롤과 함께 ── */}
           {(() => {
             const activeCount = sheetFilters.genres.length + sheetFilters.nations.length + (sheetFilters.bookable ? 1 : 0)
@@ -1933,6 +1947,30 @@ export function TheaterSheet({
             >
               예매하러가기
             </button>
+          </div>
+        )
+      })()}
+
+      {/* ── GV 상세 서브페이지 ── */}
+      {(() => {
+        const gvEv = selGvId ? GV_EVENTS.find(e => e.id === selGvId) : undefined
+        if (gvEv) lastGvEvRef.current = gvEv
+        const displayEv = gvEv ?? lastGvEvRef.current
+        return (
+          <div
+            style={{
+              position: 'absolute', inset: 0,
+              transform: selGvId ? 'translateX(0)' : 'translateX(-100%)',
+              transition: 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
+              zIndex: 50,
+              overflow: 'hidden',
+              borderRadius: 'inherit',
+            }}
+            onTouchStart={e => e.stopPropagation()}
+            onTouchMove={e => e.stopPropagation()}
+            onPointerDown={e => e.stopPropagation()}
+          >
+            {displayEv && <GvDetailPanel ev={displayEv} onClose={() => setSelGvId(null)} onCloseAll={onClose} />}
           </div>
         )
       })()}
