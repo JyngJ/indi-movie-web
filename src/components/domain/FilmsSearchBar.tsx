@@ -24,13 +24,33 @@ const TYPE_LABEL: Record<string, string> = { movie: '영화', director: '감독'
 
 type Suggestion = { type: 'movie' | 'director' | 'theater'; label: string; navigateTo: string }
 
+// 한글 자모 분해: 받침까지 낱자로 풀어서 substring 비교 — 미완성 음절("에뭇"→"에무시") 처리
+const CHO  = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ'.split('')
+const JUNG = 'ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ'.split('')
+const JONG = ' ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ'.split('')
+
+function decomposeKo(text: string): string {
+  return text.split('').map(ch => {
+    const c = ch.charCodeAt(0) - 0xAC00
+    if (c < 0 || c > 11171) return ch
+    const jong = c % 28
+    return CHO[Math.floor(c / 588)] + JUNG[Math.floor(c / 28) % 21] + (jong ? JONG[jong] : '')
+  }).join('')
+}
+
+function koMatch(query: string, target: string): boolean {
+  const q = query.toLowerCase().replace(/\s/g, '')
+  const t = target.toLowerCase().replace(/\s/g, '')
+  return t.includes(q) || decomposeKo(t).includes(decomposeKo(q))
+}
+
 function buildSuggestions(iv: string, movies: Movie[], theaters: Theater[]): Suggestion[] {
   if (!iv) return []
   const seen = new Set<string>()
   const out: Suggestion[] = []
 
   for (const m of movies) {
-    if (m.title.toLowerCase().includes(iv) && !seen.has(m.title)) {
+    if (koMatch(iv, m.title) && !seen.has(m.title)) {
       seen.add(m.title)
       out.push({ type: 'movie', label: m.title, navigateTo: `/films/movie/${m.id}` })
       if (out.length >= 4) break
@@ -38,7 +58,7 @@ function buildSuggestions(iv: string, movies: Movie[], theaters: Theater[]): Sug
   }
   for (const m of movies) {
     for (const d of m.director) {
-      if (d.toLowerCase().includes(iv) && !seen.has(d)) {
+      if (koMatch(iv, d) && !seen.has(d)) {
         seen.add(d)
         out.push({ type: 'director', label: d, navigateTo: `/films/director/${encodeURIComponent(d)}` })
       }
@@ -46,7 +66,7 @@ function buildSuggestions(iv: string, movies: Movie[], theaters: Theater[]): Sug
     if (out.length >= 6) break
   }
   for (const t of theaters) {
-    if (t.name.toLowerCase().includes(iv) && !seen.has(t.name)) {
+    if (koMatch(iv, t.name) && !seen.has(t.name)) {
       seen.add(t.name)
       out.push({ type: 'theater', label: t.name, navigateTo: `/films/theater/${t.id}` })
     }
