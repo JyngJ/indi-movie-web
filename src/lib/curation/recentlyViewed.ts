@@ -63,3 +63,9 @@ export async function removeRecentlyViewed(
   const entries = await readEntries(storage, kind)
   await storage.setItem(STORAGE_KEY[kind], JSON.stringify(entries.filter(e => e.id !== id)))
 }
+
+export async function clearRecentlyViewed(storage: IStorageAdapter): Promise<void> {
+  await Promise.all(
+    (Object.keys(STORAGE_KEY) as RecentlyViewedKind[]).map(k => storage.setItem(STORAGE_KEY[k], '[]'))
+  )
+}

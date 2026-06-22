@@ -38,7 +38,7 @@ import { posterCountForZoom, posterSizeForZoom, posterSlotsForZoom } from '@/lib
 import { calculateAndFormatDistance } from '@/lib/map/distanceUtils'
 import type { TheaterPosterMovie } from '@/lib/map/posterLogic'
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
-import { recordRecentlyViewed, removeRecentlyViewed } from '@/lib/curation/recentlyViewed'
+import { recordRecentlyViewed, removeRecentlyViewed, clearRecentlyViewed } from '@/lib/curation/recentlyViewed'
 import { cookieStorageAdapter } from '@/lib/adapters/cookieStorage'
 import type { RecentlyViewedEntry, RecentlyViewedKind } from '@/lib/curation/types'
 import { useCurationData } from '@/hooks/useCurationData'
@@ -1253,6 +1253,11 @@ export default function MapView() {
 
   const handleRemoveRecentlyViewed = useCallback((kind: RecentlyViewedKind, id: string) => {
     removeRecentlyViewed(cookieStorageAdapter, kind, id)
+      .then(() => setRecentlyViewedKey(k => k + 1))
+  }, [])
+
+  const handleClearRecentlyViewed = useCallback(() => {
+    clearRecentlyViewed(cookieStorageAdapter)
       .then(() => setRecentlyViewedKey(k => k + 1))
   }, [])
 
@@ -3279,6 +3284,7 @@ export default function MapView() {
           onTodayShowSelect={handleTodayShowSelect}
           getTheaterDistance={getTheaterDistance}
           onRemoveRecentlyViewed={handleRemoveRecentlyViewed}
+          onClearRecentlyViewed={handleClearRecentlyViewed}
           onRecentItemClick={handleRecentItemClick}
         />
       )}
@@ -3325,6 +3331,7 @@ export default function MapView() {
                 onTodayShowSelect={handleTodayShowSelect}
                 getTheaterDistance={getTheaterDistance}
                 onRemoveRecentlyViewed={handleRemoveRecentlyViewed}
+                onClearRecentlyViewed={handleClearRecentlyViewed}
                 onRecentItemClick={handleRecentItemClick}
                 desktop
               />

@@ -42,7 +42,33 @@ export default function FilmsPage() {
   }
   const userLocation = locCoords
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [showScrollTop, setShowScrollTop] = useState(false)
+  const headerRef = useRef<HTMLElement>(null)
   const chipRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    const el = headerRef.current
+    if (!el) return
+    const obs = new IntersectionObserver(([entry]) => setShowScrollTop(!entry.isIntersecting), { threshold: 0 })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const hash = window.location.hash.slice(1)
+    if (!hash) return
+    let tries = 0
+    const interval = setInterval(() => {
+      const el = document.getElementById(hash)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        clearInterval(interval)
+      } else if (++tries > 30) {
+        clearInterval(interval)
+      }
+    }, 100)
+    return () => clearInterval(interval)
+  }, [])
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -169,7 +195,7 @@ export default function FilmsPage() {
         backgroundColor: 'var(--color-surface-bg)',
       }}
     >
-      <header style={{ padding: '20px 16px 0' }}>
+      <header ref={headerRef} style={{ padding: '20px 16px 0' }}>
         {isDesktop ? (
           /* 데스크톱: [영화+서브타이틀]  ←─검색창 절대 중앙─→  [지역칩] */
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center', minHeight: 52 }}>
@@ -185,7 +211,7 @@ export default function FilmsPage() {
                   color: 'var(--color-text-primary)',
                 }}
               >
-                영화
+                상영작
               </h1>
               <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--color-text-caption)', whiteSpace: 'nowrap' }}>
                 {subtitle}
@@ -249,7 +275,7 @@ export default function FilmsPage() {
                   color: 'var(--color-text-primary)',
                 }}
               >
-                영화
+                상영작
               </h1>
               <div style={{ position: 'relative' }}>
                 <FilterChip
@@ -406,7 +432,7 @@ export default function FilmsPage() {
           type SectionDisplayMode = import('@/lib/curation/filmsTabLists').SectionDisplayMode
           function rowFor(s: AnySection, compact: boolean) {
             return (
-              <CurationSectionRow key={s.listId}
+              <CurationSectionRow key={s.listId} id={s.listId}
                 title={s.nameKo} emoji={s.emoji} description={s.description}
                 displayMode={s.displayMode as SectionDisplayMode}
                 movies={s.movies} isDesktop={isDesktop}
@@ -471,6 +497,36 @@ export default function FilmsPage() {
           </>
         )
       })()}
+
+      {/* scroll-to-top: 헤더가 뷰포트 밖으로 나가면 표시 */}
+      {showScrollTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          style={{
+            position: 'fixed',
+            right: isDesktop ? 32 : 20,
+            bottom: isDesktop
+              ? 32
+              : `calc(${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom) + 16px)`,
+            width: 40, height: 40,
+            borderRadius: '50%',
+            border: 'none',
+            cursor: 'pointer',
+            background: 'var(--color-surface-card)',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
+            color: 'var(--color-text-body)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 100,
+            minHeight: 'unset',
+            transition: 'opacity 0.15s',
+          }}
+          title="맨 위로"
+        >
+          <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 19V5M5 12l7-7 7 7" />
+          </svg>
+        </button>
+      )}
     </div>
   )
 }
