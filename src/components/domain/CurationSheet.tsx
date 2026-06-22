@@ -59,6 +59,7 @@ interface CurationSheetProps {
   /** "지금 출발하면"/"단 한 곳" 섹션 전용 — 영화 상세 대신 해당 극장으로 flyTo + 선택 */
   onTodayShowSelect?: (movieId: string, title: string, theaterId: string) => void
   onRemoveRecentlyViewed?: (kind: RecentlyViewedKind, id: string) => void
+  onClearRecentlyViewed?: () => void
   onRecentItemClick?: (item: RecentlyViewedEntry) => void
   /** 현재 위치 있을 때 극장 ID로 거리 텍스트("1.2 km") 조회 */
   getTheaterDistance?: (theaterId: string) => string | null
@@ -434,6 +435,7 @@ interface CurationSectionsProps {
   /** "지금 출발하면"/"단 한 곳" 섹션 전용 — 영화 상세 대신 해당 극장으로 flyTo + 선택 */
   onTodayShowSelect?: (movieId: string, title: string, theaterId: string) => void
   onRemoveRecentlyViewed?: (kind: RecentlyViewedKind, id: string) => void
+  onClearRecentlyViewed?: () => void
   onRecentItemClick?: (item: RecentlyViewedEntry) => void
   /** 현재 위치 있을 때 극장 ID로 거리 텍스트("1.2 km") 조회 */
   getTheaterDistance?: (theaterId: string) => string | null
@@ -451,8 +453,18 @@ interface SectionCandidate {
 }
 
 const MAX_CURATION_SECTIONS = 3
-/** 섹션별 첫 노출 개수 — 초과분은 펼치기로 표시 (데스크톱 그리드 전용, 모바일은 가로 스크롤이라 제한 없음) */
 const SECTION_COLLAPSED_COUNT = 6
+const SECTION_PARTIAL_COUNT = 21
+
+type SectionExpand = 'collapsed' | 'partial'
+
+const SECTION_FILMS_HREF: Record<string, string | null> = {
+  lastWeek:    '/films#realtime_last_week',
+  newIndie:    '/films#realtime_new_indie',
+  returning:   '/films#realtime_returning',
+  soloTheater: null,
+  todayShow:   null,
+}
 
 const IconChevronDown = ({ open }: { open: boolean }) => (
   <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
@@ -473,6 +485,7 @@ export function CurationSections({
   onMovieSelect,
   onTodayShowSelect,
   onRemoveRecentlyViewed,
+  onClearRecentlyViewed,
   onRecentItemClick,
   getTheaterDistance,
   desktop = false,
@@ -525,7 +538,10 @@ export function CurationSections({
 
   const sections = candidates.filter((c) => c.items.length > 0).slice(0, MAX_CURATION_SECTIONS)
 
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({})
+  const [expandedSections, setExpandedSections] = useState<Record<string, SectionExpand>>({})
+  const setExpand = (key: string, state: SectionExpand) =>
+    setExpandedSections((prev) => ({ ...prev, [key]: state }))
+  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: SECTION_GAP }}>
@@ -537,46 +553,70 @@ export function CurationSections({
               if (item?.theaterId) onTodayShowSelect?.(id, title, item.theaterId)
             }
           : onMovieSelect
-        const expanded = expandedSections[section.key] ?? false
+        const expandState: SectionExpand = expandedSections[section.key] ?? 'collapsed'
         const hasMore = desktop && section.items.length > SECTION_COLLAPSED_COUNT
-        const visibleItems = hasMore && !expanded
-          ? section.items.slice(0, SECTION_COLLAPSED_COUNT)
-          : section.items
+        const hasManyMore = desktop && section.items.length > SECTION_PARTIAL_COUNT
+        const visibleItems = hasMore && expandState === 'partial'
+          ? section.items.slice(0, SECTION_PARTIAL_COUNT)
+          : section.items.slice(0, SECTION_COLLAPSED_COUNT)
+
+        const btnStyle = {
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+          padding: '8px 0', border: 'none', borderRadius: 8,
+          background: 'var(--color-surface-bg)', color: 'var(--color-text-caption)',
+          fontSize: 12, fontWeight: 600, cursor: 'pointer',
+        } as const
+
         return (
-          <div key={section.key} style={{ display: 'flex', flexDirection: 'column', gap: SECTION_GAP }}>
+          <div key={section.key} ref={el => { sectionRefs.current[section.key] = el }}
+            style={{ display: 'flex', flexDirection: 'column', gap: SECTION_GAP }}>
             <Section title={section.title} icon={section.icon} withLine>
               <PosterRow items={visibleItems} onSelect={handleSelect} emptyText={section.emptyText} desktop={desktop} />
-              {hasMore && (
-                <button
-                  type="button"
-                  onClick={() => setExpandedSections((prev) => ({ ...prev, [section.key]: !expanded }))}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 4,
-                    margin: '0 20px',
-                    padding: '8px 0',
-                    border: 'none',
-                    borderRadius: 8,
-                    background: 'var(--color-surface-bg)',
-                    color: 'var(--color-text-caption)',
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {expanded ? '접기' : '더보기'}
-                  <IconChevronDown open={expanded} />
+              {hasMore && expandState === 'collapsed' && (
+                <button type="button" onClick={() => setExpand(section.key, 'partial')}
+                  style={{ ...btnStyle, margin: '0 20px' }}>
+                  더보기 <IconChevronDown open={false} />
                 </button>
+              )}
+              {hasMore && expandState === 'partial' && (
+                <div style={{ display: 'flex', gap: 8, margin: '0 20px' }}>
+                  <button type="button" onClick={() => {
+                    setExpand(section.key, 'collapsed')
+                    sectionRefs.current[section.key]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                  }} style={{ ...btnStyle, flex: 1 }}>
+                    접기 <IconChevronDown open={true} />
+                  </button>
+                  {hasManyMore && SECTION_FILMS_HREF[section.key] && (
+                    <a href={SECTION_FILMS_HREF[section.key]!}
+                      style={{ ...btnStyle, flex: 1, textDecoration: 'none',
+                        background: 'var(--color-primary-subtle-l)',
+                        color: 'var(--filter-chip-value)' }}>
+                      모두보기 →
+                    </a>
+                  )}
+                </div>
               )}
             </Section>
             <SectionDivider />
           </div>
         )
       })}
-      <Section title="최근 찾아본" icon="🔎" withLine>
-        <RecentList items={recentlyViewed} onRemove={onRemoveRecentlyViewed} onItemClick={onRecentItemClick} />
+      <Section title="최근 찾아본" icon="🔎" withLine action={
+        onClearRecentlyViewed && recentlyViewed.length > 0 ? (
+          <button
+            type="button"
+            onClick={onClearRecentlyViewed}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+              fontSize: 11, color: 'var(--color-text-caption)',
+              textDecoration: 'underline', flexShrink: 0,
+            }}
+          >
+            모두 지우기
+          </button>
+        ) : undefined
+      }>
+        <RecentList items={recentlyViewed.slice(0, 10)} onRemove={onRemoveRecentlyViewed} onItemClick={onRecentItemClick} />
       </Section>
     </div>
   )
@@ -597,6 +637,7 @@ export function CurationSheet({
   onMovieSelect,
   onTodayShowSelect,
   onRemoveRecentlyViewed,
+  onClearRecentlyViewed,
   onRecentItemClick,
   getTheaterDistance,
   hidden = false,
@@ -869,6 +910,7 @@ export function CurationSheet({
           onMovieSelect={onMovieSelect}
           onTodayShowSelect={onTodayShowSelect}
           onRemoveRecentlyViewed={onRemoveRecentlyViewed}
+          onClearRecentlyViewed={onClearRecentlyViewed}
           onRecentItemClick={onRecentItemClick}
           getTheaterDistance={getTheaterDistance}
         />

@@ -21,6 +21,7 @@ interface CurationSectionRowProps {
   noHeader?: boolean
   /** compact: 외부 여백 없이 flex item으로 렌더 — 1~2편 섹션을 2열로 묶을 때 사용 */
   compact?: boolean
+  id?: string
 }
 
 const POSTER_SIZE = {
@@ -279,6 +280,7 @@ export function CurationSectionRow({
   onMovieClick,
   noHeader = false,
   compact = false,
+  id,
 }: CurationSectionRowProps) {
   const { width, height } = isDesktop ? POSTER_SIZE.desktop : POSTER_SIZE.mobile
   const scaleBleed = Math.ceil(height * 0.04)
@@ -363,7 +365,7 @@ export function CurationSectionRow({
   }
 
   return (
-    <section style={{ paddingTop: noHeader ? 0 : 24 }}>
+    <section id={id} style={{ paddingTop: noHeader ? 0 : 24 }}>
       {!noHeader && (
         <h2
           style={{

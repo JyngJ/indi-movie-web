@@ -4,6 +4,69 @@ export type AdminShowtimeStatus = 'draft' | 'needs_review' | 'approved' | 'rejec
 export type CrawlRunStatus = 'idle' | 'running' | 'completed' | 'failed'
 export type CrawlInputKind = 'fixture' | 'url' | 'html' | 'csv'
 
+export type EventType = 'gv' | 'talk' | 'overnight' | 'special' | 'masterclass'
+export type EventSourceHealth = 'healthy' | 'degraded' | 'broken'
+export type EventSourceCadence = 'manual' | 'daily' | 'twice_daily'
+
+export interface AdminEventSource {
+  id: string
+  theaterId: string
+  theaterName: string
+  matchedTheaterId?: string
+  homepageUrl?: string
+  listingUrl: string
+  parser: 'kofaCinemathequeEvents' | 'deosupEvents' | 'cinecubeEvents' | 'indispaceEvents' | 'laikaCinemaEvents' | 'emuBoard' | 'artnineEvents'
+  enabled: boolean
+  cadence: EventSourceCadence
+  health: EventSourceHealth
+  notes?: string
+  lastCrawledAt?: string
+}
+
+export interface CrawledEventCandidate {
+  id: string
+  sourceId: string
+  theaterId: string
+  theaterName: string
+  eventType: EventType
+  title: string
+  movieTitle?: string
+  eventDate: string
+  eventTime?: string
+  endTime?: string
+  guests: string[]
+  description?: string
+  bookingUrl?: string
+  sourceUrl?: string
+  rawText: string
+  confidence: number
+  warnings: string[]
+  status: AdminShowtimeStatus
+  fingerprint: string
+  matchedTheaterId?: string
+  matchedMovieId?: string
+  approvedAt?: string
+  approvedBy?: string
+}
+
+export interface TheaterEvent {
+  id: string
+  theaterId: string
+  theaterName: string
+  movieId?: string
+  movieTitle?: string
+  eventType: EventType
+  title: string
+  eventDate: string
+  eventTime?: string
+  endTime?: string
+  guests: string[]
+  description?: string
+  bookingUrl?: string
+  sourceUrl: string
+  isActive: boolean
+}
+
 export interface AdminTheaterSource {
   id: string
   theaterId: string
@@ -11,7 +74,7 @@ export interface AdminTheaterSource {
   matchedTheaterId?: string
   homepageUrl: string
   listingUrl: string
-  parser: 'jsonLdEvent' | 'tableText' | 'timelineCard' | 'dtryxReservationApi' | 'movieeTicketApi' | 'movielandProductOptions' | 'seoulArtTimetable' | 'csv' | 'selfHosted' | 'ocr' | 'tinyticketEventManager' | 'petitecine' | 'drfa' | 'screenshotOcr' | 'boardImageOcr'
+  parser: 'jsonLdEvent' | 'tableText' | 'timelineCard' | 'dtryxReservationApi' | 'movieeTicketApi' | 'movielandProductOptions' | 'seoulArtTimetable' | 'csv' | 'selfHosted' | 'ocr' | 'tinyticketEventManager' | 'petitecine' | 'drfa' | 'screenshotOcr' | 'boardImageOcr' | 'kofaCinematheque'
   enabled: boolean
   cadence: 'manual' | 'daily' | 'twice_daily' | 'four_daily'
   lastCrawledAt?: string

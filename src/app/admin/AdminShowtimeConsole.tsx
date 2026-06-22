@@ -34,7 +34,7 @@ import {
 } from './adminShowtimeConsole/types'
 import { groupByCity, normalizeSearchText, splitListInput, upsertOption } from './adminShowtimeConsole/utils'
 
-export function AdminShowtimeConsole() {
+export function AdminShowtimeConsole({ tabSlot }: { tabSlot?: React.ReactNode } = {}) {
   const router = useRouter()
   const [payload, setPayload] = useState<AdminPayload>(emptyPayload)
   const [adminTheaters, setAdminTheaters] = useState<AdminTheater[]>([])
@@ -977,6 +977,7 @@ export function AdminShowtimeConsole() {
 
   return (
     <main className={styles.shell}>
+      {tabSlot && <div style={{ maxWidth: 1320, margin: '0 auto 8px' }}>{tabSlot}</div>}
       <header className={styles.header}>
         <div>
           <p className={styles.eyebrow}>운영자 콘솔</p>

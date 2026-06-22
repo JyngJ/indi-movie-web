@@ -730,15 +730,6 @@ export const crawlSourcesToAdd = [
     notes: '인천 미추홀구 주안역 근처. 독립영화 중심 상영.',
   },
   {
-    theaterName: '주안영상미디어센터',
-    matchedTheaterId: '',
-    homepageUrl: '',
-    listingUrl: '',
-    parser: 'tableText',
-    cadence: 'weekly',
-    notes: '인천광역시 미추홀구 석바위로 68 필프라자 7층. 전화: 032-872-2622',
-  },
-  {
     theaterName: '고흥작은영화관',
     matchedTheaterId: '',
     homepageUrl: '',

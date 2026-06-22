@@ -38,15 +38,6 @@ export const theatersToAdd = [
     website: '',
   },
   {
-    name: '주안영상미디어센터',
-    city: '인천',
-    address: '인천광역시 미추홀구 석바위로 68 필프라자 7층',
-    lat: 37.4524,
-    lng: 126.6357,
-    phone: '032-872-2622',
-    website: '',
-  },
-  {
     name: '부평대한극장',
     city: '인천',
     address: '인천광역시 부평구 경원대로 1382',

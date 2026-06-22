@@ -10,6 +10,7 @@ import { DirectorSpotlightSection } from '@/components/domain/DirectorSpotlightS
 import { FilmRankingSection } from '@/components/domain/FilmRankingSection'
 import { LocationPermissionModal } from '@/components/domain/LocationPermissionModal'
 import { FilterChip } from '@/components/domain/filterBar/FilterChip'
+import { FilmsSearchBar } from '@/components/domain/FilmsSearchBar'
 import { RegionDropdown } from '@/components/domain/filterBar/RegionDropdown'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
@@ -17,7 +18,6 @@ import { useCurationData } from '@/hooks/useCurationData'
 import { useLocationPermission } from '@/hooks/useLocationPermission'
 import { getFilmsTabCurationSections, SECTION_GROUP } from '@/lib/curation/filmsTabLists'
 import { getTodayAnniversaries } from '@/lib/curation/directorAnniversaries'
-import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { useActiveMovieIdsByRegion, useActiveMovieTheaterPairs, useCurationLists, useFilmRankings, useMovies, useTheaters } from '@/lib/supabase/queries'
 import { getStoredRegion, setStoredRegion } from '@/lib/regionStorage'
 import type { Theater } from '@/types/api'
@@ -42,8 +42,33 @@ export default function FilmsPage() {
   }
   const userLocation = locCoords
   const [dropdownOpen, setDropdownOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [showScrollTop, setShowScrollTop] = useState(false)
+  const headerRef = useRef<HTMLElement>(null)
   const chipRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    const el = headerRef.current
+    if (!el) return
+    const obs = new IntersectionObserver(([entry]) => setShowScrollTop(!entry.isIntersecting), { threshold: 0 })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const hash = window.location.hash.slice(1)
+    if (!hash) return
+    let tries = 0
+    const interval = setInterval(() => {
+      const el = document.getElementById(hash)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        clearInterval(interval)
+      } else if (++tries > 30) {
+        clearInterval(interval)
+      }
+    }, 100)
+    return () => clearInterval(interval)
+  }, [])
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -67,20 +92,7 @@ export default function FilmsPage() {
   const { data: filmRankingRow } = useFilmRankings()
   const { lastWeekFilms, newIndieFilms, returningFilms } = useCurationData(true, selectedRegion)
 
-  const q = searchQuery.trim()
-
-  function matchesSearch(title: string, directors: string[]) {
-    if (!q) return true
-    const ql = q.toLowerCase()
-    return (
-      normalizeTitle(title).toLowerCase().includes(ql) ||
-      directors.some((d) => d.toLowerCase().includes(ql))
-    )
-  }
-
-  const filteredMovies = movies.filter((m) => matchesSearch(m.title, m.director))
-
-  const sections = getFilmsTabCurationSections(filteredMovies, new Set(activeMovieIds), curationLists)
+  const sections = getFilmsTabCurationSections(movies, new Set(activeMovieIds), curationLists)
 
   const lastWeekBadgeMap = new Map(lastWeekFilms.map((f) => [f.movie.id, f.daysLeft]))
 
@@ -92,9 +104,7 @@ export default function FilmsPage() {
       description: '한동안 다시 못볼지도 몰라요! 놓치기 전에 여기서',
       displayMode: 'default' as const,
       posterBadges: lastWeekBadgeMap,
-      movies: lastWeekFilms
-        .filter((f) => matchesSearch(f.movie.title, f.movie.director))
-        .map((f) => f.movie),
+      movies: lastWeekFilms.map((f) => f.movie),
     },
     {
       listId: 'realtime_new_indie',
@@ -102,9 +112,7 @@ export default function FilmsPage() {
       emoji: '🎬',
       description: '이번 주 스크린에 새로 오른 영화들',
       displayMode: 'default' as const,
-      movies: newIndieFilms
-        .filter((f) => matchesSearch(f.movie.title, f.movie.director))
-        .map((f) => f.movie),
+      movies: newIndieFilms.map((f) => f.movie),
     },
     {
       listId: 'realtime_returning',
@@ -112,9 +120,7 @@ export default function FilmsPage() {
       emoji: '🎞️',
       description: '잠시 사라졌다가 다시 스크린으로 돌아온 영화들',
       displayMode: 'default' as const,
-      movies: returningFilms
-        .filter((f) => matchesSearch(f.movie.title, f.movie.director))
-        .map((f) => f.movie),
+      movies: returningFilms.map((f) => f.movie),
     },
   ].filter((s) => s.movies.length > 0)
 
@@ -132,7 +138,7 @@ export default function FilmsPage() {
   const theaterDirMap = new Map<string, Map<string, typeof movies>>()
   for (const { movieId, theaterId } of movieTheaterPairs) {
     const movie = movieById.get(movieId)
-    if (!movie || !matchesSearch(movie.title, movie.director)) continue
+    if (!movie) continue
     if (!theaterDirMap.has(theaterId)) theaterDirMap.set(theaterId, new Map())
     const dirMap = theaterDirMap.get(theaterId)!
     for (const dir of movie.director) {
@@ -189,11 +195,13 @@ export default function FilmsPage() {
         backgroundColor: 'var(--color-surface-bg)',
       }}
     >
-      <header style={{ padding: '20px 16px 0' }}>
+      <header ref={headerRef} style={{ padding: '20px 16px 0' }}>
         {isDesktop ? (
-          /* 데스크톱: [영화+서브타이틀] [검색창──────] [지역칩] */
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ flexShrink: 0 }}>
+          /* 데스크톱: [영화+서브타이틀]  ←─검색창 절대 중앙─→  [지역칩] */
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', minHeight: 52 }}>
+
+            {/* Left: title (flow) */}
+            <div style={{ flexShrink: 0, zIndex: 1 }}>
               <h1
                 style={{
                   margin: 0,
@@ -203,78 +211,18 @@ export default function FilmsPage() {
                   color: 'var(--color-text-primary)',
                 }}
               >
-                영화
+                상영작
               </h1>
               <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--color-text-caption)', whiteSpace: 'nowrap' }}>
-                {q && visibleSections.length === 0 ? '검색 결과 없음' : subtitle}
+                {subtitle}
               </p>
             </div>
 
-            <div style={{ position: 'relative', flex: 1 }}>
-              <span
-                style={{
-                  position: 'absolute',
-                  left: 14,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: 'var(--color-text-caption)',
-                  display: 'flex',
-                  pointerEvents: 'none',
-                }}
-              >
-                <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
-                  <circle cx="8.5" cy="8.5" r="5.75" stroke="currentColor" strokeWidth="1.7" />
-                  <path d="M13 13L17 17" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-                </svg>
-              </span>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="영화, 감독, 배우 검색"
-                style={{
-                  width: '100%',
-                  height: 36,
-                  paddingLeft: 36,
-                  paddingRight: searchQuery ? 34 : 14,
-                  borderRadius: 20,
-                  border: '1px solid var(--color-border)',
-                  background: 'var(--color-surface-card)',
-                  color: 'var(--color-text-body)',
-                  fontSize: 14,
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                }}
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  style={{
-                    position: 'absolute',
-                    right: 8,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'var(--color-text-caption)',
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: 18,
-                    height: 18,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    padding: 0,
-                    color: 'var(--color-surface-bg)',
-                    fontSize: 11,
-                    lineHeight: 1,
-                  }}
-                >
-                  ✕
-                </button>
-              )}
-            </div>
+            {/* Spacer */}
+            <div style={{ flex: 1 }} />
 
-            <div style={{ position: 'relative', flexShrink: 0 }}>
+            {/* Right: region chip (flow) */}
+            <div style={{ position: 'relative', flexShrink: 0, zIndex: 1 }}>
               <FilterChip
                 label="검색 지역"
                 value={selectedRegion ?? undefined}
@@ -297,6 +245,22 @@ export default function FilmsPage() {
                 </div>
               )}
             </div>
+
+            {/* Center: search bar — 항상 컨테이너 정중앙 고정 */}
+            <div style={{
+              position: 'absolute', left: 0, right: 0,
+              display: 'flex', justifyContent: 'center',
+              pointerEvents: 'none',
+              zIndex: 2,
+            }}>
+              <div style={{ width: 420, pointerEvents: 'auto' }}>
+                <FilmsSearchBar
+                  movies={movies}
+                  theaters={theaters}
+                  isDesktop={true}
+                />
+              </div>
+            </div>
           </div>
         ) : (
           /* 모바일: 제목 + 지역칩 → 검색창 → 서브타이틀 순 */
@@ -311,7 +275,7 @@ export default function FilmsPage() {
                   color: 'var(--color-text-primary)',
                 }}
               >
-                영화
+                상영작
               </h1>
               <div style={{ position: 'relative' }}>
                 <FilterChip
@@ -338,75 +302,19 @@ export default function FilmsPage() {
               </div>
             </div>
 
-            <div style={{ position: 'relative', marginTop: 12 }}>
-              <span
-                style={{
-                  position: 'absolute',
-                  left: 14,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: 'var(--color-text-caption)',
-                  display: 'flex',
-                  pointerEvents: 'none',
-                }}
-              >
-                <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
-                  <circle cx="8.5" cy="8.5" r="5.75" stroke="currentColor" strokeWidth="1.7" />
-                  <path d="M13 13L17 17" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-                </svg>
-              </span>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="영화, 감독, 배우 검색"
-                style={{
-                  width: '100%',
-                  height: 40,
-                  paddingLeft: 38,
-                  paddingRight: searchQuery ? 36 : 14,
-                  borderRadius: 20,
-                  border: '1px solid var(--color-border)',
-                  background: 'var(--color-surface-card)',
-                  color: 'var(--color-text-body)',
-                  fontSize: 14,
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                }}
+            <div style={{ marginTop: 12 }}>
+              <FilmsSearchBar
+                movies={movies}
+                theaters={theaters}
+                isDesktop={false}
               />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  style={{
-                    position: 'absolute',
-                    right: 10,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'var(--color-text-caption)',
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: 18,
-                    height: 18,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    padding: 0,
-                    color: 'var(--color-surface-bg)',
-                    fontSize: 11,
-                    lineHeight: 1,
-                  }}
-                >
-                  ✕
-                </button>
-              )}
             </div>
           </>
         )}
 
         {!isDesktop && (
           <p style={{ margin: '8px 0 0', fontSize: 13, color: 'var(--color-text-caption)' }}>
-            {q && visibleSections.length === 0 ? '검색 결과 없음' : subtitle}
+            {subtitle}
           </p>
         )}
 
@@ -496,6 +404,7 @@ export default function FilmsPage() {
                   sectionTitle={ann.sectionTitle} sectionDesc={ann.sectionDesc}
                   eventType={ann.eventType} nameKo={ann.nameKo} nameEn={ann.nameEn}
                   birthYear={ann.birthYear} deathYear={ann.deathYear}
+                  month={ann.month} day={ann.day}
                   films={films} isDesktop={isDesktop} onMovieClick={handleMovieClick} />
               ))}
               {rows.map((pair, ri) => (
@@ -505,6 +414,7 @@ export default function FilmsPage() {
                       sectionTitle={ann.sectionTitle} sectionDesc={ann.sectionDesc}
                       eventType={ann.eventType} nameKo={ann.nameKo} nameEn={ann.nameEn}
                       birthYear={ann.birthYear} deathYear={ann.deathYear}
+                      month={ann.month} day={ann.day}
                       films={films} isDesktop={isDesktop} onMovieClick={handleMovieClick} compact />
                   ))}
                 </div>
@@ -522,7 +432,7 @@ export default function FilmsPage() {
           type SectionDisplayMode = import('@/lib/curation/filmsTabLists').SectionDisplayMode
           function rowFor(s: AnySection, compact: boolean) {
             return (
-              <CurationSectionRow key={s.listId}
+              <CurationSectionRow key={s.listId} id={s.listId}
                 title={s.nameKo} emoji={s.emoji} description={s.description}
                 displayMode={s.displayMode as SectionDisplayMode}
                 movies={s.movies} isDesktop={isDesktop}
@@ -579,7 +489,7 @@ export default function FilmsPage() {
 
             {/* 11. 전체 상영작 그리드 */}
             <AllMoviesGrid
-              movies={filteredMovies.filter((m) => activeMovieIdSet.has(m.id))}
+              movies={movies.filter((m) => activeMovieIdSet.has(m.id))}
               isDesktop={isDesktop}
               regionLabel={selectedRegion ?? undefined}
               theaterCountByMovie={theaterCountByMovie}
@@ -587,6 +497,36 @@ export default function FilmsPage() {
           </>
         )
       })()}
+
+      {/* scroll-to-top: 헤더가 뷰포트 밖으로 나가면 표시 */}
+      {showScrollTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          style={{
+            position: 'fixed',
+            right: isDesktop ? 32 : 20,
+            bottom: isDesktop
+              ? 32
+              : `calc(${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom) + 16px)`,
+            width: 40, height: 40,
+            borderRadius: '50%',
+            border: 'none',
+            cursor: 'pointer',
+            background: 'var(--color-surface-card)',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
+            color: 'var(--color-text-body)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 100,
+            minHeight: 'unset',
+            transition: 'opacity 0.15s',
+          }}
+          title="맨 위로"
+        >
+          <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 19V5M5 12l7-7 7 7" />
+          </svg>
+        </button>
+      )}
     </div>
   )
 }

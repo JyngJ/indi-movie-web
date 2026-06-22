@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getAdminSessionUser } from '@/lib/admin/auth'
-import { AdminShowtimeConsole } from './AdminShowtimeConsole'
+import { AdminConsoleTabs } from './AdminConsoleTabs'
 
 export default async function AdminPage() {
   const user = await getAdminSessionUser()
@@ -9,5 +9,5 @@ export default async function AdminPage() {
     redirect('/admin/login')
   }
 
-  return <AdminShowtimeConsole />
+  return <AdminConsoleTabs />
 }

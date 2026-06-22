@@ -14,6 +14,8 @@ interface Props {
   nameEn: string
   birthYear: number
   deathYear?: number
+  month: number
+  day: number
   films: Movie[]
   isDesktop: boolean
   /** compact: 외부 여백 없이 반반 2열 레이아웃용 (1편짜리) */
@@ -35,12 +37,14 @@ function accentColors(eventType: AnniversaryEventType) {
 export function AnniversarySection({
   sectionTitle, sectionDesc, eventType,
   nameKo, nameEn, birthYear, deathYear,
+  month, day,
   films, isDesktop, compact = false, onMovieClick,
 }: Props) {
   if (films.length === 0) return null
 
   const { bg, border, text } = accentColors(eventType)
   const years = deathYear ? `${birthYear} – ${deathYear}` : `b. ${birthYear}`
+  const dateLabel = `${month}월 ${day}일`
 
   const header = (
     <div style={{
@@ -52,12 +56,21 @@ export function AnniversarySection({
       borderRight: `1px solid color-mix(in srgb, ${border} 30%, transparent)`,
       display: 'flex', flexDirection: 'column', gap: 3,
     }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <span style={{
           fontSize: compact ? 14 : (isDesktop ? 18 : 16),
           fontWeight: 700, fontFamily: 'var(--font-display)', color: text,
         }}>
           {sectionTitle}
+        </span>
+        <span style={{
+          fontSize: 11, fontWeight: 700, color: text,
+          background: `color-mix(in srgb, ${border} 18%, transparent)`,
+          border: `1px solid color-mix(in srgb, ${border} 35%, transparent)`,
+          borderRadius: 99, padding: '2px 8px',
+          whiteSpace: 'nowrap',
+        }}>
+          {dateLabel}
         </span>
         <span style={{
           fontSize: 11, color: text, opacity: 0.7,

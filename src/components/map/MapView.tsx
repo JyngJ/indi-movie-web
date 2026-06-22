@@ -15,6 +15,9 @@ import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components
 import { MapPin, TheaterSheet, MovieSheet, CurationSheet, CurationSections, FilterBar, LocationPermissionModal, CURATION_PEEK_HEIGHT } from '@/components/domain'
 import type { CurationSnap } from '@/components/domain'
 import { DesktopDetailPanel } from '@/components/domain/DesktopDetailPanel'
+import { GvMarkerIcon } from '@/components/domain/GvMarkerIcon'
+import { computeGvSlotH, computeGvSlotW, GV_MARKER_STEM_H, GV_MARKER_DOT_D } from '@/components/domain/GvPinSlots'
+import { GV_EVENTS, type GvEvent } from '@/data/gv-events'
 import type { DesktopPanelState } from '@/components/domain/DesktopDetailPanel'
 import type { FilterState } from '@/components/domain'
 import { useActiveMovieIds, useMapShowtimes, useMovies, useStations, useTheaters } from '@/lib/supabase/queries'
@@ -35,7 +38,7 @@ import { posterCountForZoom, posterSizeForZoom, posterSlotsForZoom } from '@/lib
 import { calculateAndFormatDistance } from '@/lib/map/distanceUtils'
 import type { TheaterPosterMovie } from '@/lib/map/posterLogic'
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
-import { recordRecentlyViewed, removeRecentlyViewed } from '@/lib/curation/recentlyViewed'
+import { recordRecentlyViewed, removeRecentlyViewed, clearRecentlyViewed } from '@/lib/curation/recentlyViewed'
 import { cookieStorageAdapter } from '@/lib/adapters/cookieStorage'
 import type { RecentlyViewedEntry, RecentlyViewedKind } from '@/lib/curation/types'
 import { useCurationData } from '@/hooks/useCurationData'
@@ -195,7 +198,9 @@ function makePinIcon(
       `</div></div>`
   })() : ''
 
-  const pinHtml = renderToStaticMarkup(<MapPin kind="indie" selected={selected} label={name} labelOffset={labelOffset} dimmed={dimmed} isDark={isDark} />)
+  const pinHtml = renderToStaticMarkup(
+    <MapPin kind="indie" selected={selected} label={name} labelOffset={labelOffset} dimmed={dimmed} isDark={isDark} />
+  )
   const html = `
     <div style="width:140px;display:flex;flex-direction:column;align-items:center;overflow:visible;position:relative;">
       <div style="position:relative;z-index:3;align-self:center;">${pinHtml}</div>
@@ -211,6 +216,29 @@ function makePinIcon(
     iconAnchor: [70, ANCHOR_Y],
   })
   _pinIconCache.set(cacheKey, icon)
+  return icon
+}
+
+/* ── GV 마커 아이콘 ─────────────────────────────────────────────── */
+const _gvMarkerIconCache = new Map<string, L.DivIcon>()
+
+function makeGvMarkerIcon(events: GvEvent[], zoom: number, expanded: boolean, theaterName: string, selected?: boolean): L.DivIcon {
+  const cacheKey = `${theaterName}|${zoom}|${expanded ? 1 : 0}|${selected ? 1 : 0}|${events.map(e => e.id).join(',')}`
+  const cached = _gvMarkerIconCache.get(cacheKey)
+  if (cached) return cached
+  const slotH = computeGvSlotH(events.length, zoom, expanded, selected)
+  const slotW = computeGvSlotW(events.length, zoom, expanded, selected)
+  const totalH = slotH + GV_MARKER_STEM_H + GV_MARKER_DOT_D
+  const html = renderToStaticMarkup(
+    <GvMarkerIcon events={events} zoom={zoom} expanded={expanded} theaterName={theaterName} selected={selected} slotW={slotW} />
+  )
+  const icon = L.divIcon({
+    html,
+    className: '',
+    iconSize: [slotW, totalH],
+    iconAnchor: [slotW / 2, totalH],
+  })
+  _gvMarkerIconCache.set(cacheKey, icon)
   return icon
 }
 
@@ -532,7 +560,13 @@ function computeClustersByZoom(
       !!firstKey &&
       group.every((g) => coLocGroupKey.get(g.t.id) === firstKey)
 
-    clusters.push({ id: a.t.id, theaters: group.map((g) => g.t), lat, lng, isCoLocation })
+    if (group.length < 4) {
+      for (const g of group) {
+        clusters.push({ id: g.t.id, theaters: [g.t], lat: g.t.lat, lng: g.t.lng })
+      }
+    } else {
+      clusters.push({ id: a.t.id, theaters: group.map((g) => g.t), lat, lng, isCoLocation })
+    }
   }
 
   for (const t of theaters.filter((t) => splitIds.has(t.id))) {
@@ -892,86 +926,7 @@ function makeClusterIcon(
     })
   }
 
-  const DOT_D = 28
-  const DOT_R = DOT_D / 2
-  const CARD_GAP = 8
-  const CANVAS_W = 220
-  const CANVAS_H = 148
-  const CENTER_X = CANVAS_W / 2
-  const CENTER_Y = CANVAS_H / 2
-
-  if (count <= 3) {
-    const LINE_H = 18
-    const PY = 6
-    const names = theaters.map(t =>
-      `<div style="font-size:11px;font-weight:700;font-family:var(--font-display);line-height:${LINE_H}px;` +
-      `white-space:nowrap;color:var(--color-text-primary);">${t.name}</div>`
-    ).join('')
-    const cardStyle =
-      `position:relative;background:var(--color-surface-card);` +
-      `border:1.5px solid var(--color-border);border-radius:8px;` +
-      `padding:${PY}px 10px;box-shadow:var(--shadow-sm);` +
-      `display:flex;flex-direction:column;align-items:center;gap:2px;` +
-      `z-index:2;`
-    const tailBase =
-      `position:absolute;width:10px;height:10px;background:var(--color-surface-card);` +
-      `pointer-events:none;z-index:1;`
-    const tailStyles: Record<LabelDir, string> = {
-      bottom: `top:-6px;left:50%;transform:translateX(-50%) rotate(45deg);` +
-        `border-top:1.5px solid var(--color-border);border-right:1.5px solid var(--color-border);border-top-right-radius:2px;`,
-      top: `bottom:-6px;left:50%;transform:translateX(-50%) rotate(45deg);` +
-        `border-bottom:1.5px solid var(--color-border);border-left:1.5px solid var(--color-border);border-bottom-left-radius:2px;`,
-      right: `top:50%;left:-6px;transform:translateY(-50%) rotate(45deg);` +
-        `border-top:1.5px solid var(--color-border);border-left:1.5px solid var(--color-border);border-top-left-radius:2px;`,
-      left: `top:50%;right:-6px;transform:translateY(-50%) rotate(45deg);` +
-        `border-right:1.5px solid var(--color-border);border-bottom:1.5px solid var(--color-border);border-bottom-right-radius:2px;`,
-    }
-    const offset = DOT_R + CARD_GAP
-    const cardPos: Record<LabelDir, string> = {
-      top: `left:${CENTER_X}px;bottom:${CANVAS_H - CENTER_Y + offset}px;transform:translateX(-50%);`,
-      bottom: `left:${CENTER_X}px;top:${CENTER_Y + offset}px;transform:translateX(-50%);`,
-      right: `left:${CENTER_X + offset}px;top:${CENTER_Y}px;transform:translateY(-50%);`,
-      left: `right:${CANVAS_W - CENTER_X + offset}px;top:${CENTER_Y}px;transform:translateY(-50%);`,
-    }
-    const wrapperStyle =
-      `position:absolute;${cardPos[labelDir]}width:max-content;max-width:180px;z-index:2;` +
-      `margin-left:${labelOffset.x}px;margin-top:${labelOffset.y}px;`
-    const countTagBelow = movieCount > 0
-      ? `<div style="position:absolute;top:${CENTER_Y + DOT_R + 5}px;left:${CENTER_X}px;transform:translateX(-50%);z-index:2;pointer-events:none;">` +
-        `<div style="position:absolute;top:-5px;left:50%;transform:translateX(-50%) rotate(45deg);` +
-        `width:10px;height:10px;background:var(--color-surface-card);` +
-        `border-top:1.5px solid var(--color-border);border-left:1.5px solid var(--color-border);` +
-        `border-top-left-radius:2px;z-index:0;"></div>` +
-        `<div style="position:relative;background:var(--color-surface-card);` +
-        `border:1.5px solid var(--color-border);border-radius:10px;` +
-        `padding:3px 8px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.13);z-index:1;">` +
-        `<span style="font-size:11px;font-weight:700;color:var(--color-primary-base);">${movieCount}편</span>` +
-        `</div></div>`
-      : ''
-    const html =
-      `<div style="position:relative;width:${CANVAS_W}px;height:${CANVAS_H}px;overflow:visible;">` +
-      `<div style="${wrapperStyle}">` +
-      `<div style="${tailBase}${tailStyles[labelDir]}"></div>` +
-      `<div style="${cardStyle}">${names}</div>` +
-      `</div>` +
-      `<div style="position:absolute;width:${DOT_D}px;height:${DOT_D}px;` +
-      `top:${CENTER_Y - DOT_R}px;left:${CENTER_X - DOT_R}px;` +
-      `border-radius:50%;background:${dotColor};` +
-      `border:2px solid var(--color-surface-bg);box-shadow:var(--shadow-sm);` +
-      `display:flex;align-items:center;justify-content:center;` +
-      `color:#fff;font-weight:700;font-size:12px;z-index:1;">${count}</div>` +
-      countTagBelow +
-      `</div>`
-
-    return L.divIcon({
-      html,
-      className: '',
-      iconSize: [CANVAS_W, CANVAS_H],
-      iconAnchor: [CENTER_X, CENTER_Y],
-    })
-  }
-
-  // count > 3: 원형 + 태그
+  // 원형 + 숫자 (이름 말풍선 없음)
   const SIZE = 40
   const TAG_H = movieCount > 0 ? 32 : 0
   const CW = 100, CH = SIZE + TAG_H + 8
@@ -1075,6 +1030,17 @@ export default function MapView() {
   useEffect(() => () => cancelSpringAnimation(), [])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const selectedIdRef = useRef<string | null>(null)
+  const [initialGvId, setInitialGvId] = useState<string | undefined>(undefined)
+  const gvDelayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [expandedGvTheater, setExpandedGvTheater] = useState<string | null>(null)
+  const gvByTheater = useMemo(() => {
+    const map = new Map<string, GvEvent[]>()
+    for (const ev of GV_EVENTS) {
+      if (!map.has(ev.theaterName)) map.set(ev.theaterName, [])
+      map.get(ev.theaterName)!.push(ev)
+    }
+    return map
+  }, [])
   selectedIdRef.current = selectedId
   const [fromMovieId, setFromMovieId] = useState<string | null>(null)
   const [initialSheetDate, setInitialSheetDate] = useState<string | undefined>(undefined)
@@ -1287,6 +1253,11 @@ export default function MapView() {
 
   const handleRemoveRecentlyViewed = useCallback((kind: RecentlyViewedKind, id: string) => {
     removeRecentlyViewed(cookieStorageAdapter, kind, id)
+      .then(() => setRecentlyViewedKey(k => k + 1))
+  }, [])
+
+  const handleClearRecentlyViewed = useCallback(() => {
+    clearRecentlyViewed(cookieStorageAdapter)
       .then(() => setRecentlyViewedKey(k => k + 1))
   }, [])
 
@@ -2001,6 +1972,8 @@ export default function MapView() {
       setFromMovieId(null)
       setInitialSheetDate(undefined)
       setInitialShowtimeId(undefined)
+      setInitialGvId(undefined)
+      if (gvDelayTimerRef.current) { clearTimeout(gvDelayTimerRef.current); gvDelayTimerRef.current = null }
     }, 400)
   }, [])
 
@@ -2923,13 +2896,52 @@ export default function MapView() {
           />
         ))}
 
+        {zoom >= 12 && Array.from(gvByTheater.entries()).map(([theaterName, events]) => {
+          const theater = theaters.find((t) => t.name === theaterName)
+          if (!theater) return null
+          const expanded = expandedGvTheater === theater.id
+          const gvSelected = selectedId === theater.id
+          const gvDimmed = !!selectedId && !gvSelected
+          return (
+            <Marker
+              key={`gv-${theater.id}`}
+              position={[theater.lat, theater.lng]}
+              opacity={gvDimmed ? 0.7 : 1}
+              icon={makeGvMarkerIcon(events, zoom, expanded, theaterName, gvSelected)}
+              zIndexOffset={gvDimmed ? -500 : -200}
+              eventHandlers={{ click: (e) => {
+                const target = e.originalEvent?.target as HTMLElement | null
+                const gvToggleEl = target?.closest('[data-gv-toggle]') as HTMLElement | null
+                const gvRowEl = target?.closest('[data-gv-row]') as HTMLElement | null
+                if (gvToggleEl) {
+                  setExpandedGvTheater((prev) => prev === theater.id ? null : theater.id)
+                  return
+                }
+                if (gvRowEl) {
+                  const gvId = gvRowEl.dataset.gvRow
+                  if (!gvId) return
+                  const gvEv = GV_EVENTS.find(e => e.id === gvId)
+                  if (!gvEv) return
+                  const gvTheater = theaters.find(t => t.name === gvEv.theaterName)
+                  if (!gvTheater) return
+                  setInitialGvId(undefined)
+                  if (gvDelayTimerRef.current) clearTimeout(gvDelayTimerRef.current)
+                  handlePinClick(gvTheater.id)
+                  if (dockCollapsed) setDockCollapsed(false)
+                  gvDelayTimerRef.current = setTimeout(() => setInitialGvId(gvId), 500)
+                }
+              }}}
+            />
+          )
+        })}
+
         {clusters.map((cluster) => {
           // 줌 7-10에서는 항상 클러스터 표시 (1개라도), 줌 11+에서는 2개 이상일 때만 클러스터
           const shouldShowAsCluster = zoom <= 10 || cluster.theaters.length > 1
           if (shouldShowAsCluster) {
-            const clusterDimmed = filtersActive && cluster.theaters.every(
+            const clusterDimmed = (filtersActive && cluster.theaters.every(
               (t) => (theaterPosterMovies.get(t.id) ?? []).every(m => !m.matchesFilter)
-            )
+            )) || (!!selectedId && !cluster.theaters.some(t => t.id === selectedId))
             // 지역/도시 클러스터가 아닐 때만 상영 편수 합산
             const clusterMovieCount = (!cluster.regionLabel && !cluster.cityLabel)
               ? cluster.theaters.reduce((sum, t) => sum + (theaterPosterMovies.get(t.id)?.length ?? 0), 0)
@@ -2983,7 +2995,8 @@ export default function MapView() {
             : [theater.lat, theater.lng]
           const offsetX = posterOffsets.get(theater.id) ?? 0
           const posterMovies = theaterPosterMovies.get(theater.id) ?? []
-          const dimmed = filtersActive && posterMovies.every(m => !m.matchesFilter)
+          const dimmed = (filtersActive && posterMovies.every(m => !m.matchesFilter)) ||
+                         (!!selectedId && selectedId !== theater.id)
           return (
             <Marker
               key={theater.id}
@@ -2991,8 +3004,8 @@ export default function MapView() {
               opacity={dimmed ? 0.7 : 1}
               zIndexOffset={
                 selectedId === theater.id ? 1000 :
-                filtersActive && !dimmed ? 500 :
-                filtersActive && dimmed ? -500 :
+                (filtersActive && !dimmed) ? 500 :
+                dimmed ? -500 :
                 0
               }
               icon={makePinIcon(
@@ -3271,6 +3284,7 @@ export default function MapView() {
           onTodayShowSelect={handleTodayShowSelect}
           getTheaterDistance={getTheaterDistance}
           onRemoveRecentlyViewed={handleRemoveRecentlyViewed}
+          onClearRecentlyViewed={handleClearRecentlyViewed}
           onRecentItemClick={handleRecentItemClick}
         />
       )}
@@ -3292,35 +3306,36 @@ export default function MapView() {
           transition: 'transform 220ms cubic-bezier(0.32, 0.72, 0, 1)',
         }}>
           <div style={{
-            paddingTop: 'max(12px, env(safe-area-inset-top))',
-            paddingLeft: 16,
-            paddingRight: 16,
-            paddingBottom: 12,
-            borderBottom: '1px solid var(--color-border)',
-            flexShrink: 0,
-          }}>
-            <SearchBarButton
-              placeholder="영화, 감독, 역, 영화관 검색"
-              onClick={openSearch}
-            />
-          </div>
-          <div className="themed-scrollbar" style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingBottom: 24 }}>
-            <CurationSections
-              lastWeekFilms={curationData.lastWeekFilms}
-              soloTheaterFilms={curationData.soloTheaterFilms}
-              soloRegionLabel={filters.regionId ?? undefined}
-              todayShowFilms={curationData.todayShowFilms}
-              returningFilms={curationData.returningFilms}
-              newIndieFilms={curationData.newIndieFilms}
-              recentlyViewed={curationData.recentlyViewed}
-              onMovieSelect={handleCurationMovieSelect}
-              onTodayShowSelect={handleTodayShowSelect}
-              getTheaterDistance={getTheaterDistance}
-              onRemoveRecentlyViewed={handleRemoveRecentlyViewed}
-              onRecentItemClick={handleRecentItemClick}
-              desktop
-            />
-          </div>
+              paddingTop: 'max(12px, env(safe-area-inset-top))',
+              paddingLeft: 16,
+              paddingRight: 16,
+              paddingBottom: 12,
+              borderBottom: '1px solid var(--color-border)',
+              flexShrink: 0,
+            }}>
+              <SearchBarButton
+                placeholder="영화, 감독, 역, 영화관 검색"
+                onClick={openSearch}
+              />
+            </div>
+            <div className="themed-scrollbar" style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingBottom: 24 }}>
+              <CurationSections
+                lastWeekFilms={curationData.lastWeekFilms}
+                soloTheaterFilms={curationData.soloTheaterFilms}
+                soloRegionLabel={filters.regionId ?? undefined}
+                todayShowFilms={curationData.todayShowFilms}
+                returningFilms={curationData.returningFilms}
+                newIndieFilms={curationData.newIndieFilms}
+                recentlyViewed={curationData.recentlyViewed}
+                onMovieSelect={handleCurationMovieSelect}
+                onTodayShowSelect={handleTodayShowSelect}
+                getTheaterDistance={getTheaterDistance}
+                onRemoveRecentlyViewed={handleRemoveRecentlyViewed}
+                onClearRecentlyViewed={handleClearRecentlyViewed}
+                onRecentItemClick={handleRecentItemClick}
+                desktop
+              />
+            </div>
         </div>
       )}
 
@@ -3502,6 +3517,7 @@ export default function MapView() {
             mapFilters={{ genres: filters.genres, nations: filters.nations }}
             initialIsoDate={initialSheetDate}
             initialShowtimeId={initialShowtimeId}
+            initialGvId={initialGvId}
             onBack={fromMovieId ? () => router.push(`/movie/${fromMovieId}?tab=theaters`) : undefined}
           />
         )

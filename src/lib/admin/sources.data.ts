@@ -703,4 +703,18 @@ export const ADMIN_THEATER_SOURCES: AdminTheaterSource[] = [
     notes: '전남 목포시.',
   },
 
+  // ── 한국영상자료원 시네마테크 KOFA ──────────────────────────────
+  {
+    id: 'src-kofa-cinematheque',
+    theaterId: 'f356a561-0b89-4f51-b2bc-612995550f1c',
+    theaterName: '시네마테크KOFA',
+    homepageUrl: 'https://www.koreafilm.or.kr/cinematheque',
+    listingUrl: 'https://www.koreafilm.or.kr/cinematheque/schedule',
+    parser: 'kofaCinematheque',
+    enabled: true,
+    cadence: 'daily',
+    health: 'healthy',
+    notes: '서울 마포구 상암동. SSR HTML 파싱. GV는 cm-icon-screen-1 클래스로 구조화 탐지.',
+  },
+
 ]
