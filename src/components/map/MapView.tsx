@@ -2424,7 +2424,11 @@ export default function MapView() {
                 classifySessionIntent('type_a', { source: 'search', movie_id: movie.id })
                 setRecentSearches(prev => addToRecent(searchQuery, prev))
                 closeSearch()
+                suppressMovieFilterFitRef.current = false
+                setDirectorFilter(null)
+                setMovieFilter({ id: movie.id, title: movie.title })
                 if (isDesktopLayout) {
+                  autoMovieFilterRef.current = true
                   openDesktopPanel({ type: 'movie', id: movie.id })
                 } else {
                   router.push(`/movie/${movie.id}`)
@@ -3493,7 +3497,7 @@ export default function MapView() {
               setDirectorFilter(null)
               setMovieFilter({ id: movieId, title: movieTitle })
             }}
-            onMovieDetailOpen={isDesktopLayout ? (id) => {
+            onMovieDetailOpen={(id) => {
               trackEvent('search result selected', {
                 result_type: 'movie',
                 result_id: id,
@@ -3501,8 +3505,17 @@ export default function MapView() {
                 source: 'theater_sheet',
               })
               classifySessionIntent('type_a', { source: 'theater_sheet', movie_id: id })
-              openDesktopPanel({ type: 'movie', id })
-            } : undefined}
+              suppressMovieFilterFitRef.current = false
+              setDirectorFilter(null)
+              const movie = movies.find((m) => m.id === id)
+              setMovieFilter({ id, title: movie?.title ?? '' })
+              if (isDesktopLayout) {
+                autoMovieFilterRef.current = true
+                openDesktopPanel({ type: 'movie', id })
+              } else {
+                router.push(`/movie/${id}?theater=${selectedTheater.id}`)
+              }
+            }}
             onDirectorOpen={isDesktopLayout ? (name) => {
               trackEvent('search result selected', {
                 result_type: 'director',
