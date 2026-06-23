@@ -104,7 +104,15 @@ async function saveOcrToSupabase(schedule: ParsedSchedule): Promise<{ count: num
 
   let { data: source } = await supabase.from('crawl_sources').select('id, matched_theater_id').eq('id', id).maybeSingle()
   if (!source) {
-    const { data: theater } = await supabase.from('theaters').select('id').ilike('name', `%${schedule.theaterName}%`).maybeSingle()
+    // 1순위: 정확한 ilike 매칭 (한글 극장명)
+    let { data: theater } = await supabase.from('theaters').select('id, name').ilike('name', `%${schedule.theaterName}%`).maybeSingle()
+    // 2순위: 공백·특수문자 제거 후 전체 목록에서 normalize 매칭 (영문명 등 대비)
+    if (!theater) {
+      const normalize = (s: string) => s.replace(/\s+/g, '').replace(/[^a-z0-9가-힣]/gi, '').toLowerCase()
+      const norm = normalize(schedule.theaterName)
+      const { data: all } = await supabase.from('theaters').select('id, name')
+      theater = (all ?? []).find((t: { id: string; name: string }) => normalize(t.name) === norm || normalize(t.name).includes(norm) || norm.includes(normalize(t.name))) ?? null
+    }
     const { data: created } = await supabase.from('crawl_sources').insert({
       id, theater_id: id, theater_name: schedule.theaterName, matched_theater_id: theater?.id ?? null,
       homepage_url: null, listing_url: 'ocr://discord', parser: 'ocr',
@@ -227,7 +235,7 @@ async function handleOcrConfirm(sourceId: string) {
     .from('showtime_candidates')
     .select('id')
     .eq('source_id', sourceId)
-    .eq('status', 'draft')
+    .in('status', ['draft', 'needs_review'])
 
   if (!rows?.length) {
     return { ok: false, message: '승인할 후보가 없습니다. 이미 처리됐거나 만료됐을 수 있습니다.' }
