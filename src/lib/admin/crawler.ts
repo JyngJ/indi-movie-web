@@ -156,6 +156,9 @@ export function parseShowtimeCandidates(
 }
 
 export async function crawlShowtimeCandidates(context: ParseContext) {
+  // OCR 소스는 Discord /schedule 커맨드로만 수집 — 자동 크롤에서 제외
+  if (context.source.parser === 'ocr') return []
+
   if (context.source.parser === 'dtryxReservationApi') {
     return crawlDtryxReservationApi(context)
   }
