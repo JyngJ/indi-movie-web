@@ -22,9 +22,8 @@ export default function TabsLayout({ children }: { children: ReactNode }) {
   const isDesktopLayout = useIsDesktopLayout()
 
   // MapView는 처음 방문 후 계속 마운트 상태 유지 (상태 보존)
-  const [mapMounted, setMapMounted] = useState(
-    () => typeof window !== 'undefined' && window.location.pathname === '/',
-  )
+  // 항상 false로 시작해 서버/클라이언트 첫 렌더를 일치시키고, mount 후 effect에서 켠다 (hydration mismatch 방지)
+  const [mapMounted, setMapMounted] = useState(false)
   useEffect(() => {
     if (isOnMap) setMapMounted(true)
   }, [isOnMap])
