@@ -395,8 +395,13 @@ export default function FilmsPage() {
         function renderAnniversaries(list: typeof anniversarySections) {
           const rich   = list.filter((s) => s.films.length > 2)
           const sparse = list.filter((s) => s.films.length <= 2)
+          // 모바일에서는 2열로 묶지 않고 1개씩 — 가로로 합쳐서 보여주면 잘려서 잘 안 보임
           const rows: (typeof sparse)[] = []
-          for (let i = 0; i < sparse.length; i += 2) rows.push(sparse.slice(i, i + 2))
+          if (isDesktop) {
+            for (let i = 0; i < sparse.length; i += 2) rows.push(sparse.slice(i, i + 2))
+          } else {
+            for (const s of sparse) rows.push([s])
+          }
           return (
             <>
               {rich.map(({ ann, films }) => (
@@ -415,7 +420,7 @@ export default function FilmsPage() {
                       eventType={ann.eventType} nameKo={ann.nameKo} nameEn={ann.nameEn}
                       birthYear={ann.birthYear} deathYear={ann.deathYear}
                       month={ann.month} day={ann.day}
-                      films={films} isDesktop={isDesktop} onMovieClick={handleMovieClick} compact />
+                      films={films} isDesktop={isDesktop} onMovieClick={handleMovieClick} compact={isDesktop} />
                   ))}
                 </div>
               ))}
@@ -445,7 +450,8 @@ export default function FilmsPage() {
             const next = active[i + 1]
             const currSparse = curr.movies.length <= 2
             const nextSparse = next != null && next.movies.length > 0 && next.movies.length <= 2
-            if (currSparse && nextSparse) {
+            // 모바일에서는 2열로 묶지 않음 — 가로로 합쳐서 보여주면 잘려서 잘 안 보임
+            if (isDesktop && currSparse && nextSparse) {
               nodes.push(
                 <div key={`${keyPrefix}_pair_${i}`} style={{ display: 'flex', gap: 12, padding: '24px 16px 0' }}>
                   {rowFor(curr, true)}
