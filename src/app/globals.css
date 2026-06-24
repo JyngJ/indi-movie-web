@@ -147,7 +147,8 @@ img {
 
 /* 호버 중인 마커를 최상위로 올려 팝업이 다른 마커에 안 가려지게 */
 .leaflet-marker-icon:has(.pm-wrap:hover),
-.leaflet-marker-icon:has(.po-wrap:hover) {
+.leaflet-marker-icon:has(.po-wrap:hover),
+.leaflet-marker-icon:has(.gv-wrap:hover) {
   z-index: 9999 !important;
 }
 
@@ -334,14 +335,62 @@ img {
   border-bottom-left-radius: 2px;
 }
 
+/* GV/이벤트 마커 호버 카드 — 포스터 호버 카드(.pm-wrap/.pm-tip)와 동일한 패턴 */
+.gv-wrap { position: relative; }
+.gv-wrap:hover .gv-tip { display: block; }
+.gv-tip {
+  display: none;
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 220px;
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10);
+  padding: 12px;
+  pointer-events: none;
+  z-index: 9999;
+  white-space: normal;
+}
+.tip-l .gv-tip {
+  left: auto;
+  right: calc(100% + 10px);
+}
+.tip-l .gv-tip-tail {
+  left: auto;
+  right: -5px;
+  border-left: none;
+  border-bottom: none;
+  border-right: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border);
+  border-bottom-left-radius: 0;
+  border-top-right-radius: 2px;
+}
+.gv-tip-tail {
+  position: absolute;
+  left: -5px;
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+  width: 10px;
+  height: 10px;
+  background: var(--color-surface-card);
+  border-left: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  border-bottom-left-radius: 2px;
+}
+
 /* 터치 디바이스에서 호버 카드/리스트 팝업 비활성화 */
 @media (hover: none), (pointer: coarse) {
   .pm-wrap > div:first-child { transition: none !important; }
   .pm-wrap:hover .pm-tip { display: none !important; }
   .pm-wrap:hover > div:first-child { transform: none !important; box-shadow: none !important; }
   .po-wrap:hover .po-list { display: none !important; }
+  .gv-wrap:hover .gv-tip { display: none !important; }
   .leaflet-marker-icon:has(.pm-wrap:hover),
-  .leaflet-marker-icon:has(.po-wrap:hover) { z-index: auto !important; }
+  .leaflet-marker-icon:has(.po-wrap:hover),
+  .leaflet-marker-icon:has(.gv-wrap:hover) { z-index: auto !important; }
 }
 
 /* 모바일 가로 회전 차단 오버레이 */

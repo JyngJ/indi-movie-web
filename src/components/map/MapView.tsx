@@ -16,7 +16,7 @@ import { MapPin, TheaterSheet, MovieSheet, CurationSheet, CurationSections, Filt
 import type { CurationSnap } from '@/components/domain'
 import { DesktopDetailPanel } from '@/components/domain/DesktopDetailPanel'
 import { GvMarkerIcon } from '@/components/domain/GvMarkerIcon'
-import { computeGvSlotH, computeGvSlotW, GV_MARKER_STEM_H, GV_MARKER_DOT_D } from '@/components/domain/GvPinSlots'
+import { computeGvSlotH, computeGvSlotW, GV_MARKER_STEM_H, GV_MARKER_DOT_D, GV_MAX_VISIBLE } from '@/components/domain/GvPinSlots'
 import type { GvEvent } from '@/data/gv-events'
 import { theaterEventToGvEvent } from '@/lib/gv/adapter'
 import type { DesktopPanelState } from '@/components/domain/DesktopDetailPanel'
@@ -223,15 +223,15 @@ function makePinIcon(
 /* ── GV 마커 아이콘 ─────────────────────────────────────────────── */
 const _gvMarkerIconCache = new Map<string, L.DivIcon>()
 
-function makeGvMarkerIcon(events: GvEvent[], zoom: number, expanded: boolean, theaterName: string, selected?: boolean): L.DivIcon {
-  const cacheKey = `${theaterName}|${zoom}|${expanded ? 1 : 0}|${selected ? 1 : 0}|${events.map(e => e.id).join(',')}`
+function makeGvMarkerIcon(events: GvEvent[], zoom: number, expanded: boolean, theaterName: string, selected?: boolean, page = 0): L.DivIcon {
+  const cacheKey = `${theaterName}|${zoom}|${expanded ? 1 : 0}|${selected ? 1 : 0}|${page}|${events.map(e => e.id).join(',')}`
   const cached = _gvMarkerIconCache.get(cacheKey)
   if (cached) return cached
   const slotH = computeGvSlotH(events.length, zoom, expanded, selected)
   const slotW = computeGvSlotW(events.length, zoom, expanded, selected)
   const totalH = slotH + GV_MARKER_STEM_H + GV_MARKER_DOT_D
   const html = renderToStaticMarkup(
-    <GvMarkerIcon events={events} zoom={zoom} expanded={expanded} theaterName={theaterName} selected={selected} slotW={slotW} />
+    <GvMarkerIcon events={events} zoom={zoom} expanded={expanded} theaterName={theaterName} selected={selected} slotW={slotW} page={page} />
   )
   const icon = L.divIcon({
     html,
@@ -1034,6 +1034,7 @@ export default function MapView() {
   const [initialGvId, setInitialGvId] = useState<string | undefined>(undefined)
   const gvDelayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [expandedGvTheater, setExpandedGvTheater] = useState<string | null>(null)
+  const [gvPageByTheater, setGvPageByTheater] = useState<Map<string, number>>(new Map())
   const { data: rawTheaterEvents = [] } = useTheaterEvents()
   const gvEvents = useMemo(() => rawTheaterEvents.map(theaterEventToGvEvent), [rawTheaterEvents])
   const gvByTheater = useMemo(() => {
@@ -1064,11 +1065,12 @@ export default function MapView() {
 
     const handleOver = (e: Event) => {
       const target = e.target as HTMLElement | null
-      const wrap = target?.closest('.pm-wrap, .po-wrap') as HTMLElement | null
+      const wrap = target?.closest('.pm-wrap, .po-wrap, .gv-wrap') as HTMLElement | null
       if (!wrap) return
       const isPm = wrap.classList.contains('pm-wrap')
+      const isGv = wrap.classList.contains('gv-wrap')
       const rect = wrap.getBoundingClientRect()
-      const tipW = isPm ? 200 : 280  // gap(10) + tooltip width
+      const tipW = isGv ? 230 : isPm ? 200 : 280  // gap(10) + tooltip width
       // 우측엔 더 이상 떠있는 패널이 없음(좌측 도크로 이전) — 화면 우측 끝 기준으로만 판단
       wrap.classList.toggle('tip-l', rect.right + tipW > window.innerWidth)
     }
@@ -1078,6 +1080,18 @@ export default function MapView() {
     container.addEventListener('mouseover', handleOver)
     return () => container.removeEventListener('mouseover', handleOver)
   }, [isDesktopLayout])
+
+  // GV 펼친 목록(zoom<=13) 안에서 휠 스크롤 시 지도 줌 대신 목록 스크롤되게 — capture 단계에서 가로채 전파 차단
+  useEffect(() => {
+    const handleWheel = (e: Event) => {
+      const target = e.target as HTMLElement | null
+      if (target?.closest('.gv-expanded-scroll')) e.stopPropagation()
+    }
+    const container = document.querySelector('.leaflet-container')
+    if (!container) return
+    container.addEventListener('wheel', handleWheel, { capture: true })
+    return () => container.removeEventListener('wheel', handleWheel, { capture: true })
+  }, [])
 
   // 검색 오버레이 — 데스크톱은 좌측 레일의 검색 버튼으로도 토글되므로 공유 스토어 사용
   const searchOpen = useUIStore((s) => s.isSearchOpen)
@@ -2905,17 +2919,31 @@ export default function MapView() {
           const expanded = expandedGvTheater === theater.id
           const gvSelected = selectedId === theater.id
           const gvDimmed = !!selectedId && !gvSelected
+          const gvPage = gvPageByTheater.get(theaterName) ?? 0
           return (
             <Marker
               key={`gv-${theater.id}`}
               position={[theater.lat, theater.lng]}
               opacity={gvDimmed ? 0.7 : 1}
-              icon={makeGvMarkerIcon(events, zoom, expanded, theaterName, gvSelected)}
+              icon={makeGvMarkerIcon(events, zoom, expanded, theaterName, gvSelected, gvPage)}
               zIndexOffset={gvDimmed ? -500 : -200}
               eventHandlers={{ click: (e) => {
                 const target = e.originalEvent?.target as HTMLElement | null
                 const gvToggleEl = target?.closest('[data-gv-toggle]') as HTMLElement | null
                 const gvRowEl = target?.closest('[data-gv-row]') as HTMLElement | null
+                const gvPagePrevEl = target?.closest('[data-gv-page-prev]') as HTMLElement | null
+                const gvPageNextEl = target?.closest('[data-gv-page-next]') as HTMLElement | null
+                if (gvPagePrevEl || gvPageNextEl) {
+                  const totalPages = Math.ceil(events.length / GV_MAX_VISIBLE)
+                  setGvPageByTheater((prev) => {
+                    const next = new Map(prev)
+                    const current = next.get(theaterName) ?? 0
+                    const delta = gvPagePrevEl ? -1 : 1
+                    next.set(theaterName, ((current + delta) % totalPages + totalPages) % totalPages)
+                    return next
+                  })
+                  return
+                }
                 if (gvToggleEl) {
                   setExpandedGvTheater((prev) => prev === theater.id ? null : theater.id)
                   return

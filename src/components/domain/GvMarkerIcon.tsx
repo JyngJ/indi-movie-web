@@ -10,13 +10,14 @@ interface GvMarkerIconProps {
   theaterName: string
   selected?: boolean
   slotW: number
+  page?: number
 }
 
 // Pure function — no hooks. Safe for renderToStaticMarkup.
-export function GvMarkerIcon({ events, zoom, expanded, theaterName, selected, slotW }: GvMarkerIconProps) {
+export function GvMarkerIcon({ events, zoom, expanded, theaterName, selected, slotW, page }: GvMarkerIconProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: slotW, overflow: 'visible' }}>
-      <GvBottomSlot events={events} zoom={zoom} expanded={expanded} theaterName={theaterName} selected={selected} />
+      <GvBottomSlot events={events} zoom={zoom} expanded={expanded} theaterName={theaterName} selected={selected} page={page} />
       {/* stem */}
       <div style={{ width: 1.5, height: GV_MARKER_STEM_H, background: GV_AMBER, opacity: 0.75 }} />
       {/* dot */}
