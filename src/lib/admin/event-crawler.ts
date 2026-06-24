@@ -123,22 +123,30 @@ export async function crawlDeosupEvents(
   const html = await fetchEventHtml(listingUrl)
   const tail = html.slice(Math.floor(html.length * 0.65))
 
-  // 태그 제거 (주석 포함), 엔티티 유지
-  const clean = tail.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')
-
   // 패턴: 숲톡/씨네모어: &lt;영화제목&gt; MM/DD(요일) 오전|오후 H시 [M분]
   const entryRe =
-    /(숲톡|씨네모어)[:\s]+&lt;([^&]{2,60})&gt;[^0-9가-힣]{0,20}(\d{1,2}\/\d{1,2})\([월화수목금토일]\)\s*(오전|오후)\s*(\d{1,2})시(?:\s*(\d{1,2})분)?/g
+    /(숲톡|씨네모어)[:\s]+&lt;([^&]{2,60})&gt;[^0-9가-힣]{0,20}(\d{1,2}\/\d{1,2})\([월화수목금토일]\)\s*(오전|오후)\s*(\d{1,2})시(?:\s*(\d{1,2})분)?/
 
-  // idx 순서 추출 (목록 순서대로 게시글 URL 구성)
-  const idxMatches = Array.from(tail.matchAll(/idx=(\d+)/g)).map((m) => m[1])
-  const idxList = [...new Set(idxMatches)]
+  // 카드(게시글) 단위로 분리 — idx는 자기 카드 안의 제목/날짜와만 짝지어야 한다.
+  // 목록 페이지 전체에서 idx= 순서와 항목 순서를 별도로 뽑아 인덱스로 매칭하면, 패턴에
+  // 안 걸리는 카드(공지 등)가 하나라도 끼면 그 뒤 모든 idx가 한 칸씩 밀려서 엉뚱한 글로 연결된다.
+  const cardStartRe = /<a[^>]+class="post_link_wrap[^"]*"[^>]+href="[^"]*idx=(\d+)[^"]*"/g
+  const cardStarts: Array<{ idx: string; start: number }> = []
+  let cardMatch: RegExpExecArray | null
+  while ((cardMatch = cardStartRe.exec(tail)) !== null) {
+    cardStarts.push({ idx: cardMatch[1], start: cardMatch.index })
+  }
 
   const candidates: CrawledEventCandidate[] = []
-  let match: RegExpExecArray | null
-  let entryIndex = 0
 
-  while ((match = entryRe.exec(clean)) !== null) {
+  for (let i = 0; i < cardStarts.length; i++) {
+    const segmentEnd = i + 1 < cardStarts.length ? cardStarts[i + 1].start : tail.length
+    const segment = tail.slice(cardStarts[i].start, segmentEnd)
+    const cleanSegment = segment.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')
+
+    const match = entryRe.exec(cleanSegment)
+    if (!match) continue
+
     const [, rawType, movieTitle, dateStr, period, hourStr, minuteStr] = match
     const eventDate = parseKoreanSlashDate(dateStr)
     if (!eventDate) continue
@@ -146,10 +154,7 @@ export async function crawlDeosupEvents(
     const eventTime = parseKoreanTime(period, hourStr, minuteStr)
     const eventType: EventType = rawType === '씨네모어' ? 'talk' : 'gv'
     const title = `${rawType}: <${movieTitle}> ${dateStr} ${period} ${hourStr}시${minuteStr ? ` ${minuteStr}분` : ''}`
-    const idx = idxList[entryIndex]
-    const postUrl = idx
-      ? `${listingUrl}/?q=YToxOntzOjEyOiJrZXl3b3JkX3R5cGUiO3M6MzoiYWxsIjt9&bmode=view&idx=${idx}&t=board`
-      : listingUrl
+    const postUrl = `${listingUrl}/?q=YToxOntzOjEyOiJrZXl3b3JkX3R5cGUiO3M6MzoiYWxsIjt9&bmode=view&idx=${cardStarts[i].idx}&t=board`
 
     candidates.push(
       buildEventCandidate({
@@ -165,7 +170,6 @@ export async function crawlDeosupEvents(
         confidence: 0.9,
       }),
     )
-    entryIndex++
   }
 
   return dedupEventCandidates(candidates)

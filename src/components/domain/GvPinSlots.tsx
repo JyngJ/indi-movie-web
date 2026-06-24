@@ -1,4 +1,5 @@
 import type { GvEvent } from '@/data/gv-events'
+import { gvEventTypeColor } from '@/lib/gv/adapter'
 
 const GV_AMBER = '#D97706'
 const SLOT_W = 130
@@ -17,6 +18,8 @@ export const GV_CALLOUT_COL_GAP = 4  // horizontal gap between 2-column bubbles
 export const GV_DS_CARD_H = 52
 export const GV_DS_GAP = 6
 export const GV_OVERFLOW_H = 24
+// 콜아웃 그리드(zoom 14+ 다건)에서 한 번에 보여줄 최대 슬롯 수 — 포스터 그리드와 동일하게 나머지는 "+N개 이벤트"로 묶는다
+export const GV_MAX_VISIBLE = 4
 
 function shouldStack(count: number, zoom: number, selected: boolean): boolean {
   return count > 1 && (zoom >= 15 || (zoom === 14 && selected))
@@ -39,19 +42,21 @@ export function computeGvSlotH(count: number, zoom: number, expanded: boolean, s
     if (!expanded) return GV_CHIP_H
     return GV_STACK_HDR_H + count * GV_STACK_ROW_H
   }
+  const n = Math.min(count, GV_MAX_VISIBLE)
   const { h } = calloutSize(zoom)
-  if (!shouldStack(count, zoom, selected)) return h
-  if (shouldTwoCol(count, zoom, selected)) {
-    const rows = Math.ceil(count / 2)
+  if (!shouldStack(n, zoom, selected)) return h
+  if (shouldTwoCol(n, zoom, selected)) {
+    const rows = Math.ceil(n / 2)
     return rows * h + (rows - 1) * GV_CALLOUT_GAP
   }
-  return count * h + (count - 1) * GV_CALLOUT_GAP
+  return n * h + (n - 1) * GV_CALLOUT_GAP
 }
 
 export function computeGvSlotW(count: number, zoom: number, expanded: boolean, selected = false): number {
   if (zoom <= 13) return SLOT_W
+  const n = Math.min(count, GV_MAX_VISIBLE)
   const { w } = calloutSize(zoom)
-  if (shouldTwoCol(count, zoom, selected)) return w * 2 + GV_CALLOUT_COL_GAP
+  if (shouldTwoCol(n, zoom, selected)) return w * 2 + GV_CALLOUT_COL_GAP
   return w
 }
 
@@ -167,7 +172,7 @@ function GvDsCard({ ev, first }: { ev: GvEvent; first: boolean }) {
       cursor: 'pointer',
       marginTop: first ? 0 : GV_DS_GAP,
     }}>
-      <div style={{ width: 3, alignSelf: 'stretch', background: GV_AMBER, flexShrink: 0 }} />
+      <div style={{ width: 3, alignSelf: 'stretch', background: gvEventTypeColor(ev.type), flexShrink: 0 }} />
       <div style={{
         width: 24, height: 34, margin: '0 6px 0 6px', borderRadius: 3, flexShrink: 0,
         background: `oklch(35% 0.08 ${ev.hue})`,
@@ -177,7 +182,7 @@ function GvDsCard({ ev, first }: { ev: GvEvent; first: boolean }) {
       </div>
       <div style={{ flex: 1, minWidth: 0, padding: '0 4px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginBottom: 2 }}>
-          <span style={{ background: GV_AMBER, color: '#fff', fontSize: 7, fontWeight: 800, borderRadius: 2, padding: '0.5px 3px' }}>{ev.type}</span>
+          <span style={{ background: gvEventTypeColor(ev.type), color: '#fff', fontSize: 7, fontWeight: 800, borderRadius: 2, padding: '0.5px 3px' }}>{ev.type}</span>
           <span style={{ fontSize: 9, color: 'var(--color-text-caption)' }}>{ev.time}</span>
         </div>
         <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -213,7 +218,7 @@ function GvOverflowChip({ count, theaterName }: { count: number; theaterName: st
 }
 
 // ── Zoom 14+ single event: original GvPin callout bubble shape ────
-function GvCalloutBubble({ ev, extraCount = 0, selected, size }: { ev: GvEvent; extraCount?: number; selected?: boolean; size: { w: number; h: number } }) {
+function GvCalloutBubble({ ev, extraCount = 0, overlayCount, selected, size }: { ev: GvEvent; extraCount?: number; overlayCount?: number; selected?: boolean; size: { w: number; h: number } }) {
   const subLine = ev.subtitle ? `— ${ev.subtitle}` : (ev.guest?.split(' · ')[0] ?? '')
   const vPad = Math.max(5, Math.floor((size.h - 42) / 2))
   return (
@@ -233,7 +238,7 @@ function GvCalloutBubble({ ev, extraCount = 0, selected, size }: { ev: GvEvent; 
       {/* Content */}
       <div style={{ flex: 1, padding: `${vPad}px 7px ${vPad}px 10px`, display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ background: GV_AMBER, color: '#fff', fontSize: 7.5, fontWeight: 800, borderRadius: 3, padding: '1px 3px', letterSpacing: '0.3px', lineHeight: 1.3, flexShrink: 0 }}>{ev.type}</span>
+          <span style={{ background: gvEventTypeColor(ev.type), color: '#fff', fontSize: 7.5, fontWeight: 800, borderRadius: 3, padding: '1px 3px', letterSpacing: '0.3px', lineHeight: 1.3, flexShrink: 0 }}>{ev.type}</span>
           <span style={{ fontSize: 8.5, color: 'var(--color-text-caption)', lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.time}</span>
         </div>
         <div style={{ fontFamily: 'var(--font-display, sans-serif)', fontSize: 11, fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -261,6 +266,17 @@ function GvCalloutBubble({ ev, extraCount = 0, selected, size }: { ev: GvEvent; 
           +{extraCount}
         </div>
       )}
+      {/* 포스터 오버플로우와 동일한 패턴 — 마지막 슬롯에 어두운 오버레이 + "+N개 이벤트" */}
+      {overlayCount != null && overlayCount > 0 && (
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(15,12,9,0.62)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: '#fff', fontSize: 11, fontWeight: 700,
+        }}>
+          +{overlayCount}개 이벤트
+        </div>
+      )}
     </div>
   )
 }
@@ -284,7 +300,9 @@ export function GvBottomSlot({ events, zoom, expanded, theaterName, selected }: 
   // zoom 15+: stack all bubbles; zoom 14 + selected: also stack; otherwise single + extra count
   const stack = (zoom >= 15 || (zoom === 14 && selected)) && events.length > 1
   if (stack) {
-    const twoCol = events.length > 3
+    const visibleEvents = events.slice(0, GV_MAX_VISIBLE)
+    const overflowCount = events.length - visibleEvents.length
+    const twoCol = visibleEvents.length > 3
     const totalW = twoCol ? size.w * 2 + GV_CALLOUT_COL_GAP : size.w
     return (
       <div style={{
@@ -293,14 +311,23 @@ export function GvBottomSlot({ events, zoom, expanded, theaterName, selected }: 
         gap: twoCol ? `${GV_CALLOUT_GAP}px ${GV_CALLOUT_COL_GAP}px` : GV_CALLOUT_GAP,
         width: totalW,
       }}>
-        {events.map((ev, i) => {
-          const isLastOdd = twoCol && events.length % 2 === 1 && i === events.length - 1
+        {visibleEvents.map((ev, i) => {
+          const isLast = i === visibleEvents.length - 1
+          const isLastOdd = twoCol && overflowCount === 0 && visibleEvents.length % 2 === 1 && isLast
           if (isLastOdd) return (
             <div key={ev.id} style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'center' }}>
               <div style={{ width: size.w }}><GvCalloutBubble ev={ev} selected={selected} size={size} /></div>
             </div>
           )
-          return <GvCalloutBubble key={ev.id} ev={ev} selected={selected} size={size} />
+          return (
+            <GvCalloutBubble
+              key={ev.id}
+              ev={ev}
+              selected={selected}
+              size={size}
+              overlayCount={isLast && overflowCount > 0 ? overflowCount : undefined}
+            />
+          )
         })}
       </div>
     )

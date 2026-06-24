@@ -17,10 +17,11 @@ import type { CurationSnap } from '@/components/domain'
 import { DesktopDetailPanel } from '@/components/domain/DesktopDetailPanel'
 import { GvMarkerIcon } from '@/components/domain/GvMarkerIcon'
 import { computeGvSlotH, computeGvSlotW, GV_MARKER_STEM_H, GV_MARKER_DOT_D } from '@/components/domain/GvPinSlots'
-import { GV_EVENTS, type GvEvent } from '@/data/gv-events'
+import type { GvEvent } from '@/data/gv-events'
+import { theaterEventToGvEvent } from '@/lib/gv/adapter'
 import type { DesktopPanelState } from '@/components/domain/DesktopDetailPanel'
 import type { FilterState } from '@/components/domain'
-import { useActiveMovieIds, useMapShowtimes, useMovies, useStations, useTheaters } from '@/lib/supabase/queries'
+import { useActiveMovieIds, useMapShowtimes, useMovies, useStations, useTheaters, useTheaterEvents } from '@/lib/supabase/queries'
 import type { Movie, Station, Theater } from '@/types/api'
 import { SEOUL_GU, SEOUL_DONG } from '@/data/seoul-areas'
 import { normalizeGenre } from '@/lib/genres'
@@ -1033,14 +1034,16 @@ export default function MapView() {
   const [initialGvId, setInitialGvId] = useState<string | undefined>(undefined)
   const gvDelayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [expandedGvTheater, setExpandedGvTheater] = useState<string | null>(null)
+  const { data: rawTheaterEvents = [] } = useTheaterEvents()
+  const gvEvents = useMemo(() => rawTheaterEvents.map(theaterEventToGvEvent), [rawTheaterEvents])
   const gvByTheater = useMemo(() => {
     const map = new Map<string, GvEvent[]>()
-    for (const ev of GV_EVENTS) {
+    for (const ev of gvEvents) {
       if (!map.has(ev.theaterName)) map.set(ev.theaterName, [])
       map.get(ev.theaterName)!.push(ev)
     }
     return map
-  }, [])
+  }, [gvEvents])
   selectedIdRef.current = selectedId
   const [fromMovieId, setFromMovieId] = useState<string | null>(null)
   const [initialSheetDate, setInitialSheetDate] = useState<string | undefined>(undefined)
@@ -2920,7 +2923,7 @@ export default function MapView() {
                 if (gvRowEl) {
                   const gvId = gvRowEl.dataset.gvRow
                   if (!gvId) return
-                  const gvEv = GV_EVENTS.find(e => e.id === gvId)
+                  const gvEv = gvEvents.find(e => e.id === gvId)
                   if (!gvEv) return
                   const gvTheater = theaters.find(t => t.name === gvEv.theaterName)
                   if (!gvTheater) return
@@ -3518,6 +3521,7 @@ export default function MapView() {
             initialIsoDate={initialSheetDate}
             initialShowtimeId={initialShowtimeId}
             initialGvId={initialGvId}
+            gvEvents={gvEvents}
             onBack={fromMovieId ? () => router.push(`/movie/${fromMovieId}?tab=theaters`) : undefined}
           />
         )

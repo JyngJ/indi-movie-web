@@ -1,8 +1,7 @@
 'use client'
 
 import type { GvEvent } from '@/data/gv-events'
-
-const GV_AMBER = '#D97706'
+import { gvEventTypeColor } from '@/lib/gv/adapter'
 
 interface GvDetailPanelProps {
   ev: GvEvent
@@ -49,7 +48,7 @@ export function GvDetailPanel({ ev, onClose, onCloseAll }: GvDetailPanelProps) {
           }}>{ev.theaterName}</span>
           <span style={{ fontSize: 12, color: 'var(--color-text-caption)', flexShrink: 0 }}>/</span>
           <span style={{
-            background: GV_AMBER, color: '#fff',
+            background: gvEventTypeColor(ev.type), color: '#fff',
             fontSize: 9, fontWeight: 800, borderRadius: 3,
             padding: '2px 5px', letterSpacing: '0.3px', lineHeight: 1.4, flexShrink: 0,
           }}>{ev.type}</span>

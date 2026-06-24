@@ -268,7 +268,7 @@ export async function approveEventCandidates(
     }
 
     // Mark candidate approved
-    await supabase
+    const { error: updateErr } = await supabase
       .from('event_candidates')
       .update({
         status: 'approved',
@@ -276,6 +276,13 @@ export async function approveEventCandidates(
         approved_by: approvedByUserId,
       })
       .eq('id', c.id)
+
+    if (updateErr) {
+      // candidate 상태 갱신 실패 — theater_events에 고아 행이 남지 않도록 되돌린다
+      await supabase.from('theater_events').delete().eq('id', inserted.id)
+      result.failed.push({ candidateId: c.id, reason: updateErr.message })
+      continue
+    }
 
     result.approved.push({ candidateId: c.id, eventId: inserted?.id })
   }
@@ -289,6 +296,96 @@ export async function rejectEventCandidates(ids: string[]): Promise<void> {
     .from('event_candidates')
     .update({ status: 'rejected' })
     .in('id', ids)
+}
+
+// ── Auto-match ────────────────────────────────────────────────────────────────
+
+function normalizeTitle(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .normalize('NFKC')
+    .replace(/[\s"'‘’“”()[\]{}:;,.!?·ㆍ・_-]+/g, '')
+}
+
+/** 제목에서 "<영화제목>" 패턴(크롤된 GV/토크 제목에 흔함) 추출 */
+function extractMovieTitleGuess(title: string, movieTitle?: string): string | undefined {
+  if (movieTitle) return movieTitle
+  return title.match(/<([^<>]+)>/)?.[1]?.trim()
+}
+
+interface AutoMatchResult {
+  totalProcessed: number
+  autoApproved: number
+  needsReview: number
+  failed: Array<{ candidateId: string; reason: string }>
+}
+
+/**
+ * event_candidates 자동 매칭 — 극장은 event_sources.matched_theater_id를 그대로 상속(소스당 극장 1곳,
+ * 모호함 없음). 영화는 제목 정확 일치 시에만 연결(오매칭 방지 — 부분/유사 일치는 하지 않음).
+ * 극장+영화 모두 매칭되면 바로 승인(theater_events 등록), 영화만 못 찾으면 검수 대기로 남겨둔다.
+ */
+export async function autoMatchEventCandidates(approvedByUserId: string, ids?: string[]): Promise<AutoMatchResult> {
+  const supabase = createSupabaseAdminClient()
+
+  let candidatesQuery = supabase.from('event_candidates').select('*')
+  candidatesQuery = ids?.length ? candidatesQuery.in('id', ids) : candidatesQuery.in('status', ['draft', 'needs_review'])
+
+  const [{ data: sourceRows }, { data: movieRows }, { data: candidateRows, error: candidateError }] = await Promise.all([
+    supabase.from('event_sources').select('id, matched_theater_id'),
+    supabase.from('movies').select('id, title, original_title'),
+    candidatesQuery,
+  ])
+
+  if (candidateError) throw new Error(candidateError.message)
+
+  const sourceTheaterMap = new Map(
+    ((sourceRows ?? []) as Array<{ id: string; matched_theater_id: string | null }>)
+      .filter((s) => s.matched_theater_id)
+      .map((s) => [s.id, s.matched_theater_id as string]),
+  )
+
+  const movieByNormalizedTitle = new Map<string, string>()
+  for (const m of (movieRows ?? []) as Array<{ id: string; title: string; original_title: string | null }>) {
+    movieByNormalizedTitle.set(normalizeTitle(m.title), m.id)
+    if (m.original_title) movieByNormalizedTitle.set(normalizeTitle(m.original_title), m.id)
+  }
+
+  const result: AutoMatchResult = { totalProcessed: 0, autoApproved: 0, needsReview: 0, failed: [] }
+  const toApprove: string[] = []
+
+  for (const row of (candidateRows ?? []) as EventCandidateRow[]) {
+    result.totalProcessed++
+    const matchedTheaterId = sourceTheaterMap.get(row.source_id)
+    if (!matchedTheaterId) {
+      result.failed.push({ candidateId: row.id, reason: `소스(${row.source_id})에 매칭된 극장 없음` })
+      continue
+    }
+
+    const movieGuess = extractMovieTitleGuess(row.title, row.movie_title ?? undefined)
+    const matchedMovieId = movieGuess ? movieByNormalizedTitle.get(normalizeTitle(movieGuess)) : undefined
+
+    await updateEventCandidateMatch(row.id, matchedTheaterId, matchedMovieId)
+
+    if (matchedMovieId) {
+      toApprove.push(row.id)
+      result.autoApproved++
+    } else {
+      result.needsReview++
+    }
+  }
+
+  if (toApprove.length > 0) {
+    const approval = await approveEventCandidates(toApprove, approvedByUserId)
+    for (const f of approval.failed) {
+      result.failed.push(f)
+      result.autoApproved--
+      result.needsReview++
+    }
+  }
+
+  return result
 }
 
 // ── Public theater_events ─────────────────────────────────────────────────────

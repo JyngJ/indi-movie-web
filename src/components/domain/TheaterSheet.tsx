@@ -19,7 +19,7 @@ import { useMomentumScroll } from '@/hooks/useMomentumScroll'
 import { shareAdapter } from '@/lib/adapters/share'
 import { GvEventSection } from './GvEventSection'
 import { GvDetailPanel } from './GvDetailPanel'
-import { GV_EVENTS } from '@/data/gv-events'
+import type { GvEvent } from '@/data/gv-events'
 
 /* ── 상수 ──────────────────────────────────────────────────────── */
 // 접힌 상태에서 보이는 높이 = 핸들(20) + 헤더(88, 액션버튼 포함) + 포스터스트립(228) + 테두리(2) + 여유(6)
@@ -241,6 +241,7 @@ interface TheaterSheetProps {
   initialIsoDate?: string
   initialShowtimeId?: string
   initialGvId?: string
+  gvEvents?: GvEvent[]
   onBack?: () => void
 }
 
@@ -264,6 +265,7 @@ export function TheaterSheet({
   initialIsoDate,
   initialShowtimeId,
   initialGvId,
+  gvEvents = [],
   onBack,
 }: TheaterSheetProps) {
 
@@ -332,7 +334,7 @@ export function TheaterSheet({
   const [selGvId, setSelGvId] = useState<string | null>(initialGvId ?? null)
   useEffect(() => { if (initialGvId) setSelGvId(initialGvId) }, [initialGvId])
   // Keep last event alive so exit animation can play (panel stays rendered during slide-out)
-  const lastGvEvRef = useRef<typeof GV_EVENTS[0] | undefined>(undefined)
+  const lastGvEvRef = useRef<GvEvent | undefined>(undefined)
 
   /* ── 날짜 선택 상태 (ISO date 기준) ── */
   const todayIso = useMemo(() => {
@@ -1376,7 +1378,7 @@ export function TheaterSheet({
           </div>
 
           {/* GV & 이벤트 */}
-          <GvEventSection theaterName={theater.name} selectedIsoDate={selectedIsoDate} onGvOpen={(id) => setSelGvId(id)} />
+          <GvEventSection events={gvEvents} theaterName={theater.name} selectedIsoDate={selectedIsoDate} onGvOpen={(id) => setSelGvId(id)} />
 
           {/* ── 포스터 가로 스크롤 — expanded에서 스크롤과 함께 ── */}
           {(() => {
@@ -1953,7 +1955,7 @@ export function TheaterSheet({
 
       {/* ── GV 상세 서브페이지 ── */}
       {(() => {
-        const gvEv = selGvId ? GV_EVENTS.find(e => e.id === selGvId) : undefined
+        const gvEv = selGvId ? gvEvents.find(e => e.id === selGvId) : undefined
         if (gvEv) lastGvEvRef.current = gvEv
         const displayEv = gvEv ?? lastGvEvRef.current
         return (
