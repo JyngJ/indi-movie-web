@@ -238,6 +238,31 @@ export function AdminEventConsole({ tabSlot }: { tabSlot?: React.ReactNode } = {
     }
   }
 
+  async function autoMatchCandidates() {
+    setLoading(true)
+    setMessage(selectedIds.length ? '선택한 후보를 자동 매칭하는 중입니다.' : '초안/검수 대기 후보를 자동 매칭하는 중입니다.')
+    try {
+      const res = await fetch('/api/admin/events/auto-match', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(selectedIds.length ? { ids: selectedIds } : {}),
+      })
+      const result = await res.json() as {
+        totalProcessed?: number; autoApproved?: number; needsReview?: number
+        failed?: unknown[]; error?: { message: string }
+      }
+      if (!res.ok) throw new Error(result.error?.message ?? '자동 매칭에 실패했습니다.')
+
+      await refresh()
+      setSelectedIds([])
+      setMessage(`자동 매칭 완료: 처리 ${result.totalProcessed ?? 0}건, 승인 ${result.autoApproved ?? 0}건, 검수 대기 ${result.needsReview ?? 0}건`)
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : '자동 매칭에 실패했습니다.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const latestIdSet = useMemo(() => new Set(latestIds), [latestIds])
 
   const filtered = useMemo(() => {
@@ -357,6 +382,7 @@ export function AdminEventConsole({ tabSlot }: { tabSlot?: React.ReactNode } = {
               <span>극장·영화 매칭 후 승인하면 theater_events 테이블에 등록됩니다.</span>
             </div>
             <div className={styles.reviewActions}>
+              <Button variant="secondary" size="sm" loading={loading} onClick={autoMatchCandidates}>자동 매칭</Button>
               <Button variant="ghost" size="sm" loading={loading} onClick={() => handleApprove('reject')}>반려</Button>
               <Button size="sm" loading={loading} onClick={() => handleApprove('approve')}>승인</Button>
             </div>

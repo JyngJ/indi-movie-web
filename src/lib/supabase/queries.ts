@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import type { CurationListRow } from '@/lib/curation/types'
 import type { Theater, Movie, Showtime, Station } from '@/types/api'
+import type { TheaterEvent } from '@/types/admin'
 import { createSupabaseBrowserClient } from './browser'
 import { getRegionFromCity } from '@/lib/regions'
 
@@ -46,6 +47,20 @@ export function useStations() {
     },
     staleTime: 60 * 60 * 1000,
     gcTime: 120 * 60 * 1000,
+  })
+}
+
+/* ── 극장 이벤트(GV·토크 등) 목록 ──────────────────────────────── */
+export function useTheaterEvents() {
+  return useQuery<TheaterEvent[]>({
+    queryKey: ['theater-events'],
+    queryFn: async () => {
+      const res = await fetch('/api/public/theater-events')
+      if (!res.ok) throw new Error(`theater-events fetch 실패: ${res.status}`)
+      return res.json()
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   })
 }
 

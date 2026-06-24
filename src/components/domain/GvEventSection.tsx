@@ -1,9 +1,8 @@
 'use client'
 
 import { useRef, useEffect, useState, useCallback } from 'react'
-import { GV_EVENTS, type GvEvent } from '@/data/gv-events'
-
-const GV_AMBER = '#D97706'
+import type { GvEvent } from '@/data/gv-events'
+import { gvEventTypeColor } from '@/lib/gv/adapter'
 
 const navBtn: React.CSSProperties = {
   position: 'absolute', top: '50%',
@@ -40,15 +39,16 @@ function statusColor(status: GvEvent['status']): string {
 }
 
 interface GvEventSectionProps {
+  events: GvEvent[]
   theaterName: string
   selectedIsoDate: string
   onGvOpen?: (id: string) => void
 }
 
-export function GvEventSection({ theaterName, selectedIsoDate, onGvOpen }: GvEventSectionProps) {
+export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate, onGvOpen }: GvEventSectionProps) {
   const year = selectedIsoDate ? Number(selectedIsoDate.split('-')[0]) : new Date().getFullYear()
 
-  const events = GV_EVENTS
+  const events = allEvents
     .filter(ev => ev.theaterName === theaterName)
     .sort((a, b) => sortKey(a.time) - sortKey(b.time))
 
@@ -183,7 +183,7 @@ export function GvEventSection({ theaterName, selectedIsoDate, onGvOpen }: GvEve
                     )}
                     <div style={{
                       position: 'absolute', top: 5, left: 5,
-                      background: GV_AMBER, color: '#fff',
+                      background: gvEventTypeColor(ev.type), color: '#fff',
                       fontSize: 9, fontWeight: 800, borderRadius: 3, padding: '2px 5px', letterSpacing: '0.3px',
                     }}>{ev.type}</div>
                     <div style={{
