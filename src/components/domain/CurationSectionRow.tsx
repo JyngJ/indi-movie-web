@@ -91,7 +91,7 @@ function MovieCardInfo({ movie, isDesktop }: { movie: Movie; isDesktop: boolean 
 }
 
 /* ── 호버 팝업 카드 ─────────────────────────────────────────────── */
-function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number }) {
+export function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number }) {
   const synopsis = movie.synopsis
     ? movie.synopsis.length > 90
       ? movie.synopsis.slice(0, 90) + '...'
