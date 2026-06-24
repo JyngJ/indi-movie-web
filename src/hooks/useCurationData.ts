@@ -5,6 +5,8 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 import { cookieStorageAdapter } from '@/lib/adapters/cookieStorage'
 import { getRecentlyViewed } from '@/lib/curation/recentlyViewed'
 import { getRegionFromCity } from '@/lib/regions'
+import { calculateDistanceKm } from '@/lib/map/distanceUtils'
+import type { LocationCoords } from '@/lib/adapters/location'
 import type {
   LastWeekFilm,
   NewIndieFilm,
@@ -66,14 +68,14 @@ interface RawTodayShowtime {
   movie_id: string
   show_time: string
   theater_id: string
-  theaters: { id: string; name: string; city: string } | null
+  theaters: { id: string; name: string; city: string; lat: number; lng: number } | null
   movies: Record<string, unknown> | null
 }
 
 /** curation_cache에서 서버 계산 스냅샷 읽기 + 오늘 회차/최근 찾아본 클라이언트 로드.
  *  refreshKey가 바뀌면 최근 찾아본 재로드 + "지금 출발하면" 시각 필터를 다시 계산.
  */
-export function useCurationData(open: boolean, regionId: string | null, refreshKey = 0): CurationData {
+export function useCurationData(open: boolean, regionId: string | null, refreshKey = 0, userCoords?: LocationCoords | null): CurationData {
   const [cacheData, setCacheData] = useState(EMPTY_CACHE)
   const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewedEntry[]>([])
   const [todayShowtimes, setTodayShowtimes] = useState<RawTodayShowtime[]>([])
@@ -110,7 +112,7 @@ export function useCurationData(open: boolean, regionId: string | null, refreshK
         movie_id,
         show_time,
         theater_id,
-        theaters(id, name, city),
+        theaters(id, name, city, lat, lng),
         movies(id, title, original_title, year, poster_url, genre, director, nation, kmdb_id, tmdb_id, rating)
       `)
       .eq('show_date', today)
@@ -161,11 +163,22 @@ export function useCurationData(open: boolean, regionId: string | null, refreshK
         nextShowTime: row.show_time.slice(0, 5),
         theaterId: theaterRaw.id,
         theaterName: theaterRaw.name,
+        theaterLat: Number(theaterRaw.lat),
+        theaterLng: Number(theaterRaw.lng),
       })
     }
-    return [...byMovie.values()].sort((a, b) => a.nextShowTime.localeCompare(b.nextShowTime))
+    const films = [...byMovie.values()]
+    // 위치 권한이 있으면 가까운 극장 순, 없으면 빠른 회차 순
+    if (userCoords) {
+      return films.sort((a, b) => {
+        const distA = calculateDistanceKm(userCoords.lat, userCoords.lng, a.theaterLat, a.theaterLng) ?? Infinity
+        const distB = calculateDistanceKm(userCoords.lat, userCoords.lng, b.theaterLat, b.theaterLng) ?? Infinity
+        return distA - distB
+      })
+    }
+    return films.sort((a, b) => a.nextShowTime.localeCompare(b.nextShowTime))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [todayShowtimes, regionId, refreshKey])
+  }, [todayShowtimes, regionId, refreshKey, userCoords])
 
   const soloTheaterFilms = useMemo<SoloTheaterFilm[]>(() => {
     if (!regionId) return []

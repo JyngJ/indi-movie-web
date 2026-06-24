@@ -98,6 +98,8 @@ export interface TodayShowFilm {
   nextShowTime: string
   theaterId: string
   theaterName: string
+  theaterLat: number
+  theaterLng: number
 }
 
 // ─────────────────────────────────────────────
