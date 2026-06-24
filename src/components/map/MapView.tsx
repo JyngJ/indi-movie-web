@@ -1114,7 +1114,7 @@ export default function MapView() {
   const desktopContentStart = GLOBAL_NAV_DESKTOP_WIDTH + (desktopDockHidden ? 0 : DESKTOP_DOCK_WIDTH)
   // 데스크톱: 좌측 도크에 항상 노출 / 모바일: 시트가 항상 떠 있음 — 레이아웃 무관하게 항상 로드
   const [recentlyViewedKey, setRecentlyViewedKey] = useState(0)
-  const curationData = useCurationData(true, filters.regionId, recentlyViewedKey)
+  const curationData = useCurationData(true, filters.regionId, recentlyViewedKey, coords)
   const mapViewTrackedRef = useRef(false)
   const lastSearchTelemetryRef = useRef('')
   const lastFilterTelemetryRef = useRef('')
