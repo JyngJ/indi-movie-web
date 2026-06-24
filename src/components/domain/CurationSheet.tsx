@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { PosterThumb } from './PosterThumb'
 import { Badge } from '@/components/primitives/Badge'
+import { HoverPopup } from './CurationSectionRow'
 import type {
   LastWeekFilm,
   NewIndieFilm,
@@ -14,6 +15,7 @@ import type {
   SoloTheaterFilm,
   TodayShowFilm,
 } from '@/lib/curation/types'
+import type { Movie } from '@/types/api'
 
 /** 시트가 도달 가능한 2개 스냅 지점 — peek(최소, 기본값) / expanded(최대) */
 export type CurationSnap = 'peek' | 'expanded'
@@ -41,6 +43,8 @@ interface CurationItem {
   theaterId?: string
   /** 현재 위치로부터의 거리, 예: "1.2 km" — 위치 정보 있을 때만 */
   distanceLabel?: string
+  /** 데스크톱 호버 팝업(감독/장르/시놉시스)용 원본 영화 데이터 */
+  movie?: Movie
 }
 
 interface CurationSheetProps {
@@ -193,92 +197,137 @@ function PosterRow({ items, onSelect, emptyText, desktop = false }: {
       paddingBottom: 4,
     }}>
       {items.map((item) => (
-        <button
-          key={item.id}
-          type="button"
-          onClick={() => onSelect?.(item.id, item.title)}
-          style={{
-            flexShrink: desktop ? undefined : 0,
-            width: desktop ? '100%' : posterSize.width,
-            minWidth: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 6,
-            border: 'none',
-            background: 'none',
-            padding: 0,
-            textAlign: 'left',
-            cursor: onSelect ? 'pointer' : 'default',
-            minHeight: 'unset',
-          }}
-        >
-          <div style={{ position: 'relative' }}>
-            <PosterThumb src={item.posterUrl} alt={item.title} width={posterSize.width} height={posterSize.height} size="lg" />
-            {item.distanceLabel && (
-              <div style={{
-                position: 'absolute',
-                top: -6,
-                right: -6,
-                backgroundColor: 'var(--color-primary-base)',
-                color: '#fff',
-                borderRadius: 999,
-                padding: '2px 7px',
-                fontSize: 10,
-                fontWeight: 700,
-                whiteSpace: 'nowrap',
-                boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
-                border: '1.5px solid var(--color-surface-bg)',
-              }}>
-                {item.distanceLabel}
-              </div>
-            )}
-            {item.badge && (
-              <Badge
-                variant="info"
-                style={{
-                  position: 'absolute',
-                  left: 6,
-                  bottom: 6,
-                  backgroundColor: 'rgba(20,15,10,0.72)',
-                  color: '#fff',
-                  maxWidth: 'calc(100% - 12px)',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  display: 'block',
-                }}
-              >
-                {item.badge}
-              </Badge>
-            )}
-          </div>
-          <span style={{
-            fontSize: 13,
-            fontWeight: 700,
-            fontFamily: 'var(--font-display)',
-            color: 'var(--color-text-primary)',
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-            lineHeight: 1.3,
-          }}>
-            {item.title}
-          </span>
-          {item.subtitle && (
-            <span style={{
-              fontSize: 11,
-              color: 'var(--color-text-caption)',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}>
-              {item.subtitle}
-            </span>
-          )}
-        </button>
+        <PosterItem key={item.id} item={item} posterSize={posterSize} desktop={desktop} onSelect={onSelect} />
       ))}
     </div>
+  )
+}
+
+/** 포스터 1개 — 데스크톱에서 호버 시 살짝 확대 + 상영작 탭과 동일한 정보 팝업 */
+function PosterItem({ item, posterSize, desktop, onSelect }: {
+  item: CurationItem
+  posterSize: { width: number; height: number }
+  desktop: boolean
+  onSelect?: (id: string, title: string) => void
+}) {
+  const cardRef = useRef<HTMLButtonElement>(null)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [hovered, setHovered] = useState(false)
+  const [popupPos, setPopupPos] = useState<{ x: number; y: number } | null>(null)
+
+  function onMouseEnter() {
+    timerRef.current = setTimeout(() => {
+      const rect = cardRef.current?.getBoundingClientRect()
+      if (rect) {
+        setHovered(true)
+        setPopupPos({ x: rect.right + 8, y: rect.top })
+      }
+    }, 180)
+  }
+  function onMouseLeave() {
+    if (timerRef.current) clearTimeout(timerRef.current)
+    setHovered(false)
+    setPopupPos(null)
+  }
+
+  return (
+    <>
+      <button
+        ref={cardRef}
+        type="button"
+        onClick={() => onSelect?.(item.id, item.title)}
+        onMouseEnter={desktop ? onMouseEnter : undefined}
+        onMouseLeave={desktop ? onMouseLeave : undefined}
+        style={{
+          flexShrink: desktop ? undefined : 0,
+          width: desktop ? '100%' : posterSize.width,
+          minWidth: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 6,
+          border: 'none',
+          background: 'none',
+          padding: 0,
+          textAlign: 'left',
+          cursor: onSelect ? 'pointer' : 'default',
+          minHeight: 'unset',
+        }}
+      >
+        <div style={{
+          position: 'relative',
+          transition: 'transform 130ms ease',
+          transform: hovered ? 'scale(1.1)' : 'scale(1)',
+          transformOrigin: 'center center',
+        }}>
+          <PosterThumb src={item.posterUrl} alt={item.title} width={posterSize.width} height={posterSize.height} size="lg" />
+          {item.distanceLabel && (
+            <div style={{
+              position: 'absolute',
+              top: -6,
+              right: -6,
+              backgroundColor: 'var(--color-primary-base)',
+              color: '#fff',
+              borderRadius: 999,
+              padding: '2px 7px',
+              fontSize: 10,
+              fontWeight: 700,
+              whiteSpace: 'nowrap',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+              border: '1.5px solid var(--color-surface-bg)',
+            }}>
+              {item.distanceLabel}
+            </div>
+          )}
+          {item.badge && (
+            <Badge
+              variant="info"
+              style={{
+                position: 'absolute',
+                left: 6,
+                bottom: 6,
+                backgroundColor: 'rgba(20,15,10,0.72)',
+                color: '#fff',
+                maxWidth: 'calc(100% - 12px)',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                display: 'block',
+              }}
+            >
+              {item.badge}
+            </Badge>
+          )}
+        </div>
+        <span style={{
+          fontSize: 13,
+          fontWeight: 700,
+          fontFamily: 'var(--font-display)',
+          color: 'var(--color-text-primary)',
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+          lineHeight: 1.3,
+        }}>
+          {item.title}
+        </span>
+        {item.subtitle && (
+          <span style={{
+            fontSize: 11,
+            color: 'var(--color-text-caption)',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}>
+            {item.subtitle}
+          </span>
+        )}
+      </button>
+
+      {popupPos && desktop && item.movie && (
+        <HoverPopup movie={item.movie} x={popupPos.x} y={popupPos.y} />
+      )}
+    </>
   )
 }
 
@@ -496,6 +545,7 @@ export function CurationSections({
     posterUrl: film.movie.posterUrl,
     badge: film.badgeText,
     subtitle: formatDirectors(film.movie.director) || undefined,
+    movie: film.movie,
   }))
   const soloTheaterItems: CurationItem[] = soloTheaterFilms.map((film) => ({
     id: film.movie.id,
@@ -504,6 +554,7 @@ export function CurationSections({
     subtitle: film.theaterName,
     theaterId: film.theaterId,
     distanceLabel: getTheaterDistance?.(film.theaterId) ?? undefined,
+    movie: film.movie,
   }))
   const todayShowItems: CurationItem[] = todayShowFilms.map((film) => ({
     id: film.movie.id,
@@ -513,12 +564,14 @@ export function CurationSections({
     subtitle: film.theaterName,
     theaterId: film.theaterId,
     distanceLabel: getTheaterDistance?.(film.theaterId) ?? undefined,
+    movie: film.movie,
   }))
   const newIndieItems: CurationItem[] = newIndieFilms.map((film) => ({
     id: film.movie.id,
     title: film.movie.title,
     posterUrl: film.movie.posterUrl,
     subtitle: formatDirectors(film.movie.director) || undefined,
+    movie: film.movie,
   }))
   const returningItems: CurationItem[] = returningFilms.map((film) => ({
     id: film.movie.id,
@@ -526,6 +579,7 @@ export function CurationSections({
     posterUrl: film.movie.posterUrl,
     badge: film.tagText,
     subtitle: formatDirectors(film.movie.director) || undefined,
+    movie: film.movie,
   }))
 
   const candidates: SectionCandidate[] = [
