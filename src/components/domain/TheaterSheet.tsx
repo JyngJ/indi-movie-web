@@ -1970,7 +1970,6 @@ export function TheaterSheet({
             }}
             onTouchStart={e => e.stopPropagation()}
             onTouchMove={e => e.stopPropagation()}
-            onPointerDown={e => e.stopPropagation()}
           >
             {displayEv && <GvDetailPanel ev={displayEv} onClose={() => setSelGvId(null)} onCloseAll={onClose} />}
           </div>
