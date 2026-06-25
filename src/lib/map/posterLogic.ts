@@ -15,7 +15,6 @@ export interface PosterSlot {
   movie?: TheaterPosterMovie
   overflow?: number | string
   countLabel?: string
-  dimmed?: boolean
 }
 
 export function posterCountForZoom(zoom: number): number {
@@ -48,22 +47,20 @@ export function posterSlotsForZoom(
   const capacity = forceMinOne && rawCapacity === 0 ? 1 : rawCapacity
   if (capacity === 0 || movies.length === 0) return []
 
-  const sorted = filtersActive
-    ? [...movies].sort((a, b) => Number(b.matchesFilter) - Number(a.matchesFilter))
-    : movies
-
-  const dim = (m: TheaterPosterMovie) => filtersActive && !m.matchesFilter
+  // 필터 활성 시엔 매칭되는 영화만 — 안 맞는 영화는 dim 처리해서 같이 보여주지 않고 아예 제외한다
+  const sorted = filtersActive ? movies.filter((m) => m.matchesFilter) : movies
+  if (sorted.length === 0) return []
 
   if (capacity === 1) {
     return sorted.length === 1
-      ? [{ movie: sorted[0], dimmed: dim(sorted[0]) }]
-      : [{ movie: sorted[0], overflow: `${sorted.length}편`, dimmed: dim(sorted[0]) }]
+      ? [{ movie: sorted[0] }]
+      : [{ movie: sorted[0], overflow: `${sorted.length}편` }]
   }
-  if (sorted.length <= capacity) return sorted.map((m) => ({ movie: m, dimmed: dim(m) }))
+  if (sorted.length <= capacity) return sorted.map((m) => ({ movie: m }))
 
   const visiblePosterCount = capacity - 1
   return [
-    ...sorted.slice(0, visiblePosterCount).map((m) => ({ movie: m, dimmed: dim(m) })),
-    { movie: sorted[visiblePosterCount], overflow: sorted.length - visiblePosterCount, dimmed: dim(sorted[visiblePosterCount]) },
+    ...sorted.slice(0, visiblePosterCount).map((m) => ({ movie: m })),
+    { movie: sorted[visiblePosterCount], overflow: sorted.length - visiblePosterCount },
   ]
 }
