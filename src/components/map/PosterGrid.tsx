@@ -104,7 +104,7 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
                       {allMovies && allMovies.length > 0 && <MovieListCard movies={allMovies} />}
                     </div>
                   ) : (
-                    <div key={idx} data-movie-id={slot.movie?.id} className={slot.overflow ? 'po-wrap' : 'pm-wrap'} style={{ position: 'relative', width: posterW, height: posterH, opacity: slot.dimmed ? 0.5 : 1 }}>
+                    <div key={idx} data-movie-id={slot.movie?.id} className={slot.overflow ? 'po-wrap' : 'pm-wrap'} style={{ position: 'relative', width: posterW, height: posterH }}>
                       <PosterThumb
                         src={slot.movie?.posterUrl}
                         alt={slot.movie?.title ?? ''}
@@ -112,20 +112,8 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
                         height={posterH}
                         size="sm"
                         overflow={slot.overflow}
-                        highlighted={filtersActive && !slot.dimmed && !slot.overflow && !!slot.movie?.matchesFilter}
+                        highlighted={filtersActive && !slot.overflow && !!slot.movie?.matchesFilter}
                       />
-                      {slot.dimmed && (
-                        <div style={{
-                          position: 'absolute', inset: 0,
-                          borderRadius: 'var(--comp-poster-radius)',
-                          backgroundColor: 'rgba(0,0,0,0.45)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}>
-                          <span style={{ fontSize: 8, fontWeight: 700, color: 'rgba(255,255,255,0.85)', textAlign: 'center', lineHeight: 1.3 }}>
-                            조건{'\n'}외
-                          </span>
-                        </div>
-                      )}
                       {slot.movie && !slot.overflow && (
                         <div className="pm-tip">
                           <div className="pm-tip-title">{slot.movie.title}</div>
