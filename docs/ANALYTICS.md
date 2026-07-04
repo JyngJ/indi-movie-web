@@ -114,3 +114,11 @@ Type C, theater fan:
 | Directions vs booking | Compare `directions clicked` and `booking clicked`. |
 | Acquisition | UTM/referrer properties on all events. |
 | Device split | `device_type`, `viewport_width`, and `viewport_height`. |
+
+## 프로덕션 가동 확인 (2026-07-05)
+
+- **크롤 헬스체크 자동화**: `scripts/check-crawl-health.ts`가 `crawl_runs`의 `status='completed'` 기준 마지막 성공 크롤 시각을 확인해 15시간 초과 시 Discord로 알림을 보내도록 확장됨 (PR #132). RPi(`pi@100.76.84.97`)에서 `main` pull 완료, 수동 1회 실행으로 Supabase 조회·Discord 웹훅 전송 정상 동작 확인, crontab에 4시간 간격(`0 */4 * * *`)으로 등록 완료.
+- **분석 이벤트 프로덕션 유입 확인**: 완료. `www.영화볼지도.com`(프로덕션 커스텀 도메인)에서 실사용 시나리오(지도 → 극장 시트 → 영화 상세 → 예매 클릭)를 수행해 확인.
+  - PostHog Live Events: `theater sheet opened`, `movie detail viewed`, `booking clicked` 포함 `map pin clicked`, `search result selected`, `session intent classified`, `map filter changed`, `curation movie selected`, Autocapture, Pageview 등 실시간 수신 확인. `posthog.init()`은 `instrumentation-client.ts`(Next.js 16 전용 파일, 클라이언트 시작 시 자동 실행)에 있음 — `src/` grep만으로는 안 보임.
+  - GA4 Realtime: `map_pin_clicked`, `theater_sheet_opened`, `session_intent_classified`, `first_visit`, `map_filter_changed`, `map_viewed` 등 이벤트명·화면 조회수 수신 확인 (이벤트명은 `gaEventName()`이 공백을 `_`로 치환).
+  - 퍼널 핵심 3종(`theater sheet opened` → `movie detail viewed` → `booking clicked`) 전부 PostHog·GA4 양쪽에서 확인됨.
