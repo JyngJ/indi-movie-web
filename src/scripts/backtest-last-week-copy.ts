@@ -28,8 +28,10 @@ if (fs.existsSync(envPath)) {
 }
 
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
-import { computeLeadtimeDays, isLeadtimeConfirmed, toLeadtimeDiffs } from '@/lib/curation/leadtime'
+import { computeLeadtimeDays, isLeadtimeConfirmed, toDailyMaxLeadtimeDiffs } from '@/lib/curation/leadtime'
 import type { TheaterLeadtimeSample } from '@/lib/curation/types'
+
+const PAGE_SIZE = 1000
 
 function todayIso(): string {
   const d = new Date()
@@ -54,13 +56,25 @@ async function main() {
   const supabase = createSupabaseAdminClient()
   const today = todayIso()
 
-  const { data, error } = await supabase
-    .from('showtimes')
-    .select('movie_id, theater_id, show_date, created_at, movies(title)')
+  // PostgREST 기본 상한(1000행)에 걸리지 않도록 페이지네이션으로 전량 조회.
+  // (compute-curation.ts의 프로덕션 경로는 DB RPC로 집계하지만, 이 스크립트는
+  // asOfDate별로 매번 다르게 필터링해야 해서 SQL 집계로 옮기기 어렵다. 일회성
+  // 검증 스크립트라 전량을 메모리에 올려 처리해도 무방하다 — 현재 수천 행 수준.)
+  const rawRows: Array<Record<string, unknown>> = []
+  for (let page = 0; ; page++) {
+    const from = page * PAGE_SIZE
+    const { data, error } = await supabase
+      .from('showtimes')
+      .select('movie_id, theater_id, show_date, created_at, movies(title)')
+      .range(from, from + PAGE_SIZE - 1)
 
-  if (error) throw error
+    if (error) throw error
+    if (!data || data.length === 0) break
+    rawRows.push(...(data as unknown as Array<Record<string, unknown>>))
+    if (data.length < PAGE_SIZE) break
+  }
 
-  const rows: Row[] = (data ?? [])
+  const rows: Row[] = rawRows
     .map((r) => {
       const movieRaw = r.movies as unknown as { title?: string } | null
       return {
@@ -106,7 +120,7 @@ async function main() {
   }
   const leadtimeByTheater = new Map<string, number | null>()
   for (const [theaterId, samples] of byTheater.entries()) {
-    leadtimeByTheater.set(theaterId, computeLeadtimeDays(toLeadtimeDiffs(samples)))
+    leadtimeByTheater.set(theaterId, computeLeadtimeDays(toDailyMaxLeadtimeDiffs(samples)))
   }
 
   let totalCandidates = 0

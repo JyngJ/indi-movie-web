@@ -36,9 +36,9 @@ import { clusterDatesToRuns, getReturningFilms } from '@/lib/curation/getReturni
 import { getNewIndieFilms } from '@/lib/curation/getNewIndieFilms'
 import { fetchCine21Rating } from '@/lib/admin/cine21'
 import type { Movie } from '@/types/api'
-import type { NewIndieFilmCandidate, ReturningFilmCandidate, LastWeekFilm, SoloTheaterFilm, SoloTheaterFilmsByRegion, TheaterLeadtimeSample } from '@/lib/curation/types'
+import type { NewIndieFilmCandidate, ReturningFilmCandidate, LastWeekFilm, SoloTheaterFilm, SoloTheaterFilmsByRegion } from '@/lib/curation/types'
 import { getRegionFromCity } from '@/lib/regions'
-import { computeLeadtimeDays, isLeadtimeConfirmed, toLeadtimeDiffs } from '@/lib/curation/leadtime'
+import { isLeadtimeConfirmed, MIN_LEADTIME_SAMPLES } from '@/lib/curation/leadtime'
 import { combineConfidence } from '@/lib/curation/confidence'
 import { getLastWeekBadgeText } from '@/lib/curation/lastWeekBadge'
 import { findKobisMovieCd, fetchScreenCountTrend, isScreenCountDeclining } from '@/lib/kobis/getBoxOfficeTrend'
@@ -374,25 +374,25 @@ async function sendCurationPreviewToDiscord(
   return true
 }
 
-/** 극장별 통상 공개 리드타임(일) — showtimes.created_at 기준, 전체 테이블(최근 크롤분)을 훑는다 */
+/**
+ * 극장별 통상 공개 리드타임(일) — DB RPC(theater_leadtime_p25, supabase/seeds/14_*.sql)에서
+ * 집계된 결과만 받는다. showtimes를 통째로 select하면 PostgREST 기본 상한(1000행)에 걸려
+ * 임의로 잘린 표본만 보게 되므로 집계 자체를 DB에서 수행한다.
+ *
+ * RPC 마이그레이션이 아직 안 돼 있어도(배포 순서상 코드가 SQL보다 먼저 나갈 수 있음)
+ * 전체 파이프라인이 죽으면 안 되므로 실패 시 빈 맵으로 폴백한다 — 그러면 모든 후보가
+ * "리드타임 미상"으로 처리돼 likely로만 잡히는, 이 기능 배포 전과 동일한 안전한 동작이 된다.
+ */
 async function computeTheaterLeadtimes(supabase: ReturnType<typeof createSupabaseAdminClient>): Promise<Map<string, number | null>> {
-  const { data, error } = await supabase
-    .from('showtimes')
-    .select('theater_id, show_date, created_at')
-
-  if (error) throw error
-
-  const byTheater = new Map<string, TheaterLeadtimeSample[]>()
-  for (const r of (data ?? []) as Record<string, unknown>[]) {
-    const theaterId = r.theater_id as string | null
-    if (!theaterId) continue
-    if (!byTheater.has(theaterId)) byTheater.set(theaterId, [])
-    byTheater.get(theaterId)!.push({ showDate: r.show_date as string, createdAt: r.created_at as string })
+  const { data, error } = await supabase.rpc('theater_leadtime_p25', { min_samples: MIN_LEADTIME_SAMPLES })
+  if (error) {
+    console.error('  theater_leadtime_p25 RPC 실패 — 리드타임 미상으로 폴백 (SQL 마이그레이션 적용됐는지 확인):', error.message)
+    return new Map()
   }
 
   const leadtimeByTheater = new Map<string, number | null>()
-  for (const [theaterId, samples] of byTheater.entries()) {
-    leadtimeByTheater.set(theaterId, computeLeadtimeDays(toLeadtimeDiffs(samples)))
+  for (const row of (data ?? []) as Array<{ theater_id: string; leadtime_days: number }>) {
+    leadtimeByTheater.set(row.theater_id, row.leadtime_days)
   }
   return leadtimeByTheater
 }
@@ -419,6 +419,10 @@ async function checkKobisDeclining(title: string, year: number, asOfDate: string
 
     const targetDates = [3, 2, 1].map((daysAgo) => toKobisDate(addDaysIso(asOfDate, -daysAgo)))
     const trend = await fetchScreenCountTrend(KOBIS_API_KEY, movieCd, targetDates)
+    // 일별 박스오피스는 상위 10편만 주므로 독립·예술영화는 순위 밖이라 trend가 비다시피 한다.
+    // 이건 "감소 안 함"이 아니라 "데이터 없음"이다 — 매칭 실패와 동일하게 다뤄 리드타임 결과를
+    // 그대로 살린다. 실데이터(2개 이상)가 있을 때만 진짜 추세로 취급한다.
+    if (trend.length < 2) return KOBIS_NO_MATCH
     return { matched: true, declining: isScreenCountDeclining(trend) }
   })(), 6000, KOBIS_NO_MATCH)
 }

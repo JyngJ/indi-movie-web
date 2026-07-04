@@ -1,17 +1,20 @@
 import { describe, expect, it } from 'vitest'
-import { computeLeadtimeDays, isLeadtimeConfirmed, toLeadtimeDiffs, MIN_LEADTIME_SAMPLES } from './leadtime'
+import { computeLeadtimeDays, isLeadtimeConfirmed, toDailyMaxLeadtimeDiffs, MIN_LEADTIME_SAMPLES } from './leadtime'
 
-describe('toLeadtimeDiffs', () => {
-  it('computes days between created_at date and show_date', () => {
-    const diffs = toLeadtimeDiffs([
-      { showDate: '2026-07-10', createdAt: '2026-07-05T03:00:00Z' },
-      { showDate: '2026-07-10', createdAt: '2026-07-08T03:00:00Z' },
+describe('toDailyMaxLeadtimeDiffs', () => {
+  it('keeps only the max diff per crawl day, not every show_date row', () => {
+    // 같은 크롤일(07-05)에 나온 여러 show_date는 독립 표본이 아니라 "그날 본 최대 지평" 하나로 합친다
+    const diffs = toDailyMaxLeadtimeDiffs([
+      { showDate: '2026-07-06', createdAt: '2026-07-05T03:00:00Z' }, // diff 1
+      { showDate: '2026-07-08', createdAt: '2026-07-05T04:00:00Z' }, // diff 3 — 같은 날, 더 먼 지평
+      { showDate: '2026-07-07', createdAt: '2026-07-05T05:00:00Z' }, // diff 2 — 같은 날, 무시됨
+      { showDate: '2026-07-14', createdAt: '2026-07-08T00:00:00Z' }, // diff 6 — 다른 크롤일
     ])
-    expect(diffs).toEqual([5, 2])
+    expect(diffs.sort((a, b) => a - b)).toEqual([3, 6])
   })
 
   it('drops negative diffs (backfilled/corrected past rows)', () => {
-    const diffs = toLeadtimeDiffs([
+    const diffs = toDailyMaxLeadtimeDiffs([
       { showDate: '2026-07-01', createdAt: '2026-07-05T00:00:00Z' },
       { showDate: '2026-07-10', createdAt: '2026-07-05T00:00:00Z' },
     ])

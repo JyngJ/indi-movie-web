@@ -76,7 +76,8 @@ export interface LastWeekFilm {
   daysLeft: number
   /** 예: "D-3 막바지 상영" / "오늘이 마지막" — 레거시 캐시 호환용, UI는 getLastWeekBadgeText 사용 */
   badgeText: string
-  confidence: LastWeekConfidence
+  /** 레거시 캐시 JSON엔 없는 필드일 수 있음 — 읽는 쪽은 반드시 ?? 'likely'로 안전하게 폴백할 것 */
+  confidence?: LastWeekConfidence
   /** 현재 이 영화를 상영 중인 지역 목록 — 검색 지역 필터에 사용 */
   regions: string[]
 }

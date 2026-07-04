@@ -1,17 +1,28 @@
 import type { TheaterLeadtimeSample } from './types'
 
-/** 이 미만 표본이면 리드타임을 신뢰할 수 없다고 보고 null(미상) 처리 */
+/** 이 미만 표본(=관측된 크롤일 수)이면 리드타임을 신뢰할 수 없다고 보고 null(미상) 처리 */
 export const MIN_LEADTIME_SAMPLES = 10
 
-/** show_date - created_at(날짜부분) 사이 일수. 음수(과거 데이터 정정 등 이상치)는 제외 */
-export function toLeadtimeDiffs(samples: TheaterLeadtimeSample[]): number[] {
-  return samples
-    .map(({ showDate, createdAt }) => {
-      const show = Date.parse(`${showDate}T00:00:00Z`)
-      const created = Date.parse(`${createdAt.slice(0, 10)}T00:00:00Z`)
-      return Math.round((show - created) / 86400000)
-    })
-    .filter((diff) => Number.isFinite(diff) && diff >= 0)
+/**
+ * (극장, 크롤일) 그룹별 "그날 본 것 중 가장 먼 미래 show_date"만 남긴다.
+ * 한 크롤에서 나온 여러 show_date(내일치, 모레치, ...)를 전부 개별 표본으로 세면
+ * 서로 독립적인 관측이 아닌데도 표본 수만 부풀려 MIN_LEADTIME_SAMPLES를 쉽게
+ * 넘겨버리고, 대부분 diff가 작은 값(0~수일)에 몰려 p25가 실제 공개 지평보다
+ * 훨씬 짧게(과소추정) 나온다. "그 크롤일에 이 극장이 최대 며칠 앞까지 공개했나"
+ * 하나만 표본으로 세야 각 표본이 독립적인 관측이 된다.
+ */
+export function toDailyMaxLeadtimeDiffs(samples: TheaterLeadtimeSample[]): number[] {
+  const maxDiffByCrawlDay = new Map<string, number>()
+  for (const { showDate, createdAt } of samples) {
+    const crawlDay = createdAt.slice(0, 10)
+    const show = Date.parse(`${showDate}T00:00:00Z`)
+    const created = Date.parse(`${crawlDay}T00:00:00Z`)
+    const diff = Math.round((show - created) / 86400000)
+    if (!Number.isFinite(diff) || diff < 0) continue
+    const current = maxDiffByCrawlDay.get(crawlDay)
+    if (current == null || diff > current) maxDiffByCrawlDay.set(crawlDay, diff)
+  }
+  return [...maxDiffByCrawlDay.values()]
 }
 
 /**
