@@ -544,7 +544,7 @@ export function CurationSections({
     id: film.movie.id,
     title: film.movie.title,
     posterUrl: film.movie.posterUrl,
-    badge: getLastWeekBadgeText(film.daysLeft),
+    badge: getLastWeekBadgeText(film.daysLeft, film.confidence ?? 'likely'),
     subtitle: formatDirectors(film.movie.director) || undefined,
     movie: film.movie,
   }))

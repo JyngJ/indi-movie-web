@@ -60,6 +60,14 @@ export interface NewIndieFilm {
 // 기준: max(show_date) ≤ today + 7일
 // ─────────────────────────────────────────────
 
+/**
+ * 'confirmed' — 상영 중인 모든 극장이 통상 공개 리드타임보다 먼 미래까지 시간표를 공개했는데도
+ *   이 영화가 없음(+ KOBIS 매칭 실패 또는 스크린 수 감소 추세) — 진짜 종영으로 볼 근거가 있음.
+ * 'likely' — 위 근거가 부족함(리드타임 미상 극장 포함, 또는 KOBIS가 증가/유지 추세를 보임).
+ *   데이터 부재를 종영으로 오독했을 수 있어 단정 표현을 쓰지 않는다.
+ */
+export type LastWeekConfidence = 'confirmed' | 'likely'
+
 export interface LastWeekFilm {
   movie: Movie
   /** ISO date "YYYY-MM-DD" — 이 영화의 마지막 상영일 */
@@ -68,8 +76,21 @@ export interface LastWeekFilm {
   daysLeft: number
   /** 예: "D-3 막바지 상영" / "오늘이 마지막" — 레거시 캐시 호환용, UI는 getLastWeekBadgeText 사용 */
   badgeText: string
+  confidence: LastWeekConfidence
   /** 현재 이 영화를 상영 중인 지역 목록 — 검색 지역 필터에 사용 */
   regions: string[]
+}
+
+// ─────────────────────────────────────────────
+// 극장별 공개 리드타임 — "이번 주가 마지막" 오탐 방지용
+// 기준: 크롤 시점(created_at) 대비 며칠 앞의 show_date까지 공개돼 있었나
+// ─────────────────────────────────────────────
+
+export interface TheaterLeadtimeSample {
+  /** ISO date "YYYY-MM-DD" */
+  showDate: string
+  /** show_date row가 처음 생성된 시각 (ISO datetime) */
+  createdAt: string
 }
 
 // ─────────────────────────────────────────────
