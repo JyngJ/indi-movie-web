@@ -15,6 +15,7 @@ import type {
   SoloTheaterFilm,
   TodayShowFilm,
 } from '@/lib/curation/types'
+import { getLastWeekBadgeText } from '@/lib/curation/lastWeekBadge'
 import type { Movie } from '@/types/api'
 
 /** 시트가 도달 가능한 2개 스냅 지점 — peek(최소, 기본값) / expanded(최대) */
@@ -543,7 +544,7 @@ export function CurationSections({
     id: film.movie.id,
     title: film.movie.title,
     posterUrl: film.movie.posterUrl,
-    badge: film.badgeText,
+    badge: getLastWeekBadgeText(film.daysLeft),
     subtitle: formatDirectors(film.movie.director) || undefined,
     movie: film.movie,
   }))
@@ -583,7 +584,7 @@ export function CurationSections({
   }))
 
   const candidates: SectionCandidate[] = [
-    { key: 'lastWeek', title: '이번 주가 마지막', icon: '⏳', items: lastWeekItems, emptyText: '' },
+    { key: 'lastWeek', title: '막바지 상영', icon: '⏳', items: lastWeekItems, emptyText: '' },
     { key: 'soloTheater', title: `${soloRegionLabel ?? '이 지역'}에서 단 한 곳`, icon: '📍', items: soloTheaterItems, emptyText: '' },
     { key: 'todayShow', title: '지금 출발하면 볼 수 있는', icon: '🚗', items: soloRegionLabel ? todayShowItems : [], emptyText: '' },
     { key: 'newIndie', title: '이번 주 새롭게 상영하는 영화', icon: '🎬', items: newIndieItems, emptyText: '' },

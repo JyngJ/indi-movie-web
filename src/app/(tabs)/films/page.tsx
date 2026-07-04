@@ -99,9 +99,9 @@ export default function FilmsPage() {
   const realtimeSections = [
     {
       listId: 'realtime_last_week',
-      nameKo: '이번 주가 마지막',
+      nameKo: '막바지 상영',
       emoji: '⏳',
-      description: '한동안 다시 못볼지도 몰라요! 놓치기 전에 여기서',
+      description: '상영관이 줄고 있어요. 미리 확인하고 예매하세요',
       displayMode: 'default' as const,
       posterBadges: lastWeekBadgeMap,
       movies: lastWeekFilms.map((f) => f.movie),

@@ -66,7 +66,7 @@ export interface LastWeekFilm {
   maxShowDate: string
   /** 오늘 기준 남은 일수 (0 = 오늘이 마지막) */
   daysLeft: number
-  /** 예: "D-3 종영" / "오늘이 마지막" */
+  /** 예: "D-3 막바지 상영" / "오늘이 마지막" — 레거시 캐시 호환용, UI는 getLastWeekBadgeText 사용 */
   badgeText: string
   /** 현재 이 영화를 상영 중인 지역 목록 — 검색 지역 필터에 사용 */
   regions: string[]
