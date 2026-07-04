@@ -114,3 +114,8 @@ Type C, theater fan:
 | Directions vs booking | Compare `directions clicked` and `booking clicked`. |
 | Acquisition | UTM/referrer properties on all events. |
 | Device split | `device_type`, `viewport_width`, and `viewport_height`. |
+
+## 프로덕션 가동 확인 (2026-07-05)
+
+- **크롤 헬스체크 자동화**: `scripts/check-crawl-health.ts`가 `crawl_runs`의 `status='completed'` 기준 마지막 성공 크롤 시각을 확인해 15시간 초과 시 Discord로 알림을 보내도록 확장됨 (PR #132). RPi(`pi@100.76.84.97`)에서 `main` pull 완료, 수동 1회 실행으로 Supabase 조회·Discord 웹훅 전송 정상 동작 확인, crontab에 4시간 간격(`0 */4 * * *`)으로 등록 완료.
+- **분석 이벤트 프로덕션 유입 확인**: 미확인. Vercel `indi-movie-web` 프로젝트 Production 환경변수(`NEXT_PUBLIC_POSTHOG_TOKEN`, `NEXT_PUBLIC_POSTHOG_HOST`, `NEXT_PUBLIC_GA_MEASUREMENT_ID`)와 PostHog Live Events / GA4 실시간 보고서 확인은 Vercel/PostHog/GA 대시보드 접근이 필요해 별도로 진행 필요.
