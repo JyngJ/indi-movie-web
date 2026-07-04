@@ -29,8 +29,7 @@ export default async function sitemap({ id }: { id: number }): Promise<MetadataR
     .range(from, to)
     .order('updated_at', { ascending: false })
 
-  return (data ?? []).flatMap((m) => [
-    { url: `${BASE_URL}/movie/${m.id}`, lastModified: new Date(m.updated_at), changeFrequency: 'weekly' as const, priority: 0.7 },
-    { url: `${BASE_URL}/films/movie/${m.id}`, lastModified: new Date(m.updated_at), changeFrequency: 'weekly' as const, priority: 0.7 },
-  ])
+  return (data ?? []).map((m) => (
+    { url: `${BASE_URL}/movie/${m.id}`, lastModified: new Date(m.updated_at), changeFrequency: 'weekly' as const, priority: 0.7 }
+  ))
 }

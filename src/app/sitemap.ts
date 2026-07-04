@@ -12,10 +12,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     supabase.from('movies').select('director'),
   ])
 
-  const theaterUrls: MetadataRoute.Sitemap = (theaters ?? []).flatMap((t) => [
-    { url: `${BASE_URL}/theater/${t.id}`, lastModified: new Date(t.updated_at), changeFrequency: 'weekly' as const, priority: 0.8 },
-    { url: `${BASE_URL}/films/theater/${t.id}`, lastModified: new Date(t.updated_at), changeFrequency: 'weekly' as const, priority: 0.7 },
-  ])
+  const theaterUrls: MetadataRoute.Sitemap = (theaters ?? []).map((t) => (
+    { url: `${BASE_URL}/theater/${t.id}`, lastModified: new Date(t.updated_at), changeFrequency: 'weekly' as const, priority: 0.8 }
+  ))
 
   const directorNames = [...new Set(
     (directors ?? []).flatMap((m) => (m.director as string[] | null) ?? []).filter(Boolean)
