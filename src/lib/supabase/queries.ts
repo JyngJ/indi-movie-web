@@ -4,6 +4,8 @@ import type { Theater, Movie, Showtime, Station } from '@/types/api'
 import type { TheaterEvent } from '@/types/admin'
 import { createSupabaseBrowserClient } from './browser'
 import { getRegionFromCity } from '@/lib/regions'
+import { getMovieTheaterShowtimes as getMovieTheaterShowtimesPure } from '@/lib/catalog/getMovieTheaterShowtimes'
+import type { MovieTheaterEntry } from '@/lib/catalog/getMovieTheaterShowtimes'
 
 function supabase() {
   return createSupabaseBrowserClient()
@@ -613,109 +615,19 @@ export function useTheaterShowtimes(theaterId: string | null, date: string) {
 }
 
 /* ── 영화별 상영 영화관 + 날짜별 상영시간 ───────────────────────── */
-export interface MovieTheaterDateGroup {
-  date: string
-  showtimes: Showtime[]
-}
+export type { MovieTheaterDateGroup, MovieTheaterEntry } from '@/lib/catalog/getMovieTheaterShowtimes'
 
-export interface MovieTheaterEntry {
-  theaterId: string
-  theaterName: string
-  theaterAddress: string
-  theaterLat: number | null
-  theaterLng: number | null
-  dateGroups: MovieTheaterDateGroup[]
-}
-
-export function useMovieTheaterShowtimes(movieId: string | null) {
+export function useMovieTheaterShowtimes(movieId: string | null, initialData?: MovieTheaterEntry[]) {
   const today = formatLocalDate(new Date())
-
-  const until = new Date()
-  until.setDate(until.getDate() + 13)
-  const untilDate = formatLocalDate(until)
 
   return useQuery<MovieTheaterEntry[]>({
     queryKey: ['movie-theater-showtimes', movieId, today, 'with-theater-coords'],
     enabled: !!movieId,
-    queryFn: async () => {
-      const { data, error } = await supabase()
-        .from('showtimes')
-        .select(`
-          id,
-          theater_id,
-          show_date,
-          show_time,
-          end_time,
-          seat_available,
-          seat_total,
-          booking_url,
-          screen_name,
-          theaters (
-            id,
-            name,
-            address,
-            lat,
-            lng
-          )
-        `)
-        .eq('movie_id', movieId!)
-        .eq('is_active', true)
-        .gte('show_date', today)
-        .lte('show_date', untilDate)
-        .order('show_date')
-        .order('show_time')
-        .limit(1000)
-
-      if (error) throw error
-
-      // 극장별로 모으고, 극장 내에서 날짜별로 그룹핑
-      const theaterMap = new Map<string, { name: string; address: string; lat: number | null; lng: number | null; byDate: Map<string, Showtime[]> }>()
-      for (const r of data ?? []) {
-        const th = r.theaters as unknown as { id: string; name: string; address: string; lat: number | string | null; lng: number | string | null } | null
-        if (!th) continue
-
-        if (!theaterMap.has(th.id)) {
-          const lat = th.lat == null ? null : Number(th.lat)
-          const lng = th.lng == null ? null : Number(th.lng)
-          theaterMap.set(th.id, {
-            name: th.name,
-            address: th.address,
-            lat: lat != null && Number.isFinite(lat) ? lat : null,
-            lng: lng != null && Number.isFinite(lng) ? lng : null,
-            byDate: new Map(),
-          })
-        }
-        const entry = theaterMap.get(th.id)!
-        if (!entry.byDate.has(r.show_date)) entry.byDate.set(r.show_date, [])
-        entry.byDate.get(r.show_date)!.push({
-          id: r.id,
-          movieId: movieId!,
-          movieTitle: '',
-          theaterId: th.id,
-          screenName: r.screen_name,
-          showDate: r.show_date,
-          showTime: r.show_time,
-          endTime: r.end_time ?? undefined,
-          formatType: 'standard' as const,
-          language: 'korean' as const,
-          seatAvailable: Number(r.seat_available ?? 0),
-          seatTotal: Number(r.seat_total ?? 0),
-          price: 0,
-          bookingUrl: r.booking_url ?? undefined,
-        })
-      }
-
-      return Array.from(theaterMap.entries()).map(([theaterId, { name, address, lat, lng, byDate }]) => ({
-        theaterId,
-        theaterName: name,
-        theaterAddress: address,
-        theaterLat: lat,
-        theaterLng: lng,
-        dateGroups: Array.from(byDate.entries())
-          .sort(([a], [b]) => a.localeCompare(b))
-          .map(([date, showtimes]) => ({ date, showtimes })),
-      }))
-    },
+    initialData: initialData ?? undefined,
+    // SSR initialData는 ISR 캐시(최대 1시간 전) 산물 — 즉시 stale 처리해서
+    // 화면엔 바로 그리되 마운트 직후 백그라운드 refetch로 신선도 회복
+    initialDataUpdatedAt: initialData ? 0 : undefined,
+    queryFn: () => getMovieTheaterShowtimesPure(supabase(), movieId!),
     staleTime: 2 * 60 * 1000,
   })
 }
