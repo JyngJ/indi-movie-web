@@ -56,7 +56,7 @@ export async function generateMetadata({
   return {
     title,
     description,
-    alternates: { canonical: `/films/theater/${id}` },
+    alternates: { canonical: `/theater/${id}` },
   }
 }
 

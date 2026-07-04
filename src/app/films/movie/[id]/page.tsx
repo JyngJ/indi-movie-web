@@ -57,7 +57,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       title, description,
       ...(movie.posterUrl && { images: [{ url: movie.posterUrl, alt: `${movie.title} 포스터` }] }),
     },
-    alternates: { canonical: `/films/movie/${id}` },
+    alternates: { canonical: `/movie/${id}` },
   }
 }
 
