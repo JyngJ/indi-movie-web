@@ -18,7 +18,8 @@
     "seed:disable-broken": "tsx src/scripts/disable-broken-crawl-sources.ts",
     "find:duplicates": "tsx src/scripts/find-duplicate-theaters.ts",
     "crawl:curation": "tsx --env-file=.env.local src/scripts/compute-curation.ts",
-    "curate:weekly-ranking": "tsx --env-file=.env.local scripts/compute-weekly-ranking.ts"
+    "curate:weekly-ranking": "tsx --env-file=.env.local scripts/compute-weekly-ranking.ts",
+    "check:crawl-health": "tsx --env-file=.env.local scripts/check-crawl-health.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0",
