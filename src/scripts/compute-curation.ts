@@ -363,7 +363,7 @@ function daysLeftBadge(maxDate: string, asOf: string): { daysLeft: number; badge
   )
   return {
     daysLeft: diff,
-    badgeText: diff === 0 ? '오늘이 마지막' : `D-${diff} 종영`,
+    badgeText: diff === 0 ? '오늘이 마지막' : `D-${diff} 막바지 상영`,
   }
 }
 
