@@ -126,6 +126,18 @@ export async function notifyDiscordMatch(matched: number, autoApproved: number, 
   })
 }
 
+export async function notifyDiscordCrawlStale(hoursSinceLastSuccess: number, lastSuccessAt: string | null) {
+  const lastSuccessText = lastSuccessAt
+    ? new Date(lastSuccessAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
+    : '기록 없음'
+  await sendEmbed({
+    title: '🚨 크롤러 헬스체크 — 상영시간표 갱신 지연',
+    description: `마지막 크롤 **성공**이 **${hoursSinceLastSuccess.toFixed(1)}시간** 전입니다. RPi 크론이 멈췄거나 소스가 계속 실패 중일 수 있습니다.\n마지막 성공: ${lastSuccessText}`,
+    color: 0xE74C3C,
+    footer: { text: nowKST() },
+  })
+}
+
 export async function notifyDiscordError(title: string, errorMessage: string) {
   await sendEmbed({
     title: `❌ ${title} 오류`,
