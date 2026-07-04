@@ -1,8 +1,10 @@
 import type { Metadata } from 'next'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { toMovieSchema } from '@/lib/seo/toMovieSchema'
+import { toScreeningEventSchema } from '@/lib/seo/toScreeningEventSchema'
+import { getMovieTheaterShowtimes } from '@/lib/catalog/getMovieTheaterShowtimes'
 import { MovieDetailClient } from './MovieDetailClient'
-import type { MovieDetail } from '@/lib/supabase/queries'
+import type { MovieDetail, MovieTheaterEntry } from '@/lib/supabase/queries'
 
 export const revalidate = 3600
 
@@ -102,8 +104,12 @@ export default async function MovieDetailPage({
 }) {
   const [{ id }, sp] = await Promise.all([params, searchParams])
   const movie = await fetchMovieFull(id)
+  const showtimes: MovieTheaterEntry[] = movie
+    ? await getMovieTheaterShowtimes(createSupabaseServerClient(), id)
+    : []
 
   const schema = movie ? toMovieSchema(movie, BASE_URL) : null
+  const screeningEventSchemas = movie ? toScreeningEventSchema(movie, showtimes, BASE_URL) : []
 
   return (
     <>
@@ -113,7 +119,19 @@ export default async function MovieDetailPage({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
         />
       )}
-      <MovieDetailClient movieId={id} theaterId={sp.theater} initialData={movie ?? undefined} />
+      {screeningEventSchemas.map((eventSchema, i) => (
+        <script
+          key={i}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(eventSchema) }}
+        />
+      ))}
+      <MovieDetailClient
+        movieId={id}
+        theaterId={sp.theater}
+        initialData={movie ?? undefined}
+        initialShowtimes={showtimes}
+      />
     </>
   )
 }
