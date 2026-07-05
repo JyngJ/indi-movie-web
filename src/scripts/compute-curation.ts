@@ -32,6 +32,8 @@ if (fs.existsSync(envPath)) {
 }
 
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { rowToMovie } from '@/lib/supabase/movieRow'
+import { addDaysIso, formatLocalDate } from '@/lib/date'
 import { clusterDatesToRuns, getReturningFilms } from '@/lib/curation/getReturningFilms'
 import { getNewIndieFilms } from '@/lib/curation/getNewIndieFilms'
 import { fetchCine21Rating } from '@/lib/admin/cine21'
@@ -48,21 +50,10 @@ const KOBIS_API_KEY = process.env.KOBIS_API_KEY
 /** 이 평점 미만인 영화는 큐레이션 섹션에서 제외 (10점 만점, cine21 관객 별점 기준) */
 const RATING_THRESHOLD = 5.0
 
-function todayIso(): string {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
 function addMonthsToIso(dateStr: string, months: number): string {
   const d = new Date(`${dateStr}T00:00:00Z`)
   const shifted = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + months, d.getUTCDate()))
   return shifted.toISOString().slice(0, 10)
-}
-
-function addDaysIso(dateStr: string, days: number): string {
-  const d = new Date(`${dateStr}T00:00:00Z`)
-  d.setUTCDate(d.getUTCDate() + days)
-  return d.toISOString().slice(0, 10)
 }
 
 /** "2026-07-05" → "20260705" (KOBIS API 날짜 포맷) */
@@ -132,22 +123,6 @@ async function ensureMovieRatings(supabase: ReturnType<typeof createSupabaseAdmi
 /** 평점이 RATING_THRESHOLD 미만인 영화는 큐레이션에서 제외 (평점 정보 없으면 통과) */
 function filterByRating<T extends { movie: Movie }>(items: T[]): T[] {
   return items.filter(({ movie }) => movie.rating == null || movie.rating >= RATING_THRESHOLD)
-}
-
-function rowToMovie(movieRaw: Record<string, unknown>): Movie {
-  return {
-    id: String(movieRaw.id),
-    title: String(movieRaw.title),
-    originalTitle: movieRaw.original_title != null ? String(movieRaw.original_title) : undefined,
-    year: Number(movieRaw.year ?? 2000),
-    posterUrl: movieRaw.poster_url != null ? String(movieRaw.poster_url) : undefined,
-    genre: (movieRaw.genre as string[]) ?? [],
-    director: (movieRaw.director as string[]) ?? [],
-    nation: movieRaw.nation != null ? String(movieRaw.nation) : undefined,
-    kmdbId: movieRaw.kmdb_id != null ? String(movieRaw.kmdb_id) : undefined,
-    tmdbId: movieRaw.tmdb_id != null ? Number(movieRaw.tmdb_id) : undefined,
-    rating: movieRaw.rating != null ? Number(movieRaw.rating) : undefined,
-  }
 }
 
 async function computeReturningFilms(supabase: ReturnType<typeof createSupabaseAdminClient>, asOfDate: string) {
@@ -629,7 +604,7 @@ async function computeSoloTheaterFilms(supabase: ReturnType<typeof createSupabas
 async function main() {
   console.log('큐레이션 스냅샷 계산 시작')
   const supabase = createSupabaseAdminClient()
-  const asOfDate = todayIso()
+  const asOfDate = formatLocalDate(new Date())
   console.log(`날짜: ${asOfDate}`)
 
   const [returningFilms, newIndieFilms, lastWeekFilms, soloTheaterFilms] = await Promise.all([

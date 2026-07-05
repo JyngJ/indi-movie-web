@@ -29,20 +29,10 @@ if (fs.existsSync(envPath)) {
 
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { computeLeadtimeDays, isLeadtimeConfirmed, toDailyMaxLeadtimeDiffs } from '@/lib/curation/leadtime'
+import { addDaysIso, formatLocalDate } from '@/lib/date'
 import type { TheaterLeadtimeSample } from '@/lib/curation/types'
 
 const PAGE_SIZE = 1000
-
-function todayIso(): string {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
-function addDaysIso(iso: string, days: number): string {
-  const d = new Date(`${iso}T00:00:00Z`)
-  d.setUTCDate(d.getUTCDate() + days)
-  return d.toISOString().slice(0, 10)
-}
 
 interface Row {
   movieId: string
@@ -54,7 +44,7 @@ interface Row {
 
 async function main() {
   const supabase = createSupabaseAdminClient()
-  const today = todayIso()
+  const today = formatLocalDate(new Date())
 
   // PostgREST 기본 상한(1000행)에 걸리지 않도록 페이지네이션으로 전량 조회.
   // (compute-curation.ts의 프로덕션 경로는 DB RPC로 집계하지만, 이 스크립트는

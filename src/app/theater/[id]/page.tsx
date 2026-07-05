@@ -3,19 +3,13 @@ import { notFound } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { toTheaterSchema } from '@/lib/seo/toTheaterSchema'
 import { safeUrl } from '@/lib/seo/safeUrl'
+import { formatLocalDate } from '@/lib/date'
 import type { Theater } from '@/types/api'
 import { TheaterDetailClient } from './TheaterDetailClient'
 
 export const revalidate = 3600
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'
-
-function formatLocalDate(date: Date) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
 
 /** 오늘 상영 중인 영화 제목 최대 3개 — 메타 description용 */
 async function fetchTodayMovieTitles(theaterId: string): Promise<string[]> {

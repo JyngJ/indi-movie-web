@@ -1,4 +1,5 @@
 import type { MovieTheaterEntry } from '@/lib/catalog/getMovieTheaterShowtimes'
+import { addDaysIso } from '@/lib/date'
 
 /** JSON-LD 크기 폭주 방지 — 가까운 날짜순 상한 */
 export const MAX_SCREENING_EVENTS = 50
@@ -6,12 +7,6 @@ export const MAX_SCREENING_EVENTS = 50
 interface ScreeningEventMovie {
   id: string
   title: string
-}
-
-function addDaysIso(iso: string, days: number): string {
-  const d = new Date(`${iso}T00:00:00Z`)
-  d.setUTCDate(d.getUTCDate() + days)
-  return d.toISOString().slice(0, 10)
 }
 
 /**

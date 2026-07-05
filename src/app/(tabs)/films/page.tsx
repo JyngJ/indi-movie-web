@@ -22,17 +22,11 @@ import { formatAlmostSoldOutCaption, getAlmostSoldOutFilms } from '@/lib/curatio
 import { getTodayAnniversaries } from '@/lib/curation/directorAnniversaries'
 import { trackEvent } from '@/lib/analytics/client'
 import { buildYearsOnScreenCaptions } from '@/lib/curation/yearsOnScreenCaption'
+import { formatLocalDate, formatLocalTimeHHMM } from '@/lib/date'
 import { useActiveMovieIdsByRegion, useActiveMovieTheaterPairs, useAlmostSoldOutCandidates, useCurationLists, useFilmRankings, useMovies, useTheaters } from '@/lib/supabase/queries'
 import { getRegionFromCity } from '@/lib/regions'
 import { getStoredRegion, setStoredRegion } from '@/lib/regionStorage'
 import type { Theater } from '@/types/api'
-
-function formatLocalDate(date: Date) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
 
 export default function FilmsPage() {
   const router = useRouter()
@@ -114,7 +108,7 @@ export default function FilmsPage() {
   const asoNow = new Date()
   const asoToday = formatLocalDate(asoNow)
   const asoTomorrow = formatLocalDate(new Date(asoNow.getTime() + 24 * 60 * 60 * 1000))
-  const asoNowTime = `${String(asoNow.getHours()).padStart(2, '0')}:${String(asoNow.getMinutes()).padStart(2, '0')}`
+  const asoNowTime = formatLocalTimeHHMM(asoNow)
   const almostSoldOutFilms = getAlmostSoldOutFilms(
     selectedRegion
       ? almostSoldOutCandidates.filter((c) => getRegionFromCity(c.theaterCity) === selectedRegion)

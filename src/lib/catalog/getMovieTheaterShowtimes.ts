@@ -1,5 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { addDaysIso, toKstIsoDate } from '@/lib/date'
 import type { Showtime } from '@/types/api'
+
+export { toKstIsoDate }
 
 export interface MovieTheaterDateGroup {
   date: string
@@ -13,17 +16,6 @@ export interface MovieTheaterEntry {
   theaterLat: number | null
   theaterLng: number | null
   dateGroups: MovieTheaterDateGroup[]
-}
-
-/** 서버(Vercel, UTC)와 클라이언트(사용자 브라우저, KST 가정) 모두에서 동일한 "오늘" 날짜를 얻기 위한 KST 기준 변환 */
-export function toKstIsoDate(date: Date): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(date)
-}
-
-function addDaysIso(iso: string, days: number): string {
-  const d = new Date(`${iso}T00:00:00Z`)
-  d.setUTCDate(d.getUTCDate() + days)
-  return d.toISOString().slice(0, 10)
 }
 
 /**
