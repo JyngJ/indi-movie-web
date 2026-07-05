@@ -38,6 +38,12 @@ import { fetchCine21Rating } from '@/lib/admin/cine21'
 import type { Movie } from '@/types/api'
 import type { NewIndieFilmCandidate, ReturningFilmCandidate, LastWeekFilm, SoloTheaterFilm, SoloTheaterFilmsByRegion } from '@/lib/curation/types'
 import { getRegionFromCity } from '@/lib/regions'
+import { isLeadtimeConfirmed, MIN_LEADTIME_SAMPLES } from '@/lib/curation/leadtime'
+import { combineConfidence } from '@/lib/curation/confidence'
+import { getLastWeekBadgeText } from '@/lib/curation/lastWeekBadge'
+import { findKobisMovieCd, fetchScreenCountTrend, isScreenCountDeclining } from '@/lib/kobis/getBoxOfficeTrend'
+
+const KOBIS_API_KEY = process.env.KOBIS_API_KEY
 
 /** 이 평점 미만인 영화는 큐레이션 섹션에서 제외 (10점 만점, cine21 관객 별점 기준) */
 const RATING_THRESHOLD = 5.0
@@ -51,6 +57,17 @@ function addMonthsToIso(dateStr: string, months: number): string {
   const d = new Date(`${dateStr}T00:00:00Z`)
   const shifted = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + months, d.getUTCDate()))
   return shifted.toISOString().slice(0, 10)
+}
+
+function addDaysIso(dateStr: string, days: number): string {
+  const d = new Date(`${dateStr}T00:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + days)
+  return d.toISOString().slice(0, 10)
+}
+
+/** "2026-07-05" → "20260705" (KOBIS API 날짜 포맷) */
+function toKobisDate(iso: string): string {
+  return iso.replaceAll('-', '')
 }
 
 function getMondayIso(dateStr: string): string {
@@ -357,14 +374,71 @@ async function sendCurationPreviewToDiscord(
   return true
 }
 
-function daysLeftBadge(maxDate: string, asOf: string): { daysLeft: number; badgeText: string } {
-  const diff = Math.round(
-    (new Date(`${maxDate}T00:00:00Z`).getTime() - new Date(`${asOf}T00:00:00Z`).getTime()) / 86400000
-  )
-  return {
-    daysLeft: diff,
-    badgeText: diff === 0 ? '오늘이 마지막' : `D-${diff} 막바지 상영`,
+/**
+ * 극장별 통상 공개 리드타임(일) — DB RPC(theater_leadtime_p25, supabase/seeds/14_*.sql)에서
+ * 집계된 결과만 받는다. showtimes를 통째로 select하면 PostgREST 기본 상한(1000행)에 걸려
+ * 임의로 잘린 표본만 보게 되므로 집계 자체를 DB에서 수행한다.
+ *
+ * RPC 마이그레이션이 아직 안 돼 있어도(배포 순서상 코드가 SQL보다 먼저 나갈 수 있음)
+ * 전체 파이프라인이 죽으면 안 되므로 실패 시 빈 맵으로 폴백한다 — 그러면 모든 후보가
+ * "리드타임 미상"으로 처리돼 likely로만 잡히는, 이 기능 배포 전과 동일한 안전한 동작이 된다.
+ */
+async function computeTheaterLeadtimes(supabase: ReturnType<typeof createSupabaseAdminClient>): Promise<Map<string, number | null>> {
+  const { data, error } = await supabase.rpc('theater_leadtime_p25', { min_samples: MIN_LEADTIME_SAMPLES })
+  if (error) {
+    console.error('  theater_leadtime_p25 RPC 실패 — 리드타임 미상으로 폴백 (SQL 마이그레이션 적용됐는지 확인):', error.message)
+    return new Map()
   }
+
+  const leadtimeByTheater = new Map<string, number | null>()
+  for (const row of (data ?? []) as Array<{ theater_id: string; leadtime_days: number }>) {
+    leadtimeByTheater.set(row.theater_id, row.leadtime_days)
+  }
+  return leadtimeByTheater
+}
+
+const KOBIS_NO_MATCH = { matched: false, declining: false } as const
+
+/** KOBIS 교차검증은 어디까지나 보너스 신호라, 응답이 늦으면 기다리지 않고 미매칭으로 취급한다 */
+async function withDeadline<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(fallback), ms)
+    promise.then((v) => { clearTimeout(timer); resolve(v) }, () => { clearTimeout(timer); resolve(fallback) })
+  })
+}
+
+/** KOBIS 교차검증 — 실패해도 파이프라인이 죽으면 안 되므로 항상 호출부에서 try/catch로 감싼다.
+ *  영화 1편당 최대 6번 순차 요청(검색 1 + 일별 박스오피스 3)이라, 요청당 타임아웃을 다 채우면
+ *  후보가 많을 때 전체가 느려진다 — 영화 1편 전체에 하드 데드라인을 걸어 그 이상은 기다리지 않는다. */
+async function checkKobisDeclining(title: string, year: number, asOfDate: string): Promise<{ matched: boolean; declining: boolean }> {
+  if (!KOBIS_API_KEY) return KOBIS_NO_MATCH
+
+  return withDeadline((async () => {
+    const movieCd = await findKobisMovieCd(KOBIS_API_KEY, title, year)
+    if (!movieCd) return KOBIS_NO_MATCH
+
+    const targetDates = [3, 2, 1].map((daysAgo) => toKobisDate(addDaysIso(asOfDate, -daysAgo)))
+    const trend = await fetchScreenCountTrend(KOBIS_API_KEY, movieCd, targetDates)
+    // 일별 박스오피스는 상위 10편만 주므로 독립·예술영화는 순위 밖이라 trend가 비다시피 한다.
+    // 이건 "감소 안 함"이 아니라 "데이터 없음"이다 — 매칭 실패와 동일하게 다뤄 리드타임 결과를
+    // 그대로 살린다. 실데이터(2개 이상)가 있을 때만 진짜 추세로 취급한다.
+    if (trend.length < 2) return KOBIS_NO_MATCH
+    return { matched: true, declining: isScreenCountDeclining(trend) }
+  })(), 6000, KOBIS_NO_MATCH)
+}
+
+/** 동시 실행 수를 제한하며 배열 전체를 처리 — KOBIS API에 순간적으로 몰아치지 않도록 */
+async function mapWithConcurrency<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const results: R[] = new Array(items.length)
+  let next = 0
+  async function worker() {
+    while (next < items.length) {
+      const i = next++
+      results[i] = await fn(items[i])
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker))
+  return results
 }
 
 async function computeLastWeekFilms(supabase: ReturnType<typeof createSupabaseAdminClient>, asOfDate: string): Promise<LastWeekFilm[]> {
@@ -376,10 +450,10 @@ async function computeLastWeekFilms(supabase: ReturnType<typeof createSupabaseAd
     return d.toISOString().slice(0, 10)
   })()
 
-  // 현재 상영 중인 영화의 max(show_date) 조회
+  // 현재 상영 중인 영화의 max(show_date) 조회 — 극장별 max_date도 함께(리드타임 판정용)
   const { data: rows, error } = await supabase
     .from('showtimes')
-    .select('movie_id, show_date, movies(id, title, original_title, year, poster_url, genre, director, nation, kmdb_id, tmdb_id, rating), theaters(city)')
+    .select('movie_id, theater_id, show_date, movies(id, title, original_title, year, poster_url, genre, director, nation, kmdb_id, tmdb_id, rating), theaters(city)')
     .eq('is_active', true)
     .gte('show_date', asOfDate)
     .lte('show_date', sevenDaysLater)
@@ -387,23 +461,29 @@ async function computeLastWeekFilms(supabase: ReturnType<typeof createSupabaseAd
 
   if (error) throw error
 
-  // 영화별 max show_date + movie 정보 + 상영 지역
-  const movieMap = new Map<string, { movie: Movie; maxDate: string; regions: Set<string> }>()
+  // 영화별 max show_date + movie 정보 + 상영 지역 + 극장별 max_date
+  const movieMap = new Map<string, { movie: Movie; maxDate: string; regions: Set<string>; theaterMaxDates: Map<string, string> }>()
   for (const row of (rows ?? []) as Record<string, unknown>[]) {
     const mid = row.movie_id as string
+    const theaterId = row.theater_id as string | null
     const date = row.show_date as string
     const movieRaw = row.movies as Record<string, unknown> | null
     const theaterRaw = row.theaters as Record<string, unknown> | null
     if (!mid || !movieRaw) continue
     const existing = movieMap.get(mid)
     if (!existing) {
-      movieMap.set(mid, { movie: rowToMovie(movieRaw), maxDate: date, regions: new Set() })
+      movieMap.set(mid, { movie: rowToMovie(movieRaw), maxDate: date, regions: new Set(), theaterMaxDates: new Map() })
     } else if (date > existing.maxDate) {
       existing.maxDate = date
     }
+    const entry = movieMap.get(mid)!
     if (theaterRaw) {
       const region = getRegionFromCity(String(theaterRaw.city))
-      if (region !== '기타') movieMap.get(mid)!.regions.add(region)
+      if (region !== '기타') entry.regions.add(region)
+    }
+    if (theaterId) {
+      const theaterMax = entry.theaterMaxDates.get(theaterId)
+      if (!theaterMax || date > theaterMax) entry.theaterMaxDates.set(theaterId, date)
     }
   }
 
@@ -419,19 +499,51 @@ async function computeLastWeekFilms(supabase: ReturnType<typeof createSupabaseAd
 
   const hasFutureIds = new Set((futureRows ?? []).map((r: Record<string, unknown>) => r.movie_id as string).filter(Boolean))
 
-  const allResults: LastWeekFilm[] = []
-  for (const [mid, { movie, maxDate, regions }] of movieMap.entries()) {
-    if (hasFutureIds.has(mid)) continue   // 7일 이후에도 상영 있음 → 제외
-    const { daysLeft, badgeText } = daysLeftBadge(maxDate, asOfDate)
-    allResults.push({ movie, maxShowDate: maxDate, daysLeft, badgeText, regions: [...regions] })
-  }
+  const leadtimeByTheater = await computeTheaterLeadtimes(supabase)
+
+  // 1단계(리드타임) 판정까지는 동기 계산이라 전부 먼저 끝내둔다
+  const candidates = [...movieMap.entries()]
+    .filter(([mid]) => !hasFutureIds.has(mid))   // 7일 이후에도 상영 있음 → 제외
+    .map(([, { movie, maxDate, regions, theaterMaxDates }]) => {
+      const theaterMaxDateList = [...theaterMaxDates.entries()].map(([theaterId, maxShowDate]) => ({ theaterId, maxShowDate }))
+      return { movie, maxDate, regions, leadtimeConfirmed: isLeadtimeConfirmed(theaterMaxDateList, leadtimeByTheater, asOfDate) }
+    })
+
+  // 2단계(KOBIS)는 리드타임 통과 후보만, 그마저도 동시에 몇 개씩 처리 — 순차로 하면 후보 많을 때 수 분씩 걸린다
+  const KOBIS_CONCURRENCY = 4
+  const kobisResults = await mapWithConcurrency(candidates, KOBIS_CONCURRENCY, async (c) => {
+    if (!c.leadtimeConfirmed) return KOBIS_NO_MATCH
+    try {
+      return await checkKobisDeclining(c.movie.title, c.movie.year, asOfDate)
+    } catch (e) {
+      console.error(`  KOBIS 교차검증 실패 (${c.movie.title}), 리드타임 결과로 폴백:`, e instanceof Error ? e.message : e)
+      return KOBIS_NO_MATCH
+    }
+  })
+
+  const allResults: LastWeekFilm[] = candidates.map((c, i) => {
+    const { matched, declining } = kobisResults[i]
+    const confidence = combineConfidence(c.leadtimeConfirmed, matched, declining)
+    const diff = Math.round(
+      (new Date(`${c.maxDate}T00:00:00Z`).getTime() - new Date(`${asOfDate}T00:00:00Z`).getTime()) / 86400000
+    )
+    return {
+      movie: c.movie,
+      maxShowDate: c.maxDate,
+      daysLeft: diff,
+      badgeText: getLastWeekBadgeText(diff, confidence),
+      confidence,
+      regions: [...c.regions],
+    }
+  })
 
   await ensureMovieRatings(supabase, allResults.map(r => r.movie))
   const results = filterByRating(allResults)
 
   // 가장 급한 순 (마지막 날 빠른 순)
   results.sort((a, b) => a.maxShowDate.localeCompare(b.maxShowDate))
-  console.log(`  결과: ${results.length}편 (평점 미달 제외 ${allResults.length - results.length}편)`)
+  const confirmedCount = results.filter((r) => r.confidence === 'confirmed').length
+  console.log(`  결과: ${results.length}편 (평점 미달 제외 ${allResults.length - results.length}편, confirmed ${confirmedCount}편/likely ${results.length - confirmedCount}편)`)
   return results
 }
 
@@ -526,6 +638,16 @@ async function main() {
     computeLastWeekFilms(supabase, asOfDate),
     computeSoloTheaterFilms(supabase, asOfDate),
   ])
+
+  // DRY_RUN=1: DB 쓰기·Discord 전송 없이 판정 결과만 확인 (리드타임/KOBIS 튜닝 검증용)
+  if (process.env.DRY_RUN === '1') {
+    console.log('\n=== DRY RUN — 쓰기·Discord 전송 없음 ===')
+    console.log(`이번 주가 마지막: ${lastWeekFilms.length}편`)
+    for (const f of lastWeekFilms) {
+      console.log(`  [${f.confidence}] ${f.movie.title} — ${f.badgeText} (max: ${f.maxShowDate})`)
+    }
+    return
+  }
 
   // Discord 봇이 설정되어 있으면 pending에 저장 후 컨펌 대기 (신규 개봉 라인업만 검수 대상)
   const discordSent = await sendCurationPreviewToDiscord(returningFilms, newIndieFilms)
