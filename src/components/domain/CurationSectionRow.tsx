@@ -16,6 +16,8 @@ interface CurationSectionRowProps {
   isDesktop?: boolean
   /** movieId → 남은 일수 (0 = 오늘이 마지막) — 포스터 우상단 D-N 배지 */
   posterBadges?: Map<string, number>
+  /** movieId → 카드 하단 서브텍스트 (예: "오늘 19:30 에무시네마") — 있으면 감독 대신 표시 */
+  movieCaptions?: Map<string, string>
   onMovieClick?: (movieId: string) => void
   /** true면 h2 제목/설명 영역을 렌더하지 않음 (AnniversarySection 등 외부 헤더 사용 시) */
   noHeader?: boolean
@@ -30,7 +32,7 @@ const POSTER_SIZE = {
 }
 
 /* ── 포스터 하단 정보: 제목 / 감독 / 장르칩+연도 ───────────────── */
-function MovieCardInfo({ movie, isDesktop }: { movie: Movie; isDesktop: boolean }) {
+function MovieCardInfo({ movie, isDesktop, caption }: { movie: Movie; isDesktop: boolean; caption?: string }) {
   const fontSize = isDesktop ? 14 : 12
 
   return (
@@ -51,17 +53,18 @@ function MovieCardInfo({ movie, isDesktop }: { movie: Movie; isDesktop: boolean 
         {normalizeTitle(movie.title)}
       </span>
 
-      {/* 감독 */}
+      {/* 서브텍스트(있으면) 또는 감독 */}
       <span
         style={{
           fontSize: fontSize - 1,
-          color: 'var(--color-text-caption)',
+          color: caption ? 'var(--color-text-body)' : 'var(--color-text-caption)',
+          fontWeight: caption ? 600 : undefined,
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
         }}
       >
-        {movie.director.length > 0 ? movie.director[0] : '감독 미상'}
+        {caption ?? (movie.director.length > 0 ? movie.director[0] : '감독 미상')}
       </span>
 
       {/* 장르칩 + 연도 */}
@@ -192,6 +195,7 @@ function MovieCard({
   height,
   isDesktop,
   daysLeft,
+  caption,
   onClick,
 }: {
   movie: Movie
@@ -199,6 +203,7 @@ function MovieCard({
   height: number
   isDesktop: boolean
   daysLeft?: number
+  caption?: string
   onClick?: () => void
 }) {
   const cardRef = useRef<HTMLDivElement>(null)
@@ -258,7 +263,7 @@ function MovieCard({
           )}
         </div>
 
-        <MovieCardInfo movie={movie} isDesktop={isDesktop} />
+        <MovieCardInfo movie={movie} isDesktop={isDesktop} caption={caption} />
       </div>
 
       {popupPos && isDesktop && (
@@ -277,6 +282,7 @@ export function CurationSectionRow({
   movies,
   isDesktop = false,
   posterBadges,
+  movieCaptions,
   onMovieClick,
   noHeader = false,
   compact = false,
@@ -435,6 +441,7 @@ export function CurationSectionRow({
               height={height}
               isDesktop={isDesktop}
               daysLeft={posterBadges?.get(movie.id)}
+              caption={movieCaptions?.get(movie.id)}
               onClick={onMovieClick ? () => onMovieClick(movie.id) : undefined}
             />
           ))}

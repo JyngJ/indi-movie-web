@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import type { CurationListRow } from '@/lib/curation/types'
+import type { AlmostSoldOutCandidate, CurationListRow } from '@/lib/curation/types'
 import type { Theater, Movie, Showtime, Station } from '@/types/api'
 import type { TheaterEvent } from '@/types/admin'
 import { createSupabaseBrowserClient } from './browser'
@@ -278,6 +278,71 @@ export function useCurationLists() {
       }))
     },
     staleTime: 60 * 60 * 1000,
+  })
+}
+
+/* ── 매진 임박 후보 회차 (오늘~내일, 좌석 스냅샷 포함) ──────────── */
+// 잔여율 판정은 순수 함수(src/lib/curation/getAlmostSoldOutFilms.ts) 책임 —
+// 여기서는 좌석 데이터가 수집된(seat_total > 0) 회차만 가져온다.
+export function useAlmostSoldOutCandidates() {
+  const today = formatLocalDate(new Date())
+  const tomorrow = formatLocalDate(new Date(Date.now() + 24 * 60 * 60 * 1000))
+
+  return useQuery<AlmostSoldOutCandidate[]>({
+    queryKey: ['almost-sold-out-candidates', today],
+    queryFn: async () => {
+      const { data, error } = await supabase()
+        .from('showtimes')
+        .select(`
+          theater_id,
+          show_date,
+          show_time,
+          seat_available,
+          seat_total,
+          theaters(id, name, city),
+          movies(id, title, original_title, year, poster_url, genre, director, nation, kmdb_id, tmdb_id, rating)
+        `)
+        .eq('is_active', true)
+        .gte('show_date', today)
+        .lte('show_date', tomorrow)
+        .gt('seat_total', 0)
+        .order('show_date', { ascending: true })
+        .order('show_time', { ascending: true })
+        .limit(5000)
+
+      if (error) throw error
+
+      const candidates: AlmostSoldOutCandidate[] = []
+      for (const r of data ?? []) {
+        const m = r.movies as unknown as Record<string, unknown> | null
+        const t = r.theaters as unknown as Record<string, unknown> | null
+        if (!m || !t) continue
+        candidates.push({
+          movie: {
+            id: String(m.id),
+            title: String(m.title),
+            originalTitle: m.original_title ? String(m.original_title) : undefined,
+            year: Number(m.year),
+            posterUrl: m.poster_url ? String(m.poster_url) : undefined,
+            genre: (m.genre as string[] | null) ?? [],
+            director: (m.director as string[] | null) ?? [],
+            nation: m.nation ? String(m.nation) : undefined,
+            kmdbId: m.kmdb_id ? String(m.kmdb_id) : undefined,
+            tmdbId: m.tmdb_id ? Number(m.tmdb_id) : undefined,
+            rating: m.rating ? Number(m.rating) : undefined,
+          },
+          theaterId: String(t.id),
+          theaterName: String(t.name),
+          theaterCity: t.city ? String(t.city) : '',
+          showDate: r.show_date,
+          showTime: r.show_time,
+          seatAvailable: Number(r.seat_available ?? 0),
+          seatTotal: Number(r.seat_total ?? 0),
+        })
+      }
+      return candidates
+    },
+    staleTime: 2 * 60 * 1000,
   })
 }
 
