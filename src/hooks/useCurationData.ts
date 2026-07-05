@@ -6,6 +6,8 @@ import { cookieStorageAdapter } from '@/lib/adapters/cookieStorage'
 import { getRecentlyViewed } from '@/lib/curation/recentlyViewed'
 import { getRegionFromCity } from '@/lib/regions'
 import { calculateDistanceKm } from '@/lib/map/distanceUtils'
+import { formatLocalDate, formatLocalTimeHHMM } from '@/lib/date'
+import { rowToMovie } from '@/lib/supabase/movieRow'
 import type { LocationCoords } from '@/lib/adapters/location'
 import type {
   LastWeekFilm,
@@ -40,29 +42,6 @@ const DEPARTURE_BUFFER_MIN = 30
 
 /** "지금 출발하면" 최대 범위(시간) — 지금으로부터 이 시간 이내에 시작하는 회차만 노출 */
 const LEAVE_NOW_WINDOW_HOURS = 4
-
-function formatLocalDate(date: Date) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-function rowToMovie(movieRaw: Record<string, unknown>): Movie {
-  return {
-    id: String(movieRaw.id),
-    title: String(movieRaw.title),
-    originalTitle: movieRaw.original_title != null ? String(movieRaw.original_title) : undefined,
-    year: Number(movieRaw.year ?? 2000),
-    posterUrl: movieRaw.poster_url != null ? String(movieRaw.poster_url) : undefined,
-    genre: (movieRaw.genre as string[]) ?? [],
-    director: (movieRaw.director as string[]) ?? [],
-    nation: movieRaw.nation != null ? String(movieRaw.nation) : undefined,
-    kmdbId: movieRaw.kmdb_id != null ? String(movieRaw.kmdb_id) : undefined,
-    tmdbId: movieRaw.tmdb_id != null ? Number(movieRaw.tmdb_id) : undefined,
-    rating: movieRaw.rating != null ? Number(movieRaw.rating) : undefined,
-  }
-}
 
 interface RawTodayShowtime {
   movie_id: string
@@ -145,9 +124,9 @@ export function useCurationData(open: boolean, regionId: string | null, refreshK
   // "지금 출발하면 볼 수 있는" — 오늘 회차 중 (현재 시각 + 버퍼) 이후 시작하는 회차만, 영화별 가장 빠른 1건
   const todayShowFilms = useMemo<TodayShowFilm[]>(() => {
     const cutoff = new Date(Date.now() + DEPARTURE_BUFFER_MIN * 60 * 1000)
-    const cutoffHHMM = `${String(cutoff.getHours()).padStart(2, '0')}:${String(cutoff.getMinutes()).padStart(2, '0')}`
+    const cutoffHHMM = formatLocalTimeHHMM(cutoff)
     const windowEnd = new Date(Date.now() + LEAVE_NOW_WINDOW_HOURS * 60 * 60 * 1000)
-    const windowEndHHMM = `${String(windowEnd.getHours()).padStart(2, '0')}:${String(windowEnd.getMinutes()).padStart(2, '0')}`
+    const windowEndHHMM = formatLocalTimeHHMM(windowEnd)
 
     const byMovie = new Map<string, TodayShowFilm>()
     for (const row of todayShowtimes) {

@@ -1,3 +1,4 @@
+import { addDaysIso } from '@/lib/date'
 import type { TheaterLeadtimeSample } from './types'
 
 /** 이 미만 표본(=관측된 크롤일 수)이면 리드타임을 신뢰할 수 없다고 보고 null(미상) 처리 */
@@ -36,12 +37,6 @@ export function computeLeadtimeDays(diffDays: number[]): number | null {
   const sorted = [...diffDays].sort((a, b) => a - b)
   const idx = Math.floor(sorted.length * 0.25)
   return sorted[idx]
-}
-
-function addDaysIso(iso: string, days: number): string {
-  const d = new Date(`${iso}T00:00:00Z`)
-  d.setUTCDate(d.getUTCDate() + days)
-  return d.toISOString().slice(0, 10)
 }
 
 /**

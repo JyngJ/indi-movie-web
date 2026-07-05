@@ -11,12 +11,8 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { isCurationListMember } from '@/lib/curation/filmsTabLists'
 import type { CurationListRow } from '@/lib/curation/types'
 import { REGIONS, getRegionFromCity } from '@/lib/regions'
+import { formatLocalDate } from '@/lib/date'
 import type { Movie } from '@/types/api'
-
-function todayIso(): string {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
 
 async function main() {
   const supabase = createSupabaseAdminClient()
@@ -50,7 +46,7 @@ async function main() {
     director: m.director ?? [],
   }))
 
-  const today = todayIso()
+  const today = formatLocalDate(new Date())
   const { data: showtimeRows, error: showtimeError } = await supabase
     .from('showtimes')
     .select('movie_id, theaters(city)')

@@ -3,19 +3,14 @@ import type { AlmostSoldOutCandidate, CurationListRow } from '@/lib/curation/typ
 import type { Theater, Movie, Showtime, Station } from '@/types/api'
 import type { TheaterEvent } from '@/types/admin'
 import { createSupabaseBrowserClient } from './browser'
+import { movieRowToMovie } from './movieRow'
+import { formatLocalDate } from '@/lib/date'
 import { getRegionFromCity } from '@/lib/regions'
 import { getMovieTheaterShowtimes as getMovieTheaterShowtimesPure } from '@/lib/catalog/getMovieTheaterShowtimes'
 import type { MovieTheaterEntry } from '@/lib/catalog/getMovieTheaterShowtimes'
 
 function supabase() {
   return createSupabaseBrowserClient()
-}
-
-function formatLocalDate(date: Date) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
 }
 
 function isMissingColumnError(error: unknown, column: string) {
@@ -85,22 +80,7 @@ export function useMovies() {
 
       if (error) throw error
 
-      return (data ?? []).map((r) => {
-        const row = r as Record<string, unknown>
-        return {
-          id: String(row.id),
-          title: String(row.title),
-          originalTitle: row.original_title ? String(row.original_title) : undefined,
-          year: Number(row.year),
-          posterUrl: row.poster_url ? String(row.poster_url) : undefined,
-          genre: (row.genre as string[] | null) ?? [],
-          director: (row.director as string[] | null) ?? [],
-          nation: row.nation ? String(row.nation) : undefined,
-          kmdbId: row.kmdb_id ? String(row.kmdb_id) : undefined,
-          tmdbId: row.tmdb_id ? Number(row.tmdb_id) : undefined,
-          rating: row.rating ? Number(row.rating) : undefined,
-        }
-      })
+      return (data ?? []).map((r) => movieRowToMovie(r as Record<string, unknown>))
     },
     staleTime: 60 * 60 * 1000,
   })
@@ -318,19 +298,7 @@ export function useAlmostSoldOutCandidates() {
         const t = r.theaters as unknown as Record<string, unknown> | null
         if (!m || !t) continue
         candidates.push({
-          movie: {
-            id: String(m.id),
-            title: String(m.title),
-            originalTitle: m.original_title ? String(m.original_title) : undefined,
-            year: Number(m.year),
-            posterUrl: m.poster_url ? String(m.poster_url) : undefined,
-            genre: (m.genre as string[] | null) ?? [],
-            director: (m.director as string[] | null) ?? [],
-            nation: m.nation ? String(m.nation) : undefined,
-            kmdbId: m.kmdb_id ? String(m.kmdb_id) : undefined,
-            tmdbId: m.tmdb_id ? Number(m.tmdb_id) : undefined,
-            rating: m.rating ? Number(m.rating) : undefined,
-          },
+          movie: movieRowToMovie(m),
           theaterId: String(t.id),
           theaterName: String(t.name),
           theaterCity: t.city ? String(t.city) : '',
