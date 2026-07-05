@@ -17,10 +17,20 @@ import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useCurationData } from '@/hooks/useCurationData'
 import { useLocationPermission } from '@/hooks/useLocationPermission'
 import { getFilmsTabCurationSections, SECTION_GROUP } from '@/lib/curation/filmsTabLists'
+import { formatAlmostSoldOutCaption, getAlmostSoldOutFilms } from '@/lib/curation/getAlmostSoldOutFilms'
 import { getTodayAnniversaries } from '@/lib/curation/directorAnniversaries'
-import { useActiveMovieIdsByRegion, useActiveMovieTheaterPairs, useCurationLists, useFilmRankings, useMovies, useTheaters } from '@/lib/supabase/queries'
+import { trackEvent } from '@/lib/analytics/client'
+import { useActiveMovieIdsByRegion, useActiveMovieTheaterPairs, useAlmostSoldOutCandidates, useCurationLists, useFilmRankings, useMovies, useTheaters } from '@/lib/supabase/queries'
+import { getRegionFromCity } from '@/lib/regions'
 import { getStoredRegion, setStoredRegion } from '@/lib/regionStorage'
 import type { Theater } from '@/types/api'
+
+function formatLocalDate(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 
 export default function FilmsPage() {
   const router = useRouter()
@@ -92,9 +102,38 @@ export default function FilmsPage() {
   const { data: filmRankingRow } = useFilmRankings()
   const { lastWeekFilms, newIndieFilms, returningFilms } = useCurationData(true, selectedRegion)
 
+  const { data: almostSoldOutCandidates = [] } = useAlmostSoldOutCandidates()
+
   const sections = getFilmsTabCurationSections(movies, new Set(activeMovieIds), curationLists)
 
   const lastWeekBadgeMap = new Map(lastWeekFilms.map((f) => [f.movie.id, f.daysLeft]))
+
+  // 매진 임박 — 오늘~내일 회차 좌석 스냅샷 기준, 판정은 순수 함수에 위임
+  const asoNow = new Date()
+  const asoToday = formatLocalDate(asoNow)
+  const asoTomorrow = formatLocalDate(new Date(asoNow.getTime() + 24 * 60 * 60 * 1000))
+  const asoNowTime = `${String(asoNow.getHours()).padStart(2, '0')}:${String(asoNow.getMinutes()).padStart(2, '0')}`
+  const almostSoldOutFilms = getAlmostSoldOutFilms(
+    selectedRegion
+      ? almostSoldOutCandidates.filter((c) => getRegionFromCity(c.theaterCity) === selectedRegion)
+      : almostSoldOutCandidates,
+    asoToday,
+    asoTomorrow,
+    asoNowTime,
+  )
+  const almostSoldOutCaptions = new Map(
+    almostSoldOutFilms.map((f) => [f.movie.id, formatAlmostSoldOutCaption(f, asoToday)]),
+  )
+
+  const handleAlmostSoldOutMovieClick = (movieId: string) => {
+    trackEvent('curation movie selected', {
+      movie_id: movieId,
+      movie_title: almostSoldOutFilms.find((f) => f.movie.id === movieId)?.movie.title,
+      source: 'films_tab',
+      list_id: 'realtime_almost_soldout',
+    })
+    handleMovieClick(movieId)
+  }
 
   const realtimeSections = [
     {
@@ -345,7 +384,7 @@ export default function FilmsPage() {
       {/* ── 렌더 순서 ─────────────────────────────────────────────
           1. 기념일 (생몰일)
           2. 특별전 #0
-          3. 시기별 큐레이션 (seasonal) + 이번주 마지막
+          3. 매진 임박 + 시기별 큐레이션 (seasonal) + 이번주 마지막
           4. 특별전 #1 (있으면)
           5. 거장/수상작
           6. 새롭게 상영 (realtime new/returning)
@@ -359,6 +398,8 @@ export default function FilmsPage() {
           listId: string; nameKo: string; emoji: string; description?: string
           displayMode: string; movies: import('@/types/api').Movie[]
           posterBadges?: Map<string, number>
+          movieCaptions?: Map<string, string>
+          onMovieClick?: (movieId: string) => void
         }
 
         // 큐레이션 섹션 그룹별 분류
@@ -370,6 +411,18 @@ export default function FilmsPage() {
 
         const rtLastWeek = realtimeSections.filter((s) => s.listId === 'realtime_last_week')
         const rtNew      = realtimeSections.filter((s) => s.listId !== 'realtime_last_week')
+
+        // 매진 임박 — 3편 미만이면 getAlmostSoldOutFilms가 빈 배열을 반환해 섹션 자체가 숨겨짐
+        const rtAlmostSoldOut: AnySection[] = almostSoldOutFilms.length > 0 ? [{
+          listId: 'realtime_almost_soldout',
+          nameKo: '매진 임박',
+          emoji: '⚡',
+          description: '최근 확인 기준, 오늘·내일 회차의 좌석이 얼마 남지 않았어요',
+          displayMode: 'default',
+          movieCaptions: almostSoldOutCaptions,
+          onMovieClick: handleAlmostSoldOutMovieClick,
+          movies: almostSoldOutFilms.map((f) => f.movie),
+        }] : []
 
         // 특별전 interleave 준비
         const [special0, special1] = specialDirectorSections
@@ -441,7 +494,8 @@ export default function FilmsPage() {
                 title={s.nameKo} emoji={s.emoji} description={s.description}
                 displayMode={s.displayMode as SectionDisplayMode}
                 movies={s.movies} isDesktop={isDesktop}
-                posterBadges={s.posterBadges} onMovieClick={handleMovieClick}
+                posterBadges={s.posterBadges} movieCaptions={s.movieCaptions}
+                onMovieClick={s.onMovieClick ?? handleMovieClick}
                 compact={compact} />
             )
           }
@@ -467,8 +521,8 @@ export default function FilmsPage() {
           return <>{nodes}</>
         }
 
-        // 특별전 앞뒤 경계를 기준으로 두 개의 run 구성
-        const run1: AnySection[] = [...seasonal, ...rtLastWeek]
+        // 특별전 앞뒤 경계를 기준으로 두 개의 run 구성 — 매진 임박(오늘·내일)이 가장 시급하므로 맨 앞
+        const run1: AnySection[] = [...rtAlmostSoldOut, ...seasonal, ...rtLastWeek]
         const run2: AnySection[] = [...awards, ...rtNew, ...decades, ...critics, ...movements]
 
         return (
@@ -479,7 +533,7 @@ export default function FilmsPage() {
             {/* 2. 특별전 #0 */}
             {renderSpecial(special0)}
 
-            {/* 3. 시기별 + 이번주 마지막 — 연속 sparse 자동 페어링 */}
+            {/* 3. 매진 임박 + 시기별 + 이번주 마지막 — 연속 sparse 자동 페어링 */}
             {renderRun(run1, 'run1')}
 
             {/* 4. 특별전 #1 (interleaved) */}

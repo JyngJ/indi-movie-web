@@ -95,6 +95,45 @@ export interface TheaterLeadtimeSample {
 }
 
 // ─────────────────────────────────────────────
+// 매진 임박 (almost sold out)
+// 기준: 오늘~내일 회차 중 seat_total > 0 && 잔여율 ≤ LOW_SEAT_RATIO_THRESHOLD
+// 주의: 좌석 수는 크롤 시점 스냅샷 — UI 카피에서 실시간 단정 금지
+// ─────────────────────────────────────────────
+
+/** 판정 입력 — 좌석 스냅샷이 포함된 오늘~내일 회차 1건 */
+export interface AlmostSoldOutCandidate {
+  movie: Movie
+  theaterId: string
+  theaterName: string
+  /** 극장 도시 — 검색 지역 필터에 사용 (지역 매핑은 호출부 책임) */
+  theaterCity: string
+  /** ISO date "YYYY-MM-DD" */
+  showDate: string
+  /** "HH:MM" 또는 "HH:MM:SS" */
+  showTime: string
+  seatAvailable: number
+  seatTotal: number
+}
+
+/** 매진 임박 판정된 회차 1건 (영화 그룹 내부) */
+export interface AlmostSoldOutShowing {
+  theaterId: string
+  theaterName: string
+  /** ISO date "YYYY-MM-DD" */
+  showDate: string
+  /** "HH:MM" */
+  showTime: string
+  seatAvailable: number
+  seatTotal: number
+}
+
+export interface AlmostSoldOutFilm {
+  movie: Movie
+  /** 날짜+시간 오름차순 정렬된 매진 임박 회차 목록 */
+  showings: AlmostSoldOutShowing[]
+}
+
+// ─────────────────────────────────────────────
 // 선택 지역에서 단 한 곳 (solo theater in region)
 // 기준: 선택 지역 내 상영 극장 수 = 1
 // ─────────────────────────────────────────────
