@@ -518,6 +518,14 @@ export default function FilmsPage() {
                 </div>
               )
               i += 2
+            } else if (isDesktop && currSparse) {
+              // 이웃이 sparse가 아니어도 데스크톱에선 가로 카드 단독 렌더 — 큰 포스터 1~2장에 빈 공간이 생기는 것 방지
+              nodes.push(
+                <div key={`${keyPrefix}_solo_${i}`} style={{ display: 'flex', gap: 12, padding: '24px 16px 0' }}>
+                  {rowFor(curr, true)}
+                </div>
+              )
+              i++
             } else {
               nodes.push(rowFor(curr, false))
               i++
