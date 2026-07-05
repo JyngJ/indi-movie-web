@@ -134,6 +134,41 @@ export interface AlmostSoldOutFilm {
 }
 
 // ─────────────────────────────────────────────
+// 심야 상영 (late night)
+// 기준: 오늘~D+7 회차 중 show_time >= LATE_NIGHT_START_TIME OR < LATE_NIGHT_END_TIME
+// 판정 시각 상수는 src/lib/catalog/lateNight.ts — 지도 kind='late'와 동일 기준
+// ─────────────────────────────────────────────
+
+/** 판정 입력 — 오늘~D+7 회차 1건 (show_time 필터 전) */
+export interface LateNightCandidate {
+  movie: Movie
+  theaterId: string
+  theaterName: string
+  /** 극장 도시 — 검색 지역 필터에 사용 (지역 매핑은 호출부 책임) */
+  theaterCity: string
+  /** ISO date "YYYY-MM-DD" — 실제 시작 캘린더 날짜 (자정 넘는 회차는 다음 날 날짜) */
+  showDate: string
+  /** "HH:MM" 또는 "HH:MM:SS" */
+  showTime: string
+}
+
+/** 심야 판정된 회차 1건 (영화 그룹 내부) */
+export interface LateNightShowing {
+  theaterId: string
+  theaterName: string
+  /** ISO date "YYYY-MM-DD" */
+  showDate: string
+  /** "HH:MM" */
+  showTime: string
+}
+
+export interface LateNightFilm {
+  movie: Movie
+  /** 날짜+시간 오름차순(가까운 회차순) 정렬된 심야 회차 목록 */
+  showings: LateNightShowing[]
+}
+
+// ─────────────────────────────────────────────
 // 선택 지역에서 단 한 곳 (solo theater in region)
 // 기준: 선택 지역 내 상영 극장 수 = 1
 // ─────────────────────────────────────────────
