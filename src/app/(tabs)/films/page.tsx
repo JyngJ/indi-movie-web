@@ -21,6 +21,7 @@ import { getFilmsTabCurationSections, SECTION_GROUP } from '@/lib/curation/films
 import { formatAlmostSoldOutCaption, getAlmostSoldOutFilms } from '@/lib/curation/getAlmostSoldOutFilms'
 import { getTodayAnniversaries } from '@/lib/curation/directorAnniversaries'
 import { trackEvent } from '@/lib/analytics/client'
+import { buildYearsOnScreenCaptions } from '@/lib/curation/yearsOnScreenCaption'
 import { useActiveMovieIdsByRegion, useActiveMovieTheaterPairs, useAlmostSoldOutCandidates, useCurationLists, useFilmRankings, useMovies, useTheaters } from '@/lib/supabase/queries'
 import { getRegionFromCity } from '@/lib/regions'
 import { getStoredRegion, setStoredRegion } from '@/lib/regionStorage'
@@ -136,6 +137,13 @@ export default function FilmsPage() {
     handleMovieClick(movieId)
   }
 
+  // 오래된 작품(15년↑)에만 제작연도 카피 — movies.year는 제작연도라 "N년 만에 재개봉" 단정 금지
+  const returningYearCaptions = buildYearsOnScreenCaptions(
+    returningFilms.map((f) => f.movie),
+    new Date().getFullYear(),
+  )
+
+
   const realtimeSections = [
     {
       listId: 'realtime_last_week',
@@ -160,6 +168,7 @@ export default function FilmsPage() {
       emoji: '🎞️',
       description: '잠시 사라졌다가 다시 스크린으로 돌아온 영화들',
       displayMode: 'default' as const,
+      movieCaptions: returningYearCaptions,
       movies: returningFilms.map((f) => f.movie),
     },
   ].filter((s) => s.movies.length > 0)
