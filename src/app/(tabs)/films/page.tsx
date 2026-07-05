@@ -9,6 +9,7 @@ import { DirectorSpecialSection } from '@/components/domain/DirectorSpecialSecti
 import { DirectorSpotlightSection } from '@/components/domain/DirectorSpotlightSection'
 import { FilmRankingSection } from '@/components/domain/FilmRankingSection'
 import { LocationPermissionModal } from '@/components/domain/LocationPermissionModal'
+import { PersonalizedSection } from '@/components/domain/PersonalizedSection'
 import { FilterChip } from '@/components/domain/filterBar/FilterChip'
 import { FilmsSearchBar } from '@/components/domain/FilmsSearchBar'
 import { RegionDropdown } from '@/components/domain/filterBar/RegionDropdown'
@@ -90,7 +91,7 @@ export default function FilmsPage() {
   const { data: activeMovieIds = [] } = useActiveMovieIdsByRegion(selectedRegion)
   const { data: movieTheaterPairs = [] } = useActiveMovieTheaterPairs(selectedRegion)
   const { data: filmRankingRow } = useFilmRankings()
-  const { lastWeekFilms, newIndieFilms, returningFilms } = useCurationData(true, selectedRegion)
+  const { lastWeekFilms, newIndieFilms, returningFilms, recentlyViewed } = useCurationData(true, selectedRegion)
 
   const sections = getFilmsTabCurationSections(movies, new Set(activeMovieIds), curationLists)
 
@@ -343,6 +344,7 @@ export default function FilmsPage() {
       */}
 
       {/* ── 렌더 순서 ─────────────────────────────────────────────
+          0. 이런 작품은 어때요 (개인화 — 최근 조회 이력 기반)
           1. 기념일 (생몰일)
           2. 특별전 #0
           3. 시기별 큐레이션 (seasonal) + 이번주 마지막
@@ -473,6 +475,15 @@ export default function FilmsPage() {
 
         return (
           <>
+            {/* 0. 개인화 — 최근 본 영화 기반, 이력 없으면 미노출 */}
+            <PersonalizedSection
+              movies={movies}
+              activeMovieIds={activeMovieIds}
+              recentlyViewed={recentlyViewed}
+              isDesktop={isDesktop}
+              onMovieClick={handleMovieClick}
+            />
+
             {/* 1. 기념일 */}
             {renderAnniversaries(anniversarySections)}
 
