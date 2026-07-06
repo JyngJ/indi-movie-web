@@ -13,11 +13,7 @@ function supabase() {
   return createSupabaseBrowserClient()
 }
 
-function isMissingColumnError(error: unknown, column: string) {
-  if (!error || typeof error !== 'object' || !('message' in error)) return false
-  const message = String(error.message).toLowerCase()
-  return message.includes(column.toLowerCase()) && (message.includes('column') || message.includes('schema cache'))
-}
+
 
 /* ── 영화관 목록 ────────────────────────────────────────────────── */
 export function useTheaters() {
@@ -67,16 +63,10 @@ export function useMovies() {
   return useQuery<Movie[]>({
     queryKey: ['movies'],
     queryFn: async () => {
-      const primary = await supabase()
+      const { data, error } = await supabase()
         .from('movies')
         .select('id,title,original_title,year,poster_url,genre,director,nation,kmdb_id,tmdb_id,rating')
         .order('title')
-      const { data, error } = primary.error && isMissingColumnError(primary.error, 'nation')
-        ? await supabase()
-          .from('movies')
-          .select('id,title,original_title,year,poster_url,genre,director,kmdb_id,tmdb_id,rating')
-          .order('title')
-        : primary
 
       if (error) throw error
 
@@ -400,7 +390,7 @@ export function useMapShowtimes(startDate: string, endDate: string) {
   return useQuery<MapShowtime[]>({
     queryKey: ['map-showtimes', startDate, endDate],
     queryFn: async () => {
-      const primary = await supabase()
+      const { data, error } = await supabase()
         .from('showtimes')
         .select(`
           id,
@@ -425,32 +415,6 @@ export function useMapShowtimes(startDate: string, endDate: string) {
         .order('show_date', { ascending: true })
         .order('show_time', { ascending: true })
         .limit(5000)
-      const { data, error } = primary.error && isMissingColumnError(primary.error, 'nation')
-        ? await supabase()
-          .from('showtimes')
-          .select(`
-            id,
-            theater_id,
-            movie_id,
-            show_date,
-            show_time,
-            seat_available,
-            booking_url,
-            movies (
-              id,
-              title,
-              poster_url,
-              genre,
-              director
-            )
-          `)
-          .eq('is_active', true)
-          .gte('show_date', startDate)
-          .lte('show_date', endDate)
-          .order('show_date', { ascending: true })
-          .order('show_time', { ascending: true })
-          .limit(5000)
-        : primary
 
       if (error) throw error
 
@@ -495,7 +459,7 @@ export function useTheaterAllMovies(theaterId: string | null) {
     queryKey: ['theater-all-movies', theaterId, today],
     enabled: !!theaterId,
     queryFn: async () => {
-      const primary = await supabase()
+      const { data, error } = await supabase()
         .from('showtimes')
         .select(`
           movie_id,
@@ -512,26 +476,6 @@ export function useTheaterAllMovies(theaterId: string | null) {
         .lte('show_date', endDate)
         .order('show_date')
         .limit(1000)
-
-      const { data, error } = primary.error && isMissingColumnError(primary.error, 'nation')
-        ? await supabase()
-          .from('showtimes')
-          .select(`
-            movie_id,
-            show_date,
-            movies (
-              id, title, original_title, year, poster_url, genre, director,
-              kmdb_id, tmdb_id, rating,
-              movie_details(synopsis, runtime_minutes, certification)
-            )
-          `)
-          .eq('theater_id', theaterId!)
-          .eq('is_active', true)
-          .gte('show_date', today)
-          .lte('show_date', endDate)
-          .order('show_date')
-          .limit(1000)
-        : primary
 
       if (error) throw error
 
@@ -584,7 +528,7 @@ export function useTheaterShowtimes(theaterId: string | null, date: string) {
     queryKey: ['theater-showtimes', theaterId, date],
     enabled: !!theaterId,
     queryFn: async () => {
-      const primary = await supabase()
+      const { data, error } = await supabase()
         .from('showtimes')
         .select(`
           id,
@@ -618,41 +562,6 @@ export function useTheaterShowtimes(theaterId: string | null, date: string) {
         .eq('show_date', date)
         .eq('is_active', true)
         .order('show_time')
-      const { data, error } = primary.error && isMissingColumnError(primary.error, 'nation')
-        ? await supabase()
-          .from('showtimes')
-          .select(`
-            id,
-            screen_name,
-            show_date,
-            show_time,
-            end_time,
-            format_type,
-            language,
-            seat_available,
-            seat_total,
-            price,
-            booking_url,
-            movie_id,
-            movies (
-              id,
-              title,
-              original_title,
-              year,
-              poster_url,
-              genre,
-              director,
-              kmdb_id,
-              tmdb_id,
-              rating,
-              movie_details(synopsis, runtime_minutes, certification)
-            )
-          `)
-          .eq('theater_id', theaterId!)
-          .eq('show_date', date)
-          .eq('is_active', true)
-          .order('show_time')
-        : primary
 
       if (error) throw error
 
