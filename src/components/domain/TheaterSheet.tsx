@@ -12,6 +12,7 @@ import type { TheaterMovieEntry } from '@/lib/supabase/queries'
 import type { Theater, Showtime } from '@/types/api'
 import { Skeleton } from '@/components/primitives/Skeleton'
 import { GENRES, normalizeGenre } from '@/lib/genres'
+import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { withFlag } from '@/lib/nations'
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { useDragSheet } from '@/hooks/useDragSheet'
@@ -22,8 +23,8 @@ import { GvDetailPanel } from './GvDetailPanel'
 import type { GvEvent } from '@/data/gv-events'
 
 /* ── 상수 ──────────────────────────────────────────────────────── */
-// 접힌 상태에서 보이는 높이 = 핸들(20) + 헤더(88, 액션버튼 포함) + 포스터스트립(228) + 테두리(2) + 여유(6)
-const COLLAPSED_H = 344
+// 접힌 상태에서 보이는 높이 = 핸들(20) + 헤더(88, 액션버튼 포함) + 포스터스트립(228) + 테두리(2) + 탭바 여백 + safe-area 여유분
+export const THEATER_SHEET_COLLAPSED_H = 344 + GLOBAL_NAV_MOBILE_HEIGHT + 34
 
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
 const IconStar = ({ filled = false }: { filled?: boolean }) => (
@@ -496,7 +497,7 @@ export function TheaterSheet({
     scrollAreaRef,
     posterTouching,
     posterDrag,
-    collapsedHeight: COLLAPSED_H,
+    collapsedHeight: THEATER_SHEET_COLLAPSED_H,
     onClose,
     onCollapse,
     onExpand,
@@ -1103,8 +1104,8 @@ export function TheaterSheet({
         borderBottom: '1px solid var(--color-border)',
         backgroundColor: 'var(--color-surface-bg)',
         flexShrink: 0,
-        // 스크롤 비례 높이 축소 (228 → 90) — 상단 배지(8px) 여백 포함
-        maxHeight: 228 - 138 * posterProgress,
+        // 스크롤 비례 높이 축소 (228 → 90) + 하단 탭바 및 safe-area만큼 높이 확장
+        maxHeight: `calc(${228 - 138 * posterProgress}px + ${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`,
         overflow: 'hidden',
         position: 'relative',  // 스크롤 버튼 절대 위치 기준
       }}>
@@ -1157,7 +1158,7 @@ export function TheaterSheet({
             paddingTop: 22 - 6 * posterProgress,    // 22 → 16 (배지 8px 여백 포함)
             paddingLeft: 20,
             paddingRight: 20,
-            paddingBottom: 14 - 6 * posterProgress, // 14 → 8
+            paddingBottom: `calc(${14 - 6 * posterProgress}px + ${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`,
             scrollbarWidth: 'none',
             cursor: 'grab',
             userSelect: 'none',

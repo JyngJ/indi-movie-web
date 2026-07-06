@@ -12,6 +12,7 @@ import { useIsDark } from '@/hooks/useIsDark'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { SearchBarButton, FabRound, Toast } from '@/components/primitives'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
+import { THEATER_SHEET_COLLAPSED_H } from '@/components/domain/TheaterSheet'
 import { MapPin, TheaterSheet, MovieSheet, CurationSheet, CurationSections, FilterBar, LocationPermissionModal, CURATION_PEEK_HEIGHT } from '@/components/domain'
 import type { CurationSnap } from '@/components/domain'
 import { DesktopDetailPanel } from '@/components/domain/DesktopDetailPanel'
@@ -2274,12 +2275,12 @@ export default function MapView() {
   }, [coords, theaters])
 
   // FAB 버튼 bottom — 모바일: 떠 있는 시트의 보이는 높이 + 여유 16만큼 띄움
-  // 극장 시트 collapsed = COLLAPSED_H(300) + 16 = 316 / 큐레이션 시트 peek = 현재 보이는 높이 + 16
+  // 극장 시트 collapsed = THEATER_SHEET_COLLAPSED_H + 16 / 큐레이션 시트 peek = 현재 보이는 높이 + 16
   // 그 외(큐레이션 시트 expanded·극장 시트 expanded·시트 없음) = 하단 탭바(모바일 전용 — GlobalNav) 위 32px 고정
   //   — 큐레이션 시트가 expanded로 올라오면 더 높은 zIndex로 FAB를 그대로 덮어 가림(따라가지 않음)
   const fabBottom = !isDesktopLayout
     ? (selectedTheater && !sheetExpanded && !sheetExiting
-        ? 316
+        ? THEATER_SHEET_COLLAPSED_H + 16
         : !selectedTheater && !movieSheetId && !searchOpen && curationSnap === 'peek' && curationVisibleHeight > 0
           ? curationVisibleHeight + 16
           : GLOBAL_NAV_MOBILE_HEIGHT + 32)
