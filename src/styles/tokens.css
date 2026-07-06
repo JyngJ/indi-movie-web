@@ -79,6 +79,7 @@
   --text-h2:      22px;   /* 극장명 상세 / font-serif / 700 */
   --text-h3:      20px;   /* 바텀시트 극장명 / font-serif / 700 */
   --text-title:   17px;   /* 카드 제목 / Pretendard / 700 */
+  --text-subtitle: 15px;  /* 소제목·카드 헤더 / Pretendard / 600~700 — TASK-10 감사에서 실사용 33곳(18개 파일) 확인, body(14)·title(17) 사이 갭 */
   --text-body:    14px;   /* 본문 / Pretendard / 500 */
   --text-meta:    13px;   /* 메타·주소 / Pretendard / 400 */
   --text-caption: 11px;   /* 라벨 caps / Pretendard / 500 / uppercase */
@@ -95,7 +96,9 @@
 
   /* ── Spacing ── */
   --spacing-1: 4px;
+  --spacing-1-5: 6px;   /* TASK-10 감사 — 실사용 41곳으로 spacing-2(8px)보다도 많음, 4px 배수 밖이지만 정식 토큰화 */
   --spacing-2: 8px;
+  --spacing-2-5: 10px;  /* TASK-10 감사 — 실사용 31곳, spacing-2·spacing-3 사이 갭 */
   --spacing-3: 12px;
   --spacing-4: 16px;
   --spacing-5: 20px;
