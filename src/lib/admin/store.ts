@@ -994,19 +994,23 @@ async function resolveMovieForApproval(
   if (localMovie) return { movie: localMovie }
 
   const titles = candidateMovieTitleCandidates(candidate.movieTitle)
+  // "데미트리우스 (1954)"처럼 제목에 연도가 박혀 있으면 그것이 제작연도의 근거로
+  // 크롤 release_year(국내 개봉연도)보다 정확하다 — 고전 기획전 매칭에 필수
+  const titleYear = extractTitleYear(candidate.movieTitle)
+  const expectedYear = titleYear ?? candidate.releaseYear
   for (const title of titles) {
-    const localByCleanTitle = resolveMovieByTitle(title, movies, candidate.releaseYear)
+    const localByCleanTitle = resolveMovieByTitle(title, movies, expectedYear)
     if (localByCleanTitle) return { movie: localByCleanTitle }
   }
 
-  const cacheKey = movieResolutionCacheKey(titles, candidate.releaseYear)
+  const cacheKey = movieResolutionCacheKey(titles, expectedYear)
   const cached = cache?.get(cacheKey)
   if (cached) return cached
 
   try {
     for (const title of titles) {
       const externalMovies = await searchKmdbMovies(title)
-      const externalMovie = pickExactExternalMovie(title, externalMovies, candidate.releaseYear)
+      const externalMovie = pickExactExternalMovie(title, externalMovies, expectedYear)
       if (!externalMovie) continue
 
       const imported = await importAdminExternalMovie(externalMovie)
@@ -1048,7 +1052,9 @@ async function resolveMovieForApproval(
 
 function isYearMatch(movieYear: number | null | undefined, expectedYear?: number) {
   if (movieYear == null || expectedYear == null) return false
-  return Math.abs(movieYear - expectedYear) <= 1
+  // ±2: movies.year는 제작연도, 크롤 release_year는 국내 개봉연도라 1~2년 시차가 흔함
+  // (예: 사무라이 타임슬리퍼 — 제작 2024, 국내 개봉 2026)
+  return Math.abs(movieYear - expectedYear) <= 2
 }
 
 // 후보가 여러 개면 개봉연도가 맞는 것을 우선한다. 후보가 1개뿐이고 연도가 어긋나면
@@ -1126,7 +1132,15 @@ function extractProviderMovieKey(rawText: string) {
   }
 }
 
-function candidateMovieTitleCandidates(title: string) {
+/** "데미트리우스 (1954)" → 1954. 제목 끝 괄호 연도만 인정한다. */
+export function extractTitleYear(title: string): number | undefined {
+  const m = title.trim().match(/\((\d{4})\)\s*$/)
+  if (!m) return undefined
+  const year = Number(m[1])
+  return year >= 1888 && year <= 2100 ? year : undefined
+}
+
+export function candidateMovieTitleCandidates(title: string) {
   const base = title.trim()
   const decoratedBase = stripMovieTitleDecorations(base)
 
@@ -1147,6 +1161,8 @@ function candidateMovieTitleCandidates(title: string) {
   const slashParts = base.split(/\s*\/\s*/).map(s => s.trim()).filter(Boolean)
   // 미지의 괄호 내용 포함한 모든 trailing 괄호 제거: "마더(고려극장기획)" → "마더"
   const beforeAnyParen = base.includes('(') ? base.replace(/\s*\(.*$/, '').trim() : base
+  // 선행 괄호 토큰 제거: "(더빙)토이 스토리 5" → "토이 스토리 5" (더빙/자막/리플레이 등)
+  const afterLeadingParen = base.replace(/^\s*[(\[][^)\]]{1,12}[)\]]\s*/, '').trim()
 
   const variants = [
     base,
@@ -1172,6 +1188,9 @@ function candidateMovieTitleCandidates(title: string) {
     // 파트 표시 제거 (1부, 2부, 상, 하)
     base.replace(/\s+(?:\d+,\s*\d+부|\d+부|상편|하편|[상하])\s*$/, '').trim(),
     base.replace(/,?\s*\d+[,\s]*\d*부?\s*$/, '').trim(),
+    // 선행 괄호 토큰 제거
+    afterLeadingParen && afterLeadingParen !== base ? afterLeadingParen : undefined,
+    afterLeadingParen && afterLeadingParen !== base ? stripMovieTitleDecorations(afterLeadingParen) : undefined,
     // 미지의 괄호 내용 포함 trailing 괄호 전체 제거
     beforeAnyParen !== base && beforeAnyParen !== decoratedBase ? beforeAnyParen : undefined,
     beforeAnyParen !== base && beforeAnyParen !== decoratedBase ? stripMovieTitleDecorations(beforeAnyParen) : undefined,
