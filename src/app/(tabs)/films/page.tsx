@@ -19,11 +19,12 @@ import { useCurationData } from '@/hooks/useCurationData'
 import { useLocationPermission } from '@/hooks/useLocationPermission'
 import { getFilmsTabCurationSections, SECTION_GROUP } from '@/lib/curation/filmsTabLists'
 import { formatAlmostSoldOutCaption, getAlmostSoldOutFilms } from '@/lib/curation/getAlmostSoldOutFilms'
+import { formatLateNightCaption, getLateNightFilms } from '@/lib/curation/getLateNightFilms'
 import { getTodayAnniversaries } from '@/lib/curation/directorAnniversaries'
 import { trackEvent } from '@/lib/analytics/client'
 import { buildYearsOnScreenCaptions } from '@/lib/curation/yearsOnScreenCaption'
 import { formatLocalDate, formatLocalTimeHHMM } from '@/lib/date'
-import { useActiveMovieIdsByRegion, useActiveMovieTheaterPairs, useAlmostSoldOutCandidates, useCurationLists, useFilmRankings, useMovies, useTheaters } from '@/lib/supabase/queries'
+import { useActiveMovieIdsByRegion, useActiveMovieTheaterPairs, useAlmostSoldOutCandidates, useCurationLists, useFilmRankings, useLateNightCandidates, useMovies, useTheaters } from '@/lib/supabase/queries'
 import { getRegionFromCity } from '@/lib/regions'
 import { getStoredRegion, setStoredRegion } from '@/lib/regionStorage'
 import type { Theater } from '@/types/api'
@@ -99,6 +100,7 @@ export default function FilmsPage() {
   const { lastWeekFilms, newIndieFilms, returningFilms, recentlyViewed } = useCurationData(true, selectedRegion)
 
   const { data: almostSoldOutCandidates = [] } = useAlmostSoldOutCandidates()
+  const { data: lateNightCandidates = [] } = useLateNightCandidates()
 
   const sections = getFilmsTabCurationSections(movies, new Set(activeMovieIds), curationLists)
 
@@ -127,6 +129,33 @@ export default function FilmsPage() {
       movie_title: almostSoldOutFilms.find((f) => f.movie.id === movieId)?.movie.title,
       source: 'films_tab',
       list_id: 'realtime_almost_soldout',
+    })
+    handleMovieClick(movieId)
+  }
+
+  // 심야 상영 — 오늘~D+7 회차 기준, 심야 시각 판정은 순수 함수에 위임
+  const lnNow = new Date()
+  const lnToday = formatLocalDate(lnNow)
+  const lnEnd = formatLocalDate(new Date(lnNow.getTime() + 7 * 24 * 60 * 60 * 1000))
+  const lnNowTime = formatLocalTimeHHMM(lnNow)
+  const lateNightFilms = getLateNightFilms(
+    selectedRegion
+      ? lateNightCandidates.filter((c) => getRegionFromCity(c.theaterCity) === selectedRegion)
+      : lateNightCandidates,
+    lnToday,
+    lnEnd,
+    lnNowTime,
+  )
+  const lateNightCaptions = new Map(
+    lateNightFilms.map((f) => [f.movie.id, formatLateNightCaption(f, lnToday)]),
+  )
+
+  const handleLateNightMovieClick = (movieId: string) => {
+    trackEvent('curation movie selected', {
+      movie_id: movieId,
+      movie_title: lateNightFilms.find((f) => f.movie.id === movieId)?.movie.title,
+      source: 'films_tab',
+      list_id: 'realtime_late_night',
     })
     handleMovieClick(movieId)
   }
@@ -429,6 +458,18 @@ export default function FilmsPage() {
           movies: almostSoldOutFilms.map((f) => f.movie),
         }] : []
 
+        // 심야 상영 — 3편 미만이면 getLateNightFilms가 빈 배열을 반환해 섹션 자체가 숨겨짐
+        const rtLateNight: AnySection[] = lateNightFilms.length > 0 ? [{
+          listId: 'realtime_late_night',
+          nameKo: '심야 상영',
+          emoji: '🌙',
+          description: '하루의 끝, 밤 깊은 시간에 시작하는 회차들이에요',
+          displayMode: 'default',
+          movieCaptions: lateNightCaptions,
+          onMovieClick: handleLateNightMovieClick,
+          movies: lateNightFilms.map((f) => f.movie),
+        }] : []
+
         // 특별전 interleave 준비
         const [special0, special1] = specialDirectorSections
 
@@ -536,7 +577,7 @@ export default function FilmsPage() {
 
         // 특별전 앞뒤 경계를 기준으로 두 개의 run 구성 — 매진 임박(오늘·내일)이 가장 시급하므로 맨 앞
         const run1: AnySection[] = [...rtAlmostSoldOut, ...seasonal, ...rtLastWeek]
-        const run2: AnySection[] = [...awards, ...rtNew, ...decades, ...critics, ...movements]
+        const run2: AnySection[] = [...awards, ...rtNew, ...rtLateNight, ...decades, ...critics, ...movements]
 
         return (
           <>

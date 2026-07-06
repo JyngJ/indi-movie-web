@@ -1,6 +1,7 @@
 import type { CatalogMovie, CatalogResponse, CatalogShowtime, CatalogTheater } from '@/types/catalog'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { isAlmostSoldOut } from './seatAvailability'
+import { isLateNightTime } from './lateNight'
 
 interface TheaterRow {
   id: string
@@ -158,7 +159,7 @@ function showtimeFromRow(row: ShowtimeRow): CatalogShowtime {
   const seatTotal = Number(row.seat_total ?? 0)
   const kind = seatAvailable <= 0
     ? 'soldout'
-    : row.show_time >= '23:00'
+    : isLateNightTime(row.show_time)
       ? 'late'
       : isAlmostSoldOut(seatAvailable, seatTotal)
         ? 'low'
