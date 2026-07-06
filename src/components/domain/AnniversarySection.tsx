@@ -56,30 +56,30 @@ export function AnniversarySection({
       borderRight: `1px solid color-mix(in srgb, ${border} 30%, transparent)`,
       display: 'flex', flexDirection: 'column', gap: 3,
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)', flexWrap: 'wrap' }}>
         <span style={{
-          fontSize: compact ? 14 : (isDesktop ? 18 : 16),
+          fontSize: compact ? 'var(--text-body)' : (isDesktop ? 18 : 16),
           fontWeight: 700, fontFamily: 'var(--font-display)', color: text,
         }}>
           {sectionTitle}
         </span>
         <span style={{
-          fontSize: 11, fontWeight: 700, color: text,
+          fontSize: 'var(--text-caption)', fontWeight: 700, color: text,
           background: `color-mix(in srgb, ${border} 18%, transparent)`,
           border: `1px solid color-mix(in srgb, ${border} 35%, transparent)`,
-          borderRadius: 99, padding: '2px 8px',
+          borderRadius: 'var(--radius-full)', padding: '2px 8px',
           whiteSpace: 'nowrap',
         }}>
           {dateLabel}
         </span>
         <span style={{
-          fontSize: 11, color: text, opacity: 0.7,
+          fontSize: 'var(--text-caption)', color: text, opacity: 0.7,
           fontStyle: 'italic', fontFamily: 'var(--font-serif-en)',
         }}>
           {nameEn} · {years}
         </span>
       </div>
-      <p style={{ margin: 0, fontSize: compact ? 12 : 13, color: text, opacity: 0.85, lineHeight: 1.5 }}>
+      <p style={{ margin: 0, fontSize: compact ? 12 : 'var(--text-meta)', color: text, opacity: 0.85, lineHeight: 1.5 }}>
         {sectionDesc}
       </p>
     </div>
@@ -93,7 +93,7 @@ export function AnniversarySection({
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
         {header}
         <div style={{
-          display: 'flex', gap: 10, alignItems: 'flex-start',
+          display: 'flex', gap: 'var(--spacing-2-5)', alignItems: 'flex-start',
           padding: '12px 14px',
           border: filmBorder, borderTop: 'none',
           borderRadius: '0 0 10px 10px',
@@ -105,7 +105,7 @@ export function AnniversarySection({
               key={film.id}
               onClick={onMovieClick ? () => onMovieClick(film.id) : undefined}
               style={{
-                display: 'flex', gap: 10, alignItems: 'flex-start', flex: 1, minWidth: 0,
+                display: 'flex', gap: 'var(--spacing-2-5)', alignItems: 'flex-start', flex: 1, minWidth: 0,
                 cursor: onMovieClick ? 'pointer' : undefined,
               }}
             >
@@ -122,10 +122,10 @@ export function AnniversarySection({
                 <span style={{ fontSize: 10, color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {film.director[0] ?? '감독 미상'}
                 </span>
-                <div style={{ display: 'flex', gap: 4 }}>
+                <div style={{ display: 'flex', gap: 'var(--spacing-1)' }}>
                   {film.genre.slice(0, 1).map((g) => (
                     <span key={g} style={{
-                      fontSize: 10, padding: '2px 5px', borderRadius: 99,
+                      fontSize: 10, padding: '2px 5px', borderRadius: 'var(--radius-full)',
                       background: 'var(--color-surface-raised)', color: 'var(--color-text-caption)',
                       border: '1px solid var(--color-border)',
                     }}>{g}</span>
