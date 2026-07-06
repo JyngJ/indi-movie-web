@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { PosterThumb } from '@/components/domain/PosterThumb'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { withFlag } from '@/lib/nations'
@@ -125,7 +126,8 @@ function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number }) {
   const cardWidth = 220
   const adjustedX = x + cardWidth > window.innerWidth - 16 ? x - cardWidth - 136 : x
 
-  return (
+  // transform 조상(도크 슬라이드 패널)에 잘리지 않게 body로 portal
+  return createPortal(
     <div style={{
       position: 'fixed', top: y, left: adjustedX, width: cardWidth,
       background: 'var(--color-surface-card)', border: '1px solid var(--color-border)',
@@ -154,7 +156,8 @@ function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number }) {
           <span style={{ fontSize: 12, color: 'var(--color-text-caption)', lineHeight: 1.65 }}>{synopsis}</span>
         </>
       )}
-    </div>
+    </div>,
+    document.body,
   )
 }
 

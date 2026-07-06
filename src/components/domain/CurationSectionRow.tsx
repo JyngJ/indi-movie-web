@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { PosterThumb } from '@/components/domain/PosterThumb'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import type { SectionDisplayMode } from '@/lib/curation/filmsTabLists'
@@ -110,7 +111,9 @@ export function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number
   const adjustedX =
     x + cardWidth > window.innerWidth - 16 ? x - cardWidth - 156 : x
 
-  return (
+  // position:fixed는 transform 있는 조상(도크 슬라이드 패널) 기준이 되어 잘리므로
+  // body로 portal해 진짜 뷰포트 기준으로 띄운다
+  return createPortal(
     <div
       style={{
         position: 'fixed',
@@ -184,7 +187,8 @@ export function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number
           </span>
         </>
       )}
-    </div>
+    </div>,
+    document.body,
   )
 }
 
