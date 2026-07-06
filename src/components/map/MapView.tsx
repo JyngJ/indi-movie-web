@@ -23,6 +23,7 @@ import { theaterEventToGvEvent } from '@/lib/gv/adapter'
 import type { DesktopPanelState } from '@/components/domain/DesktopDetailPanel'
 import type { FilterState } from '@/components/domain'
 import { useActiveMovieIds, useMapShowtimes, useMovies, useStations, useTheaters, useTheaterEvents } from '@/lib/supabase/queries'
+import { LRUCache } from '@/lib/lruCache'
 import type { Movie, Station, Theater } from '@/types/api'
 import { SEOUL_GU, SEOUL_DONG } from '@/data/seoul-areas'
 import { normalizeGenre } from '@/lib/genres'
@@ -32,9 +33,10 @@ import { useThemeStore } from '@/store/themeStore'
 import { useUIStore } from '@/store/uiStore'
 import { REPORT_CATEGORIES } from '@/lib/reports/types'
 import {
-  SUBWAY_LINES, SUBWAY_LINE_MIN_ZOOM, STATION_PIN_MIN_ZOOM,
-  subwayLineStyle, subwayLineColor, makeStationIcon,
+  SUBWAY_LINE_MIN_ZOOM, STATION_PIN_MIN_ZOOM,
+  subwayLineColor,
 } from '@/lib/map/subwayUtils'
+import { SubwayLayer } from './SubwayLayer'
 import { finiteNumber, formatDateParam, startOfLocalDay, addDays, endOfMonth, loadRecentSearches, addToRecent, removeFromRecent, clearRecentSearches } from '@/lib/map/searchUtils'
 import { stationSearchScore, movieSearchScore, directorSearchScore, theaterSearchScore, areaSearchScore } from '@/lib/map/searchScoring'
 import { posterCountForZoom, posterSizeForZoom, posterSlotsForZoom } from '@/lib/map/posterLogic'
@@ -118,7 +120,7 @@ function isMapProjectionReady(map: LeafletMap) {
 }
 
 // 동일 입력에 대해 renderToStaticMarkup 중복 호출 방지
-const _pinIconCache = new Map<string, L.DivIcon>()
+const _pinIconCache = new LRUCache<string, L.DivIcon>(800)
 
 function makePinIcon(
   name: string,
@@ -223,7 +225,7 @@ function makePinIcon(
 }
 
 /* ── GV 마커 아이콘 ─────────────────────────────────────────────── */
-const _gvMarkerIconCache = new Map<string, L.DivIcon>()
+const _gvMarkerIconCache = new LRUCache<string, L.DivIcon>(300)
 
 function makeGvMarkerIcon(events: GvEvent[], zoom: number, expanded: boolean, theaterName: string, selected?: boolean): L.DivIcon {
   const cacheKey = `${theaterName}|${zoom}|${expanded ? 1 : 0}|${selected ? 1 : 0}|${events.map(e => e.id).join(',')}`
@@ -2909,24 +2911,12 @@ export default function MapView() {
           onOffScreen={setTheaterOffScreen}
         />
 
-        {zoom >= SUBWAY_LINE_MIN_ZOOM && subwayLayerReady && SUBWAY_LINES.features.length > 0 && (
-          <GeoJSON
-            key={`subway-lines-${zoom >= SUBWAY_LINE_MIN_ZOOM ? 'on' : 'off'}-${isDark ? 'dark' : 'light'}`}
-            data={SUBWAY_LINES}
-            style={(feature) => subwayLineStyle(feature, isDark)}
-            interactive={false}
-          />
-        )}
-
-        {visibleStations.map((station) => (
-          <Marker
-            key={`station-${station.id}`}
-            position={[station.lat, station.lng]}
-            icon={makeStationIcon(station, isDark, zoom)}
-            interactive={false}
-            zIndexOffset={-1000}
-          />
-        ))}
+        <SubwayLayer
+          zoom={zoom}
+          subwayLayerReady={subwayLayerReady}
+          isDark={isDark}
+          visibleStations={visibleStations}
+        />
 
         {zoom >= 12 && Array.from(gvByTheater.entries()).map(([theaterName, events]) => {
           const theater = theaters.find((t) => t.name === theaterName)
