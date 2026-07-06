@@ -80,33 +80,37 @@ export const IcLock = makeIcon(
 )
 export const IcArrow = makeIcon(<path d="M5 12h14M13 6l6 6-6 6" />, 2)
 
+/* ── 실제 포스터 (TMDB CDN) ─────────────────────────────────────── */
+
+const TMDB = (path: string) => `https://image.tmdb.org/t/p/w342${path}`
+
+/** 온보딩에 쓰는 실물 포스터 — 널리 알려진 작품으로 첫인상 신뢰 확보 */
+export const ONBOARDING_POSTERS = {
+  parasite: TMDB('/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg'),
+  inception: TMDB('/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg'),
+  matrix: TMDB('/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg'),
+  odyssey: TMDB('/ve72VxNqjGM69Uky4WTo2bK6rfq.jpg'),
+  pulp: TMDB('/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg'),
+  fightClub: TMDB('/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg'),
+} as const
+
+const POSTER_LIST = Object.values(ONBOARDING_POSTERS)
+
 /* ── 빌딩 블록 ──────────────────────────────────────────────────── */
 
 interface PosterProps {
   w: number
   h: number
-  hue: number
+  src: string
   r?: number
-  label: string
 }
 
-/** 포스터 플레이스홀더 — 사선 스트라이프 + 첫 글자. 색은 장식용 고정 oklch */
-function Poster({ w, h, hue, r = 6, label }: PosterProps) {
-  const fontSize = Math.max(10, w * 0.28)
+/** 실물 포스터 이미지 */
+function Poster({ w, h, src, r = 6 }: PosterProps) {
   return (
-    <div
-      className={s.poster}
-      style={
-        {
-          width: w,
-          height: h,
-          borderRadius: r,
-          '--ps': `oklch(0.37 0.06 ${hue})`,
-          '--pb': `oklch(0.30 0.06 ${hue})`,
-        } as React.CSSProperties
-      }
-    >
-      <span style={{ fontSize }}>{label}</span>
+    <div className={s.poster} style={{ width: w, height: h, borderRadius: r }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src} alt="" width={w} height={h} draggable={false} loading="eager" />
     </div>
   )
 }
@@ -115,19 +119,19 @@ interface PosterPinProps {
   x: number
   y: number
   w: number
-  hue: number
-  label: string
+  src: string
   name?: string
 }
 
-/** 지도 위 떠 있는 포스터 핀 (좌표는 % 단위) */
-function PosterPin({ x, y, w, hue, label, name }: PosterPinProps) {
+/** 지도 위 떠 있는 포스터 핀 (좌표는 % 단위) — 작은(주변) 핀은 투명도를 낮춰 뒤로 가라앉힘 */
+function PosterPin({ x, y, w, src, name }: PosterPinProps) {
   const h = Math.round(w * 1.46)
+  const dim = !name
   return (
-    <div className={s.ppin} style={{ left: `${x}%`, top: `${y}%` }}>
+    <div className={s.ppin} style={{ left: `${x}%`, top: `${y}%`, opacity: dim ? 0.7 : 1 }}>
       {name && <div className={s.namelabel}>{name}</div>}
       <div className={s.pcard}>
-        <Poster w={w} h={h} hue={hue} r={5} label={label} />
+        <Poster w={w} h={h} src={src} r={5} />
       </div>
       <div className={s.stem} />
       <div className={s.pdot} />
@@ -135,47 +139,59 @@ function PosterPin({ x, y, w, hue, label, name }: PosterPinProps) {
   )
 }
 
-/** 지도 스켈레톤 베이스 — 격자 도로 + 강 + 공원 + 동네 라벨 */
-function MapBase() {
+/* ── 실제 지도 배경 (CartoDB voyager 타일, 홍대 부근) ────────────── */
+// 채도를 낮춰(mapscrim + CSS filter) 배경으로 가라앉히고 포스터 핀을 띄운다.
+const TILE_Z = 14
+const TILE_CX = 13968 // 홍대입구 중심 타일 (z14)
+const TILE_CY = 6345
+const TILE_OFFSETS = [-1, 0, 1]
+const tileUrl = (x: number, y: number, dark: boolean) =>
+  `https://a.basemaps.cartocdn.com/${dark ? 'dark_all' : 'rastertiles/voyager'}/${TILE_Z}/${x}/${y}.png`
+
+function MapBase({ dark = false }: { dark?: boolean }) {
   return (
     <div className={s.mapbg}>
-      <div className={s.mapgrid} />
-      <div className={s.river} />
-      <div className={s.park} style={{ top: '10%', left: '5%', width: 120, height: 96, borderRadius: '44% 56% 50% 60%' }} />
-      <div className={s.park} style={{ top: '60%', left: '70%', width: 104, height: 120, borderRadius: '56% 44% 60% 40%' }} />
-      <div className={s.roadEl} style={{ top: '42%', left: '-10%', width: '130%', height: 7, transform: 'rotate(-4deg)' }} />
-      <div className={s.roadEl} style={{ top: '-5%', left: '30%', width: 7, height: '110%', transform: 'rotate(6deg)' }} />
-      <span className={s.nb} style={{ top: '22%', left: '13%', fontSize: 14 }}>망원동</span>
-      <span className={s.nb} style={{ top: '64%', left: '44%', fontSize: 13 }}>합정동</span>
-      <span className={s.nb} style={{ top: '15%', left: '60%', fontSize: 11, opacity: 0.65 }}>홍대입구</span>
+      <div className={s.maptiles}>
+        {TILE_OFFSETS.flatMap((dy) =>
+          TILE_OFFSETS.map((dx) => {
+            const x = TILE_CX + dx
+            const y = TILE_CY + dy
+            return (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img key={`${dx}_${dy}`} src={tileUrl(x, y, dark)} alt="" width={256} height={256} draggable={false} />
+            )
+          }),
+        )}
+      </div>
+      <div className={s.mapscrim} />
     </div>
   )
 }
 
 /* ── Page 1 — 다 모았다: 지도 위 포스터 핀 무리 ─────────────────── */
 
-export function IlloCollected() {
+export function IlloCollected({ dark = false }: { dark?: boolean }) {
+  const [p0, p1, p2, p3, p4, p5] = POSTER_LIST
   return (
     <>
-      <MapBase />
-      <PosterPin x={50} y={30} w={58} hue={20} label="화" name="상상마당 홍대" />
-      <PosterPin x={22} y={44} w={44} hue={140} label="박" />
-      <PosterPin x={75} y={50} w={46} hue={200} label="심" />
-      <PosterPin x={37} y={63} w={42} hue={45} label="너" />
-      <PosterPin x={64} y={72} w={50} hue={265} label="그" name="서울아트시네마" />
-      <PosterPin x={87} y={36} w={38} hue={0} label="고" />
-      <PosterPin x={13} y={68} w={38} hue={90} label="순" />
+      <MapBase dark={dark} />
+      <PosterPin x={48} y={30} w={80} src={p0} name="상상마당 홍대" />
+      <PosterPin x={20} y={46} w={62} src={p1} />
+      <PosterPin x={76} y={52} w={64} src={p2} />
+      <PosterPin x={36} y={66} w={58} src={p3} />
+      <PosterPin x={64} y={74} w={70} src={p4} name="서울아트시네마" />
+      <PosterPin x={88} y={36} w={54} src={p5} />
     </>
   )
 }
 
 /* ── Page 2 — 뭘 볼지: 큐레이션 카드 스택 ───────────────────────── */
 
-const REISSUE: Array<[label: string, hue: number, tag: string]> = [
-  ['화', 20, '24년 만의 재상영'],
-  ['박', 140, '4K 리마스터'],
-  ['8', 40, '61년 만에'],
-  ['자', 200, '재개봉'],
+const REISSUE: Array<[src: string, tag: string]> = [
+  [ONBOARDING_POSTERS.parasite, '24년 만의 재상영'],
+  [ONBOARDING_POSTERS.matrix, '4K 리마스터'],
+  [ONBOARDING_POSTERS.odyssey, '61년 만에'],
+  [ONBOARDING_POSTERS.pulp, '재개봉'],
 ]
 
 const displayFont = { fontFamily: 'var(--font-display)', fontWeight: 700 } as const
@@ -195,9 +211,9 @@ export function IlloCuration() {
             </span>
           </div>
           <div style={{ display: 'flex', gap: 12, overflow: 'hidden', padding: '0 18px' }}>
-            {REISSUE.map(([label, hue, tag]) => (
+            {REISSUE.map(([src, tag]) => (
               <div key={tag} style={{ width: 112, flexShrink: 0, position: 'relative' }}>
-                <Poster w={112} h={160} hue={hue} r={8} label={label} />
+                <Poster w={112} h={160} src={src} r={8} />
                 <div style={{ position: 'absolute', top: 6, left: 6, background: 'rgba(217,119,6,0.95)', color: '#fff', fontSize: 9, fontWeight: 700, padding: '3px 6px', borderRadius: 5, boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }}>
                   {tag}
                 </div>
@@ -209,13 +225,13 @@ export function IlloCuration() {
         {/* 수상작 랭킹 카드 */}
         <div style={{ marginTop: 16, background: 'var(--color-surface-card)', borderRadius: 18, boxShadow: '0 12px 34px rgba(20,15,10,0.12)', padding: '16px 18px', width: 300, display: 'flex', gap: 12, alignItems: 'center' }}>
           <div style={{ position: 'relative', flexShrink: 0 }}>
-            <Poster w={64} h={92} hue={265} r={7} label="그" />
+            <Poster w={64} h={92} src={ONBOARDING_POSTERS.inception} r={7} />
             <div style={{ ...displayFont, position: 'absolute', top: -7, left: -7, width: 24, height: 24, borderRadius: '50%', background: 'var(--color-primary-base)', color: '#fff', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--color-surface-card)', boxShadow: '0 2px 6px rgba(0,0,0,0.18)' }}>
               1
             </div>
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ ...displayFont, fontSize: 14.5, color: 'var(--color-text-primary)' }}>고독의 오후</div>
+            <div style={{ ...displayFont, fontSize: 14.5, color: 'var(--color-text-primary)' }}>인셉션</div>
             <div style={{ display: 'flex', gap: 5, marginTop: 8 }}>
               {['칸 수상', '드라마'].map((tag) => (
                 <span key={tag} style={{ fontSize: 10, fontWeight: 500, color: 'var(--color-text-sub)', background: 'var(--color-surface-raised)', padding: '2px 7px', borderRadius: 4 }}>
@@ -241,20 +257,20 @@ const SHOWTIMES: Array<[time: string, seat: string, warn: boolean]> = [
   ['20:30', '잔여 51', false],
 ]
 
-export function IlloMapDetail() {
+export function IlloMapDetail({ dark = false }: { dark?: boolean }) {
   return (
     <>
-      <MapBase />
-      <PosterPin x={28} y={40} w={42} hue={140} label="박" />
-      <PosterPin x={72} y={34} w={40} hue={20} label="화" />
+      <MapBase dark={dark} />
+      <PosterPin x={26} y={42} w={58} src={ONBOARDING_POSTERS.matrix} />
+      <PosterPin x={78} y={34} w={54} src={ONBOARDING_POSTERS.pulp} />
 
       {/* 선택된 핀 클로즈업 */}
       <div style={{ position: 'absolute', left: '50%', top: '30%', transform: 'translate(-50%, -100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 6 }}>
-        <div className={s.namelabel} style={{ fontSize: 11.5, background: 'var(--color-primary-base)', color: '#fff' }}>
+        <div className={s.namelabel} style={{ fontSize: 12.5, background: 'var(--color-primary-base)', color: '#fff' }}>
           서울아트시네마
         </div>
         <div style={{ position: 'relative', padding: 5, background: 'var(--color-surface-card)', borderRadius: 9, boxShadow: '0 10px 26px rgba(74,99,128,0.34)', border: '2.5px solid var(--color-primary-base)' }}>
-          <Poster w={72} h={104} hue={265} r={6} label="그" />
+          <Poster w={96} h={138} src={ONBOARDING_POSTERS.parasite} r={6} />
         </div>
         <div style={{ width: 2.5, height: 11, background: 'var(--color-primary-base)' }} />
         <div style={{ width: 15, height: 15, borderRadius: '50%', background: 'var(--color-primary-base)', border: '3px solid var(--color-surface-card)', boxShadow: '0 3px 8px rgba(0,0,0,0.3)' }} />
@@ -282,22 +298,22 @@ export function IlloMapDetail() {
 
 /* ── Page 4 — 위치: 내 위치 중심으로 극장 핀이 모임 ─────────────── */
 
-const AROUND: Array<[x: number, y: number, w: number, hue: number, label: string]> = [
-  [50, 14, 44, 20, '화'],
-  [80, 32, 38, 140, '박'],
-  [84, 64, 36, 200, '심'],
-  [52, 84, 42, 265, '그'],
-  [18, 66, 38, 45, '너'],
-  [16, 30, 36, 0, '고'],
+const AROUND: Array<[x: number, y: number, w: number, src: string]> = [
+  [50, 16, 62, POSTER_LIST[0]],
+  [82, 34, 54, POSTER_LIST[1]],
+  [84, 66, 50, POSTER_LIST[2]],
+  [52, 84, 58, POSTER_LIST[3]],
+  [16, 66, 54, POSTER_LIST[4]],
+  [16, 32, 50, POSTER_LIST[5]],
 ]
 
-export function IlloLocation() {
+export function IlloLocation({ dark = false }: { dark?: boolean }) {
   return (
     <>
-      <MapBase />
+      <MapBase dark={dark} />
       <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(46% 40% at 50% 52%, transparent 0%, transparent 40%, rgba(74,99,128,0.06) 70%)' }} />
-      {AROUND.map(([x, y, w, hue, label]) => (
-        <PosterPin key={label} x={x} y={y} w={w} hue={hue} label={label} />
+      {AROUND.map(([x, y, w, src], i) => (
+        <PosterPin key={i} x={x} y={y} w={w} src={src} />
       ))}
       {/* 정확도 링 + 내 위치 마커 */}
       <div style={{ position: 'absolute', left: '50%', top: '52%', transform: 'translate(-50%,-50%)', width: 150, height: 150, borderRadius: '50%', background: 'radial-gradient(circle, rgba(74,99,128,0.18) 0%, rgba(74,99,128,0.05) 55%, transparent 70%)', border: '1.5px solid rgba(74,99,128,0.3)' }} />

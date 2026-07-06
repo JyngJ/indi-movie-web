@@ -38,7 +38,7 @@ export default function FilmsPage() {
   const handleMovieClick = (id: string) => router.push(`/films/movie/${id}`)
   const handleDirectorClick = (name: string) => router.push(`/films/director/${encodeURIComponent(name)}`)
 
-  const { state: locState, coords: locCoords, request: requestLoc, dismiss: dismissLoc } = useLocationPermission()
+  const { state: locState, coords: locCoords, modalSuppressed: locModalSuppressed, request: requestLoc, dismiss: dismissLoc } = useLocationPermission()
   const isDesktop = mounted && isDesktopLayout
 
   const [selectedRegion, setSelectedRegion] = useState<string | null>(() => getStoredRegion())
@@ -394,7 +394,7 @@ export default function FilmsPage() {
         <div style={{ marginTop: 16, height: 1, background: 'var(--color-border)' }} />
       </header>
 
-      {(locState === 'prompt' || locState === 'denied' || locState === 'requesting') && (
+      {!locModalSuppressed && (locState === 'prompt' || locState === 'denied' || locState === 'requesting') && (
         <LocationPermissionModal
           state={locState}
           onRequest={requestLoc}

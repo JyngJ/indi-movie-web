@@ -11,6 +11,7 @@ import { useCallback, useEffect, useRef, useState, type ComponentType, type Reac
 import { usePathname, useRouter } from 'next/navigation'
 import { useTheaters } from '@/lib/supabase/queries'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
+import { useIsDark } from '@/hooks/useIsDark'
 import { useLocationPermission } from '@/hooks/useLocationPermission'
 import { markOnboardingSeen } from '@/lib/onboarding'
 import { storageAdapter } from '@/lib/adapters/storage'
@@ -35,7 +36,7 @@ import s from './onboarding.module.css'
 const PAGE_COUNT = 4
 
 interface PageDef {
-  Illo: ComponentType
+  Illo: ComponentType<{ dark?: boolean }>
   head: ReactNode
   hero?: boolean
   sub?: ReactNode
@@ -51,9 +52,10 @@ interface Props {
 
 export function Onboarding({ onClose }: Props) {
   const isDesktop = useIsDesktopLayout()
+  const isDark = useIsDark()
   const router = useRouter()
   const pathname = usePathname()
-  const { request: requestLocation, dismiss: dismissLocation } = useLocationPermission()
+  const { request: requestLocation, dismiss: dismissLocation, suppressModal: suppressLocationModal } = useLocationPermission()
   // 온보딩 뒤에서 카탈로그 로딩이 미리 진행되도록 theaters 캐시를 여기서도 구독
   const { data: theaters } = useTheaters()
   const theaterCount = theaters?.length ?? 0
@@ -78,8 +80,10 @@ export function Onboarding({ onClose }: Props) {
     if (closedRef.current) return
     closedRef.current = true
     void markOnboardingSeen(storageAdapter)
+    // 온보딩이 위치 유도를 전담했으므로 지도/상영작 탭의 권한 팝업 중복 억제
+    suppressLocationModal()
     onClose()
-  }, [onClose])
+  }, [onClose, suppressLocationModal])
 
   const goToMap = useCallback(() => {
     if (pathname !== '/') router.push('/')
@@ -263,7 +267,7 @@ export function Onboarding({ onClose }: Props) {
             건너뛰기
           </button>
           <div className={s.mIllo} key={`illo-${page}`}>
-            <p.Illo />
+            <p.Illo dark={isDark} />
           </div>
           <div className={s.mText} key={`text-${page}`}>
             <div className={`${s.head} ${s.mHead}`}>{p.head}</div>
@@ -309,7 +313,7 @@ export function Onboarding({ onClose }: Props) {
                   illoRefs.current[i] = node
                 }}
               >
-                <p.Illo />
+                <p.Illo dark={isDark} />
               </div>
               <div className={s.scrim} />
             </div>
@@ -318,13 +322,32 @@ export function Onboarding({ onClose }: Props) {
               {renderBody(p)}
               {p.footnote && <div className={s.footnote}>{p.footnote}</div>}
               {dots}
-              {p.cta && (
+              {p.cta ? (
                 <div className={s.ctablock}>
                   <button type="button" className={s.cta} onClick={handleLocationCta}>
                     위치 켜고 시작하기
                   </button>
-                  <button type="button" className={s.ctaSub} onClick={handleBrowseCta}>
-                    위치 없이 둘러보기
+                  <div className={s.mobNavRow}>
+                    <button type="button" className={s.mobNavPrev} onClick={() => goTo(i - 1)}>
+                      <IcArrow size={15} /> 이전
+                    </button>
+                    <button type="button" className={s.ctaSub} onClick={handleBrowseCta}>
+                      위치 없이 둘러보기
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className={s.mobNavRow}>
+                  <button
+                    type="button"
+                    className={s.mobNavPrev}
+                    onClick={() => goTo(i - 1)}
+                    style={{ visibility: i === 0 ? 'hidden' : 'visible' }}
+                  >
+                    <IcArrow size={15} /> 이전
+                  </button>
+                  <button type="button" className={s.mobNavNext} onClick={() => goTo(i + 1)}>
+                    다음 <IcArrow size={15} />
                   </button>
                 </div>
               )}

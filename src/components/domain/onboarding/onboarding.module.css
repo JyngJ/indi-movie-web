@@ -120,7 +120,7 @@
 .head {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 26px;
+  font-size: 30px;
   line-height: 1.32;
   letter-spacing: -0.4px;
   color: var(--color-text-primary);
@@ -128,13 +128,13 @@
 }
 
 .headHero {
-  font-size: 30px;
+  font-size: 34px;
   line-height: 1.28;
 }
 
 .sub {
-  margin-top: 14px;
-  font-size: 15px;
+  margin-top: 16px;
+  font-size: 17px;
   line-height: 1.62;
   color: var(--color-text-sub);
   word-break: keep-all;
@@ -146,7 +146,7 @@
 
 .footnote {
   margin-top: 18px;
-  font-size: 11.5px;
+  font-size: 13px;
   line-height: 1.5;
   color: var(--color-text-caption);
   word-break: keep-all;
@@ -159,7 +159,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 13.5px;
   color: var(--color-text-caption);
   word-break: keep-all;
 }
@@ -190,7 +190,7 @@
 }
 
 .btext {
-  font-size: 14px;
+  font-size: 15.5px;
   line-height: 1.5;
   color: var(--color-text-body);
   padding-top: 4px;
@@ -244,13 +244,16 @@
 }
 
 .cta {
-  height: 54px;
+  min-height: 56px;
+  padding: 8px 0;
   border-radius: 14px;
   background: var(--color-primary-base);
   color: #fff;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 16.5px;
+  line-height: 1.2;
+  text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -260,9 +263,12 @@
 }
 
 .ctaSub {
-  height: 46px;
-  font-size: 14px;
+  min-height: 44px;
+  padding: 6px 12px;
+  font-size: 13.5px;
   font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
   color: var(--color-text-caption);
   display: flex;
   align-items: center;
@@ -270,6 +276,35 @@
   background: none;
   border: none;
   cursor: pointer;
+}
+
+/* 모바일 하단 이전/다음 내비 */
+.mobNavRow {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.mobNavPrev,
+.mobNavNext {
+  min-height: 44px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-caption);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.mobNavPrev svg {
+  transform: scaleX(-1);
+}
+.mobNavNext {
+  color: var(--color-primary-base);
 }
 
 /* ── 지도 스켈레톤 ────────────────────────────────────────────── */
@@ -281,47 +316,36 @@
   overflow: hidden;
 }
 
-.mapgrid {
+/* 실제 지도 타일(CartoDB) 3×3 그리드 — 중앙 정렬, 채도 낮춰 배경으로 가라앉힘 */
+.maptiles {
   position: absolute;
-  inset: -14%;
-  background-color: var(--ob-land);
-  background-image:
-    linear-gradient(0deg, var(--ob-road) 3px, transparent 3px),
-    linear-gradient(90deg, var(--ob-road) 3px, transparent 3px),
-    linear-gradient(0deg, var(--ob-block) 1px, transparent 1px),
-    linear-gradient(90deg, var(--ob-block) 1px, transparent 1px);
-  background-size:
-    112px 112px,
-    112px 112px,
-    38px 38px,
-    38px 38px;
+  left: 50%;
+  top: 42%;
+  transform: translate(-50%, -50%);
+  width: 768px;
+  height: 768px;
+  display: grid;
+  grid-template-columns: repeat(3, 256px);
+  grid-template-rows: repeat(3, 256px);
+  filter: saturate(0.55) contrast(0.97);
+  opacity: 0.9;
+}
+:global([data-theme='dark']) .maptiles {
+  filter: saturate(0.7) brightness(0.92);
+  opacity: 0.82;
+}
+.maptiles img {
+  display: block;
+  width: 256px;
+  height: 256px;
 }
 
-.river {
+/* 하단 페이드 — 텍스트 영역으로 자연스럽게 연결 */
+.mapscrim {
   position: absolute;
-  top: -25%;
-  left: 56%;
-  width: 96px;
-  height: 170%;
-  background: var(--ob-water);
-  transform: rotate(15deg);
-}
-
-.park {
-  position: absolute;
-  background: var(--ob-park);
-}
-
-.roadEl {
-  position: absolute;
-  background: var(--ob-road);
-}
-
-.nb {
-  position: absolute;
-  font-family: var(--font-display);
-  font-weight: 700;
-  color: var(--ob-label);
+  inset: 0;
+  background: linear-gradient(180deg, transparent 55%, var(--color-surface-bg) 99%);
+  pointer-events: none;
 }
 
 /* ── 포스터 핀 ────────────────────────────────────────────────── */
@@ -373,24 +397,19 @@
   margin-bottom: 4px;
 }
 
-/* 포스터 플레이스홀더 — --ps/--pb는 인라인으로 주입 (장식용 고정 색) */
+/* 실물 포스터 이미지 컨테이너 */
 .poster {
-  border-radius: 6px;
   flex-shrink: 0;
   overflow: hidden;
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: repeating-linear-gradient(135deg, var(--ps) 0 9px, var(--pb) 9px 20px);
+  background: var(--color-surface-raised);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
-.poster span {
-  font-family: var(--font-display);
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.34);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  letter-spacing: -0.5px;
+.poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 /* ── 데스크톱: 중앙 모달 (풀스크린 금지) ─────────────────────── */
