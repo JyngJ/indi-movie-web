@@ -27,6 +27,9 @@ export type AnalyticsEventName =
   | 'personalized movie clicked'
   | 'director theaters map opened'
   | 'session intent classified'
+  | 'onboarding viewed'
+  | 'onboarding skipped'
+  | 'onboarding completed'
 
 export type AnalyticsSource =
   | 'direct'

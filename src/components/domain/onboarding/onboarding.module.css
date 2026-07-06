@@ -1,0 +1,529 @@
+/* ================================
+   Onboarding — 첫 방문 4페이지 오버레이
+   색상은 앱 토큰(--color-*) 사용.
+   지도 스켈레톤 전용 색(land/block/road/water/park)은 기존 토큰에 없어
+   온보딩 스코프 변수(--ob-*)로 정의하고 다크모드([data-theme="dark"])를 함께 대응한다.
+   ================================ */
+
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: 9500; /* LocationPermissionModal(9000)·SettingsPanel(2100)보다 위 */
+  animation: obFade 0.25s ease;
+
+  /* 지도 스켈레톤 색 — 디자인 산출물 라이트 값 */
+  --ob-land: #ece6d8;
+  --ob-block: #f3eee2;
+  --ob-road: #fbf8f0;
+  --ob-water: #cfe0e6;
+  --ob-park: #d6e3c8;
+  --ob-label: rgba(74, 99, 128, 0.34);
+}
+
+:global([data-theme='dark']) .root {
+  --ob-land: #15130e;
+  --ob-block: #1b1813;
+  --ob-road: #262119;
+  --ob-water: #13202b;
+  --ob-park: #16241a;
+  --ob-label: rgba(120, 150, 180, 0.4);
+}
+
+@keyframes obFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ── 모바일: 풀스크린 ─────────────────────────────────────────── */
+
+.mobileRoot {
+  background: var(--color-surface-bg);
+  color: var(--color-text-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+.skip {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 6px);
+  right: 8px;
+  z-index: 5;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-caption);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.swipe {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior: contain;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.swipe::-webkit-scrollbar {
+  display: none;
+}
+
+.slide {
+  flex: 0 0 100%;
+  width: 100%;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* 일러스트 영역 — 남는 세로 공간을 모두 차지 (상단 60~65% 컨셉) */
+.illo {
+  position: relative;
+  overflow: hidden;
+  flex: 1 1 0;
+  min-height: 140px;
+}
+
+/* 패럴랙스 대상 레이어 — 스와이프 시 12px 이내로 뒤늦게 따라온다 */
+.illoInner {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 55%, var(--color-surface-bg) 99%);
+}
+
+/* ── 텍스트 영역 ──────────────────────────────────────────────── */
+
+.textarea {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 30px calc(env(safe-area-inset-bottom, 0px) + 26px);
+}
+
+.head {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 26px;
+  line-height: 1.32;
+  letter-spacing: -0.4px;
+  color: var(--color-text-primary);
+  word-break: keep-all;
+}
+
+.headHero {
+  font-size: 30px;
+  line-height: 1.28;
+}
+
+.sub {
+  margin-top: 14px;
+  font-size: 15px;
+  line-height: 1.62;
+  color: var(--color-text-sub);
+  word-break: keep-all;
+}
+.sub b {
+  color: var(--color-text-primary);
+  font-weight: 700;
+}
+
+.footnote {
+  margin-top: 18px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--color-text-caption);
+  word-break: keep-all;
+  text-align: center;
+  padding: 0 6px;
+}
+
+.reassure {
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--color-text-caption);
+  word-break: keep-all;
+}
+
+.bullets {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bul {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.bicon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--color-primary-subtle-l);
+  color: var(--color-primary-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btext {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-body);
+  padding-top: 4px;
+  word-break: keep-all;
+}
+
+/* ── 도트 인디케이터 — active 20×7 / inactive 7×7 ─────────────── */
+
+.dots {
+  display: flex;
+  gap: 1px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 14px;
+}
+
+.dotBtn {
+  min-width: 20px;
+  height: 28px;
+  padding: 0 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.dot {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--color-border);
+  transition: all 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dotOn {
+  width: 20px;
+  background: var(--color-primary-base);
+}
+
+/* ── CTA (Page 4 전용) ───────────────────────────────────────── */
+
+.ctablock {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+}
+
+.cta {
+  height: 54px;
+  border-radius: 14px;
+  background: var(--color-primary-base);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--color-primary-base) 28%, transparent);
+}
+
+.ctaSub {
+  height: 46px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-caption);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* ── 지도 스켈레톤 ────────────────────────────────────────────── */
+
+.mapbg {
+  position: absolute;
+  inset: 0;
+  background: var(--ob-land);
+  overflow: hidden;
+}
+
+.mapgrid {
+  position: absolute;
+  inset: -14%;
+  background-color: var(--ob-land);
+  background-image:
+    linear-gradient(0deg, var(--ob-road) 3px, transparent 3px),
+    linear-gradient(90deg, var(--ob-road) 3px, transparent 3px),
+    linear-gradient(0deg, var(--ob-block) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ob-block) 1px, transparent 1px);
+  background-size:
+    112px 112px,
+    112px 112px,
+    38px 38px,
+    38px 38px;
+}
+
+.river {
+  position: absolute;
+  top: -25%;
+  left: 56%;
+  width: 96px;
+  height: 170%;
+  background: var(--ob-water);
+  transform: rotate(15deg);
+}
+
+.park {
+  position: absolute;
+  background: var(--ob-park);
+}
+
+.roadEl {
+  position: absolute;
+  background: var(--ob-road);
+}
+
+.nb {
+  position: absolute;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--ob-label);
+}
+
+/* ── 포스터 핀 ────────────────────────────────────────────────── */
+
+.ppin {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pcard {
+  border-radius: 7px;
+  padding: 3px;
+  background: var(--color-surface-card);
+  box-shadow: 0 6px 18px rgba(20, 15, 10, 0.22);
+}
+:global([data-theme='dark']) .pcard {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+}
+
+.stem {
+  width: 2px;
+  height: 9px;
+  background: var(--color-primary-base);
+  opacity: 0.55;
+}
+
+.pdot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-primary-base);
+  border: 2px solid var(--color-surface-card);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.24);
+}
+
+.namelabel {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 10.5px;
+  color: var(--color-text-primary);
+  background: color-mix(in srgb, var(--color-surface-card) 90%, transparent);
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  margin-bottom: 4px;
+}
+
+/* 포스터 플레이스홀더 — --ps/--pb는 인라인으로 주입 (장식용 고정 색) */
+.poster {
+  border-radius: 6px;
+  flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: repeating-linear-gradient(135deg, var(--ps) 0 9px, var(--pb) 9px 20px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.poster span {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.34);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  letter-spacing: -0.5px;
+}
+
+/* ── 데스크톱: 중앙 모달 (풀스크린 금지) ─────────────────────── */
+
+.desktopRoot {
+  background: rgba(20, 15, 10, 0.42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal {
+  position: relative;
+  width: 880px;
+  max-width: calc(100vw - 80px);
+  height: 520px;
+  max-height: calc(100vh - 80px);
+  background: var(--color-surface-card);
+  color: var(--color-text-primary);
+  border-radius: 22px;
+  overflow: hidden;
+  display: flex;
+  box-shadow: 0 30px 70px rgba(20, 15, 10, 0.45);
+}
+
+.mIllo {
+  width: 420px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  background: var(--ob-land);
+  animation: obSlideIn 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mText {
+  flex: 1;
+  min-width: 0;
+  padding: 56px 52px 40px;
+  display: flex;
+  flex-direction: column;
+  animation: obSlideIn 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mSkip {
+  position: absolute;
+  top: 22px;
+  right: 26px;
+  z-index: 5;
+  min-height: 40px;
+  padding: 0 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-text-caption);
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.mHead {
+  font-size: 29px;
+}
+
+.mSub {
+  font-size: 15.5px;
+  max-width: 330px;
+}
+
+.mFootnote {
+  text-align: left;
+  padding: 0;
+  margin: 0 0 18px;
+  max-width: 320px;
+}
+
+.spacer {
+  flex: 1;
+  min-height: 14px;
+}
+
+.mFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.mFooter .dots {
+  margin-top: 0;
+}
+
+.nextBtn {
+  height: 52px;
+  padding: 0 30px;
+  border-radius: 13px;
+  background: var(--color-primary-base);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15.5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--color-primary-base) 26%, transparent);
+}
+
+.mCtas {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ctaGhost {
+  height: 52px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-caption);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+@keyframes obSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
