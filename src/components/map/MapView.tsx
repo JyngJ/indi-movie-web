@@ -33,9 +33,10 @@ import { useThemeStore } from '@/store/themeStore'
 import { useUIStore } from '@/store/uiStore'
 import { REPORT_CATEGORIES } from '@/lib/reports/types'
 import {
-  SUBWAY_LINES, SUBWAY_LINE_MIN_ZOOM, STATION_PIN_MIN_ZOOM,
-  subwayLineStyle, subwayLineColor, makeStationIcon,
+  SUBWAY_LINE_MIN_ZOOM, STATION_PIN_MIN_ZOOM,
+  subwayLineColor,
 } from '@/lib/map/subwayUtils'
+import { SubwayLayer } from './SubwayLayer'
 import { finiteNumber, formatDateParam, startOfLocalDay, addDays, endOfMonth, loadRecentSearches, addToRecent, removeFromRecent, clearRecentSearches } from '@/lib/map/searchUtils'
 import { stationSearchScore, movieSearchScore, directorSearchScore, theaterSearchScore, areaSearchScore } from '@/lib/map/searchScoring'
 import { posterCountForZoom, posterSizeForZoom, posterSlotsForZoom } from '@/lib/map/posterLogic'
@@ -2910,24 +2911,12 @@ export default function MapView() {
           onOffScreen={setTheaterOffScreen}
         />
 
-        {zoom >= SUBWAY_LINE_MIN_ZOOM && subwayLayerReady && SUBWAY_LINES.features.length > 0 && (
-          <GeoJSON
-            key={`subway-lines-${zoom >= SUBWAY_LINE_MIN_ZOOM ? 'on' : 'off'}-${isDark ? 'dark' : 'light'}`}
-            data={SUBWAY_LINES}
-            style={(feature) => subwayLineStyle(feature, isDark)}
-            interactive={false}
-          />
-        )}
-
-        {visibleStations.map((station) => (
-          <Marker
-            key={`station-${station.id}`}
-            position={[station.lat, station.lng]}
-            icon={makeStationIcon(station, isDark, zoom)}
-            interactive={false}
-            zIndexOffset={-1000}
-          />
-        ))}
+        <SubwayLayer
+          zoom={zoom}
+          subwayLayerReady={subwayLayerReady}
+          isDark={isDark}
+          visibleStations={visibleStations}
+        />
 
         {zoom >= 12 && Array.from(gvByTheater.entries()).map(([theaterName, events]) => {
           const theater = theaters.find((t) => t.name === theaterName)
