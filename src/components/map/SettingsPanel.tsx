@@ -80,6 +80,17 @@ export function SettingsHeader({ title, onBack, onClose, submitting }: { title: 
   )
 }
 
+/* 푸터 링크 — button·a·구분점을 같은 높이/정렬로 통일 */
+const footerLink: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', height: 30, padding: '0 8px',
+  background: 'none', border: 'none', cursor: 'pointer', minHeight: 'unset',
+  fontSize: 13, color: 'var(--color-text-sub)',
+}
+const footerDot: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', height: 30,
+  fontSize: 13, color: 'var(--color-text-placeholder)',
+}
+
 /* ── 설정 메인 ── */
 export function SettingsMainPage({
   isDark, onSetTheme, onNavigate,
@@ -155,10 +166,12 @@ export function SettingsMainPage({
       </div>
 
       {/* 푸터 링크 */}
-      <div style={{ margin: '24px 16px 0', display: 'flex', justifyContent: 'center', gap: 4 }}>
-        <button onClick={() => onNavigate('attribution')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--color-text-sub)', padding: '4px 8px', minHeight: 'unset' }}>출처 표기 정보</button>
-        <span style={{ fontSize: 13, color: 'var(--color-text-placeholder)', lineHeight: '30px' }}>·</span>
-        <button onClick={() => onNavigate('about')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--color-text-sub)', padding: '4px 8px', minHeight: 'unset' }}>만든 사람</button>
+      <div style={{ margin: '24px 16px 0', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+        <button onClick={() => onNavigate('attribution')} style={footerLink}>출처 표기 정보</button>
+        <span style={footerDot}>·</span>
+        <button onClick={() => onNavigate('about')} style={footerLink}>만든 사람</button>
+        <span style={footerDot}>·</span>
+        <a href="/privacy" style={{ ...footerLink, textDecoration: 'none' }}>개인정보 처리방침</a>
       </div>
       <div style={{ textAlign: 'center', marginTop: 8, fontSize: 11, color: 'var(--color-text-placeholder)' }}>
         영화볼지도 · v0.1.0
