@@ -9,8 +9,7 @@ export const metadata: Metadata = {
 
 // 최종 개정일 — 내용 변경 시 함께 갱신
 const EFFECTIVE_DATE = '2026년 7월 7일'
-// TODO: 개인정보 보호책임자 공개 이메일 확정 후 교체
-const CONTACT_EMAIL = 'mail.jaeyong@gmail.com'
+const CONTACT_EMAIL = 'indi.movie.map@gmail.com'
 
 export default function PrivacyPolicyPage() {
   return (
