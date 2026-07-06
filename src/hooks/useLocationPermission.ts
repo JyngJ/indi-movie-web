@@ -13,11 +13,15 @@ const SKIP_KEY = 'ym_loc_skip'
 interface LocationPermissionState {
   state: LocationPermState
   coords: LocationCoords | null
+  // 온보딩이 위치 UX를 전담한 세션에서는 지도/상영작 탭의 권한 팝업을 띄우지 않는다
+  // (온보딩 4페이지가 이미 위치 켜기/둘러보기를 물었으므로 중복)
+  suppressModal: boolean
 }
 
 const useLocationPermissionStore = create<LocationPermissionState>(() => ({
   state: 'idle',
   coords: null,
+  suppressModal: false,
 }))
 
 const setState = useLocationPermissionStore.setState
@@ -76,6 +80,11 @@ function dismiss() {
   setState({ state: 'idle' })
 }
 
+/** 온보딩이 위치 UX를 처리했음 — 이 세션에서 지도/상영작 탭 권한 팝업 억제 */
+function suppressModal() {
+  setState({ suppressModal: true })
+}
+
 /** 위치 버튼 클릭 시 GPS 재조회 */
 function refetch() {
   locationAdapter.getCurrentPosition().then((c) => {
@@ -89,6 +98,7 @@ function refetch() {
 export function useLocationPermission() {
   const state = useLocationPermissionStore((s) => s.state)
   const coords = useLocationPermissionStore((s) => s.coords)
+  const modalSuppressed = useLocationPermissionStore((s) => s.suppressModal)
 
   useEffect(() => {
     if (initStarted) return
@@ -96,5 +106,5 @@ export function useLocationPermission() {
     initPermissionState()
   }, [])
 
-  return { state, coords, request, dismiss, refetch }
+  return { state, coords, modalSuppressed, request, dismiss, suppressModal, refetch }
 }

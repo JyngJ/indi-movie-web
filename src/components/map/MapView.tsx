@@ -994,7 +994,7 @@ function findSplitZoom(
 export default function MapView() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { state: locPermState, coords, request: locRequest, dismiss: locDismiss, refetch } = useLocationPermission()
+  const { state: locPermState, coords, modalSuppressed: locModalSuppressed, request: locRequest, dismiss: locDismiss, refetch } = useLocationPermission()
   const isDark = useIsDark()
   const isDesktopLayout = useIsDesktopLayout()
   const { setTheme } = useThemeStore()
@@ -3558,7 +3558,7 @@ export default function MapView() {
       )}
 
       {/* 위치 권한 팝업 */}
-      {(locPermState === 'prompt' || locPermState === 'requesting' || locPermState === 'denied') && (
+      {!locModalSuppressed && (locPermState === 'prompt' || locPermState === 'requesting' || locPermState === 'denied') && (
         <LocationPermissionModal
           state={locPermState}
           onRequest={locRequest}
