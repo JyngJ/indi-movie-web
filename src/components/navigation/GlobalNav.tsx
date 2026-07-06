@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useUIStore } from '@/store/uiStore'
+import { trackEvent } from '@/lib/analytics/client'
 
 /** §5 바텀 탭바 표준 높이(safe-area 포함) — 다른 화면 요소가 이 값만큼 비켜야 함 */
 export const GLOBAL_NAV_MOBILE_HEIGHT = 60
@@ -195,7 +196,10 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
 
         <button
           type="button"
-          onClick={() => setSearchOpen(!isSearchOpen)}
+          onClick={() => {
+            if (!isSearchOpen) trackEvent('search opened', { source: 'nav_rail' })
+            setSearchOpen(!isSearchOpen)
+          }}
           aria-label="검색"
           aria-pressed={isSearchOpen}
           style={{

@@ -10,11 +10,12 @@ import type { Map as LeafletMap, Point as LeafletPoint } from 'leaflet'
 import { useLocationPermission } from '@/hooks/useLocationPermission'
 import { useIsDark } from '@/hooks/useIsDark'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
-import { SearchBarButton, SearchBar, FabRound, Toast } from '@/components/primitives'
+import { SearchBarButton, FabRound, Toast } from '@/components/primitives'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { MapPin, TheaterSheet, MovieSheet, CurationSheet, CurationSections, FilterBar, LocationPermissionModal, CURATION_PEEK_HEIGHT } from '@/components/domain'
 import type { CurationSnap } from '@/components/domain'
 import { DesktopDetailPanel } from '@/components/domain/DesktopDetailPanel'
+import { SearchPanel } from '@/components/domain/SearchPanel'
 import { GvMarkerIcon } from '@/components/domain/GvMarkerIcon'
 import { computeGvSlotH, computeGvSlotW, GV_MARKER_STEM_H, GV_MARKER_DOT_D } from '@/components/domain/GvPinSlots'
 import type { GvEvent } from '@/data/gv-events'
@@ -33,7 +34,7 @@ import {
   SUBWAY_LINES, SUBWAY_LINE_MIN_ZOOM, STATION_PIN_MIN_ZOOM,
   subwayLineStyle, subwayLineColor, makeStationIcon,
 } from '@/lib/map/subwayUtils'
-import { finiteNumber, formatDateParam, startOfLocalDay, addDays, endOfMonth, loadRecentSearches, addToRecent, removeFromRecent } from '@/lib/map/searchUtils'
+import { finiteNumber, formatDateParam, startOfLocalDay, addDays, endOfMonth, loadRecentSearches, addToRecent, removeFromRecent, clearRecentSearches } from '@/lib/map/searchUtils'
 import { stationSearchScore, movieSearchScore, directorSearchScore, theaterSearchScore, areaSearchScore } from '@/lib/map/searchScoring'
 import { posterCountForZoom, posterSizeForZoom, posterSlotsForZoom } from '@/lib/map/posterLogic'
 import { calculateAndFormatDistance } from '@/lib/map/distanceUtils'
@@ -3145,128 +3146,38 @@ export default function MapView() {
           도크가 비어 있던 채로 열렸으면(searchSlideMode) 도크처럼 좌측에서 슬라이드 인/아웃,
           다른 시트(극장/상세) 위로 열렸으면 애니메이션 없이 바로 겹쳐 표시 */}
       {displayedSearchOpen && (
-        <div style={{
-          position: 'absolute',
-          inset: isDesktopLayout ? `0 auto 0 ${GLOBAL_NAV_DESKTOP_WIDTH}px` : 0,
-          width: isDesktopLayout ? DESKTOP_DOCK_WIDTH : 'auto',
-          maxWidth: isDesktopLayout ? `calc(100vw - ${GLOBAL_NAV_DESKTOP_WIDTH}px)` : undefined,
-          backgroundColor: 'var(--color-surface-bg)',
-          display: 'flex',
-          flexDirection: 'column',
-          // 슬라이드 모드일 땐 도크와 같은 슬롯에서 겹치므로 도크보다 살짝 위, 글로벌 내비 레일보단 아래(레일이 항상 최상단)
-          zIndex: searchSlideMode ? 945 : 2000,
-          borderRight: isDesktopLayout ? '1px solid var(--color-border)' : undefined,
-          overflow: 'hidden',
-          transform: searchSlideMode ? (searchIn ? 'translateX(0)' : 'translateX(-100%)') : undefined,
-          transition: searchSlideMode ? 'transform 220ms cubic-bezier(0.32, 0.72, 0, 1)' : undefined,
-        }}>
-          {/* 검색바 헤더 — < 버튼은 SearchBar의 onBack 쉐브론이 담당 */}
-          <div style={{
-            paddingTop: 'max(12px, env(safe-area-inset-top))',
-            paddingLeft: 16,
-            paddingRight: 16,
-            paddingBottom: 12,
-            borderBottom: '1px solid var(--color-border)',
-            flexShrink: 0,
-          }}>
-            <SearchBar
-              ref={searchInputRef}
-              value={searchQuery}
-              placeholder="영화, 감독, 역, 영화관 검색"
-              inputFontSize={isDesktopLayout ? 14 : 16}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onClear={() => setSearchQuery('')}
-              onBack={closeSearch}
-            />
-          </div>
-
-          {/* 결과 영역 */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px' }}>
-            {searchQuery === '' ? (
-              <div style={{ marginTop: 0 }}>
-                {recentSearches.length > 0 && (
-                  <div style={{ marginBottom: 16 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                      <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-caption)', margin: 0 }}>최근 검색</p>
-                      <button
-                        onClick={() => {
-                          setRecentSearches([])
-                          try { localStorage.removeItem('movie:recent-searches:v1') } catch {}
-                        }}
-                        style={{ fontSize: 12, color: 'var(--color-text-caption)', background: 'none', border: 0, cursor: 'pointer', padding: 0 }}
-                      >
-                        전체 삭제
-                      </button>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      {recentSearches.map(q => (
-                        <div
-                          key={q}
-                          style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--color-border)' }}
-                        >
-                          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-caption)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                            <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
-                          </svg>
-                          <button
-                            onClick={() => setSearchQuery(q)}
-                            style={{ flex: 1, background: 'none', border: 0, cursor: 'pointer', textAlign: 'left', padding: 0, fontSize: 14, color: 'var(--color-text-body)' }}
-                          >
-                            {q}
-                          </button>
-                          <button
-                            onClick={() => setRecentSearches(prev => removeFromRecent(q, prev))}
-                            style={{ background: 'none', border: 0, cursor: 'pointer', padding: 4, color: 'var(--color-text-caption)', lineHeight: 1, flexShrink: 0 }}
-                          >
-                            <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                              <path d="M6 6l12 12M18 6 6 18" />
-                            </svg>
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                <div style={{ marginTop: 20 }}>
-                  <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 600, color: 'var(--color-text-caption)' }}>
-                    영화관, 영화, 감독, 지하철역을 모두 검색할 수 있어요
-                  </p>
-                  <div style={{ display: 'flex', flexDirection: 'column', marginTop: 8 }}>
-                    {[
-                      { label: '영화관', example: '서울아트시네마' },
-                      { label: '영화', example: '레오파드' },
-                      { label: '감독', example: '홍상수' },
-                      { label: '지하철역', example: '혜화역' },
-                    ].map(({ label, example }) => (
-                      <div key={label} style={{ display: 'flex', alignItems: 'baseline', gap: 10, lineHeight: 1.9 }}>
-                        <span style={{ fontSize: 12, color: 'var(--color-text-caption)', width: 44, flexShrink: 0 }}>{label}</span>
-                        <span style={{ fontSize: 12, color: 'var(--color-text-caption)', opacity: 0.6 }}>"{example}"</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ) : hasSearchResults ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-                {searchSections.map((section) => {
-                  const node = section === 'movies'
-                    ? renderMovieSearchSection()
-                    : section === 'directors'
-                      ? renderDirectorSearchSection()
-                      : section === 'theaters'
-                        ? renderTheaterSearchSection()
-                        : section === 'areas'
-                          ? renderAreaSearchSection()
-                          : renderStationSearchSection()
-                  return node ? <div key={section}>{node}</div> : null
-                })}
-              </div>
-            ) : (
-              <p style={{ textAlign: 'center', marginTop: 60, fontSize: 14, color: 'var(--color-text-caption)' }}>
-                &ldquo;{searchQuery}&rdquo;와 일치하는 결과가 없습니다
-              </p>
-            )}
-          </div>
-        </div>
+        <SearchPanel
+          isDesktopLayout={isDesktopLayout}
+          leftOffset={GLOBAL_NAV_DESKTOP_WIDTH}
+          width={DESKTOP_DOCK_WIDTH}
+          slideMode={searchSlideMode}
+          slideIn={searchIn}
+          query={searchQuery}
+          inputRef={searchInputRef}
+          recentSearches={recentSearches}
+          hasResults={hasSearchResults}
+          onQueryChange={setSearchQuery}
+          onClose={closeSearch}
+          onRecentSelect={setSearchQuery}
+          onRecentRemove={(q) => setRecentSearches(prev => removeFromRecent(q, prev))}
+          onRecentClearAll={() => {
+            setRecentSearches([])
+            clearRecentSearches()
+          }}
+        >
+          {searchSections.map((section) => {
+            const node = section === 'movies'
+              ? renderMovieSearchSection()
+              : section === 'directors'
+                ? renderDirectorSearchSection()
+                : section === 'theaters'
+                  ? renderTheaterSearchSection()
+                  : section === 'areas'
+                    ? renderAreaSearchSection()
+                    : renderStationSearchSection()
+            return node ? <div key={section}>{node}</div> : null
+          })}
+        </SearchPanel>
       )}
 
       {/* 큐레이션 — 모바일: 항상 떠 있는 드래그 가능한 하단 시트(peek/default/expanded 3단 스냅) */}
