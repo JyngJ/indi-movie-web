@@ -70,6 +70,7 @@
   overflow-y: hidden;
   scroll-snap-type: x mandatory;
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
@@ -80,7 +81,8 @@
 .slide {
   flex: 0 0 100%;
   width: 100%;
-  scroll-snap-align: start;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -94,11 +96,12 @@
   min-height: 140px;
 }
 
-/* 패럴랙스 대상 레이어 — 스와이프 시 12px 이내로 뒤늦게 따라온다 */
+/* 패럴랙스 대상 레이어 — 스와이프 시 쫀득하게 뒤늦게 따라온다 */
 .illoInner {
   position: absolute;
   inset: 0;
   will-change: transform;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .scrim {
@@ -225,7 +228,7 @@
   height: 7px;
   border-radius: 999px;
   background: var(--color-border);
-  transition: all 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .dotOn {
