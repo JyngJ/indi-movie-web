@@ -216,7 +216,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
           }}
         >
           <IconInstagram size={21} />
-          <span style={{ fontSize: 10.5, fontWeight: 600 }}>인스타</span>
+          <span style={{ fontSize: 10.5, fontWeight: 600 }}>SNS</span>
         </a>
 
         <div style={{ width: 'calc(100% - 32px)', height: 1, background: 'var(--color-border)' }} />
