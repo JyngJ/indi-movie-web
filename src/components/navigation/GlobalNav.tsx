@@ -33,6 +33,16 @@ function IconFilm({ size = 23 }: { size?: number }) {
   )
 }
 
+function IconInstagram({ size = 21 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
 function IconSettings({ size = 21 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
@@ -184,33 +194,60 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
         {DESKTOP_RAIL_TABS.map(renderRailTab)}
       </div>
 
-      <button
-        type="button"
-        onClick={() => {
-          if (isSearchOpen) setSearchOpen(false)
-          setSettingsOpen(true)
-        }}
-        aria-label="설정"
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 4,
-          padding: '8px 4px',
-          marginTop: 'auto',
-          marginLeft: 8,
-          marginRight: 8,
-          width: 'calc(100% - 16px)',
-          borderRadius: 10,
-          border: 'none',
-          background: 'transparent',
-          color: INACTIVE_COLOR,
-          cursor: 'pointer',
-        }}
-      >
-        <IconSettings size={21} />
-        <span style={{ fontSize: 10.5, fontWeight: 600 }}>설정</span>
-      </button>
+      {/* 하단 그룹: 인스타 바로가기 — 구분선 — 설정 */}
+      <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, width: '100%' }}>
+        <a
+          href="https://www.instagram.com/indi.movie.map/"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="인스타그램 바로가기"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 4,
+            padding: '8px 4px',
+            marginLeft: 8,
+            marginRight: 8,
+            width: 'calc(100% - 16px)',
+            borderRadius: 10,
+            color: INACTIVE_COLOR,
+            textDecoration: 'none',
+          }}
+        >
+          <IconInstagram size={21} />
+          <span style={{ fontSize: 10.5, fontWeight: 600 }}>인스타</span>
+        </a>
+
+        <div style={{ width: 'calc(100% - 32px)', height: 1, background: 'var(--color-border)' }} />
+
+        <button
+          type="button"
+          onClick={() => {
+            if (isSearchOpen) setSearchOpen(false)
+            setSettingsOpen(true)
+          }}
+          aria-label="설정"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 4,
+            padding: '8px 4px',
+            marginLeft: 8,
+            marginRight: 8,
+            width: 'calc(100% - 16px)',
+            borderRadius: 10,
+            border: 'none',
+            background: 'transparent',
+            color: INACTIVE_COLOR,
+            cursor: 'pointer',
+          }}
+        >
+          <IconSettings size={21} />
+          <span style={{ fontSize: 10.5, fontWeight: 600 }}>설정</span>
+        </button>
+      </div>
     </nav>
   )
 }
