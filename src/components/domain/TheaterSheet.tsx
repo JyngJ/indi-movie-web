@@ -1298,6 +1298,10 @@ export function TheaterSheet({
             WebkitOverflowScrolling: 'touch' as never,
             overscrollBehavior: 'none',
             backgroundColor: panelMode ? 'var(--color-surface-bg)' : undefined,
+            // 회차 선택 시 하단에서 뜨는 예매 바가 마지막 회차를 가리지 않도록 여백 확보
+            paddingBottom: (selectedShowtimeId && showtimeInView)
+              ? 'calc(88px + env(safe-area-inset-bottom))'
+              : 'env(safe-area-inset-bottom)',
           }}
         >
           {/* 극장 정보 — 스크롤 시 위로 밀림 */}
