@@ -23,6 +23,7 @@ import { theaterEventToGvEvent } from '@/lib/gv/adapter'
 import type { DesktopPanelState } from '@/components/domain/DesktopDetailPanel'
 import type { FilterState } from '@/components/domain'
 import { useActiveMovieIds, useMapShowtimes, useMovies, useStations, useTheaters, useTheaterEvents } from '@/lib/supabase/queries'
+import { LRUCache } from '@/lib/lruCache'
 import type { Movie, Station, Theater } from '@/types/api'
 import { SEOUL_GU, SEOUL_DONG } from '@/data/seoul-areas'
 import { normalizeGenre } from '@/lib/genres'
@@ -118,7 +119,7 @@ function isMapProjectionReady(map: LeafletMap) {
 }
 
 // 동일 입력에 대해 renderToStaticMarkup 중복 호출 방지
-const _pinIconCache = new Map<string, L.DivIcon>()
+const _pinIconCache = new LRUCache<string, L.DivIcon>(800)
 
 function makePinIcon(
   name: string,
@@ -223,7 +224,7 @@ function makePinIcon(
 }
 
 /* ── GV 마커 아이콘 ─────────────────────────────────────────────── */
-const _gvMarkerIconCache = new Map<string, L.DivIcon>()
+const _gvMarkerIconCache = new LRUCache<string, L.DivIcon>(300)
 
 function makeGvMarkerIcon(events: GvEvent[], zoom: number, expanded: boolean, theaterName: string, selected?: boolean): L.DivIcon {
   const cacheKey = `${theaterName}|${zoom}|${expanded ? 1 : 0}|${selected ? 1 : 0}|${events.map(e => e.id).join(',')}`
