@@ -1,149 +1,27 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import type { ReactNode } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { SearchBar } from '@/components/primitives'
-import { useCatalog } from '@/lib/catalog/client'
+import { useUIStore } from '@/store/uiStore'
+import { trackEvent } from '@/lib/analytics/client'
 
+/**
+ * /search — 딥링크 호환용 얇은 진입점.
+ *
+ * 검색 UI는 지도 화면의 검색 패널(SearchPanel) 하나로 통합됐다:
+ * 데스크톱은 좌측 도크 슬롯에 붙는 슬라이드 패널, 모바일은 전체화면 오버레이.
+ * 이 라우트는 별도의 검색 화면을 중복 구현하지 않고, 검색 오버레이를 연 상태로
+ * 지도 화면으로 이동시키기만 한다. (기존 북마크·공유 링크 호환을 위해 라우트 유지)
+ */
 export default function SearchPage() {
   const router = useRouter()
-  const inputRef = useRef<HTMLInputElement>(null)
-  const [query, setQuery] = useState('')
-  const { data: catalog } = useCatalog()
-  const normalizedQuery = query.trim().toLocaleLowerCase('ko-KR')
-  const theaters = normalizedQuery
-    ? (catalog?.theaters ?? []).filter((theater) =>
-        [theater.name, theater.address, theater.city].some((value) =>
-          value.toLocaleLowerCase('ko-KR').includes(normalizedQuery),
-        ),
-      ).slice(0, 12)
-    : []
-  const movies = normalizedQuery
-    ? (catalog?.movies ?? []).filter((movie) =>
-        [movie.title, movie.originalTitle, movie.director].some((value) =>
-          value?.toLocaleLowerCase('ko-KR').includes(normalizedQuery),
-        ),
-      ).slice(0, 12)
-    : []
+  const setSearchOpen = useUIStore((s) => s.setSearchOpen)
 
-  // 페이지 마운트 시 키보드 자동 올리기
   useEffect(() => {
-    const t = setTimeout(() => inputRef.current?.focus(), 80)
-    return () => clearTimeout(t)
-  }, [])
+    trackEvent('search opened', { source: 'page' })
+    setSearchOpen(true)
+    router.replace('/')
+  }, [router, setSearchOpen])
 
-  return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'var(--color-surface-bg)',
-        display: 'flex',
-        flexDirection: 'column',
-        zIndex: 2000,
-      }}
-    >
-      {/* 검색바 헤더 */}
-      <div style={{
-        paddingTop: 'max(12px, env(safe-area-inset-top))',
-        paddingLeft: 16,
-        paddingRight: 16,
-        paddingBottom: 12,
-        borderBottom: '1px solid var(--color-border)',
-        backgroundColor: 'var(--color-surface-bg)',
-        flexShrink: 0,
-      }}>
-        <SearchBar
-          ref={inputRef}
-          value={query}
-          placeholder="극장 또는 영화 검색"
-          onChange={(e) => setQuery(e.target.value)}
-          onClear={() => setQuery('')}
-          onBack={() => router.back()}
-          autoFocus
-        />
-      </div>
-
-      <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px' }}>
-        {query === '' ? (
-          <p style={{
-            textAlign: 'center',
-            marginTop: 60,
-            fontSize: 14,
-            color: 'var(--color-text-caption)',
-          }}>
-            극장명, 영화 제목, 감독 이름으로 검색하세요
-          </p>
-        ) : theaters.length === 0 && movies.length === 0 ? (
-          <p style={{
-            textAlign: 'center',
-            marginTop: 60,
-            fontSize: 14,
-            color: 'var(--color-text-caption)',
-          }}>
-            &ldquo;{query}&rdquo;에 맞는 결과가 없습니다.
-          </p>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-            {theaters.length > 0 && (
-              <ResultSection title="극장">
-                {theaters.map((theater) => (
-                  <ResultItem
-                    key={theater.id}
-                    title={theater.name}
-                    subtitle={theater.address}
-                  />
-                ))}
-              </ResultSection>
-            )}
-            {movies.length > 0 && (
-              <ResultSection title="영화">
-                {movies.map((movie) => (
-                  <ResultItem
-                    key={movie.id}
-                    title={movie.title}
-                    subtitle={[movie.director, movie.year].filter(Boolean).join(' · ')}
-                  />
-                ))}
-              </ResultSection>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function ResultSection({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section>
-      <h2 style={{
-        margin: '0 0 8px',
-        fontSize: 12,
-        fontWeight: 700,
-        color: 'var(--color-text-caption)',
-      }}>
-        {title}
-      </h2>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {children}
-      </div>
-    </section>
-  )
-}
-
-function ResultItem({ title, subtitle }: { title: string; subtitle?: string }) {
-  return (
-    <div style={{
-      minHeight: 56,
-      border: '1px solid var(--color-border)',
-      borderRadius: 8,
-      backgroundColor: 'var(--color-surface-card)',
-      padding: '10px 12px',
-    }}>
-      <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)' }}>{title}</div>
-      {subtitle && <div style={{ marginTop: 4, fontSize: 12, color: 'var(--color-text-sub)' }}>{subtitle}</div>}
-    </div>
-  )
+  return null
 }

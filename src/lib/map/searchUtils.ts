@@ -59,6 +59,10 @@ export function removeFromRecent(query: string, list: string[]): string[] {
   return next
 }
 
+export function clearRecentSearches(): void {
+  try { localStorage.removeItem(RECENT_KEY) } catch {}
+}
+
 /* ── 날짜 유틸리티 ─────────────────────────────────────────────── */
 const DATE_FORMATTER = new Intl.DateTimeFormat('en-CA', {
   year: 'numeric', month: '2-digit', day: '2-digit',
