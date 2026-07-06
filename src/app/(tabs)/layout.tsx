@@ -9,6 +9,7 @@ import { useUIStore } from '@/store/uiStore'
 import { useIsDark } from '@/hooks/useIsDark'
 import { useThemeStore } from '@/store/themeStore'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
+import { OnboardingGate } from '@/components/domain/onboarding/OnboardingGate'
 
 const MapView = dynamic(() => import('@/components/map/MapView'), { ssr: false })
 
@@ -60,6 +61,9 @@ export default function TabsLayout({ children }: { children: ReactNode }) {
           onSetTheme={(theme) => void setTheme(theme)}
         />
       )}
+
+      {/* 첫 방문 온보딩 — 플래그(onboarding_seen_v1) 확인 후에만 오버레이. 지도·카탈로그 로딩은 뒤에서 계속 진행 */}
+      <OnboardingGate />
     </>
   )
 }
