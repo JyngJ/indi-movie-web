@@ -20,6 +20,8 @@ export const GV_DS_GAP = 6
 export const GV_OVERFLOW_H = 24
 // 콜아웃 그리드(zoom 14+ 다건)에서 한 번에 보여줄 최대 슬롯 수 — 포스터 그리드와 동일하게 나머지는 "+N개 이벤트"로 묶는다
 export const GV_MAX_VISIBLE = 4
+// 확장 스택(zoom ≤13)에서 스크롤 없이 보이는 최대 행 수 — 초과분은 스택 내부 스크롤로
+export const GV_STACK_MAX_VISIBLE = 5
 
 function shouldStack(count: number, zoom: number, selected: boolean): boolean {
   return count > 1 && (zoom >= 15 || (zoom === 14 && selected))
@@ -40,7 +42,8 @@ function calloutSize(zoom: number): { w: number; h: number } {
 export function computeGvSlotH(count: number, zoom: number, expanded: boolean, selected = false): number {
   if (zoom <= 13) {
     if (!expanded) return GV_CHIP_H
-    return GV_STACK_HDR_H + count * GV_STACK_ROW_H
+    // 5개 초과는 스택 내부 스크롤 — 슬롯 높이는 5행에서 고정 (화면 밖으로 뚫고 나가는 것 방지)
+    return GV_STACK_HDR_H + Math.min(count, GV_STACK_MAX_VISIBLE) * GV_STACK_ROW_H
   }
   const n = Math.min(count, GV_MAX_VISIBLE)
   const { h } = calloutSize(zoom)
@@ -151,7 +154,17 @@ function GvExpandedStack({ events, theaterName }: { events: GvEvent[]; theaterNa
         </span>
         <span style={{ fontSize: 10, color: 'var(--color-text-caption)' }}>▲</span>
       </div>
-      {events.map((ev) => <GvStackRow key={ev.id} ev={ev} />)}
+      <div
+        data-gv-scroll
+        style={{
+          maxHeight: GV_STACK_MAX_VISIBLE * GV_STACK_ROW_H,
+          overflowY: events.length > GV_STACK_MAX_VISIBLE ? 'auto' : 'visible',
+          overscrollBehavior: 'contain',
+          WebkitOverflowScrolling: 'touch',
+        }}
+      >
+        {events.map((ev) => <GvStackRow key={ev.id} ev={ev} />)}
+      </div>
     </div>
   )
 }
