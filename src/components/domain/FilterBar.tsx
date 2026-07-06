@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import type { MouseEvent as ReactMouseEvent, WheelEvent as ReactWheelEvent } from 'react'
 import { GENRES } from '@/lib/genres'
 import { withFlag } from '@/lib/nations'
-import { getStoredRegion, setStoredRegion } from '@/lib/regionStorage'
+import { getStoredRegion, setStoredRegion, subscribeStoredRegion } from '@/lib/regionStorage'
 import { type DateId, buildDateOptions, fmtFull, fmtMD, isSameDay } from './filterBar/dateHelpers'
 import { CalendarPicker } from './filterBar/CalendarPicker'
 import { DateDropdown } from './filterBar/DateDropdown'
@@ -124,6 +124,12 @@ export function FilterBar({
     if (stored) { userPickedRegionRef.current = true; setRegionId(stored); return }
     setRegionId(defaultRegionId ?? null)
   }, [defaultRegionId])
+
+  // 다른 화면(상영작 탭 등)에서 지역이 바뀌면 필터바 라벨도 즉시 동기화
+  useEffect(() => subscribeStoredRegion((id) => {
+    userPickedRegionRef.current = !!id
+    setRegionId(id)
+  }), [])
 
   useEffect(() => {
     if (!openPanel) return

@@ -27,6 +27,7 @@ import type { Movie, Station, Theater } from '@/types/api'
 import { SEOUL_GU, SEOUL_DONG } from '@/data/seoul-areas'
 import { normalizeGenre } from '@/lib/genres'
 import { getRegionFromCity, getRegionFromCoords, REGION_BOUNDS } from '@/lib/regions'
+import { getStoredRegion, subscribeStoredRegion } from '@/lib/regionStorage'
 import { useThemeStore } from '@/store/themeStore'
 import { useUIStore } from '@/store/uiStore'
 import { REPORT_CATEGORIES } from '@/lib/reports/types'
@@ -1002,7 +1003,7 @@ export default function MapView() {
   const { data: stations = [] } = useStations()
   const { data: movies = [] } = useMovies()
   const { data: activeMovieIds = [] } = useActiveMovieIds()
-  const [filters, setFilters] = useState<FilterState>({
+  const [filters, setFilters] = useState<FilterState>(() => ({
     dateId: 'this-week',
     customStart: null,
     customEnd: null,
@@ -1010,8 +1011,14 @@ export default function MapView() {
     nations: [],
     bookable: false,
     indie: false,
-    regionId: null,
-  })
+    // MapView는 persistent 마운트라 sessionStorage 저장값으로 초기화 (ssr:false라 안전)
+    regionId: getStoredRegion(),
+  }))
+
+  // 상영작 탭 등 다른 화면에서 지역이 바뀌면 persistent MapView에 즉시 반영
+  useEffect(() => subscribeStoredRegion((id) => {
+    setFilters((f) => (f.regionId === id ? f : { ...f, regionId: id }))
+  }), [])
   const [movieFilter, setMovieFilter] = useState<{ id: string; title: string } | null>(null)
   const [directorFilter, setDirectorFilter] = useState<{ name: string } | null>(null)
   const [panelStack, setPanelStack] = useState<DesktopPanelState[]>([])
