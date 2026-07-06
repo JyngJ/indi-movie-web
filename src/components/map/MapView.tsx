@@ -1036,7 +1036,13 @@ export default function MapView() {
   const gvDelayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [expandedGvTheater, setExpandedGvTheater] = useState<string | null>(null)
   const { data: rawTheaterEvents = [] } = useTheaterEvents()
-  const gvEvents = useMemo(() => rawTheaterEvents.map(theaterEventToGvEvent), [rawTheaterEvents])
+  // GV/이벤트 핀도 상영일정 날짜 필터를 따른다 — 필터 밖 날짜의 이벤트는 핀에서 제외
+  const gvEvents = useMemo(
+    () => rawTheaterEvents
+      .filter((ev) => ev.eventDate >= mapShowtimeStart && ev.eventDate <= mapShowtimeEnd)
+      .map(theaterEventToGvEvent),
+    [rawTheaterEvents, mapShowtimeStart, mapShowtimeEnd],
+  )
   const gvByTheater = useMemo(() => {
     const map = new Map<string, GvEvent[]>()
     for (const ev of gvEvents) {
@@ -1058,6 +1064,21 @@ export default function MapView() {
   const subwayLayerVisibleRef = useRef(false)
   const subwayLayerDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const viewportRecomputeDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // GV 확장 스택 내부 스크롤이 지도 줌/드래그로 새지 않게 — data-gv-scroll 내부 이벤트는
+  // document 캡처 단계에서 전파를 끊는다 (Leaflet 핸들러는 지도 컨테이너에 붙어 있음)
+  useEffect(() => {
+    const stopIfInGvScroll = (e: Event) => {
+      const target = e.target as HTMLElement | null
+      if (target?.closest('[data-gv-scroll]')) e.stopPropagation()
+    }
+    document.addEventListener('wheel', stopIfInGvScroll, { capture: true })
+    document.addEventListener('touchmove', stopIfInGvScroll, { capture: true })
+    return () => {
+      document.removeEventListener('wheel', stopIfInGvScroll, { capture: true })
+      document.removeEventListener('touchmove', stopIfInGvScroll, { capture: true })
+    }
+  }, [])
 
   useEffect(() => {
     // 모바일에서는 포스터 호버 정보 표시 안함
