@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useUIStore } from '@/store/uiStore'
-import { trackEvent } from '@/lib/analytics/client'
 
 /** §5 바텀 탭바 표준 높이(safe-area 포함) — 다른 화면 요소가 이 값만큼 비켜야 함 */
 export const GLOBAL_NAV_MOBILE_HEIGHT = 60
@@ -30,15 +29,6 @@ function IconFilm({ size = 23 }: { size?: number }) {
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="4" width="18" height="16" rx="2" />
       <path d="M3 9h18M3 15h18M8 4v5M8 15v5M16 4v5M16 15v5" />
-    </svg>
-  )
-}
-
-function IconSearch({ size = 21 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="8" />
-      <path d="M21 21l-4.35-4.35" />
     </svg>
   )
 }
@@ -124,7 +114,6 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
   const setSearchOpen = useUIStore((s) => s.setSearchOpen)
   const setSettingsOpen = useUIStore((s) => s.setSettingsOpen)
   const toggleMapDockCollapsed = useUIStore((s) => s.toggleMapDockCollapsed)
-  const searchColor = isSearchOpen ? ACTIVE_COLOR : INACTIVE_COLOR
 
   const renderRailTab = ({ key, href, label, Icon }: MobileTab) => {
     // 검색 패널이 열려있는 동안은 라우트 탭의 활성 표시를 끈다 — 메뉴는 한 번에 하나만 선택 상태
@@ -190,39 +179,9 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
         <Image src="/icon.svg" alt="" width={38} height={38} style={{ borderRadius: 11 }} />
       </Link>
 
-      {/* 순서: 지도 - 검색 - 영화 */}
+      {/* 순서: 지도 - 영화 (검색은 지도 상단 검색창으로 진입 — 레일 탭 제거) */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
-        {DESKTOP_RAIL_TABS.filter((tab) => tab.key === 'map').map(renderRailTab)}
-
-        <button
-          type="button"
-          onClick={() => {
-            if (!isSearchOpen) trackEvent('search opened', { source: 'nav_rail' })
-            setSearchOpen(!isSearchOpen)
-          }}
-          aria-label="검색"
-          aria-pressed={isSearchOpen}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 4,
-            padding: '8px 4px',
-            marginLeft: 8,
-            marginRight: 8,
-            width: 'calc(100% - 16px)',
-            borderRadius: 10,
-            border: 'none',
-            background: isSearchOpen ? 'color-mix(in srgb, var(--color-primary-base) 11%, transparent)' : 'transparent',
-            color: searchColor,
-            cursor: 'pointer',
-          }}
-        >
-          <IconSearch size={21} />
-          <span style={{ fontSize: 10.5, fontWeight: 600 }}>검색</span>
-        </button>
-
-        {DESKTOP_RAIL_TABS.filter((tab) => tab.key !== 'map').map(renderRailTab)}
+        {DESKTOP_RAIL_TABS.map(renderRailTab)}
       </div>
 
       <button
