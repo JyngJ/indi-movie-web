@@ -68,14 +68,14 @@ function MovieCardInfo({ movie, isDesktop, caption }: { movie: Movie; isDesktop:
       </span>
 
       {/* 장르칩 + 연도 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-1)', flexWrap: 'wrap' }}>
         {movie.genre.slice(0, 1).map((g) => (
           <span
             key={g}
             style={{
               fontSize: 10,
               padding: '2px 6px',
-              borderRadius: 99,
+              borderRadius: 'var(--radius-full)',
               background: 'var(--color-surface-raised)',
               color: 'var(--color-text-caption)',
               border: '1px solid var(--color-border)',
@@ -126,12 +126,12 @@ export function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number
         padding: '14px',
         display: 'flex',
         flexDirection: 'column',
-        gap: 8,
+        gap: 'var(--spacing-2)',
       }}
     >
       <span
         style={{
-          fontSize: 15,
+          fontSize: 'var(--text-subtitle)',
           fontWeight: 700,
           color: 'var(--color-text-primary)',
           lineHeight: 1.35,
@@ -151,14 +151,14 @@ export function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number
       )}
 
       {tags.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-1)' }}>
           {tags.map((tag) => (
             <span
               key={tag}
               style={{
-                fontSize: 11,
+                fontSize: 'var(--text-caption)',
                 padding: '3px 9px',
-                borderRadius: 99,
+                borderRadius: 'var(--radius-full)',
                 background: 'var(--color-surface-raised)',
                 color: 'var(--color-text-body)',
                 border: '1px solid var(--color-border)',
@@ -234,7 +234,7 @@ function MovieCard({
         onMouseEnter={isDesktop ? onMouseEnter : undefined}
         onMouseLeave={isDesktop ? onMouseLeave : undefined}
         onClick={onClick}
-        style={{ display: 'flex', flexDirection: 'column', gap: 6, width, flexShrink: 0, cursor: onClick ? 'pointer' : undefined }}
+        style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1-5)', width, flexShrink: 0, cursor: onClick ? 'pointer' : undefined }}
       >
         {/* 포스터: scale은 있으나 layout size 유지 → 부모 padding 안에서 visual overflow */}
         <div
@@ -242,7 +242,7 @@ function MovieCard({
             transition: 'transform 130ms ease',
             transform: hovered ? 'scale(1.1)' : 'scale(1)',
             transformOrigin: 'center center',
-            borderRadius: 6,
+            borderRadius: 'var(--radius-md)',
             position: 'relative',
           }}
         >
@@ -251,7 +251,7 @@ function MovieCard({
             <span style={{
               position: 'absolute', top: 4, right: 4,
               padding: '2px 6px',
-              borderRadius: 99,
+              borderRadius: 'var(--radius-full)',
               fontSize: 10, fontWeight: 700, lineHeight: 1.4,
               color: '#fff',
               backgroundColor: daysLeft === 0 ? '#DC2626' : daysLeft === 1 ? '#EA580C' : '#78716C',
@@ -316,20 +316,20 @@ export function CurationSectionRow({
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' }}>
         {/* 헤더 */}
         <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--color-border)', background: 'var(--color-surface-card)' }}>
-          <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>
+          <div style={{ fontSize: 'var(--text-body)', fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>
             {emoji} {title}
           </div>
           {description && (
-            <div style={{ fontSize: 11, color: 'var(--color-text-caption)', marginTop: 2, lineHeight: 1.4 }}>{description}</div>
+            <div style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-caption)', marginTop: 2, lineHeight: 1.4 }}>{description}</div>
           )}
         </div>
         {/* 영화 inline */}
-        <div style={{ display: 'flex', gap: 10, padding: '12px 14px', background: 'var(--color-surface-card)', flex: 1 }}>
+        <div style={{ display: 'flex', gap: 'var(--spacing-2-5)', padding: '12px 14px', background: 'var(--color-surface-card)', flex: 1 }}>
           {movies.slice(0, 2).map((movie) => (
             <div
               key={movie.id}
               onClick={onMovieClick ? () => onMovieClick(movie.id) : undefined}
-              style={{ display: 'flex', gap: 10, alignItems: 'flex-start', flex: 1, minWidth: 0, cursor: onMovieClick ? 'pointer' : undefined }}
+              style={{ display: 'flex', gap: 'var(--spacing-2-5)', alignItems: 'flex-start', flex: 1, minWidth: 0, cursor: onMovieClick ? 'pointer' : undefined }}
             >
               <div style={{ flexShrink: 0 }}>
                 <PosterThumb src={movie.posterUrl} alt={movie.title} width={52} height={78} />
@@ -341,9 +341,9 @@ export function CurationSectionRow({
                 <span style={{ fontSize: 10, color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {movie.director.length > 0 ? movie.director[0] : '감독 미상'}
                 </span>
-                <div style={{ display: 'flex', gap: 4 }}>
+                <div style={{ display: 'flex', gap: 'var(--spacing-1)' }}>
                   {movie.genre.slice(0, 1).map((g) => (
-                    <span key={g} style={{ fontSize: 10, padding: '2px 5px', borderRadius: 99, background: 'var(--color-surface-raised)', color: 'var(--color-text-caption)', border: '1px solid var(--color-border)' }}>{g}</span>
+                    <span key={g} style={{ fontSize: 10, padding: '2px 5px', borderRadius: 'var(--radius-full)', background: 'var(--color-surface-raised)', color: 'var(--color-text-caption)', border: '1px solid var(--color-border)' }}>{g}</span>
                   ))}
                   <span style={{ fontSize: 10, color: 'var(--color-text-caption)', fontWeight: 600 }}>{movie.year}</span>
                 </div>
@@ -377,7 +377,7 @@ export function CurationSectionRow({
           style={{
             margin: 0,
             padding: '0 16px',
-            fontSize: isDesktop ? 20 : 17,
+            fontSize: isDesktop ? 'var(--text-h3)' : 'var(--text-title)',
             fontWeight: 700,
             fontFamily: 'var(--font-display)',
             color: 'var(--color-text-primary)',
@@ -391,7 +391,7 @@ export function CurationSectionRow({
           style={{
             margin: '4px 0 0',
             padding: '0 16px',
-            fontSize: isDesktop ? 13 : 12,
+            fontSize: isDesktop ? 'var(--text-meta)' : 12,
             color: 'var(--color-text-caption)',
             lineHeight: 1.5,
           }}

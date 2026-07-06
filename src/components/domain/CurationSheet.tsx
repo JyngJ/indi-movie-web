@@ -176,7 +176,7 @@ function PosterRow({ items, onSelect, emptyText, desktop = false }: {
 
   if (items.length === 0) {
     return (
-      <p style={{ margin: 0, paddingLeft: 20, paddingRight: 20, fontSize: 13, color: 'var(--color-text-caption)' }}>
+      <p style={{ margin: 0, paddingLeft: 20, paddingRight: 20, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
         {emptyText}
       </p>
     )
@@ -186,12 +186,12 @@ function PosterRow({ items, onSelect, emptyText, desktop = false }: {
     <div ref={desktop ? undefined : scrollRef} className={desktop ? undefined : 'themed-scrollbar'} style={desktop ? {
       display: 'grid',
       gridTemplateColumns: 'repeat(3, 1fr)',
-      gap: 12,
+      gap: 'var(--spacing-3)',
       paddingLeft: 20,
       paddingRight: 20,
     } : {
       display: 'flex',
-      gap: 12,
+      gap: 'var(--spacing-3)',
       overflowX: 'auto',
       paddingLeft: 20,
       paddingRight: 20,
@@ -245,7 +245,7 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
           minWidth: 0,
           display: 'flex',
           flexDirection: 'column',
-          gap: 6,
+          gap: 'var(--spacing-1-5)',
           border: 'none',
           background: 'none',
           padding: 0,
@@ -268,7 +268,7 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
               right: -6,
               backgroundColor: 'var(--color-primary-base)',
               color: '#fff',
-              borderRadius: 999,
+              borderRadius: 'var(--radius-full)',
               padding: '2px 7px',
               fontSize: 10,
               fontWeight: 700,
@@ -300,7 +300,7 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
           )}
         </div>
         <span style={{
-          fontSize: 13,
+          fontSize: 'var(--text-meta)',
           fontWeight: 700,
           fontFamily: 'var(--font-display)',
           color: 'var(--color-text-primary)',
@@ -314,7 +314,7 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
         </span>
         {item.subtitle && (
           <span style={{
-            fontSize: 11,
+            fontSize: 'var(--text-caption)',
             color: 'var(--color-text-caption)',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -343,12 +343,12 @@ function Section({ title, icon, withLine, action, style, children }: {
   children: React.ReactNode
 }) {
   return (
-    <section style={{ display: 'flex', flexDirection: 'column', gap: 10, ...style }}>
-      <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 20, paddingRight: 20, gap: 6 }}>
+    <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2-5)', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 20, paddingRight: 20, gap: 'var(--spacing-1-5)' }}>
         {icon && <span style={{ fontSize: 16, lineHeight: 1 }}>{icon}</span>}
         <h3 style={{
           margin: 0,
-          fontSize: 15,
+          fontSize: 'var(--text-subtitle)',
           fontWeight: 700,
           color: 'var(--color-text-primary)',
           flexShrink: 0,
@@ -413,13 +413,13 @@ function RecentList({
 
   if (items.length === 0) {
     return (
-      <p style={{ margin: 0, paddingLeft: 20, paddingRight: 20, fontSize: 13, color: 'var(--color-text-caption)' }}>
+      <p style={{ margin: 0, paddingLeft: 20, paddingRight: 20, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
         최근 찾아본 영화·극장·감독이 아직 없어요
       </p>
     )
   }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingLeft: 20, paddingRight: 20 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1-5)', paddingLeft: 20, paddingRight: 20 }}>
       {items.map(item => (
         <div
           key={`${item.kind}-${item.id}`}
@@ -428,23 +428,23 @@ function RecentList({
             alignItems: 'center',
             padding: '6px 12px',
             backgroundColor: 'var(--color-surface-bg)',
-            borderRadius: 8,
-            gap: 10,
+            borderRadius: 'var(--radius-lg)',
+            gap: 'var(--spacing-2-5)',
           }}
         >
           <button
             onClick={() => handleItemClick(item)}
             style={{
               flex: 1, minWidth: 0,
-              display: 'flex', alignItems: 'center', gap: 8,
+              display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)',
               border: 'none', background: 'none', cursor: 'pointer', padding: 0, textAlign: 'left',
             }}
           >
-            <span style={{ flex: 1, fontSize: 14, fontWeight: 500, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span style={{ flex: 1, fontSize: 'var(--text-body)', fontWeight: 500, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {item.title}
             </span>
             {item.kind && (
-              <span style={{ fontSize: 11, color: 'var(--color-text-caption)', flexShrink: 0 }}>
+              <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-caption)', flexShrink: 0 }}>
                 {KIND_LABEL[item.kind]}
               </span>
             )}
@@ -460,7 +460,7 @@ function RecentList({
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: 'var(--color-text-caption)',
                 padding: 0,
-                fontSize: 13,
+                fontSize: 'var(--text-meta)',
               }}
             >
               ✕
@@ -616,8 +616,8 @@ export function CurationSections({
           : section.items.slice(0, SECTION_COLLAPSED_COUNT)
 
         const btnStyle = {
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-          padding: '8px 0', border: 'none', borderRadius: 8,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-1)',
+          padding: '8px 0', border: 'none', borderRadius: 'var(--radius-lg)',
           background: 'var(--color-surface-bg)', color: 'var(--color-text-caption)',
           fontSize: 12, fontWeight: 600, cursor: 'pointer',
         } as const
@@ -634,7 +634,7 @@ export function CurationSections({
                 </button>
               )}
               {hasMore && expandState === 'partial' && (
-                <div style={{ display: 'flex', gap: 8, margin: '0 20px' }}>
+                <div style={{ display: 'flex', gap: 'var(--spacing-2)', margin: '0 20px' }}>
                   <button type="button" onClick={() => {
                     setExpand(section.key, 'collapsed')
                     sectionRefs.current[section.key]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -663,7 +663,7 @@ export function CurationSections({
             onClick={onClearRecentlyViewed}
             style={{
               background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-              fontSize: 11, color: 'var(--color-text-caption)',
+              fontSize: 'var(--text-caption)', color: 'var(--color-text-caption)',
               textDecoration: 'underline', flexShrink: 0,
             }}
           >
@@ -929,7 +929,7 @@ export function CurationSheet({
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: 8,
+          gap: 'var(--spacing-2)',
           paddingTop: 8,
           paddingBottom: 10,
           flexShrink: 0,
@@ -941,9 +941,9 @@ export function CurationSheet({
           borderRadius: 'var(--comp-sheet-handle-radius)',
           backgroundColor: 'var(--color-border)',
         }} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-text-primary)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-1-5)', color: 'var(--color-text-primary)' }}>
           <span style={{ color: 'var(--color-primary-base)', display: 'flex' }}><IconSparkle /></span>
-          <span style={{ fontSize: 15, fontWeight: 700 }}>큐레이션</span>
+          <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700 }}>큐레이션</span>
         </div>
       </div>
       <div ref={scrollAreaRef} style={{

@@ -90,14 +90,14 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
         onClick={() => setOpen(o => !o)}
         style={{
           display: 'flex', alignItems: 'center', width: '100%',
-          padding: '10px 16px 6px', gap: 6,
+          padding: '10px 16px 6px', gap: 'var(--spacing-1-5)',
           background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
         }}
       >
-        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-primary)', flex: 1 }}>
+        <span style={{ fontSize: 'var(--text-meta)', fontWeight: 700, color: 'var(--color-text-primary)', flex: 1 }}>
           이벤트
         </span>
-        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-caption)', marginRight: 4 }}>
+        <span style={{ fontSize: 'var(--text-caption)', fontWeight: 600, color: 'var(--color-text-caption)', marginRight: 4 }}>
           {events.length}개
         </span>
         <svg
@@ -132,7 +132,7 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
             ref={scrollRef}
             onScroll={updateEdge}
             style={{
-              display: 'flex', gap: 8, overflowX: 'auto',
+              display: 'flex', gap: 'var(--spacing-2)', overflowX: 'auto',
               padding: '2px 16px 10px',
               scrollbarWidth: 'none',
             }}
@@ -177,19 +177,19 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
                     ) : (
                       <span style={{
                         fontFamily: 'var(--font-display)',
-                        fontSize: 22, fontWeight: 900, color: 'rgba(255,255,255,0.15)',
+                        fontSize: 'var(--text-h2)', fontWeight: 900, color: 'rgba(255,255,255,0.15)',
                         userSelect: 'none',
                       }}>{ev.label}</span>
                     )}
                     <div style={{
                       position: 'absolute', top: 5, left: 5,
                       background: gvEventTypeColor(ev.type), color: '#fff',
-                      fontSize: 9, fontWeight: 800, borderRadius: 3, padding: '2px 5px', letterSpacing: '0.3px',
+                      fontSize: 'var(--text-badge)', fontWeight: 800, borderRadius: 3, padding: '2px 5px', letterSpacing: '0.3px',
                     }}>{ev.type}</div>
                     <div style={{
                       position: 'absolute', bottom: 5, right: 5,
                       background: 'rgba(0,0,0,0.5)', color: '#fff',
-                      fontSize: 9.5, fontWeight: 600, borderRadius: 4, padding: '1.5px 5px',
+                      fontSize: 9.5, fontWeight: 600, borderRadius: 'var(--radius-sm)', padding: '1.5px 5px',
                       backdropFilter: 'blur(4px)',
                       whiteSpace: 'nowrap',
                     }}>

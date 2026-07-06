@@ -28,7 +28,7 @@ function RankBadge({ rank, prevRank }: { rank: number; prevRank: number | null }
   if (prevRank === null) {
     return (
       <span style={{
-        fontSize: 10, fontWeight: 700, padding: '2px 5px', borderRadius: 4,
+        fontSize: 10, fontWeight: 700, padding: '2px 5px', borderRadius: 'var(--radius-sm)',
         background: '#D97706', color: '#fff', letterSpacing: 0.2,
       }}>NEW</span>
     )
@@ -85,21 +85,21 @@ function InfoTooltip({ weekStart }: { weekStart: string }) {
         border: '1px solid var(--color-border)',
         borderRadius: 14,
         padding: '16px 16px 12px',
-        display: 'flex', flexDirection: 'column', gap: 10,
+        display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2-5)',
         boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
       }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+        <span style={{ fontSize: 'var(--text-meta)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
           ⚖️ 랭킹은 이렇게 매겨요
         </span>
-        <p style={{ margin: 0, fontSize: 11, color: 'var(--color-text-caption)', lineHeight: 1.6 }}>
+        <p style={{ margin: 0, fontSize: 'var(--text-caption)', color: 'var(--color-text-caption)', lineHeight: 1.6 }}>
           지난 7일 · <strong>{periodLabel}</strong> 세 지표 가중 합산
         </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)' }}>
           {METRICS.map(({ icon, label: l, pct, color, desc }) => (
             <div key={l} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 11, color: 'var(--color-text-body)' }}>{icon} {l}</span>
-                <span style={{ fontSize: 11, fontWeight: 700, color }}>{pct}%</span>
+                <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-body)' }}>{icon} {l}</span>
+                <span style={{ fontSize: 'var(--text-caption)', fontWeight: 700, color }}>{pct}%</span>
               </div>
               <div style={{ height: 5, borderRadius: 3, background: 'var(--color-border)', overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 3 }} />
@@ -131,18 +131,18 @@ function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number }) {
       background: 'var(--color-surface-card)', border: '1px solid var(--color-border)',
       borderRadius: 16, boxShadow: '0 12px 40px rgba(0,0,0,0.48)',
       zIndex: 9999, pointerEvents: 'none', padding: 14,
-      display: 'flex', flexDirection: 'column', gap: 8,
+      display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)',
     }}>
-      <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+      <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
         {normalizeTitle(movie.title)}
       </span>
       {movie.director.length > 0 && (
         <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>{movie.director[0]}</span>
       )}
       {tags.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-1)' }}>
           {tags.map(tag => (
-            <span key={tag} style={{ fontSize: 11, padding: '3px 9px', borderRadius: 99, background: 'var(--color-surface-raised)', color: 'var(--color-text-body)', border: '1px solid var(--color-border)' }}>
+            <span key={tag} style={{ fontSize: 'var(--text-caption)', padding: '3px 9px', borderRadius: 'var(--radius-full)', background: 'var(--color-surface-raised)', color: 'var(--color-text-body)', border: '1px solid var(--color-border)' }}>
               {tag}
             </span>
           ))}
@@ -184,7 +184,7 @@ function RankingCard({ entry, movie, rank, isDesktop, gapRight, onClick }: { ent
         onMouseEnter={isDesktop ? onMouseEnter : undefined}
         onMouseLeave={isDesktop ? onMouseLeave : undefined}
         onClick={onClick}
-        style={{ display: 'flex', flexDirection: 'column', gap: 8, width, flexShrink: 0, cursor: onClick ? 'pointer' : undefined, marginRight: gapRight }}
+        style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)', width, flexShrink: 0, cursor: onClick ? 'pointer' : undefined, marginRight: gapRight }}
       >
         <div style={{ position: 'relative', overflow: 'visible' }}>
           {/* 순위 — 포스터 왼쪽 뒤에, 반투명 테두리만 */}
@@ -201,7 +201,7 @@ function RankingCard({ entry, movie, rank, isDesktop, gapRight, onClick }: { ent
           </span>
           {/* 포스터 — 숫자 위에, 호버시만 확대 */}
           <div style={{
-            position: 'relative', zIndex: 1, borderRadius: 6, overflow: 'hidden',
+            position: 'relative', zIndex: 1, borderRadius: 'var(--radius-md)', overflow: 'hidden',
             transition: 'transform 130ms ease',
             transform: hovered ? 'scale(1.1)' : 'scale(1)',
             transformOrigin: 'center center',
@@ -210,11 +210,11 @@ function RankingCard({ entry, movie, rank, isDesktop, gapRight, onClick }: { ent
           </div>
         </div>
 
-        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-body)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3 }}>
+        <span style={{ fontSize: 'var(--text-meta)', fontWeight: 700, color: 'var(--color-text-body)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3 }}>
           {movie ? normalizeTitle(movie.title) : '—'}
         </span>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
-          <span style={{ fontSize: 11, color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--spacing-1)' }}>
+          <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {movie?.director?.[0] ?? '감독 미상'}
           </span>
           <RankBadge rank={entry.rank} prevRank={entry.prev_rank} />
@@ -275,10 +275,10 @@ export function FilmRankingSection({ weekStart, rankings, movies, isDesktop, onM
     <section style={{ paddingTop: 28 }}>
       <div style={{ padding: '0 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-1-5)' }}>
             <h2 style={{
               margin: 0,
-              fontSize: isDesktop ? 20 : 17,
+              fontSize: isDesktop ? 'var(--text-h3)' : 'var(--text-title)',
               fontWeight: 700,
               fontFamily: 'var(--font-display)',
               color: 'var(--color-text-primary)',
@@ -293,7 +293,7 @@ export function FilmRankingSection({ weekStart, rankings, movies, isDesktop, onM
               <button
                 style={{
                   background: 'none', border: 'none', cursor: 'pointer',
-                  padding: 2, color: 'var(--color-text-caption)', fontSize: 14,
+                  padding: 2, color: 'var(--color-text-caption)', fontSize: 'var(--text-body)',
                   display: 'flex', alignItems: 'center',
                 }}
                 aria-label="랭킹 기준 보기"

@@ -62,7 +62,7 @@ function DirectorCard({ director, isDesktop, onClick }: { director: DirectorSpot
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: 6,
+        gap: 'var(--spacing-1-5)',
         width: size + 16,
         flexShrink: 0,
         cursor: onClick ? 'pointer' : undefined,
@@ -119,7 +119,7 @@ function DirectorCard({ director, isDesktop, onClick }: { director: DirectorSpot
         {director.name}
       </span>
 
-      <span style={{ fontSize: 11, color: 'var(--color-text-caption)', whiteSpace: 'nowrap' }}>
+      <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-caption)', whiteSpace: 'nowrap' }}>
         상영중{' '}
         <strong style={{ color: 'var(--color-accent)', fontWeight: 700 }}>
           {director.movieCount}
@@ -146,7 +146,7 @@ export function DirectorSpotlightSection({
         <h2
           style={{
             margin: 0,
-            fontSize: isDesktop ? 20 : 17,
+            fontSize: isDesktop ? 'var(--text-h3)' : 'var(--text-title)',
             fontWeight: 700,
             fontFamily: 'var(--font-display)',
             color: 'var(--color-text-primary)',
@@ -163,7 +163,7 @@ export function DirectorSpotlightSection({
         className="no-scrollbar"
         style={{
           display: 'flex',
-          gap: isDesktop ? 20 : 14,
+          gap: isDesktop ? 'var(--spacing-5)' : 14,
           overflowX: 'auto',
           padding: '12px 16px 8px',
         }}
