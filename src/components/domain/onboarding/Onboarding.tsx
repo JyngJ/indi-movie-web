@@ -275,14 +275,22 @@ export function Onboarding({ onClose }: Props) {
             <div className={s.spacer} />
             {p.footnote && <div className={`${s.footnote} ${s.mFootnote}`}>{p.footnote}</div>}
             <div className={s.mFooter}>
+              <button
+                type="button"
+                className={s.mPrevBtn}
+                onClick={() => goTo(page - 1)}
+                style={{ visibility: page === 0 ? 'hidden' : 'visible' }}
+              >
+                <IcArrow size={16} /> 이전
+              </button>
               {dots}
               {isLast ? (
                 <div className={s.mCtas}>
                   <button type="button" className={s.ctaGhost} onClick={handleBrowseCta}>
-                    위치 없이 둘러보기
+                    위치 없이<br />둘러보기
                   </button>
                   <button type="button" className={s.nextBtn} onClick={handleLocationCta}>
-                    위치 켜고 시작하기
+                    위치 켜고<br />시작하기
                   </button>
                 </div>
               ) : (

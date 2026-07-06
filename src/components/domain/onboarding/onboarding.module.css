@@ -495,21 +495,24 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 10px;
 }
 .mFooter .dots {
   margin-top: 0;
 }
 
 .nextBtn {
-  height: 52px;
-  padding: 0 30px;
+  min-height: 52px;
+  padding: 8px 22px;
   border-radius: 13px;
+  white-space: nowrap;
   background: var(--color-primary-base);
   color: #fff;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 15.5px;
+  line-height: 1.2;
+  text-align: center;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -521,19 +524,41 @@
 
 .mCtas {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 6px;
 }
 
 .ctaGhost {
-  height: 52px;
-  padding: 0 12px;
+  min-height: 52px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--color-text-caption);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* 데스크톱 모달 이전 버튼 */
+.mPrevBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  padding: 0 8px;
   font-size: 14px;
   font-weight: 600;
   color: var(--color-text-caption);
   background: none;
   border: none;
   cursor: pointer;
+  white-space: nowrap;
+}
+.mPrevBtn svg {
+  transform: scaleX(-1);
 }
 
 @keyframes obSlideIn {
