@@ -132,7 +132,7 @@ export function Onboarding({ onClose }: Props) {
     illoRefs.current.forEach((node, i) => {
       if (!node) return
       const delta = el.scrollLeft - i * width
-      const lag = Math.max(-12, Math.min(12, delta * 0.032))
+      const lag = Math.max(-18, Math.min(18, delta * 0.045))
       node.style.transform = `translateX(${lag}px)`
     })
   }, [])
