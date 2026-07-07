@@ -124,6 +124,26 @@ export default function FilmsPage() {
     almostSoldOutFilms.map((f) => [f.movie.id, formatAlmostSoldOutCaption(f, asoToday)]),
   )
 
+  const almostSoldOutCustomInfos = new Map<string, React.ReactNode>(
+    almostSoldOutFilms.map((f) => {
+      const dir = f.movie.director.length > 0 ? f.movie.director[0] : '감독 미상'
+      const first = f.showings[0]
+      const dayLabel = first?.showDate === asoToday ? '오늘' : '내일'
+      const rest = f.showings.length - 1
+      const dateText = first ? `${dayLabel} ${first.showTime}${rest > 0 ? ` · 외 ${rest}회` : ''}` : ''
+      const theaterName = first?.theaterName ?? ''
+
+      return [
+        f.movie.id,
+        <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 2 }}>
+          <span style={{ fontSize: 11, color: 'var(--color-text-caption)' }}>{dir}</span>
+          <span style={{ fontSize: 11, color: 'var(--color-primary-base)', fontWeight: 600 }}>{theaterName}</span>
+          <span style={{ fontSize: 11, color: 'var(--color-primary-hover-l)' }}>{dateText}</span>
+        </div>
+      ]
+    })
+  )
+
   const handleAlmostSoldOutMovieClick = (movieId: string) => {
     trackEvent('curation movie selected', {
       movie_id: movieId,
@@ -149,6 +169,26 @@ export default function FilmsPage() {
   )
   const lateNightCaptions = new Map(
     lateNightFilms.map((f) => [f.movie.id, formatLateNightCaption(f, lnToday)]),
+  )
+
+  const lateNightCustomInfos = new Map<string, React.ReactNode>(
+    lateNightFilms.map((f) => {
+      const dir = f.movie.director.length > 0 ? f.movie.director[0] : '감독 미상'
+      const first = f.showings[0]
+      const dayLabel = first?.showDate === lnToday ? '오늘' : '내일'
+      const rest = f.showings.length - 1
+      const dateText = first ? `${dayLabel} ${first.showTime}${rest > 0 ? ` · 외 ${rest}회` : ''}` : ''
+      const theaterName = first?.theaterName ?? ''
+
+      return [
+        f.movie.id,
+        <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 2 }}>
+          <span style={{ fontSize: 11, color: 'var(--color-text-caption)' }}>{dir}</span>
+          <span style={{ fontSize: 11, color: 'var(--color-primary-base)', fontWeight: 600 }}>{theaterName}</span>
+          <span style={{ fontSize: 11, color: 'var(--color-primary-hover-l)' }}>{dateText}</span>
+        </div>
+      ]
+    })
   )
 
   const handleLateNightMovieClick = (movieId: string) => {
@@ -434,6 +474,7 @@ export default function FilmsPage() {
           displayMode: string; movies: import('@/types/api').Movie[]
           posterBadges?: Map<string, number>
           movieCaptions?: Map<string, string>
+          customBottomInfos?: Map<string, React.ReactNode>
           onMovieClick?: (movieId: string) => void
         }
 
@@ -455,6 +496,7 @@ export default function FilmsPage() {
           description: '최근 확인 기준, 오늘·내일 회차의 좌석이 얼마 남지 않았어요',
           displayMode: 'default',
           movieCaptions: almostSoldOutCaptions,
+          customBottomInfos: almostSoldOutCustomInfos,
           onMovieClick: handleAlmostSoldOutMovieClick,
           movies: almostSoldOutFilms.map((f) => f.movie),
         }] : []
@@ -467,6 +509,7 @@ export default function FilmsPage() {
           description: '하루의 끝, 밤 깊은 시간에 시작하는 회차들이에요',
           displayMode: 'default',
           movieCaptions: lateNightCaptions,
+          customBottomInfos: lateNightCustomInfos,
           onMovieClick: handleLateNightMovieClick,
           movies: lateNightFilms.map((f) => f.movie),
         }] : []
@@ -542,6 +585,7 @@ export default function FilmsPage() {
                 displayMode={s.displayMode as SectionDisplayMode}
                 movies={s.movies} isDesktop={isDesktop}
                 posterBadges={s.posterBadges} movieCaptions={s.movieCaptions}
+                customBottomInfos={s.customBottomInfos}
                 onMovieClick={s.onMovieClick ?? handleMovieClick}
                 compact={compact} />
             )

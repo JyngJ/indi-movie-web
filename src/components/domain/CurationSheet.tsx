@@ -265,8 +265,8 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
           {item.distanceLabel && (
             <div style={{
               position: 'absolute',
-              top: -6,
-              right: -6,
+              top: 4,
+              right: 4,
               backgroundColor: 'var(--color-primary-base)',
               color: '#fff',
               borderRadius: 'var(--radius-full)',
@@ -275,7 +275,6 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
               fontWeight: 700,
               whiteSpace: 'nowrap',
               boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
-              border: '1.5px solid var(--color-surface-bg)',
             }}>
               {item.distanceLabel}
             </div>
