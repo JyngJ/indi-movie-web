@@ -1396,14 +1396,21 @@ async function crawlCineQApi(
           const showDate = match[1]
           const showTime = match[4].trim()
 
-          candidates.push({
+          candidates.push(buildCandidate({
+            context,
             movieTitle,
             screenName: '씨네Q 신도림', // TODO: Parse actual screen name if available
             showDate,
             showTime,
-            // Additional links to book directly
-            ticketingUrl: `https://www.cineq.co.kr/Theater/Movie?TheaterCode=${theaterCode}`
-          })
+            bookingUrl: `https://www.cineq.co.kr/Theater/Movie?TheaterCode=${theaterCode}`,
+            formatText: '',
+            seatAvailable: 0,
+            seatTotal: 0,
+            price: 0,
+            confidence: 0.9,
+            warnings: [],
+            rawText: block.slice(0, 300).replace(/\s+/g, ' '),
+          }))
         }
       }
     } catch (e) {
