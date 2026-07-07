@@ -7,6 +7,7 @@ import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import type { SectionDisplayMode } from '@/lib/curation/filmsTabLists'
 import { withFlag } from '@/lib/nations'
 import type { Movie } from '@/types/api'
+import { GenreChip, SectionHeader, CardContainer } from '@/components/primitives'
 
 interface CurationSectionRowProps {
   title: string
@@ -71,20 +72,7 @@ function MovieCardInfo({ movie, isDesktop, caption }: { movie: Movie; isDesktop:
       {/* 장르칩 + 연도 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-1)', flexWrap: 'wrap' }}>
         {movie.genre.slice(0, 1).map((g) => (
-          <span
-            key={g}
-            style={{
-              fontSize: 10,
-              padding: '2px 6px',
-              borderRadius: 'var(--radius-full)',
-              background: 'var(--color-surface-raised)',
-              color: 'var(--color-text-caption)',
-              border: '1px solid var(--color-border)',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {g}
-          </span>
+          <GenreChip key={g}>{g}</GenreChip>
         ))}
         <span style={{ fontSize: 10, color: 'var(--color-text-caption)', fontWeight: 600 }}>
           {movie.year}
@@ -317,15 +305,10 @@ export function CurationSectionRow({
   // compact 모드: flex item으로 렌더, 1~2편 inline 표시 (스크롤 없음)
   if (compact) {
     return (
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' }}>
+      <CardContainer>
         {/* 헤더 */}
-        <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--color-border)', background: 'var(--color-surface-card)' }}>
-          <div style={{ fontSize: 'var(--text-body)', fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>
-            {emoji} {title}
-          </div>
-          {description && (
-            <div style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-caption)', marginTop: 2, lineHeight: 1.4 }}>{description}</div>
-          )}
+        <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--color-border)' }}>
+          <SectionHeader title={title} emoji={emoji} description={description} />
         </div>
         {/* 영화 inline */}
         <div style={{ display: 'flex', gap: 'var(--spacing-2-5)', padding: '12px 14px', background: 'var(--color-surface-card)', flex: 1 }}>
@@ -347,7 +330,7 @@ export function CurationSectionRow({
                 </span>
                 <div style={{ display: 'flex', gap: 'var(--spacing-1)' }}>
                   {movie.genre.slice(0, 1).map((g) => (
-                    <span key={g} style={{ fontSize: 10, padding: '2px 5px', borderRadius: 'var(--radius-full)', background: 'var(--color-surface-raised)', color: 'var(--color-text-caption)', border: '1px solid var(--color-border)' }}>{g}</span>
+                    <GenreChip key={g}>{g}</GenreChip>
                   ))}
                   <span style={{ fontSize: 10, color: 'var(--color-text-caption)', fontWeight: 600 }}>{movie.year}</span>
                 </div>
@@ -355,7 +338,7 @@ export function CurationSectionRow({
             </div>
           ))}
         </div>
-      </div>
+      </CardContainer>
     )
   }
 
@@ -377,31 +360,9 @@ export function CurationSectionRow({
   return (
     <section id={id} style={{ paddingTop: noHeader ? 0 : 24 }}>
       {!noHeader && (
-        <h2
-          style={{
-            margin: 0,
-            padding: '0 16px',
-            fontSize: isDesktop ? 'var(--text-h3)' : 'var(--text-title)',
-            fontWeight: 700,
-            fontFamily: 'var(--font-display)',
-            color: 'var(--color-text-primary)',
-          }}
-        >
-          {emoji} {title}
-        </h2>
-      )}
-      {!noHeader && description && (
-        <p
-          style={{
-            margin: '4px 0 0',
-            padding: '0 16px',
-            fontSize: isDesktop ? 'var(--text-meta)' : 12,
-            color: 'var(--color-text-caption)',
-            lineHeight: 1.5,
-          }}
-        >
-          {description}
-        </p>
+        <div style={{ paddingBottom: '16px' }}>
+          <SectionHeader title={title} emoji={emoji} description={description} isDesktop={isDesktop} />
+        </div>
       )}
       <div style={{ position: 'relative' }}>
         {canScrollLeft && (
