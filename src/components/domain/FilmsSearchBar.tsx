@@ -178,18 +178,27 @@ export function FilmsSearchBar({ movies, theaters, isDesktop }: Props) {
       <div ref={wrapRef} style={{ position: 'relative', width: '100%', zIndex: focused ? 45 : 1 }}>
 
         {/* ── Search bar ── */}
-        <div
-          onClick={() => desktopRef.current?.focus()}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 10,
-            height: 44, paddingLeft: 16, paddingRight: 10,
-            backgroundColor: 'var(--color-surface-card)',
-            border: focused ? `1.5px solid ${ACCENT}` : '1px solid var(--color-border)',
-            borderBottom: focused ? '1px solid var(--color-border)' : undefined,
-            borderRadius: focused ? '22px 22px 0 0' : '999px',
-            cursor: 'text',
-          }}
-        >
+        {!focused && !query ? (
+          <SearchBarButton
+            placeholder="영화, 영화관, 감독 검색"
+            onClick={() => {
+              setFocused(true)
+              requestAnimationFrame(() => desktopRef.current?.focus())
+            }}
+          />
+        ) : (
+          <div
+            onClick={() => desktopRef.current?.focus()}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              height: 44, paddingLeft: 16, paddingRight: 10,
+              backgroundColor: 'var(--color-surface-card)',
+              border: `1.5px solid ${ACCENT}`,
+              borderBottom: 'none',
+              borderRadius: '22px 22px 0 0',
+              cursor: 'text',
+            }}
+          >
           <span style={{ flexShrink: 0, display: 'flex', color: focused ? ACCENT : 'var(--color-text-body)' }}>
             <SearchIcon size={16} />
           </span>
@@ -231,6 +240,7 @@ export function FilmsSearchBar({ movies, theaters, isDesktop }: Props) {
             </button>
           )}
         </div>
+        )}
 
         {/* ── Dropdown ── */}
         {focused && (

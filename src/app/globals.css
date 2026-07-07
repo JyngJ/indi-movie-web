@@ -334,8 +334,8 @@ img {
   border-bottom-left-radius: 2px;
 }
 
-/* 터치 디바이스에서 호버 카드/리스트 팝업 비활성화 */
-@media (hover: none), (pointer: coarse) {
+/* 터치 디바이스 및 모바일 레이아웃(너비 1023px 이하)에서 호버 카드/리스트 팝업 비활성화 */
+@media (hover: none), (pointer: coarse), (max-width: 1023px) {
   .pm-wrap > div:first-child { transition: none !important; }
   .pm-wrap:hover .pm-tip { display: none !important; }
   .pm-wrap:hover > div:first-child { transform: none !important; box-shadow: none !important; }

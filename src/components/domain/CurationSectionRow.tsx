@@ -20,6 +20,8 @@ interface CurationSectionRowProps {
   posterBadges?: Map<string, number>
   /** movieId → 카드 하단 서브텍스트 (예: "오늘 19:30 에무시네마") — 있으면 감독 대신 표시 */
   movieCaptions?: Map<string, string>
+  /** movieId → 하단 정보 전체 커스텀 (감독, 장르, 연도 등 기본 렌더를 완전히 덮어씀) */
+  customBottomInfos?: Map<string, React.ReactNode>
   onMovieClick?: (movieId: string) => void
   /** true면 h2 제목/설명 영역을 렌더하지 않음 (AnniversarySection 등 외부 헤더 사용 시) */
   noHeader?: boolean
@@ -34,7 +36,7 @@ const POSTER_SIZE = {
 }
 
 /* ── 포스터 하단 정보: 제목 / 감독 / 장르칩+연도 ───────────────── */
-function MovieCardInfo({ movie, isDesktop, caption }: { movie: Movie; isDesktop: boolean; caption?: string }) {
+function MovieCardInfo({ movie, isDesktop, caption, customBottomInfo }: { movie: Movie; isDesktop: boolean; caption?: string; customBottomInfo?: React.ReactNode }) {
   const fontSize = isDesktop ? 14 : 12
 
   return (
@@ -55,29 +57,35 @@ function MovieCardInfo({ movie, isDesktop, caption }: { movie: Movie; isDesktop:
         {normalizeTitle(movie.title)}
       </span>
 
-      {/* 서브텍스트(있으면) 또는 감독 */}
-      <span
-        style={{
-          fontSize: fontSize - 1,
-          color: caption ? 'var(--color-text-body)' : 'var(--color-text-caption)',
-          fontWeight: caption ? 600 : undefined,
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {caption ?? (movie.director.length > 0 ? movie.director[0] : '감독 미상')}
-      </span>
+      {customBottomInfo ? (
+        customBottomInfo
+      ) : (
+        <>
+          {/* 서브텍스트(있으면) 또는 감독 */}
+          <span
+            style={{
+              fontSize: fontSize - 1,
+              color: caption ? 'var(--color-text-body)' : 'var(--color-text-caption)',
+              fontWeight: caption ? 600 : undefined,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {caption ?? (movie.director.length > 0 ? movie.director[0] : '감독 미상')}
+          </span>
 
-      {/* 장르칩 + 연도 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-1)', flexWrap: 'wrap' }}>
-        {movie.genre.slice(0, 1).map((g) => (
-          <GenreChip key={g}>{g}</GenreChip>
-        ))}
-        <span style={{ fontSize: 10, color: 'var(--color-text-caption)', fontWeight: 600 }}>
-          {movie.year}
-        </span>
-      </div>
+          {/* 장르칩 + 연도 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-1)', flexWrap: 'wrap' }}>
+            {movie.genre.slice(0, 1).map((g) => (
+              <GenreChip key={g}>{g}</GenreChip>
+            ))}
+            <span style={{ fontSize: 10, color: 'var(--color-text-caption)', fontWeight: 600 }}>
+              {movie.year}
+            </span>
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -188,6 +196,7 @@ function MovieCard({
   isDesktop,
   daysLeft,
   caption,
+  customBottomInfo,
   onClick,
 }: {
   movie: Movie
@@ -196,6 +205,7 @@ function MovieCard({
   isDesktop: boolean
   daysLeft?: number
   caption?: string
+  customBottomInfo?: React.ReactNode
   onClick?: () => void
 }) {
   const cardRef = useRef<HTMLDivElement>(null)
@@ -210,7 +220,7 @@ function MovieCard({
         setHovered(true)
         setPopupPos({ x: rect.right + 8, y: rect.top })
       }
-    }, 180)
+    }, 400)
   }
 
   function onMouseLeave() {
@@ -255,7 +265,7 @@ function MovieCard({
           )}
         </div>
 
-        <MovieCardInfo movie={movie} isDesktop={isDesktop} caption={caption} />
+        <MovieCardInfo movie={movie} isDesktop={isDesktop} caption={caption} customBottomInfo={customBottomInfo} />
       </div>
 
       {popupPos && isDesktop && (
@@ -275,6 +285,7 @@ export function CurationSectionRow({
   isDesktop = false,
   posterBadges,
   movieCaptions,
+  customBottomInfos,
   onMovieClick,
   noHeader = false,
   compact = false,
@@ -407,6 +418,7 @@ export function CurationSectionRow({
               isDesktop={isDesktop}
               daysLeft={posterBadges?.get(movie.id)}
               caption={movieCaptions?.get(movie.id)}
+              customBottomInfo={customBottomInfos?.get(movie.id)}
               onClick={onMovieClick ? () => onMovieClick(movie.id) : undefined}
             />
           ))}

@@ -82,24 +82,47 @@ export function DirectorPanel({
 
       {/* 정렬 + 목록 */}
       <div style={{ padding: '16px 20px 32px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>
-            작품 · {directorMovies.length}편
-          </span>
-          <div style={{ display: 'flex', gap: 4 }}>
-            {(['newest', 'oldest'] as const).map((s) => (
-              <button
-                key={s}
-                onClick={() => setSort(s)}
-                style={{
-                  padding: '4px 10px', borderRadius: 999, fontSize: 11, fontWeight: 500, cursor: 'pointer', border: '1px solid var(--color-border)',
-                  backgroundColor: sort === s ? 'var(--color-primary-base)' : 'transparent',
-                  color: sort === s ? '#fff' : 'var(--color-text-caption)',
-                }}
-              >
-                {s === 'newest' ? '최신순' : '오래된순'}
-              </button>
-            ))}
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>
+              작품 · {directorMovies.length}편
+            </span>
+            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+              {(['newest', 'oldest'] as const).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setSort(s)}
+                  style={{
+                    height: 24, padding: '0 10px', borderRadius: 999, fontSize: 11, fontWeight: 500, cursor: 'pointer', border: '1px solid var(--color-border)',
+                    backgroundColor: sort === s ? 'var(--color-primary-base)' : 'transparent',
+                    color: sort === s ? '#fff' : 'var(--color-text-caption)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, minHeight: 'auto',
+                  }}
+                >
+                  {s === 'newest' ? '최신순' : '오래된순'}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div style={{ 
+            marginTop: 10, 
+            fontSize: 11, 
+            color: 'var(--color-text-sub)',
+            lineHeight: 1.4,
+          }}>
+            현재 상영일정이 존재하는 영화는 <span style={{ 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              height: 16, 
+              padding: '0 4px', 
+              borderRadius: 4, 
+              backgroundColor: 'var(--color-primary-base)', 
+              color: '#fff', 
+              fontSize: 9, 
+              fontWeight: 700, 
+              verticalAlign: 'text-bottom',
+              margin: '0 2px'
+            }}>상영중</span> 태그가 표시됩니다.
           </div>
         </div>
 

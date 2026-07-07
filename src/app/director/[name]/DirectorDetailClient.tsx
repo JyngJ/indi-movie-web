@@ -121,13 +121,14 @@ function SortChips({ active, onChange }: { active: SortKey; onChange: (k: SortKe
     { key: 'oldest', label: '오래된' },
   ]
   return (
-    <div style={{ display: 'flex', gap: 6 }}>
+    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
       {opts.map((o) => (
         <button
           key={o.key}
           onClick={() => onChange(o.key)}
           style={{
-            height: 26, padding: '0 12px',
+            height: 24,
+            padding: '0 10px',
             borderRadius: 999,
             border: '1px solid',
             borderColor: active === o.key ? 'var(--color-primary-base)' : 'var(--color-border)',
@@ -137,6 +138,10 @@ function SortChips({ active, onChange }: { active: SortKey; onChange: (k: SortKe
             fontWeight: active === o.key ? 600 : 400,
             cursor: 'pointer',
             minHeight: 'auto',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            lineHeight: 1,
           }}
         >
           {o.label}
@@ -331,18 +336,42 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
       }}>
           {/* 헤더 */}
           <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
             marginBottom: isDesktop ? 0 : 14,
             marginTop: isDesktop ? 0 : 20,
-            padding: isDesktop ? '20px 22px' : undefined,
+            padding: isDesktop ? '20px 22px 16px' : undefined,
             borderBottom: isDesktop ? '1px solid var(--color-border)' : undefined,
           }}>
-            <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>
-              작품 · {directorMovies.length}편
-            </span>
-            <SortChips active={sort} onChange={setSort} />
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
+              <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>
+                작품 · {directorMovies.length}편
+              </span>
+              <SortChips active={sort} onChange={setSort} />
+            </div>
+            {/* 가이드 텍스트 추가 */}
+            <div style={{ 
+              marginTop: 10, 
+              fontSize: 12, 
+              color: 'var(--color-text-sub)',
+              lineHeight: 1.4,
+            }}>
+              현재 상영일정이 존재하는 영화는 <span style={{ 
+                display: 'inline-flex', 
+                alignItems: 'center', 
+                height: 16, 
+                padding: '0 4px', 
+                borderRadius: 4, 
+                backgroundColor: 'var(--color-primary-base)', 
+                color: '#fff', 
+                fontSize: 9, 
+                fontWeight: 700, 
+                verticalAlign: 'text-bottom',
+                margin: '0 2px'
+              }}>상영중</span> 태그가 표시됩니다.
+            </div>
           </div>
 
           {/* 리스트 */}
