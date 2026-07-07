@@ -7,7 +7,7 @@ import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import type { SectionDisplayMode } from '@/lib/curation/filmsTabLists'
 import { withFlag } from '@/lib/nations'
 import type { Movie } from '@/types/api'
-import { GenreChip, SectionHeader, CardContainer } from '@/components/primitives'
+import { GenreChip, SectionHeader, CardContainer, HoverPopup as HoverPopupPrimitive, ScrollNavButton } from '@/components/primitives'
 
 interface CurationSectionRowProps {
   title: string
@@ -95,87 +95,15 @@ export function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number
     ...(movie.nation ? [withFlag(movie.nation)] : []),
   ]
 
-  const cardWidth = 220
-  const adjustedX =
-    x + cardWidth > window.innerWidth - 16 ? x - cardWidth - 156 : x
-
-  // position:fixed는 transform 있는 조상(도크 슬라이드 패널) 기준이 되어 잘리므로
-  // body로 portal해 진짜 뷰포트 기준으로 띄운다
   return createPortal(
-    <div
-      style={{
-        position: 'fixed',
-        top: y,
-        left: adjustedX,
-        width: cardWidth,
-        background: 'var(--color-surface-card)',
-        border: '1px solid var(--color-border)',
-        borderRadius: 16,
-        boxShadow: '0 12px 40px rgba(0,0,0,0.48)',
-        zIndex: 9999,
-        pointerEvents: 'none',
-        padding: '14px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 'var(--spacing-2)',
-      }}
-    >
-      <span
-        style={{
-          fontSize: 'var(--text-subtitle)',
-          fontWeight: 700,
-          color: 'var(--color-text-primary)',
-          lineHeight: 1.35,
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden',
-        }}
-      >
-        {normalizeTitle(movie.title)}
-      </span>
-
-      {movie.director.length > 0 && (
-        <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>
-          {movie.director[0]}
-        </span>
-      )}
-
-      {tags.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-1)' }}>
-          {tags.map((tag) => (
-            <span
-              key={tag}
-              style={{
-                fontSize: 'var(--text-caption)',
-                padding: '3px 9px',
-                borderRadius: 'var(--radius-full)',
-                background: 'var(--color-surface-raised)',
-                color: 'var(--color-text-body)',
-                border: '1px solid var(--color-border)',
-              }}
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {synopsis && (
-        <>
-          <div style={{ height: 1, background: 'var(--color-border)' }} />
-          <span
-            style={{
-              fontSize: 12,
-              color: 'var(--color-text-caption)',
-              lineHeight: 1.65,
-            }}
-          >
-            {synopsis}
-          </span>
-        </>
-      )}
-    </div>,
+    <HoverPopupPrimitive
+      x={x}
+      y={y}
+      title={normalizeTitle(movie.title)}
+      subtitle={movie.director.length > 0 ? movie.director[0] : undefined}
+      tags={tags}
+      synopsis={synopsis}
+    />,
     document.body,
   )
 }
@@ -345,18 +273,6 @@ export function CurationSectionRow({
   // 포스터 이미지 영역 세로 중앙: padding-top + 포스터 높이의 절반
   const posterMidY = scaleBleed + 8 + height / 2
 
-  const btnStyle: React.CSSProperties = {
-    position: 'absolute', top: posterMidY, transform: 'translateY(-50%)',
-    width: 32, height: 32, borderRadius: '50%', zIndex: 3,
-    border: 'none', cursor: 'pointer',
-    backgroundColor: 'color-mix(in srgb, var(--color-surface-card) 72%, transparent)',
-    backdropFilter: 'blur(8px)',
-    color: 'var(--color-text-body)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    boxShadow: '0 1px 6px rgba(0,0,0,0.12)',
-    minHeight: 'auto',
-  }
-
   return (
     <section id={id} style={{ paddingTop: noHeader ? 0 : 24 }}>
       {!noHeader && (
@@ -366,26 +282,18 @@ export function CurationSectionRow({
       )}
       <div style={{ position: 'relative' }}>
         {canScrollLeft && (
-          <button
-            style={{ ...btnStyle, left: 6 }}
+          <ScrollNavButton
+            direction="left"
+            style={{ position: 'absolute', top: posterMidY, transform: 'translateY(-50%)', left: 6, zIndex: 3 }}
             onClick={() => scrollRef.current?.scrollBy({ left: -scrollAmount, behavior: 'smooth' })}
-            aria-label="이전"
-          >
-            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </button>
+          />
         )}
         {canScrollRight && (
-          <button
-            style={{ ...btnStyle, right: 6 }}
+          <ScrollNavButton
+            direction="right"
+            style={{ position: 'absolute', top: posterMidY, transform: 'translateY(-50%)', right: 6, zIndex: 3 }}
             onClick={() => scrollRef.current?.scrollBy({ left: scrollAmount, behavior: 'smooth' })}
-            aria-label="다음"
-          >
-            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-          </button>
+          />
         )}
         <div
           ref={scrollRef}
