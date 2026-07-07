@@ -20,7 +20,7 @@ export default function PrivacyPolicyPage() {
         padding: '40px 20px 80px',
         color: 'var(--color-text-body)',
         lineHeight: 1.7,
-        fontSize: 15,
+        fontSize: 'var(--text-subtitle)',
       }}
     >
       <BackLink />
@@ -28,7 +28,7 @@ export default function PrivacyPolicyPage() {
       <h1
         style={{
           fontFamily: 'var(--font-display)',
-          fontSize: 26,
+          fontSize: 'var(--text-h1)',
           fontWeight: 700,
           color: 'var(--color-text-primary)',
           margin: '20px 0 8px',
@@ -36,7 +36,7 @@ export default function PrivacyPolicyPage() {
       >
         개인정보 처리방침
       </h1>
-      <p style={{ fontSize: 13, color: 'var(--color-text-caption)', marginBottom: 28 }}>
+      <p style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', marginBottom: 28 }}>
         시행일: {EFFECTIVE_DATE}
       </p>
 
@@ -136,7 +136,7 @@ export default function PrivacyPolicyPage() {
           통해 공지합니다.</p>
       </Section>
 
-      <p style={{ fontSize: 13, color: 'var(--color-text-caption)', marginTop: 32 }}>
+      <p style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', marginTop: 32 }}>
         시행일: {EFFECTIVE_DATE}
       </p>
     </main>
@@ -148,12 +148,12 @@ const ulStyle: React.CSSProperties = {
   paddingLeft: 20,
   display: 'flex',
   flexDirection: 'column',
-  gap: 6,
+  gap: 'var(--spacing-1-5)',
 }
 
 const noteStyle: React.CSSProperties = {
   marginTop: 12,
-  fontSize: 13,
+  fontSize: 'var(--text-meta)',
   color: 'var(--color-text-caption)',
 }
 
@@ -163,7 +163,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <h2
         style={{
           fontFamily: 'var(--font-display)',
-          fontSize: 17,
+          fontSize: 'var(--text-title)',
           fontWeight: 700,
           color: 'var(--color-text-primary)',
           margin: '0 0 8px',

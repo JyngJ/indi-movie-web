@@ -46,7 +46,7 @@ export default async function OgImage({ params }: { params: Promise<{ id: string
               height: 420,
               marginRight: 60,
               alignSelf: 'center',
-              borderRadius: 16,
+              borderRadius: 'var(--radius-xl)',
               overflow: 'hidden',
               boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
             }}
@@ -75,24 +75,24 @@ export default async function OgImage({ params }: { params: Promise<{ id: string
           }}
         >
           {/* 상단: 앱 이름 */}
-          <div style={{ display: 'flex', fontSize: 20, color: '#4A6380', fontFamily: 'KIMM', fontWeight: 700 }}>
+          <div style={{ display: 'flex', fontSize: 'var(--text-h3)', color: '#4A6380', fontFamily: 'KIMM', fontWeight: 700 }}>
             영화볼지도
           </div>
 
           {/* 중앙: 영화 정보 */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' }}>
             {genres.length > 0 && (
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 'var(--spacing-2)' }}>
                 {genres.slice(0, 3).map((g) => (
                   <div
                     key={g}
                     style={{
                       display: 'flex',
-                      fontSize: 16,
+                      fontSize: 'var(--text-title)',
                       fontWeight: 600,
                       color: '#4A6380',
                       background: '#1A2530',
-                      borderRadius: 6,
+                      borderRadius: 'var(--radius-sm)',
                       padding: '3px 12px',
                     }}
                   >
@@ -113,12 +113,12 @@ export default async function OgImage({ params }: { params: Promise<{ id: string
               {title}
             </div>
             {originalTitle && (
-              <div style={{ fontSize: 20, color: '#635D55', fontStyle: 'italic' }}>
+              <div style={{ fontSize: 'var(--text-h3)', color: '#635D55', fontStyle: 'italic' }}>
                 {originalTitle}
               </div>
             )}
             {(directors.length > 0 || year) && (
-              <div style={{ display: 'flex', fontSize: 22, color: '#8A847C', gap: 12 }}>
+              <div style={{ display: 'flex', fontSize: 'var(--text-h2)', color: '#8A847C', gap: 'var(--spacing-3)' }}>
                 {directors.length > 0 && <span>{directors.join(', ')} 감독</span>}
                 {directors.length > 0 && year && <span>·</span>}
                 {year && <span>{year}</span>}
@@ -133,7 +133,7 @@ export default async function OgImage({ params }: { params: Promise<{ id: string
               alignItems: 'center',
               borderTop: '1px solid #2C2820',
               paddingTop: 20,
-              fontSize: 16,
+              fontSize: 'var(--text-title)',
               color: '#4A4540',
             }}
           >

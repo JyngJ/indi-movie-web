@@ -164,7 +164,7 @@ export default function ComponentsPage() {
                       <span className="text-[12px] font-semibold block" style={{ color: 'var(--color-text-primary)' }}>
                         {s.name}
                       </span>
-                      <span className="font-mono" style={{ ...captionStyle, fontSize: 10 }}>{s.hex}</span>
+                      <span className="font-mono" style={{ ...captionStyle, fontSize: 'var(--text-caption)' }}>{s.hex}</span>
                     </div>
                     <span className="text-right max-w-[180px]" style={captionStyle}>{s.role}</span>
                   </div>
@@ -282,7 +282,7 @@ export default function ComponentsPage() {
 
         {/* 05 바텀시트 — 극장 카드 (드래그 가능 시트, 지도 화면에서 사용) */}
         <Section title="05 · 바텀시트 — 극장 카드">
-          <div style={{ position: 'relative', height: 400, overflow: 'hidden', borderRadius: 16, background: '#e0ddd6' }}>
+          <div style={{ position: 'relative', height: 400, overflow: 'hidden', borderRadius: 'var(--radius-xl)', background: '#e0ddd6' }}>
             <TheaterSheet
               theater={{ id: 'dev', name: '더숲 아트시네마', address: '서울특별시 노원구 화랑로 123', lat: 37.6, lng: 127.0, city: '서울', createdAt: '', updatedAt: '' }}
               expanded={false}
@@ -351,7 +351,7 @@ export default function ComponentsPage() {
 
 /* ── 헬퍼 컴포넌트 ─────────────────────────────────────────────── */
 const captionStyle: React.CSSProperties = {
-  fontSize: 11,
+  fontSize: 'var(--text-caption)',
   color: 'var(--color-text-caption)',
   textTransform: 'uppercase',
   letterSpacing: '0.4px',

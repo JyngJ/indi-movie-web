@@ -33,7 +33,7 @@ function DesktopPlaceholder() {
         minHeight: '100dvh',
         paddingLeft: GLOBAL_NAV_DESKTOP_WIDTH,
         color: 'var(--color-text-caption)',
-        fontSize: 14,
+        fontSize: 'var(--text-body)',
       }}
     >
       설정 탭 — 준비 중

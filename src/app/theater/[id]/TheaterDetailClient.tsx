@@ -13,7 +13,7 @@ const s = {
     background: 'var(--color-surface-bg)',
     fontFamily: 'var(--font-sans)',
     color: 'var(--color-text-caption)',
-    fontSize: 14,
+    fontSize: 'var(--text-body)',
   } as React.CSSProperties,
 }
 

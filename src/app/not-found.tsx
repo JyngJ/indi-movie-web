@@ -18,21 +18,21 @@ export default function NotFound() {
         alt=""
         style={{ width: 220, height: 'auto', opacity: 0.85 }}
       />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)' }}>
         <p style={{
-          fontSize: 15,
+          fontSize: 'var(--text-subtitle)',
           fontWeight: 600,
           color: 'var(--color-text-primary)',
           fontFamily: 'var(--font-serif)',
         }}>
           페이지를 찾을 수 없습니다
         </p>
-        <p style={{ fontSize: 13, color: 'var(--color-text-caption)' }}>
+        <p style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
           요청하신 페이지가 존재하지 않거나 이동되었습니다.
         </p>
       </div>
       <Link href="/" style={{
-        fontSize: 13,
+        fontSize: 'var(--text-meta)',
         fontWeight: 600,
         color: 'var(--color-primary-base)',
         textDecoration: 'none',

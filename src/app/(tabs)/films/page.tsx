@@ -277,7 +277,7 @@ export default function FilmsPage() {
               <h1
                 style={{
                   margin: 0,
-                  fontSize: 24,
+                  fontSize: 'var(--text-h1)',
                   fontWeight: 700,
                   fontFamily: 'var(--font-display)',
                   color: 'var(--color-text-primary)',
@@ -285,7 +285,7 @@ export default function FilmsPage() {
               >
                 상영작
               </h1>
-              <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--color-text-caption)', whiteSpace: 'nowrap' }}>
+              <p style={{ margin: '2px 0 0', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', whiteSpace: 'nowrap' }}>
                 {subtitle}
               </p>
             </div>
@@ -341,7 +341,7 @@ export default function FilmsPage() {
               <h1
                 style={{
                   margin: 0,
-                  fontSize: 24,
+                  fontSize: 'var(--text-h1)',
                   fontWeight: 700,
                   fontFamily: 'var(--font-display)',
                   color: 'var(--color-text-primary)',
@@ -385,7 +385,7 @@ export default function FilmsPage() {
         )}
 
         {!isDesktop && (
-          <p style={{ margin: '8px 0 0', fontSize: 13, color: 'var(--color-text-caption)' }}>
+          <p style={{ margin: '8px 0 0', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
             {subtitle}
           </p>
         )}
@@ -512,7 +512,7 @@ export default function FilmsPage() {
                   films={films} isDesktop={isDesktop} onMovieClick={handleMovieClick} />
               ))}
               {rows.map((pair, ri) => (
-                <div key={`ann_sparse_${ri}`} style={{ display: 'flex', gap: 12, padding: '24px 16px 0' }}>
+                <div key={`ann_sparse_${ri}`} style={{ display: 'flex', gap: 'var(--spacing-3)', padding: '24px 16px 0' }}>
                   {pair.map(({ ann, films }) => (
                     <AnniversarySection key={`ann_${ann.nameKo}_${ann.eventType}`}
                       sectionTitle={ann.sectionTitle} sectionDesc={ann.sectionDesc}
@@ -553,7 +553,7 @@ export default function FilmsPage() {
             // 모바일에서는 2열로 묶지 않음 — 가로로 합쳐서 보여주면 잘려서 잘 안 보임
             if (isDesktop && currSparse && nextSparse) {
               nodes.push(
-                <div key={`${keyPrefix}_pair_${i}`} style={{ display: 'flex', gap: 12, padding: '24px 16px 0' }}>
+                <div key={`${keyPrefix}_pair_${i}`} style={{ display: 'flex', gap: 'var(--spacing-3)', padding: '24px 16px 0' }}>
                   {rowFor(curr, true)}
                   {rowFor(next, true)}
                 </div>
@@ -562,7 +562,7 @@ export default function FilmsPage() {
             } else if (isDesktop && currSparse) {
               // 이웃이 sparse가 아니어도 데스크톱에선 가로 카드 단독 렌더 — 큰 포스터 1~2장에 빈 공간이 생기는 것 방지
               nodes.push(
-                <div key={`${keyPrefix}_solo_${i}`} style={{ display: 'flex', gap: 12, padding: '24px 16px 0' }}>
+                <div key={`${keyPrefix}_solo_${i}`} style={{ display: 'flex', gap: 'var(--spacing-3)', padding: '24px 16px 0' }}>
                   {rowFor(curr, true)}
                 </div>
               )

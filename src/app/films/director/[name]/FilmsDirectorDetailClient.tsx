@@ -30,7 +30,7 @@ type SortKey = 'newest' | 'oldest'
 /* ── MiniPoster ─────────────────────────────────────────────────── */
 function MiniPoster({ src }: { src?: string }) {
   return (
-    <div style={{ width: 52, height: 76, borderRadius: 6, overflow: 'hidden', flexShrink: 0, backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)' }}>
+    <div style={{ width: 52, height: 76, borderRadius: 'var(--radius-sm)', overflow: 'hidden', flexShrink: 0, backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)' }}>
       {src ? <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> : <div style={{ width: '100%', height: '100%', background: 'repeating-linear-gradient(135deg, rgba(128,128,128,0.08) 0 5px, transparent 5px 10px)' }} />}
     </div>
   )
@@ -41,15 +41,15 @@ function NowPlayingPoster({ movie, isDesktop, onClick }: { movie: Movie; isDeskt
   const w = isDesktop ? 120 : 96
   const h = isDesktop ? 180 : 144
   return (
-    <button onClick={onClick} style={{ display: 'flex', flexDirection: 'column', gap: 6, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', minHeight: 'auto', width: w, flexShrink: 0 }}>
-      <div style={{ width: w, height: h, borderRadius: 8, overflow: 'hidden', flexShrink: 0, position: 'relative', backgroundColor: 'var(--color-surface-raised)' }}>
+    <button onClick={onClick} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1-5)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', minHeight: 'auto', width: w, flexShrink: 0 }}>
+      <div style={{ width: w, height: h, borderRadius: 'var(--radius-md)', overflow: 'hidden', flexShrink: 0, position: 'relative', backgroundColor: 'var(--color-surface-raised)' }}>
         {movie.posterUrl ? (
           <Image src={movie.posterUrl} alt={movie.title} fill sizes={`${w}px`} style={{ objectFit: 'cover' }} />
         ) : (
           <div style={{ width: '100%', height: '100%', background: 'repeating-linear-gradient(135deg, rgba(128,128,128,0.08) 0 7px, transparent 7px 14px)' }} />
         )}
       </div>
-      <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-body)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3, width: '100%' }}>
+      <span style={{ fontSize: 'var(--text-meta)', fontWeight: 700, color: 'var(--color-text-body)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3, width: '100%' }}>
         {normalizeTitle(movie.title)}
       </span>
     </button>
@@ -61,17 +61,17 @@ function FilmographyRow({ movie, isLast, isActive, onClick, isDesktop }: { movie
   return (
     <button
       onClick={onClick}
-      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: isDesktop ? '14px 18px' : '12px 16px', background: 'transparent', border: 'none', borderBottom: isLast ? 'none' : '1px solid var(--color-border)', width: '100%', cursor: 'pointer', textAlign: 'left', minHeight: 'auto' }}
+      style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)', padding: isDesktop ? '14px 18px' : '12px 16px', background: 'transparent', border: 'none', borderBottom: isLast ? 'none' : '1px solid var(--color-border)', width: '100%', cursor: 'pointer', textAlign: 'left', minHeight: 'auto' }}
     >
       <MiniPoster src={movie.posterUrl} />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontFamily: 'var(--font-serif)', fontSize: 15, fontWeight: 700, color: isActive ? 'var(--color-primary-base)' : 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: isDesktop ? 360 : 180 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-1-5)' }}>
+          <span style={{ fontFamily: 'var(--font-serif)', fontSize: 'var(--text-subtitle)', fontWeight: 700, color: isActive ? 'var(--color-primary-base)' : 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: isDesktop ? 360 : 180 }}>
             {normalizeTitle(movie.title)}
           </span>
-          {isActive && <span style={{ height: 18, padding: '0 6px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', fontSize: 9, fontWeight: 700, color: '#fff', backgroundColor: 'var(--color-primary-base)', flexShrink: 0 }}>상영중</span>}
+          {isActive && <span style={{ height: 18, padding: '0 6px', borderRadius: 'var(--radius-sm)', display: 'inline-flex', alignItems: 'center', fontSize: 'var(--text-badge)', fontWeight: 700, color: '#fff', backgroundColor: 'var(--color-primary-base)', flexShrink: 0 }}>상영중</span>}
         </div>
-        <div style={{ marginTop: 3, fontSize: 12, color: 'var(--color-text-caption)' }}>
+        <div style={{ marginTop: 3, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
           {[movie.year, movie.genre[0]].filter(Boolean).join(' · ')}
         </div>
       </div>
@@ -104,17 +104,17 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
   const hiddenCount = directorMovies.length - COLLAPSED_COUNT
 
   if (isLoading) {
-    return <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--color-surface-bg)' }}><span style={{ fontSize: 13, color: 'var(--color-text-caption)' }}>불러오는 중…</span></div>
+    return <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--color-surface-bg)' }}><span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>불러오는 중…</span></div>
   }
 
   const navBar = (
     <div style={{ position: 'sticky', top: 0, zIndex: 50, paddingTop: 'env(safe-area-inset-top)', backgroundColor: 'var(--color-surface-bg)', borderBottom: '1px solid var(--color-border)' }}>
-      <div style={{ height: 52, display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: isDesktop ? 4 : 0, paddingRight: 12, gap: 6, maxWidth: isDesktop ? 1200 : undefined, margin: isDesktop ? '0 auto' : undefined }}>
+      <div style={{ height: 52, display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: isDesktop ? 4 : 0, paddingRight: 12, gap: 'var(--spacing-1-5)', maxWidth: isDesktop ? 1200 : undefined, margin: isDesktop ? '0 auto' : undefined }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: isDesktop ? 4 : 0, minWidth: 0 }}>
           <button onClick={() => router.back()} style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-text-body)', flexShrink: 0 }}><IcoChevronLeft /></button>
-          <button onClick={() => router.push('/films')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-caption)', fontSize: 13, minHeight: 'auto', padding: '0 2px', flexShrink: 0 }}>영화</button>
-          <span style={{ color: 'var(--color-text-caption)', fontSize: 13, flexShrink: 0 }}>&gt;</span>
-          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>감독 · {directorName}</span>
+          <button onClick={() => router.push('/films')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-caption)', fontSize: 'var(--text-meta)', minHeight: 'auto', padding: '0 2px', flexShrink: 0 }}>영화</button>
+          <span style={{ color: 'var(--color-text-caption)', fontSize: 'var(--text-meta)', flexShrink: 0 }}>&gt;</span>
+          <span style={{ fontSize: 'var(--text-meta)', fontWeight: 600, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>감독 · {directorName}</span>
         </div>
         <RegionFilterWidget />
       </div>
@@ -137,31 +137,31 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
       </div>
 
       {/* 이름 */}
-      <h1 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 26, fontWeight: 700, color: 'var(--color-text-primary)', textAlign: 'center' }}>
+      <h1 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 'var(--text-h1)', fontWeight: 700, color: 'var(--color-text-primary)', textAlign: 'center' }}>
         {directorName}
       </h1>
       {profile?.originalName && (
-        <div style={{ marginTop: 5, fontSize: 14, color: 'var(--color-text-sub)', fontStyle: 'italic', textAlign: 'center' }}>{profile.originalName}</div>
+        <div style={{ marginTop: 5, fontSize: 'var(--text-body)', color: 'var(--color-text-sub)', fontStyle: 'italic', textAlign: 'center' }}>{profile.originalName}</div>
       )}
 
       {/* 메타 정보 */}
-      <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--color-text-caption)' }}>
+      <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
         {nowPlaying.length > 0 && (
           <span style={{ color: 'var(--color-primary-base)', fontWeight: 600 }}>상영중 {nowPlaying.length}편</span>
         )}
       </div>
 
       {/* CTA 버튼 */}
-      <div style={{ marginTop: 18, display: 'flex', gap: 8 }}>
+      <div style={{ marginTop: 18, display: 'flex', gap: 'var(--spacing-2)' }}>
         <button
           onClick={() => router.push(`/?director=${encodeURIComponent(directorName)}`)}
-          style={{ height: 40, padding: '0 16px', display: 'flex', alignItems: 'center', gap: 6, borderRadius: 10, border: '1px solid var(--color-primary-base)', backgroundColor: 'var(--color-primary-base)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+          style={{ height: 40, padding: '0 16px', display: 'flex', alignItems: 'center', gap: 'var(--spacing-1-5)', borderRadius: 'var(--radius-xl)', border: '1px solid var(--color-primary-base)', backgroundColor: 'var(--color-primary-base)', color: '#fff', fontSize: 'var(--text-meta)', fontWeight: 600, cursor: 'pointer' }}
         >
           <IcoMap /> 지도에서 필터로 보기
         </button>
         <button
           onClick={() => navigator.share?.({ title: directorName, url: window.location.href }).catch(() => {})}
-          style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 10, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', color: 'var(--color-text-body)', cursor: 'pointer', flexShrink: 0 }}
+          style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 'var(--radius-xl)', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', color: 'var(--color-text-body)', cursor: 'pointer', flexShrink: 0 }}
         >
           <IcoShare />
         </button>
@@ -179,18 +179,18 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
         {/* 소개 */}
         {profile?.bio && (
           <div style={{ padding: '20px 20px', borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
-            <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>소개</p>
-            <p style={{ margin: 0, fontSize: 13, lineHeight: 1.8, color: 'var(--color-text-body)', wordBreak: 'keep-all' }}>{profile.bio}</p>
+            <p style={{ margin: '0 0 8px', fontSize: 'var(--text-meta)', fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>소개</p>
+            <p style={{ margin: 0, fontSize: 'var(--text-meta)', lineHeight: 1.8, color: 'var(--color-text-body)', wordBreak: 'keep-all' }}>{profile.bio}</p>
           </div>
         )}
 
         {/* 현재 상영작 */}
         {nowPlaying.length > 0 && (
           <div style={{ padding: '20px 20px 0' }}>
-            <p style={{ margin: '0 0 14px', fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)' }}>
-              🎬 현재 상영작 <span style={{ fontSize: 16, color: 'var(--color-primary-base)' }}>{nowPlaying.length}편</span>
+            <p style={{ margin: '0 0 14px', fontSize: 'var(--text-h3)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+              🎬 현재 상영작 <span style={{ fontSize: 'var(--text-title)', color: 'var(--color-primary-base)' }}>{nowPlaying.length}편</span>
             </p>
-            <div className="no-scrollbar" style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 4 }}>
+            <div className="no-scrollbar" style={{ display: 'flex', gap: 'var(--spacing-3)', overflowX: 'auto', paddingBottom: 4 }}>
               {nowPlaying.map((m) => (
                 <NowPlayingPoster
                   key={m.id}
@@ -207,15 +207,15 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
         <div style={{ padding: isDesktop ? '20px 0 64px' : '20px 0 52px' }}>
           {/* 헤더 */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px 12px', borderBottom: '1px solid var(--color-border)' }}>
-            <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)' }}>
-              작품 목록 <span style={{ fontSize: 16, color: 'var(--color-text-caption)', fontWeight: 400 }}>{directorMovies.length}편</span>
+            <span style={{ fontSize: 'var(--text-h3)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+              작품 목록 <span style={{ fontSize: 'var(--text-title)', color: 'var(--color-text-caption)', fontWeight: 400 }}>{directorMovies.length}편</span>
             </span>
-            <div style={{ display: 'flex', gap: 6 }}>
+            <div style={{ display: 'flex', gap: 'var(--spacing-1-5)' }}>
               {(['newest', 'oldest'] as SortKey[]).map((k) => (
                 <button
                   key={k}
                   onClick={() => setSort(k)}
-                  style={{ height: 26, padding: '0 10px', borderRadius: 999, border: '1px solid', borderColor: sort === k ? 'var(--color-primary-base)' : 'var(--color-border)', backgroundColor: sort === k ? 'var(--color-primary-subtle-l)' : 'transparent', color: sort === k ? 'var(--color-primary-base)' : 'var(--color-text-caption)', fontSize: 12, fontWeight: sort === k ? 600 : 400, cursor: 'pointer', minHeight: 'auto' }}
+                  style={{ height: 26, padding: '0 10px', borderRadius: 'var(--radius-full)', border: '1px solid', borderColor: sort === k ? 'var(--color-primary-base)' : 'var(--color-border)', backgroundColor: sort === k ? 'var(--color-primary-subtle-l)' : 'transparent', color: sort === k ? 'var(--color-primary-base)' : 'var(--color-text-caption)', fontSize: 'var(--text-meta)', fontWeight: sort === k ? 600 : 400, cursor: 'pointer', minHeight: 'auto' }}
                 >
                   {k === 'newest' ? '최신순' : '오래된순'}
                 </button>
@@ -224,7 +224,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
           </div>
 
           {directorMovies.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '48px 0', fontSize: 13, color: 'var(--color-text-caption)' }}>작품 정보가 없습니다</div>
+            <div style={{ textAlign: 'center', padding: '48px 0', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>작품 정보가 없습니다</div>
           ) : (
             <div style={{ backgroundColor: 'var(--color-surface-card)' }}>
               {visibleMovies.map((m, i) => (
@@ -240,7 +240,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
               {hiddenCount > 0 && (
                 <button
                   onClick={() => setExpanded(!expanded)}
-                  style={{ width: '100%', height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, border: 'none', borderTop: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-raised)', color: 'var(--color-text-sub)', fontSize: 13, fontWeight: 500, cursor: 'pointer', minHeight: 'auto' }}
+                  style={{ width: '100%', height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-1-5)', border: 'none', borderTop: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-raised)', color: 'var(--color-text-sub)', fontSize: 'var(--text-meta)', fontWeight: 500, cursor: 'pointer', minHeight: 'auto' }}
                 >
                   <IcoChevronDown flipped={expanded} />
                   {expanded ? '접기' : `${hiddenCount}편 더 보기`}

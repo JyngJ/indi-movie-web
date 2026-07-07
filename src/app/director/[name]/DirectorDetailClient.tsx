@@ -65,7 +65,7 @@ function NavBar({ onBack, onClose }: { onBack: () => void; onClose: () => void }
       flexShrink: 0,
     }}>
       <button style={btn} onClick={onBack}><IcoChevronLeft /></button>
-      <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-text-primary)' }}>감독 정보</span>
+      <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 600, color: 'var(--color-text-primary)' }}>감독 정보</span>
       <button style={btn} onClick={onClose}><IcoClose /></button>
     </div>
   )
@@ -101,11 +101,11 @@ function ProfileHero({
           </svg>
         )}
       </div>
-      <h1 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 26, fontWeight: 700, color: 'var(--color-text-primary)', textAlign: 'center' }}>
+      <h1 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 'var(--text-h1)', fontWeight: 700, color: 'var(--color-text-primary)', textAlign: 'center' }}>
         {name}
       </h1>
       {originalName && (
-        <div style={{ marginTop: 5, fontSize: 14, color: 'var(--color-text-sub)', fontStyle: 'italic', textAlign: 'center' }}>
+        <div style={{ marginTop: 5, fontSize: 'var(--text-body)', color: 'var(--color-text-sub)', fontStyle: 'italic', textAlign: 'center' }}>
           {originalName}
         </div>
       )}
@@ -121,19 +121,19 @@ function SortChips({ active, onChange }: { active: SortKey; onChange: (k: SortKe
     { key: 'oldest', label: '오래된' },
   ]
   return (
-    <div style={{ display: 'flex', gap: 6 }}>
+    <div style={{ display: 'flex', gap: 'var(--spacing-1-5)' }}>
       {opts.map((o) => (
         <button
           key={o.key}
           onClick={() => onChange(o.key)}
           style={{
             height: 26, padding: '0 12px',
-            borderRadius: 999,
+            borderRadius: 'var(--radius-full)',
             border: '1px solid',
             borderColor: active === o.key ? 'var(--color-primary-base)' : 'var(--color-border)',
             backgroundColor: active === o.key ? 'var(--color-primary-subtle-l)' : 'transparent',
             color: active === o.key ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
-            fontSize: 12,
+            fontSize: 'var(--text-meta)',
             fontWeight: active === o.key ? 600 : 400,
             cursor: 'pointer',
             minHeight: 'auto',
@@ -149,7 +149,7 @@ function SortChips({ active, onChange }: { active: SortKey; onChange: (k: SortKe
 /* ── 포스터 플레이스홀더 ── */
 function MiniPoster({ src }: { src?: string }) {
   return (
-    <div style={{ width: 52, height: 76, borderRadius: 6, overflow: 'hidden', flexShrink: 0, backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)' }}>
+    <div style={{ width: 52, height: 76, borderRadius: 'var(--radius-sm)', overflow: 'hidden', flexShrink: 0, backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)' }}>
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
@@ -180,7 +180,7 @@ function FilmographyRow({
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 12,
+        gap: 'var(--spacing-3)',
         padding: desktop ? '16px 18px' : '14px 16px',
         backgroundColor: 'transparent',
         borderWidth: 0,
@@ -195,10 +195,10 @@ function FilmographyRow({
     >
       <MiniPoster src={movie.posterUrl} />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-1-5)' }}>
           <span style={{
             fontFamily: 'var(--font-serif)',
-            fontSize: 15,
+            fontSize: 'var(--text-subtitle)',
             fontWeight: 700,
             color: isActive ? 'var(--color-primary-base)' : 'var(--color-text-primary)',
             overflow: 'hidden',
@@ -211,9 +211,9 @@ function FilmographyRow({
           {isActive && (
             <span style={{
               height: 18, padding: '0 6px',
-              borderRadius: 4,
+              borderRadius: 'var(--radius-sm)',
               display: 'inline-flex', alignItems: 'center',
-              fontSize: 9, fontWeight: 700,
+              fontSize: 'var(--text-badge)', fontWeight: 700,
               color: '#fff',
               backgroundColor: 'var(--color-primary-base)',
               flexShrink: 0,
@@ -222,7 +222,7 @@ function FilmographyRow({
             </span>
           )}
         </div>
-        <div style={{ marginTop: 3, fontSize: 12, color: 'var(--color-text-caption)' }}>
+        <div style={{ marginTop: 3, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
           {[movie.year, movie.genre[0]].filter(Boolean).join(' · ')}
         </div>
       </div>
@@ -260,7 +260,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
   if (isLoading) {
     return (
       <div style={{ position: 'fixed', inset: 0, backgroundColor: 'var(--color-surface-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontSize: 13, color: 'var(--color-text-caption)' }}>불러오는 중…</span>
+        <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>불러오는 중…</span>
       </div>
     )
   }
@@ -291,7 +291,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
       {/* 약력 */}
       {profile?.bio && (
         <div style={{ padding: '16px 20px', borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
-          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.8, color: 'var(--color-text-body)' }}>
+          <p style={{ margin: 0, fontSize: 'var(--text-meta)', lineHeight: 1.8, color: 'var(--color-text-body)' }}>
             {profile.bio}
           </p>
         </div>
@@ -302,12 +302,12 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
           onClick={() => router.push(`/?director=${encodeURIComponent(directorName)}`)}
           style={{
             width: '100%', height: 44,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            borderRadius: 10,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-2)',
+            borderRadius: 'var(--radius-xl)',
             border: '1px solid var(--color-primary-base)',
             backgroundColor: 'var(--color-primary-subtle-l)',
             color: 'var(--color-primary-base)',
-            fontSize: 14,
+            fontSize: 'var(--text-body)',
             fontWeight: 600,
             cursor: 'pointer',
           }}
@@ -339,7 +339,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
             padding: isDesktop ? '20px 22px' : undefined,
             borderBottom: isDesktop ? '1px solid var(--color-border)' : undefined,
           }}>
-            <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>
+            <span style={{ fontSize: 'var(--text-caption)', fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>
               작품 · {directorMovies.length}편
             </span>
             <SortChips active={sort} onChange={setSort} />
@@ -347,7 +347,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
 
           {/* 리스트 */}
           {directorMovies.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: isDesktop ? '56px 0' : '40px 0 0', fontSize: 13, color: 'var(--color-text-caption)' }}>
+            <div style={{ textAlign: 'center', padding: isDesktop ? '56px 0' : '40px 0 0', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
               작품 정보가 없습니다
             </div>
           ) : (
@@ -378,12 +378,12 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: 6,
+                    gap: 'var(--spacing-1-5)',
                     border: 'none',
                     borderTop: '1px solid var(--color-border)',
                     backgroundColor: 'var(--color-surface-raised)',
                     color: 'var(--color-text-sub)',
-                    fontSize: 13,
+                    fontSize: 'var(--text-meta)',
                     fontWeight: 500,
                     cursor: 'pointer',
                     borderRadius: '0 0 12px 12px',
