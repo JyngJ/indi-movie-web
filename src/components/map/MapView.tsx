@@ -463,14 +463,81 @@ function clusterRadiusForZoom(zoom: number, isDesktop = false): number {
   return 80
 }
 
-function computePixelClusters(
+/* ── 줌 레벨별 클러스터 계산 ─────────────────────────────── */
+function computeClustersByZoom(
   theaters: Theater[],
   map: LeafletMap,
   zoom: number,
-  splitIds: Set<string>,
-  coLocGroupKey: Map<string, string>,
-  isDesktop: boolean,
+  splitIds: Set<string> = new Set(),
+  coLocGroupKey: Map<string, string> = new Map(),
+  isDesktop = false,
 ): TheaterCluster[] {
+  // 줌 7-8: 지역별 클러스터링 (지역 중심 좌표 사용)
+  if (zoom >= 7 && zoom <= 8) {
+    const regionGroups = new Map<string, Theater[]>()
+    for (const theater of theaters) {
+      const region = getRegionGroup(theater.city, theater)
+      if (!regionGroups.has(region)) {
+        regionGroups.set(region, [])
+      }
+      regionGroups.get(region)!.push(theater)
+    }
+
+    const clusters: TheaterCluster[] = []
+    for (const [region, group] of regionGroups.entries()) {
+      const center = getRegionCenter(region)
+      clusters.push({
+        id: `region-${region}`,
+        theaters: group,
+        lat: center.lat,
+        lng: center.lng,
+        isCoLocation: false,
+        regionLabel: region,
+        clusterCount: group.length,
+      })
+    }
+    return clusters
+  }
+
+  // 줌 9-10: 도시별 클러스터링 (광역시만 개별, 나머지는 도/지역으로 묶음)
+  if (zoom >= 9 && zoom <= 10) {
+    const metropolis = ['서울', '부산', '대구', '인천', '광주', '대전', '울산']
+    const groupMap = new Map<string, Theater[]>()
+
+    for (const theater of theaters) {
+      let groupKey: string
+      // address가 "경기도"로 시작하면 항상 경기도 남부/북부로 분류
+      if (theater.address?.startsWith('경기도')) {
+        groupKey = getRegionGroup(theater.city, theater)
+      } else if (metropolis.includes(theater.city)) {
+        groupKey = theater.city
+      } else {
+        groupKey = getRegionGroup(theater.city, theater)
+      }
+
+      if (!groupMap.has(groupKey)) {
+        groupMap.set(groupKey, [])
+      }
+      groupMap.get(groupKey)!.push(theater)
+    }
+
+    const clusters: TheaterCluster[] = []
+    for (const [groupKey, group] of groupMap.entries()) {
+      const center = getRegionCenter(groupKey)
+      clusters.push({
+        id: `city-${groupKey}`,
+        theaters: group,
+        lat: center.lat,
+        lng: center.lng,
+        isCoLocation: false,
+        cityLabel: groupKey,
+        clusterCount: group.length,
+      })
+    }
+    return clusters
+  }
+
+  // 줌 11+: 기존 픽셀 기반 클러스터링
   const radiusPx = clusterRadiusForZoom(zoom, isDesktop)
   const clusterableTheaters = theaters.filter((t) => !splitIds.has(t.id))
   const pts = clusterableTheaters.map((t) => ({
@@ -513,106 +580,6 @@ function computePixelClusters(
   }
 
   return clusters
-}
-
-/* ── 줌 레벨별 클러스터 계산 ─────────────────────────────── */
-function computeClustersByZoom(
-  theaters: Theater[],
-  map: LeafletMap,
-  zoom: number,
-  splitIds: Set<string> = new Set(),
-  coLocGroupKey: Map<string, string> = new Map(),
-  isDesktop = false,
-): TheaterCluster[] {
-  const mapBounds = map.getBounds()
-
-  // 줌 7-8: 지역별 클러스터링 (지역 중심 좌표 사용)
-  // 단, 화면(mapBounds) 안에 있는 극장들은 픽셀 기반 개별 클러스터링으로 표시
-  if (zoom >= 7 && zoom <= 8) {
-    const regionGroups = new Map<string, Theater[]>()
-    const inViewport: Theater[] = []
-
-    for (const theater of theaters) {
-      if (mapBounds.contains([theater.lat, theater.lng])) {
-        inViewport.push(theater)
-      } else {
-        const region = getRegionGroup(theater.city, theater)
-        if (!regionGroups.has(region)) {
-          regionGroups.set(region, [])
-        }
-        regionGroups.get(region)!.push(theater)
-      }
-    }
-
-    const clusters: TheaterCluster[] = []
-    for (const [region, group] of regionGroups.entries()) {
-      const center = getRegionCenter(region)
-      clusters.push({
-        id: `region-${region}`,
-        theaters: group,
-        lat: center.lat,
-        lng: center.lng,
-        isCoLocation: false,
-        regionLabel: region,
-        clusterCount: group.length,
-      })
-    }
-    
-    if (inViewport.length > 0) {
-      clusters.push(...computePixelClusters(inViewport, map, zoom, splitIds, coLocGroupKey, isDesktop))
-    }
-    return clusters
-  }
-
-  // 줌 9-10: 도시별 클러스터링 (광역시만 개별, 나머지는 도/지역으로 묶음)
-  // 화면 안에 있는 극장들은 픽셀 기반 개별 클러스터링으로 표시
-  if (zoom >= 9 && zoom <= 10) {
-    const metropolis = ['서울', '부산', '대구', '인천', '광주', '대전', '울산']
-    const groupMap = new Map<string, Theater[]>()
-    const inViewport: Theater[] = []
-
-    for (const theater of theaters) {
-      if (mapBounds.contains([theater.lat, theater.lng])) {
-        inViewport.push(theater)
-      } else {
-        let groupKey: string
-        if (theater.address?.startsWith('경기도')) {
-          groupKey = getRegionGroup(theater.city, theater)
-        } else if (metropolis.includes(theater.city)) {
-          groupKey = theater.city
-        } else {
-          groupKey = getRegionGroup(theater.city, theater)
-        }
-
-        if (!groupMap.has(groupKey)) {
-          groupMap.set(groupKey, [])
-        }
-        groupMap.get(groupKey)!.push(theater)
-      }
-    }
-
-    const clusters: TheaterCluster[] = []
-    for (const [groupKey, group] of groupMap.entries()) {
-      const center = getRegionCenter(groupKey)
-      clusters.push({
-        id: `city-${groupKey}`,
-        theaters: group,
-        lat: center.lat,
-        lng: center.lng,
-        isCoLocation: false,
-        cityLabel: groupKey,
-        clusterCount: group.length,
-      })
-    }
-
-    if (inViewport.length > 0) {
-      clusters.push(...computePixelClusters(inViewport, map, zoom, splitIds, coLocGroupKey, isDesktop))
-    }
-    return clusters
-  }
-
-  // 줌 11+: 픽셀 기반 클러스터링
-  return computePixelClusters(theaters, map, zoom, splitIds, coLocGroupKey, isDesktop)
 }
 
 /* ── 동일 좌표 극장 분리 설정 ───────────────────────────────────── */
