@@ -20,7 +20,8 @@
     "crawl:curation": "tsx --env-file=.env.local src/scripts/compute-curation.ts",
     "curate:weekly-ranking": "tsx --env-file=.env.local scripts/compute-weekly-ranking.ts",
     "check:crawl-health": "tsx --env-file=.env.local scripts/check-crawl-health.ts",
-    "backtest:last-week": "tsx --env-file=.env.local src/scripts/backtest-last-week-copy.ts"
+    "backtest:last-week": "tsx --env-file=.env.local src/scripts/backtest-last-week-copy.ts",
+    "audit:tokens": "tsx src/scripts/audit-design-tokens.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0",
