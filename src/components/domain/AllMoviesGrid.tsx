@@ -4,6 +4,7 @@ import { useState } from 'react'
 import type { Movie } from '@/types/api'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
+import { Film } from 'lucide-react'
 
 type SortKey = 'theaters_desc' | 'theaters_asc' | 'year_desc' | 'year_asc' | 'alpha'
 
@@ -128,9 +129,12 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
                 fontWeight: 700,
                 fontFamily: 'var(--font-display)',
                 color: 'var(--color-text-primary)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
               }}
             >
-              🎞 지금 {regionText}상영 전체
+              <Film size={20} strokeWidth={1.75} color="var(--color-primary-base)" /> 지금 {regionText}상영 전체
             </h2>
             <p style={{ margin: '3px 0 0', fontSize: 12, color: 'var(--color-text-caption)' }}>
               {movies.length}편 상영 중

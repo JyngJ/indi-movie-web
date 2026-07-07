@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useCallback, useRef } from 'react'
+import { Sun, Moon, HeartHandshake } from 'lucide-react'
+import Link from 'next/link'
 
 export type SettingsPage = 'main' | 'report' | 'attribution' | 'about'
 type Page = SettingsPage
@@ -137,8 +139,8 @@ export function SettingsMainPage({
                 : <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="5" fill="currentColor" stroke="none"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
               }
             </div>
-            <div style={{ width: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-warning)', opacity: isDark ? 0.2 : 0 }}>☀️</div>
-            <div style={{ width: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isDark ? 0 : 0.3, fontSize: 14 }}>🌙</div>
+            <div style={{ width: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-warning)', opacity: isDark ? 0.2 : 0 }}><Sun size={16} strokeWidth={2.5} color="currentColor" /></div>
+            <div style={{ width: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isDark ? 0 : 0.3, color: 'var(--color-text-body)' }}><Moon size={16} strokeWidth={2.5} color="currentColor" /></div>
           </button>
         </div>
       </div>
@@ -171,7 +173,7 @@ export function SettingsMainPage({
         <span style={footerDot}>·</span>
         <button onClick={() => onNavigate('about')} style={footerLink}>만든 사람</button>
         <span style={footerDot}>·</span>
-        <a href="/privacy" style={{ ...footerLink, textDecoration: 'none' }}>개인정보 처리방침</a>
+        <Link href="/privacy" style={{ ...footerLink, textDecoration: 'none' }}>개인정보 처리방침</Link>
       </div>
       <div style={{ textAlign: 'center', marginTop: 8, fontSize: 11, color: 'var(--color-text-placeholder)' }}>
         영화볼지도 · v0.1.0
@@ -184,7 +186,7 @@ export function SettingsMainPage({
 export function ReportSuccessNotice() {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32, backgroundColor: 'var(--color-surface-bg)' }}>
-      <div style={{ fontSize: 40 }}>🙏</div>
+      <HeartHandshake size={48} strokeWidth={1.5} color="var(--color-text-sub)" />
       <div style={{ fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>감사합니다!</div>
       <div style={{ fontSize: 13.5, color: 'var(--color-text-sub)', textAlign: 'center', lineHeight: 1.6 }}>제보해 주셔서 감사합니다.<br/>확인 후 이메일로 답변 드리겠습니다.</div>
     </div>

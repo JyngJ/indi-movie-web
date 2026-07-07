@@ -105,32 +105,32 @@ export function AnniversarySection({
               key={film.id}
               onClick={onMovieClick ? () => onMovieClick(film.id) : undefined}
               style={{
-                display: 'flex', gap: 'var(--spacing-2-5)', alignItems: 'flex-start', flex: 1, minWidth: 0,
+                display: 'flex', gap: 8, alignItems: 'flex-start', flex: 1, minWidth: 0,
                 cursor: onMovieClick ? 'pointer' : undefined,
               }}
             >
               <div style={{ flexShrink: 0 }}>
-                <PosterThumb src={film.posterUrl} alt={film.title} width={52} height={78} />
+                <PosterThumb src={film.posterUrl} alt={film.title} width={72} height={108} />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, justifyContent: 'center' }}>
                 <span style={{
-                  fontSize: 12, fontWeight: 700, color: 'var(--color-text-body)',
+                  fontSize: 14, fontWeight: 700, color: 'var(--color-text-body)',
                   display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3,
                 }}>
                   {normalizeTitle(film.title)}
                 </span>
-                <span style={{ fontSize: 10, color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 12, color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {film.director[0] ?? '감독 미상'}
                 </span>
-                <div style={{ display: 'flex', gap: 'var(--spacing-1)' }}>
+                <div style={{ display: 'flex', gap: 'var(--spacing-1)', alignItems: 'center' }}>
                   {film.genre.slice(0, 1).map((g) => (
                     <span key={g} style={{
-                      fontSize: 10, padding: '2px 5px', borderRadius: 'var(--radius-full)',
+                      fontSize: 11, padding: '2px 5px', borderRadius: 'var(--radius-full)',
                       background: 'var(--color-surface-raised)', color: 'var(--color-text-caption)',
                       border: '1px solid var(--color-border)',
                     }}>{g}</span>
                   ))}
-                  <span style={{ fontSize: 10, color: 'var(--color-text-caption)', fontWeight: 600 }}>{film.year}</span>
+                  <span style={{ fontSize: 11, color: 'var(--color-text-caption)', fontWeight: 600 }}>{film.year}</span>
                 </div>
               </div>
             </div>

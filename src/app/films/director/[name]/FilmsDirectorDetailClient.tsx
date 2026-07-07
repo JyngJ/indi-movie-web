@@ -7,6 +7,7 @@ import { useMovies, useActiveMovieIds, useDirectorProfile } from '@/lib/supabase
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import type { Movie } from '@/types/api'
 import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWidget'
+import { Clapperboard } from 'lucide-react'
 
 function useIsDesktop() {
   const [v, setV] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches)
@@ -187,8 +188,8 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
         {/* 현재 상영작 */}
         {nowPlaying.length > 0 && (
           <div style={{ padding: '20px 20px 0' }}>
-            <p style={{ margin: '0 0 14px', fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)' }}>
-              🎬 현재 상영작 <span style={{ fontSize: 16, color: 'var(--color-primary-base)' }}>{nowPlaying.length}편</span>
+            <p style={{ margin: '0 0 14px', fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Clapperboard size={20} strokeWidth={2} color="var(--color-primary-base)" /> 현재 상영작 <span style={{ fontSize: 16, color: 'var(--color-primary-base)' }}>{nowPlaying.length}편</span>
             </p>
             <div className="no-scrollbar" style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 4 }}>
               {nowPlaying.map((m) => (

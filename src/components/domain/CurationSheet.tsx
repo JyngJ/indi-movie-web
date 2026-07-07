@@ -6,6 +6,7 @@ import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { PosterThumb } from './PosterThumb'
 import { Badge } from '@/components/primitives/Badge'
 import { HoverPopup } from './CurationSectionRow'
+import { Hourglass, MapPin, Car, Clapperboard, Film, Search, ChevronDown } from 'lucide-react'
 import type {
   LastWeekFilm,
   NewIndieFilm,
@@ -336,7 +337,7 @@ const SECTION_GAP = 16
 
 function Section({ title, icon, withLine, action, style, children }: {
   title: string
-  icon?: string
+  icon?: React.ReactNode
   withLine?: boolean
   action?: React.ReactNode
   style?: React.CSSProperties
@@ -345,7 +346,7 @@ function Section({ title, icon, withLine, action, style, children }: {
   return (
     <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2-5)', ...style }}>
       <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 20, paddingRight: 20, gap: 'var(--spacing-1-5)' }}>
-        {icon && <span style={{ fontSize: 16, lineHeight: 1 }}>{icon}</span>}
+        {icon && <span style={{ display: 'flex', alignItems: 'center', color: 'var(--color-text-body)' }}>{icon}</span>}
         <h3 style={{
           margin: 0,
           fontSize: 'var(--text-subtitle)',
@@ -583,12 +584,12 @@ export function CurationSections({
     movie: film.movie,
   }))
 
-  const candidates: SectionCandidate[] = [
-    { key: 'lastWeek', title: '막바지 상영', icon: '⏳', items: lastWeekItems, emptyText: '' },
-    { key: 'soloTheater', title: `${soloRegionLabel ?? '이 지역'}에서 단 한 곳`, icon: '📍', items: soloTheaterItems, emptyText: '' },
-    { key: 'todayShow', title: '지금 출발하면 볼 수 있는', icon: '🚗', items: soloRegionLabel ? todayShowItems : [], emptyText: '' },
-    { key: 'newIndie', title: '이번 주 새롭게 상영하는 영화', icon: '🎬', items: newIndieItems, emptyText: '' },
-    { key: 'returning', title: '오랜만에 상영하는 영화', icon: '🎞️', items: returningItems, emptyText: '' },
+  const candidates = [
+    { key: 'lastWeek', title: '막바지 상영', icon: <Hourglass size={18} strokeWidth={1.75} color="var(--color-primary-base)" />, items: lastWeekItems, emptyText: '' },
+    { key: 'soloTheater', title: `${soloRegionLabel ?? '이 지역'}에서 단 한 곳`, icon: <MapPin size={18} strokeWidth={1.75} color="var(--color-primary-base)" />, items: soloTheaterItems, emptyText: '' },
+    { key: 'todayShow', title: '지금 출발하면 볼 수 있는', icon: <Car size={18} strokeWidth={1.75} color="var(--color-primary-base)" />, items: soloRegionLabel ? todayShowItems : [], emptyText: '' },
+    { key: 'newIndie', title: '이번 주 새롭게 상영하는 영화', icon: <Clapperboard size={18} strokeWidth={1.75} color="var(--color-primary-base)" />, items: newIndieItems, emptyText: '' },
+    { key: 'returning', title: '오랜만에 상영하는 영화', icon: <Film size={18} strokeWidth={1.75} color="var(--color-primary-base)" />, items: returningItems, emptyText: '' },
   ]
 
   const sections = candidates.filter((c) => c.items.length > 0).slice(0, MAX_CURATION_SECTIONS)
@@ -630,7 +631,7 @@ export function CurationSections({
               {hasMore && expandState === 'collapsed' && (
                 <button type="button" onClick={() => setExpand(section.key, 'partial')}
                   style={{ ...btnStyle, margin: '0 20px' }}>
-                  더보기 <IconChevronDown open={false} />
+                  더보기 <ChevronDown size={14} strokeWidth={1.75} color="currentColor" />
                 </button>
               )}
               {hasMore && expandState === 'partial' && (
@@ -639,7 +640,7 @@ export function CurationSections({
                     setExpand(section.key, 'collapsed')
                     sectionRefs.current[section.key]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                   }} style={{ ...btnStyle, flex: 1 }}>
-                    접기 <IconChevronDown open={true} />
+                    접기 <ChevronDown size={14} strokeWidth={1.75} color="currentColor" style={{ transform: 'rotate(180deg)' }} />
                   </button>
                   {hasManyMore && SECTION_FILMS_HREF[section.key] && (
                     <a href={SECTION_FILMS_HREF[section.key]!}
@@ -656,7 +657,7 @@ export function CurationSections({
           </div>
         )
       })}
-      <Section title="최근 찾아본" icon="🔎" withLine action={
+      <Section title="최근 찾아본" icon={<Search size={18} strokeWidth={1.75} color="currentColor" />} withLine action={
         onClearRecentlyViewed && recentlyViewed.length > 0 ? (
           <button
             type="button"
