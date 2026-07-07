@@ -106,7 +106,7 @@ function DirectorCard({ director, isDesktop, onClick }: { director: DirectorSpot
 
       <span
         style={{
-          fontSize: isDesktop ? 13 : 12,
+          fontSize: 'var(--text-meta)',
           fontWeight: 700,
           color: 'var(--color-text-body)',
           textAlign: 'center',
@@ -154,7 +154,7 @@ export function DirectorSpotlightSection({
         >
           🏆 감독 스포트라이트
         </h2>
-        <p style={{ margin: '3px 0 0', fontSize: 12, color: 'var(--color-text-caption)' }}>
+        <p style={{ margin: '3px 0 0', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
           지금 주목할 만한 감독
         </p>
       </div>
@@ -163,7 +163,7 @@ export function DirectorSpotlightSection({
         className="no-scrollbar"
         style={{
           display: 'flex',
-          gap: isDesktop ? 'var(--spacing-5)' : 14,
+          gap: isDesktop ? 'var(--spacing-5)' : 'var(--spacing-3)',
           overflowX: 'auto',
           padding: '12px 16px 8px',
         }}

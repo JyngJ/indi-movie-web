@@ -46,7 +46,7 @@ function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number }) {
       position: 'fixed', top: y, left: adjustedX, width: cardWidth,
       background: 'var(--color-surface-card)',
       border: '1px solid var(--color-border)',
-      borderRadius: 16, boxShadow: '0 12px 40px rgba(0,0,0,0.48)',
+      borderRadius: 'var(--radius-xl)', boxShadow: '0 12px 40px rgba(0,0,0,0.48)',
       zIndex: 9999, pointerEvents: 'none', padding: 14,
       display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)',
     }}>
@@ -57,7 +57,7 @@ function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number }) {
         {normalizeTitle(movie.title)}
       </span>
       {movie.director.length > 0 && (
-        <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>{movie.director[0]}</span>
+        <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>{movie.director[0]}</span>
       )}
       {tags.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-1)' }}>
@@ -73,7 +73,7 @@ function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number }) {
       {synopsis && (
         <>
           <div style={{ height: 1, background: 'var(--color-border)' }} />
-          <span style={{ fontSize: 12, color: 'var(--color-text-caption)', lineHeight: 1.65 }}>{synopsis}</span>
+          <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', lineHeight: 1.65 }}>{synopsis}</span>
         </>
       )}
     </div>,
@@ -120,7 +120,7 @@ function MovieCard({
         }}>
           <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} />
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1)' }}>
           <span style={{
             fontSize, fontWeight: 700, color: 'var(--color-text-body)',
             display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3,
@@ -133,7 +133,7 @@ function MovieCard({
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-1)', flexWrap: 'wrap' }}>
             {movie.genre.slice(0, 1).map((g) => (
               <span key={g} style={{
-                fontSize: 10, padding: '2px 6px', borderRadius: 'var(--radius-full)',
+                fontSize: 'var(--text-caption)', padding: '2px 6px', borderRadius: 'var(--radius-full)',
                 background: 'var(--color-surface-raised)', color: 'var(--color-text-caption)',
                 border: '1px solid var(--color-border)', whiteSpace: 'nowrap',
               }}>{g}</span>
@@ -201,8 +201,8 @@ function LeftPanel({
               </div>
             )}
           </div>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: isDesktop ? 18 : 16, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)', lineHeight: 1.2 }}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div style={{ fontSize: 'var(--text-title)', fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)', lineHeight: 1.2 }}>
               {directorName}
             </div>
             {profile?.originalName && (
@@ -215,7 +215,7 @@ function LeftPanel({
 
         {/* 바이오 */}
         <p style={{
-          margin: 0, fontSize: 12, lineHeight: 1.65,
+          margin: 0, fontSize: 'var(--text-meta)', lineHeight: 1.65,
           color: bio ? 'var(--color-text-sub)' : 'var(--color-text-caption)',
           fontStyle: bio ? 'normal' : 'italic',
           ...(bio ? { display: '-webkit-box', WebkitLineClamp: isDesktop ? 5 : 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } : {}),
@@ -382,7 +382,7 @@ export function DirectorSpecialSection({
         <div style={{
           margin: '0 16px',
           display: 'flex',
-          borderRadius: 10,
+          borderRadius: 'var(--radius-xl)',
           overflow: 'hidden',
           border: '1px solid var(--color-border)',
         }}>
@@ -400,7 +400,7 @@ export function DirectorSpecialSection({
         </div>
       ) : (
         /* ── 모바일: 위아래 적층, 동일 마진 ─────── */
-        <div style={{ margin: '0 16px', borderRadius: 10, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
+        <div style={{ margin: '0 16px', borderRadius: 'var(--radius-xl)', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
           <div style={{ background: 'var(--color-surface-card)', padding: '0 16px' }}>
             <LeftPanel
               directorName={directorName} theater={theater} filmCount={films.length}

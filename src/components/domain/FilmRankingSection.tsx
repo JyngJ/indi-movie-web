@@ -29,7 +29,7 @@ function RankBadge({ rank, prevRank }: { rank: number; prevRank: number | null }
   if (prevRank === null) {
     return (
       <span style={{
-        fontSize: 10, fontWeight: 700, padding: '2px 5px', borderRadius: 'var(--radius-sm)',
+        fontSize: 'var(--text-caption)', fontWeight: 700, padding: '2px 5px', borderRadius: 'var(--radius-sm)',
         background: '#D97706', color: '#fff', letterSpacing: 0.2,
       }}>NEW</span>
     )
@@ -37,14 +37,14 @@ function RankBadge({ rank, prevRank }: { rank: number; prevRank: number | null }
   const diff = prevRank - rank
   if (diff > 0) {
     return (
-      <span style={{ fontSize: 10, fontWeight: 700, color: '#16A34A' }}>
+      <span style={{ fontSize: 'var(--text-caption)', fontWeight: 700, color: '#16A34A' }}>
         ▲{diff}
       </span>
     )
   }
   if (diff < 0) {
     return (
-      <span style={{ fontSize: 10, fontWeight: 700, color: '#DC2626' }}>
+      <span style={{ fontSize: 'var(--text-caption)', fontWeight: 700, color: '#DC2626' }}>
         ▼{Math.abs(diff)}
       </span>
     )
@@ -84,7 +84,7 @@ function InfoTooltip({ weekStart }: { weekStart: string }) {
       <div style={{
         background: 'var(--color-surface-card)',
         border: '1px solid var(--color-border)',
-        borderRadius: 14,
+        borderRadius: 'var(--radius-xl)',
         padding: '16px 16px 12px',
         display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2-5)',
         boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
@@ -97,7 +97,7 @@ function InfoTooltip({ weekStart }: { weekStart: string }) {
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)' }}>
           {METRICS.map(({ icon, label: l, pct, color, desc }) => (
-            <div key={l} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <div key={l} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-body)' }}>{icon} {l}</span>
                 <span style={{ fontSize: 'var(--text-caption)', fontWeight: 700, color }}>{pct}%</span>
@@ -105,11 +105,11 @@ function InfoTooltip({ weekStart }: { weekStart: string }) {
               <div style={{ height: 5, borderRadius: 3, background: 'var(--color-border)', overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 3 }} />
               </div>
-              <span style={{ fontSize: 10, color: 'var(--color-text-caption)' }}>{desc}</span>
+              <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-caption)' }}>{desc}</span>
             </div>
           ))}
         </div>
-        <span style={{ fontSize: 10, color: 'var(--color-text-caption)', borderTop: '1px solid var(--color-border)', paddingTop: 8 }}>
+        <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-caption)', borderTop: '1px solid var(--color-border)', paddingTop: 8 }}>
           🕐 매주 월요일 오전 6시 자동 갱신 · {label} 기준
         </span>
       </div>
@@ -131,7 +131,7 @@ function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number }) {
     <div style={{
       position: 'fixed', top: y, left: adjustedX, width: cardWidth,
       background: 'var(--color-surface-card)', border: '1px solid var(--color-border)',
-      borderRadius: 16, boxShadow: '0 12px 40px rgba(0,0,0,0.48)',
+      borderRadius: 'var(--radius-xl)', boxShadow: '0 12px 40px rgba(0,0,0,0.48)',
       zIndex: 9999, pointerEvents: 'none', padding: 14,
       display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)',
     }}>
@@ -139,7 +139,7 @@ function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number }) {
         {normalizeTitle(movie.title)}
       </span>
       {movie.director.length > 0 && (
-        <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>{movie.director[0]}</span>
+        <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>{movie.director[0]}</span>
       )}
       {tags.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-1)' }}>
@@ -153,7 +153,7 @@ function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number }) {
       {synopsis && (
         <>
           <div style={{ height: 1, background: 'var(--color-border)' }} />
-          <span style={{ fontSize: 12, color: 'var(--color-text-caption)', lineHeight: 1.65 }}>{synopsis}</span>
+          <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', lineHeight: 1.65 }}>{synopsis}</span>
         </>
       )}
     </div>,
@@ -306,7 +306,7 @@ export function FilmRankingSection({ weekStart, rankings, movies, isDesktop, onM
               {infoHover && <InfoTooltip weekStart={weekStart} />}
             </div>
           </div>
-          <p style={{ margin: '3px 0 0', fontSize: 12, color: 'var(--color-text-caption)' }}>
+          <p style={{ margin: '3px 0 0', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
             {label} · 상영관·회차·조회수 합산
           </p>
         </div>
