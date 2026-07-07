@@ -16,7 +16,7 @@ export function GvDetailPanel({ ev, onClose, onCloseAll }: GvDetailPanelProps) {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', backgroundColor: 'var(--color-surface-card)' }}>
       {/* Header */}
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 8,
+        display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)',
         padding: '12px 12px 12px',
         borderBottom: '1px solid var(--color-border)',
         flexShrink: 0,
@@ -28,7 +28,7 @@ export function GvDetailPanel({ ev, onClose, onCloseAll }: GvDetailPanelProps) {
           aria-label="뒤로"
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: 32, height: 32, borderRadius: 8,
+            width: 32, height: 32, borderRadius: 'var(--radius-md)',
             border: 'none',
             background: 'transparent', cursor: 'pointer',
             color: 'var(--color-text-body)', flexShrink: 0, padding: 0,
@@ -40,16 +40,16 @@ export function GvDetailPanel({ ev, onClose, onCloseAll }: GvDetailPanelProps) {
         </button>
 
         {/* 브레드크럼 */}
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 5, overflow: 'hidden' }}>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 'var(--spacing-1)', overflow: 'hidden' }}>
           <span style={{
-            fontSize: 16, fontWeight: 700, color: 'var(--color-text-sub)',
+            fontSize: 'var(--text-title)', fontWeight: 700, color: 'var(--color-text-sub)',
             fontFamily: 'var(--font-display)',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 1,
           }}>{ev.theaterName}</span>
-          <span style={{ fontSize: 12, color: 'var(--color-text-caption)', flexShrink: 0 }}>/</span>
+          <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', flexShrink: 0 }}>/</span>
           <span style={{
             background: gvEventTypeColor(ev.type), color: '#fff',
-            fontSize: 9, fontWeight: 800, borderRadius: 3,
+            fontSize: 'var(--text-badge)', fontWeight: 800, borderRadius: 'var(--radius-sm)',
             padding: '2px 5px', letterSpacing: '0.3px', lineHeight: 1.4, flexShrink: 0,
           }}>{ev.type}</span>
         </div>
@@ -62,7 +62,7 @@ export function GvDetailPanel({ ev, onClose, onCloseAll }: GvDetailPanelProps) {
             aria-label="닫기"
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              width: 32, height: 32, borderRadius: 8,
+              width: 32, height: 32, borderRadius: 'var(--radius-md)',
               border: 'none',
               background: 'transparent', cursor: 'pointer',
               color: 'var(--color-text-body)', flexShrink: 0, padding: 0,
@@ -79,9 +79,9 @@ export function GvDetailPanel({ ev, onClose, onCloseAll }: GvDetailPanelProps) {
       <div className="themed-scrollbar" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
 
         {/* Hero — poster + movie info */}
-        <div style={{ display: 'flex', gap: 14, padding: '16px 16px 16px' }}>
+        <div style={{ display: 'flex', gap: 'var(--spacing-3)', padding: '16px 16px 16px' }}>
           <div style={{
-            width: 80, height: 120, borderRadius: 8, flexShrink: 0,
+            width: 80, height: 120, borderRadius: 'var(--radius-md)', flexShrink: 0,
             background: `oklch(35% 0.08 ${ev.hue})`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: '0 4px 16px rgba(0,0,0,0.20)',
@@ -90,25 +90,25 @@ export function GvDetailPanel({ ev, onClose, onCloseAll }: GvDetailPanelProps) {
               {ev.label}
             </span>
           </div>
-          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 2 }}>
-            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)', lineHeight: 1.3 }}>
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1)', paddingTop: 2 }}>
+            <h2 style={{ margin: 0, fontSize: 'var(--text-h3)', fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)', lineHeight: 1.3 }}>
               {ev.movie}
             </h2>
             {ev.movieNote && (
-              <p style={{ margin: 0, fontSize: 12, color: 'var(--color-text-caption)', lineHeight: 1.4 }}>
+              <p style={{ margin: 0, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', lineHeight: 1.4 }}>
                 {ev.movieNote}
               </p>
             )}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-1-5)', marginTop: 2, flexWrap: 'wrap' }}>
               <span style={{
                 display: 'inline-block',
-                fontSize: 11, fontWeight: 600, color: statusColor,
-                background: `${statusColor}18`, borderRadius: 4, padding: '2px 7px',
+                fontSize: 'var(--text-caption)', fontWeight: 600, color: statusColor,
+                background: `${statusColor}18`, borderRadius: 'var(--radius-sm)', padding: '2px 7px',
               }}>
                 {ev.status}
               </span>
               {ev.status === '매진 임박' && ev.seatTotal != null && ev.seatAvailable != null && (
-                <span style={{ fontSize: 11, color: statusColor, fontWeight: 500 }}>
+                <span style={{ fontSize: 'var(--text-caption)', color: statusColor, fontWeight: 500 }}>
                   {ev.seatTotal}석 중 {ev.seatAvailable}석 남음
                 </span>
               )}
@@ -125,10 +125,10 @@ export function GvDetailPanel({ ev, onClose, onCloseAll }: GvDetailPanelProps) {
         {/* Guests */}
         {ev.guest && (
           <div style={{ borderTop: '1px solid var(--color-border)', padding: '14px 16px' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-caption)', letterSpacing: '0.5px', marginBottom: 10 }}>
+            <div style={{ fontSize: 'var(--text-caption)', fontWeight: 600, color: 'var(--color-text-caption)', letterSpacing: '0.5px', marginBottom: 10 }}>
               참석 게스트
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)' }}>
               {ev.guest.split(' · ').map((g) => (
                 <GuestRow key={g} name={g} />
               ))}
@@ -139,10 +139,10 @@ export function GvDetailPanel({ ev, onClose, onCloseAll }: GvDetailPanelProps) {
         {/* GV note */}
         {ev.gvNote && (
           <div style={{ borderTop: '1px solid var(--color-border)', padding: '14px 16px' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-caption)', letterSpacing: '0.5px', marginBottom: 8 }}>
+            <div style={{ fontSize: 'var(--text-caption)', fontWeight: 600, color: 'var(--color-text-caption)', letterSpacing: '0.5px', marginBottom: 8 }}>
               안내
             </div>
-            <p style={{ margin: 0, fontSize: 13, color: 'var(--color-text-body)', lineHeight: 1.65 }}>
+            <p style={{ margin: 0, fontSize: 'var(--text-meta)', color: 'var(--color-text-body)', lineHeight: 1.65 }}>
               {ev.gvNote}
             </p>
           </div>
@@ -158,7 +158,7 @@ export function GvDetailPanel({ ev, onClose, onCloseAll }: GvDetailPanelProps) {
         padding: '12px 16px max(16px, env(safe-area-inset-bottom))',
         background: 'var(--color-surface-card)',
         borderTop: '1px solid var(--color-border)',
-        display: 'flex', gap: 8,
+        display: 'flex', gap: 'var(--spacing-2)',
       }}>
         {ev.bookingUrl ? (
           <a
@@ -170,7 +170,7 @@ export function GvDetailPanel({ ev, onClose, onCloseAll }: GvDetailPanelProps) {
               background: 'var(--color-primary-base)',
               color: '#fff', borderRadius: 'var(--radius-full)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 16, fontWeight: 700, textDecoration: 'none', letterSpacing: '-0.2px',
+              fontSize: 'var(--text-title)', fontWeight: 700, textDecoration: 'none', letterSpacing: '-0.2px',
             }}
           >
             예매하러 가기
@@ -181,7 +181,7 @@ export function GvDetailPanel({ ev, onClose, onCloseAll }: GvDetailPanelProps) {
             background: 'var(--color-border)',
             color: 'var(--color-text-caption)', borderRadius: 'var(--radius-full)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 16, fontWeight: 600,
+            fontSize: 'var(--text-title)', fontWeight: 600,
           }}>
             예매 준비 중
           </div>
@@ -197,12 +197,12 @@ function InfoRow({ label, value, last }: { label: string; value: string; last?: 
       display: 'flex', alignItems: 'center',
       padding: '12px 16px',
       borderBottom: last ? 'none' : '1px solid var(--color-border)',
-      gap: 12,
+      gap: 'var(--spacing-3)',
     }}>
-      <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-caption)', width: 28, flexShrink: 0 }}>
+      <span style={{ fontSize: 'var(--text-caption)', fontWeight: 600, color: 'var(--color-text-caption)', width: 28, flexShrink: 0 }}>
         {label}
       </span>
-      <span style={{ fontSize: 13, color: 'var(--color-text-body)', flex: 1 }}>
+      <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-body)', flex: 1 }}>
         {value}
       </span>
     </div>
@@ -211,18 +211,18 @@ function InfoRow({ label, value, last }: { label: string; value: string; last?: 
 
 function GuestRow({ name }: { name: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-2-5)' }}>
       <div style={{
         width: 32, height: 32, borderRadius: '50%',
         background: 'var(--color-primary-base)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         flexShrink: 0, opacity: 0.85,
       }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>
+        <span style={{ fontSize: 'var(--text-meta)', fontWeight: 700, color: '#fff' }}>
           {name.charAt(0)}
         </span>
       </div>
-      <span style={{ fontSize: 13, color: 'var(--color-text-body)' }}>{name}</span>
+      <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-body)' }}>{name}</span>
     </div>
   )
 }

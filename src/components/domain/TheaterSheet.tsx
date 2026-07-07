@@ -140,20 +140,20 @@ function SynopsisCard({ synopsis, tags, visible, onSearchTheaters }: SynopsisCar
         <div style={{ padding: '16px 20px 20px' }}>
           {/* 태그 — 있을 때만 */}
           {tags && tags.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-1-5)', marginBottom: 12 }}>
               {tags.map((tag) => (
                 <span
                   key={tag}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    fontSize: 10,
+                    fontSize: 'var(--text-caption)',
                     fontWeight: 500,
                     lineHeight: 1,
                     color: 'var(--color-neutral-200)',
                     border: '1px solid var(--color-neutral-600)',
                     backgroundColor: 'rgba(255,255,255,0.08)',
-                    borderRadius: 999,
+                    borderRadius: 'var(--radius-full)',
                     paddingLeft: 10,
                     paddingRight: 10,
                     paddingTop: 3,
@@ -168,7 +168,7 @@ function SynopsisCard({ synopsis, tags, visible, onSearchTheaters }: SynopsisCar
           {/* 시놉시스 — 전체 표시 (자세히 버튼 없음) */}
           <p style={{
             margin: 0,
-            fontSize: 13,
+            fontSize: 'var(--text-meta)',
             lineHeight: 1.7,
             color: 'var(--color-neutral-200)',
           }}>
@@ -783,14 +783,14 @@ export function TheaterSheet({
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 5,
+    gap: 'var(--spacing-1)',
     minHeight: 30,
     padding: '0 10px',
     border: '1px solid var(--color-border)',
     borderRadius: 'var(--radius-full)',
     background: 'var(--color-surface-card)',
     color: 'var(--color-text-body)',
-    fontSize: 12,
+    fontSize: 'var(--text-meta)',
     fontWeight: 600,
     lineHeight: 1,
     whiteSpace: 'nowrap',
@@ -918,7 +918,7 @@ export function TheaterSheet({
               )}
             </div>
             <div style={{
-              fontSize: 13,
+              fontSize: 'var(--text-meta)',
               color: 'var(--color-text-sub)',
               marginTop: 1,
               lineHeight: 1.25,
@@ -934,7 +934,7 @@ export function TheaterSheet({
             <div style={{
               display: 'flex',
               flexWrap: 'wrap',
-              gap: 6,
+              gap: 'var(--spacing-1-5)',
               marginTop: 5,
             }}>
               <button style={actionBtn} onClick={openDirections}>
@@ -958,7 +958,7 @@ export function TheaterSheet({
             top: -2,
             right: 20,
             display: 'flex',
-            gap: 6,
+            gap: 'var(--spacing-1-5)',
           }}>
             <button style={iconBtn} onClick={onClose}>
               <IconClose />
@@ -984,7 +984,7 @@ export function TheaterSheet({
           <div style={{
             display: 'flex',
             alignItems: 'flex-start',
-            gap: 12,
+            gap: 'var(--spacing-3)',
           }}>
             {onBack && (
               <button style={{ ...iconBtn, flexShrink: 0 }} onClick={onBack} aria-label="이전으로">
@@ -992,11 +992,11 @@ export function TheaterSheet({
               </button>
             )}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-1)' }}>
                 <h2 style={{
                   margin: 0,
                   minWidth: 0,
-                  fontSize: 22,
+                  fontSize: 'var(--text-h2)',
                   fontWeight: 800,
                   fontFamily: 'var(--font-display)',
                   lineHeight: 1.16,
@@ -1016,11 +1016,11 @@ export function TheaterSheet({
               <div style={{
                 display: 'flex',
                 alignItems: 'baseline',
-                gap: 3,
+                gap: 'var(--spacing-1)',
                 marginTop: 5,
                 minWidth: 0,
                 color: 'var(--color-text-sub)',
-                fontSize: 13,
+                fontSize: 'var(--text-meta)',
                 lineHeight: 1.35,
               }}>
                 <span style={{
@@ -1076,7 +1076,7 @@ export function TheaterSheet({
           </button>
           <span style={{
             flex: 1, textAlign: 'center',
-            fontSize: 15, fontWeight: 600,
+            fontSize: 'var(--text-subtitle)', fontWeight: 600,
             color: 'var(--color-text-primary)',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             padding: '0 6px',
@@ -1085,7 +1085,7 @@ export function TheaterSheet({
           }}>
             {theater.name}
           </span>
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div style={{ display: 'flex', gap: 'var(--spacing-1-5)' }}>
             {/* 즐겨찾기 — 계정 기능 구현 전 비활성화
             <button style={iconBtn} onClick={onFavorite}>
               <IconStar filled={favorited} />
@@ -1168,9 +1168,9 @@ export function TheaterSheet({
           {allMoviesLoading
             ? Array.from({ length: 7 }).map((_, i) => (
                 <div key={i} style={{ flexShrink: 0, width: 88 }}>
-                  <div style={{ width: 88, height: 132, borderRadius: 6, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
-                  <div style={{ width: 70, height: 11, borderRadius: 4, marginTop: 6, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
-                  <div style={{ width: 50, height: 10, borderRadius: 4, marginTop: 3, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
+                  <div style={{ width: 88, height: 132, borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
+                  <div style={{ width: 70, height: 11, borderRadius: 'var(--radius-sm)', marginTop: 6, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
+                  <div style={{ width: 50, height: 10, borderRadius: 'var(--radius-sm)', marginTop: 3, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
                 </div>
               ))
             : allMovieEntries.length === 0
@@ -1182,11 +1182,11 @@ export function TheaterSheet({
                     alignItems: 'center',
                     justifyContent: 'center',
                     padding: '6px 0 12px',
-                    gap: 8,
+                    gap: 'var(--spacing-2)',
                     minWidth: '100%',
                   }}>
                     <img src="/closed.svg" alt="" style={{ width: 72, height: 92, opacity: 0.5 }} />
-                    <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>상영 예정 정보가 없습니다</span>
+                    <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>상영 예정 정보가 없습니다</span>
                   </div>
                 )
               : (() => {
@@ -1225,10 +1225,10 @@ export function TheaterSheet({
                                 right: 6,
                                 height: 20,
                                 padding: '0 6px',
-                                borderRadius: 4,
+                                borderRadius: 'var(--radius-sm)',
                                 display: 'inline-flex',
                                 alignItems: 'center',
-                                fontSize: 10,
+                                fontSize: 'var(--text-caption)',
                                 fontWeight: 700,
                                 color: '#fff',
                                 backgroundColor: 'var(--color-error)',
@@ -1251,7 +1251,7 @@ export function TheaterSheet({
                           </div>
                           <div style={{
                             marginTop: 6,
-                            fontSize: 11,
+                            fontSize: 'var(--text-caption)',
                             fontWeight: 600,
                             color: 'var(--color-text-primary)',
                             fontFamily: 'var(--font-serif)',
@@ -1268,7 +1268,7 @@ export function TheaterSheet({
                           {movie.director && movie.director.length > 0 && (
                             <div style={{
                               marginTop: 3,
-                              fontSize: 10,
+                              fontSize: 'var(--text-caption)',
                               fontFamily: 'var(--font-display)',
                               color: 'var(--color-text-caption)',
                               overflow: 'hidden',
@@ -1307,7 +1307,7 @@ export function TheaterSheet({
         >
           {/* 극장 정보 — 스크롤 시 위로 밀림 */}
           {!panelMode && <div ref={theaterNameRef} style={{ padding: '4px 20px 14px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-1)' }}>
               <div style={{
                 fontSize: 23, fontWeight: 700,
                 fontFamily: 'var(--font-display)',
@@ -1323,7 +1323,7 @@ export function TheaterSheet({
               )}
             </div>
             <div style={{
-              fontSize: 13, color: 'var(--color-text-sub)',
+              fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)',
               marginTop: 1, lineHeight: 1.25,
               display: 'flex', alignItems: 'baseline', gap: 2,
             }}>
@@ -1332,7 +1332,7 @@ export function TheaterSheet({
                 <IconCopy size={10} />
               </button>
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-1-5)', marginTop: 8 }}>
               <button style={actionBtn} onClick={openDirections}>
                 <IconRoute size={13} />길찾기
               </button>
@@ -1401,13 +1401,13 @@ export function TheaterSheet({
             {/* 필터 행 */}
             {(availableGenres.length > 0 || availableNations.length > 0) && (
               <div style={{
-                display: 'flex', alignItems: 'center', gap: 8,
+                display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)',
                 paddingLeft: 16, paddingRight: 16, paddingTop: 8, paddingBottom: 2,
               }}>
                 {/* 왼쪽: 편수 + 활성 칩들 */}
-                <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, overflowX: 'auto', scrollbarWidth: 'none' }}>
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 'var(--spacing-1-5)', overflowX: 'auto', scrollbarWidth: 'none' }}>
                   <span style={{
-                    flexShrink: 0, fontSize: 13, fontWeight: 600,
+                    flexShrink: 0, fontSize: 'var(--text-meta)', fontWeight: 600,
                     color: filtersOn ? 'var(--color-primary-base)' : 'var(--color-text-sub)',
                     whiteSpace: 'nowrap',
                     lineHeight: 1,
@@ -1420,12 +1420,12 @@ export function TheaterSheet({
                       onClick={() => applySheetFilters({ ...sheetFilters, genres: sheetFilters.genres.filter(x => x !== g) })}
                       style={{
                         flexShrink: 0, height: 22, padding: '0 6px 0 8px',
-                        borderRadius: 999,
+                        borderRadius: 'var(--radius-full)',
                         border: '1px solid var(--color-primary-base)',
                         backgroundColor: 'var(--color-primary-subtle-l)',
                         color: 'var(--color-primary-base)',
-                        fontSize: 10, fontWeight: 600, cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', gap: 3, minHeight: 'auto',
+                        fontSize: 'var(--text-caption)', fontWeight: 600, cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: 'var(--spacing-1)', minHeight: 'auto',
                       }}
                     >
                       {g}
@@ -1438,12 +1438,12 @@ export function TheaterSheet({
                       onClick={() => applySheetFilters({ ...sheetFilters, nations: sheetFilters.nations.filter(x => x !== n) })}
                       style={{
                         flexShrink: 0, height: 22, padding: '0 6px 0 8px',
-                        borderRadius: 999,
+                        borderRadius: 'var(--radius-full)',
                         border: '1px solid var(--color-primary-base)',
                         backgroundColor: 'var(--color-primary-subtle-l)',
                         color: 'var(--color-primary-base)',
-                        fontSize: 10, fontWeight: 600, cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', gap: 3, minHeight: 'auto',
+                        fontSize: 'var(--text-caption)', fontWeight: 600, cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: 'var(--spacing-1)', minHeight: 'auto',
                       }}
                     >
                       {withFlag(n)}
@@ -1455,12 +1455,12 @@ export function TheaterSheet({
                       onClick={() => applySheetFilters({ ...sheetFilters, bookable: false })}
                       style={{
                         flexShrink: 0, height: 22, padding: '0 6px 0 8px',
-                        borderRadius: 999,
+                        borderRadius: 'var(--radius-full)',
                         border: '1px solid var(--color-primary-base)',
                         backgroundColor: 'var(--color-primary-subtle-l)',
                         color: 'var(--color-primary-base)',
-                        fontSize: 10, fontWeight: 600, cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', gap: 3, minHeight: 'auto',
+                        fontSize: 'var(--text-caption)', fontWeight: 600, cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: 'var(--spacing-1)', minHeight: 'auto',
                       }}
                     >
                       예매가능
@@ -1473,13 +1473,13 @@ export function TheaterSheet({
                   onClick={() => { setPendingFilters(sheetFilters); setFilterSheetOpen(true) }}
                   style={{
                     flexShrink: 0, height: 26, padding: '0 10px',
-                    borderRadius: 999,
+                    borderRadius: 'var(--radius-full)',
                     border: '1px solid',
                     borderColor: filtersOn ? 'var(--color-primary-base)' : 'var(--color-border)',
                     backgroundColor: filtersOn ? 'var(--color-primary-subtle-l)' : 'transparent',
                     color: filtersOn ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
-                    fontSize: 11, fontWeight: 600, cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', gap: 4, minHeight: 'auto',
+                    fontSize: 'var(--text-caption)', fontWeight: 600, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 'var(--spacing-1)', minHeight: 'auto',
                   }}
                 >
                   <IconFilter size={11} />
@@ -1492,7 +1492,7 @@ export function TheaterSheet({
             {/* <label style={{
               display: 'flex', alignItems: 'center', gap: 7,
               padding: '6px 16px',
-              cursor: 'pointer', fontSize: 11, userSelect: 'none',
+              cursor: 'pointer', fontSize: 'var(--text-caption)', userSelect: 'none',
               color: showTodayFirst ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
               fontWeight: showTodayFirst ? 600 : 400,
             }}>
@@ -1539,7 +1539,7 @@ export function TheaterSheet({
               onScroll={updatePosterScrollEdge}
               style={{
                 display: 'flex',
-                gap: 12,
+                gap: 'var(--spacing-3)',
                 overflowX: 'auto',
                 paddingTop: 14,
                 paddingLeft: 20,
@@ -1554,9 +1554,9 @@ export function TheaterSheet({
               {allMoviesLoading
                 ? Array.from({ length: 7 }).map((_, i) => (
                     <div key={i} style={{ flexShrink: 0, width: 88 }}>
-                      <div style={{ width: 88, height: 132, borderRadius: 6, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
-                      <div style={{ width: 70, height: 11, borderRadius: 4, marginTop: 6, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
-                      <div style={{ width: 50, height: 10, borderRadius: 4, marginTop: 3, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
+                      <div style={{ width: 88, height: 132, borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
+                      <div style={{ width: 70, height: 11, borderRadius: 'var(--radius-sm)', marginTop: 6, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
+                      <div style={{ width: 50, height: 10, borderRadius: 'var(--radius-sm)', marginTop: 3, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
                     </div>
                   ))
                 : allMovieEntries.length === 0
@@ -1564,10 +1564,10 @@ export function TheaterSheet({
                       <div style={{
                         flex: 1, display: 'flex', flexDirection: 'column',
                         alignItems: 'center', justifyContent: 'center',
-                        padding: '6px 0 12px', gap: 8, minWidth: '100%',
+                        padding: '6px 0 12px', gap: 'var(--spacing-2)', minWidth: '100%',
                       }}>
                         <img src="/closed.svg" alt="" style={{ width: 72, height: 92, opacity: 0.5 }} />
-                        <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>상영 예정 정보가 없습니다</span>
+                        <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>상영 예정 정보가 없습니다</span>
                       </div>
                     )
                   : <>
@@ -1592,9 +1592,9 @@ export function TheaterSheet({
                                 {soldout && (
                                   <div style={{
                                     position: 'absolute', bottom: 6, right: 6,
-                                    height: 20, padding: '0 6px', borderRadius: 4,
+                                    height: 20, padding: '0 6px', borderRadius: 'var(--radius-sm)',
                                     display: 'inline-flex', alignItems: 'center',
-                                    fontSize: 10, fontWeight: 700, color: '#fff',
+                                    fontSize: 'var(--text-caption)', fontWeight: 700, color: '#fff',
                                     backgroundColor: 'var(--color-error)',
                                     pointerEvents: 'none', zIndex: 2,
                                   }}>매진</div>
@@ -1621,7 +1621,7 @@ export function TheaterSheet({
                                       <span style={{ fontSize: 8, fontWeight: 500, color: 'rgba(255,255,255,0.55)', textAlign: 'center' }}>
                                         다음 상영
                                       </span>
-                                      <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.85)', textAlign: 'center', lineHeight: 1.3 }}>
+                                      <span style={{ fontSize: 'var(--text-badge)', fontWeight: 700, color: 'rgba(255,255,255,0.85)', textAlign: 'center', lineHeight: 1.3 }}>
                                         {nextLabel ?? '일정 없음'}
                                       </span>
                                     </div>
@@ -1629,7 +1629,7 @@ export function TheaterSheet({
                                 })()}
                               </div>
                               <div style={{
-                                marginTop: 6, fontSize: 11, fontWeight: 600,
+                                marginTop: 6, fontSize: 'var(--text-caption)', fontWeight: 600,
                                 color: 'var(--color-text-primary)', fontFamily: 'var(--font-serif)',
                                 lineHeight: 1.35, overflow: 'hidden',
                                 display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
@@ -1638,7 +1638,7 @@ export function TheaterSheet({
                               }}>{movie.title}</div>
                               {movie.director && movie.director.length > 0 && (
                                 <div style={{
-                                  marginTop: 3, fontSize: 10, fontFamily: 'var(--font-display)',
+                                  marginTop: 3, fontSize: 'var(--text-caption)', fontFamily: 'var(--font-display)',
                                   color: 'var(--color-text-caption)',
                                   overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
                                   opacity: unavailable ? 0.3 : 1,
@@ -1670,20 +1670,20 @@ export function TheaterSheet({
                                       background: 'rgba(0,0,0,0.45)',
                                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     }}>
-                                      <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.9)', textAlign: 'center', lineHeight: 1.3 }}>
+                                      <span style={{ fontSize: 'var(--text-caption)', fontWeight: 700, color: 'rgba(255,255,255,0.9)', textAlign: 'center', lineHeight: 1.3 }}>
                                         조건 외
                                       </span>
                                     </div>
                                   </div>
                                   <div style={{
-                                    marginTop: 6, fontSize: 11, fontWeight: 600,
+                                    marginTop: 6, fontSize: 'var(--text-caption)', fontWeight: 600,
                                     color: 'var(--color-text-primary)', fontFamily: 'var(--font-serif)',
                                     lineHeight: 1.35, overflow: 'hidden',
                                     display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
                                   }}>{movie.title}</div>
                                   {movie.director && movie.director.length > 0 && (
                                     <div style={{
-                                      marginTop: 3, fontSize: 10, fontFamily: 'var(--font-display)',
+                                      marginTop: 3, fontSize: 'var(--text-caption)', fontFamily: 'var(--font-display)',
                                       color: 'var(--color-text-caption)',
                                       overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
                                     }}>{movie.director[0]}</div>
@@ -1712,13 +1712,13 @@ export function TheaterSheet({
               <div style={{
                 margin: '8px 20px',
                 border: '1px solid var(--color-border)',
-                borderRadius: 12,
+                borderRadius: 'var(--radius-xl)',
                 overflow: 'hidden',
                 backgroundColor: 'var(--color-surface-card)',
               }}>
-                <div style={{ display: 'flex', gap: 12, padding: '12px 12px 10px' }}>
+                <div style={{ display: 'flex', gap: 'var(--spacing-3)', padding: '12px 12px 10px' }}>
                   {/* 포스터 */}
-                  <div style={{ flexShrink: 0, width: 60, height: 90, borderRadius: 6, overflow: 'hidden', backgroundColor: 'var(--color-neutral-700)' }}>
+                  <div style={{ flexShrink: 0, width: 60, height: 90, borderRadius: 'var(--radius-sm)', overflow: 'hidden', backgroundColor: 'var(--color-neutral-700)' }}>
                     {movie.posterUrl && (
                       <img src={movie.posterUrl} alt={movie.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                     )}
@@ -1726,7 +1726,7 @@ export function TheaterSheet({
                   {/* 영화 정보 */}
                   <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <div style={{
-                      fontSize: 17, fontWeight: 700,
+                      fontSize: 'var(--text-title)', fontWeight: 700,
                       fontFamily: 'var(--font-display)',
                       color: 'var(--color-text-primary)',
                       lineHeight: 1.3,
@@ -1737,12 +1737,12 @@ export function TheaterSheet({
                     }}>
                       {movie.title}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-1-5)', flexWrap: 'wrap' }}>
                       {movie.nation && movie.nation.split(/[,，/·]+/).map(n => n.trim()).filter(Boolean).map(n => (
                         <span key={n} style={{
-                          fontSize: 10, fontWeight: 500,
+                          fontSize: 'var(--text-caption)', fontWeight: 500,
                           padding: '1px 6px',
-                          borderRadius: 999,
+                          borderRadius: 'var(--radius-full)',
                           border: '1px solid var(--color-border)',
                           color: 'var(--color-text-sub)',
                         }}>
@@ -1750,18 +1750,18 @@ export function TheaterSheet({
                         </span>
                       ))}
                       {movie.runtimeMinutes && (
-                        <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>
+                        <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
                           {movie.runtimeMinutes}분
                         </span>
                       )}
                     </div>
                     {movie.genre && movie.genre.length > 0 && (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-1)' }}>
                         {movie.genre.map(g => (
                           <span key={g} style={{
-                            fontSize: 10, fontWeight: 500,
+                            fontSize: 'var(--text-caption)', fontWeight: 500,
                             padding: '1px 6px',
-                            borderRadius: 999,
+                            borderRadius: 'var(--radius-full)',
                             border: '1px solid var(--color-border)',
                             color: 'var(--color-text-sub)',
                           }}>
@@ -1784,7 +1784,7 @@ export function TheaterSheet({
                     tabIndex={0}
                     style={{
                       borderTop: '1px solid var(--color-border)',
-                      display: 'flex', alignItems: 'center', gap: 10,
+                      display: 'flex', alignItems: 'center', gap: 'var(--spacing-2-5)',
                       padding: '10px 12px',
                       cursor: 'pointer',
                     }}
@@ -1800,7 +1800,7 @@ export function TheaterSheet({
                         <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
                       </svg>
                     </div>
-                    <span style={{ flex: 1, fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-body)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <span style={{ flex: 1, fontSize: 'var(--text-body)', fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-body)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {movie.director[0]}
                     </span>
                     <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-caption)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1814,11 +1814,11 @@ export function TheaterSheet({
                     onClick={() => onMovieDetailOpen ? onMovieDetailOpen(movie.id) : router.push(`/movie/${movie.id}?theater=${theater.id}`)}
                     style={{
                       flex: 1, padding: '10px 0',
-                      fontSize: 12, fontWeight: 600,
+                      fontSize: 'var(--text-meta)', fontWeight: 600,
                       color: 'var(--color-text-body)',
                       background: 'none', border: 'none',
                       cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-1)',
                     }}
                   >
                     <IconChevronRight size={13} />
@@ -1829,11 +1829,11 @@ export function TheaterSheet({
                     onClick={() => { onMovieSearch?.(movie.id, movie.title); onClose() }}
                     style={{
                       flex: 1, padding: '10px 0',
-                      fontSize: 12, fontWeight: 600,
+                      fontSize: 'var(--text-meta)', fontWeight: 600,
                       color: 'var(--color-text-body)',
                       background: 'none', border: 'none',
                       cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-1)',
                     }}
                   >
                     <IconSearch size={13} />
@@ -1847,9 +1847,9 @@ export function TheaterSheet({
           {/* 상영시간표 */}
           <div ref={showtimeSectionRef} style={{ padding: `8px 20px ${selectedShowtimeId ? 88 : 40}px` }}>
             {showtimesLoading ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--spacing-2)' }}>
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <Skeleton key={i} height={60} style={{ borderRadius: 8 }} />
+                  <Skeleton key={i} height={60} style={{ borderRadius: 'var(--radius-md)' }} />
                 ))}
               </div>
             ) : filteredShowtimes.length === 0 ? (
@@ -1857,12 +1857,12 @@ export function TheaterSheet({
                 paddingTop: 32,
                 textAlign: 'center',
                 color: 'var(--color-text-caption)',
-                fontSize: 13,
+                fontSize: 'var(--text-meta)',
               }}>
                 선택한 날짜에 상영 정보가 없습니다.
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--spacing-2)' }}>
                 {filteredShowtimes.map((st) => {
                   const [sh, sm] = st.showTime.split(':').map(Number)
                   const startMin = sh * 60 + sm
@@ -1895,7 +1895,7 @@ export function TheaterSheet({
             {!showtimesLoading && filteredShowtimes.length > 0 && (
               <div style={{
                 marginTop: 10,
-                fontSize: 11,
+                fontSize: 'var(--text-caption)',
                 color: 'var(--color-text-caption)',
                 textAlign: 'center',
                 lineHeight: 1.5,
@@ -1946,7 +1946,7 @@ export function TheaterSheet({
                 borderRadius: 'var(--radius-full)',
                 backgroundColor: selectedSt?.bookingUrl ? 'var(--color-primary-base)' : 'var(--color-neutral-600)',
                 color: '#fff',
-                fontSize: 16,
+                fontSize: 'var(--text-title)',
                 fontWeight: 700,
                 border: 'none',
                 cursor: selectedSt?.bookingUrl ? 'pointer' : 'default',
@@ -2000,7 +2000,7 @@ export function TheaterSheet({
             style={{
               width: 'calc(100% - 48px)', maxWidth: 360,
               backgroundColor: 'var(--color-surface-card)',
-              borderRadius: 16,
+              borderRadius: 'var(--radius-xl)',
               overflow: 'hidden',
               boxShadow: 'var(--shadow-sheet)',
             }}
@@ -2014,10 +2014,10 @@ export function TheaterSheet({
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: '18px 18px 12px',
             }}>
-              <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text-primary)' }}>영화 필터</span>
+              <span style={{ fontSize: 'var(--text-title)', fontWeight: 700, color: 'var(--color-text-primary)' }}>영화 필터</span>
               <button
                 onClick={() => setPendingFilters({ genres: [], nations: [], bookable: false })}
-                style={{ border: 'none', background: 'none', fontSize: 12, color: 'var(--color-text-caption)', cursor: 'pointer', padding: '4px 0' }}
+                style={{ border: 'none', background: 'none', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', cursor: 'pointer', padding: '4px 0' }}
               >
                 모두 선택해제
               </button>
@@ -2028,8 +2028,8 @@ export function TheaterSheet({
               {/* 장르 */}
               {availableGenres.length > 0 && (
                 <>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-sub)', marginBottom: 10 }}>장르</div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 18 }}>
+                  <div style={{ fontSize: 'var(--text-meta)', fontWeight: 600, color: 'var(--color-text-sub)', marginBottom: 10 }}>장르</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-2)', marginBottom: 18 }}>
                     {availableGenres.map(g => (
                       <button
                         key={g}
@@ -2038,12 +2038,12 @@ export function TheaterSheet({
                           genres: prev.genres.includes(g) ? prev.genres.filter(x => x !== g) : [...prev.genres, g],
                         }))}
                         style={{
-                          height: 34, padding: '0 14px', borderRadius: 999,
+                          height: 34, padding: '0 14px', borderRadius: 'var(--radius-full)',
                           border: '1px solid',
                           borderColor: pendingFilters.genres.includes(g) ? 'var(--color-primary-base)' : 'var(--color-border)',
                           backgroundColor: pendingFilters.genres.includes(g) ? 'var(--color-primary-subtle-l)' : 'var(--color-surface-bg)',
                           color: pendingFilters.genres.includes(g) ? 'var(--color-primary-base)' : 'var(--color-text-body)',
-                          fontSize: 13, fontWeight: pendingFilters.genres.includes(g) ? 600 : 400,
+                          fontSize: 'var(--text-meta)', fontWeight: pendingFilters.genres.includes(g) ? 600 : 400,
                           cursor: 'pointer', minHeight: 'auto',
                         }}
                       >{g}</button>
@@ -2054,8 +2054,8 @@ export function TheaterSheet({
               {/* 국가 */}
               {availableNations.length > 0 && (
                 <>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-sub)', marginBottom: 10 }}>국가</div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 18 }}>
+                  <div style={{ fontSize: 'var(--text-meta)', fontWeight: 600, color: 'var(--color-text-sub)', marginBottom: 10 }}>국가</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-2)', marginBottom: 18 }}>
                     {availableNations.map(n => (
                       <button
                         key={n}
@@ -2064,12 +2064,12 @@ export function TheaterSheet({
                           nations: prev.nations.includes(n) ? prev.nations.filter(x => x !== n) : [...prev.nations, n],
                         }))}
                         style={{
-                          height: 34, padding: '0 14px', borderRadius: 999,
+                          height: 34, padding: '0 14px', borderRadius: 'var(--radius-full)',
                           border: '1px solid',
                           borderColor: pendingFilters.nations.includes(n) ? 'var(--color-primary-base)' : 'var(--color-border)',
                           backgroundColor: pendingFilters.nations.includes(n) ? 'var(--color-primary-subtle-l)' : 'var(--color-surface-bg)',
                           color: pendingFilters.nations.includes(n) ? 'var(--color-primary-base)' : 'var(--color-text-body)',
-                          fontSize: 13, fontWeight: pendingFilters.nations.includes(n) ? 600 : 400,
+                          fontSize: 'var(--text-meta)', fontWeight: pendingFilters.nations.includes(n) ? 600 : 400,
                           cursor: 'pointer', minHeight: 'auto',
                         }}
                       >{withFlag(n)}</button>
@@ -2084,14 +2084,14 @@ export function TheaterSheet({
                 borderTop: '1px solid var(--color-border)',
               }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>예매 가능한 영화만</div>
-                  <div style={{ fontSize: 11, color: 'var(--color-text-caption)', marginTop: 3 }}>잔여석이 있는 상영회만 표시</div>
+                  <div style={{ fontSize: 'var(--text-body)', fontWeight: 600, color: 'var(--color-text-primary)' }}>예매 가능한 영화만</div>
+                  <div style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-caption)', marginTop: 3 }}>잔여석이 있는 상영회만 표시</div>
                 </div>
                 <div
                   onClick={() => setPendingFilters(prev => ({ ...prev, bookable: !prev.bookable }))}
                   style={{
                     flexShrink: 0,
-                    width: 44, height: 26, borderRadius: 999,
+                    width: 44, height: 26, borderRadius: 'var(--radius-full)',
                     backgroundColor: pendingFilters.bookable ? 'var(--color-primary-base)' : 'var(--color-neutral-500)',
                     position: 'relative', cursor: 'pointer',
                     transition: 'background-color 180ms',
@@ -2116,9 +2116,9 @@ export function TheaterSheet({
               <button
                 onClick={() => { applySheetFilters(pendingFilters); setFilterSheetOpen(false) }}
                 style={{
-                  width: '100%', height: 50, borderRadius: 12,
+                  width: '100%', height: 50, borderRadius: 'var(--radius-xl)',
                   border: 'none', backgroundColor: 'var(--color-primary-base)',
-                  color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer',
+                  color: '#fff', fontSize: 'var(--text-subtitle)', fontWeight: 700, cursor: 'pointer',
                   letterSpacing: '-0.2px',
                 }}
               >

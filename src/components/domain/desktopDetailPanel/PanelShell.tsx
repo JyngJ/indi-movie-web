@@ -19,7 +19,7 @@ export function PanelShell({
     width: 36, height: 36,
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     border: 'none', background: 'none', cursor: 'pointer',
-    color: 'var(--color-text-body)', borderRadius: 8, flexShrink: 0,
+    color: 'var(--color-text-body)', borderRadius: 'var(--radius-md)', flexShrink: 0,
   }
   return (
     <div style={{
@@ -39,14 +39,14 @@ export function PanelShell({
         paddingRight: 8,
         borderBottom: '1px solid var(--color-border)',
         flexShrink: 0,
-        gap: 4,
+        gap: 'var(--spacing-1)',
       }}>
         {onBack && (
           <button style={btn} onClick={onBack}><IcoChevronLeft /></button>
         )}
         <span style={{
           flex: 1,
-          fontSize: 14,
+          fontSize: 'var(--text-body)',
           fontWeight: 700,
           fontFamily: 'var(--font-display)',
           color: 'var(--color-text-primary)',

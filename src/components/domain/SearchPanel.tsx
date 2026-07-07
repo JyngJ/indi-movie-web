@@ -107,10 +107,10 @@ export function SearchPanel({
             {recentSearches.length > 0 && (
               <div style={{ marginBottom: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-caption)', margin: 0 }}>최근 검색</p>
+                  <p style={{ fontSize: 'var(--text-meta)', fontWeight: 700, color: 'var(--color-text-caption)', margin: 0 }}>최근 검색</p>
                   <button
                     onClick={onRecentClearAll}
-                    style={{ fontSize: 12, color: 'var(--color-text-caption)', background: 'none', border: 0, cursor: 'pointer', padding: 0 }}
+                    style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', background: 'none', border: 0, cursor: 'pointer', padding: 0 }}
                   >
                     전체 삭제
                   </button>
@@ -119,14 +119,14 @@ export function SearchPanel({
                   {recentSearches.map(q => (
                     <div
                       key={q}
-                      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--color-border)' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)', padding: '10px 0', borderBottom: '1px solid var(--color-border)' }}
                     >
                       <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-caption)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                         <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
                       </svg>
                       <button
                         onClick={() => onRecentSelect(q)}
-                        style={{ flex: 1, background: 'none', border: 0, cursor: 'pointer', textAlign: 'left', padding: 0, fontSize: 14, color: 'var(--color-text-body)' }}
+                        style={{ flex: 1, background: 'none', border: 0, cursor: 'pointer', textAlign: 'left', padding: 0, fontSize: 'var(--text-body)', color: 'var(--color-text-body)' }}
                       >
                         {q}
                       </button>
@@ -144,14 +144,14 @@ export function SearchPanel({
               </div>
             )}
             <div style={{ marginTop: 20 }}>
-              <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 600, color: 'var(--color-text-caption)' }}>
+              <p style={{ margin: '0 0 4px', fontSize: 'var(--text-meta)', fontWeight: 600, color: 'var(--color-text-caption)' }}>
                 영화관, 영화, 감독, 지하철역을 모두 검색할 수 있어요
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', marginTop: 8 }}>
                 {SEARCH_GUIDE_EXAMPLES.map(({ label, example }) => (
-                  <div key={label} style={{ display: 'flex', alignItems: 'baseline', gap: 10, lineHeight: 1.9 }}>
-                    <span style={{ fontSize: 12, color: 'var(--color-text-caption)', width: 44, flexShrink: 0 }}>{label}</span>
-                    <span style={{ fontSize: 12, color: 'var(--color-text-caption)', opacity: 0.6 }}>&quot;{example}&quot;</span>
+                  <div key={label} style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--spacing-2-5)', lineHeight: 1.9 }}>
+                    <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', width: 44, flexShrink: 0 }}>{label}</span>
+                    <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', opacity: 0.6 }}>&quot;{example}&quot;</span>
                   </div>
                 ))}
               </div>
@@ -162,7 +162,7 @@ export function SearchPanel({
             {children}
           </div>
         ) : (
-          <p style={{ textAlign: 'center', marginTop: 60, fontSize: 14, color: 'var(--color-text-caption)' }}>
+          <p style={{ textAlign: 'center', marginTop: 60, fontSize: 'var(--text-body)', color: 'var(--color-text-caption)' }}>
             &ldquo;{query}&rdquo;와 일치하는 결과가 없습니다
           </p>
         )}

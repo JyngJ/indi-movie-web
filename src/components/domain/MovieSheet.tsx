@@ -132,14 +132,14 @@ export function MovieSheet({ movieId, onClose, onTheaterSelect, onRecentlyViewed
           paddingBottom: GLOBAL_NAV_MOBILE_HEIGHT + 16,
         }}>
           {/* 영화 헤더 */}
-          <div style={{ display: 'flex', gap: 14, padding: '12px 16px 16px' }}>
+          <div style={{ display: 'flex', gap: 'var(--spacing-3)', padding: '12px 16px 16px' }}>
             <div style={{ flexShrink: 0 }}>
               {movieLoading
                 ? <Skeleton width={80} height={120} rounded="md" />
                 : <PosterThumb src={movie?.posterUrl} alt={movie?.title ?? ''} width={80} height={120} size="lg" />
               }
             </div>
-            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 2 }}>
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1)', paddingTop: 2 }}>
               {movieLoading ? (
                 <>
                   <Skeleton width="80%" height={22} rounded="sm" />
@@ -147,15 +147,15 @@ export function MovieSheet({ movieId, onClose, onTheaterSelect, onRecentlyViewed
                 </>
               ) : movie ? (
                 <>
-                  <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.3 }}>
+                  <h2 style={{ margin: 0, fontSize: 'var(--text-h3)', fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.3 }}>
                     {movie.title}
                   </h2>
                   {movie.originalTitle && (
-                    <p style={{ margin: 0, fontSize: 12, color: 'var(--color-text-caption)', lineHeight: 1.3 }}>
+                    <p style={{ margin: 0, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', lineHeight: 1.3 }}>
                       {movie.originalTitle}
                     </p>
                   )}
-                  <p style={{ margin: 0, fontSize: 13, color: 'var(--color-text-body)' }}>
+                  <p style={{ margin: 0, fontSize: 'var(--text-meta)', color: 'var(--color-text-body)' }}>
                     {[
                       movie.year,
                       movie.runtimeMinutes ? `${movie.runtimeMinutes}분` : null,
@@ -163,15 +163,15 @@ export function MovieSheet({ movieId, onClose, onTheaterSelect, onRecentlyViewed
                     ].filter(Boolean).join(' · ')}
                   </p>
                   {movie.director.length > 0 && (
-                    <p style={{ margin: 0, fontSize: 13, color: 'var(--color-text-body)' }}>
+                    <p style={{ margin: 0, fontSize: 'var(--text-meta)', color: 'var(--color-text-body)' }}>
                       감독 {movie.director.join(', ')}
                     </p>
                   )}
                   {movie.genre.length > 0 && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 2 }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-1)', marginTop: 2 }}>
                       {movie.genre.map(g => (
                         <span key={g} style={{
-                          fontSize: 11, padding: '2px 8px', borderRadius: 20,
+                          fontSize: 'var(--text-caption)', padding: '2px 8px', borderRadius: 20,
                           backgroundColor: 'var(--color-surface-overlay)',
                           color: 'var(--color-text-caption)',
                         }}>{g}</span>
@@ -186,7 +186,7 @@ export function MovieSheet({ movieId, onClose, onTheaterSelect, onRecentlyViewed
           {/* 시놉시스 */}
           {movie?.synopsis && (
             <div style={{ padding: '0 16px 16px', borderTop: '1px solid var(--color-border)' }}>
-              <p style={{ margin: '12px 0 0', fontSize: 13, color: 'var(--color-text-body)', lineHeight: 1.7 }}>
+              <p style={{ margin: '12px 0 0', fontSize: 'var(--text-meta)', color: 'var(--color-text-body)', lineHeight: 1.7 }}>
                 {movie.synopsis}
               </p>
             </div>
@@ -194,37 +194,37 @@ export function MovieSheet({ movieId, onClose, onTheaterSelect, onRecentlyViewed
 
           {/* 상영 중인 극장 */}
           <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 12 }}>
-            <h3 style={{ margin: '0 0 8px', padding: '0 16px', fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+            <h3 style={{ margin: '0 0 8px', padding: '0 16px', fontSize: 'var(--text-body)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
               상영 중인 극장
             </h3>
 
             {showsLoading ? (
-              <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)' }}>
                 {[0, 1, 2].map(i => <Skeleton key={i} width="100%" height={48} rounded="md" />)}
               </div>
             ) : theaters.length === 0 ? (
-              <p style={{ margin: 0, padding: '4px 16px 16px', fontSize: 13, color: 'var(--color-text-caption)' }}>
+              <p style={{ margin: 0, padding: '4px 16px 16px', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
                 현재 상영 정보가 없어요
               </p>
             ) : theaters.map(theater => (
               <div key={theater.theaterId} style={{ marginBottom: 16 }}>
                 {/* 극장 이름 */}
                 <div style={{
-                  display: 'flex', alignItems: 'center', gap: 6,
+                  display: 'flex', alignItems: 'center', gap: 'var(--spacing-1-5)',
                   padding: '6px 16px', backgroundColor: 'var(--color-surface-base)',
                 }}>
-                  <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)' }}>
+                  <span style={{ flex: 1, fontSize: 'var(--text-meta)', fontWeight: 600, color: 'var(--color-text-primary)' }}>
                     {theater.theaterName}
                   </span>
                   {onTheaterSelect && (
                     <button
                       onClick={() => { onTheaterSelect(theater.theaterId); handleClose() }}
                       style={{
-                        display: 'flex', alignItems: 'center', gap: 4,
+                        display: 'flex', alignItems: 'center', gap: 'var(--spacing-1)',
                         padding: '4px 10px', borderRadius: 20,
                         border: '1px solid var(--color-border)',
                         background: 'none', cursor: 'pointer',
-                        fontSize: 11, color: 'var(--color-text-body)',
+                        fontSize: 'var(--text-caption)', color: 'var(--color-text-body)',
                       }}
                     >
                       <IcoMap /> 지도에서 보기
@@ -235,10 +235,10 @@ export function MovieSheet({ movieId, onClose, onTheaterSelect, onRecentlyViewed
                 {/* 날짜별 상영 */}
                 {theater.dateGroups.map(({ date, showtimes }) => (
                   <div key={date} style={{ padding: '8px 16px 0' }}>
-                    <p style={{ margin: '0 0 6px', fontSize: 12, fontWeight: 600, color: 'var(--color-text-caption)' }}>
+                    <p style={{ margin: '0 0 6px', fontSize: 'var(--text-meta)', fontWeight: 600, color: 'var(--color-text-caption)' }}>
                       {formatDate(date)}
                     </p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-1-5)' }}>
                       {showtimes.map(show => (
                         <ShowtimeCell
                           key={show.id}
@@ -264,10 +264,10 @@ export function MovieSheet({ movieId, onClose, onTheaterSelect, onRecentlyViewed
               onClick={() => router.push(`/movie/${movieId}`)}
               style={{
                 width: '100%', padding: '12px 0',
-                borderRadius: 10, border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-xl)', border: '1px solid var(--color-border)',
                 background: 'none', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-1-5)',
+                fontSize: 'var(--text-body)', fontWeight: 600, color: 'var(--color-text-primary)',
               }}
             >
               <IcoExternal /> 영화 상세 전체 화면으로 보기

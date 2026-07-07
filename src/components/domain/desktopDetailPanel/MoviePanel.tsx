@@ -49,7 +49,7 @@ export function MoviePanel({
   if (isLoading) {
     return (
       <PanelShell onClose={onClose} onBack={onBack} embedded={embedded}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200, fontSize: 13, color: 'var(--color-text-caption)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
           불러오는 중…
         </div>
       </PanelShell>
@@ -58,7 +58,7 @@ export function MoviePanel({
   if (!movie) {
     return (
       <PanelShell onClose={onClose} onBack={onBack} embedded={embedded} title="영화 정보">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200, fontSize: 13, color: 'var(--color-text-caption)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
           영화를 찾을 수 없습니다
         </div>
       </PanelShell>
@@ -72,33 +72,33 @@ export function MoviePanel({
         background: 'linear-gradient(135deg, var(--color-surface-card) 0%, var(--color-primary-subtle-l) 100%)',
         padding: '24px 20px 20px',
         display: 'flex',
-        gap: 18,
+        gap: 'var(--spacing-5)',
         alignItems: 'flex-start',
       }}>
         <div style={{ flexShrink: 0, width: 90, height: 135 }}>
           {movie.posterUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={movie.posterUrl} alt="" style={{ width: 90, height: 135, borderRadius: 8, objectFit: 'cover', display: 'block', boxShadow: '0 8px 28px rgba(0,0,0,0.35)' }} />
+            <img src={movie.posterUrl} alt="" style={{ width: 90, height: 135, borderRadius: 'var(--radius-md)', objectFit: 'cover', display: 'block', boxShadow: '0 8px 28px rgba(0,0,0,0.35)' }} />
           ) : (
-            <div style={{ width: 90, height: 135, borderRadius: 8, backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)', background: 'repeating-linear-gradient(135deg, rgba(128,128,128,0.08) 0 7px, transparent 7px 14px)' }} />
+            <div style={{ width: 90, height: 135, borderRadius: 'var(--radius-md)', backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)', background: 'repeating-linear-gradient(135deg, rgba(128,128,128,0.08) 0 7px, transparent 7px 14px)' }} />
           )}
         </div>
         <div style={{ flex: 1, minWidth: 0, paddingTop: 4 }}>
-          <h1 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, lineHeight: 1.2, color: 'var(--color-text-primary)', wordBreak: 'keep-all' }}>
+          <h1 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 'var(--text-h2)', fontWeight: 700, lineHeight: 1.2, color: 'var(--color-text-primary)', wordBreak: 'keep-all' }}>
             {movie.title}
           </h1>
           {movie.originalTitle && (
-            <div style={{ marginTop: 4, fontFamily: 'var(--font-serif-en)', fontStyle: 'italic', fontSize: 12, color: 'var(--color-text-caption)' }}>
+            <div style={{ marginTop: 4, fontFamily: 'var(--font-serif-en)', fontStyle: 'italic', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
               {movie.originalTitle}
             </div>
           )}
           {movie.genre.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 10 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-1)', marginTop: 10 }}>
               {movie.genre.map((g) => (
                 <span key={g} style={{
                   height: 22, padding: '0 9px',
                   display: 'inline-flex', alignItems: 'center',
-                  borderRadius: 999, fontSize: 11, fontWeight: 500,
+                  borderRadius: 'var(--radius-full)', fontSize: 'var(--text-caption)', fontWeight: 500,
                   backgroundColor: 'var(--color-primary-subtle-l)',
                   border: '1px solid color-mix(in srgb, var(--color-primary-base) 40%, transparent)',
                   color: 'var(--color-primary-base)',
@@ -106,7 +106,7 @@ export function MoviePanel({
               ))}
             </div>
           )}
-          <div style={{ marginTop: 10, fontSize: 13, color: 'var(--color-text-sub)', lineHeight: 1.5 }}>
+          <div style={{ marginTop: 10, fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)', lineHeight: 1.5 }}>
             {[movie.nation ? withFlagsRaw(movie.nation) : undefined, movie.year, movie.runtimeMinutes ? `${movie.runtimeMinutes}분` : null].filter(Boolean).join(' · ')}
           </div>
         </div>
@@ -129,7 +129,7 @@ export function MoviePanel({
             }}
             style={{
               flex: 1, height: 42, border: 'none', background: 'none', cursor: 'pointer',
-              fontSize: 13, fontWeight: tab === t ? 600 : 400,
+              fontSize: 'var(--text-meta)', fontWeight: tab === t ? 600 : 400,
               color: tab === t ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
               borderBottomWidth: 2,
               borderBottomStyle: 'solid',
@@ -158,14 +158,14 @@ export function MoviePanel({
 
 function MovieInfoTab({ movie, onDirectorClick }: { movie: NonNullable<ReturnType<typeof useMovieDetail>['data']>; onDirectorClick: (n: string) => void }) {
   const divider: React.CSSProperties = { borderTop: '1px solid var(--color-border)', margin: '0 20px' }
-  const sectionLabel: React.CSSProperties = { fontSize: 11, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)', marginBottom: 10 }
+  const sectionLabel: React.CSSProperties = { fontSize: 'var(--text-caption)', fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)', marginBottom: 10 }
 
   return (
     <div style={{ paddingBottom: 32 }}>
       {movie.synopsis && (
         <div style={{ padding: '24px 20px' }}>
           <p style={sectionLabel}>시놉시스</p>
-          <p style={{ margin: 0, fontSize: 14, lineHeight: 1.8, color: 'var(--color-text-body)', wordBreak: 'keep-all' }}>{movie.synopsis}</p>
+          <p style={{ margin: 0, fontSize: 'var(--text-body)', lineHeight: 1.8, color: 'var(--color-text-body)', wordBreak: 'keep-all' }}>{movie.synopsis}</p>
         </div>
       )}
       {movie.director.length > 0 && (
@@ -178,8 +178,8 @@ function MovieInfoTab({ movie, onDirectorClick }: { movie: NonNullable<ReturnTyp
                 key={name}
                 onClick={() => onDirectorClick(name)}
                 style={{
-                  width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-                  padding: '12px 14px', borderRadius: 12,
+                  width: '100%', display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)',
+                  padding: '12px 14px', borderRadius: 'var(--radius-xl)',
                   border: '1px solid var(--color-border)',
                   backgroundColor: 'var(--color-surface-card)',
                   cursor: 'pointer', textAlign: 'left', marginBottom: 8, minHeight: 'auto',
@@ -189,8 +189,8 @@ function MovieInfoTab({ movie, onDirectorClick }: { movie: NonNullable<ReturnTyp
                   <IcoUser />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)' }}>{name}</div>
-                  <div style={{ marginTop: 3, fontSize: 11, color: 'var(--color-primary-base)', fontWeight: 500, textDecoration: 'underline' }}>감독 페이지 보기</div>
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{name}</div>
+                  <div style={{ marginTop: 3, fontSize: 'var(--text-caption)', color: 'var(--color-primary-base)', fontWeight: 500, textDecoration: 'underline' }}>감독 페이지 보기</div>
                 </div>
                 <IcoChevronRight />
               </button>
@@ -201,7 +201,7 @@ function MovieInfoTab({ movie, onDirectorClick }: { movie: NonNullable<ReturnTyp
       <div style={divider} />
       <div style={{ padding: '20px 20px' }}>
         <p style={sectionLabel}>상세 정보</p>
-        <div style={{ borderRadius: 10, border: '1px solid var(--color-border)', overflow: 'hidden' }}>
+        <div style={{ borderRadius: 'var(--radius-xl)', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
           {[
             { key: '국가', value: movie.nation ? withFlagsRaw(movie.nation) : undefined },
             { key: '개봉', value: movie.year ? String(movie.year) : undefined },
@@ -209,8 +209,8 @@ function MovieInfoTab({ movie, onDirectorClick }: { movie: NonNullable<ReturnTyp
             { key: '장르', value: movie.genre.join(', ') || undefined },
           ].filter((r) => r.value).map((row, i, arr) => (
             <div key={row.key} style={{ display: 'flex', alignItems: 'center', padding: '12px 16px', borderBottom: i < arr.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
-              <span style={{ width: 72, flexShrink: 0, fontSize: 13, color: 'var(--color-text-sub)', fontWeight: 500 }}>{row.key}</span>
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)' }}>{row.value}</span>
+              <span style={{ width: 72, flexShrink: 0, fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)', fontWeight: 500 }}>{row.key}</span>
+              <span style={{ fontSize: 'var(--text-meta)', fontWeight: 600, color: 'var(--color-text-primary)' }}>{row.value}</span>
             </div>
           ))}
         </div>
@@ -261,12 +261,12 @@ function MovieTheatersTab({
   }, [sortedTheaters, regionId])
 
   const renderTheaterCard = (entry: typeof sortedTheaters[0]) => (
-    <div key={entry.theaterId} style={{ borderRadius: 12, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', overflow: 'hidden' }}>
+    <div key={entry.theaterId} style={{ borderRadius: 'var(--radius-xl)', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', overflow: 'hidden' }}>
       {/* 극장 헤더 */}
       <div style={{ padding: '12px 14px 10px', display: 'flex', alignItems: 'flex-start' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)' }}>{entry.theaterName}</div>
-          <div style={{ marginTop: 2, display: 'flex', alignItems: 'center', gap: 3, color: 'var(--color-text-sub)', fontSize: 11 }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-body)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{entry.theaterName}</div>
+          <div style={{ marginTop: 2, display: 'flex', alignItems: 'center', gap: 'var(--spacing-1)', color: 'var(--color-text-sub)', fontSize: 'var(--text-caption)' }}>
             <IcoPin />{entry.theaterAddress}
           </div>
         </div>
@@ -277,9 +277,9 @@ function MovieTheatersTab({
               flexShrink: 0, alignSelf: 'center', minWidth: 54, height: 24,
               padding: '0 8px', marginRight: 8,
               display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-start',
-              borderRadius: 999, border: '1px solid var(--color-border)',
+              borderRadius: 'var(--radius-full)', border: '1px solid var(--color-border)',
               backgroundColor: 'var(--color-surface-raised)', color: 'var(--color-text-body)',
-              fontSize: 11, fontWeight: 500, fontFeatureSettings: '"tnum"', whiteSpace: 'nowrap',
+              fontSize: 'var(--text-caption)', fontWeight: 500, fontFeatureSettings: '"tnum"', whiteSpace: 'nowrap',
             }}>
               {distance}
             </span>
@@ -290,7 +290,7 @@ function MovieTheatersTab({
             trackEvent('movie theater selected', { movie_id: movieId, theater_id: entry.theaterId, theater_name: entry.theaterName, source: 'desktop_panel' })
             onTheaterOpen(entry.theaterId, entry.dateGroups[0]?.date ?? '')
           }}
-          style={{ flexShrink: 0, alignSelf: 'center', height: 26, padding: '0 10px', borderRadius: 999, border: '1px solid color-mix(in srgb, var(--color-primary-base) 35%, transparent)', backgroundColor: 'var(--color-primary-subtle-l)', color: 'var(--color-primary-base)', fontSize: 11, fontWeight: 700, cursor: 'pointer', minHeight: 'auto' }}
+          style={{ flexShrink: 0, alignSelf: 'center', height: 26, padding: '0 10px', borderRadius: 'var(--radius-full)', border: '1px solid color-mix(in srgb, var(--color-primary-base) 35%, transparent)', backgroundColor: 'var(--color-primary-subtle-l)', color: 'var(--color-primary-base)', fontSize: 'var(--text-caption)', fontWeight: 700, cursor: 'pointer', minHeight: 'auto' }}
         >
           영화관 보기
         </button>
@@ -298,7 +298,7 @@ function MovieTheatersTab({
       {/* 날짜별 상영시간 */}
       {entry.dateGroups.map((group) => (
         <div key={group.date} style={{ borderTop: '1px solid var(--color-border)', padding: '9px 14px 11px' }}>
-          <div style={{ marginBottom: 7, fontSize: 10, fontWeight: 600, color: 'var(--color-text-caption)', letterSpacing: '0.3px' }}>
+          <div style={{ marginBottom: 7, fontSize: 'var(--text-caption)', fontWeight: 600, color: 'var(--color-text-caption)', letterSpacing: '0.3px' }}>
             {formatDateLabel(group.date)}
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
@@ -316,15 +316,15 @@ function MovieTheatersTab({
                   }}
                   style={{ padding: '8px 12px', borderRadius: 9, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-raised)', cursor: soldout ? 'default' : 'pointer', opacity: soldout ? 0.5 : 1, textAlign: 'left', minHeight: 'auto' }}
                 >
-                  <div style={{ fontSize: 14, fontWeight: 700, fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>
+                  <div style={{ fontSize: 'var(--text-body)', fontWeight: 700, fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>
                     {st.showTime.slice(0, 5)}
-                    {st.endTime && <span style={{ fontSize: 10, color: 'var(--color-text-caption)', marginLeft: 3 }}>-{st.endTime.slice(0, 5)}</span>}
+                    {st.endTime && <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-caption)', marginLeft: 3 }}>-{st.endTime.slice(0, 5)}</span>}
                   </div>
                   {st.seatTotal > 0 && (
-                    <div style={{ marginTop: 3, fontSize: 11, fontFeatureSettings: '"tnum"' }}>
+                    <div style={{ marginTop: 3, fontSize: 'var(--text-caption)', fontFeatureSettings: '"tnum"' }}>
                       <span style={{ fontWeight: 600, color: seatColor }}>{st.seatAvailable}</span>
                       <span style={{ color: 'var(--color-text-sub)' }}>/{st.seatTotal}석</span>
-                      {soldout && <span style={{ marginLeft: 3, fontSize: 9, color: 'var(--color-error)', fontWeight: 700 }}>매진</span>}
+                      {soldout && <span style={{ marginLeft: 3, fontSize: 'var(--text-badge)', color: 'var(--color-error)', fontWeight: 700 }}>매진</span>}
                     </div>
                   )}
                 </button>
@@ -337,9 +337,9 @@ function MovieTheatersTab({
   )
 
   const sectionDivider = (label: string) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)', margin: '4px 0' }}>
       <div style={{ flex: 1, height: 1, backgroundColor: 'var(--color-border)' }} />
-      <span style={{ fontSize: 11, color: 'var(--color-text-caption)', fontWeight: 500, whiteSpace: 'nowrap' }}>{label}</span>
+      <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-caption)', fontWeight: 500, whiteSpace: 'nowrap' }}>{label}</span>
       <div style={{ flex: 1, height: 1, backgroundColor: 'var(--color-border)' }} />
     </div>
   )
@@ -354,10 +354,10 @@ function MovieTheatersTab({
         }}
         style={{
           width: '100%', height: 40,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          borderRadius: 10, border: '1px solid var(--color-primary-base)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-2)',
+          borderRadius: 'var(--radius-xl)', border: '1px solid var(--color-primary-base)',
           backgroundColor: 'var(--color-primary-subtle-l)',
-          color: 'var(--color-primary-base)', fontSize: 13, fontWeight: 600,
+          color: 'var(--color-primary-base)', fontSize: 'var(--text-meta)', fontWeight: 600,
           cursor: 'pointer',
         }}
       >
@@ -365,7 +365,7 @@ function MovieTheatersTab({
         지도에서 필터로 보기
       </button>
 
-      <p style={{ margin: '6px 0 12px', fontSize: 12, color: 'var(--color-text-caption)', lineHeight: 1.5 }}>
+      <p style={{ margin: '6px 0 12px', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', lineHeight: 1.5 }}>
         {regionId && (
           <><b style={{ color: 'var(--color-primary-base)' }}>{regionId}</b>{' 지역 '}
           <b style={{ color: 'var(--color-primary-base)' }}>{inRegion.length}</b>{'개 영화관 상영중, '}</>
@@ -374,13 +374,13 @@ function MovieTheatersTab({
       </p>
 
       {isLoading ? (
-        <div style={{ height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: 'var(--color-text-caption)' }}>불러오는 중…</div>
+        <div style={{ height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>불러오는 중…</div>
       ) : theaters.length === 0 ? (
-        <div style={{ textAlign: 'center', paddingTop: 32, fontSize: 13, color: 'var(--color-text-caption)' }}>상영 중인 영화관이 없습니다</div>
+        <div style={{ textAlign: 'center', paddingTop: 32, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>상영 중인 영화관이 없습니다</div>
       ) : regionId ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2-5)' }}>
           {inRegion.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '16px 0', fontSize: 13, color: 'var(--color-text-caption)' }}>
+            <div style={{ textAlign: 'center', padding: '16px 0', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
               {regionId} 지역 상영 정보가 없습니다
             </div>
           ) : (
@@ -394,7 +394,7 @@ function MovieTheatersTab({
           )}
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2-5)' }}>
           {sortedTheaters.map(renderTheaterCard)}
         </div>
       )}

@@ -270,7 +270,7 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
               color: '#fff',
               borderRadius: 'var(--radius-full)',
               padding: '2px 7px',
-              fontSize: 10,
+              fontSize: 'var(--text-caption)',
               fontWeight: 700,
               whiteSpace: 'nowrap',
               boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
@@ -345,7 +345,7 @@ function Section({ title, icon, withLine, action, style, children }: {
   return (
     <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2-5)', ...style }}>
       <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 20, paddingRight: 20, gap: 'var(--spacing-1-5)' }}>
-        {icon && <span style={{ fontSize: 16, lineHeight: 1 }}>{icon}</span>}
+        {icon && <span style={{ fontSize: 'var(--text-title)', lineHeight: 1 }}>{icon}</span>}
         <h3 style={{
           margin: 0,
           fontSize: 'var(--text-subtitle)',
@@ -619,7 +619,7 @@ export function CurationSections({
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-1)',
           padding: '8px 0', border: 'none', borderRadius: 'var(--radius-lg)',
           background: 'var(--color-surface-bg)', color: 'var(--color-text-caption)',
-          fontSize: 12, fontWeight: 600, cursor: 'pointer',
+          fontSize: 'var(--text-meta)', fontWeight: 600, cursor: 'pointer',
         } as const
 
         return (

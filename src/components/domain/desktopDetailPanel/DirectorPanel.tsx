@@ -40,7 +40,7 @@ export function DirectorPanel({
   if (isLoading) {
     return (
       <PanelShell onClose={onClose} onBack={onBack} embedded={embedded}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200, fontSize: 13, color: 'var(--color-text-caption)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
           불러오는 중…
         </div>
       </PanelShell>
@@ -50,13 +50,13 @@ export function DirectorPanel({
   return (
     <PanelShell onClose={onClose} onBack={onBack} embedded={embedded} title={directorName}>
       {/* 감독 헤더 */}
-      <div style={{ padding: '28px 20px 20px', display: 'flex', alignItems: 'center', gap: 16, borderBottom: '1px solid var(--color-border)' }}>
+      <div style={{ padding: '28px 20px 20px', display: 'flex', alignItems: 'center', gap: 'var(--spacing-4)', borderBottom: '1px solid var(--color-border)' }}>
         <div style={{ width: 64, height: 64, borderRadius: '50%', backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-caption)', flexShrink: 0 }}>
           <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
         </div>
         <div>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, color: 'var(--color-text-primary)' }}>{directorName}</div>
-          <div style={{ marginTop: 4, fontSize: 13, color: 'var(--color-text-caption)' }}>작품 {directorMovies.length}편</div>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-h2)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{directorName}</div>
+          <div style={{ marginTop: 4, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>작품 {directorMovies.length}편</div>
         </div>
       </div>
 
@@ -65,12 +65,12 @@ export function DirectorPanel({
           onClick={() => onDirectorFilterOnMap(directorName)}
           style={{
             width: '100%', height: 40,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            borderRadius: 10,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-2)',
+            borderRadius: 'var(--radius-xl)',
             border: '1px solid var(--color-primary-base)',
             backgroundColor: 'var(--color-primary-subtle-l)',
             color: 'var(--color-primary-base)',
-            fontSize: 13,
+            fontSize: 'var(--text-meta)',
             fontWeight: 600,
             cursor: 'pointer',
           }}
@@ -83,16 +83,16 @@ export function DirectorPanel({
       {/* 정렬 + 목록 */}
       <div style={{ padding: '16px 20px 32px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>
+          <span style={{ fontSize: 'var(--text-caption)', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>
             작품 · {directorMovies.length}편
           </span>
-          <div style={{ display: 'flex', gap: 4 }}>
+          <div style={{ display: 'flex', gap: 'var(--spacing-1)' }}>
             {(['newest', 'oldest'] as const).map((s) => (
               <button
                 key={s}
                 onClick={() => setSort(s)}
                 style={{
-                  padding: '4px 10px', borderRadius: 999, fontSize: 11, fontWeight: 500, cursor: 'pointer', border: '1px solid var(--color-border)',
+                  padding: '4px 10px', borderRadius: 'var(--radius-full)', fontSize: 'var(--text-caption)', fontWeight: 500, cursor: 'pointer', border: '1px solid var(--color-border)',
                   backgroundColor: sort === s ? 'var(--color-primary-base)' : 'transparent',
                   color: sort === s ? '#fff' : 'var(--color-text-caption)',
                 }}
@@ -103,7 +103,7 @@ export function DirectorPanel({
           </div>
         </div>
 
-        <div style={{ borderRadius: 12, border: '1px solid var(--color-border)', overflow: 'hidden', backgroundColor: 'var(--color-surface-card)' }}>
+        <div style={{ borderRadius: 'var(--radius-xl)', border: '1px solid var(--color-border)', overflow: 'hidden', backgroundColor: 'var(--color-surface-card)' }}>
           {visibleMovies.map((movie, i) => {
             const isActive = activeIdSet.has(movie.id)
             return (
@@ -111,7 +111,7 @@ export function DirectorPanel({
                 key={movie.id}
                 onClick={() => onMovieOpen(movie.id)}
                 style={{
-                  width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+                  width: '100%', display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)',
                   padding: '12px 14px',
                   borderWidth: 0,
                   borderBottomWidth: i < visibleMovies.length - 1 ? 1 : 0,
@@ -127,13 +127,13 @@ export function DirectorPanel({
                   <div style={{ width: 36, height: 52, borderRadius: 5, backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)', flexShrink: 0 }} />
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: isActive ? 'var(--color-primary-base)' : 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontSize: 'var(--text-body)', fontWeight: 600, color: isActive ? 'var(--color-primary-base)' : 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {movie.title}
                     {isActive && (
-                      <span style={{ marginLeft: 6, padding: '1px 5px', borderRadius: 4, fontSize: 9, fontWeight: 700, color: '#fff', backgroundColor: 'var(--color-primary-base)', verticalAlign: 'middle' }}>상영중</span>
+                      <span style={{ marginLeft: 6, padding: '1px 5px', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-badge)', fontWeight: 700, color: '#fff', backgroundColor: 'var(--color-primary-base)', verticalAlign: 'middle' }}>상영중</span>
                     )}
                   </div>
-                  <div style={{ marginTop: 2, fontSize: 12, color: 'var(--color-text-caption)' }}>
+                  <div style={{ marginTop: 2, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
                     {[movie.year, movie.genre[0]].filter(Boolean).join(' · ')}
                   </div>
                 </div>
@@ -147,13 +147,13 @@ export function DirectorPanel({
               onClick={() => setExpanded(!expanded)}
               style={{
                 width: '100%', height: 38,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-1-5)',
                 borderWidth: 0,
                 borderTopWidth: 1,
                 borderTopStyle: 'solid',
                 borderTopColor: 'var(--color-border)',
                 backgroundColor: 'var(--color-surface-raised)',
-                color: 'var(--color-text-sub)', fontSize: 12, fontWeight: 500,
+                color: 'var(--color-text-sub)', fontSize: 'var(--text-meta)', fontWeight: 500,
                 cursor: 'pointer', borderRadius: '0 0 12px 12px', minHeight: 'auto',
               }}
             >
