@@ -37,7 +37,7 @@ function MovieCardInfo({ movie, isDesktop, caption }: { movie: Movie; isDesktop:
   const fontSize = isDesktop ? 14 : 12
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1)' }}>
       {/* 제목 */}
       <span
         style={{
@@ -74,7 +74,7 @@ function MovieCardInfo({ movie, isDesktop, caption }: { movie: Movie; isDesktop:
           <span
             key={g}
             style={{
-              fontSize: 10,
+              fontSize: 'var(--text-caption)',
               padding: '2px 6px',
               borderRadius: 'var(--radius-full)',
               background: 'var(--color-surface-raised)',
@@ -86,7 +86,7 @@ function MovieCardInfo({ movie, isDesktop, caption }: { movie: Movie; isDesktop:
             {g}
           </span>
         ))}
-        <span style={{ fontSize: 10, color: 'var(--color-text-caption)', fontWeight: 600 }}>
+        <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-caption)', fontWeight: 600 }}>
           {movie.year}
         </span>
       </div>
@@ -122,7 +122,7 @@ export function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number
         width: cardWidth,
         background: 'var(--color-surface-card)',
         border: '1px solid var(--color-border)',
-        borderRadius: 16,
+        borderRadius: 'var(--radius-xl)',
         boxShadow: '0 12px 40px rgba(0,0,0,0.48)',
         zIndex: 9999,
         pointerEvents: 'none',
@@ -148,7 +148,7 @@ export function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number
       </span>
 
       {movie.director.length > 0 && (
-        <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>
+        <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
           {movie.director[0]}
         </span>
       )}
@@ -178,7 +178,7 @@ export function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number
           <div style={{ height: 1, background: 'var(--color-border)' }} />
           <span
             style={{
-              fontSize: 12,
+              fontSize: 'var(--text-meta)',
               color: 'var(--color-text-caption)',
               lineHeight: 1.65,
             }}
@@ -256,7 +256,7 @@ function MovieCard({
               position: 'absolute', top: 4, right: 4,
               padding: '2px 6px',
               borderRadius: 'var(--radius-full)',
-              fontSize: 10, fontWeight: 700, lineHeight: 1.4,
+              fontSize: 'var(--text-dow)', fontWeight: 700, lineHeight: 1.4,
               color: '#fff',
               backgroundColor: daysLeft === 0 ? '#DC2626' : daysLeft === 1 ? '#EA580C' : '#78716C',
               boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
@@ -317,7 +317,7 @@ export function CurationSectionRow({
   // compact 모드: flex item으로 렌더, 1~2편 inline 표시 (스크롤 없음)
   if (compact) {
     return (
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', border: '1px solid var(--color-border)', borderRadius: 10, overflow: 'hidden' }}>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-xl)', overflow: 'hidden' }}>
         {/* 헤더 */}
         <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--color-border)', background: 'var(--color-surface-card)' }}>
           <div style={{ fontSize: 'var(--text-body)', fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>
@@ -338,18 +338,18 @@ export function CurationSectionRow({
               <div style={{ flexShrink: 0 }}>
                 <PosterThumb src={movie.posterUrl} alt={movie.title} width={52} height={78} />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-body)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1)', minWidth: 0 }}>
+                <span style={{ fontSize: 'var(--text-meta)', fontWeight: 700, color: 'var(--color-text-body)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3 }}>
                   {normalizeTitle(movie.title)}
                 </span>
-                <span style={{ fontSize: 10, color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {movie.director.length > 0 ? movie.director[0] : '감독 미상'}
                 </span>
                 <div style={{ display: 'flex', gap: 'var(--spacing-1)' }}>
                   {movie.genre.slice(0, 1).map((g) => (
-                    <span key={g} style={{ fontSize: 10, padding: '2px 5px', borderRadius: 'var(--radius-full)', background: 'var(--color-surface-raised)', color: 'var(--color-text-caption)', border: '1px solid var(--color-border)' }}>{g}</span>
+                    <span key={g} style={{ fontSize: 'var(--text-caption)', padding: '2px 5px', borderRadius: 'var(--radius-full)', background: 'var(--color-surface-raised)', color: 'var(--color-text-caption)', border: '1px solid var(--color-border)' }}>{g}</span>
                   ))}
-                  <span style={{ fontSize: 10, color: 'var(--color-text-caption)', fontWeight: 600 }}>{movie.year}</span>
+                  <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-caption)', fontWeight: 600 }}>{movie.year}</span>
                 </div>
               </div>
             </div>
@@ -395,7 +395,7 @@ export function CurationSectionRow({
           style={{
             margin: '4px 0 0',
             padding: '0 16px',
-            fontSize: isDesktop ? 'var(--text-meta)' : 12,
+            fontSize: isDesktop ? 'var(--text-meta)' : 'var(--text-meta)',
             color: 'var(--color-text-caption)',
             lineHeight: 1.5,
           }}

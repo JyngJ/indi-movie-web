@@ -49,16 +49,16 @@ export function AnniversarySection({
   const header = (
     <div style={{
       padding: compact ? '12px 14px' : '14px 16px',
-      borderRadius: '10px 10px 0 0',
+      borderRadius: 'var(--radius-xl) var(--radius-xl) 0 0',
       background: bg,
       borderTop: `3px solid ${border}`,
       borderLeft: `1px solid color-mix(in srgb, ${border} 30%, transparent)`,
       borderRight: `1px solid color-mix(in srgb, ${border} 30%, transparent)`,
-      display: 'flex', flexDirection: 'column', gap: 3,
+      display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1)',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)', flexWrap: 'wrap' }}>
         <span style={{
-          fontSize: compact ? 'var(--text-body)' : (isDesktop ? 18 : 16),
+          fontSize: compact ? 'var(--text-body)' : 'var(--text-title)',
           fontWeight: 700, fontFamily: 'var(--font-display)', color: text,
         }}>
           {sectionTitle}
@@ -79,7 +79,7 @@ export function AnniversarySection({
           {nameEn} · {years}
         </span>
       </div>
-      <p style={{ margin: 0, fontSize: compact ? 12 : 'var(--text-meta)', color: text, opacity: 0.85, lineHeight: 1.5 }}>
+      <p style={{ margin: 0, fontSize: 'var(--text-meta)', color: text, opacity: 0.85, lineHeight: 1.5 }}>
         {sectionDesc}
       </p>
     </div>
@@ -95,8 +95,8 @@ export function AnniversarySection({
         <div style={{
           display: 'flex', gap: 'var(--spacing-2-5)', alignItems: 'flex-start',
           padding: '12px 14px',
-          border: filmBorder, borderTop: 'none',
-          borderRadius: '0 0 10px 10px',
+          border: '1px solid var(--color-border)', borderTop: 'none',
+          borderRadius: '0 0 var(--radius-xl) var(--radius-xl)',
           background: 'var(--color-surface-card)',
           flex: 1,
         }}>
@@ -112,25 +112,25 @@ export function AnniversarySection({
               <div style={{ flexShrink: 0 }}>
                 <PosterThumb src={film.posterUrl} alt={film.title} width={52} height={78} />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1)', minWidth: 0 }}>
                 <span style={{
-                  fontSize: 12, fontWeight: 700, color: 'var(--color-text-body)',
+                  fontSize: 'var(--text-meta)', fontWeight: 700, color: 'var(--color-text-body)',
                   display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3,
                 }}>
                   {normalizeTitle(film.title)}
                 </span>
-                <span style={{ fontSize: 10, color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {film.director[0] ?? '감독 미상'}
+                <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {film.director.length > 0 ? film.director[0] : '감독 미상'}
                 </span>
                 <div style={{ display: 'flex', gap: 'var(--spacing-1)' }}>
                   {film.genre.slice(0, 1).map((g) => (
                     <span key={g} style={{
-                      fontSize: 10, padding: '2px 5px', borderRadius: 'var(--radius-full)',
+                      fontSize: 'var(--text-caption)', padding: '2px 5px', borderRadius: 'var(--radius-full)',
                       background: 'var(--color-surface-raised)', color: 'var(--color-text-caption)',
                       border: '1px solid var(--color-border)',
                     }}>{g}</span>
                   ))}
-                  <span style={{ fontSize: 10, color: 'var(--color-text-caption)', fontWeight: 600 }}>{film.year}</span>
+                  <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-caption)', fontWeight: 600 }}>{film.year}</span>
                 </div>
               </div>
             </div>
@@ -146,8 +146,9 @@ export function AnniversarySection({
       <div style={{ margin: '0 16px' }}>{header}</div>
       <div style={{
         margin: '0 16px',
-        borderRadius: '0 0 10px 10px',
-        border: filmBorder, borderTop: 'none',
+        borderRadius: '0 0 var(--radius-xl) var(--radius-xl)',
+        background: 'var(--color-surface-card)',
+        border: '1px solid var(--color-border)', borderTop: 'none',
         overflow: 'hidden',
       }}>
         <CurationSectionRow
