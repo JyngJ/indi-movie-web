@@ -57,7 +57,7 @@ export function SettingsHeader({ title, onBack, onClose, submitting }: { title: 
   const btn: React.CSSProperties = {
     width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center',
     border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-text-body)',
-    borderRadius: 8, flexShrink: 0, minHeight: 'unset',
+    borderRadius: 'var(--radius-md)', flexShrink: 0, minHeight: 'unset',
   }
   return (
     <div style={{
@@ -65,12 +65,12 @@ export function SettingsHeader({ title, onBack, onClose, submitting }: { title: 
       paddingTop: 'max(0px, env(safe-area-inset-top))',
       borderBottom: '1px solid var(--color-border)',
       display: 'flex', alignItems: 'center', paddingLeft: onBack ? 8 : 16, paddingRight: 8,
-      gap: 4, flexShrink: 0, backgroundColor: 'var(--color-surface-card)',
+      gap: 'var(--spacing-1)', flexShrink: 0, backgroundColor: 'var(--color-surface-card)',
     }}>
       {onBack && (
         <button style={btn} onClick={onBack} disabled={submitting}><IcoChevronLeft /></button>
       )}
-      <span style={{ flex: 1, fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      <span style={{ flex: 1, fontSize: 'var(--text-title)', fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {title}
       </span>
       {onClose && (
@@ -84,11 +84,11 @@ export function SettingsHeader({ title, onBack, onClose, submitting }: { title: 
 const footerLink: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', height: 30, padding: '0 8px',
   background: 'none', border: 'none', cursor: 'pointer', minHeight: 'unset',
-  fontSize: 13, color: 'var(--color-text-sub)',
+  fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)',
 }
 const footerDot: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', height: 30,
-  fontSize: 13, color: 'var(--color-text-placeholder)',
+  fontSize: 'var(--text-meta)', color: 'var(--color-text-placeholder)',
 }
 
 /* ── 설정 메인 ── */
@@ -100,7 +100,7 @@ export function SettingsMainPage({
   onNavigate: (page: Page) => void
 }) {
   const row: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', gap: 12,
+    display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)',
     padding: '14px 16px',
     backgroundColor: 'var(--color-surface-card)',
     border: 'none', width: '100%', textAlign: 'left', cursor: 'pointer', minHeight: 'unset',
@@ -109,21 +109,21 @@ export function SettingsMainPage({
   return (
     <div style={{ flex: 1, overflowY: 'auto', backgroundColor: 'var(--color-surface-bg)', paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}>
       {/* 카드 1: 화면 모드 */}
-      <div style={{ margin: '16px 16px 0', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
+      <div style={{ margin: '16px 16px 0', borderRadius: 'var(--radius-xl)', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
         <div style={{ ...row, cursor: 'default', borderBottom: 'none' }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-xl)', backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-sub)" strokeWidth={1.8} strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>화면 모드</div>
-            <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 1 }}>{isDark ? '다크' : '라이트'}</div>
+            <div style={{ fontSize: 'var(--text-body)', fontWeight: 600, color: 'var(--color-text-primary)' }}>화면 모드</div>
+            <div style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', marginTop: 1 }}>{isDark ? '다크' : '라이트'}</div>
           </div>
           {/* 토글 스위치 */}
           <button
             onClick={() => onSetTheme(isDark ? 'light' : 'dark')}
             aria-label={isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}
             style={{
-              width: 76, height: 40, borderRadius: 999, padding: 4,
+              width: 76, height: 40, borderRadius: 'var(--radius-full)', padding: 4,
               border: '1px solid var(--color-border)',
               backgroundColor: isDark ? 'var(--color-surface-card)' : 'var(--color-surface-raised)',
               boxShadow: 'var(--shadow-sm)', cursor: 'pointer',
@@ -138,42 +138,42 @@ export function SettingsMainPage({
               }
             </div>
             <div style={{ width: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-warning)', opacity: isDark ? 0.2 : 0 }}>☀️</div>
-            <div style={{ width: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isDark ? 0 : 0.3, fontSize: 14 }}>🌙</div>
+            <div style={{ width: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isDark ? 0 : 0.3, fontSize: 'var(--text-body)' }}>🌙</div>
           </button>
         </div>
       </div>
 
       {/* 카드 2: 버그 리포트 */}
-      <div style={{ margin: '12px 16px 0', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
+      <div style={{ margin: '12px 16px 0', borderRadius: 'var(--radius-xl)', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
         <button style={{ ...row, borderBottom: 'none' }} onClick={() => onNavigate('report')}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-xl)', backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-sub)" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>버그 리포트</div>
-            <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 1 }}>오류·깨짐을 알려주세요</div>
+            <div style={{ fontSize: 'var(--text-body)', fontWeight: 600, color: 'var(--color-text-primary)' }}>버그 리포트</div>
+            <div style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', marginTop: 1 }}>오류·깨짐을 알려주세요</div>
           </div>
           <span style={{ color: 'var(--color-text-placeholder)' }}><IcoChevronRight /></span>
         </button>
       </div>
 
       {/* 안내 배너 */}
-      <div style={{ margin: '12px 16px 0', backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, var(--color-surface-bg))', border: '1px solid color-mix(in srgb, var(--color-warning) 25%, transparent)', borderRadius: 12, padding: '12px 14px', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+      <div style={{ margin: '12px 16px 0', backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, var(--color-surface-bg))', border: '1px solid color-mix(in srgb, var(--color-warning) 25%, transparent)', borderRadius: 'var(--radius-xl)', padding: '12px 14px', display: 'flex', gap: 'var(--spacing-2-5)', alignItems: 'flex-start' }}>
         <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="var(--color-warning)" strokeWidth={2} strokeLinecap="round" style={{ flexShrink: 0, marginTop: 1 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.55, color: 'var(--color-text-sub)' }}>
+        <p style={{ margin: 0, fontSize: 'var(--text-meta)', lineHeight: 1.55, color: 'var(--color-text-sub)' }}>
           상영 정보는 실시간으로 불러오지 않으므로 실제 좌석 현황과 다를 수 있습니다.
         </p>
       </div>
 
       {/* 푸터 링크 */}
-      <div style={{ margin: '24px 16px 0', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+      <div style={{ margin: '24px 16px 0', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 'var(--spacing-1)', flexWrap: 'wrap' }}>
         <button onClick={() => onNavigate('attribution')} style={footerLink}>출처 표기 정보</button>
         <span style={footerDot}>·</span>
         <button onClick={() => onNavigate('about')} style={footerLink}>만든 사람</button>
         <span style={footerDot}>·</span>
         <a href="/privacy" style={{ ...footerLink, textDecoration: 'none' }}>개인정보 처리방침</a>
       </div>
-      <div style={{ textAlign: 'center', marginTop: 8, fontSize: 11, color: 'var(--color-text-placeholder)' }}>
+      <div style={{ textAlign: 'center', marginTop: 8, fontSize: 'var(--text-caption)', color: 'var(--color-text-placeholder)' }}>
         영화볼지도 · v0.1.0
       </div>
     </div>
@@ -183,10 +183,10 @@ export function SettingsMainPage({
 /* ── 버그 리포트 전송 완료 ── */
 export function ReportSuccessNotice() {
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32, backgroundColor: 'var(--color-surface-bg)' }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-3)', padding: 32, backgroundColor: 'var(--color-surface-bg)' }}>
       <div style={{ fontSize: 40 }}>🙏</div>
-      <div style={{ fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>감사합니다!</div>
-      <div style={{ fontSize: 13.5, color: 'var(--color-text-sub)', textAlign: 'center', lineHeight: 1.6 }}>제보해 주셔서 감사합니다.<br/>확인 후 이메일로 답변 드리겠습니다.</div>
+      <div style={{ fontSize: 'var(--text-title)', fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>감사합니다!</div>
+      <div style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)', textAlign: 'center', lineHeight: 1.6 }}>제보해 주셔서 감사합니다.<br/>확인 후 이메일로 답변 드리겠습니다.</div>
     </div>
   )
 }
@@ -235,27 +235,27 @@ export function SettingsReportPage({
 
   const inputStyle: React.CSSProperties = {
     width: '100%', boxSizing: 'border-box',
-    padding: '10px 12px', borderRadius: 10,
+    padding: '10px 12px', borderRadius: 'var(--radius-xl)',
     border: '1px solid var(--color-border)',
     backgroundColor: 'var(--color-surface-bg)',
     color: 'var(--color-text-primary)',
-    fontSize: 14, resize: 'none', outline: 'none',
+    fontSize: 'var(--text-body)', resize: 'none', outline: 'none',
     fontFamily: 'var(--font-sans)',
   }
 
   return (
-    <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px', paddingBottom: 'max(24px, env(safe-area-inset-bottom))', display: 'flex', flexDirection: 'column', gap: 18, backgroundColor: 'var(--color-surface-bg)' }}>
-      <p style={{ margin: 0, fontSize: 13.5, color: 'var(--color-text-sub)', lineHeight: 1.55 }}>
+    <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px', paddingBottom: 'max(24px, env(safe-area-inset-bottom))', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-5)', backgroundColor: 'var(--color-surface-bg)' }}>
+      <p style={{ margin: 0, fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)', lineHeight: 1.55 }}>
         발견하신 오류를 알려주세요. 어떤 화면에서 무엇이 잘못됐는지 적어주시면 큰 도움이 됩니다.
       </p>
 
       {/* 분류 */}
       <div>
-        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-sub)', marginBottom: 8 }}>분류</div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        <div style={{ fontSize: 'var(--text-meta)', fontWeight: 600, color: 'var(--color-text-sub)', marginBottom: 8 }}>분류</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-2)' }}>
           {REPORT_CATEGORIES.map(cat => (
             <button key={cat} onClick={() => setCategory(cat)} style={{
-              padding: '7px 14px', borderRadius: 999, fontSize: 13, fontWeight: 500, cursor: 'pointer', minHeight: 'unset',
+              padding: '7px 14px', borderRadius: 'var(--radius-full)', fontSize: 'var(--text-meta)', fontWeight: 500, cursor: 'pointer', minHeight: 'unset',
               border: category === cat ? '1px solid var(--color-primary-base)' : '1px solid var(--color-border)',
               backgroundColor: category === cat ? 'var(--color-primary-subtle-l)' : 'var(--color-surface-bg)',
               color: category === cat ? 'var(--color-primary-text)' : 'var(--color-text-body)',
@@ -266,7 +266,7 @@ export function SettingsReportPage({
 
       {/* 내용 */}
       <div>
-        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-sub)', marginBottom: 8 }}>내용</div>
+        <div style={{ fontSize: 'var(--text-meta)', fontWeight: 600, color: 'var(--color-text-sub)', marginBottom: 8 }}>내용</div>
         <textarea
           value={detail}
           onChange={e => setDetail(e.target.value)}
@@ -275,21 +275,21 @@ export function SettingsReportPage({
           placeholder="예) 라이카시네마 상영 시간표가 어제 날짜로 표시돼요."
           style={{ ...inputStyle, minHeight: 120 }}
         />
-        <div style={{ textAlign: 'right', fontSize: 11, color: 'var(--color-text-placeholder)', marginTop: 4 }}>{detail.length}/500</div>
+        <div style={{ textAlign: 'right', fontSize: 'var(--text-caption)', color: 'var(--color-text-placeholder)', marginTop: 4 }}>{detail.length}/500</div>
       </div>
 
       {/* 스크린샷 */}
       <div>
         <input ref={fileInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={e => setFiles(Array.from(e.target.files ?? []).slice(0, 3))} />
         <button onClick={() => fileInputRef.current?.click()} style={{
-          display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 999,
+          display: 'inline-flex', alignItems: 'center', gap: 'var(--spacing-1-5)', padding: '8px 14px', borderRadius: 'var(--radius-full)',
           border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-bg)',
-          fontSize: 13, fontWeight: 500, color: 'var(--color-text-body)', cursor: 'pointer', minHeight: 'unset',
+          fontSize: 'var(--text-meta)', fontWeight: 500, color: 'var(--color-text-body)', cursor: 'pointer', minHeight: 'unset',
         }}>
           <IcoCamera /> 스크린샷 첨부
         </button>
         {files.length > 0 && (
-          <div style={{ marginTop: 8, fontSize: 12, color: 'var(--color-text-caption)' }}>
+          <div style={{ marginTop: 8, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
             {files.map(f => f.name).join(', ')}
           </div>
         )}
@@ -297,27 +297,27 @@ export function SettingsReportPage({
 
       {/* 이메일 */}
       <div>
-        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-sub)', marginBottom: 8 }}>회신 이메일 (선택)</div>
+        <div style={{ fontSize: 'var(--text-meta)', fontWeight: 600, color: 'var(--color-text-sub)', marginBottom: 8 }}>회신 이메일 (선택)</div>
         <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" style={{ ...inputStyle }} />
       </div>
 
       {/* 동의 */}
-      <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
+      <label style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--spacing-2-5)', cursor: 'pointer' }}>
         <input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} style={{ marginTop: 2, width: 16, height: 16, accentColor: 'var(--color-primary-base)', flexShrink: 0 }} />
-        <span style={{ fontSize: 12.5, color: 'var(--color-text-sub)', lineHeight: 1.5 }}>
+        <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)', lineHeight: 1.5 }}>
           제출하는 내용과 스크린샷이 서비스 개선 목적으로 사용될 수 있음에 동의합니다.
         </span>
       </label>
 
-      {error && <p style={{ margin: 0, fontSize: 12.5, color: 'var(--color-error)' }}>{error}</p>}
+      {error && <p style={{ margin: 0, fontSize: 'var(--text-meta)', color: 'var(--color-error)' }}>{error}</p>}
 
       {/* 전송 버튼 */}
       <button onClick={handleSubmit} disabled={!canSubmit} style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-        height: 48, borderRadius: 12, border: 'none', cursor: canSubmit ? 'pointer' : 'default',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-2)',
+        height: 48, borderRadius: 'var(--radius-xl)', border: 'none', cursor: canSubmit ? 'pointer' : 'default',
         backgroundColor: canSubmit ? 'var(--color-primary-base)' : 'var(--color-surface-raised)',
         color: canSubmit ? '#fff' : 'var(--color-text-placeholder)',
-        fontSize: 15, fontWeight: 700, fontFamily: 'var(--font-display)',
+        fontSize: 'var(--text-subtitle)', fontWeight: 700, fontFamily: 'var(--font-display)',
         transition: 'background-color 150ms',
       }}>
         <IcoSend /> {submitting ? '전송 중…' : '리포트 보내기'}
@@ -329,34 +329,34 @@ export function SettingsReportPage({
 /* ── 출처 표기 ── */
 export function SettingsAttributionPage() {
   const card: React.CSSProperties = {
-    margin: '12px 16px 0', borderRadius: 12, overflow: 'hidden',
+    margin: '12px 16px 0', borderRadius: 'var(--radius-xl)', overflow: 'hidden',
     border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)',
   }
   const labelRow: React.CSSProperties = {
-    padding: '8px 14px 0', fontSize: 10, fontWeight: 700, letterSpacing: '0.6px',
+    padding: '8px 14px 0', fontSize: 'var(--text-caption)', fontWeight: 700, letterSpacing: '0.6px',
     color: 'var(--color-text-placeholder)', textTransform: 'uppercase',
   }
   const valueBox: React.CSSProperties = {
-    margin: '6px 14px', padding: '8px 12px', borderRadius: 8,
+    margin: '6px 14px', padding: '8px 12px', borderRadius: 'var(--radius-md)',
     backgroundColor: 'var(--color-surface-bg)',
-    fontSize: 12.5, color: 'var(--color-text-sub)', fontFamily: 'var(--font-mono)',
+    fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)', fontFamily: 'var(--font-mono)',
   }
   const linkRow: React.CSSProperties = {
     padding: '8px 14px 12px',
-    display: 'flex', alignItems: 'center', gap: 4,
-    fontSize: 13, fontWeight: 500, color: 'var(--color-primary-base)', cursor: 'pointer',
+    display: 'flex', alignItems: 'center', gap: 'var(--spacing-1)',
+    fontSize: 'var(--text-meta)', fontWeight: 500, color: 'var(--color-primary-base)', cursor: 'pointer',
   }
   return (
     <div style={{ flex: 1, overflowY: 'auto', backgroundColor: 'var(--color-surface-bg)', paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}>
       {/* 지도 데이터 */}
       <div style={{ ...card, marginTop: 16 }}>
-        <div style={{ padding: '12px 14px 10px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--color-border)' }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{ padding: '12px 14px 10px', display: 'flex', alignItems: 'center', gap: 'var(--spacing-2-5)', borderBottom: '1px solid var(--color-border)' }}>
+          <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-xl)', backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-sub)" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
           </div>
           <div>
-            <div style={{ fontSize: 11, color: 'var(--color-text-placeholder)', letterSpacing: '0.4px', textTransform: 'uppercase', fontWeight: 600 }}>지도 데이터</div>
-            <div style={{ fontSize: 15, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>OpenStreetMap</div>
+            <div style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-placeholder)', letterSpacing: '0.4px', textTransform: 'uppercase', fontWeight: 600 }}>지도 데이터</div>
+            <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>OpenStreetMap</div>
           </div>
         </div>
         <div style={valueBox}>© OpenStreetMap contributors</div>
@@ -367,11 +367,11 @@ export function SettingsAttributionPage() {
 
       {/* 서체 */}
       <div style={card}>
-        <div style={{ padding: '12px 14px 10px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--color-border)' }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18, fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--color-text-sub)' }}>T</div>
+        <div style={{ padding: '12px 14px 10px', display: 'flex', alignItems: 'center', gap: 'var(--spacing-2-5)', borderBottom: '1px solid var(--color-border)' }}>
+          <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-xl)', backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 'var(--text-h3)', fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--color-text-sub)' }}>T</div>
           <div>
-            <div style={{ fontSize: 11, color: 'var(--color-text-placeholder)', letterSpacing: '0.4px', textTransform: 'uppercase', fontWeight: 600 }}>서체</div>
-            <div style={{ fontSize: 15, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>KIMM 서체</div>
+            <div style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-placeholder)', letterSpacing: '0.4px', textTransform: 'uppercase', fontWeight: 600 }}>서체</div>
+            <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>KIMM 서체</div>
           </div>
         </div>
         <div style={valueBox}>출처 – 한국기계연구원, kimm.re.kr</div>
@@ -396,26 +396,26 @@ export function SettingsAboutPage() {
         <div style={{ width: 72, height: 72, borderRadius: 18, overflow: 'hidden', marginBottom: 12 }}>
           <img src="/squarelogo.svg" alt="영화볼지도" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
-        <div style={{ fontSize: 20, fontWeight: 800, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>영화볼지도</div>
-        <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 2, fontStyle: 'italic', fontFamily: 'var(--font-serif-en)' }}>independent cinema map</div>
+        <div style={{ fontSize: 'var(--text-h3)', fontWeight: 800, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>영화볼지도</div>
+        <div style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', marginTop: 2, fontStyle: 'italic', fontFamily: 'var(--font-serif-en)' }}>independent cinema map</div>
       </div>
 
       {/* 만든 사람 */}
-      <div style={{ margin: '0 16px', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)' }}>
-        <div style={{ padding: '6px 16px', fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', color: 'var(--color-text-placeholder)', textTransform: 'uppercase', borderBottom: '1px solid var(--color-border)' }}>만든 사람</div>
+      <div style={{ margin: '0 16px', borderRadius: 'var(--radius-xl)', overflow: 'hidden', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)' }}>
+        <div style={{ padding: '6px 16px', fontSize: 'var(--text-caption)', fontWeight: 700, letterSpacing: '0.5px', color: 'var(--color-text-placeholder)', textTransform: 'uppercase', borderBottom: '1px solid var(--color-border)' }}>만든 사람</div>
         {team.map((member, i) => (
-          <div key={member.name} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderBottom: i < team.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
+          <div key={member.name} style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)', padding: '14px 16px', borderBottom: i < team.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>{member.name}</div>
-              <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 1 }}>{member.role}</div>
+              <div style={{ fontSize: 'var(--text-body)', fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>{member.name}</div>
+              <div style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', marginTop: 1 }}>{member.role}</div>
             </div>
             {member.linkedin && (
-              <button onClick={() => window.open(member.linkedin!, '_blank', 'noopener')} style={{ width: 32, height: 32, borderRadius: 8, border: 'none', backgroundColor: '#0A66C2', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, minHeight: 'unset' }}>
+              <button onClick={() => window.open(member.linkedin!, '_blank', 'noopener')} style={{ width: 32, height: 32, borderRadius: 'var(--radius-md)', border: 'none', backgroundColor: '#0A66C2', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, minHeight: 'unset' }}>
                 <IcoLinkedIn />
               </button>
             )}
             {member.github && (
-              <button onClick={() => window.open(member.github!, '_blank', 'noopener')} style={{ width: 32, height: 32, borderRadius: 8, border: 'none', backgroundColor: '#24292e', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, minHeight: 'unset' }}>
+              <button onClick={() => window.open(member.github!, '_blank', 'noopener')} style={{ width: 32, height: 32, borderRadius: 'var(--radius-md)', border: 'none', backgroundColor: '#24292e', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, minHeight: 'unset' }}>
                 <IcoGitHub />
               </button>
             )}
@@ -424,7 +424,7 @@ export function SettingsAboutPage() {
       </div>
 
       {/* 카피라이트 */}
-      <div style={{ textAlign: 'center', marginTop: 24, fontSize: 12, color: 'var(--color-text-placeholder)' }}>
+      <div style={{ textAlign: 'center', marginTop: 24, fontSize: 'var(--text-meta)', color: 'var(--color-text-placeholder)' }}>
         <div>© 2026 영화볼지도</div>
       </div>
     </div>

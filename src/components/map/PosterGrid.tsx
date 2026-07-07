@@ -61,7 +61,7 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
       <div style={{
         backgroundColor: selected ? 'var(--color-primary-base)' : 'var(--color-surface-card)',
         border: selected ? '1.5px solid rgba(0,0,0,0.14)' : '1.5px solid var(--color-border)',
-        borderRadius: 8,
+        borderRadius: 'var(--radius-md)',
         padding: '8px 8px 8px',
         boxShadow: selected ? 'var(--shadow-lg)' : 'var(--shadow-md)',
         display: 'inline-block',
@@ -72,7 +72,7 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
           <div style={{
             position: 'absolute', top: -8, right: -8,
             backgroundColor: 'var(--color-primary-base)', color: '#fff',
-            borderRadius: 999, padding: '2px 7px', fontSize: 10, fontWeight: 700,
+            borderRadius: 'var(--radius-full)', padding: '2px 7px', fontSize: 'var(--text-caption)', fontWeight: 700,
             zIndex: 10, whiteSpace: 'nowrap',
             boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
             border: '1.5px solid var(--color-surface-bg)',
@@ -80,9 +80,9 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
             {matchCount}편 일치
           </div>
         )}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1)', position: 'relative', zIndex: 1 }}>
           {Array.from({ length: count > 3 ? 2 : 1 }).map((_, row) => (
-            <div key={row} style={{ display: 'flex', gap: 4 }}>
+            <div key={row} style={{ display: 'flex', gap: 'var(--spacing-1)' }}>
               {Array.from({ length: perRow }).map((_, col) => {
                 const idx = row * perRow + col
                 const slot = slots[idx]
@@ -95,7 +95,7 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
                         borderRadius: 'var(--comp-poster-radius)',
                         backgroundColor: 'var(--color-primary-base)', color: '#fff',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 15, fontWeight: 800,
+                        fontSize: 'var(--text-subtitle)', fontWeight: 800,
                         boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.18)',
                         whiteSpace: 'nowrap',
                       }}>

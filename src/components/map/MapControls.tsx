@@ -185,7 +185,7 @@ export function ZoomSlider({
   }, [mapRef, stepIdx])
 
   const btn: React.CSSProperties = {
-    width: 34, height: 34, fontSize: 20, fontWeight: 300, lineHeight: 1,
+    width: 34, height: 34, fontSize: 'var(--text-h3)', fontWeight: 300, lineHeight: 1,
     border: 'none', background: 'none', cursor: 'pointer', minHeight: 'auto',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     color: 'var(--color-text-body)', flexShrink: 0,
