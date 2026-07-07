@@ -8,6 +8,7 @@ import type { PersonalizedReason } from '@/lib/curation/getPersonalizedFilms'
 import type { RecentlyViewedEntry } from '@/lib/curation/types'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import type { Movie } from '@/types/api'
+import { Sparkles } from 'lucide-react'
 
 interface PersonalizedSectionProps {
   movies: Movie[]
@@ -78,7 +79,7 @@ export function PersonalizedSection({
     <CurationSectionRow
       id="personalized"
       title="이런 작품은 어때요"
-      emoji="✨"
+      emoji={<Sparkles size={24} strokeWidth={2} color="var(--color-primary-base)" />}
       description={reasonDescription(group.reason)}
       displayMode="default"
       movies={group.movies}

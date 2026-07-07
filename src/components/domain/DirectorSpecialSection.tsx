@@ -7,6 +7,9 @@ import { PosterThumb } from '@/components/domain/PosterThumb'
 import { useDirectorProfile } from '@/lib/supabase/queries'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { withFlag } from '@/lib/nations'
+import { ScrollNavButton } from '@/components/primitives'
+import { HoverPopup } from '@/components/domain/CurationSectionRow'
+import { MapPin, Sparkles, Clapperboard } from 'lucide-react'
 
 interface Props {
   directorName: string
@@ -32,54 +35,7 @@ function hashColor(name: string): string {
   return AVATAR_COLORS[h % AVATAR_COLORS.length]
 }
 
-// ── 호버 팝업 (CurationSectionRow 동일 패턴) ────────────────────
-function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number }) {
-  const synopsis = movie.synopsis
-    ? movie.synopsis.length > 90 ? movie.synopsis.slice(0, 90) + '...' : movie.synopsis
-    : null
-  const tags = [...movie.genre.slice(0, 2), ...(movie.nation ? [withFlag(movie.nation)] : [])]
-  const cardWidth = 220
-  const adjustedX = x + cardWidth > window.innerWidth - 16 ? x - cardWidth - 156 : x
-
-  return createPortal(
-    <div style={{
-      position: 'fixed', top: y, left: adjustedX, width: cardWidth,
-      background: 'var(--color-surface-card)',
-      border: '1px solid var(--color-border)',
-      borderRadius: 16, boxShadow: '0 12px 40px rgba(0,0,0,0.48)',
-      zIndex: 9999, pointerEvents: 'none', padding: 14,
-      display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)',
-    }}>
-      <span style={{
-        fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.35,
-        display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-      }}>
-        {normalizeTitle(movie.title)}
-      </span>
-      {movie.director.length > 0 && (
-        <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>{movie.director[0]}</span>
-      )}
-      {tags.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-1)' }}>
-          {tags.map((t) => (
-            <span key={t} style={{
-              fontSize: 'var(--text-caption)', padding: '3px 9px', borderRadius: 'var(--radius-full)',
-              background: 'var(--color-surface-raised)', color: 'var(--color-text-body)',
-              border: '1px solid var(--color-border)',
-            }}>{t}</span>
-          ))}
-        </div>
-      )}
-      {synopsis && (
-        <>
-          <div style={{ height: 1, background: 'var(--color-border)' }} />
-          <span style={{ fontSize: 12, color: 'var(--color-text-caption)', lineHeight: 1.65 }}>{synopsis}</span>
-        </>
-      )}
-    </div>,
-    document.body,
-  )
-}
+// (local HoverPopup removed)
 
 // ── 영화 카드 (CurationSectionRow 동일 패턴) ────────────────────
 function MovieCard({
@@ -179,8 +135,9 @@ function LeftPanel({
           border: '1px solid color-mix(in srgb, var(--color-primary-base) 40%, transparent)',
           backgroundColor: 'color-mix(in srgb, var(--color-primary-base) 10%, transparent)',
           letterSpacing: 0.3,
+          display: 'flex', alignItems: 'center', gap: 4
         }}>
-          ✦ 감독 특별전
+          <Sparkles size={12} strokeWidth={1.75} color="currentColor" /> 감독 특별전
         </span>
 
         {/* 아바타 + 이름 */}
@@ -245,7 +202,7 @@ function LeftPanel({
         background: 'var(--color-surface-bg)',
       }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--spacing-1-5)' }}>
-          <span style={{ fontSize: 'var(--text-meta)', flexShrink: 0, marginTop: 1 }}>📍</span>
+          <MapPin size={16} strokeWidth={1.75} color="currentColor" style={{ marginTop: 2, flexShrink: 0, color: 'var(--color-text-body)' }} />
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 'var(--text-meta)', fontWeight: 700, color: 'var(--color-text-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {theater.name}
@@ -296,22 +253,6 @@ export function DirectorSpecialSection({
   if (films.length === 0) return null
 
   const posterMidY = scaleBleed + 8 + height / 2
-  const showBtns = scrollAreaHovered || !isDesktop
-
-  const btnStyle: React.CSSProperties = {
-    position: 'absolute', top: posterMidY, transform: 'translateY(-50%)',
-    width: 32, height: 32, borderRadius: '50%', zIndex: 3,
-    border: 'none', cursor: 'pointer',
-    backgroundColor: 'color-mix(in srgb, var(--color-surface-card) 72%, transparent)',
-    backdropFilter: 'blur(8px)',
-    color: 'var(--color-text-body)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    boxShadow: '0 1px 6px rgba(0,0,0,0.12)',
-    minHeight: 'auto',
-    opacity: scrollAreaHovered ? 1 : 0,
-    transition: 'opacity 150ms ease',
-    pointerEvents: scrollAreaHovered ? 'auto' : 'none',
-  }
 
   const filmScroll = (
     <div
@@ -320,18 +261,18 @@ export function DirectorSpecialSection({
       onMouseLeave={() => setScrollAreaHovered(false)}
     >
       {canScrollLeft && (
-        <button style={{ ...btnStyle, left: 6 }} onClick={() => scrollRef.current?.scrollBy({ left: -scrollAmount, behavior: 'smooth' })} aria-label="이전">
-          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-        </button>
+        <ScrollNavButton
+          direction="left"
+          style={{ position: 'absolute', top: posterMidY, transform: 'translateY(-50%)', left: 6, zIndex: 3 }}
+          onClick={() => scrollRef.current?.scrollBy({ left: -scrollAmount, behavior: 'smooth' })}
+        />
       )}
       {canScrollRight && (
-        <button style={{ ...btnStyle, right: 6 }} onClick={() => scrollRef.current?.scrollBy({ left: scrollAmount, behavior: 'smooth' })} aria-label="다음">
-          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 18l6-6-6-6" />
-          </svg>
-        </button>
+        <ScrollNavButton
+          direction="right"
+          style={{ position: 'absolute', top: posterMidY, transform: 'translateY(-50%)', right: 6, zIndex: 3 }}
+          onClick={() => scrollRef.current?.scrollBy({ left: scrollAmount, behavior: 'smooth' })}
+        />
       )}
       <div
         ref={scrollRef}
@@ -374,8 +315,11 @@ export function DirectorSpecialSection({
         fontFamily: 'var(--font-display)',
         color: 'var(--color-text-primary)',
         marginBottom: 10,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6
       }}>
-        🎬 {directorName} 특별전
+        <Clapperboard size={24} strokeWidth={2} color="var(--color-primary-base)" /> {directorName} 특별전
       </h2>
       {isDesktop ? (
         /* ── 데스크톱: 좌우 분할, 동일 마진 ─────── */

@@ -18,9 +18,12 @@ export function SectionHeader({ title, emoji, description, isDesktop = false }: 
           fontWeight: 700,
           fontFamily: 'var(--font-display)',
           color: 'var(--color-text-primary)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6
         }}
       >
-        {emoji && <span style={{ marginRight: '4px' }}>{emoji}</span>}
+        {emoji}
         {title}
       </h2>
       {description && (

@@ -10,6 +10,7 @@ import type { Showtime } from '@/types/api'
 import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWidget'
 import { getStoredRegion } from '@/lib/regionStorage'
 import { getRegionFromAddress } from '@/lib/regions'
+import { MapPin } from 'lucide-react'
 
 function useIsDesktop() {
   const [v, setV] = useState(false)
@@ -271,8 +272,8 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
   const showtimesSection = (
     <div style={{ paddingTop: 8 }}>
       <div style={{ padding: isDesktop ? '16px 0 0' : '16px 16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)' }}>
-          📍 상영 영화관 및 일정
+        <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <MapPin size={20} strokeWidth={2} color="var(--color-primary-base)" /> 상영 영화관 및 일정
         </span>
         <button
           onClick={() => router.push(`/?movie=${movie.id}`)}

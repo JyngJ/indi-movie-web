@@ -5,6 +5,9 @@ import { createPortal } from 'react-dom'
 import { PosterThumb } from '@/components/domain/PosterThumb'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { withFlag } from '@/lib/nations'
+import { ScrollNavButton } from '@/components/primitives'
+import { HoverPopup } from '@/components/domain/CurationSectionRow'
+import { MapPin, Film, Eye, Scale, Clock, Flame, Info, TrendingUp, TrendingDown } from 'lucide-react'
 import type { FilmRankingEntry } from '@/lib/supabase/queries'
 import type { Movie } from '@/types/api'
 
@@ -37,15 +40,15 @@ function RankBadge({ rank, prevRank }: { rank: number; prevRank: number | null }
   const diff = prevRank - rank
   if (diff > 0) {
     return (
-      <span style={{ fontSize: 10, fontWeight: 700, color: '#16A34A' }}>
-        ▲{diff}
+      <span style={{ fontSize: 10, fontWeight: 700, color: '#16A34A', display: 'flex', alignItems: 'center' }}>
+        <TrendingUp size={12} strokeWidth={2.5} color="currentColor" /> {diff}
       </span>
     )
   }
   if (diff < 0) {
     return (
-      <span style={{ fontSize: 10, fontWeight: 700, color: '#DC2626' }}>
-        ▼{Math.abs(diff)}
+      <span style={{ fontSize: 10, fontWeight: 700, color: '#DC2626', display: 'flex', alignItems: 'center' }}>
+        <TrendingDown size={12} strokeWidth={2.5} color="currentColor" /> {Math.abs(diff)}
       </span>
     )
   }
@@ -54,9 +57,9 @@ function RankBadge({ rank, prevRank }: { rank: number; prevRank: number | null }
 
 // ── 랭킹 설명 호버 툴팁 ──────────────────────────────────────────
 const METRICS = [
-  { icon: '📍', label: '상영관 수',      pct: 45, color: '#3B82F6', desc: '전국 독립·예술영화 전용관 중 상영 중인 극장 수' },
-  { icon: '🎞️', label: '상영 회차',      pct: 30, color: '#10B981', desc: '집계 기간 동안 편성된 총 상영 회차' },
-  { icon: '👁️', label: '영화볼지도 조회', pct: 25, color: '#8B5CF6', desc: '앱에서 이 영화·상영관을 찾아본 횟수' },
+  { icon: MapPin, label: '상영관 수',      pct: 45, color: '#3B82F6', desc: '전국 독립·예술영화 전용관 중 상영 중인 극장 수' },
+  { icon: Film, label: '상영 회차',      pct: 30, color: '#10B981', desc: '집계 기간 동안 편성된 총 상영 회차' },
+  { icon: Eye, label: '영화볼지도 조회', pct: 25, color: '#8B5CF6', desc: '앱에서 이 영화·상영관을 찾아본 횟수' },
 ] as const
 
 function InfoTooltip({ weekStart }: { weekStart: string }) {
@@ -89,17 +92,19 @@ function InfoTooltip({ weekStart }: { weekStart: string }) {
         display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2-5)',
         boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
       }}>
-        <span style={{ fontSize: 'var(--text-meta)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
-          ⚖️ 랭킹은 이렇게 매겨요
+        <span style={{ fontSize: 'var(--text-meta)', fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Scale size={16} strokeWidth={1.75} color="currentColor" /> 랭킹은 이렇게 매겨요
         </span>
         <p style={{ margin: 0, fontSize: 'var(--text-caption)', color: 'var(--color-text-caption)', lineHeight: 1.6 }}>
           지난 7일 · <strong>{periodLabel}</strong> 세 지표 가중 합산
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)' }}>
-          {METRICS.map(({ icon, label: l, pct, color, desc }) => (
+          {METRICS.map(({ icon: Icon, label: l, pct, color, desc }) => (
             <div key={l} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-body)' }}>{icon} {l}</span>
+                <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-body)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <Icon size={14} strokeWidth={1.75} color="currentColor" /> {l}
+                </span>
                 <span style={{ fontSize: 'var(--text-caption)', fontWeight: 700, color }}>{pct}%</span>
               </div>
               <div style={{ height: 5, borderRadius: 3, background: 'var(--color-border)', overflow: 'hidden' }}>
@@ -109,55 +114,11 @@ function InfoTooltip({ weekStart }: { weekStart: string }) {
             </div>
           ))}
         </div>
-        <span style={{ fontSize: 10, color: 'var(--color-text-caption)', borderTop: '1px solid var(--color-border)', paddingTop: 8 }}>
-          🕐 매주 월요일 오전 6시 자동 갱신 · {label} 기준
+        <span style={{ fontSize: 10, color: 'var(--color-text-caption)', borderTop: '1px solid var(--color-border)', paddingTop: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
+          <Clock size={12} strokeWidth={1.75} color="currentColor" /> 매주 월요일 오전 6시 자동 갱신 · {label} 기준
         </span>
       </div>
     </div>
-  )
-}
-
-// ── 호버 팝업 ────────────────────────────────────────────────────
-function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number }) {
-  const synopsis = movie.synopsis
-    ? movie.synopsis.length > 90 ? movie.synopsis.slice(0, 90) + '...' : movie.synopsis
-    : null
-  const tags = [...movie.genre.slice(0, 2), ...(movie.nation ? [withFlag(movie.nation)] : [])]
-  const cardWidth = 220
-  const adjustedX = x + cardWidth > window.innerWidth - 16 ? x - cardWidth - 136 : x
-
-  // transform 조상(도크 슬라이드 패널)에 잘리지 않게 body로 portal
-  return createPortal(
-    <div style={{
-      position: 'fixed', top: y, left: adjustedX, width: cardWidth,
-      background: 'var(--color-surface-card)', border: '1px solid var(--color-border)',
-      borderRadius: 16, boxShadow: '0 12px 40px rgba(0,0,0,0.48)',
-      zIndex: 9999, pointerEvents: 'none', padding: 14,
-      display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)',
-    }}>
-      <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-        {normalizeTitle(movie.title)}
-      </span>
-      {movie.director.length > 0 && (
-        <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>{movie.director[0]}</span>
-      )}
-      {tags.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-1)' }}>
-          {tags.map(tag => (
-            <span key={tag} style={{ fontSize: 'var(--text-caption)', padding: '3px 9px', borderRadius: 'var(--radius-full)', background: 'var(--color-surface-raised)', color: 'var(--color-text-body)', border: '1px solid var(--color-border)' }}>
-              {tag}
-            </span>
-          ))}
-        </div>
-      )}
-      {synopsis && (
-        <>
-          <div style={{ height: 1, background: 'var(--color-border)' }} />
-          <span style={{ fontSize: 12, color: 'var(--color-text-caption)', lineHeight: 1.65 }}>{synopsis}</span>
-        </>
-      )}
-    </div>,
-    document.body,
   )
 }
 
@@ -262,18 +223,6 @@ export function FilmRankingSection({ weekStart, rankings, movies, isDesktop, onM
   // 포스터 이미지 영역 세로 중앙: scroll container paddingTop(12) + poster 높이 절반
   const posterMidY = 12 + POSTER.height / 2
 
-  const btnStyle: React.CSSProperties = {
-    position: 'absolute', top: posterMidY, transform: 'translateY(-50%)',
-    width: 32, height: 32, borderRadius: '50%', zIndex: 3,
-    border: 'none', cursor: 'pointer',
-    backgroundColor: 'color-mix(in srgb, var(--color-surface-card) 72%, transparent)',
-    backdropFilter: 'blur(8px)',
-    color: 'var(--color-text-body)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    boxShadow: '0 1px 6px rgba(0,0,0,0.12)',
-    minHeight: 'auto',
-  }
-
   return (
     <section style={{ paddingTop: 28 }}>
       <div style={{ padding: '0 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -285,8 +234,11 @@ export function FilmRankingSection({ weekStart, rankings, movies, isDesktop, onM
               fontWeight: 700,
               fontFamily: 'var(--font-display)',
               color: 'var(--color-text-primary)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6
             }}>
-              🔥 독립영화 주간 랭킹
+              <Flame size={24} strokeWidth={2} color="var(--color-warning)" /> 독립영화 주간 랭킹
             </h2>
             <div
               style={{ position: 'relative', display: 'inline-flex' }}
@@ -301,7 +253,7 @@ export function FilmRankingSection({ weekStart, rankings, movies, isDesktop, onM
                 }}
                 aria-label="랭킹 기준 보기"
               >
-                ⓘ
+                <Info size={16} strokeWidth={1.75} color="currentColor" />
               </button>
               {infoHover && <InfoTooltip weekStart={weekStart} />}
             </div>
@@ -314,16 +266,18 @@ export function FilmRankingSection({ weekStart, rankings, movies, isDesktop, onM
 
       <div style={{ position: 'relative' }}>
         {canScrollLeft && (
-          <button style={{ ...btnStyle, left: 6 }}
-            onClick={() => scrollRef.current?.scrollBy({ left: -scrollAmount, behavior: 'smooth' })}>
-            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
-          </button>
+          <ScrollNavButton
+            direction="left"
+            style={{ position: 'absolute', top: posterMidY, transform: 'translateY(-50%)', left: 6, zIndex: 3 }}
+            onClick={() => scrollRef.current?.scrollBy({ left: -scrollAmount, behavior: 'smooth' })}
+          />
         )}
         {canScrollRight && (
-          <button style={{ ...btnStyle, right: 6 }}
-            onClick={() => scrollRef.current?.scrollBy({ left: scrollAmount, behavior: 'smooth' })}>
-            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
-          </button>
+          <ScrollNavButton
+            direction="right"
+            style={{ position: 'absolute', top: posterMidY, transform: 'translateY(-50%)', right: 6, zIndex: 3 }}
+            onClick={() => scrollRef.current?.scrollBy({ left: scrollAmount, behavior: 'smooth' })}
+          />
         )}
         <div
           ref={scrollRef}

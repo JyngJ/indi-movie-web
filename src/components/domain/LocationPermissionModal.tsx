@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import type { LocationPermState } from '@/hooks/useLocationPermission'
+import { Lock } from 'lucide-react'
 
 interface Props {
   state: Extract<LocationPermState, 'prompt' | 'requesting' | 'denied'>
@@ -120,7 +121,9 @@ export function LocationPermissionModal({ state, onRequest, onDismiss }: Props) 
               textAlign: 'left',
             }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                <span style={{ fontSize: 18, flexShrink: 0, lineHeight: 1.5 }}>🔒</span>
+                <span style={{ flexShrink: 0, marginTop: 2, color: 'var(--color-text-body)' }}>
+                  <Lock size={18} strokeWidth={2} color="currentColor" />
+                </span>
                 <div style={{ fontSize: 13, color: 'var(--color-text-body)', lineHeight: 1.65 }}>
                   주소창 왼쪽 <strong>자물쇠 아이콘</strong> 클릭<br />
                   <span style={{ color: 'var(--color-text-caption)' }}>

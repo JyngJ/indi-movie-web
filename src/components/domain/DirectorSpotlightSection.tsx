@@ -2,6 +2,7 @@
 
 import type { Movie } from '@/types/api'
 import { useDirectorProfile } from '@/lib/supabase/queries'
+import { Trophy } from 'lucide-react'
 
 interface DirectorSpotlight {
   name: string
@@ -150,9 +151,12 @@ export function DirectorSpotlightSection({
             fontWeight: 700,
             fontFamily: 'var(--font-display)',
             color: 'var(--color-text-primary)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6
           }}
         >
-          🏆 감독 스포트라이트
+          <Trophy size={24} strokeWidth={2} color="var(--color-primary-base)" /> 감독 스포트라이트
         </h2>
         <p style={{ margin: '3px 0 0', fontSize: 12, color: 'var(--color-text-caption)' }}>
           지금 주목할 만한 감독

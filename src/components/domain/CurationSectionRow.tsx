@@ -11,7 +11,7 @@ import { GenreChip, SectionHeader, CardContainer } from '@/components/primitives
 
 interface CurationSectionRowProps {
   title: string
-  emoji: string
+  emoji?: React.ReactNode
   description?: string
   displayMode: SectionDisplayMode
   movies: Movie[]
@@ -307,7 +307,7 @@ export function CurationSectionRow({
     return (
       <CardContainer>
         {/* 헤더 */}
-        <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--color-border)' }}>
+        <div style={{ padding: '12px 0', borderBottom: '1px solid var(--color-border)' }}>
           <SectionHeader title={title} emoji={emoji} description={description} />
         </div>
         {/* 영화 inline */}
@@ -316,23 +316,23 @@ export function CurationSectionRow({
             <div
               key={movie.id}
               onClick={onMovieClick ? () => onMovieClick(movie.id) : undefined}
-              style={{ display: 'flex', gap: 'var(--spacing-2-5)', alignItems: 'flex-start', flex: 1, minWidth: 0, cursor: onMovieClick ? 'pointer' : undefined }}
+              style={{ display: 'flex', gap: 8, alignItems: 'flex-start', flex: 1, minWidth: 0, cursor: onMovieClick ? 'pointer' : undefined }}
             >
               <div style={{ flexShrink: 0 }}>
-                <PosterThumb src={movie.posterUrl} alt={movie.title} width={52} height={78} />
+                <PosterThumb src={movie.posterUrl} alt={movie.title} width={72} height={108} />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-body)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, justifyContent: 'center' }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-body)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3 }}>
                   {normalizeTitle(movie.title)}
                 </span>
-                <span style={{ fontSize: 10, color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 12, color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {movie.director.length > 0 ? movie.director[0] : '감독 미상'}
                 </span>
-                <div style={{ display: 'flex', gap: 'var(--spacing-1)' }}>
+                <div style={{ display: 'flex', gap: 'var(--spacing-1)', alignItems: 'center' }}>
                   {movie.genre.slice(0, 1).map((g) => (
                     <GenreChip key={g}>{g}</GenreChip>
                   ))}
-                  <span style={{ fontSize: 10, color: 'var(--color-text-caption)', fontWeight: 600 }}>{movie.year}</span>
+                  <span style={{ fontSize: 11, color: 'var(--color-text-caption)', fontWeight: 600 }}>{movie.year}</span>
                 </div>
               </div>
             </div>
@@ -360,7 +360,7 @@ export function CurationSectionRow({
   return (
     <section id={id} style={{ paddingTop: noHeader ? 0 : 24 }}>
       {!noHeader && (
-        <div style={{ paddingBottom: '16px' }}>
+        <div>
           <SectionHeader title={title} emoji={emoji} description={description} isDesktop={isDesktop} />
         </div>
       )}

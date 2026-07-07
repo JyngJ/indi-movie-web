@@ -8,6 +8,7 @@ import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { withFlagsRaw } from '@/lib/nations'
 import type { Theater, Movie, Showtime } from '@/types/api'
 import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWidget'
+import { Clapperboard } from 'lucide-react'
 
 function useIsDesktop() {
   const [v, setV] = useState(false)
@@ -387,8 +388,8 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
       {/* 현재 상영중 */}
       <div style={{ padding: isDesktop ? '20px 28px 0' : '16px 16px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-          <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)' }}>
-            🎬 현재 상영중{' '}
+          <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Clapperboard size={20} strokeWidth={2} color="var(--color-primary-base)" /> 현재 상영중{' '}
             <span style={{ fontSize: 16, color: 'var(--color-primary-base)' }}>{movieShowtimeGroups.length}편</span>
           </span>
         </div>

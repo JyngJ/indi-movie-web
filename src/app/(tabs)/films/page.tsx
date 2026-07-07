@@ -28,6 +28,7 @@ import { useActiveMovieIdsByRegion, useActiveMovieTheaterPairs, useAlmostSoldOut
 import { getRegionFromCity } from '@/lib/regions'
 import { getStoredRegion, setStoredRegion } from '@/lib/regionStorage'
 import type { Theater } from '@/types/api'
+import { Hourglass, Clapperboard, Film, Zap, Moon, ArrowUp } from 'lucide-react'
 
 export default function FilmsPage() {
   const router = useRouter()
@@ -171,7 +172,7 @@ export default function FilmsPage() {
     {
       listId: 'realtime_last_week',
       nameKo: '막바지 상영',
-      emoji: '⏳',
+      emoji: <Hourglass size={24} strokeWidth={2} color="var(--color-primary-base)" />,
       description: '상영관이 줄고 있어요. 미리 확인하고 예매하세요',
       displayMode: 'default' as const,
       posterBadges: lastWeekBadgeMap,
@@ -180,7 +181,7 @@ export default function FilmsPage() {
     {
       listId: 'realtime_new_indie',
       nameKo: '이번 주 새롭게 상영하는 영화',
-      emoji: '🎬',
+      emoji: <Clapperboard size={24} strokeWidth={2} color="var(--color-primary-base)" />,
       description: '이번 주 스크린에 새로 오른 영화들',
       displayMode: 'default' as const,
       movies: newIndieFilms.map((f) => f.movie),
@@ -188,7 +189,7 @@ export default function FilmsPage() {
     {
       listId: 'realtime_returning',
       nameKo: '오랜만에 상영하는 영화',
-      emoji: '🎞️',
+      emoji: <Film size={24} strokeWidth={2} color="var(--color-primary-base)" />,
       description: '잠시 사라졌다가 다시 스크린으로 돌아온 영화들',
       displayMode: 'default' as const,
       movieCaptions: returningYearCaptions,
@@ -429,7 +430,7 @@ export default function FilmsPage() {
       ─────────────────────────────────────────────────────── */}
       {(() => {
         type AnySection = {
-          listId: string; nameKo: string; emoji: string; description?: string
+          listId: string; nameKo: string; emoji: React.ReactNode; description?: string
           displayMode: string; movies: import('@/types/api').Movie[]
           posterBadges?: Map<string, number>
           movieCaptions?: Map<string, string>
@@ -450,7 +451,7 @@ export default function FilmsPage() {
         const rtAlmostSoldOut: AnySection[] = almostSoldOutFilms.length > 0 ? [{
           listId: 'realtime_almost_soldout',
           nameKo: '매진 임박',
-          emoji: '⚡',
+          emoji: <Zap size={24} strokeWidth={2} color="var(--color-primary-base)" />,
           description: '최근 확인 기준, 오늘·내일 회차의 좌석이 얼마 남지 않았어요',
           displayMode: 'default',
           movieCaptions: almostSoldOutCaptions,
@@ -462,7 +463,7 @@ export default function FilmsPage() {
         const rtLateNight: AnySection[] = lateNightFilms.length > 0 ? [{
           listId: 'realtime_late_night',
           nameKo: '심야 상영',
-          emoji: '🌙',
+          emoji: <Moon size={24} strokeWidth={2} color="var(--color-primary-base)" />,
           description: '하루의 끝, 밤 깊은 시간에 시작하는 회차들이에요',
           displayMode: 'default',
           movieCaptions: lateNightCaptions,
@@ -645,9 +646,7 @@ export default function FilmsPage() {
           }}
           title="맨 위로"
         >
-          <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 19V5M5 12l7-7 7 7" />
-          </svg>
+          <ArrowUp size={20} strokeWidth={2} color="currentColor" />
         </button>
       )}
     </div>
