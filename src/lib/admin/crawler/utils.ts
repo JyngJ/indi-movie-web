@@ -215,8 +215,8 @@ export function pickDtryxCinema(cinemas: DtryxCinema[], theaterName: string) {
     cinemas.find((cinema) => normalizedTarget.includes(normalizeKoreanName(cinema.CinemaNm)))
 }
 
-export function normalizeKoreanName(value: string) {
-  return value.replace(/\s+/g, '').replace(/[()（）\-_·.]/g, '').toLowerCase()
+export function normalizeKoreanName(value: string | undefined | null) {
+  return String(value ?? '').replace(/\s+/g, '').replace(/[()（）\-_·.]/g, '').toLowerCase()
 }
 
 export function normalizeDtryxTime(value: unknown) {

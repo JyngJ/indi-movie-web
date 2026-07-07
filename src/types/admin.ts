@@ -74,7 +74,7 @@ export interface AdminTheaterSource {
   matchedTheaterId?: string
   homepageUrl: string
   listingUrl: string
-  parser: 'jsonLdEvent' | 'tableText' | 'timelineCard' | 'dtryxReservationApi' | 'movieeTicketApi' | 'movielandProductOptions' | 'seoulArtTimetable' | 'csv' | 'selfHosted' | 'ocr' | 'tinyticketEventManager' | 'petitecine' | 'drfa' | 'screenshotOcr' | 'boardImageOcr' | 'kofaCinematheque'
+  parser: 'jsonLdEvent' | 'tableText' | 'timelineCard' | 'dtryxReservationApi' | 'movieeTicketApi' | 'movielandProductOptions' | 'seoulArtTimetable' | 'csv' | 'selfHosted' | 'ocr' | 'tinyticketEventManager' | 'petitecine' | 'drfa' | 'screenshotOcr' | 'boardImageOcr' | 'kofaCinematheque' | 'cineQApi'
   enabled: boolean
   cadence: 'manual' | 'daily' | 'twice_daily' | 'four_daily'
   lastCrawledAt?: string
