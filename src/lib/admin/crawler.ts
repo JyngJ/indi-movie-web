@@ -199,6 +199,10 @@ export async function crawlShowtimeCandidates(context: ParseContext) {
     return crawlBoardImageOcr(context)
   }
 
+  if (context.source.parser === 'cineQApi') {
+    return crawlCineQApi(context)
+  }
+
   if (context.source.parser === 'kofaCinematheque') {
     return crawlKofaCinematheque(context)
   }
@@ -508,6 +512,9 @@ export async function crawlSelfHosted(context: ParseContext) {
 
   if (hostname.includes('moviee.co.kr')) {
     return crawlMovieeTicketApi(context)
+  }
+  if (hostname.includes('cineq.co.kr')) {
+    return crawlCineQApi(context)
   }
   if (hostname.includes('moonhwain.net') || hostname.includes('moonhwain.kr')) {
     return crawlMoonhwain(url, context)
@@ -1134,12 +1141,12 @@ async function crawlPetitecine(context: ParseContext): Promise<CrawledShowtimeCa
     if (res.result !== 1) continue
 
     for (const row of res.data ?? []) {
-      if (row['use_yn'] !== 'Y' || row['complete_yn'] === 'Y') continue
+      if (row['use_yn'] !== 'Y') continue
       const rawTime = String(row['movie_time'] ?? '')
       const rawEnd = String(row['movie_end'] ?? '')
       if (rawTime.length < 4) continue
-      const showTime = `${rawTime.slice(0, 2)}:${rawTime.slice(2, 4)}`
-      const endTime = rawEnd.length >= 4 ? `${rawEnd.slice(0, 2)}:${rawEnd.slice(2, 4)}` : undefined
+      const showTime = normalizeCompactTime(rawTime) ?? `${rawTime.slice(0, 2)}:${rawTime.slice(2, 4)}`
+      const endTime = rawEnd.length >= 4 ? normalizeCompactTime(rawEnd) ?? `${rawEnd.slice(0, 2)}:${rawEnd.slice(2, 4)}` : undefined
       const movieTitle = String(row['movie_name'] ?? '').replace(/\s*\(.*?\)\s*/g, '').trim()
       const screenName = String(row['theater_name'] ?? '상영관')
       const seatAvail = Number(row['ticketing_seat_count'] ?? 0)
@@ -1344,4 +1351,65 @@ async function crawlKofaCinematheque(context: ParseContext): Promise<CrawledShow
   }
 
   return dedupeCandidates(candidates)
+}
+
+async function crawlCineQApi(
+  context: ParseContext,
+): Promise<CrawledShowtimeCandidate[]> {
+  const urlObj = new URL(context.source.listingUrl)
+  const theaterCode = urlObj.searchParams.get('TheaterCode') || '1001'
+
+  const candidates: CrawledShowtimeCandidate[] = []
+
+  const today = new Date()
+  // Fetch today and next 4 days
+  for (let i = 0; i < 5; i++) {
+    const d = new Date(today)
+    d.setDate(d.getDate() + i)
+    // format YYYY-MM-DD
+    const playDate = [
+      d.getFullYear(),
+      String(d.getMonth() + 1).padStart(2, '0'),
+      String(d.getDate()).padStart(2, '0')
+    ].join('-')
+
+    try {
+      const response = await fetch('https://www.cineq.co.kr/Theater/MovieTable2', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `TheaterCode=${theaterCode}&PlayDate=${playDate}`
+      })
+
+      if (!response.ok) continue
+      const html = await response.text()
+
+      // Splitting by 'each-movie-title' to process movies separately
+      const blocks = html.split('class="each-movie-title"')
+      for (let b = 1; b < blocks.length; b++) {
+        const block = blocks[b]
+        const titleMatch = block.match(/<h3>([^<]+)<\/h3>/)
+        const movieTitle = titleMatch ? titleMatch[1].trim() : '알 수 없음'
+
+        const timeRegex = /data-playdate="([^"]+)"[^>]*data-moviecode="([^"]+)"[^>]*data-screenplanid="([^"]+)"[\s\S]*?<a[^>]*>([^<]+)<\/a>/g
+        let match
+        while ((match = timeRegex.exec(block)) !== null) {
+          const showDate = match[1]
+          const showTime = match[4].trim()
+
+          candidates.push({
+            movieTitle,
+            screenName: '씨네Q 신도림', // TODO: Parse actual screen name if available
+            showDate,
+            showTime,
+            // Additional links to book directly
+            ticketingUrl: `https://www.cineq.co.kr/Theater/Movie?TheaterCode=${theaterCode}`
+          })
+        }
+      }
+    } catch (e) {
+      console.warn('CineQ crawling failed for date', playDate, e)
+    }
+  }
+
+  return candidates
 }
