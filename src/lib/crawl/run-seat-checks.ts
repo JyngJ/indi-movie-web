@@ -41,23 +41,15 @@ export async function runSeatChecks(): Promise<RunSeatResult> {
   const runStartedAt = new Date().toISOString()
   
   const todayDash = todayIsoDate()
-  const todayCompact = todayDash.replace(/-/g, '')
-  const currentYear = todayDash.slice(0, 4)
 
-  // DB에서 올해의 상영 후보들 미리 조회 후, 과거 날짜 필터링
-  const { data: rawDbRows } = await supabase
+  // DB에서 오늘 이후의 상영 후보들 미리 조회
+  const { data: dbRows } = await supabase
     .from('showtime_candidates')
     .select('id, source_id, booking_url, fingerprint, show_date')
-    .gte('show_date', currentYear)
-
-  const dbRows = (rawDbRows ?? []).filter((r) => {
-    if (!r.show_date) return false
-    if (r.show_date.includes('-')) return r.show_date >= todayDash
-    return r.show_date >= todayCompact
-  })
+    .gte('show_date', todayDash)
 
   // 모든 좌석 갱신 소스에 대해 최적화된 업데이트 (각 파서별 병렬 처리)
-  const results = await updateSeatsOptimized(seatSources, dbRows)
+  const results = await updateSeatsOptimized(seatSources, dbRows ?? [])
 
   for (const { source, candidates, error, warningCount = 0 } of results) {
     if (error) {

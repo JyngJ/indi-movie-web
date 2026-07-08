@@ -51,7 +51,7 @@ export async function crawlScreenshotOcr(context: ParseContext): Promise<Crawled
   const today = new Date().toISOString().slice(0, 10)
   return dedupeCandidates(
     schedule.showtimes
-      .filter(st => st.showDate >= today && st.movieTitle?.trim())
+      .filter(st => st.showDate >= today && st.movieTitle?.trim() && /^\d{1,2}:\d{2}(?::\d{2})?$/.test(st.showTime))
       .map(st => buildCandidate({
         context,
         movieTitle: st.movieTitle.trim(),
@@ -143,7 +143,7 @@ export async function crawlBoardImageOcr(context: ParseContext): Promise<Crawled
   const today = new Date().toISOString().slice(0, 10)
   return dedupeCandidates(
     schedule.showtimes
-      .filter(st => st.showDate >= today && st.movieTitle?.trim())
+      .filter(st => st.showDate >= today && st.movieTitle?.trim() && /^\d{1,2}:\d{2}(?::\d{2})?$/.test(st.showTime))
       .map(st => buildCandidate({
         context,
         movieTitle: st.movieTitle.trim(),
