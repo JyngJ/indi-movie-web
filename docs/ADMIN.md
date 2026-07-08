@@ -80,6 +80,10 @@ HTML 파서는 우선 JSON-LD `Event` 블록을 읽고, 없거나 부족하면 `
 
 디트릭스 계열 예매 페이지는 `dtryxReservationApi`로 처리한다. 이 어댑터는 예매 페이지 URL의 `cgid`를 추출하고 `/reserve/main_list.do`에서 영화관, 영화, 날짜 목록을 받은 뒤 `/reserve/showseq_list.do`를 조합 호출하여 `Showseqlist`를 후보 레코드로 정규화한다.
 
+> ⚠️ **dtryx 운영 주의** (상세: `docs/RUNBOOK-crawler.md`)
+> - **동시성은 도메인당 1**을 유지한다. 병렬 버스트를 올리면 dtryx 방화벽이 크롤러 서버(RPi) 공인 IP를 차단(IP 밴)한다. 밴 시 RPi에서 `mac-rotate.sh`로 IP 로테이션.
+> - 좌석 매칭 시 dtryx가 반환하는 `ShowSeq`/`ScreenCd`는 **number**일 수 있으므로, booking URL의 `searchParams.get()`(string)과 비교하기 전에 `String()`으로 정규화한다. 안 하면 `===`가 항상 false가 되어 좌석이 0개로 갱신된다.
+
 무비애 계열 예매 페이지는 `movieeTicketApi`로 처리한다. 이 어댑터는 URL의 `tid` 또는 `thsynid`를 추출하고 `/api/TicketApi/GetPlayDateList`, `/api/TicketApi/GetPlayTimeList`를 호출해 영화명, 관, 날짜, 시간, 좌석 정보를 후보 레코드로 정규화한다.
 
 무비랜드는 `movielandProductOptions`로 처리한다. 이 어댑터는 Now Showing 목록에서 상품 상세 URL을 수집하고, Cafe24 상품 상세 HTML의 `option_stock_data`에 들어있는 `Date / Time / Seat` 조합을 날짜·시간별로 그룹핑해 잔여 좌석과 총 좌석을 계산한다.
