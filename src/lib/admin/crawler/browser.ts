@@ -87,7 +87,7 @@ async function fetchSsrHtml(url: string): Promise<string> {
   const res = await fetch(url, {
     headers: { 'user-agent': UA, accept: 'text/html,*/*', 'accept-language': 'ko-KR,ko;q=0.9' },
     cache: 'no-store',
-    signal: AbortSignal.timeout(15_000),
+    signal: AbortSignal.timeout(30_000),
   })
   if (!res.ok) throw new Error(`TinyTicket fetch failed: HTTP ${res.status}`)
   return res.text()
