@@ -4,7 +4,7 @@
  * GitHub Actions에서도 동일하게 사용
  */
 import { runSeatChecks } from '../src/lib/crawl/run-seat-checks'
-import { notifyDiscord } from '../src/lib/crawl/notify-discord'
+import { notifyDiscordSeats } from '../src/lib/crawl/notify-discord'
 
 async function main() {
   console.log(`[${new Date().toISOString()}] 좌석 현황 갱신 시작`)
@@ -27,15 +27,10 @@ async function main() {
   const failed = result.runs.filter((r) => r.status === 'failed')
   console.log(`\n완료 (${(result.durationMs / 1000).toFixed(1)}s)`)
 
-  // 좌석 갱신은 실패했을 때만 Discord 알림
-  if (failed.length > 0) {
-    await notifyDiscord({
-      title: '🪑 좌석 갱신 실패',
-      runs: result.runs,
-      durationMs: result.durationMs,
-    })
-    process.exit(1)
-  }
+  // 성공/실패 관계없이 매 실행마다 Discord 리포트 (좌석은 updatedCount 기준)
+  await notifyDiscordSeats(result.runs, result.durationMs)
+
+  if (failed.length > 0) process.exit(1)
 }
 
 main().catch((err) => {
