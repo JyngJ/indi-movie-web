@@ -1914,13 +1914,13 @@ export function TheaterSheet({
           <div style={{
             position: 'absolute',
             left: 0, right: 0, 
-            bottom: panelMode ? 0 : `calc(${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`,
+            bottom: 0,
             transform: (selectedShowtimeId && showtimeInView) ? 'translateY(0)' : 'translateY(100%)',
             transition: 'transform 0.28s cubic-bezier(0.32, 0.72, 0, 1)',
             backgroundColor: 'var(--color-surface-card)',
             borderTop: '1px solid var(--color-border)',
             padding: '12px 20px',
-            paddingBottom: panelMode ? 'max(12px, env(safe-area-inset-bottom))' : 12,
+            paddingBottom: panelMode ? 'max(12px, env(safe-area-inset-bottom))' : `calc(12px + ${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`,
             zIndex: 10,
           }}>
             <button

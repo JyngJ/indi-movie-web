@@ -2105,9 +2105,13 @@ export default function MapView() {
   // 영화 상세 페이지에서 뒤로가기 시 ?theater= 파라미터로 극장 시트 복원
   const restoredTheaterRef = useRef<string | null>(null)
   useEffect(() => {
-    if (theaters.length === 0) return
     const theaterParam = searchParams.get('theater')
-    if (!theaterParam) return
+    if (!theaterParam) {
+      restoredTheaterRef.current = null
+      return
+    }
+    if (theaters.length === 0) return
+    
     const movieParam = searchParams.get('movie') ?? searchParams.get('fromMovie')
     if (movieParam && movies.length === 0) return
     const dateParam = searchParams.get('date')
@@ -2165,9 +2169,12 @@ export default function MapView() {
   // 영화 상세 / 패널에서 ?movie= 파라미터로 지도 필터만 복원
   const restoredMovieFilterRef = useRef<string | null>(null)
   useEffect(() => {
-    if (searchParams.has('theater')) return
     const movieParam = searchParams.get('movie')
-    if (!movieParam || movies.length === 0) return
+    if (searchParams.has('theater') || !movieParam) {
+      restoredMovieFilterRef.current = null
+      return
+    }
+    if (movies.length === 0) return
     if (restoredMovieFilterRef.current === movieParam) return
     const movie = movies.find((m) => m.id === movieParam)
     if (!movie) return
@@ -2186,9 +2193,11 @@ export default function MapView() {
   // 감독 상세 / 패널에서 ?director= 파라미터로 지도 필터만 복원
   const restoredDirectorFilterRef = useRef<string | null>(null)
   useEffect(() => {
-    if (searchParams.has('theater')) return
     const directorParam = searchParams.get('director')
-    if (!directorParam) return
+    if (searchParams.has('theater') || !directorParam) {
+      restoredDirectorFilterRef.current = null
+      return
+    }
     if (restoredDirectorFilterRef.current === directorParam) return
     restoredDirectorFilterRef.current = directorParam
     applyDirectorFilter(directorParam)
@@ -2911,6 +2920,20 @@ export default function MapView() {
           theaterLatLng={selectedTheater ? [selectedTheater.lat, selectedTheater.lng] : null}
           onOffScreen={setTheaterOffScreen}
         />
+
+        {coords && (
+          <Marker
+            position={[coords.lat, coords.lng]}
+            icon={L.divIcon({
+              className: 'user-loc-marker',
+              html: `<div style="width: 24px; height: 24px; border-radius: 50%; background-color: color-mix(in srgb, var(--color-primary-base) 20%, transparent); border: 2px solid var(--color-primary-base); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 10px rgba(0,0,0,0.1);"><div style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--color-primary-base);"></div></div>`,
+              iconSize: [24, 24],
+              iconAnchor: [12, 12],
+            })}
+            zIndexOffset={-400}
+            interactive={false}
+          />
+        )}
 
         <SubwayLayer
           zoom={zoom}

@@ -99,9 +99,10 @@ export function Onboarding({ onClose }: Props) {
   const handleLocationCta = useCallback(() => {
     if (closedRef.current) return
     trackEvent('onboarding completed', { cta: 'location' })
+    // requestLocation을 먼저 호출해야 모바일 기기(iOS 등)에서 사용자 제스처 컨텍스트가 유지되어 권한 프롬프트가 정상적으로 뜹니다
+    void requestLocation()
     close()
     goToMap()
-    void requestLocation()
   }, [close, goToMap, requestLocation])
 
   /** CTA(부): 위치 없이 둘러보기 — 권한 프롬프트 없이 기본(서울) 뷰, 지도 위치 팝업도 생략 */
@@ -122,19 +123,13 @@ export function Onboarding({ onClose }: Props) {
     return () => window.removeEventListener('keydown', onKey)
   }, [handleSkip])
 
-  /* ── 스와이프 스크롤 → 도트 동기화 + 얕은 패럴랙스 (일러스트가 최대 12px 뒤늦게) ── */
+  /* ── 스와이프 스크롤 → 도트 동기화 (패럴랙스는 깜빡임 이슈로 제거) ── */
   const handleScroll = useCallback(() => {
     const el = swipeRef.current
     if (!el || !el.clientWidth) return
     const width = el.clientWidth
     const idx = Math.min(PAGE_COUNT - 1, Math.max(0, Math.round(el.scrollLeft / width)))
     if (idx !== pageRef.current) setPage(idx)
-    illoRefs.current.forEach((node, i) => {
-      if (!node) return
-      const delta = el.scrollLeft - i * width
-      const lag = Math.max(-18, Math.min(18, delta * 0.045))
-      node.style.transform = `translateX(${lag}px)`
-    })
   }, [])
 
   const goTo = useCallback(
