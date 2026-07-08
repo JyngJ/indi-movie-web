@@ -11,7 +11,7 @@ interface ShowtimeCellProps {
   promo?: string
   kind?: ShowtimeKind
   selected?: boolean
-  onClick?: () => void
+  onClick?: (e: React.MouseEvent<HTMLDivElement>) => void
 }
 
 /* 인라인 배지 — 심야 전용 */
