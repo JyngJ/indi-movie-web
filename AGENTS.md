@@ -45,3 +45,11 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - When integrating a new external provider, isolate provider-specific details in an adapter module and return normalized application data.
 - Add abstractions only when they protect a real boundary or remove meaningful duplication. Avoid ceremony for tiny, local UI behavior.
 - Prefer pure functions for parsing, matching, validation, and normalization so they can be tested without a browser or database.
+
+## Crawler Operations
+
+The crawler runs on a Raspberry Pi (`ssh pi@100.76.84.97`, Tailscale). Full runbook: `docs/RUNBOOK-crawler.md`.
+
+- **dtryx requests must stay at concurrency 1 per domain.** Bursty parallel requests (`Promise.all` over per-theater tasks, high `mapWithConcurrency`) get the RPi's public IP firewall-banned by dtryx. Do not raise concurrency without domain-level rate limiting.
+- **If dtryx returns `fetch failed` / connect timeouts (IP ban):** on the RPi, run the IP-rotation script — `ssh pi@100.76.84.97 'sudo systemd-run --unit=mac-rotate --collect /bin/bash /home/pi/mac-rotate.sh'`. It swaps the `eth0` cloned MAC to get a new DHCP public IP, with a 150s self-healing rollback. Verify with `timeout 8 bash -c "cat < /dev/null > /dev/tcp/www.dtryx.com/443" && echo OPEN`. See the runbook for detection, verification, and MAC revert.
+- Seat crawling is `npm run crawl:seats` (movie repo, throttled, all parsers). The old standalone `/home/pi/seat-checker` was retired 2026-07-09 — do not resurrect it.
