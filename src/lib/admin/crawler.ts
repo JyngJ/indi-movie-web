@@ -126,7 +126,7 @@ export async function resolveCrawlInput(
       headers: {
         'user-agent': 'indi-movie-web-admin-crawler/0.1',
       },
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(30000),
     })
 
     if (!response.ok) {
@@ -273,8 +273,8 @@ export async function crawlAllDtryxSources(
         const movies = (main.MovieList ?? []).filter((m) => m.HiddenYn !== 'Y')
         const playDates = (main.PlaySdtList ?? []).filter((d) => d.HiddenYn !== 'Y').slice(0, 14)
 
-        return Promise.all(
-          group.sources.map(async (source) => {
+        return mapWithConcurrency(
+          group.sources.map((source) => async () => {
             const srcUrl = new URL(source.listingUrl)
             const urlCinemaCd = srcUrl.searchParams.get('CinemaCd')
             const screenFilter = srcUrl.searchParams.get('screenFilter')
@@ -296,8 +296,9 @@ export async function crawlAllDtryxSources(
               return { source, candidates: [], error: error instanceof Error ? error.message : '크롤링 오류' }
             }
           }),
+          2,
         )
-      } catch (error) {
+        } catch (error) {
         const msg = error instanceof Error ? error.message : '디트릭스 API 오류'
         return group.sources.map((source) => ({ source, candidates: [], error: msg }))
       }
@@ -305,6 +306,322 @@ export async function crawlAllDtryxSources(
   )
 
   return brandResults.flat()
+}
+
+export interface SeatUpdateResult {
+  source: AdminTheaterSource
+  candidates: { fingerprint: string; seatAvailable: number; seatTotal: number }[]
+  error?: string
+  warningCount?: number
+}
+
+export async function updateSeatsOptimized(
+  sources: AdminTheaterSource[],
+  dbCandidates: any[]
+): Promise<SeatUpdateResult[]> {
+  const results: SeatUpdateResult[] = []
+  
+  const byParser = new Map<string, AdminTheaterSource[]>()
+  for (const s of sources) {
+    const list = byParser.get(s.parser) || []
+    list.push(s)
+    byParser.set(s.parser, list)
+  }
+
+  for (const [parser, parserSources] of byParser.entries()) {
+    if (parser === 'dtryxReservationApi') {
+      results.push(...await updateDtryxSeats(parserSources, dbCandidates))
+    } else if (parser === 'movieeTicketApi') {
+      results.push(...await updateMovieeSeats(parserSources, dbCandidates))
+    } else if (parser === 'cineQApi') {
+      results.push(...await updateCineQSeats(parserSources, dbCandidates))
+    } else if (parser === 'movielandProductOptions') {
+      results.push(...await updateMovielandSeats(parserSources, dbCandidates))
+    } else {
+      // 최적화 불가 — 이유: 좌석 전용 단일 엔드포인트가 없고, 전체 데이터를 한 번에 응답하므로 선택적 조회가 불가함.
+      results.push(...await updateFallbackSeats(parserSources, dbCandidates))
+    }
+  }
+
+  return results
+}
+
+async function updateDtryxSeats(sources: AdminTheaterSource[], dbCandidates: any[]): Promise<SeatUpdateResult[]> {
+  const groups = new Map<string, { origin: string; cgid: string; brandCd: string; sources: AdminTheaterSource[] }>()
+
+  for (const source of sources) {
+    try {
+      const url = new URL(source.listingUrl)
+      const brandCd = url.searchParams.get('BrandCd') ?? 'dtryx'
+      const cgid = extractDtryxCgid(source.listingUrl)
+      const key = `${url.origin}|${brandCd}`
+      const group = groups.get(key) ?? { origin: url.origin, cgid, brandCd, sources: [] }
+      group.sources.push(source)
+      groups.set(key, group)
+    } catch { }
+  }
+
+  const brandResults = await Promise.all(
+    Array.from(groups.values()).map(async (group) => {
+      try {
+        const headers = buildDtryxHeaders(`${group.origin}/cinema/main.do?cgid=${group.cgid}&BrandCd=${group.brandCd}`)
+        
+        return mapWithConcurrency(
+          group.sources.map((source) => async () => {
+            const candidatesForSource = dbCandidates.filter((c) => c.source_id === source.id)
+            if (candidatesForSource.length === 0) return { source, candidates: [] }
+
+            const combis = new Map<string, { CinemaCd: string; MovieCd: string; PlaySDT: string }>()
+            for (const c of candidatesForSource) {
+              try {
+                if (!c.booking_url) continue
+                const bUrl = new URL(c.booking_url)
+                const CinemaCd = bUrl.searchParams.get('CinemaCd')
+                const MovieCd = bUrl.searchParams.get('MovieCd')
+                const PlaySDT = bUrl.searchParams.get('PlaySDT')
+                if (CinemaCd && MovieCd && PlaySDT) {
+                  combis.set(`${CinemaCd}|${MovieCd}|${PlaySDT}`, { CinemaCd, MovieCd, PlaySDT })
+                }
+              } catch { }
+            }
+
+            const updatedCandidates: { fingerprint: string; seatAvailable: number; seatTotal: number }[] = []
+            let warningCount = 0
+
+            const tasks = Array.from(combis.values()).map(({ CinemaCd, MovieCd, PlaySDT }) => async () => {
+              try {
+                const params = createDtryxParams(group.cgid, { CinemaCd, MovieCd, PlaySDT }, group.brandCd)
+                const data = await fetchJson<{ Showseqlist?: DtryxShowtimeGroup[] }>(
+                  `${group.origin}/reserve/showseq_list.do?${params}`,
+                  headers,
+                )
+                
+                const showseqGroups = data.Showseqlist ?? []
+                showseqGroups.forEach((sg) => {
+                  ;(sg.MovieDetail ?? []).forEach((detail) => {
+                    const ShowSeq = detail.ShowSeq
+                    const ScreenCd = detail.ScreenCd
+                    const matchedDb = candidatesForSource.filter((c) => {
+                       try {
+                         if (!c.booking_url) return false
+                         const u = new URL(c.booking_url)
+                         return u.searchParams.get('CinemaCd') === CinemaCd &&
+                                u.searchParams.get('MovieCd') === MovieCd &&
+                                u.searchParams.get('PlaySDT') === PlaySDT &&
+                                u.searchParams.get('ShowSeq') === ShowSeq &&
+                                (!u.searchParams.get('ScreenCd') || u.searchParams.get('ScreenCd') === ScreenCd)
+                       } catch { return false }
+                    })
+                    
+                    const seatAvailable = toInt(detail.RemainSeatCnt, DEFAULT_SEAT_TOTAL)
+                    const seatTotal = toInt(detail.TotalSeatCnt, DEFAULT_SEAT_TOTAL)
+
+                    for (const m of matchedDb) {
+                       updatedCandidates.push({ fingerprint: m.fingerprint, seatAvailable, seatTotal })
+                    }
+                  })
+                })
+              } catch (err) {
+                 warningCount++
+              }
+            })
+
+            await mapWithConcurrency(tasks, 4)
+
+            return { source, candidates: updatedCandidates, warningCount }
+          }),
+          2,
+        )
+      } catch (error) {
+         const msg = error instanceof Error ? error.message : '디트릭스 API 오류'
+         return group.sources.map((source) => ({ source, candidates: [], error: msg }))
+      }
+    })
+  )
+
+  return brandResults.flat()
+}
+
+async function updateMovieeSeats(sources: AdminTheaterSource[], dbCandidates: any[]): Promise<SeatUpdateResult[]> {
+  return mapWithConcurrency(sources.map(source => async () => {
+    try {
+      const candidatesForSource = dbCandidates.filter(c => c.source_id === source.id)
+      if (candidatesForSource.length === 0) return { source, candidates: [] }
+      
+      const sourceUrl = source.listingUrl
+      const tid = extractMovieeTheaterId(sourceUrl)
+      const baseUrl = new URL(sourceUrl)
+      const origin = baseUrl.origin
+      const headers = {
+        'user-agent': 'Mozilla/5.0 (compatible; indi-movie-web-admin-crawler/0.1)',
+        accept: 'application/json, text/javascript, */*; q=0.01',
+        'accept-language': 'ko-KR,ko;q=0.9,en;q=0.8',
+        'x-requested-with': 'XMLHttpRequest',
+        referer: `${origin}/Theater/Index`,
+      }
+
+      const showDates = [...new Set(candidatesForSource.map(c => c.show_date).filter(Boolean))]
+      const updatedCandidates: { fingerprint: string; seatAvailable: number; seatTotal: number }[] = []
+      let warningCount = 0
+
+      const tasks = showDates.map(playDate => async () => {
+        try {
+          const params = createMovieeTimeParams(tid, playDate)
+          const timeData = await fetchJson<{ ResCd?: string, ResData?: { Table?: MovieeShowtime[] } }>(
+            `${origin}/api/TicketApi/GetPlayTimeList?${params}`, headers
+          )
+          const rows = timeData.ResData?.Table ?? []
+
+          rows.forEach((row) => {
+            const showTime = normalizeCompactTime(row.PLAY_TIME)
+            const movieTitle = normalizeMovieeMovieTitle(row.M_NM)
+            const screenName = normalizeScreenName(row.TS_NM, source.theaterName)
+
+            if (!showTime || !movieTitle) return
+
+            const context: ParseContext = { source, inputKind: 'url', sourceUrl }
+            const c = buildCandidate({
+              context, movieTitle, showDate: row.PLAY_DT ?? playDate, showTime, endTime: normalizeCompactTime(row.END_TIME),
+              screenName, formatText: '', seatAvailable: 0, seatTotal: 0, price: 0, bookingUrl: '', rawText: '', confidence: 1, warnings: []
+            })
+            
+            const matchedDb = candidatesForSource.filter(db => db.fingerprint === c.fingerprint)
+            const seatAvailable = toInt(row.REMAINSEAT_CNT, DEFAULT_SEAT_TOTAL)
+            const seatTotal = toInt(row.SEAT_CNT, DEFAULT_SEAT_TOTAL)
+
+            for (const m of matchedDb) {
+              updatedCandidates.push({ fingerprint: m.fingerprint, seatAvailable, seatTotal })
+            }
+          })
+        } catch {
+          warningCount++
+        }
+      })
+
+      await mapWithConcurrency(tasks, 4)
+      return { source, candidates: updatedCandidates, warningCount }
+    } catch (error) {
+      return { source, candidates: [], error: error instanceof Error ? error.message : String(error) }
+    }
+  }), 2)
+}
+
+async function updateCineQSeats(sources: AdminTheaterSource[], dbCandidates: any[]): Promise<SeatUpdateResult[]> {
+  return mapWithConcurrency(sources.map(source => async () => {
+    try {
+      const candidatesForSource = dbCandidates.filter(c => c.source_id === source.id)
+      if (candidatesForSource.length === 0) return { source, candidates: [] }
+      
+      const urlObj = new URL(source.listingUrl)
+      const theaterCode = urlObj.searchParams.get('TheaterCode') || '1001'
+      
+      const showDates = [...new Set(candidatesForSource.map(c => c.show_date).filter(Boolean))]
+      const updatedCandidates: { fingerprint: string; seatAvailable: number; seatTotal: number }[] = []
+      let warningCount = 0
+
+      const tasks = showDates.map(playDate => async () => {
+        try {
+          const formattedDate = playDate.includes('-') ? playDate : `${playDate.slice(0,4)}-${playDate.slice(4,6)}-${playDate.slice(6,8)}`
+          const response = await fetch('https://www.cineq.co.kr/Theater/MovieTable2', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `TheaterCode=${theaterCode}&PlayDate=${formattedDate}`,
+            signal: AbortSignal.timeout(30000),
+          })
+          if (!response.ok) return
+          const html = await response.text()
+
+          const blocks = html.split('class="each-movie-title"')
+          for (let b = 1; b < blocks.length; b++) {
+            const block = blocks[b]
+            const titleMatch = block.match(/<h3>([^<]+)<\/h3>/)
+            const movieTitle = titleMatch ? titleMatch[1].trim() : '알 수 없음'
+
+            const timeRegex = /data-playdate="([^"]+)"[^>]*data-moviecode="([^"]+)"[^>]*data-screenplanid="([^"]+)"[\s\S]*?<a[^>]*>([^<]+)<\/a>/g
+            let match
+            while ((match = timeRegex.exec(block)) !== null) {
+              const showDate = match[1]
+              const showTime = match[4].trim()
+
+              const context: ParseContext = { source, inputKind: 'url', sourceUrl: source.listingUrl }
+              const c = buildCandidate({
+                context, movieTitle, screenName: '씨네Q 신도림', showDate, showTime, endTime: '', formatText: '', seatAvailable: 0, seatTotal: 0, price: 0, bookingUrl: '', rawText: '', confidence: 1, warnings: []
+              })
+              
+              const matchedDb = candidatesForSource.filter(db => db.fingerprint === c.fingerprint)
+              for (const m of matchedDb) {
+                updatedCandidates.push({ fingerprint: m.fingerprint, seatAvailable: DEFAULT_SEAT_TOTAL, seatTotal: DEFAULT_SEAT_TOTAL })
+              }
+            }
+          }
+        } catch {
+          warningCount++
+        }
+      })
+
+      await mapWithConcurrency(tasks, 4)
+      return { source, candidates: updatedCandidates, warningCount }
+    } catch (error) {
+      return { source, candidates: [], error: error instanceof Error ? error.message : String(error) }
+    }
+  }), 2)
+}
+
+async function updateMovielandSeats(sources: AdminTheaterSource[], dbCandidates: any[]): Promise<SeatUpdateResult[]> {
+  return mapWithConcurrency(sources.map(source => async () => {
+    try {
+      const candidatesForSource = dbCandidates.filter(c => c.source_id === source.id)
+      if (candidatesForSource.length === 0) return { source, candidates: [] }
+      
+      const productUrls = [...new Set(candidatesForSource.map(c => c.booking_url).filter(Boolean))]
+      const updatedCandidates: { fingerprint: string; seatAvailable: number; seatTotal: number }[] = []
+      let warningCount = 0
+
+      const tasks = productUrls.map(productUrl => async () => {
+        try {
+          const html = await fetchText(productUrl)
+          const parsedCandidates = parseMovielandProduct(html, productUrl, { source, inputKind: 'url', sourceUrl: source.listingUrl })
+          
+          parsedCandidates.forEach(c => {
+             const matchedDb = candidatesForSource.filter(db => db.fingerprint === c.fingerprint)
+             for (const m of matchedDb) {
+               updatedCandidates.push({ fingerprint: m.fingerprint, seatAvailable: c.seatAvailable, seatTotal: c.seatTotal })
+             }
+          })
+        } catch {
+          warningCount++
+        }
+      })
+
+      await mapWithConcurrency(tasks, 4)
+      return { source, candidates: updatedCandidates, warningCount }
+    } catch (error) {
+      return { source, candidates: [], error: error instanceof Error ? error.message : String(error) }
+    }
+  }), 2)
+}
+
+async function updateFallbackSeats(sources: AdminTheaterSource[], dbCandidates: any[]): Promise<SeatUpdateResult[]> {
+  return Promise.all(sources.map(async (source) => {
+    try {
+      const candidatesForSource = dbCandidates.filter(c => c.source_id === source.id)
+      if (candidatesForSource.length === 0) return { source, candidates: [] }
+
+      const parsedCandidates = await crawlShowtimeCandidates({ source, inputKind: 'url', sourceUrl: source.listingUrl })
+      const updatedCandidates: { fingerprint: string; seatAvailable: number; seatTotal: number }[] = []
+      
+      parsedCandidates.forEach(c => {
+         const matchedDb = candidatesForSource.filter(db => db.fingerprint === c.fingerprint)
+         for (const m of matchedDb) {
+           updatedCandidates.push({ fingerprint: m.fingerprint, seatAvailable: c.seatAvailable, seatTotal: c.seatTotal })
+         }
+      })
+      
+      return { source, candidates: updatedCandidates, warningCount: 0 }
+    } catch (error) {
+      return { source, candidates: [], error: error instanceof Error ? error.message : String(error) }
+    }
+  }))
 }
 
 function buildDtryxHeaders(referer: string): Record<string, string> {
@@ -694,7 +1011,7 @@ async function fetchSelfHosted(url: string): Promise<string> {
       'accept-language': 'ko-KR,ko;q=0.9',
     },
     cache: 'no-store',
-    signal: AbortSignal.timeout(15000),
+    signal: AbortSignal.timeout(30000),
   })
 
   if (!response.ok) {
@@ -1180,7 +1497,7 @@ async function crawlDrfa(context: ParseContext): Promise<CrawledShowtimeCandidat
   const url = context.sourceUrl ?? context.source.listingUrl
   const res = await fetch(url, {
     headers: { 'user-agent': 'indi-movie-web-admin-crawler/0.1' },
-    signal: AbortSignal.timeout(15000),
+    signal: AbortSignal.timeout(30000),
   })
   if (!res.ok) throw new Error(`DRFA fetch 실패: ${res.status}`)
   const html = await res.text()
@@ -1272,7 +1589,7 @@ async function crawlKofaCinematheque(context: ParseContext): Promise<CrawledShow
       'accept-language': 'ko-KR,ko;q=0.9',
     },
     cache: 'no-store',
-    signal: AbortSignal.timeout(15_000),
+    signal: AbortSignal.timeout(30_000),
   })
   if (!res.ok) throw new Error(`KOFA fetch failed: HTTP ${res.status}`)
   const html = await res.text()
@@ -1377,7 +1694,8 @@ async function crawlCineQApi(
       const response = await fetch('https://www.cineq.co.kr/Theater/MovieTable2', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `TheaterCode=${theaterCode}&PlayDate=${playDate}`
+        body: `TheaterCode=${theaterCode}&PlayDate=${playDate}`,
+        signal: AbortSignal.timeout(30000),
       })
 
       if (!response.ok) continue

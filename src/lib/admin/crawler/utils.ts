@@ -95,7 +95,7 @@ export async function fetchJson<T>(url: string, headers: Record<string, string>)
   const response = await fetch(url, {
     headers,
     cache: 'no-store',
-    signal: AbortSignal.timeout(15000),
+    signal: AbortSignal.timeout(30000),
   })
 
   if (!response.ok) {
@@ -111,7 +111,7 @@ export async function fetchText(url: string) {
       'user-agent': 'Mozilla/5.0 (compatible; indi-movie-web-admin-crawler/0.1)',
     },
     cache: 'no-store',
-    signal: AbortSignal.timeout(15000),
+    signal: AbortSignal.timeout(30000),
   })
 
   if (!response.ok) {

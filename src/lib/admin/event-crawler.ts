@@ -72,7 +72,7 @@ async function fetchEventHtml(url: string): Promise<string> {
       'accept-language': 'ko-KR,ko;q=0.9',
     },
     cache: 'no-store',
-    signal: AbortSignal.timeout(15_000),
+    signal: AbortSignal.timeout(30_000),
   })
   if (!res.ok) throw new Error(`fetch 실패: ${url} (HTTP ${res.status})`)
   return res.text()
@@ -190,7 +190,7 @@ export async function crawlKofaEvents(
       'accept-language': 'ko-KR,ko;q=0.9',
     },
     cache: 'no-store',
-    signal: AbortSignal.timeout(15_000),
+    signal: AbortSignal.timeout(30_000),
   })
   if (!res.ok) throw new Error(`KOFA GV fetch 실패: HTTP ${res.status}`)
   const html = await res.text()
