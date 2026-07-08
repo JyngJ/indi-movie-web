@@ -296,7 +296,7 @@ export async function crawlAllDtryxSources(
               return { source, candidates: [], error: error instanceof Error ? error.message : '크롤링 오류' }
             }
           }),
-          2,
+          1,
         )
         } catch (error) {
         const msg = error instanceof Error ? error.message : '디트릭스 API 오류'
@@ -399,8 +399,9 @@ async function updateDtryxSeats(sources: AdminTheaterSource[], dbCandidates: any
                 const showseqGroups = data.Showseqlist ?? []
                 showseqGroups.forEach((sg) => {
                   ;(sg.MovieDetail ?? []).forEach((detail) => {
-                    const ShowSeq = detail.ShowSeq
-                    const ScreenCd = detail.ScreenCd
+                    // API가 ShowSeq/ScreenCd를 number로 줄 수 있어 String()으로 정규화 후 비교 (좌석 0개 매칭 버그 방지)
+                    const ShowSeq = detail.ShowSeq != null ? String(detail.ShowSeq) : ''
+                    const ScreenCd = detail.ScreenCd != null ? String(detail.ScreenCd) : ''
                     const matchedDb = candidatesForSource.filter((c) => {
                        try {
                          if (!c.booking_url) return false
@@ -426,11 +427,11 @@ async function updateDtryxSeats(sources: AdminTheaterSource[], dbCandidates: any
               }
             })
 
-            await mapWithConcurrency(tasks, 4)
+            await mapWithConcurrency(tasks, 1)
 
             return { source, candidates: updatedCandidates, warningCount }
           }),
-          2,
+          1,
         )
       } catch (error) {
          const msg = error instanceof Error ? error.message : '디트릭스 API 오류'
@@ -498,12 +499,12 @@ async function updateMovieeSeats(sources: AdminTheaterSource[], dbCandidates: an
         }
       })
 
-      await mapWithConcurrency(tasks, 4)
+      await mapWithConcurrency(tasks, 1)
       return { source, candidates: updatedCandidates, warningCount }
     } catch (error) {
       return { source, candidates: [], error: error instanceof Error ? error.message : String(error) }
     }
-  }), 2)
+  }), 1)
 }
 
 async function updateCineQSeats(sources: AdminTheaterSource[], dbCandidates: any[]): Promise<SeatUpdateResult[]> {
@@ -559,12 +560,12 @@ async function updateCineQSeats(sources: AdminTheaterSource[], dbCandidates: any
         }
       })
 
-      await mapWithConcurrency(tasks, 4)
+      await mapWithConcurrency(tasks, 1)
       return { source, candidates: updatedCandidates, warningCount }
     } catch (error) {
       return { source, candidates: [], error: error instanceof Error ? error.message : String(error) }
     }
-  }), 2)
+  }), 1)
 }
 
 async function updateMovielandSeats(sources: AdminTheaterSource[], dbCandidates: any[]): Promise<SeatUpdateResult[]> {
@@ -593,12 +594,12 @@ async function updateMovielandSeats(sources: AdminTheaterSource[], dbCandidates:
         }
       })
 
-      await mapWithConcurrency(tasks, 4)
+      await mapWithConcurrency(tasks, 1)
       return { source, candidates: updatedCandidates, warningCount }
     } catch (error) {
       return { source, candidates: [], error: error instanceof Error ? error.message : String(error) }
     }
-  }), 2)
+  }), 1)
 }
 
 async function updateFallbackSeats(sources: AdminTheaterSource[], dbCandidates: any[]): Promise<SeatUpdateResult[]> {
@@ -731,7 +732,7 @@ async function fetchDtryxShowtimes(
     }),
   )
 
-  const candidateGroups = await mapWithConcurrency(tasks, 6)
+  const candidateGroups = await mapWithConcurrency(tasks, 1)
 
   return dedupeCandidates(candidateGroups.flat())
 }
@@ -798,7 +799,7 @@ export async function crawlMovieeTicketApi(context: ParseContext) {
     })
   })
 
-  const candidateGroups = await mapWithConcurrency(tasks, 4)
+  const candidateGroups = await mapWithConcurrency(tasks, 1)
 
   return dedupeCandidates(candidateGroups.flat())
 }
@@ -818,7 +819,7 @@ export async function crawlMovielandProductOptions(context: ParseContext) {
     const html = productUrl === sourceUrl ? content : await fetchText(productUrl)
     return parseMovielandProduct(html, productUrl, context)
   })
-  const candidateGroups = await mapWithConcurrency(tasks, 4)
+  const candidateGroups = await mapWithConcurrency(tasks, 1)
 
   return dedupeCandidates(candidateGroups.flat())
 }
@@ -870,7 +871,7 @@ async function crawlMoonhwain(sourceUrl: string, context: ParseContext) {
     return parseMoonhwainDay(html, date, bookingBase, context)
   })
 
-  const groups = await mapWithConcurrency(tasks, 3)
+  const groups = await mapWithConcurrency(tasks, 1)
   return dedupeCandidates(groups.flat())
 }
 
@@ -946,7 +947,7 @@ async function crawlDureraum(sourceUrl: string, context: ParseContext) {
     return parseDurearumDay(html, date, context)
   })
 
-  const groups = await mapWithConcurrency(tasks, 4)
+  const groups = await mapWithConcurrency(tasks, 1)
   return dedupeCandidates(groups.flat())
 }
 
