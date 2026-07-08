@@ -116,6 +116,66 @@ export async function notifyDiscord(payload: NotifyPayload) {
   }
 }
 
+export async function notifyDiscordSeats(runs: CrawlRun[], durationMs: number) {
+  const ok = runs.filter((r) => r.status === 'completed')
+  const failed = runs.filter((r) => r.status === 'failed')
+  const totalSeats = ok.reduce((s, r) => s + r.updatedCount, 0)
+  const secs = (durationMs / 1000).toFixed(1)
+
+  const color = failed.length === runs.length ? 0xE74C3C
+    : failed.length > 0 ? 0xF39C12
+    : 0x2ECC71
+
+  const summary = [
+    `**갱신** ${totalSeats.toLocaleString()}석`,
+    `**성공** ${ok.length}　·　**실패** ${failed.length}`,
+    `**소요** ${secs}s`,
+  ].join('　·　')
+
+  const okLines = [...ok]
+    .sort((a, b) => b.updatedCount - a.updatedCount)
+    .map((r) => `\`${r.updatedCount.toString().padStart(3)}석\` ${r.sourceName}`)
+
+  const failedLines = failed.map((r) => {
+    const err = r.error ? ` \`${r.error.slice(0, 80)}\`` : ''
+    return `• ${r.sourceName}${err}`
+  })
+
+  const fields: { name: string; value: string; inline: boolean }[] = []
+
+  const okChunks = chunkLines(okLines)
+  okChunks.forEach((chunk, i) => {
+    const label = okChunks.length > 1
+      ? `✅ 성공 (${ok.length}개) [${i + 1}/${okChunks.length}]`
+      : `✅ 성공 (${ok.length}개)`
+    fields.push({ name: label, value: chunk || '없음', inline: false })
+  })
+
+  if (failedLines.length > 0) {
+    const failChunks = chunkLines(failedLines)
+    failChunks.forEach((chunk, i) => {
+      const label = failChunks.length > 1
+        ? `⚠️ 실패 (${failed.length}건) [${i + 1}/${failChunks.length}]`
+        : `⚠️ 실패 (${failed.length}건)`
+      fields.push({ name: label, value: chunk, inline: false })
+    })
+  }
+
+  const title = failed.length > 0 ? '🪑 좌석 갱신 (일부 실패)' : '🪑 좌석 갱신 완료'
+  const FIELD_BATCH = 24
+  for (let i = 0; i < fields.length; i += FIELD_BATCH) {
+    const batch = fields.slice(i, i + FIELD_BATCH)
+    const isFirst = i === 0
+    await sendEmbed({
+      title: isFirst ? title : `${title} (계속)`,
+      description: isFirst ? summary : undefined,
+      color,
+      fields: batch,
+      footer: isFirst ? { text: nowKST() } : undefined,
+    })
+  }
+}
+
 export async function notifyDiscordMatch(matched: number, autoApproved: number, needsReview: number, durationMs: number) {
   const secs = (durationMs / 1000).toFixed(1)
   await sendEmbed({
