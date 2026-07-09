@@ -8,6 +8,7 @@ import type { SectionDisplayMode } from '@/lib/curation/filmsTabLists'
 import { withFlag } from '@/lib/nations'
 import type { Movie } from '@/types/api'
 import { GenreChip, SectionHeader, CardContainer } from '@/components/primitives'
+import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
 
 interface CurationSectionRowProps {
   title: string
@@ -311,12 +312,17 @@ export function CurationSectionRow({
     updateScrollEdge()
   }, [movies])
 
+  const sectionRef = useRef<HTMLElement | null>(null)
+  const setSectionRef = (node: HTMLElement | null) => { sectionRef.current = node }
+  useSectionDwellTracking(sectionRef, id)
+
   if (movies.length === 0) return null
 
   // compact 모드: flex item으로 렌더, 1~2편 inline 표시 (스크롤 없음)
   if (compact) {
     return (
-      <CardContainer>
+      <div ref={setSectionRef} style={{ flex: 1, minWidth: 0, display: 'flex' }}>
+      <CardContainer style={{ flex: 1, minWidth: 0 }}>
         {/* 헤더 */}
         <div style={{ padding: '12px 0', borderBottom: '1px solid var(--color-border)' }}>
           <SectionHeader title={title} emoji={emoji} description={description} />
@@ -350,6 +356,7 @@ export function CurationSectionRow({
           ))}
         </div>
       </CardContainer>
+      </div>
     )
   }
 
@@ -369,7 +376,7 @@ export function CurationSectionRow({
   }
 
   return (
-    <section id={id} style={{ paddingTop: noHeader ? 0 : 24 }}>
+    <section ref={setSectionRef} id={id} style={{ paddingTop: noHeader ? 0 : 24 }}>
       {!noHeader && (
         <div>
           <SectionHeader title={title} emoji={emoji} description={description} isDesktop={isDesktop} />
