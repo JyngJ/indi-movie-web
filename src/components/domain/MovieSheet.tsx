@@ -10,6 +10,7 @@ import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { withFlag } from '@/lib/nations'
 import { recordRecentlyViewed } from '@/lib/curation/recentlyViewed'
 import { cookieStorageAdapter } from '@/lib/adapters/cookieStorage'
+import { trackEvent } from '@/lib/analytics/client'
 import type { Showtime } from '@/types/api'
 
 const TOP_MARGIN = 72  // 검색바 아래에서 시작 — 지도가 살짝 보이게
@@ -248,7 +249,19 @@ export function MovieSheet({ movieId, onClose, onTheaterSelect, onRecentlyViewed
                           seatTotal={show.seatTotal}
                           screenName={show.screenName}
                           kind={showtimeKind(show)}
-                          onClick={show.bookingUrl ? () => window.open(show.bookingUrl, '_blank', 'noopener') : undefined}
+                          onClick={show.bookingUrl ? () => {
+                            trackEvent('booking clicked', {
+                              theater_id: theater.theaterId,
+                              theater_name: theater.theaterName,
+                              movie_id: movie?.id,
+                              movie_title: movie?.title,
+                              showtime_id: show.id,
+                              show_date: show.showDate,
+                              show_time: show.showTime,
+                              source: 'movie_sheet',
+                            })
+                            window.open(show.bookingUrl, '_blank', 'noopener')
+                          } : undefined}
                         />
                       ))}
                     </div>
