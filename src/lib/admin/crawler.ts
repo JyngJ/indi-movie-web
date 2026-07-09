@@ -229,7 +229,7 @@ export async function crawlDtryxReservationApi(context: ParseContext) {
   const main = await fetchDtryxMain(origin, cgid, brandCd, headers)
   const cinemas = (main.CinemaList ?? []).filter((cinema) => cinema.HiddenYn !== 'Y')
   const movies = (main.MovieList ?? []).filter((movie) => movie.HiddenYn !== 'Y')
-  const playDates = (main.PlaySdtList ?? []).filter((date) => date.HiddenYn !== 'Y').slice(0, 14)
+  const playDates = (main.PlaySdtList ?? []).filter((date) => date.HiddenYn !== 'Y').slice(0, 7)
   // 이름 매칭 → CinemaCd fallback → CinemaList에 없으면 synthetic cinema 생성
   const targetCinema = pickDtryxCinema(cinemas, context.source.theaterName)
     ?? (urlCinemaCd ? cinemas.find((c) => c.CinemaCd === urlCinemaCd) : undefined)
@@ -271,7 +271,7 @@ export async function crawlAllDtryxSources(
         const main = await fetchDtryxMain(group.origin, group.cgid, group.brandCd, headers)
         const cinemas = (main.CinemaList ?? []).filter((c) => c.HiddenYn !== 'Y')
         const movies = (main.MovieList ?? []).filter((m) => m.HiddenYn !== 'Y')
-        const playDates = (main.PlaySdtList ?? []).filter((d) => d.HiddenYn !== 'Y').slice(0, 14)
+        const playDates = (main.PlaySdtList ?? []).filter((d) => d.HiddenYn !== 'Y').slice(0, 7)
 
         return mapWithConcurrency(
           group.sources.map((source) => async () => {
@@ -390,6 +390,7 @@ async function updateDtryxSeats(sources: AdminTheaterSource[], dbCandidates: any
 
             const tasks = Array.from(combis.values()).map(({ CinemaCd, MovieCd, PlaySDT }) => async () => {
               try {
+                await dtryxDelay()
                 const params = createDtryxParams(group.cgid, { CinemaCd, MovieCd, PlaySDT }, group.brandCd)
                 const data = await fetchJson<{ Showseqlist?: DtryxShowtimeGroup[] }>(
                   `${group.origin}/reserve/showseq_list.do?${params}`,
@@ -626,6 +627,13 @@ async function updateFallbackSeats(sources: AdminTheaterSource[], dbCandidates: 
   }))
 }
 
+// dtryx 요청 사이 사람처럼 랜덤 지연(0.8~2.5s). 고정 간격도 봇 탐지에 걸리므로 지터를 준다.
+// 동시성 1과 함께 시간당 요청량을 낮춰 rate-limit IP 밴을 회피한다.
+function dtryxDelay(): Promise<void> {
+  const ms = 800 + Math.floor(Math.random() * 1700)
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 function buildDtryxHeaders(referer: string): Record<string, string> {
   return browserHeaders({
     accept: 'application/json, text/javascript, */*; q=0.01',
@@ -679,6 +687,7 @@ async function fetchDtryxShowtimes(
 ): Promise<CrawledShowtimeCandidate[]> {
   const tasks = playDates.flatMap((playDate) =>
     movies.map((movie) => async () => {
+      await dtryxDelay()
       const candidates: CrawledShowtimeCandidate[] = []
       const params = createDtryxParams(cgid, {
         CinemaCd: targetCinema.CinemaCd,
