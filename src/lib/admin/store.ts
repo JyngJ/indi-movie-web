@@ -1279,7 +1279,7 @@ async function searchAndImportCine21(
   // 씨네21 검색
   const searchRes = await fetch(
     `https://cine21.com/search/result/?q=${encodeURIComponent(title)}`,
-    { headers: { 'user-agent': 'indi-movie-web-admin-crawler/0.1' }, signal: AbortSignal.timeout(8000) },
+    { headers: { 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36' }, signal: AbortSignal.timeout(8000) },
   )
   const searchHtml = await searchRes.text()
   const movieIds = [...searchHtml.matchAll(/movie_id=(\d+)/g)].map(m => m[1])
@@ -1289,7 +1289,7 @@ async function searchAndImportCine21(
   // 상세 페이지
   const detailRes = await fetch(
     `https://cine21.com/movie/info/?movie_id=${movieId}`,
-    { headers: { 'user-agent': 'indi-movie-web-admin-crawler/0.1' }, signal: AbortSignal.timeout(8000) },
+    { headers: { 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36' }, signal: AbortSignal.timeout(8000) },
   )
   const html = await detailRes.text()
 

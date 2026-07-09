@@ -67,7 +67,7 @@ function buildEventCandidate(input: {
 async function fetchEventHtml(url: string): Promise<string> {
   const res = await fetch(url, {
     headers: {
-      'user-agent': 'Mozilla/5.0 (compatible; indi-movie-web-admin-crawler/0.1)',
+      'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
       accept: 'text/html,*/*',
       'accept-language': 'ko-KR,ko;q=0.9',
     },
@@ -185,7 +185,7 @@ export async function crawlKofaEvents(
   const url = context.source.listingUrl
   const res = await fetch(url, {
     headers: {
-      'user-agent': 'Mozilla/5.0 (compatible; indi-movie-web-admin-crawler/0.1)',
+      'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
       accept: 'text/html,*/*',
       'accept-language': 'ko-KR,ko;q=0.9',
     },

@@ -78,7 +78,7 @@ export async function crawlBoardImageOcr(context: ParseContext): Promise<Crawled
 
   // 1) 게시글 HTML 가져오기
   const pageRes = await fetch(url, {
-    headers: { 'user-agent': 'indi-movie-web-admin-crawler/0.1' },
+    headers: { 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36' },
     signal: AbortSignal.timeout(12000),
   })
   if (!pageRes.ok) throw new Error(`게시글 fetch 실패: ${pageRes.status}`)

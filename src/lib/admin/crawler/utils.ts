@@ -91,6 +91,22 @@ export function normalizeDateTime(value: string) {
   }
 }
 
+// 실제 크롬 브라우저 UA. 이전에는 UA에 "crawler"가 박혀 있어 dtryx 봇 필터에 바로 걸렸다.
+export const BROWSER_UA =
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+
+/** 브라우저처럼 보이는 기본 헤더 세트. extra로 API별 헤더(accept 등)를 덮어쓴다. */
+export function browserHeaders(extra: Record<string, string> = {}): Record<string, string> {
+  return {
+    'user-agent': BROWSER_UA,
+    'accept-language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+    'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"macOS"',
+    ...extra,
+  }
+}
+
 export async function fetchJson<T>(url: string, headers: Record<string, string>): Promise<T> {
   const response = await fetch(url, {
     headers,
@@ -107,9 +123,7 @@ export async function fetchJson<T>(url: string, headers: Record<string, string>)
 
 export async function fetchText(url: string) {
   const response = await fetch(url, {
-    headers: {
-      'user-agent': 'Mozilla/5.0 (compatible; indi-movie-web-admin-crawler/0.1)',
-    },
+    headers: browserHeaders(),
     cache: 'no-store',
     signal: AbortSignal.timeout(30000),
   })

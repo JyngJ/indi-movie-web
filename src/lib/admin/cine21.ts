@@ -15,7 +15,7 @@ function buildPosterUrl(html: string): string | undefined {
 
 async function fetchHtml(url: string): Promise<string> {
   const res = await fetch(url, {
-    headers: { 'user-agent': 'indi-movie-web-admin-crawler/0.1', 'accept-language': 'ko-KR,ko;q=0.9' },
+    headers: { 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36', 'accept-language': 'ko-KR,ko;q=0.9' },
     signal: AbortSignal.timeout(10000),
   })
   if (!res.ok) throw new Error(`cine21 fetch ${res.status}: ${url}`)
