@@ -51,7 +51,7 @@ export async function searchKmdbMovies(query: string): Promise<AdminExternalMovi
   return extractResults(payload).map(movieFromItem)
 }
 
-export async function searchKmdbByDirector(director: string): Promise<AdminExternalMovie[]> {
+export async function searchKmdbByDirector(director: string, startCount = 0): Promise<AdminExternalMovie[]> {
   const normalizedQuery = director.trim()
   if (normalizedQuery.length < 1) return []
 
@@ -59,7 +59,7 @@ export async function searchKmdbByDirector(director: string): Promise<AdminExter
     director: normalizedQuery,
     detail: 'Y',
     listCount: '30',
-    startCount: '0',
+    startCount: String(startCount),
     sort: 'RANK,1',
   })
 
