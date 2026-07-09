@@ -658,6 +658,13 @@ async function fetchAutoMatchInputs(supabase: ReturnType<typeof createSupabaseAd
   }
 }
 
+// 예매 상태성 경고(매진/예매 종료/예매 불가/판매 중지/상영관 확인)는 상영 정보의 정체성에는
+// 문제가 없으므로 자동 승인을 막지 않는다. 영화 제목 확인·행사/강연·매칭 실패 등 정체성 관련
+// 경고는 계속 검토 대기(needs_review)로 남긴다.
+function isBenignWarning(warning: string): boolean {
+  return /매진|판매\s*중지|예매\s*종료|예매\s*불가|상영관을\s*확인/.test(warning)
+}
+
 export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<CandidateAutoMatchResult> {
   const supabase = createSupabaseAdminClient()
   const { candidates, theaters, movies, providerMovieAliases } = await fetchAutoMatchInputs(supabase, ids)
@@ -677,8 +684,10 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
       movie ? undefined : movieResult.reason ?? `자동 영화 매칭 실패: ${candidate.movieTitle}`,
     ])
 
-    // 자동 승인 기준: theater + movie 둘 다 매칭 + confidence >= 0.9 + warnings 없음
-    const canAutoApprove = Boolean(theater && movie && candidate.confidence >= 0.9 && warnings.length === 0)
+    // 자동 승인 기준: theater + movie 둘 다 매칭 + confidence >= 0.9 + 정체성 관련 경고 없음
+    // (매진·예매 종료 등 예매 상태성 경고는 자동 승인을 막지 않음)
+    const blockingWarnings = warnings.filter((w) => !isBenignWarning(w))
+    const canAutoApprove = Boolean(theater && movie && candidate.confidence >= 0.9 && blockingWarnings.length === 0)
     const newStatus = canAutoApprove ? 'approved' : 'needs_review'
 
     const { data, error } = await supabase
