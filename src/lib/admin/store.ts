@@ -684,10 +684,14 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
       movie ? undefined : movieResult.reason ?? `자동 영화 매칭 실패: ${candidate.movieTitle}`,
     ])
 
-    // 자동 승인 기준: theater + movie 둘 다 매칭 + confidence >= 0.9 + 정체성 관련 경고 없음
-    // (매진·예매 종료 등 예매 상태성 경고는 자동 승인을 막지 않음)
+    // 자동 승인 기준: theater + movie 둘 다 매칭 + 정체성 관련 경고 없음 + confidence 충족.
+    // 크롤러는 경고가 하나라도 있으면 confidence를 0.82/0.78로 낮추므로, 양성 경고(매진·예매 종료 등)만
+    // 있는 회차는 0.9 문턱에 걸려 자동 승인되지 못한다 — 이 경우 문턱을 0.78로 완화한다.
+    // (행사/강연·제목 확인 등 정체성 경고는 blockingWarnings에 남아 자동 승인이 차단된다.)
     const blockingWarnings = warnings.filter((w) => !isBenignWarning(w))
-    const canAutoApprove = Boolean(theater && movie && candidate.confidence >= 0.9 && blockingWarnings.length === 0)
+    const hasOnlyBenignWarnings = warnings.length > 0 && blockingWarnings.length === 0
+    const minConfidence = hasOnlyBenignWarnings ? 0.78 : 0.9
+    const canAutoApprove = Boolean(theater && movie && blockingWarnings.length === 0 && candidate.confidence >= minConfidence)
     const newStatus = canAutoApprove ? 'approved' : 'needs_review'
 
     const { data, error } = await supabase
