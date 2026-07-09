@@ -11,6 +11,8 @@ import {
   normalizeDateTime,
   fetchJson,
   fetchText,
+  BROWSER_UA,
+  browserHeaders,
   mapWithConcurrency,
   extractDtryxCgid,
   extractMovieeTheaterId,
@@ -123,9 +125,7 @@ export async function resolveCrawlInput(
   if (inputKind === 'fixture') return SAMPLE_CRAWL_HTML
   if (inputKind === 'url' && url) {
     const response = await fetch(url, {
-      headers: {
-        'user-agent': 'indi-movie-web-admin-crawler/0.1',
-      },
+      headers: browserHeaders(),
       signal: AbortSignal.timeout(30000),
     })
 
@@ -453,13 +453,14 @@ async function updateMovieeSeats(sources: AdminTheaterSource[], dbCandidates: an
       const tid = extractMovieeTheaterId(sourceUrl)
       const baseUrl = new URL(sourceUrl)
       const origin = baseUrl.origin
-      const headers = {
-        'user-agent': 'Mozilla/5.0 (compatible; indi-movie-web-admin-crawler/0.1)',
+      const headers = browserHeaders({
         accept: 'application/json, text/javascript, */*; q=0.01',
-        'accept-language': 'ko-KR,ko;q=0.9,en;q=0.8',
         'x-requested-with': 'XMLHttpRequest',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
         referer: `${origin}/Theater/Index`,
-      }
+      })
 
       const showDates = [...new Set(candidatesForSource.map(c => c.show_date).filter(Boolean))]
       const updatedCandidates: { fingerprint: string; seatAvailable: number; seatTotal: number }[] = []
@@ -626,12 +627,14 @@ async function updateFallbackSeats(sources: AdminTheaterSource[], dbCandidates: 
 }
 
 function buildDtryxHeaders(referer: string): Record<string, string> {
-  return {
-    'user-agent': 'Mozilla/5.0 (compatible; indi-movie-web-admin-crawler/0.1)',
+  return browserHeaders({
     accept: 'application/json, text/javascript, */*; q=0.01',
     'x-requested-with': 'XMLHttpRequest',
+    'sec-fetch-dest': 'empty',
+    'sec-fetch-mode': 'cors',
+    'sec-fetch-site': 'same-origin',
     referer,
-  }
+  })
 }
 
 function buildDtryxBookingUrl(
@@ -742,13 +745,14 @@ export async function crawlMovieeTicketApi(context: ParseContext) {
   const tid = extractMovieeTheaterId(sourceUrl)
   const baseUrl = new URL(sourceUrl)
   const origin = baseUrl.origin
-  const headers = {
-    'user-agent': 'Mozilla/5.0 (compatible; indi-movie-web-admin-crawler/0.1)',
+  const headers = browserHeaders({
     accept: 'application/json, text/javascript, */*; q=0.01',
-    'accept-language': 'ko-KR,ko;q=0.9,en;q=0.8',
     'x-requested-with': 'XMLHttpRequest',
+    'sec-fetch-dest': 'empty',
+    'sec-fetch-mode': 'cors',
+    'sec-fetch-site': 'same-origin',
     referer: `${origin}/Theater/Index`,
-  }
+  })
   const dateParams = createMovieePlayDateParams(tid)
   const dateData = await fetchJson<{
     ResCd?: string
@@ -1451,7 +1455,7 @@ async function crawlPetitecine(context: ParseContext): Promise<CrawledShowtimeCa
 
     const resp = await fetch('https://petitecine.com/api/W0060.do', {
       method: 'POST',
-      headers: { 'content-type': 'application/json', 'user-agent': 'indi-movie-web-admin-crawler/0.1' },
+      headers: browserHeaders({ 'content-type': 'application/json' }),
       body: JSON.stringify({ req_cmd: 'selectlist', cinema_id: Number(cinemaId), chkCinemaId: 'N', movie_date: dateStr }),
       signal: AbortSignal.timeout(10000),
     })
@@ -1497,7 +1501,7 @@ async function crawlPetitecine(context: ParseContext): Promise<CrawledShowtimeCa
 async function crawlDrfa(context: ParseContext): Promise<CrawledShowtimeCandidate[]> {
   const url = context.sourceUrl ?? context.source.listingUrl
   const res = await fetch(url, {
-    headers: { 'user-agent': 'indi-movie-web-admin-crawler/0.1' },
+    headers: browserHeaders(),
     signal: AbortSignal.timeout(30000),
   })
   if (!res.ok) throw new Error(`DRFA fetch 실패: ${res.status}`)
@@ -1584,11 +1588,7 @@ async function crawlDrfa(context: ParseContext): Promise<CrawledShowtimeCandidat
 async function crawlKofaCinematheque(context: ParseContext): Promise<CrawledShowtimeCandidate[]> {
   const url = context.source.listingUrl
   const res = await fetch(url, {
-    headers: {
-      'user-agent': 'Mozilla/5.0 (compatible; indi-movie-web-admin-crawler/0.1)',
-      accept: 'text/html,*/*',
-      'accept-language': 'ko-KR,ko;q=0.9',
-    },
+    headers: browserHeaders({ accept: 'text/html,*/*' }),
     cache: 'no-store',
     signal: AbortSignal.timeout(30_000),
   })

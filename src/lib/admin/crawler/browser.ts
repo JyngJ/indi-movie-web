@@ -2,7 +2,7 @@ import type { CrawledShowtimeCandidate } from '@/types/admin'
 import type { ParseContext } from './utils'
 import { buildCandidate, dedupeCandidates } from './utils'
 
-const UA = 'Mozilla/5.0 (compatible; indi-movie-web-admin-crawler/0.1)'
+const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
 
 // Extended GV keyword regex — includes "컨버세이션" (시네마다방 고유 GV 프로그램명)
 const GV_RE =
