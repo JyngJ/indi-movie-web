@@ -576,7 +576,6 @@ export default function FilmsPage() {
           const active = list.filter((s) => s.movies.length > 0)
           if (active.length === 0) return null
           const nodes: React.ReactNode[] = []
-          let i = 0
           type SectionDisplayMode = import('@/lib/curation/filmsTabLists').SectionDisplayMode
           function rowFor(s: AnySection, compact: boolean) {
             return (
@@ -590,32 +589,44 @@ export default function FilmsPage() {
                 compact={compact} />
             )
           }
-          while (i < active.length) {
-            const curr = active[i]
-            const next = active[i + 1]
-            const currSparse = curr.movies.length <= 2
-            const nextSparse = next != null && next.movies.length > 0 && next.movies.length <= 2
-            // 모바일에서는 2열로 묶지 않음 — 가로로 합쳐서 보여주면 잘려서 잘 안 보임
-            if (isDesktop && currSparse && nextSparse) {
-              nodes.push(
-                <div key={`${keyPrefix}_pair_${i}`} style={{ display: 'flex', gap: 12, padding: '24px 16px 0' }}>
-                  {rowFor(curr, true)}
-                  {rowFor(next, true)}
-                </div>
-              )
-              i += 2
-            } else if (isDesktop && currSparse) {
-              // 이웃이 sparse가 아니어도 데스크톱에선 가로 카드 단독 렌더 — 큰 포스터 1~2장에 빈 공간이 생기는 것 방지
-              nodes.push(
-                <div key={`${keyPrefix}_solo_${i}`} style={{ display: 'flex', gap: 12, padding: '24px 16px 0' }}>
-                  {rowFor(curr, true)}
-                </div>
-              )
-              i++
-            } else {
-              nodes.push(rowFor(curr, false))
-              i++
+          // 모바일에서는 2열로 묶지 않음 — 가로로 합쳐서 보여주면 잘려서 잘 안 보임
+          if (!isDesktop) {
+            return <>{active.map((s) => rowFor(s, false))}</>
+          }
+          // 데스크톱: sparse(≤2편) 섹션끼리 짝지어 2열로 — 인접하지 않아도 사이의 rich 섹션은
+          // 잠깐 미뤄뒀다가 짝을 맺은 직후 원래 순서대로 이어서 낸다 (건너뛴 줄만큼 빈 공간 안 남게)
+          let pending: AnySection | null = null
+          const deferred: AnySection[] = []
+          for (const s of active) {
+            const sparse = s.movies.length <= 2
+            if (sparse && pending == null) {
+              pending = s
+              continue
             }
+            if (sparse && pending != null) {
+              nodes.push(
+                <div key={`${keyPrefix}_pair_${pending.listId}`} style={{ display: 'flex', gap: 12, padding: '24px 16px 0' }}>
+                  {rowFor(pending, true)}
+                  {rowFor(s, true)}
+                </div>
+              )
+              pending = null
+              deferred.forEach((d) => nodes.push(rowFor(d, false)))
+              deferred.length = 0
+              continue
+            }
+            // rich 섹션: 짝을 기다리는 sparse가 있으면 뒤로 미뤄두고, 없으면 바로 낸다
+            if (pending != null) deferred.push(s)
+            else nodes.push(rowFor(s, false))
+          }
+          if (pending != null) {
+            // 끝까지 짝을 못 찾은 sparse — 큰 포스터 1~2장에 빈 공간 안 남게 단독 카드로
+            nodes.push(
+              <div key={`${keyPrefix}_solo_${pending.listId}`} style={{ display: 'flex', gap: 12, padding: '24px 16px 0' }}>
+                {rowFor(pending, true)}
+              </div>
+            )
+            deferred.forEach((d) => nodes.push(rowFor(d, false)))
           }
           return <>{nodes}</>
         }
