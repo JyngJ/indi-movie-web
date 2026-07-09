@@ -2,6 +2,7 @@
 
 import type { GvEvent } from '@/data/gv-events'
 import { gvEventTypeColor } from '@/lib/gv/adapter'
+import { trackEvent } from '@/lib/analytics/client'
 
 interface GvDetailPanelProps {
   ev: GvEvent
@@ -165,6 +166,12 @@ export function GvDetailPanel({ ev, onClose, onCloseAll }: GvDetailPanelProps) {
             href={ev.bookingUrl}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackEvent('booking clicked', {
+              theater_name: ev.theaterName,
+              movie_title: ev.movie,
+              gv_event_id: ev.id,
+              source: 'gv_detail',
+            })}
             style={{
               flex: 1, height: 50,
               background: 'var(--color-primary-base)',

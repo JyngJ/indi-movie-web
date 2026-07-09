@@ -8,6 +8,7 @@ import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { withFlagsRaw } from '@/lib/nations'
 import type { Theater, Movie, Showtime } from '@/types/api'
 import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWidget'
+import { trackEvent } from '@/lib/analytics/client'
 import { Clapperboard } from 'lucide-react'
 
 function useIsDesktop() {
@@ -471,6 +472,16 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
               </div>
               {selectedShowtimeData.st.bookingUrl ? (
                 <a href={selectedShowtimeData.st.bookingUrl} target="_blank" rel="noopener noreferrer"
+                  onClick={() => trackEvent('booking clicked', {
+                    theater_id: theater.id,
+                    theater_name: theater.name,
+                    movie_id: selectedShowtimeData.st.movieId,
+                    movie_title: selectedShowtimeData.movieTitle,
+                    showtime_id: selectedShowtimeData.st.id,
+                    show_date: selectedShowtimeData.st.showDate,
+                    show_time: selectedShowtimeData.st.showTime,
+                    source: 'films_theater_detail',
+                  })}
                   style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 44, borderRadius: 10, backgroundColor: 'var(--color-primary-base)', color: '#fff', fontSize: 14, fontWeight: 700, textDecoration: 'none', marginTop: 4 }}>
                   예매하러 가기 →
                 </a>
@@ -527,6 +538,16 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
           </div>
           {selectedShowtimeData.st.bookingUrl ? (
             <a href={selectedShowtimeData.st.bookingUrl} target="_blank" rel="noopener noreferrer"
+              onClick={() => trackEvent('booking clicked', {
+                theater_id: theater.id,
+                theater_name: theater.name,
+                movie_id: selectedShowtimeData.st.movieId,
+                movie_title: selectedShowtimeData.movieTitle,
+                showtime_id: selectedShowtimeData.st.id,
+                show_date: selectedShowtimeData.st.showDate,
+                show_time: selectedShowtimeData.st.showTime,
+                source: 'films_theater_detail',
+              })}
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 48, borderRadius: 12, backgroundColor: 'var(--color-primary-base)', color: '#fff', fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
               예매하러 가기 →
             </a>
