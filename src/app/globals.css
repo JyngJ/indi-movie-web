@@ -81,7 +81,7 @@ img {
   margin: 0 auto;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1280px) {
   .mobile-container {
     max-width: none;
   }
@@ -124,6 +124,13 @@ img {
 @keyframes tipIn {
   from { opacity: 0; transform: translateY(-6px) scale(0.96); }
   to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+/* 지역 설정 말풍선 등장 시 잠깐 밝아졌다 가라앉는 강조 */
+@keyframes tipGlow {
+  0%   { filter: brightness(1); }
+  35%  { filter: brightness(1.4); }
+  100% { filter: brightness(1); }
 }
 
 @keyframes poster-wave {
@@ -334,8 +341,8 @@ img {
   border-bottom-left-radius: 2px;
 }
 
-/* 터치 디바이스 및 모바일 레이아웃(너비 1023px 이하)에서 호버 카드/리스트 팝업 비활성화 */
-@media (hover: none), (pointer: coarse), (max-width: 1023px) {
+/* 터치 디바이스 및 모바일 레이아웃(너비 1279px 이하, 태블릿 포함)에서 호버 카드/리스트 팝업 비활성화 */
+@media (hover: none), (pointer: coarse), (max-width: 1279px) {
   .pm-wrap > div:first-child { transition: none !important; }
   .pm-wrap:hover .pm-tip { display: none !important; }
   .pm-wrap:hover > div:first-child { transform: none !important; box-shadow: none !important; }

@@ -7,12 +7,13 @@ import { useMovies, useActiveMovieIds, useDirectorProfile } from '@/lib/supabase
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import type { Movie } from '@/types/api'
 import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWidget'
+import { trackEvent } from '@/lib/analytics/client'
 import { Clapperboard } from 'lucide-react'
 
 function useIsDesktop() {
-  const [v, setV] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches)
+  const [v, setV] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 1280px)').matches)
   useEffect(() => {
-    const m = window.matchMedia('(min-width: 1024px)')
+    const m = window.matchMedia('(min-width: 1280px)')
     const fn = () => setV(m.matches); fn()
     m.addEventListener('change', fn); return () => m.removeEventListener('change', fn)
   }, [])
@@ -161,7 +162,10 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
           <IcoMap /> 지도에서 필터로 보기
         </button>
         <button
-          onClick={() => navigator.share?.({ title: directorName, url: window.location.href }).catch(() => {})}
+          onClick={() => {
+            trackEvent('share clicked', { director_name: directorName, source: 'films_director_detail' })
+            navigator.share?.({ title: directorName, url: window.location.href }).catch(() => {})
+          }}
           style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 10, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', color: 'var(--color-text-body)', cursor: 'pointer', flexShrink: 0 }}
         >
           <IcoShare />

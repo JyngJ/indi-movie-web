@@ -14,7 +14,7 @@ import { Clapperboard } from 'lucide-react'
 function useIsDesktop() {
   const [v, setV] = useState(false)
   useEffect(() => {
-    const m = window.matchMedia('(min-width: 1024px)')
+    const m = window.matchMedia('(min-width: 1280px)')
     const fn = () => setV(m.matches)
     fn(); m.addEventListener('change', fn)
     return () => m.removeEventListener('change', fn)
@@ -341,7 +341,10 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
           )}
           <button
             style={btnBase}
-            onClick={() => navigator.share?.({ title: theater.name, url: window.location.href }).catch(() => {})}
+            onClick={() => {
+              trackEvent('share clicked', { theater_id: theater.id, theater_name: theater.name, source: 'films_theater_detail' })
+              navigator.share?.({ title: theater.name, url: window.location.href }).catch(() => {})
+            }}
           >
             <IcoShare />
             공유

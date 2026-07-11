@@ -43,7 +43,7 @@ function collectUtm() {
 
 function deviceType() {
   if (typeof window === 'undefined') return 'unknown'
-  return window.matchMedia('(min-width: 1024px)').matches ? 'desktop' : 'mobile'
+  return window.matchMedia('(min-width: 1280px)').matches ? 'desktop' : 'mobile'
 }
 
 function getOrCreateSession() {

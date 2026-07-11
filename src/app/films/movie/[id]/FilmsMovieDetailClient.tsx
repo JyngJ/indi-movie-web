@@ -16,7 +16,7 @@ import { MapPin } from 'lucide-react'
 function useIsDesktop() {
   const [v, setV] = useState(false)
   useEffect(() => {
-    const m = window.matchMedia('(min-width: 1024px)')
+    const m = window.matchMedia('(min-width: 1280px)')
     const fn = () => setV(m.matches); fn()
     m.addEventListener('change', fn); return () => m.removeEventListener('change', fn)
   }, [])
@@ -225,7 +225,10 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
         <IcoMap /> 지도에서 상영관 필터로 보기
       </button>
       <button
-        onClick={() => navigator.share?.({ title: movie.title, url: window.location.href }).catch(() => {})}
+        onClick={() => {
+          trackEvent('share clicked', { movie_id: movie.id, movie_title: movie.title, source: 'films_movie_detail' })
+          navigator.share?.({ title: movie.title, url: window.location.href }).catch(() => {})
+        }}
         style={{ width: 42, height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 10, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', color: 'var(--color-text-body)', cursor: 'pointer', flexShrink: 0 }}
       >
         <IcoShare />

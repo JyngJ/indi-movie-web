@@ -74,6 +74,7 @@ export function FilterBar({
   const [dropdownPos, setDropdownPos] = useState<{ left: number; top: number }>({ left: 16, top: 0 })
   const [mounted, setMounted] = useState(false)
   const [regionHintDismissed, setRegionHintDismissed] = useState(false)
+  const [regionHintLeft, setRegionHintLeft] = useState(16)
 
   const wrapperRef = useRef<HTMLDivElement>(null)
   const portalDropdownRef = useRef<HTMLDivElement>(null)
@@ -168,13 +169,25 @@ export function FilterBar({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const syncRegionHintPosition = useCallback(() => {
+    const chip = regionChipRef.current
+    const row = chipRowRef.current
+    if (chip && row) setRegionHintLeft(chip.offsetLeft - row.scrollLeft)
+  }, [])
+
+  // 영화/감독 필터칩이 검색 지역 칩 앞에 붙거나 빠지면 말풍선 위치도 같이 이동
+  useEffect(() => {
+    syncRegionHintPosition()
+  }, [movieFilter, directorFilter, syncRegionHintPosition])
+
   const handleChipRowScroll = useCallback(() => {
     if (scrollFrameRef.current !== null) return
     scrollFrameRef.current = requestAnimationFrame(() => {
       scrollFrameRef.current = null
       syncOpenDropdownPosition()
+      syncRegionHintPosition()
     })
-  }, [syncOpenDropdownPosition])
+  }, [syncOpenDropdownPosition, syncRegionHintPosition])
 
   const handleChipRowMouseDown = useCallback((e: ReactMouseEvent<HTMLDivElement>) => {
     if (e.button !== 0) return
@@ -403,10 +416,11 @@ export function FilterBar({
           <div style={{
             position: 'absolute',
             top: 52,
-            left: 16,
+            left: regionHintLeft,
             zIndex: 60,
             width: 236,
-            animation: 'tipIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            transition: 'left 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            animation: 'tipIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), tipGlow 0.7s ease-out',
           }}>
             {/* 꼬리 */}
             <div style={{
