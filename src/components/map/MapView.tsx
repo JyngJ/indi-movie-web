@@ -40,9 +40,9 @@ import {
 import { SubwayLayer } from './SubwayLayer'
 import { finiteNumber, formatDateParam, startOfLocalDay, addDays, endOfMonth, loadRecentSearches, addToRecent, removeFromRecent, clearRecentSearches } from '@/lib/map/searchUtils'
 import { stationSearchScore, movieSearchScore, directorSearchScore, theaterSearchScore, areaSearchScore } from '@/lib/map/searchScoring'
-import { posterCountForZoom, posterSizeForZoom, posterSlotsForZoom } from '@/lib/map/posterLogic'
+import { posterCountForZoom, posterSizeForZoom, posterSlotsForZoom, dayLabel, SHOWTIME_DATES_ZOOM_THRESHOLD, SHOWTIME_FULL_ZOOM_THRESHOLD } from '@/lib/map/posterLogic'
 import { calculateAndFormatDistance } from '@/lib/map/distanceUtils'
-import type { TheaterPosterMovie } from '@/lib/map/posterLogic'
+import type { TheaterPosterMovie, ScreeningDay } from '@/lib/map/posterLogic'
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { recordRecentlyViewed, removeRecentlyViewed, clearRecentlyViewed } from '@/lib/curation/recentlyViewed'
 import { cookieStorageAdapter } from '@/lib/adapters/cookieStorage'
@@ -134,11 +134,16 @@ function makePinIcon(
   isDark = false,
   dimmed = false,
   isDesktop = false,
+  singleMovieMode = false,
+  scheduleData?: { days: ScreeningDay[]; nextShow?: { date: string; time: string; showtimeId: string } },
 ) {
   // 캐시 키: 모든 입력을 직렬화 — 같은 조합이면 renderToStaticMarkup 재사용
-  const moviesKey = posterMovies.map(m => `${m.id}:${m.matchesFilter ? 1 : 0}:${m.showtimesToday?.map(s => s.time + (s.soldout ? 'x' : '') + (s.past ? 'p' : '')).join('|') ?? ''}`).join(',')
+  const moviesKey = posterMovies.map(m => `${m.id}:${m.matchesFilter ? 1 : 0}:${m.showtimeCount}:${m.showtimesToday?.map(s => s.time + (s.soldout ? 'x' : '') + (s.past ? 'p' : '')).join('|') ?? ''}`).join(',')
   const loKey = `${Math.round(labelOffset?.x ?? 0)},${Math.round(labelOffset?.y ?? 0)}`
-  const cacheKey = `${name}|${selected ? 1 : 0}|${zoom}|${moviesKey}|${filtersActive ? 1 : 0}|${Math.round(finiteNumber(posterOffsetX) * 2) / 2}|${loKey}|${isDark ? 1 : 0}|${dimmed ? 1 : 0}|${isDesktop ? 1 : 0}`
+  const scheduleKey = scheduleData
+    ? `${scheduleData.days.map(d => `${d.date}:${d.times.join('-')}`).join(',')}|${scheduleData.nextShow ? `${scheduleData.nextShow.date}${scheduleData.nextShow.time}` : ''}`
+    : ''
+  const cacheKey = `${name}|${selected ? 1 : 0}|${zoom}|${moviesKey}|${filtersActive ? 1 : 0}|${Math.round(finiteNumber(posterOffsetX) * 2) / 2}|${loKey}|${isDark ? 1 : 0}|${dimmed ? 1 : 0}|${isDesktop ? 1 : 0}|${singleMovieMode ? 1 : 0}|${scheduleKey}`
   const cached = _pinIconCache.get(cacheKey)
   if (cached) return cached
 
@@ -147,6 +152,9 @@ function makePinIcon(
   const forceMinOne = filtersActive && posterMovies.some(m => m.matchesFilter)
   const slots = posterSlotsForZoom(posterMovies, zoom, filtersActive, forceMinOne)
   const matchCount = filtersActive ? posterMovies.filter(m => m.matchesFilter).length : undefined
+  const showSchedule = singleMovieMode && zoom >= SHOWTIME_DATES_ZOOM_THRESHOLD && slots.length === 1 && !!scheduleData?.days.length
+  const scheduleShowTimes = zoom >= SHOWTIME_FULL_ZOOM_THRESHOLD
+  const occurrenceCount = showSchedule ? posterMovies.find(m => m.matchesFilter)?.showtimeCount : undefined
   const numRows = slots.length > 3 ? 2 : slots.length > 0 ? 1 : 0
   const usePosterLeft = slots.length > 0 && safePosterOffsetX < -80
   const { w: pW, h: pH } = posterSizeForZoom(zoom, isDesktop)
@@ -169,6 +177,10 @@ function makePinIcon(
         posterW={pW}
         posterH={pH}
         allMovies={posterMovies}
+        schedule={showSchedule ? scheduleData?.days : undefined}
+        scheduleShowTimes={scheduleShowTimes}
+        occurrenceCount={occurrenceCount}
+        hideMatchChip={singleMovieMode}
       />
     )
     if (usePosterLeft) {
@@ -1544,6 +1556,48 @@ export default function MapView() {
     return result
   }, [directorFilter, filters.bookable, filters.genres, filters.nations, movieFilter, mapShowtimes, mapShowtimeStart])
 
+  // 단일 영화 필터 시 핀에 노출할 극장별 날짜별 상영시간표 (최대 4일)
+  const singleMovieSchedule = useMemo(() => {
+    const result = new Map<string, { days: ScreeningDay[]; nextShow?: { date: string; time: string; showtimeId: string } }>()
+    if (!movieFilter) return result
+
+    const byTheaterDay = new Map<string, Map<string, Array<{ time: string; id: string }>>>()
+    for (const showtime of mapShowtimes) {
+      if (showtime.movieId !== movieFilter.id) continue
+      let dayMap = byTheaterDay.get(showtime.theaterId)
+      if (!dayMap) { dayMap = new Map(); byTheaterDay.set(showtime.theaterId, dayMap) }
+      const list = dayMap.get(showtime.showDate) ?? []
+      list.push({ time: showtime.showTime.slice(0, 5), id: showtime.id })
+      dayMap.set(showtime.showDate, list)
+    }
+
+    const now = new Date()
+    const nowMins = now.getHours() * 60 + now.getMinutes()
+    for (const [theaterId, dayMap] of byTheaterDay) {
+      const sortedDates = Array.from(dayMap.entries()).sort((a, b) => a[0].localeCompare(b[0])).slice(0, 4)
+      const days: ScreeningDay[] = sortedDates.map(([date, entries]) => ({
+        date,
+        label: dayLabel(date, mapShowtimeStart),
+        times: [...entries].map((e) => e.time).sort(),
+      }))
+
+      let nextShow: { date: string; time: string; showtimeId: string } | undefined
+      for (const [date, entries] of sortedDates) {
+        const sorted = [...entries].sort((a, b) => a.time.localeCompare(b.time))
+        const upcoming = date === mapShowtimeStart
+          ? sorted.find((e) => {
+              const [th, tm] = e.time.split(':').map(Number)
+              return th * 60 + tm >= nowMins
+            })
+          : sorted[0]
+        if (upcoming) { nextShow = { date, time: upcoming.time, showtimeId: upcoming.id }; break }
+      }
+
+      result.set(theaterId, { days, nextShow })
+    }
+    return result
+  }, [movieFilter, mapShowtimes, mapShowtimeStart])
+
   const filtersActive = filters.bookable || filters.genres.length > 0 || filters.nations.length > 0 || !!movieFilter || !!directorFilter
   const filterResultCount = useMemo(() => {
     if (!filtersActive) return theaters.length
@@ -2209,7 +2263,7 @@ export default function MapView() {
 
 
   // 극장 선택 시 → 첫 번째 영화 선택 + 시트 collapsed로 열기
-  const handlePinClick = useCallback((theaterId: string, clickedMovieId?: string) => {
+  const handlePinClick = useCallback((theaterId: string, clickedMovieId?: string, opts?: { date?: string; showtimeId?: string; forceExpand?: boolean }) => {
     if (selectedId === theaterId) {
       trackEvent('theater sheet closed', { theater_id: theaterId, source: 'map' })
       closeSheet()
@@ -2219,7 +2273,9 @@ export default function MapView() {
       setSelectedId(theaterId)
       setDisplayedId(theaterId)
       setSelectedMovieId(clickedMovieId ?? movieFilter?.id ?? '')
-      setSheetExpanded(isDesktopLayout)
+      setInitialSheetDate(opts?.date)
+      setInitialShowtimeId(opts?.showtimeId)
+      setSheetExpanded(opts?.forceExpand ? true : isDesktopLayout)
       const currentZoom = mapRef.current?.getZoom() ?? 15
       const theater = theaters.find((t) => t.id === theaterId)
       if (theater) {
@@ -3065,11 +3121,19 @@ export default function MapView() {
                 isDark,
                 dimmed,
                 isDesktopLayout,
+                !!movieFilter,
+                singleMovieSchedule.get(theater.id),
               )}
               eventHandlers={{ click: (e) => {
                 const target = e.originalEvent?.target as HTMLElement | null
                 const movieEl = target?.closest('[data-movie-id]') as HTMLElement | null
-                handlePinClick(theater.id, movieEl?.dataset.movieId)
+                const clickedMovieId = movieEl?.dataset.movieId
+                const nextShow = movieFilter && clickedMovieId === movieFilter.id
+                  ? singleMovieSchedule.get(theater.id)?.nextShow
+                  : undefined
+                handlePinClick(theater.id, clickedMovieId, nextShow
+                  ? { date: nextShow.date, showtimeId: nextShow.showtimeId, forceExpand: true }
+                  : undefined)
               } }}
             />
           )
@@ -3535,7 +3599,6 @@ export default function MapView() {
               clearTheaterSelection()
               setDirectorFilter(null)
               setMovieFilter({ id, title })
-              closeDesktopPanel()
             }}
             onDirectorFilterOnMap={(name) => {
               trackEvent('director theaters map opened', {

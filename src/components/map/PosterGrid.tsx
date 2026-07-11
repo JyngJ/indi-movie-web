@@ -3,7 +3,16 @@
 import { PosterThumb } from '@/components/domain'
 import { finiteNumber } from '@/lib/map/searchUtils'
 import { withFlag } from '@/lib/nations'
-import type { TheaterPosterMovie, PosterSlot } from '@/lib/map/posterLogic'
+import { dayOfWeek } from '@/lib/map/posterLogic'
+import type { TheaterPosterMovie, PosterSlot, ScreeningDay } from '@/lib/map/posterLogic'
+
+function dayLabelColor(day: ScreeningDay): string {
+  if (day.label === '오늘') return 'var(--color-primary-base)'
+  const dow = dayOfWeek(day.date)
+  if (dow === 6) return 'var(--color-info)'
+  if (dow === 0) return 'var(--color-error)'
+  return 'var(--color-text-caption)'
+}
 
 export function MovieListCard({ movies }: { movies: TheaterPosterMovie[] }) {
   return (
@@ -22,7 +31,43 @@ export function MovieListCard({ movies }: { movies: TheaterPosterMovie[] }) {
   )
 }
 
-export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filtersActive = false, selected = false, posterW = 44, posterH = 66, allMovies }: {
+export function ScheduleRows({ days, showTimes = true }: {
+  days: ScreeningDay[]
+  showTimes?: boolean
+}) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      {days.map((day) => (
+        <div key={day.date} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{
+            minWidth: 29, fontSize: 9.5, fontWeight: 700, whiteSpace: 'nowrap',
+            color: dayLabelColor(day),
+          }}>{day.label}</span>
+          {showTimes && (
+            <span style={{ display: 'flex', gap: 4 }}>
+              {day.times.slice(0, 3).map((t) => (
+                <span key={t} style={{
+                  fontFamily: "'SF Mono', ui-monospace, monospace",
+                  fontSize: 10.5,
+                  letterSpacing: 0.2,
+                  fontWeight: 600,
+                  color: 'var(--color-text-primary)',
+                }}>{t}</span>
+              ))}
+              {day.times.length > 3 && (
+                <span style={{ fontSize: 9.5, fontWeight: 600, color: 'var(--color-text-caption)', alignSelf: 'center' }}>
+                  +{day.times.length - 3}
+                </span>
+              )}
+            </span>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filtersActive = false, selected = false, posterW = 44, posterH = 66, allMovies, schedule, scheduleShowTimes = true, occurrenceCount, hideMatchChip = false }: {
   slots: PosterSlot[]
   tailDir?: 'up' | 'right'
   tailOffset?: number
@@ -32,13 +77,20 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
   posterW?: number
   posterH?: number
   allMovies?: TheaterPosterMovie[]
+  schedule?: ScreeningDay[]
+  scheduleShowTimes?: boolean
+  occurrenceCount?: number
+  hideMatchChip?: boolean
 }) {
   const count = slots.length
+  const scheduleMode = !!schedule && schedule.length > 0 && count === 1
   const perRow = count > 3 ? 3 : count
   const cardWidth = perRow * posterW + Math.max(0, perRow - 1) * 4 + 16
   const tailInset = 14
   const safeTailOffset = finiteNumber(tailOffset)
-  const tailX = Math.max(tailInset, Math.min(cardWidth - tailInset, cardWidth / 2 - safeTailOffset))
+  const tailX = scheduleMode
+    ? cardWidth / 2
+    : Math.max(tailInset, Math.min(cardWidth - tailInset, cardWidth / 2 - safeTailOffset))
 
   const tailBg = selected ? 'var(--color-primary-base)' : 'var(--color-surface-card)'
   const tailBorder = selected ? '1.5px solid rgba(0,0,0,0.14)' : '1.5px solid var(--color-border)'
@@ -46,7 +98,7 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
   const tailStyle: React.CSSProperties | null = tailDir === 'up' ? {
     position: 'absolute', width: 10, height: 10,
     backgroundColor: tailBg, borderTop: tailBorder, borderRight: tailBorder,
-    borderTopRightRadius: 2, top: -6, left: tailX,
+    borderTopRightRadius: 2, top: -6, left: scheduleMode ? '50%' : tailX,
     transform: 'translateX(-50%) rotate(45deg)', zIndex: 0, pointerEvents: 'none',
   } : tailDir === 'right' ? {
     position: 'absolute', width: 10, height: 10,
@@ -68,7 +120,7 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
         position: 'relative',
         zIndex: 1,
       }}>
-        {filtersActive && matchCount != null && matchCount > 0 && (
+        {!hideMatchChip && filtersActive && matchCount != null && matchCount > 0 && (
           <div style={{
             position: 'absolute', top: -8, right: -8,
             backgroundColor: 'var(--color-primary-base)', color: '#fff',
@@ -80,6 +132,41 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
             {matchCount}편 일치
           </div>
         )}
+        {scheduleMode ? (
+          <div data-movie-id={slots[0].movie?.id} style={{ display: 'flex', alignItems: 'center', gap: 9, position: 'relative', zIndex: 1 }}>
+            <div style={{ position: 'relative', width: posterW, height: posterH, flexShrink: 0 }}>
+              <PosterThumb
+                src={slots[0].movie?.posterUrl}
+                alt={slots[0].movie?.title ?? ''}
+                width={posterW}
+                height={posterH}
+                size="sm"
+              />
+              {occurrenceCount != null && occurrenceCount > 0 && (
+                <div style={{
+                  position: 'absolute', top: -8, right: -8,
+                  backgroundColor: 'var(--color-primary-base)', color: '#fff',
+                  borderRadius: 999, padding: '2px 6px', fontSize: 9, fontWeight: 700,
+                  zIndex: 10, whiteSpace: 'nowrap',
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+                  border: '1.5px solid var(--color-surface-bg)',
+                }}>
+                  {occurrenceCount}회
+                </div>
+              )}
+            </div>
+            <div style={{ borderLeft: '1px dashed var(--color-border)', paddingLeft: 9 }}>
+              <div style={{
+                fontSize: 9, fontWeight: 700, textAlign: 'center', whiteSpace: 'nowrap',
+                color: 'var(--color-primary-base)', backgroundColor: 'var(--color-primary-subtle-l)',
+                borderRadius: 999, padding: '2px 8px', marginBottom: 4,
+              }}>
+                상영 일정
+              </div>
+              <ScheduleRows days={schedule!} showTimes={scheduleShowTimes} />
+            </div>
+          </div>
+        ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, position: 'relative', zIndex: 1 }}>
           {Array.from({ length: count > 3 ? 2 : 1 }).map((_, row) => (
             <div key={row} style={{ display: 'flex', gap: 4 }}>
@@ -153,6 +240,7 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
             </div>
           ))}
         </div>
+        )}
       </div>
     </div>
   )

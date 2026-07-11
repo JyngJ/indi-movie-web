@@ -16,11 +16,11 @@ import { getRegionFromAddress, getRegionFromCoords } from '@/lib/regions'
 
 function useIsDesktopDetail() {
   const [isDesktop, setIsDesktop] = useState(
-    () => typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches,
+    () => typeof window !== 'undefined' && window.matchMedia('(min-width: 1280px)').matches,
   )
 
   useEffect(() => {
-    const media = window.matchMedia('(min-width: 1024px)')
+    const media = window.matchMedia('(min-width: 1280px)')
     const update = () => setIsDesktop(media.matches)
     update()
     media.addEventListener('change', update)
@@ -143,7 +143,7 @@ function HeroSection({ movie, titleRef, desktop = false }: { movie: MovieDetail;
             alt={`${movie.title} 포스터`}
             fill
             priority
-            sizes={`(min-width: 1024px) ${posterW}px, ${posterW}px`}
+            sizes={`(min-width: 1280px) ${posterW}px, ${posterW}px`}
             style={{ borderRadius: desktop ? 12 : 8, objectFit: 'cover', boxShadow: desktop ? '0 18px 46px rgba(0,0,0,0.28)' : '0 8px 28px rgba(0,0,0,0.45)' }}
           />
         ) : (

@@ -17,6 +17,33 @@ export interface PosterSlot {
   countLabel?: string
 }
 
+export interface ScreeningDay {
+  date: string    // 'YYYY-MM-DD'
+  label: string   // '오늘' | '내일' | 'M.D'
+  times: string[] // 'HH:MM', 정렬됨
+}
+
+// 단일 영화 필터 시 핀에 상영 날짜만 노출하는 줌 임계값 (중간 단계)
+export const SHOWTIME_DATES_ZOOM_THRESHOLD = 15
+// 단일 영화 필터 시 핀에 날짜별 전체 시간표를 노출하는 줌 임계값 (근접 단계)
+export const SHOWTIME_FULL_ZOOM_THRESHOLD = 17
+
+const WEEKDAY_KO = ['일', '월', '화', '수', '목', '금', '토']
+
+export function dayLabel(date: string, todayIso: string): string {
+  if (date === todayIso) return '오늘'
+  const d = new Date(`${date}T00:00:00`)
+  const today = new Date(`${todayIso}T00:00:00`)
+  const diffDays = Math.round((d.getTime() - today.getTime()) / 86400000)
+  if (diffDays === 1) return '내일'
+  const [, m, day] = date.split('-')
+  return `${Number(m)}.${Number(day)}(${WEEKDAY_KO[d.getDay()]})`
+}
+
+export function dayOfWeek(date: string): number {
+  return new Date(`${date}T00:00:00`).getDay()
+}
+
 export function posterCountForZoom(zoom: number): number {
   if (zoom >= 16) return 6
   if (zoom >= 15) return 3
