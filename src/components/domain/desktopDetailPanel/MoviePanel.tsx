@@ -8,6 +8,7 @@ import { useUserLocation } from '@/hooks/useUserLocation'
 import { locationAdapter } from '@/lib/adapters/location'
 import { calculateAndFormatDistance, calculateDistanceKm } from '@/lib/map/distanceUtils'
 import { getRegionFromAddress } from '@/lib/regions'
+import { Toast } from '@/components/primitives'
 import { PanelShell } from './PanelShell'
 import { IcoUser, IcoChevronRight, IcoMap, IcoPin } from './icons'
 
@@ -49,8 +50,8 @@ export function MoviePanel({
   if (isLoading) {
     return (
       <PanelShell onClose={onClose} onBack={onBack} embedded={embedded}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200, fontSize: 13, color: 'var(--color-text-caption)' }}>
-          불러오는 중…
+        <div style={{ height: 200 }}>
+          <Toast message="데이터 불러오는 중…" visible />
         </div>
       </PanelShell>
     )

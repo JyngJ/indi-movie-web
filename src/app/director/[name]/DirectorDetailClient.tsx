@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMovies, useActiveMovieIds, useDirectorProfile } from '@/lib/supabase/queries'
 import type { Movie } from '@/types/api'
+import { Toast } from '@/components/primitives'
 
 function useIsDesktopDetail() {
   const [isDesktop, setIsDesktop] = useState(
@@ -264,8 +265,8 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
 
   if (isLoading) {
     return (
-      <div style={{ position: 'fixed', inset: 0, backgroundColor: 'var(--color-surface-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontSize: 13, color: 'var(--color-text-caption)' }}>불러오는 중…</span>
+      <div style={{ position: 'fixed', inset: 0, backgroundColor: 'var(--color-surface-bg)' }}>
+        <Toast message="데이터 불러오는 중…" visible />
       </div>
     )
   }
