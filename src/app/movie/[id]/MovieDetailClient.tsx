@@ -13,6 +13,7 @@ import { useUserLocation } from '@/hooks/useUserLocation'
 import { locationAdapter } from '@/lib/adapters/location'
 import { calculateAndFormatDistance, calculateDistanceKm } from '@/lib/map/distanceUtils'
 import { getRegionFromAddress, getRegionFromCoords } from '@/lib/regions'
+import { Toast } from '@/components/primitives'
 
 function useIsDesktopDetail() {
   const [isDesktop, setIsDesktop] = useState(
@@ -708,8 +709,8 @@ export function MovieDetailClient({ movieId, theaterId, initialData, initialShow
 
   if (isLoading) {
     return (
-      <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontSize: 13, color: 'var(--color-text-caption)' }}>불러오는 중…</span>
+      <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
+        <Toast message="데이터 불러오는 중…" visible />
       </div>
     )
   }

@@ -2913,25 +2913,7 @@ export default function MapView() {
   return (
     <div style={{ position: 'relative', width: '100%', height: '100dvh', overflow: 'hidden' }}>
       {/* 영화관 데이터 로딩 인디케이터 */}
-      {theatersLoading && (
-        <div style={{
-          position: 'absolute',
-          bottom: 'max(100px, calc(env(safe-area-inset-bottom) + 80px))',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 1100,
-          background: 'var(--color-surface-sheet)',
-          border: '1px solid var(--color-border)',
-          borderRadius: 999,
-          padding: '6px 16px',
-          fontSize: 12,
-          color: 'var(--color-text-sub)',
-          boxShadow: 'var(--shadow-sheet)',
-          pointerEvents: 'none',
-        }}>
-          영화관 불러오는 중…
-        </div>
-      )}
+      <Toast message="영화관 불러오는 중…" visible={theatersLoading} />
       {/* iOS 키보드 트릭용 hidden dummy input — 항상 DOM에 존재 */}
       <input
         ref={dummyInputRef}

@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useMovies, useActiveMovieIds } from '@/lib/supabase/queries'
+import { Toast } from '@/components/primitives'
 import { PanelShell } from './PanelShell'
 import { IcoMap, IcoChevronRight, IcoChevronDown } from './icons'
 
@@ -40,8 +41,8 @@ export function DirectorPanel({
   if (isLoading) {
     return (
       <PanelShell onClose={onClose} onBack={onBack} embedded={embedded}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200, fontSize: 13, color: 'var(--color-text-caption)' }}>
-          불러오는 중…
+        <div style={{ height: 200 }}>
+          <Toast message="데이터 불러오는 중…" visible />
         </div>
       </PanelShell>
     )

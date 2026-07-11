@@ -8,6 +8,7 @@ import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import type { Movie } from '@/types/api'
 import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWidget'
 import { trackEvent } from '@/lib/analytics/client'
+import { Toast } from '@/components/primitives'
 import { Clapperboard } from 'lucide-react'
 
 function useIsDesktop() {
@@ -106,7 +107,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
   const hiddenCount = directorMovies.length - COLLAPSED_COUNT
 
   if (isLoading) {
-    return <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--color-surface-bg)' }}><span style={{ fontSize: 13, color: 'var(--color-text-caption)' }}>불러오는 중…</span></div>
+    return <div style={{ position: 'fixed', inset: 0, backgroundColor: 'var(--color-surface-bg)' }}><Toast message="데이터 불러오는 중…" visible /></div>
   }
 
   const navBar = (
