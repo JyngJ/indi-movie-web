@@ -12,6 +12,7 @@
     "curate:resolve-pending": "tsx --env-file=.env.local src/scripts/resolve-curation-pending.ts",
     "crawl:showtimes": "tsx --env-file=.env.local scripts/crawl-showtimes.ts && npm run curate:resolve-pending",
     "crawl:seats": "tsx --env-file=.env.local scripts/crawl-seats.ts",
+    "crawl:events": "tsx --env-file=.env.local scripts/crawl-events.ts",
     "seed:theaters": "tsx src/scripts/seed-theaters.ts",
     "seed:sources": "tsx src/scripts/seed-crawl-sources.ts",
     "seed:event-sources": "tsx --env-file=.env.local src/scripts/seed-event-sources.ts",

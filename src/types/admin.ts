@@ -15,7 +15,7 @@ export interface AdminEventSource {
   matchedTheaterId?: string
   homepageUrl?: string
   listingUrl: string
-  parser: 'kofaCinemathequeEvents' | 'deosupEvents' | 'cinecubeEvents' | 'indispaceEvents' | 'laikaCinemaEvents' | 'emuBoard' | 'artnineEvents'
+  parser: 'kofaCinemathequeEvents' | 'deosupEvents' | 'cinecubeEvents' | 'indispaceEvents' | 'laikaCinemaEvents' | 'emuBoard' | 'artnineEvents' | 'dtryxGvEvents' | 'seoulArtEvents'
   enabled: boolean
   cadence: EventSourceCadence
   health: EventSourceHealth

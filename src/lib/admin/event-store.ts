@@ -202,10 +202,30 @@ export async function updateEventCandidateMatch(
   matchedMovieId?: string,
 ): Promise<void> {
   const supabase = createSupabaseAdminClient()
+
+  // 극장 미지정 시 소스에 이미 알려진 극장(소스당 극장 1곳)으로 폴백 — 관리자가
+  // 영화만 고르고 저장하면 매칭된 극장이 null로 덮어써지던 문제 방지.
+  let resolvedTheaterId = matchedTheaterId ?? null
+  if (!resolvedTheaterId) {
+    const { data: candidate } = await supabase
+      .from('event_candidates')
+      .select('source_id')
+      .eq('id', candidateId)
+      .single()
+    if (candidate?.source_id) {
+      const { data: source } = await supabase
+        .from('event_sources')
+        .select('matched_theater_id')
+        .eq('id', candidate.source_id)
+        .single()
+      resolvedTheaterId = source?.matched_theater_id ?? null
+    }
+  }
+
   const { error } = await supabase
     .from('event_candidates')
     .update({
-      matched_theater_id: matchedTheaterId ?? null,
+      matched_theater_id: resolvedTheaterId,
       matched_movie_id: matchedMovieId ?? null,
       status: 'needs_review',
     })
@@ -223,7 +243,7 @@ interface ApprovalResult {
 
 export async function approveEventCandidates(
   ids: string[],
-  approvedByUserId: string,
+  approvedByUserId: string | null,
 ): Promise<ApprovalResult> {
   const supabase = createSupabaseAdminClient()
   const result: ApprovalResult = { approved: [], failed: [] }
@@ -326,7 +346,7 @@ interface AutoMatchResult {
  * 모호함 없음). 영화는 제목 정확 일치 시에만 연결(오매칭 방지 — 부분/유사 일치는 하지 않음).
  * 극장+영화 모두 매칭되면 바로 승인(theater_events 등록), 영화만 못 찾으면 검수 대기로 남겨둔다.
  */
-export async function autoMatchEventCandidates(approvedByUserId: string, ids?: string[]): Promise<AutoMatchResult> {
+export async function autoMatchEventCandidates(approvedByUserId: string | null, ids?: string[]): Promise<AutoMatchResult> {
   const supabase = createSupabaseAdminClient()
 
   let candidatesQuery = supabase.from('event_candidates').select('*')
