@@ -131,12 +131,14 @@ function trimDiscordText(value: string, max: number) {
   return value.length > max ? `${value.slice(0, max - 1)}…` : value
 }
 
+// 전용 채널(DISCORD_USER_REQUEST_CHANNEL_ID) 없으면 제보하기(reports)가 쓰는 채널로 폴백 —
+// 실제 운영 env엔 DISCORD_REPORT_CHANNEL_ID만 설정돼 있고 범용 DISCORD_CHANNEL_ID는 없음.
 function discordUserRequestChannelId() {
-  return discordEnv('DISCORD_USER_REQUEST_CHANNEL_ID') || discordEnv('DISCORD_CHANNEL_ID')
+  return discordEnv('DISCORD_USER_REQUEST_CHANNEL_ID') || discordEnv('DISCORD_CHANNEL_ID') || discordEnv('DISCORD_REPORT_CHANNEL_ID')
 }
 
 function discordUserRequestWebhookUrl() {
-  return discordEnv('DISCORD_USER_REQUEST_WEBHOOK_URL') || discordEnv('DISCORD_WEBHOOK_URL')
+  return discordEnv('DISCORD_USER_REQUEST_WEBHOOK_URL') || discordEnv('DISCORD_WEBHOOK_URL') || discordEnv('DISCORD_REPORT_WEBHOOK_URL')
 }
 
 function discordEnv(name: string) {
