@@ -61,7 +61,7 @@ interface CurationSheetProps {
   returningFilms: ReturningFilm[]
   newIndieFilms: NewIndieFilm[]
   recentlyViewed: RecentlyViewedEntry[]
-  onMovieSelect?: (movieId: string, title: string) => void
+  onMovieSelect?: (movieId: string, title: string, sectionKey?: string) => void
   /** "지금 출발하면"/"단 한 곳" 섹션 전용 — 영화 상세 대신 해당 극장으로 flyTo + 선택 */
   onTodayShowSelect?: (movieId: string, title: string, theaterId: string) => void
   onRemoveRecentlyViewed?: (kind: RecentlyViewedKind, id: string) => void
@@ -481,7 +481,7 @@ interface CurationSectionsProps {
   returningFilms: ReturningFilm[]
   newIndieFilms: NewIndieFilm[]
   recentlyViewed: RecentlyViewedEntry[]
-  onMovieSelect?: (movieId: string, title: string) => void
+  onMovieSelect?: (movieId: string, title: string, sectionKey?: string) => void
   /** "지금 출발하면"/"단 한 곳" 섹션 전용 — 영화 상세 대신 해당 극장으로 flyTo + 선택 */
   onTodayShowSelect?: (movieId: string, title: string, theaterId: string) => void
   onRemoveRecentlyViewed?: (kind: RecentlyViewedKind, id: string) => void
@@ -607,7 +607,7 @@ export function CurationSections({
               const item = section.items.find((i) => i.id === id)
               if (item?.theaterId) onTodayShowSelect?.(id, title, item.theaterId)
             }
-          : onMovieSelect
+          : (id: string, title: string) => onMovieSelect?.(id, title, section.key)
         const expandState: SectionExpand = expandedSections[section.key] ?? 'collapsed'
         const hasMore = desktop && section.items.length > SECTION_COLLAPSED_COUNT
         const hasManyMore = desktop && section.items.length > SECTION_PARTIAL_COUNT

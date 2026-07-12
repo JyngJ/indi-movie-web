@@ -1270,11 +1270,12 @@ export default function MapView() {
   }, [])
 
   // 데스크톱: 좌측 도크에 영화 상세 패널 / 모바일: MovieSheet
-  const handleCurationMovieSelect = useCallback((movieId: string, movieTitle: string) => {
+  const handleCurationMovieSelect = useCallback((movieId: string, movieTitle: string, sectionKey?: string) => {
     trackEvent('curation movie selected', {
       movie_id: movieId,
       movie_title: movieTitle,
       source: 'curation_sheet',
+      list_id: sectionKey,
     })
     classifySessionIntent('type_a', { source: 'curation_sheet', movie_id: movieId })
 

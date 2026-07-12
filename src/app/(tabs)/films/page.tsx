@@ -585,7 +585,15 @@ export default function FilmsPage() {
                 movies={s.movies} isDesktop={isDesktop}
                 posterBadges={s.posterBadges} movieCaptions={s.movieCaptions}
                 customBottomInfos={s.customBottomInfos}
-                onMovieClick={s.onMovieClick ?? handleMovieClick}
+                onMovieClick={s.onMovieClick ?? ((movieId) => {
+                  trackEvent('curation movie selected', {
+                    movie_id: movieId,
+                    movie_title: movieById.get(movieId)?.title,
+                    source: 'films_tab',
+                    list_id: s.listId,
+                  })
+                  handleMovieClick(movieId)
+                })}
                 compact={compact} />
             )
           }
