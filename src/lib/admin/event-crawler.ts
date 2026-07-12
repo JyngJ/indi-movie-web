@@ -1,4 +1,5 @@
 import type { AdminEventSource, CrawledEventCandidate, EventType } from '@/types/admin'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 
 export interface EventParseContext {
   source: AdminEventSource
@@ -597,6 +598,65 @@ export async function crawlLaikaCinemaEvents(
   return dedupEventCandidates(candidates)
 }
 
+// ── 디트릭스(dtryx) GV — 별도 페이지 스크래핑 아님, 이미 크롤된 showtimes에서 유도 ──
+// dtryx 소속 극장들(아트나인·아트하우스모모·씨네인디U·씨네아트리좀·아리랑시네센터·
+// 오오극장 등)은 GV 회차를 별도 게시판이 아니라 상영시간표 자체의 screen_name에
+// "#GV"/"GV" 마커로 표기한다(예: "2관 2D-#GV(자막)"). 이미 상영시간표 크롤러가
+// 수집해둔 showtimes 테이블을 그대로 읽어 유도하므로 dtryx에 별도 요청을 보내지
+// 않는다 — concurrency 1 rate limit과 무관.
+const GV_SCREEN_NAME_RE = /#?\s*GV|관객과의\s*대화|무대인사/i
+
+export async function crawlDtryxGvEvents(
+  context: EventParseContext,
+): Promise<CrawledEventCandidate[]> {
+  const theaterId = context.source.matchedTheaterId
+  if (!theaterId) return [] // 극장 매칭 전이면 조회 불가 — 매칭 후 다음 크론에 자동 수집됨
+
+  const supabase = createSupabaseAdminClient()
+  const today = new Date().toISOString().slice(0, 10)
+
+  const { data: rows, error } = await supabase
+    .from('showtimes')
+    .select('movie_id, show_date, show_time, screen_name, booking_url, movies(title)')
+    .eq('theater_id', theaterId)
+    .eq('is_active', true)
+    .gte('show_date', today)
+    .or('screen_name.ilike.%GV%,screen_name.ilike.%관객과의%,screen_name.ilike.%무대인사%')
+
+  if (error) throw new Error(`GV 상영 조회 실패: ${error.message}`)
+
+  const candidates: CrawledEventCandidate[] = []
+  for (const row of (rows ?? []) as Array<{
+    movie_id: string; show_date: string; show_time: string
+    screen_name: string | null; booking_url: string | null
+    movies: { title?: string } | { title?: string }[] | null
+  }>) {
+    if (!GV_SCREEN_NAME_RE.test(row.screen_name ?? '')) continue
+    const movieRow = Array.isArray(row.movies) ? row.movies[0] : row.movies
+    const movieTitle = movieRow?.title
+    if (!movieTitle) continue
+
+    const eventTime = row.show_time.slice(0, 5)
+    candidates.push(
+      buildEventCandidate({
+        context,
+        eventType: 'gv',
+        title: `GV: <${movieTitle}> ${row.show_date} ${eventTime}`,
+        movieTitle,
+        eventDate: row.show_date,
+        eventTime,
+        guests: [],
+        sourceUrl: context.source.listingUrl,
+        bookingUrl: row.booking_url ?? undefined,
+        rawText: JSON.stringify(row),
+        confidence: 0.85,
+      }),
+    )
+  }
+
+  return dedupEventCandidates(candidates)
+}
+
 // ── 메인 디스패처 ─────────────────────────────────────────────────────────
 
 export async function crawlEventCandidates(
@@ -615,6 +675,11 @@ export async function crawlEventCandidates(
       return crawlIndispaceEvents(context)
     case 'laikaCinemaEvents':
       return crawlLaikaCinemaEvents(context)
+    case 'dtryxGvEvents':
+      return crawlDtryxGvEvents(context)
+    case 'seoulArtEvents':
+      // TODO: 서울아트시네마 GV는 별도 게시판(cinematheque.seoul.kr)에서 관리돼 아직 미구현.
+      return []
     default:
       throw new Error(`알 수 없는 이벤트 파서: ${context.source.parser}`)
   }
