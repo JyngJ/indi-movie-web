@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useUIStore } from '@/store/uiStore'
+import { Flag } from 'lucide-react'
 
 /** §5 바텀 탭바 표준 높이(safe-area 포함) — 다른 화면 요소가 이 값만큼 비켜야 함 */
 export const GLOBAL_NAV_MOBILE_HEIGHT = 60
@@ -123,6 +124,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
   const isSearchOpen = useUIStore((s) => s.isSearchOpen)
   const setSearchOpen = useUIStore((s) => s.setSearchOpen)
   const setSettingsOpen = useUIStore((s) => s.setSettingsOpen)
+  const openSettingsPage = useUIStore((s) => s.openSettingsPage)
   const toggleMapDockCollapsed = useUIStore((s) => s.toggleMapDockCollapsed)
 
   const renderRailTab = ({ key, href, label, Icon }: MobileTab) => {
@@ -194,8 +196,35 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
         {DESKTOP_RAIL_TABS.map(renderRailTab)}
       </div>
 
-      {/* 하단 그룹: 인스타 바로가기 — 구분선 — 설정 */}
+      {/* 하단 그룹: 신고 — 인스타 바로가기 — 구분선 — 설정 */}
       <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, width: '100%' }}>
+        <button
+          type="button"
+          onClick={() => {
+            if (isSearchOpen) setSearchOpen(false)
+            openSettingsPage('report')
+          }}
+          aria-label="신고"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 4,
+            padding: '8px 4px',
+            marginLeft: 8,
+            marginRight: 8,
+            width: 'calc(100% - 16px)',
+            borderRadius: 10,
+            border: 'none',
+            background: 'transparent',
+            color: INACTIVE_COLOR,
+            cursor: 'pointer',
+          }}
+        >
+          <Flag size={21} strokeWidth={1.8} color="currentColor" />
+          <span style={{ fontSize: 10.5, fontWeight: 600 }}>신고</span>
+        </button>
+
         <a
           href="https://www.instagram.com/indi.movie.map/"
           target="_blank"
@@ -216,7 +245,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
           }}
         >
           <IconInstagram size={21} />
-          <span style={{ fontSize: 10.5, fontWeight: 600 }}>SNS</span>
+          <span style={{ fontSize: 10.5, fontWeight: 600 }}>Insta</span>
         </a>
 
         <div style={{ width: 'calc(100% - 32px)', height: 1, background: 'var(--color-border)' }} />

@@ -18,6 +18,7 @@ export default function TabsLayout({ children }: { children: ReactNode }) {
   const isOnMap = pathname === '/'
   const settingsOpen = useUIStore((s) => s.isSettingsOpen)
   const setSettingsOpen = useUIStore((s) => s.setSettingsOpen)
+  const settingsInitialPage = useUIStore((s) => s.settingsInitialPage)
   const isDark = useIsDark()
   const { setTheme } = useThemeStore()
   const isDesktopLayout = useIsDesktopLayout()
@@ -59,6 +60,7 @@ export default function TabsLayout({ children }: { children: ReactNode }) {
           isDesktopLayout={isDesktopLayout}
           isDark={isDark}
           onSetTheme={(theme) => void setTheme(theme)}
+          initialPage={settingsInitialPage}
         />
       )}
 

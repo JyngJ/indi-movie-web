@@ -1133,6 +1133,7 @@ export default function MapView() {
 
   const dummyInputRef = useRef<HTMLInputElement>(null)
   const settingsOpen = useUIStore((s) => s.isSettingsOpen)
+  const settingsInitialPage = useUIStore((s) => s.settingsInitialPage)
   const setSettingsOpen = useUIStore((s) => s.setSettingsOpen)
   // 큐레이션에서 선택한 영화 — MovieSheet를 띄움. null이면 닫힘
   const [movieSheetId, setMovieSheetId] = useState<string | null>(null)
@@ -3607,6 +3608,7 @@ export default function MapView() {
           onSetTheme={(theme) => void setTheme(theme)}
           selectedMovieId={selectedMovieId}
           selectedTheaterName={selectedTheater?.name}
+          initialPage={settingsInitialPage}
         />
       )}
 
