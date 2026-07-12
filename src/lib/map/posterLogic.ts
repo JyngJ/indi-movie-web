@@ -23,10 +23,11 @@ export interface ScreeningDay {
   times: string[] // 'HH:MM', 정렬됨
 }
 
-// 단일 영화 필터 시 핀에 상영 날짜만 노출하는 줌 임계값 (중간 단계)
-export const SHOWTIME_DATES_ZOOM_THRESHOLD = 15
-// 단일 영화 필터 시 핀에 날짜별 전체 시간표를 노출하는 줌 임계값 (근접 단계)
-export const SHOWTIME_FULL_ZOOM_THRESHOLD = 17
+// 단일 영화 필터 시 핀에 상영 날짜만/전체 시간표를 노출하는 줌 임계값
+// 모바일·태블릿은 화면이 작아 한 화면에 담기는 지도 범위가 넓은 만큼, 더 멀리서도(줌아웃 상태에서도) 보이도록 데스크톱보다 2단계 낮춘다
+export function showtimeZoomThresholds(isDesktop: boolean): { dates: number; full: number } {
+  return isDesktop ? { dates: 15, full: 17 } : { dates: 13, full: 15 }
+}
 
 const WEEKDAY_KO = ['일', '월', '화', '수', '목', '금', '토']
 
