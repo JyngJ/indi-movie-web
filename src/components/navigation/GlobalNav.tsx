@@ -123,7 +123,6 @@ function MobileTabBar({ pathname, filmsHref }: { pathname: string; filmsHref: st
 function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: string }) {
   const isSearchOpen = useUIStore((s) => s.isSearchOpen)
   const setSearchOpen = useUIStore((s) => s.setSearchOpen)
-  const setSettingsOpen = useUIStore((s) => s.setSettingsOpen)
   const openSettingsPage = useUIStore((s) => s.openSettingsPage)
   const toggleMapDockCollapsed = useUIStore((s) => s.toggleMapDockCollapsed)
 
@@ -254,7 +253,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
           type="button"
           onClick={() => {
             if (isSearchOpen) setSearchOpen(false)
-            setSettingsOpen(true)
+            openSettingsPage('main')
           }}
           aria-label="설정"
           style={{
