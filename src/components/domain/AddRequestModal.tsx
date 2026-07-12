@@ -35,6 +35,23 @@ const NOTE_HINT: Record<UserRequestKind, string> = {
   etc: '자세히 적어주시면 도움이 됩니다',
 }
 
+export function AddRequestCtaButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 6,
+        height: 36, padding: '0 18px', borderRadius: 999,
+        border: 'none', cursor: 'pointer', minHeight: 'unset',
+        background: 'var(--color-primary-base)', color: '#fff',
+        fontSize: 13, fontWeight: 600,
+      }}
+    >
+      추가 요청하기
+    </button>
+  )
+}
+
 export function AddRequestModal({ open, query, onClose }: Props) {
   const isDesktop = useIsDesktopLayout()
   const [mounted, setMounted] = useState(false)

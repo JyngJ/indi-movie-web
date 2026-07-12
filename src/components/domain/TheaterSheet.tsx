@@ -1600,12 +1600,20 @@ export function TheaterSheet({
                                   }}>매진</div>
                                 )}
                                 {unavailable && (() => {
-                                  const nextDates = [...entry.availableDates].filter(d => d > selectedIsoDate).sort()
-                                  const nextLabel = nextDates.length > 0 ? (() => {
-                                    const [y, m, d] = nextDates[0].split('-').map(Number)
-                                    const dt = new Date(y, m - 1, d)
-                                    return `${dt.getDate()}일(${'일월화수목금토'[dt.getDay()]})`
-                                  })() : null
+                                  const allDates = [...entry.availableDates].sort()
+                                  const MAX_SHOWN = 4
+                                  const selectedTime = new Date(selectedIsoDate).getTime()
+                                  // 선택한 날짜 기준 가장 가까운 상영일부터(과거·미래 상관없이) 채움
+                                  const nearestDates = [...allDates]
+                                    .sort((a, b) => Math.abs(new Date(a).getTime() - selectedTime) - Math.abs(new Date(b).getTime() - selectedTime))
+                                    .slice(0, MAX_SHOWN)
+                                  const shownSet = new Set(nearestDates)
+                                  const nextDates = allDates.filter((d) => shownSet.has(d))
+                                  const dateLabels = nextDates.map((iso) => ({
+                                    iso,
+                                    label: `${Number(iso.split('-')[2])}일`,
+                                  }))
+                                  const moreCount = allDates.length - dateLabels.length
                                   return (
                                     <div
                                       onClick={() => handleMovieSelect(movie.id, 'unavailable_movie_card')}
@@ -1615,15 +1623,30 @@ export function TheaterSheet({
                                         background: 'rgba(10, 8, 6, 0.72)',
                                         display: 'flex', flexDirection: 'column',
                                         alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                                        gap: 2,
+                                        gap: 3,
                                       }}
                                     >
-                                      <span style={{ fontSize: 8, fontWeight: 500, color: 'rgba(255,255,255,0.55)', textAlign: 'center' }}>
-                                        다음 상영
+                                      <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.6)', textAlign: 'center' }}>
+                                        상영 일정
                                       </span>
-                                      <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.85)', textAlign: 'center', lineHeight: 1.3 }}>
-                                        {nextLabel ?? '일정 없음'}
-                                      </span>
+                                      {dateLabels.length > 0 ? (
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                                          {dateLabels.map(({ iso, label }) => (
+                                            <span key={iso} style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.9)', lineHeight: 1.3 }}>
+                                              {label}
+                                            </span>
+                                          ))}
+                                          {moreCount > 0 && (
+                                            <span style={{ fontSize: 10, fontWeight: 500, color: 'rgba(255,255,255,0.55)', marginTop: 1 }}>
+                                              +{moreCount}
+                                            </span>
+                                          )}
+                                        </div>
+                                      ) : (
+                                        <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.85)', textAlign: 'center' }}>
+                                          일정 없음
+                                        </span>
+                                      )}
                                     </div>
                                   )
                                 })()}

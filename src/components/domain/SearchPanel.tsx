@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, type ReactNode, type RefObject } from 'react'
+import { useEffect, useState, type ReactNode, type RefObject } from 'react'
 import { SearchBar } from '@/components/primitives'
+import { AddRequestModal, AddRequestCtaButton } from '@/components/domain/AddRequestModal'
 
 const SEARCH_GUIDE_EXAMPLES = [
   { label: '영화관', example: '서울아트시네마' },
@@ -19,23 +20,7 @@ const SEARCH_GUIDE_EXAMPLES = [
  * 이 컴포넌트는 패널 크롬(컨테이너·검색바·최근 검색·빈/무결과 상태)만 담당한다.
  * 결과 섹션은 children으로 주입.
  */
-export function SearchPanel({
-  isDesktopLayout,
-  leftOffset,
-  width,
-  slideMode,
-  slideIn,
-  query,
-  inputRef,
-  recentSearches,
-  hasResults,
-  onQueryChange,
-  onClose,
-  onRecentSelect,
-  onRecentRemove,
-  onRecentClearAll,
-  children,
-}: {
+interface SearchPanelProps {
   isDesktopLayout: boolean
   /** 데스크톱에서 패널이 시작되는 x 오프셋(글로벌 내비 레일 폭) */
   leftOffset: number
@@ -55,7 +40,27 @@ export function SearchPanel({
   onRecentRemove: (query: string) => void
   onRecentClearAll: () => void
   children?: ReactNode
-}) {
+}
+
+export function SearchPanel({
+  isDesktopLayout,
+  leftOffset,
+  width,
+  slideMode,
+  slideIn,
+  query,
+  inputRef,
+  recentSearches,
+  hasResults,
+  onQueryChange,
+  onClose,
+  onRecentSelect,
+  onRecentRemove,
+  onRecentClearAll,
+  children,
+}: SearchPanelProps) {
+  const [requestOpen, setRequestOpen] = useState(false)
+
   // 데스크톱: 패널이 열리면(마운트되면) 검색 입력 자동 포커스 — 좌측 레일 버튼·/search 딥링크처럼
   // openSearch()를 거치지 않는 진입에서도 동일하게 동작.
   // 모바일은 iOS 키보드 정책상 클릭 핸들러 안의 동기 focus가 필요하므로 openSearch가 담당.
@@ -162,11 +167,15 @@ export function SearchPanel({
             {children}
           </div>
         ) : (
-          <p style={{ textAlign: 'center', marginTop: 60, fontSize: 14, color: 'var(--color-text-caption)' }}>
-            &ldquo;{query}&rdquo;와 일치하는 결과가 없습니다
-          </p>
+          <div style={{ textAlign: 'center', marginTop: 60 }}>
+            <p style={{ margin: '0 0 14px', fontSize: 14, color: 'var(--color-text-caption)' }}>
+              &ldquo;{query}&rdquo;와 일치하는 결과가 없습니다
+            </p>
+            <AddRequestCtaButton onClick={() => setRequestOpen(true)} />
+          </div>
         )}
       </div>
+      <AddRequestModal open={requestOpen} query={query} onClose={() => setRequestOpen(false)} />
     </div>
   )
 }
