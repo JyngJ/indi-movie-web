@@ -40,7 +40,7 @@ import {
 import { SubwayLayer } from './SubwayLayer'
 import { finiteNumber, formatDateParam, startOfLocalDay, addDays, endOfMonth, loadRecentSearches, addToRecent, removeFromRecent, clearRecentSearches } from '@/lib/map/searchUtils'
 import { stationSearchScore, movieSearchScore, directorSearchScore, theaterSearchScore, areaSearchScore } from '@/lib/map/searchScoring'
-import { posterCountForZoom, posterSizeForZoom, posterSlotsForZoom, dayLabel, SHOWTIME_DATES_ZOOM_THRESHOLD, SHOWTIME_FULL_ZOOM_THRESHOLD } from '@/lib/map/posterLogic'
+import { posterCountForZoom, posterSizeForZoom, posterSlotsForZoom, dayLabel, showtimeZoomThresholds } from '@/lib/map/posterLogic'
 import { calculateAndFormatDistance } from '@/lib/map/distanceUtils'
 import type { TheaterPosterMovie, ScreeningDay } from '@/lib/map/posterLogic'
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
@@ -152,8 +152,9 @@ function makePinIcon(
   const forceMinOne = filtersActive && posterMovies.some(m => m.matchesFilter)
   const slots = posterSlotsForZoom(posterMovies, zoom, filtersActive, forceMinOne)
   const matchCount = filtersActive ? posterMovies.filter(m => m.matchesFilter).length : undefined
-  const showSchedule = singleMovieMode && zoom >= SHOWTIME_DATES_ZOOM_THRESHOLD && slots.length === 1 && !!scheduleData?.days.length
-  const scheduleShowTimes = zoom >= SHOWTIME_FULL_ZOOM_THRESHOLD
+  const { dates: showtimeDatesThreshold, full: showtimeFullThreshold } = showtimeZoomThresholds(isDesktop)
+  const showSchedule = singleMovieMode && zoom >= showtimeDatesThreshold && slots.length === 1 && !!scheduleData?.days.length
+  const scheduleShowTimes = zoom >= showtimeFullThreshold
   const occurrenceCount = showSchedule ? posterMovies.find(m => m.matchesFilter)?.showtimeCount : undefined
   const numRows = slots.length > 3 ? 2 : slots.length > 0 ? 1 : 0
   const usePosterLeft = slots.length > 0 && safePosterOffsetX < -80
