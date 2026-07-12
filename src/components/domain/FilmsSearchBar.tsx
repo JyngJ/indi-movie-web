@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { SearchBar, SearchBarButton } from '@/components/primitives'
+import { AddRequestModal } from '@/components/domain/AddRequestModal'
 import type { Movie, Theater } from '@/types/api'
 
 const HISTORY_KEY = 'films-search-history:v1'
@@ -118,6 +119,8 @@ export function FilmsSearchBar({ movies, theaters, isDesktop }: Props) {
   const [arrowIdx, setArrowIdx]  = useState<number | null>(null)
   const [mOpen, setMOpen]        = useState(false)
   const [mInput, setMInput]      = useState('')
+  const [requestOpen, setRequestOpen] = useState(false)
+  const [requestQuery, setRequestQuery] = useState('')
 
   const desktopRef = useRef<HTMLInputElement>(null)
   const mobileRef  = useRef<HTMLInputElement>(null)
@@ -175,6 +178,7 @@ export function FilmsSearchBar({ movies, theaters, isDesktop }: Props) {
     const isTyping = iv.length > 0
 
     return (
+      <>
       <div ref={wrapRef} style={{ position: 'relative', width: '100%', zIndex: focused ? 45 : 1 }}>
 
         {/* ── Search bar ── */}
@@ -277,9 +281,12 @@ export function FilmsSearchBar({ movies, theaters, isDesktop }: Props) {
                   <div style={{ height: 6 }} />
                 </>
               ) : (
-                <p style={{ padding: '14px 16px', margin: 0, fontSize: 13, color: 'var(--color-text-caption)' }}>
-                  &ldquo;{query}&rdquo;와 일치하는 결과가 없습니다
-                </p>
+                <div style={{ padding: '14px 16px 18px', textAlign: 'center' }}>
+                  <p style={{ margin: '0 0 12px', fontSize: 13, color: 'var(--color-text-caption)' }}>
+                    &ldquo;{query}&rdquo;와 일치하는 결과가 없습니다
+                  </p>
+                  <RequestCtaButton onClick={() => { setRequestQuery(query); setRequestOpen(true) }} />
+                </div>
               )
             ) : (
               <>
@@ -299,6 +306,8 @@ export function FilmsSearchBar({ movies, theaters, isDesktop }: Props) {
           </div>
         )}
       </div>
+      <AddRequestModal open={requestOpen} query={requestQuery} onClose={() => setRequestOpen(false)} />
+      </>
     )
   }
 
@@ -362,9 +371,12 @@ export function FilmsSearchBar({ movies, theaters, isDesktop }: Props) {
                 ))}
               </div>
             ) : (
-              <p style={{ textAlign: 'center', marginTop: 60, fontSize: 14, color: 'var(--color-text-caption)' }}>
-                &ldquo;{mInput}&rdquo;와 일치하는 결과가 없습니다
-              </p>
+              <div style={{ textAlign: 'center', marginTop: 60 }}>
+                <p style={{ margin: '0 0 14px', fontSize: 14, color: 'var(--color-text-caption)' }}>
+                  &ldquo;{mInput}&rdquo;와 일치하는 결과가 없습니다
+                </p>
+                <RequestCtaButton onClick={() => { setRequestQuery(mInput.trim()); setRequestOpen(true) }} />
+              </div>
             )
           ) : (
             <>
@@ -402,6 +414,24 @@ export function FilmsSearchBar({ movies, theaters, isDesktop }: Props) {
           )}
         </div>
       </div>
+      <AddRequestModal open={requestOpen} query={requestQuery} onClose={() => setRequestOpen(false)} />
     </>
+  )
+}
+
+function RequestCtaButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 6,
+        height: 36, padding: '0 18px', borderRadius: 999,
+        border: 'none', cursor: 'pointer', minHeight: 'unset',
+        background: 'var(--color-primary-base)', color: '#fff',
+        fontSize: 13, fontWeight: 600,
+      }}
+    >
+      추가 요청하기
+    </button>
   )
 }

@@ -9,6 +9,8 @@ import { after } from 'next/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { formatDiscordReportEmbeds, parseReportAction, reportActionComponents } from '@/lib/reports/discord'
 import { updateReportStatus } from '@/lib/reports/store'
+import { formatDiscordUserRequestEmbeds, parseUserRequestAction, userRequestActionComponents } from '@/lib/userRequests/discord'
+import { updateUserRequestStatus } from '@/lib/userRequests/store'
 import { approveShowtimeCandidates } from '@/lib/admin/store'
 import OpenAI from 'openai'
 import nacl from 'tweetnacl'
@@ -364,6 +366,26 @@ export async function POST(request: Request) {
       })
 
       return Response.json({ type: InteractionResponse.DEFERRED_UPDATE_MESSAGE })
+    }
+
+    // 추가 요청하기 버튼 액션
+    if (customId.startsWith('user_request:')) {
+      const requestAction = parseUserRequestAction(customId)
+      if (!requestAction) return ephemeralResponse('알 수 없는 액션입니다.')
+
+      try {
+        const userRequest = await updateUserRequestStatus(requestAction.requestId, requestAction.status)
+        return Response.json({
+          type: InteractionResponse.UPDATE_MESSAGE,
+          data: {
+            embeds: formatDiscordUserRequestEmbeds(userRequest, requestAction.status),
+            components: userRequestActionComponents(userRequest.id, true),
+            allowed_mentions: { parse: [] },
+          },
+        })
+      } catch (error) {
+        return ephemeralResponse(error instanceof Error ? error.message : '요청 상태를 변경하지 못했습니다.')
+      }
     }
 
     // 제보 리포트 버튼 액션
