@@ -31,6 +31,8 @@ export type AnalyticsEventName =
   | 'onboarding viewed'
   | 'onboarding skipped'
   | 'onboarding completed'
+  | 'add request opened'
+  | 'add request submitted'
 
 export type AnalyticsSource =
   | 'direct'
