@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { Sun, Moon, HeartHandshake } from 'lucide-react'
 import Link from 'next/link'
+import { useLockBodyScroll } from '@/hooks/useLockBodyScroll'
 
 export type SettingsPage = 'main' | 'report' | 'attribution' | 'about'
 type Page = SettingsPage
@@ -222,10 +223,11 @@ export function SettingsReportPage({
       form.set('detail', detail)
       form.set('email', email)
       form.set('consent', String(consent))
-      if (selectedMovieId) form.set('movie_id', selectedMovieId)
-      if (selectedTheaterName) form.set('theater_name', selectedTheaterName)
-      files.forEach(f => form.append('screenshots', f))
-      const res = await fetch('/api/report', { method: 'POST', body: form })
+      form.set('pageUrl', window.location.href)
+      if (selectedMovieId) form.set('selectedMovieId', selectedMovieId)
+      if (selectedTheaterName) form.set('selectedTheaterName', selectedTheaterName)
+      files.forEach(f => form.append('files', f))
+      const res = await fetch('/api/reports', { method: 'POST', body: form })
       if (!res.ok) throw new Error(`서버 오류 ${res.status}`)
       onSuccess()
     } catch (e) {
@@ -442,6 +444,7 @@ export function SettingsPanel({
   onSetTheme,
   selectedMovieId,
   selectedTheaterName,
+  initialPage = 'main',
 }: {
   isOpen: boolean
   onClose: () => void
@@ -450,9 +453,17 @@ export function SettingsPanel({
   onSetTheme: (theme: 'light' | 'dark') => void
   selectedMovieId?: string | null
   selectedTheaterName?: string
+  initialPage?: Page
 }) {
   const [page, setPage] = useState<Page>('main')
   const [reportSuccess, setReportSuccess] = useState(false)
+
+  useLockBodyScroll(isOpen)
+
+  // 열릴 때마다 요청된 첫 페이지로 진입 — 좌측 레일 '신고' 버튼은 바로 report로 들어옴
+  useEffect(() => {
+    if (isOpen) setPage(initialPage)
+  }, [isOpen, initialPage])
 
   const handleClose = () => {
     onClose()

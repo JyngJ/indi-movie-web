@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Film, Building2, User, MoreHorizontal, Check } from 'lucide-react'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
+import { useLockBodyScroll } from '@/hooks/useLockBodyScroll'
 import { trackEvent } from '@/lib/analytics/client'
 import type { UserRequestKind } from '@/lib/userRequests/types'
 
@@ -44,6 +45,8 @@ export function AddRequestModal({ open, query, onClose }: Props) {
   const [note, setNote] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useLockBodyScroll(open)
 
   useEffect(() => { setMounted(true) }, [])
 

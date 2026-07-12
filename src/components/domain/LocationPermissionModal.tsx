@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
+import { useLockBodyScroll } from '@/hooks/useLockBodyScroll'
 import type { LocationPermState } from '@/hooks/useLocationPermission'
 import { Lock } from 'lucide-react'
 
@@ -32,6 +33,8 @@ export function LocationPermissionModal({ state, onRequest, onDismiss }: Props) 
   const isDesktop = useIsDesktopLayout()
   const [mounted, setMounted] = useState(false)
   const [visible, setVisible] = useState(false)
+
+  useLockBodyScroll(true)
 
   useEffect(() => {
     setMounted(true)
