@@ -20,6 +20,7 @@ import { useMomentumScroll } from '@/hooks/useMomentumScroll'
 import { shareAdapter } from '@/lib/adapters/share'
 import { GvEventSection } from './GvEventSection'
 import { GvDetailPanel } from './GvDetailPanel'
+import { BookingCtaButton, ShareScheduleButton } from './booking/BookingActions'
 import type { GvEvent } from '@/data/gv-events'
 
 /* ── 상수 ──────────────────────────────────────────────────────── */
@@ -1933,10 +1934,11 @@ export function TheaterSheet({
       {/* ── 예매 바 — 회차 선택 시 하단에서 슬라이드 업 ── */}
       {shownExpanded && (() => {
         const selectedSt = filteredShowtimes.find((st) => st.id === selectedShowtimeId)
+        const normalizedBookingUrl = selectedSt?.bookingUrl?.replace(/^http:\/\//i, 'https://')
         return (
           <div style={{
             position: 'absolute',
-            left: 0, right: 0, 
+            left: 0, right: 0,
             bottom: 0,
             transform: (selectedShowtimeId && showtimeInView) ? 'translateY(0)' : 'translateY(100%)',
             transition: 'transform 0.28s cubic-bezier(0.32, 0.72, 0, 1)',
@@ -1945,39 +1947,26 @@ export function TheaterSheet({
             padding: '12px 20px',
             paddingBottom: panelMode ? 'max(12px, env(safe-area-inset-bottom))' : `calc(12px + ${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`,
             zIndex: 10,
+            display: 'flex', gap: 10,
           }}>
-            <button
-              disabled={!selectedSt?.bookingUrl}
+            <ShareScheduleButton variant="bar" onClick={shareTheater} />
+            <BookingCtaButton
+              variant="bar"
+              bookingUrl={normalizedBookingUrl}
               onClick={() => {
-                if (selectedSt?.bookingUrl) {
-                  trackEvent('booking clicked', {
-                    theater_id: theater.id,
-                    theater_name: theater.name,
-                    movie_id: selectedSt.movieId,
-                    movie_title: selectedSt.movieTitle,
-                    showtime_id: selectedSt.id,
-                    show_date: selectedSt.showDate,
-                    show_time: selectedSt.showTime,
-                    source: 'theater_sheet',
-                  })
-                  window.open(selectedSt.bookingUrl.replace(/^http:\/\//i, 'https://'), '_blank', 'noopener')
-                }
+                if (!selectedSt) return
+                trackEvent('booking clicked', {
+                  theater_id: theater.id,
+                  theater_name: theater.name,
+                  movie_id: selectedSt.movieId,
+                  movie_title: selectedSt.movieTitle,
+                  showtime_id: selectedSt.id,
+                  show_date: selectedSt.showDate,
+                  show_time: selectedSt.showTime,
+                  source: 'theater_sheet',
+                })
               }}
-              style={{
-                width: '100%',
-                height: 50,
-                borderRadius: 'var(--radius-full)',
-                backgroundColor: selectedSt?.bookingUrl ? 'var(--color-primary-base)' : 'var(--color-neutral-600)',
-                color: '#fff',
-                fontSize: 16,
-                fontWeight: 700,
-                border: 'none',
-                cursor: selectedSt?.bookingUrl ? 'pointer' : 'default',
-                letterSpacing: '-0.2px',
-              }}
-            >
-              예매하러가기
-            </button>
+            />
           </div>
         )
       })()}

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { useMovieTheaterShowtimes, useDirectorProfile } from '@/lib/supabase/queries'
 import type { MovieDetail } from '@/lib/supabase/queries'
@@ -12,6 +12,8 @@ import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWi
 import { getStoredRegion } from '@/lib/regionStorage'
 import { getRegionFromAddress } from '@/lib/regions'
 import { trackEvent } from '@/lib/analytics/client'
+import { shareAdapter } from '@/lib/adapters/share'
+import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/components/domain/booking/BookingActions'
 import { MapPin } from 'lucide-react'
 
 function useIsDesktop() {
@@ -44,7 +46,6 @@ const IcoMap = () => <svg width={16} height={16} viewBox="0 0 24 24" fill="none"
 const IcoShare = () => <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>
 const IcoPin = () => <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" /></svg>
 const IcoUser = () => <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-const IcoX = () => <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
 
 /* ── ShowtimeChip ──────────────────────────────────────────────── */
 function ShowtimeChip({ st, selected, onClick }: { st: Showtime; selected?: boolean; onClick?: () => void }) {
@@ -98,6 +99,7 @@ function DirectorChipLoader({ name, onClick }: { name: string; onClick: () => vo
 /* ── 메인 ────────────────────────────────────────────────────────── */
 export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const isDesktop = useIsDesktop()
 
   const dates = useMemo(() => getDateRange(7), [])
@@ -105,8 +107,39 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
   const [regionId, setRegionId] = useState<string | null>(() => getStoredRegion())
   const [selectedShowtimeId, setSelectedShowtimeId] = useState<string | null>(null)
   const [selectedTheaterId, setSelectedTheaterId] = useState<string | null>(null)
+  // 공유 링크(?date=&theater=&showtime=)로 들어왔을 때, 날짜 변경 시 선택 초기화하는
+  // 아래 effect가 복원 직후 곧바로 리셋해버리지 않도록 1회 억제한다.
+  const suppressResetOnDateChangeRef = useRef(false)
 
   const { data: theaterEntries = [], isLoading } = useMovieTheaterShowtimes(movie.id)
+
+  // 공유 링크로 진입 시 선택된 회차 복원
+  const restoredShareRef = useRef(false)
+  useEffect(() => {
+    if (restoredShareRef.current) return
+    const dateParam = searchParams.get('date')
+    const theaterParam = searchParams.get('theater')
+    const showtimeParam = searchParams.get('showtime')
+    if (!dateParam || !theaterParam || !showtimeParam) return
+    if (theaterEntries.length === 0) return
+
+    const entry = theaterEntries.find((e) => e.theaterId === theaterParam)
+    const group = entry?.dateGroups.find((g) => g.date === dateParam)
+    const st = group?.showtimes.find((s) => s.id === showtimeParam)
+    if (!entry || !st) return
+
+    restoredShareRef.current = true
+    suppressResetOnDateChangeRef.current = true
+    setSelectedDate(dateParam)
+    setSelectedTheaterId(theaterParam)
+    setSelectedShowtimeId(showtimeParam)
+
+    const url = new URL(window.location.href)
+    url.searchParams.delete('date')
+    url.searchParams.delete('theater')
+    url.searchParams.delete('showtime')
+    window.history.replaceState({}, '', url.toString())
+  }, [searchParams, theaterEntries])
 
   // 날짜별 showtimes 유무
   const activeDates = useMemo(() => {
@@ -128,8 +161,12 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeDates])
 
-  // 날짜 변경 시 선택 회차 초기화
+  // 날짜 변경 시 선택 회차 초기화 (공유 링크 복원 직후 1회는 건너뜀)
   useEffect(() => {
+    if (suppressResetOnDateChangeRef.current) {
+      suppressResetOnDateChangeRef.current = false
+      return
+    }
     setSelectedShowtimeId(null)
     setSelectedTheaterId(null)
   }, [selectedDate])
@@ -161,6 +198,43 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
     if (!st) return null
     return { st, theaterName: entry.theaterName, theaterAddress: entry.theaterAddress }
   }, [selectedShowtimeId, selectedTheaterId, dayTheaters])
+
+  const shareSelectedShowtime = () => {
+    if (!selectedShowtimeData || !selectedTheaterId) return
+    trackEvent('share clicked', {
+      movie_id: movie.id,
+      movie_title: movie.title,
+      theater_id: selectedTheaterId,
+      theater_name: selectedShowtimeData.theaterName,
+      showtime_id: selectedShowtimeData.st.id,
+      source: 'films_movie_detail',
+    })
+    const url = new URL(window.location.href)
+    url.searchParams.set('date', selectedDate)
+    url.searchParams.set('theater', selectedTheaterId)
+    url.searchParams.set('showtime', selectedShowtimeData.st.id)
+    const shareUrl = url.toString()
+    const title = `${movie.title} - ${selectedShowtimeData.theaterName} ${selectedShowtimeData.st.showTime.slice(0, 5)}`
+    const payload = { title, url: shareUrl }
+    const copyFallback = () => { shareAdapter.copyToClipboardAsync(shareUrl) }
+    if (shareAdapter.canShare(payload)) {
+      shareAdapter.share(payload).then((result) => { if (result === 'error') copyFallback() })
+      return
+    }
+    copyFallback()
+  }
+
+  // 회차가 선택돼있으면 그 회차까지 실어서 지도로 — 선택 안 돼있으면 영화 필터만
+  function mapUrlWithSelection() {
+    const url = new URL('/', window.location.origin)
+    url.searchParams.set('movie', movie.id)
+    if (selectedShowtimeData && selectedTheaterId) {
+      url.searchParams.set('theater', selectedTheaterId)
+      url.searchParams.set('date', selectedDate)
+      url.searchParams.set('showtime', selectedShowtimeData.st.id)
+    }
+    return url.pathname + url.search
+  }
 
   const meta = [
     movie.nation ? withFlagsRaw(movie.nation) : undefined,
@@ -220,7 +294,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
   const ctaButtons = (
     <div style={{ padding: isDesktop ? '0 0 20px' : '12px 16px', display: 'flex', gap: 8 }}>
       <button
-        onClick={() => router.push(`/?movie=${movie.id}`)}
+        onClick={() => router.push(mapUrlWithSelection())}
         style={{ flex: 1, height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, borderRadius: 10, border: '1px solid var(--color-primary-base)', backgroundColor: 'var(--color-primary-base)', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
       >
         <IcoMap /> 지도에서 상영관 필터로 보기
@@ -281,7 +355,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
           <MapPin size={20} strokeWidth={2} color="var(--color-primary-base)" /> 상영 영화관 및 일정
         </span>
         <button
-          onClick={() => router.push(`/?movie=${movie.id}`)}
+          onClick={() => router.push(mapUrlWithSelection())}
           style={{ height: 30, padding: '0 12px', borderRadius: 99, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', color: 'var(--color-text-body)', fontSize: 12, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, minHeight: 'auto' }}
         >
           <IcoMap /> 지도에서 필터로 보기
@@ -383,9 +457,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
       <div style={{ padding: '14px 14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', color: 'var(--color-text-caption)' }}>회차 선택됨</span>
-          <button onClick={() => { setSelectedShowtimeId(null); setSelectedTheaterId(null) }} style={{ width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--color-border)', background: 'var(--color-surface-raised)', borderRadius: 99, cursor: 'pointer', color: 'var(--color-text-caption)', padding: 0, minHeight: 'auto' }}>
-            <IcoX />
-          </button>
+          <CloseRoundButton variant="card" onClick={() => { setSelectedShowtimeId(null); setSelectedTheaterId(null) }} />
         </div>
         <div>
           <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-serif)', lineHeight: 1.3 }}>{movie.title}</div>
@@ -408,8 +480,11 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
             </div>
           ))}
         </div>
-        {selectedShowtimeData.st.bookingUrl ? (
-          <a href={selectedShowtimeData.st.bookingUrl} target="_blank" rel="noopener noreferrer"
+        <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+          <ShareScheduleButton variant="card" onClick={shareSelectedShowtime} />
+          <BookingCtaButton
+            variant="card"
+            bookingUrl={selectedShowtimeData.st.bookingUrl}
             onClick={() => trackEvent('booking clicked', {
               theater_id: selectedTheaterId ?? undefined,
               theater_name: selectedShowtimeData.theaterName,
@@ -420,14 +495,8 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
               show_time: selectedShowtimeData.st.showTime,
               source: 'films_movie_detail',
             })}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 44, borderRadius: 10, backgroundColor: 'var(--color-primary-base)', color: '#fff', fontSize: 14, fontWeight: 700, textDecoration: 'none', marginTop: 4 }}>
-            예매하러 가기 →
-          </a>
-        ) : (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 40, borderRadius: 10, backgroundColor: 'var(--color-surface-raised)', color: 'var(--color-text-caption)', fontSize: 12, border: '1px solid var(--color-border)', marginTop: 4 }}>
-            예매 링크 없음
-          </div>
-        )}
+          />
+        </div>
       </div>
     </div>
   ) : null
@@ -495,7 +564,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100, backgroundColor: 'var(--color-surface-card)', borderTop: '1px solid var(--color-border)', padding: '12px 16px', paddingBottom: 'max(16px, env(safe-area-inset-bottom))', boxShadow: '0 -4px 20px rgba(0,0,0,0.12)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>
+              <div style={{ fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-serif)', fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>
                 {selectedShowtimeData.st.showTime.slice(0, 5)}
                 {selectedShowtimeData.st.endTime && <span style={{ fontSize: 12, color: 'var(--color-text-caption)', marginLeft: 6, fontWeight: 400 }}>→ {selectedShowtimeData.st.endTime.slice(0, 5)}</span>}
               </div>
@@ -505,12 +574,15 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
                 {selectedShowtimeData.st.seatTotal > 0 ? ` · 잔여 ${selectedShowtimeData.st.seatAvailable}석` : ''}
               </div>
             </div>
-            <button onClick={() => { setSelectedShowtimeId(null); setSelectedTheaterId(null) }} style={{ marginLeft: 12, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'var(--color-surface-raised)', borderRadius: 99, cursor: 'pointer', color: 'var(--color-text-caption)', flexShrink: 0, minHeight: 'auto' }}>
-              <IcoX />
-            </button>
+            <div style={{ marginLeft: 12 }}>
+              <CloseRoundButton variant="bar" onClick={() => { setSelectedShowtimeId(null); setSelectedTheaterId(null) }} />
+            </div>
           </div>
-          {selectedShowtimeData.st.bookingUrl ? (
-            <a href={selectedShowtimeData.st.bookingUrl} target="_blank" rel="noopener noreferrer"
+          <div style={{ display: 'flex', gap: 10 }}>
+            <ShareScheduleButton variant="bar" onClick={shareSelectedShowtime} />
+            <BookingCtaButton
+              variant="bar"
+              bookingUrl={selectedShowtimeData.st.bookingUrl}
               onClick={() => trackEvent('booking clicked', {
                 theater_id: selectedTheaterId ?? undefined,
                 theater_name: selectedShowtimeData.theaterName,
@@ -521,14 +593,8 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
                 show_time: selectedShowtimeData.st.showTime,
                 source: 'films_movie_detail',
               })}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 48, borderRadius: 12, backgroundColor: 'var(--color-primary-base)', color: '#fff', fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
-              예매하러 가기 →
-            </a>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 48, borderRadius: 12, backgroundColor: 'var(--color-surface-raised)', color: 'var(--color-text-caption)', fontSize: 13, border: '1px solid var(--color-border)' }}>
-              예매 링크 없음
-            </div>
-          )}
+            />
+          </div>
         </div>,
         document.body,
       )}

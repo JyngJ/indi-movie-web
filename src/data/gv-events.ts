@@ -3,8 +3,11 @@ export type GvEventType = 'GV' | '토크' | '상영회' | '이벤트'
 
 export interface GvEvent {
   id: string
+  theaterId?: string
   theaterName: string
+  movieId?: string
   movie: string
+  eventDate?: string
   guest?: string
   time: string
   status: GvStatus
