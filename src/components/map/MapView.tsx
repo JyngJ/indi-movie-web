@@ -455,7 +455,9 @@ function getRegionGroup(city: string, theater?: Theater): string {
     '제주': '제주도',
     '세종': '세종',
   }
-  return doGroups[city] || city
+  // city 누락/미매핑 시에도 반드시 truthy 라벨 반환 — falsy면 클러스터 아이콘이
+  // 지역 배지 대신 편수 태그 모드로 렌더되고 위치도 한국 중심 fallback으로 튐
+  return doGroups[city] || city || '기타'
 }
 
 function getRegionCenter(region: string): { lat: number; lng: number } {
