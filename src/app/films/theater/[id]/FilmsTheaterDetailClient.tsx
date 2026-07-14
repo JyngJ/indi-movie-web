@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useMemo, useRef } from 'react'
+import { createPortal } from 'react-dom'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { useTheaterShowtimes, useTheaterAllMovies } from '@/lib/supabase/queries'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
@@ -9,6 +10,8 @@ import { withFlagsRaw } from '@/lib/nations'
 import type { Theater, Movie, Showtime } from '@/types/api'
 import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWidget'
 import { trackEvent } from '@/lib/analytics/client'
+import { shareAdapter } from '@/lib/adapters/share'
+import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/components/domain/booking/BookingActions'
 import { Clapperboard } from 'lucide-react'
 
 function useIsDesktop() {
@@ -73,7 +76,6 @@ const IcoChevronRight = () => (
     <path d="M9 18l6-6-6-6" />
   </svg>
 )
-const IcoX = () => <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
 
 /* ── 상영시간 포맷 ─────────────────────────────────────────────── */
 function formatLabel(st: Showtime): string {
@@ -218,6 +220,7 @@ function MovieShowtimeCard({
 /* ── 메인 ────────────────────────────────────────────────────────── */
 export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const isDesktop = useIsDesktop()
 
   const dates = useMemo(() => getDateRange(7), [])
@@ -225,6 +228,10 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
   const [copied, setCopied] = useState(false)
   const [selectedShowtimeId, setSelectedShowtimeId] = useState<string | null>(null)
   const [selectedMovieTitle, setSelectedMovieTitle] = useState<string | null>(null)
+  // 공유 링크(?date=&showtime=)로 들어왔을 때, 날짜 변경 시 선택 초기화하는
+  // 아래 effect가 복원 직후 곧바로 리셋해버리지 않도록 1회 억제한다.
+  const suppressResetOnDateChangeRef = useRef(false)
+  const restoredShareRef = useRef(false)
 
   const { data: allMovies = [] } = useTheaterAllMovies(theater.id)
   const { data: dayData, isLoading } = useTheaterShowtimes(theater.id, selectedDate)
@@ -252,11 +259,42 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeDates])
 
-  // 날짜 변경 시 선택 회차 초기화
+  // 날짜 변경 시 선택 회차 초기화 (공유 링크 복원 직후 1회는 건너뜀)
   useEffect(() => {
+    if (suppressResetOnDateChangeRef.current) {
+      suppressResetOnDateChangeRef.current = false
+      return
+    }
     setSelectedShowtimeId(null)
     setSelectedMovieTitle(null)
   }, [selectedDate])
+
+  // 공유 링크로 진입 시 선택된 회차 복원
+  useEffect(() => {
+    if (restoredShareRef.current) return
+    const dateParam = searchParams.get('date')
+    const showtimeParam = searchParams.get('showtime')
+    if (!dateParam || !showtimeParam) return
+    if (dayShowtimes.length === 0) return
+    if (selectedDate !== dateParam) {
+      // 공유된 날짜로 먼저 이동 — dayShowtimes가 새 날짜로 다시 로드된 뒤 이 effect가 재실행된다
+      suppressResetOnDateChangeRef.current = true
+      setSelectedDate(dateParam)
+      return
+    }
+
+    const st = dayShowtimes.find((s) => s.id === showtimeParam)
+    if (!st) return
+
+    restoredShareRef.current = true
+    setSelectedShowtimeId(st.id)
+    setSelectedMovieTitle(st.movieTitle)
+
+    const url = new URL(window.location.href)
+    url.searchParams.delete('date')
+    url.searchParams.delete('showtime')
+    window.history.replaceState({}, '', url.toString())
+  }, [searchParams, dayShowtimes, selectedDate])
 
   // 영화별로 showtimes 묶기
   const movieShowtimeGroups = useMemo(() => {
@@ -275,6 +313,42 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
     if (!st) return null
     return { st, movieTitle: selectedMovieTitle }
   }, [selectedShowtimeId, selectedMovieTitle, dayShowtimes])
+
+  // 회차가 선택돼있으면 그 회차(영화+날짜+시간)까지 실어서 지도로 — 선택 안 돼있으면 극장만
+  function mapUrlWithSelection() {
+    const url = new URL('/', window.location.origin)
+    url.searchParams.set('theater', theater.id)
+    if (selectedShowtimeData) {
+      url.searchParams.set('movie', selectedShowtimeData.st.movieId)
+      url.searchParams.set('date', selectedDate)
+      url.searchParams.set('showtime', selectedShowtimeData.st.id)
+    }
+    return url.pathname + url.search
+  }
+
+  const shareSelectedShowtime = () => {
+    if (!selectedShowtimeData) return
+    trackEvent('share clicked', {
+      theater_id: theater.id,
+      theater_name: theater.name,
+      movie_id: selectedShowtimeData.st.movieId,
+      movie_title: selectedShowtimeData.movieTitle,
+      showtime_id: selectedShowtimeData.st.id,
+      source: 'films_theater_detail',
+    })
+    const url = new URL(window.location.href)
+    url.searchParams.set('date', selectedDate)
+    url.searchParams.set('showtime', selectedShowtimeData.st.id)
+    const shareUrl = url.toString()
+    const title = `${theater.name} - ${selectedShowtimeData.movieTitle} ${selectedShowtimeData.st.showTime.slice(0, 5)}`
+    const payload = { title, url: shareUrl }
+    const copyFallback = () => { shareAdapter.copyToClipboardAsync(shareUrl) }
+    if (shareAdapter.canShare(payload)) {
+      shareAdapter.share(payload).then((result) => { if (result === 'error') copyFallback() })
+      return
+    }
+    copyFallback()
+  }
 
   function copyAddress() {
     navigator.clipboard.writeText(theater.address).then(() => {
@@ -325,7 +399,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button
             style={{ ...btnBase, backgroundColor: 'var(--color-primary-base)', color: '#fff', border: 'none', flex: isDesktop ? undefined : 1 }}
-            onClick={() => router.push(`/?theater=${theater.id}`)}
+            onClick={() => router.push(mapUrlWithSelection())}
           >
             <IcoMap />
             지도에서 보기
@@ -448,9 +522,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
             <div style={{ padding: '14px 14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', color: 'var(--color-text-caption)' }}>회차 선택됨</span>
-                <button onClick={() => { setSelectedShowtimeId(null); setSelectedMovieTitle(null) }} style={{ width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--color-border)', background: 'var(--color-surface-raised)', borderRadius: 99, cursor: 'pointer', color: 'var(--color-text-caption)', padding: 0, minHeight: 'auto' }}>
-                  <IcoX />
-                </button>
+                <CloseRoundButton variant="card" onClick={() => { setSelectedShowtimeId(null); setSelectedMovieTitle(null) }} />
               </div>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-serif)', lineHeight: 1.3 }}>{selectedShowtimeData.movieTitle}</div>
@@ -473,8 +545,11 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
                   </div>
                 ))}
               </div>
-              {selectedShowtimeData.st.bookingUrl ? (
-                <a href={selectedShowtimeData.st.bookingUrl} target="_blank" rel="noopener noreferrer"
+              <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+                <ShareScheduleButton variant="card" onClick={shareSelectedShowtime} />
+                <BookingCtaButton
+                  variant="card"
+                  bookingUrl={selectedShowtimeData.st.bookingUrl}
                   onClick={() => trackEvent('booking clicked', {
                     theater_id: theater.id,
                     theater_name: theater.name,
@@ -485,14 +560,8 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
                     show_time: selectedShowtimeData.st.showTime,
                     source: 'films_theater_detail',
                   })}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 44, borderRadius: 10, backgroundColor: 'var(--color-primary-base)', color: '#fff', fontSize: 14, fontWeight: 700, textDecoration: 'none', marginTop: 4 }}>
-                  예매하러 가기 →
-                </a>
-              ) : (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 40, borderRadius: 10, backgroundColor: 'var(--color-surface-raised)', color: 'var(--color-text-caption)', fontSize: 12, border: '1px solid var(--color-border)', marginTop: 4 }}>
-                  예매 링크 없음
-                </div>
-              )}
+                />
+              </div>
             </div>
           </div>
         )}
@@ -521,11 +590,13 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
       </div>
       {content}
       <div style={{ height: 'env(safe-area-inset-bottom)' }} />
-      {selectedShowtimeData && (
+      {selectedShowtimeData && typeof document !== 'undefined' && createPortal(
+        // .page-slide-in의 transform이 컨테이닝 블록을 만들어 fixed가 페이지 하단(전체 콘텐츠 끝)에
+        // 붙어버리는 문제 — 뷰포트 기준으로 뜨도록 body에 직접 포탈로 렌더한다.
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100, backgroundColor: 'var(--color-surface-card)', borderTop: '1px solid var(--color-border)', padding: '12px 16px', paddingBottom: 'max(16px, env(safe-area-inset-bottom))', boxShadow: '0 -4px 20px rgba(0,0,0,0.12)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>
+              <div style={{ fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-serif)', fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>
                 {selectedShowtimeData.st.showTime.slice(0, 5)}
                 {selectedShowtimeData.st.endTime && <span style={{ fontSize: 12, color: 'var(--color-text-caption)', marginLeft: 6, fontWeight: 400 }}>→ {selectedShowtimeData.st.endTime.slice(0, 5)}</span>}
               </div>
@@ -535,12 +606,15 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
                 {selectedShowtimeData.st.seatTotal > 0 ? ` · 잔여 ${selectedShowtimeData.st.seatAvailable}석` : ''}
               </div>
             </div>
-            <button onClick={() => { setSelectedShowtimeId(null); setSelectedMovieTitle(null) }} style={{ marginLeft: 12, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'var(--color-surface-raised)', borderRadius: 99, cursor: 'pointer', color: 'var(--color-text-caption)', flexShrink: 0, minHeight: 'auto' }}>
-              <IcoX />
-            </button>
+            <div style={{ marginLeft: 12 }}>
+              <CloseRoundButton variant="bar" onClick={() => { setSelectedShowtimeId(null); setSelectedMovieTitle(null) }} />
+            </div>
           </div>
-          {selectedShowtimeData.st.bookingUrl ? (
-            <a href={selectedShowtimeData.st.bookingUrl} target="_blank" rel="noopener noreferrer"
+          <div style={{ display: 'flex', gap: 10 }}>
+            <ShareScheduleButton variant="bar" onClick={shareSelectedShowtime} />
+            <BookingCtaButton
+              variant="bar"
+              bookingUrl={selectedShowtimeData.st.bookingUrl}
               onClick={() => trackEvent('booking clicked', {
                 theater_id: theater.id,
                 theater_name: theater.name,
@@ -551,15 +625,10 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
                 show_time: selectedShowtimeData.st.showTime,
                 source: 'films_theater_detail',
               })}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 48, borderRadius: 12, backgroundColor: 'var(--color-primary-base)', color: '#fff', fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
-              예매하러 가기 →
-            </a>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 48, borderRadius: 12, backgroundColor: 'var(--color-surface-raised)', color: 'var(--color-text-caption)', fontSize: 13, border: '1px solid var(--color-border)' }}>
-              예매 링크 없음
-            </div>
-          )}
-        </div>
+            />
+          </div>
+        </div>,
+        document.body,
       )}
     </div>
   )

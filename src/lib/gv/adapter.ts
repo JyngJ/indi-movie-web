@@ -38,8 +38,11 @@ export function theaterEventToGvEvent(ev: TheaterEvent): GvEvent {
   const movie = extractMovieTitle(ev.title, ev.movieTitle)
   return {
     id: ev.id,
+    theaterId: ev.theaterId,
     theaterName: ev.theaterName,
+    movieId: ev.movieId,
     movie,
+    eventDate: ev.eventDate,
     guest: ev.guests.length > 0 ? ev.guests.join(' · ') : undefined,
     time: formatGvTime(ev.eventDate, ev.eventTime),
     status: '예매 가능',

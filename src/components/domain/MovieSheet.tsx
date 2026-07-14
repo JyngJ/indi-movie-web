@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { PosterThumb } from './PosterThumb'
 import { ShowtimeCell } from './ShowtimeCell'
@@ -11,6 +11,8 @@ import { withFlag } from '@/lib/nations'
 import { recordRecentlyViewed } from '@/lib/curation/recentlyViewed'
 import { cookieStorageAdapter } from '@/lib/adapters/cookieStorage'
 import { trackEvent } from '@/lib/analytics/client'
+import { shareAdapter } from '@/lib/adapters/share'
+import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/components/domain/booking/BookingActions'
 import type { Showtime } from '@/types/api'
 
 const TOP_MARGIN = 72  // 검색바 아래에서 시작 — 지도가 살짝 보이게
@@ -58,6 +60,50 @@ export function MovieSheet({ movieId, onClose, onTheaterSelect, onRecentlyViewed
 
   const [visible, setVisible] = useState(false)
   useEffect(() => { const id = requestAnimationFrame(() => setVisible(true)); return () => cancelAnimationFrame(id) }, [])
+
+  const [selectedTheaterId, setSelectedTheaterId] = useState<string | null>(null)
+  const [selectedShowtimeId, setSelectedShowtimeId] = useState<string | null>(null)
+  useEffect(() => {
+    setSelectedTheaterId(null)
+    setSelectedShowtimeId(null)
+  }, [movieId])
+
+  const selectedShowtimeData = useMemo(() => {
+    if (!selectedTheaterId || !selectedShowtimeId) return null
+    const entry = theaters.find((t) => t.theaterId === selectedTheaterId)
+    if (!entry) return null
+    for (const g of entry.dateGroups) {
+      const st = g.showtimes.find((s) => s.id === selectedShowtimeId)
+      if (st) return { st, theaterName: entry.theaterName, date: g.date }
+    }
+    return null
+  }, [selectedTheaterId, selectedShowtimeId, theaters])
+
+  const shareSelectedShowtime = () => {
+    if (!selectedShowtimeData || !selectedTheaterId || !movie) return
+    trackEvent('share clicked', {
+      theater_id: selectedTheaterId,
+      theater_name: selectedShowtimeData.theaterName,
+      movie_id: movie.id,
+      movie_title: movie.title,
+      showtime_id: selectedShowtimeData.st.id,
+      source: 'movie_sheet',
+    })
+    const url = new URL(window.location.origin)
+    url.searchParams.set('theater', selectedTheaterId)
+    url.searchParams.set('movie', movie.id)
+    url.searchParams.set('date', selectedShowtimeData.date)
+    url.searchParams.set('showtime', selectedShowtimeData.st.id)
+    const shareUrl = url.toString()
+    const title = `${movie.title} - ${selectedShowtimeData.theaterName} ${selectedShowtimeData.st.showTime.slice(0, 5)}`
+    const payload = { title, url: shareUrl }
+    const copyFallback = () => { shareAdapter.copyToClipboardAsync(shareUrl) }
+    if (shareAdapter.canShare(payload)) {
+      shareAdapter.share(payload).then((result) => { if (result === 'error') copyFallback() })
+      return
+    }
+    copyFallback()
+  }
 
   useEffect(() => {
     if (!movie) return
@@ -130,7 +176,7 @@ export function MovieSheet({ movieId, onClose, onTheaterSelect, onRecentlyViewed
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingBottom: GLOBAL_NAV_MOBILE_HEIGHT + 16,
+          paddingBottom: GLOBAL_NAV_MOBILE_HEIGHT + (selectedShowtimeData ? 100 : 16),
         }}>
           {/* 영화 헤더 */}
           <div style={{ display: 'flex', gap: 14, padding: '12px 16px 16px' }}>
@@ -249,19 +295,11 @@ export function MovieSheet({ movieId, onClose, onTheaterSelect, onRecentlyViewed
                           seatTotal={show.seatTotal}
                           screenName={show.screenName}
                           kind={showtimeKind(show)}
-                          onClick={show.bookingUrl ? () => {
-                            trackEvent('booking clicked', {
-                              theater_id: theater.theaterId,
-                              theater_name: theater.theaterName,
-                              movie_id: movie?.id,
-                              movie_title: movie?.title,
-                              showtime_id: show.id,
-                              show_date: show.showDate,
-                              show_time: show.showTime,
-                              source: 'movie_sheet',
-                            })
-                            window.open(show.bookingUrl, '_blank', 'noopener')
-                          } : undefined}
+                          selected={selectedShowtimeId === show.id}
+                          onClick={() => {
+                            setSelectedTheaterId(theater.theaterId)
+                            setSelectedShowtimeId(show.id)
+                          }}
                         />
                       ))}
                     </div>
@@ -287,6 +325,51 @@ export function MovieSheet({ movieId, onClose, onTheaterSelect, onRecentlyViewed
             </button>
           </div>
         </div>
+
+        {/* ── 예매 바 — 회차 선택 시 하단에서 등장 ── */}
+        {selectedShowtimeData && (
+          <div style={{
+            position: 'absolute', left: 0, right: 0, bottom: 0,
+            backgroundColor: 'var(--color-surface-card)',
+            borderTop: '1px solid var(--color-border)',
+            padding: '12px 16px',
+            paddingBottom: `calc(12px + ${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-serif)', fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>
+                  {selectedShowtimeData.st.showTime.slice(0, 5)}
+                  {selectedShowtimeData.st.endTime && <span style={{ fontSize: 12, color: 'var(--color-text-caption)', marginLeft: 6, fontWeight: 400 }}>→ {selectedShowtimeData.st.endTime.slice(0, 5)}</span>}
+                </div>
+                <div style={{ marginTop: 2, fontSize: 12, color: 'var(--color-text-sub)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {selectedShowtimeData.theaterName}
+                  {selectedShowtimeData.st.screenName ? ` · ${selectedShowtimeData.st.screenName}` : ''}
+                  {selectedShowtimeData.st.seatTotal > 0 ? ` · 잔여 ${selectedShowtimeData.st.seatAvailable}석` : ''}
+                </div>
+              </div>
+              <div style={{ marginLeft: 12 }}>
+                <CloseRoundButton variant="bar" onClick={() => { setSelectedTheaterId(null); setSelectedShowtimeId(null) }} />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <ShareScheduleButton variant="bar" onClick={shareSelectedShowtime} />
+              <BookingCtaButton
+                variant="bar"
+                bookingUrl={selectedShowtimeData.st.bookingUrl}
+                onClick={() => trackEvent('booking clicked', {
+                  theater_id: selectedTheaterId ?? undefined,
+                  theater_name: selectedShowtimeData.theaterName,
+                  movie_id: movie?.id,
+                  movie_title: movie?.title,
+                  showtime_id: selectedShowtimeData.st.id,
+                  show_date: selectedShowtimeData.st.showDate,
+                  show_time: selectedShowtimeData.st.showTime,
+                  source: 'movie_sheet',
+                })}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </>
   )

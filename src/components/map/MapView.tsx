@@ -2186,6 +2186,8 @@ export default function MapView() {
     if (movieParam) {
       openTheaterForMovie(theater.id, movieParam, dateParam ?? undefined, 'movie_detail')
       setInitialShowtimeId(showtimeParam ?? undefined)
+      // 특정 회차까지 지정된 딥링크는 모바일에서도 시트를 화면 가득(펼침) 상태로 열어야 함
+      if (showtimeParam) setSheetExpanded(true)
     } else {
       suppressMovieFilterFitRef.current = true
       closeSearch()

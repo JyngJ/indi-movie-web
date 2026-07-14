@@ -3,6 +3,8 @@
 import type { GvEvent } from '@/data/gv-events'
 import { gvEventTypeColor } from '@/lib/gv/adapter'
 import { trackEvent } from '@/lib/analytics/client'
+import { shareAdapter } from '@/lib/adapters/share'
+import { BookingCtaButton, ShareScheduleButton } from './booking/BookingActions'
 
 interface GvDetailPanelProps {
   ev: GvEvent
@@ -12,6 +14,32 @@ interface GvDetailPanelProps {
 
 export function GvDetailPanel({ ev, onClose, onCloseAll }: GvDetailPanelProps) {
   const statusColor = ev.status === '매진' ? '#b91c1c' : ev.status === '매진 임박' ? '#ea580c' : '#16a34a'
+
+  const shareEvent = () => {
+    trackEvent('share clicked', {
+      theater_name: ev.theaterName,
+      movie_title: ev.movie,
+      gv_event_id: ev.id,
+      source: 'gv_detail',
+    })
+
+    const url = new URL(window.location.origin)
+    if (ev.theaterId) url.searchParams.set('theater', ev.theaterId)
+    if (ev.movieId) url.searchParams.set('movie', ev.movieId)
+    if (ev.eventDate) url.searchParams.set('date', ev.eventDate)
+    const shareUrl = url.toString()
+    const payload = { title: `${ev.theaterName} - ${ev.movie}`, url: shareUrl }
+
+    const copyFallback = () => { shareAdapter.copyToClipboardAsync(shareUrl) }
+
+    if (shareAdapter.canShare(payload)) {
+      shareAdapter.share(payload).then((result) => {
+        if (result === 'error') copyFallback()
+      })
+      return
+    }
+    copyFallback()
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', backgroundColor: 'var(--color-surface-card)' }}>
@@ -159,40 +187,19 @@ export function GvDetailPanel({ ev, onClose, onCloseAll }: GvDetailPanelProps) {
         padding: '12px 16px max(16px, env(safe-area-inset-bottom))',
         background: 'var(--color-surface-card)',
         borderTop: '1px solid var(--color-border)',
-        display: 'flex', gap: 8,
+        display: 'flex', gap: 10,
       }}>
-        {ev.bookingUrl ? (
-          <a
-            href={ev.bookingUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => trackEvent('booking clicked', {
-              theater_name: ev.theaterName,
-              movie_title: ev.movie,
-              gv_event_id: ev.id,
-              source: 'gv_detail',
-            })}
-            style={{
-              flex: 1, height: 50,
-              background: 'var(--color-primary-base)',
-              color: '#fff', borderRadius: 'var(--radius-full)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 16, fontWeight: 700, textDecoration: 'none', letterSpacing: '-0.2px',
-            }}
-          >
-            예매하러 가기
-          </a>
-        ) : (
-          <div style={{
-            flex: 1, height: 50,
-            background: 'var(--color-border)',
-            color: 'var(--color-text-caption)', borderRadius: 'var(--radius-full)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 16, fontWeight: 600,
-          }}>
-            예매 준비 중
-          </div>
-        )}
+        <ShareScheduleButton variant="bar" onClick={shareEvent} />
+        <BookingCtaButton
+          variant="bar"
+          bookingUrl={ev.bookingUrl}
+          onClick={() => trackEvent('booking clicked', {
+            theater_name: ev.theaterName,
+            movie_title: ev.movie,
+            gv_event_id: ev.id,
+            source: 'gv_detail',
+          })}
+        />
       </div>
     </div>
   )
