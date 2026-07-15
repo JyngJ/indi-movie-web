@@ -627,10 +627,12 @@ async function updateFallbackSeats(sources: AdminTheaterSource[], dbCandidates: 
   }))
 }
 
-// dtryx 요청 사이 사람처럼 랜덤 지연(0.8~2.5s). 고정 간격도 봇 탐지에 걸리므로 지터를 준다.
-// 동시성 1과 함께 시간당 요청량을 낮춰 rate-limit IP 밴을 회피한다.
+// dtryx 요청 사이 랜덤 지연(0.15~0.3s). 고정 간격도 봇 탐지에 걸리므로 지터를 준다.
+// 한 소스가 7일 × 브랜드 영화 수십 편(≈350 요청)을 순차 호출하므로 지연이 커지면 소스 타임아웃을
+// 넘겨 dtryx 전체가 실패한다(0.8~2.5s로 뒀다가 전 소스가 90s 타임아웃으로 전멸했었다).
+// 동시성 1과 합쳐 raw 대비 약 5배 느린 요청률을 유지하는 선에서 절충한다.
 function dtryxDelay(): Promise<void> {
-  const ms = 800 + Math.floor(Math.random() * 1700)
+  const ms = 150 + Math.floor(Math.random() * 150)
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 

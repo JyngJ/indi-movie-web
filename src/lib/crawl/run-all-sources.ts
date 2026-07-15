@@ -26,9 +26,9 @@ export async function runAllSources(
         inputKind: 'url',
         sourceUrl: source.listingUrl,
       })
-      // dtryx는 동시성 1(밴 방지)로 14일 × 영화수를 순차 호출하므로 상영작이 많은 극장(아트나인 등)은
-      // 30s를 넘긴다. 동시성은 그대로 두고 소스 타임아웃만 늘려 heavy 극장을 살린다.
-      const timeoutMs = source.parser === 'dtryxReservationApi' ? 90000 : 30000
+      // dtryx는 동시성 1(밴 방지) + 요청당 지터 지연으로 7일 × 영화수(≈350 요청)를 순차 호출하므로
+      // 한 소스에 수십 초가 걸린다. 90s로는 전 소스가 타임아웃으로 전멸했어서 넉넉히 잡는다.
+      const timeoutMs = source.parser === 'dtryxReservationApi' ? 300000 : 30000
       const timeoutPromise = new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error(`소스 타임아웃 (${timeoutMs / 1000}s)`)), timeoutMs),
       )
