@@ -100,10 +100,13 @@ export function Onboarding({ onClose }: Props) {
     if (closedRef.current) return
     trackEvent('onboarding completed', { cta: 'location' })
     // requestLocation을 먼저 호출해야 모바일 기기(iOS 등)에서 사용자 제스처 컨텍스트가 유지되어 권한 프롬프트가 정상적으로 뜹니다
-    void requestLocation()
+    // 거부/실패 시에도 온보딩이 이미 위치를 물었으므로 SKIP_KEY를 영구 기록해 다음 세션에 지도/상영작 탭 팝업이 재노출되지 않게 한다
+    void requestLocation().then((granted) => {
+      if (!granted) dismissLocation()
+    })
     close()
     goToMap()
-  }, [close, goToMap, requestLocation])
+  }, [close, dismissLocation, goToMap, requestLocation])
 
   /** CTA(부): 위치 없이 둘러보기 — 권한 프롬프트 없이 기본(서울) 뷰, 지도 위치 팝업도 생략 */
   const handleBrowseCta = useCallback(() => {

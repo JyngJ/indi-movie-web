@@ -60,17 +60,19 @@ function initPermissionState() {
   })
 }
 
-/** 위치 허용하기 / 설정했어요 버튼 */
-async function request() {
+/** 위치 허용하기 / 설정했어요 버튼 — 허용 성공 여부를 반환한다 */
+async function request(): Promise<boolean> {
   setState({ state: 'requesting' })
   try {
     const c = await locationAdapter.requestPosition()
     locationAdapter.saveCache(c)
     setState({ coords: c, state: 'success' })
+    return true
   } catch (err: unknown) {
     const code = (err as GeolocationPositionError)?.code
     // code 1 = PERMISSION_DENIED
     setState({ state: code === 1 ? 'denied' : 'idle' })
+    return false
   }
 }
 
