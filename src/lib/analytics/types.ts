@@ -33,6 +33,7 @@ export type AnalyticsEventName =
   | 'onboarding completed'
   | 'add request opened'
   | 'add request submitted'
+  | 'landing variant assigned'
 
 export type AnalyticsSource =
   | 'direct'

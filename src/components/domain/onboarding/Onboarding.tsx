@@ -15,6 +15,7 @@ import { useIsDark } from '@/hooks/useIsDark'
 import { useLocationPermission } from '@/hooks/useLocationPermission'
 import { markOnboardingSeen } from '@/lib/onboarding'
 import { storageAdapter } from '@/lib/adapters/storage'
+import type { LandingVariant } from '@/lib/experiments/landingVariant'
 import { trackEvent } from '@/lib/analytics/client'
 import {
   IcArrow,
@@ -48,9 +49,11 @@ interface PageDef {
 
 interface Props {
   onClose: () => void
+  // 랜딩 A/B 배정 — 아직 resolve 전(null)이면 control과 동일하게 취급(보수적 기본값)
+  variant: LandingVariant | null
 }
 
-export function Onboarding({ onClose }: Props) {
+export function Onboarding({ onClose, variant }: Props) {
   const isDesktop = useIsDesktopLayout()
   const isDark = useIsDark()
   const router = useRouter()
@@ -85,9 +88,14 @@ export function Onboarding({ onClose }: Props) {
     onClose()
   }, [onClose, suppressLocationModal])
 
-  const goToMap = useCallback(() => {
+  // Test arm은 온보딩이 끝나도 강제로 지도(/)로 보내지 않는다 — /films 랜딩 실험을 이 강제 이동이 무력화하므로
+  const goToLanding = useCallback(() => {
+    if (variant === 'test') {
+      if (pathname !== '/films') router.push('/films')
+      return
+    }
     if (pathname !== '/') router.push('/')
-  }, [pathname, router])
+  }, [pathname, router, variant])
 
   const handleSkip = useCallback(() => {
     if (closedRef.current) return
@@ -105,8 +113,8 @@ export function Onboarding({ onClose }: Props) {
       if (!granted) dismissLocation()
     })
     close()
-    goToMap()
-  }, [close, dismissLocation, goToMap, requestLocation])
+    goToLanding()
+  }, [close, dismissLocation, goToLanding, requestLocation])
 
   /** CTA(부): 위치 없이 둘러보기 — 권한 프롬프트 없이 기본(서울) 뷰, 지도 위치 팝업도 생략 */
   const handleBrowseCta = useCallback(() => {
@@ -114,8 +122,8 @@ export function Onboarding({ onClose }: Props) {
     trackEvent('onboarding completed', { cta: 'browse' })
     dismissLocation()
     close()
-    goToMap()
-  }, [close, dismissLocation, goToMap])
+    goToLanding()
+  }, [close, dismissLocation, goToLanding])
 
   /* ── ESC = 건너뛰기 ── */
   useEffect(() => {

@@ -1,4 +1,5 @@
 import type { AnalyticsProperties, SessionIntent } from './types'
+import type { LandingVariant } from '@/lib/experiments/landingVariant'
 
 const SESSION_KEY = 'movie:analytics-session:v1'
 
@@ -10,6 +11,7 @@ interface StoredSession {
   utm: Record<string, string>
   milestones: Record<string, number>
   intent?: SessionIntent
+  landingVariant?: LandingVariant
 }
 
 function uuid() {
@@ -78,6 +80,7 @@ export function getSessionContext(): AnalyticsProperties {
     viewport_height: window.innerHeight,
     ...session.utm,
     session_intent: session.intent,
+    landing_variant: session.landingVariant,
   }
 }
 
@@ -101,5 +104,13 @@ export function setSessionIntent(intent: SessionIntent) {
   } else {
     session.intent = intent
   }
+  writeSession(session)
+}
+
+/** variant는 세션마다 1개 — session_intent와 달리 병합 없이 최초 배정 값을 그대로 유지한다 */
+export function setLandingVariant(variant: LandingVariant) {
+  const session = getOrCreateSession()
+  if (!session || session.landingVariant) return
+  session.landingVariant = variant
   writeSession(session)
 }
