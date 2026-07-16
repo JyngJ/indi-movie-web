@@ -9,9 +9,15 @@
 import { useEffect, useState } from 'react'
 import { shouldShowOnboarding } from '@/lib/onboarding'
 import { storageAdapter } from '@/lib/adapters/storage'
+import type { LandingVariant } from '@/lib/experiments/landingVariant'
 import { Onboarding } from './Onboarding'
 
-export function OnboardingGate() {
+interface Props {
+  // TabsLayout에서 이미 resolve한 값을 그대로 받는다 — 여기서 다시 배정 로직을 호출하지 않는다
+  variant: LandingVariant | null
+}
+
+export function OnboardingGate({ variant }: Props) {
   const [show, setShow] = useState(false)
 
   useEffect(() => {
@@ -25,5 +31,5 @@ export function OnboardingGate() {
   }, [])
 
   if (!show) return null
-  return <Onboarding onClose={() => setShow(false)} />
+  return <Onboarding variant={variant} onClose={() => setShow(false)} />
 }

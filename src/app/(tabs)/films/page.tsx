@@ -30,11 +30,77 @@ import { getStoredRegion, setStoredRegion } from '@/lib/regionStorage'
 import type { Theater } from '@/types/api'
 import { Hourglass, Clapperboard, Film, Zap, Moon, ArrowUp } from 'lucide-react'
 
+/* ── 지역 설정 힌트 말풍선 — 지도 FilterBar의 안내와 동일한 문구/닫기 동작(yh_region_tip) ── */
+function RegionHintBubble({ onDismiss }: { onDismiss: () => void }) {
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        top: 'calc(100% + 10px)',
+        right: 0,
+        zIndex: 60,
+        width: 236,
+        animation: 'tipIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), tipGlow 0.7s ease-out',
+      }}
+    >
+      <div style={{
+        position: 'relative',
+        background: 'var(--color-primary-base)',
+        borderRadius: 12,
+        boxShadow: '0 10px 28px rgba(40, 55, 75, 0.34)',
+        padding: '12px 12px 12px 14px',
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: 10,
+      }}>
+        <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+        <span style={{
+          flex: 1,
+          fontFamily: 'Pretendard, sans-serif',
+          fontSize: 12.5,
+          lineHeight: 1.55,
+          fontWeight: 500,
+          color: '#fff',
+        }}>
+          지역을 설정해서 내 주변 영화관의 상영 정보를 조회하세요
+        </span>
+        <button
+          onClick={onDismiss}
+          style={{
+            width: 18, height: 18, minWidth: 18, minHeight: 18,
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.2)',
+            border: 'none',
+            color: '#fff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer',
+            flexShrink: 0,
+            marginTop: -1,
+            padding: 0,
+          }}
+        >
+          <svg width={8} height={8} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function FilmsPage() {
   const router = useRouter()
   const isDesktopLayout = useIsDesktopLayout()
   const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  const [regionHintDismissed, setRegionHintDismissed] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+    // 지도 FilterBar와 같은 힌트 — 한쪽에서 닫으면 다른 쪽에서도 다시 안 뜨도록 같은 세션 키 공유
+    if (sessionStorage.getItem('yh_region_tip') === 'closed') setRegionHintDismissed(true)
+  }, [])
 
   const handleMovieClick = (id: string) => router.push(`/films/movie/${id}`)
   const handleDirectorClick = (name: string) => router.push(`/films/director/${encodeURIComponent(name)}`)
@@ -357,6 +423,14 @@ export default function FilmsPage() {
                   />
                 </div>
               )}
+              {mounted && !selectedRegion && !regionHintDismissed && !dropdownOpen && (
+                <RegionHintBubble
+                  onDismiss={() => {
+                    sessionStorage.setItem('yh_region_tip', 'closed')
+                    setRegionHintDismissed(true)
+                  }}
+                />
+              )}
             </div>
 
             {/* Center: search bar — 항상 컨테이너 정중앙 고정 */}
@@ -411,6 +485,14 @@ export default function FilmsPage() {
                       onSelect={(id) => { pickRegion(id); setDropdownOpen(false) }}
                     />
                   </div>
+                )}
+                {mounted && !selectedRegion && !regionHintDismissed && !dropdownOpen && (
+                  <RegionHintBubble
+                    onDismiss={() => {
+                      sessionStorage.setItem('yh_region_tip', 'closed')
+                      setRegionHintDismissed(true)
+                    }}
+                  />
                 )}
               </div>
             </div>

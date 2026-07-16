@@ -11,7 +11,9 @@ import type { Showtime } from '@/types/api'
 import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWidget'
 import { getStoredRegion } from '@/lib/regionStorage'
 import { getRegionFromAddress } from '@/lib/regions'
-import { trackEvent } from '@/lib/analytics/client'
+import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
+import { recordRecentlyViewed } from '@/lib/curation/recentlyViewed'
+import { cookieStorageAdapter } from '@/lib/adapters/cookieStorage'
 import { shareAdapter } from '@/lib/adapters/share'
 import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/components/domain/booking/BookingActions'
 import { MapPin } from 'lucide-react'
@@ -112,6 +114,25 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
   const suppressResetOnDateChangeRef = useRef(false)
 
   const { data: theaterEntries = [], isLoading } = useMovieTheaterShowtimes(movie.id)
+
+  /* ── analytics: films 플로우 진입 시에도 지도 플로우(MovieDetailClient)와 동일하게 기록 ── */
+  useEffect(() => {
+    trackEvent('movie detail viewed', {
+      movie_id: movie.id,
+      movie_title: movie.title,
+      source: 'films_movie_detail',
+    })
+    classifySessionIntent('type_a', {
+      source: 'films_movie_detail',
+      movie_id: movie.id,
+    })
+    recordRecentlyViewed(cookieStorageAdapter, 'movie', {
+      id: movie.id,
+      title: movie.title,
+      thumbnailKey: movie.posterUrl,
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [movie.id])
 
   // 공유 링크로 진입 시 선택된 회차 복원
   const restoredShareRef = useRef(false)
@@ -340,7 +361,22 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
             <ShowtimeChip
               key={st.id} st={st}
               selected={selectedShowtimeId === st.id}
-              onClick={() => { setSelectedShowtimeId(st.id); setSelectedTheaterId(entry.theaterId) }}
+              onClick={() => {
+                trackEvent('showtime selected', {
+                  theater_id: entry.theaterId,
+                  theater_name: entry.theaterName,
+                  movie_id: movie.id,
+                  movie_title: movie.title,
+                  showtime_id: st.id,
+                  show_date: st.showDate,
+                  show_time: st.showTime,
+                  seat_available: st.seatAvailable,
+                  seat_total: st.seatTotal,
+                  has_booking_url: Boolean(st.bookingUrl),
+                  source: 'films_movie_detail',
+                })
+                setSelectedShowtimeId(st.id); setSelectedTheaterId(entry.theaterId)
+              }}
             />
           ))}
         </div>

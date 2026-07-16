@@ -9,7 +9,7 @@ import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { withFlagsRaw } from '@/lib/nations'
 import type { Theater, Movie, Showtime } from '@/types/api'
 import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWidget'
-import { trackEvent } from '@/lib/analytics/client'
+import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { shareAdapter } from '@/lib/adapters/share'
 import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/components/domain/booking/BookingActions'
 import { Clapperboard } from 'lucide-react'
@@ -235,6 +235,15 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
 
   const { data: allMovies = [] } = useTheaterAllMovies(theater.id)
   const { data: dayData, isLoading } = useTheaterShowtimes(theater.id, selectedDate)
+
+  /* ── analytics: 극장을 영화 경유 없이 직접 본 흐름 — TheaterSheet의 type_c 패턴 미러링 ── */
+  useEffect(() => {
+    classifySessionIntent('type_c', {
+      source: 'films_theater_detail',
+      theater_id: theater.id,
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [theater.id])
 
   const dayMovies = dayData?.movies ?? []
   const dayShowtimes = dayData?.showtimes ?? []
@@ -489,7 +498,22 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
                 showtimes={showtimes}
                 isDesktop={isDesktop}
                 onMovieClick={(id) => router.push(`/films/movie/${id}`)}
-                onChipClick={(st, movieTitle) => { setSelectedShowtimeId(st.id); setSelectedMovieTitle(movieTitle) }}
+                onChipClick={(st, movieTitle) => {
+                  trackEvent('showtime selected', {
+                    theater_id: theater.id,
+                    theater_name: theater.name,
+                    movie_id: st.movieId,
+                    movie_title: movieTitle,
+                    showtime_id: st.id,
+                    show_date: st.showDate,
+                    show_time: st.showTime,
+                    seat_available: st.seatAvailable,
+                    seat_total: st.seatTotal,
+                    has_booking_url: Boolean(st.bookingUrl),
+                    source: 'films_theater_detail',
+                  })
+                  setSelectedShowtimeId(st.id); setSelectedMovieTitle(movieTitle)
+                }}
                 selectedShowtimeId={selectedShowtimeId}
               />
             ))}
