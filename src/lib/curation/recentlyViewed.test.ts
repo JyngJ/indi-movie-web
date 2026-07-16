@@ -16,6 +16,7 @@ function inMemoryStorage(): IStorageAdapter {
     },
     async setItem(key, value) {
       store.set(key, value)
+      return true
     },
     async removeItem(key) {
       store.delete(key)

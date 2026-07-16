@@ -38,11 +38,13 @@ export const cookieStorageAdapter: IStorageAdapter = {
   },
 
   async setItem(key, value) {
-    if (typeof document === 'undefined') return
+    if (typeof document === 'undefined') return false
     try {
       writeCookie(key, value)
+      return true
     } catch {
       console.warn('Cookie setItem failed:', key)
+      return false
     }
   },
 
