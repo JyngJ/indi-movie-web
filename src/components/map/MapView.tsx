@@ -2475,7 +2475,7 @@ export default function MapView() {
               <span style={{
                 width: 38,
                 height: 38,
-                borderRadius: 10,
+                borderRadius: 'var(--radius-xl)',
                 flexShrink: 0,
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -2483,8 +2483,8 @@ export default function MapView() {
                 backgroundColor: '#7C3AED',
                 color: '#fff',
               }}>
-                <svg width={17} height={17} viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                <svg width={20} height={20} viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="4" width="18" height="17" rx="2" />
                   <path d="M3 9h18M8 2v4M16 2v4" />
                 </svg>

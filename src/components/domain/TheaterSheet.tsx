@@ -1099,6 +1099,16 @@ export function TheaterSheet({
         </div>
       )}
 
+      {/* ── GV/이벤트 — collapsed에서도 노출 (expanded와 동일 컴포넌트, 이벤트 없으면 자체적으로 null) ── */}
+      {!shownExpanded && (
+        <GvEventSection
+          events={gvEvents}
+          theaterName={theater.name}
+          selectedIsoDate={selectedIsoDate}
+          onGvOpen={(id) => { setSelGvId(id); onExpand() }}
+        />
+      )}
+
       {/* ── 포스터 가로 스크롤 — collapsed 전용 ── */}
       {!shownExpanded && <div style={{
         borderTop: '1px solid var(--color-border)',

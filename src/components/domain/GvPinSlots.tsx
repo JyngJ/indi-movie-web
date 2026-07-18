@@ -69,6 +69,7 @@ export function computeGvSlotW(count: number, zoom: number, expanded: boolean, s
 // ── Collapsed chip ────────────────────────────────────────────────
 function GvCollapsedChip({ count, theaterName, selected, festivalTitle }: { count: number; theaterName: string; selected?: boolean; festivalTitle?: string }) {
   if (festivalTitle) {
+    // 보라(GV_PURPLE)만 색상 예외 — 나머지(spacing/radius/shadow/타입)는 docs/DESIGN.md 토큰 사용
     return (
       <div
         data-gv-toggle={theaterName}
@@ -78,21 +79,21 @@ function GvCollapsedChip({ count, theaterName, selected, festivalTitle }: { coun
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: 3,
-          padding: '5px 10px',
-          borderRadius: 10,
+          gap: 'var(--spacing-1)',
+          padding: 'var(--spacing-1) var(--spacing-2-5)',
+          borderRadius: 'var(--radius-lg)', // 지도 팝업 용도 — docs/DESIGN.md 반경 토큰
           background: GV_PURPLE,
           cursor: 'pointer',
           boxShadow: selected
             ? '0 0 0 2px #fff, 0 0 0 4px #4A6380'
-            : '0 1px 4px rgba(0,0,0,0.18)',
+            : '0 2px 6px rgba(0,0,0,0.18)', // shadow.pin (docs/DESIGN.md)
           userSelect: 'none',
           whiteSpace: 'nowrap',
         }}
       >
-        <span style={{ fontSize: 10.5, fontWeight: 700, color: '#fff' }}>{festivalTitle}</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>{festivalTitle}</span>
         <span style={{ width: '100%', height: 1, background: 'rgba(255,255,255,0.35)' }} />
-        <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.9)' }}>이벤트 {count}개</span>
+        <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.9)' }}>이벤트 {count}개</span>
       </div>
     )
   }
