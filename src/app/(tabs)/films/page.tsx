@@ -212,12 +212,32 @@ export default function FilmsPage() {
     })
   )
 
+  // run1/run2 내 커스텀 클릭 핸들러를 쓰는 5개 섹션(지금출발하면·막바지·매진임박·이번주말·심야·단독)의
+  // 논리적 순번 — run1/run2 배열 조립 규칙(하단 IIFE)과 정확히 같은 순서로 카운트한다.
+  // function 선언이라 호이스팅되므로 이 아래에서 정의되는 const들을 참조해도 안전(호출 시점엔 이미 다 초기화됨).
+  function getRealtimePositions() {
+    const leaveNow = leaveNowFilms.length > 0 ? 1 : 0
+    const lastWeek = lastWeekFilms.length > 0 ? 1 : 0
+    const weekend = weekendFilms.length > 0 ? 1 : 0
+    const newAndReturning = (newIndieFilms.length > 0 ? 1 : 0) + (returningFilms.length > 0 ? 1 : 0)
+    const lateNight = lateNightFilms.length > 0 ? 1 : 0
+    return {
+      leaveNow: 0,
+      lastWeek: leaveNow,
+      almostSoldOut: leaveNow + lastWeek,
+      weekend: 0,
+      lateNight: weekend + newAndReturning,
+      solo: weekend + newAndReturning + lateNight,
+    }
+  }
+
   const handleAlmostSoldOutMovieClick = (movieId: string) => {
     trackEvent('curation movie selected', {
       movie_id: movieId,
       movie_title: almostSoldOutFilms.find((f) => f.movie.id === movieId)?.movie.title,
       source: 'films_tab',
       list_id: 'realtime_almost_soldout',
+      position: getRealtimePositions().almostSoldOut,
     })
     handleMovieClick(movieId)
   }
@@ -265,6 +285,7 @@ export default function FilmsPage() {
       movie_title: lateNightFilms.find((f) => f.movie.id === movieId)?.movie.title,
       source: 'films_tab',
       list_id: 'realtime_late_night',
+      position: getRealtimePositions().lateNight,
     })
     handleMovieClick(movieId)
   }
@@ -306,6 +327,7 @@ export default function FilmsPage() {
       movie_title: weekendFilms.find((f) => f.movie.id === movieId)?.movie.title,
       source: 'films_tab',
       list_id: 'realtime_weekend',
+      position: getRealtimePositions().weekend,
     })
     handleMovieClick(movieId)
   }
@@ -336,6 +358,7 @@ export default function FilmsPage() {
       movie_title: leaveNowFilms.find((f) => f.movie.id === movieId)?.movie.title,
       source: 'films_tab',
       list_id: 'realtime_leave_now',
+      position: getRealtimePositions().leaveNow,
     })
     handleMovieClick(movieId)
   }
@@ -352,6 +375,7 @@ export default function FilmsPage() {
       movie_title: soloFilms.find((f) => f.movie.id === movieId)?.movie.title,
       source: 'films_tab',
       list_id: 'realtime_solo_theater',
+      position: getRealtimePositions().solo,
     })
     handleMovieClick(movieId)
   }
@@ -782,12 +806,14 @@ export default function FilmsPage() {
         }
 
         // 연속 sparse 섹션을 2열로 페어링 (그룹 경계 무관)
-        function renderRun(list: AnySection[], keyPrefix: string) {
+        function renderRun(list: AnySection[], keyPrefix: string, startIndex: number) {
           const active = list.filter((s) => s.movies.length > 0)
           if (active.length === 0) return null
           const nodes: React.ReactNode[] = []
           type SectionDisplayMode = import('@/lib/curation/filmsTabLists').SectionDisplayMode
           function rowFor(s: AnySection, compact: boolean) {
+            // 논리적 순번(run 내 상대 위치) — 화면 절대 순번 아님, position prop 주석 참고
+            const position = startIndex + active.indexOf(s)
             return (
               <CurationSectionRow key={s.listId} id={s.listId}
                 title={s.nameKo} emoji={s.emoji} description={s.description}
@@ -795,12 +821,14 @@ export default function FilmsPage() {
                 movies={s.movies} isDesktop={isDesktop}
                 posterBadges={s.posterBadges} movieCaptions={s.movieCaptions}
                 customBottomInfos={s.customBottomInfos}
+                position={position}
                 onMovieClick={s.onMovieClick ?? ((movieId) => {
                   trackEvent('curation movie selected', {
                     movie_id: movieId,
                     movie_title: movieById.get(movieId)?.title,
                     source: 'films_tab',
                     list_id: s.listId,
+                    position,
                   })
                   handleMovieClick(movieId)
                 })}
@@ -878,13 +906,13 @@ export default function FilmsPage() {
             {renderSpecial(special0)}
 
             {/* 3. 이번주 마지막 + 매진 임박 — 연속 sparse 자동 페어링 */}
-            {renderRun(run1, 'run1')}
+            {renderRun(run1, 'run1', 0)}
 
             {/* 4. 특별전 #1 (interleaved) */}
             {renderSpecial(special1)}
 
             {/* 5~10. 신작·심야 · 거장/수상 · 시기별 · 연도별 · 평론가 · 무브먼트 — 연속 sparse 자동 페어링 */}
-            {renderRun(run2, 'run2')}
+            {renderRun(run2, 'run2', run1.length)}
 
             {/* 11. 감독 스포트라이트 */}
             <DirectorSpotlightSection

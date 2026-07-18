@@ -11,7 +11,11 @@ const VISIBILITY_THRESHOLD = 0.5
  * 탭을 백그라운드에 둔 시간은 안 셈 — visibilitychange로 타이머를 멈췄다 재개한다.
  * PostHog에서 list_id별로 group by 하면 "가장 오래 보는 섹션" 순위가 나온다.
  */
-export function useSectionDwellTracking(ref: RefObject<HTMLElement | null>, listId: string | undefined) {
+export function useSectionDwellTracking(
+  ref: RefObject<HTMLElement | null>,
+  listId: string | undefined,
+  extraProps?: Record<string, string | number>,
+) {
   useEffect(() => {
     if (!listId) return
     const el = ref.current
@@ -24,7 +28,7 @@ export function useSectionDwellTracking(ref: RefObject<HTMLElement | null>, list
       const dwellMs = Math.round(performance.now() - enteredAt)
       enteredAt = null
       if (dwellMs >= MIN_DWELL_MS) {
-        trackEvent('curation section dwell', { list_id: listId, dwell_ms: dwellMs })
+        trackEvent('curation section dwell', { list_id: listId, dwell_ms: dwellMs, ...extraProps })
       }
     }
 

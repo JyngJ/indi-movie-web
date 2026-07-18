@@ -29,6 +29,9 @@ interface CurationSectionRowProps {
   /** compact: 외부 여백 없이 flex item으로 렌더 — 1~2편 섹션을 2열로 묶을 때 사용 */
   compact?: boolean
   id?: string
+  /** run1/run2 배열 내 논리적 순번(0-based) — dwell/클릭 이벤트에 실어 재배치 전후 CTR 비교에 사용.
+   *  화면 최상단 기준 절대 순번이 아님(개인화·기념일·특별전은 이 번호 체계 밖) — run 내 상대 순번으로만 해석할 것 */
+  position?: number
 }
 
 const POSTER_SIZE = {
@@ -291,6 +294,7 @@ export function CurationSectionRow({
   noHeader = false,
   compact = false,
   id,
+  position,
 }: CurationSectionRowProps) {
   const { width, height } = isDesktop ? POSTER_SIZE.desktop : POSTER_SIZE.mobile
   const scaleBleed = Math.ceil(height * 0.04)
@@ -314,7 +318,7 @@ export function CurationSectionRow({
 
   const sectionRef = useRef<HTMLElement | null>(null)
   const setSectionRef = (node: HTMLElement | null) => { sectionRef.current = node }
-  useSectionDwellTracking(sectionRef, id)
+  useSectionDwellTracking(sectionRef, id, position != null ? { position } : undefined)
 
   if (movies.length === 0) return null
 
