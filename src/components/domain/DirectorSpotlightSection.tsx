@@ -142,7 +142,7 @@ export function DirectorSpotlightSection({
   if (directors.length === 0) return null
 
   return (
-    <section style={{ paddingTop: 28 }}>
+    <section style={{ paddingTop: isDesktop ? 56 : 28 }}>
       <div style={{ padding: '0 16px' }}>
         <h2
           style={{

@@ -45,7 +45,6 @@ function GridPoster({ src, alt }: { src?: string; alt: string }) {
         borderRadius: 0,
         overflow: 'hidden',
         position: 'relative',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
         background: 'oklch(0.32 0.04 220)',
       }}
     >
@@ -65,7 +64,7 @@ function GridPoster({ src, alt }: { src?: string; alt: string }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px 5px',
           }}
         >
-          <span style={{ color: 'rgba(255,255,255,0.65)', fontSize: 11, fontWeight: 600, textAlign: 'center', lineHeight: 1.3, wordBreak: 'keep-all' }}>
+          <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 14, fontWeight: 800, textAlign: 'center', lineHeight: 1.3, wordBreak: 'keep-all' }}>
             {alt}
           </span>
         </div>
@@ -109,7 +108,7 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
         backgroundColor: 'var(--color-surface-raised)',
         borderTop: '1px solid var(--color-border)',
         borderBottom: '1px solid var(--color-border)',
-        marginTop: 32,
+        marginTop: isDesktop ? 64 : 32,
       }} />
 
       <section>
@@ -175,7 +174,7 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
           style={{
             display: 'grid',
             gridTemplateColumns: isDesktop
-              ? 'repeat(auto-fill, minmax(160px, 1fr))'
+              ? 'repeat(auto-fill, minmax(240px, 1fr))'
               : 'repeat(3, 1fr)',
             gap: isDesktop ? 20 : 12,
             padding: isDesktop ? '16px 16px 0' : '14px 12px 0',

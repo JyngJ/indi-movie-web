@@ -14,6 +14,8 @@ interface PosterThumbProps {
   onClick?: () => void
   /** 지정하면 size 기반 라운드값 대신 이 값을 그대로 사용 (예: 0으로 각진 포스터) */
   radius?: number | string
+  /** false면 드롭섀도우를 뺀다(선택 링은 유지) — 기본 true */
+  shadow?: boolean
 }
 
 export function PosterThumb({
@@ -27,10 +29,12 @@ export function PosterThumb({
   overflow,
   onClick,
   radius,
+  shadow = true,
 }: PosterThumbProps) {
   const radiusVar = radius ?? (size === 'lg'
     ? 'var(--comp-poster-sheet-radius)'   /* 8px */
     : 'var(--comp-poster-radius)')         /* 6px */
+  const dropShadow = shadow ? '0 2px 8px rgba(0,0,0,0.18)' : null
 
   return (
     /* 컨테이너는 항상 고정 크기 — 선택 링이 레이아웃에 영향 없도록 box-shadow 사용 */
@@ -42,8 +46,8 @@ export function PosterThumb({
         borderRadius: radiusVar,
         /* 선택 링: box-shadow는 레이아웃에 영향을 주지 않음 */
         boxShadow: selected || highlighted
-          ? '0 0 0 2px var(--color-primary-base), 0 2px 8px rgba(0,0,0,0.18)'
-          : '0 2px 8px rgba(0,0,0,0.18)',
+          ? [`0 0 0 2px var(--color-primary-base)`, dropShadow].filter(Boolean).join(', ')
+          : (dropShadow ?? 'none'),
         cursor: onClick ? 'pointer' : 'default',
       }}
       onClick={onClick}
@@ -82,9 +86,9 @@ export function PosterThumb({
           >
             {alt && (
               <span style={{
-                color: 'rgba(255,255,255,0.75)',
-                fontSize: Math.max(8, Math.min(10, Math.round(width * 0.16))),
-                fontWeight: 600,
+                color: 'rgba(255,255,255,0.9)',
+                fontSize: Math.max(11, Math.min(20, Math.round(width * 0.15))),
+                fontWeight: 800,
                 textAlign: 'center',
                 lineHeight: 1.3,
                 wordBreak: 'keep-all',

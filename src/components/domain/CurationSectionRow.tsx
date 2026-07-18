@@ -35,8 +35,8 @@ interface CurationSectionRowProps {
 }
 
 const POSTER_SIZE = {
-  mobile: { width: 96, height: 144 },
-  desktop: { width: 140, height: 210 },
+  mobile: { width: 120, height: 180 },
+  desktop: { width: 210, height: 315 },
 }
 
 /* ── 포스터 하단 정보: 제목 / 감독 / 장르칩+연도 ───────────────── */
@@ -124,7 +124,7 @@ export function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number
         border: '1px solid var(--color-border)',
         borderRadius: 16,
         boxShadow: '0 12px 40px rgba(0,0,0,0.48)',
-        zIndex: 9999,
+        zIndex: 999999,
         pointerEvents: 'none',
         padding: '14px',
         display: 'flex',
@@ -252,7 +252,7 @@ function MovieCard({
             position: 'relative',
           }}
         >
-          <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} radius={0} />
+          <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} radius={0} shadow={false} />
           {daysLeft != null && (
             <span style={{
               position: 'absolute', top: 4, right: 4,
@@ -340,7 +340,7 @@ export function CurationSectionRow({
               style={{ display: 'flex', gap: 8, alignItems: 'flex-start', flex: 1, minWidth: 0, cursor: onMovieClick ? 'pointer' : undefined }}
             >
               <div style={{ flexShrink: 0 }}>
-                <PosterThumb src={movie.posterUrl} alt={movie.title} width={72} height={108} radius={0} />
+                <PosterThumb src={movie.posterUrl} alt={movie.title} width={108} height={162} radius={0} shadow={false} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, justifyContent: 'center' }}>
                 <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-body)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3 }}>
@@ -370,21 +370,23 @@ export function CurationSectionRow({
     <div style={{ display: 'flex', gap: 8 }}>
       <ScrollNavButton
         direction="left"
+        size={isDesktop ? 40 : 32}
         disabled={!canScrollLeft}
-        style={{ position: 'static', top: 'auto', left: 'auto', transform: 'none', opacity: canScrollLeft ? 1 : 0.35 }}
+        style={{ position: 'static', top: 'auto', left: 'auto', transform: 'none', boxShadow: 'none', opacity: canScrollLeft ? 1 : 0.35 }}
         onClick={() => scrollRef.current?.scrollBy({ left: -scrollAmount, behavior: 'smooth' })}
       />
       <ScrollNavButton
         direction="right"
+        size={isDesktop ? 40 : 32}
         disabled={!canScrollRight}
-        style={{ position: 'static', top: 'auto', right: 'auto', transform: 'none', opacity: canScrollRight ? 1 : 0.35 }}
+        style={{ position: 'static', top: 'auto', right: 'auto', transform: 'none', boxShadow: 'none', opacity: canScrollRight ? 1 : 0.35 }}
         onClick={() => scrollRef.current?.scrollBy({ left: scrollAmount, behavior: 'smooth' })}
       />
     </div>
   )
 
   return (
-    <section ref={setSectionRef} id={id} style={{ paddingTop: noHeader ? 0 : 24 }}>
+    <section ref={setSectionRef} id={id} style={{ paddingTop: noHeader ? 0 : (isDesktop ? 48 : 24) }}>
       {!noHeader && (
         <div>
           <SectionHeader title={title} description={description} isDesktop={isDesktop} trailing={navButtons} />

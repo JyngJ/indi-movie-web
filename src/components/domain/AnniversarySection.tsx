@@ -110,7 +110,7 @@ export function AnniversarySection({
               }}
             >
               <div style={{ flexShrink: 0 }}>
-                <PosterThumb src={film.posterUrl} alt={film.title} width={72} height={108} radius={0} />
+                <PosterThumb src={film.posterUrl} alt={film.title} width={90} height={135} radius={0} shadow={false} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, justifyContent: 'center' }}>
                 <span style={{
@@ -142,7 +142,7 @@ export function AnniversarySection({
 
   // 일반 모드 — 가로 스크롤
   return (
-    <div style={{ paddingTop: 24 }}>
+    <div style={{ paddingTop: isDesktop ? 48 : 24 }}>
       <div style={{ margin: '0 16px' }}>{header}</div>
       <div style={{
         margin: '0 16px',

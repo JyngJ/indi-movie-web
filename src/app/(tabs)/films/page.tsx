@@ -790,7 +790,7 @@ export default function FilmsPage() {
                   films={films} isDesktop={isDesktop} onMovieClick={handleMovieClick} />
               ))}
               {rows.map((pair, ri) => (
-                <div key={`ann_sparse_${ri}`} style={{ display: 'flex', gap: 12, padding: '24px 16px 0' }}>
+                <div key={`ann_sparse_${ri}`} style={{ display: 'flex', gap: 12, padding: isDesktop ? '48px 16px 0' : '24px 16px 0' }}>
                   {pair.map(({ ann, films }) => (
                     <AnniversarySection key={`ann_${ann.nameKo}_${ann.eventType}`}
                       sectionTitle={ann.sectionTitle} sectionDesc={ann.sectionDesc}
@@ -851,7 +851,7 @@ export default function FilmsPage() {
             }
             if (sparse && pending != null) {
               nodes.push(
-                <div key={`${keyPrefix}_pair_${pending.listId}`} style={{ display: 'flex', gap: 12, padding: '24px 16px 0' }}>
+                <div key={`${keyPrefix}_pair_${pending.listId}`} style={{ display: 'flex', gap: 12, padding: '48px 16px 0' }}>
                   {rowFor(pending, true)}
                   {rowFor(s, true)}
                 </div>
@@ -868,7 +868,7 @@ export default function FilmsPage() {
           if (pending != null) {
             // 끝까지 짝을 못 찾은 sparse — 큰 포스터 1~2장에 빈 공간 안 남게 단독 카드로
             nodes.push(
-              <div key={`${keyPrefix}_solo_${pending.listId}`} style={{ display: 'flex', gap: 12, padding: '24px 16px 0' }}>
+              <div key={`${keyPrefix}_solo_${pending.listId}`} style={{ display: 'flex', gap: 12, padding: '48px 16px 0' }}>
                 {rowFor(pending, true)}
               </div>
             )
