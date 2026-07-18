@@ -7,7 +7,7 @@ import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import type { SectionDisplayMode } from '@/lib/curation/filmsTabLists'
 import { withFlag } from '@/lib/nations'
 import type { Movie } from '@/types/api'
-import { GenreChip, SectionHeader, CardContainer } from '@/components/primitives'
+import { GenreChip, SectionHeader, CardContainer, ScrollNavButton } from '@/components/primitives'
 import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
 
 interface CurationSectionRowProps {
@@ -29,11 +29,14 @@ interface CurationSectionRowProps {
   /** compact: 외부 여백 없이 flex item으로 렌더 — 1~2편 섹션을 2열로 묶을 때 사용 */
   compact?: boolean
   id?: string
+  /** run1/run2 배열 내 논리적 순번(0-based) — dwell/클릭 이벤트에 실어 재배치 전후 CTR 비교에 사용.
+   *  화면 최상단 기준 절대 순번이 아님(개인화·기념일·특별전은 이 번호 체계 밖) — run 내 상대 순번으로만 해석할 것 */
+  position?: number
 }
 
 const POSTER_SIZE = {
-  mobile: { width: 96, height: 144 },
-  desktop: { width: 140, height: 210 },
+  mobile: { width: 120, height: 180 },
+  desktop: { width: 210, height: 315 },
 }
 
 /* ── 포스터 하단 정보: 제목 / 감독 / 장르칩+연도 ───────────────── */
@@ -121,7 +124,7 @@ export function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number
         border: '1px solid var(--color-border)',
         borderRadius: 16,
         boxShadow: '0 12px 40px rgba(0,0,0,0.48)',
-        zIndex: 9999,
+        zIndex: 999999,
         pointerEvents: 'none',
         padding: '14px',
         display: 'flex',
@@ -249,7 +252,7 @@ function MovieCard({
             position: 'relative',
           }}
         >
-          <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} />
+          <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} radius={0} shadow={false} />
           {daysLeft != null && (
             <span style={{
               position: 'absolute', top: 4, right: 4,
@@ -291,6 +294,7 @@ export function CurationSectionRow({
   noHeader = false,
   compact = false,
   id,
+  position,
 }: CurationSectionRowProps) {
   const { width, height } = isDesktop ? POSTER_SIZE.desktop : POSTER_SIZE.mobile
   const scaleBleed = Math.ceil(height * 0.04)
@@ -314,7 +318,7 @@ export function CurationSectionRow({
 
   const sectionRef = useRef<HTMLElement | null>(null)
   const setSectionRef = (node: HTMLElement | null) => { sectionRef.current = node }
-  useSectionDwellTracking(sectionRef, id)
+  useSectionDwellTracking(sectionRef, id, position != null ? { position } : undefined)
 
   if (movies.length === 0) return null
 
@@ -325,7 +329,7 @@ export function CurationSectionRow({
       <CardContainer style={{ flex: 1, minWidth: 0 }}>
         {/* 헤더 */}
         <div style={{ padding: '12px 0', borderBottom: '1px solid var(--color-border)' }}>
-          <SectionHeader title={title} emoji={emoji} description={description} />
+          <SectionHeader title={title} description={description} isDesktop={isDesktop} />
         </div>
         {/* 영화 inline */}
         <div style={{ display: 'flex', gap: 'var(--spacing-2-5)', padding: '12px 14px', background: 'var(--color-surface-card)', flex: 1 }}>
@@ -336,7 +340,7 @@ export function CurationSectionRow({
               style={{ display: 'flex', gap: 8, alignItems: 'flex-start', flex: 1, minWidth: 0, cursor: onMovieClick ? 'pointer' : undefined }}
             >
               <div style={{ flexShrink: 0 }}>
-                <PosterThumb src={movie.posterUrl} alt={movie.title} width={72} height={108} />
+                <PosterThumb src={movie.posterUrl} alt={movie.title} width={108} height={162} radius={0} shadow={false} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, justifyContent: 'center' }}>
                 <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-body)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3 }}>
@@ -360,51 +364,35 @@ export function CurationSectionRow({
     )
   }
 
-  // 포스터 이미지 영역 세로 중앙: padding-top + 포스터 높이의 절반
-  const posterMidY = scaleBleed + 8 + height / 2
-
-  const btnStyle: React.CSSProperties = {
-    position: 'absolute', top: posterMidY, transform: 'translateY(-50%)',
-    width: 32, height: 32, borderRadius: '50%', zIndex: 3,
-    border: 'none', cursor: 'pointer',
-    backgroundColor: 'color-mix(in srgb, var(--color-surface-card) 72%, transparent)',
-    backdropFilter: 'blur(8px)',
-    color: 'var(--color-text-body)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    boxShadow: '0 1px 6px rgba(0,0,0,0.12)',
-    minHeight: 'auto',
-  }
+  // 좌우 스크롤 버튼 — 제목 줄 오른쪽 끝에 배치(design.md ScrollNavButton 표준 사용,
+  // 포스터 위 플로팅 원형 버튼 방식은 지양)
+  const navButtons = (canScrollLeft || canScrollRight) && (
+    <div style={{ display: 'flex', gap: 8 }}>
+      <ScrollNavButton
+        direction="left"
+        size={isDesktop ? 40 : 32}
+        disabled={!canScrollLeft}
+        style={{ position: 'static', top: 'auto', left: 'auto', transform: 'none', boxShadow: 'none', opacity: canScrollLeft ? 1 : 0.35 }}
+        onClick={() => scrollRef.current?.scrollBy({ left: -scrollAmount, behavior: 'smooth' })}
+      />
+      <ScrollNavButton
+        direction="right"
+        size={isDesktop ? 40 : 32}
+        disabled={!canScrollRight}
+        style={{ position: 'static', top: 'auto', right: 'auto', transform: 'none', boxShadow: 'none', opacity: canScrollRight ? 1 : 0.35 }}
+        onClick={() => scrollRef.current?.scrollBy({ left: scrollAmount, behavior: 'smooth' })}
+      />
+    </div>
+  )
 
   return (
-    <section ref={setSectionRef} id={id} style={{ paddingTop: noHeader ? 0 : 24 }}>
+    <section ref={setSectionRef} id={id} style={{ paddingTop: noHeader ? 0 : (isDesktop ? 48 : 24) }}>
       {!noHeader && (
         <div>
-          <SectionHeader title={title} emoji={emoji} description={description} isDesktop={isDesktop} />
+          <SectionHeader title={title} description={description} isDesktop={isDesktop} trailing={navButtons} />
         </div>
       )}
       <div style={{ position: 'relative' }}>
-        {canScrollLeft && (
-          <button
-            style={{ ...btnStyle, left: 6 }}
-            onClick={() => scrollRef.current?.scrollBy({ left: -scrollAmount, behavior: 'smooth' })}
-            aria-label="이전"
-          >
-            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </button>
-        )}
-        {canScrollRight && (
-          <button
-            style={{ ...btnStyle, right: 6 }}
-            onClick={() => scrollRef.current?.scrollBy({ left: scrollAmount, behavior: 'smooth' })}
-            aria-label="다음"
-          >
-            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-          </button>
-        )}
         <div
           ref={scrollRef}
           onScroll={updateScrollEdge}

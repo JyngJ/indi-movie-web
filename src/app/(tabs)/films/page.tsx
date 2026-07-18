@@ -19,7 +19,8 @@ import { useCurationData } from '@/hooks/useCurationData'
 import { useLocationPermission } from '@/hooks/useLocationPermission'
 import { getFilmsTabCurationSections, SECTION_GROUP } from '@/lib/curation/filmsTabLists'
 import { formatAlmostSoldOutCaption, getAlmostSoldOutFilms } from '@/lib/curation/getAlmostSoldOutFilms'
-import { formatLateNightCaption, getLateNightFilms } from '@/lib/curation/getLateNightFilms'
+import { dayOfWeekLabel, formatLateNightCaption, getLateNightFilms } from '@/lib/curation/getLateNightFilms'
+import { formatWeekendCaption, getWeekendFilms } from '@/lib/curation/getWeekendFilms'
 import { getTodayAnniversaries } from '@/lib/curation/directorAnniversaries'
 import { trackEvent } from '@/lib/analytics/client'
 import { buildYearsOnScreenCaptions } from '@/lib/curation/yearsOnScreenCaption'
@@ -28,7 +29,7 @@ import { useActiveMovieIdsByRegion, useActiveMovieTheaterPairs, useAlmostSoldOut
 import { getRegionFromCity } from '@/lib/regions'
 import { getStoredRegion, setStoredRegion } from '@/lib/regionStorage'
 import type { Theater } from '@/types/api'
-import { Hourglass, Clapperboard, Film, Zap, Moon, ArrowUp } from 'lucide-react'
+import { Hourglass, Clapperboard, Film, Zap, Moon, ArrowUp, Car, CalendarDays, MapPin } from 'lucide-react'
 
 /* ── 지역 설정 힌트 말풍선 — 지도 FilterBar의 안내와 동일한 문구/닫기 동작(yh_region_tip) ── */
 function RegionHintBubble({ onDismiss }: { onDismiss: () => void }) {
@@ -164,7 +165,8 @@ export default function FilmsPage() {
   const { data: activeMovieIds = [] } = useActiveMovieIdsByRegion(selectedRegion)
   const { data: movieTheaterPairs = [] } = useActiveMovieTheaterPairs(selectedRegion)
   const { data: filmRankingRow } = useFilmRankings()
-  const { lastWeekFilms, newIndieFilms, returningFilms, recentlyViewed } = useCurationData(true, selectedRegion)
+  const { lastWeekFilms, newIndieFilms, returningFilms, recentlyViewed, soloTheaterFilms, todayShowFilms } =
+    useCurationData(true, selectedRegion, undefined, userLocation)
 
   const { data: almostSoldOutCandidates = [] } = useAlmostSoldOutCandidates()
   const { data: lateNightCandidates = [] } = useLateNightCandidates()
@@ -210,12 +212,32 @@ export default function FilmsPage() {
     })
   )
 
+  // run1/run2 내 커스텀 클릭 핸들러를 쓰는 5개 섹션(지금출발하면·막바지·매진임박·이번주말·심야·단독)의
+  // 논리적 순번 — run1/run2 배열 조립 규칙(하단 IIFE)과 정확히 같은 순서로 카운트한다.
+  // function 선언이라 호이스팅되므로 이 아래에서 정의되는 const들을 참조해도 안전(호출 시점엔 이미 다 초기화됨).
+  function getRealtimePositions() {
+    const leaveNow = leaveNowFilms.length > 0 ? 1 : 0
+    const lastWeek = lastWeekFilms.length > 0 ? 1 : 0
+    const weekend = weekendFilms.length > 0 ? 1 : 0
+    const newAndReturning = (newIndieFilms.length > 0 ? 1 : 0) + (returningFilms.length > 0 ? 1 : 0)
+    const lateNight = lateNightFilms.length > 0 ? 1 : 0
+    return {
+      leaveNow: 0,
+      lastWeek: leaveNow,
+      almostSoldOut: leaveNow + lastWeek,
+      weekend: 0,
+      lateNight: weekend + newAndReturning,
+      solo: weekend + newAndReturning + lateNight,
+    }
+  }
+
   const handleAlmostSoldOutMovieClick = (movieId: string) => {
     trackEvent('curation movie selected', {
       movie_id: movieId,
       movie_title: almostSoldOutFilms.find((f) => f.movie.id === movieId)?.movie.title,
       source: 'films_tab',
       list_id: 'realtime_almost_soldout',
+      position: getRealtimePositions().almostSoldOut,
     })
     handleMovieClick(movieId)
   }
@@ -263,6 +285,97 @@ export default function FilmsPage() {
       movie_title: lateNightFilms.find((f) => f.movie.id === movieId)?.movie.title,
       source: 'films_tab',
       list_id: 'realtime_late_night',
+      position: getRealtimePositions().lateNight,
+    })
+    handleMovieClick(movieId)
+  }
+
+  // 이번 주말 상영 — 심야와 같은 오늘~D+7 candidates 재사용, 판정만 별도 순수 함수에 위임
+  const weekendFilms = getWeekendFilms(
+    selectedRegion
+      ? lateNightCandidates.filter((c) => getRegionFromCity(c.theaterCity) === selectedRegion)
+      : lateNightCandidates,
+    lnToday,
+    lnNowTime,
+  )
+  const weekendCaptions = new Map(
+    weekendFilms.map((f) => [f.movie.id, formatWeekendCaption(f, lnToday)]),
+  )
+  const weekendCustomInfos = new Map<string, React.ReactNode>(
+    weekendFilms.map((f) => {
+      const dir = f.movie.director.length > 0 ? f.movie.director[0] : '감독 미상'
+      const first = f.showings[0]
+      const dayLabel = first?.showDate === lnToday ? '오늘' : dayOfWeekLabel(first?.showDate ?? lnToday)
+      const rest = f.showings.length - 1
+      const dateText = first ? `${dayLabel} ${first.showTime}${rest > 0 ? ` · 외 ${rest}회` : ''}` : ''
+      const theaterName = first?.theaterName ?? ''
+
+      return [
+        f.movie.id,
+        <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 2 }}>
+          <span style={{ fontSize: 11, color: 'var(--color-text-caption)' }}>{dir}</span>
+          <span style={{ fontSize: 11, color: 'var(--color-primary-base)', fontWeight: 600 }}>{theaterName}</span>
+          <span style={{ fontSize: 11, color: 'var(--color-primary-hover-l)' }}>{dateText}</span>
+        </div>
+      ]
+    })
+  )
+
+  const handleWeekendMovieClick = (movieId: string) => {
+    trackEvent('curation movie selected', {
+      movie_id: movieId,
+      movie_title: weekendFilms.find((f) => f.movie.id === movieId)?.movie.title,
+      source: 'films_tab',
+      list_id: 'realtime_weekend',
+      position: getRealtimePositions().weekend,
+    })
+    handleMovieClick(movieId)
+  }
+
+  // 지금 출발하면 볼 수 있는 — useCurationData의 todayShowFilms(출발 버퍼 30분 + 4시간 창) 재사용.
+  // 훅 자체엔 최소 편수 게이트가 없어 여기서 3편 미만이면 숨긴다.
+  const leaveNowFilms = todayShowFilms.length >= 3 ? todayShowFilms : []
+  const leaveNowCaptions = new Map(
+    leaveNowFilms.map((f) => [f.movie.id, `${f.nextShowTime} ${f.theaterName}`]),
+  )
+  const leaveNowCustomInfos = new Map<string, React.ReactNode>(
+    leaveNowFilms.map((f) => {
+      const dir = f.movie.director.length > 0 ? f.movie.director[0] : '감독 미상'
+      return [
+        f.movie.id,
+        <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 2 }}>
+          <span style={{ fontSize: 11, color: 'var(--color-text-caption)' }}>{dir}</span>
+          <span style={{ fontSize: 11, color: 'var(--color-primary-base)', fontWeight: 600 }}>{f.theaterName}</span>
+          <span style={{ fontSize: 11, color: 'var(--color-primary-hover-l)' }}>{`오늘 ${f.nextShowTime}`}</span>
+        </div>
+      ]
+    })
+  )
+
+  const handleLeaveNowMovieClick = (movieId: string) => {
+    trackEvent('curation movie selected', {
+      movie_id: movieId,
+      movie_title: leaveNowFilms.find((f) => f.movie.id === movieId)?.movie.title,
+      source: 'films_tab',
+      list_id: 'realtime_leave_now',
+      position: getRealtimePositions().leaveNow,
+    })
+    handleMovieClick(movieId)
+  }
+
+  // 단독 상영 — soloTheaterFilms는 지역 미선택 시 훅이 빈 배열을 반환(지도 탭과 동일 제약).
+  // 크롤 커버리지가 낮은 지역에선 "단독"이 진짜 유일 상영이 아니라 "이 지도가 아는 극장이 하나뿐"일 수 있어
+  // 카피에서 "유일하게"처럼 단정적인 표현은 쓰지 않는다.
+  const soloFilms = soloTheaterFilms.length >= 3 ? soloTheaterFilms : []
+  const soloCaptions = new Map(soloFilms.map((f) => [f.movie.id, f.theaterName]))
+
+  const handleSoloMovieClick = (movieId: string) => {
+    trackEvent('curation movie selected', {
+      movie_id: movieId,
+      movie_title: soloFilms.find((f) => f.movie.id === movieId)?.movie.title,
+      source: 'films_tab',
+      list_id: 'realtime_solo_theater',
+      position: getRealtimePositions().solo,
     })
     handleMovieClick(movieId)
   }
@@ -537,18 +650,19 @@ export default function FilmsPage() {
       )}
       */}
 
-      {/* ── 렌더 순서 ─────────────────────────────────────────────
+      {/* ── 렌더 순서 (30일 CTR 기준 재배치 — 시의성 상단, 지식형 하단) ──────
           0. 이런 작품은 어때요 (개인화 — 최근 조회 이력 기반)
           1. 기념일 (생몰일)
           2. 특별전 #0
-          3. 매진 임박 + 시기별 큐레이션 (seasonal) + 이번주 마지막
+          3. 지금 출발하면 + 이번주 마지막 + 매진 임박 (run1 — 시의성 최상단)
           4. 특별전 #1 (있으면)
-          5. 거장/수상작
-          6. 새롭게 상영 (realtime new/returning)
-          7. 연도별
-          8. 평론가
-          9. 무브먼트
-          10. 감독 스포트라이트
+          5. 이번 주말 + 새롭게 상영(realtime new/returning) + 심야 + 단독 상영
+          6. 거장/수상작 (인지도 앵커)
+          7. 시기별 큐레이션 (seasonal — 명당에서 강등)
+          8. 연도별
+          9. 평론가
+          10. 무브먼트
+          11. 감독 스포트라이트
       ─────────────────────────────────────────────────────── */}
       {(() => {
         type AnySection = {
@@ -596,6 +710,44 @@ export default function FilmsPage() {
           movies: lateNightFilms.map((f) => f.movie),
         }] : []
 
+        // 이번 주말 상영 — 3편 미만이면 getWeekendFilms가 빈 배열을 반환해 섹션 자체가 숨겨짐
+        const rtWeekend: AnySection[] = weekendFilms.length > 0 ? [{
+          listId: 'realtime_weekend',
+          nameKo: '이번 주말 상영',
+          emoji: <CalendarDays size={24} strokeWidth={2} color="var(--color-primary-base)" />,
+          description: '이번 주말 볼 수 있는 회차예요',
+          displayMode: 'default',
+          movieCaptions: weekendCaptions,
+          customBottomInfos: weekendCustomInfos,
+          onMovieClick: handleWeekendMovieClick,
+          movies: weekendFilms.map((f) => f.movie),
+        }] : []
+
+        // 지금 출발하면 볼 수 있는 — 3편 미만이면 위에서 이미 빈 배열로 걸러짐
+        const rtLeaveNow: AnySection[] = leaveNowFilms.length > 0 ? [{
+          listId: 'realtime_leave_now',
+          nameKo: '지금 출발하면 볼 수 있는',
+          emoji: <Car size={24} strokeWidth={2} color="var(--color-primary-base)" />,
+          description: '지금 출발하면 늦지 않게 볼 수 있는 회차예요',
+          displayMode: 'default',
+          movieCaptions: leaveNowCaptions,
+          customBottomInfos: leaveNowCustomInfos,
+          onMovieClick: handleLeaveNowMovieClick,
+          movies: leaveNowFilms.map((f) => f.movie),
+        }] : []
+
+        // 단독 상영 — 3편 미만이면 위에서 이미 빈 배열로 걸러짐, 지역 미선택 시에도 빈 배열
+        const rtSolo: AnySection[] = soloFilms.length > 0 ? [{
+          listId: 'realtime_solo_theater',
+          nameKo: `${selectedRegion ?? '이 지역'}에서 단 한 곳`,
+          emoji: <MapPin size={24} strokeWidth={2} color="var(--color-primary-base)" />,
+          description: '이 지역에서는 이 극장에서만 상영해요',
+          displayMode: 'default',
+          movieCaptions: soloCaptions,
+          onMovieClick: handleSoloMovieClick,
+          movies: soloFilms.map((f) => f.movie),
+        }] : []
+
         // 특별전 interleave 준비
         const [special0, special1] = specialDirectorSections
 
@@ -638,7 +790,7 @@ export default function FilmsPage() {
                   films={films} isDesktop={isDesktop} onMovieClick={handleMovieClick} />
               ))}
               {rows.map((pair, ri) => (
-                <div key={`ann_sparse_${ri}`} style={{ display: 'flex', gap: 12, padding: '24px 16px 0' }}>
+                <div key={`ann_sparse_${ri}`} style={{ display: 'flex', gap: 12, padding: isDesktop ? '48px 16px 0' : '24px 16px 0' }}>
                   {pair.map(({ ann, films }) => (
                     <AnniversarySection key={`ann_${ann.nameKo}_${ann.eventType}`}
                       sectionTitle={ann.sectionTitle} sectionDesc={ann.sectionDesc}
@@ -654,12 +806,14 @@ export default function FilmsPage() {
         }
 
         // 연속 sparse 섹션을 2열로 페어링 (그룹 경계 무관)
-        function renderRun(list: AnySection[], keyPrefix: string) {
+        function renderRun(list: AnySection[], keyPrefix: string, startIndex: number) {
           const active = list.filter((s) => s.movies.length > 0)
           if (active.length === 0) return null
           const nodes: React.ReactNode[] = []
           type SectionDisplayMode = import('@/lib/curation/filmsTabLists').SectionDisplayMode
           function rowFor(s: AnySection, compact: boolean) {
+            // 논리적 순번(run 내 상대 위치) — 화면 절대 순번 아님, position prop 주석 참고
+            const position = startIndex + active.indexOf(s)
             return (
               <CurationSectionRow key={s.listId} id={s.listId}
                 title={s.nameKo} emoji={s.emoji} description={s.description}
@@ -667,12 +821,14 @@ export default function FilmsPage() {
                 movies={s.movies} isDesktop={isDesktop}
                 posterBadges={s.posterBadges} movieCaptions={s.movieCaptions}
                 customBottomInfos={s.customBottomInfos}
+                position={position}
                 onMovieClick={s.onMovieClick ?? ((movieId) => {
                   trackEvent('curation movie selected', {
                     movie_id: movieId,
                     movie_title: movieById.get(movieId)?.title,
                     source: 'films_tab',
                     list_id: s.listId,
+                    position,
                   })
                   handleMovieClick(movieId)
                 })}
@@ -695,7 +851,7 @@ export default function FilmsPage() {
             }
             if (sparse && pending != null) {
               nodes.push(
-                <div key={`${keyPrefix}_pair_${pending.listId}`} style={{ display: 'flex', gap: 12, padding: '24px 16px 0' }}>
+                <div key={`${keyPrefix}_pair_${pending.listId}`} style={{ display: 'flex', gap: 12, padding: '48px 16px 0' }}>
                   {rowFor(pending, true)}
                   {rowFor(s, true)}
                 </div>
@@ -712,7 +868,7 @@ export default function FilmsPage() {
           if (pending != null) {
             // 끝까지 짝을 못 찾은 sparse — 큰 포스터 1~2장에 빈 공간 안 남게 단독 카드로
             nodes.push(
-              <div key={`${keyPrefix}_solo_${pending.listId}`} style={{ display: 'flex', gap: 12, padding: '24px 16px 0' }}>
+              <div key={`${keyPrefix}_solo_${pending.listId}`} style={{ display: 'flex', gap: 12, padding: '48px 16px 0' }}>
                 {rowFor(pending, true)}
               </div>
             )
@@ -721,9 +877,16 @@ export default function FilmsPage() {
           return <>{nodes}</>
         }
 
-        // 특별전 앞뒤 경계를 기준으로 두 개의 run 구성 — 매진 임박(오늘·내일)이 가장 시급하므로 맨 앞
-        const run1: AnySection[] = [...rtAlmostSoldOut, ...seasonal, ...rtLastWeek]
-        const run2: AnySection[] = [...awards, ...rtNew, ...rtLateNight, ...decades, ...critics, ...movements]
+        // 특별전 앞뒤 경계를 기준으로 두 개의 run 구성 — 30일 CTR 기준 재배치:
+        // 시의성(막바지·매진임박)을 최상단으로, 저CTR 시기별(seasonal)은 명당에서 강등
+        const run1: AnySection[] = [...rtLeaveNow, ...rtLastWeek, ...rtAlmostSoldOut]
+        const run2: AnySection[] = [
+          ...rtWeekend, ...rtNew, ...rtLateNight,
+          ...rtSolo,
+          ...awards,
+          ...seasonal,
+          ...decades, ...critics, ...movements,
+        ]
 
         return (
           <>
@@ -742,21 +905,21 @@ export default function FilmsPage() {
             {/* 2. 특별전 #0 */}
             {renderSpecial(special0)}
 
-            {/* 3. 매진 임박 + 시기별 + 이번주 마지막 — 연속 sparse 자동 페어링 */}
-            {renderRun(run1, 'run1')}
+            {/* 3. 이번주 마지막 + 매진 임박 — 연속 sparse 자동 페어링 */}
+            {renderRun(run1, 'run1', 0)}
 
             {/* 4. 특별전 #1 (interleaved) */}
             {renderSpecial(special1)}
 
-            {/* 5~9. 거장/수상 · 신작 · 연도별 · 평론가 · 무브먼트 — 연속 sparse 자동 페어링 */}
-            {renderRun(run2, 'run2')}
+            {/* 5~10. 신작·심야 · 거장/수상 · 시기별 · 연도별 · 평론가 · 무브먼트 — 연속 sparse 자동 페어링 */}
+            {renderRun(run2, 'run2', run1.length)}
 
-            {/* 10. 감독 스포트라이트 */}
+            {/* 11. 감독 스포트라이트 */}
             <DirectorSpotlightSection
               movies={movies} activeMovieIds={activeMovieIdSet}
               isDesktop={isDesktop} onDirectorClick={handleDirectorClick} />
 
-            {/* 11. 전체 상영작 그리드 */}
+            {/* 12. 전체 상영작 그리드 */}
             <AllMoviesGrid
               movies={movies.filter((m) => activeMovieIdSet.has(m.id))}
               isDesktop={isDesktop}

@@ -23,8 +23,8 @@ interface Props {
 }
 
 const POSTER = {
-  mobile: { width: 96, height: 144 },
-  desktop: { width: 140, height: 210 },
+  mobile: { width: 120, height: 180 },
+  desktop: { width: 210, height: 315 },
 }
 
 // ── 아바타 색상 ─────────────────────────────────────────────────
@@ -74,7 +74,7 @@ function MovieCard({
           transformOrigin: 'center center',
           borderRadius: 'var(--radius-md)',
         }}>
-          <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} />
+          <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} radius={0} shadow={false} />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           <span style={{
@@ -307,7 +307,7 @@ export function DirectorSpecialSection({
   )
 
   return (
-    <section style={{ paddingTop: 24 }}>
+    <section style={{ paddingTop: isDesktop ? 48 : 24 }}>
       <h2 style={{
         margin: 0, padding: '0 16px',
         fontSize: isDesktop ? 'var(--text-h3)' : 'var(--text-title)',
