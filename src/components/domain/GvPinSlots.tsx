@@ -93,7 +93,7 @@ function GvCollapsedChip({ count, theaterName, selected, festivalTitle }: { coun
         }}
       >
         <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', textAlign: 'center' }}>{festivalTitle}</span>
-        <div style={{ width: '100%', height: 1, background: '#fff', flexShrink: 0 }} />
+        <div style={{ width: '100%', height: 1, margin: '-2px 0', background: 'rgba(255,255,255,0.45)', flexShrink: 0 }} />
         <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.9)', textAlign: 'center' }}>이벤트 {count}개</span>
       </div>
     )
