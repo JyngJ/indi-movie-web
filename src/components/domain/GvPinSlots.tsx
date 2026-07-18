@@ -77,7 +77,8 @@ function GvCollapsedChip({ count, theaterName, selected, festivalTitle }: { coun
           height: GV_FESTIVAL_CHIP_H,
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center',
+          // alignItems 기본값(stretch) 그대로 둔다 — flex item은 태그와 무관하게 block화되므로
+          // center로 바꾸면 자식이 콘텐츠 폭으로 줄어들어 구분선(너비 100% 필요)이 찌그러진다
           justifyContent: 'center',
           gap: 'var(--spacing-1)',
           padding: 'var(--spacing-1) var(--spacing-2-5)',
@@ -91,9 +92,9 @@ function GvCollapsedChip({ count, theaterName, selected, festivalTitle }: { coun
           whiteSpace: 'nowrap',
         }}
       >
-        <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>{festivalTitle}</span>
-        <span style={{ display: 'block', alignSelf: 'stretch', height: 1, background: '#fff' }} />
-        <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.9)' }}>이벤트 {count}개</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', textAlign: 'center' }}>{festivalTitle}</span>
+        <div style={{ width: '100%', height: 1, background: '#fff', flexShrink: 0 }} />
+        <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.9)', textAlign: 'center' }}>이벤트 {count}개</span>
       </div>
     )
   }
