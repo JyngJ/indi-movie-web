@@ -249,7 +249,7 @@ function MovieCard({
             position: 'relative',
           }}
         >
-          <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} />
+          <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} radius={0} />
           {daysLeft != null && (
             <span style={{
               position: 'absolute', top: 4, right: 4,
@@ -325,7 +325,7 @@ export function CurationSectionRow({
       <CardContainer style={{ flex: 1, minWidth: 0 }}>
         {/* 헤더 */}
         <div style={{ padding: '12px 0', borderBottom: '1px solid var(--color-border)' }}>
-          <SectionHeader title={title} emoji={emoji} description={description} />
+          <SectionHeader title={title} description={description} isDesktop={isDesktop} />
         </div>
         {/* 영화 inline */}
         <div style={{ display: 'flex', gap: 'var(--spacing-2-5)', padding: '12px 14px', background: 'var(--color-surface-card)', flex: 1 }}>
@@ -336,7 +336,7 @@ export function CurationSectionRow({
               style={{ display: 'flex', gap: 8, alignItems: 'flex-start', flex: 1, minWidth: 0, cursor: onMovieClick ? 'pointer' : undefined }}
             >
               <div style={{ flexShrink: 0 }}>
-                <PosterThumb src={movie.posterUrl} alt={movie.title} width={72} height={108} />
+                <PosterThumb src={movie.posterUrl} alt={movie.title} width={72} height={108} radius={0} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, justifyContent: 'center' }}>
                 <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-body)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3 }}>
@@ -379,7 +379,7 @@ export function CurationSectionRow({
     <section ref={setSectionRef} id={id} style={{ paddingTop: noHeader ? 0 : 24 }}>
       {!noHeader && (
         <div>
-          <SectionHeader title={title} emoji={emoji} description={description} isDesktop={isDesktop} />
+          <SectionHeader title={title} description={description} isDesktop={isDesktop} />
         </div>
       )}
       <div style={{ position: 'relative' }}>

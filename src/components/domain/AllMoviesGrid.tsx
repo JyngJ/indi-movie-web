@@ -42,7 +42,7 @@ function GridPoster({ src, alt }: { src?: string; alt: string }) {
       style={{
         width: '100%',
         aspectRatio: '2/3',
-        borderRadius: 6,
+        borderRadius: 0,
         overflow: 'hidden',
         position: 'relative',
         boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
@@ -72,7 +72,7 @@ function GridPoster({ src, alt }: { src?: string; alt: string }) {
       )}
       <div
         style={{
-          position: 'absolute', inset: 0, borderRadius: 6, pointerEvents: 'none',
+          position: 'absolute', inset: 0, borderRadius: 0, pointerEvents: 'none',
           boxShadow: 'inset 0 0 0 1px var(--comp-poster-border)',
         }}
       />

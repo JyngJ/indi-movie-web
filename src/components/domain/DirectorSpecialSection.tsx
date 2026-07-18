@@ -74,7 +74,7 @@ function MovieCard({
           transformOrigin: 'center center',
           borderRadius: 'var(--radius-md)',
         }}>
-          <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} />
+          <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} radius={0} />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           <span style={{

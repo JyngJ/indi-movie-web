@@ -14,7 +14,7 @@ export function SectionHeader({ title, emoji, description, isDesktop = false }: 
         style={{
           margin: 0,
           padding: '0 16px',
-          fontSize: isDesktop ? 'var(--text-h3)' : 'var(--text-title)',
+          fontSize: isDesktop ? 'var(--text-h2)' : 'var(--text-h3)',
           fontWeight: 700,
           fontFamily: 'var(--font-display)',
           color: 'var(--color-text-primary)',

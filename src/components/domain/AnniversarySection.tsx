@@ -110,7 +110,7 @@ export function AnniversarySection({
               }}
             >
               <div style={{ flexShrink: 0 }}>
-                <PosterThumb src={film.posterUrl} alt={film.title} width={72} height={108} />
+                <PosterThumb src={film.posterUrl} alt={film.title} width={72} height={108} radius={0} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, justifyContent: 'center' }}>
                 <span style={{

@@ -12,6 +12,8 @@ interface PosterThumbProps {
   highlighted?: boolean
   overflow?: number | string
   onClick?: () => void
+  /** 지정하면 size 기반 라운드값 대신 이 값을 그대로 사용 (예: 0으로 각진 포스터) */
+  radius?: number | string
 }
 
 export function PosterThumb({
@@ -24,10 +26,11 @@ export function PosterThumb({
   highlighted = false,
   overflow,
   onClick,
+  radius,
 }: PosterThumbProps) {
-  const radiusVar = size === 'lg'
+  const radiusVar = radius ?? (size === 'lg'
     ? 'var(--comp-poster-sheet-radius)'   /* 8px */
-    : 'var(--comp-poster-radius)'          /* 6px */
+    : 'var(--comp-poster-radius)')         /* 6px */
 
   return (
     /* 컨테이너는 항상 고정 크기 — 선택 링이 레이아웃에 영향 없도록 box-shadow 사용 */
