@@ -1999,7 +1999,7 @@ export function TheaterSheet({
             onTouchStart={e => e.stopPropagation()}
             onTouchMove={e => e.stopPropagation()}
           >
-            {displayEv && <GvDetailPanel ev={displayEv} onClose={() => setSelGvId(null)} onCloseAll={onClose} />}
+            {displayEv && <GvDetailPanel ev={displayEv} onClose={() => setSelGvId(null)} onCloseAll={onClose} panelMode={panelMode} />}
           </div>
         )
       })()}
