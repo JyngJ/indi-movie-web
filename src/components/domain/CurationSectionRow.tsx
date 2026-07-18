@@ -7,7 +7,7 @@ import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import type { SectionDisplayMode } from '@/lib/curation/filmsTabLists'
 import { withFlag } from '@/lib/nations'
 import type { Movie } from '@/types/api'
-import { GenreChip, SectionHeader, CardContainer } from '@/components/primitives'
+import { GenreChip, SectionHeader, CardContainer, ScrollNavButton } from '@/components/primitives'
 import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
 
 interface CurationSectionRowProps {
@@ -364,51 +364,33 @@ export function CurationSectionRow({
     )
   }
 
-  // 포스터 이미지 영역 세로 중앙: padding-top + 포스터 높이의 절반
-  const posterMidY = scaleBleed + 8 + height / 2
-
-  const btnStyle: React.CSSProperties = {
-    position: 'absolute', top: posterMidY, transform: 'translateY(-50%)',
-    width: 32, height: 32, borderRadius: '50%', zIndex: 3,
-    border: 'none', cursor: 'pointer',
-    backgroundColor: 'color-mix(in srgb, var(--color-surface-card) 72%, transparent)',
-    backdropFilter: 'blur(8px)',
-    color: 'var(--color-text-body)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    boxShadow: '0 1px 6px rgba(0,0,0,0.12)',
-    minHeight: 'auto',
-  }
+  // 좌우 스크롤 버튼 — 제목 줄 오른쪽 끝에 배치(design.md ScrollNavButton 표준 사용,
+  // 포스터 위 플로팅 원형 버튼 방식은 지양)
+  const navButtons = (canScrollLeft || canScrollRight) && (
+    <div style={{ display: 'flex', gap: 8 }}>
+      <ScrollNavButton
+        direction="left"
+        disabled={!canScrollLeft}
+        style={{ position: 'static', top: 'auto', left: 'auto', transform: 'none', opacity: canScrollLeft ? 1 : 0.35 }}
+        onClick={() => scrollRef.current?.scrollBy({ left: -scrollAmount, behavior: 'smooth' })}
+      />
+      <ScrollNavButton
+        direction="right"
+        disabled={!canScrollRight}
+        style={{ position: 'static', top: 'auto', right: 'auto', transform: 'none', opacity: canScrollRight ? 1 : 0.35 }}
+        onClick={() => scrollRef.current?.scrollBy({ left: scrollAmount, behavior: 'smooth' })}
+      />
+    </div>
+  )
 
   return (
     <section ref={setSectionRef} id={id} style={{ paddingTop: noHeader ? 0 : 24 }}>
       {!noHeader && (
         <div>
-          <SectionHeader title={title} description={description} isDesktop={isDesktop} />
+          <SectionHeader title={title} description={description} isDesktop={isDesktop} trailing={navButtons} />
         </div>
       )}
       <div style={{ position: 'relative' }}>
-        {canScrollLeft && (
-          <button
-            style={{ ...btnStyle, left: 6 }}
-            onClick={() => scrollRef.current?.scrollBy({ left: -scrollAmount, behavior: 'smooth' })}
-            aria-label="이전"
-          >
-            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </button>
-        )}
-        {canScrollRight && (
-          <button
-            style={{ ...btnStyle, right: 6 }}
-            onClick={() => scrollRef.current?.scrollBy({ left: scrollAmount, behavior: 'smooth' })}
-            aria-label="다음"
-          >
-            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-          </button>
-        )}
         <div
           ref={scrollRef}
           onScroll={updateScrollEdge}
