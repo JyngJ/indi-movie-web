@@ -537,18 +537,19 @@ export default function FilmsPage() {
       )}
       */}
 
-      {/* ── 렌더 순서 ─────────────────────────────────────────────
+      {/* ── 렌더 순서 (30일 CTR 기준 재배치 — 시의성 상단, 지식형 하단) ──────
           0. 이런 작품은 어때요 (개인화 — 최근 조회 이력 기반)
           1. 기념일 (생몰일)
           2. 특별전 #0
-          3. 매진 임박 + 시기별 큐레이션 (seasonal) + 이번주 마지막
+          3. 이번주 마지막 + 매진 임박 (run1 — CTR 1·2위, 최상단)
           4. 특별전 #1 (있으면)
-          5. 거장/수상작
-          6. 새롭게 상영 (realtime new/returning)
-          7. 연도별
-          8. 평론가
-          9. 무브먼트
-          10. 감독 스포트라이트
+          5. 새롭게 상영(realtime new/returning) + 심야
+          6. 거장/수상작 (인지도 앵커)
+          7. 시기별 큐레이션 (seasonal — 명당에서 강등)
+          8. 연도별
+          9. 평론가
+          10. 무브먼트
+          11. 감독 스포트라이트
       ─────────────────────────────────────────────────────── */}
       {(() => {
         type AnySection = {
@@ -721,9 +722,10 @@ export default function FilmsPage() {
           return <>{nodes}</>
         }
 
-        // 특별전 앞뒤 경계를 기준으로 두 개의 run 구성 — 매진 임박(오늘·내일)이 가장 시급하므로 맨 앞
-        const run1: AnySection[] = [...rtAlmostSoldOut, ...seasonal, ...rtLastWeek]
-        const run2: AnySection[] = [...awards, ...rtNew, ...rtLateNight, ...decades, ...critics, ...movements]
+        // 특별전 앞뒤 경계를 기준으로 두 개의 run 구성 — 30일 CTR 기준 재배치:
+        // 시의성(막바지·매진임박)을 최상단으로, 저CTR 시기별(seasonal)은 명당에서 강등
+        const run1: AnySection[] = [...rtLastWeek, ...rtAlmostSoldOut]
+        const run2: AnySection[] = [...rtNew, ...rtLateNight, ...awards, ...seasonal, ...decades, ...critics, ...movements]
 
         return (
           <>
@@ -742,21 +744,21 @@ export default function FilmsPage() {
             {/* 2. 특별전 #0 */}
             {renderSpecial(special0)}
 
-            {/* 3. 매진 임박 + 시기별 + 이번주 마지막 — 연속 sparse 자동 페어링 */}
+            {/* 3. 이번주 마지막 + 매진 임박 — 연속 sparse 자동 페어링 */}
             {renderRun(run1, 'run1')}
 
             {/* 4. 특별전 #1 (interleaved) */}
             {renderSpecial(special1)}
 
-            {/* 5~9. 거장/수상 · 신작 · 연도별 · 평론가 · 무브먼트 — 연속 sparse 자동 페어링 */}
+            {/* 5~10. 신작·심야 · 거장/수상 · 시기별 · 연도별 · 평론가 · 무브먼트 — 연속 sparse 자동 페어링 */}
             {renderRun(run2, 'run2')}
 
-            {/* 10. 감독 스포트라이트 */}
+            {/* 11. 감독 스포트라이트 */}
             <DirectorSpotlightSection
               movies={movies} activeMovieIds={activeMovieIdSet}
               isDesktop={isDesktop} onDirectorClick={handleDirectorClick} />
 
-            {/* 11. 전체 상영작 그리드 */}
+            {/* 12. 전체 상영작 그리드 */}
             <AllMoviesGrid
               movies={movies.filter((m) => activeMovieIdSet.has(m.id))}
               isDesktop={isDesktop}
