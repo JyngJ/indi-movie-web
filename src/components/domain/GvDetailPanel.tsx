@@ -4,15 +4,18 @@ import type { GvEvent } from '@/data/gv-events'
 import { gvEventTypeColor } from '@/lib/gv/adapter'
 import { trackEvent } from '@/lib/analytics/client'
 import { shareAdapter } from '@/lib/adapters/share'
+import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { BookingCtaButton, ShareScheduleButton } from './booking/BookingActions'
 
 interface GvDetailPanelProps {
   ev: GvEvent
   onClose: () => void
   onCloseAll?: () => void
+  /** 데스크톱 독/플로팅 패널 모드 — true면 하단 탭바가 없어 GLOBAL_NAV_MOBILE_HEIGHT 여백이 필요 없다 */
+  panelMode?: boolean
 }
 
-export function GvDetailPanel({ ev, onClose, onCloseAll }: GvDetailPanelProps) {
+export function GvDetailPanel({ ev, onClose, onCloseAll, panelMode }: GvDetailPanelProps) {
   const statusColor = ev.status === '매진' ? '#b91c1c' : ev.status === '매진 임박' ? '#ea580c' : '#16a34a'
 
   const shareEvent = () => {
@@ -171,19 +174,21 @@ export function GvDetailPanel({ ev, onClose, onCloseAll }: GvDetailPanelProps) {
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-caption)', letterSpacing: '0.5px', marginBottom: 8 }}>
               안내
             </div>
-            <p style={{ margin: 0, fontSize: 13, color: 'var(--color-text-body)', lineHeight: 1.65 }}>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--color-text-body)', lineHeight: 1.65, whiteSpace: 'pre-line' }}>
               {ev.gvNote}
             </p>
           </div>
         )}
 
         {/* Spacer for footer */}
-        <div style={{ height: 88 }} />
+        <div style={{ height: panelMode ? 88 : 88 + GLOBAL_NAV_MOBILE_HEIGHT }} />
       </div>
 
-      {/* CTA footer */}
+      {/* CTA footer — 모바일에서는 하단 탭바에 가리지 않도록 GLOBAL_NAV_MOBILE_HEIGHT만큼 띄운다 */}
       <div style={{
-        position: 'absolute', bottom: 0, left: 0, right: 0,
+        position: 'absolute',
+        bottom: panelMode ? 0 : GLOBAL_NAV_MOBILE_HEIGHT,
+        left: 0, right: 0,
         padding: '12px 16px max(16px, env(safe-area-inset-bottom))',
         background: 'var(--color-surface-card)',
         borderTop: '1px solid var(--color-border)',
