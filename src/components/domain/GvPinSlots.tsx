@@ -1,7 +1,9 @@
 import type { GvEvent } from '@/data/gv-events'
+import { isFestivalGroup } from '@/data/gv-events'
 import { gvEventTypeColor } from '@/lib/gv/adapter'
 
 const GV_AMBER = '#D97706'
+const GV_PURPLE = '#7C3AED'
 const SLOT_W = 130
 
 export const GV_MARKER_STEM_H = 28
@@ -9,6 +11,7 @@ export const GV_MARKER_DOT_D = 8
 
 // Heights/widths must match actual rendered sizes — used for iconAnchor offset calculation
 export const GV_CHIP_H = 22
+export const GV_FESTIVAL_CHIP_H = 42 // 영화제 배지 — 제목/구분선/개수 3줄
 export const GV_STACK_HDR_H = 32
 export const GV_STACK_ROW_H = 50
 export const GV_CALLOUT_H = 62
@@ -39,9 +42,9 @@ function calloutSize(zoom: number): { w: number; h: number } {
   return { w: GV_CALLOUT_W, h: GV_CALLOUT_H }
 }
 
-export function computeGvSlotH(count: number, zoom: number, expanded: boolean, selected = false): number {
+export function computeGvSlotH(count: number, zoom: number, expanded: boolean, selected = false, isFestival = false): number {
   if (zoom <= 13) {
-    if (!expanded) return GV_CHIP_H
+    if (!expanded) return isFestival ? GV_FESTIVAL_CHIP_H : GV_CHIP_H
     // 5개 초과는 스택 내부 스크롤 — 슬롯 높이는 5행에서 고정 (화면 밖으로 뚫고 나가는 것 방지)
     return GV_STACK_HDR_H + Math.min(count, GV_STACK_MAX_VISIBLE) * GV_STACK_ROW_H
   }
@@ -55,8 +58,8 @@ export function computeGvSlotH(count: number, zoom: number, expanded: boolean, s
   return n * h + (n - 1) * GV_CALLOUT_GAP
 }
 
-export function computeGvSlotW(count: number, zoom: number, expanded: boolean, selected = false): number {
-  if (zoom <= 13) return SLOT_W
+export function computeGvSlotW(count: number, zoom: number, expanded: boolean, selected = false, isFestival = false): number {
+  if (zoom <= 13) return isFestival && !expanded ? 150 : SLOT_W
   const n = Math.min(count, GV_MAX_VISIBLE)
   const { w } = calloutSize(zoom)
   if (shouldTwoCol(n, zoom, selected)) return w * 2 + GV_CALLOUT_COL_GAP
@@ -64,7 +67,35 @@ export function computeGvSlotW(count: number, zoom: number, expanded: boolean, s
 }
 
 // ── Collapsed chip ────────────────────────────────────────────────
-function GvCollapsedChip({ count, theaterName, selected }: { count: number; theaterName: string; selected?: boolean }) {
+function GvCollapsedChip({ count, theaterName, selected, festivalTitle }: { count: number; theaterName: string; selected?: boolean; festivalTitle?: string }) {
+  if (festivalTitle) {
+    return (
+      <div
+        data-gv-toggle={theaterName}
+        style={{
+          height: GV_FESTIVAL_CHIP_H,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 3,
+          padding: '5px 10px',
+          borderRadius: 10,
+          background: GV_PURPLE,
+          cursor: 'pointer',
+          boxShadow: selected
+            ? '0 0 0 2px #fff, 0 0 0 4px #4A6380'
+            : '0 1px 4px rgba(0,0,0,0.18)',
+          userSelect: 'none',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        <span style={{ fontSize: 10.5, fontWeight: 700, color: '#fff' }}>{festivalTitle}</span>
+        <span style={{ width: '100%', height: 1, background: 'rgba(255,255,255,0.35)' }} />
+        <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.9)' }}>이벤트 {count}개</span>
+      </div>
+    )
+  }
   return (
     <div
       data-gv-toggle={theaterName}
@@ -128,7 +159,8 @@ function GvStackRow({ ev }: { ev: GvEvent }) {
 }
 
 // ── Expanded stack (header + rows) ────────────────────────────────
-function GvExpandedStack({ events, theaterName }: { events: GvEvent[]; theaterName: string }) {
+function GvExpandedStack({ events, theaterName, festivalTitle }: { events: GvEvent[]; theaterName: string; festivalTitle?: string }) {
+  const accent = festivalTitle ? GV_PURPLE : GV_AMBER
   return (
     <div style={{
       width: SLOT_W,
@@ -146,12 +178,20 @@ function GvExpandedStack({ events, theaterName }: { events: GvEvent[]; theaterNa
         gap: 5,
         borderBottom: '1px solid var(--color-border)',
         cursor: 'pointer',
-        background: `${GV_AMBER}14`,
+        background: `${accent}14`,
       }}>
-        <span style={{ fontSize: 8, fontWeight: 900, color: GV_AMBER, letterSpacing: '0.3px' }}>GV</span>
-        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-primary)', flex: 1 }}>
-          GV {events.length}개
-        </span>
+        {festivalTitle ? (
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {festivalTitle} · {events.length}개
+          </span>
+        ) : (
+          <>
+            <span style={{ fontSize: 8, fontWeight: 900, color: GV_AMBER, letterSpacing: '0.3px' }}>GV</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-primary)', flex: 1 }}>
+              GV {events.length}개
+            </span>
+          </>
+        )}
         <span style={{ fontSize: 10, color: 'var(--color-text-caption)' }}>▲</span>
       </div>
       <div
@@ -305,9 +345,10 @@ interface GvBottomSlotProps {
 
 // Pure function — no hooks. Safe for renderToStaticMarkup.
 export function GvBottomSlot({ events, zoom, expanded, theaterName, selected }: GvBottomSlotProps) {
+  const festivalTitle = isFestivalGroup(events) ? events[0].movie : undefined
   if (zoom <= 13) {
-    if (!expanded) return <GvCollapsedChip count={events.length} theaterName={theaterName} selected={selected} />
-    return <GvExpandedStack events={events} theaterName={theaterName} />
+    if (!expanded) return <GvCollapsedChip count={events.length} theaterName={theaterName} selected={selected} festivalTitle={festivalTitle} />
+    return <GvExpandedStack events={events} theaterName={theaterName} festivalTitle={festivalTitle} />
   }
   const size = calloutSize(zoom)
   // zoom 15+: stack all bubbles; zoom 14 + selected: also stack; otherwise single + extra count

@@ -171,7 +171,7 @@ export function GvDetailPanel({ ev, onClose, onCloseAll }: GvDetailPanelProps) {
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-caption)', letterSpacing: '0.5px', marginBottom: 8 }}>
               안내
             </div>
-            <p style={{ margin: 0, fontSize: 13, color: 'var(--color-text-body)', lineHeight: 1.65 }}>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--color-text-body)', lineHeight: 1.65, whiteSpace: 'pre-line' }}>
               {ev.gvNote}
             </p>
           </div>

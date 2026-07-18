@@ -20,7 +20,8 @@ import { SearchPanel } from '@/components/domain/SearchPanel'
 import { GvMarkerIcon } from '@/components/domain/GvMarkerIcon'
 import { computeGvSlotH, computeGvSlotW, GV_MARKER_STEM_H, GV_MARKER_DOT_D } from '@/components/domain/GvPinSlots'
 import type { GvEvent } from '@/data/gv-events'
-import { theaterEventToGvEvent } from '@/lib/gv/adapter'
+import { isFestivalGroup } from '@/data/gv-events'
+import { theaterEventToGvEvent, isFestivalTitle } from '@/lib/gv/adapter'
 import type { DesktopPanelState } from '@/components/domain/DesktopDetailPanel'
 import type { FilterState } from '@/components/domain'
 import { useActiveMovieIds, useMapShowtimes, useMovies, useStations, useTheaters, useTheaterEvents } from '@/lib/supabase/queries'
@@ -245,8 +246,9 @@ function makeGvMarkerIcon(events: GvEvent[], zoom: number, expanded: boolean, th
   const cacheKey = `${theaterName}|${zoom}|${expanded ? 1 : 0}|${selected ? 1 : 0}|${events.map(e => e.id).join(',')}`
   const cached = _gvMarkerIconCache.get(cacheKey)
   if (cached) return cached
-  const slotH = computeGvSlotH(events.length, zoom, expanded, selected)
-  const slotW = computeGvSlotW(events.length, zoom, expanded, selected)
+  const isFestival = isFestivalGroup(events)
+  const slotH = computeGvSlotH(events.length, zoom, expanded, selected, isFestival)
+  const slotW = computeGvSlotW(events.length, zoom, expanded, selected, isFestival)
   const totalH = slotH + GV_MARKER_STEM_H + GV_MARKER_DOT_D
   const html = renderToStaticMarkup(
     <GvMarkerIcon events={events} zoom={zoom} expanded={expanded} theaterName={theaterName} selected={selected} slotW={slotW} />
@@ -1061,10 +1063,11 @@ export default function MapView() {
   const gvDelayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [expandedGvTheater, setExpandedGvTheater] = useState<string | null>(null)
   const { data: rawTheaterEvents = [] } = useTheaterEvents()
-  // GV/이벤트 핀도 상영일정 날짜 필터를 따른다 — 필터 밖 날짜의 이벤트는 핀에서 제외
+  // GV/이벤트 핀도 상영일정 날짜 필터를 따른다 — 필터 밖 날짜의 이벤트는 핀에서 제외.
+  // 단, 영화제(festival)는 여러 날에 걸친 행사 자체를 알리는 게 목적이라 날짜 필터와 무관하게 항상 노출한다.
   const gvEvents = useMemo(
     () => rawTheaterEvents
-      .filter((ev) => ev.eventDate >= mapShowtimeStart && ev.eventDate <= mapShowtimeEnd)
+      .filter((ev) => isFestivalTitle(ev.title) || (ev.eventDate >= mapShowtimeStart && ev.eventDate <= mapShowtimeEnd))
       .map(theaterEventToGvEvent),
     [rawTheaterEvents, mapShowtimeStart, mapShowtimeEnd],
   )
@@ -1416,6 +1419,25 @@ export default function MapView() {
       .map((result) => result.theater)
   }, [searchQuery, theaters])
 
+  // 정동진독립영화제 같은 여러 극장에 걸친 영화제 이벤트 — 이름으로 검색하면 관련 극장들을 한 번에 보여준다
+  const festivalResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return []
+    const byTitle = new Map<string, Set<string>>()
+    for (const ev of rawTheaterEvents) {
+      if (!isFestivalTitle(ev.title)) continue
+      if (!ev.title.toLowerCase().includes(q)) continue
+      if (!byTitle.has(ev.title)) byTitle.set(ev.title, new Set())
+      byTitle.get(ev.title)!.add(ev.theaterId)
+    }
+    return Array.from(byTitle.entries())
+      .map(([title, theaterIds]) => ({
+        title,
+        theaters: theaters.filter((t) => theaterIds.has(t.id)),
+      }))
+      .filter((f) => f.theaters.length > 0)
+  }, [rawTheaterEvents, searchQuery, theaters])
+
   const activeMovieIdSet = useMemo(() => new Set(activeMovieIds), [activeMovieIds])
   const nationOptions = useMemo(() => {
     const counts = new Map<string, number>()
@@ -1738,7 +1760,9 @@ export default function MapView() {
     const bestStationScore = Math.max(0, ...stationResults.map((station) => stationSearchScore(station, searchQuery)))
     const bestTheaterScore = Math.max(0, ...theaterResults.map((theater) => theaterSearchScore(theater, searchQuery)))
     const bestAreaScore = Math.max(0, ...areaResults.map(a => Math.max(areaSearchScore(a.name, searchQuery), ...a.aliases.map(al => areaSearchScore(al, searchQuery)))))
+    const bestFestivalScore = festivalResults.length > 0 ? 100 : 0
     return [
+      { id: 'festivals', score: bestFestivalScore, priority: -1 },
       { id: 'theaters', score: bestTheaterScore, priority: 0 },
       { id: 'movies', score: bestMovieScore, priority: 1 },
       { id: 'directors', score: bestDirectorScore, priority: 2 },
@@ -1748,7 +1772,7 @@ export default function MapView() {
       .filter((section) => section.score > 0)
       .sort((a, b) => b.score - a.score || a.priority - b.priority)
       .map((section) => section.id)
-  }, [areaResults, directorResults, searchQuery, stationResults, theaterResults, titleMovieResults])
+  }, [areaResults, directorResults, festivalResults, searchQuery, stationResults, theaterResults, titleMovieResults])
 
   const focusStation = useCallback((station: Station) => {
     trackEvent('search result selected', {
@@ -2360,7 +2384,7 @@ export default function MapView() {
           ? curationVisibleHeight + 16
           : GLOBAL_NAV_MOBILE_HEIGHT + 32)
     : 32
-  const hasSearchResults = theaterResults.length > 0 || stationResults.length > 0 || movieResults.length > 0 || relatedDirectorResults.length > 0 || areaResults.length > 0
+  const hasSearchResults = theaterResults.length > 0 || stationResults.length > 0 || movieResults.length > 0 || relatedDirectorResults.length > 0 || areaResults.length > 0 || festivalResults.length > 0
 
   useEffect(() => {
     const query = searchQuery.trim()
@@ -2398,6 +2422,99 @@ export default function MapView() {
 
     return () => clearTimeout(timer)
   }, [areaResults.length, movieResults.length, relatedDirectorResults.length, searchOpen, searchQuery, stationResults.length, theaterResults.length])
+
+  const renderFestivalSearchSection = () => {
+    if (festivalResults.length === 0) return null
+    return (
+      <section>
+        <h2 style={{
+          margin: '0 0 10px',
+          fontSize: 12,
+          fontWeight: 700,
+          color: 'var(--color-text-caption)',
+        }}>
+          영화제
+        </h2>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {festivalResults.map((festival) => (
+            <button
+              key={festival.title}
+              type="button"
+              onClick={() => {
+                trackEvent('search result selected', {
+                  result_type: 'festival',
+                  result_id: festival.title,
+                  result_name: festival.title,
+                  search_term: searchQuery.trim(),
+                })
+                setRecentSearches(prev => addToRecent(searchQuery, prev))
+                closeSearch()
+                const map = mapRef.current
+                if (!map || festival.theaters.length === 0) return
+                if (festival.theaters.length === 1) {
+                  const t = festival.theaters[0]
+                  flyToForTheater([t.lat, t.lng], 16, 0.75)
+                } else {
+                  const bounds = L.latLngBounds(festival.theaters.map((t) => [t.lat, t.lng] as [number, number]))
+                  map.fitBounds(bounds, { padding: [64, 64] })
+                }
+              }}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '12px 0',
+                border: 0,
+                borderBottom: '1px solid var(--color-border)',
+                background: 'transparent',
+                color: 'var(--color-text-primary)',
+                textAlign: 'left',
+              }}
+            >
+              <span style={{
+                width: 38,
+                height: 38,
+                borderRadius: 10,
+                flexShrink: 0,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#7C3AED',
+                color: '#fff',
+              }}>
+                <svg width={17} height={17} viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="18" height="17" rx="2" />
+                  <path d="M3 9h18M8 2v4M16 2v4" />
+                </svg>
+              </span>
+              <span style={{ minWidth: 0, flex: 1 }}>
+                <span style={{
+                  display: 'block',
+                  fontSize: 15,
+                  fontWeight: 700,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {festival.title}
+                </span>
+                <span style={{
+                  display: 'block',
+                  marginTop: 4,
+                  fontSize: 12,
+                  color: 'var(--color-text-caption)',
+                }}>
+                  {festival.theaters.length}개 극장 · {festival.theaters.map((t) => t.name).join(', ')}
+                </span>
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
+    )
+  }
 
   const renderTheaterSearchSection = () => {
     if (theaterResults.length === 0) return null
@@ -3264,15 +3381,17 @@ export default function MapView() {
           }}
         >
           {searchSections.map((section) => {
-            const node = section === 'movies'
-              ? renderMovieSearchSection()
-              : section === 'directors'
-                ? renderDirectorSearchSection()
-                : section === 'theaters'
-                  ? renderTheaterSearchSection()
-                  : section === 'areas'
-                    ? renderAreaSearchSection()
-                    : renderStationSearchSection()
+            const node = section === 'festivals'
+              ? renderFestivalSearchSection()
+              : section === 'movies'
+                ? renderMovieSearchSection()
+                : section === 'directors'
+                  ? renderDirectorSearchSection()
+                  : section === 'theaters'
+                    ? renderTheaterSearchSection()
+                    : section === 'areas'
+                      ? renderAreaSearchSection()
+                      : renderStationSearchSection()
             return node ? <div key={section}>{node}</div> : null
           })}
         </SearchPanel>
