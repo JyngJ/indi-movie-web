@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import type { AlmostSoldOutCandidate, CurationListRow, LateNightCandidate } from '@/lib/curation/types'
 import type { Theater, Movie, Showtime, Station } from '@/types/api'
 import type { TheaterEvent } from '@/types/admin'
+import type { Festival } from '@/types/festival'
 import { createSupabaseBrowserClient } from './browser'
 import { movieRowToMovie } from './movieRow'
 import { formatLocalDate } from '@/lib/date'
@@ -248,6 +249,44 @@ export function useCurationLists() {
       }))
     },
     staleTime: 60 * 60 * 1000,
+  })
+}
+
+/* ── 진행중/예정 영화제 (상영작 탭 "주목할 영화제" 배너) ─────────── */
+// 지역 필터를 안 탐 — festivals는 전국 대상. end_date >= today로 종료된 건 제외,
+// start_date 임박순 정렬(진행중이 upcoming보다 먼저 오도록 start_date가 이미 과거인
+// 진행중 항목이 자연히 앞선다).
+export function useFestivals() {
+  const today = formatLocalDate(new Date())
+  return useQuery<Festival[]>({
+    queryKey: ['festivals', today],
+    queryFn: async () => {
+      const { data, error } = await supabase()
+        .from('festivals')
+        .select('id, name, slug, start_date, end_date, region, city, venue_text, banner_url, link_url, description, is_active')
+        .eq('is_active', true)
+        .gte('end_date', today)
+        .order('start_date', { ascending: true })
+
+      if (error) throw error
+
+      return (data ?? []).map((r) => ({
+        id: r.id,
+        name: r.name,
+        slug: r.slug,
+        startDate: r.start_date,
+        endDate: r.end_date,
+        region: r.region,
+        city: r.city,
+        venueText: r.venue_text,
+        bannerUrl: r.banner_url,
+        linkUrl: r.link_url,
+        description: r.description,
+        isActive: r.is_active,
+      }))
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   })
 }
 

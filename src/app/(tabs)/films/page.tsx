@@ -25,11 +25,13 @@ import { getTodayAnniversaries } from '@/lib/curation/directorAnniversaries'
 import { trackEvent } from '@/lib/analytics/client'
 import { buildYearsOnScreenCaptions } from '@/lib/curation/yearsOnScreenCaption'
 import { formatLocalDate, formatLocalTimeHHMM } from '@/lib/date'
-import { useActiveMovieIdsByRegion, useActiveMovieTheaterPairs, useAlmostSoldOutCandidates, useCurationLists, useFilmRankings, useLateNightCandidates, useMovies, useTheaters } from '@/lib/supabase/queries'
+import { useActiveMovieIdsByRegion, useActiveMovieTheaterPairs, useAlmostSoldOutCandidates, useCurationLists, useFestivals, useFilmRankings, useLateNightCandidates, useMovies, useTheaters } from '@/lib/supabase/queries'
 import { getRegionFromCity } from '@/lib/regions'
 import { getStoredRegion, setStoredRegion } from '@/lib/regionStorage'
+import { getFestivalDateLabel, getFestivalStatus, type FestivalStatus } from '@/lib/festival/status'
 import type { Theater } from '@/types/api'
-import { Hourglass, Clapperboard, Film, Zap, Moon, ArrowUp, Car, CalendarDays, MapPin } from 'lucide-react'
+import type { Festival } from '@/types/festival'
+import { Hourglass, Clapperboard, Film, Zap, Moon, ArrowUp, Car, CalendarDays, MapPin, ChevronRight } from 'lucide-react'
 
 /* ── 지역 설정 힌트 말풍선 — 지도 FilterBar의 안내와 동일한 문구/닫기 동작(yh_region_tip) ── */
 function RegionHintBubble({ onDismiss }: { onDismiss: () => void }) {
@@ -89,6 +91,38 @@ function RegionHintBubble({ onDismiss }: { onDismiss: () => void }) {
         </button>
       </div>
     </div>
+  )
+}
+
+const FESTIVAL_STATUS_LABEL: Record<FestivalStatus, string> = { upcoming: '예정', ongoing: '진행 중', ended: '종료' }
+const FESTIVAL_STATUS_DOT: Record<FestivalStatus, string> = { upcoming: '#D97706', ongoing: '#16A34A', ended: 'var(--color-text-caption)' }
+
+/* ── 주목할 영화제 배너 — 지역 필터 무관, 전국에서 가장 임박한 영화제 1개 ── */
+function FestivalBannerCard({ festival, today, onClick }: { festival: Festival; today: string; onClick: () => void }) {
+  const status = getFestivalStatus(festival.startDate, festival.endDate, today)
+  const dateLabel = getFestivalDateLabel(status, festival.startDate, festival.endDate, today)
+
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+        padding: '14px 16px', margin: '0 16px', borderRadius: 'var(--radius-xl)',
+        border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)',
+        cursor: 'pointer', textAlign: 'left', minHeight: 'auto',
+      }}
+    >
+      <div style={{ minWidth: 0 }}>
+        <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+          주목할 영화제
+        </span>
+        <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--color-text-caption)' }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: FESTIVAL_STATUS_DOT[status], flexShrink: 0 }} />
+          {FESTIVAL_STATUS_LABEL[status]} · {dateLabel} · {festival.city}
+        </div>
+      </div>
+      <ChevronRight size={18} strokeWidth={1.75} color="var(--color-text-caption)" style={{ flexShrink: 0 }} />
+    </button>
   )
 }
 
@@ -165,6 +199,7 @@ export default function FilmsPage() {
   const { data: activeMovieIds = [] } = useActiveMovieIdsByRegion(selectedRegion)
   const { data: movieTheaterPairs = [] } = useActiveMovieTheaterPairs(selectedRegion)
   const { data: filmRankingRow } = useFilmRankings()
+  const { data: festivals = [] } = useFestivals()
   const { lastWeekFilms, newIndieFilms, returningFilms, recentlyViewed, soloTheaterFilms, todayShowFilms } =
     useCurationData(true, selectedRegion, undefined, userLocation)
 
@@ -890,6 +925,17 @@ export default function FilmsPage() {
 
         return (
           <>
+            {/* 주목할 영화제 — 지역 필터 무관 전국 대상, festivals 0개면 미노출 */}
+            {festivals.length > 0 && (
+              <div style={{ paddingTop: isDesktop ? 24 : 16 }}>
+                <FestivalBannerCard
+                  festival={festivals[0]}
+                  today={formatLocalDate(new Date())}
+                  onClick={() => router.push(`/festival/${festivals[0].slug}`)}
+                />
+              </div>
+            )}
+
             {/* 0. 개인화 — 최근 본 영화 기반, 이력 없으면 미노출 */}
             <PersonalizedSection
               movies={movies}
