@@ -24,7 +24,7 @@ import { formatWeekendCaption, getWeekendFilms } from '@/lib/curation/getWeekend
 import { getTodayAnniversaries } from '@/lib/curation/directorAnniversaries'
 import { trackEvent } from '@/lib/analytics/client'
 import { buildYearsOnScreenCaptions } from '@/lib/curation/yearsOnScreenCaption'
-import { formatLocalDate, formatLocalTimeHHMM } from '@/lib/date'
+import { formatLocalDate, formatLocalTimeHHMM, toKstIsoDate } from '@/lib/date'
 import { useActiveMovieIdsByRegion, useActiveMovieTheaterPairs, useAlmostSoldOutCandidates, useCurationLists, useFestivals, useFilmRankings, useLateNightCandidates, useMovies, useTheaters } from '@/lib/supabase/queries'
 import { getRegionFromCity } from '@/lib/regions'
 import { getStoredRegion, setStoredRegion } from '@/lib/regionStorage'
@@ -592,6 +592,7 @@ export default function FilmsPage() {
                 <FilmsSearchBar
                   movies={movies}
                   theaters={theaters}
+                  festivals={festivals}
                   isDesktop={true}
                 />
               </div>
@@ -649,6 +650,7 @@ export default function FilmsPage() {
               <FilmsSearchBar
                 movies={movies}
                 theaters={theaters}
+                festivals={festivals}
                 isDesktop={false}
               />
             </div>
@@ -930,7 +932,7 @@ export default function FilmsPage() {
               <div style={{ paddingTop: isDesktop ? 24 : 16 }}>
                 <FestivalBannerCard
                   festival={festivals[0]}
-                  today={formatLocalDate(new Date())}
+                  today={toKstIsoDate(new Date())}
                   onClick={() => router.push(`/festival/${festivals[0].slug}`)}
                 />
               </div>

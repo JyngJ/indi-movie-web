@@ -24,10 +24,14 @@ const FESTIVAL_SELECT = `
 
 async function fetchFestival(slug: string): Promise<FestivalDetail | null> {
   const supabase = createSupabaseServerClient()
+  // createSupabaseServerClient()는 anon key라 RLS(is_active=true)가 이미 비활성 영화제를
+  // 막아주지만, 쿼리 자체에도 명시해 서버 클라이언트가 나중에 service-role로 바뀌어도
+  // (RLS 우회) 조용히 새지 않게 방어한다 — sitemap.ts의 is_active 필터와 같은 원칙.
   const { data } = await supabase
     .from('festivals')
     .select(FESTIVAL_SELECT)
     .eq('slug', slug)
+    .eq('is_active', true)
     .single()
 
   if (!data) return null

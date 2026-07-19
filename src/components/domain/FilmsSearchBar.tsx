@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { SearchBar, SearchBarButton } from '@/components/primitives'
 import { AddRequestModal, AddRequestCtaButton } from '@/components/domain/AddRequestModal'
 import type { Movie, Theater } from '@/types/api'
+import type { Festival } from '@/types/festival'
 
 const HISTORY_KEY = 'films-search-history:v1'
 const MAX_HISTORY = 10
@@ -12,6 +13,7 @@ const MAX_HISTORY = 10
 interface Props {
   movies: Movie[]
   theaters: Theater[]
+  festivals: Festival[]
   isDesktop: boolean
 }
 
@@ -19,11 +21,12 @@ const HINTS = [
   { cat: '영화관', ex: '서울아트시네마' },
   { cat: '영화',   ex: '레오파드' },
   { cat: '감독',   ex: '홍상수' },
+  { cat: '영화제', ex: '정동진독립영화제' },
 ] as const
 
-const TYPE_LABEL: Record<string, string> = { movie: '영화', director: '감독', theater: '영화관' }
+const TYPE_LABEL: Record<string, string> = { movie: '영화', director: '감독', theater: '영화관', festival: '영화제' }
 
-type Suggestion = { type: 'movie' | 'director' | 'theater'; label: string; navigateTo: string }
+type Suggestion = { type: 'movie' | 'director' | 'theater' | 'festival'; label: string; navigateTo: string }
 
 // 한글 자모 분해: 받침까지 낱자로 풀어서 substring 비교 — 미완성 음절("에뭇"→"에무시") 처리
 const CHO  = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ'.split('')
@@ -45,11 +48,18 @@ function koMatch(query: string, target: string): boolean {
   return t.includes(q) || decomposeKo(t).includes(decomposeKo(q))
 }
 
-function buildSuggestions(iv: string, movies: Movie[], theaters: Theater[]): Suggestion[] {
+function buildSuggestions(iv: string, movies: Movie[], theaters: Theater[], festivals: Festival[]): Suggestion[] {
   if (!iv) return []
   const seen = new Set<string>()
   const out: Suggestion[] = []
 
+  for (const f of festivals) {
+    if (koMatch(iv, f.name) && !seen.has(f.name)) {
+      seen.add(f.name)
+      out.push({ type: 'festival', label: f.name, navigateTo: `/festival/${f.slug}` })
+    }
+    if (out.length >= 3) break
+  }
   for (const m of movies) {
     if (koMatch(iv, m.title) && !seen.has(m.title)) {
       seen.add(m.title)
@@ -109,7 +119,7 @@ const CloseIcon = ({ size = 14 }: { size?: number }) => (
   </svg>
 )
 
-export function FilmsSearchBar({ movies, theaters, isDesktop }: Props) {
+export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props) {
   const router = useRouter()
 
   const [history, setHistory]    = useState<string[]>([])
@@ -165,7 +175,7 @@ export function FilmsSearchBar({ movies, theaters, isDesktop }: Props) {
   }
 
   function mobileSubmit() {
-    const sug = buildSuggestions(mInput.trim().toLowerCase(), movies, theaters)
+    const sug = buildSuggestions(mInput.trim().toLowerCase(), movies, theaters, festivals)
     if (sug[0]) mobileNavigate(sug[0])
     else { setMOpen(false); setMInput('') }
   }
@@ -174,7 +184,7 @@ export function FilmsSearchBar({ movies, theaters, isDesktop }: Props) {
   if (isDesktop) {
     const ACCENT = 'var(--color-primary-base)'
     const iv = query.trim().toLowerCase()
-    const typingSuggestions = buildSuggestions(iv, movies, theaters)
+    const typingSuggestions = buildSuggestions(iv, movies, theaters, festivals)
     const isTyping = iv.length > 0
 
     return (
@@ -184,7 +194,7 @@ export function FilmsSearchBar({ movies, theaters, isDesktop }: Props) {
         {/* ── Search bar ── */}
         {!focused && !query ? (
           <SearchBarButton
-            placeholder="영화, 영화관, 감독 검색"
+            placeholder="영화, 영화관, 감독, 영화제 검색"
             onClick={() => {
               setFocused(true)
               requestAnimationFrame(() => desktopRef.current?.focus())
@@ -229,7 +239,7 @@ export function FilmsSearchBar({ movies, theaters, isDesktop }: Props) {
                 else setFocused(false)
               }
             }}
-            placeholder="영화, 영화관, 감독 검색"
+            placeholder="영화, 영화관, 감독, 영화제 검색"
             style={{
               flex: 1, border: 'none', outline: 'none', background: 'none', minWidth: 0,
               fontSize: 14, color: 'var(--color-text-primary)', caretColor: ACCENT,
@@ -316,7 +326,7 @@ export function FilmsSearchBar({ movies, theaters, isDesktop }: Props) {
     return (
       <div style={{ width: '100%' }}>
         <SearchBarButton
-          placeholder="영화, 영화관, 감독 검색"
+          placeholder="영화, 영화관, 감독, 영화제 검색"
           onClick={() => { setMInput(''); setMOpen(true); setTimeout(() => mobileRef.current?.focus(), 80) }}
         />
       </div>
@@ -325,7 +335,7 @@ export function FilmsSearchBar({ movies, theaters, isDesktop }: Props) {
 
   // Mobile overlay
   const miv = mInput.trim().toLowerCase()
-  const mobileSuggestions = buildSuggestions(miv, movies, theaters)
+  const mobileSuggestions = buildSuggestions(miv, movies, theaters, festivals)
 
   return (
     <>
@@ -336,7 +346,7 @@ export function FilmsSearchBar({ movies, theaters, isDesktop }: Props) {
             <SearchBar
               ref={mobileRef}
               value={mInput}
-              placeholder="영화, 영화관, 감독 검색"
+              placeholder="영화, 영화관, 감독, 영화제 검색"
               inputFontSize={16}
               onChange={e => setMInput(e.target.value)}
               onClear={() => setMInput('')}

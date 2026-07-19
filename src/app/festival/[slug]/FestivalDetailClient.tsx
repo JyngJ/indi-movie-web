@@ -9,7 +9,7 @@ import { SectionHeader, ScrollNavButton } from '@/components/primitives'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { getFestivalDateLabel, getFestivalStatus, type FestivalStatus } from '@/lib/festival/status'
-import { formatLocalDate } from '@/lib/date'
+import { toKstIsoDate } from '@/lib/date'
 import type { FestivalDetail } from '@/types/festival'
 
 const STATUS_LABEL: Record<FestivalStatus, string> = { upcoming: '예정', ongoing: '진행중', ended: '종료' }
@@ -43,7 +43,9 @@ function LineupPoster({ src, alt }: { src?: string; alt: string }) {
 export function FestivalDetailClient({ festival }: { festival: FestivalDetail }) {
   const router = useRouter()
   const isDesktop = useIsDesktopLayout()
-  const today = formatLocalDate(new Date())
+  // 한국 서비스라 항상 KST 기준 "오늘" — formatLocalDate는 SSR(Vercel UTC)에서
+  // 자정~오전 9시 사이 날짜가 하루 밀리는 버그가 있어 toKstIsoDate를 쓴다.
+  const today = toKstIsoDate(new Date())
   const status = getFestivalStatus(festival.startDate, festival.endDate, today)
   const dateLabel = getFestivalDateLabel(status, festival.startDate, festival.endDate, today)
 

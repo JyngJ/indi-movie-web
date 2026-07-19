@@ -5,7 +5,7 @@ import type { TheaterEvent } from '@/types/admin'
 import type { Festival } from '@/types/festival'
 import { createSupabaseBrowserClient } from './browser'
 import { movieRowToMovie } from './movieRow'
-import { formatLocalDate } from '@/lib/date'
+import { formatLocalDate, toKstIsoDate } from '@/lib/date'
 import { getRegionFromCity } from '@/lib/regions'
 import { getMovieTheaterShowtimes as getMovieTheaterShowtimesPure } from '@/lib/catalog/getMovieTheaterShowtimes'
 import type { MovieTheaterEntry } from '@/lib/catalog/getMovieTheaterShowtimes'
@@ -257,7 +257,9 @@ export function useCurationLists() {
 // start_date 임박순 정렬(진행중이 upcoming보다 먼저 오도록 start_date가 이미 과거인
 // 진행중 항목이 자연히 앞선다).
 export function useFestivals() {
-  const today = formatLocalDate(new Date())
+  // 한국 서비스 대상 고정 개념(회기)이라 기기 로컬 타임존이 아닌 KST로 고정 — formatLocalDate였다면
+  // 해외 사용자 기기 시간대에 따라 "오늘"이 어긋날 수 있음.
+  const today = toKstIsoDate(new Date())
   return useQuery<Festival[]>({
     queryKey: ['festivals', today],
     queryFn: async () => {
