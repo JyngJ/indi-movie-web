@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { ExternalLink, MapPin, X, ZoomIn } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ExternalLink, MapPin, X, ZoomIn } from 'lucide-react'
 import { SectionHeader, ScrollNavButton } from '@/components/primitives'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
@@ -14,6 +14,10 @@ import type { FestivalDetail } from '@/types/festival'
 
 const STATUS_LABEL: Record<FestivalStatus, string> = { upcoming: '예정', ongoing: '진행중', ended: '종료' }
 const STATUS_COLOR: Record<FestivalStatus, string> = { upcoming: '#D97706', ongoing: '#16A34A', ended: 'var(--color-text-caption)' }
+
+// 라인업 그리드 접힌 상태 노출 개수 — 지도 큐레이션 탭(CurationSheet)과 같은 더보기 패턴,
+// 컬럼 수와 무관하게 고정 개수로 자른다(그쪽도 SECTION_COLLAPSED_COUNT=6 고정값 사용)
+const LINEUP_COLLAPSED_COUNT = 6
 
 const DOW = ['일', '월', '화', '수', '목', '금', '토']
 function timetableCaption(dayDate: string | null, label: string | null): string {
@@ -42,7 +46,13 @@ function LineupPoster({ src, alt }: { src?: string; alt: string }) {
 
 export function FestivalDetailClient({ festival }: { festival: FestivalDetail }) {
   const router = useRouter()
-  const isDesktop = useIsDesktopLayout()
+  // SSR은 window가 없어 항상 모바일 레이아웃으로 렌더 — useIsDesktopLayout을 마운트 전에
+  // 그대로 쓰면 데스크톱 뷰포트에서 첫 클라이언트 렌더가 SSR 결과와 달라져 하이드레이션
+  // 에러가 난다(films/page.tsx의 mounted 게이트와 동일 패턴).
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+  const isDesktopLayout = useIsDesktopLayout()
+  const isDesktop = mounted && isDesktopLayout
   // 한국 서비스라 항상 KST 기준 "오늘" — formatLocalDate는 SSR(Vercel UTC)에서
   // 자정~오전 9시 사이 날짜가 하루 밀리는 버그가 있어 toKstIsoDate를 쓴다.
   const today = toKstIsoDate(new Date())
@@ -51,6 +61,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
 
   const [ttIndex, setTtIndex] = useState(0)
   const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lineupExpanded, setLineupExpanded] = useState(false)
   const timetables = festival.timetables
   const currentTimetable = timetables[ttIndex]
 
@@ -60,18 +71,39 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
 
   return (
     <div style={{ minHeight: '100dvh', backgroundColor: 'var(--color-surface-bg)', paddingBottom: 40 }}>
-      {/* 배너 */}
-      <div style={{ width: '100%', aspectRatio: '16/9', position: 'relative', backgroundColor: 'var(--color-surface-raised)' }}>
-        {festival.bannerUrl ? (
-          <Image src={festival.bannerUrl} alt={festival.name} fill priority sizes="100vw" style={{ objectFit: 'cover' }} />
-        ) : (
-          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
-            <span style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)', textAlign: 'center' }}>
-              {festival.name}
-            </span>
-          </div>
-        )}
+      {/* 상단 NavBar — 이 페이지는 (tabs) 레이아웃 밖이라 GlobalNav(탭바/레일)이 안 뜬다.
+          films/theater/[id]와 같은 패턴: 뒤로가기 + 브레드크럼 */}
+      <div style={{ position: 'sticky', top: 0, zIndex: 50, paddingTop: 'env(safe-area-inset-top)', backgroundColor: 'var(--color-surface-bg)', borderBottom: '1px solid var(--color-border)' }}>
+        <div style={{ height: 52, display: 'flex', alignItems: 'center', gap: 4, paddingLeft: 4, paddingRight: 12, maxWidth: isDesktop ? 1200 : undefined, margin: isDesktop ? '0 auto' : undefined }}>
+          <button
+            onClick={() => router.back()}
+            style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-text-body)', flexShrink: 0 }}
+            aria-label="뒤로"
+          >
+            <ChevronLeft size={22} strokeWidth={1.75} color="currentColor" />
+          </button>
+          <button onClick={() => router.push('/films')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-caption)', fontSize: 13, minHeight: 'auto', padding: 0, flexShrink: 0 }}>영화</button>
+          <span style={{ color: 'var(--color-text-caption)', fontSize: 13, flexShrink: 0 }}>&gt;</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{festival.name}</span>
+        </div>
       </div>
+
+      {/* 배너 — 잘리지 않게 원본 비율 그대로 가로에 맞춤(크롭 없음). fill+objectFit:cover였을 땐
+          21:4처럼 아주 납작한 배너가 16:9 박스에 눌려 좌우가 크게 잘렸다. */}
+      {festival.bannerUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={festival.bannerUrl}
+          alt={festival.name}
+          style={{ width: '100%', height: 'auto', display: 'block', backgroundColor: 'var(--color-surface-raised)' }}
+        />
+      ) : (
+        <div style={{ width: '100%', aspectRatio: '21/4', position: 'relative', backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
+          <span style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)', textAlign: 'center' }}>
+            {festival.name}
+          </span>
+        </div>
+      )}
 
       {/* 헤더 */}
       <div style={{ padding: '20px 16px 0' }}>
@@ -188,23 +220,40 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
             라인업 준비 중
           </p>
         ) : (
-          <div style={{
-            display: 'grid', gridTemplateColumns: isDesktop ? 'repeat(auto-fill, minmax(140px, 1fr))' : 'repeat(3, 1fr)',
-            gap: isDesktop ? 16 : 10, padding: '12px 16px',
-          }}>
-            {festival.movies.map((link) => (
-              <div
-                key={link.id}
-                onClick={link.movie ? () => router.push(`/films/movie/${link.movie!.id}`) : undefined}
-                style={{ display: 'flex', flexDirection: 'column', gap: 6, cursor: link.movie ? 'pointer' : 'default' }}
+          <>
+            <div style={{
+              display: 'grid', gridTemplateColumns: isDesktop ? 'repeat(auto-fill, minmax(140px, 1fr))' : 'repeat(3, 1fr)',
+              gap: isDesktop ? 16 : 10, padding: '12px 16px',
+            }}>
+              {(lineupExpanded ? festival.movies : festival.movies.slice(0, LINEUP_COLLAPSED_COUNT)).map((link) => (
+                <div
+                  key={link.id}
+                  onClick={link.movie ? () => router.push(`/films/movie/${link.movie!.id}`) : undefined}
+                  style={{ display: 'flex', flexDirection: 'column', gap: 6, cursor: link.movie ? 'pointer' : 'default' }}
+                >
+                  <LineupPoster src={link.movie?.posterUrl} alt={normalizeTitle(link.movie?.title ?? link.movieTitleSnapshot)} />
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-body)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3 }}>
+                    {normalizeTitle(link.movie?.title ?? link.movieTitleSnapshot)}
+                  </span>
+                </div>
+              ))}
+            </div>
+            {festival.movies.length > LINEUP_COLLAPSED_COUNT && (
+              <button
+                type="button"
+                onClick={() => setLineupExpanded((v) => !v)}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                  width: 'calc(100% - 32px)', margin: '4px 16px 0', padding: '8px 0',
+                  border: 'none', borderRadius: 'var(--radius-lg)', backgroundColor: 'var(--color-surface-raised)',
+                  color: 'var(--color-text-caption)', fontSize: 12, fontWeight: 600, cursor: 'pointer', minHeight: 'auto',
+                }}
               >
-                <LineupPoster src={link.movie?.posterUrl} alt={normalizeTitle(link.movie?.title ?? link.movieTitleSnapshot)} />
-                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-body)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3 }}>
-                  {normalizeTitle(link.movie?.title ?? link.movieTitleSnapshot)}
-                </span>
-              </div>
-            ))}
-          </div>
+                {lineupExpanded ? '접기' : '더보기'}
+                <ChevronDown size={14} strokeWidth={1.75} color="currentColor" style={{ transform: lineupExpanded ? 'rotate(180deg)' : undefined }} />
+              </button>
+            )}
+          </>
         )}
       </section>
 

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { SectionHeader } from '@/components/primitives'
 import { AllMoviesGrid } from '@/components/domain/AllMoviesGrid'
 import { AnniversarySection } from '@/components/domain/AnniversarySection'
 import { CurationSectionRow } from '@/components/domain/CurationSectionRow'
@@ -96,50 +97,55 @@ function RegionHintBubble({ onDismiss }: { onDismiss: () => void }) {
 }
 
 const FESTIVAL_STATUS_LABEL: Record<FestivalStatus, string> = { upcoming: '예정', ongoing: '진행 중', ended: '종료' }
-const FESTIVAL_STATUS_DOT: Record<FestivalStatus, string> = { upcoming: '#D97706', ongoing: '#16A34A', ended: 'var(--color-text-caption)' }
 
-/* ── 주목할 영화제 배너 — 지역 필터 무관, 전국에서 가장 임박한 영화제 1개 ── */
-function FestivalBannerCard({ festival, today, onClick }: { festival: Festival; today: string; onClick: () => void }) {
+// 데스크톱 배너 고정 폭 — 포스터 3장 가로 길이 정도(CurationSectionRow 데스크톱 포스터 210px × 3 + gap 16px × 2)
+const FESTIVAL_BANNER_DESKTOP_WIDTH = 662
+
+/* ── 주목할 영화제 배너 — 카드 아님. 제목줄은 다른 섹션과 같은 SectionHeader(왼쪽 고정,
+   배너 폭과 무관), 배너만 별도로 모바일은 좌우 꽉 채움 / 데스크톱은 폭 고정 + 중앙 정렬,
+   양옆 빈 공간은 배경보다 살짝 어두운 surface-raised로 채운다.
+   지역 필터 무관, 전국에서 가장 임박한 영화제 1개 ── */
+function FestivalBannerCard({ festival, today, isDesktop, onClick }: { festival: Festival; today: string; isDesktop: boolean; onClick: () => void }) {
   const status = getFestivalStatus(festival.startDate, festival.endDate, today)
   const dateLabel = getFestivalDateLabel(status, festival.startDate, festival.endDate, today)
 
   return (
-    <button
-      onClick={onClick}
-      style={{
-        width: 'calc(100% - 32px)', display: 'block', margin: '0 16px', padding: 0,
-        borderRadius: 'var(--radius-xl)', overflow: 'hidden',
-        border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)',
-        cursor: 'pointer', textAlign: 'left', minHeight: 'auto',
-      }}
-    >
-      {/* 제목줄 — 바로가기 화살표로 탭 가능함을 알림 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '12px 14px 10px' }}>
-        <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)' }}>
-          주목할 영화제
-        </span>
-        <ChevronRight size={16} strokeWidth={1.75} color="var(--color-text-caption)" />
-      </div>
+    <div>
+      <SectionHeader
+        title="주목할 영화제"
+        description={`${FESTIVAL_STATUS_LABEL[status]} · ${dateLabel} · ${festival.city}`}
+        isDesktop={isDesktop}
+        trailing={<ChevronRight size={18} strokeWidth={1.75} color="var(--color-text-caption)" />}
+      />
 
-      {/* 배너 이미지 — banner_url 있을 때만. 없으면 이 블록 건너뜀(아래 정보줄이 폴백) */}
+      {/* 배너 이미지 — banner_url 있을 때만. 전체 폭 띠에 surface-raised 배경을 깔고
+          그 안에서 데스크톱만 고정폭으로 중앙 정렬(모바일은 100%라 여백 자체가 없음) */}
       {festival.bannerUrl && (
-        <div style={{ position: 'relative', width: '100%', aspectRatio: '1400 / 380', backgroundColor: 'var(--color-surface-raised)' }}>
-          <Image
-            src={festival.bannerUrl}
-            alt={festival.name}
-            fill
-            sizes="(max-width: 1280px) 100vw, 600px"
-            style={{ objectFit: 'cover' }}
-          />
-        </div>
+        <button
+          onClick={onClick}
+          style={{
+            display: 'block', width: '100%', padding: 0, margin: '10px 0 0', border: 'none',
+            backgroundColor: 'var(--color-surface-raised)', cursor: 'pointer', minHeight: 'auto',
+          }}
+        >
+          {/* 21/4 — jiff28 배너 실제 크기(1260x240) 기준. 다른 영화제 배너가 비율이 달라도
+              objectFit:cover가 중앙 크롭하므로 레이아웃은 안 깨짐 */}
+          <div style={{
+            position: 'relative', aspectRatio: '21 / 4',
+            width: isDesktop ? FESTIVAL_BANNER_DESKTOP_WIDTH : '100%',
+            margin: isDesktop ? '0 auto' : 0,
+          }}>
+            <Image
+              src={festival.bannerUrl}
+              alt={festival.name}
+              fill
+              sizes={isDesktop ? `${FESTIVAL_BANNER_DESKTOP_WIDTH}px` : '100vw'}
+              style={{ objectFit: 'cover' }}
+            />
+          </div>
+        </button>
       )}
-
-      {/* 상태 정보줄 — 상태 dot + 날짜 카피 + 도시 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px 12px', fontSize: 12, color: 'var(--color-text-caption)' }}>
-        <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: FESTIVAL_STATUS_DOT[status], flexShrink: 0 }} />
-        {FESTIVAL_STATUS_LABEL[status]} · {dateLabel} · {festival.city}
-      </div>
-    </button>
+    </div>
   )
 }
 
@@ -950,6 +956,7 @@ export default function FilmsPage() {
                 <FestivalBannerCard
                   festival={festivals[0]}
                   today={toKstIsoDate(new Date())}
+                  isDesktop={isDesktop}
                   onClick={() => router.push(`/festival/${festivals[0].slug}`)}
                 />
               </div>

@@ -1,5 +1,7 @@
 -- ============================================================
--- 제28회 정동진독립영화제 — 임시 데이터 INSERT
+-- 정동진독립영화제(jiff28) — 임시 데이터 INSERT
+-- 이름은 '정동진독립영화제'(제28회 안 붙임)로 통일 — scripts/update-jeongdongjin-festival-copy.ts가
+-- theater_events.title도 이미 이 이름으로 바꿔놨음(지도/상영작 탭 표시 이름 단일화).
 -- Supabase 대시보드 SQL 에디터에서 실행. docs/SUPABASE_FESTIVALS.sql이
 -- 먼저 적용돼 있어야 함(festivals 등 4개 테이블 생성).
 --
@@ -19,7 +21,7 @@
 -- 1) 영화제 본체 -------------------------------------------------
 INSERT INTO festivals (name, slug, start_date, end_date, region, city, venue_text, banner_url, link_url, description, is_active)
 VALUES (
-  '제28회 정동진독립영화제',
+  '정동진독립영화제',
   'jiff28',
   '2026-08-07',
   '2026-08-10',
