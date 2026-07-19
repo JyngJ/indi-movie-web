@@ -1,0 +1,172 @@
+'use client'
+
+import { useRef } from 'react'
+import Image from 'next/image'
+import { ChevronRight } from 'lucide-react'
+import { SectionHeader } from '@/components/primitives'
+import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
+import { trackEvent } from '@/lib/analytics/client'
+import { getFestivalDateLabel, getFestivalStatus } from '@/lib/festival/status'
+import { isInstagramRecActiveNow, sortInstagramRecommendations } from '@/lib/curation/sortInstagramRecommendations'
+import { normalizeTitle } from '@/lib/text/normalizeTitle'
+import type { InstagramRecommendation } from '@/types/instagramRecommendation'
+
+interface Props {
+  recommendations: InstagramRecommendation[]
+  activeMovieIds: ReadonlySet<string>
+  today: string
+  isDesktop: boolean
+  /** run1/run2 배열 내 논리적 순번 — CurationSectionRow의 다른 섹션과 같은 계측 규칙 */
+  position?: number
+  onMovieClick: (movieId: string) => void
+  onFestivalClick: (slug: string) => void
+}
+
+const MAX_VISIBLE = 3
+
+/* ── 카드 하나 ──────────────────────────────────────────────────
+   왼쪽엔 카드뉴스 이미지(완성본, 텍스트 포함) 그대로, 오른쪽으로 갈수록
+   mask-image로 실제 투명해져 카드 배경(--color-surface-card, 테마별 흰/검)이
+   드러난다. 그 드러난 영역에 포스터(영화)/배너(영화제)를 올린다. ── */
+function InstagramRecCard({
+  rec,
+  activeMovieIds,
+  today,
+  onClick,
+}: {
+  rec: InstagramRecommendation
+  activeMovieIds: ReadonlySet<string>
+  today: string
+  onClick: () => void
+}) {
+  const activeNow = isInstagramRecActiveNow(rec, activeMovieIds, today)
+
+  let badge: { text: string; tone: 'active' | 'neutral' } = { text: '인스타에서 보기', tone: 'neutral' }
+  let rightImageUrl: string | undefined
+  let rightImageAspect = '2/3'
+
+  if (rec.targetType === 'movie' && rec.movie) {
+    rightImageUrl = rec.movie.posterUrl
+    rightImageAspect = '2/3'
+    if (activeNow) badge = { text: '상영 중', tone: 'active' }
+  } else if (rec.targetType === 'festival' && rec.festival) {
+    rightImageUrl = rec.festival.bannerUrl ?? undefined
+    rightImageAspect = '21/4'
+    if (activeNow) {
+      const status = getFestivalStatus(rec.festival.startDate, rec.festival.endDate, today)
+      badge = { text: status === 'ongoing' ? '진행 중' : getFestivalDateLabel(status, rec.festival.startDate, rec.festival.endDate, today), tone: 'active' }
+    }
+  }
+
+  const title = normalizeTitle(rec.movie?.title ?? rec.festival?.name ?? rec.titleSnapshot)
+  const clickable = !!(rec.movie || rec.festival || rec.instagramUrl)
+
+  return (
+    <button
+      onClick={clickable ? onClick : undefined}
+      style={{
+        display: 'block', width: '100%', padding: 0, margin: 0, border: 'none',
+        borderRadius: 'var(--radius-xl)', overflow: 'hidden', position: 'relative',
+        aspectRatio: '2/1', backgroundColor: 'var(--color-surface-card)',
+        cursor: clickable ? 'pointer' : 'default', minHeight: 'auto',
+      }}
+      aria-label={title}
+    >
+      {/* 카드뉴스 이미지 — 오른쪽으로 실제 투명해짐(색으로 덮는 게 아니라 mask) */}
+      <div
+        style={{
+          position: 'absolute', inset: 0,
+          WebkitMaskImage: 'linear-gradient(90deg, #000 0%, #000 45%, transparent 78%)',
+          maskImage: 'linear-gradient(90deg, #000 0%, #000 45%, transparent 78%)',
+        }}
+      >
+        <Image src={rec.cardImageUrl} alt={title} fill sizes="(max-width: 1280px) 100vw, 600px" style={{ objectFit: 'cover' }} />
+      </div>
+
+      {/* 드러난 오른쪽 영역 — 포스터(영화)/배너(영화제). 연결 끊겨 이미지 없으면 생략 */}
+      {rightImageUrl && (
+        <div
+          style={{
+            position: 'absolute', top: '50%', right: '6%', transform: 'translateY(-50%)',
+            width: rightImageAspect === '2/3' ? '20%' : '38%',
+            aspectRatio: rightImageAspect,
+            borderRadius: 8, overflow: 'hidden', boxShadow: '0 6px 20px rgba(0,0,0,0.35)',
+          }}
+        >
+          <Image src={rightImageUrl} alt={title} fill sizes="200px" style={{ objectFit: 'cover' }} />
+        </div>
+      )}
+
+      {/* 상태 뱃지 */}
+      <div
+        style={{
+          position: 'absolute', bottom: 10, right: 10, padding: '4px 10px', borderRadius: 99,
+          fontSize: 11, fontWeight: 700,
+          backgroundColor: badge.tone === 'active' ? 'var(--color-success)' : 'rgba(0,0,0,0.55)',
+          color: '#fff',
+        }}
+      >
+        {badge.text}
+      </div>
+    </button>
+  )
+}
+
+/* ── 섹션 ─────────────────────────────────────────────────────── */
+export function InstagramRecsSection({
+  recommendations,
+  activeMovieIds,
+  today,
+  isDesktop,
+  position,
+  onMovieClick,
+  onFestivalClick,
+}: Props) {
+  const sectionRef = useRef<HTMLElement | null>(null)
+  useSectionDwellTracking(sectionRef, recommendations.length > 0 ? 'instagram_recs' : undefined, position != null ? { position } : undefined)
+
+  if (recommendations.length === 0) return null
+
+  const sorted = sortInstagramRecommendations(recommendations, activeMovieIds, today).slice(0, MAX_VISIBLE)
+
+  function handleClick(rec: InstagramRecommendation) {
+    trackEvent('curation movie selected', {
+      list_id: 'instagram_recs',
+      source: 'films_tab',
+      target_type: rec.targetType,
+      movie_id: rec.movieId ?? undefined,
+      festival_id: rec.festivalId ?? undefined,
+      is_active_now: isInstagramRecActiveNow(rec, activeMovieIds, today),
+      ...(position != null ? { position } : {}),
+    })
+
+    if (rec.targetType === 'movie' && rec.movie) {
+      onMovieClick(rec.movie.id)
+    } else if (rec.targetType === 'festival' && rec.festival) {
+      onFestivalClick(rec.festival.slug)
+    } else if (rec.instagramUrl) {
+      window.open(rec.instagramUrl, '_blank', 'noopener,noreferrer')
+    }
+  }
+
+  return (
+    <section ref={sectionRef} style={{ paddingTop: isDesktop ? 48 : 32 }}>
+      <SectionHeader
+        title="인스타그램에서 추천한 그 영화"
+        isDesktop={isDesktop}
+        trailing={<ChevronRight size={18} strokeWidth={1.75} color="var(--color-text-caption)" />}
+      />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '12px 16px' }}>
+        {sorted.map((rec) => (
+          <InstagramRecCard
+            key={rec.id}
+            rec={rec}
+            activeMovieIds={activeMovieIds}
+            today={today}
+            onClick={() => handleClick(rec)}
+          />
+        ))}
+      </div>
+    </section>
+  )
+}

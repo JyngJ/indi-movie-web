@@ -12,6 +12,7 @@ import { DirectorSpotlightSection } from '@/components/domain/DirectorSpotlightS
 import { FilmRankingSection } from '@/components/domain/FilmRankingSection'
 import { LocationPermissionModal } from '@/components/domain/LocationPermissionModal'
 import { PersonalizedSection } from '@/components/domain/PersonalizedSection'
+import { InstagramRecsSection } from '@/components/domain/InstagramRecsSection'
 import { FilterChip } from '@/components/domain/filterBar/FilterChip'
 import { FilmsSearchBar } from '@/components/domain/FilmsSearchBar'
 import { RegionDropdown } from '@/components/domain/filterBar/RegionDropdown'
@@ -27,7 +28,7 @@ import { getTodayAnniversaries } from '@/lib/curation/directorAnniversaries'
 import { trackEvent } from '@/lib/analytics/client'
 import { buildYearsOnScreenCaptions } from '@/lib/curation/yearsOnScreenCaption'
 import { formatLocalDate, formatLocalTimeHHMM, toKstIsoDate } from '@/lib/date'
-import { useActiveMovieIdsByRegion, useActiveMovieTheaterPairs, useAlmostSoldOutCandidates, useCurationLists, useFestivals, useFilmRankings, useLateNightCandidates, useMovies, useTheaters } from '@/lib/supabase/queries'
+import { useActiveMovieIdsByRegion, useActiveMovieTheaterPairs, useAlmostSoldOutCandidates, useCurationLists, useFestivals, useFilmRankings, useInstagramRecommendations, useLateNightCandidates, useMovies, useTheaters } from '@/lib/supabase/queries'
 import { getRegionFromCity } from '@/lib/regions'
 import { getStoredRegion, setStoredRegion } from '@/lib/regionStorage'
 import { getFestivalDateLabel, getFestivalStatus, type FestivalStatus } from '@/lib/festival/status'
@@ -223,6 +224,7 @@ export default function FilmsPage() {
   const { data: movieTheaterPairs = [] } = useActiveMovieTheaterPairs(selectedRegion)
   const { data: filmRankingRow } = useFilmRankings()
   const { data: festivals = [] } = useFestivals()
+  const { data: instagramRecs = [] } = useInstagramRecommendations()
   const { lastWeekFilms, newIndieFilms, returningFilms, recentlyViewed, soloTheaterFilms, todayShowFilms } =
     useCurationData(true, selectedRegion, undefined, userLocation)
 
@@ -976,6 +978,17 @@ export default function FilmsPage() {
 
             {/* 2. 특별전 #0 */}
             {renderSpecial(special0)}
+
+            {/* 인스타그램에서 추천한 그 영화 — run1/run2 순번 체계 밖(개인화·기념일·특별전과 동일),
+                발견 성격이라 시의성 run1보다 위, 상단권에 배치 */}
+            <InstagramRecsSection
+              recommendations={instagramRecs}
+              activeMovieIds={activeMovieIdSet}
+              today={toKstIsoDate(new Date())}
+              isDesktop={isDesktop}
+              onMovieClick={handleMovieClick}
+              onFestivalClick={(slug) => router.push(`/festival/${slug}`)}
+            />
 
             {/* 3. 이번주 마지막 + 매진 임박 — 연속 sparse 자동 페어링 */}
             {renderRun(run1, 'run1', 0)}
