@@ -7,9 +7,12 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지�
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createSupabaseServerClient()
-  const [{ data: theaters }, { data: directors }] = await Promise.all([
+  const [{ data: theaters }, { data: directors }, { data: festivals }] = await Promise.all([
     supabase.from('theaters').select('id, updated_at'),
     supabase.from('movies').select('director'),
+    // is_active 필터 필수 — 비활성 영화제가 sitemap에 실리면 상세가 notFound()라
+    // Search Console에 404가 쌓인다(죽은 극장 sitemap 이슈와 같은 재발 패턴).
+    supabase.from('festivals').select('slug, updated_at').eq('is_active', true),
   ])
 
   const theaterUrls: MetadataRoute.Sitemap = (theaters ?? []).map((t) => (
@@ -25,11 +28,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }))
 
+  const festivalUrls: MetadataRoute.Sitemap = (festivals ?? []).map((f) => (
+    { url: `${BASE_URL}/festival/${f.slug}`, lastModified: new Date(f.updated_at), changeFrequency: 'weekly' as const, priority: 0.7 }
+  ))
+
   return [
     { url: BASE_URL, changeFrequency: 'daily', priority: 1.0 },
     { url: `${BASE_URL}/films`, changeFrequency: 'daily', priority: 0.9 },
     { url: `${BASE_URL}/privacy`, changeFrequency: 'yearly', priority: 0.2 },
     ...theaterUrls,
     ...directorUrls,
+    ...festivalUrls,
   ]
 }
