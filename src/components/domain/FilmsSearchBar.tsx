@@ -4,11 +4,11 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { SearchBar, SearchBarButton } from '@/components/primitives'
 import { AddRequestModal, AddRequestCtaButton } from '@/components/domain/AddRequestModal'
+// 지도 탭과 검색 기록을 공유 — 같은 localStorage 키를 쓰는 지도 쪽 유틸을 그대로 재사용한다.
+// 지도에서 검색한 극장/영화가 상영작 탭 "최근 검색"에도 보이고, 그 반대도 마찬가지.
+import { loadRecentSearches, addToRecent, clearRecentSearches } from '@/lib/map/searchUtils'
 import type { Movie, Theater } from '@/types/api'
 import type { Festival } from '@/types/festival'
-
-const HISTORY_KEY = 'films-search-history:v1'
-const MAX_HISTORY = 10
 
 interface Props {
   movies: Movie[]
@@ -101,13 +101,6 @@ function HighlightMatch({ text, query }: { text: string; query: string }) {
   )
 }
 
-function loadHistory(): string[] {
-  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) ?? '[]') } catch { return [] }
-}
-function persistHistory(list: string[]) {
-  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list)) } catch {}
-}
-
 const SearchIcon = ({ size = 16 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
@@ -136,7 +129,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
   const mobileRef  = useRef<HTMLInputElement>(null)
   const wrapRef    = useRef<HTMLDivElement>(null)
 
-  useEffect(() => { setHistory(loadHistory()) }, [])
+  useEffect(() => { setHistory(loadRecentSearches()) }, [])
 
   useEffect(() => {
     if (!isDesktop || !focused) return
@@ -155,8 +148,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
   }, [isDesktop, focused])
 
   function addToHistory(q: string) {
-    const next = [q, ...history.filter(h => h !== q)].slice(0, MAX_HISTORY)
-    setHistory(next); persistHistory(next)
+    setHistory(addToRecent(q, history))
   }
 
   function navigateDirect(s: Suggestion) {
@@ -394,7 +386,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
                 <div style={{ marginBottom: 16 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                     <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-caption)', margin: 0 }}>최근 검색</p>
-                    <button onClick={() => { setHistory([]); try { localStorage.removeItem(HISTORY_KEY) } catch {} }} style={{ fontSize: 12, color: 'var(--color-text-caption)', background: 'none', border: 0, cursor: 'pointer', padding: 0 }}>전체 삭제</button>
+                    <button onClick={() => { setHistory([]); clearRecentSearches() }} style={{ fontSize: 12, color: 'var(--color-text-caption)', background: 'none', border: 0, cursor: 'pointer', padding: 0 }}>전체 삭제</button>
                   </div>
                   {history.map(q => (
                     <div key={q} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--color-border)' }}>
