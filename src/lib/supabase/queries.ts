@@ -283,20 +283,30 @@ export function useFestivals() {
 
 /* ── 인스타그램 추천 카드 (상영작 탭 "인스타그램에서 추천한 그 영화") ────── */
 // 상태/우측 이미지는 저장 안 하고 movies/festivals 조인 결과로 런타임 계산(정렬은
-// src/lib/curation/sortInstagramRecommendations.ts에 위임 — 순수함수라 테스트 가능)
+// src/lib/curation/sortInstagramRecommendations.ts에 위임 — 순수함수라 테스트 가능).
+// movie 타입은 instagram_recommendation_movies로 1편 이상 연결(카드뉴스 한 장이 여러 편을
+// 소개하는 경우가 있어서 movie_id를 이 테이블에 직접 안 둠).
 export function useInstagramRecommendations() {
+  const today = toKstIsoDate(new Date())
+
   return useQuery<InstagramRecommendation[]>({
-    queryKey: ['instagram-recommendations'],
+    queryKey: ['instagram-recommendations', today],
     queryFn: async () => {
       const { data, error } = await supabase()
         .from('instagram_recommendations')
         .select(`
-          id, target_type, movie_id, festival_id, title_snapshot, card_image_url,
-          instagram_url, published_at, is_active, sort_order,
-          movies(id,title,original_title,year,poster_url,genre,director,nation,kmdb_id,tmdb_id,rating),
+          id, target_type, festival_id, title_snapshot, card_image_url,
+          instagram_url, published_at, display_until, is_active, sort_order,
+          instagram_recommendation_movies(
+            id, movie_id, title_snapshot, sort_order,
+            movies(id,title,original_title,year,poster_url,genre,director,nation,kmdb_id,tmdb_id,rating)
+          ),
           festivals(id,name,slug,start_date,end_date,region,city,venue_text,banner_url,link_url,description,is_active)
         `)
         .eq('is_active', true)
+        // display_until이 지난 건 쿼리 단계에서부터 제외 — 클라이언트(sortInstagramRecommendations의
+        // isInstagramRecVisible)에서도 한 번 더 걸러 이중 방어
+        .or(`display_until.is.null,display_until.gte.${today}`)
         .order('sort_order', { ascending: true })
 
       if (error) throw error
@@ -304,24 +314,36 @@ export function useInstagramRecommendations() {
       return (data ?? []).map((raw) => {
         const row = raw as unknown as {
           id: string; target_type: InstagramRecommendationTargetType
-          movie_id: string | null; festival_id: string | null
+          festival_id: string | null
           title_snapshot: string; card_image_url: string
           instagram_url: string | null; published_at: string | null
+          display_until: string | null
           is_active: boolean; sort_order: number
-          movies: Record<string, unknown> | null
+          instagram_recommendation_movies: {
+            id: string; movie_id: string | null; title_snapshot: string; sort_order: number
+            movies: Record<string, unknown> | null
+          }[]
           festivals: Record<string, unknown> | null
         }
         return {
           id: row.id,
           targetType: row.target_type,
-          movieId: row.movie_id,
-          movie: row.movies ? movieRowToMovie(row.movies) : null,
+          movies: [...row.instagram_recommendation_movies]
+            .sort((a, b) => a.sort_order - b.sort_order)
+            .map((m) => ({
+              id: m.id,
+              movieId: m.movie_id,
+              movie: m.movies ? movieRowToMovie(m.movies) : null,
+              titleSnapshot: m.title_snapshot,
+              sortOrder: m.sort_order,
+            })),
           festivalId: row.festival_id,
           festival: row.festivals ? festivalRowToFestival(row.festivals) : null,
           titleSnapshot: row.title_snapshot,
           cardImageUrl: row.card_image_url,
           instagramUrl: row.instagram_url,
           publishedAt: row.published_at,
+          displayUntil: row.display_until,
           isActive: row.is_active,
           sortOrder: row.sort_order,
         } satisfies InstagramRecommendation

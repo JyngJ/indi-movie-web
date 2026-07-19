@@ -23,11 +23,14 @@ interface Props {
 }
 
 const MAX_VISIBLE = 3
+/** DB(instagram_url)에 링크가 없으면 게시물 대신 프로필로 보낸다 */
+const INSTAGRAM_PROFILE_URL = 'https://www.instagram.com/indi.movie.map/'
 
 /* ── 카드 하나 ──────────────────────────────────────────────────
    왼쪽엔 카드뉴스 이미지(완성본, 텍스트 포함) 그대로, 오른쪽으로 갈수록
    mask-image로 실제 투명해져 카드 배경(--color-surface-card, 테마별 흰/검)이
-   드러난다. 그 드러난 영역에 포스터(영화)/배너(영화제)를 올린다. ── */
+   드러난다. 그 드러난 영역에 포스터(영화)/배너(영화제)를 올린다.
+   영화 여러 편이면 첫 편 포스터 + "+N" 뱃지로 나머지 편수를 알린다. ── */
 function InstagramRecCard({
   rec,
   activeMovieIds,
@@ -40,13 +43,14 @@ function InstagramRecCard({
   onClick: () => void
 }) {
   const activeNow = isInstagramRecActiveNow(rec, activeMovieIds, today)
+  const firstMovie = rec.movies.find((m) => m.movie)?.movie
 
   let badge: { text: string; tone: 'active' | 'neutral' } = { text: '인스타에서 보기', tone: 'neutral' }
   let rightImageUrl: string | undefined
   let rightImageAspect = '2/3'
 
-  if (rec.targetType === 'movie' && rec.movie) {
-    rightImageUrl = rec.movie.posterUrl
+  if (rec.targetType === 'movie' && firstMovie) {
+    rightImageUrl = firstMovie.posterUrl
     rightImageAspect = '2/3'
     if (activeNow) badge = { text: '상영 중', tone: 'active' }
   } else if (rec.targetType === 'festival' && rec.festival) {
@@ -58,17 +62,17 @@ function InstagramRecCard({
     }
   }
 
-  const title = normalizeTitle(rec.movie?.title ?? rec.festival?.name ?? rec.titleSnapshot)
-  const clickable = !!(rec.movie || rec.festival || rec.instagramUrl)
+  const title = normalizeTitle(rec.festival?.name ?? rec.titleSnapshot)
+  const extraMovieCount = rec.targetType === 'movie' ? rec.movies.length - 1 : 0
 
   return (
     <button
-      onClick={clickable ? onClick : undefined}
+      onClick={onClick}
       style={{
         display: 'block', width: '100%', padding: 0, margin: 0, border: 'none',
         borderRadius: 'var(--radius-xl)', overflow: 'hidden', position: 'relative',
         aspectRatio: '2/1', backgroundColor: 'var(--color-surface-card)',
-        cursor: clickable ? 'pointer' : 'default', minHeight: 'auto',
+        cursor: 'pointer', minHeight: 'auto',
       }}
       aria-label={title}
     >
@@ -83,7 +87,7 @@ function InstagramRecCard({
         <Image src={rec.cardImageUrl} alt={title} fill sizes="(max-width: 1280px) 100vw, 600px" style={{ objectFit: 'cover' }} />
       </div>
 
-      {/* 드러난 오른쪽 영역 — 포스터(영화)/배너(영화제). 연결 끊겨 이미지 없으면 생략 */}
+      {/* 드러난 오른쪽 영역 — 포스터(영화 첫 편)/배너(영화제). 연결 끊겨 이미지 없으면 생략 */}
       {rightImageUrl && (
         <div
           style={{
@@ -94,6 +98,14 @@ function InstagramRecCard({
           }}
         >
           <Image src={rightImageUrl} alt={title} fill sizes="200px" style={{ objectFit: 'cover' }} />
+          {extraMovieCount > 0 && (
+            <div style={{
+              position: 'absolute', bottom: 4, right: 4, padding: '2px 6px', borderRadius: 99,
+              fontSize: 10, fontWeight: 700, color: '#fff', backgroundColor: 'rgba(0,0,0,0.6)',
+            }}>
+              +{extraMovieCount}
+            </div>
+          )}
         </div>
       )}
 
@@ -130,23 +142,30 @@ export function InstagramRecsSection({
   const sorted = sortInstagramRecommendations(recommendations, activeMovieIds, today).slice(0, MAX_VISIBLE)
 
   function handleClick(rec: InstagramRecommendation) {
+    const linkedMovieIds = rec.movies.map((m) => m.movieId).filter((id): id is string => !!id)
+
     trackEvent('curation movie selected', {
       list_id: 'instagram_recs',
       source: 'films_tab',
       target_type: rec.targetType,
-      movie_id: rec.movieId ?? undefined,
+      movie_ids: linkedMovieIds.join(','),
+      movie_count: linkedMovieIds.length,
       festival_id: rec.festivalId ?? undefined,
       is_active_now: isInstagramRecActiveNow(rec, activeMovieIds, today),
       ...(position != null ? { position } : {}),
     })
 
-    if (rec.targetType === 'movie' && rec.movie) {
-      onMovieClick(rec.movie.id)
-    } else if (rec.targetType === 'festival' && rec.festival) {
-      onFestivalClick(rec.festival.slug)
-    } else if (rec.instagramUrl) {
-      window.open(rec.instagramUrl, '_blank', 'noopener,noreferrer')
+    // 영화 1편만 연결돼 있으면 그 영화 상세로, 여러 편이면(개별 상세 하나로 대표할 수 없음)
+    // 원본 게시물로. 영화제는 상세로. 링크가 DB에 없으면 게시물 대신 프로필로 보낸다.
+    if (rec.targetType === 'movie' && rec.movies.length === 1 && rec.movies[0].movieId) {
+      onMovieClick(rec.movies[0].movieId)
+      return
     }
+    if (rec.targetType === 'festival' && rec.festival) {
+      onFestivalClick(rec.festival.slug)
+      return
+    }
+    window.open(rec.instagramUrl ?? INSTAGRAM_PROFILE_URL, '_blank', 'noopener,noreferrer')
   }
 
   return (
