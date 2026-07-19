@@ -299,6 +299,53 @@ CREATE TABLE notification_preferences (
 
 ---
 
+## instagram_recommendations + instagram_recommendation_movies (인스타그램 추천 카드, 상영작 탭)
+
+인스타그램 카드뉴스로 소개한 영화(1편 또는 여러 편)/영화제를 상영작 탭 섹션과 연결하는
+다형(polymorphic) 테이블. 적용 SQL: `docs/SUPABASE_INSTAGRAM_RECS.sql`.
+
+```sql
+CREATE TABLE instagram_recommendations (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  target_type    TEXT NOT NULL CHECK (target_type IN ('movie', 'festival')),
+  festival_id    UUID REFERENCES festivals(id) ON DELETE SET NULL,
+  title_snapshot TEXT NOT NULL,
+  card_image_url TEXT NOT NULL,
+  instagram_url  TEXT,
+  published_at   DATE,
+  display_until  DATE,   -- 노출 종료일(포함), NULL이면 무기한
+  is_active      BOOLEAN NOT NULL DEFAULT true,
+  sort_order     INT NOT NULL DEFAULT 0,
+  created_at     TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- movie 타입 카드가 참조하는 영화 목록(1편 이상) — 한 카드가 여러 편을 소개할 수 있다
+CREATE TABLE instagram_recommendation_movies (
+  id                           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  instagram_recommendation_id  UUID NOT NULL REFERENCES instagram_recommendations(id) ON DELETE CASCADE,
+  movie_id                     UUID REFERENCES movies(id) ON DELETE SET NULL,
+  title_snapshot               TEXT NOT NULL,
+  sort_order                   INT NOT NULL DEFAULT 0
+);
+
+-- 인덱스
+CREATE INDEX idx_insta_recs_active ON instagram_recommendations(is_active, sort_order);
+CREATE INDEX idx_insta_rec_movie_rec ON instagram_recommendation_movies(instagram_recommendation_id, sort_order);
+
+-- movie 타입 행엔 festival_id가 없어야 함(festival_id는 festival 전용)
+ALTER TABLE instagram_recommendations ADD CONSTRAINT chk_insta_target CHECK (
+  target_type <> 'movie' OR festival_id IS NULL
+);
+```
+
+상태(상영중/진행중/D-N 등)와 우측 포스터·배너 이미지는 저장하지 않고 `movies`/`festivals`를
+조인해 런타임에 계산한다 — 카드뉴스 이미지(`card_image_url`)만 이 테이블 소유 데이터다.
+`display_until`이 지나면(오늘 > display_until) `is_active`를 안 건드려도 자동으로 안 보인다.
+
+**RLS**: 모든 사용자 SELECT 허용(`is_active = true`인 행 및 그 하위 `instagram_recommendation_movies`만).
+
+---
+
 ## 공통 트리거 (updated_at 자동 갱신)
 
 ```sql
