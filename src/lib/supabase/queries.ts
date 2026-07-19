@@ -3,8 +3,10 @@ import type { AlmostSoldOutCandidate, CurationListRow, LateNightCandidate } from
 import type { Theater, Movie, Showtime, Station } from '@/types/api'
 import type { TheaterEvent } from '@/types/admin'
 import type { Festival } from '@/types/festival'
+import type { InstagramRecommendation, InstagramRecommendationTargetType } from '@/types/instagramRecommendation'
 import { createSupabaseBrowserClient } from './browser'
 import { movieRowToMovie } from './movieRow'
+import { festivalRowToFestival } from './festivalRow'
 import { formatLocalDate, toKstIsoDate } from '@/lib/date'
 import { getRegionFromCity } from '@/lib/regions'
 import { getMovieTheaterShowtimes as getMovieTheaterShowtimesPure } from '@/lib/catalog/getMovieTheaterShowtimes'
@@ -272,20 +274,58 @@ export function useFestivals() {
 
       if (error) throw error
 
-      return (data ?? []).map((r) => ({
-        id: r.id,
-        name: r.name,
-        slug: r.slug,
-        startDate: r.start_date,
-        endDate: r.end_date,
-        region: r.region,
-        city: r.city,
-        venueText: r.venue_text,
-        bannerUrl: r.banner_url,
-        linkUrl: r.link_url,
-        description: r.description,
-        isActive: r.is_active,
-      }))
+      return (data ?? []).map((r) => festivalRowToFestival(r as Record<string, unknown>))
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+  })
+}
+
+/* ── 인스타그램 추천 카드 (상영작 탭 "인스타그램에서 추천한 그 영화") ────── */
+// 상태/우측 이미지는 저장 안 하고 movies/festivals 조인 결과로 런타임 계산(정렬은
+// src/lib/curation/sortInstagramRecommendations.ts에 위임 — 순수함수라 테스트 가능)
+export function useInstagramRecommendations() {
+  return useQuery<InstagramRecommendation[]>({
+    queryKey: ['instagram-recommendations'],
+    queryFn: async () => {
+      const { data, error } = await supabase()
+        .from('instagram_recommendations')
+        .select(`
+          id, target_type, movie_id, festival_id, title_snapshot, card_image_url,
+          instagram_url, published_at, is_active, sort_order,
+          movies(id,title,original_title,year,poster_url,genre,director,nation,kmdb_id,tmdb_id,rating),
+          festivals(id,name,slug,start_date,end_date,region,city,venue_text,banner_url,link_url,description,is_active)
+        `)
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true })
+
+      if (error) throw error
+
+      return (data ?? []).map((raw) => {
+        const row = raw as unknown as {
+          id: string; target_type: InstagramRecommendationTargetType
+          movie_id: string | null; festival_id: string | null
+          title_snapshot: string; card_image_url: string
+          instagram_url: string | null; published_at: string | null
+          is_active: boolean; sort_order: number
+          movies: Record<string, unknown> | null
+          festivals: Record<string, unknown> | null
+        }
+        return {
+          id: row.id,
+          targetType: row.target_type,
+          movieId: row.movie_id,
+          movie: row.movies ? movieRowToMovie(row.movies) : null,
+          festivalId: row.festival_id,
+          festival: row.festivals ? festivalRowToFestival(row.festivals) : null,
+          titleSnapshot: row.title_snapshot,
+          cardImageUrl: row.card_image_url,
+          instagramUrl: row.instagram_url,
+          publishedAt: row.published_at,
+          isActive: row.is_active,
+          sortOrder: row.sort_order,
+        } satisfies InstagramRecommendation
+      })
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,

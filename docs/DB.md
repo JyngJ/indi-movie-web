@@ -299,6 +299,43 @@ CREATE TABLE notification_preferences (
 
 ---
 
+## instagram_recommendations (인스타그램 추천 카드, 상영작 탭)
+
+인스타그램 카드뉴스로 소개한 영화/영화제를 상영작 탭 섹션과 연결하는 다형(polymorphic) 테이블.
+적용 SQL: `docs/SUPABASE_INSTAGRAM_RECS.sql`.
+
+```sql
+CREATE TABLE instagram_recommendations (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  target_type    TEXT NOT NULL CHECK (target_type IN ('movie', 'festival')),
+  movie_id       UUID REFERENCES movies(id) ON DELETE SET NULL,
+  festival_id    UUID REFERENCES festivals(id) ON DELETE SET NULL,
+  title_snapshot TEXT NOT NULL,
+  card_image_url TEXT NOT NULL,
+  instagram_url  TEXT,
+  published_at   DATE,
+  is_active      BOOLEAN NOT NULL DEFAULT true,
+  sort_order     INT NOT NULL DEFAULT 0,
+  created_at     TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 인덱스
+CREATE INDEX idx_insta_recs_active ON instagram_recommendations(is_active, sort_order);
+
+-- target_type과 실제 FK 정합성 보장(movie_id/festival_id 중 대상과 다른 쪽은 반드시 NULL)
+ALTER TABLE instagram_recommendations ADD CONSTRAINT chk_insta_target CHECK (
+  (target_type = 'movie'    AND festival_id IS NULL) OR
+  (target_type = 'festival' AND movie_id    IS NULL)
+);
+```
+
+상태(상영중/진행중/D-N 등)와 우측 포스터·배너 이미지는 저장하지 않고 `movies`/`festivals`를
+조인해 런타임에 계산한다 — 카드뉴스 이미지(`card_image_url`)만 이 테이블 소유 데이터다.
+
+**RLS**: 모든 사용자 SELECT 허용(`is_active = true`인 행만).
+
+---
+
 ## 공통 트리거 (updated_at 자동 갱신)
 
 ```sql

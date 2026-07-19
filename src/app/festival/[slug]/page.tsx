@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { safeUrl } from '@/lib/seo/safeUrl'
 import { movieRowToMovie } from '@/lib/supabase/movieRow'
+import { festivalRowToFestival } from '@/lib/supabase/festivalRow'
 import type { FestivalDetail } from '@/types/festival'
 import { FestivalDetailClient } from './FestivalDetailClient'
 
@@ -52,18 +53,7 @@ async function fetchFestival(slug: string): Promise<FestivalDetail | null> {
   }
 
   return {
-    id: row.id,
-    name: row.name,
-    slug: row.slug,
-    startDate: row.start_date,
-    endDate: row.end_date,
-    region: row.region,
-    city: row.city,
-    venueText: row.venue_text,
-    bannerUrl: row.banner_url,
-    linkUrl: safeUrl(row.link_url) ?? null,
-    description: row.description,
-    isActive: row.is_active,
+    ...festivalRowToFestival(row),
     theaters: [...row.festival_theaters]
       .sort((a, b) => a.sort_order - b.sort_order)
       .map((t) => ({
