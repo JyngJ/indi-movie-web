@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { SectionHeader } from '@/components/primitives'
+import { SectionHeader, MovieCardSkeleton } from '@/components/primitives'
 import { AllMoviesGrid } from '@/components/domain/AllMoviesGrid'
 import { AnniversarySection } from '@/components/domain/AnniversarySection'
 import { CurationSectionRow } from '@/components/domain/CurationSectionRow'
@@ -217,9 +217,9 @@ export default function FilmsPage() {
     return () => document.removeEventListener('pointerdown', onPointerDown)
   }, [dropdownOpen])
 
-  const { data: movies = [] } = useMovies()
+  const { data: movies = [], isLoading: moviesLoading } = useMovies()
   const { data: theaters = [] } = useTheaters()
-  const { data: curationLists = [] } = useCurationLists()
+  const { data: curationLists = [], isLoading: curationListsLoading } = useCurationLists()
   const { data: activeMovieIds = [] } = useActiveMovieIdsByRegion(selectedRegion)
   const { data: movieTheaterPairs = [] } = useActiveMovieTheaterPairs(selectedRegion)
   const { data: filmRankingRow } = useFilmRankings()
@@ -952,6 +952,20 @@ export default function FilmsPage() {
 
         return (
           <>
+            {/* 로딩 중 자리표시 — 큐레이션 섹션이 몇 개 뜰지 로딩 전엔 알 수 없어 최소 자리만 흉내.
+                로딩 끝난 뒤에도 visibleSections가 비어 있으면(진짜 빈 상태) 계속 아무것도 안 그림 */}
+            {(moviesLoading || curationListsLoading) && (
+              <div style={{ paddingTop: isDesktop ? 48 : 24 }}>
+                <div style={{ display: 'flex', gap: isDesktop ? 16 : 10, overflow: 'hidden', padding: '0 16px' }}>
+                  {[0, 1, 2, 3].map((i) => (
+                    <div key={i} style={{ width: isDesktop ? 210 : 120, flexShrink: 0 }}>
+                      <MovieCardSkeleton />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* 주목할 영화제 — 지역 필터 무관 전국 대상, festivals 0개면 미노출 */}
             {festivals.length > 0 && (
               <div style={{ paddingTop: isDesktop ? 24 : 16 }}>
