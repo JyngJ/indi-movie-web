@@ -30,32 +30,31 @@ const INSTAGRAM_PROFILE_URL = 'https://www.instagram.com/indi.movie.map/'
    왼쪽엔 카드뉴스 이미지(완성본, 텍스트 포함) 그대로, 오른쪽으로 갈수록
    mask-image로 실제 투명해져 카드 배경(--color-surface-card, 테마별 흰/검)이
    드러난다. 그 드러난 영역에 포스터(영화)/배너(영화제)를 올린다.
-   영화 여러 편이면 첫 편 포스터 + "+N" 뱃지로 나머지 편수를 알린다. ── */
+   영화 여러 편이면 좌우로 스크롤되는 포스터 줄로 보여주고, 포스터 각각을
+   눌러 바로 그 영화 상세로 갈 수 있다(카드 전체 클릭과는 별개 타깃). ── */
 function InstagramRecCard({
   rec,
   activeMovieIds,
   today,
   onClick,
+  onPosterClick,
 }: {
   rec: InstagramRecommendation
   activeMovieIds: ReadonlySet<string>
   today: string
   onClick: () => void
+  onPosterClick: (movieId: string) => void
 }) {
   const activeNow = isInstagramRecActiveNow(rec, activeMovieIds, today)
-  const firstMovie = rec.movies.find((m) => m.movie)?.movie
+  const moviesWithPoster = rec.movies.filter((m) => m.movie?.posterUrl)
 
   let badge: { text: string; tone: 'active' | 'neutral' } = { text: '인스타에서 보기', tone: 'neutral' }
-  let rightImageUrl: string | undefined
-  let rightImageAspect = '2/3'
+  let festivalBannerUrl: string | undefined
 
-  if (rec.targetType === 'movie' && firstMovie) {
-    rightImageUrl = firstMovie.posterUrl
-    rightImageAspect = '2/3'
+  if (rec.targetType === 'movie' && moviesWithPoster.length > 0) {
     if (activeNow) badge = { text: '상영 중', tone: 'active' }
   } else if (rec.targetType === 'festival' && rec.festival) {
-    rightImageUrl = rec.festival.bannerUrl ?? undefined
-    rightImageAspect = '21/4'
+    festivalBannerUrl = rec.festival.bannerUrl ?? undefined
     if (activeNow) {
       const status = getFestivalStatus(rec.festival.startDate, rec.festival.endDate, today)
       badge = { text: status === 'ongoing' ? '진행 중' : getFestivalDateLabel(status, rec.festival.startDate, rec.festival.endDate, today), tone: 'active' }
@@ -63,7 +62,6 @@ function InstagramRecCard({
   }
 
   const title = normalizeTitle(rec.festival?.name ?? rec.titleSnapshot)
-  const extraMovieCount = rec.targetType === 'movie' ? rec.movies.length - 1 : 0
 
   return (
     <button
@@ -87,25 +85,50 @@ function InstagramRecCard({
         <Image src={rec.cardImageUrl} alt={title} fill sizes="(max-width: 1280px) 100vw, 600px" style={{ objectFit: 'cover' }} />
       </div>
 
-      {/* 드러난 오른쪽 영역 — 포스터(영화 첫 편)/배너(영화제). 연결 끊겨 이미지 없으면 생략 */}
-      {rightImageUrl && (
+      {/* 드러난 오른쪽 영역 — 영화 포스터(1편이면 고정, 여러 편이면 좌우 스크롤)/영화제 배너.
+          연결 끊겨 이미지가 하나도 없으면 생략 */}
+      {rec.targetType === 'movie' && moviesWithPoster.length === 1 && (
+        <div style={{
+          position: 'absolute', top: '50%', right: '6%', transform: 'translateY(-50%)',
+          width: '20%', aspectRatio: '2/3',
+          borderRadius: 8, overflow: 'hidden', boxShadow: '0 6px 20px rgba(0,0,0,0.35)',
+        }}>
+          <Image src={moviesWithPoster[0].movie!.posterUrl!} alt={title} fill sizes="200px" style={{ objectFit: 'cover' }} />
+        </div>
+      )}
+
+      {rec.targetType === 'movie' && moviesWithPoster.length > 1 && (
         <div
+          className="no-scrollbar"
+          onClick={(e) => e.stopPropagation()}
           style={{
-            position: 'absolute', top: '50%', right: '6%', transform: 'translateY(-50%)',
-            width: rightImageAspect === '2/3' ? '20%' : '38%',
-            aspectRatio: rightImageAspect,
-            borderRadius: 8, overflow: 'hidden', boxShadow: '0 6px 20px rgba(0,0,0,0.35)',
+            position: 'absolute', top: '12%', bottom: '12%', left: '46%', right: '4%',
+            display: 'flex', gap: 8, overflowX: 'auto',
           }}
         >
-          <Image src={rightImageUrl} alt={title} fill sizes="200px" style={{ objectFit: 'cover' }} />
-          {extraMovieCount > 0 && (
-            <div style={{
-              position: 'absolute', bottom: 4, right: 4, padding: '2px 6px', borderRadius: 99,
-              fontSize: 10, fontWeight: 700, color: '#fff', backgroundColor: 'rgba(0,0,0,0.6)',
-            }}>
-              +{extraMovieCount}
+          {moviesWithPoster.map((m) => (
+            <div
+              key={m.id}
+              onClick={m.movieId ? () => onPosterClick(m.movieId!) : undefined}
+              style={{
+                position: 'relative', height: '100%', aspectRatio: '2/3', flexShrink: 0,
+                borderRadius: 8, overflow: 'hidden', boxShadow: '0 6px 20px rgba(0,0,0,0.35)',
+                cursor: m.movieId ? 'pointer' : 'default',
+              }}
+            >
+              <Image src={m.movie!.posterUrl!} alt={normalizeTitle(m.movie!.title)} fill sizes="120px" style={{ objectFit: 'cover' }} />
             </div>
-          )}
+          ))}
+        </div>
+      )}
+
+      {rec.targetType === 'festival' && festivalBannerUrl && (
+        <div style={{
+          position: 'absolute', top: '50%', right: '6%', transform: 'translateY(-50%)',
+          width: '38%', aspectRatio: '21/4',
+          borderRadius: 8, overflow: 'hidden', boxShadow: '0 6px 20px rgba(0,0,0,0.35)',
+        }}>
+          <Image src={festivalBannerUrl} alt={title} fill sizes="200px" style={{ objectFit: 'cover' }} />
         </div>
       )}
 
@@ -168,6 +191,21 @@ export function InstagramRecsSection({
     window.open(rec.instagramUrl ?? INSTAGRAM_PROFILE_URL, '_blank', 'noopener,noreferrer')
   }
 
+  // 여러 편 카드에서 포스터 하나를 콕 집어 눌렀을 때 — 카드 전체 클릭(handleClick)과는
+  // 별도 타깃이라 계측도 따로(어떤 편이 눌렸는지 movie_ids가 1개짜리로 남는다)
+  function handlePosterClick(rec: InstagramRecommendation, movieId: string) {
+    trackEvent('curation movie selected', {
+      list_id: 'instagram_recs',
+      source: 'films_tab',
+      target_type: rec.targetType,
+      movie_ids: movieId,
+      movie_count: 1,
+      is_active_now: activeMovieIds.has(movieId),
+      ...(position != null ? { position } : {}),
+    })
+    onMovieClick(movieId)
+  }
+
   return (
     <section ref={sectionRef} style={{ paddingTop: isDesktop ? 48 : 32 }}>
       <SectionHeader
@@ -183,6 +221,7 @@ export function InstagramRecsSection({
             activeMovieIds={activeMovieIds}
             today={today}
             onClick={() => handleClick(rec)}
+            onPosterClick={(movieId) => handlePosterClick(rec, movieId)}
           />
         ))}
       </div>
