@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { AllMoviesGrid } from '@/components/domain/AllMoviesGrid'
 import { AnniversarySection } from '@/components/domain/AnniversarySection'
 import { CurationSectionRow } from '@/components/domain/CurationSectionRow'
@@ -106,22 +107,38 @@ function FestivalBannerCard({ festival, today, onClick }: { festival: Festival; 
     <button
       onClick={onClick}
       style={{
-        width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-        padding: '14px 16px', margin: '0 16px', borderRadius: 'var(--radius-xl)',
+        width: 'calc(100% - 32px)', display: 'block', margin: '0 16px', padding: 0,
+        borderRadius: 'var(--radius-xl)', overflow: 'hidden',
         border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)',
         cursor: 'pointer', textAlign: 'left', minHeight: 'auto',
       }}
     >
-      <div style={{ minWidth: 0 }}>
+      {/* 제목줄 — 바로가기 화살표로 탭 가능함을 알림 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '12px 14px 10px' }}>
         <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)' }}>
           주목할 영화제
         </span>
-        <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--color-text-caption)' }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: FESTIVAL_STATUS_DOT[status], flexShrink: 0 }} />
-          {FESTIVAL_STATUS_LABEL[status]} · {dateLabel} · {festival.city}
-        </div>
+        <ChevronRight size={16} strokeWidth={1.75} color="var(--color-text-caption)" />
       </div>
-      <ChevronRight size={18} strokeWidth={1.75} color="var(--color-text-caption)" style={{ flexShrink: 0 }} />
+
+      {/* 배너 이미지 — banner_url 있을 때만. 없으면 이 블록 건너뜀(아래 정보줄이 폴백) */}
+      {festival.bannerUrl && (
+        <div style={{ position: 'relative', width: '100%', aspectRatio: '1400 / 380', backgroundColor: 'var(--color-surface-raised)' }}>
+          <Image
+            src={festival.bannerUrl}
+            alt={festival.name}
+            fill
+            sizes="(max-width: 1280px) 100vw, 600px"
+            style={{ objectFit: 'cover' }}
+          />
+        </div>
+      )}
+
+      {/* 상태 정보줄 — 상태 dot + 날짜 카피 + 도시 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px 12px', fontSize: 12, color: 'var(--color-text-caption)' }}>
+        <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: FESTIVAL_STATUS_DOT[status], flexShrink: 0 }} />
+        {FESTIVAL_STATUS_LABEL[status]} · {dateLabel} · {festival.city}
+      </div>
     </button>
   )
 }
