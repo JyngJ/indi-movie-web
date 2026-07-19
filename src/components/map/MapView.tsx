@@ -2244,15 +2244,18 @@ export default function MapView() {
 
     if (fromMovie || movieParam) setFromMovieId(fromMovie ?? movieParam ?? null)
 
-    const url = new URL(window.location.href)
-    url.searchParams.delete('theater')
-    url.searchParams.delete('fromMovie')
-    url.searchParams.delete('date')
-    url.searchParams.delete('movie')
-    url.searchParams.delete('showtime')
-    window.history.replaceState({}, '', url.toString())
+    // history.replaceState는 useSearchParams를 갱신하지 않아 다음 내비게이션과 상태가
+    // 어긋날 수 있다 — router.replace로 통일해 searchParams 훅과 정합을 맞춘다.
+    const params = new URLSearchParams(Array.from(searchParams.entries()))
+    params.delete('theater')
+    params.delete('fromMovie')
+    params.delete('date')
+    params.delete('movie')
+    params.delete('showtime')
+    const qs = params.toString()
+    router.replace(qs ? `/?${qs}` : '/', { scroll: false })
 
-  }, [closeSearch, flyToForTheater, isDesktopLayout, movies.length, openTheaterForMovie, searchParams, theaters])
+  }, [closeSearch, flyToForTheater, isDesktopLayout, movies.length, openTheaterForMovie, router, searchParams, theaters])
 
   // 영화 상세 / 패널에서 ?movie= 파라미터로 지도 필터만 복원
   const restoredMovieFilterRef = useRef<string | null>(null)
@@ -2273,10 +2276,11 @@ export default function MapView() {
     setDirectorFilter(null)
     setMovieFilter({ id: movie.id, title: movie.title })
 
-    const url = new URL(window.location.href)
-    url.searchParams.delete('movie')
-    window.history.replaceState({}, '', url.toString())
-  }, [clearTheaterSelection, movies, searchParams])
+    const params = new URLSearchParams(Array.from(searchParams.entries()))
+    params.delete('movie')
+    const qs = params.toString()
+    router.replace(qs ? `/?${qs}` : '/', { scroll: false })
+  }, [clearTheaterSelection, movies, router, searchParams])
 
   // 감독 상세 / 패널에서 ?director= 파라미터로 지도 필터만 복원
   const restoredDirectorFilterRef = useRef<string | null>(null)
@@ -2290,10 +2294,11 @@ export default function MapView() {
     restoredDirectorFilterRef.current = directorParam
     applyDirectorFilter(directorParam)
 
-    const url = new URL(window.location.href)
-    url.searchParams.delete('director')
-    window.history.replaceState({}, '', url.toString())
-  }, [applyDirectorFilter, searchParams])
+    const params = new URLSearchParams(Array.from(searchParams.entries()))
+    params.delete('director')
+    const qs = params.toString()
+    router.replace(qs ? `/?${qs}` : '/', { scroll: false })
+  }, [applyDirectorFilter, router, searchParams])
 
 
   // 극장 선택 시 → 첫 번째 영화 선택 + 시트 collapsed로 열기
