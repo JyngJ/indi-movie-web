@@ -3,11 +3,8 @@
 -- Supabase 대시보드 SQL 에디터에서 실행. docs/SUPABASE_INSTAGRAM_RECS.sql이
 -- 먼저 적용돼 있어야 함(instagram_recommendations + instagram_recommendation_movies 생성).
 --
--- ⚠️ 실행 전 반드시 채울 것 — card_image_url 4개가 전부 TODO placeholder임.
---   카드뉴스 이미지를 poster_url과 같은 Supabase Storage 버킷에 올리고 그 public
---   URL로 아래 TODO_CARD_IMAGE_URL_n을 바꿀 것. next.config가 remotePatterns
---   와일드카드(hostname: '**')라 다른 도메인이어도 렌더는 되지만, 원본이 인스타
---   CDN이면 링크가 만료될 수 있어 우리 버킷에 옮기는 걸 권장.
+-- card_image_url 4개는 scripts/upload-instagram-card-images.ts로 Supabase Storage
+-- "instagram-cards" 버킷(신규 생성, public)에 업로드 완료 — 실제 URL로 채워져 있음.
 --
 -- 각 INSERT는 title_snapshot을 키로 NOT EXISTS 가드를 걸어 재실행해도 중복 안 생김.
 -- movie_id는 movies.title 정확매칭 — 안 맞으면 NULL로 들어가고 title_snapshot만
@@ -19,7 +16,7 @@
 -- ── 1) 해피엔드 (1편, sort_order 0) ─────────────────────────────
 INSERT INTO instagram_recommendations
   (target_type, title_snapshot, card_image_url, instagram_url, sort_order)
-SELECT 'movie', '해피엔드', 'TODO_CARD_IMAGE_URL_1',
+SELECT 'movie', '해피엔드', 'https://pkmgloiixwvhitqpcfyc.supabase.co/storage/v1/object/public/instagram-cards/happy-end.jpg',
   'https://www.instagram.com/p/DafBZSek0uz/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==', 0
 WHERE NOT EXISTS (SELECT 1 FROM instagram_recommendations WHERE title_snapshot = '해피엔드');
 
@@ -35,7 +32,7 @@ WHERE r.title_snapshot = '해피엔드'
 -- ── 2) 백룸 (1편, sort_order 1) ──────────────────────────────────
 INSERT INTO instagram_recommendations
   (target_type, title_snapshot, card_image_url, instagram_url, sort_order)
-SELECT 'movie', '백룸', 'TODO_CARD_IMAGE_URL_2',
+SELECT 'movie', '백룸', 'https://pkmgloiixwvhitqpcfyc.supabase.co/storage/v1/object/public/instagram-cards/the-back-room.jpg',
   'https://www.instagram.com/p/DaxBgqmk9q1/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==', 1
 WHERE NOT EXISTS (SELECT 1 FROM instagram_recommendations WHERE title_snapshot = '백룸');
 
@@ -53,7 +50,7 @@ WHERE r.title_snapshot = '백룸'
 -- NULL(클릭 시 자동으로 프로필 https://www.instagram.com/indi.movie.map/ 로 폴백).
 INSERT INTO instagram_recommendations
   (target_type, title_snapshot, card_image_url, instagram_url, display_until, sort_order)
-SELECT 'movie', '자려고 누웠는데 특별 상영전', 'TODO_CARD_IMAGE_URL_3', NULL, '2026-08-31', 2
+SELECT 'movie', '자려고 누웠는데 특별 상영전', 'https://pkmgloiixwvhitqpcfyc.supabase.co/storage/v1/object/public/instagram-cards/bacurau-and-more.jpg', NULL, '2026-08-31', 2
 WHERE NOT EXISTS (SELECT 1 FROM instagram_recommendations WHERE title_snapshot = '자려고 누웠는데 특별 상영전');
 
 INSERT INTO instagram_recommendation_movies (instagram_recommendation_id, movie_id, title_snapshot, sort_order)
@@ -75,7 +72,7 @@ WHERE r.title_snapshot = '자려고 누웠는데 특별 상영전'
 -- display_until 언급 없어서 무기한(NULL)으로 둠 — 필요하면 UPDATE로 나중에 채울 것.
 INSERT INTO instagram_recommendations
   (target_type, title_snapshot, card_image_url, instagram_url, sort_order)
-SELECT 'movie', '2026년 7월 상영작 모음(마티 슈프림 외 6편)', 'TODO_CARD_IMAGE_URL_4',
+SELECT 'movie', '2026년 7월 상영작 모음(마티 슈프림 외 6편)', 'https://pkmgloiixwvhitqpcfyc.supabase.co/storage/v1/object/public/instagram-cards/marty-supreme-and-more.jpg',
   'https://www.instagram.com/p/DamfN_lk67Y/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==', 3
 WHERE NOT EXISTS (SELECT 1 FROM instagram_recommendations WHERE title_snapshot = '2026년 7월 상영작 모음(마티 슈프림 외 6편)');
 
