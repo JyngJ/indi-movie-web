@@ -2020,6 +2020,16 @@ export default function MapView() {
 
   useEffect(() => { tryLocationFly() }, [coords, tryLocationFly])
 
+  // (tabs) 레이아웃 밖(festival 상세 등)에서 돌아오면 MapView가 통째로 리마운트돼
+  // mapRef가 null로 리셋된다 — MapRefSetter.onReady가 불릴 때까지 여러 렌더 걸릴 수
+  // 있는데, ?theater= 복원 effect는 map 없이도 조용히 실패하고 "복원 완료"로
+  // 마킹해버려 재시도가 없었다(아래 mapReadyTick을 그 effect의 deps에 추가해 재시도).
+  const [mapReadyTick, setMapReadyTick] = useState(0)
+  const handleMapReady = useCallback(() => {
+    tryLocationFly()
+    setMapReadyTick((v) => v + 1)
+  }, [tryLocationFly])
+
   // 칩 직접 조작 시만 호출되는 zoom 함수 — setFilters와 분리됨
   const theatersRef = useRef(theaters)
   theatersRef.current = theaters
@@ -2238,7 +2248,12 @@ export default function MapView() {
       return
     }
     if (theaters.length === 0) return
-    
+    // 다른 라우트 그룹(festival 상세 등)에서 돌아와 MapView가 리마운트된 직후엔
+    // mapRef가 아직 null일 수 있다 — 여기서 곧장 진행하면 flyTo가 조용히 no-op되고
+    // 아래서 restoredTheaterRef가 "완료"로 마킹돼 다시는 재시도되지 않는다. map 준비
+    // 전이면 그냥 리턴 — mapReadyTick이 deps에 있어 map 준비되면 effect가 다시 돈다.
+    if (!mapRef.current) return
+
     const movieParam = searchParams.get('movie') ?? searchParams.get('fromMovie')
     if (movieParam && movies.length === 0) return
     const dateParam = searchParams.get('date')
@@ -2296,7 +2311,7 @@ export default function MapView() {
     const qs = params.toString()
     router.replace(qs ? `/?${qs}` : '/', { scroll: false })
 
-  }, [closeSearch, flyToForTheater, isDesktopLayout, movies.length, openTheaterForMovie, router, searchParams, theaters])
+  }, [closeSearch, flyToForTheater, isDesktopLayout, mapReadyTick, movies.length, openTheaterForMovie, router, searchParams, theaters])
 
   // 영화 상세 / 패널에서 ?movie= 파라미터로 지도 필터만 복원
   const restoredMovieFilterRef = useRef<string | null>(null)
@@ -3124,7 +3139,7 @@ export default function MapView() {
           bounds={KOREA_MAP_BOUNDS}
           noWrap
         />
-        <MapRefSetter mapRef={mapRef} onReady={tryLocationFly} />
+        <MapRefSetter mapRef={mapRef} onReady={handleMapReady} />
         <MapInteractionTracker onInteract={collapseCurationOnMapInteraction} />
         <ViewportTracker onViewport={handleViewport} />
         <OffScreenTracker
