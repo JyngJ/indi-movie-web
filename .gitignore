@@ -47,3 +47,6 @@ seat-checker/
 .env*.local
 KIMM_Light.ttf
 KIMM_bold.ttf
+
+# 로컬 기획/노트 (git 미추적)
+/plan/

@@ -140,6 +140,7 @@ function FestivalBannerCard({ festival, today, isDesktop, onClick }: { festival:
               src={festival.bannerUrl}
               alt={festival.name}
               fill
+              priority
               sizes={isDesktop ? `${FESTIVAL_BANNER_DESKTOP_WIDTH}px` : '100vw'}
               style={{ objectFit: 'cover' }}
             />
