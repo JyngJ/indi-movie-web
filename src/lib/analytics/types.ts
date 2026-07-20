@@ -34,6 +34,10 @@ export type AnalyticsEventName =
   | 'add request opened'
   | 'add request submitted'
   | 'landing variant assigned'
+  | 'survey shown'
+  | 'survey good selected'
+  | 'survey submitted'
+  | 'survey dismissed'
 
 export type AnalyticsSource =
   | 'direct'
