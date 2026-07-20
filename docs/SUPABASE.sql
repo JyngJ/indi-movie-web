@@ -423,3 +423,19 @@ CREATE POLICY "Public read subway lines" ON subway_lines
   FOR SELECT USING (true);
 
 -- Admin writes are performed by the server-only Supabase service role client.
+
+-- ─────────────────────────────────────────────
+-- 재방문자 피드백 설문 (survey_responses)
+-- 좋은 점(객관식) + 개선할 점(주관식, 선택)
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS survey_responses (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  good_point   TEXT NOT NULL,
+  etc_text     TEXT,
+  improvement  TEXT,
+  session_id   TEXT,
+  device       TEXT,
+  page_url     TEXT,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_survey_responses_created_at ON survey_responses(created_at DESC);
