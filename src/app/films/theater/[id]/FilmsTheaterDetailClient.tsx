@@ -12,6 +12,7 @@ import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWi
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { shareAdapter } from '@/lib/adapters/share'
 import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/components/domain/booking/BookingActions'
+import { Skeleton } from '@/components/primitives'
 import { Clapperboard } from 'lucide-react'
 
 function useIsDesktop() {
@@ -212,6 +213,34 @@ function MovieShowtimeCard({
             onClick={() => onChipClick?.(st, movie.title)}
           />
         ))}
+      </div>
+    </div>
+  )
+}
+
+/* ── MovieShowtimeCard 로딩 자리표시 — 실제 카드와 같은 레이아웃/크기로 시프트 방지 ── */
+function MovieShowtimeCardSkeleton({ isDesktop }: { isDesktop: boolean }) {
+  const posterW = isDesktop ? 80 : 68
+  const posterH = isDesktop ? 120 : 102
+
+  return (
+    <div style={{
+      borderRadius: 14, border: '1px solid var(--color-border)',
+      backgroundColor: 'var(--color-surface-card)',
+      overflow: 'hidden',
+      marginBottom: 12,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '14px 16px' }}>
+        <Skeleton width={posterW} height={posterH} rounded="md" />
+        <div style={{ flex: 1, minWidth: 0, paddingTop: 2, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <Skeleton width="70%" height={18} />
+          <Skeleton width="45%" height={13} />
+          <Skeleton width={90} height={18} rounded="full" />
+        </div>
+      </div>
+      <div style={{ padding: '0 16px 14px', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        <Skeleton width={110} height={60} rounded="md" />
+        <Skeleton width={110} height={60} rounded="md" />
       </div>
     </div>
   )
@@ -482,8 +511,8 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
         </div>
 
         {isLoading ? (
-          <div style={{ height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-caption)', fontSize: 13 }}>
-            불러오는 중…
+          <div style={isDesktop ? { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 0, columnGap: 16 } : {}}>
+            {[0, 1, 2].map((i) => <MovieShowtimeCardSkeleton key={i} isDesktop={isDesktop} />)}
           </div>
         ) : movieShowtimeGroups.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px 0', fontSize: 13, color: 'var(--color-text-caption)' }}>

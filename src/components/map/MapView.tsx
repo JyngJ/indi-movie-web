@@ -25,8 +25,10 @@ import { theaterEventToGvEvent, isFestivalTitle } from '@/lib/gv/adapter'
 import type { DesktopPanelState } from '@/components/domain/DesktopDetailPanel'
 import type { FilterState } from '@/components/domain'
 import { useActiveMovieIds, useMapShowtimes, useMovies, useStations, useTheaters, useTheaterEvents } from '@/lib/supabase/queries'
+import type { MapShowtime } from '@/lib/supabase/queries'
 import { LRUCache } from '@/lib/lruCache'
 import type { Movie, Station, Theater } from '@/types/api'
+import type { TheaterEvent } from '@/types/admin'
 import { SEOUL_GU, SEOUL_DONG } from '@/data/seoul-areas'
 import { normalizeGenre } from '@/lib/genres'
 import { getRegionFromCity, getRegionFromCoords, REGION_BOUNDS } from '@/lib/regions'
@@ -57,6 +59,14 @@ import { SettingsPanel } from './SettingsPanel'
 const SEARCH_CROSS_RESULT_LIMIT = 5
 const STATION_BOUNDS_PADDING = 0.25
 const SUBWAY_LAYER_ENTER_DELAY_MS = 120
+// 로딩 중 `data: x = []` 인라인 기본값은 렌더마다 새 배열을 만들어 하위 useMemo 메모이제이션을
+// 깨뜨린다 — 안정된 참조를 대신 기본값으로 써서 로딩 구간에도 참조 동일성을 유지한다.
+const EMPTY_THEATERS: Theater[] = []
+const EMPTY_STATIONS: Station[] = []
+const EMPTY_MOVIES: Movie[] = []
+const EMPTY_ACTIVE_MOVIE_IDS: string[] = []
+const EMPTY_MAP_SHOWTIMES: MapShowtime[] = []
+const EMPTY_THEATER_EVENTS: TheaterEvent[] = []
 const MAP_MIN_ZOOM = 7
 const MAP_MAX_ZOOM = 19
 const KOREA_MAP_BOUNDS: L.LatLngBoundsExpression = [
@@ -1019,10 +1029,10 @@ export default function MapView() {
   const isDark = useIsDark()
   const isDesktopLayout = useIsDesktopLayout()
   const { setTheme } = useThemeStore()
-  const { data: theaters = [], isLoading: theatersLoading } = useTheaters()
-  const { data: stations = [] } = useStations()
-  const { data: movies = [] } = useMovies()
-  const { data: activeMovieIds = [] } = useActiveMovieIds()
+  const { data: theaters = EMPTY_THEATERS, isLoading: theatersLoading } = useTheaters()
+  const { data: stations = EMPTY_STATIONS } = useStations()
+  const { data: movies = EMPTY_MOVIES } = useMovies()
+  const { data: activeMovieIds = EMPTY_ACTIVE_MOVIE_IDS } = useActiveMovieIds()
   const [filters, setFilters] = useState<FilterState>(() => ({
     dateId: 'this-week',
     customStart: null,
@@ -1054,7 +1064,7 @@ export default function MapView() {
   const selectedDateRange = useMemo(() => dateRangeForFilter(filters), [filters])
   const mapShowtimeStart = formatDateParam(selectedDateRange.start)
   const mapShowtimeEnd = formatDateParam(selectedDateRange.end)
-  const { data: mapShowtimes = [] } = useMapShowtimes(mapShowtimeStart, mapShowtimeEnd)
+  const { data: mapShowtimes = EMPTY_MAP_SHOWTIMES } = useMapShowtimes(mapShowtimeStart, mapShowtimeEnd)
   const mapRef = useRef<LeafletMap | null>(null)
   useEffect(() => () => cancelSpringAnimation(), [])
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -1062,7 +1072,7 @@ export default function MapView() {
   const [initialGvId, setInitialGvId] = useState<string | undefined>(undefined)
   const gvDelayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [expandedGvTheater, setExpandedGvTheater] = useState<string | null>(null)
-  const { data: rawTheaterEvents = [] } = useTheaterEvents()
+  const { data: rawTheaterEvents = EMPTY_THEATER_EVENTS } = useTheaterEvents()
   // GV/이벤트 핀도 상영일정 날짜 필터를 따른다 — 필터 밖 날짜의 이벤트는 핀에서 제외.
   // 단, 영화제(festival)는 여러 날에 걸친 행사 자체를 알리는 게 목적이라 날짜 필터와 무관하게 항상 노출한다.
   const gvEvents = useMemo(
@@ -1087,6 +1097,17 @@ export default function MapView() {
   const [zoom, setZoom] = useState(14)
   const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null)
   const [subwayLayerReady, setSubwayLayerReady] = useState(false)
+  // 부가 레이어(GV/영화제 마커)는 첫 마운트에 필수 아님 — idle까지 미뤄 초기 렉을 줄인다
+  const [showSecondaryLayers, setShowSecondaryLayers] = useState(false)
+  useEffect(() => {
+    const ric = typeof requestIdleCallback === 'function' ? requestIdleCallback : null
+    if (ric) {
+      const id = ric(() => setShowSecondaryLayers(true))
+      return () => cancelIdleCallback?.(id)
+    }
+    const timer = setTimeout(() => setShowSecondaryLayers(true), 200)
+    return () => clearTimeout(timer)
+  }, [])
   const zoomRef = useRef(14)
   const recomputeRef = useRef<(() => void) | null>(null)
   const subwayLayerVisibleRef = useRef(false)
@@ -1408,6 +1429,26 @@ export default function MapView() {
     const paddedBounds = mapBounds.pad(STATION_BOUNDS_PADDING)
     return stations.filter((station) => paddedBounds.contains([station.lat, station.lng]))
   }, [mapBounds, stations, subwayLayerReady, zoom])
+
+  const theaterByName = useMemo(() => {
+    const map = new Map<string, Theater>()
+    for (const t of theaters) map.set(t.name, t)
+    return map
+  }, [theaters])
+
+  // GV/영화제 마커도 역 레이어와 같은 방식으로 뷰포트 안만 그린다
+  const visibleGvEntries = useMemo(() => {
+    if (!mapBounds || zoom < 12) return []
+    const paddedBounds = mapBounds.pad(STATION_BOUNDS_PADDING)
+    const entries: [string, GvEvent[]][] = []
+    for (const [theaterName, events] of gvByTheater) {
+      const theater = theaterByName.get(theaterName)
+      if (!theater) continue
+      if (!paddedBounds.contains([theater.lat, theater.lng])) continue
+      entries.push([theaterName, events])
+    }
+    return entries
+  }, [gvByTheater, mapBounds, theaterByName, zoom])
 
   const theaterResults = useMemo(() => {
     if (!searchQuery.trim()) return []
@@ -3112,8 +3153,8 @@ export default function MapView() {
           visibleStations={visibleStations}
         />
 
-        {zoom >= 12 && Array.from(gvByTheater.entries()).map(([theaterName, events]) => {
-          const theater = theaters.find((t) => t.name === theaterName)
+        {showSecondaryLayers && visibleGvEntries.map(([theaterName, events]) => {
+          const theater = theaterByName.get(theaterName)
           if (!theater) return null
           const expanded = expandedGvTheater === theater.id
           const gvSelected = selectedId === theater.id
@@ -3138,7 +3179,7 @@ export default function MapView() {
                   if (!gvId) return
                   const gvEv = gvEvents.find(e => e.id === gvId)
                   if (!gvEv) return
-                  const gvTheater = theaters.find(t => t.name === gvEv.theaterName)
+                  const gvTheater = theaterByName.get(gvEv.theaterName)
                   if (!gvTheater) return
                   setInitialGvId(undefined)
                   if (gvDelayTimerRef.current) clearTimeout(gvDelayTimerRef.current)
