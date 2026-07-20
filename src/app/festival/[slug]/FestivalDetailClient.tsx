@@ -12,6 +12,13 @@ import { getFestivalDateLabel, getFestivalStatus, type FestivalStatus } from '@/
 import { toKstIsoDate } from '@/lib/date'
 import type { FestivalDetail } from '@/types/festival'
 
+// http:// 원본(예: jiff.kr — HTTPS 인증서가 깨져있음)을 브라우저가 직접 요청하면 mixed-content
+// 자동 https 승격 때문에 깨진다. Next 이미지 최적화 엔드포인트를 거치면 서버가 대신
+// http로 fetch해서 우리 도메인(https)으로 내려주므로 브라우저 정책을 안 탄다.
+function proxiedImageUrl(url: string, width: number) {
+  return `/_next/image?url=${encodeURIComponent(url)}&w=${width}&q=75`
+}
+
 const STATUS_LABEL: Record<FestivalStatus, string> = { upcoming: '예정', ongoing: '진행중', ended: '종료' }
 const STATUS_COLOR: Record<FestivalStatus, string> = { upcoming: '#D97706', ongoing: '#16A34A', ended: 'var(--color-text-caption)' }
 
@@ -93,7 +100,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
       {festival.bannerUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={festival.bannerUrl}
+          src={proxiedImageUrl(festival.bannerUrl, 1920)}
           alt={festival.name}
           style={{ width: '100%', height: 'auto', display: 'block', backgroundColor: 'var(--color-surface-raised)' }}
         />
