@@ -284,9 +284,9 @@ export function TheaterSheet({
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
   const [pendingFilters, setPendingFilters] = useState<SheetFilterState>({ genres: [], nations: [], bookable: false })
 
-  const applySheetFilters = (next: SheetFilterState) => {
+  const applySheetFilters = (next: SheetFilterState, scope: 'theater_sheet' | 'theater_sheet_quick' = 'theater_sheet') => {
     trackEvent('map filter changed', {
-      filter_scope: 'theater_sheet',
+      filter_scope: scope,
       theater_id: theater.id,
       theater_name: theater.name,
       selected_movie_id: selectedMovieId || null,
@@ -1453,6 +1453,23 @@ export function TheaterSheet({
                   }}>
                     {filtersOn ? `${matched}/${total}편` : `${total}편 상영`}
                   </span>
+                  {/* 예매 가능만 보기 — 즉시 토글, 드로어 열지 않음 */}
+                  <button
+                    onClick={() => applySheetFilters({ ...sheetFilters, bookable: !sheetFilters.bookable }, 'theater_sheet_quick')}
+                    style={{
+                      flexShrink: 0, height: 22, padding: '0 8px',
+                      borderRadius: 999,
+                      border: '1px solid',
+                      borderColor: sheetFilters.bookable ? 'var(--color-primary-base)' : 'var(--color-border)',
+                      backgroundColor: sheetFilters.bookable ? 'var(--color-primary-subtle-l)' : 'transparent',
+                      color: sheetFilters.bookable ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
+                      fontSize: 10, fontWeight: 600, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', minHeight: 'auto',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    예매 가능만 보기
+                  </button>
                   {sheetFilters.genres.map(g => (
                     <button
                       key={`g:${g}`}
@@ -1489,23 +1506,6 @@ export function TheaterSheet({
                       <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
                     </button>
                   ))}
-                  {sheetFilters.bookable && (
-                    <button
-                      onClick={() => applySheetFilters({ ...sheetFilters, bookable: false })}
-                      style={{
-                        flexShrink: 0, height: 22, padding: '0 6px 0 8px',
-                        borderRadius: 999,
-                        border: '1px solid var(--color-primary-base)',
-                        backgroundColor: 'var(--color-primary-subtle-l)',
-                        color: 'var(--color-primary-base)',
-                        fontSize: 10, fontWeight: 600, cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', gap: 3, minHeight: 'auto',
-                      }}
-                    >
-                      예매가능
-                      <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
-                    </button>
-                  )}
                 </div>
                 {/* 오른쪽: 필터 버튼 */}
                 <button
