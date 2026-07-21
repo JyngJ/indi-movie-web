@@ -426,6 +426,7 @@ export function TheaterSheet({
   /* ── 확장 시 스크롤 영역 ── */
   const scrollAreaRef      = useRef<HTMLDivElement>(null)
   const theaterNameRef     = useRef<HTMLDivElement>(null)
+  const dateBarStickyRef   = useRef<HTMLDivElement>(null)
   const showtimeSectionRef = useRef<HTMLDivElement>(null)
   const [nameInNav, setNameInNav] = useState(false)
   const [showtimeInView, setShowtimeInView] = useState(true)
@@ -626,6 +627,24 @@ export function TheaterSheet({
     })
     onMovieSelect(movieId)
   }
+
+  /* 영화 선택 시 상영시간 섹션으로 스무스 스크롤 (같은 영화 재탭 시 반복 방지) */
+  const prevScrollMovieIdRef = useRef(selectedMovieId)
+  useEffect(() => {
+    if (!shownExpanded) return
+    if (prevScrollMovieIdRef.current === selectedMovieId) return
+    prevScrollMovieIdRef.current = selectedMovieId
+
+    const id = requestAnimationFrame(() => {
+      const container = scrollAreaRef.current
+      const target = showtimeSectionRef.current
+      if (!container || !target) return
+      const headerOffset = dateBarStickyRef.current?.offsetHeight ?? 0
+      const delta = target.getBoundingClientRect().top - container.getBoundingClientRect().top - headerOffset - 8
+      container.scrollTo({ top: container.scrollTop + delta, behavior: 'smooth' })
+    })
+    return () => cancelAnimationFrame(id)
+  }, [selectedMovieId, shownExpanded])
 
   const handleShowtimeSelect = (showtime: Showtime) => {
     setSelectedShowtimeId((prev) => {
@@ -1359,7 +1378,7 @@ export function TheaterSheet({
           </div>}
 
           {/* DateBar — sticky */}
-          <div style={{
+          <div ref={dateBarStickyRef} style={{
             position: 'sticky', top: 0, zIndex: 10,
             backgroundColor: panelMode ? 'var(--color-surface-card)' : 'var(--color-surface-raised)',
             borderTop: panelMode ? 'none' : '1px solid var(--color-border)',
