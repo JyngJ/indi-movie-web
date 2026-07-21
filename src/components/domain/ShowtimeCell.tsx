@@ -12,6 +12,7 @@ interface ShowtimeCellProps {
   kind?: ShowtimeKind
   selected?: boolean
   onClick?: (e: React.MouseEvent<HTMLDivElement>) => void
+  onUnavailableClick?: (e: React.MouseEvent<HTMLDivElement>) => void
 }
 
 /* 인라인 배지 — 심야 전용 */
@@ -38,7 +39,7 @@ function InlineBadge({ text, color }: { text: string; color: string }) {
 
 export function ShowtimeCell({
   startTime, endTime, seatAvailable, seatTotal, screenName, promo,
-  kind = 'normal', selected = false, onClick,
+  kind = 'normal', selected = false, onClick, onUnavailableClick,
 }: ShowtimeCellProps) {
   const isSoldout    = kind === 'soldout'
   const isLate       = kind === 'late'
@@ -75,7 +76,7 @@ export function ShowtimeCell({
         cursor: isClickable ? 'pointer' : 'default',
         transition: 'border-color 150ms ease, background-color 150ms ease',
       }}
-      onClick={isClickable ? onClick : undefined}
+      onClick={isClickable ? onClick : (isSoldout || isPast) ? onUnavailableClick : undefined}
       role={isClickable ? 'button' : undefined}
       tabIndex={isClickable ? 0 : undefined}
     >

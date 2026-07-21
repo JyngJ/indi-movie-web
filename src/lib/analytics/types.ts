@@ -12,6 +12,8 @@ export type AnalyticsEventName =
   | 'theater date changed'
   | 'theater movie selected'
   | 'theater movie searched on map'
+  | 'theater sheet filter opened'
+  | 'showtime unavailable clicked'
   | 'showtime selected'
   | 'booking clicked'
   | 'directions clicked'

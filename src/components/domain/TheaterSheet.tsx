@@ -284,9 +284,9 @@ export function TheaterSheet({
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
   const [pendingFilters, setPendingFilters] = useState<SheetFilterState>({ genres: [], nations: [], bookable: false })
 
-  const applySheetFilters = (next: SheetFilterState) => {
+  const applySheetFilters = (next: SheetFilterState, scope: 'theater_sheet' | 'theater_sheet_quick' = 'theater_sheet') => {
     trackEvent('map filter changed', {
-      filter_scope: 'theater_sheet',
+      filter_scope: scope,
       theater_id: theater.id,
       theater_name: theater.name,
       selected_movie_id: selectedMovieId || null,
@@ -376,6 +376,15 @@ export function TheaterSheet({
   const days = buildDays(7, theaterAvailableDates, dateWindowOffset)
   const selectedDate = days.find((d) => d.isoDate === selectedIsoDate)?.date ?? days[0].date
 
+  /* 선택된 영화가 상영하는 날짜 — 날짜바 밑줄 표시용 */
+  const selectedMovieAvailableDates = useMemo(
+    () => allMovieEntries.find((e) => e.movie.id === selectedMovieId)?.availableDates,
+    [allMovieEntries, selectedMovieId]
+  )
+  const daysWithMovieAvailability = selectedMovieAvailableDates
+    ? days.map((d) => ({ ...d, hasSelectedMovie: selectedMovieAvailableDates!.has(d.isoDate) }))
+    : days
+
   /* ── 바텀시트 필터 — 이 극장 영화에서만 가능한 장르/국가 ── */
   const availableGenres = useMemo(() => {
     const found = new Set<string>()
@@ -426,6 +435,7 @@ export function TheaterSheet({
   /* ── 확장 시 스크롤 영역 ── */
   const scrollAreaRef      = useRef<HTMLDivElement>(null)
   const theaterNameRef     = useRef<HTMLDivElement>(null)
+  const dateBarStickyRef   = useRef<HTMLDivElement>(null)
   const showtimeSectionRef = useRef<HTMLDivElement>(null)
   const [nameInNav, setNameInNav] = useState(false)
   const [showtimeInView, setShowtimeInView] = useState(true)
@@ -626,6 +636,24 @@ export function TheaterSheet({
     })
     onMovieSelect(movieId)
   }
+
+  /* 영화 선택 시 상영시간 섹션으로 스무스 스크롤 (같은 영화 재탭 시 반복 방지) */
+  const prevScrollMovieIdRef = useRef(selectedMovieId)
+  useEffect(() => {
+    if (!shownExpanded) return
+    if (prevScrollMovieIdRef.current === selectedMovieId) return
+    prevScrollMovieIdRef.current = selectedMovieId
+
+    const id = requestAnimationFrame(() => {
+      const container = scrollAreaRef.current
+      const target = showtimeSectionRef.current
+      if (!container || !target) return
+      const headerOffset = dateBarStickyRef.current?.offsetHeight ?? 0
+      const delta = target.getBoundingClientRect().top - container.getBoundingClientRect().top - headerOffset - 8
+      container.scrollTo({ top: container.scrollTop + delta, behavior: 'smooth' })
+    })
+    return () => cancelAnimationFrame(id)
+  }, [selectedMovieId, shownExpanded])
 
   const handleShowtimeSelect = (showtime: Showtime) => {
     setSelectedShowtimeId((prev) => {
@@ -1359,14 +1387,14 @@ export function TheaterSheet({
           </div>}
 
           {/* DateBar — sticky */}
-          <div style={{
+          <div ref={dateBarStickyRef} style={{
             position: 'sticky', top: 0, zIndex: 10,
             backgroundColor: panelMode ? 'var(--color-surface-card)' : 'var(--color-surface-raised)',
             borderTop: panelMode ? 'none' : '1px solid var(--color-border)',
             borderBottom: panelMode ? '1px solid var(--color-border)' : undefined,
           }}>
             <DateBar
-              days={days}
+              days={daysWithMovieAvailability}
               selectedDate={selectedDate}
               hasPrev={dateWindowOffset > 0}
               hasNext={dateWindowOffset < 21}
@@ -1425,6 +1453,23 @@ export function TheaterSheet({
                   }}>
                     {filtersOn ? `${matched}/${total}편` : `${total}편 상영`}
                   </span>
+                  {/* 예매 가능만 보기 — 즉시 토글, 드로어 열지 않음 */}
+                  <button
+                    onClick={() => applySheetFilters({ ...sheetFilters, bookable: !sheetFilters.bookable }, 'theater_sheet_quick')}
+                    style={{
+                      flexShrink: 0, height: 22, padding: '0 8px',
+                      borderRadius: 999,
+                      border: '1px solid',
+                      borderColor: sheetFilters.bookable ? 'var(--color-primary-base)' : 'var(--color-border)',
+                      backgroundColor: sheetFilters.bookable ? 'var(--color-primary-subtle-l)' : 'transparent',
+                      color: sheetFilters.bookable ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
+                      fontSize: 10, fontWeight: 600, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', minHeight: 'auto',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    예매 가능만 보기
+                  </button>
                   {sheetFilters.genres.map(g => (
                     <button
                       key={`g:${g}`}
@@ -1461,27 +1506,14 @@ export function TheaterSheet({
                       <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
                     </button>
                   ))}
-                  {sheetFilters.bookable && (
-                    <button
-                      onClick={() => applySheetFilters({ ...sheetFilters, bookable: false })}
-                      style={{
-                        flexShrink: 0, height: 22, padding: '0 6px 0 8px',
-                        borderRadius: 999,
-                        border: '1px solid var(--color-primary-base)',
-                        backgroundColor: 'var(--color-primary-subtle-l)',
-                        color: 'var(--color-primary-base)',
-                        fontSize: 10, fontWeight: 600, cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', gap: 3, minHeight: 'auto',
-                      }}
-                    >
-                      예매가능
-                      <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
-                    </button>
-                  )}
                 </div>
                 {/* 오른쪽: 필터 버튼 */}
                 <button
-                  onClick={() => { setPendingFilters(sheetFilters); setFilterSheetOpen(true) }}
+                  onClick={() => {
+                    trackEvent('theater sheet filter opened', { theater_id: theater.id, source: 'theater_sheet' })
+                    setPendingFilters(sheetFilters)
+                    setFilterSheetOpen(true)
+                  }}
                   style={{
                     flexShrink: 0, height: 26, padding: '0 10px',
                     borderRadius: 999,
@@ -1921,6 +1953,13 @@ export function TheaterSheet({
                       kind={kind}
                       selected={st.id === selectedShowtimeId}
                       onClick={kind !== 'soldout' && kind !== 'nowplaying' && kind !== 'ended' ? () => handleShowtimeSelect(st) : undefined}
+                      onUnavailableClick={() => {
+                        trackEvent('showtime unavailable clicked', {
+                          theater_id: theater.id,
+                          kind,
+                          source: 'theater_sheet',
+                        })
+                      }}
                     />
                   )
                 })}
