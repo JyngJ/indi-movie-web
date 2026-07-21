@@ -143,6 +143,17 @@ function InstagramRecCard({
     ? { position: 'absolute', top: '50%', right: 28, transform: 'translateY(-50%)', width: 320, aspectRatio: '21/4' }
     : { position: 'absolute', top: '50%', right: '6%', transform: 'translateY(-50%)', width: '38%', aspectRatio: '21/4' }
 
+  // 검정 배경만 있으면 사진 페이드 경계가 뚝 끊겨 보임 — 사진 자체를 오른쪽 끝만
+  // 크게 늘려서(스트레치) 블러 처리, 그 자리의 "평균색"처럼 보이게 깔아준다(캔버스로
+  // 픽셀 평균 내는 대신 CSS만으로 — 외부 이미지 CORS 오염 문제도 없음).
+  const edgeBleedStyle: React.CSSProperties = {
+    position: 'absolute', inset: 0,
+    backgroundImage: `url(${rec.cardImageUrl})`,
+    backgroundSize: '500% 100%', backgroundPosition: 'right center', backgroundRepeat: 'no-repeat',
+    filter: 'blur(60px) saturate(1.25)',
+    transform: 'scale(1.2)',
+  }
+
   return (
     <button
       onClick={onClick}
@@ -160,6 +171,10 @@ function InstagramRecCard({
       }}
       aria-label={title}
     >
+      {/* 사진 오른쪽 끝 색을 늘려 블러 — 검정 배경과 사진 페이드 경계가 뚝 끊기지 않게.
+          포스터/영화제 배너보다 먼저 그려야(DOM 순서=쌓임 순서) 그 위에 얹힌다 */}
+      <div style={edgeBleedStyle} />
+
       {/* 카드뉴스 이미지 — 오른쪽 끝에서 실제 투명해짐(색으로 덮는 게 아니라 mask).
           objectPosition을 아래쪽으로 당겨서 카드뉴스 하단 카피 문구까지 보이게 함 */}
       <div style={{ ...imageBoxStyle, ...imageMaskStyle }}>
