@@ -376,6 +376,15 @@ export function TheaterSheet({
   const days = buildDays(7, theaterAvailableDates, dateWindowOffset)
   const selectedDate = days.find((d) => d.isoDate === selectedIsoDate)?.date ?? days[0].date
 
+  /* 선택된 영화가 상영하는 날짜 — 날짜바 밑줄 표시용 */
+  const selectedMovieAvailableDates = useMemo(
+    () => allMovieEntries.find((e) => e.movie.id === selectedMovieId)?.availableDates,
+    [allMovieEntries, selectedMovieId]
+  )
+  const daysWithMovieAvailability = selectedMovieAvailableDates
+    ? days.map((d) => ({ ...d, hasSelectedMovie: selectedMovieAvailableDates!.has(d.isoDate) }))
+    : days
+
   /* ── 바텀시트 필터 — 이 극장 영화에서만 가능한 장르/국가 ── */
   const availableGenres = useMemo(() => {
     const found = new Set<string>()
@@ -1366,7 +1375,7 @@ export function TheaterSheet({
             borderBottom: panelMode ? '1px solid var(--color-border)' : undefined,
           }}>
             <DateBar
-              days={days}
+              days={daysWithMovieAvailability}
               selectedDate={selectedDate}
               hasPrev={dateWindowOffset > 0}
               hasNext={dateWindowOffset < 21}
