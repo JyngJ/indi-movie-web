@@ -10,6 +10,7 @@ export interface Day {
   isoDate: string   // 'YYYY-MM-DD' — API 쿼리용
   type: DayType
   disabled?: boolean
+  hasSelectedMovie?: boolean   // 선택된 영화가 이 날짜에 상영하는지
 }
 
 interface DateBarProps {
@@ -149,6 +150,20 @@ export function DateBar({ days, selectedDate, onSelectDate, onPrev, onNext, hasP
               >
                 {d.date}
               </span>
+              {d.hasSelectedMovie && !isDisabled && (
+                <span
+                  style={{
+                    position: 'absolute',
+                    bottom: 2,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: 12,
+                    height: 2,
+                    borderRadius: 1,
+                    backgroundColor: active ? 'rgba(255,255,255,0.85)' : 'var(--color-primary-base)',
+                  }}
+                />
+              )}
             </button>
           )
         })}
