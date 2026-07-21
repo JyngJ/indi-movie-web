@@ -1481,7 +1481,11 @@ export function TheaterSheet({
                 </div>
                 {/* 오른쪽: 필터 버튼 */}
                 <button
-                  onClick={() => { setPendingFilters(sheetFilters); setFilterSheetOpen(true) }}
+                  onClick={() => {
+                    trackEvent('theater sheet filter opened', { theater_id: theater.id, source: 'theater_sheet' })
+                    setPendingFilters(sheetFilters)
+                    setFilterSheetOpen(true)
+                  }}
                   style={{
                     flexShrink: 0, height: 26, padding: '0 10px',
                     borderRadius: 999,
@@ -1921,6 +1925,13 @@ export function TheaterSheet({
                       kind={kind}
                       selected={st.id === selectedShowtimeId}
                       onClick={kind !== 'soldout' && kind !== 'nowplaying' && kind !== 'ended' ? () => handleShowtimeSelect(st) : undefined}
+                      onUnavailableClick={() => {
+                        trackEvent('showtime unavailable clicked', {
+                          theater_id: theater.id,
+                          kind,
+                          source: 'theater_sheet',
+                        })
+                      }}
                     />
                   )
                 })}
