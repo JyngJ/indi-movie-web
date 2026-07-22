@@ -35,7 +35,11 @@ export async function generateSitemaps() {
   throw new Error(`movie sitemap: count 조회 ${MAX_ATTEMPTS}회 재시도 후 실패 — ${lastMessage}`)
 }
 
-export default async function sitemap({ id }: { id: number }): Promise<MetadataRoute.Sitemap> {
+export default async function sitemap(props: { id: Promise<string> }): Promise<MetadataRoute.Sitemap> {
+  // Next.js 16부터 generateSitemaps의 id가 Promise<string>으로 전달된다 (await 안 하면
+  // id가 Promise 객체 그대로라 id * PAGE_SIZE가 NaN이 되고, .range(NaN, NaN)이 에러 없이
+  // 빈 배열을 반환해서 실제 원인이었다 — 재시도로는 절대 못 잡는 결정론적 버그였음).
+  const id = Number(await props.id)
   const supabase = createSupabaseServerClient()
   const from = id * PAGE_SIZE
   const to = from + PAGE_SIZE - 1
@@ -48,8 +52,8 @@ export default async function sitemap({ id }: { id: number }): Promise<MetadataR
       .range(from, to)
       .order('updated_at', { ascending: false })
 
-    // 빌드 시점에 에러 없이 빈 배열만 오는 경우가 실제로 관측됨(원인 미상, 재현됨) —
-    // 정상 에러뿐 아니라 "이유 없는 빈 결과"도 재시도 대상으로 취급한다.
+    // id Promise를 안 기다린 버그(위 주석)로 에러 없는 빈 배열을 실제로 겪었다 —
+    // 그 버그는 고쳤지만 방어적으로 에러뿐 아니라 빈 결과도 재시도 대상으로 유지한다.
     if (!error && data && data.length > 0) {
       return data.map((m) => (
         { url: `${BASE_URL}/movie/${m.id}`, lastModified: new Date(m.updated_at), changeFrequency: 'weekly' as const, priority: 0.7 }
