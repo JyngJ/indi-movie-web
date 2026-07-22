@@ -172,8 +172,7 @@ export function SettingsMainPage({
       <div style={{ margin: '24px 16px 0', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
         <button onClick={() => onNavigate('attribution')} style={footerLink}>출처 표기 정보</button>
         <span style={footerDot}>·</span>
-        <button onClick={() => onNavigate('about')} style={footerLink}>만든 사람</button>
-        <span style={footerDot}>·</span>
+        {/* 만든 사람 탭 임시 숨김 */}
         <Link href="/privacy" style={{ ...footerLink, textDecoration: 'none' }}>개인정보 처리방침</Link>
       </div>
       <div style={{ textAlign: 'center', marginTop: 8, fontSize: 11, color: 'var(--color-text-placeholder)' }}>
