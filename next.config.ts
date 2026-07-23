@@ -22,6 +22,13 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // 구 라우트(/theater/[id]) → films 탭 라우트로 영구 리다이렉트.
+  // sitemap도 신규 경로로만 생성하지만, 과거에 색인/공유된 구 링크를 위해 유지.
+  async redirects() {
+    return [
+      { source: '/theater/:id', destination: '/films/theater/:id', permanent: true },
+    ]
+  },
 };
 
 export default nextConfig;
