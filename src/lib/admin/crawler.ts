@@ -687,68 +687,96 @@ async function fetchDtryxShowtimes(
   targetCinema: DtryxCinema,
   context: ParseContext,
 ): Promise<CrawledShowtimeCandidate[]> {
-  const tasks = playDates.flatMap((playDate) =>
-    movies.map((movie) => async () => {
-      await dtryxDelay()
-      const candidates: CrawledShowtimeCandidate[] = []
-      const params = createDtryxParams(cgid, {
-        CinemaCd: targetCinema.CinemaCd,
-        MovieCd: movie.MovieCd,
-        PlaySDT: playDate.PlaySDT,
-      }, brandCd)
-      const data = await fetchJson<{ Showseqlist?: DtryxShowtimeGroup[] }>(
-        `${origin}/reserve/showseq_list.do?${params}`,
-        headers,
-      )
-      const groups = data.Showseqlist ?? []
-      const releaseYear = parseDtryxReleaseYear(movie.ReleaseDT)
+  // (movie, date) 한 조합 조회 → 후보 배열
+  async function probeOne(movie: DtryxMovie, playDate: DtryxPlayDate): Promise<CrawledShowtimeCandidate[]> {
+    await dtryxDelay()
+    const candidates: CrawledShowtimeCandidate[] = []
+    const params = createDtryxParams(cgid, {
+      CinemaCd: targetCinema.CinemaCd,
+      MovieCd: movie.MovieCd,
+      PlaySDT: playDate.PlaySDT,
+    }, brandCd)
+    const data = await fetchJson<{ Showseqlist?: DtryxShowtimeGroup[] }>(
+      `${origin}/reserve/showseq_list.do?${params}`,
+      headers,
+    )
+    const groups = data.Showseqlist ?? []
+    const releaseYear = parseDtryxReleaseYear(movie.ReleaseDT)
 
-      groups.forEach((group) => {
-        ;(group.MovieDetail ?? []).forEach((detail) => {
-          const startTime = normalizeDtryxTime(detail.StartTime)
-          const movieTitle = detail.MovieNm || movie.MovieNm
+    groups.forEach((group) => {
+      ;(group.MovieDetail ?? []).forEach((detail) => {
+        const startTime = normalizeDtryxTime(detail.StartTime)
+        const movieTitle = detail.MovieNm || movie.MovieNm
 
-          if (!startTime || !movieTitle) return
+        if (!startTime || !movieTitle) return
 
-          const screenName = [detail.ScreenNm ?? group.ScreenNm, detail.ScreeningInfo ?? group.ScreeningInfo]
-            .filter(Boolean)
-            .join(' ')
-            .trim() || '상영관 확인 필요'
-          const seatAvailable = toInt(detail.RemainSeatCnt, DEFAULT_SEAT_TOTAL)
-          const seatTotal = toInt(detail.TotalSeatCnt, DEFAULT_SEAT_TOTAL)
-          const closed = detail.SaleCloseYn === 'Y'
-          const warnings = [
-            ...(closed ? ['예매 종료 회차입니다.'] : []),
-            ...(screenName === '상영관 확인 필요' ? ['상영관을 확인해야 합니다.'] : []),
-          ]
+        const screenName = [detail.ScreenNm ?? group.ScreenNm, detail.ScreeningInfo ?? group.ScreeningInfo]
+          .filter(Boolean)
+          .join(' ')
+          .trim() || '상영관 확인 필요'
+        const seatAvailable = toInt(detail.RemainSeatCnt, DEFAULT_SEAT_TOTAL)
+        const seatTotal = toInt(detail.TotalSeatCnt, DEFAULT_SEAT_TOTAL)
+        const closed = detail.SaleCloseYn === 'Y'
+        const warnings = [
+          ...(closed ? ['예매 종료 회차입니다.'] : []),
+          ...(screenName === '상영관 확인 필요' ? ['상영관을 확인해야 합니다.'] : []),
+        ]
 
-          candidates.push(buildCandidate({
-            context,
-            movieTitle,
-            releaseYear,
-            showDate: playDate.PlaySDT,
-            showTime: startTime,
-            endTime: normalizeDtryxTime(detail.EndTime),
-            screenName,
-            formatText: `${screenName} ${movie.MovieNmEng ?? ''}`,
-            seatAvailable,
-            seatTotal,
-            price: DEFAULT_PRICE,
-            bookingUrl: buildDtryxBookingUrl(origin, cgid, brandCd, targetCinema.CinemaCd, movie.MovieCd, playDate.PlaySDT, detail.ShowSeq, detail.ScreenCd),
-            rawText: JSON.stringify(detail),
-            confidence: warnings.length ? 0.82 : 0.96,
-            warnings,
-          }))
-        })
+        candidates.push(buildCandidate({
+          context,
+          movieTitle,
+          releaseYear,
+          showDate: playDate.PlaySDT,
+          showTime: startTime,
+          endTime: normalizeDtryxTime(detail.EndTime),
+          screenName,
+          formatText: `${screenName} ${movie.MovieNmEng ?? ''}`,
+          seatAvailable,
+          seatTotal,
+          price: DEFAULT_PRICE,
+          bookingUrl: buildDtryxBookingUrl(origin, cgid, brandCd, targetCinema.CinemaCd, movie.MovieCd, playDate.PlaySDT, detail.ShowSeq, detail.ScreenCd),
+          rawText: JSON.stringify(detail),
+          confidence: warnings.length ? 0.82 : 0.96,
+          warnings,
+        }))
       })
+    })
 
-      return candidates
-    }),
-  )
+    return candidates
+  }
 
-  const candidateGroups = await mapWithConcurrency(tasks, 1)
+  // dtryx는 per-movie 조회만 지원(MovieCd=all·per-date 한방 조회 전부 빈 응답)하므로, 극장마다
+  // 브랜드 전체 영화(수십~백 편)를 모든 날짜에 무차별 조회하면 요청이 폭증해 rate-limit 밴을 부른다.
+  // 발견 비용을 줄이기 위해: 첫·마지막 날짜만 전 영화를 스캔해 이 극장의 실제 상영작 집합을 구하고
+  // (주 초·주 후반 신규 편성 모두 포착), 나머지 날짜는 그 집합만 조회한다.
+  const probeDates = playDates.length <= 2 ? playDates : [playDates[0], playDates[playDates.length - 1]]
+  const restDates = playDates.filter((d) => !probeDates.includes(d))
 
-  return dedupeCandidates(candidateGroups.flat())
+  const all: CrawledShowtimeCandidate[] = []
+  const showingMovieCds = new Set<string>()
+
+  for (const playDate of probeDates) {
+    const groups = await mapWithConcurrency(
+      movies.map((movie) => async () => {
+        const c = await probeOne(movie, playDate)
+        if (c.length) showingMovieCds.add(movie.MovieCd)
+        return c
+      }),
+      1,
+    )
+    all.push(...groups.flat())
+  }
+
+  const showingMovies = movies.filter((m) => showingMovieCds.has(m.MovieCd))
+  for (const playDate of restDates) {
+    const groups = await mapWithConcurrency(
+      showingMovies.map((movie) => async () => probeOne(movie, playDate)),
+      1,
+    )
+    all.push(...groups.flat())
+  }
+
+  return dedupeCandidates(all)
 }
 
 export async function crawlMovieeTicketApi(context: ParseContext) {
