@@ -46,7 +46,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ])
 
   const theaterUrls: MetadataRoute.Sitemap = theaters.map((t) => (
-    { url: `${BASE_URL}/theater/${t.id}`, lastModified: new Date(t.updated_at), changeFrequency: 'weekly' as const, priority: 0.8 }
+    { url: `${BASE_URL}/films/theater/${t.id}`, lastModified: new Date(t.updated_at), changeFrequency: 'weekly' as const, priority: 0.8 }
   ))
 
   const directorNames = [...new Set(
