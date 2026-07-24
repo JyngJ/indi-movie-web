@@ -7,8 +7,22 @@ import { AnalyticsScripts } from '@/components/analytics/AnalyticsScripts'
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'),
-  title: '영화볼지도',
-  description: '독립·예술영화관 상영 정보를 지도에서 한눈에. 극장별 시간표, 영화 검색, 큐레이션까지.',
+  title: '독립영화 상영시간표·독립영화관 정보 | 영화볼지도',
+  description:
+    '전국 독립·예술영화관 상영시간표와 독립영화 정보를 지도에서 한눈에. 오늘 어디서 무슨 독립영화를 하는지, 극장별 시간표·영화 검색·큐레이션까지 한 곳에서.',
+  keywords: [
+    '독립영화',
+    '독립영화 시간표',
+    '독립영화 상영시간표',
+    '독립영화 정보',
+    '독립영화관',
+    '예술영화관',
+    '독립예술영화',
+    '영화볼지도',
+  ],
+  alternates: {
+    canonical: '/',
+  },
   icons: {
     icon: '/squarelogo.svg',
   },
