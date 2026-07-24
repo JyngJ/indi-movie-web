@@ -26,6 +26,7 @@ import {
   IcPin,
   IcSearch,
   IcSparkle,
+  ILLO_IMAGE_URLS,
   IlloCollected,
   IlloCuration,
   IlloLocation,
@@ -77,6 +78,16 @@ export function Onboarding({ onClose, variant }: Props) {
     viewedRef.current.add(page)
     trackEvent('onboarding viewed', { page: page + 1 })
   }, [page])
+
+  // 1페이지가 뜨자마자 뒤 페이지들이 쓸 지도 타일/포스터를 미리 요청해둔다.
+  // key={`illo-${page}`}로 페이지 전환마다 <img>가 리마운트되는데, 프리로드 없이는 "다음" 클릭 시점에야
+  // 첫 요청이 나가 몇 초간 빈 화면이 보이고(느린 응답 인상 → 연타), 이걸 방지하기 위함.
+  useEffect(() => {
+    ILLO_IMAGE_URLS.forEach((src) => {
+      const img = new Image()
+      img.src = src
+    })
+  }, [])
 
   /* ── 닫기 공통: 플래그 기록 (1회 보장) ── */
   const close = useCallback(() => {

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePendingNavItem } from '@/hooks/usePendingNavItem'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { PosterThumb } from './PosterThumb'
 import { Badge } from '@/components/primitives/Badge'
@@ -398,7 +398,7 @@ function RecentList({
   onRemove?: (kind: RecentlyViewedKind, id: string) => void
   onItemClick?: (item: RecentlyViewedEntry) => void
 }) {
-  const router = useRouter()
+  const { pendingId, navigate } = usePendingNavItem()
 
   function handleItemClick(item: RecentlyViewedEntry) {
     if (!item.kind) return
@@ -406,9 +406,10 @@ function RecentList({
       onItemClick(item)
       return
     }
-    if (item.kind === 'movie') router.push(`/movie/${item.id}`)
-    else if (item.kind === 'theater') router.push(`/theater/${item.id}`)
-    else if (item.kind === 'director') router.push(`/director/${encodeURIComponent(item.id)}`)
+    const key = `${item.kind}-${item.id}`
+    if (item.kind === 'movie') navigate(key, `/movie/${item.id}`)
+    else if (item.kind === 'theater') navigate(key, `/theater/${item.id}`)
+    else if (item.kind === 'director') navigate(key, `/director/${encodeURIComponent(item.id)}`)
   }
 
   if (items.length === 0) {
@@ -430,6 +431,7 @@ function RecentList({
             backgroundColor: 'var(--color-surface-bg)',
             borderRadius: 'var(--radius-lg)',
             gap: 'var(--spacing-2-5)',
+            opacity: pendingId === `${item.kind}-${item.id}` ? 0.5 : 1,
           }}
         >
           <button

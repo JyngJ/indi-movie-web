@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePendingNavItem } from '@/hooks/usePendingNavItem'
 import { SearchBar, SearchBarButton } from '@/components/primitives'
 import { AddRequestModal, AddRequestCtaButton } from '@/components/domain/AddRequestModal'
 // 지도 탭과 검색 기록을 공유 — 같은 localStorage 키를 쓰는 지도 쪽 유틸을 그대로 재사용한다.
@@ -113,7 +113,7 @@ const CloseIcon = ({ size = 14 }: { size?: number }) => (
 )
 
 export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props) {
-  const router = useRouter()
+  const { pendingId: navPendingId, navigate } = usePendingNavItem()
 
   const [history, setHistory]    = useState<string[]>([])
   const [focused, setFocused]    = useState(false)
@@ -153,7 +153,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
 
   function navigateDirect(s: Suggestion) {
     addToHistory(s.label)
-    router.push(s.navigateTo)
+    navigate(s.label, s.navigateTo)
     setFocused(false)
     setArrowIdx(null)
     desktopRef.current?.blur()
@@ -161,7 +161,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
 
   function mobileNavigate(s: Suggestion) {
     addToHistory(s.label)
-    router.push(s.navigateTo)
+    navigate(s.label, s.navigateTo)
     setMOpen(false)
     setMInput('')
   }
@@ -267,7 +267,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
                       onMouseDown={e => { e.preventDefault(); navigateDirect(s) }}
                       onMouseEnter={() => setHovered(i)}
                       onMouseLeave={() => setHovered(null)}
-                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '9px 16px', background: (arrowIdx === i || hoveredIdx === i) ? 'var(--color-surface-raised)' : 'none', border: 'none', cursor: 'pointer', textAlign: 'left', minHeight: 'unset' }}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '9px 16px', background: (arrowIdx === i || hoveredIdx === i) ? 'var(--color-surface-raised)' : 'none', border: 'none', cursor: 'pointer', textAlign: 'left', minHeight: 'unset', opacity: navPendingId === s.label ? 0.5 : 1 }}
                     >
                       <span style={{ flexShrink: 0, display: 'flex', color: 'var(--color-text-caption)' }}>
                         <SearchIcon size={14} />
@@ -362,7 +362,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
                   <button
                     key={s.label}
                     onClick={() => mobileNavigate(s)}
-                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', background: 'none', border: 'none', borderBottom: '1px solid var(--color-border)', cursor: 'pointer', textAlign: 'left', minHeight: 'unset' }}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', background: 'none', border: 'none', borderBottom: '1px solid var(--color-border)', cursor: 'pointer', textAlign: 'left', minHeight: 'unset', opacity: navPendingId === s.label ? 0.5 : 1 }}
                   >
                     <span style={{ flexShrink: 0, display: 'flex', color: 'var(--color-text-caption)' }}><SearchIcon size={14} /></span>
                     <span style={{ flex: 1, fontSize: 14, color: 'var(--color-text-body)' }}>

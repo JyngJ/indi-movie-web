@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePendingNavItem } from '@/hooks/usePendingNavItem'
 import { PosterThumb } from './PosterThumb'
 import { DateBar, type Day, type DayType } from './DateBar'
 import { ShowtimeCell } from './ShowtimeCell'
@@ -271,7 +271,7 @@ export function TheaterSheet({
   onBack,
 }: TheaterSheetProps) {
 
-  const router = useRouter()
+  const { pendingId: movieNavPendingId, navigate: navigateMovie } = usePendingNavItem()
   // 'panel'(우측 플로팅 카드) · 'dock'(좌측 도크 내장) — 헤더/스크롤/배경 등 콘텐츠 쪽 스타일은 동일하게 취급
   const floatingPanel = presentation === 'panel'
   const dockMode = presentation === 'dock'
@@ -1844,7 +1844,7 @@ export function TheaterSheet({
                     onClick={(e) => {
                       e.stopPropagation()
                       if (onDirectorOpen) onDirectorOpen(movie.director[0])
-                      else router.push(`/director/${encodeURIComponent(movie.director[0])}`)
+                      else navigateMovie(`director-${movie.id}`, `/director/${encodeURIComponent(movie.director[0])}`)
                     }}
                     role="button"
                     tabIndex={0}
@@ -1853,6 +1853,7 @@ export function TheaterSheet({
                       display: 'flex', alignItems: 'center', gap: 10,
                       padding: '10px 12px',
                       cursor: 'pointer',
+                      opacity: movieNavPendingId === `director-${movie.id}` ? 0.5 : 1,
                     }}
                   >
                     <div style={{
@@ -1877,7 +1878,7 @@ export function TheaterSheet({
                 {/* 액션 버튼 */}
                 <div style={{ borderTop: '1px solid var(--color-border)', display: 'flex' }}>
                   <button
-                    onClick={() => onMovieDetailOpen ? onMovieDetailOpen(movie.id) : router.push(`/movie/${movie.id}?theater=${theater.id}`)}
+                    onClick={() => onMovieDetailOpen ? onMovieDetailOpen(movie.id) : navigateMovie(movie.id, `/movie/${movie.id}?theater=${theater.id}`)}
                     style={{
                       flex: 1, padding: '10px 0',
                       fontSize: 12, fontWeight: 600,
@@ -1885,6 +1886,7 @@ export function TheaterSheet({
                       background: 'none', border: 'none',
                       cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                      opacity: movieNavPendingId === movie.id ? 0.5 : 1,
                     }}
                   >
                     <IconChevronRight size={13} />
