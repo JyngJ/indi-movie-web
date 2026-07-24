@@ -82,10 +82,30 @@ export default async function FilmsAreaPage({
       <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8 }}>
         {region} 독립영화관 상영시간표
       </h1>
-      <p style={{ color: 'var(--color-text-secondary, #666)', lineHeight: 1.6, marginBottom: 28 }}>
+      <p style={{ color: 'var(--color-text-secondary, #666)', lineHeight: 1.6, marginBottom: 20 }}>
         {region} 지역 독립·예술영화관에서 오늘 상영 중인 독립영화와 극장 정보입니다.
         멀티플렉스엔 걸리지 않는 독립·예술영화를 {region}에서 어디서 볼 수 있는지 확인하세요.
       </p>
+
+      <Link
+        href="/"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 6,
+          padding: '12px 18px',
+          marginBottom: 32,
+          background: 'var(--color-primary-base, #2b6cb0)',
+          color: '#fff',
+          fontWeight: 600,
+          fontSize: 15,
+          borderRadius: 10,
+          textDecoration: 'none',
+          boxShadow: '0 4px 14px rgba(40, 55, 75, 0.22)',
+        }}
+      >
+        🗺️ 지도에서 {region} 독립영화관 찾기 →
+      </Link>
 
       <section style={{ marginBottom: 32 }}>
         <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 12 }}>
