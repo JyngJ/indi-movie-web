@@ -1,7 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /admin
-Disallow: /api/
-Disallow: /dev/
-Sitemap: https://www.xn--hq1bv8o5phw2d7wt.com/sitemap.xml
-Sitemap: https://www.xn--hq1bv8o5phw2d7wt.com/movie/sitemap/0.xml
