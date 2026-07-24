@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePendingNavItem } from '@/hooks/usePendingNavItem'
 import { PosterThumb } from './PosterThumb'
 import { ShowtimeCell } from './ShowtimeCell'
 import { Skeleton } from '@/components/primitives/Skeleton'
@@ -54,7 +54,7 @@ interface MovieSheetProps {
 }
 
 export function MovieSheet({ movieId, onClose, onTheaterSelect, onRecentlyViewed }: MovieSheetProps) {
-  const router = useRouter()
+  const { pendingId: expandPendingId, navigate: navigateExpand } = usePendingNavItem()
   const { data: movie, isLoading: movieLoading } = useMovieDetail(movieId)
   const { data: theaters = [], isLoading: showsLoading } = useMovieTheaterShowtimes(movieId)
 
@@ -312,13 +312,14 @@ export function MovieSheet({ movieId, onClose, onTheaterSelect, onRecentlyViewed
           {/* 전체 화면 버튼 */}
           <div style={{ padding: '8px 16px 16px' }}>
             <button
-              onClick={() => router.push(`/movie/${movieId}`)}
+              onClick={() => navigateExpand('expand', `/movie/${movieId}`)}
               style={{
                 width: '100%', padding: '12px 0',
                 borderRadius: 10, border: '1px solid var(--color-border)',
                 background: 'none', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                 fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)',
+                opacity: expandPendingId === 'expand' ? 0.5 : 1,
               }}
             >
               <IcoExternal /> 영화 상세 전체 화면으로 보기

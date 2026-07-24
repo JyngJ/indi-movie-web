@@ -304,12 +304,24 @@ export function CurationSectionRow({
   const scrollRef = useRef<HTMLDivElement>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(false)
+  // smooth scroll 애니메이션 도중 재클릭하면 거리가 계속 누적돼 "안 눌렸나?" 하고 연타하게 됨 — 진행 중엔 무시
+  const scrollingRef = useRef(false)
 
   function updateScrollEdge() {
     const el = scrollRef.current
     if (!el) return
     setCanScrollLeft(el.scrollLeft > 4)
     setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4)
+  }
+
+  function scrollByAmount(delta: number) {
+    const el = scrollRef.current
+    if (!el || scrollingRef.current) return
+    scrollingRef.current = true
+    el.scrollBy({ left: delta, behavior: 'smooth' })
+    window.setTimeout(() => {
+      scrollingRef.current = false
+    }, 350)
   }
 
   useEffect(() => {
@@ -373,14 +385,14 @@ export function CurationSectionRow({
         size={isDesktop ? 40 : 32}
         disabled={!canScrollLeft}
         style={{ position: 'static', top: 'auto', left: 'auto', transform: 'none', boxShadow: 'none', opacity: canScrollLeft ? 1 : 0.35 }}
-        onClick={() => scrollRef.current?.scrollBy({ left: -scrollAmount, behavior: 'smooth' })}
+        onClick={() => scrollByAmount(-scrollAmount)}
       />
       <ScrollNavButton
         direction="right"
         size={isDesktop ? 40 : 32}
         disabled={!canScrollRight}
         style={{ position: 'static', top: 'auto', right: 'auto', transform: 'none', boxShadow: 'none', opacity: canScrollRight ? 1 : 0.35 }}
-        onClick={() => scrollRef.current?.scrollBy({ left: scrollAmount, behavior: 'smooth' })}
+        onClick={() => scrollByAmount(scrollAmount)}
       />
     </div>
   )

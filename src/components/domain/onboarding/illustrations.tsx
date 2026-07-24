@@ -148,6 +148,14 @@ const TILE_OFFSETS = [-1, 0, 1]
 const tileUrl = (x: number, y: number, dark: boolean) =>
   `https://a.basemaps.cartocdn.com/${dark ? 'dark_all' : 'rastertiles/voyager'}/${TILE_Z}/${x}/${y}.png`
 
+/** 온보딩이 쓰는 모든 외부 이미지(지도 타일 + 포스터) — 첫 렌더 전에 프리로드해 다음 페이지 전환 시 재요청 없게 함 */
+export const ILLO_IMAGE_URLS: string[] = [
+  ...[true, false].flatMap((dark) =>
+    TILE_OFFSETS.flatMap((dy) => TILE_OFFSETS.map((dx) => tileUrl(TILE_CX + dx, TILE_CY + dy, dark))),
+  ),
+  ...POSTER_LIST,
+]
+
 function MapBase({ dark = false }: { dark?: boolean }) {
   return (
     <div className={s.mapbg}>
