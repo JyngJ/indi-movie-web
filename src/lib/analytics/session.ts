@@ -1,4 +1,4 @@
-import type { AnalyticsProperties, SessionIntent } from './types'
+import type { AnalyticsProperties, AnalyticsSurface, SessionIntent } from './types'
 import type { LandingVariant } from '@/lib/experiments/landingVariant'
 
 const SESSION_KEY = 'movie:analytics-session:v1'
@@ -12,6 +12,23 @@ interface StoredSession {
   milestones: Record<string, number>
   intent?: SessionIntent
   landingVariant?: LandingVariant
+  /** 이 세션에서 방문한 탭 표면(방문 순서 유지). v1 세션에는 없을 수 있어 optional. */
+  surfaces?: AnalyticsSurface[]
+}
+
+/**
+ * 경로를 탭 단위 표면으로 접는다.
+ * /movie/[id], /theater/[id]는 지도 탭에서 여는 상세라 map으로 본다.
+ */
+export function surfaceFromPath(pathname: string): AnalyticsSurface {
+  if (pathname === '/films' || pathname.startsWith('/films/')) return 'films'
+  if (pathname === '/more' || pathname.startsWith('/more/')) return 'more'
+  if (
+    pathname === '/'
+    || pathname.startsWith('/movie/')
+    || pathname.startsWith('/theater/')
+  ) return 'map'
+  return 'other'
 }
 
 function uuid() {
@@ -60,14 +77,45 @@ function getOrCreateSession() {
     referrer: document.referrer || '',
     utm: collectUtm(),
     milestones: {},
+    surfaces: [surfaceFromPath(window.location.pathname)],
   }
   writeSession(session)
   return session
 }
 
+/** 현재 경로의 표면을 세션 여정에 누적하고, 갱신된 여정을 돌려준다. */
+function recordSurface(session: StoredSession): AnalyticsSurface[] {
+  const current = surfaceFromPath(window.location.pathname)
+  const surfaces = session.surfaces ?? []
+  if (surfaces[surfaces.length - 1] !== current) {
+    surfaces.push(current)
+    session.surfaces = surfaces
+    writeSession(session)
+  }
+  return surfaces
+}
+
+/**
+ * 진입 표면을 덮어쓴다. 도착 경로와 사용자가 실제로 처음 본 화면이 다를 때만 쓴다
+ * — 랜딩 A/B의 test arm은 `/`로 도착한 뒤 곧바로 `/films`로 replace되므로,
+ * 경로만 보면 지도 진입으로 잘못 집계된다. `landing_path`(실제 도착 경로)는 유입
+ * 분석에 필요하므로 건드리지 않고 표면 여정만 고친다.
+ */
+export function setEntrySurface(surface: AnalyticsSurface) {
+  const session = getOrCreateSession()
+  if (!session) return
+  session.surfaces = [surface]
+  writeSession(session)
+}
+
 export function getSessionContext(): AnalyticsProperties {
   const session = getOrCreateSession()
   if (!session || typeof window === 'undefined') return {}
+
+  const surfaces = recordSurface(session)
+  const entrySurface = surfaces[0]
+  const currentSurface = surfaces[surfaces.length - 1]
+  const visited = Array.from(new Set(surfaces))
 
   return {
     analytics_session_id: session.id,
@@ -81,6 +129,12 @@ export function getSessionContext(): AnalyticsProperties {
     ...session.utm,
     session_intent: session.intent,
     landing_variant: session.landingVariant,
+    entry_surface: entrySurface,
+    current_surface: currentSurface,
+    surfaces_visited: visited,
+    surface_switch_count: surfaces.length - 1,
+    /** 진입 탭과 지금 탭이 다름 = 크로스탭 여정. source만으로는 안 보이는 축. */
+    is_cross_surface: entrySurface !== currentSurface,
   }
 }
 

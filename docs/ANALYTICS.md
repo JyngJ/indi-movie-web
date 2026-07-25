@@ -53,6 +53,26 @@ All events include session context:
 - `device_type`
 - viewport width/height
 - `session_intent`
+- `entry_surface`, `current_surface`, `surfaces_visited`, `surface_switch_count`, `is_cross_surface`
+
+### Surface vs `source`
+
+`source` records **where the click happened** (`movie_sheet`, `theater_sheet`, `films_movie_detail`, …).
+It says nothing about where the session started, so a films-tab visitor who books from the map is
+attributed 100% to the map. The surface properties add the missing axis:
+
+- `entry_surface` — tab the session landed on (`map` / `films` / `more` / `other`).
+- `current_surface` — tab the event fired on. `/movie/[id]` and `/theater/[id]` count as `map`.
+- `surfaces_visited` — distinct tabs seen this session, in first-visit order.
+- `is_cross_surface` — `entry_surface !== current_surface`; the cross-tab journey flag.
+
+`entry_surface` is not always derivable from `landing_path`. The landing A/B test arm arrives at
+`/` and is immediately `router.replace`d to `/films`, so the path says `map` while the first screen
+the user actually saw was `films`. `(tabs)/layout.tsx` calls `setEntrySurface('films')` before the
+redirect to correct this; `landing_path` deliberately keeps the raw arrival path for acquisition
+analysis. Any future landing redirect must do the same.
+
+Breaking `booking clicked` down by `entry_surface` × `current_surface` gives the cross-tab matrix.
 
 Milestone properties are added automatically:
 

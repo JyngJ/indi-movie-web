@@ -53,6 +53,9 @@ export type AnalyticsSource =
 
 export type SessionIntent = 'type_a' | 'type_b' | 'type_c' | 'mixed'
 
+/** 탭 단위 표면. source(클릭 지점)와 달리 세션 여정을 추적하는 데 쓴다. */
+export type AnalyticsSurface = 'map' | 'films' | 'more' | 'other'
+
 export type AnalyticsProperties = Record<
   string,
   string | number | boolean | null | undefined | string[]

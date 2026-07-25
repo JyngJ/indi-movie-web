@@ -11,6 +11,7 @@ import { useThemeStore } from '@/store/themeStore'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useLandingVariant } from '@/hooks/useLandingVariant'
 import { trackEvent } from '@/lib/analytics/client'
+import { setEntrySurface } from '@/lib/analytics/session'
 import { OnboardingGate } from '@/components/domain/onboarding/OnboardingGate'
 import { SurveyGate } from '@/components/domain/survey/SurveyGate'
 
@@ -52,6 +53,10 @@ export default function TabsLayout({ children }: { children: ReactNode }) {
     if (assignment === null) return
 
     redirectedRef.current = true
+    // test arm은 '/'로 도착한 직후 films로 replace되므로, 경로만 보면 지도 진입으로 잡힌다.
+    // 사용자가 실제로 처음 본 화면은 films이니 배정 이벤트보다 먼저 진입 표면을 바로잡는다.
+    if (assignment.variant === 'test') setEntrySurface('films')
+
     // legacy_user(실험 배포 이전부터 있던 기존 유저)는 랜덤 배정을 받지 않은 비참가자이므로
     // 배정 이벤트를 남기지 않는다 — 안 그러면 control 카운트가 시간이 갈수록 오염된다
     if (assignment.isExperimentParticipant) {
