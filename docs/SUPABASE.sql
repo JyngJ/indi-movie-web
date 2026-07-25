@@ -439,3 +439,15 @@ CREATE TABLE IF NOT EXISTS survey_responses (
   created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_survey_responses_created_at ON survey_responses(created_at DESC);
+
+-- ─────────────────────────────────────────────
+-- showtime_candidates 과거 후보 자동 정리 (pg_cron)
+-- 지난 상영(과거 show_date) row가 안 지워져 테이블이 비대해지면 autoMatch의
+-- alias 쿼리(raw_text 대량 스캔)가 statement_timeout에 걸린다. 3일 지난 것 매일 삭제.
+-- Supabase SQL Editor에서 1회 실행하여 크론 등록.
+-- ─────────────────────────────────────────────
+SELECT cron.schedule(
+  'cleanup-old-candidates',
+  '30 3 * * *',
+  $$DELETE FROM showtime_candidates WHERE show_date < CURRENT_DATE - INTERVAL '3 days'$$
+);
