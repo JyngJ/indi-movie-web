@@ -427,13 +427,15 @@ function TheaterShowtimeChips({
                   key={st.id}
                   disabled={soldout}
                   onClick={soldout ? undefined : () => {
-                    trackEvent('movie theater selected', {
+                    trackEvent('showtime selected', {
                       movie_id: movieId,
                       theater_id: entry.theaterId,
                       theater_name: entry.theaterName,
                       showtime_id: st.id,
                       show_date: group.date,
                       show_time: st.showTime,
+                      seat_available: st.seatAvailable,
+                      seat_total: st.seatTotal,
                       source: 'movie_detail_showtime',
                     })
                     onGoTo(group.date)

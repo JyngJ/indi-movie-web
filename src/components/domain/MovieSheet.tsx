@@ -299,6 +299,18 @@ export function MovieSheet({ movieId, onClose, onTheaterSelect, onRecentlyViewed
                           onClick={() => {
                             setSelectedTheaterId(theater.theaterId)
                             setSelectedShowtimeId(show.id)
+                            trackEvent('showtime selected', {
+                              movie_id: movieId,
+                              movie_title: movie?.title,
+                              theater_id: theater.theaterId,
+                              theater_name: theater.theaterName,
+                              showtime_id: show.id,
+                              show_date: date,
+                              show_time: show.showTime,
+                              seat_available: show.seatAvailable,
+                              seat_total: show.seatTotal,
+                              source: 'movie_sheet',
+                            })
                           }}
                         />
                       ))}
