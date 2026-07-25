@@ -95,6 +95,19 @@ function recordSurface(session: StoredSession): AnalyticsSurface[] {
   return surfaces
 }
 
+/**
+ * 진입 표면을 덮어쓴다. 도착 경로와 사용자가 실제로 처음 본 화면이 다를 때만 쓴다
+ * — 랜딩 A/B의 test arm은 `/`로 도착한 뒤 곧바로 `/films`로 replace되므로,
+ * 경로만 보면 지도 진입으로 잘못 집계된다. `landing_path`(실제 도착 경로)는 유입
+ * 분석에 필요하므로 건드리지 않고 표면 여정만 고친다.
+ */
+export function setEntrySurface(surface: AnalyticsSurface) {
+  const session = getOrCreateSession()
+  if (!session) return
+  session.surfaces = [surface]
+  writeSession(session)
+}
+
 export function getSessionContext(): AnalyticsProperties {
   const session = getOrCreateSession()
   if (!session || typeof window === 'undefined') return {}
