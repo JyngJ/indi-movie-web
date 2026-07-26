@@ -48,6 +48,8 @@ export async function runSeatChecks(): Promise<RunSeatResult> {
     .select('id, source_id, booking_url, fingerprint, show_date')
     .gte('show_date', todayDash)
 
+  const knownFingerprints = new Set((dbRows ?? []).map((r) => r.fingerprint))
+
   // 모든 좌석 갱신 소스에 대해 최적화된 업데이트 (각 파서별 병렬 처리)
   const results = await updateSeatsOptimized(seatSources, dbRows ?? [])
 
@@ -73,13 +75,17 @@ export async function runSeatChecks(): Promise<RunSeatResult> {
     }
 
     // 좌석 수 업데이트: fingerprint 기준 단일 배치 upsert
-    if (candidates.length > 0) {
-      const rows = candidates.map((c) => ({
+    // DB에 없는 fingerprint로 upsert하면 PostgREST가 insert로 빠져
+    // showtime_candidates의 not-null 컬럼(id 등) 위반이 나므로 미리 걸러낸다.
+    const rows = candidates
+      .filter((c) => knownFingerprints.has(c.fingerprint))
+      .map((c) => ({
         fingerprint: c.fingerprint,
         seat_available: c.seatAvailable,
         seat_total: c.seatTotal,
       }))
 
+    if (rows.length > 0) {
       await supabase.from('showtime_candidates').upsert(rows, { onConflict: 'fingerprint' })
     }
 
@@ -93,7 +99,7 @@ export async function runSeatChecks(): Promise<RunSeatResult> {
       finishedAt: new Date().toISOString(),
       candidates: [],
       createdCount: 0,
-      updatedCount: candidates.length,
+      updatedCount: rows.length,
       warningCount,
     }
 
