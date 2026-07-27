@@ -50,3 +50,6 @@ KIMM_bold.ttf
 
 # 로컬 기획/노트 (git 미추적)
 /plan/
+
+# UI 감사 산출물 (audit:ui)
+.audit-out/
