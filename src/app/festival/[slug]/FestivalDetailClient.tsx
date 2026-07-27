@@ -20,7 +20,7 @@ function proxiedImageUrl(url: string, width: number) {
 }
 
 const STATUS_LABEL: Record<FestivalStatus, string> = { upcoming: '예정', ongoing: '진행중', ended: '종료' }
-const STATUS_COLOR: Record<FestivalStatus, string> = { upcoming: '#D97706', ongoing: '#16A34A', ended: 'var(--color-text-caption)' }
+const STATUS_COLOR: Record<FestivalStatus, string> = { upcoming: 'var(--color-warning)', ongoing: '#16A34A', ended: 'var(--color-text-caption)' }
 
 // 라인업 그리드 접힌 상태 노출 개수 — 지도 큐레이션 탭(CurationSheet)과 같은 더보기 패턴,
 // 컬럼 수와 무관하게 고정 개수로 자른다(그쪽도 SECTION_COLLAPSED_COUNT=6 고정값 사용)
@@ -115,7 +115,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
       {/* 헤더 */}
       <div style={{ padding: '20px 16px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: '#fff', backgroundColor: STATUS_COLOR[status], padding: '3px 10px', borderRadius: 99 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-on-accent)', backgroundColor: STATUS_COLOR[status], padding: '3px 10px', borderRadius: 99 }}>
             {STATUS_LABEL[status]}
           </span>
           <span style={{ fontSize: 13, color: 'var(--color-text-caption)', fontWeight: 600 }}>{dateLabel}</span>
@@ -139,7 +139,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
                 rel="noopener noreferrer"
                 style={{
                   flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  height: 44, borderRadius: 10, backgroundColor: 'var(--color-primary-base)', color: '#fff',
+                  height: 44, borderRadius: 10, backgroundColor: 'var(--color-primary-base)', color: 'var(--color-on-accent)',
                   fontSize: 14, fontWeight: 700, textDecoration: 'none',
                 }}
               >
@@ -194,8 +194,9 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
                 <div style={{
                   position: 'absolute', bottom: 10, right: 10, width: 32, height: 32, borderRadius: '50%',
                   backgroundColor: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'var(--color-on-accent)',
                 }}>
-                  <ZoomIn size={16} strokeWidth={1.75} color="#fff" />
+                  <ZoomIn size={16} strokeWidth={1.75} className="text-current" />
                 </div>
               </div>
               {timetables.length > 1 && (
@@ -329,9 +330,10 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
               position: 'absolute', top: 16, right: 16, width: 36, height: 36, borderRadius: '50%',
               backgroundColor: 'rgba(255,255,255,0.12)', border: 'none', display: 'flex',
               alignItems: 'center', justifyContent: 'center', cursor: 'pointer', minHeight: 'auto',
+              color: 'var(--color-on-accent)',
             }}
           >
-            <X size={18} strokeWidth={1.75} color="#fff" />
+            <X size={18} strokeWidth={1.75} className="text-current" />
           </button>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

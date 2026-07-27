@@ -37,7 +37,7 @@ function EventTypeBadge({ type }: { type: EventType }) {
       borderRadius: 4,
       fontSize: 11,
       fontWeight: 700,
-      color: '#fff',
+      color: 'var(--color-on-accent)',
       background: colors[type] ?? '#555',
       letterSpacing: '0.3px',
     }}>

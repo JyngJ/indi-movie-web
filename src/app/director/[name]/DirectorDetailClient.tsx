@@ -130,7 +130,7 @@ function SortChips({ active, onChange }: { active: SortKey; onChange: (k: SortKe
           style={{
             height: 24,
             padding: '0 10px',
-            borderRadius: 999,
+            borderRadius: 9999,
             border: '1px solid',
             borderColor: active === o.key ? 'var(--color-primary-base)' : 'var(--color-border)',
             backgroundColor: active === o.key ? 'var(--color-primary-subtle-l)' : 'transparent',
@@ -220,7 +220,7 @@ function FilmographyRow({
               borderRadius: 4,
               display: 'inline-flex', alignItems: 'center',
               fontSize: 9, fontWeight: 700,
-              color: '#fff',
+              color: 'var(--color-on-accent)',
               backgroundColor: 'var(--color-primary-base)',
               flexShrink: 0,
             }}>
@@ -366,7 +366,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
                 padding: '0 4px', 
                 borderRadius: 4, 
                 backgroundColor: 'var(--color-primary-base)', 
-                color: '#fff', 
+                color: 'var(--color-on-accent)', 
                 fontSize: 9, 
                 fontWeight: 700, 
                 verticalAlign: 'text-bottom',

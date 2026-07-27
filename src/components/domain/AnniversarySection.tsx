@@ -28,8 +28,8 @@ function accentColors(eventType: AnniversaryEventType) {
   return {
     bg: isBirthday
       ? 'color-mix(in srgb, #C8901A 12%, var(--color-surface-card))'
-      : 'color-mix(in srgb, #4A6380 14%, var(--color-surface-card))',
-    border: isBirthday ? '#C8901A' : '#4A6380',
+      : 'color-mix(in srgb, var(--color-primary-base) 14%, var(--color-surface-card))',
+    border: isBirthday ? '#C8901A' : 'var(--color-primary-base)',
     text: isBirthday ? '#8A5F00' : '#2E4A65',
   }
 }
@@ -151,7 +151,7 @@ export function AnniversarySection({
         overflow: 'hidden',
       }}>
         <CurationSectionRow
-          title="" emoji="" displayMode="default"
+          title="" displayMode="default"
           movies={films} isDesktop={isDesktop}
           onMovieClick={onMovieClick}
           noHeader

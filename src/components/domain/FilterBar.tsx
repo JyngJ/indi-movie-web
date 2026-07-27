@@ -443,9 +443,10 @@ export function FilterBar({
               display: 'flex',
               alignItems: 'flex-start',
               gap: 10,
+              color: 'var(--color-on-accent)',
             }}>
               {/* 핀 아이콘 */}
-              <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+              <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                 <circle cx="12" cy="10" r="3" />
               </svg>
@@ -453,10 +454,10 @@ export function FilterBar({
               <span style={{
                 flex: 1,
                 fontFamily: 'Pretendard, sans-serif',
-                fontSize: 12.5,
+                fontSize: 'var(--text-meta)',
                 lineHeight: 1.55,
                 fontWeight: 500,
-                color: '#fff',
+                color: 'var(--color-on-accent)',
               }}>
                 지역을 설정해서 내 주변 영화관의 상영 정보를 조회하세요
               </span>
@@ -471,7 +472,7 @@ export function FilterBar({
                   borderRadius: '50%',
                   background: 'rgba(255,255,255,0.2)',
                   border: 'none',
-                  color: '#fff',
+                  color: 'var(--color-on-accent)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   cursor: 'pointer',
                   flexShrink: 0,

@@ -6,7 +6,7 @@ import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { PosterThumb } from './PosterThumb'
 import { Badge } from '@/components/primitives/Badge'
 import { HoverPopup } from './CurationSectionRow'
-import { Hourglass, MapPin, Car, Clapperboard, Film, Search, ChevronDown } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import type {
   LastWeekFilm,
   NewIndieFilm,
@@ -261,14 +261,14 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
           transform: hovered ? 'scale(1.1)' : 'scale(1)',
           transformOrigin: 'center center',
         }}>
-          <PosterThumb src={item.posterUrl} alt={item.title} width={posterSize.width} height={posterSize.height} size="lg" />
+          <PosterThumb src={item.posterUrl} alt={item.title} width={posterSize.width} height={posterSize.height} size="lg" radius={0} shadow={false} />
           {item.distanceLabel && (
             <div style={{
               position: 'absolute',
               top: 4,
               right: 4,
               backgroundColor: 'var(--color-primary-base)',
-              color: '#fff',
+              color: 'var(--color-on-accent)',
               borderRadius: 'var(--radius-full)',
               padding: '2px 7px',
               fontSize: 10,
@@ -287,7 +287,7 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
                 left: 6,
                 bottom: 6,
                 backgroundColor: 'rgba(20,15,10,0.72)',
-                color: '#fff',
+                color: 'var(--color-on-accent)',
                 maxWidth: 'calc(100% - 12px)',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -495,15 +495,6 @@ interface CurationSectionsProps {
   desktop?: boolean
 }
 
-/** 노출 가능한 큐레이션 섹션 후보 — 우선순위 순. 데이터 있는 섹션을 최대 3개까지 노출 */
-interface SectionCandidate {
-  key: string
-  title: string
-  icon: string
-  items: CurationItem[]
-  emptyText: string
-}
-
 const MAX_CURATION_SECTIONS = 3
 const SECTION_COLLAPSED_COUNT = 6
 const SECTION_PARTIAL_COUNT = 21
@@ -586,11 +577,11 @@ export function CurationSections({
   }))
 
   const candidates = [
-    { key: 'lastWeek', title: '막바지 상영', icon: <Hourglass size={18} strokeWidth={1.75} color="var(--color-primary-base)" />, items: lastWeekItems, emptyText: '' },
-    { key: 'soloTheater', title: `${soloRegionLabel ?? '이 지역'}에서 단 한 곳`, icon: <MapPin size={18} strokeWidth={1.75} color="var(--color-primary-base)" />, items: soloTheaterItems, emptyText: '' },
-    { key: 'todayShow', title: '지금 출발하면 볼 수 있는', icon: <Car size={18} strokeWidth={1.75} color="var(--color-primary-base)" />, items: soloRegionLabel ? todayShowItems : [], emptyText: '' },
-    { key: 'newIndie', title: '이번 주 새롭게 상영하는 영화', icon: <Clapperboard size={18} strokeWidth={1.75} color="var(--color-primary-base)" />, items: newIndieItems, emptyText: '' },
-    { key: 'returning', title: '오랜만에 상영하는 영화', icon: <Film size={18} strokeWidth={1.75} color="var(--color-primary-base)" />, items: returningItems, emptyText: '' },
+    { key: 'lastWeek', title: '막바지 상영', items: lastWeekItems, emptyText: '' },
+    { key: 'soloTheater', title: `${soloRegionLabel ?? '이 지역'}에서 단 한 곳`, items: soloTheaterItems, emptyText: '' },
+    { key: 'todayShow', title: '지금 출발하면 볼 수 있는', items: soloRegionLabel ? todayShowItems : [], emptyText: '' },
+    { key: 'newIndie', title: '이번 주 새롭게 상영하는 영화', items: newIndieItems, emptyText: '' },
+    { key: 'returning', title: '오랜만에 상영하는 영화', items: returningItems, emptyText: '' },
   ]
 
   const sections = candidates.filter((c) => c.items.length > 0).slice(0, MAX_CURATION_SECTIONS)
@@ -627,7 +618,7 @@ export function CurationSections({
         return (
           <div key={section.key} ref={el => { sectionRefs.current[section.key] = el }}
             style={{ display: 'flex', flexDirection: 'column', gap: SECTION_GAP }}>
-            <Section title={section.title} icon={section.icon} withLine>
+            <Section title={section.title} withLine>
               <PosterRow items={visibleItems} onSelect={handleSelect} emptyText={section.emptyText} desktop={desktop} />
               {hasMore && expandState === 'collapsed' && (
                 <button type="button" onClick={() => setExpand(section.key, 'partial')}
@@ -658,7 +649,7 @@ export function CurationSections({
           </div>
         )
       })}
-      <Section title="최근 찾아본" icon={<Search size={18} strokeWidth={1.75} color="currentColor" />} withLine action={
+      <Section title="최근 찾아본" withLine action={
         onClearRecentlyViewed && recentlyViewed.length > 0 ? (
           <button
             type="button"

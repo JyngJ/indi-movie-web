@@ -81,6 +81,9 @@
 | `text.sub` | `--color-text-sub` | `#635D55` | `#A9A39A` |
 | `text.caption` | `--color-text-caption` | `#857F76` | `#857F76` |
 | `text.placeholder` | `--color-text-placeholder` | `#A9A39A` | `#635D55` |
+| `text.onAccent` | `--color-on-accent` | `#FFFFFF` | `#FFFFFF` |
+
+> `text.onAccent`: 솔리드 accent(primary·semantic·브랜드 고정색) 위 텍스트·아이콘. `text.inverse`와 달리 테마에 따라 뒤집히지 않음(항상 흰색 고정).
 
 ---
 
@@ -172,7 +175,7 @@ mono           HEX, 상영 시간, 좌석수 등 정렬이 필요한 수치(tnum
 | `lg` | `--radius-lg` | 8px | 포스터 중·날짜 셀·지도 팝업 |
 | `xl` | `--radius-xl` | 12px | 상영시간표 셀 |
 | `2xl` | — | 20px | 바텀시트 상단 모서리 |
-| `full` | — | 999px | pill — 검색창·칩·FAB |
+| `full` | — | 9999px | pill — 검색창·칩·FAB |
 | `circle` | — | 50% | 핀·FAB round·체크 배지 |
 
 > TASK-10 감사에서 드리프트 확인 — 신규 토큰 추가 대신 stage 2에서 기존 값으로 수렴 예정:

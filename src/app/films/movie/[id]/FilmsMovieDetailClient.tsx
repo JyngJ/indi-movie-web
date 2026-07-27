@@ -83,7 +83,7 @@ function ShowtimeChip({ st, selected, onClick }: { st: Showtime; selected?: bool
 /* ── DirectorChip (inline in hero) ────────────────────────────── */
 function DirectorChip({ name, photoUrl, onClick }: { name: string; photoUrl?: string; onClick: () => void }) {
   return (
-    <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 12px 6px 6px', borderRadius: 999, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', cursor: 'pointer', minHeight: 'auto' }}>
+    <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 12px 6px 6px', borderRadius: 9999, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', cursor: 'pointer', minHeight: 'auto' }}>
       <div style={{ width: 28, height: 28, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-caption)' }}>
         {photoUrl ? <img src={photoUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} /> : <IcoUser />}
       </div>
@@ -292,7 +292,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
         {movie.genre.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>
             {movie.genre.map((g) => (
-              <span key={g} style={{ height: 24, padding: '0 10px', display: 'inline-flex', alignItems: 'center', borderRadius: 999, fontSize: 12, fontWeight: 500, backgroundColor: 'var(--color-primary-subtle-l)', border: '1px solid color-mix(in srgb, var(--color-primary-base) 40%, transparent)', color: 'var(--color-primary-base)' }}>
+              <span key={g} style={{ height: 24, padding: '0 10px', display: 'inline-flex', alignItems: 'center', borderRadius: 9999, fontSize: 12, fontWeight: 500, backgroundColor: 'var(--color-primary-subtle-l)', border: '1px solid color-mix(in srgb, var(--color-primary-base) 40%, transparent)', color: 'var(--color-primary-base)' }}>
                 {g}
               </span>
             ))}
@@ -316,7 +316,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
     <div style={{ padding: isDesktop ? '0 0 20px' : '12px 16px', display: 'flex', gap: 8 }}>
       <button
         onClick={() => router.push(mapUrlWithSelection())}
-        style={{ flex: 1, height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, borderRadius: 10, border: '1px solid var(--color-primary-base)', backgroundColor: 'var(--color-primary-base)', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+        style={{ flex: 1, height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, borderRadius: 10, border: '1px solid var(--color-primary-base)', backgroundColor: 'var(--color-primary-base)', color: 'var(--color-on-accent)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
       >
         <IcoMap /> 지도에서 상영관 필터로 보기
       </button>

@@ -38,6 +38,10 @@
   --color-text-placeholder: var(--color-neutral-400);   /* #A9A39A */
   --color-text-inverse:     #FFFFFF;
 
+  /* 솔리드 accent(primary·semantic·브랜드 고정색) 위 텍스트·아이콘 —
+     text-inverse와 달리 테마에 따라 뒤집히지 않음(항상 흰색 고정) */
+  --color-on-accent: #FFFFFF;
+
   /* Backward-compat aliases (이전 컴포넌트 호환) */
   --color-text-secondary: var(--color-text-caption);
   --color-text-disabled:  var(--color-text-placeholder);
@@ -120,17 +124,10 @@
   --comp-search-px:     18px;
   --comp-search-radius: var(--radius-full);
 
-  /* 필터 칩 */
-  --comp-chip-height:    26px;
+  /* 필터 칩 — height는 var(--filter-chip-height) 참고(FilterChip.tsx 실사용) */
   --comp-chip-px:        14px;
   --comp-chip-radius:    var(--radius-full);
   --comp-chip-font-size: 13px;
-
-  /* 시간대 칩 */
-  --comp-time-chip-height:  24px;
-  --comp-time-chip-px:      12px;
-  --comp-time-chip-radius:  var(--radius-full);
-  --comp-time-chip-font:    12px;
 
   /* 날짜 셀 */
   --comp-date-cell-pt:     6px;

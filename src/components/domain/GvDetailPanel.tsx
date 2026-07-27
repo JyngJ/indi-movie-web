@@ -80,7 +80,7 @@ export function GvDetailPanel({ ev, onClose, onCloseAll, panelMode }: GvDetailPa
           }}>{ev.theaterName}</span>
           <span style={{ fontSize: 12, color: 'var(--color-text-caption)', flexShrink: 0 }}>/</span>
           <span style={{
-            background: gvEventTypeColor(ev.type), color: '#fff',
+            background: gvEventTypeColor(ev.type), color: 'var(--color-on-accent)',
             fontSize: 9, fontWeight: 800, borderRadius: 3,
             padding: '2px 5px', letterSpacing: '0.3px', lineHeight: 1.4, flexShrink: 0,
           }}>{ev.type}</span>
@@ -237,7 +237,7 @@ function GuestRow({ name }: { name: string }) {
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         flexShrink: 0, opacity: 0.85,
       }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-on-accent)' }}>
           {name.charAt(0)}
         </span>
       </div>

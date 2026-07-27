@@ -436,7 +436,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
         {/* CTA 버튼 */}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button
-            style={{ ...btnBase, backgroundColor: 'var(--color-primary-base)', color: '#fff', border: 'none', flex: isDesktop ? undefined : 1 }}
+            style={{ ...btnBase, backgroundColor: 'var(--color-primary-base)', color: 'var(--color-on-accent)', border: 'none', flex: isDesktop ? undefined : 1 }}
             onClick={() => router.push(mapUrlWithSelection())}
           >
             <IcoMap />

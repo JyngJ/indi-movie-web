@@ -94,7 +94,7 @@ export function DirectorPanel({
                   key={s}
                   onClick={() => setSort(s)}
                   style={{
-                    height: 24, padding: '0 10px', borderRadius: 999, fontSize: 11, fontWeight: 500, cursor: 'pointer', border: '1px solid var(--color-border)',
+                    height: 24, padding: '0 10px', borderRadius: 9999, fontSize: 11, fontWeight: 500, cursor: 'pointer', border: '1px solid var(--color-border)',
                     backgroundColor: sort === s ? 'var(--color-primary-base)' : 'transparent',
                     color: sort === s ? '#fff' : 'var(--color-text-caption)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, minHeight: 'auto',
@@ -118,7 +118,7 @@ export function DirectorPanel({
               padding: '0 4px', 
               borderRadius: 4, 
               backgroundColor: 'var(--color-primary-base)', 
-              color: '#fff', 
+              color: 'var(--color-on-accent)', 
               fontSize: 9, 
               fontWeight: 700, 
               verticalAlign: 'text-bottom',
@@ -154,7 +154,7 @@ export function DirectorPanel({
                   <div style={{ fontSize: 14, fontWeight: 600, color: isActive ? 'var(--color-primary-base)' : 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {movie.title}
                     {isActive && (
-                      <span style={{ marginLeft: 6, padding: '1px 5px', borderRadius: 4, fontSize: 9, fontWeight: 700, color: '#fff', backgroundColor: 'var(--color-primary-base)', verticalAlign: 'middle' }}>상영중</span>
+                      <span style={{ marginLeft: 6, padding: '1px 5px', borderRadius: 4, fontSize: 9, fontWeight: 700, color: 'var(--color-on-accent)', backgroundColor: 'var(--color-primary-base)', verticalAlign: 'middle' }}>상영중</span>
                     )}
                   </div>
                   <div style={{ marginTop: 2, fontSize: 12, color: 'var(--color-text-caption)' }}>

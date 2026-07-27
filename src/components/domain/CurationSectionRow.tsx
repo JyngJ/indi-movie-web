@@ -259,7 +259,7 @@ function MovieCard({
               padding: '2px 6px',
               borderRadius: 'var(--radius-full)',
               fontSize: 10, fontWeight: 700, lineHeight: 1.4,
-              color: '#fff',
+              color: 'var(--color-on-accent)',
               backgroundColor: daysLeft === 0 ? '#DC2626' : daysLeft === 1 ? '#EA580C' : '#78716C',
               boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
               whiteSpace: 'nowrap',

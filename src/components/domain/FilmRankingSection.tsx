@@ -33,7 +33,7 @@ function RankBadge({ rank, prevRank }: { rank: number; prevRank: number | null }
     return (
       <span style={{
         fontSize: 10, fontWeight: 700, padding: '2px 5px', borderRadius: 'var(--radius-sm)',
-        background: '#D97706', color: '#fff', letterSpacing: 0.2,
+        background: '#D97706', color: 'var(--color-on-accent)', letterSpacing: 0.2,
       }}>NEW</span>
     )
   }
@@ -57,7 +57,7 @@ function RankBadge({ rank, prevRank }: { rank: number; prevRank: number | null }
 
 // ── 랭킹 설명 호버 툴팁 ──────────────────────────────────────────
 const METRICS = [
-  { icon: MapPin, label: '상영관 수',      pct: 45, color: '#3B82F6', desc: '전국 독립·예술영화 전용관 중 상영 중인 극장 수' },
+  { icon: MapPin, label: '상영관 수',      pct: 45, color: 'var(--color-info)', desc: '전국 독립·예술영화 전용관 중 상영 중인 극장 수' },
   { icon: Film, label: '상영 회차',      pct: 30, color: '#10B981', desc: '집계 기간 동안 편성된 총 상영 회차' },
   { icon: Eye, label: '영화볼지도 조회', pct: 25, color: '#8B5CF6', desc: '앱에서 이 영화·상영관을 찾아본 횟수' },
 ] as const
@@ -165,12 +165,12 @@ function RankingCard({ entry, movie, rank, isDesktop, gapRight, onClick }: { ent
           </span>
           {/* 포스터 — 숫자 위에, 호버시만 확대 */}
           <div style={{
-            position: 'relative', zIndex: 1, borderRadius: 'var(--radius-md)', overflow: 'hidden',
+            position: 'relative', zIndex: 1, overflow: 'hidden',
             transition: 'transform 130ms ease',
             transform: hovered ? 'scale(1.1)' : 'scale(1)',
             transformOrigin: 'center center',
           }}>
-            <PosterThumb src={movie?.posterUrl} alt={movie?.title ?? ''} width={width} height={height} />
+            <PosterThumb src={movie?.posterUrl} alt={movie?.title ?? ''} width={width} height={height} radius={0} shadow={false} />
           </div>
         </div>
 

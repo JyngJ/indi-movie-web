@@ -214,7 +214,7 @@ function LeftPanel({
         {onTheaterClick && (
           <button onClick={onTheaterClick} style={{
             padding: '7px 14px', borderRadius: 'var(--radius-lg)', border: 'none',
-            background: 'var(--color-primary-base)', color: '#fff',
+            background: 'var(--color-primary-base)', color: 'var(--color-on-accent)',
             fontSize: 'var(--text-meta)', fontWeight: 600, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-1)',
           }}>

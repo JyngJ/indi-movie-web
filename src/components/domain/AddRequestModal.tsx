@@ -41,9 +41,9 @@ export function AddRequestCtaButton({ onClick }: { onClick: () => void }) {
       onClick={onClick}
       style={{
         display: 'inline-flex', alignItems: 'center', gap: 6,
-        height: 36, padding: '0 18px', borderRadius: 999,
+        height: 36, padding: '0 18px', borderRadius: 9999,
         border: 'none', cursor: 'pointer', minHeight: 'unset',
-        background: 'var(--color-primary-base)', color: '#fff',
+        background: 'var(--color-primary-base)', color: 'var(--color-on-accent)',
         fontSize: 13, fontWeight: 600,
       }}
     >
@@ -157,9 +157,9 @@ export function AddRequestModal({ open, query, onClose }: Props) {
           <button
             onClick={handleDismiss}
             style={{
-              width: '100%', height: 48, borderRadius: 999,
+              width: '100%', height: 48, borderRadius: 9999,
               background: 'var(--color-primary-base)', border: 'none',
-              color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', minHeight: 'unset',
+              color: 'var(--color-on-accent)', fontSize: 15, fontWeight: 600, cursor: 'pointer', minHeight: 'unset',
             }}
           >
             확인
@@ -237,7 +237,7 @@ export function AddRequestModal({ open, query, onClose }: Props) {
             <button
               onClick={handleDismiss}
               style={{
-                flex: 1, height: 48, borderRadius: 999,
+                flex: 1, height: 48, borderRadius: 9999,
                 background: 'var(--color-surface-raised)', border: '1px solid var(--color-border)',
                 color: 'var(--color-text-body)', fontSize: 15, fontWeight: 600, cursor: 'pointer', minHeight: 'unset',
               }}
@@ -248,9 +248,9 @@ export function AddRequestModal({ open, query, onClose }: Props) {
               disabled={!name.trim() || submitting}
               onClick={handleSubmit}
               style={{
-                flex: 2, height: 48, borderRadius: 999,
+                flex: 2, height: 48, borderRadius: 9999,
                 background: 'var(--color-primary-base)', border: 'none',
-                color: '#fff', fontSize: 15, fontWeight: 600,
+                color: 'var(--color-on-accent)', fontSize: 15, fontWeight: 600,
                 cursor: (!name.trim() || submitting) ? 'default' : 'pointer',
                 opacity: (!name.trim() || submitting) ? 0.5 : 1,
                 minHeight: 'unset',

@@ -86,13 +86,13 @@ function GvCollapsedChip({ count, theaterName, selected, festivalTitle }: { coun
           background: GV_PURPLE,
           cursor: 'pointer',
           boxShadow: selected
-            ? '0 0 0 2px #fff, 0 0 0 4px #4A6380'
+            ? '0 0 0 2px #fff, 0 0 0 4px var(--color-primary-base)'
             : '0 2px 6px rgba(0,0,0,0.18)', // shadow.pin (docs/DESIGN.md)
           userSelect: 'none',
           whiteSpace: 'nowrap',
         }}
       >
-        <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', textAlign: 'center' }}>{festivalTitle}</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-on-accent)', textAlign: 'center' }}>{festivalTitle}</span>
         <div style={{ width: '100%', height: 1, margin: '-2px 0', background: 'rgba(255,255,255,0.45)', flexShrink: 0 }} />
         <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.9)', textAlign: 'center' }}>이벤트 {count}개</span>
       </div>
@@ -111,13 +111,13 @@ function GvCollapsedChip({ count, theaterName, selected, festivalTitle }: { coun
         background: GV_AMBER,
         cursor: 'pointer',
         boxShadow: selected
-          ? '0 0 0 2px #fff, 0 0 0 4px #4A6380'
+          ? '0 0 0 2px #fff, 0 0 0 4px var(--color-primary-base)'
           : '0 1px 4px rgba(0,0,0,0.18)',
         userSelect: 'none',
         whiteSpace: 'nowrap',
       }}
     >
-      <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>이벤트 {count}개</span>
+      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-on-accent)' }}>이벤트 {count}개</span>
       <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.7)', marginLeft: 1 }}>·</span>
     </div>
   )
@@ -237,7 +237,7 @@ function GvDsCard({ ev, first }: { ev: GvEvent; first: boolean }) {
       </div>
       <div style={{ flex: 1, minWidth: 0, padding: '0 4px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginBottom: 2 }}>
-          <span style={{ background: gvEventTypeColor(ev.type), color: '#fff', fontSize: 7, fontWeight: 800, borderRadius: 2, padding: '0.5px 3px' }}>{ev.type}</span>
+          <span style={{ background: gvEventTypeColor(ev.type), color: 'var(--color-on-accent)', fontSize: 7, fontWeight: 800, borderRadius: 2, padding: '0.5px 3px' }}>{ev.type}</span>
           <span style={{ fontSize: 9, color: 'var(--color-text-caption)' }}>{ev.time}</span>
         </div>
         <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -282,7 +282,7 @@ function GvCalloutBubble({ ev, extraCount = 0, overlayCount, selected, size }: {
       width: '100%',
       height: size.h,
       background: 'var(--color-surface-card)',
-      border: selected ? '2px solid #4A6380' : '1px solid var(--color-border)',
+      border: selected ? '2px solid var(--color-primary-base)' : '1px solid var(--color-border)',
       borderRadius: 9,
       boxShadow: selected
         ? '0 0 0 3px rgba(74,99,128,0.28), 0 2px 8px rgba(20,15,10,0.15)'
@@ -293,7 +293,7 @@ function GvCalloutBubble({ ev, extraCount = 0, overlayCount, selected, size }: {
       {/* Content */}
       <div style={{ flex: 1, padding: `${vPad}px 7px ${vPad}px 10px`, display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ background: gvEventTypeColor(ev.type), color: '#fff', fontSize: 7.5, fontWeight: 800, borderRadius: 3, padding: '1px 3px', letterSpacing: '0.3px', lineHeight: 1.3, flexShrink: 0 }}>{ev.type}</span>
+          <span style={{ background: gvEventTypeColor(ev.type), color: 'var(--color-on-accent)', fontSize: 7.5, fontWeight: 800, borderRadius: 3, padding: '1px 3px', letterSpacing: '0.3px', lineHeight: 1.3, flexShrink: 0 }}>{ev.type}</span>
           <span style={{ fontSize: 8.5, color: 'var(--color-text-caption)', lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.time}</span>
         </div>
         <div style={{ fontFamily: 'var(--font-display, sans-serif)', fontSize: 11, fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -311,7 +311,7 @@ function GvCalloutBubble({ ev, extraCount = 0, overlayCount, selected, size }: {
           top: 6,
           right: 6,
           background: GV_AMBER,
-          color: '#fff',
+          color: 'var(--color-on-accent)',
           fontSize: 9,
           fontWeight: 800,
           borderRadius: 8,
@@ -327,7 +327,7 @@ function GvCalloutBubble({ ev, extraCount = 0, overlayCount, selected, size }: {
           position: 'absolute', inset: 0,
           background: 'rgba(15,12,9,0.62)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: '#fff', fontSize: 11, fontWeight: 700,
+          color: 'var(--color-on-accent)', fontSize: 11, fontWeight: 700,
         }}>
           +{overlayCount}개 이벤트
         </div>

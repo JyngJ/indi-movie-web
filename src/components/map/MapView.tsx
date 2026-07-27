@@ -903,7 +903,7 @@ function makeClusterIcon(
       `border-radius:50%;background:${dotColor};` +
       `border:2.5px solid var(--color-surface-bg);box-shadow:var(--shadow-md);` +
       `display:flex;align-items:center;justify-content:center;` +
-      `color:#fff;font-weight:800;font-size:18px;z-index:3;">${count}</div>` +
+      `color:var(--color-on-accent);font-weight:800;font-size:18px;z-index:3;">${count}</div>` +
       `</div>`
 
     return L.divIcon({
@@ -948,7 +948,7 @@ function makeClusterIcon(
       `border-radius:50%;background:${dotColor};` +
       `border:2.5px solid var(--color-surface-bg);box-shadow:var(--shadow-md);` +
       `display:flex;align-items:center;justify-content:center;` +
-      `color:#fff;font-weight:800;font-size:16px;z-index:3;">${count}</div>` +
+      `color:var(--color-on-accent);font-weight:800;font-size:16px;z-index:3;">${count}</div>` +
       `</div>`
 
     return L.divIcon({
@@ -973,7 +973,7 @@ function makeClusterIcon(
       `<div style="position:relative;background:var(--color-surface-card);` +
       `border:1.5px solid var(--color-border);border-radius:10px;` +
       `padding:3px 8px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.13);z-index:1;">` +
-      `<span style="font-size:11px;font-weight:700;color:var(--color-text-primary);">${movieCount}편</span>` +
+      `<span style="font-size:11px;font-weight:700;color:var(--color-primary-base);">${movieCount}편</span>` +
       `</div></div>`
     : ''
   const html =
@@ -982,7 +982,7 @@ function makeClusterIcon(
     `top:0;left:${cx - SIZE / 2}px;` +
     `border-radius:50%;background:${dotColor};` +
     `display:flex;align-items:center;justify-content:center;` +
-    `color:#fff;font-weight:700;font-size:16px;line-height:1;` +
+    `color:var(--color-on-accent);font-weight:700;font-size:16px;line-height:1;` +
     `box-shadow:var(--shadow-md);border:2.5px solid var(--color-surface-bg);">${count}</div>` +
     countTagLarge +
     `</div>`
@@ -2082,7 +2082,7 @@ export default function MapView() {
       aria-label={isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}
       style={{
         width: 76, height: 40,
-        borderRadius: 999,
+        borderRadius: 9999,
         padding: 4,
         border: '1px solid var(--color-border)',
         backgroundColor: isDark ? 'var(--color-surface-card)' : 'var(--color-surface-raised)',
@@ -2542,7 +2542,7 @@ export default function MapView() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: '#7C3AED',
-                color: '#fff',
+                color: 'var(--color-on-accent)',
               }}>
                 <svg width={20} height={20} viewBox="0 0 24 24" fill="none"
                   stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -2975,7 +2975,7 @@ export default function MapView() {
                         borderRadius: 4,
                         fontSize: 11,
                         fontWeight: 700,
-                        color: '#fff',
+                        color: 'var(--color-on-accent)',
                         backgroundColor: subwayLineColor({ name: line }, isDark),
                       }}
                     >
@@ -3615,11 +3615,11 @@ export default function MapView() {
               height: 40,
               paddingLeft: 6,
               paddingRight: 16,
-              borderRadius: 999,
+              borderRadius: 9999,
               border: '1px solid rgba(0,0,0,0.14)',
               backgroundColor: 'var(--color-primary-base)',
               boxShadow: 'var(--shadow-md)',
-              color: '#fff',
+              color: 'var(--color-on-accent)',
               fontSize: 14,
               fontWeight: 600,
               cursor: 'pointer',

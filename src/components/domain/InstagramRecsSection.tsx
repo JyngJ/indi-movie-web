@@ -120,7 +120,7 @@ function InstagramRecCard({
   // top/transform은 ScrollNavButton 기본값(50% 중앙정렬)을 그대로 씀 — 포스터 줄 자체가
   // 카드 세로 중앙에 대칭 배치(top/bottom 12%)라 카드 중앙 = 포스터 줄 중앙과 일치한다.
   const navButtonDarkStyle: React.CSSProperties = {
-    backgroundColor: '#000', border: 'none', color: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+    backgroundColor: '#000', border: 'none', color: 'var(--color-on-accent)', boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
   }
   const stripNavLeftStyle: React.CSSProperties = {
     ...navButtonDarkStyle,
@@ -248,7 +248,7 @@ function InstagramRecCard({
           position: 'absolute', bottom: 10, right: 10, padding: '4px 10px', borderRadius: 99,
           fontSize: 11, fontWeight: 700,
           backgroundColor: badge.tone === 'active' ? 'var(--color-success)' : 'rgba(0,0,0,0.55)',
-          color: '#fff',
+          color: 'var(--color-on-accent)',
         }}
       >
         {badge.text}

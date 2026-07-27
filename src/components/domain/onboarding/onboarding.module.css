@@ -429,7 +429,7 @@
   width: 880px;
   max-width: calc(100vw - 80px);
   height: 520px;
-  max-height: calc(100vh - 80px);
+  max-height: calc(100dvh - 80px);
   background: var(--color-surface-card);
   color: var(--color-text-primary);
   border-radius: 22px;

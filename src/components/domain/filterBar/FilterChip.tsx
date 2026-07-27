@@ -34,8 +34,8 @@ export function FilterChip({ label, value, open, selected, hasDropdown, onClick,
       onClick={onClick}
       style={{
         display: 'inline-flex', alignItems: 'center',
-        height: 36, paddingLeft: pl, paddingRight: pr,
-        borderRadius: 999, background: bg, border,
+        height: 'var(--filter-chip-height)', paddingLeft: pl, paddingRight: pr,
+        borderRadius: 'var(--radius-full)', background: bg, border,
         cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap',
         gap: 4, minHeight: 'unset',
         transition: 'background 150ms, border-color 150ms',

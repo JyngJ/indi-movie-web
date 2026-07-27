@@ -154,10 +154,10 @@ export function LocationPermissionModal({ state, onRequest, onDismiss }: Props) 
           disabled={isRequesting}
           onClick={onRequest}
           style={{
-            height: 52, borderRadius: 999,
+            height: 52, borderRadius: 9999,
             background: 'var(--color-primary-base)',
             border: 'none',
-            color: '#fff',
+            color: 'var(--color-on-accent)',
             fontSize: 16, fontWeight: 600,
             cursor: isRequesting ? 'default' : 'pointer',
             opacity: isRequesting ? 0.65 : 1,

@@ -96,7 +96,7 @@ export default async function FilmsAreaPage({
           padding: '12px 18px',
           marginBottom: 32,
           background: 'var(--color-primary-base, #2b6cb0)',
-          color: '#fff',
+          color: 'var(--color-on-accent)',
           fontWeight: 600,
           fontSize: 15,
           borderRadius: 10,

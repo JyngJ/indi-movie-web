@@ -348,7 +348,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
           </div>
           <button
             onClick={mobileSubmit}
-            style={{ flexShrink: 0, height: 36, paddingLeft: 14, paddingRight: 14, borderRadius: 'var(--comp-search-radius)', border: 'none', cursor: 'pointer', background: 'var(--color-primary-base)', color: '#fff', fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap', minHeight: 'unset' }}
+            style={{ flexShrink: 0, height: 36, paddingLeft: 14, paddingRight: 14, borderRadius: 'var(--comp-search-radius)', border: 'none', cursor: 'pointer', background: 'var(--color-primary-base)', color: 'var(--color-on-accent)', fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap', minHeight: 'unset' }}
           >
             찾기
           </button>

@@ -172,7 +172,7 @@ export function CalendarPicker({ startDate, endDate, onApply, onCancel, style }:
         <button
           onClick={onCancel}
           style={{
-            flex: 1, height: 40, borderRadius: 999,
+            flex: 1, height: 40, borderRadius: 9999,
             background: 'transparent',
             border: '1px solid var(--color-border)',
             fontSize: 14, fontWeight: 500,
@@ -186,7 +186,7 @@ export function CalendarPicker({ startDate, endDate, onApply, onCancel, style }:
           disabled={!canApply}
           onClick={() => canApply && onApply(rangeStart!, rangeEnd!)}
           style={{
-            flex: 2, height: 40, borderRadius: 999,
+            flex: 2, height: 40, borderRadius: 9999,
             background: canApply ? 'var(--color-primary-base)' : 'var(--color-surface-raised)',
             border: canApply ? 'none' : '1px solid var(--color-border)',
             fontSize: 14, fontWeight: 600,

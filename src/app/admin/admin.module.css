@@ -794,7 +794,7 @@
   display: grid;
   align-content: start;
   gap: 8px;
-  max-height: calc(100vh - 220px);
+  max-height: calc(100dvh - 220px);
   overflow-y: auto;
 }
 

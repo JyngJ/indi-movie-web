@@ -176,7 +176,7 @@ function HeroSection({ movie, titleRef, desktop = false }: { movie: MovieDetail;
               <span key={g} style={{
                 height: desktop ? 28 : 22, padding: desktop ? '0 12px' : '0 9px',
                 display: 'inline-flex', alignItems: 'center',
-                borderRadius: 999, fontSize: desktop ? 13 : 11, fontWeight: 500,
+                borderRadius: 9999, fontSize: desktop ? 13 : 11, fontWeight: 500,
                 backgroundColor: 'var(--color-primary-subtle-l)',
                 border: '1px solid color-mix(in srgb, var(--color-primary-base) 40%, transparent)',
                 color: 'var(--color-primary-base)',
@@ -371,7 +371,7 @@ function TheaterShowtimeChips({
               alignItems: 'center',
               justifyContent: 'flex-start',
               textAlign: 'left',
-              borderRadius: 999,
+              borderRadius: 9999,
               border: '1px solid var(--color-border)',
               backgroundColor: 'var(--color-surface-raised)',
               color: 'var(--color-text-body)',
@@ -398,7 +398,7 @@ function TheaterShowtimeChips({
             style={{
               flexShrink: 0,
               height: 28, padding: '0 11px',
-              borderRadius: 999,
+              borderRadius: 9999,
               border: '1px solid color-mix(in srgb, var(--color-primary-base) 35%, transparent)',
               backgroundColor: 'var(--color-primary-subtle-l)',
               color: 'var(--color-primary-base)',

@@ -151,7 +151,7 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
                     flexShrink: 0,
                     width: 148,
                     borderRadius: 10,
-                    border: isHighlighted ? '1.5px solid #4A6380' : '1px solid var(--color-border)',
+                    border: isHighlighted ? '1.5px solid var(--color-primary-base)' : '1px solid var(--color-border)',
                     background: 'var(--color-surface-card)',
                     overflow: 'hidden',
                     boxShadow: isHighlighted
@@ -183,12 +183,12 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
                     )}
                     <div style={{
                       position: 'absolute', top: 5, left: 5,
-                      background: gvEventTypeColor(ev.type), color: '#fff',
+                      background: gvEventTypeColor(ev.type), color: 'var(--color-on-accent)',
                       fontSize: 'var(--text-badge)', fontWeight: 800, borderRadius: 3, padding: '2px 5px', letterSpacing: '0.3px',
                     }}>{ev.type}</div>
                     <div style={{
                       position: 'absolute', bottom: 5, right: 5,
-                      background: 'rgba(0,0,0,0.5)', color: '#fff',
+                      background: 'rgba(0,0,0,0.5)', color: 'var(--color-on-accent)',
                       fontSize: 9.5, fontWeight: 600, borderRadius: 'var(--radius-sm)', padding: '1.5px 5px',
                       backdropFilter: 'blur(4px)',
                       whiteSpace: 'nowrap',

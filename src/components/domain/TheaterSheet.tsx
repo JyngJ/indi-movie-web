@@ -154,7 +154,7 @@ function SynopsisCard({ synopsis, tags, visible, onSearchTheaters }: SynopsisCar
                     color: 'var(--color-neutral-200)',
                     border: '1px solid var(--color-neutral-600)',
                     backgroundColor: 'rgba(255,255,255,0.08)',
-                    borderRadius: 999,
+                    borderRadius: 9999,
                     paddingLeft: 10,
                     paddingRight: 10,
                     paddingTop: 3,
@@ -1269,7 +1269,7 @@ export function TheaterSheet({
                                 alignItems: 'center',
                                 fontSize: 10,
                                 fontWeight: 700,
-                                color: '#fff',
+                                color: 'var(--color-on-accent)',
                                 backgroundColor: 'var(--color-error)',
                                 border: '1px solid color-mix(in srgb, var(--color-error) 60%, transparent)',
                                 pointerEvents: 'none',
@@ -1458,7 +1458,7 @@ export function TheaterSheet({
                     onClick={() => applySheetFilters({ ...sheetFilters, bookable: !sheetFilters.bookable }, 'theater_sheet_quick')}
                     style={{
                       flexShrink: 0, height: 22, padding: '0 8px',
-                      borderRadius: 999,
+                      borderRadius: 9999,
                       border: '1px solid',
                       borderColor: sheetFilters.bookable ? 'var(--color-primary-base)' : 'var(--color-border)',
                       backgroundColor: sheetFilters.bookable ? 'var(--color-primary-subtle-l)' : 'transparent',
@@ -1476,7 +1476,7 @@ export function TheaterSheet({
                       onClick={() => applySheetFilters({ ...sheetFilters, genres: sheetFilters.genres.filter(x => x !== g) })}
                       style={{
                         flexShrink: 0, height: 22, padding: '0 6px 0 8px',
-                        borderRadius: 999,
+                        borderRadius: 9999,
                         border: '1px solid var(--color-primary-base)',
                         backgroundColor: 'var(--color-primary-subtle-l)',
                         color: 'var(--color-primary-base)',
@@ -1494,7 +1494,7 @@ export function TheaterSheet({
                       onClick={() => applySheetFilters({ ...sheetFilters, nations: sheetFilters.nations.filter(x => x !== n) })}
                       style={{
                         flexShrink: 0, height: 22, padding: '0 6px 0 8px',
-                        borderRadius: 999,
+                        borderRadius: 9999,
                         border: '1px solid var(--color-primary-base)',
                         backgroundColor: 'var(--color-primary-subtle-l)',
                         color: 'var(--color-primary-base)',
@@ -1516,7 +1516,7 @@ export function TheaterSheet({
                   }}
                   style={{
                     flexShrink: 0, height: 26, padding: '0 10px',
-                    borderRadius: 999,
+                    borderRadius: 9999,
                     border: '1px solid',
                     borderColor: filtersOn ? 'var(--color-primary-base)' : 'var(--color-border)',
                     backgroundColor: filtersOn ? 'var(--color-primary-subtle-l)' : 'transparent',
@@ -1637,7 +1637,7 @@ export function TheaterSheet({
                                     position: 'absolute', bottom: 6, right: 6,
                                     height: 20, padding: '0 6px', borderRadius: 4,
                                     display: 'inline-flex', alignItems: 'center',
-                                    fontSize: 10, fontWeight: 700, color: '#fff',
+                                    fontSize: 10, fontWeight: 700, color: 'var(--color-on-accent)',
                                     backgroundColor: 'var(--color-error)',
                                     pointerEvents: 'none', zIndex: 2,
                                   }}>매진</div>
@@ -1808,7 +1808,7 @@ export function TheaterSheet({
                         <span key={n} style={{
                           fontSize: 10, fontWeight: 500,
                           padding: '1px 6px',
-                          borderRadius: 999,
+                          borderRadius: 9999,
                           border: '1px solid var(--color-border)',
                           color: 'var(--color-text-sub)',
                         }}>
@@ -1827,7 +1827,7 @@ export function TheaterSheet({
                           <span key={g} style={{
                             fontSize: 10, fontWeight: 500,
                             padding: '1px 6px',
-                            borderRadius: 999,
+                            borderRadius: 9999,
                             border: '1px solid var(--color-border)',
                             color: 'var(--color-text-sub)',
                           }}>
@@ -2101,7 +2101,7 @@ export function TheaterSheet({
                           genres: prev.genres.includes(g) ? prev.genres.filter(x => x !== g) : [...prev.genres, g],
                         }))}
                         style={{
-                          height: 34, padding: '0 14px', borderRadius: 999,
+                          height: 34, padding: '0 14px', borderRadius: 9999,
                           border: '1px solid',
                           borderColor: pendingFilters.genres.includes(g) ? 'var(--color-primary-base)' : 'var(--color-border)',
                           backgroundColor: pendingFilters.genres.includes(g) ? 'var(--color-primary-subtle-l)' : 'var(--color-surface-bg)',
@@ -2127,7 +2127,7 @@ export function TheaterSheet({
                           nations: prev.nations.includes(n) ? prev.nations.filter(x => x !== n) : [...prev.nations, n],
                         }))}
                         style={{
-                          height: 34, padding: '0 14px', borderRadius: 999,
+                          height: 34, padding: '0 14px', borderRadius: 9999,
                           border: '1px solid',
                           borderColor: pendingFilters.nations.includes(n) ? 'var(--color-primary-base)' : 'var(--color-border)',
                           backgroundColor: pendingFilters.nations.includes(n) ? 'var(--color-primary-subtle-l)' : 'var(--color-surface-bg)',
@@ -2154,7 +2154,7 @@ export function TheaterSheet({
                   onClick={() => setPendingFilters(prev => ({ ...prev, bookable: !prev.bookable }))}
                   style={{
                     flexShrink: 0,
-                    width: 44, height: 26, borderRadius: 999,
+                    width: 44, height: 26, borderRadius: 9999,
                     backgroundColor: pendingFilters.bookable ? 'var(--color-primary-base)' : 'var(--color-neutral-500)',
                     position: 'relative', cursor: 'pointer',
                     transition: 'background-color 180ms',
@@ -2181,7 +2181,7 @@ export function TheaterSheet({
                 style={{
                   width: '100%', height: 50, borderRadius: 12,
                   border: 'none', backgroundColor: 'var(--color-primary-base)',
-                  color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer',
+                  color: 'var(--color-on-accent)', fontSize: 15, fontWeight: 700, cursor: 'pointer',
                   letterSpacing: '-0.2px',
                 }}
               >

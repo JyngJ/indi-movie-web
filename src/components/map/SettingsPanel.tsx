@@ -126,7 +126,7 @@ export function SettingsMainPage({
             onClick={() => onSetTheme(isDark ? 'light' : 'dark')}
             aria-label={isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}
             style={{
-              width: 76, height: 40, borderRadius: 999, padding: 4,
+              width: 76, height: 40, borderRadius: 9999, padding: 4,
               border: '1px solid var(--color-border)',
               backgroundColor: isDark ? 'var(--color-surface-card)' : 'var(--color-surface-raised)',
               boxShadow: 'var(--shadow-sm)', cursor: 'pointer',
@@ -258,7 +258,7 @@ export function SettingsReportPage({
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {REPORT_CATEGORIES.map(cat => (
             <button key={cat} onClick={() => setCategory(cat)} style={{
-              padding: '7px 14px', borderRadius: 999, fontSize: 13, fontWeight: 500, cursor: 'pointer', minHeight: 'unset',
+              padding: '7px 14px', borderRadius: 9999, fontSize: 13, fontWeight: 500, cursor: 'pointer', minHeight: 'unset',
               border: category === cat ? '1px solid var(--color-primary-base)' : '1px solid var(--color-border)',
               backgroundColor: category === cat ? 'var(--color-primary-subtle-l)' : 'var(--color-surface-bg)',
               color: category === cat ? 'var(--color-primary-text)' : 'var(--color-text-body)',
@@ -285,7 +285,7 @@ export function SettingsReportPage({
       <div>
         <input ref={fileInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={e => setFiles(Array.from(e.target.files ?? []).slice(0, 3))} />
         <button onClick={() => fileInputRef.current?.click()} style={{
-          display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 999,
+          display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 9999,
           border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-bg)',
           fontSize: 13, fontWeight: 500, color: 'var(--color-text-body)', cursor: 'pointer', minHeight: 'unset',
         }}>
@@ -413,12 +413,12 @@ export function SettingsAboutPage() {
               <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 1 }}>{member.role}</div>
             </div>
             {member.linkedin && (
-              <button onClick={() => window.open(member.linkedin!, '_blank', 'noopener')} style={{ width: 32, height: 32, borderRadius: 8, border: 'none', backgroundColor: '#0A66C2', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, minHeight: 'unset' }}>
+              <button onClick={() => window.open(member.linkedin!, '_blank', 'noopener')} style={{ width: 32, height: 32, borderRadius: 8, border: 'none', backgroundColor: '#0A66C2', color: 'var(--color-on-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, minHeight: 'unset' }}>
                 <IcoLinkedIn />
               </button>
             )}
             {member.github && (
-              <button onClick={() => window.open(member.github!, '_blank', 'noopener')} style={{ width: 32, height: 32, borderRadius: 8, border: 'none', backgroundColor: '#24292e', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, minHeight: 'unset' }}>
+              <button onClick={() => window.open(member.github!, '_blank', 'noopener')} style={{ width: 32, height: 32, borderRadius: 8, border: 'none', backgroundColor: '#24292e', color: 'var(--color-on-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, minHeight: 'unset' }}>
                 <IcoGitHub />
               </button>
             )}

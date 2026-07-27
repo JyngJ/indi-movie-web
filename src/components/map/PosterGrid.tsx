@@ -123,8 +123,8 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
         {!hideMatchChip && filtersActive && matchCount != null && matchCount > 0 && (
           <div style={{
             position: 'absolute', top: -8, right: -8,
-            backgroundColor: 'var(--color-primary-base)', color: '#fff',
-            borderRadius: 999, padding: '2px 7px', fontSize: 10, fontWeight: 700,
+            backgroundColor: 'var(--color-primary-base)', color: 'var(--color-on-accent)',
+            borderRadius: 9999, padding: '2px 7px', fontSize: 10, fontWeight: 700,
             zIndex: 10, whiteSpace: 'nowrap',
             boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
             border: '1.5px solid var(--color-surface-bg)',
@@ -145,8 +145,8 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
               {occurrenceCount != null && occurrenceCount > 0 && (
                 <div style={{
                   position: 'absolute', top: -8, right: -8,
-                  backgroundColor: 'var(--color-primary-base)', color: '#fff',
-                  borderRadius: 999, padding: '2px 6px', fontSize: 9, fontWeight: 700,
+                  backgroundColor: 'var(--color-primary-base)', color: 'var(--color-on-accent)',
+                  borderRadius: 9999, padding: '2px 6px', fontSize: 9, fontWeight: 700,
                   zIndex: 10, whiteSpace: 'nowrap',
                   boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
                   border: '1.5px solid var(--color-surface-bg)',
@@ -159,7 +159,7 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
               <div style={{
                 fontSize: 9, fontWeight: 700, textAlign: 'center', whiteSpace: 'nowrap',
                 color: 'var(--color-primary-base)', backgroundColor: 'var(--color-primary-subtle-l)',
-                borderRadius: 999, padding: '2px 8px', marginBottom: 4,
+                borderRadius: 9999, padding: '2px 8px', marginBottom: 4,
               }}>
                 상영 일정
               </div>
@@ -180,7 +180,7 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
                       <div style={{
                         width: posterW, height: posterH,
                         borderRadius: 'var(--comp-poster-radius)',
-                        backgroundColor: 'var(--color-primary-base)', color: '#fff',
+                        backgroundColor: 'var(--color-primary-base)', color: 'var(--color-on-accent)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: 15, fontWeight: 800,
                         boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.18)',

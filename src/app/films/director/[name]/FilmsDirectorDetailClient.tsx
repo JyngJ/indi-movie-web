@@ -72,7 +72,7 @@ function FilmographyRow({ movie, isLast, isActive, onClick, isDesktop }: { movie
           <span style={{ fontFamily: 'var(--font-serif)', fontSize: 15, fontWeight: 700, color: isActive ? 'var(--color-primary-base)' : 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: isDesktop ? 360 : 180 }}>
             {normalizeTitle(movie.title)}
           </span>
-          {isActive && <span style={{ height: 18, padding: '0 6px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', fontSize: 9, fontWeight: 700, color: '#fff', backgroundColor: 'var(--color-primary-base)', flexShrink: 0 }}>상영중</span>}
+          {isActive && <span style={{ height: 18, padding: '0 6px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', fontSize: 9, fontWeight: 700, color: 'var(--color-on-accent)', backgroundColor: 'var(--color-primary-base)', flexShrink: 0 }}>상영중</span>}
         </div>
         <div style={{ marginTop: 3, fontSize: 12, color: 'var(--color-text-caption)' }}>
           {[movie.year, movie.genre[0]].filter(Boolean).join(' · ')}
@@ -158,7 +158,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
       <div style={{ marginTop: 18, display: 'flex', gap: 8 }}>
         <button
           onClick={() => router.push(`/?director=${encodeURIComponent(directorName)}`)}
-          style={{ height: 40, padding: '0 16px', display: 'flex', alignItems: 'center', gap: 6, borderRadius: 10, border: '1px solid var(--color-primary-base)', backgroundColor: 'var(--color-primary-base)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+          style={{ height: 40, padding: '0 16px', display: 'flex', alignItems: 'center', gap: 6, borderRadius: 10, border: '1px solid var(--color-primary-base)', backgroundColor: 'var(--color-primary-base)', color: 'var(--color-on-accent)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
         >
           <IcoMap /> 지도에서 필터로 보기
         </button>
@@ -221,7 +221,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
                 <button
                   key={k}
                   onClick={() => setSort(k)}
-                  style={{ height: 26, padding: '0 10px', borderRadius: 999, border: '1px solid', borderColor: sort === k ? 'var(--color-primary-base)' : 'var(--color-border)', backgroundColor: sort === k ? 'var(--color-primary-subtle-l)' : 'transparent', color: sort === k ? 'var(--color-primary-base)' : 'var(--color-text-caption)', fontSize: 12, fontWeight: sort === k ? 600 : 400, cursor: 'pointer', minHeight: 'auto' }}
+                  style={{ height: 26, padding: '0 10px', borderRadius: 9999, border: '1px solid', borderColor: sort === k ? 'var(--color-primary-base)' : 'var(--color-border)', backgroundColor: sort === k ? 'var(--color-primary-subtle-l)' : 'transparent', color: sort === k ? 'var(--color-primary-base)' : 'var(--color-text-caption)', fontSize: 12, fontWeight: sort === k ? 600 : 400, cursor: 'pointer', minHeight: 'auto' }}
                 >
                   {k === 'newest' ? '최신순' : '오래된순'}
                 </button>

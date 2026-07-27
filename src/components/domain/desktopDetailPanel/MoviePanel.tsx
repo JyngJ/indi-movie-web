@@ -99,7 +99,7 @@ export function MoviePanel({
                 <span key={g} style={{
                   height: 22, padding: '0 9px',
                   display: 'inline-flex', alignItems: 'center',
-                  borderRadius: 999, fontSize: 11, fontWeight: 500,
+                  borderRadius: 9999, fontSize: 11, fontWeight: 500,
                   backgroundColor: 'var(--color-primary-subtle-l)',
                   border: '1px solid color-mix(in srgb, var(--color-primary-base) 40%, transparent)',
                   color: 'var(--color-primary-base)',
@@ -278,7 +278,7 @@ function MovieTheatersTab({
               flexShrink: 0, alignSelf: 'center', minWidth: 54, height: 24,
               padding: '0 8px', marginRight: 8,
               display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-start',
-              borderRadius: 999, border: '1px solid var(--color-border)',
+              borderRadius: 9999, border: '1px solid var(--color-border)',
               backgroundColor: 'var(--color-surface-raised)', color: 'var(--color-text-body)',
               fontSize: 11, fontWeight: 500, fontFeatureSettings: '"tnum"', whiteSpace: 'nowrap',
             }}>
@@ -291,7 +291,7 @@ function MovieTheatersTab({
             trackEvent('movie theater selected', { movie_id: movieId, theater_id: entry.theaterId, theater_name: entry.theaterName, source: 'desktop_panel' })
             onTheaterOpen(entry.theaterId, entry.dateGroups[0]?.date ?? '')
           }}
-          style={{ flexShrink: 0, alignSelf: 'center', height: 26, padding: '0 10px', borderRadius: 999, border: '1px solid color-mix(in srgb, var(--color-primary-base) 35%, transparent)', backgroundColor: 'var(--color-primary-subtle-l)', color: 'var(--color-primary-base)', fontSize: 11, fontWeight: 700, cursor: 'pointer', minHeight: 'auto' }}
+          style={{ flexShrink: 0, alignSelf: 'center', height: 26, padding: '0 10px', borderRadius: 9999, border: '1px solid color-mix(in srgb, var(--color-primary-base) 35%, transparent)', backgroundColor: 'var(--color-primary-subtle-l)', color: 'var(--color-primary-base)', fontSize: 11, fontWeight: 700, cursor: 'pointer', minHeight: 'auto' }}
         >
           영화관 보기
         </button>
