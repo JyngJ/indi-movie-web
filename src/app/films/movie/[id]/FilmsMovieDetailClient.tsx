@@ -264,6 +264,19 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
   ].filter(Boolean).join(' · ')
 
   /* ── 공통 섹션들 ──────────────────────────────────────────────── */
+  const shareButton = (
+    <button
+      onClick={() => {
+        trackEvent('share clicked', { movie_id: movie.id, movie_title: movie.title, source: 'films_movie_detail' })
+        navigator.share?.({ title: movie.title, url: window.location.href }).catch(() => {})
+      }}
+      aria-label="공유"
+      style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 'var(--radius-button)', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', color: 'var(--color-text-body)', cursor: 'pointer', flexShrink: 0 }}
+    >
+      <IcoShare />
+    </button>
+  )
+
   const heroSection = (
     <div style={{
       background: 'linear-gradient(to bottom, var(--color-primary-subtle-l) 0%, var(--color-surface-bg) 100%)',
@@ -301,36 +314,18 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
         {meta && (
           <div style={{ marginTop: 12, fontSize: 13, color: 'var(--color-text-sub)' }}>{meta}</div>
         )}
-        {movie.director.length > 0 && (
-          <div style={{ marginTop: 16, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        <div style={{ marginTop: 16, display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {movie.director.map((name) => (
               <DirectorChipLoader key={name} name={name} onClick={() => router.push(`/films/director/${encodeURIComponent(name)}`)} />
             ))}
           </div>
-        )}
+          {shareButton}
+        </div>
       </div>
     </div>
   )
 
-  const ctaButtons = (
-    <div style={{ padding: isDesktop ? '0 0 20px' : '12px 16px', display: 'flex', gap: 8 }}>
-      <button
-        onClick={() => router.push(mapUrlWithSelection())}
-        style={{ flex: 1, height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 12, border: '1px solid var(--color-primary-base)', backgroundColor: 'var(--color-primary-base)', color: 'var(--color-on-accent)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
-      >
-        <IcoMap /> 지도에서 상영관 필터로 보기
-      </button>
-      <button
-        onClick={() => {
-          trackEvent('share clicked', { movie_id: movie.id, movie_title: movie.title, source: 'films_movie_detail' })
-          navigator.share?.({ title: movie.title, url: window.location.href }).catch(() => {})
-        }}
-        style={{ width: 42, height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 12, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', color: 'var(--color-text-body)', cursor: 'pointer', flexShrink: 0 }}
-      >
-        <IcoShare />
-      </button>
-    </div>
-  )
 
   const synopsisSection = movie.synopsis ? (
     <div style={{ padding: isDesktop ? '0 0 20px' : '0 16px 16px', borderBottom: '1px solid var(--color-border)' }}>
@@ -555,7 +550,6 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 var(--gutter)' }}>
           {/* hero */}
           {heroSection}
-          {ctaButtons}
 
           {/* 2-column layout */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 32, alignItems: 'flex-start' }}>
@@ -590,7 +584,6 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
         </div>
       </div>
       {heroSection}
-      {ctaButtons}
       {synopsisSection}
       {showtimesSection}
       <div style={{ height: 'env(safe-area-inset-bottom)' }} />

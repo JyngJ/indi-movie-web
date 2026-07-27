@@ -137,20 +137,6 @@ function LeftPanel({
   const [dirBtnHovered, setDirBtnHovered] = useState(false)
   const [theaterBtnHovered, setTheaterBtnHovered] = useState(false)
 
-  const badge = (
-    <span style={{
-      alignSelf: 'flex-start', fontSize: 'var(--text-caption)', fontWeight: 600,
-      color: 'var(--color-primary-base)',
-      padding: '4px 12px', borderRadius: 'var(--radius-pill)',
-      border: '1px solid color-mix(in srgb, var(--color-primary-base) 40%, transparent)',
-      backgroundColor: 'color-mix(in srgb, var(--color-primary-base) 10%, transparent)',
-      letterSpacing: 0.3, lineHeight: 1,
-      display: 'flex', alignItems: 'center', gap: 4
-    }}>
-      감독 특별전
-    </span>
-  )
-
   const avatarRow = (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
       <div style={{
@@ -212,19 +198,15 @@ function LeftPanel({
       {/* ── 감독 블록 ── */}
       <div style={{ padding: blockPad, display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
         {wide ? (
-          /* 와이드: [배지+아바타 2줄] 왼쪽, 감독 상세 버튼 오른쪽 상단 */
+          /* 와이드: 아바타+이름 왼쪽, 감독 상세 버튼 오른쪽 상단 */
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {badge}
+            <div style={{ flex: 1, minWidth: 0 }}>
               {avatarRow}
             </div>
             {directorButton}
           </div>
         ) : (
-          <>
-            {badge}
-            {avatarRow}
-          </>
+          avatarRow
         )}
 
         {/* 바이오 */}
