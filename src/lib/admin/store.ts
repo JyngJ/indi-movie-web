@@ -1072,6 +1072,8 @@ function isYearMatch(movieYear: number | null | undefined, expectedYear?: number
 
 // 후보가 여러 개면 개봉연도가 맞는 것을 우선한다. 후보가 1개뿐이고 연도가 어긋나면
 // 동명이인 영화로 보고 매칭을 보류해 다음 단계(다음 타이틀 후보, KMDB 검색 등)로 넘긴다.
+// 후보가 2개 이상인데 연도 정보가 없으면(크롤 원문에 제작연도가 안 찍히는 경우가 흔함)
+// 어느 쪽인지 가릴 수 없으므로 첫 번째를 임의로 찍지 않고 보류한다.
 function pickMovieMatch(matches: MovieRow[], expectedYear?: number) {
   if (matches.length === 0) return undefined
   if (matches.length === 1) {
@@ -1079,8 +1081,7 @@ function pickMovieMatch(matches: MovieRow[], expectedYear?: number) {
     if (expectedYear != null && only.year != null && !isYearMatch(only.year, expectedYear)) return undefined
     return only
   }
-  return matches.find((movie) => isYearMatch(movie.year, expectedYear)) ??
-    (expectedYear == null ? matches[0] : undefined)
+  return matches.find((movie) => isYearMatch(movie.year, expectedYear))
 }
 
 function resolveMovieByTitle(title: string, movies: MovieRow[], expectedYear?: number) {
@@ -1217,6 +1218,7 @@ export function candidateMovieTitleCandidates(title: string) {
 
 // 후보가 여러 개면 개봉연도가 맞는 것을 우선한다. 후보가 1개뿐이고 연도가 어긋나면
 // 동명이인 영화로 보고 매칭을 보류해 다음 단계로 넘긴다.
+// 후보가 2개 이상인데 연도 정보가 없으면 어느 쪽인지 가릴 수 없으므로 보류한다.
 function pickExternalMovieMatch(matches: AdminExternalMovie[], expectedYear?: number) {
   if (matches.length === 0) return undefined
   if (matches.length === 1) {
@@ -1224,8 +1226,7 @@ function pickExternalMovieMatch(matches: AdminExternalMovie[], expectedYear?: nu
     if (expectedYear != null && !isYearMatch(only.year, expectedYear)) return undefined
     return only
   }
-  return matches.find((movie) => isYearMatch(movie.year, expectedYear)) ??
-    (expectedYear == null ? matches[0] : undefined)
+  return matches.find((movie) => isYearMatch(movie.year, expectedYear))
 }
 
 function pickExactExternalMovie(title: string, movies: AdminExternalMovie[], expectedYear?: number) {
