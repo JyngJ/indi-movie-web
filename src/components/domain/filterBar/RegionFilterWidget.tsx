@@ -45,7 +45,7 @@ export function RegionFilterWidget({ onRegionChange }: { onRegionChange?: (id: s
       {open && (
         <div
           ref={dropdownRef}
-          style={{ position: 'absolute', top: '100%', right: 0, marginTop: 6, zIndex: 200 }}
+          style={{ position: 'absolute', top: '100%', right: 0, marginTop: 8, zIndex: 200 }}
         >
           <RegionDropdown selectedId={region} onSelect={pickRegion} />
         </div>

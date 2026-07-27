@@ -13,7 +13,7 @@ export function GenreChip({ children }: GenreChipProps) {
         justifyContent: 'center',
         lineHeight: 1,
         fontSize: 'var(--text-caption)',
-        padding: '2px 6px',
+        padding: '4px 8px',
         borderRadius: 'var(--radius-pill)',
         background: 'var(--color-surface-raised)',
         color: 'var(--color-text-caption)',

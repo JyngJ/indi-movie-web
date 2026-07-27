@@ -81,20 +81,20 @@ export function DateBar({ days, selectedDate, onSelectDate, onPrev, onNext, hasP
     <div
       style={{
         width: '100%',
-        padding: '8px 6px',
+        padding: '8px',
         backgroundColor: 'var(--color-surface-card)',
         borderTop: '1px solid var(--color-border)',
         borderBottom: '1px solid var(--color-border)',
         display: 'flex',
         alignItems: 'center',
-        gap: 2,
+        gap: 4,
       }}
     >
       {/* 이전 버튼 */}
       <DateNavButton direction="prev" onClick={onPrev} enabled={hasPrev} label="이전 주" />
 
       {/* 날짜 행 */}
-      <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between', gap: 2 }}>
+      <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between', gap: 4 }}>
         {days.map((d) => {
           const isSelected = d.date === selectedDate
           const isDisabled = !!d.disabled
@@ -159,7 +159,7 @@ export function DateBar({ days, selectedDate, onSelectDate, onPrev, onNext, hasP
                     transform: 'translateX(-50%)',
                     width: 12,
                     height: 2,
-                    borderRadius: 1,
+                    borderRadius: 4,
                     backgroundColor: active ? 'rgba(255,255,255,0.85)' : 'var(--color-primary-base)',
                   }}
                 />

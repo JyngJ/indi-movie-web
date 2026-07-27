@@ -22,7 +22,7 @@ function InlineBadge({ text, color }: { text: string; color: string }) {
       className="inline-flex items-center flex-shrink-0"
       style={{
         height: 18,
-        padding: '0 6px',
+        padding: '0 8px',
         borderRadius: 'var(--radius-badge)',
         backgroundColor: color,
         color: '#FFFFFF',

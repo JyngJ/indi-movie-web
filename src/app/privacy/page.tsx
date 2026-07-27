@@ -144,11 +144,11 @@ export default function PrivacyPolicyPage() {
 }
 
 const ulStyle: React.CSSProperties = {
-  margin: '10px 0 0',
+  margin: '12px 0 0',
   paddingLeft: 20,
   display: 'flex',
   flexDirection: 'column',
-  gap: 6,
+  gap: 8,
 }
 
 const noteStyle: React.CSSProperties = {

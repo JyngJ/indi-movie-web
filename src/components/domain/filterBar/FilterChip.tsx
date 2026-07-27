@@ -76,7 +76,7 @@ export function FilterChip({ label, value, open, selected, hasDropdown, onClick,
         </span>
       ) : hasDropdown ? (
         <span style={{
-          display: 'inline-flex', alignItems: 'center', marginLeft: 2, flexShrink: 0,
+          display: 'inline-flex', alignItems: 'center', marginLeft: 4, flexShrink: 0,
           color: open ? 'var(--filter-chip-open-caret)' : 'var(--color-text-caption)',
         }}>
           <IcoChevron open={!!open} />

@@ -32,7 +32,7 @@ function RankBadge({ rank, prevRank }: { rank: number; prevRank: number | null }
   if (prevRank === null) {
     return (
       <span style={{
-        fontSize: 10, fontWeight: 700, padding: '2px 5px', borderRadius: 'var(--radius-badge)',
+        fontSize: 10, fontWeight: 700, padding: '4px', borderRadius: 'var(--radius-badge)',
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
         background: '#D97706', color: 'var(--color-on-accent)', letterSpacing: 0.2,
       }}>NEW</span>
@@ -88,12 +88,12 @@ function InfoTooltip({ weekStart }: { weekStart: string }) {
       <div style={{
         background: 'var(--color-surface-card)',
         border: '1px solid var(--color-border)',
-        borderRadius: 14,
+        borderRadius: 16,
         padding: '16px 16px 12px',
-        display: 'flex', flexDirection: 'column', gap: 10,
+        display: 'flex', flexDirection: 'column', gap: 12,
         boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
       }}>
-        <span style={{ fontSize: 'var(--text-meta)', fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={{ fontSize: 'var(--text-meta)', fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
           <Scale size={16} strokeWidth={1.75} color="currentColor" /> 랭킹은 이렇게 매겨요
         </span>
         <p style={{ margin: 0, fontSize: 'var(--text-caption)', color: 'var(--color-text-caption)', lineHeight: 1.6 }}>
@@ -101,15 +101,15 @@ function InfoTooltip({ weekStart }: { weekStart: string }) {
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)' }}>
           {METRICS.map(({ icon: Icon, label: l, pct, color, desc }) => (
-            <div key={l} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <div key={l} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-body)', display: 'flex', alignItems: 'center', gap: 4 }}>
                   <Icon size={14} strokeWidth={1.75} color="currentColor" /> {l}
                 </span>
                 <span style={{ fontSize: 'var(--text-caption)', fontWeight: 700, color }}>{pct}%</span>
               </div>
-              <div style={{ height: 5, borderRadius: 3, background: 'var(--color-border)', overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 3 }} />
+              <div style={{ height: 5, borderRadius: 4, background: 'var(--color-border)', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 4 }} />
               </div>
               <span style={{ fontSize: 10, color: 'var(--color-text-caption)' }}>{desc}</span>
             </div>
@@ -228,7 +228,7 @@ export function FilmRankingSection({ weekStart, rankings, movies, isDesktop, onM
     <section style={{ paddingTop: 28 }}>
       <div style={{ padding: '0 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <h2 style={{
               margin: 0,
               fontSize: isDesktop ? 'var(--text-h3)' : 'var(--text-title)',
@@ -237,7 +237,7 @@ export function FilmRankingSection({ weekStart, rankings, movies, isDesktop, onM
               color: 'var(--color-text-primary)',
               display: 'flex',
               alignItems: 'center',
-              gap: 6
+              gap: 8
             }}>
               독립영화 주간 랭킹
             </h2>
@@ -249,7 +249,7 @@ export function FilmRankingSection({ weekStart, rankings, movies, isDesktop, onM
               <button
                 style={{
                   background: 'none', border: 'none', cursor: 'pointer',
-                  padding: 2, color: 'var(--color-text-caption)', fontSize: 'var(--text-body)',
+                  padding: 4, color: 'var(--color-text-caption)', fontSize: 'var(--text-body)',
                   display: 'flex', alignItems: 'center',
                 }}
                 aria-label="랭킹 기준 보기"
@@ -259,7 +259,7 @@ export function FilmRankingSection({ weekStart, rankings, movies, isDesktop, onM
               {infoHover && <InfoTooltip weekStart={weekStart} />}
             </div>
           </div>
-          <p style={{ margin: '3px 0 0', fontSize: 12, color: 'var(--color-text-caption)' }}>
+          <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-caption)' }}>
             {label} · 상영관·회차·조회수 합산
           </p>
         </div>

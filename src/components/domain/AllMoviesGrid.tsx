@@ -60,7 +60,7 @@ function GridPoster({ src, alt }: { src?: string; alt: string }) {
           style={{
             width: '100%', height: '100%',
             background: 'var(--color-neutral-800)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px 5px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px',
           }}
         >
           <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 14, fontWeight: 800, textAlign: 'center', lineHeight: 1.3, wordBreak: 'keep-all' }}>
@@ -129,12 +129,12 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
                 color: 'var(--color-text-primary)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: 6
+                gap: 8
               }}
             >
               지금 {regionText}상영 전체
             </h2>
-            <p style={{ margin: '3px 0 0', fontSize: 12, color: 'var(--color-text-caption)' }}>
+            <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-caption)' }}>
               {movies.length}편 상영 중
             </p>
           </div>
@@ -151,7 +151,7 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
               background: 'var(--color-surface-card)',
               border: '1px solid var(--color-border)',
               borderRadius: 8,
-              padding: '6px 10px',
+              padding: '8px 12px',
               cursor: 'pointer',
               outline: 'none',
               appearance: 'none',
@@ -186,13 +186,13 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
               style={{
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 6,
+                gap: 8,
                 cursor: onMovieClick ? 'pointer' : undefined,
               }}
             >
               <GridPoster src={movie.posterUrl} alt={movie.title} />
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span
                   style={{
                     fontSize: isDesktop ? 13 : 12,
@@ -228,7 +228,7 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
                       key={g}
                       style={{
                         fontSize: 10,
-                        padding: '2px 5px',
+                        padding: '4px',
                         borderRadius: 9999,
                         display: 'inline-flex',
                         alignItems: 'center',

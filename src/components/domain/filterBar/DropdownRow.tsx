@@ -18,7 +18,7 @@ export function DropdownRow({ kind, label, sub, selected, onClick, isLast }: Dro
         display: 'flex',
         alignItems: sub ? 'flex-start' : 'center',
         gap: 12,
-        padding: '12px 14px',
+        padding: '12px 16px',
         width: '100%',
         background: selected ? 'rgba(74,99,128,0.13)' : 'transparent',
         border: 'none',
@@ -49,7 +49,7 @@ export function DropdownRow({ kind, label, sub, selected, onClick, isLast }: Dro
           {label}
         </div>
         {sub && (
-          <div style={{ fontSize: 11, color: 'var(--color-text-caption)', marginTop: 2 }}>
+          <div style={{ fontSize: 11, color: 'var(--color-text-caption)', marginTop: 4 }}>
             {sub}
           </div>
         )}

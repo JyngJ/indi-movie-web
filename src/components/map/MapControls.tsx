@@ -237,12 +237,12 @@ export function ZoomSlider({
           ref={trackRef}
           style={{
             position: 'relative', width: 4, height: SLIDER_TRACK_H,
-            borderRadius: 2, backgroundColor: 'var(--color-border)',
+            borderRadius: 4, backgroundColor: 'var(--color-border)',
           }}
         >
           <div style={{
             position: 'absolute', bottom: 0, left: 0, right: 0,
-            height: `${pct}%`, borderRadius: 2,
+            height: `${pct}%`, borderRadius: 4,
             backgroundColor: 'var(--color-primary-base)',
             transition: 'height 0.08s cubic-bezier(0.34,1.4,0.64,1)',
           }} />
@@ -252,7 +252,7 @@ export function ZoomSlider({
               left: '50%', top: (1 - s / 100) * SLIDER_TRACK_H - 1,
               transform: 'translateX(-50%)',
               width: i === stepIdx ? 10 : 6, height: 2,
-              borderRadius: 1,
+              borderRadius: 4,
               backgroundColor: s <= pct ? 'rgba(255,255,255,0.55)' : 'var(--color-border)',
               transition: 'width 0.08s',
               zIndex: 2, pointerEvents: 'none',

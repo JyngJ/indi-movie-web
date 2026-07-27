@@ -238,7 +238,7 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
           minWidth: 0,
           display: 'flex',
           flexDirection: 'column',
-          gap: 6,
+          gap: 8,
           border: 'none',
           background: 'none',
           padding: 0,
@@ -341,7 +341,7 @@ function Section({ title, icon, withLine, action, style, children }: {
 }) {
   return (
     <section style={{ display: 'flex', flexDirection: 'column', gap: 12, ...style }}>
-      <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 20, paddingRight: 20, gap: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 20, paddingRight: 20, gap: 8 }}>
         {icon && <span style={{ display: 'flex', alignItems: 'center', color: 'var(--color-text-body)' }}>{icon}</span>}
         <h3 style={{
           margin: 0,
@@ -417,17 +417,17 @@ function RecentList({
     )
   }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingLeft: 20, paddingRight: 20 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingLeft: 20, paddingRight: 20 }}>
       {items.map(item => (
         <div
           key={`${item.kind}-${item.id}`}
           style={{
             display: 'flex',
             alignItems: 'center',
-            padding: '6px 12px',
+            padding: '8px 12px',
             backgroundColor: 'var(--color-surface-bg)',
             borderRadius: 'var(--radius-control)',
-            gap: 10,
+            gap: 12,
             opacity: pendingId === `${item.kind}-${item.id}` ? 0.5 : 1,
           }}
         >
@@ -921,7 +921,7 @@ export function CurationSheet({
           alignItems: 'center',
           gap: 'var(--spacing-2)',
           paddingTop: 8,
-          paddingBottom: 10,
+          paddingBottom: 12,
           flexShrink: 0,
           pointerEvents: 'none',   // 컨테이너가 드래그·탭 처리 (handlePointerUp에서 영역 판정)
         }}>
@@ -931,7 +931,7 @@ export function CurationSheet({
           borderRadius: 'var(--comp-sheet-handle-radius)',
           backgroundColor: 'var(--color-border)',
         }} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-text-primary)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-text-primary)' }}>
           <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700 }}>큐레이션</span>
         </div>
       </div>

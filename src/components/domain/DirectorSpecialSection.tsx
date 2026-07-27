@@ -66,7 +66,7 @@ function MovieCard({
         onMouseEnter={isDesktop ? onMouseEnter : undefined}
         onMouseLeave={isDesktop ? onMouseLeave : undefined}
         onClick={onClick}
-        style={{ display: 'flex', flexDirection: 'column', gap: 6, width, flexShrink: 0, cursor: onClick ? 'pointer' : undefined }}
+        style={{ display: 'flex', flexDirection: 'column', gap: 8, width, flexShrink: 0, cursor: onClick ? 'pointer' : undefined }}
       >
         <div style={{
           transition: 'transform 130ms ease',
@@ -76,7 +76,7 @@ function MovieCard({
         }}>
           <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} radius={0} shadow={false} />
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <span style={{
             fontSize, fontWeight: 700, color: 'var(--color-text-body)',
             display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3,
@@ -89,7 +89,7 @@ function MovieCard({
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-1)', flexWrap: 'wrap' }}>
             {movie.genre.slice(0, 1).map((g) => (
               <span key={g} style={{
-                fontSize: 10, padding: '2px 6px', borderRadius: 'var(--radius-pill)',
+                fontSize: 10, padding: '4px 8px', borderRadius: 'var(--radius-pill)',
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
                 background: 'var(--color-surface-raised)', color: 'var(--color-text-caption)',
                 border: '1px solid var(--color-border)', whiteSpace: 'nowrap',
@@ -141,7 +141,7 @@ function LeftPanel({
     <span style={{
       alignSelf: 'flex-start', fontSize: 'var(--text-caption)', fontWeight: 600,
       color: 'var(--color-primary-base)',
-      padding: '3px 10px', borderRadius: 'var(--radius-pill)',
+      padding: '4px 12px', borderRadius: 'var(--radius-pill)',
       border: '1px solid color-mix(in srgb, var(--color-primary-base) 40%, transparent)',
       backgroundColor: 'color-mix(in srgb, var(--color-primary-base) 10%, transparent)',
       letterSpacing: 0.3, lineHeight: 1,
@@ -152,7 +152,7 @@ function LeftPanel({
   )
 
   const avatarRow = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
       <div style={{
         width: avatarSize, height: avatarSize, borderRadius: '50%',
         background: photoUrl ? 'transparent' : color,
@@ -174,7 +174,7 @@ function LeftPanel({
           {directorName}
         </div>
         {profile?.originalName && (
-          <div style={{ fontSize: 'var(--text-caption)', fontStyle: 'italic', color: 'var(--color-text-caption)', fontFamily: 'var(--font-serif-en)', marginTop: 2 }}>
+          <div style={{ fontSize: 'var(--text-caption)', fontStyle: 'italic', color: 'var(--color-text-caption)', fontFamily: 'var(--font-serif-en)', marginTop: 4 }}>
             {profile.originalName}
           </div>
         )}
@@ -189,7 +189,7 @@ function LeftPanel({
       onMouseLeave={() => setDirBtnHovered(false)}
       style={{
         ...(wide ? { flexShrink: 0 } : { marginTop: 'auto' }),
-        padding: '8px 14px', borderRadius: 'var(--radius-button)',
+        padding: '8px 16px', borderRadius: 'var(--radius-button)',
         border: '1px solid var(--color-border)',
         background: dirBtnHovered ? 'var(--color-surface-raised)' : 'var(--color-surface-card)',
         color: 'var(--color-text-body)',
@@ -210,11 +210,11 @@ function LeftPanel({
       height: '100%',
     }}>
       {/* ── 감독 블록 ── */}
-      <div style={{ padding: blockPad, display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
+      <div style={{ padding: blockPad, display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
         {wide ? (
           /* 와이드: [배지+아바타 2줄] 왼쪽, 감독 상세 버튼 오른쪽 세로 중앙 */
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
               {badge}
               {avatarRow}
             </div>
@@ -251,14 +251,14 @@ function LeftPanel({
           : { flexDirection: 'column' as const, gap: 'var(--spacing-2)' }),
         background: 'var(--color-surface-bg)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, ...(wide ? { flex: 1, minWidth: 0 } : {}) }}>
-          <MapPin size={16} strokeWidth={1.75} color="currentColor" style={{ marginTop: 2, flexShrink: 0, color: 'var(--color-text-body)' }} />
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, ...(wide ? { flex: 1, minWidth: 0 } : {}) }}>
+          <MapPin size={16} strokeWidth={1.75} color="currentColor" style={{ marginTop: 4, flexShrink: 0, color: 'var(--color-text-body)' }} />
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 'var(--text-meta)', fontWeight: 700, color: 'var(--color-text-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {theater.name}
               {distSuffix && <span style={{ fontSize: 'var(--text-caption)', fontWeight: 400, color: 'var(--color-text-caption)', marginLeft: 4 }}>{distSuffix}</span>}
             </div>
-            <div style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-caption)', marginTop: 1 }}>{theater.city} · {filmCount}편 상영중</div>
+            <div style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-caption)', marginTop: 4 }}>{theater.city} · {filmCount}편 상영중</div>
           </div>
         </div>
         {onTheaterClick && (
@@ -268,7 +268,7 @@ function LeftPanel({
             onMouseLeave={() => setTheaterBtnHovered(false)}
             style={{
               ...(wide ? { flexShrink: 0 } : {}),
-              padding: '7px 14px', borderRadius: 'var(--radius-button)', border: 'none',
+              padding: '8px 16px', borderRadius: 'var(--radius-button)', border: 'none',
               background: theaterBtnHovered ? 'var(--color-primary-hover-l)' : 'var(--color-primary-base)',
               color: 'var(--color-on-accent)',
               transition: 'background var(--transition-fast)',
@@ -352,7 +352,7 @@ export function DirectorSpecialSection({
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       {/* 상영 극장 한 줄 타이틀 */}
       <div style={{
-        padding: '14px 16px 0',
+        padding: '16px 16px 0',
         fontSize: isDesktop ? 'var(--text-subtitle)' : 'var(--text-body)',
         fontWeight: 700,
         color: 'var(--color-text-primary)',
@@ -372,10 +372,10 @@ export function DirectorSpecialSection({
         fontWeight: 700,
         fontFamily: 'var(--font-display)',
         color: 'var(--color-text-primary)',
-        marginBottom: 10,
+        marginBottom: 12,
         display: 'flex',
         alignItems: 'center',
-        gap: 6
+        gap: 8
       }}>
         {directorName} 특별전
       </h2>
@@ -384,7 +384,7 @@ export function DirectorSpecialSection({
         <div style={{
           margin: '0 16px',
           display: 'flex',
-          borderRadius: 10,
+          borderRadius: 12,
           overflow: 'hidden',
           border: '1px solid var(--color-border)',
         }}>
@@ -402,7 +402,7 @@ export function DirectorSpecialSection({
         </div>
       ) : (
         /* ── 모바일: 위아래 적층, 동일 마진 ─────── */
-        <div style={{ margin: '0 16px', borderRadius: 10, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
+        <div style={{ margin: '0 16px', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
           <div style={{ background: 'var(--color-surface-card)' }}>
             <LeftPanel
               directorName={directorName} theater={theater} filmCount={films.length}

@@ -92,14 +92,14 @@ export default async function FilmsAreaPage({
         style={{
           display: 'inline-flex',
           alignItems: 'center',
-          gap: 6,
-          padding: '12px 18px',
+          gap: 8,
+          padding: '12px 20px',
           marginBottom: 32,
           background: 'var(--color-primary-base, #2b6cb0)',
           color: 'var(--color-on-accent)',
           fontWeight: 600,
           fontSize: 15,
-          borderRadius: 10,
+          borderRadius: 12,
           textDecoration: 'none',
           boxShadow: '0 4px 14px rgba(40, 55, 75, 0.22)',
         }}

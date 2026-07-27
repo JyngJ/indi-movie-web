@@ -34,8 +34,8 @@ export function DateDropdown({ selectedId, onSelect, onPickCustom, style }: {
       <button
         onClick={onPickCustom}
         style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          padding: '13px 14px', width: '100%',
+          display: 'flex', alignItems: 'center', gap: 12,
+          padding: '12px 16px', width: '100%',
           background: 'var(--color-surface-raised)',
           border: 'none', borderTop: '1px solid var(--color-border)',
           cursor: 'pointer', minHeight: 'unset',

@@ -90,7 +90,7 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
         onClick={() => setOpen(o => !o)}
         style={{
           display: 'flex', alignItems: 'center', width: '100%',
-          padding: '10px 16px 6px', gap: 6,
+          padding: '12px 16px 8px', gap: 8,
           background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
         }}
       >
@@ -133,7 +133,7 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
             onScroll={updateEdge}
             style={{
               display: 'flex', gap: 'var(--spacing-2)', overflowX: 'auto',
-              padding: '2px 16px 10px',
+              padding: '4px 16px 12px',
               scrollbarWidth: 'none',
             }}
           >
@@ -150,7 +150,7 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
                   style={{
                     flexShrink: 0,
                     width: 148,
-                    borderRadius: 10,
+                    borderRadius: 12,
                     border: isHighlighted ? '1.5px solid var(--color-primary-base)' : '1px solid var(--color-border)',
                     background: 'var(--color-surface-card)',
                     overflow: 'hidden',
@@ -200,7 +200,7 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
                   </div>
 
                   {/* Body */}
-                  <div style={{ padding: '6px 8px 7px' }}>
+                  <div style={{ padding: 8 }}>
                     <div style={{
                       fontSize: 12, fontWeight: 700,
                       fontFamily: 'var(--font-display)',
@@ -213,7 +213,7 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
                       <div style={{
                         fontSize: 10, color: 'var(--color-text-caption)',
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                        marginTop: 1,
+                        marginTop: 4,
                       }}>
                         — {ev.subtitle}
                       </div>
@@ -222,12 +222,12 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
                       <div style={{
                         fontSize: 10, color: 'var(--color-text-caption)',
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                        marginTop: 1,
+                        marginTop: 4,
                       }}>
                         {ev.guest}
                       </div>
                     )}
-                    <span style={{ fontSize: 9.5, fontWeight: 600, color: sc, whiteSpace: 'nowrap', display: 'block', marginTop: 4 }}>
+                    <span style={{ fontSize: 9, fontWeight: 600, color: sc, whiteSpace: 'nowrap', display: 'block', marginTop: 4 }}>
                       ● {ev.status}
                     </span>
                   </div>

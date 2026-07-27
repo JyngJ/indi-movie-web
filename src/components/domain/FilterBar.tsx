@@ -431,7 +431,7 @@ export function FilterBar({
               height: 11,
               background: 'var(--color-primary-base)',
               transform: 'rotate(45deg)',
-              borderRadius: 2,
+              borderRadius: 4,
             }} />
             {/* 본체 */}
             <div style={{
@@ -439,14 +439,14 @@ export function FilterBar({
               background: 'var(--color-primary-base)',
               borderRadius: 12,
               boxShadow: '0 10px 28px rgba(40, 55, 75, 0.34)',
-              padding: '12px 12px 12px 14px',
+              padding: '12px 12px 12px 16px',
               display: 'flex',
               alignItems: 'flex-start',
-              gap: 10,
+              gap: 12,
               color: 'var(--color-on-accent)',
             }}>
               {/* 핀 아이콘 */}
-              <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+              <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 4 }}>
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                 <circle cx="12" cy="10" r="3" />
               </svg>

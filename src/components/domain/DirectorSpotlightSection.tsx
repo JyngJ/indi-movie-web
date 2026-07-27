@@ -62,7 +62,7 @@ function DirectorCard({ director, isDesktop, onClick }: { director: DirectorSpot
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: 6,
+        gap: 8,
         width: size + 16,
         flexShrink: 0,
         cursor: onClick ? 'pointer' : undefined,
@@ -152,12 +152,12 @@ export function DirectorSpotlightSection({
             color: 'var(--color-text-primary)',
             display: 'flex',
             alignItems: 'center',
-            gap: 6
+            gap: 8
           }}
         >
           감독 스포트라이트
         </h2>
-        <p style={{ margin: '3px 0 0', fontSize: 12, color: 'var(--color-text-caption)' }}>
+        <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-caption)' }}>
           지금 주목할 만한 감독
         </p>
       </div>

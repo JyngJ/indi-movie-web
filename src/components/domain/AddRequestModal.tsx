@@ -40,8 +40,8 @@ export function AddRequestCtaButton({ onClick }: { onClick: () => void }) {
     <button
       onClick={onClick}
       style={{
-        display: 'inline-flex', alignItems: 'center', gap: 6,
-        height: 36, padding: '0 18px', borderRadius: 9999,
+        display: 'inline-flex', alignItems: 'center', gap: 8,
+        height: 36, padding: '0 20px', borderRadius: 9999,
         border: 'none', cursor: 'pointer', minHeight: 'unset',
         background: 'var(--color-primary-base)', color: 'var(--color-on-accent)',
         fontSize: 13, fontWeight: 600,
@@ -182,7 +182,7 @@ export function AddRequestModal({ open, query, onClose }: Props) {
                   key={k}
                   onClick={() => setKind(k)}
                   style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
                     padding: '12px 4px', borderRadius: 12, cursor: 'pointer', minHeight: 'unset',
                     border: selected ? '1.5px solid var(--color-primary-base)' : '1px solid var(--color-border)',
                     background: selected ? 'var(--color-primary-subtle-l)' : 'var(--color-surface-bg)',
@@ -196,7 +196,7 @@ export function AddRequestModal({ open, query, onClose }: Props) {
             })}
           </div>
 
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--color-text-body)', marginBottom: 6 }}>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--color-text-body)', marginBottom: 8 }}>
             {NAME_FIELD[kind].label}
           </label>
           <input
@@ -204,14 +204,14 @@ export function AddRequestModal({ open, query, onClose }: Props) {
             onChange={(e) => setName(e.target.value)}
             placeholder={NAME_FIELD[kind].placeholder}
             style={{
-              width: '100%', height: 44, padding: '0 14px', marginBottom: 16,
-              border: '1px solid var(--color-border)', borderRadius: 10,
+              width: '100%', height: 44, padding: '0 16px', marginBottom: 16,
+              border: '1px solid var(--color-border)', borderRadius: 12,
               background: 'var(--color-surface-bg)', color: 'var(--color-text-primary)',
               fontSize: 14, outline: 'none', boxSizing: 'border-box',
             }}
           />
 
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--color-text-body)', marginBottom: 6 }}>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--color-text-body)', marginBottom: 8 }}>
             추가 정보 <span style={{ color: 'var(--color-text-caption)', fontWeight: 400 }}>(선택)</span>
           </label>
           <textarea
@@ -222,7 +222,7 @@ export function AddRequestModal({ open, query, onClose }: Props) {
             maxLength={500}
             style={{
               width: '100%', padding: 12, marginBottom: 12,
-              border: '1px solid var(--color-border)', borderRadius: 10,
+              border: '1px solid var(--color-border)', borderRadius: 12,
               background: 'var(--color-surface-bg)', color: 'var(--color-text-primary)',
               fontSize: 14, outline: 'none', resize: 'none', boxSizing: 'border-box',
               fontFamily: 'inherit',
@@ -233,7 +233,7 @@ export function AddRequestModal({ open, query, onClose }: Props) {
             <p style={{ fontSize: 13, color: 'var(--color-error)', margin: '0 0 12px' }}>{error}</p>
           )}
 
-          <div style={{ display: 'flex', gap: 10, padding: '4px 0 20px' }}>
+          <div style={{ display: 'flex', gap: 12, padding: '4px 0 20px' }}>
             <button
               onClick={handleDismiss}
               style={{

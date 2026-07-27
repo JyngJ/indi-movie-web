@@ -72,7 +72,7 @@ export function GvDetailPanel({ ev, onClose, onCloseAll, panelMode }: GvDetailPa
         </button>
 
         {/* 브레드크럼 */}
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 5, overflow: 'hidden' }}>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 4, overflow: 'hidden' }}>
           <span style={{
             fontSize: 16, fontWeight: 700, color: 'var(--color-text-sub)',
             fontFamily: 'var(--font-display)',
@@ -81,8 +81,8 @@ export function GvDetailPanel({ ev, onClose, onCloseAll, panelMode }: GvDetailPa
           <span style={{ fontSize: 12, color: 'var(--color-text-caption)', flexShrink: 0 }}>/</span>
           <span style={{
             background: gvEventTypeColor(ev.type), color: 'var(--color-on-accent)',
-            fontSize: 9, fontWeight: 800, borderRadius: 3,
-            padding: '2px 5px', letterSpacing: '0.3px', lineHeight: 1, flexShrink: 0,
+            fontSize: 9, fontWeight: 800, borderRadius: 4,
+            padding: 4, letterSpacing: '0.3px', lineHeight: 1, flexShrink: 0,
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           }}>{ev.type}</span>
         </div>
@@ -112,7 +112,7 @@ export function GvDetailPanel({ ev, onClose, onCloseAll, panelMode }: GvDetailPa
       <div className="themed-scrollbar" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
 
         {/* Hero — poster + movie info */}
-        <div style={{ display: 'flex', gap: 14, padding: '16px 16px 16px' }}>
+        <div style={{ display: 'flex', gap: 16, padding: '16px 16px 16px' }}>
           <div style={{
             width: 80, height: 120, borderRadius: 8, flexShrink: 0,
             background: `oklch(35% 0.08 ${ev.hue})`,
@@ -123,7 +123,7 @@ export function GvDetailPanel({ ev, onClose, onCloseAll, panelMode }: GvDetailPa
               {ev.label}
             </span>
           </div>
-          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 2 }}>
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 4 }}>
             <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)', lineHeight: 1.3 }}>
               {ev.movie}
             </h2>
@@ -132,11 +132,11 @@ export function GvDetailPanel({ ev, onClose, onCloseAll, panelMode }: GvDetailPa
                 {ev.movieNote}
               </p>
             )}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
               <span style={{
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
                 fontSize: 11, fontWeight: 600, color: statusColor,
-                background: `${statusColor}18`, borderRadius: 4, padding: '2px 7px',
+                background: `${statusColor}18`, borderRadius: 4, padding: '4px 8px',
               }}>
                 {ev.status}
               </span>
@@ -157,8 +157,8 @@ export function GvDetailPanel({ ev, onClose, onCloseAll, panelMode }: GvDetailPa
 
         {/* Guests */}
         {ev.guest && (
-          <div style={{ borderTop: '1px solid var(--color-border)', padding: '14px 16px' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-caption)', letterSpacing: '0.5px', marginBottom: 10 }}>
+          <div style={{ borderTop: '1px solid var(--color-border)', padding: 16 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-caption)', letterSpacing: '0.5px', marginBottom: 12 }}>
               참석 게스트
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -171,7 +171,7 @@ export function GvDetailPanel({ ev, onClose, onCloseAll, panelMode }: GvDetailPa
 
         {/* GV note */}
         {ev.gvNote && (
-          <div style={{ borderTop: '1px solid var(--color-border)', padding: '14px 16px' }}>
+          <div style={{ borderTop: '1px solid var(--color-border)', padding: 16 }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-caption)', letterSpacing: '0.5px', marginBottom: 8 }}>
               안내
             </div>
@@ -193,7 +193,7 @@ export function GvDetailPanel({ ev, onClose, onCloseAll, panelMode }: GvDetailPa
         padding: '12px 16px max(16px, env(safe-area-inset-bottom))',
         background: 'var(--color-surface-card)',
         borderTop: '1px solid var(--color-border)',
-        display: 'flex', gap: 10,
+        display: 'flex', gap: 12,
       }}>
         <ShareScheduleButton variant="bar" onClick={shareEvent} />
         <BookingCtaButton
@@ -231,7 +231,7 @@ function InfoRow({ label, value, last }: { label: string; value: string; last?: 
 
 function GuestRow({ name }: { name: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
       <div style={{
         width: 32, height: 32, borderRadius: '50%',
         background: 'var(--color-primary-base)',

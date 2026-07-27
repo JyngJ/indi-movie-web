@@ -44,7 +44,7 @@ function MovieCardInfo({ movie, isDesktop, caption, customBottomInfo }: { movie:
   const fontSize = isDesktop ? 14 : 12
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       {/* 제목 */}
       <span
         style={{
@@ -126,7 +126,7 @@ export function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number
         boxShadow: '0 12px 40px rgba(0,0,0,0.48)',
         zIndex: 999999,
         pointerEvents: 'none',
-        padding: '14px',
+        padding: '16px',
         display: 'flex',
         flexDirection: 'column',
         gap: 'var(--spacing-2)',
@@ -160,7 +160,7 @@ export function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number
               key={tag}
               style={{
                 fontSize: 'var(--text-caption)',
-                padding: '3px 9px',
+                padding: '4px 8px',
                 borderRadius: 'var(--radius-pill)',
                 background: 'var(--color-surface-raised)',
                 color: 'var(--color-text-body)',
@@ -240,7 +240,7 @@ function MovieCard({
         onMouseEnter={isDesktop ? onMouseEnter : undefined}
         onMouseLeave={isDesktop ? onMouseLeave : undefined}
         onClick={onClick}
-        style={{ display: 'flex', flexDirection: 'column', gap: 6, width, flexShrink: 0, cursor: onClick ? 'pointer' : undefined }}
+        style={{ display: 'flex', flexDirection: 'column', gap: 8, width, flexShrink: 0, cursor: onClick ? 'pointer' : undefined }}
       >
         {/* 포스터: scale은 있으나 layout size 유지 → 부모 padding 안에서 visual overflow */}
         <div
@@ -344,7 +344,7 @@ export function CurationSectionRow({
           <SectionHeader title={title} description={description} isDesktop={isDesktop} />
         </div>
         {/* 영화 inline */}
-        <div style={{ display: 'flex', gap: 10, padding: '12px 14px', background: 'var(--color-surface-card)', flex: 1 }}>
+        <div style={{ display: 'flex', gap: 12, padding: '12px 16px', background: 'var(--color-surface-card)', flex: 1 }}>
           {movies.slice(0, 2).map((movie) => (
             <div
               key={movie.id}

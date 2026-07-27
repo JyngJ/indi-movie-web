@@ -79,7 +79,7 @@ export function PosterThumb({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              padding: '4px 5px',
+              padding: 4,
             }}
           >
             {alt && (

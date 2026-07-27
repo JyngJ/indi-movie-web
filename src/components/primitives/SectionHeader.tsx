@@ -21,7 +21,7 @@ export function SectionHeader({ title, emoji, description, isDesktop = false, tr
         color: 'var(--color-text-primary)',
         display: 'flex',
         alignItems: 'center',
-        gap: 6
+        gap: 8
       }}
     >
       {emoji}

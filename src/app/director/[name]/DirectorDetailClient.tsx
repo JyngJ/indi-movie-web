@@ -89,7 +89,7 @@ function ProfileHero({
         backgroundColor: 'var(--color-surface-raised)',
         border: '1px solid var(--color-border)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        marginBottom: 18, flexShrink: 0, overflow: 'hidden',
+        marginBottom: 20, flexShrink: 0, overflow: 'hidden',
         color: 'var(--color-text-caption)',
         boxShadow: '0 8px 24px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10)',
       }}>
@@ -106,7 +106,7 @@ function ProfileHero({
         {name}
       </h1>
       {originalName && (
-        <div style={{ marginTop: 5, fontSize: 14, color: 'var(--color-text-sub)', fontStyle: 'italic', textAlign: 'center' }}>
+        <div style={{ marginTop: 4, fontSize: 14, color: 'var(--color-text-sub)', fontStyle: 'italic', textAlign: 'center' }}>
           {originalName}
         </div>
       )}
@@ -122,14 +122,14 @@ function SortChips({ active, onChange }: { active: SortKey; onChange: (k: SortKe
     { key: 'oldest', label: '오래된' },
   ]
   return (
-    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
       {opts.map((o) => (
         <button
           key={o.key}
           onClick={() => onChange(o.key)}
           style={{
             height: 24,
-            padding: '0 10px',
+            padding: '0 12px',
             borderRadius: 9999,
             border: '1px solid',
             borderColor: active === o.key ? 'var(--color-primary-base)' : 'var(--color-border)',
@@ -155,7 +155,7 @@ function SortChips({ active, onChange }: { active: SortKey; onChange: (k: SortKe
 /* ── 포스터 플레이스홀더 ── */
 function MiniPoster({ src }: { src?: string }) {
   return (
-    <div style={{ width: 52, height: 76, borderRadius: 6, overflow: 'hidden', flexShrink: 0, backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)' }}>
+    <div style={{ width: 52, height: 76, borderRadius: 8, overflow: 'hidden', flexShrink: 0, backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)' }}>
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
@@ -201,7 +201,7 @@ function FilmographyRow({
     >
       <MiniPoster src={movie.posterUrl} />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{
             fontFamily: 'var(--font-serif)',
             fontSize: 15,
@@ -216,7 +216,7 @@ function FilmographyRow({
           </span>
           {isActive && (
             <span style={{
-              height: 18, padding: '0 6px',
+              height: 18, padding: '0 8px',
               borderRadius: 4,
               display: 'inline-flex', alignItems: 'center',
               fontSize: 9, fontWeight: 700,
@@ -228,7 +228,7 @@ function FilmographyRow({
             </span>
           )}
         </div>
-        <div style={{ marginTop: 3, fontSize: 12, color: 'var(--color-text-caption)' }}>
+        <div style={{ marginTop: 4, fontSize: 12, color: 'var(--color-text-caption)' }}>
           {[movie.year, movie.genre[0]].filter(Boolean).join(' · ')}
         </div>
       </div>
@@ -309,7 +309,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
           style={{
             width: '100%', height: 44,
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            borderRadius: 10,
+            borderRadius: 12,
             border: '1px solid var(--color-primary-base)',
             backgroundColor: 'var(--color-primary-subtle-l)',
             color: 'var(--color-primary-base)',
@@ -354,8 +354,8 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
             </div>
             {/* 가이드 텍스트 추가 */}
             <div style={{ 
-              marginTop: 10, 
-              fontSize: 12, 
+              marginTop: 12,
+              fontSize: 12,
               color: 'var(--color-text-sub)',
               lineHeight: 1.4,
             }}>
@@ -370,7 +370,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
                 fontSize: 9, 
                 fontWeight: 700, 
                 verticalAlign: 'text-bottom',
-                margin: '0 2px'
+                margin: '0 4px'
               }}>상영중</span> 태그가 표시됩니다.
             </div>
           </div>
@@ -408,7 +408,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: 6,
+                    gap: 8,
                     border: 'none',
                     borderTop: '1px solid var(--color-border)',
                     backgroundColor: 'var(--color-surface-raised)',
