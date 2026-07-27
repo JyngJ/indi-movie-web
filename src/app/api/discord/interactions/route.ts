@@ -11,7 +11,8 @@ import { formatDiscordReportEmbeds, parseReportAction, reportActionComponents } 
 import { updateReportStatus } from '@/lib/reports/store'
 import { formatDiscordUserRequestEmbeds, parseUserRequestAction, userRequestActionComponents } from '@/lib/userRequests/discord'
 import { updateUserRequestStatus } from '@/lib/userRequests/store'
-import { approveShowtimeCandidates } from '@/lib/admin/store'
+import { approveShowtimeCandidates, resolveAmbiguousMovieMatch } from '@/lib/admin/store'
+import { parseMovieMatchAction } from '@/lib/admin/matchReviewDiscord'
 import OpenAI from 'openai'
 import nacl from 'tweetnacl'
 import { randomUUID } from 'crypto'
@@ -260,6 +261,18 @@ async function handleOcrCancel(sourceId: string) {
   return { ok: false, message: '❌ 취소됐습니다. 후보가 삭제됐습니다.' }
 }
 
+/* ── 동명 영화 매칭 보류 — 사람이 후보 고르기 ── */
+async function handleMovieMatchChoice(hash: string, movieId: string) {
+  const result = await resolveAmbiguousMovieMatch(hash, movieId)
+  if (result.updatedCount === 0) {
+    return { ok: false, message: '❌ 이미 처리됐거나 대상을 찾을 수 없습니다.' }
+  }
+  return {
+    ok: true,
+    message: `✅ ${result.updatedCount}건 반영: **승인 ${result.approved.length}개**${result.failed.length > 0 ? ` / 실패 ${result.failed.length}개` : ''}`,
+  }
+}
+
 /* ── Route Handler ── */
 export async function POST(request: Request) {
   const { valid, body } = await verifyRequest(request)
@@ -351,6 +364,32 @@ export async function POST(request: Request) {
           const result = action === 'ocr_confirm'
             ? await handleOcrConfirm(sourceId)
             : await handleOcrCancel(sourceId)
+          await patchOriginalMessage(token, {
+            embeds: [{ description: result.message, color: result.ok ? 0x57F287 : 0xED4245 }],
+            components: [],
+            allowed_mentions: { parse: [] },
+          })
+        } catch (error) {
+          await patchOriginalMessage(token, {
+            embeds: [{ description: `❌ 오류: ${error instanceof Error ? error.message : String(error)}`, color: 0xED4245 }],
+            components: [],
+            allowed_mentions: { parse: [] },
+          })
+        }
+      })
+
+      return Response.json({ type: InteractionResponse.DEFERRED_UPDATE_MESSAGE })
+    }
+
+    // 동명 영화 매칭 보류 — 사람이 1/2/3번 버튼으로 확정
+    if (customId.startsWith('movie_match:')) {
+      const action = parseMovieMatchAction(customId)
+      if (!action) return ephemeralResponse('알 수 없는 액션입니다.')
+      const token = interaction.token
+
+      after(async () => {
+        try {
+          const result = await handleMovieMatchChoice(action.hash, action.movieId)
           await patchOriginalMessage(token, {
             embeds: [{ description: result.message, color: result.ok ? 0x57F287 : 0xED4245 }],
             components: [],
