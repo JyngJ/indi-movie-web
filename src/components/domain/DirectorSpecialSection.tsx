@@ -189,7 +189,7 @@ function LeftPanel({
       onMouseLeave={() => setDirBtnHovered(false)}
       style={{
         ...(wide ? { flexShrink: 0 } : { marginTop: 'auto' }),
-        minHeight: 32, padding: '0 14px', lineHeight: 1, whiteSpace: 'nowrap', borderRadius: 'var(--radius-button)',
+        minHeight: 32, padding: '0 16px', lineHeight: 1, whiteSpace: 'nowrap', borderRadius: 'var(--radius-button)',
         border: '1px solid var(--color-border)',
         background: dirBtnHovered ? 'var(--color-surface-raised)' : 'var(--color-surface-card)',
         color: 'var(--color-text-body)',
@@ -198,7 +198,7 @@ function LeftPanel({
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-1)',
       }}
     >
-      감독 상세 →
+      감독 상세 보기
     </button>
   )
 
@@ -212,8 +212,8 @@ function LeftPanel({
       {/* ── 감독 블록 ── */}
       <div style={{ padding: blockPad, display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
         {wide ? (
-          /* 와이드: [배지+아바타 2줄] 왼쪽, 감독 상세 버튼 오른쪽 세로 중앙 */
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          /* 와이드: [배지+아바타 2줄] 왼쪽, 감독 상세 버튼 오른쪽 상단 */
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
               {badge}
               {avatarRow}
@@ -268,7 +268,7 @@ function LeftPanel({
             onMouseLeave={() => setTheaterBtnHovered(false)}
             style={{
               ...(wide ? { flexShrink: 0 } : {}),
-              minHeight: 32, padding: '0 14px', lineHeight: 1, whiteSpace: 'nowrap', borderRadius: 'var(--radius-button)', border: 'none',
+              minHeight: 32, padding: '0 16px', lineHeight: 1, whiteSpace: 'nowrap', borderRadius: 'var(--radius-button)', border: 'none',
               background: theaterBtnHovered ? 'var(--color-primary-hover-l)' : 'var(--color-primary-base)',
               color: 'var(--color-on-accent)',
               transition: 'background var(--transition-fast)',

@@ -1332,13 +1332,11 @@ export default function MapView() {
       }
       openDesktopPanel({ type: 'movie', id: movieId })
     } else {
-      // 모바일: 곧바로 지도에서 이 영화 검색 — 영화 필터 적용 + 매칭 극장으로 fit, 큐레이션 시트는 peek으로 접기
-      suppressMovieFilterFitRef.current = false
-      setDirectorFilter(null)
-      setMovieFilter({ id: movieId, title: movieTitle })
+      // 모바일: 큐레이션 시트를 접고 영화 상세로 이동
       setCurationSnap('peek')
+      router.push(`/movie/${encodeURIComponent(movieId)}`)
     }
-  }, [isDesktopLayout, openDesktopPanel, curationData, filters.regionId])
+  }, [isDesktopLayout, openDesktopPanel, curationData, filters.regionId, router])
 
   const handleRemoveRecentlyViewed = useCallback((kind: RecentlyViewedKind, id: string) => {
     removeRecentlyViewed(cookieStorageAdapter, kind, id)
@@ -3492,7 +3490,7 @@ export default function MapView() {
       )}
 
       {/* 큐레이션 도크 — 데스크톱 전용 좌측 상시 패널. 검색 패널·극장 시트와 같은 슬롯·크기를 공유하며 셋 다 비활성일 때만 노출(네이버 지도 레퍼런스) */}
-      {isDesktopLayout && !searchOpen && !selectedTheater && (
+      {isDesktopLayout && !searchOpen && !selectedTheater && !displayedPanel && (
         <div style={{
           position: 'absolute',
           inset: `0 auto 0 ${GLOBAL_NAV_DESKTOP_WIDTH}px`,
@@ -3542,7 +3540,7 @@ export default function MapView() {
       )}
 
       {/* 도크 접기/펼치기 토글 — 도크 오른쪽 가장자리에 붙어 폭 변화에 맞춰 같이 이동 (네이버 지도 레퍼런스). 극장 상세가 떠 있을 땐 숨김(항상 펼쳐진 상태로 고정) */}
-      {isDesktopLayout && !searchOpen && !selectedTheater && (
+      {isDesktopLayout && !searchOpen && !selectedTheater && !displayedPanel && (
         <button
           type="button"
           onClick={() => toggleDockCollapsed()}
