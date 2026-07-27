@@ -99,13 +99,13 @@ function ShowtimeChip({ st, selected, onClick }: { st: Showtime; selected?: bool
     <div
       onClick={!soldout && onClick ? onClick : undefined}
       style={{
-        padding: '10px 14px', borderRadius: 10, minWidth: 110,
+        padding: '12px 16px', borderRadius: 12, minWidth: 110,
         border: selected ? '2px solid var(--color-primary-base)' : '1px solid var(--color-border)',
         backgroundColor: selected ? 'var(--color-primary-subtle-l)' : 'var(--color-surface-raised)',
         opacity: soldout ? 0.5 : 1,
         cursor: !soldout && onClick ? 'pointer' : 'default',
       }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
         <span style={{ fontSize: 16, fontWeight: 700, fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>
           {st.showTime.slice(0, 5)}
         </span>
@@ -116,7 +116,7 @@ function ShowtimeChip({ st, selected, onClick }: { st: Showtime; selected?: bool
         )}
       </div>
       {st.seatTotal > 0 && (
-        <div style={{ marginTop: 3, fontSize: 11, fontFeatureSettings: '"tnum"' }}>
+        <div style={{ marginTop: 4, fontSize: 11, fontFeatureSettings: '"tnum"' }}>
           <span style={{ fontWeight: 600, color: seatColor }}>{st.seatAvailable}</span>
           <span style={{ color: 'var(--color-text-sub)' }}>/{st.seatTotal}석</span>
           {low && !soldout && <span style={{ marginLeft: 4, fontSize: 10, color: 'var(--color-warning)', fontWeight: 600 }}>잔여↓</span>}
@@ -124,7 +124,7 @@ function ShowtimeChip({ st, selected, onClick }: { st: Showtime; selected?: bool
         </div>
       )}
       {label && (
-        <div style={{ marginTop: 2, fontSize: 10, color: 'var(--color-text-caption)' }}>{label}</div>
+        <div style={{ marginTop: 4, fontSize: 10, color: 'var(--color-text-caption)' }}>{label}</div>
       )}
     </div>
   )
@@ -157,7 +157,7 @@ function MovieShowtimeCard({
 
   return (
     <div style={{
-      borderRadius: 14, border: '1px solid var(--color-border)',
+      borderRadius: 16, border: '1px solid var(--color-border)',
       backgroundColor: 'var(--color-surface-card)',
       overflow: 'hidden',
       marginBottom: 12,
@@ -166,8 +166,8 @@ function MovieShowtimeCard({
       <button
         onClick={() => onMovieClick(movie.id)}
         style={{
-          width: '100%', display: 'flex', alignItems: 'flex-start', gap: 14,
-          padding: '14px 16px', background: 'none', border: 'none', cursor: 'pointer',
+          width: '100%', display: 'flex', alignItems: 'flex-start', gap: 16,
+          padding: '16px', background: 'none', border: 'none', cursor: 'pointer',
           textAlign: 'left', minHeight: 'auto',
         }}
       >
@@ -181,19 +181,19 @@ function MovieShowtimeCard({
         </div>
 
         {/* 텍스트 */}
-        <div style={{ flex: 1, minWidth: 0, paddingTop: 2 }}>
+        <div style={{ flex: 1, minWidth: 0, paddingTop: 4 }}>
           <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-serif)', display: 'block', lineHeight: 1.3, wordBreak: 'keep-all' }}>
             {normalizeTitle(movie.title)}
           </span>
           {meta && (
-            <span style={{ marginTop: 5, display: 'block', fontSize: 12, color: 'var(--color-text-caption)', lineHeight: 1.5 }}>
+            <span style={{ marginTop: 4, display: 'block', fontSize: 12, color: 'var(--color-text-caption)', lineHeight: 1.5 }}>
               {meta}
             </span>
           )}
           {movie.genre.length > 0 && (
             <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
               {movie.genre.slice(0, 2).map((g) => (
-                <span key={g} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 9999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, border: '1px solid var(--color-border)', color: 'var(--color-text-caption)', backgroundColor: 'var(--color-surface-raised)' }}>
+                <span key={g} style={{ fontSize: 11, padding: '4px 8px', borderRadius: 9999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, border: '1px solid var(--color-border)', color: 'var(--color-text-caption)', backgroundColor: 'var(--color-surface-raised)' }}>
                   {g}
                 </span>
               ))}
@@ -205,7 +205,7 @@ function MovieShowtimeCard({
       </button>
 
       {/* 상영시간 */}
-      <div style={{ padding: '0 16px 14px', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+      <div style={{ padding: '0 16px 16px', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
         {showtimes.map((st) => (
           <ShowtimeChip
             key={st.id} st={st}
@@ -225,20 +225,20 @@ function MovieShowtimeCardSkeleton({ isDesktop }: { isDesktop: boolean }) {
 
   return (
     <div style={{
-      borderRadius: 14, border: '1px solid var(--color-border)',
+      borderRadius: 16, border: '1px solid var(--color-border)',
       backgroundColor: 'var(--color-surface-card)',
       overflow: 'hidden',
       marginBottom: 12,
     }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '14px 16px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, padding: '16px' }}>
         <Skeleton width={posterW} height={posterH} rounded="md" />
-        <div style={{ flex: 1, minWidth: 0, paddingTop: 2, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ flex: 1, minWidth: 0, paddingTop: 4, display: 'flex', flexDirection: 'column', gap: 8 }}>
           <Skeleton width="70%" height={18} />
           <Skeleton width="45%" height={13} />
           <Skeleton width={90} height={18} rounded="full" />
         </div>
       </div>
-      <div style={{ padding: '0 16px 14px', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+      <div style={{ padding: '0 16px 16px', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
         <Skeleton width={110} height={60} rounded="md" />
         <Skeleton width={110} height={60} rounded="md" />
       </div>
@@ -396,8 +396,8 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
   }
 
   const btnBase: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-    height: 40, padding: '0 16px', borderRadius: 10,
+    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+    height: 40, padding: '0 16px', borderRadius: 12,
     border: '1px solid var(--color-border)',
     backgroundColor: 'var(--color-surface-card)',
     color: 'var(--color-text-body)',
@@ -412,22 +412,22 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
         background: 'linear-gradient(to bottom, var(--color-primary-subtle-l) 0%, var(--color-surface-bg) 100%)',
         padding: isDesktop ? '28px 28px 24px' : '20px 16px 20px',
       }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: 9999, border: '1px solid color-mix(in srgb, var(--color-primary-base) 55%, transparent)', backgroundColor: 'var(--color-primary-subtle-l)', marginBottom: 10 }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', padding: '4px 12px', borderRadius: 9999, border: '1px solid color-mix(in srgb, var(--color-primary-base) 55%, transparent)', backgroundColor: 'var(--color-primary-subtle-l)', marginBottom: 12 }}>
           <span style={{ fontSize: 11, fontWeight: 600, lineHeight: 1, color: 'var(--color-primary-base)' }}>독립·예술영화관</span>
         </div>
-        <h1 style={{ margin: '0 0 10px', fontSize: isDesktop ? 32 : 24, fontWeight: 700, fontFamily: 'var(--font-serif)', color: 'var(--color-text-primary)', lineHeight: 1.2 }}>
+        <h1 style={{ margin: '0 0 12px', fontSize: isDesktop ? 32 : 24, fontWeight: 700, fontFamily: 'var(--font-serif)', color: 'var(--color-text-primary)', lineHeight: 1.2 }}>
           {theater.name}
         </h1>
         {/* 주소 + 복사 */}
         <button
           onClick={copyAddress}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--color-text-sub)', fontSize: 13, marginBottom: 18, minHeight: 'auto' }}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--color-text-sub)', fontSize: 13, marginBottom: 20, minHeight: 'auto' }}
         >
           <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" />
           </svg>
           <span>{theater.address}</span>
-          <span style={{ marginLeft: 2, display: 'flex', alignItems: 'center', gap: 3, color: copied ? 'var(--color-primary-base)' : 'var(--color-text-caption)', fontSize: 11, fontWeight: 500 }}>
+          <span style={{ marginLeft: 4, display: 'flex', alignItems: 'center', gap: 4, color: copied ? 'var(--color-primary-base)' : 'var(--color-text-caption)', fontSize: 11, fontWeight: 500 }}>
             <IcoCopy />
             {copied ? '복사됨' : '복사'}
           </span>
@@ -481,7 +481,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
                 onClick={() => setSelectedDate(d)}
                 style={{
                   flexShrink: 0, width: 56, height: 60,
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
                   border: 'none', background: 'none', cursor: hasShows ? 'pointer' : 'default',
                   opacity: hasShows ? 1 : 0.35,
                   borderBottom: isSelected ? '2px solid var(--color-primary-base)' : '2px solid transparent',
@@ -503,8 +503,8 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
 
       {/* 현재 상영중 */}
       <div style={{ padding: isDesktop ? '20px 28px 0' : '16px 16px 0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-          <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
             <Clapperboard size={20} strokeWidth={2} color="var(--color-primary-base)" /> 현재 상영중{' '}
             <span style={{ fontSize: 16, color: 'var(--color-primary-base)' }}>{movieShowtimeGroups.length}편</span>
           </span>
@@ -557,7 +557,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
       <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
         {/* 상단 NavBar */}
         <div style={{ position: 'sticky', top: 0, zIndex: 50, paddingTop: 'env(safe-area-inset-top)', backgroundColor: 'var(--color-surface-bg)', borderBottom: '1px solid var(--color-border)' }}>
-          <div style={{ height: 52, display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 4, paddingRight: 12, gap: 6, maxWidth: 1200, margin: '0 auto' }}>
+          <div style={{ height: 52, display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 4, paddingRight: 12, gap: 8, maxWidth: 1200, margin: '0 auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
               <button onClick={() => router.back()} style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-text-body)', flexShrink: 0 }}><IcoChevronLeft /></button>
               <button onClick={() => router.push('/films')} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-caption)', fontSize: 13, minHeight: 'auto', flexShrink: 0 }}>영화</button>
@@ -571,21 +571,21 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
           {content}
         </div>
         {selectedShowtimeData && (
-          <div style={{ position: 'fixed', right: 32, bottom: 32, width: 300, zIndex: 100, borderRadius: 14, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', boxShadow: '0 6px 24px color-mix(in srgb, var(--color-primary-base) 55%, transparent)', overflow: 'hidden' }}>
-            <div style={{ padding: '14px 14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ position: 'fixed', right: 32, bottom: 32, width: 300, zIndex: 100, borderRadius: 16, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', boxShadow: '0 6px 24px color-mix(in srgb, var(--color-primary-base) 55%, transparent)', overflow: 'hidden' }}>
+            <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', color: 'var(--color-text-caption)' }}>회차 선택됨</span>
                 <CloseRoundButton variant="card" onClick={() => { setSelectedShowtimeId(null); setSelectedMovieTitle(null) }} />
               </div>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-serif)', lineHeight: 1.3 }}>{selectedShowtimeData.movieTitle}</div>
-                <div style={{ marginTop: 3, fontSize: 12, fontWeight: 700, color: 'var(--color-primary-base)' }}>{theater.name}</div>
+                <div style={{ marginTop: 4, fontSize: 12, fontWeight: 700, color: 'var(--color-primary-base)' }}>{theater.name}</div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
                 <span style={{ fontSize: 24, fontWeight: 700, fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>{selectedShowtimeData.st.showTime.slice(0, 5)}</span>
                 {selectedShowtimeData.st.endTime && <span style={{ fontSize: 12, color: 'var(--color-text-caption)', fontFeatureSettings: '"tnum"' }}>→ {selectedShowtimeData.st.endTime.slice(0, 5)}</span>}
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {([
                   { key: '날짜', value: selectedDate.slice(5).replace('-', '/') },
                   { key: '상영관', value: selectedShowtimeData.st.screenName || undefined },
@@ -598,7 +598,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
                   </div>
                 ))}
               </div>
-              <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+              <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
                 <ShareScheduleButton variant="card" onClick={shareSelectedShowtime} />
                 <BookingCtaButton
                   variant="card"
@@ -638,7 +638,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
             <span style={{ color: 'var(--color-text-caption)', flexShrink: 0 }}>&gt;</span>
             <span style={{ fontWeight: 600, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{theater.name}</span>
           </div>
-          <div style={{ paddingRight: 10, flexShrink: 0 }}><RegionFilterWidget /></div>
+          <div style={{ paddingRight: 12, flexShrink: 0 }}><RegionFilterWidget /></div>
         </div>
       </div>
       {content}
@@ -647,13 +647,13 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
         // .page-slide-in의 transform이 컨테이닝 블록을 만들어 fixed가 페이지 하단(전체 콘텐츠 끝)에
         // 붙어버리는 문제 — 뷰포트 기준으로 뜨도록 body에 직접 포탈로 렌더한다.
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100, backgroundColor: 'var(--color-surface-card)', borderTop: '1px solid var(--color-border)', padding: '12px 16px', paddingBottom: 'max(16px, env(safe-area-inset-bottom))', boxShadow: '0 -4px 20px rgba(0,0,0,0.12)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-serif)', fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>
                 {selectedShowtimeData.st.showTime.slice(0, 5)}
-                {selectedShowtimeData.st.endTime && <span style={{ fontSize: 12, color: 'var(--color-text-caption)', marginLeft: 6, fontWeight: 400 }}>→ {selectedShowtimeData.st.endTime.slice(0, 5)}</span>}
+                {selectedShowtimeData.st.endTime && <span style={{ fontSize: 12, color: 'var(--color-text-caption)', marginLeft: 8, fontWeight: 400 }}>→ {selectedShowtimeData.st.endTime.slice(0, 5)}</span>}
               </div>
-              <div style={{ marginTop: 2, fontSize: 12, color: 'var(--color-text-sub)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div style={{ marginTop: 4, fontSize: 12, color: 'var(--color-text-sub)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {selectedShowtimeData.movieTitle}
                 {selectedShowtimeData.st.screenName ? ` · ${selectedShowtimeData.st.screenName}` : ''}
                 {selectedShowtimeData.st.seatTotal > 0 ? ` · 잔여 ${selectedShowtimeData.st.seatAvailable}석` : ''}
@@ -663,7 +663,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
               <CloseRoundButton variant="bar" onClick={() => { setSelectedShowtimeId(null); setSelectedMovieTitle(null) }} />
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 12 }}>
             <ShareScheduleButton variant="bar" onClick={shareSelectedShowtime} />
             <BookingCtaButton
               variant="bar"
