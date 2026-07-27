@@ -1275,6 +1275,7 @@ export function TheaterSheet({
                               height={posterItemH}
                               size="lg"
                               radius={0}
+                              alt={movie.title}
                               src={movie.posterUrl}
                               selected={shownExpanded && selectedMovieId === movie.id}
                               onClick={unavailable ? undefined : () => {
@@ -1654,6 +1655,7 @@ export function TheaterSheet({
                               <div style={{ position: 'relative' }}>
                                 <PosterThumb
                                   width={posterItemW} height={posterItemH} size="lg" radius={0}
+                                  alt={movie.title}
                                   src={movie.posterUrl}
                                   selected={selectedMovieId === movie.id}
                                   onClick={unavailable ? undefined : () => { handleMovieSelect(movie.id, 'poster_strip') }}
@@ -1755,7 +1757,7 @@ export function TheaterSheet({
                               <div key={movie.id} style={{ flexShrink: 0, width: posterItemW, overflow: 'visible', opacity: 0.38 }}>
                                 <div style={{ width: posterItemW }}>
                                   <div style={{ position: 'relative' }}>
-                                    <PosterThumb width={posterItemW} height={posterItemH} size="lg" radius={0} src={movie.posterUrl} />
+                                    <PosterThumb width={posterItemW} height={posterItemH} size="lg" radius={0} alt={movie.title} src={movie.posterUrl} />
                                     <div style={{
                                       position: 'absolute', inset: 0,
                                       borderRadius: 0,
