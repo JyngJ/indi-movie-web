@@ -2536,7 +2536,7 @@ export default function MapView() {
               <span style={{
                 width: 38,
                 height: 38,
-                borderRadius: 'var(--radius-xl)',
+                borderRadius: 'var(--radius-control)',
                 flexShrink: 0,
                 display: 'inline-flex',
                 alignItems: 'center',

@@ -23,7 +23,7 @@ function InlineBadge({ text, color }: { text: string; color: string }) {
       style={{
         height: 18,
         padding: '0 6px',
-        borderRadius: 'var(--radius-sm)',
+        borderRadius: 'var(--radius-badge)',
         backgroundColor: color,
         color: '#FFFFFF',
         fontSize: 'var(--text-badge)',

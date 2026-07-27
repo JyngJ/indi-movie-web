@@ -35,7 +35,7 @@ export function FilterChip({ label, value, open, selected, hasDropdown, onClick,
       style={{
         display: 'inline-flex', alignItems: 'center',
         height: 'var(--filter-chip-height)', paddingLeft: pl, paddingRight: pr,
-        borderRadius: 'var(--radius-full)', background: bg, border,
+        borderRadius: 'var(--radius-pill)', background: bg, border,
         cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap',
         gap: 4, minHeight: 'unset',
         transition: 'background 150ms, border-color 150ms',

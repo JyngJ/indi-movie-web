@@ -63,7 +63,7 @@ function DirectorCard({ director, isDesktop, onClick }: { director: DirectorSpot
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: 'var(--spacing-1-5)',
+        gap: 6,
         width: size + 16,
         flexShrink: 0,
         cursor: onClick ? 'pointer' : undefined,

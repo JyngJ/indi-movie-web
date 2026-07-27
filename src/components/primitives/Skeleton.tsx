@@ -9,10 +9,10 @@ interface SkeletonProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const roundedStyles = {
-  sm: 'rounded-[var(--radius-sm)]',
-  md: 'rounded-[var(--radius-md)]',
-  lg: 'rounded-[var(--radius-lg)]',
-  full: 'rounded-[var(--radius-full)]',
+  sm: 'rounded-[var(--radius-badge)]',
+  md: 'rounded-[var(--radius-poster)]',
+  lg: 'rounded-[var(--radius-poster)]',
+  full: 'rounded-[var(--radius-pill)]',
 }
 
 export function Skeleton({

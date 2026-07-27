@@ -56,11 +56,8 @@
   /* ── Primary ── */
   --color-primary-base:     #4A6380;
   --color-primary-hover-l:  #5C7896;
-  --color-primary-hover-d:  #3A5068;
   --color-primary-subtle-l: #E8EEF4;
-  --color-primary-subtle-d: #1A2530;
   --color-primary-text:     #2B3D50;
-  --color-primary-text-d:   #B8C7D8;
 
   /* ── Semantic ── */
   --color-warning: #D97706;
@@ -105,49 +102,51 @@
   --text-bask-meta:  13px;   /* 감독명/연도 / regular */
   --text-bask-xs:    10px;   /* 썸네일 원제 / regular */
 
-  /* ── Spacing ── */
+  /* ── Spacing (4배수 전용) ── */
   --spacing-1: 4px;
-  --spacing-1-5: 6px;   /* TASK-10 감사 — 실사용 41곳으로 spacing-2(8px)보다도 많음, 4px 배수 밖이지만 정식 토큰화 */
   --spacing-2: 8px;
-  --spacing-2-5: 10px;  /* TASK-10 감사 — 실사용 31곳, spacing-2·spacing-3 사이 갭 */
   --spacing-3: 12px;
   --spacing-4: 16px;
   --spacing-5: 20px;
   --spacing-6: 24px;
   --spacing-8: 32px;
+  --spacing-10: 40px;
 
-  /* ── Border Radius (tokens.js radius 기준) ── */
-  --radius-sm:   4px;    /* 배지·캡션 라벨 */
-  --radius-md:   6px;    /* 포스터 썸네일(소) */
-  --radius-lg:   8px;    /* 포스터(중)·날짜 셀·지도 팝업 */
-  --radius-xl:   12px;   /* 상영시간표 셀 */
-  --radius-2xl:  20px;   /* 바텀시트 상단 */
-  --radius-full: 9999px; /* pill — 검색창·칩·FAB */
+  /* ── Border Radius (4배수 · 역할 기반 이름) ──
+     기존 --radius-sm/md/lg/xl/2xl/full 은 전부 삭제됨.
+     같은 이름에 다른 값을 넣으면 기존 참조부가 조용히 바뀌므로 이름을 교체.
+     부수효과: Tailwind v4 --radius-* 네임스페이스 충돌 해소. */
+  --radius-badge:    4px;   /* 배지·라벨·인디케이터 */
+  --radius-poster:   8px;   /* 포스터·썸네일·날짜 셀·지도 팝업 */
+  --radius-control: 12px;   /* 버튼·입력·칩·카드·상영시간표 셀 */
+  --radius-popover: 16px;   /* 드롭다운·팝오버·모달 */
+  --radius-sheet:   20px;   /* 바텀시트 상단 */
+  --radius-pill:  9999px;   /* pill — 검색창·칩·FAB */
 
   /* ── Component Sizes (디자인 스펙 고정) ── */
 
   /* 검색창 */
   --comp-search-height: 44px;
   --comp-search-px:     18px;
-  --comp-search-radius: var(--radius-full);
+  --comp-search-radius: var(--radius-pill);
 
   /* 필터 칩 — height는 var(--filter-chip-height) 참고(FilterChip.tsx 실사용) */
   --comp-chip-px:        14px;
-  --comp-chip-radius:    var(--radius-full);
+  --comp-chip-radius:    var(--radius-pill);
   --comp-chip-font-size: 13px;
 
   /* 날짜 셀 */
   --comp-date-cell-pt:     6px;
   --comp-date-cell-pb:     8px;
-  --comp-date-cell-radius: var(--radius-lg);   /* 8px */
+  --comp-date-cell-radius: var(--radius-poster);   /* 8px */
 
   /* 상영시간표 셀 */
   --comp-showtime-p:      12px;
-  --comp-showtime-radius: var(--radius-xl);    /* 12px */
+  --comp-showtime-radius: var(--radius-control);   /* 12px */
 
   /* 포스터 썸네일 */
-  --comp-poster-radius:        var(--radius-md);   /* 6px */
-  --comp-poster-sheet-radius:  var(--radius-lg);   /* 8px */
+  --comp-poster-radius:        var(--radius-poster);   /* 8px — 기존 6px에서 8px로 흡수(의도된 변경) */
+  --comp-poster-sheet-radius:  var(--radius-poster);   /* 8px */
   --comp-poster-border:        rgba(0, 0, 0, 0.10);
 
   /* 지도 핀 */
@@ -163,10 +162,10 @@
   --comp-fab-pill-height: 44px;
   --comp-fab-pill-pl:     14px;
   --comp-fab-pill-pr:     16px;
-  --comp-fab-pill-radius: var(--radius-full);
+  --comp-fab-pill-radius: var(--radius-pill);
 
   /* 바텀시트 */
-  --comp-sheet-radius:        var(--radius-2xl) var(--radius-2xl) 0 0;
+  --comp-sheet-radius:        var(--radius-sheet) var(--radius-sheet) 0 0;
   --comp-sheet-handle-width:  36px;
   --comp-sheet-handle-height: 4px;
   --comp-sheet-handle-radius: 2px;
@@ -191,6 +190,9 @@
   --transition-base: 250ms ease;
 
   /* ── Layout ── */
+  --gutter:    16px;   /* 최상위 좌우 여백. 중첩 시 12 → 8 */
+  --gutter-md: 12px;
+  --gutter-sm:  8px;
   --max-width-mobile: 480px;
   --header-height:    52px;
   --touch-target:     44px;
@@ -224,7 +226,6 @@
 
   /* Primary subtle 교체 */
   --color-primary-subtle-l: #1A2530;
-  --color-primary-subtle-d: #E8EEF4;
 
   /* 활성 칩 텍스트 — 다크 배경에서 읽히는 밝은 파란색 */
   --color-primary-text:     #B8C7D8;

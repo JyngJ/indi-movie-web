@@ -161,7 +161,7 @@ export function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number
               style={{
                 fontSize: 'var(--text-caption)',
                 padding: '3px 9px',
-                borderRadius: 'var(--radius-full)',
+                borderRadius: 'var(--radius-pill)',
                 background: 'var(--color-surface-raised)',
                 color: 'var(--color-text-body)',
                 border: '1px solid var(--color-border)',
@@ -240,7 +240,7 @@ function MovieCard({
         onMouseEnter={isDesktop ? onMouseEnter : undefined}
         onMouseLeave={isDesktop ? onMouseLeave : undefined}
         onClick={onClick}
-        style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1-5)', width, flexShrink: 0, cursor: onClick ? 'pointer' : undefined }}
+        style={{ display: 'flex', flexDirection: 'column', gap: 6, width, flexShrink: 0, cursor: onClick ? 'pointer' : undefined }}
       >
         {/* 포스터: scale은 있으나 layout size 유지 → 부모 padding 안에서 visual overflow */}
         <div
@@ -248,7 +248,7 @@ function MovieCard({
             transition: 'transform 130ms ease',
             transform: hovered ? 'scale(1.1)' : 'scale(1)',
             transformOrigin: 'center center',
-            borderRadius: 'var(--radius-md)',
+            borderRadius: 'var(--radius-poster)',
             position: 'relative',
           }}
         >
@@ -257,7 +257,7 @@ function MovieCard({
             <span style={{
               position: 'absolute', top: 4, right: 4,
               padding: '2px 6px',
-              borderRadius: 'var(--radius-full)',
+              borderRadius: 'var(--radius-pill)',
               fontSize: 10, fontWeight: 700, lineHeight: 1.4,
               color: 'var(--color-on-accent)',
               backgroundColor: daysLeft === 0 ? '#DC2626' : daysLeft === 1 ? '#EA580C' : '#78716C',
@@ -344,7 +344,7 @@ export function CurationSectionRow({
           <SectionHeader title={title} description={description} isDesktop={isDesktop} />
         </div>
         {/* 영화 inline */}
-        <div style={{ display: 'flex', gap: 'var(--spacing-2-5)', padding: '12px 14px', background: 'var(--color-surface-card)', flex: 1 }}>
+        <div style={{ display: 'flex', gap: 10, padding: '12px 14px', background: 'var(--color-surface-card)', flex: 1 }}>
           {movies.slice(0, 2).map((movie) => (
             <div
               key={movie.id}

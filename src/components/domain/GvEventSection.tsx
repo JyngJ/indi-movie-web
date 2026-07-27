@@ -90,7 +90,7 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
         onClick={() => setOpen(o => !o)}
         style={{
           display: 'flex', alignItems: 'center', width: '100%',
-          padding: '10px 16px 6px', gap: 'var(--spacing-1-5)',
+          padding: '10px 16px 6px', gap: 6,
           background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
         }}
       >
@@ -189,7 +189,7 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
                     <div style={{
                       position: 'absolute', bottom: 5, right: 5,
                       background: 'rgba(0,0,0,0.5)', color: 'var(--color-on-accent)',
-                      fontSize: 9.5, fontWeight: 600, borderRadius: 'var(--radius-sm)', padding: '1.5px 5px',
+                      fontSize: 9.5, fontWeight: 600, borderRadius: 'var(--radius-badge)', padding: '1.5px 5px',
                       backdropFilter: 'blur(4px)',
                       whiteSpace: 'nowrap',
                     }}>

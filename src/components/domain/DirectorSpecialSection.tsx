@@ -66,13 +66,13 @@ function MovieCard({
         onMouseEnter={isDesktop ? onMouseEnter : undefined}
         onMouseLeave={isDesktop ? onMouseLeave : undefined}
         onClick={onClick}
-        style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1-5)', width, flexShrink: 0, cursor: onClick ? 'pointer' : undefined }}
+        style={{ display: 'flex', flexDirection: 'column', gap: 6, width, flexShrink: 0, cursor: onClick ? 'pointer' : undefined }}
       >
         <div style={{
           transition: 'transform 130ms ease',
           transform: hovered ? 'scale(1.1)' : 'scale(1)',
           transformOrigin: 'center center',
-          borderRadius: 'var(--radius-md)',
+          borderRadius: 'var(--radius-poster)',
         }}>
           <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} radius={0} shadow={false} />
         </div>
@@ -89,7 +89,7 @@ function MovieCard({
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-1)', flexWrap: 'wrap' }}>
             {movie.genre.slice(0, 1).map((g) => (
               <span key={g} style={{
-                fontSize: 10, padding: '2px 6px', borderRadius: 'var(--radius-full)',
+                fontSize: 10, padding: '2px 6px', borderRadius: 'var(--radius-pill)',
                 background: 'var(--color-surface-raised)', color: 'var(--color-text-caption)',
                 border: '1px solid var(--color-border)', whiteSpace: 'nowrap',
               }}>{g}</span>
@@ -126,12 +126,12 @@ function LeftPanel({
       height: '100%',
     }}>
       {/* ── 감독 블록 ── */}
-      <div style={{ padding: blockPad, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2-5)', flex: 1 }}>
+      <div style={{ padding: blockPad, display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
         {/* 배지 */}
         <span style={{
           alignSelf: 'flex-start', fontSize: 'var(--text-caption)', fontWeight: 600,
           color: 'var(--color-primary-base)',
-          padding: '3px 10px', borderRadius: 'var(--radius-full)',
+          padding: '3px 10px', borderRadius: 'var(--radius-pill)',
           border: '1px solid color-mix(in srgb, var(--color-primary-base) 40%, transparent)',
           backgroundColor: 'color-mix(in srgb, var(--color-primary-base) 10%, transparent)',
           letterSpacing: 0.3,
@@ -141,7 +141,7 @@ function LeftPanel({
         </span>
 
         {/* 아바타 + 이름 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-2-5)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
             width: avatarSize, height: avatarSize, borderRadius: '50%',
             background: photoUrl ? 'transparent' : color,
@@ -183,7 +183,7 @@ function LeftPanel({
         {/* 감독 상세 버튼 */}
         {onDirectorClick && (
           <button onClick={onDirectorClick} style={{
-            marginTop: 'auto', padding: '8px 14px', borderRadius: 'var(--radius-lg)',
+            marginTop: 'auto', padding: '8px 14px', borderRadius: 'var(--radius-control)',
             border: '1px solid var(--color-border)',
             background: 'var(--color-surface-card)', color: 'var(--color-text-body)',
             fontSize: 'var(--text-meta)', fontWeight: 600, cursor: 'pointer',
@@ -201,7 +201,7 @@ function LeftPanel({
         display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)',
         background: 'var(--color-surface-bg)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--spacing-1-5)' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
           <MapPin size={16} strokeWidth={1.75} color="currentColor" style={{ marginTop: 2, flexShrink: 0, color: 'var(--color-text-body)' }} />
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 'var(--text-meta)', fontWeight: 700, color: 'var(--color-text-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -213,7 +213,7 @@ function LeftPanel({
         </div>
         {onTheaterClick && (
           <button onClick={onTheaterClick} style={{
-            padding: '7px 14px', borderRadius: 'var(--radius-lg)', border: 'none',
+            padding: '7px 14px', borderRadius: 'var(--radius-control)', border: 'none',
             background: 'var(--color-primary-base)', color: 'var(--color-on-accent)',
             fontSize: 'var(--text-meta)', fontWeight: 600, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-1)',

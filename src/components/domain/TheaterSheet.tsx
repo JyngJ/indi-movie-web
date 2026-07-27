@@ -816,7 +816,7 @@ export function TheaterSheet({
     minHeight: 30,
     padding: '0 10px',
     border: '1px solid var(--color-border)',
-    borderRadius: 'var(--radius-full)',
+    borderRadius: 'var(--radius-pill)',
     background: 'var(--color-surface-card)',
     color: 'var(--color-text-body)',
     fontSize: 12,

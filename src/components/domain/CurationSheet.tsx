@@ -246,7 +246,7 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
           minWidth: 0,
           display: 'flex',
           flexDirection: 'column',
-          gap: 'var(--spacing-1-5)',
+          gap: 6,
           border: 'none',
           background: 'none',
           padding: 0,
@@ -269,7 +269,7 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
               right: 4,
               backgroundColor: 'var(--color-primary-base)',
               color: 'var(--color-on-accent)',
-              borderRadius: 'var(--radius-full)',
+              borderRadius: 'var(--radius-pill)',
               padding: '2px 7px',
               fontSize: 10,
               fontWeight: 700,
@@ -343,8 +343,8 @@ function Section({ title, icon, withLine, action, style, children }: {
   children: React.ReactNode
 }) {
   return (
-    <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2-5)', ...style }}>
-      <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 20, paddingRight: 20, gap: 'var(--spacing-1-5)' }}>
+    <section style={{ display: 'flex', flexDirection: 'column', gap: 10, ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 20, paddingRight: 20, gap: 6 }}>
         {icon && <span style={{ display: 'flex', alignItems: 'center', color: 'var(--color-text-body)' }}>{icon}</span>}
         <h3 style={{
           margin: 0,
@@ -420,7 +420,7 @@ function RecentList({
     )
   }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1-5)', paddingLeft: 20, paddingRight: 20 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingLeft: 20, paddingRight: 20 }}>
       {items.map(item => (
         <div
           key={`${item.kind}-${item.id}`}
@@ -429,8 +429,8 @@ function RecentList({
             alignItems: 'center',
             padding: '6px 12px',
             backgroundColor: 'var(--color-surface-bg)',
-            borderRadius: 'var(--radius-lg)',
-            gap: 'var(--spacing-2-5)',
+            borderRadius: 'var(--radius-control)',
+            gap: 10,
             opacity: pendingId === `${item.kind}-${item.id}` ? 0.5 : 1,
           }}
         >
@@ -610,7 +610,7 @@ export function CurationSections({
 
         const btnStyle = {
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-1)',
-          padding: '8px 0', border: 'none', borderRadius: 'var(--radius-lg)',
+          padding: '8px 0', border: 'none', borderRadius: 'var(--radius-control)',
           background: 'var(--color-surface-bg)', color: 'var(--color-text-caption)',
           fontSize: 12, fontWeight: 600, cursor: 'pointer',
         } as const
@@ -934,7 +934,7 @@ export function CurationSheet({
           borderRadius: 'var(--comp-sheet-handle-radius)',
           backgroundColor: 'var(--color-border)',
         }} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-1-5)', color: 'var(--color-text-primary)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-text-primary)' }}>
           <span style={{ color: 'var(--color-primary-base)', display: 'flex' }}><IconSparkle /></span>
           <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700 }}>큐레이션</span>
         </div>

@@ -67,7 +67,7 @@ export function AnniversarySection({
           fontSize: 'var(--text-caption)', fontWeight: 700, color: text,
           background: `color-mix(in srgb, ${border} 18%, transparent)`,
           border: `1px solid color-mix(in srgb, ${border} 35%, transparent)`,
-          borderRadius: 'var(--radius-full)', padding: '2px 8px',
+          borderRadius: 'var(--radius-pill)', padding: '2px 8px',
           whiteSpace: 'nowrap',
         }}>
           {dateLabel}
@@ -93,7 +93,7 @@ export function AnniversarySection({
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
         {header}
         <div style={{
-          display: 'flex', gap: 'var(--spacing-2-5)', alignItems: 'flex-start',
+          display: 'flex', gap: 10, alignItems: 'flex-start',
           padding: '12px 14px',
           border: filmBorder, borderTop: 'none',
           borderRadius: '0 0 10px 10px',
@@ -125,7 +125,7 @@ export function AnniversarySection({
                 <div style={{ display: 'flex', gap: 'var(--spacing-1)', alignItems: 'center' }}>
                   {film.genre.slice(0, 1).map((g) => (
                     <span key={g} style={{
-                      fontSize: 11, padding: '2px 5px', borderRadius: 'var(--radius-full)',
+                      fontSize: 11, padding: '2px 5px', borderRadius: 'var(--radius-pill)',
                       background: 'var(--color-surface-raised)', color: 'var(--color-text-caption)',
                       border: '1px solid var(--color-border)',
                     }}>{g}</span>

@@ -159,7 +159,7 @@ function InstagramRecCard({
       onClick={onClick}
       style={{
         display: 'block', width: '100%', padding: 0, margin: 0, border: 'none',
-        borderRadius: 'var(--radius-xl)', overflow: 'hidden', position: 'relative',
+        borderRadius: 'var(--radius-control)', overflow: 'hidden', position: 'relative',
         // 웹: 세로 높이 고정, 가로만 컨테이너 폭에 맞춰 늘어남. 모바일: "사진이 너무 큼"은
         // 박스 크기가 아니라 cover 크롭이 과하게 확대돼 보이는 문제였음 — 박스를 덜 납작하게
         // (세로 여유를 더 줘서) 잘리는 비율을 줄이는 쪽으로 수정, 원래 2:1로 되돌림.

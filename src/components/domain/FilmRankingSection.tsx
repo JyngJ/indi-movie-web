@@ -32,7 +32,7 @@ function RankBadge({ rank, prevRank }: { rank: number; prevRank: number | null }
   if (prevRank === null) {
     return (
       <span style={{
-        fontSize: 10, fontWeight: 700, padding: '2px 5px', borderRadius: 'var(--radius-sm)',
+        fontSize: 10, fontWeight: 700, padding: '2px 5px', borderRadius: 'var(--radius-badge)',
         background: '#D97706', color: 'var(--color-on-accent)', letterSpacing: 0.2,
       }}>NEW</span>
     )
@@ -89,7 +89,7 @@ function InfoTooltip({ weekStart }: { weekStart: string }) {
         border: '1px solid var(--color-border)',
         borderRadius: 14,
         padding: '16px 16px 12px',
-        display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2-5)',
+        display: 'flex', flexDirection: 'column', gap: 10,
         boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
       }}>
         <span style={{ fontSize: 'var(--text-meta)', fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -227,7 +227,7 @@ export function FilmRankingSection({ weekStart, rankings, movies, isDesktop, onM
     <section style={{ paddingTop: 28 }}>
       <div style={{ padding: '0 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-1-5)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <h2 style={{
               margin: 0,
               fontSize: isDesktop ? 'var(--text-h3)' : 'var(--text-title)',

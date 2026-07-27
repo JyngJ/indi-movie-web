@@ -81,8 +81,8 @@ function GvCollapsedChip({ count, theaterName, selected, festivalTitle }: { coun
           // center로 바꾸면 자식이 콘텐츠 폭으로 줄어들어 구분선(너비 100% 필요)이 찌그러진다
           justifyContent: 'center',
           gap: 'var(--spacing-1)',
-          padding: 'var(--spacing-1) var(--spacing-2-5)',
-          borderRadius: 'var(--radius-lg)', // 지도 팝업 용도 — docs/DESIGN.md 반경 토큰
+          padding: 'var(--spacing-1) 10px',
+          borderRadius: 'var(--radius-poster)', // 지도 팝업 용도 — docs/DESIGN.md 반경 토큰
           background: GV_PURPLE,
           cursor: 'pointer',
           boxShadow: selected

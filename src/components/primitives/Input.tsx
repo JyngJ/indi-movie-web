@@ -42,7 +42,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
             bg-[var(--color-surface-card)]
             text-[var(--color-text-primary)]
             text-[var(--text-body)]
-            border rounded-[var(--radius-md)]
+            border rounded-[var(--radius-control)]
             outline-none transition-all duration-150
             placeholder:text-[var(--color-text-disabled)]
             ${error

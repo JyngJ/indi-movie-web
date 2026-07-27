@@ -40,7 +40,7 @@ export function Card({
     <div
       className={`
         bg-[var(--color-surface-card)]
-        rounded-[var(--radius-lg)]
+        rounded-[var(--radius-control)]
         ${paddingStyles[padding]}
         ${shadowStyles[shadow]}
         ${bordered ? 'border border-[var(--color-border)]' : ''}

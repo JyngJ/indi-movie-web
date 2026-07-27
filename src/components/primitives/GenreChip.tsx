@@ -10,7 +10,7 @@ export function GenreChip({ children }: GenreChipProps) {
       style={{
         fontSize: 'var(--text-caption)',
         padding: '2px 6px',
-        borderRadius: 'var(--radius-full)',
+        borderRadius: 'var(--radius-pill)',
         background: 'var(--color-surface-raised)',
         color: 'var(--color-text-caption)',
         border: '1px solid var(--color-border)',

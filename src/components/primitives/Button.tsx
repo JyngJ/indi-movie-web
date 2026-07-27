@@ -36,9 +36,9 @@ const variantStyles: Record<Variant, string> = {
 }
 
 const sizeStyles: Record<Size, string> = {
-  sm: 'h-8 px-3 text-[var(--text-meta)] rounded-[var(--radius-md)]',
-  md: 'h-11 px-4 text-[var(--text-body)] rounded-[var(--radius-md)]',
-  lg: 'h-14 px-6 text-[var(--text-title)] rounded-[var(--radius-lg)]',
+  sm: 'h-8 px-3 text-[var(--text-meta)] rounded-[var(--radius-control)]',
+  md: 'h-11 px-4 text-[var(--text-body)] rounded-[var(--radius-control)]',
+  lg: 'h-14 px-6 text-[var(--text-title)] rounded-[var(--radius-control)]',
 }
 
 export function Button({
