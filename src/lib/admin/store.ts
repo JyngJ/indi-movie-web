@@ -19,6 +19,7 @@ import type {
 } from '@/types/admin'
 import { searchKmdbMovies } from '@/lib/admin/kmdb'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { notifyAmbiguousMovieMatches, titleHash } from '@/lib/admin/matchReviewDiscord'
 import {
   candidateFromRow,
   candidateToRow,
@@ -95,6 +96,8 @@ async function ensureDirectorProfiles(directors: string[]): Promise<void> {
 interface MovieResolutionResult {
   movie?: MovieRow
   reason?: string
+  /** 동명 영화가 여러 개라 연도로 못 가려서 보류된 경우의 후보 목록 (Discord 리뷰용) */
+  ambiguous?: MovieRow[]
 }
 
 type ProviderMovieAliases = Map<string, string>
@@ -619,6 +622,38 @@ export async function updateCandidateMatch(input: CandidateMatchPayload) {
   return candidateFromRow(data as CandidateRow)
 }
 
+// Discord "동명 영화 매칭 보류" 알림에서 사람이 후보를 골랐을 때 호출.
+// 같은 제목 해시(titleHash)를 가진, 아직 확정 안 된(matched_movie_id null) 후보를 모두 찾아
+// 골라진 movieId로 일괄 반영한 뒤 승인 파이프라인(approveShowtimeCandidates)에 태운다.
+export async function resolveAmbiguousMovieMatch(titleHashValue: string, movieId: string) {
+  const supabase = createSupabaseAdminClient()
+  const { data: pending, error: fetchError } = await supabase
+    .from('showtime_candidates')
+    .select('id, movie_title')
+    .is('matched_movie_id', null)
+    .in('status', ['needs_review', 'draft'])
+
+  if (fetchError) throw new Error(fetchError.message)
+
+  const matchingIds = (pending ?? [])
+    .filter((row) => titleHash(row.movie_title) === titleHashValue)
+    .map((row) => row.id)
+
+  if (matchingIds.length === 0) {
+    return { updatedCount: 0, approved: [], failed: [] }
+  }
+
+  const { error: updateError } = await supabase
+    .from('showtime_candidates')
+    .update({ matched_movie_id: movieId })
+    .in('id', matchingIds)
+
+  if (updateError) throw new Error(updateError.message)
+
+  const approvalResult = await approveShowtimeCandidates(matchingIds, 'discord')
+  return { updatedCount: matchingIds.length, ...approvalResult }
+}
+
 async function fetchAutoMatchInputs(supabase: ReturnType<typeof createSupabaseAdminClient>, ids?: string[]) {
   let query = supabase
     .from('showtime_candidates')
@@ -638,7 +673,7 @@ async function fetchAutoMatchInputs(supabase: ReturnType<typeof createSupabaseAd
   ] = await Promise.all([
     query,
     supabase.from('theaters').select('id, name'),
-    supabase.from('movies').select('id, title, original_title, year, kmdb_id, kmdb_movie_seq'),
+    supabase.from('movies').select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, director'),
     supabase
       .from('showtime_candidates')
       .select('raw_text, matched_movie_id')
@@ -671,6 +706,7 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
 
   const updated: CrawledShowtimeCandidate[] = []
   const movieResolutionCache = new Map<string, MovieResolutionResult>()
+  const ambiguousGroups = new Map<string, { title: string; options: MovieRow[]; theaterNames: Set<string>; alreadyNotified: boolean }>()
   let matched = 0
   let autoApproved = 0
   let needsReview = 0
@@ -683,6 +719,15 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
       theater ? undefined : `자동 극장 매칭 실패: ${candidate.theaterName}`,
       movie ? undefined : movieResult.reason ?? `자동 영화 매칭 실패: ${candidate.movieTitle}`,
     ])
+
+    if (movieResult.ambiguous) {
+      const key = candidate.movieTitle.trim()
+      const alreadyNotified = candidate.warnings.some((w) => w.startsWith('동명 영화'))
+      const group = ambiguousGroups.get(key) ?? { title: key, options: movieResult.ambiguous, theaterNames: new Set<string>(), alreadyNotified: true }
+      group.theaterNames.add(candidate.theaterName)
+      group.alreadyNotified = group.alreadyNotified && alreadyNotified
+      ambiguousGroups.set(key, group)
+    }
 
     // 자동 승인 기준: theater + movie 둘 다 매칭 + 정체성 관련 경고 없음 + confidence 충족.
     // 크롤러는 경고가 하나라도 있으면 confidence를 0.82/0.78로 낮추므로, 양성 경고(매진·예매 종료 등)만
@@ -727,6 +772,15 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
     rememberProviderMovieAlias(candidate, movie, providerMovieAliases)
 
     updated.push(candidateFromRow(data as CandidateRow))
+  }
+
+  const newAmbiguousGroups = Array.from(ambiguousGroups.values()).filter((g) => !g.alreadyNotified)
+  if (newAmbiguousGroups.length > 0) {
+    await notifyAmbiguousMovieMatches(newAmbiguousGroups.map((g) => ({
+      title: g.title,
+      theaterNames: Array.from(g.theaterNames),
+      options: g.options,
+    })))
   }
 
   return { matched, autoApproved, needsReview, updated }
@@ -888,7 +942,7 @@ export async function approveShowtimeCandidates(
     { data: aliasRows, error: aliasError },
   ] = await Promise.all([
     supabase.from('theaters').select('id, name'),
-    supabase.from('movies').select('id, title, original_title, year, kmdb_id, kmdb_movie_seq'),
+    supabase.from('movies').select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, director'),
     supabase
       .from('showtime_candidates')
       .select('raw_text, matched_movie_id')
@@ -981,7 +1035,7 @@ function resolveTheater(candidate: CrawledShowtimeCandidate, theaters: TheaterRo
   return theaters.find((theater) => normalizeMatchText(theater.name) === normalizedName)
 }
 
-function resolveMovie(candidate: CrawledShowtimeCandidate, movies: MovieRow[], providerMovieAliases?: ProviderMovieAliases) {
+function resolveMovie(candidate: CrawledShowtimeCandidate, movies: MovieRow[], providerMovieAliases?: ProviderMovieAliases): MovieRow | MovieRow[] | null {
   if (candidate.matchedMovieId) {
     const matched = movies.find((movie) => movie.id === candidate.matchedMovieId)
     if (matched) return matched
@@ -1004,7 +1058,12 @@ async function resolveMovieForApproval(
   providerMovieAliases?: ProviderMovieAliases,
 ): Promise<MovieResolutionResult> {
   const localMovie = resolveMovie(candidate, movies, providerMovieAliases)
-  if (localMovie) return { movie: localMovie }
+  if (localMovie) {
+    if (Array.isArray(localMovie)) {
+      return { movie: undefined, ambiguous: localMovie, reason: `동명 영화 ${localMovie.length}개 — 확인 필요: ${candidate.movieTitle}` }
+    }
+    return { movie: localMovie }
+  }
 
   const titles = candidateMovieTitleCandidates(candidate.movieTitle)
   // "데미트리우스 (1954)"처럼 제목에 연도가 박혀 있으면 그것이 제작연도의 근거로
@@ -1013,7 +1072,12 @@ async function resolveMovieForApproval(
   const expectedYear = titleYear ?? candidate.releaseYear
   for (const title of titles) {
     const localByCleanTitle = resolveMovieByTitle(title, movies, expectedYear)
-    if (localByCleanTitle) return { movie: localByCleanTitle }
+    if (localByCleanTitle) {
+      if (Array.isArray(localByCleanTitle)) {
+        return { movie: undefined, ambiguous: localByCleanTitle, reason: `동명 영화 ${localByCleanTitle.length}개 — 확인 필요: ${candidate.movieTitle}` }
+      }
+      return { movie: localByCleanTitle }
+    }
   }
 
   const cacheKey = movieResolutionCacheKey(titles, expectedYear)
@@ -1072,18 +1136,21 @@ function isYearMatch(movieYear: number | null | undefined, expectedYear?: number
 
 // 후보가 여러 개면 개봉연도가 맞는 것을 우선한다. 후보가 1개뿐이고 연도가 어긋나면
 // 동명이인 영화로 보고 매칭을 보류해 다음 단계(다음 타이틀 후보, KMDB 검색 등)로 넘긴다.
-function pickMovieMatch(matches: MovieRow[], expectedYear?: number) {
+// 후보가 2개 이상인데 연도 정보가 없으면(크롤 원문에 제작연도가 안 찍히는 경우가 흔함)
+// 어느 쪽인지 가릴 수 없으므로 첫 번째를 임의로 찍지 않고, 후보 전체를 반환해 사람 확인으로 넘긴다.
+function pickMovieMatch(matches: MovieRow[], expectedYear?: number): MovieRow | MovieRow[] | undefined {
   if (matches.length === 0) return undefined
   if (matches.length === 1) {
     const only = matches[0]
     if (expectedYear != null && only.year != null && !isYearMatch(only.year, expectedYear)) return undefined
     return only
   }
-  return matches.find((movie) => isYearMatch(movie.year, expectedYear)) ??
-    (expectedYear == null ? matches[0] : undefined)
+  const yearMatch = matches.find((movie) => isYearMatch(movie.year, expectedYear))
+  if (yearMatch) return yearMatch
+  return matches
 }
 
-function resolveMovieByTitle(title: string, movies: MovieRow[], expectedYear?: number) {
+function resolveMovieByTitle(title: string, movies: MovieRow[], expectedYear?: number): MovieRow | MovieRow[] | undefined {
   const exactMatches = movies.filter((movie) => movie.title.trim() === title.trim())
   const exact = pickMovieMatch(exactMatches, expectedYear)
   if (exact) return exact
@@ -1217,6 +1284,7 @@ export function candidateMovieTitleCandidates(title: string) {
 
 // 후보가 여러 개면 개봉연도가 맞는 것을 우선한다. 후보가 1개뿐이고 연도가 어긋나면
 // 동명이인 영화로 보고 매칭을 보류해 다음 단계로 넘긴다.
+// 후보가 2개 이상인데 연도 정보가 없으면 어느 쪽인지 가릴 수 없으므로 보류한다.
 function pickExternalMovieMatch(matches: AdminExternalMovie[], expectedYear?: number) {
   if (matches.length === 0) return undefined
   if (matches.length === 1) {
@@ -1224,8 +1292,7 @@ function pickExternalMovieMatch(matches: AdminExternalMovie[], expectedYear?: nu
     if (expectedYear != null && !isYearMatch(only.year, expectedYear)) return undefined
     return only
   }
-  return matches.find((movie) => isYearMatch(movie.year, expectedYear)) ??
-    (expectedYear == null ? matches[0] : undefined)
+  return matches.find((movie) => isYearMatch(movie.year, expectedYear))
 }
 
 function pickExactExternalMovie(title: string, movies: AdminExternalMovie[], expectedYear?: number) {
@@ -1425,7 +1492,8 @@ function mergeWarnings(current: string[], next: Array<string | undefined>) {
       !warning.startsWith('자동 극장 매칭 실패:') &&
       !warning.startsWith('자동 영화 매칭 실패:') &&
       !warning.startsWith('영화 매칭 실패:') &&
-      !warning.startsWith('KMDB 자동 매칭 실패:'),
+      !warning.startsWith('KMDB 자동 매칭 실패:') &&
+      !warning.startsWith('동명 영화'),
   )
 
   return Array.from(new Set([...filteredCurrent, ...next.filter((warning): warning is string => Boolean(warning))]))
