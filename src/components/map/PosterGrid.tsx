@@ -141,6 +141,7 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
                 width={posterW}
                 height={posterH}
                 size="sm"
+                radius={0}
               />
               {occurrenceCount != null && occurrenceCount > 0 && (
                 <div style={{
@@ -179,7 +180,7 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
                     <div key={idx} className="po-wrap" style={{ position: 'relative', width: posterW, height: posterH }}>
                       <div style={{
                         width: posterW, height: posterH,
-                        borderRadius: 'var(--comp-poster-radius)',
+                        borderRadius: 0,
                         backgroundColor: 'var(--color-primary-base)', color: 'var(--color-on-accent)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: 15, fontWeight: 800,
@@ -198,6 +199,7 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
                         width={posterW}
                         height={posterH}
                         size="sm"
+                        radius={0}
                         overflow={slot.overflow}
                         highlighted={filtersActive && !slot.overflow && !!slot.movie?.matchesFilter}
                       />

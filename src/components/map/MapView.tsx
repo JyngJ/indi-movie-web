@@ -13,7 +13,7 @@ import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { SearchBarButton, FabRound, Toast } from '@/components/primitives'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { THEATER_SHEET_COLLAPSED_H } from '@/components/domain/TheaterSheet'
-import { MapPin, TheaterSheet, MovieSheet, CurationSheet, CurationSections, FilterBar, LocationPermissionModal, CURATION_PEEK_HEIGHT } from '@/components/domain'
+import { MapPin, TheaterSheet, CurationSheet, CurationSections, FilterBar, LocationPermissionModal, CURATION_PEEK_HEIGHT } from '@/components/domain'
 import type { CurationSnap } from '@/components/domain'
 import { DesktopDetailPanel } from '@/components/domain/DesktopDetailPanel'
 import { SearchPanel } from '@/components/domain/SearchPanel'
@@ -1161,8 +1161,6 @@ export default function MapView() {
   const settingsOpen = useUIStore((s) => s.isSettingsOpen)
   const settingsInitialPage = useUIStore((s) => s.settingsInitialPage)
   const setSettingsOpen = useUIStore((s) => s.setSettingsOpen)
-  // 큐레이션에서 선택한 영화 — MovieSheet를 띄움. null이면 닫힘
-  const [movieSheetId, setMovieSheetId] = useState<string | null>(null)
   // 모바일 큐레이션 시트 — peek(최소, 기본값) ↔ expanded 2단. visibleHeight는 +/- · 현위치 FAB 위치 계산용
   const [curationSnap, setCurationSnap] = useState<CurationSnap>('peek')
   const [curationVisibleHeight, setCurationVisibleHeight] = useState(0)
@@ -1296,7 +1294,7 @@ export default function MapView() {
     })
   }, [])
 
-  // 데스크톱: 좌측 도크에 영화 상세 패널 / 모바일: MovieSheet
+  // 데스크톱: 좌측 도크에 영화 상세 패널 / 모바일: 지도에 영화 필터 적용("지도에서 이 영화 검색"과 동일)
   const handleCurationMovieSelect = useCallback((movieId: string, movieTitle: string, sectionKey?: string) => {
     trackEvent('curation movie selected', {
       movie_id: movieId,
@@ -1306,17 +1304,25 @@ export default function MapView() {
     })
     classifySessionIntent('type_a', { source: 'curation_sheet', movie_id: movieId })
 
+    const allCurationFilms = [
+      ...curationData.lastWeekFilms.map(f => ({ movie: f.movie, regions: f.regions })),
+      ...curationData.newIndieFilms.map(f => ({ movie: f.movie, regions: f.regions })),
+      ...curationData.returningFilms.map(f => ({ movie: f.movie, regions: f.regions })),
+    ]
+    const match = allCurationFilms.find(f => f.movie.id === movieId)
+
+    // 최근 찾아본 기록 — 기존 내부 상세 뷰(MovieSheet)가 하던 기록을 클릭 시점으로 이동
+    recordRecentlyViewed(cookieStorageAdapter, 'movie', {
+      id: movieId,
+      title: movieTitle,
+      thumbnailKey: match?.movie.posterUrl,
+    }).then(() => setRecentlyViewedKey(k => k + 1))
+
     // 지역 있는 큐레이션 영화면 → 대상 지역 자동 적용 (데스크톱 패널 한정)
     if (isDesktopLayout) {
       setMovieFilter({ id: movieId, title: movieTitle })
       autoMovieFilterRef.current = true
 
-      const allCurationFilms = [
-        ...curationData.lastWeekFilms.map(f => ({ id: f.movie.id, regions: f.regions })),
-        ...curationData.newIndieFilms.map(f => ({ id: f.movie.id, regions: f.regions })),
-        ...curationData.returningFilms.map(f => ({ id: f.movie.id, regions: f.regions })),
-      ]
-      const match = allCurationFilms.find(f => f.id === movieId)
       const targetRegion = match?.regions?.[0] ?? null
       if (targetRegion && targetRegion !== filters.regionId) {
         autoRegionRef.current = { applied: targetRegion, prev: filters.regionId }
@@ -1326,7 +1332,11 @@ export default function MapView() {
       }
       openDesktopPanel({ type: 'movie', id: movieId })
     } else {
-      setMovieSheetId(movieId)
+      // 모바일: 곧바로 지도에서 이 영화 검색 — 영화 필터 적용 + 매칭 극장으로 fit, 큐레이션 시트는 peek으로 접기
+      suppressMovieFilterFitRef.current = false
+      setDirectorFilter(null)
+      setMovieFilter({ id: movieId, title: movieTitle })
+      setCurationSnap('peek')
     }
   }, [isDesktopLayout, openDesktopPanel, curationData, filters.regionId])
 
@@ -2441,7 +2451,7 @@ export default function MapView() {
   const fabBottom = !isDesktopLayout
     ? (selectedTheater && !sheetExpanded && !sheetExiting
         ? THEATER_SHEET_COLLAPSED_H + 16
-        : !selectedTheater && !movieSheetId && !searchOpen && curationSnap === 'peek' && curationVisibleHeight > 0
+        : !selectedTheater && !searchOpen && curationSnap === 'peek' && curationVisibleHeight > 0
           ? curationVisibleHeight + 16
           : GLOBAL_NAV_MOBILE_HEIGHT + 32)
     : 32
@@ -2747,7 +2757,7 @@ export default function MapView() {
                   <div style={{
                     width: '100%',
                     height: '100%',
-                    background: 'repeating-linear-gradient(135deg, rgba(255,255,255,0.08) 0 7px, transparent 7px 14px)',
+                    background: 'var(--color-neutral-800)',
                   }} />
                 )}
               </div>
@@ -3460,11 +3470,11 @@ export default function MapView() {
 
       {/* 큐레이션 — 모바일: 항상 떠 있는 드래그 가능한 하단 시트(peek/default/expanded 3단 스냅) */}
       {!isDesktopLayout && !searchOpen && (
-        // 극장/영화 시트가 위에 뜬 동안은 마운트는 유지 — hidden prop으로 슬라이드 애니메이션 제어
+        // 극장 시트가 위에 뜬 동안은 마운트는 유지 — hidden prop으로 슬라이드 애니메이션 제어
         <CurationSheet
           snap={curationSnap}
           onSnapChange={handleCurationSnapChange}
-          hidden={!!(selectedTheater || movieSheetId)}
+          hidden={!!selectedTheater}
           lastWeekFilms={curationData.lastWeekFilms}
           soloTheaterFilms={curationData.soloTheaterFilms}
           soloRegionLabel={filters.regionId ?? undefined}
@@ -3797,20 +3807,6 @@ export default function MapView() {
           selectedMovieId={selectedMovieId}
           selectedTheaterName={selectedTheater?.name}
           initialPage={settingsInitialPage}
-        />
-      )}
-
-      {/* 큐레이션 영화 시트 — 모바일 전용 (데스크톱은 DesktopDetailPanel이 처리) */}
-      {movieSheetId && !isDesktopLayout && (
-        <MovieSheet
-          movieId={movieSheetId}
-          onClose={() => setMovieSheetId(null)}
-          onRecentlyViewed={() => setRecentlyViewedKey(k => k + 1)}
-          onTheaterSelect={(theaterId) => {
-            const mid = movieSheetId
-            setMovieSheetId(null)
-            handlePinClick(theaterId, mid)
-          }}
         />
       )}
 

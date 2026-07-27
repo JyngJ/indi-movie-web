@@ -75,9 +75,7 @@ export function PosterThumb({
             style={{
               width: '100%',
               height: '100%',
-              background: 'oklch(0.32 0.04 220)',
-              backgroundImage:
-                'repeating-linear-gradient(135deg, oklch(0.38 0.04 220) 0 6px, transparent 6px 14px)',
+              background: 'var(--color-neutral-800)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

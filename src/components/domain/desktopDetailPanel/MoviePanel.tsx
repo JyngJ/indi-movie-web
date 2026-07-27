@@ -81,7 +81,7 @@ export function MoviePanel({
             // eslint-disable-next-line @next/next/no-img-element
             <img src={movie.posterUrl} alt="" style={{ width: 90, height: 135, borderRadius: 8, objectFit: 'cover', display: 'block', boxShadow: '0 8px 28px rgba(0,0,0,0.35)' }} />
           ) : (
-            <div style={{ width: 90, height: 135, borderRadius: 8, backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)', background: 'repeating-linear-gradient(135deg, rgba(128,128,128,0.08) 0 7px, transparent 7px 14px)' }} />
+            <div style={{ width: 90, height: 135, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-neutral-800)' }} />
           )}
         </div>
         <div style={{ flex: 1, minWidth: 0, paddingTop: 4 }}>

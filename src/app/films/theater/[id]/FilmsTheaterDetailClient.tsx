@@ -176,7 +176,7 @@ function MovieShowtimeCard({
           {movie.posterUrl ? (
             <Image src={movie.posterUrl} alt={movie.title} fill sizes={`${posterW}px`} style={{ objectFit: 'cover' }} />
           ) : (
-            <div style={{ width: '100%', height: '100%', background: 'repeating-linear-gradient(135deg, rgba(128,128,128,0.08) 0 7px, transparent 7px 14px)' }} />
+            <div style={{ width: '100%', height: '100%', background: 'var(--color-neutral-800)' }} />
           )}
         </div>
 
@@ -193,7 +193,7 @@ function MovieShowtimeCard({
           {movie.genre.length > 0 && (
             <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
               {movie.genre.slice(0, 2).map((g) => (
-                <span key={g} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 9999, border: '1px solid var(--color-border)', color: 'var(--color-text-caption)', backgroundColor: 'var(--color-surface-raised)' }}>
+                <span key={g} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 9999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, border: '1px solid var(--color-border)', color: 'var(--color-text-caption)', backgroundColor: 'var(--color-surface-raised)' }}>
                   {g}
                 </span>
               ))}
@@ -413,7 +413,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
         padding: isDesktop ? '28px 28px 24px' : '20px 16px 20px',
       }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: 9999, border: '1px solid color-mix(in srgb, var(--color-primary-base) 55%, transparent)', backgroundColor: 'var(--color-primary-subtle-l)', marginBottom: 10 }}>
-          <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-primary-base)' }}>독립·예술영화관</span>
+          <span style={{ fontSize: 11, fontWeight: 600, lineHeight: 1, color: 'var(--color-primary-base)' }}>독립·예술영화관</span>
         </div>
         <h1 style={{ margin: '0 0 10px', fontSize: isDesktop ? 32 : 24, fontWeight: 700, fontFamily: 'var(--font-serif)', color: 'var(--color-text-primary)', lineHeight: 1.2 }}>
           {theater.name}

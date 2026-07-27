@@ -182,14 +182,16 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
                       }}>{ev.label}</span>
                     )}
                     <div style={{
-                      position: 'absolute', top: 5, left: 5,
+                      position: 'absolute', top: 6, left: 6,
                       background: gvEventTypeColor(ev.type), color: 'var(--color-on-accent)',
-                      fontSize: 'var(--text-badge)', fontWeight: 800, borderRadius: 3, padding: '2px 5px', letterSpacing: '0.3px',
+                      fontSize: 11, fontWeight: 600, borderRadius: 'var(--radius-badge)', padding: '4px 8px', letterSpacing: '0.3px',
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
                     }}>{ev.type}</div>
                     <div style={{
-                      position: 'absolute', bottom: 5, right: 5,
+                      position: 'absolute', bottom: 6, right: 6,
                       background: 'rgba(0,0,0,0.5)', color: 'var(--color-on-accent)',
-                      fontSize: 9.5, fontWeight: 600, borderRadius: 'var(--radius-badge)', padding: '1.5px 5px',
+                      fontSize: 11, fontWeight: 600, borderRadius: 'var(--radius-badge)', padding: '4px 8px',
+                      display: 'inline-flex', alignItems: 'center', lineHeight: 1,
                       backdropFilter: 'blur(4px)',
                       whiteSpace: 'nowrap',
                     }}>

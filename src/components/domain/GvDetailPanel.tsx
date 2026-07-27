@@ -82,7 +82,8 @@ export function GvDetailPanel({ ev, onClose, onCloseAll, panelMode }: GvDetailPa
           <span style={{
             background: gvEventTypeColor(ev.type), color: 'var(--color-on-accent)',
             fontSize: 9, fontWeight: 800, borderRadius: 3,
-            padding: '2px 5px', letterSpacing: '0.3px', lineHeight: 1.4, flexShrink: 0,
+            padding: '2px 5px', letterSpacing: '0.3px', lineHeight: 1, flexShrink: 0,
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           }}>{ev.type}</span>
         </div>
 
@@ -133,7 +134,7 @@ export function GvDetailPanel({ ev, onClose, onCloseAll, panelMode }: GvDetailPa
             )}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2, flexWrap: 'wrap' }}>
               <span style={{
-                display: 'inline-block',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
                 fontSize: 11, fontWeight: 600, color: statusColor,
                 background: `${statusColor}18`, borderRadius: 4, padding: '2px 7px',
               }}>

@@ -7,7 +7,7 @@ import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { withFlag } from '@/lib/nations'
 import { ScrollNavButton } from '@/components/primitives'
 import { HoverPopup } from '@/components/domain/CurationSectionRow'
-import { MapPin, Film, Eye, Scale, Clock, Flame, Info, TrendingUp, TrendingDown } from 'lucide-react'
+import { MapPin, Film, Eye, Scale, Clock, Info, TrendingUp, TrendingDown } from 'lucide-react'
 import type { FilmRankingEntry } from '@/lib/supabase/queries'
 import type { Movie } from '@/types/api'
 
@@ -33,6 +33,7 @@ function RankBadge({ rank, prevRank }: { rank: number; prevRank: number | null }
     return (
       <span style={{
         fontSize: 10, fontWeight: 700, padding: '2px 5px', borderRadius: 'var(--radius-badge)',
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
         background: '#D97706', color: 'var(--color-on-accent)', letterSpacing: 0.2,
       }}>NEW</span>
     )
@@ -238,7 +239,7 @@ export function FilmRankingSection({ weekStart, rankings, movies, isDesktop, onM
               alignItems: 'center',
               gap: 6
             }}>
-              <Flame size={24} strokeWidth={2} color="var(--color-warning)" /> 독립영화 주간 랭킹
+              독립영화 주간 랭킹
             </h2>
             <div
               style={{ position: 'relative', display: 'inline-flex' }}

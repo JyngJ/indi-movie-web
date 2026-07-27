@@ -68,6 +68,7 @@ export function AnniversarySection({
           background: `color-mix(in srgb, ${border} 18%, transparent)`,
           border: `1px solid color-mix(in srgb, ${border} 35%, transparent)`,
           borderRadius: 'var(--radius-pill)', padding: '2px 8px',
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
           whiteSpace: 'nowrap',
         }}>
           {dateLabel}
@@ -126,6 +127,7 @@ export function AnniversarySection({
                   {film.genre.slice(0, 1).map((g) => (
                     <span key={g} style={{
                       fontSize: 11, padding: '2px 5px', borderRadius: 'var(--radius-pill)',
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
                       background: 'var(--color-surface-raised)', color: 'var(--color-text-caption)',
                       border: '1px solid var(--color-border)',
                     }}>{g}</span>

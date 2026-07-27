@@ -27,6 +27,18 @@ import type { GvEvent } from '@/data/gv-events'
 // 접힌 상태에서 보이는 높이 = 핸들(20) + 헤더(88, 액션버튼 포함) + 포스터스트립(228) + 테두리(2) + 탭바 여백 + safe-area 여유분
 export const THEATER_SHEET_COLLAPSED_H = 344 + GLOBAL_NAV_MOBILE_HEIGHT + 34
 
+/* ── 포스터 캐러셀 레이아웃 — 기본 3열, 너무 좁으면 2열·넓으면 4열 ── */
+const POSTER_GAP = 12
+const POSTER_PAD_LEFT = 20
+function calcPosterItemW(w: number): number {
+  if (w <= 0) return 88   // 마운트 전 폴백 (기존 고정폭)
+  const calc = (n: number) => (w - POSTER_PAD_LEFT * 2 - POSTER_GAP * (n - 1)) / n
+  let n = 3
+  if (calc(3) < 80) n = 2
+  else if (calc(3) > 120) n = 4
+  return calc(n)
+}
+
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
 const IconStar = ({ filled = false }: { filled?: boolean }) => (
   <svg width={22} height={22} viewBox="0 0 24 24"
@@ -432,6 +444,19 @@ export function TheaterSheet({
     updatePosterScrollEdge,
   } = useMomentumScroll(posterScrollRef, shownExpanded, allMovieEntries)
 
+  /* ── 캐러셀 반응형 아이템 폭 (스크롤러 폭 기준 2~4열) ── */
+  const [posterItemW, setPosterItemW] = useState(88)
+  const posterItemH = Math.round(posterItemW * 1.5)
+  useEffect(() => {
+    const el = posterScrollRef.current
+    if (!el) return
+    const update = () => setPosterItemW(calcPosterItemW(el.clientWidth))
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [shownExpanded])
+
   /* ── 확장 시 스크롤 영역 ── */
   const scrollAreaRef      = useRef<HTMLDivElement>(null)
   const theaterNameRef     = useRef<HTMLDivElement>(null)
@@ -591,14 +616,14 @@ export function TheaterSheet({
     const idx = visualEntries.findIndex(e => e.movie.id === selectedMovieId)
     if (idx < 0) return
 
-    const itemW = 88
-    const gap = 12
-    const paddingLeft = 20
+    const itemW = posterItemW
+    const gap = POSTER_GAP
+    const paddingLeft = POSTER_PAD_LEFT
     const targetLeft = paddingLeft + idx * (itemW + gap)
     el.scrollLeft = Math.max(0, targetLeft - el.clientWidth / 2 + itemW / 2)
   // selectedMovieId 변경(외부 진입 포함) + 데이터 로드 시 실행
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedMovieId, allMovieEntries, filteredMovieEntries, shownExpanded])
+  }, [selectedMovieId, allMovieEntries, filteredMovieEntries, shownExpanded, posterItemW])
 
   /* ── 펼칠 때 오늘 상영 없으면 가장 빠른 날로 자동 이동 ── */
   useEffect(() => {
@@ -949,7 +974,7 @@ export function TheaterSheet({
             <div style={{
               fontSize: 13,
               color: 'var(--color-text-sub)',
-              marginTop: 4,
+              marginTop: 8,
               lineHeight: 1.25,
               display: 'flex',
               alignItems: 'baseline',
@@ -964,7 +989,7 @@ export function TheaterSheet({
               display: 'flex',
               flexWrap: 'wrap',
               gap: 8,
-              marginTop: 4,
+              marginTop: 12,
             }}>
               <button style={actionBtn} onClick={openDirections}>
                 <IconRoute size={13} />
@@ -1046,7 +1071,7 @@ export function TheaterSheet({
                 display: 'flex',
                 alignItems: 'baseline',
                 gap: 4,
-                marginTop: 4,
+                marginTop: 8,
                 minWidth: 0,
                 color: 'var(--color-text-sub)',
                 fontSize: 13,
@@ -1163,7 +1188,7 @@ export function TheaterSheet({
               boxShadow: '0 1px 6px rgba(0,0,0,0.12)',
               minHeight: 'auto',
             }}
-            onClick={() => posterScrollRef.current?.scrollBy({ left: -(88 + 12) * 3, behavior: 'smooth' })}
+            onClick={() => posterScrollRef.current?.scrollBy({ left: -(posterItemW + POSTER_GAP) * 3, behavior: 'smooth' })}
           >
             <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
@@ -1182,7 +1207,7 @@ export function TheaterSheet({
               boxShadow: '0 1px 6px rgba(0,0,0,0.12)',
               minHeight: 'auto',
             }}
-            onClick={() => posterScrollRef.current?.scrollBy({ left: (88 + 12) * 3, behavior: 'smooth' })}
+            onClick={() => posterScrollRef.current?.scrollBy({ left: (posterItemW + POSTER_GAP) * 3, behavior: 'smooth' })}
           >
             <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
           </button>
@@ -1206,8 +1231,8 @@ export function TheaterSheet({
         >
           {allMoviesLoading
             ? Array.from({ length: 7 }).map((_, i) => (
-                <div key={i} style={{ flexShrink: 0, width: 88 }}>
-                  <div style={{ width: 88, height: 132, borderRadius: 8, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
+                <div key={i} style={{ flexShrink: 0, width: posterItemW }}>
+                  <div style={{ width: posterItemW, height: posterItemH, borderRadius: 0, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
                   <div style={{ width: 70, height: 11, borderRadius: 4, marginTop: 8, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
                   <div style={{ width: 50, height: 10, borderRadius: 4, marginTop: 4, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
                 </div>
@@ -1237,18 +1262,19 @@ export function TheaterSheet({
                     return (
                       <div
                         key={movie.id}
-                        style={{ flexShrink: 0, width: 88 - 44 * posterProgress, overflow: 'visible' }}
+                        style={{ flexShrink: 0, width: posterItemW * (1 - 0.5 * posterProgress), overflow: 'visible' }}
                       >
                         <div style={{
-                          width: 88,
+                          width: posterItemW,
                           transformOrigin: 'top left',
                           transform: `scale(${1 - 0.5 * posterProgress})`,
                         }}>
                           <div style={{ position: 'relative' }}>
                             <PosterThumb
-                              width={88}
-                              height={132}
+                              width={posterItemW}
+                              height={posterItemH}
                               size="lg"
+                              radius={0}
                               src={movie.posterUrl}
                               selected={shownExpanded && selectedMovieId === movie.id}
                               onClick={unavailable ? undefined : () => {
@@ -1262,13 +1288,13 @@ export function TheaterSheet({
                                 position: 'absolute',
                                 bottom: 6,
                                 right: 6,
-                                height: 20,
-                                padding: '0 8px',
-                                borderRadius: 4,
+                                padding: '4px 8px',
+                                borderRadius: 'var(--radius-badge)',
                                 display: 'inline-flex',
                                 alignItems: 'center',
-                                fontSize: 10,
-                                fontWeight: 700,
+                                fontSize: 11,
+                                fontWeight: 600,
+                                lineHeight: 1,
                                 color: 'var(--color-on-accent)',
                                 backgroundColor: 'var(--color-error)',
                                 border: '1px solid color-mix(in srgb, var(--color-error) 60%, transparent)',
@@ -1282,7 +1308,7 @@ export function TheaterSheet({
                             {unavailable && (
                               <div style={{
                                 position: 'absolute', inset: 0,
-                                borderRadius: 'var(--comp-poster-sheet-radius)',
+                                borderRadius: 0,
                                 background: 'rgba(10, 8, 6, 0.45)',
                                 pointerEvents: 'none',
                               }} />
@@ -1548,7 +1574,7 @@ export function TheaterSheet({
               {/* 포스터 좌우 스크롤 버튼 — expanded 전체(모바일/PC 패널) */}
               {(() => {
                 const scrollBy = (dir: 1 | -1) => {
-                  posterScrollRef.current?.scrollBy({ left: dir * (88 + 12) * 3, behavior: 'smooth' })
+                  posterScrollRef.current?.scrollBy({ left: dir * (posterItemW + POSTER_GAP) * 3, behavior: 'smooth' })
                 }
                 const btnStyle: React.CSSProperties = {
                   position: 'absolute', top: '50%', transform: 'translateY(-50%)',
@@ -1596,8 +1622,8 @@ export function TheaterSheet({
             >
               {allMoviesLoading
                 ? Array.from({ length: 7 }).map((_, i) => (
-                    <div key={i} style={{ flexShrink: 0, width: 88 }}>
-                      <div style={{ width: 88, height: 132, borderRadius: 8, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
+                    <div key={i} style={{ flexShrink: 0, width: posterItemW }}>
+                      <div style={{ width: posterItemW, height: posterItemH, borderRadius: 0, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
                       <div style={{ width: 70, height: 11, borderRadius: 4, marginTop: 8, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
                       <div style={{ width: 50, height: 10, borderRadius: 4, marginTop: 4, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
                     </div>
@@ -1622,12 +1648,12 @@ export function TheaterSheet({
                         return (
                           <div
                             key={movie.id}
-                            style={{ flexShrink: 0, width: 88, overflow: 'visible' }}
+                            style={{ flexShrink: 0, width: posterItemW, overflow: 'visible' }}
                           >
-                            <div style={{ width: 88 }}>
+                            <div style={{ width: posterItemW }}>
                               <div style={{ position: 'relative' }}>
                                 <PosterThumb
-                                  width={88} height={132} size="lg"
+                                  width={posterItemW} height={posterItemH} size="lg" radius={0}
                                   src={movie.posterUrl}
                                   selected={selectedMovieId === movie.id}
                                   onClick={unavailable ? undefined : () => { handleMovieSelect(movie.id, 'poster_strip') }}
@@ -1635,9 +1661,9 @@ export function TheaterSheet({
                                 {soldout && (
                                   <div style={{
                                     position: 'absolute', bottom: 6, right: 6,
-                                    height: 20, padding: '0 8px', borderRadius: 4,
-                                    display: 'inline-flex', alignItems: 'center',
-                                    fontSize: 10, fontWeight: 700, color: 'var(--color-on-accent)',
+                                    padding: '4px 8px', borderRadius: 'var(--radius-badge)',
+                                    display: 'inline-flex', alignItems: 'center', lineHeight: 1,
+                                    fontSize: 11, fontWeight: 600, color: 'var(--color-on-accent)',
                                     backgroundColor: 'var(--color-error)',
                                     pointerEvents: 'none', zIndex: 2,
                                   }}>매진</div>
@@ -1662,7 +1688,7 @@ export function TheaterSheet({
                                       onClick={() => handleMovieSelect(movie.id, 'unavailable_movie_card')}
                                       style={{
                                         position: 'absolute', inset: 0,
-                                        borderRadius: 'var(--comp-poster-sheet-radius)',
+                                        borderRadius: 0,
                                         background: 'rgba(10, 8, 6, 0.72)',
                                         display: 'flex', flexDirection: 'column',
                                         alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
@@ -1718,7 +1744,7 @@ export function TheaterSheet({
                       {filtersOn && nonMatchingEntries.length > 0 && (
                         <>
                           <div style={{
-                            flexShrink: 0, width: 1, height: 132,
+                            flexShrink: 0, width: 1, height: posterItemH,
                             alignSelf: 'flex-start', marginTop: 0,
                             backgroundColor: 'var(--color-border)',
                             marginLeft: 4, marginRight: 4,
@@ -1726,13 +1752,13 @@ export function TheaterSheet({
                           {nonMatchingEntries.map((entry) => {
                             const { movie } = entry
                             return (
-                              <div key={movie.id} style={{ flexShrink: 0, width: 88, overflow: 'visible', opacity: 0.38 }}>
-                                <div style={{ width: 88 }}>
+                              <div key={movie.id} style={{ flexShrink: 0, width: posterItemW, overflow: 'visible', opacity: 0.38 }}>
+                                <div style={{ width: posterItemW }}>
                                   <div style={{ position: 'relative' }}>
-                                    <PosterThumb width={88} height={132} size="lg" src={movie.posterUrl} />
+                                    <PosterThumb width={posterItemW} height={posterItemH} size="lg" radius={0} src={movie.posterUrl} />
                                     <div style={{
                                       position: 'absolute', inset: 0,
-                                      borderRadius: 'var(--comp-poster-sheet-radius)',
+                                      borderRadius: 0,
                                       background: 'rgba(0,0,0,0.45)',
                                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     }}>

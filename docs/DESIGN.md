@@ -232,6 +232,17 @@ mono           HEX, 상영 시간, 좌석수 등 정렬이 필요한 수치(tnum
 - selected ring: `primary.base` 2px, badgeSize 20px, badgeBorder `2px solid #FFFFFF`
 - overflow overlay: `rgba(15,12,9,0.62)`, font 18px/600, color `#FFFFFF`
 
+### 포스터 오버레이 칩
+
+포스터 위에 absolute로 얹는 상태 칩(D-N, 매진, 상영 상태, GV 타입/일시 등) 공통 스펙:
+
+- font: 11px/600, lineHeight 1
+- padding: `4px 8px`, radius: `--radius-badge`
+- display: `inline-flex` + `alignItems: center` (세로 중앙정렬)
+- 포스터 모서리에서 offset 6px
+- 배경/글자색은 칩별 의미색 유지 (매진 `semantic.error`, 상영 중 `semantic.success` 등)
+- 예외: 지도 핀 미니 배지(GvPinSlots)·랭킹 순위 숫자 같은 장식성 요소는 이 스펙 대상 아님
+
 ### BottomSheet
 
 - borderRadius: `var(--radius-sheet) var(--radius-sheet) 0 0` (20px, 상단만)

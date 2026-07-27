@@ -150,9 +150,8 @@ function HeroSection({ movie, titleRef, desktop = false }: { movie: MovieDetail;
         ) : (
           <div style={{
             width: posterW, height: posterH, borderRadius: desktop ? 12 : 8,
-            backgroundColor: 'var(--color-surface-raised)',
             border: '1px solid var(--color-border)',
-            background: 'repeating-linear-gradient(135deg, rgba(128,128,128,0.08) 0 7px, transparent 7px 14px)',
+            background: 'var(--color-neutral-800)',
           }} />
         )}
       </div>

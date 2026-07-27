@@ -4,7 +4,6 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { usePendingNavItem } from '@/hooks/usePendingNavItem'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { PosterThumb } from './PosterThumb'
-import { Badge } from '@/components/primitives/Badge'
 import { HoverPopup } from './CurationSectionRow'
 import { ChevronDown } from 'lucide-react'
 import type {
@@ -28,12 +27,6 @@ const TOP_MARGIN = 132
 export const CURATION_PEEK_HEIGHT = 120
 const VELOCITY_THRESHOLD = 500   // px/s 이상이면 flick으로 간주
 const SNAP_ORDER: CurationSnap[] = ['expanded', 'peek']
-
-const IconSparkle = () => (
-  <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8" />
-  </svg>
-)
 
 interface CurationItem {
   id: string
@@ -69,7 +62,7 @@ interface CurationSheetProps {
   onRecentItemClick?: (item: RecentlyViewedEntry) => void
   /** 현재 위치 있을 때 극장 ID로 거리 텍스트("1.2 km") 조회 */
   getTheaterDistance?: (theaterId: string) => string | null
-  /** TheaterSheet/MovieSheet가 열려 큐레이션 시트를 숨겨야 할 때 */
+  /** TheaterSheet가 열려 큐레이션 시트를 숨겨야 할 때 */
   hidden?: boolean
 }
 
@@ -196,7 +189,6 @@ function PosterRow({ items, onSelect, emptyText, desktop = false }: {
       overflowX: 'auto',
       paddingLeft: 20,
       paddingRight: 20,
-      paddingBottom: 4,
     }}>
       {items.map((item) => (
         <PosterItem key={item.id} item={item} posterSize={posterSize} desktop={desktop} onSelect={onSelect} />
@@ -265,14 +257,15 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
           {item.distanceLabel && (
             <div style={{
               position: 'absolute',
-              top: 4,
-              right: 4,
+              top: 6,
+              right: 6,
               backgroundColor: 'var(--color-primary-base)',
               color: 'var(--color-on-accent)',
-              borderRadius: 'var(--radius-pill)',
-              padding: '2px 7px',
-              fontSize: 10,
-              fontWeight: 700,
+              borderRadius: 'var(--radius-badge)',
+              padding: '4px 8px',
+              fontSize: 11,
+              fontWeight: 600,
+              lineHeight: 1,
               whiteSpace: 'nowrap',
               boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
             }}>
@@ -280,14 +273,18 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
             </div>
           )}
           {item.badge && (
-            <Badge
-              variant="info"
+            <span
               style={{
                 position: 'absolute',
                 left: 6,
                 bottom: 6,
                 backgroundColor: 'rgba(20,15,10,0.72)',
                 color: 'var(--color-on-accent)',
+                borderRadius: 'var(--radius-badge)',
+                padding: '4px 8px',
+                fontSize: 11,
+                fontWeight: 600,
+                lineHeight: 1,
                 maxWidth: 'calc(100% - 12px)',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -296,7 +293,7 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
               }}
             >
               {item.badge}
-            </Badge>
+            </span>
           )}
         </div>
         <span style={{
@@ -343,7 +340,7 @@ function Section({ title, icon, withLine, action, style, children }: {
   children: React.ReactNode
 }) {
   return (
-    <section style={{ display: 'flex', flexDirection: 'column', gap: 10, ...style }}>
+    <section style={{ display: 'flex', flexDirection: 'column', gap: 12, ...style }}>
       <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 20, paddingRight: 20, gap: 6 }}>
         {icon && <span style={{ display: 'flex', alignItems: 'center', color: 'var(--color-text-body)' }}>{icon}</span>}
         <h3 style={{
@@ -935,7 +932,6 @@ export function CurationSheet({
           backgroundColor: 'var(--color-border)',
         }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-text-primary)' }}>
-          <span style={{ color: 'var(--color-primary-base)', display: 'flex' }}><IconSparkle /></span>
           <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700 }}>큐레이션</span>
         </div>
       </div>

@@ -154,7 +154,7 @@ export function DirectorPanel({
                   <div style={{ fontSize: 14, fontWeight: 600, color: isActive ? 'var(--color-primary-base)' : 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {movie.title}
                     {isActive && (
-                      <span style={{ marginLeft: 6, padding: '1px 5px', borderRadius: 4, fontSize: 9, fontWeight: 700, color: 'var(--color-on-accent)', backgroundColor: 'var(--color-primary-base)', verticalAlign: 'middle' }}>상영중</span>
+                      <span style={{ marginLeft: 6, padding: '2px 5px', borderRadius: 4, fontSize: 9, fontWeight: 700, lineHeight: 1, display: 'inline-flex', alignItems: 'center', color: 'var(--color-on-accent)', backgroundColor: 'var(--color-primary-base)', verticalAlign: 'middle' }}>상영중</span>
                     )}
                   </div>
                   <div style={{ marginTop: 2, fontSize: 12, color: 'var(--color-text-caption)' }}>

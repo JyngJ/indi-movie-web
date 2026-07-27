@@ -115,7 +115,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
       {/* 헤더 */}
       <div style={{ padding: '20px 16px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-on-accent)', backgroundColor: STATUS_COLOR[status], padding: '3px 10px', borderRadius: 9999 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, lineHeight: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-on-accent)', backgroundColor: STATUS_COLOR[status], padding: '3px 10px', borderRadius: 9999 }}>
             {STATUS_LABEL[status]}
           </span>
           <span style={{ fontSize: 13, color: 'var(--color-text-caption)', fontWeight: 600 }}>{dateLabel}</span>

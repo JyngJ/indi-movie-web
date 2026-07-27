@@ -9,7 +9,7 @@ import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { withFlag } from '@/lib/nations'
 import { ScrollNavButton } from '@/components/primitives'
 import { HoverPopup } from '@/components/domain/CurationSectionRow'
-import { MapPin, Sparkles, Clapperboard } from 'lucide-react'
+import { MapPin } from 'lucide-react'
 
 interface Props {
   directorName: string
@@ -90,6 +90,7 @@ function MovieCard({
             {movie.genre.slice(0, 1).map((g) => (
               <span key={g} style={{
                 fontSize: 10, padding: '2px 6px', borderRadius: 'var(--radius-pill)',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
                 background: 'var(--color-surface-raised)', color: 'var(--color-text-caption)',
                 border: '1px solid var(--color-border)', whiteSpace: 'nowrap',
               }}>{g}</span>
@@ -116,10 +117,93 @@ function LeftPanel({
   const photoUrl = profile?.photoUrl
   const bio = profile?.bio
 
-  const blockPad = isDesktop ? '18px 20px' : '16px'
+  // 카드 내부 패딩 통일 (상단·좌우 동일)
+  const blockPad = 16
+
+  // 컨테이너 폭 기준 와이드 레이아웃 — 넓으면 버튼을 오른쪽에 인라인 배치
+  // (데스크톱 분할 레이아웃의 260px 사이드 패널·좁은 도크에서는 세로 적층 유지)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const [wide, setWide] = useState(false)
+  useEffect(() => {
+    const el = rootRef.current
+    if (!el) return
+    const measure = () => setWide(el.getBoundingClientRect().width >= 420)
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  const [dirBtnHovered, setDirBtnHovered] = useState(false)
+  const [theaterBtnHovered, setTheaterBtnHovered] = useState(false)
+
+  const badge = (
+    <span style={{
+      alignSelf: 'flex-start', fontSize: 'var(--text-caption)', fontWeight: 600,
+      color: 'var(--color-primary-base)',
+      padding: '3px 10px', borderRadius: 'var(--radius-pill)',
+      border: '1px solid color-mix(in srgb, var(--color-primary-base) 40%, transparent)',
+      backgroundColor: 'color-mix(in srgb, var(--color-primary-base) 10%, transparent)',
+      letterSpacing: 0.3, lineHeight: 1,
+      display: 'flex', alignItems: 'center', gap: 4
+    }}>
+      감독 특별전
+    </span>
+  )
+
+  const avatarRow = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{
+        width: avatarSize, height: avatarSize, borderRadius: '50%',
+        background: photoUrl ? 'transparent' : color,
+        flexShrink: 0, overflow: 'hidden',
+        boxShadow: 'inset 0 0 0 1px var(--color-border), 0 2px 6px rgba(0,0,0,0.18)',
+      }}>
+        {photoUrl ? (
+          <img src={photoUrl} alt={directorName} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
+        ) : (
+          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: avatarSize * 0.38, fontWeight: 700, color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-display)' }}>
+              {directorName.charAt(0)}
+            </span>
+          </div>
+        )}
+      </div>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: isDesktop ? 18 : 16, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)', lineHeight: 1.2 }}>
+          {directorName}
+        </div>
+        {profile?.originalName && (
+          <div style={{ fontSize: 'var(--text-caption)', fontStyle: 'italic', color: 'var(--color-text-caption)', fontFamily: 'var(--font-serif-en)', marginTop: 2 }}>
+            {profile.originalName}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
+  const directorButton = onDirectorClick && (
+    <button
+      onClick={onDirectorClick}
+      onMouseEnter={() => setDirBtnHovered(true)}
+      onMouseLeave={() => setDirBtnHovered(false)}
+      style={{
+        ...(wide ? { flexShrink: 0 } : { marginTop: 'auto' }),
+        padding: '8px 14px', borderRadius: 'var(--radius-control)',
+        border: '1px solid var(--color-border)',
+        background: dirBtnHovered ? 'var(--color-surface-raised)' : 'var(--color-surface-card)',
+        color: 'var(--color-text-body)',
+        transition: 'background var(--transition-fast)',
+        fontSize: 'var(--text-meta)', fontWeight: 600, cursor: 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-1)',
+      }}
+    >
+      감독 상세 →
+    </button>
+  )
 
   return (
-    <div style={{
+    <div ref={rootRef} style={{
       display: 'flex', flexDirection: 'column',
       borderRight: isDesktop ? '1px solid var(--color-border)' : 'none',
       borderBottom: !isDesktop ? '1px solid var(--color-border)' : 'none',
@@ -127,48 +211,21 @@ function LeftPanel({
     }}>
       {/* ── 감독 블록 ── */}
       <div style={{ padding: blockPad, display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
-        {/* 배지 */}
-        <span style={{
-          alignSelf: 'flex-start', fontSize: 'var(--text-caption)', fontWeight: 600,
-          color: 'var(--color-primary-base)',
-          padding: '3px 10px', borderRadius: 'var(--radius-pill)',
-          border: '1px solid color-mix(in srgb, var(--color-primary-base) 40%, transparent)',
-          backgroundColor: 'color-mix(in srgb, var(--color-primary-base) 10%, transparent)',
-          letterSpacing: 0.3,
-          display: 'flex', alignItems: 'center', gap: 4
-        }}>
-          <Sparkles size={12} strokeWidth={1.75} color="currentColor" /> 감독 특별전
-        </span>
-
-        {/* 아바타 + 이름 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: avatarSize, height: avatarSize, borderRadius: '50%',
-            background: photoUrl ? 'transparent' : color,
-            flexShrink: 0, overflow: 'hidden',
-            boxShadow: 'inset 0 0 0 1px var(--color-border), 0 2px 6px rgba(0,0,0,0.18)',
-          }}>
-            {photoUrl ? (
-              <img src={photoUrl} alt={directorName} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
-            ) : (
-              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontSize: avatarSize * 0.38, fontWeight: 700, color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-display)' }}>
-                  {directorName.charAt(0)}
-                </span>
-              </div>
-            )}
-          </div>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: isDesktop ? 18 : 16, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)', lineHeight: 1.2 }}>
-              {directorName}
+        {wide ? (
+          /* 와이드: [배지+아바타 2줄] 왼쪽, 감독 상세 버튼 오른쪽 세로 중앙 */
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {badge}
+              {avatarRow}
             </div>
-            {profile?.originalName && (
-              <div style={{ fontSize: 'var(--text-caption)', fontStyle: 'italic', color: 'var(--color-text-caption)', fontFamily: 'var(--font-serif-en)', marginTop: 2 }}>
-                {profile.originalName}
-              </div>
-            )}
+            {directorButton}
           </div>
-        </div>
+        ) : (
+          <>
+            {badge}
+            {avatarRow}
+          </>
+        )}
 
         {/* 바이오 */}
         <p style={{
@@ -180,28 +237,21 @@ function LeftPanel({
           {bio ?? '감독 설명이 아직 없습니다'}
         </p>
 
-        {/* 감독 상세 버튼 */}
-        {onDirectorClick && (
-          <button onClick={onDirectorClick} style={{
-            marginTop: 'auto', padding: '8px 14px', borderRadius: 'var(--radius-control)',
-            border: '1px solid var(--color-border)',
-            background: 'var(--color-surface-card)', color: 'var(--color-text-body)',
-            fontSize: 'var(--text-meta)', fontWeight: 600, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-1)',
-          }}>
-            감독 상세 →
-          </button>
-        )}
+        {/* 감독 상세 버튼 — 좁은 레이아웃에서는 블록 하단 풀폭 */}
+        {!wide && directorButton}
       </div>
 
-      {/* ── 영화관 블록 ── */}
+      {/* ── 영화관 블록 (카드 좌우 끝까지 풀블리드) ── */}
       <div style={{
         padding: blockPad,
         borderTop: '1px solid var(--color-border)',
-        display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)',
+        display: 'flex',
+        ...(wide
+          ? { flexDirection: 'row' as const, alignItems: 'center', gap: 16 }
+          : { flexDirection: 'column' as const, gap: 'var(--spacing-2)' }),
         background: 'var(--color-surface-bg)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, ...(wide ? { flex: 1, minWidth: 0 } : {}) }}>
           <MapPin size={16} strokeWidth={1.75} color="currentColor" style={{ marginTop: 2, flexShrink: 0, color: 'var(--color-text-body)' }} />
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 'var(--text-meta)', fontWeight: 700, color: 'var(--color-text-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -212,12 +262,20 @@ function LeftPanel({
           </div>
         </div>
         {onTheaterClick && (
-          <button onClick={onTheaterClick} style={{
-            padding: '7px 14px', borderRadius: 'var(--radius-control)', border: 'none',
-            background: 'var(--color-primary-base)', color: 'var(--color-on-accent)',
-            fontSize: 'var(--text-meta)', fontWeight: 600, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-1)',
-          }}>
+          <button
+            onClick={onTheaterClick}
+            onMouseEnter={() => setTheaterBtnHovered(true)}
+            onMouseLeave={() => setTheaterBtnHovered(false)}
+            style={{
+              ...(wide ? { flexShrink: 0 } : {}),
+              padding: '7px 14px', borderRadius: 'var(--radius-control)', border: 'none',
+              background: theaterBtnHovered ? 'var(--color-primary-hover-l)' : 'var(--color-primary-base)',
+              color: 'var(--color-on-accent)',
+              transition: 'background var(--transition-fast)',
+              fontSize: 'var(--text-meta)', fontWeight: 600, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-1)',
+            }}
+          >
             영화관 보기
           </button>
         )}
@@ -294,7 +352,7 @@ export function DirectorSpecialSection({
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       {/* 상영 극장 한 줄 타이틀 */}
       <div style={{
-        padding: isDesktop ? '14px 20px 0' : '14px 16px 0',
+        padding: '14px 16px 0',
         fontSize: isDesktop ? 'var(--text-subtitle)' : 'var(--text-body)',
         fontWeight: 700,
         color: 'var(--color-text-primary)',
@@ -319,7 +377,7 @@ export function DirectorSpecialSection({
         alignItems: 'center',
         gap: 6
       }}>
-        <Clapperboard size={24} strokeWidth={2} color="var(--color-primary-base)" /> {directorName} 특별전
+        {directorName} 특별전
       </h2>
       {isDesktop ? (
         /* ── 데스크톱: 좌우 분할, 동일 마진 ─────── */
@@ -345,7 +403,7 @@ export function DirectorSpecialSection({
       ) : (
         /* ── 모바일: 위아래 적층, 동일 마진 ─────── */
         <div style={{ margin: '0 16px', borderRadius: 10, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
-          <div style={{ background: 'var(--color-surface-card)', padding: '0 16px' }}>
+          <div style={{ background: 'var(--color-surface-card)' }}>
             <LeftPanel
               directorName={directorName} theater={theater} filmCount={films.length}
               distSuffix={distSuffix} isDesktop={isDesktop}

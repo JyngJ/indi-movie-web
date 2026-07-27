@@ -237,7 +237,7 @@ function GvDsCard({ ev, first }: { ev: GvEvent; first: boolean }) {
       </div>
       <div style={{ flex: 1, minWidth: 0, padding: '0 4px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginBottom: 2 }}>
-          <span style={{ background: gvEventTypeColor(ev.type), color: 'var(--color-on-accent)', fontSize: 7, fontWeight: 800, borderRadius: 2, padding: '0.5px 3px' }}>{ev.type}</span>
+          <span style={{ background: gvEventTypeColor(ev.type), color: 'var(--color-on-accent)', fontSize: 7, fontWeight: 800, borderRadius: 2, padding: '1px 3px', lineHeight: 1, display: 'inline-flex', alignItems: 'center' }}>{ev.type}</span>
           <span style={{ fontSize: 9, color: 'var(--color-text-caption)' }}>{ev.time}</span>
         </div>
         <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -293,7 +293,7 @@ function GvCalloutBubble({ ev, extraCount = 0, overlayCount, selected, size }: {
       {/* Content */}
       <div style={{ flex: 1, padding: `${vPad}px 7px ${vPad}px 10px`, display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ background: gvEventTypeColor(ev.type), color: 'var(--color-on-accent)', fontSize: 7.5, fontWeight: 800, borderRadius: 3, padding: '1px 3px', letterSpacing: '0.3px', lineHeight: 1.3, flexShrink: 0 }}>{ev.type}</span>
+          <span style={{ background: gvEventTypeColor(ev.type), color: 'var(--color-on-accent)', fontSize: 7.5, fontWeight: 800, borderRadius: 3, padding: '1px 3px', letterSpacing: '0.3px', lineHeight: 1, display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}>{ev.type}</span>
           <span style={{ fontSize: 8.5, color: 'var(--color-text-caption)', lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.time}</span>
         </div>
         <div style={{ fontFamily: 'var(--font-display, sans-serif)', fontSize: 11, fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

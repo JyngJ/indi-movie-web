@@ -8,6 +8,10 @@ export function GenreChip({ children }: GenreChipProps) {
   return (
     <span
       style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        lineHeight: 1,
         fontSize: 'var(--text-caption)',
         padding: '2px 6px',
         borderRadius: 'var(--radius-pill)',

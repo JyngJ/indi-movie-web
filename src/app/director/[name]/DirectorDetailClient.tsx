@@ -160,7 +160,7 @@ function MiniPoster({ src }: { src?: string }) {
         // eslint-disable-next-line @next/next/no-img-element
         <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
       ) : (
-        <div style={{ width: '100%', height: '100%', background: 'repeating-linear-gradient(135deg, rgba(128,128,128,0.08) 0 5px, transparent 5px 10px)' }} />
+        <div style={{ width: '100%', height: '100%', background: 'var(--color-neutral-800)' }} />
       )}
     </div>
   )

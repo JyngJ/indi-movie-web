@@ -4,7 +4,6 @@ import { useState } from 'react'
 import type { Movie } from '@/types/api'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
-import { Film } from 'lucide-react'
 
 type SortKey = 'theaters_desc' | 'theaters_asc' | 'year_desc' | 'year_asc' | 'alpha'
 
@@ -45,7 +44,7 @@ function GridPoster({ src, alt }: { src?: string; alt: string }) {
         borderRadius: 0,
         overflow: 'hidden',
         position: 'relative',
-        background: 'oklch(0.32 0.04 220)',
+        background: 'var(--color-neutral-800)',
       }}
     >
       {src ? (
@@ -60,7 +59,7 @@ function GridPoster({ src, alt }: { src?: string; alt: string }) {
         <div
           style={{
             width: '100%', height: '100%',
-            backgroundImage: 'repeating-linear-gradient(135deg, oklch(0.38 0.04 220) 0 6px, transparent 6px 14px)',
+            background: 'var(--color-neutral-800)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px 5px',
           }}
         >
@@ -133,7 +132,7 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
                 gap: 6
               }}
             >
-              <Film size={20} strokeWidth={1.75} color="var(--color-primary-base)" /> 지금 {regionText}상영 전체
+              지금 {regionText}상영 전체
             </h2>
             <p style={{ margin: '3px 0 0', fontSize: 12, color: 'var(--color-text-caption)' }}>
               {movies.length}편 상영 중
@@ -229,8 +228,12 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
                       key={g}
                       style={{
                         fontSize: 10,
-                        padding: '1px 5px',
+                        padding: '2px 5px',
                         borderRadius: 9999,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        lineHeight: 1,
                         background: 'var(--color-surface-raised)',
                         color: 'var(--color-text-caption)',
                         border: '1px solid var(--color-border)',
