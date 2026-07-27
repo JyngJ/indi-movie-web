@@ -253,7 +253,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
                   width: 'calc(100% - 32px)', margin: '4px 16px 0', padding: '8px 0',
-                  border: 'none', borderRadius: 'var(--radius-control)', backgroundColor: 'var(--color-surface-raised)',
+                  border: 'none', borderRadius: 'var(--radius-button)', backgroundColor: 'var(--color-surface-raised)',
                   color: 'var(--color-text-caption)', fontSize: 12, fontWeight: 600, cursor: 'pointer', minHeight: 'auto',
                 }}
               >

@@ -607,7 +607,7 @@ export function CurationSections({
 
         const btnStyle = {
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-1)',
-          padding: '8px 0', border: 'none', borderRadius: 'var(--radius-control)',
+          padding: '8px 0', border: 'none', borderRadius: 'var(--radius-button)',
           background: 'var(--color-surface-bg)', color: 'var(--color-text-caption)',
           fontSize: 12, fontWeight: 600, cursor: 'pointer',
         } as const

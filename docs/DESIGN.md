@@ -178,7 +178,8 @@ mono           HEX, 상영 시간, 좌석수 등 정렬이 필요한 수치(tnum
 |----------|----|------|
 | `--radius-badge` | 4px | 배지·라벨·인디케이터 |
 | `--radius-poster` | 8px | 포스터·썸네일·날짜 셀·지도 팝업 |
-| `--radius-control` | 12px | 버튼·입력·칩·카드·상영시간표 셀 |
+| `--radius-button` | 8px | 버튼 (control 12px가 버튼엔 과해 분리) |
+| `--radius-control` | 12px | 입력·칩·카드·상영시간표 셀 |
 | `--radius-popover` | 16px | 드롭다운·팝오버·모달 |
 | `--radius-sheet` | 20px | 바텀시트 상단 |
 | `--radius-pill` | 9999px | pill — 검색창·칩·FAB |

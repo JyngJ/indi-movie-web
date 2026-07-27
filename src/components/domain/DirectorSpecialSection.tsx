@@ -189,7 +189,7 @@ function LeftPanel({
       onMouseLeave={() => setDirBtnHovered(false)}
       style={{
         ...(wide ? { flexShrink: 0 } : { marginTop: 'auto' }),
-        padding: '8px 14px', borderRadius: 'var(--radius-control)',
+        padding: '8px 14px', borderRadius: 'var(--radius-button)',
         border: '1px solid var(--color-border)',
         background: dirBtnHovered ? 'var(--color-surface-raised)' : 'var(--color-surface-card)',
         color: 'var(--color-text-body)',
@@ -268,7 +268,7 @@ function LeftPanel({
             onMouseLeave={() => setTheaterBtnHovered(false)}
             style={{
               ...(wide ? { flexShrink: 0 } : {}),
-              padding: '7px 14px', borderRadius: 'var(--radius-control)', border: 'none',
+              padding: '7px 14px', borderRadius: 'var(--radius-button)', border: 'none',
               background: theaterBtnHovered ? 'var(--color-primary-hover-l)' : 'var(--color-primary-base)',
               color: 'var(--color-on-accent)',
               transition: 'background var(--transition-fast)',
