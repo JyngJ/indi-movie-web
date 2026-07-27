@@ -67,7 +67,7 @@ export default async function FilmsAreaPage({
   )
 
   return (
-    <main style={{ maxWidth: 720, margin: '0 auto', padding: '24px 20px 64px' }}>
+    <main style={{ maxWidth: 720, margin: '0 auto', padding: '24px var(--gutter) 64px' }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(listSchema) }}

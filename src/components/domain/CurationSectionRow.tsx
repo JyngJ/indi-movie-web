@@ -260,7 +260,7 @@ function MovieCard({
               borderRadius: 'var(--radius-badge)',
               fontSize: 11, fontWeight: 600, lineHeight: 1,
               color: 'var(--color-on-accent)',
-              backgroundColor: daysLeft === 0 ? '#DC2626' : daysLeft === 1 ? '#EA580C' : '#78716C',
+              backgroundColor: daysLeft === 0 ? 'var(--color-error)' : daysLeft === 1 ? 'var(--color-warning)' : '#78716C',
               boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
               whiteSpace: 'nowrap',
             }}>
@@ -413,7 +413,7 @@ export function CurationSectionRow({
             display: 'flex',
             gap,
             overflowX: 'auto',
-            padding: `${scaleBleed + 8}px ${scaleBleed + 16}px`,
+            padding: `${scaleBleed + 8}px calc(${scaleBleed}px + var(--gutter))`,
           }}
         >
           {movies.map((movie) => (

@@ -51,7 +51,7 @@ export function DirectorPanel({
   return (
     <PanelShell onClose={onClose} onBack={onBack} embedded={embedded} title={directorName}>
       {/* 감독 헤더 */}
-      <div style={{ padding: '28px 20px 20px', display: 'flex', alignItems: 'center', gap: 16, borderBottom: '1px solid var(--color-border)' }}>
+      <div style={{ padding: '28px var(--gutter) 20px', display: 'flex', alignItems: 'center', gap: 16, borderBottom: '1px solid var(--color-border)' }}>
         <div style={{ width: 64, height: 64, borderRadius: '50%', backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-caption)', flexShrink: 0 }}>
           <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
         </div>
@@ -61,7 +61,7 @@ export function DirectorPanel({
         </div>
       </div>
 
-      <div style={{ padding: '16px 20px 0' }}>
+      <div style={{ padding: '16px var(--gutter) 0' }}>
         <button
           onClick={() => onDirectorFilterOnMap(directorName)}
           style={{
@@ -82,7 +82,7 @@ export function DirectorPanel({
       </div>
 
       {/* 정렬 + 목록 */}
-      <div style={{ padding: '16px 20px 32px' }}>
+      <div style={{ padding: '16px var(--gutter) 32px' }}>
         <div style={{ marginBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>

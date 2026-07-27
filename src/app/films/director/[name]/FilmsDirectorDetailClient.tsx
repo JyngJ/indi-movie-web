@@ -127,7 +127,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
   const heroSection = (
     <div style={{
       background: 'linear-gradient(to bottom, var(--color-primary-subtle-l) 0%, var(--color-surface-bg) 100%)',
-      padding: '32px 20px 24px',
+      padding: '32px var(--gutter) 24px',
       display: 'flex', flexDirection: 'column', alignItems: 'center',
     }}>
       {/* 아바타 */}
@@ -140,7 +140,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
       </div>
 
       {/* 이름 */}
-      <h1 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 26, fontWeight: 700, color: 'var(--color-text-primary)', textAlign: 'center' }}>
+      <h1 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 24, fontWeight: 700, color: 'var(--color-text-primary)', textAlign: 'center' }}>
         {directorName}
       </h1>
       {profile?.originalName && (
@@ -184,7 +184,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
 
         {/* 소개 */}
         {profile?.bio && (
-          <div style={{ padding: '20px 20px', borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
+          <div style={{ padding: '20px var(--gutter)', borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
             <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>소개</p>
             <p style={{ margin: 0, fontSize: 13, lineHeight: 1.8, color: 'var(--color-text-body)', wordBreak: 'keep-all' }}>{profile.bio}</p>
           </div>
@@ -192,7 +192,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
 
         {/* 현재 상영작 */}
         {nowPlaying.length > 0 && (
-          <div style={{ padding: '20px 20px 0' }}>
+          <div style={{ padding: '20px var(--gutter) 0' }}>
             <p style={{ margin: '0 0 16px', fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
               <Clapperboard size={20} strokeWidth={2} color="var(--color-primary-base)" /> 현재 상영작 <span style={{ fontSize: 16, color: 'var(--color-primary-base)' }}>{nowPlaying.length}편</span>
             </p>
@@ -212,7 +212,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
         {/* 작품 목록 */}
         <div style={{ padding: isDesktop ? '20px 0 64px' : '20px 0 52px' }}>
           {/* 헤더 */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px 12px', borderBottom: '1px solid var(--color-border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 var(--gutter) 12px', borderBottom: '1px solid var(--color-border)' }}>
             <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)' }}>
               작품 목록 <span style={{ fontSize: 16, color: 'var(--color-text-caption)', fontWeight: 400 }}>{directorMovies.length}편</span>
             </span>

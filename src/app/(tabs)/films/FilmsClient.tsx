@@ -79,7 +79,7 @@ function RegionHintBubble({ onDismiss }: { onDismiss: () => void }) {
           style={{
             width: 18, height: 18, minWidth: 18, minHeight: 18,
             borderRadius: '50%',
-            background: 'rgba(255,255,255,0.2)',
+            background: 'color-mix(in srgb, var(--color-on-accent) 20%, transparent)',
             border: 'none',
             color: 'var(--color-on-accent)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',

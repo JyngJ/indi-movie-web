@@ -336,7 +336,7 @@ export function DirectorSpecialSection({
         ref={scrollRef}
         onScroll={updateScrollEdge}
         className="no-scrollbar"
-        style={{ display: 'flex', gap, overflowX: 'auto', padding: `${scaleBleed + 8}px ${scaleBleed + 16}px` }}
+        style={{ display: 'flex', gap, overflowX: 'auto', padding: `${scaleBleed + 8}px calc(${scaleBleed}px + var(--gutter))` }}
       >
         {films.map((movie) => (
           <MovieCard
@@ -367,7 +367,7 @@ export function DirectorSpecialSection({
   return (
     <section style={{ paddingTop: isDesktop ? 48 : 24 }}>
       <h2 style={{
-        margin: 0, padding: '0 16px',
+        margin: 0, padding: '0 var(--gutter)',
         fontSize: isDesktop ? 'var(--text-h3)' : 'var(--text-title)',
         fontWeight: 700,
         fontFamily: 'var(--font-display)',
@@ -382,7 +382,7 @@ export function DirectorSpecialSection({
       {isDesktop ? (
         /* ── 데스크톱: 좌우 분할, 동일 마진 ─────── */
         <div style={{
-          margin: '0 16px',
+          margin: '0 var(--gutter)',
           display: 'flex',
           borderRadius: 12,
           overflow: 'hidden',
@@ -402,7 +402,7 @@ export function DirectorSpecialSection({
         </div>
       ) : (
         /* ── 모바일: 위아래 적층, 동일 마진 ─────── */
-        <div style={{ margin: '0 16px', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
+        <div style={{ margin: '0 var(--gutter)', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
           <div style={{ background: 'var(--color-surface-card)' }}>
             <LeftPanel
               directorName={directorName} theater={theater} filmCount={films.length}

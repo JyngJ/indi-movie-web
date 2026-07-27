@@ -262,7 +262,7 @@ export function ZoomSlider({
             position: 'absolute', left: '50%',
             top: thumbTop, transform: 'translateX(-50%)',
             width: 14, height: 14, borderRadius: '50%',
-            backgroundColor: '#fff',
+            backgroundColor: 'var(--color-on-accent)',
             border: '2.5px solid var(--color-primary-base)',
             boxShadow: '0 1px 4px rgba(0,0,0,0.22)',
             transition: 'top 0.08s cubic-bezier(0.34,1.4,0.64,1)',

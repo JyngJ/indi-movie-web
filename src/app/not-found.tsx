@@ -9,7 +9,7 @@ export default function NotFound() {
       justifyContent: 'center',
       minHeight: '100dvh',
       gap: 24,
-      padding: '40px 24px',
+      padding: '40px var(--gutter)',
       background: 'var(--color-surface-bg)',
       textAlign: 'center',
     }}>

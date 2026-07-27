@@ -47,7 +47,7 @@ export function Chip({ selected = false, onDismiss, children, className = '', on
             width: 16,
             height: 16,
             borderRadius: '50%',
-            backgroundColor: 'rgba(0,0,0,0.18)',
+            backgroundColor: 'color-mix(in srgb, var(--color-text-primary) 18%, transparent)',
             flexShrink: 0,
           }}
         >

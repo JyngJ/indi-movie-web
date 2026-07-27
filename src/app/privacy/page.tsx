@@ -17,7 +17,7 @@ export default function PrivacyPolicyPage() {
       style={{
         maxWidth: 760,
         margin: '0 auto',
-        padding: '40px 20px 80px',
+        padding: '40px var(--gutter) 80px',
         color: 'var(--color-text-body)',
         lineHeight: 1.7,
         fontSize: 15,
@@ -28,7 +28,7 @@ export default function PrivacyPolicyPage() {
       <h1
         style={{
           fontFamily: 'var(--font-display)',
-          fontSize: 26,
+          fontSize: 24,
           fontWeight: 700,
           color: 'var(--color-text-primary)',
           margin: '20px 0 8px',

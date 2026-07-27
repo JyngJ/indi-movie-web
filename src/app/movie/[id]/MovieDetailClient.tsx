@@ -242,12 +242,12 @@ function InfoTab({ movie, onDirectorClick, desktop = false }: { movie: MovieDeta
     fontSize: 11, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase',
     color: 'var(--color-text-caption)', marginBottom: 12,
   }
-  const divider: React.CSSProperties = { borderTop: '1px solid var(--color-border)', margin: '0 20px' }
+  const divider: React.CSSProperties = { borderTop: '1px solid var(--color-border)', margin: '0 var(--gutter)' }
 
   return (
     <div style={{ paddingBottom: 52, maxWidth: desktop ? 860 : undefined, margin: desktop ? '0 auto' : undefined }}>
       {movie.synopsis && (
-        <div style={{ padding: desktop ? '34px 0 28px' : '24px 20px' }}>
+        <div style={{ padding: desktop ? '34px 0 28px' : '24px var(--gutter)' }}>
           <p style={sectionLabel}>시놉시스</p>
           <p style={{ margin: 0, fontSize: 14, lineHeight: 1.8, color: 'var(--color-text-body)', wordBreak: 'keep-all' }}>
             {movie.synopsis}
@@ -258,7 +258,7 @@ function InfoTab({ movie, onDirectorClick, desktop = false }: { movie: MovieDeta
       {movie.director.length > 0 && (
         <>
           <div style={divider} />
-          <div style={{ padding: '20px 20px' }}>
+          <div style={{ padding: '20px var(--gutter)' }}>
             <p style={sectionLabel}>감독</p>
             {movie.director.map((name) => (
               <button
@@ -293,7 +293,7 @@ function InfoTab({ movie, onDirectorClick, desktop = false }: { movie: MovieDeta
       )}
 
       <div style={divider} />
-      <div style={{ padding: '20px 20px' }}>
+      <div style={{ padding: '20px var(--gutter)' }}>
         <p style={sectionLabel}>상세 정보</p>
         <MovieInfoTable movie={movie} />
       </div>
@@ -594,7 +594,7 @@ function SeoShowtimesSection({ movie, entries }: { movie: MovieDetail; entries: 
 
   return (
     <div ref={ref}>
-      <section aria-label={`${movie.title} 상영 시간표`} style={{ padding: '20px 20px 0' }}>
+      <section aria-label={`${movie.title} 상영 시간표`} style={{ padding: '20px var(--gutter) 0' }}>
         <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)' }}>
           {movie.title} 상영 시간표
         </h2>

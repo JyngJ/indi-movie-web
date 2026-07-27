@@ -138,7 +138,7 @@ export function AddRequestModal({ open, query, onClose }: Props) {
       )}
 
       {step === 'success' ? (
-        <div style={{ padding: '40px 24px', textAlign: 'center' }}>
+        <div style={{ padding: '40px var(--gutter)', textAlign: 'center' }}>
           <div style={{
             width: 64, height: 64, borderRadius: '50%',
             background: 'var(--color-primary-subtle-l)',
@@ -166,7 +166,7 @@ export function AddRequestModal({ open, query, onClose }: Props) {
           </button>
         </div>
       ) : (
-        <div style={{ padding: isDesktop ? '24px 24px 0' : '8px 20px 0', overflowY: 'auto' }}>
+        <div style={{ padding: isDesktop ? '24px var(--gutter) 0' : '8px var(--gutter) 0', overflowY: 'auto' }}>
           <p style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text-primary)', margin: '0 0 4px' }}>
             추가 요청하기
           </p>

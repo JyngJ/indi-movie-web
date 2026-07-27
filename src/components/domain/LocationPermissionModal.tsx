@@ -97,7 +97,7 @@ export function LocationPermissionModal({ state, onRequest, onDismiss }: Props) 
       <div style={{ height: 1, background: 'var(--color-border)' }} />
 
       {/* 본문 */}
-      <div style={{ padding: '28px 24px 0', textAlign: 'center' }}>
+      <div style={{ padding: '28px var(--gutter) 0', textAlign: 'center' }}>
         {/* 아이콘 */}
         <div style={{
           width: 80, height: 80, borderRadius: '50%',
@@ -149,7 +149,7 @@ export function LocationPermissionModal({ state, onRequest, onDismiss }: Props) 
       </div>
 
       {/* 버튼 영역 */}
-      <div style={{ padding: '24px 24px 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ padding: '24px var(--gutter) 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
         <button
           disabled={isRequesting}
           onClick={onRequest}

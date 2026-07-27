@@ -116,7 +116,7 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
           display: 'flex',
           alignItems: 'flex-end',
           justifyContent: 'space-between',
-          padding: isDesktop ? '20px 16px 0' : '16px 16px 0',
+          padding: isDesktop ? '20px var(--gutter) 0' : '16px var(--gutter) 0',
           gap: 8,
         }}>
           <div>
@@ -176,7 +176,7 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
               ? 'repeat(auto-fill, minmax(240px, 1fr))'
               : 'repeat(3, 1fr)',
             gap: isDesktop ? 20 : 12,
-            padding: isDesktop ? '16px 16px 0' : '14px 12px 0',
+            padding: isDesktop ? '16px var(--gutter) 0' : '14px var(--gutter) 0',
           }}
         >
           {sorted.map((movie) => (

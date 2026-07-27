@@ -34,21 +34,21 @@ function RankBadge({ rank, prevRank }: { rank: number; prevRank: number | null }
       <span style={{
         fontSize: 10, fontWeight: 700, padding: '4px', borderRadius: 'var(--radius-badge)',
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
-        background: '#D97706', color: 'var(--color-on-accent)', letterSpacing: 0.2,
+        background: 'var(--color-warning)', color: 'var(--color-on-accent)', letterSpacing: 0.2,
       }}>NEW</span>
     )
   }
   const diff = prevRank - rank
   if (diff > 0) {
     return (
-      <span style={{ fontSize: 10, fontWeight: 700, color: '#16A34A', display: 'flex', alignItems: 'center' }}>
+      <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-success)', display: 'flex', alignItems: 'center' }}>
         <TrendingUp size={12} strokeWidth={2.5} color="currentColor" /> {diff}
       </span>
     )
   }
   if (diff < 0) {
     return (
-      <span style={{ fontSize: 10, fontWeight: 700, color: '#DC2626', display: 'flex', alignItems: 'center' }}>
+      <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-error)', display: 'flex', alignItems: 'center' }}>
         <TrendingDown size={12} strokeWidth={2.5} color="currentColor" /> {Math.abs(diff)}
       </span>
     )
@@ -226,7 +226,7 @@ export function FilmRankingSection({ weekStart, rankings, movies, isDesktop, onM
 
   return (
     <section style={{ paddingTop: 28 }}>
-      <div style={{ padding: '0 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div style={{ padding: '0 var(--gutter)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <h2 style={{
@@ -287,7 +287,7 @@ export function FilmRankingSection({ weekStart, rankings, movies, isDesktop, onM
           style={{
             display: 'flex',
             overflowX: 'auto',
-            padding: `12px 16px 8px ${paddingLeft}px`,
+            padding: `12px var(--gutter) 8px ${paddingLeft}px`,
           }}
         >
           {rankings.map((entry, i) => (

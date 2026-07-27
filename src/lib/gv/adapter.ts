@@ -38,7 +38,7 @@ function formatGvTime(eventDate: string, eventTime?: string): string {
 
 /** 이벤트 타입별 강조색 — design.md semantic 컬러 재사용 (GV: warning, 토크: success, 상영회·이벤트: error, 페스티벌: 보라) */
 export function gvEventTypeColor(type: GvEventType): string {
-  if (type === '페스티벌') return '#7C3AED'
+  if (type === '페스티벌') return 'var(--color-gv)'
   if (type === '토크') return 'var(--color-success)'
   if (type === '상영회' || type === '이벤트') return 'var(--color-error)'
   return 'var(--color-warning)'

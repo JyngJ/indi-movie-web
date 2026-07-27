@@ -2551,7 +2551,7 @@ export default function MapView() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: '#7C3AED',
+                backgroundColor: 'var(--color-gv)',
                 color: 'var(--color-on-accent)',
               }}>
                 <svg width={20} height={20} viewBox="0 0 24 24" fill="none"
@@ -3639,7 +3639,7 @@ export default function MapView() {
           >
             <div style={{
               width: 28, height: 28, borderRadius: '50%',
-              backgroundColor: 'rgba(255,255,255,0.18)',
+              backgroundColor: 'color-mix(in srgb, var(--color-on-accent) 18%, transparent)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0,
             }}>

@@ -81,7 +81,7 @@ function ProfileHero({
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center',
-      padding: '32px 20px 24px',
+      padding: '32px var(--gutter) 24px',
       background: 'linear-gradient(to bottom, var(--color-primary-subtle-l) 0%, var(--color-surface-bg) 100%)',
     }}>
       <div style={{
@@ -102,7 +102,7 @@ function ProfileHero({
           </svg>
         )}
       </div>
-      <h1 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 26, fontWeight: 700, color: 'var(--color-text-primary)', textAlign: 'center' }}>
+      <h1 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 24, fontWeight: 700, color: 'var(--color-text-primary)', textAlign: 'center' }}>
         {name}
       </h1>
       {originalName && (
@@ -296,14 +296,14 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
 
       {/* 약력 */}
       {profile?.bio && (
-        <div style={{ padding: '16px 20px', borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
+        <div style={{ padding: '16px var(--gutter)', borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
           <p style={{ margin: 0, fontSize: 13, lineHeight: 1.8, color: 'var(--color-text-body)' }}>
             {profile.bio}
           </p>
         </div>
       )}
 
-      <div style={{ maxWidth: isDesktop ? 860 : undefined, margin: isDesktop ? '20px auto 0' : undefined, padding: isDesktop ? 0 : '16px 20px 0' }}>
+      <div style={{ maxWidth: isDesktop ? 860 : undefined, margin: isDesktop ? '20px auto 0' : undefined, padding: isDesktop ? 0 : '16px var(--gutter) 0' }}>
         <button
           onClick={() => router.push(`/?director=${encodeURIComponent(directorName)}`)}
           style={{
@@ -327,7 +327,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
       <div style={{
         maxWidth: isDesktop ? 860 : undefined,
         margin: isDesktop ? '0 auto' : undefined,
-        padding: isDesktop ? '24px 0 64px' : '0 20px 52px',
+        padding: isDesktop ? '24px 0 64px' : '0 var(--gutter) 52px',
         border: isDesktop ? '1px solid var(--color-border)' : undefined,
         borderRadius: isDesktop ? 20 : undefined,
         backgroundColor: isDesktop ? 'var(--color-surface-card)' : undefined,

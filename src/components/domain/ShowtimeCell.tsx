@@ -25,7 +25,7 @@ function InlineBadge({ text, color }: { text: string; color: string }) {
         padding: '0 8px',
         borderRadius: 'var(--radius-badge)',
         backgroundColor: color,
-        color: '#FFFFFF',
+        color: 'var(--color-on-accent)',
         fontSize: 'var(--text-badge)',
         fontWeight: 700,
         letterSpacing: '0.4px',
@@ -106,9 +106,9 @@ export function ShowtimeCell({
         }}
       >
         {isNowPlaying ? (
-          <span style={{ color: '#F97316', fontWeight: 700 }}>상영중</span>
+          <span style={{ color: 'var(--color-warning)', fontWeight: 700 }}>상영중</span>
         ) : isEnded ? (
-          <span style={{ color: '#EF4444', fontWeight: 700 }}>상영 완료</span>
+          <span style={{ color: 'var(--color-error)', fontWeight: 700 }}>상영 완료</span>
         ) : (
           <>
             <span style={{ color: seatColor, fontWeight: 600, textDecoration: isSoldout ? 'line-through' : 'none' }}>{seatAvailable}</span>

@@ -552,7 +552,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
             <RegionFilterWidget onRegionChange={setRegionId} />
           </div>
         </div>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 28px' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 var(--gutter)' }}>
           {/* hero */}
           {heroSection}
           {ctaButtons}

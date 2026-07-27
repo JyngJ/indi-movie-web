@@ -74,7 +74,7 @@ export function MoviePanel({
       {/* 히어로 */}
       <div style={{
         background: 'linear-gradient(135deg, var(--color-surface-card) 0%, var(--color-primary-subtle-l) 100%)',
-        padding: '24px 20px 20px',
+        padding: '24px var(--gutter) 20px',
         display: 'flex',
         gap: 20,
         alignItems: 'flex-start',
@@ -161,13 +161,13 @@ export function MoviePanel({
 }
 
 function MovieInfoTab({ movie, onDirectorClick }: { movie: NonNullable<ReturnType<typeof useMovieDetail>['data']>; onDirectorClick: (n: string) => void }) {
-  const divider: React.CSSProperties = { borderTop: '1px solid var(--color-border)', margin: '0 20px' }
+  const divider: React.CSSProperties = { borderTop: '1px solid var(--color-border)', margin: '0 var(--gutter)' }
   const sectionLabel: React.CSSProperties = { fontSize: 11, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)', marginBottom: 12 }
 
   return (
     <div style={{ paddingBottom: 32 }}>
       {movie.synopsis && (
-        <div style={{ padding: '24px 20px' }}>
+        <div style={{ padding: '24px var(--gutter)' }}>
           <p style={sectionLabel}>시놉시스</p>
           <p style={{ margin: 0, fontSize: 14, lineHeight: 1.8, color: 'var(--color-text-body)', wordBreak: 'keep-all' }}>{movie.synopsis}</p>
         </div>
@@ -175,7 +175,7 @@ function MovieInfoTab({ movie, onDirectorClick }: { movie: NonNullable<ReturnTyp
       {movie.director.length > 0 && (
         <>
           <div style={divider} />
-          <div style={{ padding: '20px 20px' }}>
+          <div style={{ padding: '20px var(--gutter)' }}>
             <p style={sectionLabel}>감독</p>
             {movie.director.map((name) => (
               <button
@@ -203,7 +203,7 @@ function MovieInfoTab({ movie, onDirectorClick }: { movie: NonNullable<ReturnTyp
         </>
       )}
       <div style={divider} />
-      <div style={{ padding: '20px 20px' }}>
+      <div style={{ padding: '20px var(--gutter)' }}>
         <p style={sectionLabel}>상세 정보</p>
         <MovieInfoTable movie={movie} />
       </div>
@@ -330,7 +330,7 @@ function MovieTheatersTab({
   )
 
   return (
-    <div style={{ padding: '20px 20px 32px' }}>
+    <div style={{ padding: '20px var(--gutter) 32px' }}>
       <MapCtaButton
         variant="desktop"
         onClick={() => {

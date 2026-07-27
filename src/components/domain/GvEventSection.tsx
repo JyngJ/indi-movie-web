@@ -33,9 +33,9 @@ function gvTimeToIsoDate(time: string, refYear: number): string {
 }
 
 function statusColor(status: GvEvent['status']): string {
-  if (status === '매진') return '#b91c1c'
-  if (status === '매진 임박') return '#ea580c'
-  return '#16a34a'
+  if (status === '매진') return 'var(--color-error)'
+  if (status === '매진 임박') return 'var(--color-warning)'
+  return 'var(--color-success)'
 }
 
 interface GvEventSectionProps {
@@ -90,7 +90,7 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
         onClick={() => setOpen(o => !o)}
         style={{
           display: 'flex', alignItems: 'center', width: '100%',
-          padding: '12px 16px 8px', gap: 8,
+          padding: '12px var(--gutter) 8px', gap: 8,
           background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
         }}
       >
@@ -133,7 +133,7 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
             onScroll={updateEdge}
             style={{
               display: 'flex', gap: 'var(--spacing-2)', overflowX: 'auto',
-              padding: '4px 16px 12px',
+              padding: '4px var(--gutter) 12px',
               scrollbarWidth: 'none',
             }}
           >

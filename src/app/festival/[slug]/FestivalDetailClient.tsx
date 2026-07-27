@@ -20,7 +20,7 @@ function proxiedImageUrl(url: string, width: number) {
 }
 
 const STATUS_LABEL: Record<FestivalStatus, string> = { upcoming: '예정', ongoing: '진행중', ended: '종료' }
-const STATUS_COLOR: Record<FestivalStatus, string> = { upcoming: 'var(--color-warning)', ongoing: '#16A34A', ended: 'var(--color-text-caption)' }
+const STATUS_COLOR: Record<FestivalStatus, string> = { upcoming: 'var(--color-warning)', ongoing: 'var(--color-success)', ended: 'var(--color-text-caption)' }
 
 // 라인업 그리드 접힌 상태 노출 개수 — 지도 큐레이션 탭(CurationSheet)과 같은 더보기 패턴,
 // 컬럼 수와 무관하게 고정 개수로 자른다(그쪽도 SECTION_COLLAPSED_COUNT=6 고정값 사용)

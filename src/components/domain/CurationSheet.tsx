@@ -170,7 +170,7 @@ function PosterRow({ items, onSelect, emptyText, desktop = false }: {
 
   if (items.length === 0) {
     return (
-      <p style={{ margin: 0, paddingLeft: 20, paddingRight: 20, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
+      <p style={{ margin: 0, paddingLeft: 'var(--gutter)', paddingRight: 'var(--gutter)', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
         {emptyText}
       </p>
     )
@@ -181,14 +181,14 @@ function PosterRow({ items, onSelect, emptyText, desktop = false }: {
       display: 'grid',
       gridTemplateColumns: 'repeat(3, 1fr)',
       gap: 'var(--spacing-3)',
-      paddingLeft: 20,
-      paddingRight: 20,
+      paddingLeft: 'var(--gutter)',
+      paddingRight: 'var(--gutter)',
     } : {
       display: 'flex',
       gap: 'var(--spacing-3)',
       overflowX: 'auto',
-      paddingLeft: 20,
-      paddingRight: 20,
+      paddingLeft: 'var(--gutter)',
+      paddingRight: 'var(--gutter)',
     }}>
       {items.map((item) => (
         <PosterItem key={item.id} item={item} posterSize={posterSize} desktop={desktop} onSelect={onSelect} />
@@ -341,7 +341,7 @@ function Section({ title, icon, withLine, action, style, children }: {
 }) {
   return (
     <section style={{ display: 'flex', flexDirection: 'column', gap: 12, ...style }}>
-      <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 20, paddingRight: 20, gap: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 'var(--gutter)', paddingRight: 'var(--gutter)', gap: 8 }}>
         {icon && <span style={{ display: 'flex', alignItems: 'center', color: 'var(--color-text-body)' }}>{icon}</span>}
         <h3 style={{
           margin: 0,
@@ -411,13 +411,13 @@ function RecentList({
 
   if (items.length === 0) {
     return (
-      <p style={{ margin: 0, paddingLeft: 20, paddingRight: 20, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
+      <p style={{ margin: 0, paddingLeft: 'var(--gutter)', paddingRight: 'var(--gutter)', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
         최근 찾아본 영화·극장·감독이 아직 없어요
       </p>
     )
   }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingLeft: 20, paddingRight: 20 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingLeft: 'var(--gutter)', paddingRight: 'var(--gutter)' }}>
       {items.map(item => (
         <div
           key={`${item.kind}-${item.id}`}

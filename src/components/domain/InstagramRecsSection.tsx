@@ -364,7 +364,7 @@ export function InstagramRecsSection({
           </button>
         }
       />
-      <div style={{ padding: '12px 16px' }}>
+      <div style={{ padding: '12px var(--gutter)' }}>
         <InstagramRecCard
           rec={pick}
           activeMovieIds={activeMovieIds}

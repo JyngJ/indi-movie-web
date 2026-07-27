@@ -64,6 +64,7 @@
   --color-success: #4A7C59;
   --color-error:   #B94A48;
   --color-info:    #3B82F6;
+  --color-gv:      #7C3AED;   /* GV/페스티벌 브랜드 보라 — 지도 GV 핀·페스티벌 이벤트 타입 강조색 */
 
   /* ── Multiplex (핀 전용, 텍스트 미사용) ── */
   --color-cgv:   #E30613;

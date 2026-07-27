@@ -247,7 +247,7 @@ export function SettingsReportPage({
   }
 
   return (
-    <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px', paddingBottom: 'max(24px, env(safe-area-inset-bottom))', display: 'flex', flexDirection: 'column', gap: 20, backgroundColor: 'var(--color-surface-bg)' }}>
+    <div style={{ flex: 1, overflowY: 'auto', padding: '16px var(--gutter)', paddingBottom: 'max(24px, env(safe-area-inset-bottom))', display: 'flex', flexDirection: 'column', gap: 20, backgroundColor: 'var(--color-surface-bg)' }}>
       <p style={{ margin: 0, fontSize: 13, color: 'var(--color-text-sub)', lineHeight: 1.55 }}>
         발견하신 오류를 알려주세요. 어떤 화면에서 무엇이 잘못됐는지 적어주시면 큰 도움이 됩니다.
       </p>
