@@ -2499,7 +2499,7 @@ export default function MapView() {
     return (
       <section>
         <h2 style={{
-          margin: '0 0 10px',
+          margin: '0 0 12px',
           fontSize: 12,
           fontWeight: 700,
           color: 'var(--color-text-caption)',
@@ -2592,7 +2592,7 @@ export default function MapView() {
     return (
       <section>
         <h2 style={{
-          margin: '0 0 10px',
+          margin: '0 0 12px',
           fontSize: 12,
           fontWeight: 700,
           color: 'var(--color-text-caption)',
@@ -2629,7 +2629,7 @@ export default function MapView() {
               <span style={{
                 width: 38,
                 height: 38,
-                borderRadius: 10,
+                borderRadius: 12,
                 flexShrink: 0,
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -2700,7 +2700,7 @@ export default function MapView() {
     return (
       <section>
         <h2 style={{
-          margin: '0 0 10px',
+          margin: '0 0 12px',
           fontSize: 12,
           fontWeight: 700,
           color: 'var(--color-text-caption)',
@@ -2740,7 +2740,7 @@ export default function MapView() {
               <div style={{
                 width: 48,
                 height: 68,
-                borderRadius: 6,
+                borderRadius: 8,
                 overflow: 'hidden',
                 flexShrink: 0,
                 backgroundColor: 'var(--color-surface-card)',
@@ -2779,8 +2779,8 @@ export default function MapView() {
                     <span style={{
                       flexShrink: 0,
                       height: 20,
-                      padding: '0 7px',
-                      borderRadius: 5,
+                      padding: '0 8px',
+                      borderRadius: 4,
                       display: 'inline-flex',
                       alignItems: 'center',
                       fontSize: 11,
@@ -2795,7 +2795,7 @@ export default function MapView() {
                 </div>
                 {movie.originalTitle && (
                   <div style={{
-                    marginTop: 2,
+                    marginTop: 4,
                     fontFamily: 'var(--font-serif-en)',
                     fontSize: 'var(--text-bask-meta)',
                     fontStyle: 'normal',
@@ -2822,7 +2822,7 @@ export default function MapView() {
     return (
       <section>
         <h2 style={{
-          margin: '0 0 10px',
+          margin: '0 0 12px',
           fontSize: 12,
           fontWeight: 700,
           color: 'var(--color-text-caption)',
@@ -2905,7 +2905,7 @@ export default function MapView() {
     return (
       <section>
         <h2 style={{
-          margin: '0 0 10px',
+          margin: '0 0 12px',
           fontSize: 12,
           fontWeight: 700,
           color: 'var(--color-text-caption)',
@@ -2934,7 +2934,7 @@ export default function MapView() {
               <span style={{
                 width: 38,
                 height: 38,
-                borderRadius: 10,
+                borderRadius: 12,
                 flexShrink: 0,
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -2973,7 +2973,7 @@ export default function MapView() {
                 <span style={{ display: 'block', fontSize: 15, fontWeight: 700 }}>
                   {station.name}
                 </span>
-                <span style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 5 }}>
+                <span style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 4 }}>
                   {station.lines.map((line) => (
                     <span
                       key={line}
@@ -2981,7 +2981,7 @@ export default function MapView() {
                         display: 'inline-flex',
                         alignItems: 'center',
                         height: 18,
-                        padding: '0 6px',
+                        padding: '0 8px',
                         borderRadius: 4,
                         fontSize: 11,
                         fontWeight: 700,
@@ -3026,7 +3026,7 @@ export default function MapView() {
     if (areaResults.length === 0) return null
     return (
       <section>
-        <h2 style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 700, color: 'var(--color-text-caption)' }}>
+        <h2 style={{ margin: '0 0 12px', fontSize: 12, fontWeight: 700, color: 'var(--color-text-caption)' }}>
           지역
         </h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
@@ -3043,7 +3043,7 @@ export default function MapView() {
                 }}
               >
                 <span style={{
-                  width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+                  width: 38, height: 38, borderRadius: 12, flexShrink: 0,
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                   backgroundColor: 'var(--color-surface-card)', border: '1px solid var(--color-border)',
                   color: 'var(--color-text-sub)',
@@ -3058,7 +3058,7 @@ export default function MapView() {
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 15, fontWeight: 700 }}>{area.name}</div>
-                  <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 2 }}>
+                  <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4 }}>
                     영화관 {area.theaters.length}곳
                   </div>
                 </div>
@@ -3066,7 +3066,7 @@ export default function MapView() {
               </button>
               {area.theaters.length > 0 && (
                 <div style={{
-                  marginLeft: 50,
+                  marginLeft: 52,
                   paddingBottom: 12,
                   borderBottom: '1px solid var(--color-border)',
                 }}>
@@ -3086,7 +3086,7 @@ export default function MapView() {
                       }}
                       style={{
                         width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-                        padding: '6px 0', border: 0, background: 'transparent',
+                        padding: '8px 0', border: 0, background: 'transparent',
                         color: 'var(--color-text-body)', textAlign: 'left', cursor: 'pointer',
                       }}
                     >
@@ -3623,7 +3623,7 @@ export default function MapView() {
               alignItems: 'center',
               gap: 8,
               height: 40,
-              paddingLeft: 6,
+              paddingLeft: 8,
               paddingRight: 16,
               borderRadius: 9999,
               border: '1px solid rgba(0,0,0,0.14)',
