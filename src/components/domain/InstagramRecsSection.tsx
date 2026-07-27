@@ -214,6 +214,7 @@ function InstagramRecCard({
             {moviesWithPoster.map((m) => (
               <div
                 key={m.id}
+                className={m.movieId ? 'hover-lift' : undefined}
                 onClick={m.movieId ? () => onPosterClick(m.movieId!) : undefined}
                 style={{
                   position: 'relative', height: '100%', aspectRatio: '2/3', flexShrink: 0,

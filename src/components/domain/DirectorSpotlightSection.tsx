@@ -69,6 +69,7 @@ function DirectorCard({ director, isDesktop, onClick }: { director: DirectorSpot
       }}
     >
       <div
+        className={onClick ? 'hover-lift' : undefined}
         style={{
           width: size,
           height: size,
@@ -146,7 +147,7 @@ export function DirectorSpotlightSection({
         <h2
           style={{
             margin: 0,
-            fontSize: isDesktop ? 'var(--text-h3)' : 'var(--text-title)',
+            fontSize: isDesktop ? 'var(--text-h2)' : 'var(--text-h3)',
             fontWeight: 700,
             fontFamily: 'var(--font-display)',
             color: 'var(--color-text-primary)',
@@ -157,7 +158,7 @@ export function DirectorSpotlightSection({
         >
           감독 스포트라이트
         </h2>
-        <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-caption)' }}>
+        <p style={{ margin: '4px 0 0', fontSize: isDesktop ? 'var(--text-meta)' : 'var(--text-caption)', color: 'var(--color-text-caption)' }}>
           지금 주목할 만한 감독
         </p>
       </div>

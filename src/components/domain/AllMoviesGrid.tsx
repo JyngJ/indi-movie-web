@@ -35,9 +35,10 @@ function sortMovies(
   }
 }
 
-function GridPoster({ src, alt }: { src?: string; alt: string }) {
+function GridPoster({ src, alt, interactive }: { src?: string; alt: string; interactive?: boolean }) {
   return (
     <div
+      className={interactive ? 'hover-lift' : undefined}
       style={{
         width: '100%',
         aspectRatio: '2/3',
@@ -123,7 +124,7 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
             <h2
               style={{
                 margin: 0,
-                fontSize: isDesktop ? 20 : 17,
+                fontSize: isDesktop ? 'var(--text-h2)' : 'var(--text-h3)',
                 fontWeight: 700,
                 fontFamily: 'var(--font-display)',
                 color: 'var(--color-text-primary)',
@@ -134,7 +135,7 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
             >
               지금 {regionText}상영 전체
             </h2>
-            <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-caption)' }}>
+            <p style={{ margin: '4px 0 0', fontSize: isDesktop ? 'var(--text-meta)' : 'var(--text-caption)', color: 'var(--color-text-caption)' }}>
               {movies.length}편 상영 중
             </p>
           </div>
@@ -190,7 +191,7 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
                 cursor: onMovieClick ? 'pointer' : undefined,
               }}
             >
-              <GridPoster src={movie.posterUrl} alt={movie.title} />
+              <GridPoster src={movie.posterUrl} alt={movie.title} interactive={!!onMovieClick} />
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span
