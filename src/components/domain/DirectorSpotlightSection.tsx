@@ -122,7 +122,7 @@ function DirectorCard({ director, isDesktop, onClick }: { director: DirectorSpot
 
       <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-caption)', whiteSpace: 'nowrap' }}>
         상영중{' '}
-        <strong style={{ color: 'var(--color-accent)', fontWeight: 700 }}>
+        <strong style={{ color: 'var(--color-primary-base)', fontWeight: 700 }}>
           {director.movieCount}
         </strong>
         편

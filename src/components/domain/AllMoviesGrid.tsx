@@ -230,7 +230,7 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
                       style={{
                         fontSize: 10,
                         padding: '1px 5px',
-                        borderRadius: 99,
+                        borderRadius: 9999,
                         background: 'var(--color-surface-raised)',
                         color: 'var(--color-text-caption)',
                         border: '1px solid var(--color-border)',

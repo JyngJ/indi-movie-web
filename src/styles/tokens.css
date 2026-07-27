@@ -22,6 +22,7 @@
   --color-surface-card:   #FFFFFF;   /* 카드·시트·시간표 셀 */
   --color-surface-raised: #F0EDE6;   /* 비활성 칩·스크롤 hint */
   --color-border:         #DDD9CF;
+  --color-surface-overlay: rgba(0, 0, 0, 0.06);   /* 닫기 버튼·장르 칩·배지 등 표면 위 옅은 오버레이 배경 */
 
   /* ── Text (라이트 모드)
       역할          토큰           HEX
@@ -45,6 +46,12 @@
   /* Backward-compat aliases (이전 컴포넌트 호환) */
   --color-text-secondary: var(--color-text-caption);
   --color-text-disabled:  var(--color-text-placeholder);
+
+  /* admin.module.css 미정의 변수 alias — admin이 쓰다 만 별도 네이밍을 전역 토큰에 연결
+     (CSS Modules는 :root 전역 선언을 허용하지 않아 여기에 정의) */
+  --color-surface:       var(--color-surface-card);
+  --color-text:          var(--color-text-primary);
+  --color-primary-light: var(--color-primary-hover-l);
 
   /* ── Primary ── */
   --color-primary-base:     #4A6380;
@@ -198,6 +205,7 @@
   --color-surface-card:   #1A1814;
   --color-surface-raised: #242019;
   --color-border:         #2C2820;
+  --color-surface-overlay: rgba(255, 255, 255, 0.08);
 
   /* ── Text (다크 모드)
       역할          토큰           HEX

@@ -133,7 +133,7 @@ export function AddRequestModal({ open, query, onClose }: Props) {
     >
       {!isDesktop && (
         <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 4px', flexShrink: 0 }}>
-          <div style={{ width: 36, height: 4, borderRadius: 99, background: 'var(--color-border)' }} />
+          <div style={{ width: 36, height: 4, borderRadius: 9999, background: 'var(--color-border)' }} />
         </div>
       )}
 

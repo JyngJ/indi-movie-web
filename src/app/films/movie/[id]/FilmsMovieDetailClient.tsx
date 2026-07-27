@@ -392,7 +392,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
         </span>
         <button
           onClick={() => router.push(mapUrlWithSelection())}
-          style={{ height: 30, padding: '0 12px', borderRadius: 99, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', color: 'var(--color-text-body)', fontSize: 12, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, minHeight: 'auto' }}
+          style={{ height: 30, padding: '0 12px', borderRadius: 9999, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', color: 'var(--color-text-body)', fontSize: 12, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, minHeight: 'auto' }}
         >
           <IcoMap /> 지도에서 필터로 보기
         </button>

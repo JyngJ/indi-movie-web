@@ -258,7 +258,7 @@ export function MovieSheet({ movieId, onClose, onTheaterSelect, onRecentlyViewed
                 {/* 극장 이름 */}
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: 6,
-                  padding: '6px 16px', backgroundColor: 'var(--color-surface-base)',
+                  padding: '6px 16px', backgroundColor: 'var(--color-surface-bg)',
                 }}>
                   <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)' }}>
                     {theater.theaterName}

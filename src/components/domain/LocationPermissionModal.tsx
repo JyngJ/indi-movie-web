@@ -74,7 +74,7 @@ export function LocationPermissionModal({ state, onRequest, onDismiss }: Props) 
       {/* 모바일 드래그 핸들 */}
       {!isDesktop && (
         <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 8px' }}>
-          <div style={{ width: 36, height: 4, borderRadius: 99, background: 'var(--color-border)' }} />
+          <div style={{ width: 36, height: 4, borderRadius: 9999, background: 'var(--color-border)' }} />
         </div>
       )}
 

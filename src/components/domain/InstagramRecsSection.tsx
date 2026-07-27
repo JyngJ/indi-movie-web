@@ -245,7 +245,7 @@ function InstagramRecCard({
       {/* 상태 뱃지 */}
       <div
         style={{
-          position: 'absolute', bottom: 10, right: 10, padding: '4px 10px', borderRadius: 99,
+          position: 'absolute', bottom: 10, right: 10, padding: '4px 10px', borderRadius: 9999,
           fontSize: 11, fontWeight: 700,
           backgroundColor: badge.tone === 'active' ? 'var(--color-success)' : 'rgba(0,0,0,0.55)',
           color: 'var(--color-on-accent)',
