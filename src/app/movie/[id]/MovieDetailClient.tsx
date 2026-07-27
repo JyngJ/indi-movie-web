@@ -13,7 +13,10 @@ import { useUserLocation } from '@/hooks/useUserLocation'
 import { locationAdapter } from '@/lib/adapters/location'
 import { calculateAndFormatDistance, calculateDistanceKm } from '@/lib/map/distanceUtils'
 import { getRegionFromAddress, getRegionFromCoords } from '@/lib/regions'
+import { formatDateLabel } from '@/lib/date'
 import { Toast } from '@/components/primitives'
+import { MovieInfoTable } from '@/components/domain/movieDetail/MovieInfoTable'
+import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 
 function useIsDesktopDetail() {
   const [isDesktop, setIsDesktop] = useState(
@@ -45,13 +48,6 @@ const IcoClose = () => (
 const IcoChevronRight = () => (
   <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M9 18l6-6-6-6" />
-  </svg>
-)
-const IcoMap = () => (
-  <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
-    <line x1="8" y1="2" x2="8" y2="18" />
-    <line x1="16" y1="6" x2="16" y2="22" />
   </svg>
 )
 const IcoPin = () => (
@@ -244,7 +240,7 @@ function TabBar({ active, onChange, desktop = false }: { active: 'info' | 'theat
 function InfoTab({ movie, onDirectorClick, desktop = false }: { movie: MovieDetail; onDirectorClick: (name: string) => void; desktop?: boolean }) {
   const sectionLabel: React.CSSProperties = {
     fontSize: 11, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase',
-    color: 'var(--color-text-caption)', marginBottom: 10,
+    color: 'var(--color-text-caption)', marginBottom: 12,
   }
   const divider: React.CSSProperties = { borderTop: '1px solid var(--color-border)', margin: '0 20px' }
 
@@ -269,11 +265,11 @@ function InfoTab({ movie, onDirectorClick, desktop = false }: { movie: MovieDeta
                 key={name}
                 onClick={() => onDirectorClick(name)}
                 style={{
-                  width: '100%', display: 'flex', alignItems: 'center', gap: 14,
-                  padding: '14px 16px', borderRadius: 12,
+                  width: '100%', display: 'flex', alignItems: 'center', gap: 16,
+                  padding: '16px', borderRadius: 12,
                   border: '1px solid var(--color-border)',
                   backgroundColor: 'var(--color-surface-card)',
-                  cursor: 'pointer', textAlign: 'left', marginBottom: 10, minHeight: 'auto',
+                  cursor: 'pointer', textAlign: 'left', marginBottom: 12, minHeight: 'auto',
                 }}
               >
                 <div style={{
@@ -299,33 +295,10 @@ function InfoTab({ movie, onDirectorClick, desktop = false }: { movie: MovieDeta
       <div style={divider} />
       <div style={{ padding: '20px 20px' }}>
         <p style={sectionLabel}>상세 정보</p>
-        <div style={{ borderRadius: 10, border: '1px solid var(--color-border)', overflow: 'hidden' }}>
-          {[
-            { key: '국가', value: movie.nation ? withFlagsRaw(movie.nation) : undefined },
-            { key: '개봉', value: movie.year ? String(movie.year) : undefined },
-            { key: '상영 시간', value: movie.runtimeMinutes ? `${movie.runtimeMinutes}분` : undefined },
-            { key: '장르', value: movie.genre.join(', ') || undefined },
-          ].filter((r) => r.value).map((row, i, arr) => (
-            <div key={row.key} style={{
-              display: 'flex', alignItems: 'center', padding: '13px 16px',
-              borderBottom: i < arr.length - 1 ? '1px solid var(--color-border)' : 'none',
-            }}>
-              <span style={{ width: 72, flexShrink: 0, fontSize: 13, color: 'var(--color-text-sub)', fontWeight: 500 }}>{row.key}</span>
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)' }}>{row.value}</span>
-            </div>
-          ))}
-        </div>
+        <MovieInfoTable movie={movie} />
       </div>
     </div>
   )
-}
-
-/* ── 날짜 포맷 헬퍼 ── */
-function formatDateLabel(dateStr: string) {
-  const DOW = ['일', '월', '화', '수', '목', '금', '토']
-  const [, m, d] = dateStr.split('-').map(Number)
-  const dow = DOW[new Date(dateStr + 'T00:00:00').getDay()]
-  return `${m}월 ${d}일(${dow})`
 }
 
 /* ── TheaterShowtimeChips ── */
@@ -350,12 +323,12 @@ function TheaterShowtimeChips({
   return (
     <div>
       {/* 극장 헤더 */}
-      <div style={{ padding: '14px 16px 12px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+      <div style={{ padding: '16px 16px 12px', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: 'var(--font-serif)', fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.3 }}>
             {entry.theaterName}
           </div>
-          <div style={{ marginTop: 4, display: 'flex', alignItems: 'flex-start', gap: 3, color: 'var(--color-text-sub)', fontSize: 12, lineHeight: 1.45 }}>
+          <div style={{ marginTop: 4, display: 'flex', alignItems: 'flex-start', gap: 4, color: 'var(--color-text-sub)', fontSize: 12, lineHeight: 1.45 }}>
             <IcoPin />
             <span style={{ minWidth: 0, wordBreak: 'keep-all' }}>{entry.theaterAddress}</span>
           </div>
@@ -396,7 +369,7 @@ function TheaterShowtimeChips({
             }}
             style={{
               flexShrink: 0,
-              height: 28, padding: '0 11px',
+              height: 28, padding: '0 12px',
               borderRadius: 9999,
               border: '1px solid color-mix(in srgb, var(--color-primary-base) 35%, transparent)',
               backgroundColor: 'var(--color-primary-subtle-l)',
@@ -412,7 +385,7 @@ function TheaterShowtimeChips({
 
       {/* 날짜별 상영시간 */}
       {entry.dateGroups.map((group) => (
-        <div key={group.date} style={{ borderTop: '1px solid var(--color-border)', padding: '10px 16px 12px' }}>
+        <div key={group.date} style={{ borderTop: '1px solid var(--color-border)', padding: '12px 16px' }}>
           <div style={{ marginBottom: 8, fontSize: 11, fontWeight: 600, color: 'var(--color-text-caption)', letterSpacing: '0.3px' }}>
             {formatDateLabel(group.date)}
           </div>
@@ -440,7 +413,7 @@ function TheaterShowtimeChips({
                     onGoTo(group.date)
                   }}
                   style={{
-                    padding: '10px 14px', borderRadius: 10,
+                    padding: '12px 16px', borderRadius: 12,
                     border: '1px solid var(--color-border)',
                     backgroundColor: 'var(--color-surface-raised)',
                     cursor: soldout ? 'default' : 'pointer',
@@ -448,7 +421,7 @@ function TheaterShowtimeChips({
                     textAlign: 'left', minHeight: 'auto',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
                     <span style={{ fontSize: 16, fontWeight: 700, fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>
                       {st.showTime.slice(0, 5)}
                     </span>
@@ -519,7 +492,7 @@ function TheatersTab({ movieId, onMapClick, onGoToTheater, desktop = false, init
 
   // 지도에서 보기 버튼 아래 상영 카운트 텍스트
   const countLine = !isLoading && (
-    <p style={{ margin: '6px 0 0', fontSize: 12, color: 'var(--color-text-caption)', lineHeight: 1.5 }}>
+    <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--color-text-caption)', lineHeight: 1.5 }}>
       {regionId && (
         <>
           <b style={{ color: primaryColor }}>{regionId}</b>
@@ -535,7 +508,7 @@ function TheatersTab({ movieId, onMapClick, onGoToTheater, desktop = false, init
   )
 
   const sectionDivider = (label: string) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '24px 0 16px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '24px 0 16px' }}>
       <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
       <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-caption)', whiteSpace: 'nowrap', letterSpacing: '0.3px' }}>
         {label}
@@ -553,7 +526,8 @@ function TheatersTab({ movieId, onMapClick, onGoToTheater, desktop = false, init
   return (
     <div style={{ padding: desktop ? '26px 0 64px' : '20px 20px 52px', maxWidth: desktop ? 1040 : undefined, margin: desktop ? '0 auto' : undefined }}>
       {/* 지도에서 보기 버튼 */}
-      <button
+      <MapCtaButton
+        variant="mobile"
         onClick={() => {
           trackEvent('movie theaters map opened', {
             movie_id: movieId,
@@ -563,18 +537,9 @@ function TheatersTab({ movieId, onMapClick, onGoToTheater, desktop = false, init
           classifySessionIntent('type_a', { source: 'movie_detail', movie_id: movieId })
           onMapClick()
         }}
-        style={{
-          width: '100%', height: 44,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          borderRadius: 10, border: '1px solid var(--color-primary-base)',
-          backgroundColor: 'var(--color-primary-subtle-l)',
-          color: 'var(--color-primary-base)', fontSize: 14, fontWeight: 600,
-          cursor: 'pointer', marginBottom: 0,
-        }}
       >
-        <IcoMap />
         상영중인 영화관 지도에서 보기
-      </button>
+      </MapCtaButton>
       {countLine}
 
       {/* 목록 */}
