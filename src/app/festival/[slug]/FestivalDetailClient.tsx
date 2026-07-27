@@ -39,7 +39,7 @@ function LineupPoster({ src, alt }: { src?: string; alt: string }) {
   return (
     <div style={{ width: '100%', aspectRatio: '2/3', borderRadius: 8, overflow: 'hidden', position: 'relative', backgroundColor: 'var(--color-surface-raised)' }}>
       {src ? (
-        <Image src={src} alt={alt} fill sizes="140px" style={{ objectFit: 'cover' }} />
+        <Image src={proxiedImageUrl(src, 280)} alt={alt} fill sizes="140px" style={{ objectFit: 'cover' }} />
       ) : (
         <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px 6px' }}>
           <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-caption)', textAlign: 'center', lineHeight: 1.3, wordBreak: 'keep-all' }}>
@@ -190,7 +190,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
                   overflow: 'hidden', cursor: 'zoom-in', backgroundColor: 'var(--color-surface-raised)',
                 }}
               >
-                <Image src={currentTimetable.imageUrl} alt={timetableCaption(currentTimetable.dayDate, currentTimetable.label)} fill sizes="600px" style={{ objectFit: 'contain' }} />
+                <Image src={proxiedImageUrl(currentTimetable.imageUrl, 1200)} alt={timetableCaption(currentTimetable.dayDate, currentTimetable.label)} fill sizes="600px" style={{ objectFit: 'contain' }} />
                 <div style={{
                   position: 'absolute', bottom: 10, right: 10, width: 32, height: 32, borderRadius: '50%',
                   backgroundColor: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center',
