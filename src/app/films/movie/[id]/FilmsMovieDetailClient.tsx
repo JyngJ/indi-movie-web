@@ -271,7 +271,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
         navigator.share?.({ title: movie.title, url: window.location.href }).catch(() => {})
       }}
       aria-label="공유"
-      style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 'var(--radius-button)', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', color: 'var(--color-text-body)', cursor: 'pointer', flexShrink: 0 }}
+      style={{ width: 'var(--touch-target)', height: 'var(--touch-target)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', color: 'var(--color-text-body)', cursor: 'pointer', flexShrink: 0 }}
     >
       <IcoShare />
     </button>
@@ -314,8 +314,8 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
         {meta && (
           <div style={{ marginTop: 12, fontSize: 13, color: 'var(--color-text-sub)' }}>{meta}</div>
         )}
-        <div style={{ marginTop: 16, display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <div style={{ minWidth: 0, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {movie.director.map((name) => (
               <DirectorChipLoader key={name} name={name} onClick={() => router.push(`/films/director/${encodeURIComponent(name)}`)} />
             ))}
