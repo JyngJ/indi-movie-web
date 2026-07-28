@@ -67,7 +67,7 @@ export default async function FilmsAreaPage({
   )
 
   return (
-    <main style={{ maxWidth: 720, margin: '0 auto', padding: '24px 20px 64px' }}>
+    <main style={{ maxWidth: 720, margin: '0 auto', padding: '24px var(--gutter) 64px' }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(listSchema) }}
@@ -92,14 +92,14 @@ export default async function FilmsAreaPage({
         style={{
           display: 'inline-flex',
           alignItems: 'center',
-          gap: 6,
-          padding: '12px 18px',
+          gap: 8,
+          padding: '12px 20px',
           marginBottom: 32,
           background: 'var(--color-primary-base, #2b6cb0)',
-          color: '#fff',
+          color: 'var(--color-on-accent)',
           fontWeight: 600,
           fontSize: 15,
-          borderRadius: 10,
+          borderRadius: 12,
           textDecoration: 'none',
           boxShadow: '0 4px 14px rgba(40, 55, 75, 0.22)',
         }}

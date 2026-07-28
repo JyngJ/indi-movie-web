@@ -154,13 +154,13 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
             gap: 4,
             padding: '8px 4px',
             margin: '0 8px',
-            borderRadius: 10,
+            borderRadius: 12,
             background: active ? 'color-mix(in srgb, var(--color-primary-base) 11%, transparent)' : 'transparent',
             color,
           }}
         >
           <Icon size={21} />
-          <span style={{ fontSize: 10.5, fontWeight: 600 }}>{label}</span>
+          <span style={{ fontSize: 10, fontWeight: 600 }}>{label}</span>
         </div>
       </Link>
     )
@@ -178,7 +178,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: 18,
+        gap: 20,
         paddingTop: 16,
         paddingBottom: 16,
         background: 'var(--color-surface-card)',
@@ -187,7 +187,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
       }}
     >
       <Link href="/" aria-label="지도 홈" style={{ display: 'block' }}>
-        <Image src="/icon.svg" alt="" width={38} height={38} style={{ borderRadius: 11 }} />
+        <Image src="/icon.svg" alt="" width={38} height={38} style={{ borderRadius: 12 }} />
       </Link>
 
       {/* 순서: 지도 - 영화 (검색은 지도 상단 검색창으로 진입 — 레일 탭 제거) */}
@@ -213,7 +213,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
             marginLeft: 8,
             marginRight: 8,
             width: 'calc(100% - 16px)',
-            borderRadius: 10,
+            borderRadius: 12,
             border: 'none',
             background: 'transparent',
             color: INACTIVE_COLOR,
@@ -221,7 +221,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
           }}
         >
           <Flag size={21} strokeWidth={1.8} color="currentColor" />
-          <span style={{ fontSize: 10.5, fontWeight: 600 }}>신고</span>
+          <span style={{ fontSize: 10, fontWeight: 600 }}>신고</span>
         </button>
 
         <a
@@ -238,13 +238,13 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
             marginLeft: 8,
             marginRight: 8,
             width: 'calc(100% - 16px)',
-            borderRadius: 10,
+            borderRadius: 12,
             color: INACTIVE_COLOR,
             textDecoration: 'none',
           }}
         >
           <IconInstagram size={21} />
-          <span style={{ fontSize: 10.5, fontWeight: 600 }}>Insta</span>
+          <span style={{ fontSize: 10, fontWeight: 600 }}>Insta</span>
         </a>
 
         <div style={{ width: 'calc(100% - 32px)', height: 1, background: 'var(--color-border)' }} />
@@ -265,7 +265,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
             marginLeft: 8,
             marginRight: 8,
             width: 'calc(100% - 16px)',
-            borderRadius: 10,
+            borderRadius: 12,
             border: 'none',
             background: 'transparent',
             color: INACTIVE_COLOR,
@@ -273,7 +273,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
           }}
         >
           <IconSettings size={21} />
-          <span style={{ fontSize: 10.5, fontWeight: 600 }}>설정</span>
+          <span style={{ fontSize: 10, fontWeight: 600 }}>설정</span>
         </button>
       </div>
     </nav>

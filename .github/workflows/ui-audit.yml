@@ -1,0 +1,18 @@
+name: UI Audit
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  ui-audit-regression:
+    name: ui-audit-regression
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # audit 스크립트는 Node 내장 모듈만 사용 — npm ci 불필요
+      - run: npm run audit:ui:check

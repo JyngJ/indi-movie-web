@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
@@ -20,7 +20,7 @@ function proxiedImageUrl(url: string, width: number) {
 }
 
 const STATUS_LABEL: Record<FestivalStatus, string> = { upcoming: '예정', ongoing: '진행중', ended: '종료' }
-const STATUS_COLOR: Record<FestivalStatus, string> = { upcoming: '#D97706', ongoing: '#16A34A', ended: 'var(--color-text-caption)' }
+const STATUS_COLOR: Record<FestivalStatus, string> = { upcoming: 'var(--color-warning)', ongoing: 'var(--color-success)', ended: 'var(--color-text-caption)' }
 
 // 라인업 그리드 접힌 상태 노출 개수 — 지도 큐레이션 탭(CurationSheet)과 같은 더보기 패턴,
 // 컬럼 수와 무관하게 고정 개수로 자른다(그쪽도 SECTION_COLLAPSED_COUNT=6 고정값 사용)
@@ -39,9 +39,9 @@ function LineupPoster({ src, alt }: { src?: string; alt: string }) {
   return (
     <div style={{ width: '100%', aspectRatio: '2/3', borderRadius: 8, overflow: 'hidden', position: 'relative', backgroundColor: 'var(--color-surface-raised)' }}>
       {src ? (
-        <Image src={src} alt={alt} fill sizes="140px" style={{ objectFit: 'cover' }} />
+        <Image src={proxiedImageUrl(src, 280)} alt={alt} fill sizes="140px" style={{ objectFit: 'cover' }} />
       ) : (
-        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px 6px' }}>
+        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px 8px' }}>
           <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-caption)', textAlign: 'center', lineHeight: 1.3, wordBreak: 'keep-all' }}>
             {alt}
           </span>
@@ -57,6 +57,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
   // 그대로 쓰면 데스크톱 뷰포트에서 첫 클라이언트 렌더가 SSR 결과와 달라져 하이드레이션
   // 에러가 난다(films/page.tsx의 mounted 게이트와 동일 패턴).
   const [mounted, setMounted] = useState(false)
+  const [bannerFailed, setBannerFailed] = useState(false)   // 외부 배너 로드 실패 시 이름 폴백으로 전환
   useEffect(() => setMounted(true), [])
   const isDesktopLayout = useIsDesktopLayout()
   const isDesktop = mounted && isDesktopLayout
@@ -69,6 +70,22 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
   const [ttIndex, setTtIndex] = useState(0)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [lineupExpanded, setLineupExpanded] = useState(false)
+  // 웹: 라인업을 좌우 넘김 캐러셀로 — 스크롤 여지가 있는 방향에만 버튼 노출
+  const lineupRef = useRef<HTMLDivElement | null>(null)
+  const [lineupCanL, setLineupCanL] = useState(false)
+  const [lineupCanR, setLineupCanR] = useState(false)
+  const updateLineupEdge = () => {
+    const el = lineupRef.current
+    if (!el) return
+    setLineupCanL(el.scrollLeft > 4)
+    setLineupCanR(el.scrollLeft + el.clientWidth < el.scrollWidth - 4)
+  }
+  useEffect(() => { updateLineupEdge() }, [festival.movies.length, mounted, isDesktop])   // isDesktop은 마운트 후 확정 — 캐러셀 분기로 바뀐 뒤 재계산
+  const scrollLineup = (dir: -1 | 1) => {
+    const el = lineupRef.current
+    if (!el) return
+    el.scrollBy({ left: dir * Math.max(320, el.clientWidth * 0.8), behavior: 'smooth' })
+  }
   const timetables = festival.timetables
   const currentTimetable = timetables[ttIndex]
 
@@ -97,11 +114,12 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
 
       {/* 배너 — 잘리지 않게 원본 비율 그대로 가로에 맞춤(크롭 없음). fill+objectFit:cover였을 땐
           21:4처럼 아주 납작한 배너가 16:9 박스에 눌려 좌우가 크게 잘렸다. */}
-      {festival.bannerUrl ? (
+      {festival.bannerUrl && !bannerFailed ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={proxiedImageUrl(festival.bannerUrl, 1920)}
           alt={festival.name}
+          onError={() => setBannerFailed(true)}
           style={{ width: '100%', height: 'auto', display: 'block', backgroundColor: 'var(--color-surface-raised)' }}
         />
       ) : (
@@ -114,8 +132,8 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
 
       {/* 헤더 */}
       <div style={{ padding: '20px 16px 0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: '#fff', backgroundColor: STATUS_COLOR[status], padding: '3px 10px', borderRadius: 99 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, lineHeight: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-on-accent)', backgroundColor: STATUS_COLOR[status], padding: '4px 12px', borderRadius: 9999 }}>
             {STATUS_LABEL[status]}
           </span>
           <span style={{ fontSize: 13, color: 'var(--color-text-caption)', fontWeight: 600 }}>{dateLabel}</span>
@@ -123,7 +141,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
         <h1 style={{ margin: 0, fontSize: isDesktop ? 26 : 22, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)', wordBreak: 'keep-all' }}>
           {festival.name}
         </h1>
-        <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--color-text-caption)' }}>
+        <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--color-text-caption)' }}>
           <MapPin size={14} strokeWidth={1.75} color="currentColor" />
           {festival.region} · {festival.city}
           {festival.venueText ? ` · ${festival.venueText}` : ''}
@@ -138,8 +156,8 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
-                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  height: 44, borderRadius: 10, backgroundColor: 'var(--color-primary-base)', color: '#fff',
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  height: 44, borderRadius: 12, backgroundColor: 'var(--color-primary-base)', color: 'var(--color-on-accent)',
                   fontSize: 14, fontWeight: 700, textDecoration: 'none',
                 }}
               >
@@ -150,8 +168,8 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
               <button
                 onClick={() => router.push(`/?theater=${firstLinkedTheaterId}`)}
                 style={{
-                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  height: 44, borderRadius: 10, backgroundColor: 'var(--color-surface-raised)',
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  height: 44, borderRadius: 12, backgroundColor: 'var(--color-surface-raised)',
                   border: '1px solid var(--color-border)', color: 'var(--color-text-body)',
                   fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 'auto',
                 }}
@@ -190,12 +208,13 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
                   overflow: 'hidden', cursor: 'zoom-in', backgroundColor: 'var(--color-surface-raised)',
                 }}
               >
-                <Image src={currentTimetable.imageUrl} alt={timetableCaption(currentTimetable.dayDate, currentTimetable.label)} fill sizes="600px" style={{ objectFit: 'contain' }} />
+                <Image src={proxiedImageUrl(currentTimetable.imageUrl, 1200)} alt={timetableCaption(currentTimetable.dayDate, currentTimetable.label)} fill sizes="600px" style={{ objectFit: 'contain' }} />
                 <div style={{
                   position: 'absolute', bottom: 10, right: 10, width: 32, height: 32, borderRadius: '50%',
                   backgroundColor: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'var(--color-on-accent)',
                 }}>
-                  <ZoomIn size={16} strokeWidth={1.75} color="#fff" />
+                  <ZoomIn size={16} strokeWidth={1.75} className="text-current" />
                 </div>
               </div>
               {timetables.length > 1 && (
@@ -227,16 +246,42 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
             라인업 준비 중
           </p>
         ) : (
+          isDesktop ? (
+            /* 웹: 좌우 넘김 캐러셀 — 더보기 없이 전체 라인업 */
+            <div style={{ position: 'relative' }}>
+              <div
+                ref={lineupRef}
+                className="no-scrollbar"
+                onScroll={updateLineupEdge}
+                style={{ display: 'flex', gap: 16, overflowX: 'auto', padding: '12px 16px' }}
+              >
+                {festival.movies.map((link) => (
+                  <div
+                    key={link.id}
+                    onClick={link.movie ? () => router.push(`/films/movie/${link.movie!.id}`) : undefined}
+                    style={{ display: 'flex', flexDirection: 'column', gap: 8, width: 140, flexShrink: 0, cursor: link.movie ? 'pointer' : 'default' }}
+                  >
+                    <LineupPoster src={link.movie?.posterUrl} alt={normalizeTitle(link.movie?.title ?? link.movieTitleSnapshot)} />
+                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-body)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3 }}>
+                      {normalizeTitle(link.movie?.title ?? link.movieTitleSnapshot)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              {lineupCanL && <ScrollNavButton direction="left" onClick={() => scrollLineup(-1)} />}
+              {lineupCanR && <ScrollNavButton direction="right" onClick={() => scrollLineup(1)} />}
+            </div>
+          ) : (
           <>
             <div style={{
-              display: 'grid', gridTemplateColumns: isDesktop ? 'repeat(auto-fill, minmax(140px, 1fr))' : 'repeat(3, 1fr)',
-              gap: isDesktop ? 16 : 10, padding: '12px 16px',
+              display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: 12, padding: '12px 16px',
             }}>
               {(lineupExpanded ? festival.movies : festival.movies.slice(0, LINEUP_COLLAPSED_COUNT)).map((link) => (
                 <div
                   key={link.id}
                   onClick={link.movie ? () => router.push(`/films/movie/${link.movie!.id}`) : undefined}
-                  style={{ display: 'flex', flexDirection: 'column', gap: 6, cursor: link.movie ? 'pointer' : 'default' }}
+                  style={{ display: 'flex', flexDirection: 'column', gap: 8, cursor: link.movie ? 'pointer' : 'default' }}
                 >
                   <LineupPoster src={link.movie?.posterUrl} alt={normalizeTitle(link.movie?.title ?? link.movieTitleSnapshot)} />
                   <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-body)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3 }}>
@@ -251,8 +296,8 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
                 onClick={() => setLineupExpanded((v) => !v)}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-                  width: 'calc(100% - 32px)', margin: '4px 16px 0', padding: '8px 0',
-                  border: 'none', borderRadius: 'var(--radius-lg)', backgroundColor: 'var(--color-surface-raised)',
+                  width: 'calc(100% - 32px)', maxWidth: 360, margin: '4px auto 0', padding: '8px 0',
+                  border: 'none', borderRadius: 'var(--radius-button)', backgroundColor: 'var(--color-surface-raised)',
                   color: 'var(--color-text-caption)', fontSize: 12, fontWeight: 600, cursor: 'pointer', minHeight: 'auto',
                 }}
               >
@@ -261,6 +306,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
               </button>
             )}
           </>
+          )
         )}
       </section>
 
@@ -274,26 +320,26 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
                 key={link.id}
                 onClick={() => router.push(`/films/theater/${link.theaterId}`)}
                 style={{
-                  display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px',
-                  borderRadius: 10, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)',
+                  display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 16px',
+                  borderRadius: 12, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)',
                   cursor: 'pointer', textAlign: 'left', minHeight: 'auto',
                 }}
               >
-                <MapPin size={16} strokeWidth={1.75} color="var(--color-primary-base)" style={{ marginTop: 2, flexShrink: 0 }} />
+                <MapPin size={16} strokeWidth={1.75} color="var(--color-primary-base)" style={{ marginTop: 4, flexShrink: 0 }} />
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)' }}>{link.theater.name}</div>
-                  <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 2 }}>{link.theater.address}</div>
+                  <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4 }}>{link.theater.address}</div>
                 </div>
               </button>
             ) : (
               <div
                 key={link.id}
                 style={{
-                  display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px',
-                  borderRadius: 10, border: '1px dashed var(--color-border)',
+                  display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 16px',
+                  borderRadius: 12, border: '1px dashed var(--color-border)',
                 }}
               >
-                <MapPin size={16} strokeWidth={1.75} color="var(--color-text-caption)" style={{ marginTop: 2, flexShrink: 0 }} />
+                <MapPin size={16} strokeWidth={1.75} color="var(--color-text-caption)" style={{ marginTop: 4, flexShrink: 0 }} />
                 <div style={{ fontSize: 14, color: 'var(--color-text-body)' }}>{link.venueText ?? '임시 상영장'}</div>
               </div>
             )
@@ -329,9 +375,10 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
               position: 'absolute', top: 16, right: 16, width: 36, height: 36, borderRadius: '50%',
               backgroundColor: 'rgba(255,255,255,0.12)', border: 'none', display: 'flex',
               alignItems: 'center', justifyContent: 'center', cursor: 'pointer', minHeight: 'auto',
+              color: 'var(--color-on-accent)',
             }}
           >
-            <X size={18} strokeWidth={1.75} color="#fff" />
+            <X size={18} strokeWidth={1.75} className="text-current" />
           </button>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

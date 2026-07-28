@@ -44,7 +44,7 @@ function MovieCardInfo({ movie, isDesktop, caption, customBottomInfo }: { movie:
   const fontSize = isDesktop ? 14 : 12
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       {/* 제목 */}
       <span
         style={{
@@ -126,7 +126,7 @@ export function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number
         boxShadow: '0 12px 40px rgba(0,0,0,0.48)',
         zIndex: 999999,
         pointerEvents: 'none',
-        padding: '14px',
+        padding: '16px',
         display: 'flex',
         flexDirection: 'column',
         gap: 'var(--spacing-2)',
@@ -160,8 +160,8 @@ export function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number
               key={tag}
               style={{
                 fontSize: 'var(--text-caption)',
-                padding: '3px 9px',
-                borderRadius: 'var(--radius-full)',
+                padding: '4px 8px',
+                borderRadius: 'var(--radius-pill)',
                 background: 'var(--color-surface-raised)',
                 color: 'var(--color-text-body)',
                 border: '1px solid var(--color-border)',
@@ -240,7 +240,7 @@ function MovieCard({
         onMouseEnter={isDesktop ? onMouseEnter : undefined}
         onMouseLeave={isDesktop ? onMouseLeave : undefined}
         onClick={onClick}
-        style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1-5)', width, flexShrink: 0, cursor: onClick ? 'pointer' : undefined }}
+        style={{ display: 'flex', flexDirection: 'column', gap: 8, width, flexShrink: 0, cursor: onClick ? 'pointer' : undefined }}
       >
         {/* 포스터: scale은 있으나 layout size 유지 → 부모 padding 안에서 visual overflow */}
         <div
@@ -248,19 +248,19 @@ function MovieCard({
             transition: 'transform 130ms ease',
             transform: hovered ? 'scale(1.1)' : 'scale(1)',
             transformOrigin: 'center center',
-            borderRadius: 'var(--radius-md)',
+            borderRadius: 'var(--radius-poster)',
             position: 'relative',
           }}
         >
           <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} radius={0} shadow={false} />
           {daysLeft != null && (
             <span style={{
-              position: 'absolute', top: 4, right: 4,
-              padding: '2px 6px',
-              borderRadius: 'var(--radius-full)',
-              fontSize: 10, fontWeight: 700, lineHeight: 1.4,
-              color: '#fff',
-              backgroundColor: daysLeft === 0 ? '#DC2626' : daysLeft === 1 ? '#EA580C' : '#78716C',
+              position: 'absolute', top: 6, right: 6,
+              padding: '4px 8px',
+              borderRadius: 'var(--radius-badge)',
+              fontSize: 11, fontWeight: 600, lineHeight: 1,
+              color: 'var(--color-on-accent)',
+              backgroundColor: daysLeft === 0 ? 'var(--color-error)' : daysLeft === 1 ? 'var(--color-warning)' : '#78716C',
               boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
               whiteSpace: 'nowrap',
             }}>
@@ -344,7 +344,7 @@ export function CurationSectionRow({
           <SectionHeader title={title} description={description} isDesktop={isDesktop} />
         </div>
         {/* 영화 inline */}
-        <div style={{ display: 'flex', gap: 'var(--spacing-2-5)', padding: '12px 14px', background: 'var(--color-surface-card)', flex: 1 }}>
+        <div style={{ display: 'flex', gap: 12, padding: '12px 16px', background: 'var(--color-surface-card)', flex: 1 }}>
           {movies.slice(0, 2).map((movie) => (
             <div
               key={movie.id}
@@ -413,7 +413,7 @@ export function CurationSectionRow({
             display: 'flex',
             gap,
             overflowX: 'auto',
-            padding: `${scaleBleed + 8}px ${scaleBleed + 16}px`,
+            padding: `${scaleBleed + 8}px calc(${scaleBleed}px + var(--gutter))`,
           }}
         >
           {movies.map((movie) => (

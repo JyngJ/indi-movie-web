@@ -11,7 +11,7 @@ export function CardContainer({ children, padding, gap, style, ...props }: CardC
     <div
       style={{
         border: '1px solid var(--color-border)',
-        borderRadius: 'var(--radius-xl)',
+        borderRadius: 'var(--radius-control)',
         background: 'var(--color-surface-card)',
         overflow: 'hidden',
         display: 'flex',

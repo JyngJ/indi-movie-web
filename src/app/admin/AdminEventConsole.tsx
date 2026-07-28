@@ -24,7 +24,7 @@ const EVENT_TYPE_LABEL: Record<EventType, string> = {
 
 function EventTypeBadge({ type }: { type: EventType }) {
   const colors: Record<EventType, string> = {
-    gv: '#2e7d32',
+    gv: 'var(--color-success)',
     talk: '#1565c0',
     overnight: '#6a1b9a',
     special: '#c62828',
@@ -37,7 +37,7 @@ function EventTypeBadge({ type }: { type: EventType }) {
       borderRadius: 4,
       fontSize: 11,
       fontWeight: 700,
-      color: '#fff',
+      color: 'var(--color-on-accent)',
       background: colors[type] ?? '#555',
       letterSpacing: '0.3px',
     }}>
@@ -395,8 +395,8 @@ export function AdminEventConsole({ tabSlot }: { tabSlot?: React.ReactNode } = {
               {([
                 { key: 'all' as const, label: '전체', count: candidates.length, dot: '' },
                 { key: 'draft' as const, label: '초안', count: draftCount, dot: '' },
-                { key: 'needs_review' as const, label: '검수', count: reviewCount, dot: '#e67e22' },
-                { key: 'approved' as const, label: '승인', count: approvedCount, dot: '#2e7d32' },
+                { key: 'needs_review' as const, label: '검수', count: reviewCount, dot: 'var(--color-warning)' },
+                { key: 'approved' as const, label: '승인', count: approvedCount, dot: 'var(--color-success)' },
               ]).map(({ key, label, count, dot }) => (
                 <button
                   key={key}

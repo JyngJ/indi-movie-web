@@ -23,7 +23,7 @@ export function RegionDropdown({ selectedId, onSelect, style }: {
       overflowY: 'auto',
       ...style,
     }}>
-      <div style={{ padding: '8px 14px 4px', fontSize: 10, fontWeight: 700, color: 'var(--color-text-caption)', letterSpacing: '0.5px' }}>
+      <div style={{ padding: '8px 16px 4px', fontSize: 10, fontWeight: 700, color: 'var(--color-text-caption)', letterSpacing: '0.5px' }}>
         광역시
       </div>
       {metros.map((r, i) => (
@@ -36,7 +36,7 @@ export function RegionDropdown({ selectedId, onSelect, style }: {
           isLast={false}
         />
       ))}
-      <div style={{ padding: '8px 14px 4px', fontSize: 10, fontWeight: 700, color: 'var(--color-text-caption)', letterSpacing: '0.5px', borderTop: '1px solid var(--color-border)' }}>
+      <div style={{ padding: '8px 16px 4px', fontSize: 10, fontWeight: 700, color: 'var(--color-text-caption)', letterSpacing: '0.5px', borderTop: '1px solid var(--color-border)' }}>
         도·특별자치도
       </div>
       {PROVINCES.map((r, i) => (

@@ -33,7 +33,7 @@ export function BookingCtaButton({
         style={{
           flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: s.gap,
           height: s.height, borderRadius: s.radius,
-          backgroundColor: 'var(--color-primary-base)', color: '#fff',
+          backgroundColor: 'var(--color-primary-base)', color: 'var(--color-on-accent)',
           fontSize: s.font, fontWeight: 700, letterSpacing: '-0.2px', textDecoration: 'none',
           boxShadow: '0 4px 14px rgba(74,99,128,0.27)',
         }}

@@ -74,7 +74,7 @@ export function LocationPermissionModal({ state, onRequest, onDismiss }: Props) 
       {/* 모바일 드래그 핸들 */}
       {!isDesktop && (
         <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 8px' }}>
-          <div style={{ width: 36, height: 4, borderRadius: 99, background: 'var(--color-border)' }} />
+          <div style={{ width: 36, height: 4, borderRadius: 9999, background: 'var(--color-border)' }} />
         </div>
       )}
 
@@ -97,7 +97,7 @@ export function LocationPermissionModal({ state, onRequest, onDismiss }: Props) 
       <div style={{ height: 1, background: 'var(--color-border)' }} />
 
       {/* 본문 */}
-      <div style={{ padding: '28px 24px 0', textAlign: 'center' }}>
+      <div style={{ padding: '28px var(--gutter) 0', textAlign: 'center' }}>
         {/* 아이콘 */}
         <div style={{
           width: 80, height: 80, borderRadius: '50%',
@@ -112,7 +112,7 @@ export function LocationPermissionModal({ state, onRequest, onDismiss }: Props) 
 
         {isDenied ? (
           <>
-            <p style={{ fontSize: 19, fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.4, margin: '0 0 16px' }}>
+            <p style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.4, margin: '0 0 16px' }}>
               브라우저의 위치 접근을<br />허용해주세요
             </p>
             {/* 안내 박스 */}
@@ -120,11 +120,11 @@ export function LocationPermissionModal({ state, onRequest, onDismiss }: Props) 
               background: 'var(--color-surface-raised)',
               border: '1px solid var(--color-border)',
               borderRadius: 12,
-              padding: '14px 16px',
+              padding: 16,
               textAlign: 'left',
             }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                <span style={{ flexShrink: 0, marginTop: 2, color: 'var(--color-text-body)' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                <span style={{ flexShrink: 0, marginTop: 4, color: 'var(--color-text-body)' }}>
                   <Lock size={18} strokeWidth={2} color="currentColor" />
                 </span>
                 <div style={{ fontSize: 13, color: 'var(--color-text-body)', lineHeight: 1.65 }}>
@@ -138,7 +138,7 @@ export function LocationPermissionModal({ state, onRequest, onDismiss }: Props) 
           </>
         ) : (
           <>
-            <p style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.35, margin: '0 0 10px' }}>
+            <p style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.35, margin: '0 0 12px' }}>
               내 주변 독립영화관 찾기
             </p>
             <p style={{ fontSize: 14, color: 'var(--color-text-caption)', lineHeight: 1.65, margin: 0 }}>
@@ -149,15 +149,15 @@ export function LocationPermissionModal({ state, onRequest, onDismiss }: Props) 
       </div>
 
       {/* 버튼 영역 */}
-      <div style={{ padding: '24px 24px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ padding: '24px var(--gutter) 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
         <button
           disabled={isRequesting}
           onClick={onRequest}
           style={{
-            height: 52, borderRadius: 999,
+            height: 52, borderRadius: 9999,
             background: 'var(--color-primary-base)',
             border: 'none',
-            color: '#fff',
+            color: 'var(--color-on-accent)',
             fontSize: 16, fontWeight: 600,
             cursor: isRequesting ? 'default' : 'pointer',
             opacity: isRequesting ? 0.65 : 1,

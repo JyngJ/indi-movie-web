@@ -24,7 +24,7 @@ export function Badge({ variant = 'default', children, className = '', style, ..
       className={`
         inline-flex items-center
         h-5 px-2
-        rounded-[var(--radius-full)]
+        rounded-[var(--radius-pill)]
         text-[11px] font-semibold
         ${className}
       `.replace(/\s+/g, ' ').trim()}

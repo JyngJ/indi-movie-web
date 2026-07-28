@@ -4,7 +4,6 @@ import { useState } from 'react'
 import type { Movie } from '@/types/api'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
-import { Film } from 'lucide-react'
 
 type SortKey = 'theaters_desc' | 'theaters_asc' | 'year_desc' | 'year_asc' | 'alpha'
 
@@ -36,16 +35,17 @@ function sortMovies(
   }
 }
 
-function GridPoster({ src, alt }: { src?: string; alt: string }) {
+function GridPoster({ src, alt, interactive }: { src?: string; alt: string; interactive?: boolean }) {
   return (
     <div
+      className={interactive ? 'hover-lift' : undefined}
       style={{
         width: '100%',
         aspectRatio: '2/3',
         borderRadius: 0,
         overflow: 'hidden',
         position: 'relative',
-        background: 'oklch(0.32 0.04 220)',
+        background: 'var(--color-neutral-800)',
       }}
     >
       {src ? (
@@ -60,8 +60,8 @@ function GridPoster({ src, alt }: { src?: string; alt: string }) {
         <div
           style={{
             width: '100%', height: '100%',
-            backgroundImage: 'repeating-linear-gradient(135deg, oklch(0.38 0.04 220) 0 6px, transparent 6px 14px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px 5px',
+            background: 'var(--color-neutral-800)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px',
           }}
         >
           <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 14, fontWeight: 800, textAlign: 'center', lineHeight: 1.3, wordBreak: 'keep-all' }}>
@@ -117,25 +117,25 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
           display: 'flex',
           alignItems: 'flex-end',
           justifyContent: 'space-between',
-          padding: isDesktop ? '20px 16px 0' : '16px 16px 0',
+          padding: isDesktop ? '20px var(--gutter) 0' : '16px var(--gutter) 0',
           gap: 8,
         }}>
           <div>
             <h2
               style={{
                 margin: 0,
-                fontSize: isDesktop ? 20 : 17,
+                fontSize: isDesktop ? 'var(--text-h2)' : 'var(--text-h3)',
                 fontWeight: 700,
                 fontFamily: 'var(--font-display)',
                 color: 'var(--color-text-primary)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: 6
+                gap: 8
               }}
             >
-              <Film size={20} strokeWidth={1.75} color="var(--color-primary-base)" /> 지금 {regionText}상영 전체
+              지금 {regionText}상영 전체
             </h2>
-            <p style={{ margin: '3px 0 0', fontSize: 12, color: 'var(--color-text-caption)' }}>
+            <p style={{ margin: '4px 0 0', fontSize: isDesktop ? 'var(--text-meta)' : 'var(--text-caption)', color: 'var(--color-text-caption)' }}>
               {movies.length}편 상영 중
             </p>
           </div>
@@ -152,7 +152,7 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
               background: 'var(--color-surface-card)',
               border: '1px solid var(--color-border)',
               borderRadius: 8,
-              padding: '6px 10px',
+              padding: '8px 12px',
               cursor: 'pointer',
               outline: 'none',
               appearance: 'none',
@@ -177,7 +177,7 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
               ? 'repeat(auto-fill, minmax(240px, 1fr))'
               : 'repeat(3, 1fr)',
             gap: isDesktop ? 20 : 12,
-            padding: isDesktop ? '16px 16px 0' : '14px 12px 0',
+            padding: isDesktop ? '16px var(--gutter) 0' : '14px var(--gutter) 0',
           }}
         >
           {sorted.map((movie) => (
@@ -187,13 +187,13 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
               style={{
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 6,
+                gap: 8,
                 cursor: onMovieClick ? 'pointer' : undefined,
               }}
             >
-              <GridPoster src={movie.posterUrl} alt={movie.title} />
+              <GridPoster src={movie.posterUrl} alt={movie.title} interactive={!!onMovieClick} />
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span
                   style={{
                     fontSize: isDesktop ? 13 : 12,
@@ -229,8 +229,12 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
                       key={g}
                       style={{
                         fontSize: 10,
-                        padding: '1px 5px',
-                        borderRadius: 99,
+                        padding: '4px',
+                        borderRadius: 9999,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        lineHeight: 1,
                         background: 'var(--color-surface-raised)',
                         color: 'var(--color-text-caption)',
                         border: '1px solid var(--color-border)',

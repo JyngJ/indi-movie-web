@@ -40,10 +40,10 @@ export function AddRequestCtaButton({ onClick }: { onClick: () => void }) {
     <button
       onClick={onClick}
       style={{
-        display: 'inline-flex', alignItems: 'center', gap: 6,
-        height: 36, padding: '0 18px', borderRadius: 999,
+        display: 'inline-flex', alignItems: 'center', gap: 8,
+        height: 36, padding: '0 20px', borderRadius: 9999,
         border: 'none', cursor: 'pointer', minHeight: 'unset',
-        background: 'var(--color-primary-base)', color: '#fff',
+        background: 'var(--color-primary-base)', color: 'var(--color-on-accent)',
         fontSize: 13, fontWeight: 600,
       }}
     >
@@ -133,12 +133,12 @@ export function AddRequestModal({ open, query, onClose }: Props) {
     >
       {!isDesktop && (
         <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 4px', flexShrink: 0 }}>
-          <div style={{ width: 36, height: 4, borderRadius: 99, background: 'var(--color-border)' }} />
+          <div style={{ width: 36, height: 4, borderRadius: 9999, background: 'var(--color-border)' }} />
         </div>
       )}
 
       {step === 'success' ? (
-        <div style={{ padding: '40px 24px', textAlign: 'center' }}>
+        <div style={{ padding: '40px var(--gutter)', textAlign: 'center' }}>
           <div style={{
             width: 64, height: 64, borderRadius: '50%',
             background: 'var(--color-primary-subtle-l)',
@@ -157,16 +157,16 @@ export function AddRequestModal({ open, query, onClose }: Props) {
           <button
             onClick={handleDismiss}
             style={{
-              width: '100%', height: 48, borderRadius: 999,
+              width: '100%', height: 48, borderRadius: 9999,
               background: 'var(--color-primary-base)', border: 'none',
-              color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', minHeight: 'unset',
+              color: 'var(--color-on-accent)', fontSize: 15, fontWeight: 600, cursor: 'pointer', minHeight: 'unset',
             }}
           >
             확인
           </button>
         </div>
       ) : (
-        <div style={{ padding: isDesktop ? '24px 24px 0' : '8px 20px 0', overflowY: 'auto' }}>
+        <div style={{ padding: isDesktop ? '24px var(--gutter) 0' : '8px var(--gutter) 0', overflowY: 'auto' }}>
           <p style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text-primary)', margin: '0 0 4px' }}>
             추가 요청하기
           </p>
@@ -182,7 +182,7 @@ export function AddRequestModal({ open, query, onClose }: Props) {
                   key={k}
                   onClick={() => setKind(k)}
                   style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
                     padding: '12px 4px', borderRadius: 12, cursor: 'pointer', minHeight: 'unset',
                     border: selected ? '1.5px solid var(--color-primary-base)' : '1px solid var(--color-border)',
                     background: selected ? 'var(--color-primary-subtle-l)' : 'var(--color-surface-bg)',
@@ -196,7 +196,7 @@ export function AddRequestModal({ open, query, onClose }: Props) {
             })}
           </div>
 
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--color-text-body)', marginBottom: 6 }}>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--color-text-body)', marginBottom: 8 }}>
             {NAME_FIELD[kind].label}
           </label>
           <input
@@ -204,14 +204,14 @@ export function AddRequestModal({ open, query, onClose }: Props) {
             onChange={(e) => setName(e.target.value)}
             placeholder={NAME_FIELD[kind].placeholder}
             style={{
-              width: '100%', height: 44, padding: '0 14px', marginBottom: 16,
-              border: '1px solid var(--color-border)', borderRadius: 10,
+              width: '100%', height: 44, padding: '0 16px', marginBottom: 16,
+              border: '1px solid var(--color-border)', borderRadius: 12,
               background: 'var(--color-surface-bg)', color: 'var(--color-text-primary)',
               fontSize: 14, outline: 'none', boxSizing: 'border-box',
             }}
           />
 
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--color-text-body)', marginBottom: 6 }}>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--color-text-body)', marginBottom: 8 }}>
             추가 정보 <span style={{ color: 'var(--color-text-caption)', fontWeight: 400 }}>(선택)</span>
           </label>
           <textarea
@@ -222,7 +222,7 @@ export function AddRequestModal({ open, query, onClose }: Props) {
             maxLength={500}
             style={{
               width: '100%', padding: 12, marginBottom: 12,
-              border: '1px solid var(--color-border)', borderRadius: 10,
+              border: '1px solid var(--color-border)', borderRadius: 12,
               background: 'var(--color-surface-bg)', color: 'var(--color-text-primary)',
               fontSize: 14, outline: 'none', resize: 'none', boxSizing: 'border-box',
               fontFamily: 'inherit',
@@ -233,11 +233,11 @@ export function AddRequestModal({ open, query, onClose }: Props) {
             <p style={{ fontSize: 13, color: 'var(--color-error)', margin: '0 0 12px' }}>{error}</p>
           )}
 
-          <div style={{ display: 'flex', gap: 10, padding: '4px 0 20px' }}>
+          <div style={{ display: 'flex', gap: 12, padding: '4px 0 20px' }}>
             <button
               onClick={handleDismiss}
               style={{
-                flex: 1, height: 48, borderRadius: 999,
+                flex: 1, height: 48, borderRadius: 9999,
                 background: 'var(--color-surface-raised)', border: '1px solid var(--color-border)',
                 color: 'var(--color-text-body)', fontSize: 15, fontWeight: 600, cursor: 'pointer', minHeight: 'unset',
               }}
@@ -248,9 +248,9 @@ export function AddRequestModal({ open, query, onClose }: Props) {
               disabled={!name.trim() || submitting}
               onClick={handleSubmit}
               style={{
-                flex: 2, height: 48, borderRadius: 999,
+                flex: 2, height: 48, borderRadius: 9999,
                 background: 'var(--color-primary-base)', border: 'none',
-                color: '#fff', fontSize: 15, fontWeight: 600,
+                color: 'var(--color-on-accent)', fontSize: 15, fontWeight: 600,
                 cursor: (!name.trim() || submitting) ? 'default' : 'pointer',
                 opacity: (!name.trim() || submitting) ? 0.5 : 1,
                 minHeight: 'unset',

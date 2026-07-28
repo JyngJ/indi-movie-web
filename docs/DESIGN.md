@@ -26,10 +26,12 @@
 |-------|----------|----|------|
 | `color.primary.base` | `--color-primary-base` | `#4A6380` | 독립영화관 핀, 활성 칩, CTA, 오늘 날짜 |
 | `color.primary.hoverLight` | `--color-primary-hover-l` | `#5C7896` | 라이트 모드 hover/press |
-| `color.primary.hoverDark` | `--color-primary-hover-d` | `#3A5068` | 다크 모드 hover/press |
+| `color.primary.hoverDark` | — | `#3A5068` | 다크 모드 hover/press |
 | `color.primary.subtleLight` | `--color-primary-subtle-l` | `#E8EEF4` | 활성 칩 배경 (라이트) |
-| `color.primary.subtleDark` | `--color-primary-subtle-d` | `#1A2530` | 활성 칩 배경 (다크) |
+| `color.primary.subtleDark` | — | `#1A2530` | 활성 칩 배경 (다크) |
 | `color.primary.text` | `--color-primary-text` | `#2B3D50` | primary 위 텍스트 |
+
+> `--color-primary-hover-d`/`--color-primary-subtle-d`/`--color-primary-text-d`는 미사용으로 tokens.css에서 삭제됨 — 다크 모드 값은 별도 `-d` 변수가 아니라 `[data-theme=dark]` 오버라이드 방식으로 적용한다.
 
 ### Multiplex (지도 핀 전용, 본문 사용 금지)
 
@@ -81,6 +83,9 @@
 | `text.sub` | `--color-text-sub` | `#635D55` | `#A9A39A` |
 | `text.caption` | `--color-text-caption` | `#857F76` | `#857F76` |
 | `text.placeholder` | `--color-text-placeholder` | `#A9A39A` | `#635D55` |
+| `text.onAccent` | `--color-on-accent` | `#FFFFFF` | `#FFFFFF` |
+
+> `text.onAccent`: 솔리드 accent(primary·semantic·브랜드 고정색) 위 텍스트·아이콘. `text.inverse`와 달리 테마에 따라 뒤집히지 않음(항상 흰색 고정).
 
 ---
 
@@ -150,34 +155,39 @@ mono           HEX, 상영 시간, 좌석수 등 정렬이 필요한 수치(tnum
 | CSS 변수 | 값 | 비고 |
 |----------|----|----|
 | `--spacing-1` | 4px | |
-| `--spacing-1-5` | 6px | TASK-10 감사 — 실사용 41곳(`--spacing-2`보다 많음), 4px 배수는 아니지만 정식 토큰화 |
 | `--spacing-2` | 8px | |
-| `--spacing-2-5` | 10px | TASK-10 감사 — 실사용 31곳 |
 | `--spacing-3` | 12px | |
 | `--spacing-4` | 16px | |
 | `--spacing-5` | 20px | |
 | `--spacing-6` | 24px | |
 | `--spacing-8` | 32px | `--spacing-7`(28px)는 실사용 0건 확인돼 미정의 유지 |
+| `--spacing-10` | 40px | |
 
+`--spacing-1-5`(6px)·`--spacing-2-5`(10px)는 4px 배수 규칙 위반으로 폐기(tokens.css에서 삭제) — 인접 4px 배수 토큰으로 수렴한다.
 2px·14px·18px 등은 실사용이 적어(10건 미만) 별도 토큰화하지 않음 — stage 2에서 인접 토큰으로 수렴 대상.
+
+레이아웃 거터 토큰: `--gutter`(16px) / `--gutter-md`(12px) / `--gutter-sm`(8px).
 
 ---
 
 ## 반경 (radius)
 
-| JS 키 | CSS 변수 | 값 | 용도 |
-|-------|----------|----|------|
-| `sm` | `--radius-sm` | 4px | 배지·캡션 라벨 |
-| `md` | `--radius-md` | 6px | 포스터 썸네일 소 |
-| `lg` | `--radius-lg` | 8px | 포스터 중·날짜 셀·지도 팝업 |
-| `xl` | `--radius-xl` | 12px | 상영시간표 셀 |
-| `2xl` | — | 20px | 바텀시트 상단 모서리 |
-| `full` | — | 999px | pill — 검색창·칩·FAB |
-| `circle` | — | 50% | 핀·FAB round·체크 배지 |
+역할 기반 네이밍으로 개편 — 크기 기반 토큰(`--radius-sm/md/lg/xl/2xl/full`)은 모두 삭제됨.
 
-> TASK-10 감사에서 드리프트 확인 — 신규 토큰 추가 대신 stage 2에서 기존 값으로 수렴 예정:
-> `borderRadius: 10`(34곳)이 `lg`(8)/`xl`(12) 사이에서 카드류에 혼용, `99`(19곳)는 `full`(999)의
-> 이형(異形). 상세는 "알려진 불일치" 섹션 참고.
+| CSS 변수 | 값 | 용도 |
+|----------|----|------|
+| `--radius-badge` | 4px | 배지·라벨·인디케이터 |
+| `--radius-poster` | 8px | 포스터·썸네일·날짜 셀·지도 팝업 |
+| `--radius-button` | 8px | 버튼 (control 12px가 버튼엔 과해 분리) |
+| `--radius-control` | 12px | 입력·칩·카드·상영시간표 셀 |
+| `--radius-popover` | 16px | 드롭다운·팝오버·모달 |
+| `--radius-sheet` | 20px | 바텀시트 상단 |
+| `--radius-pill` | 9999px | pill — 검색창·칩·FAB |
+| — (`circle`) | 50% | 핀·FAB round·체크 배지 |
+
+> TASK-10 감사에서 드리프트 확인 — stage 2에서 역할 토큰으로 수렴 예정:
+> `borderRadius: 10`(34곳)이 `--radius-poster`(8)/`--radius-control`(12) 사이에서 카드류에 혼용,
+> `99`(19곳)는 `--radius-pill`(9999)의 이형(異形). 상세는 "알려진 불일치" 섹션 참고.
 
 ---
 
@@ -197,7 +207,7 @@ mono           HEX, 상영 시간, 좌석수 등 정렬이 필요한 수치(tnum
 
 ### FilterChip
 
-- height: 32px, paddingH: 14px, radius: full, font: 13px/500
+- height: 32px, paddingH: 14px, radius: `--radius-pill`, font: 13px/500
 - default: `surface.raised` bg, `surface.border` border
 - active: `primary.subtleLight` bg, `primary.base` border
 
@@ -206,7 +216,7 @@ mono           HEX, 상영 시간, 좌석수 등 정렬이 필요한 수치(tnum
 ### MapPin
 
 - dotSize: 22px, border: `2px solid #FFFFFF`, shadow: `0 2px 6px rgba(0,0,0,0.18)`
-- label: font 11px/600, bg `rgba(255,255,255,0.85)`, radius `sm`, padding `2px 6px`
+- label: font 11px/600, bg `rgba(255,255,255,0.85)`, radius `--radius-badge`, padding `2px 6px`
 
 > ⚠️ `mapPin.label.font` weight 600 vs `type.scale.mapLabel` weight 700 — 불일치. mapLabel 700로 통일 권장.
 
@@ -214,31 +224,42 @@ mono           HEX, 상영 시간, 좌석수 등 정렬이 필요한 수치(tnum
 
 | 크기 | width | height | radius |
 |------|-------|--------|--------|
-| `sm` | 68px | 102px | `md` (6px) |
-| `md` | 96px | 144px | `lg` (8px) |
-| `lg` | 별도 지정 | — | `lg` (8px) |
+| `sm` | 68px | 102px | `--radius-poster` (8px) |
+| `md` | 96px | 144px | `--radius-poster` (8px) |
+| `lg` | 별도 지정 | — | `--radius-poster` (8px) |
 
 > ⚠️ tokens.js에 `lg` 크기 미정의 — MapView에서 zoom에 따라 동적 계산. 88×132 (zoom 14+) 기준.
 
 - selected ring: `primary.base` 2px, badgeSize 20px, badgeBorder `2px solid #FFFFFF`
 - overflow overlay: `rgba(15,12,9,0.62)`, font 18px/600, color `#FFFFFF`
 
+### 포스터 오버레이 칩
+
+포스터 위에 absolute로 얹는 상태 칩(D-N, 매진, 상영 상태, GV 타입/일시 등) 공통 스펙:
+
+- font: 11px/600, lineHeight 1
+- padding: `4px 8px`, radius: `--radius-badge`
+- display: `inline-flex` + `alignItems: center` (세로 중앙정렬)
+- 포스터 모서리에서 offset 6px
+- 배경/글자색은 칩별 의미색 유지 (매진 `semantic.error`, 상영 중 `semantic.success` 등)
+- 예외: 지도 핀 미니 배지(GvPinSlots)·랭킹 순위 숫자 같은 장식성 요소는 이 스펙 대상 아님
+
 ### BottomSheet
 
-- borderRadius: `20px 20px 0 0`
+- borderRadius: `var(--radius-sheet) var(--radius-sheet) 0 0` (20px, 상단만)
 - handle: 36×4px, radius 2px
 - posterScrollBg: `#EAE6DC` (라이트) / `#1B1813` (다크)
 
 ### DateBar
 
-- dayCell: radius `lg`, activeColor `primary.base`
+- dayCell: radius `--radius-poster`, activeColor `primary.base`
 - holiday(일/공휴일): `semantic.error`
 - saturday: `primary.base` (라이트) / `primary.hoverLight` (다크)
-- timeChip: height 30px, paddingH 12px, radius `full`, font 12px/500
+- timeChip: height 30px, paddingH 12px, radius `--radius-pill`, font 12px/500
 
 ### ShowtimeCell
 
-- padding: 12px, radius: `xl`, width: 100px
+- padding: 12px, radius: `--radius-control`, width: 100px
 - time: 17px/700 (tnum), endTime: 11px, seat: 12px/600, hall: 11px
 - soldout: opacity 0.45, line-through
 - low(잔여석 적음): `semantic.warning`, D-1 badge
@@ -309,17 +330,17 @@ height: 100dvh;
 ### TASK-10 하드코딩 감사 (2026-07-06)
 
 `grep -rEoh "fontSize: [0-9]+" src/components src/app --include="*.tsx"` 등으로 실사용 분포를 수집한 결과.
-전면 재설계 대신 기존 스케일에 진짜 누락분만 추가(`--text-subtitle`, `--spacing-1-5`, `--spacing-2-5`)했고,
+전면 재설계 대신 기존 스케일에 진짜 누락분만 추가(`--text-subtitle`; `--spacing-1-5`·`--spacing-2-5`도 이때 추가했으나 이후 4px 배수 규칙 위반으로 폐기)했고,
 아래는 stage 2(적용 감사 + 치환)에서 처리할 드리프트 수렴 대상이다 — 시각 변화가 생기므로 이 표만
 보고 기계적으로 치환하지 말 것, 각 치환 PR에서 개별 검토·스크린샷 확인 필요.
 
 | 항목 | 실사용 건수 | 수렴 후보 | 비고 |
 |------|------------|----------|------|
-| `borderRadius: 10` | 34곳 | `--radius-lg`(8) 또는 `--radius-xl`(12) | 카드류에 8/10/12가 혼용 중 — 어느 쪽으로 모을지 stage 2에서 결정 |
-| `borderRadius: 99` | 19곳 | `--radius-full`(999) | pill의 이형 표기, 의미상 완전 동일 |
-| `borderRadius: 14/16/18` | 5+10+1곳 | `--radius-xl`(12) 또는 신규 검토 | `16`이 10곳으로 제법 많음 — stage 2에서 신규 토큰 여부 판단 |
+| `borderRadius: 10` | 34곳 | `--radius-poster`(8) 또는 `--radius-control`(12) | 카드류에 8/10/12가 혼용 중 — 어느 쪽으로 모을지 stage 2에서 결정 |
+| `borderRadius: 99` | 19곳 | `--radius-pill`(9999) | pill의 이형 표기, 의미상 완전 동일 |
+| `borderRadius: 14/16/18` | 5+10+1곳 | `--radius-control`(12) 또는 `--radius-popover`(16) | `16`은 `--radius-popover` 신설로 수렴 가능 — stage 2에서 케이스별 판단 |
 | `fontSize: 15` | 33곳(18개 파일) | — (토큰화 완료) | `--text-subtitle` 추가로 해소, 이번 PR에 포함 |
 | `fontSize: 7/8/17/19/21/23/26/28/40` | 각 10곳 미만 | 해당 없음 | 아이콘 배지·헤딩 변형 등 일회성 — 토큰화 보류, 개별 판단 |
-| `gap: 6` | 41곳 | — (토큰화 완료) | `--spacing-1-5` 추가로 해소 |
-| `gap: 10` | 31곳 | — (토큰화 완료) | `--spacing-2-5` 추가로 해소 |
+| `gap: 6` | 41곳 | `--spacing-1`(4) 또는 `--spacing-2`(8) | `--spacing-1-5`로 토큰화했으나 4px 배수 규칙 위반으로 폐기 — 인접 토큰으로 수렴 |
+| `gap: 10` | 31곳 | `--spacing-2`(8) 또는 `--spacing-3`(12) | `--spacing-2-5`로 토큰화했으나 4px 배수 규칙 위반으로 폐기 — 인접 토큰으로 수렴 |
 | `gap: 2/5/7/14/18` | 각 10곳 내외 | 인접 spacing 토큰 | 실사용 적어 stage 2에서 케이스별 수렴 |

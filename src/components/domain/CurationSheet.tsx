@@ -4,9 +4,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { usePendingNavItem } from '@/hooks/usePendingNavItem'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { PosterThumb } from './PosterThumb'
-import { Badge } from '@/components/primitives/Badge'
 import { HoverPopup } from './CurationSectionRow'
-import { Hourglass, MapPin, Car, Clapperboard, Film, Search, ChevronDown } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import type {
   LastWeekFilm,
   NewIndieFilm,
@@ -28,12 +27,6 @@ const TOP_MARGIN = 132
 export const CURATION_PEEK_HEIGHT = 120
 const VELOCITY_THRESHOLD = 500   // px/s 이상이면 flick으로 간주
 const SNAP_ORDER: CurationSnap[] = ['expanded', 'peek']
-
-const IconSparkle = () => (
-  <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8" />
-  </svg>
-)
 
 interface CurationItem {
   id: string
@@ -69,7 +62,7 @@ interface CurationSheetProps {
   onRecentItemClick?: (item: RecentlyViewedEntry) => void
   /** 현재 위치 있을 때 극장 ID로 거리 텍스트("1.2 km") 조회 */
   getTheaterDistance?: (theaterId: string) => string | null
-  /** TheaterSheet/MovieSheet가 열려 큐레이션 시트를 숨겨야 할 때 */
+  /** TheaterSheet가 열려 큐레이션 시트를 숨겨야 할 때 */
   hidden?: boolean
 }
 
@@ -177,7 +170,7 @@ function PosterRow({ items, onSelect, emptyText, desktop = false }: {
 
   if (items.length === 0) {
     return (
-      <p style={{ margin: 0, paddingLeft: 20, paddingRight: 20, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
+      <p style={{ margin: 0, paddingLeft: 'var(--gutter)', paddingRight: 'var(--gutter)', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
         {emptyText}
       </p>
     )
@@ -188,15 +181,14 @@ function PosterRow({ items, onSelect, emptyText, desktop = false }: {
       display: 'grid',
       gridTemplateColumns: 'repeat(3, 1fr)',
       gap: 'var(--spacing-3)',
-      paddingLeft: 20,
-      paddingRight: 20,
+      paddingLeft: 'var(--gutter)',
+      paddingRight: 'var(--gutter)',
     } : {
       display: 'flex',
       gap: 'var(--spacing-3)',
       overflowX: 'auto',
-      paddingLeft: 20,
-      paddingRight: 20,
-      paddingBottom: 4,
+      paddingLeft: 'var(--gutter)',
+      paddingRight: 'var(--gutter)',
     }}>
       {items.map((item) => (
         <PosterItem key={item.id} item={item} posterSize={posterSize} desktop={desktop} onSelect={onSelect} />
@@ -246,7 +238,7 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
           minWidth: 0,
           display: 'flex',
           flexDirection: 'column',
-          gap: 'var(--spacing-1-5)',
+          gap: 8,
           border: 'none',
           background: 'none',
           padding: 0,
@@ -261,18 +253,19 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
           transform: hovered ? 'scale(1.1)' : 'scale(1)',
           transformOrigin: 'center center',
         }}>
-          <PosterThumb src={item.posterUrl} alt={item.title} width={posterSize.width} height={posterSize.height} size="lg" />
+          <PosterThumb src={item.posterUrl} alt={item.title} width={posterSize.width} height={posterSize.height} size="lg" radius={0} shadow={false} />
           {item.distanceLabel && (
             <div style={{
               position: 'absolute',
-              top: 4,
-              right: 4,
+              top: 6,
+              right: 6,
               backgroundColor: 'var(--color-primary-base)',
-              color: '#fff',
-              borderRadius: 'var(--radius-full)',
-              padding: '2px 7px',
-              fontSize: 10,
-              fontWeight: 700,
+              color: 'var(--color-on-accent)',
+              borderRadius: 'var(--radius-badge)',
+              padding: '4px 8px',
+              fontSize: 11,
+              fontWeight: 600,
+              lineHeight: 1,
               whiteSpace: 'nowrap',
               boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
             }}>
@@ -280,14 +273,18 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
             </div>
           )}
           {item.badge && (
-            <Badge
-              variant="info"
+            <span
               style={{
                 position: 'absolute',
                 left: 6,
                 bottom: 6,
                 backgroundColor: 'rgba(20,15,10,0.72)',
-                color: '#fff',
+                color: 'var(--color-on-accent)',
+                borderRadius: 'var(--radius-badge)',
+                padding: '4px 8px',
+                fontSize: 11,
+                fontWeight: 600,
+                lineHeight: 1,
                 maxWidth: 'calc(100% - 12px)',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -296,7 +293,7 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
               }}
             >
               {item.badge}
-            </Badge>
+            </span>
           )}
         </div>
         <span style={{
@@ -343,8 +340,8 @@ function Section({ title, icon, withLine, action, style, children }: {
   children: React.ReactNode
 }) {
   return (
-    <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2-5)', ...style }}>
-      <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 20, paddingRight: 20, gap: 'var(--spacing-1-5)' }}>
+    <section style={{ display: 'flex', flexDirection: 'column', gap: 12, ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 'var(--gutter)', paddingRight: 'var(--gutter)', gap: 8 }}>
         {icon && <span style={{ display: 'flex', alignItems: 'center', color: 'var(--color-text-body)' }}>{icon}</span>}
         <h3 style={{
           margin: 0,
@@ -414,23 +411,23 @@ function RecentList({
 
   if (items.length === 0) {
     return (
-      <p style={{ margin: 0, paddingLeft: 20, paddingRight: 20, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
+      <p style={{ margin: 0, paddingLeft: 'var(--gutter)', paddingRight: 'var(--gutter)', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
         최근 찾아본 영화·극장·감독이 아직 없어요
       </p>
     )
   }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1-5)', paddingLeft: 20, paddingRight: 20 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingLeft: 'var(--gutter)', paddingRight: 'var(--gutter)' }}>
       {items.map(item => (
         <div
           key={`${item.kind}-${item.id}`}
           style={{
             display: 'flex',
             alignItems: 'center',
-            padding: '6px 12px',
+            padding: '8px 12px',
             backgroundColor: 'var(--color-surface-bg)',
-            borderRadius: 'var(--radius-lg)',
-            gap: 'var(--spacing-2-5)',
+            borderRadius: 'var(--radius-control)',
+            gap: 12,
             opacity: pendingId === `${item.kind}-${item.id}` ? 0.5 : 1,
           }}
         >
@@ -493,15 +490,6 @@ interface CurationSectionsProps {
   getTheaterDistance?: (theaterId: string) => string | null
   /** 데스크톱 도크에서 호출 시 true — 포스터 행을 가로 스크롤 대신 한 줄 3개 그리드로 표시 */
   desktop?: boolean
-}
-
-/** 노출 가능한 큐레이션 섹션 후보 — 우선순위 순. 데이터 있는 섹션을 최대 3개까지 노출 */
-interface SectionCandidate {
-  key: string
-  title: string
-  icon: string
-  items: CurationItem[]
-  emptyText: string
 }
 
 const MAX_CURATION_SECTIONS = 3
@@ -586,11 +574,11 @@ export function CurationSections({
   }))
 
   const candidates = [
-    { key: 'lastWeek', title: '막바지 상영', icon: <Hourglass size={18} strokeWidth={1.75} color="var(--color-primary-base)" />, items: lastWeekItems, emptyText: '' },
-    { key: 'soloTheater', title: `${soloRegionLabel ?? '이 지역'}에서 단 한 곳`, icon: <MapPin size={18} strokeWidth={1.75} color="var(--color-primary-base)" />, items: soloTheaterItems, emptyText: '' },
-    { key: 'todayShow', title: '지금 출발하면 볼 수 있는', icon: <Car size={18} strokeWidth={1.75} color="var(--color-primary-base)" />, items: soloRegionLabel ? todayShowItems : [], emptyText: '' },
-    { key: 'newIndie', title: '이번 주 새롭게 상영하는 영화', icon: <Clapperboard size={18} strokeWidth={1.75} color="var(--color-primary-base)" />, items: newIndieItems, emptyText: '' },
-    { key: 'returning', title: '오랜만에 상영하는 영화', icon: <Film size={18} strokeWidth={1.75} color="var(--color-primary-base)" />, items: returningItems, emptyText: '' },
+    { key: 'lastWeek', title: '막바지 상영', items: lastWeekItems, emptyText: '' },
+    { key: 'soloTheater', title: `${soloRegionLabel ?? '이 지역'}에서 단 한 곳`, items: soloTheaterItems, emptyText: '' },
+    { key: 'todayShow', title: '지금 출발하면 볼 수 있는', items: soloRegionLabel ? todayShowItems : [], emptyText: '' },
+    { key: 'newIndie', title: '이번 주 새롭게 상영하는 영화', items: newIndieItems, emptyText: '' },
+    { key: 'returning', title: '오랜만에 상영하는 영화', items: returningItems, emptyText: '' },
   ]
 
   const sections = candidates.filter((c) => c.items.length > 0).slice(0, MAX_CURATION_SECTIONS)
@@ -619,7 +607,7 @@ export function CurationSections({
 
         const btnStyle = {
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-1)',
-          padding: '8px 0', border: 'none', borderRadius: 'var(--radius-lg)',
+          padding: '8px 0', border: 'none', borderRadius: 'var(--radius-button)',
           background: 'var(--color-surface-bg)', color: 'var(--color-text-caption)',
           fontSize: 12, fontWeight: 600, cursor: 'pointer',
         } as const
@@ -627,7 +615,7 @@ export function CurationSections({
         return (
           <div key={section.key} ref={el => { sectionRefs.current[section.key] = el }}
             style={{ display: 'flex', flexDirection: 'column', gap: SECTION_GAP }}>
-            <Section title={section.title} icon={section.icon} withLine>
+            <Section title={section.title} withLine>
               <PosterRow items={visibleItems} onSelect={handleSelect} emptyText={section.emptyText} desktop={desktop} />
               {hasMore && expandState === 'collapsed' && (
                 <button type="button" onClick={() => setExpand(section.key, 'partial')}
@@ -658,7 +646,7 @@ export function CurationSections({
           </div>
         )
       })}
-      <Section title="최근 찾아본" icon={<Search size={18} strokeWidth={1.75} color="currentColor" />} withLine action={
+      <Section title="최근 찾아본" withLine action={
         onClearRecentlyViewed && recentlyViewed.length > 0 ? (
           <button
             type="button"
@@ -933,7 +921,7 @@ export function CurationSheet({
           alignItems: 'center',
           gap: 'var(--spacing-2)',
           paddingTop: 8,
-          paddingBottom: 10,
+          paddingBottom: 12,
           flexShrink: 0,
           pointerEvents: 'none',   // 컨테이너가 드래그·탭 처리 (handlePointerUp에서 영역 판정)
         }}>
@@ -943,8 +931,7 @@ export function CurationSheet({
           borderRadius: 'var(--comp-sheet-handle-radius)',
           backgroundColor: 'var(--color-border)',
         }} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-1-5)', color: 'var(--color-text-primary)' }}>
-          <span style={{ color: 'var(--color-primary-base)', display: 'flex' }}><IconSparkle /></span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-text-primary)' }}>
           <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700 }}>큐레이션</span>
         </div>
       </div>

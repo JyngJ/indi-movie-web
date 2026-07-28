@@ -196,8 +196,8 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
           <div
             onClick={() => desktopRef.current?.focus()}
             style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              height: 44, paddingLeft: 16, paddingRight: 10,
+              display: 'flex', alignItems: 'center', gap: 12,
+              height: 44, paddingLeft: 16, paddingRight: 12,
               backgroundColor: 'var(--color-surface-card)',
               border: `1.5px solid ${ACCENT}`,
               borderBottom: 'none',
@@ -267,7 +267,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
                       onMouseDown={e => { e.preventDefault(); navigateDirect(s) }}
                       onMouseEnter={() => setHovered(i)}
                       onMouseLeave={() => setHovered(null)}
-                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '9px 16px', background: (arrowIdx === i || hoveredIdx === i) ? 'var(--color-surface-raised)' : 'none', border: 'none', cursor: 'pointer', textAlign: 'left', minHeight: 'unset', opacity: navPendingId === s.label ? 0.5 : 1 }}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '8px 16px', background: (arrowIdx === i || hoveredIdx === i) ? 'var(--color-surface-raised)' : 'none', border: 'none', cursor: 'pointer', textAlign: 'left', minHeight: 'unset', opacity: navPendingId === s.label ? 0.5 : 1 }}
                     >
                       <span style={{ flexShrink: 0, display: 'flex', color: 'var(--color-text-caption)' }}>
                         <SearchIcon size={14} />
@@ -283,7 +283,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
                   <div style={{ height: 6 }} />
                 </>
               ) : (
-                <div style={{ padding: '14px 16px 18px', textAlign: 'center' }}>
+                <div style={{ padding: '16px 16px 20px', textAlign: 'center' }}>
                   <p style={{ margin: '0 0 12px', fontSize: 13, color: 'var(--color-text-caption)' }}>
                     &ldquo;{query}&rdquo;와 일치하는 결과가 없습니다
                   </p>
@@ -292,12 +292,12 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
               )
             ) : (
               <>
-                <p style={{ padding: '10px 16px 8px', margin: 0, fontSize: 12, color: 'var(--color-text-caption)', letterSpacing: '-0.1px' }}>
+                <p style={{ padding: '12px 16px 8px', margin: 0, fontSize: 12, color: 'var(--color-text-caption)', letterSpacing: '-0.1px' }}>
                   영화관, 영화, 감독을 모두 검색할 수 있어요.
                 </p>
-                <div style={{ height: 1, backgroundColor: 'var(--color-border)', margin: '0 12px 3px' }} />
+                <div style={{ height: 1, backgroundColor: 'var(--color-border)', margin: '0 12px 4px' }} />
                 {HINTS.map(({ cat, ex }) => (
-                  <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '7px 16px' }}>
+                  <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 16px' }}>
                     <span style={{ fontSize: 12, color: 'var(--color-text-caption)', width: 38, flexShrink: 0 }}>{cat}</span>
                     <span style={{ fontSize: 13, color: 'var(--color-text-placeholder)' }}>&ldquo;{ex}&rdquo;</span>
                   </div>
@@ -348,7 +348,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
           </div>
           <button
             onClick={mobileSubmit}
-            style={{ flexShrink: 0, height: 36, paddingLeft: 14, paddingRight: 14, borderRadius: 'var(--comp-search-radius)', border: 'none', cursor: 'pointer', background: 'var(--color-primary-base)', color: '#fff', fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap', minHeight: 'unset' }}
+            style={{ flexShrink: 0, height: 36, paddingLeft: 16, paddingRight: 16, borderRadius: 'var(--comp-search-radius)', border: 'none', cursor: 'pointer', background: 'var(--color-primary-base)', color: 'var(--color-on-accent)', fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap', minHeight: 'unset' }}
           >
             찾기
           </button>
@@ -362,7 +362,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
                   <button
                     key={s.label}
                     onClick={() => mobileNavigate(s)}
-                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', background: 'none', border: 'none', borderBottom: '1px solid var(--color-border)', cursor: 'pointer', textAlign: 'left', minHeight: 'unset', opacity: navPendingId === s.label ? 0.5 : 1 }}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', background: 'none', border: 'none', borderBottom: '1px solid var(--color-border)', cursor: 'pointer', textAlign: 'left', minHeight: 'unset', opacity: navPendingId === s.label ? 0.5 : 1 }}
                   >
                     <span style={{ flexShrink: 0, display: 'flex', color: 'var(--color-text-caption)' }}><SearchIcon size={14} /></span>
                     <span style={{ flex: 1, fontSize: 14, color: 'var(--color-text-body)' }}>
@@ -374,7 +374,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
               </div>
             ) : (
               <div style={{ textAlign: 'center', marginTop: 60 }}>
-                <p style={{ margin: '0 0 14px', fontSize: 14, color: 'var(--color-text-caption)' }}>
+                <p style={{ margin: '0 0 16px', fontSize: 14, color: 'var(--color-text-caption)' }}>
                   &ldquo;{mInput}&rdquo;와 일치하는 결과가 없습니다
                 </p>
                 <AddRequestCtaButton onClick={() => { setRequestQuery(mInput.trim()); setRequestOpen(true) }} />
@@ -384,12 +384,12 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
             <>
               {history.length > 0 && (
                 <div style={{ marginBottom: 16 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                     <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-caption)', margin: 0 }}>최근 검색</p>
                     <button onClick={() => { setHistory([]); clearRecentSearches() }} style={{ fontSize: 12, color: 'var(--color-text-caption)', background: 'none', border: 0, cursor: 'pointer', padding: 0 }}>전체 삭제</button>
                   </div>
                   {history.map(q => (
-                    <div key={q} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--color-border)' }}>
+                    <div key={q} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--color-border)' }}>
                       <span style={{ flexShrink: 0, display: 'flex', color: 'var(--color-text-caption)' }}><SearchIcon size={14} /></span>
                       <button onClick={() => setMInput(q)} style={{ flex: 1, background: 'none', border: 0, cursor: 'pointer', textAlign: 'left', padding: 0, fontSize: 14, color: 'var(--color-text-body)' }}>{q}</button>
                       <button onClick={() => setHistory(prev => prev.filter(h => h !== q))} style={{ background: 'none', border: 0, cursor: 'pointer', padding: 4, color: 'var(--color-text-caption)', minHeight: 'unset' }}>
@@ -405,7 +405,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', marginTop: 8 }}>
                   {HINTS.map(({ cat, ex }) => (
-                    <div key={cat} style={{ display: 'flex', alignItems: 'baseline', gap: 10, lineHeight: 1.9 }}>
+                    <div key={cat} style={{ display: 'flex', alignItems: 'baseline', gap: 12, lineHeight: 1.9 }}>
                       <span style={{ fontSize: 12, color: 'var(--color-text-caption)', width: 44, flexShrink: 0 }}>{cat}</span>
                       <span style={{ fontSize: 12, color: 'var(--color-text-caption)', opacity: 0.6 }}>"{ex}"</span>
                     </div>

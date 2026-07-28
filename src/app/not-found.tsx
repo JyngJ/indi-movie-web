@@ -9,8 +9,8 @@ export default function NotFound() {
       justifyContent: 'center',
       minHeight: '100dvh',
       gap: 24,
-      padding: '40px 24px',
-      background: 'var(--color-bg-base)',
+      padding: '40px var(--gutter)',
+      background: 'var(--color-surface-bg)',
       textAlign: 'center',
     }}>
       <img

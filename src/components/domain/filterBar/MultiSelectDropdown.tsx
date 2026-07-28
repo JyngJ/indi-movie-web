@@ -37,7 +37,7 @@ export function MultiSelectDropdown({ options, selectedValues, setSelectedValues
       </div>
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '10px 14px',
+        padding: '12px 16px',
         background: 'var(--color-surface-raised)',
         borderTop: '1px solid var(--color-border)',
         minHeight: 40,

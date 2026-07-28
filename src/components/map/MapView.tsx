@@ -13,7 +13,7 @@ import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { SearchBarButton, FabRound, Toast } from '@/components/primitives'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { THEATER_SHEET_COLLAPSED_H } from '@/components/domain/TheaterSheet'
-import { MapPin, TheaterSheet, MovieSheet, CurationSheet, CurationSections, FilterBar, LocationPermissionModal, CURATION_PEEK_HEIGHT } from '@/components/domain'
+import { MapPin, TheaterSheet, CurationSheet, CurationSections, FilterBar, LocationPermissionModal, CURATION_PEEK_HEIGHT } from '@/components/domain'
 import type { CurationSnap } from '@/components/domain'
 import { DesktopDetailPanel } from '@/components/domain/DesktopDetailPanel'
 import { SearchPanel } from '@/components/domain/SearchPanel'
@@ -903,7 +903,7 @@ function makeClusterIcon(
       `border-radius:50%;background:${dotColor};` +
       `border:2.5px solid var(--color-surface-bg);box-shadow:var(--shadow-md);` +
       `display:flex;align-items:center;justify-content:center;` +
-      `color:#fff;font-weight:800;font-size:18px;z-index:3;">${count}</div>` +
+      `color:var(--color-on-accent);font-weight:800;font-size:18px;z-index:3;">${count}</div>` +
       `</div>`
 
     return L.divIcon({
@@ -948,7 +948,7 @@ function makeClusterIcon(
       `border-radius:50%;background:${dotColor};` +
       `border:2.5px solid var(--color-surface-bg);box-shadow:var(--shadow-md);` +
       `display:flex;align-items:center;justify-content:center;` +
-      `color:#fff;font-weight:800;font-size:16px;z-index:3;">${count}</div>` +
+      `color:var(--color-on-accent);font-weight:800;font-size:16px;z-index:3;">${count}</div>` +
       `</div>`
 
     return L.divIcon({
@@ -973,7 +973,7 @@ function makeClusterIcon(
       `<div style="position:relative;background:var(--color-surface-card);` +
       `border:1.5px solid var(--color-border);border-radius:10px;` +
       `padding:3px 8px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.13);z-index:1;">` +
-      `<span style="font-size:11px;font-weight:700;color:var(--color-text-primary);">${movieCount}편</span>` +
+      `<span style="font-size:11px;font-weight:700;color:var(--color-primary-base);">${movieCount}편</span>` +
       `</div></div>`
     : ''
   const html =
@@ -982,7 +982,7 @@ function makeClusterIcon(
     `top:0;left:${cx - SIZE / 2}px;` +
     `border-radius:50%;background:${dotColor};` +
     `display:flex;align-items:center;justify-content:center;` +
-    `color:#fff;font-weight:700;font-size:16px;line-height:1;` +
+    `color:var(--color-on-accent);font-weight:700;font-size:16px;line-height:1;` +
     `box-shadow:var(--shadow-md);border:2.5px solid var(--color-surface-bg);">${count}</div>` +
     countTagLarge +
     `</div>`
@@ -1161,8 +1161,6 @@ export default function MapView() {
   const settingsOpen = useUIStore((s) => s.isSettingsOpen)
   const settingsInitialPage = useUIStore((s) => s.settingsInitialPage)
   const setSettingsOpen = useUIStore((s) => s.setSettingsOpen)
-  // 큐레이션에서 선택한 영화 — MovieSheet를 띄움. null이면 닫힘
-  const [movieSheetId, setMovieSheetId] = useState<string | null>(null)
   // 모바일 큐레이션 시트 — peek(최소, 기본값) ↔ expanded 2단. visibleHeight는 +/- · 현위치 FAB 위치 계산용
   const [curationSnap, setCurationSnap] = useState<CurationSnap>('peek')
   const [curationVisibleHeight, setCurationVisibleHeight] = useState(0)
@@ -1296,7 +1294,7 @@ export default function MapView() {
     })
   }, [])
 
-  // 데스크톱: 좌측 도크에 영화 상세 패널 / 모바일: MovieSheet
+  // 데스크톱: 좌측 도크에 영화 상세 패널 / 모바일: 지도에 영화 필터 적용("지도에서 이 영화 검색"과 동일)
   const handleCurationMovieSelect = useCallback((movieId: string, movieTitle: string, sectionKey?: string) => {
     trackEvent('curation movie selected', {
       movie_id: movieId,
@@ -1306,17 +1304,25 @@ export default function MapView() {
     })
     classifySessionIntent('type_a', { source: 'curation_sheet', movie_id: movieId })
 
+    const allCurationFilms = [
+      ...curationData.lastWeekFilms.map(f => ({ movie: f.movie, regions: f.regions })),
+      ...curationData.newIndieFilms.map(f => ({ movie: f.movie, regions: f.regions })),
+      ...curationData.returningFilms.map(f => ({ movie: f.movie, regions: f.regions })),
+    ]
+    const match = allCurationFilms.find(f => f.movie.id === movieId)
+
+    // 최근 찾아본 기록 — 기존 내부 상세 뷰(MovieSheet)가 하던 기록을 클릭 시점으로 이동
+    recordRecentlyViewed(cookieStorageAdapter, 'movie', {
+      id: movieId,
+      title: movieTitle,
+      thumbnailKey: match?.movie.posterUrl,
+    }).then(() => setRecentlyViewedKey(k => k + 1))
+
     // 지역 있는 큐레이션 영화면 → 대상 지역 자동 적용 (데스크톱 패널 한정)
     if (isDesktopLayout) {
       setMovieFilter({ id: movieId, title: movieTitle })
       autoMovieFilterRef.current = true
 
-      const allCurationFilms = [
-        ...curationData.lastWeekFilms.map(f => ({ id: f.movie.id, regions: f.regions })),
-        ...curationData.newIndieFilms.map(f => ({ id: f.movie.id, regions: f.regions })),
-        ...curationData.returningFilms.map(f => ({ id: f.movie.id, regions: f.regions })),
-      ]
-      const match = allCurationFilms.find(f => f.id === movieId)
       const targetRegion = match?.regions?.[0] ?? null
       if (targetRegion && targetRegion !== filters.regionId) {
         autoRegionRef.current = { applied: targetRegion, prev: filters.regionId }
@@ -1326,9 +1332,11 @@ export default function MapView() {
       }
       openDesktopPanel({ type: 'movie', id: movieId })
     } else {
-      setMovieSheetId(movieId)
+      // 모바일: 큐레이션 시트를 접고 영화 상세로 이동
+      setCurationSnap('peek')
+      router.push(`/movie/${encodeURIComponent(movieId)}`)
     }
-  }, [isDesktopLayout, openDesktopPanel, curationData, filters.regionId])
+  }, [isDesktopLayout, openDesktopPanel, curationData, filters.regionId, router])
 
   const handleRemoveRecentlyViewed = useCallback((kind: RecentlyViewedKind, id: string) => {
     removeRecentlyViewed(cookieStorageAdapter, kind, id)
@@ -2082,7 +2090,7 @@ export default function MapView() {
       aria-label={isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}
       style={{
         width: 76, height: 40,
-        borderRadius: 999,
+        borderRadius: 9999,
         padding: 4,
         border: '1px solid var(--color-border)',
         backgroundColor: isDark ? 'var(--color-surface-card)' : 'var(--color-surface-raised)',
@@ -2441,7 +2449,7 @@ export default function MapView() {
   const fabBottom = !isDesktopLayout
     ? (selectedTheater && !sheetExpanded && !sheetExiting
         ? THEATER_SHEET_COLLAPSED_H + 16
-        : !selectedTheater && !movieSheetId && !searchOpen && curationSnap === 'peek' && curationVisibleHeight > 0
+        : !selectedTheater && !searchOpen && curationSnap === 'peek' && curationVisibleHeight > 0
           ? curationVisibleHeight + 16
           : GLOBAL_NAV_MOBILE_HEIGHT + 32)
     : 32
@@ -2489,7 +2497,7 @@ export default function MapView() {
     return (
       <section>
         <h2 style={{
-          margin: '0 0 10px',
+          margin: '0 0 12px',
           fontSize: 12,
           fontWeight: 700,
           color: 'var(--color-text-caption)',
@@ -2536,13 +2544,13 @@ export default function MapView() {
               <span style={{
                 width: 38,
                 height: 38,
-                borderRadius: 'var(--radius-xl)',
+                borderRadius: 'var(--radius-control)',
                 flexShrink: 0,
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: '#7C3AED',
-                color: '#fff',
+                backgroundColor: 'var(--color-gv)',
+                color: 'var(--color-on-accent)',
               }}>
                 <svg width={20} height={20} viewBox="0 0 24 24" fill="none"
                   stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -2582,7 +2590,7 @@ export default function MapView() {
     return (
       <section>
         <h2 style={{
-          margin: '0 0 10px',
+          margin: '0 0 12px',
           fontSize: 12,
           fontWeight: 700,
           color: 'var(--color-text-caption)',
@@ -2619,7 +2627,7 @@ export default function MapView() {
               <span style={{
                 width: 38,
                 height: 38,
-                borderRadius: 10,
+                borderRadius: 12,
                 flexShrink: 0,
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -2690,7 +2698,7 @@ export default function MapView() {
     return (
       <section>
         <h2 style={{
-          margin: '0 0 10px',
+          margin: '0 0 12px',
           fontSize: 12,
           fontWeight: 700,
           color: 'var(--color-text-caption)',
@@ -2730,7 +2738,7 @@ export default function MapView() {
               <div style={{
                 width: 48,
                 height: 68,
-                borderRadius: 6,
+                borderRadius: 8,
                 overflow: 'hidden',
                 flexShrink: 0,
                 backgroundColor: 'var(--color-surface-card)',
@@ -2747,7 +2755,7 @@ export default function MapView() {
                   <div style={{
                     width: '100%',
                     height: '100%',
-                    background: 'repeating-linear-gradient(135deg, rgba(255,255,255,0.08) 0 7px, transparent 7px 14px)',
+                    background: 'var(--color-neutral-800)',
                   }} />
                 )}
               </div>
@@ -2769,8 +2777,8 @@ export default function MapView() {
                     <span style={{
                       flexShrink: 0,
                       height: 20,
-                      padding: '0 7px',
-                      borderRadius: 5,
+                      padding: '0 8px',
+                      borderRadius: 4,
                       display: 'inline-flex',
                       alignItems: 'center',
                       fontSize: 11,
@@ -2785,7 +2793,7 @@ export default function MapView() {
                 </div>
                 {movie.originalTitle && (
                   <div style={{
-                    marginTop: 2,
+                    marginTop: 4,
                     fontFamily: 'var(--font-serif-en)',
                     fontSize: 'var(--text-bask-meta)',
                     fontStyle: 'normal',
@@ -2812,7 +2820,7 @@ export default function MapView() {
     return (
       <section>
         <h2 style={{
-          margin: '0 0 10px',
+          margin: '0 0 12px',
           fontSize: 12,
           fontWeight: 700,
           color: 'var(--color-text-caption)',
@@ -2895,7 +2903,7 @@ export default function MapView() {
     return (
       <section>
         <h2 style={{
-          margin: '0 0 10px',
+          margin: '0 0 12px',
           fontSize: 12,
           fontWeight: 700,
           color: 'var(--color-text-caption)',
@@ -2924,7 +2932,7 @@ export default function MapView() {
               <span style={{
                 width: 38,
                 height: 38,
-                borderRadius: 10,
+                borderRadius: 12,
                 flexShrink: 0,
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -2963,7 +2971,7 @@ export default function MapView() {
                 <span style={{ display: 'block', fontSize: 15, fontWeight: 700 }}>
                   {station.name}
                 </span>
-                <span style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 5 }}>
+                <span style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 4 }}>
                   {station.lines.map((line) => (
                     <span
                       key={line}
@@ -2971,11 +2979,11 @@ export default function MapView() {
                         display: 'inline-flex',
                         alignItems: 'center',
                         height: 18,
-                        padding: '0 6px',
+                        padding: '0 8px',
                         borderRadius: 4,
                         fontSize: 11,
                         fontWeight: 700,
-                        color: '#fff',
+                        color: 'var(--color-on-accent)',
                         backgroundColor: subwayLineColor({ name: line }, isDark),
                       }}
                     >
@@ -3016,7 +3024,7 @@ export default function MapView() {
     if (areaResults.length === 0) return null
     return (
       <section>
-        <h2 style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 700, color: 'var(--color-text-caption)' }}>
+        <h2 style={{ margin: '0 0 12px', fontSize: 12, fontWeight: 700, color: 'var(--color-text-caption)' }}>
           지역
         </h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
@@ -3033,7 +3041,7 @@ export default function MapView() {
                 }}
               >
                 <span style={{
-                  width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+                  width: 38, height: 38, borderRadius: 12, flexShrink: 0,
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                   backgroundColor: 'var(--color-surface-card)', border: '1px solid var(--color-border)',
                   color: 'var(--color-text-sub)',
@@ -3048,7 +3056,7 @@ export default function MapView() {
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 15, fontWeight: 700 }}>{area.name}</div>
-                  <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 2 }}>
+                  <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4 }}>
                     영화관 {area.theaters.length}곳
                   </div>
                 </div>
@@ -3056,7 +3064,7 @@ export default function MapView() {
               </button>
               {area.theaters.length > 0 && (
                 <div style={{
-                  marginLeft: 50,
+                  marginLeft: 52,
                   paddingBottom: 12,
                   borderBottom: '1px solid var(--color-border)',
                 }}>
@@ -3076,7 +3084,7 @@ export default function MapView() {
                       }}
                       style={{
                         width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-                        padding: '6px 0', border: 0, background: 'transparent',
+                        padding: '8px 0', border: 0, background: 'transparent',
                         color: 'var(--color-text-body)', textAlign: 'left', cursor: 'pointer',
                       }}
                     >
@@ -3460,11 +3468,11 @@ export default function MapView() {
 
       {/* 큐레이션 — 모바일: 항상 떠 있는 드래그 가능한 하단 시트(peek/default/expanded 3단 스냅) */}
       {!isDesktopLayout && !searchOpen && (
-        // 극장/영화 시트가 위에 뜬 동안은 마운트는 유지 — hidden prop으로 슬라이드 애니메이션 제어
+        // 극장 시트가 위에 뜬 동안은 마운트는 유지 — hidden prop으로 슬라이드 애니메이션 제어
         <CurationSheet
           snap={curationSnap}
           onSnapChange={handleCurationSnapChange}
-          hidden={!!(selectedTheater || movieSheetId)}
+          hidden={!!selectedTheater}
           lastWeekFilms={curationData.lastWeekFilms}
           soloTheaterFilms={curationData.soloTheaterFilms}
           soloRegionLabel={filters.regionId ?? undefined}
@@ -3482,7 +3490,7 @@ export default function MapView() {
       )}
 
       {/* 큐레이션 도크 — 데스크톱 전용 좌측 상시 패널. 검색 패널·극장 시트와 같은 슬롯·크기를 공유하며 셋 다 비활성일 때만 노출(네이버 지도 레퍼런스) */}
-      {isDesktopLayout && !searchOpen && !selectedTheater && (
+      {isDesktopLayout && !searchOpen && !selectedTheater && !displayedPanel && (
         <div style={{
           position: 'absolute',
           inset: `0 auto 0 ${GLOBAL_NAV_DESKTOP_WIDTH}px`,
@@ -3532,7 +3540,7 @@ export default function MapView() {
       )}
 
       {/* 도크 접기/펼치기 토글 — 도크 오른쪽 가장자리에 붙어 폭 변화에 맞춰 같이 이동 (네이버 지도 레퍼런스). 극장 상세가 떠 있을 땐 숨김(항상 펼쳐진 상태로 고정) */}
-      {isDesktopLayout && !searchOpen && !selectedTheater && (
+      {isDesktopLayout && !searchOpen && !selectedTheater && !displayedPanel && (
         <button
           type="button"
           onClick={() => toggleDockCollapsed()}
@@ -3613,13 +3621,13 @@ export default function MapView() {
               alignItems: 'center',
               gap: 8,
               height: 40,
-              paddingLeft: 6,
+              paddingLeft: 8,
               paddingRight: 16,
-              borderRadius: 999,
+              borderRadius: 9999,
               border: '1px solid rgba(0,0,0,0.14)',
               backgroundColor: 'var(--color-primary-base)',
               boxShadow: 'var(--shadow-md)',
-              color: '#fff',
+              color: 'var(--color-on-accent)',
               fontSize: 14,
               fontWeight: 600,
               cursor: 'pointer',
@@ -3629,7 +3637,7 @@ export default function MapView() {
           >
             <div style={{
               width: 28, height: 28, borderRadius: '50%',
-              backgroundColor: 'rgba(255,255,255,0.18)',
+              backgroundColor: 'color-mix(in srgb, var(--color-on-accent) 18%, transparent)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0,
             }}>
@@ -3797,20 +3805,6 @@ export default function MapView() {
           selectedMovieId={selectedMovieId}
           selectedTheaterName={selectedTheater?.name}
           initialPage={settingsInitialPage}
-        />
-      )}
-
-      {/* 큐레이션 영화 시트 — 모바일 전용 (데스크톱은 DesktopDetailPanel이 처리) */}
-      {movieSheetId && !isDesktopLayout && (
-        <MovieSheet
-          movieId={movieSheetId}
-          onClose={() => setMovieSheetId(null)}
-          onRecentlyViewed={() => setRecentlyViewedKey(k => k + 1)}
-          onTheaterSelect={(theaterId) => {
-            const mid = movieSheetId
-            setMovieSheetId(null)
-            handlePinClick(theaterId, mid)
-          }}
         />
       )}
 

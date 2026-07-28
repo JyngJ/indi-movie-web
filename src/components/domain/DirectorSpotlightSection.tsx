@@ -2,7 +2,6 @@
 
 import type { Movie } from '@/types/api'
 import { useDirectorProfile } from '@/lib/supabase/queries'
-import { Trophy } from 'lucide-react'
 
 interface DirectorSpotlight {
   name: string
@@ -63,13 +62,14 @@ function DirectorCard({ director, isDesktop, onClick }: { director: DirectorSpot
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: 'var(--spacing-1-5)',
+        gap: 8,
         width: size + 16,
         flexShrink: 0,
         cursor: onClick ? 'pointer' : undefined,
       }}
     >
       <div
+        className={onClick ? 'hover-lift' : undefined}
         style={{
           width: size,
           height: size,
@@ -122,7 +122,7 @@ function DirectorCard({ director, isDesktop, onClick }: { director: DirectorSpot
 
       <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-caption)', whiteSpace: 'nowrap' }}>
         상영중{' '}
-        <strong style={{ color: 'var(--color-accent)', fontWeight: 700 }}>
+        <strong style={{ color: 'var(--color-primary-base)', fontWeight: 700 }}>
           {director.movieCount}
         </strong>
         편
@@ -147,18 +147,18 @@ export function DirectorSpotlightSection({
         <h2
           style={{
             margin: 0,
-            fontSize: isDesktop ? 'var(--text-h3)' : 'var(--text-title)',
+            fontSize: isDesktop ? 'var(--text-h2)' : 'var(--text-h3)',
             fontWeight: 700,
             fontFamily: 'var(--font-display)',
             color: 'var(--color-text-primary)',
             display: 'flex',
             alignItems: 'center',
-            gap: 6
+            gap: 8
           }}
         >
-          <Trophy size={24} strokeWidth={2} color="var(--color-primary-base)" /> 감독 스포트라이트
+          감독 스포트라이트
         </h2>
-        <p style={{ margin: '3px 0 0', fontSize: 12, color: 'var(--color-text-caption)' }}>
+        <p style={{ margin: '4px 0 0', fontSize: isDesktop ? 'var(--text-meta)' : 'var(--text-caption)', color: 'var(--color-text-caption)' }}>
           지금 주목할 만한 감독
         </p>
       </div>

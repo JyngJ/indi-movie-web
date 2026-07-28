@@ -28,8 +28,8 @@ function accentColors(eventType: AnniversaryEventType) {
   return {
     bg: isBirthday
       ? 'color-mix(in srgb, #C8901A 12%, var(--color-surface-card))'
-      : 'color-mix(in srgb, #4A6380 14%, var(--color-surface-card))',
-    border: isBirthday ? '#C8901A' : '#4A6380',
+      : 'color-mix(in srgb, var(--color-primary-base) 14%, var(--color-surface-card))',
+    border: isBirthday ? '#C8901A' : 'var(--color-primary-base)',
     text: isBirthday ? '#8A5F00' : '#2E4A65',
   }
 }
@@ -54,7 +54,7 @@ export function AnniversarySection({
       borderTop: `3px solid ${border}`,
       borderLeft: `1px solid color-mix(in srgb, ${border} 30%, transparent)`,
       borderRight: `1px solid color-mix(in srgb, ${border} 30%, transparent)`,
-      display: 'flex', flexDirection: 'column', gap: 3,
+      display: 'flex', flexDirection: 'column', gap: 4,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)', flexWrap: 'wrap' }}>
         <span style={{
@@ -67,7 +67,8 @@ export function AnniversarySection({
           fontSize: 'var(--text-caption)', fontWeight: 700, color: text,
           background: `color-mix(in srgb, ${border} 18%, transparent)`,
           border: `1px solid color-mix(in srgb, ${border} 35%, transparent)`,
-          borderRadius: 'var(--radius-full)', padding: '2px 8px',
+          borderRadius: 'var(--radius-pill)', padding: '4px 8px',
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
           whiteSpace: 'nowrap',
         }}>
           {dateLabel}
@@ -93,8 +94,8 @@ export function AnniversarySection({
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
         {header}
         <div style={{
-          display: 'flex', gap: 'var(--spacing-2-5)', alignItems: 'flex-start',
-          padding: '12px 14px',
+          display: 'flex', gap: 12, alignItems: 'flex-start',
+          padding: '12px 16px',
           border: filmBorder, borderTop: 'none',
           borderRadius: '0 0 10px 10px',
           background: 'var(--color-surface-card)',
@@ -125,7 +126,8 @@ export function AnniversarySection({
                 <div style={{ display: 'flex', gap: 'var(--spacing-1)', alignItems: 'center' }}>
                   {film.genre.slice(0, 1).map((g) => (
                     <span key={g} style={{
-                      fontSize: 11, padding: '2px 5px', borderRadius: 'var(--radius-full)',
+                      fontSize: 11, padding: '4px', borderRadius: 'var(--radius-pill)',
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
                       background: 'var(--color-surface-raised)', color: 'var(--color-text-caption)',
                       border: '1px solid var(--color-border)',
                     }}>{g}</span>
@@ -143,15 +145,15 @@ export function AnniversarySection({
   // 일반 모드 — 가로 스크롤
   return (
     <div style={{ paddingTop: isDesktop ? 48 : 24 }}>
-      <div style={{ margin: '0 16px' }}>{header}</div>
+      <div style={{ margin: '0 var(--gutter)' }}>{header}</div>
       <div style={{
-        margin: '0 16px',
+        margin: '0 var(--gutter)',
         borderRadius: '0 0 10px 10px',
         border: filmBorder, borderTop: 'none',
         overflow: 'hidden',
       }}>
         <CurationSectionRow
-          title="" emoji="" displayMode="default"
+          title="" displayMode="default"
           movies={films} isDesktop={isDesktop}
           onMovieClick={onMovieClick}
           noHeader

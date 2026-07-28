@@ -34,7 +34,7 @@ import { getStoredRegion, setStoredRegion } from '@/lib/regionStorage'
 import { getFestivalDateLabel, getFestivalStatus, type FestivalStatus } from '@/lib/festival/status'
 import type { Theater } from '@/types/api'
 import type { Festival } from '@/types/festival'
-import { Hourglass, Clapperboard, Film, Zap, Moon, ArrowUp, Car, CalendarDays, MapPin, ChevronRight } from 'lucide-react'
+import { ArrowUp, ChevronRight } from 'lucide-react'
 
 /* ── 지역 설정 힌트 말풍선 — 지도 FilterBar의 안내와 동일한 문구/닫기 동작(yh_region_tip) ── */
 function RegionHintBubble({ onDismiss }: { onDismiss: () => void }) {
@@ -54,22 +54,23 @@ function RegionHintBubble({ onDismiss }: { onDismiss: () => void }) {
         background: 'var(--color-primary-base)',
         borderRadius: 12,
         boxShadow: '0 10px 28px rgba(40, 55, 75, 0.34)',
-        padding: '12px 12px 12px 14px',
+        padding: '12px 12px 12px 16px',
         display: 'flex',
         alignItems: 'flex-start',
-        gap: 10,
+        gap: 12,
+        color: 'var(--color-on-accent)',
       }}>
-        <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+        <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 4 }}>
           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
           <circle cx="12" cy="10" r="3" />
         </svg>
         <span style={{
           flex: 1,
           fontFamily: 'Pretendard, sans-serif',
-          fontSize: 12.5,
+          fontSize: 'var(--text-meta)',
           lineHeight: 1.55,
           fontWeight: 500,
-          color: '#fff',
+          color: 'var(--color-on-accent)',
         }}>
           지역을 설정해서 내 주변 영화관의 상영 정보를 조회하세요
         </span>
@@ -78,9 +79,9 @@ function RegionHintBubble({ onDismiss }: { onDismiss: () => void }) {
           style={{
             width: 18, height: 18, minWidth: 18, minHeight: 18,
             borderRadius: '50%',
-            background: 'rgba(255,255,255,0.2)',
+            background: 'color-mix(in srgb, var(--color-on-accent) 20%, transparent)',
             border: 'none',
-            color: '#fff',
+            color: 'var(--color-on-accent)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer',
             flexShrink: 0,
@@ -125,7 +126,7 @@ function FestivalBannerCard({ festival, today, isDesktop, onClick }: { festival:
         <button
           onClick={onClick}
           style={{
-            display: 'block', width: '100%', padding: 0, margin: '10px 0 0', border: 'none',
+            display: 'block', width: '100%', padding: 0, margin: '12px 0 0', border: 'none',
             backgroundColor: 'var(--color-surface-raised)', cursor: 'pointer', minHeight: 'auto',
           }}
         >
@@ -264,7 +265,7 @@ export default function FilmsPage() {
 
       return [
         f.movie.id,
-        <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 2 }}>
+        <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
           <span style={{ fontSize: 11, color: 'var(--color-text-caption)' }}>{dir}</span>
           <span style={{ fontSize: 11, color: 'var(--color-primary-base)', fontWeight: 600 }}>{theaterName}</span>
           <span style={{ fontSize: 11, color: 'var(--color-primary-hover-l)' }}>{dateText}</span>
@@ -331,7 +332,7 @@ export default function FilmsPage() {
 
       return [
         f.movie.id,
-        <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 2 }}>
+        <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
           <span style={{ fontSize: 11, color: 'var(--color-text-caption)' }}>{dir}</span>
           <span style={{ fontSize: 11, color: 'var(--color-primary-base)', fontWeight: 600 }}>{theaterName}</span>
           <span style={{ fontSize: 11, color: 'var(--color-primary-hover-l)' }}>{dateText}</span>
@@ -373,7 +374,7 @@ export default function FilmsPage() {
 
       return [
         f.movie.id,
-        <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 2 }}>
+        <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
           <span style={{ fontSize: 11, color: 'var(--color-text-caption)' }}>{dir}</span>
           <span style={{ fontSize: 11, color: 'var(--color-primary-base)', fontWeight: 600 }}>{theaterName}</span>
           <span style={{ fontSize: 11, color: 'var(--color-primary-hover-l)' }}>{dateText}</span>
@@ -404,7 +405,7 @@ export default function FilmsPage() {
       const dir = f.movie.director.length > 0 ? f.movie.director[0] : '감독 미상'
       return [
         f.movie.id,
-        <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 2 }}>
+        <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
           <span style={{ fontSize: 11, color: 'var(--color-text-caption)' }}>{dir}</span>
           <span style={{ fontSize: 11, color: 'var(--color-primary-base)', fontWeight: 600 }}>{f.theaterName}</span>
           <span style={{ fontSize: 11, color: 'var(--color-primary-hover-l)' }}>{`오늘 ${f.nextShowTime}`}</span>
@@ -452,7 +453,6 @@ export default function FilmsPage() {
     {
       listId: 'realtime_last_week',
       nameKo: '막바지 상영',
-      emoji: <Hourglass size={24} strokeWidth={2} color="var(--color-primary-base)" />,
       description: '상영관이 줄고 있어요. 미리 확인하고 예매하세요',
       displayMode: 'default' as const,
       posterBadges: lastWeekBadgeMap,
@@ -461,7 +461,6 @@ export default function FilmsPage() {
     {
       listId: 'realtime_new_indie',
       nameKo: '이번 주 새롭게 상영하는 영화',
-      emoji: <Clapperboard size={24} strokeWidth={2} color="var(--color-primary-base)" />,
       description: '이번 주 스크린에 새로 오른 영화들',
       displayMode: 'default' as const,
       movies: newIndieFilms.map((f) => f.movie),
@@ -469,7 +468,6 @@ export default function FilmsPage() {
     {
       listId: 'realtime_returning',
       nameKo: '오랜만에 상영하는 영화',
-      emoji: <Film size={24} strokeWidth={2} color="var(--color-primary-base)" />,
       description: '잠시 사라졌다가 다시 스크린으로 돌아온 영화들',
       displayMode: 'default' as const,
       movieCaptions: returningYearCaptions,
@@ -566,7 +564,7 @@ export default function FilmsPage() {
               >
                 상영작
               </h1>
-              <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--color-text-caption)', whiteSpace: 'nowrap' }}>
+              <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-caption)', whiteSpace: 'nowrap' }}>
                 {subtitle}
               </p>
             </div>
@@ -729,7 +727,7 @@ export default function FilmsPage() {
       ─────────────────────────────────────────────────────── */}
       {(() => {
         type AnySection = {
-          listId: string; nameKo: string; emoji: React.ReactNode; description?: string
+          listId: string; nameKo: string; description?: string
           displayMode: string; movies: import('@/types/api').Movie[]
           posterBadges?: Map<string, number>
           movieCaptions?: Map<string, string>
@@ -751,7 +749,6 @@ export default function FilmsPage() {
         const rtAlmostSoldOut: AnySection[] = almostSoldOutFilms.length > 0 ? [{
           listId: 'realtime_almost_soldout',
           nameKo: '매진 임박',
-          emoji: <Zap size={24} strokeWidth={2} color="var(--color-primary-base)" />,
           description: '최근 확인 기준, 오늘·내일 회차의 좌석이 얼마 남지 않았어요',
           displayMode: 'default',
           movieCaptions: almostSoldOutCaptions,
@@ -764,7 +761,6 @@ export default function FilmsPage() {
         const rtLateNight: AnySection[] = lateNightFilms.length > 0 ? [{
           listId: 'realtime_late_night',
           nameKo: '심야 상영',
-          emoji: <Moon size={24} strokeWidth={2} color="var(--color-primary-base)" />,
           description: '하루의 끝, 밤 깊은 시간에 시작하는 회차들이에요',
           displayMode: 'default',
           movieCaptions: lateNightCaptions,
@@ -777,7 +773,6 @@ export default function FilmsPage() {
         const rtWeekend: AnySection[] = weekendFilms.length > 0 ? [{
           listId: 'realtime_weekend',
           nameKo: '이번 주말 상영',
-          emoji: <CalendarDays size={24} strokeWidth={2} color="var(--color-primary-base)" />,
           description: '이번 주말 볼 수 있는 회차예요',
           displayMode: 'default',
           movieCaptions: weekendCaptions,
@@ -790,7 +785,6 @@ export default function FilmsPage() {
         const rtLeaveNow: AnySection[] = leaveNowFilms.length > 0 ? [{
           listId: 'realtime_leave_now',
           nameKo: '지금 출발하면 볼 수 있는',
-          emoji: <Car size={24} strokeWidth={2} color="var(--color-primary-base)" />,
           description: '지금 출발하면 늦지 않게 볼 수 있는 회차예요',
           displayMode: 'default',
           movieCaptions: leaveNowCaptions,
@@ -803,7 +797,6 @@ export default function FilmsPage() {
         const rtSolo: AnySection[] = soloFilms.length > 0 ? [{
           listId: 'realtime_solo_theater',
           nameKo: `${selectedRegion ?? '이 지역'}에서 단 한 곳`,
-          emoji: <MapPin size={24} strokeWidth={2} color="var(--color-primary-base)" />,
           description: '이 지역에서는 이 극장에서만 상영해요',
           displayMode: 'default',
           movieCaptions: soloCaptions,
@@ -879,7 +872,7 @@ export default function FilmsPage() {
             const position = startIndex + active.indexOf(s)
             return (
               <CurationSectionRow key={s.listId} id={s.listId}
-                title={s.nameKo} emoji={s.emoji} description={s.description}
+                title={s.nameKo} description={s.description}
                 displayMode={s.displayMode as SectionDisplayMode}
                 movies={s.movies} isDesktop={isDesktop}
                 posterBadges={s.posterBadges} movieCaptions={s.movieCaptions}

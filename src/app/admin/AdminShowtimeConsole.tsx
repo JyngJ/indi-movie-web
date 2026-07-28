@@ -1333,7 +1333,7 @@ export function AdminShowtimeConsole({ tabSlot }: { tabSlot?: React.ReactNode } 
                 { key: 'all',       label: '전체',     count: payload.candidates.length, dot: '' },
                 { key: 'latest',    label: '최근 수집', count: latestCount,                dot: '#3498db' },
                 { key: 'unmatched', label: '매칭 필요', count: unmatchedCount,            dot: '#e74c3c' },
-                { key: 'warning',   label: '경고',     count: warningCount,              dot: '#e67e22' },
+                { key: 'warning',   label: '경고',     count: warningCount,              dot: 'var(--color-warning)' },
                 { key: 'soldout',   label: '매진',     count: soldoutCount,              dot: '#7f8c8d' },
               ] as const).map(({ key, label, count, dot }) => (
                 <button
@@ -1394,7 +1394,7 @@ export function AdminShowtimeConsole({ tabSlot }: { tabSlot?: React.ReactNode } 
                         </small>
                       </span>
                       {movie.provider === 'local' ? (
-                        <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: '#e8f5e9', color: '#2e7d32', fontWeight: 600 }}>
+                        <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: '#e8f5e9', color: 'var(--color-success)', fontWeight: 600 }}>
                           이미 등록됨
                         </span>
                       ) : (

@@ -36,3 +36,11 @@ export function toKstIsoDate(date: Date): string {
 export function formatLocalTimeHHMM(date: Date): string {
   return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
 }
+
+/** "YYYY-MM-DD" → "M월 D일(요일)" — 상영일 표시 라벨. */
+export function formatDateLabel(dateStr: string): string {
+  const DOW = ['일', '월', '화', '수', '목', '금', '토']
+  const [, m, d] = dateStr.split('-').map(Number)
+  const dow = DOW[new Date(dateStr + 'T00:00:00').getDay()]
+  return `${m}월 ${d}일(${dow})`
+}

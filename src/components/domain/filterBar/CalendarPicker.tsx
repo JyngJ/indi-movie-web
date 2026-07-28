@@ -65,7 +65,7 @@ export function CalendarPicker({ startDate, endDate, onApply, onCancel, style }:
       boxShadow: '0 12px 40px rgba(0,0,0,0.72)',
       ...style,
     }}>
-      <div style={{ padding: '14px 14px 0' }}>
+      <div style={{ padding: '16px 16px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
           <button style={navBtn} onClick={() => setViewMonth(new Date(year, month - 1, 1))}>
             <IcoNavPrev />
@@ -90,7 +90,7 @@ export function CalendarPicker({ startDate, endDate, onApply, onCancel, style }:
             <div key={d} style={{
               textAlign: 'center', fontSize: 11, fontWeight: 600,
               color: i === 0 ? '#E30613' : i === 6 ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
-              padding: '3px 0',
+              padding: '4px 0',
             }}>
               {d}
             </div>
@@ -165,14 +165,14 @@ export function CalendarPicker({ startDate, endDate, onApply, onCancel, style }:
       </div>
       <div style={{
         display: 'flex', gap: 8,
-        padding: '12px 14px',
+        padding: '12px 16px',
         borderTop: '1px solid var(--color-border)',
         background: 'var(--color-surface-raised)',
       }}>
         <button
           onClick={onCancel}
           style={{
-            flex: 1, height: 40, borderRadius: 999,
+            flex: 1, height: 40, borderRadius: 9999,
             background: 'transparent',
             border: '1px solid var(--color-border)',
             fontSize: 14, fontWeight: 500,
@@ -186,7 +186,7 @@ export function CalendarPicker({ startDate, endDate, onApply, onCancel, style }:
           disabled={!canApply}
           onClick={() => canApply && onApply(rangeStart!, rangeEnd!)}
           style={{
-            flex: 2, height: 40, borderRadius: 999,
+            flex: 2, height: 40, borderRadius: 9999,
             background: canApply ? 'var(--color-primary-base)' : 'var(--color-surface-raised)',
             border: canApply ? 'none' : '1px solid var(--color-border)',
             fontSize: 14, fontWeight: 600,

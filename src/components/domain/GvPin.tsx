@@ -78,7 +78,7 @@ export function GvPin({ ev, selected = false }: GvPinProps) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <span style={{
               background: GV_AMBER,
-              color: '#fff',
+              color: 'var(--color-on-accent)',
               fontSize: 8,
               fontWeight: 800,
               borderRadius: 3,

@@ -69,12 +69,12 @@ function InstagramRecCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [moviesWithPoster.length])
 
-  let badge: { text: string; tone: 'active' | 'neutral' } = { text: '인스타에서 보기', tone: 'neutral' }
+  // 영화 카드엔 상태 칩을 안 단다 — 이 섹션은 상영 중인 영화만 노출되므로 정보값이 없음.
+  // 영화제만 진행 상태/일정 라벨을 보여준다.
+  let badge: { text: string; tone: 'active' } | null = null
   let festivalBannerUrl: string | undefined
 
-  if (rec.targetType === 'movie' && moviesWithPoster.length > 0) {
-    if (activeNow) badge = { text: '상영 중', tone: 'active' }
-  } else if (rec.targetType === 'festival' && rec.festival) {
+  if (rec.targetType === 'festival' && rec.festival) {
     festivalBannerUrl = rec.festival.bannerUrl ?? undefined
     if (activeNow) {
       const status = getFestivalStatus(rec.festival.startDate, rec.festival.endDate, today)
@@ -120,7 +120,7 @@ function InstagramRecCard({
   // top/transform은 ScrollNavButton 기본값(50% 중앙정렬)을 그대로 씀 — 포스터 줄 자체가
   // 카드 세로 중앙에 대칭 배치(top/bottom 12%)라 카드 중앙 = 포스터 줄 중앙과 일치한다.
   const navButtonDarkStyle: React.CSSProperties = {
-    backgroundColor: '#000', border: 'none', color: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+    backgroundColor: '#000', border: 'none', color: 'var(--color-on-accent)', boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
   }
   const stripNavLeftStyle: React.CSSProperties = {
     ...navButtonDarkStyle,
@@ -154,12 +154,22 @@ function InstagramRecCard({
     transform: 'scale(1.2)',
   }
 
+  // 카드 안에 ScrollNavButton(<button>)이 들어가는데, HTML상 <button> 안에 <button>은
+  // 허용되지 않아 하이드레이션 에러가 남 — 바깥 카드는 div[role=button]으로 처리.
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onClick()
+        }
+      }}
       style={{
         display: 'block', width: '100%', padding: 0, margin: 0, border: 'none',
-        borderRadius: 'var(--radius-xl)', overflow: 'hidden', position: 'relative',
+        borderRadius: 'var(--radius-control)', overflow: 'hidden', position: 'relative',
         // 웹: 세로 높이 고정, 가로만 컨테이너 폭에 맞춰 늘어남. 모바일: "사진이 너무 큼"은
         // 박스 크기가 아니라 cover 크롭이 과하게 확대돼 보이는 문제였음 — 박스를 덜 납작하게
         // (세로 여유를 더 줘서) 잘리는 비율을 줄이는 쪽으로 수정, 원래 2:1로 되돌림.
@@ -204,6 +214,7 @@ function InstagramRecCard({
             {moviesWithPoster.map((m) => (
               <div
                 key={m.id}
+                className={m.movieId ? 'hover-lift' : undefined}
                 onClick={m.movieId ? () => onPosterClick(m.movieId!) : undefined}
                 style={{
                   position: 'relative', height: '100%', aspectRatio: '2/3', flexShrink: 0,
@@ -242,18 +253,20 @@ function InstagramRecCard({
         </div>
       )}
 
-      {/* 상태 뱃지 */}
-      <div
-        style={{
-          position: 'absolute', bottom: 10, right: 10, padding: '4px 10px', borderRadius: 99,
-          fontSize: 11, fontWeight: 700,
-          backgroundColor: badge.tone === 'active' ? 'var(--color-success)' : 'rgba(0,0,0,0.55)',
-          color: '#fff',
-        }}
-      >
-        {badge.text}
-      </div>
-    </button>
+      {/* 상태 뱃지 — 영화제 진행 상태만 (영화 카드엔 칩 없음) */}
+      {badge && (
+        <div
+          style={{
+            position: 'absolute', bottom: 6, right: 6, padding: '4px 8px', borderRadius: 'var(--radius-badge)',
+            fontSize: 11, fontWeight: 600, lineHeight: 1, display: 'inline-flex', alignItems: 'center',
+            backgroundColor: 'var(--color-success)',
+            color: 'var(--color-on-accent)',
+          }}
+        >
+          {badge.text}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -352,7 +365,7 @@ export function InstagramRecsSection({
           </button>
         }
       />
-      <div style={{ padding: '12px 16px' }}>
+      <div style={{ padding: '12px var(--gutter)' }}>
         <InstagramRecCard
           rec={pick}
           activeMovieIds={activeMovieIds}

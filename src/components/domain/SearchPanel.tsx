@@ -111,7 +111,7 @@ export function SearchPanel({
           <div style={{ marginTop: 0 }}>
             {recentSearches.length > 0 && (
               <div style={{ marginBottom: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                   <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-caption)', margin: 0 }}>최근 검색</p>
                   <button
                     onClick={onRecentClearAll}
@@ -124,7 +124,7 @@ export function SearchPanel({
                   {recentSearches.map(q => (
                     <div
                       key={q}
-                      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--color-border)' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--color-border)' }}
                     >
                       <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-caption)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                         <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
@@ -154,7 +154,7 @@ export function SearchPanel({
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', marginTop: 8 }}>
                 {SEARCH_GUIDE_EXAMPLES.map(({ label, example }) => (
-                  <div key={label} style={{ display: 'flex', alignItems: 'baseline', gap: 10, lineHeight: 1.9 }}>
+                  <div key={label} style={{ display: 'flex', alignItems: 'baseline', gap: 12, lineHeight: 1.9 }}>
                     <span style={{ fontSize: 12, color: 'var(--color-text-caption)', width: 44, flexShrink: 0 }}>{label}</span>
                     <span style={{ fontSize: 12, color: 'var(--color-text-caption)', opacity: 0.6 }}>&quot;{example}&quot;</span>
                   </div>
@@ -168,7 +168,7 @@ export function SearchPanel({
           </div>
         ) : (
           <div style={{ textAlign: 'center', marginTop: 60 }}>
-            <p style={{ margin: '0 0 14px', fontSize: 14, color: 'var(--color-text-caption)' }}>
+            <p style={{ margin: '0 0 16px', fontSize: 14, color: 'var(--color-text-caption)' }}>
               &ldquo;{query}&rdquo;와 일치하는 결과가 없습니다
             </p>
             <AddRequestCtaButton onClick={() => setRequestOpen(true)} />

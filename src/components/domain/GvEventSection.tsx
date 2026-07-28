@@ -33,9 +33,9 @@ function gvTimeToIsoDate(time: string, refYear: number): string {
 }
 
 function statusColor(status: GvEvent['status']): string {
-  if (status === '매진') return '#b91c1c'
-  if (status === '매진 임박') return '#ea580c'
-  return '#16a34a'
+  if (status === '매진') return 'var(--color-error)'
+  if (status === '매진 임박') return 'var(--color-warning)'
+  return 'var(--color-success)'
 }
 
 interface GvEventSectionProps {
@@ -90,7 +90,7 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
         onClick={() => setOpen(o => !o)}
         style={{
           display: 'flex', alignItems: 'center', width: '100%',
-          padding: '10px 16px 6px', gap: 'var(--spacing-1-5)',
+          padding: '12px var(--gutter) 8px', gap: 8,
           background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
         }}
       >
@@ -133,7 +133,7 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
             onScroll={updateEdge}
             style={{
               display: 'flex', gap: 'var(--spacing-2)', overflowX: 'auto',
-              padding: '2px 16px 10px',
+              padding: '4px var(--gutter) 12px',
               scrollbarWidth: 'none',
             }}
           >
@@ -150,8 +150,8 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
                   style={{
                     flexShrink: 0,
                     width: 148,
-                    borderRadius: 10,
-                    border: isHighlighted ? '1.5px solid #4A6380' : '1px solid var(--color-border)',
+                    borderRadius: 12,
+                    border: isHighlighted ? '1.5px solid var(--color-primary-base)' : '1px solid var(--color-border)',
                     background: 'var(--color-surface-card)',
                     overflow: 'hidden',
                     boxShadow: isHighlighted
@@ -182,14 +182,16 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
                       }}>{ev.label}</span>
                     )}
                     <div style={{
-                      position: 'absolute', top: 5, left: 5,
-                      background: gvEventTypeColor(ev.type), color: '#fff',
-                      fontSize: 'var(--text-badge)', fontWeight: 800, borderRadius: 3, padding: '2px 5px', letterSpacing: '0.3px',
+                      position: 'absolute', top: 6, left: 6,
+                      background: gvEventTypeColor(ev.type), color: 'var(--color-on-accent)',
+                      fontSize: 11, fontWeight: 600, borderRadius: 'var(--radius-badge)', padding: '4px 8px', letterSpacing: '0.3px',
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
                     }}>{ev.type}</div>
                     <div style={{
-                      position: 'absolute', bottom: 5, right: 5,
-                      background: 'rgba(0,0,0,0.5)', color: '#fff',
-                      fontSize: 9.5, fontWeight: 600, borderRadius: 'var(--radius-sm)', padding: '1.5px 5px',
+                      position: 'absolute', bottom: 6, right: 6,
+                      background: 'rgba(0,0,0,0.5)', color: 'var(--color-on-accent)',
+                      fontSize: 11, fontWeight: 600, borderRadius: 'var(--radius-badge)', padding: '4px 8px',
+                      display: 'inline-flex', alignItems: 'center', lineHeight: 1,
                       backdropFilter: 'blur(4px)',
                       whiteSpace: 'nowrap',
                     }}>
@@ -198,7 +200,7 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
                   </div>
 
                   {/* Body */}
-                  <div style={{ padding: '6px 8px 7px' }}>
+                  <div style={{ padding: 8 }}>
                     <div style={{
                       fontSize: 12, fontWeight: 700,
                       fontFamily: 'var(--font-display)',
@@ -211,7 +213,7 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
                       <div style={{
                         fontSize: 10, color: 'var(--color-text-caption)',
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                        marginTop: 1,
+                        marginTop: 4,
                       }}>
                         — {ev.subtitle}
                       </div>
@@ -220,12 +222,12 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
                       <div style={{
                         fontSize: 10, color: 'var(--color-text-caption)',
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                        marginTop: 1,
+                        marginTop: 4,
                       }}>
                         {ev.guest}
                       </div>
                     )}
-                    <span style={{ fontSize: 9.5, fontWeight: 600, color: sc, whiteSpace: 'nowrap', display: 'block', marginTop: 4 }}>
+                    <span style={{ fontSize: 9, fontWeight: 600, color: sc, whiteSpace: 'nowrap', display: 'block', marginTop: 4 }}>
                       ● {ev.status}
                     </span>
                   </div>

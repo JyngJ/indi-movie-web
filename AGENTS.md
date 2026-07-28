@@ -46,6 +46,19 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Add abstractions only when they protect a real boundary or remove meaningful duplication. Avoid ceremony for tiny, local UI behavior.
 - Prefer pure functions for parsing, matching, validation, and normalization so they can be tested without a browser or database.
 
+## UI Design Audit (회귀 방지)
+
+- **디자인 토큰·스케일 규칙:**
+  - spacing/radius는 4배수만 사용: `max(4, round(n/4)*4)`. gutter(좌우여백)는 `var(--gutter)`/`var(--gutter-md)`/`var(--gutter-sm)` = 16/12/8px (최상위 → 중첩 순).
+  - radius는 역할 토큰 사용: `--radius-badge` / `--radius-poster` / `--radius-button` / `--radius-control` / `--radius-popover` / `--radius-sheet` / `--radius-pill`.
+  - fontSize는 `--text-*` 타입 스케일 최근접 값으로. 하드코딩 px 금지.
+  - 색은 시맨틱 토큰 사용: `--color-error` / `--color-success` / `--color-warning` / `--color-info` / `--color-gv`. 액센트 배경 위 흰색 텍스트는 `--color-on-accent`.
+  - 포스터 오버레이 칩 정책: fontSize 11px / fontWeight 600, padding `4px 8px`, `--radius-badge`, lineHeight 1, offset 6px.
+- **하드코딩 검사:** `npm run audit:ui` — 결과는 `.audit-out/migration.csv` · `.audit-out/report-v3.md` (git 미추적).
+- **회귀 게이트:** `npm run audit:ui:check` — `scripts/audit/baseline.json` 대비 카테고리별 카운트가 **증가하면 실패** (primitiveAdoptionPct는 감소하면 실패). CI(`.github/workflows/ui-audit.yml`)가 PR마다 실행한다.
+- 수치를 개선했으면(카운트 감소/채택률 증가) `scripts/audit/baseline.json`을 낮춰서 **같이 커밋할 것**. 절대 baseline을 올려서 통과시키지 말 것 — 신규 하드코딩 금지, 토큰을 사용한다.
+- 감사 제외 파일 목록(스크립트에 하드코딩됨)은 그대로 유지: `onboarding/illustrations` / `GvPinSlots` / `GvPin` / `MapPin` / `GvMarkerIcon` / `opengraph-image` / `dev/components` / `src/app/admin` (style) / `subwayUtils`.
+
 ## Crawler Operations
 
 The crawler runs on a Raspberry Pi (`ssh pi@100.76.84.97`, Tailscale). Full runbook: `docs/RUNBOOK-crawler.md`.

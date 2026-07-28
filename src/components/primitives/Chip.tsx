@@ -20,8 +20,8 @@ export function Chip({ selected = false, onDismiss, children, className = '', on
       className={`inline-flex items-center border transition-colors duration-150 ${className}`}
       style={{
         /* height 대신 padding으로 세로 크기 제어 */
-        paddingTop: 1,
-        paddingBottom: 1,
+        paddingTop: 4,
+        paddingBottom: 4,
         paddingLeft: 'var(--comp-chip-px)',
         paddingRight: 'var(--comp-chip-px)',
         borderRadius: 'var(--comp-chip-radius)',
@@ -47,7 +47,7 @@ export function Chip({ selected = false, onDismiss, children, className = '', on
             width: 16,
             height: 16,
             borderRadius: '50%',
-            backgroundColor: 'rgba(0,0,0,0.18)',
+            backgroundColor: 'color-mix(in srgb, var(--color-text-primary) 18%, transparent)',
             flexShrink: 0,
           }}
         >

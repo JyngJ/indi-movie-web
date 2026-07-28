@@ -21,7 +21,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       {label && (
         <label
           htmlFor={inputId}
-          className="text-[var(--text-sm)] font-medium text-[var(--color-text-primary)]"
+          className="text-[var(--text-body)] font-medium text-[var(--color-text-primary)]"
         >
           {label}
         </label>
@@ -41,8 +41,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
             w-full h-11
             bg-[var(--color-surface-card)]
             text-[var(--color-text-primary)]
-            text-[var(--text-base)]
-            border rounded-[var(--radius-md)]
+            text-[var(--text-body)]
+            border rounded-[var(--radius-control)]
             outline-none transition-all duration-150
             placeholder:text-[var(--color-text-disabled)]
             ${error
@@ -64,10 +64,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       </div>
 
       {error && (
-        <p className="text-[var(--text-xs)] text-[var(--color-error)]">{error}</p>
+        <p className="text-[var(--text-caption)] text-[var(--color-error)]">{error}</p>
       )}
       {hint && !error && (
-        <p className="text-[var(--text-xs)] text-[var(--color-text-disabled)]">{hint}</p>
+        <p className="text-[var(--text-caption)] text-[var(--color-text-disabled)]">{hint}</p>
       )}
     </div>
   )

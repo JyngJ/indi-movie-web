@@ -38,9 +38,9 @@ export function ScheduleRows({ days, showTimes = true }: {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       {days.map((day) => (
-        <div key={day.date} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div key={day.date} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{
-            minWidth: 29, fontSize: 9.5, fontWeight: 700, whiteSpace: 'nowrap',
+            minWidth: 29, fontSize: 9, fontWeight: 700, whiteSpace: 'nowrap',
             color: dayLabelColor(day),
           }}>{day.label}</span>
           {showTimes && (
@@ -48,14 +48,14 @@ export function ScheduleRows({ days, showTimes = true }: {
               {day.times.slice(0, 3).map((t) => (
                 <span key={t} style={{
                   fontFamily: "'SF Mono', ui-monospace, monospace",
-                  fontSize: 10.5,
+                  fontSize: 10,
                   letterSpacing: 0.2,
                   fontWeight: 600,
                   color: 'var(--color-text-primary)',
                 }}>{t}</span>
               ))}
               {day.times.length > 3 && (
-                <span style={{ fontSize: 9.5, fontWeight: 600, color: 'var(--color-text-caption)', alignSelf: 'center' }}>
+                <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--color-text-caption)', alignSelf: 'center' }}>
                   +{day.times.length - 3}
                 </span>
               )}
@@ -108,7 +108,7 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
   } : null
 
   return (
-    <div style={{ position: 'relative', marginTop: 6 }}>
+    <div style={{ position: 'relative', marginTop: 8 }}>
       {tailStyle && <div style={tailStyle} />}
       <div style={{
         backgroundColor: selected ? 'var(--color-primary-base)' : 'var(--color-surface-card)',
@@ -123,8 +123,8 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
         {!hideMatchChip && filtersActive && matchCount != null && matchCount > 0 && (
           <div style={{
             position: 'absolute', top: -8, right: -8,
-            backgroundColor: 'var(--color-primary-base)', color: '#fff',
-            borderRadius: 999, padding: '2px 7px', fontSize: 10, fontWeight: 700,
+            backgroundColor: 'var(--color-primary-base)', color: 'var(--color-on-accent)',
+            borderRadius: 9999, padding: '4px 8px', fontSize: 10, fontWeight: 700,
             zIndex: 10, whiteSpace: 'nowrap',
             boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
             border: '1.5px solid var(--color-surface-bg)',
@@ -133,7 +133,7 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
           </div>
         )}
         {scheduleMode ? (
-          <div data-movie-id={slots[0].movie?.id} style={{ display: 'flex', alignItems: 'center', gap: 9, position: 'relative', zIndex: 1 }}>
+          <div data-movie-id={slots[0].movie?.id} style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative', zIndex: 1 }}>
             <div style={{ position: 'relative', width: posterW, height: posterH, flexShrink: 0 }}>
               <PosterThumb
                 src={slots[0].movie?.posterUrl}
@@ -141,12 +141,13 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
                 width={posterW}
                 height={posterH}
                 size="sm"
+                radius={4} /* 지도 포스터 예외 — 최소 라운딩(--radius-badge 값) */
               />
               {occurrenceCount != null && occurrenceCount > 0 && (
                 <div style={{
                   position: 'absolute', top: -8, right: -8,
-                  backgroundColor: 'var(--color-primary-base)', color: '#fff',
-                  borderRadius: 999, padding: '2px 6px', fontSize: 9, fontWeight: 700,
+                  backgroundColor: 'var(--color-primary-base)', color: 'var(--color-on-accent)',
+                  borderRadius: 9999, padding: '4px 8px', fontSize: 9, fontWeight: 700,
                   zIndex: 10, whiteSpace: 'nowrap',
                   boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
                   border: '1.5px solid var(--color-surface-bg)',
@@ -155,11 +156,11 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
                 </div>
               )}
             </div>
-            <div style={{ borderLeft: '1px dashed var(--color-border)', paddingLeft: 9 }}>
+            <div style={{ borderLeft: '1px dashed var(--color-border)', paddingLeft: 8 }}>
               <div style={{
                 fontSize: 9, fontWeight: 700, textAlign: 'center', whiteSpace: 'nowrap',
                 color: 'var(--color-primary-base)', backgroundColor: 'var(--color-primary-subtle-l)',
-                borderRadius: 999, padding: '2px 8px', marginBottom: 4,
+                borderRadius: 9999, padding: '4px 8px', marginBottom: 4,
               }}>
                 상영 일정
               </div>
@@ -179,8 +180,8 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
                     <div key={idx} className="po-wrap" style={{ position: 'relative', width: posterW, height: posterH }}>
                       <div style={{
                         width: posterW, height: posterH,
-                        borderRadius: 'var(--comp-poster-radius)',
-                        backgroundColor: 'var(--color-primary-base)', color: '#fff',
+                        borderRadius: 'var(--radius-badge)',  /* 지도 포스터 예외 — 최소 라운딩 */
+                        backgroundColor: 'var(--color-primary-base)', color: 'var(--color-on-accent)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: 15, fontWeight: 800,
                         boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.18)',
@@ -198,6 +199,7 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
                         width={posterW}
                         height={posterH}
                         size="sm"
+                        radius={4} /* 지도 포스터 예외 — 최소 라운딩(--radius-badge 값) */
                         overflow={slot.overflow}
                         highlighted={filtersActive && !slot.overflow && !!slot.movie?.matchesFilter}
                       />
