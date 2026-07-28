@@ -9,7 +9,6 @@ import type { Movie } from '@/types/api'
 import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWidget'
 import { trackEvent } from '@/lib/analytics/client'
 import { Toast } from '@/components/primitives'
-import { Clapperboard } from 'lucide-react'
 
 function useIsDesktop() {
   const [v, setV] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 1280px)').matches)
@@ -194,7 +193,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
         {nowPlaying.length > 0 && (
           <div style={{ padding: '20px var(--gutter) 0' }}>
             <p style={{ margin: '0 0 16px', fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Clapperboard size={20} strokeWidth={2} color="var(--color-primary-base)" /> 현재 상영작 <span style={{ fontSize: 16, color: 'var(--color-primary-base)' }}>{nowPlaying.length}편</span>
+              현재 상영작 <span style={{ fontSize: 16, color: 'var(--color-primary-base)' }}>{nowPlaying.length}편</span>
             </p>
             <div className="no-scrollbar" style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 4 }}>
               {nowPlaying.map((m) => (

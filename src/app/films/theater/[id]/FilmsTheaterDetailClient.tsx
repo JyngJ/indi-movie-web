@@ -13,7 +13,6 @@ import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { shareAdapter } from '@/lib/adapters/share'
 import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/components/domain/booking/BookingActions'
 import { Skeleton } from '@/components/primitives'
-import { Clapperboard } from 'lucide-react'
 
 function useIsDesktop() {
   const [v, setV] = useState(false)
@@ -505,7 +504,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
       <div style={{ padding: isDesktop ? '20px 28px 0' : '16px 16px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Clapperboard size={20} strokeWidth={2} color="var(--color-primary-base)" /> 현재 상영중{' '}
+            현재 상영중{' '}
             <span style={{ fontSize: 16, color: 'var(--color-primary-base)' }}>{movieShowtimeGroups.length}편</span>
           </span>
         </div>

@@ -57,6 +57,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
   // 그대로 쓰면 데스크톱 뷰포트에서 첫 클라이언트 렌더가 SSR 결과와 달라져 하이드레이션
   // 에러가 난다(films/page.tsx의 mounted 게이트와 동일 패턴).
   const [mounted, setMounted] = useState(false)
+  const [bannerFailed, setBannerFailed] = useState(false)   // 외부 배너 로드 실패 시 이름 폴백으로 전환
   useEffect(() => setMounted(true), [])
   const isDesktopLayout = useIsDesktopLayout()
   const isDesktop = mounted && isDesktopLayout
@@ -97,11 +98,12 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
 
       {/* 배너 — 잘리지 않게 원본 비율 그대로 가로에 맞춤(크롭 없음). fill+objectFit:cover였을 땐
           21:4처럼 아주 납작한 배너가 16:9 박스에 눌려 좌우가 크게 잘렸다. */}
-      {festival.bannerUrl ? (
+      {festival.bannerUrl && !bannerFailed ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={proxiedImageUrl(festival.bannerUrl, 1920)}
           alt={festival.name}
+          onError={() => setBannerFailed(true)}
           style={{ width: '100%', height: 'auto', display: 'block', backgroundColor: 'var(--color-surface-raised)' }}
         />
       ) : (
