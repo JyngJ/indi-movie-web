@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
@@ -70,6 +70,22 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
   const [ttIndex, setTtIndex] = useState(0)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [lineupExpanded, setLineupExpanded] = useState(false)
+  // 웹: 라인업을 좌우 넘김 캐러셀로 — 스크롤 여지가 있는 방향에만 버튼 노출
+  const lineupRef = useRef<HTMLDivElement | null>(null)
+  const [lineupCanL, setLineupCanL] = useState(false)
+  const [lineupCanR, setLineupCanR] = useState(false)
+  const updateLineupEdge = () => {
+    const el = lineupRef.current
+    if (!el) return
+    setLineupCanL(el.scrollLeft > 4)
+    setLineupCanR(el.scrollLeft + el.clientWidth < el.scrollWidth - 4)
+  }
+  useEffect(() => { updateLineupEdge() }, [festival.movies.length, mounted, isDesktop])   // isDesktop은 마운트 후 확정 — 캐러셀 분기로 바뀐 뒤 재계산
+  const scrollLineup = (dir: -1 | 1) => {
+    const el = lineupRef.current
+    if (!el) return
+    el.scrollBy({ left: dir * Math.max(320, el.clientWidth * 0.8), behavior: 'smooth' })
+  }
   const timetables = festival.timetables
   const currentTimetable = timetables[ttIndex]
 
@@ -230,10 +246,36 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
             라인업 준비 중
           </p>
         ) : (
+          isDesktop ? (
+            /* 웹: 좌우 넘김 캐러셀 — 더보기 없이 전체 라인업 */
+            <div style={{ position: 'relative' }}>
+              <div
+                ref={lineupRef}
+                className="no-scrollbar"
+                onScroll={updateLineupEdge}
+                style={{ display: 'flex', gap: 16, overflowX: 'auto', padding: '12px 16px' }}
+              >
+                {festival.movies.map((link) => (
+                  <div
+                    key={link.id}
+                    onClick={link.movie ? () => router.push(`/films/movie/${link.movie!.id}`) : undefined}
+                    style={{ display: 'flex', flexDirection: 'column', gap: 8, width: 140, flexShrink: 0, cursor: link.movie ? 'pointer' : 'default' }}
+                  >
+                    <LineupPoster src={link.movie?.posterUrl} alt={normalizeTitle(link.movie?.title ?? link.movieTitleSnapshot)} />
+                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-body)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3 }}>
+                      {normalizeTitle(link.movie?.title ?? link.movieTitleSnapshot)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              {lineupCanL && <ScrollNavButton direction="left" onClick={() => scrollLineup(-1)} />}
+              {lineupCanR && <ScrollNavButton direction="right" onClick={() => scrollLineup(1)} />}
+            </div>
+          ) : (
           <>
             <div style={{
-              display: 'grid', gridTemplateColumns: isDesktop ? 'repeat(auto-fill, minmax(140px, 1fr))' : 'repeat(3, 1fr)',
-              gap: isDesktop ? 16 : 10, padding: '12px 16px',
+              display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: 10, padding: '12px 16px',
             }}>
               {(lineupExpanded ? festival.movies : festival.movies.slice(0, LINEUP_COLLAPSED_COUNT)).map((link) => (
                 <div
@@ -264,6 +306,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
               </button>
             )}
           </>
+          )
         )}
       </section>
 
