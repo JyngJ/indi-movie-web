@@ -270,6 +270,35 @@ function LayerStack() {
   )
 }
 
+/* ── 2b. 섹션 구분 헤어라인 (큐레이션 시트) ──────────────────────── */
+/* CurationSheet SectionDivider — 기존 8px surface 띠를 대체한 종이 카탈로그풍
+   1px 풀블리드 라인. 상하 간격은 부모 flex의 SECTION_GAP(16px)이 담당, 그림자 없음.
+   섹션 제목은 오른쪽으로 뻗던 가로선 없이 텍스트만 */
+function SectionHairlineDemo() {
+  const fakeSection = (title: string) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <p style={{ margin: 0, padding: '0 16px', fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)' }}>{title}</p>
+      <div style={{ display: 'flex', gap: 10, padding: '0 16px' }}>
+        {[0, 1, 2].map((i) => (
+          <div key={i} style={{ width: 84, height: 126, backgroundColor: 'var(--color-surface-raised)', boxShadow: 'inset 0 0 0 1px var(--comp-poster-border)' }} />
+        ))}
+      </div>
+    </div>
+  )
+  return (
+    <Frame label="섹션 사이 풀블리드 1px var(--color-border) — 상하 16px(SECTION_GAP) 리듬 유지 · 제목 옆 가로선 없음">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '16px 0' }}>
+        {fakeSection('서울에서 단 한 곳')}
+        <div style={{ position: 'relative' }}>
+          <div aria-hidden style={{ height: 1, width: '100%', backgroundColor: 'var(--color-border)' }} />
+          <TokenTag style={{ position: 'absolute', top: 4, right: 8 }}>--color-border · 1px</TokenTag>
+        </div>
+        {fakeSection('최근 찾아본')}
+      </div>
+    </Frame>
+  )
+}
+
 /* ── 3. 바텀시트 골격 ───────────────────────────────────────────── */
 function BottomSheetSkeleton() {
   return (
@@ -499,6 +528,12 @@ export function SurfacesSection() {
         screens="극장 시트 · 설정 패널 · 큐레이션 시트" inline
         source="src/components/domain/TheaterSheet.tsx · src/components/map/SettingsPanel.tsx · src/components/domain/CurationSheet.tsx">
         <LayerStack />
+      </Entry>
+
+      <Entry id="surf-section-hairline" name="섹션 구분 — 헤어라인 (1px --color-border)"
+        screens="큐레이션 시트(모바일) · 데스크톱 큐레이션 독 (CurationSections 공유)" inline
+        source="src/components/domain/CurationSheet.tsx (SectionDivider · Section)">
+        <SectionHairlineDemo />
       </Entry>
 
       <Entry id="surf-bottomsheet" name="바텀시트 골격 — 핸들 + 상단 라운딩 + 그림자"

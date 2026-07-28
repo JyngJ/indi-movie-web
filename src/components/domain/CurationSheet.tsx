@@ -331,10 +331,9 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
 
 const SECTION_GAP = 16
 
-function Section({ title, icon, withLine, action, style, children }: {
+function Section({ title, icon, action, style, children }: {
   title: string
   icon?: React.ReactNode
-  withLine?: boolean
   action?: React.ReactNode
   style?: React.CSSProperties
   children: React.ReactNode
@@ -352,14 +351,7 @@ function Section({ title, icon, withLine, action, style, children }: {
         }}>
           {title}
         </h3>
-        {withLine && (
-          <div style={{
-            flex: 1,
-            height: 1,
-            backgroundColor: 'var(--color-border)',
-            marginLeft: 4,
-          }} />
-        )}
+        {action && <div style={{ flex: 1 }} />}
         {action}
       </div>
       {children}
@@ -367,15 +359,15 @@ function Section({ title, icon, withLine, action, style, children }: {
   )
 }
 
-/** 섹션 간 구분 — 최근 검색/광고 사이처럼 어두운 띠로 영역을 분리 */
+/** 섹션 간 구분 — 종이 카탈로그풍 1px 헤어라인 (풀블리드, 그림자 없음)
+ *  상하 간격은 부모 flex의 SECTION_GAP(16px)이 그대로 담당 — divider 자체 margin 없음 */
 function SectionDivider() {
   return (
-    <div style={{
-      height: 8,
+    <div aria-hidden style={{
+      height: 1,
       width: '100%',
-      backgroundColor: 'var(--color-surface-bg)',
-      borderTop: '1px solid var(--color-border)',
-      borderBottom: '1px solid var(--color-border)',
+      flexShrink: 0,
+      backgroundColor: 'var(--color-border)',
     }} />
   )
 }
@@ -615,7 +607,7 @@ export function CurationSections({
         return (
           <div key={section.key} ref={el => { sectionRefs.current[section.key] = el }}
             style={{ display: 'flex', flexDirection: 'column', gap: SECTION_GAP }}>
-            <Section title={section.title} withLine>
+            <Section title={section.title}>
               <PosterRow items={visibleItems} onSelect={handleSelect} emptyText={section.emptyText} desktop={desktop} />
               {hasMore && expandState === 'collapsed' && (
                 <button type="button" onClick={() => setExpand(section.key, 'partial')}
@@ -646,7 +638,7 @@ export function CurationSections({
           </div>
         )
       })}
-      <Section title="최근 찾아본" withLine action={
+      <Section title="최근 찾아본" action={
         onClearRecentlyViewed && recentlyViewed.length > 0 ? (
           <button
             type="button"
