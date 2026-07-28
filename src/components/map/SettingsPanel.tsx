@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { Sun, Moon, HeartHandshake } from 'lucide-react'
 import Link from 'next/link'
 import { useLockBodyScroll } from '@/hooks/useLockBodyScroll'
+import { Button, Input } from '@/components/primitives'
 
 export type SettingsPage = 'main' | 'report' | 'attribution' | 'about'
 type Page = SettingsPage
@@ -170,7 +171,7 @@ export function SettingsMainPage({
 
       {/* 푸터 링크 */}
       <div style={{ margin: '24px 16px 0', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
-        <button onClick={() => onNavigate('attribution')} style={footerLink}>출처 표기 정보</button>
+        <Button variant="ghost" size="sm" onClick={() => onNavigate('attribution')}>출처 표기 정보</Button>
         <span style={footerDot}>·</span>
         {/* 만든 사람 탭 임시 숨김 */}
         <Link href="/privacy" style={{ ...footerLink, textDecoration: 'none' }}>개인정보 처리방침</Link>
@@ -238,7 +239,7 @@ export function SettingsReportPage({
 
   const inputStyle: React.CSSProperties = {
     width: '100%', boxSizing: 'border-box',
-    padding: '12px', borderRadius: 12,
+    padding: '12px', borderRadius: 'var(--radius-control)',
     border: '1px solid var(--color-border)',
     backgroundColor: 'var(--color-surface-bg)',
     color: 'var(--color-text-primary)',
@@ -301,7 +302,7 @@ export function SettingsReportPage({
       {/* 이메일 */}
       <div>
         <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-sub)', marginBottom: 8 }}>회신 이메일 (선택)</div>
-        <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" style={{ ...inputStyle }} />
+        <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" />
       </div>
 
       {/* 동의 */}
@@ -315,16 +316,9 @@ export function SettingsReportPage({
       {error && <p style={{ margin: 0, fontSize: 12, color: 'var(--color-error)' }}>{error}</p>}
 
       {/* 전송 버튼 */}
-      <button onClick={handleSubmit} disabled={!canSubmit} style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-        height: 48, borderRadius: 12, border: 'none', cursor: canSubmit ? 'pointer' : 'default',
-        backgroundColor: canSubmit ? 'var(--color-primary-base)' : 'var(--color-surface-raised)',
-        color: canSubmit ? '#fff' : 'var(--color-text-placeholder)',
-        fontSize: 15, fontWeight: 700, fontFamily: 'var(--font-display)',
-        transition: 'background-color 150ms',
-      }}>
-        <IcoSend /> {submitting ? '전송 중…' : '리포트 보내기'}
-      </button>
+      <Button fullWidth onClick={handleSubmit} disabled={!canSubmit} loading={submitting}>
+        {!submitting && <IcoSend />} {submitting ? '전송 중…' : '리포트 보내기'}
+      </Button>
     </div>
   )
 }

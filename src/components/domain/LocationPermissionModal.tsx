@@ -6,6 +6,7 @@ import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useLockBodyScroll } from '@/hooks/useLockBodyScroll'
 import type { LocationPermState } from '@/hooks/useLocationPermission'
 import { Lock } from 'lucide-react'
+import { Button } from '@/components/primitives'
 
 interface Props {
   state: Extract<LocationPermState, 'prompt' | 'requesting' | 'denied'>
@@ -150,22 +151,7 @@ export function LocationPermissionModal({ state, onRequest, onDismiss }: Props) 
 
       {/* 버튼 영역 */}
       <div style={{ padding: '24px var(--gutter) 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <button
-          disabled={isRequesting}
-          onClick={onRequest}
-          style={{
-            height: 52, borderRadius: 9999,
-            background: 'var(--color-primary-base)',
-            border: 'none',
-            color: 'var(--color-on-accent)',
-            fontSize: 16, fontWeight: 600,
-            cursor: isRequesting ? 'default' : 'pointer',
-            opacity: isRequesting ? 0.65 : 1,
-            transition: 'opacity 150ms',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            minHeight: 'unset',
-          }}
-        >
+        <Button size="lg" fullWidth disabled={isRequesting} onClick={onRequest}>
           {isRequesting ? (
             <span>위치 확인 중…</span>
           ) : isDenied ? (
@@ -176,22 +162,11 @@ export function LocationPermissionModal({ state, onRequest, onDismiss }: Props) 
               <span>위치 허용하기</span>
             </>
           )}
-        </button>
+        </Button>
 
-        <button
-          onClick={handleDismiss}
-          style={{
-            height: 40,
-            background: 'transparent',
-            border: 'none',
-            fontSize: 14,
-            color: 'var(--color-text-caption)',
-            cursor: 'pointer',
-            minHeight: 'unset',
-          }}
-        >
+        <Button variant="ghost" fullWidth onClick={handleDismiss}>
           괜찮아요
-        </button>
+        </Button>
       </div>
     </div>
   )

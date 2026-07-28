@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Film, Building2, User, MoreHorizontal, Check } from 'lucide-react'
+import { Button, Input } from '@/components/primitives'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useLockBodyScroll } from '@/hooks/useLockBodyScroll'
 import { trackEvent } from '@/lib/analytics/client'
@@ -37,18 +38,9 @@ const NOTE_HINT: Record<UserRequestKind, string> = {
 
 export function AddRequestCtaButton({ onClick }: { onClick: () => void }) {
   return (
-    <button
-      onClick={onClick}
-      style={{
-        display: 'inline-flex', alignItems: 'center', gap: 8,
-        height: 36, padding: '0 20px', borderRadius: 9999,
-        border: 'none', cursor: 'pointer', minHeight: 'unset',
-        background: 'var(--color-primary-base)', color: 'var(--color-on-accent)',
-        fontSize: 13, fontWeight: 600,
-      }}
-    >
+    <Button size="sm" onClick={onClick} className="px-5">
       추가 요청하기
-    </button>
+    </Button>
   )
 }
 
@@ -154,16 +146,9 @@ export function AddRequestModal({ open, query, onClose }: Props) {
           <p style={{ fontSize: 14, color: 'var(--color-text-caption)', lineHeight: 1.6, margin: '0 0 28px' }}>
             &ldquo;{name}&rdquo; 요청 검토 후 반영해둘게요!
           </p>
-          <button
-            onClick={handleDismiss}
-            style={{
-              width: '100%', height: 48, borderRadius: 9999,
-              background: 'var(--color-primary-base)', border: 'none',
-              color: 'var(--color-on-accent)', fontSize: 15, fontWeight: 600, cursor: 'pointer', minHeight: 'unset',
-            }}
-          >
+          <Button fullWidth onClick={handleDismiss}>
             확인
-          </button>
+          </Button>
         </div>
       ) : (
         <div style={{ padding: isDesktop ? '24px var(--gutter) 0' : '8px var(--gutter) 0', overflowY: 'auto' }}>
@@ -196,20 +181,14 @@ export function AddRequestModal({ open, query, onClose }: Props) {
             })}
           </div>
 
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--color-text-body)', marginBottom: 8 }}>
-            {NAME_FIELD[kind].label}
-          </label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder={NAME_FIELD[kind].placeholder}
-            style={{
-              width: '100%', height: 44, padding: '0 16px', marginBottom: 16,
-              border: '1px solid var(--color-border)', borderRadius: 12,
-              background: 'var(--color-surface-bg)', color: 'var(--color-text-primary)',
-              fontSize: 14, outline: 'none', boxSizing: 'border-box',
-            }}
-          />
+          <div style={{ marginBottom: 16 }}>
+            <Input
+              label={NAME_FIELD[kind].label}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={NAME_FIELD[kind].placeholder}
+            />
+          </div>
 
           <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--color-text-body)', marginBottom: 8 }}>
             추가 정보 <span style={{ color: 'var(--color-text-caption)', fontWeight: 400 }}>(선택)</span>
@@ -222,9 +201,9 @@ export function AddRequestModal({ open, query, onClose }: Props) {
             maxLength={500}
             style={{
               width: '100%', padding: 12, marginBottom: 12,
-              border: '1px solid var(--color-border)', borderRadius: 12,
-              background: 'var(--color-surface-bg)', color: 'var(--color-text-primary)',
-              fontSize: 14, outline: 'none', resize: 'none', boxSizing: 'border-box',
+              border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)',
+              background: 'var(--color-surface-card)', color: 'var(--color-text-primary)',
+              fontSize: 'var(--text-body)', outline: 'none', resize: 'none', boxSizing: 'border-box',
               fontFamily: 'inherit',
             }}
           />
@@ -234,30 +213,17 @@ export function AddRequestModal({ open, query, onClose }: Props) {
           )}
 
           <div style={{ display: 'flex', gap: 12, padding: '4px 0 20px' }}>
-            <button
-              onClick={handleDismiss}
-              style={{
-                flex: 1, height: 48, borderRadius: 9999,
-                background: 'var(--color-surface-raised)', border: '1px solid var(--color-border)',
-                color: 'var(--color-text-body)', fontSize: 15, fontWeight: 600, cursor: 'pointer', minHeight: 'unset',
-              }}
-            >
+            <Button variant="secondary" onClick={handleDismiss} className="flex-1">
               취소
-            </button>
-            <button
-              disabled={!name.trim() || submitting}
+            </Button>
+            <Button
+              disabled={!name.trim()}
+              loading={submitting}
               onClick={handleSubmit}
-              style={{
-                flex: 2, height: 48, borderRadius: 9999,
-                background: 'var(--color-primary-base)', border: 'none',
-                color: 'var(--color-on-accent)', fontSize: 15, fontWeight: 600,
-                cursor: (!name.trim() || submitting) ? 'default' : 'pointer',
-                opacity: (!name.trim() || submitting) ? 0.5 : 1,
-                minHeight: 'unset',
-              }}
+              className="flex-[2]"
             >
               {submitting ? '보내는 중…' : '요청 보내기'}
-            </button>
+            </Button>
           </div>
         </div>
       )}

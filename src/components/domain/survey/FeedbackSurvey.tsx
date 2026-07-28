@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { SURVEY_GOOD_POINTS, type SurveyGoodPoint } from '@/lib/survey/types'
 import { markSurvey } from '@/lib/survey/gate'
 import { trackEvent } from '@/lib/analytics/client'
+import { Button, Input } from '@/components/primitives'
 import styles from './survey.module.css'
 
 interface Props {
@@ -98,9 +99,9 @@ export function FeedbackSurvey({ onClose }: Props) {
             <div className={styles.thanksEmoji} aria-hidden>🎬</div>
             <p className={styles.thanksTitle}>고맙습니다!</p>
             <p className={styles.thanksSub}>남겨주신 의견은 다음 개선에 바로 반영할게요.</p>
-            <button type="button" className={styles.primaryBtn} onClick={onClose}>
+            <Button type="button" fullWidth onClick={onClose}>
               닫기
-            </button>
+            </Button>
           </div>
         ) : step === 1 ? (
           <>
@@ -124,9 +125,8 @@ export function FeedbackSurvey({ onClose }: Props) {
                 )
               })}
               {etcSelected && (
-                <input
+                <Input
                   type="text"
-                  className={styles.etcInput}
                   value={etcText}
                   onChange={(e) => setEtcText(e.target.value.slice(0, 200))}
                   placeholder="어떤 점이 좋았는지 직접 적어주세요"
@@ -135,14 +135,9 @@ export function FeedbackSurvey({ onClose }: Props) {
               )}
             </div>
             <div className={styles.actions}>
-              <button
-                type="button"
-                className={styles.primaryBtn}
-                onClick={goStep2}
-                disabled={selected.length === 0}
-              >
+              <Button type="button" onClick={goStep2} disabled={selected.length === 0}>
                 다음
-              </button>
+              </Button>
             </div>
           </>
         ) : (
@@ -159,12 +154,12 @@ export function FeedbackSurvey({ onClose }: Props) {
               autoFocus
             />
             <div className={styles.actions}>
-              <button type="button" className={styles.ghostBtn} onClick={submit} disabled={submitting}>
+              <Button type="button" variant="ghost" onClick={submit} disabled={submitting}>
                 건너뛰기
-              </button>
-              <button type="button" className={styles.primaryBtn} onClick={submit} disabled={submitting}>
+              </Button>
+              <Button type="button" onClick={submit} loading={submitting}>
                 {submitting ? '보내는 중…' : '제출'}
-              </button>
+              </Button>
             </div>
           </>
         )}
