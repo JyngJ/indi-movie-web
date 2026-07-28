@@ -39,7 +39,7 @@ export function BookingCtaButton({
         }}
       >
         예매하러 가기
-        <ExternalLink size={s.extIcon} strokeWidth={2} />
+        <ExternalLink size={s.extIcon} strokeWidth={1.75} />
       </a>
     )
   }
@@ -72,7 +72,7 @@ export function ShareScheduleButton({ variant, onClick }: { variant: Variant; on
         color: 'var(--color-text-sub)', cursor: 'pointer', padding: 0, minHeight: 'unset',
       }}
     >
-      <Share2 size={s.shareIcon} strokeWidth={1.7} />
+      <Share2 size={s.shareIcon} strokeWidth={1.75} />
     </button>
   )
 }
@@ -91,7 +91,7 @@ export function CloseRoundButton({ variant, onClick, label = '선택 해제' }: 
         cursor: 'pointer', padding: 0, minHeight: 'unset',
       }}
     >
-      <X size={s.closeIcon} strokeWidth={2.5} />
+      <X size={s.closeIcon} strokeWidth={1.75} />
     </button>
   )
 }

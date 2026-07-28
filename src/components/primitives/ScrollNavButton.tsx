@@ -27,7 +27,7 @@ export function ScrollNavButton({ direction, style, size = 32, ...props }: Scrol
       }}
       aria-label={direction === 'left' ? '이전' : '다음'}
     >
-      <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
         <path d={direction === 'left' ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6'} />
       </svg>
     </button>

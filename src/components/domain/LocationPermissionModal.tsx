@@ -6,6 +6,7 @@ import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useLockBodyScroll } from '@/hooks/useLockBodyScroll'
 import type { LocationPermState } from '@/hooks/useLocationPermission'
 import { Lock } from 'lucide-react'
+import { Button } from '@/components/primitives'
 
 interface Props {
   state: Extract<LocationPermState, 'prompt' | 'requesting' | 'denied'>
@@ -15,7 +16,7 @@ interface Props {
 
 const IcoLocation = () => (
   <svg width={30} height={30} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+    stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
     <circle cx="12" cy="9" r="2.5" />
   </svg>
@@ -23,7 +24,7 @@ const IcoLocation = () => (
 
 const IcoLock = () => (
   <svg width={28} height={28} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+    stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
   </svg>
@@ -125,7 +126,7 @@ export function LocationPermissionModal({ state, onRequest, onDismiss }: Props) 
             }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                 <span style={{ flexShrink: 0, marginTop: 4, color: 'var(--color-text-body)' }}>
-                  <Lock size={18} strokeWidth={2} color="currentColor" />
+                  <Lock size={18} strokeWidth={1.75} color="currentColor" />
                 </span>
                 <div style={{ fontSize: 13, color: 'var(--color-text-body)', lineHeight: 1.65 }}>
                   주소창 왼쪽 <strong>자물쇠 아이콘</strong> 클릭<br />
@@ -150,22 +151,7 @@ export function LocationPermissionModal({ state, onRequest, onDismiss }: Props) 
 
       {/* 버튼 영역 */}
       <div style={{ padding: '24px var(--gutter) 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <button
-          disabled={isRequesting}
-          onClick={onRequest}
-          style={{
-            height: 52, borderRadius: 9999,
-            background: 'var(--color-primary-base)',
-            border: 'none',
-            color: 'var(--color-on-accent)',
-            fontSize: 16, fontWeight: 600,
-            cursor: isRequesting ? 'default' : 'pointer',
-            opacity: isRequesting ? 0.65 : 1,
-            transition: 'opacity 150ms',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            minHeight: 'unset',
-          }}
-        >
+        <Button size="lg" fullWidth disabled={isRequesting} onClick={onRequest}>
           {isRequesting ? (
             <span>위치 확인 중…</span>
           ) : isDenied ? (
@@ -176,22 +162,11 @@ export function LocationPermissionModal({ state, onRequest, onDismiss }: Props) 
               <span>위치 허용하기</span>
             </>
           )}
-        </button>
+        </Button>
 
-        <button
-          onClick={handleDismiss}
-          style={{
-            height: 40,
-            background: 'transparent',
-            border: 'none',
-            fontSize: 14,
-            color: 'var(--color-text-caption)',
-            cursor: 'pointer',
-            minHeight: 'unset',
-          }}
-        >
+        <Button variant="ghost" fullWidth onClick={handleDismiss}>
           괜찮아요
-        </button>
+        </Button>
       </div>
     </div>
   )

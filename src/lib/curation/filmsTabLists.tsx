@@ -49,22 +49,22 @@ interface SectionConfig {
 }
 
 const SECTION_CONFIG: Record<string, SectionConfig> = {
-  summer_horror:          { emoji: <Ghost size={24} strokeWidth={2} color="var(--color-primary-base)" />, displayMode: 'genre',   description: '더운 여름, 소름으로 식히는 공포영화 모음' },
-  valentine_romance:      { emoji: <Heart size={24} strokeWidth={2} color="var(--color-primary-base)" />, displayMode: 'genre',   description: '사랑이 조금 더 선명해지는 날을 위한 멜로' },
-  decade_90s:             { emoji: <Video size={24} strokeWidth={2} color="var(--color-primary-base)" />, displayMode: 'year',    description: 'VHS 화질로 기억되는, 그 시절 스크린의 공기' },
-  decade_00s:             { emoji: <Disc size={24} strokeWidth={2} color="var(--color-primary-base)" />, displayMode: 'year',    description: 'DVD로 밤새 돌려보던 2000년대의 걸작들' },
-  festival_cannes_palme:  { emoji: <Leaf size={24} strokeWidth={2} color="var(--color-primary-base)" />, displayMode: 'default', description: '칸 영화제 최고의 영예, 황금종려상을 받은 작품들' },
-  festival_venice_lion:   { emoji: <Crown size={24} strokeWidth={2} color="var(--color-primary-base)" />, displayMode: 'default', description: '세계에서 가장 오래된 영화제가 선택한 영화들' },
-  festival_berlin_bear:   { emoji: <Award size={24} strokeWidth={2} color="var(--color-primary-base)" />, displayMode: 'default', description: '사회와 인간을 향한 시선, 베를린이 품은 작품들' },
-  festival_academy_picture: { emoji: <Trophy size={24} strokeWidth={2} color="var(--color-primary-base)" />, displayMode: 'default', description: '그해 가장 많은 이름을 남긴 영화들' },
-  critic_park_pyeong_sik: { emoji: <Star size={24} strokeWidth={2} color="var(--color-primary-base)" />, displayMode: 'default', description: '수천 편을 봐온 박평식 평론가가 높이 평가한 작품' },
-  critic_lee_dong_jin:    { emoji: <Star size={24} strokeWidth={2} color="var(--color-primary-base)" />, displayMode: 'default', description: '이동진 평론가가 별 다섯 개를 아끼지 않은 영화들' },
-  movement_taiwan_new_wave: { emoji: <Film size={24} strokeWidth={2} color="var(--color-primary-base)" />, displayMode: 'default', description: '허우샤오셴, 에드워드 양, 차이밍량이 만든 느린 아름다움' },
-  movement_nouvelle_vague:  { emoji: <VenetianMask size={24} strokeWidth={2} color="var(--color-primary-base)" />, displayMode: 'default', description: '카메라를 들고 거리로 나간 젊은 감독들의 반란' },
-  movement_hk_art_cinema:   { emoji: <Building2 size={24} strokeWidth={2} color="var(--color-primary-base)" />, displayMode: 'default', description: '왕가위와 동시대 감독들이 담은 홍콩의 밤과 멜랑콜리' },
-  collection_masters_debut: { emoji: <Clapperboard size={24} strokeWidth={2} color="var(--color-primary-base)" />, displayMode: 'default', description: '지금의 거장이 처음 카메라를 든 순간' },
-  seasonal_christmas:       { emoji: <TreePine size={24} strokeWidth={2} color="var(--color-primary-base)" />, displayMode: 'default', description: '크리스마스의 온도를 가진 영화들 — 따뜻하거나, 쓸쓸하거나' },
-  seasonal_yearend:         { emoji: <Clock size={24} strokeWidth={2} color="var(--color-primary-base)" />, displayMode: 'default', description: '한 해가 저물 때 꺼내보고 싶은 위대한 영화들' },
+  summer_horror:          { emoji: <Ghost size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'genre',   description: '더운 여름, 소름으로 식히는 공포영화 모음' },
+  valentine_romance:      { emoji: <Heart size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'genre',   description: '사랑이 조금 더 선명해지는 날을 위한 멜로' },
+  decade_90s:             { emoji: <Video size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'year',    description: 'VHS 화질로 기억되는, 그 시절 스크린의 공기' },
+  decade_00s:             { emoji: <Disc size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'year',    description: 'DVD로 밤새 돌려보던 2000년대의 걸작들' },
+  festival_cannes_palme:  { emoji: <Leaf size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '칸 영화제 최고의 영예, 황금종려상을 받은 작품들' },
+  festival_venice_lion:   { emoji: <Crown size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '세계에서 가장 오래된 영화제가 선택한 영화들' },
+  festival_berlin_bear:   { emoji: <Award size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '사회와 인간을 향한 시선, 베를린이 품은 작품들' },
+  festival_academy_picture: { emoji: <Trophy size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '그해 가장 많은 이름을 남긴 영화들' },
+  critic_park_pyeong_sik: { emoji: <Star size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '수천 편을 봐온 박평식 평론가가 높이 평가한 작품' },
+  critic_lee_dong_jin:    { emoji: <Star size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '이동진 평론가가 별 다섯 개를 아끼지 않은 영화들' },
+  movement_taiwan_new_wave: { emoji: <Film size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '허우샤오셴, 에드워드 양, 차이밍량이 만든 느린 아름다움' },
+  movement_nouvelle_vague:  { emoji: <VenetianMask size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '카메라를 들고 거리로 나간 젊은 감독들의 반란' },
+  movement_hk_art_cinema:   { emoji: <Building2 size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '왕가위와 동시대 감독들이 담은 홍콩의 밤과 멜랑콜리' },
+  collection_masters_debut: { emoji: <Clapperboard size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '지금의 거장이 처음 카메라를 든 순간' },
+  seasonal_christmas:       { emoji: <TreePine size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '크리스마스의 온도를 가진 영화들 — 따뜻하거나, 쓸쓸하거나' },
+  seasonal_yearend:         { emoji: <Clock size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '한 해가 저물 때 꺼내보고 싶은 위대한 영화들' },
 }
 
 export interface CurationSectionData {
@@ -109,7 +109,7 @@ export function getFilmsTabCurationSections(
   return lists
     .filter((list) => isInSeason(list.seasonTrigger))
     .map((list) => {
-      const config = SECTION_CONFIG[list.listId] ?? { emoji: <Clapperboard size={24} strokeWidth={2} color="var(--color-primary-base)" />, displayMode: 'default' as SectionDisplayMode }
+      const config = SECTION_CONFIG[list.listId] ?? { emoji: <Clapperboard size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default' as SectionDisplayMode }
       return {
         listId: list.listId,
         nameKo: list.nameKo,
