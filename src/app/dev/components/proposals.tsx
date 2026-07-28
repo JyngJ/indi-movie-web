@@ -184,7 +184,7 @@ function ActionButtonProposal({
     alignItems: 'center',
     gap: 6,
     height: 32,
-    padding: children ? '0 12px' : '0 7px',
+    ...(children ? { padding: '0 12px' } : { width: 32, padding: 0, justifyContent: 'center' }),   /* 아이콘 전용 = 정사각 (사용자 결정) */
     borderRadius: 'var(--radius-badge)',           /* 4px — 각진 편 */
     fontSize: 'var(--text-meta)',
     fontWeight: 500,
@@ -315,12 +315,16 @@ function SearchInputProposal({ value, placeholder }: { value?: string; placehold
       {value && (
         <button type="button" aria-label="지우기" style={{
           display: 'inline-flex',
-          background: 'var(--color-surface-overlay)',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'none',
           border: 'none',
-          borderRadius: 'var(--radius-pill)',
-          color: 'var(--color-text-sub)',
+          borderRadius: 'var(--radius-badge)',
+          color: 'var(--color-text-caption)',
           cursor: 'pointer',
-          padding: 4,
+          width: 24,
+          height: 24,
+          padding: 0,
           flexShrink: 0,
         }}>
           {Ico.close(12)}

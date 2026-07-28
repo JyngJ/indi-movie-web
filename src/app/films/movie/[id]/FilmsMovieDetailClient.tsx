@@ -278,16 +278,16 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
 
   const heroSection = (
     <div style={{
-      background: 'linear-gradient(to bottom, var(--color-primary-subtle-l) 0%, var(--color-surface-bg) 100%)',
+      background: 'var(--color-surface-bg)',
       padding: isDesktop ? '32px 0 28px' : '24px 16px 20px',
       display: 'flex', gap: isDesktop ? 32 : 16, alignItems: 'flex-start',
     }}>
       {/* 포스터 */}
       <div style={{ flexShrink: 0, position: 'relative', width: isDesktop ? 200 : 100, height: isDesktop ? 300 : 150 }}>
         {movie.posterUrl ? (
-          <Image src={movie.posterUrl} alt={`${movie.title} 포스터`} fill priority sizes={isDesktop ? '200px' : '100px'} style={{ borderRadius: isDesktop ? 12 : 8, objectFit: 'cover', boxShadow: '0 8px 28px rgba(0,0,0,0.35)' }} />
+          <Image src={movie.posterUrl} alt={`${movie.title} 포스터`} fill priority sizes={isDesktop ? '200px' : '100px'} style={{ borderRadius: 0, objectFit: 'cover', boxShadow: 'inset 0 0 0 1px var(--comp-poster-border)' }} />
         ) : (
-          <div style={{ width: '100%', height: '100%', borderRadius: isDesktop ? 12 : 8, background: 'var(--color-neutral-800)' }} />
+          <div style={{ width: '100%', height: '100%', borderRadius: 0, background: 'var(--color-neutral-800)' }} />
         )}
       </div>
 

@@ -116,14 +116,14 @@ function GenreChipHero({ children, films = false }: { children: React.ReactNode;
 function MovieHeroMap() {
   return (
     <div style={{
-      background: 'linear-gradient(to bottom, var(--color-primary-subtle-l) 0%, var(--color-surface-bg) 100%)',
+      background: 'var(--color-surface-bg)',
       padding: '24px 20px 20px',
       display: 'flex', gap: 16, alignItems: 'flex-start',
     }}>
       <div style={{ flexShrink: 0, width: 96, height: 144 }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={DEV_POSTER} alt="기생충 포스터" width={96} height={144}
-          style={{ borderRadius: 8, objectFit: 'cover', boxShadow: '0 8px 28px rgba(0,0,0,0.45)', display: 'block' }} />
+          style={{ borderRadius: 0, objectFit: 'cover', boxShadow: 'inset 0 0 0 1px var(--comp-poster-border)', display: 'block' }} />
       </div>
       <div style={{ flex: 1, minWidth: 0, paddingTop: 4 }}>
         <h1 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 21, fontWeight: 700, lineHeight: 1.2, color: 'var(--color-text-primary)', wordBreak: 'keep-all' }}>
@@ -153,14 +153,14 @@ function MovieHeroMap() {
 function MovieHeroFilms() {
   return (
     <div style={{
-      background: 'linear-gradient(to bottom, var(--color-primary-subtle-l) 0%, var(--color-surface-bg) 100%)',
+      background: 'var(--color-surface-bg)',
       padding: '24px 16px 20px',
       display: 'flex', gap: 16, alignItems: 'flex-start',
     }}>
       <div style={{ flexShrink: 0, width: 100, height: 150 }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={DEV_POSTER} alt="기생충 포스터" width={100} height={150}
-          style={{ borderRadius: 8, objectFit: 'cover', boxShadow: '0 8px 28px rgba(0,0,0,0.35)', display: 'block' }} />
+          style={{ borderRadius: 0, objectFit: 'cover', boxShadow: 'inset 0 0 0 1px var(--comp-poster-border)', display: 'block' }} />
       </div>
       <div style={{ flex: 1, minWidth: 0, paddingTop: 4 }}>
         <h1 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 22, fontWeight: 700, lineHeight: 1.2, color: 'var(--color-text-primary)', wordBreak: 'keep-all' }}>
@@ -400,7 +400,7 @@ function FestivalBanner() {
 function DirectorHero({ withPhoto }: { withPhoto: boolean }) {
   return (
     <div style={{
-      background: 'linear-gradient(to bottom, var(--color-primary-subtle-l) 0%, var(--color-surface-bg) 100%)',
+      background: 'var(--color-surface-bg)',
       padding: '32px 16px 24px',
       display: 'flex', flexDirection: 'column', alignItems: 'center',
     }}>
