@@ -275,7 +275,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
           <>
             <div style={{
               display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: 10, padding: '12px 16px',
+              gap: 12, padding: '12px 16px',
             }}>
               {(lineupExpanded ? festival.movies : festival.movies.slice(0, LINEUP_COLLAPSED_COUNT)).map((link) => (
                 <div
