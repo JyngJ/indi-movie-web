@@ -2,8 +2,9 @@
 
 > 예술영화관 상영 통합 조회 서비스 — 디자인 토큰 & 컴포넌트 가이드
 
-**토큰 참조 파일**: `src/styles/tokens.css` (CSS 변수)  
-**JS 토큰 스펙**: 아래 `tokens.js` 주석 참고
+**문서 체계**: 값의 유일한 원본 = `src/styles/tokens.css` (CSS 변수) · 역할/규칙/컴포넌트 스펙 설명 = 이 문서 · 회귀 감시 = `scripts/audit` (`npm run audit:ui:check`)
+
+> 과거 루트에 있던 JS 토큰 스펙 파일과 아이콘 지침 문서는 이 두 파일로 통합·삭제됨. 표의 "JS 키" 컬럼은 Figma Variables 네이밍 매핑용 역사적 표기.
 
 ---
 
@@ -12,6 +13,7 @@
 - 컴포넌트에서 hex 하드코딩 절대 금지
 - 모든 색상·간격·타이포그래피는 CSS 변수(`var(--...)`) 참조
 - Figma 변수 네이밍과 코드 네이밍 일치
+- **Primitives 우선**: UI 구성의 기본이 되는 조립형 컴포넌트(`HoverPopup`, `ScrollNavButton`, `SectionHeader`, `GenreChip` 등)를 적극 사용해 AI-Vibe(매직 넘버, 과도한 Glassmorphism, 의미없는 거대 그림자)를 지양한다.
 - **새 코드는 px 리터럴 대신 토큰을 쓴다.** 토큰에 없는 값이 필요하면 스케일에 토큰을 추가하고
   이 문서에 기록한다 — 새 이름을 즉흥적으로 만들지 말 것(예: `--font-size-*`, `--space-*` 같은
   병렬 네이밍 금지, 기존 `--text-*`/`--spacing-*`/`--radius-*` 체계를 확장한다).
@@ -216,6 +218,7 @@ mono           HEX, 상영 시간, 좌석수 등 정렬이 필요한 수치(tnum
 ### MapPin
 
 - dotSize: 22px, border: `2px solid #FFFFFF`, shadow: `0 2px 6px rgba(0,0,0,0.18)`
+- 선택 상태 ring: 전체 44px (`--comp-pin-selected-size`), ring opacity 0.25
 - label: font 11px/600, bg `rgba(255,255,255,0.85)`, radius `--radius-badge`, padding `2px 6px`
 
 > ⚠️ `mapPin.label.font` weight 600 vs `type.scale.mapLabel` weight 700 — 불일치. mapLabel 700로 통일 권장.
@@ -228,7 +231,7 @@ mono           HEX, 상영 시간, 좌석수 등 정렬이 필요한 수치(tnum
 | `md` | 96px | 144px | `--radius-poster` (8px) |
 | `lg` | 별도 지정 | — | `--radius-poster` (8px) |
 
-> ⚠️ tokens.js에 `lg` 크기 미정의 — MapView에서 zoom에 따라 동적 계산. 88×132 (zoom 14+) 기준.
+> ⚠️ `lg` 크기는 고정 스펙 미정의 — MapView에서 zoom에 따라 동적 계산. 88×132 (zoom 14+) 기준.
 
 - selected ring: `primary.base` 2px, badgeSize 20px, badgeBorder `2px solid #FFFFFF`
 - overflow overlay: `rgba(15,12,9,0.62)`, font 18px/600, color `#FFFFFF`
@@ -249,6 +252,7 @@ mono           HEX, 상영 시간, 좌석수 등 정렬이 필요한 수치(tnum
 - borderRadius: `var(--radius-sheet) var(--radius-sheet) 0 0` (20px, 상단만)
 - handle: 36×4px, radius 2px
 - posterScrollBg: `#EAE6DC` (라이트) / `#1B1813` (다크)
+- 헤더 아이콘 버튼(닫기 등): 36×36px, radius circle
 
 ### DateBar
 
@@ -272,6 +276,12 @@ mono           HEX, 상영 시간, 좌석수 등 정렬이 필요한 수치(tnum
 innerIcon: 22×22px circle, `primary.subtleLight` bg, `primary.base` icon
 
 ### 아이콘
+
+- **라이브러리**: [Lucide React](https://lucide.dev/)
+- **stroke width 표준**: `1.75` — 얇고 모던한 UI 톤앤매너 기준. (아래 표의 1.6~1.8은 초기 스펙 값 — 신규 코드는 1.75를 기본으로 쓰고, 기존 값 수렴은 stage 2 대상)
+- **크기 가이드**: `14~16px` 캡션·툴팁·버튼 내부 등 작은 요소 / `20~24px` 글로벌 네비게이션(탭바)·모달 헤더·주요 리스트 아이콘
+- **색상 하드코딩 절대 금지**: 아이콘 색은 부모 텍스트 색 상속 — `color="currentColor"`(또는 `text-current`). 다크모드 전환 시 자동 대응.
+  - 예: `<Film size={20} strokeWidth={1.75} className="text-current" />`
 
 | 이름 | 기본 크기 | stroke | 용도 |
 |------|----------|--------|------|

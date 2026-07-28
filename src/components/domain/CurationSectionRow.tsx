@@ -376,7 +376,7 @@ export function CurationSectionRow({
     )
   }
 
-  // 좌우 스크롤 버튼 — 제목 줄 오른쪽 끝에 배치(design.md ScrollNavButton 표준 사용,
+  // 좌우 스크롤 버튼 — 제목 줄 오른쪽 끝에 배치(docs/DESIGN.md Primitives의 ScrollNavButton 표준 사용,
   // 포스터 위 플로팅 원형 버튼 방식은 지양)
   const navButtons = (canScrollLeft || canScrollRight) && (
     <div style={{ display: 'flex', gap: 8 }}>
