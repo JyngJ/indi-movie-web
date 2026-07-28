@@ -8,19 +8,19 @@ import type { Map as LeafletMap } from 'leaflet'
 /* ── SVG 아이콘 ─────────────────────────────────────────────────── */
 export const IcoPlus = () => (
   <svg width={18} height={18} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+    stroke="currentColor" strokeWidth={1.75} strokeLinecap="round">
     <path d="M12 5v14M5 12h14" />
   </svg>
 )
 export const IcoMinus = () => (
   <svg width={18} height={18} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+    stroke="currentColor" strokeWidth={1.75} strokeLinecap="round">
     <path d="M5 12h14" />
   </svg>
 )
 export const IcoLocate = () => (
   <svg width={20} height={20} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round">
+    stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
     <circle cx={12} cy={12} r={6.5} />
     <circle cx={12} cy={12} r={1.7} fill="currentColor" stroke="none" />
     <path d="M12 2.8v4M12 17.2v4M2.8 12h4M17.2 12h4" />
@@ -28,14 +28,14 @@ export const IcoLocate = () => (
 )
 export const IcoSun = () => (
   <svg width={18} height={18} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round">
+    stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
     <circle cx={12} cy={12} r={4} />
     <path d="M12 2.8v2.4M12 18.8v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.8 12h2.4M18.8 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7" />
   </svg>
 )
 export const IcoMoon = () => (
   <svg width={18} height={18} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round">
+    stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
     <path d="M20.2 14.4A7.6 7.6 0 0 1 9.6 3.8 8.7 8.7 0 1 0 20.2 14.4z" />
   </svg>
 )

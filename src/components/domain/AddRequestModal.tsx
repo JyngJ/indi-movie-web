@@ -138,7 +138,7 @@ export function AddRequestModal({ open, query, onClose }: Props) {
             margin: '0 auto 20px',
             color: 'var(--color-primary-base)',
           }}>
-            <Check size={30} strokeWidth={2} color="currentColor" />
+            <Check size={30} strokeWidth={1.75} color="currentColor" />
           </div>
           <p style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text-primary)', margin: '0 0 8px' }}>
             요청이 접수되었어요

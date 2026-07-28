@@ -507,7 +507,7 @@ const SECTION_FILMS_HREF: Record<string, string | null> = {
 }
 
 const IconChevronDown = ({ open }: { open: boolean }) => (
-  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"
     style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 180ms ease' }}>
     <path d="M6 9l6 6 6-6" />
   </svg>

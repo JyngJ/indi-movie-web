@@ -2637,7 +2637,7 @@ export default function MapView() {
                 color: 'var(--color-text-sub)',
               }}>
                 <svg width={17} height={17} viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                  stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 21s7-5.2 7-11a7 7 0 10-14 0c0 5.8 7 11 7 11z" />
                   <circle cx="12" cy="10" r="2.5" />
                 </svg>
@@ -3047,7 +3047,7 @@ export default function MapView() {
                   color: 'var(--color-text-sub)',
                 }}>
                   <svg width={16} height={16} viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                    stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="3" width="8" height="8" rx="1.5" />
                     <rect x="13" y="3" width="8" height="8" rx="1.5" />
                     <rect x="3" y="13" width="8" height="8" rx="1.5" />
@@ -3571,7 +3571,7 @@ export default function MapView() {
         >
           <svg
             width={14} height={14} viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"
+            stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"
             style={{ transform: dockCollapsed ? 'rotate(180deg)' : undefined, transition: 'transform 220ms' }}
           >
             <path d="M15 18l-6-6 6-6" />
@@ -3642,7 +3642,7 @@ export default function MapView() {
               flexShrink: 0,
             }}>
               <svg width={14} height={14} viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" strokeWidth="2.5"
+                stroke="currentColor" strokeWidth="1.75"
                 strokeLinecap="round" strokeLinejoin="round">
                 <path d="M15 18l-6-6 6-6" />
               </svg>

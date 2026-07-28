@@ -60,7 +60,7 @@ function RegionHintBubble({ onDismiss }: { onDismiss: () => void }) {
         gap: 12,
         color: 'var(--color-on-accent)',
       }}>
-        <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 4 }}>
+        <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 4 }}>
           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
           <circle cx="12" cy="10" r="3" />
         </svg>
@@ -1047,7 +1047,7 @@ export default function FilmsPage() {
           }}
           title="맨 위로"
         >
-          <ArrowUp size={20} strokeWidth={2} color="currentColor" />
+          <ArrowUp size={20} strokeWidth={1.75} color="currentColor" />
         </button>
       )}
     </div>

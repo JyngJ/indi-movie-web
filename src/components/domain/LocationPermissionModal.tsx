@@ -16,7 +16,7 @@ interface Props {
 
 const IcoLocation = () => (
   <svg width={30} height={30} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+    stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
     <circle cx="12" cy="9" r="2.5" />
   </svg>
@@ -24,7 +24,7 @@ const IcoLocation = () => (
 
 const IcoLock = () => (
   <svg width={28} height={28} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+    stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
   </svg>
@@ -126,7 +126,7 @@ export function LocationPermissionModal({ state, onRequest, onDismiss }: Props) 
             }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                 <span style={{ flexShrink: 0, marginTop: 4, color: 'var(--color-text-body)' }}>
-                  <Lock size={18} strokeWidth={2} color="currentColor" />
+                  <Lock size={18} strokeWidth={1.75} color="currentColor" />
                 </span>
                 <div style={{ fontSize: 13, color: 'var(--color-text-body)', lineHeight: 1.65 }}>
                   주소창 왼쪽 <strong>자물쇠 아이콘</strong> 클릭<br />

@@ -23,7 +23,7 @@ export const IcoClose = ({ color = 'var(--color-text-sub)' }: { color?: string }
 
 export const IcoCalendar = () => (
   <svg width={14} height={14} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+    stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
     <rect x="3" y="4" width="18" height="18" rx="2" />
     <path d="M16 2v4M8 2v4M3 10h18" />
   </svg>
@@ -31,21 +31,21 @@ export const IcoCalendar = () => (
 
 export const IcoArrowRight = () => (
   <svg width={13} height={13} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
     <path d="M9 18l6-6-6-6" />
   </svg>
 )
 
 export const IcoNavPrev = () => (
   <svg width={16} height={16} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+    stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
     <path d="M15 18l-6-6 6-6" />
   </svg>
 )
 
 export const IcoNavNext = () => (
   <svg width={16} height={16} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+    stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
     <path d="M9 18l6-6-6-6" />
   </svg>
 )
