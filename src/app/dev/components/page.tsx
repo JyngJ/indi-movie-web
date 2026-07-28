@@ -19,6 +19,8 @@ import { HoverPopup } from '@/components/domain/CurationSectionRow'
 import type { Movie } from '@/types/api'
 import { Section, Entry, Label, captionStyle } from './gallery-shared'
 import { FoundationsSections } from './foundations'
+import { SurfacesSection } from './surfaces'
+import { ProposalsSection } from './proposals'
 import {
   PosterOverlayChips, ActionBtnRow, MoreButtonRow,
   HoverLiftDemo, PmTipDemo, ToastStatic,
@@ -171,6 +173,8 @@ const TOC = [
   { anchor: 'sec-nav', label: '내비 · 컨트롤' },
   { anchor: 'sec-sheets', label: '시트 · 카드' },
   { anchor: 'sec-feedback', label: '피드백' },
+  { anchor: 'sec-surfaces', label: '화면 표면' },
+  { anchor: 'sec-proposals', label: '리디자인 시안' },
   { anchor: 'sec-screens', label: '화면별 인덱스' },
 ]
 
@@ -642,6 +646,12 @@ export default function ComponentsPage() {
             <div style={{ maxWidth: 320 }}><TheaterCardSkeleton /></div>
           </Entry>
         </Section>
+
+        {/* ═══ 화면 표면 ════════════════════════════════════════════ */}
+        <SurfacesSection />
+
+        {/* ═══ 리디자인 시안 ════════════════════════════════════════ */}
+        <ProposalsSection />
 
         {/* ═══ 화면별 인덱스 ════════════════════════════════════════ */}
         <Section id="sec-screens" title="화면별 인덱스 — 화면 → 사용 컴포넌트">

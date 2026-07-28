@@ -123,9 +123,7 @@ function HeroSection({ movie, titleRef, desktop = false }: { movie: MovieDetail;
       border: desktop ? '1px solid var(--color-border)' : undefined,
       borderRadius: desktop ? 20 : 0,
       overflow: desktop ? 'hidden' : undefined,
-      background: desktop
-        ? 'linear-gradient(135deg, var(--color-surface-card) 0%, var(--color-primary-subtle-l) 100%)'
-        : 'linear-gradient(to bottom, var(--color-primary-subtle-l) 0%, var(--color-surface-bg) 100%)',
+      background: desktop ? 'var(--color-surface-card)' : 'var(--color-surface-bg)',
       boxShadow: desktop ? '0 18px 54px rgba(20, 15, 10, 0.10)' : undefined,
       padding: desktop ? 32 : '24px 20px 20px',
       display: 'flex',
@@ -141,11 +139,11 @@ function HeroSection({ movie, titleRef, desktop = false }: { movie: MovieDetail;
             fill
             priority
             sizes={`(min-width: 1280px) ${posterW}px, ${posterW}px`}
-            style={{ borderRadius: desktop ? 12 : 8, objectFit: 'cover', boxShadow: desktop ? '0 18px 46px rgba(0,0,0,0.28)' : '0 8px 28px rgba(0,0,0,0.45)' }}
+            style={{ borderRadius: 0, objectFit: 'cover', boxShadow: 'inset 0 0 0 1px var(--comp-poster-border)' }}
           />
         ) : (
           <div style={{
-            width: posterW, height: posterH, borderRadius: desktop ? 12 : 8,
+            width: posterW, height: posterH, borderRadius: 0,
             border: '1px solid var(--color-border)',
             background: 'var(--color-neutral-800)',
           }} />

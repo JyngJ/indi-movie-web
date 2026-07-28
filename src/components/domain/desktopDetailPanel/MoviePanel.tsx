@@ -73,7 +73,7 @@ export function MoviePanel({
     <PanelShell onClose={onClose} onBack={onBack} embedded={embedded} title={movie.title}>
       {/* 히어로 */}
       <div style={{
-        background: 'linear-gradient(135deg, var(--color-surface-card) 0%, var(--color-primary-subtle-l) 100%)',
+        background: 'var(--color-surface-card)',
         padding: '24px var(--gutter) 20px',
         display: 'flex',
         gap: 20,
@@ -82,7 +82,7 @@ export function MoviePanel({
         <div style={{ flexShrink: 0, width: 90, height: 135 }}>
           {movie.posterUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={movie.posterUrl} alt="" style={{ width: 90, height: 135, borderRadius: 8, objectFit: 'cover', display: 'block', boxShadow: '0 8px 28px rgba(0,0,0,0.35)' }} />
+            <img src={movie.posterUrl} alt="" style={{ width: 90, height: 135, borderRadius: 0, objectFit: 'cover', display: 'block', boxShadow: 'inset 0 0 0 1px var(--comp-poster-border)' }} />
           ) : (
             <div style={{ width: 90, height: 135, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-neutral-800)' }} />
           )}

@@ -125,7 +125,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
 
   const heroSection = (
     <div style={{
-      background: 'linear-gradient(to bottom, var(--color-primary-subtle-l) 0%, var(--color-surface-bg) 100%)',
+      background: 'var(--color-surface-bg)',
       padding: '32px var(--gutter) 24px',
       display: 'flex', flexDirection: 'column', alignItems: 'center',
     }}>

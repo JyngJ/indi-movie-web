@@ -82,7 +82,7 @@ function ProfileHero({
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center',
       padding: '32px var(--gutter) 24px',
-      background: 'linear-gradient(to bottom, var(--color-primary-subtle-l) 0%, var(--color-surface-bg) 100%)',
+      background: 'var(--color-surface-bg)',
     }}>
       <div style={{
         width: 112, height: 112, borderRadius: '50%',
