@@ -1,7 +1,7 @@
 {
-  "risk": { "BUG": 0, "LOSSLESS": 0, "LOW": 0, "MED": 0, "REVIEW": 103 },
+  "risk": { "BUG": 0, "LOSSLESS": 0, "LOW": 0, "MED": 0, "REVIEW": 102 },
   "summary": {
-    "gutter": 72,
+    "gutter": 71,
     "color": 30,
     "fontSize": 1,
     "asymmetryLR": 8,

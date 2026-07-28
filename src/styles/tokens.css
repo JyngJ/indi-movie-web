@@ -1,6 +1,6 @@
 /* ================================
    Design Tokens — 영화 앱
-   Source of truth: /영화 tokens.js
+   이 파일이 값의 유일한 원본 (source of truth) — 설명·역할·컴포넌트 스펙은 docs/DESIGN.md
    ================================ */
 
 /* ─── Light Mode ──────────────────────────────────────────────────── */
@@ -83,7 +83,7 @@
   --font-serif-en: 'Libre Baskerville', Georgia, serif;         /* 영문 원제·감독명 이탤릭 (선택적) */
   --font-mono:     'SF Mono', 'ui-monospace', 'Courier New', monospace;
 
-  /* ── Typography: Scale (tokens.js type.scale 기준) ── */
+  /* ── Typography: Scale (docs/DESIGN.md 타입 스케일 참고) ── */
   --text-h1:      24px;   /* 영화 대제목 / font-serif / 700 */
   --text-h2:      22px;   /* 극장명 상세 / font-serif / 700 */
   --text-h3:      20px;   /* 바텀시트 극장명 / font-serif / 700 */

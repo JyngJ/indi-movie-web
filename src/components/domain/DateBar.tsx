@@ -24,7 +24,7 @@ interface DateBarProps {
 }
 
 function getDayTextColor(type: DayType): string {
-  /* tokens.js dateBar.dayCell 기준 */
+  /* docs/DESIGN.md DateBar dayCell 스펙 기준 */
   switch (type) {
     case 'today':    return 'var(--color-primary-base)'      /* 비선택 시 primary 색으로 강조 */
     case 'saturday': return 'var(--color-primary-hover-l)'  /* #5C7896 */
