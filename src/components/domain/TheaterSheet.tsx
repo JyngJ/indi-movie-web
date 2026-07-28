@@ -2171,7 +2171,7 @@ export function TheaterSheet({
               {/* 예매 가능한 영화만 토글 */}
               <div style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                paddingTop: 4, paddingBottom: 20,
+                paddingTop: 20, paddingBottom: 20,
                 borderTop: '1px solid var(--color-border)',
               }}>
                 <div>

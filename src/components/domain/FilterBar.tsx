@@ -439,7 +439,7 @@ export function FilterBar({
               background: 'var(--color-primary-base)',
               borderRadius: 12,
               boxShadow: '0 10px 28px rgba(40, 55, 75, 0.34)',
-              padding: '12px 12px 12px 16px',
+              padding: 12,
               display: 'flex',
               alignItems: 'flex-start',
               gap: 12,

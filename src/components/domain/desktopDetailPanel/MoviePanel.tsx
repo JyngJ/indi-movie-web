@@ -282,7 +282,7 @@ function MovieTheatersTab({
       </div>
       {/* 날짜별 상영시간 */}
       {entry.dateGroups.map((group) => (
-        <div key={group.date} style={{ borderTop: '1px solid var(--color-border)', padding: '8px 16px 12px' }}>
+        <div key={group.date} style={{ borderTop: '1px solid var(--color-border)', padding: '12px 16px' }}>
           <div style={{ marginBottom: 8, fontSize: 10, fontWeight: 600, color: 'var(--color-text-caption)', letterSpacing: '0.3px' }}>
             {formatDateLabel(group.date)}
           </div>
