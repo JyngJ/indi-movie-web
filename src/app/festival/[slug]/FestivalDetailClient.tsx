@@ -254,7 +254,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
                 onClick={() => setLineupExpanded((v) => !v)}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-                  width: 'calc(100% - 32px)', margin: '4px 16px 0', padding: '8px 0',
+                  width: 'calc(100% - 32px)', maxWidth: 360, margin: '4px auto 0', padding: '8px 0',
                   border: 'none', borderRadius: 'var(--radius-button)', backgroundColor: 'var(--color-surface-raised)',
                   color: 'var(--color-text-caption)', fontSize: 12, fontWeight: 600, cursor: 'pointer', minHeight: 'auto',
                 }}

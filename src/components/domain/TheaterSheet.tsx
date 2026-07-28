@@ -977,7 +977,7 @@ export function TheaterSheet({
               marginTop: 8,
               lineHeight: 1.25,
               display: 'flex',
-              alignItems: 'baseline',
+              alignItems: 'center',
               gap: 4,
             }}>
               <span style={{ minWidth: 0 }}>{theater.address}</span>
@@ -1069,7 +1069,7 @@ export function TheaterSheet({
               </div>
               <div style={{
                 display: 'flex',
-                alignItems: 'baseline',
+                alignItems: 'center',
                 gap: 4,
                 marginTop: 8,
                 minWidth: 0,
@@ -1390,15 +1390,15 @@ export function TheaterSheet({
             </div>
             <div style={{
               fontSize: 13, color: 'var(--color-text-sub)',
-              marginTop: 4, lineHeight: 1.25,
-              display: 'flex', alignItems: 'baseline', gap: 4,
+              marginTop: 8, lineHeight: 1.25,
+              display: 'flex', alignItems: 'center', gap: 4,
             }}>
               <span style={{ minWidth: 0 }}>{theater.address}</span>
               <button style={inlineIconBtn} onClick={copyAddress} aria-label="주소 복사">
                 <IconCopy size={10} />
               </button>
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
               <button style={actionBtn} onClick={openDirections}>
                 <IconRoute size={13} />길찾기
               </button>
