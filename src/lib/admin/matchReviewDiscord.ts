@@ -19,11 +19,11 @@ function discordEnv(name: string) {
 }
 
 function matchReviewChannelId() {
-  return discordEnv('DISCORD_REPORT_CHANNEL_ID') || discordEnv('DISCORD_CHANNEL_ID')
+  return discordEnv('DISCORD_MATCH_REVIEW_CHANNEL_ID') || discordEnv('DISCORD_REPORT_CHANNEL_ID') || discordEnv('DISCORD_CHANNEL_ID')
 }
 
 function matchReviewWebhookUrl() {
-  return discordEnv('DISCORD_REPORT_WEBHOOK_URL') || discordEnv('DISCORD_WEBHOOK_URL')
+  return discordEnv('DISCORD_MATCH_REVIEW_WEBHOOK_URL') || discordEnv('DISCORD_REPORT_WEBHOOK_URL') || discordEnv('DISCORD_WEBHOOK_URL')
 }
 
 /** movie_match 버튼의 custom_id에 영화 제목 대신 넣을 짧은 해시 — Discord custom_id는 100자 제한이라 원문 제목 대신 사용 */

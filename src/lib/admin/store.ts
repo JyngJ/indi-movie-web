@@ -650,7 +650,7 @@ export async function resolveAmbiguousMovieMatch(titleHashValue: string, movieId
 
   if (updateError) throw new Error(updateError.message)
 
-  const approvalResult = await approveShowtimeCandidates(matchingIds, 'discord')
+  const approvalResult = await approveShowtimeCandidates(matchingIds, null)
   return { updatedCount: matchingIds.length, ...approvalResult }
 }
 
@@ -913,7 +913,7 @@ export async function importAdminExternalMovie(input: AdminExternalMovie) {
 
 export async function approveShowtimeCandidates(
   ids: string[],
-  approvedBy: string,
+  approvedBy: string | null,
 ): Promise<ShowtimeApprovalResult> {
   const supabase = createSupabaseAdminClient()
   const uniqueIds = Array.from(new Set(ids))

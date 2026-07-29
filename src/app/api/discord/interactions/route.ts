@@ -244,7 +244,7 @@ async function handleOcrConfirm(sourceId: string) {
     return { ok: false, message: '승인할 후보가 없습니다. 이미 처리됐거나 만료됐을 수 있습니다.' }
   }
 
-  const result = await approveShowtimeCandidates(rows.map((r) => r.id), 'discord')
+  const result = await approveShowtimeCandidates(rows.map((r) => r.id), null)
   return {
     ok: true,
     message: `✅ 승인 완료: **${result.approved.length}개** 등록${result.failed.length > 0 ? ` / 실패 ${result.failed.length}개` : ''}`,
@@ -267,9 +267,13 @@ async function handleMovieMatchChoice(hash: string, movieId: string) {
   if (result.updatedCount === 0) {
     return { ok: false, message: '❌ 이미 처리됐거나 대상을 찾을 수 없습니다.' }
   }
+  const reasonLines = result.failed
+    .slice(0, 5)
+    .map((f) => `- ${f.reason || '알 수 없는 오류'}`)
+    .join('\n')
   return {
     ok: true,
-    message: `✅ ${result.updatedCount}건 반영: **승인 ${result.approved.length}개**${result.failed.length > 0 ? ` / 실패 ${result.failed.length}개` : ''}`,
+    message: `✅ ${result.updatedCount}건 반영: **승인 ${result.approved.length}개**${result.failed.length > 0 ? ` / 실패 ${result.failed.length}개\n${reasonLines}` : ''}`,
   }
 }
 
