@@ -7,7 +7,6 @@ import { getRecentlyViewed } from '@/lib/curation/recentlyViewed'
 import { getRegionFromCity } from '@/lib/regions'
 import { calculateDistanceKm } from '@/lib/map/distanceUtils'
 import { formatLocalDate, formatLocalTimeHHMM } from '@/lib/date'
-import { rowToMovie } from '@/lib/supabase/movieRow'
 import type { LocationCoords } from '@/lib/adapters/location'
 import type {
   LastWeekFilm,
@@ -44,11 +43,11 @@ const DEPARTURE_BUFFER_MIN = 30
 const LEAVE_NOW_WINDOW_HOURS = 4
 
 interface RawTodayShowtime {
-  movie_id: string
-  show_time: string
-  theater_id: string
-  theaters: { id: string; name: string; city: string; lat: number; lng: number } | null
-  movies: Record<string, unknown> | null
+  movieId: string
+  showTime: string
+  theaterId: string
+  theater: { id: string; name: string; city: string; lat?: number; lng?: number } | null
+  movie: Movie | null
 }
 
 /** curation_cache에서 서버 계산 스냅샷 읽기 + 오늘 회차/최근 찾아본 클라이언트 로드.
@@ -81,25 +80,22 @@ export function useCurationData(open: boolean, regionId: string | null, refreshK
   }, [open])
 
   // 오늘 전체 회차 — open 첫 진입 시 1회 (시간 필터는 클라이언트에서 refreshKey마다 재계산)
+  // /api/public/showtimes-window 서버 라우트 경유 — CDN 캐시로 Supabase egress 절감
   useEffect(() => {
     if (!open) return
     let cancelled = false
     const today = formatLocalDate(new Date())
-    createSupabaseBrowserClient()
-      .from('showtimes')
-      .select(`
-        movie_id,
-        show_time,
-        theater_id,
-        theaters(id, name, city, lat, lng),
-        movies(id, title, original_title, year, poster_url, genre, director, nation, kmdb_id, tmdb_id, rating)
-      `)
-      .eq('show_date', today)
-      .eq('is_active', true)
-      .order('show_time', { ascending: true })
-      .then(({ data }) => {
+    fetch(`/api/public/showtimes-window?from=${today}&to=${today}`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((rows: Array<{ movieId: string; showTime: string; theaterId: string; theater: RawTodayShowtime['theater']; movie: Movie | null }>) => {
         if (cancelled) return
-        setTodayShowtimes((data as unknown as RawTodayShowtime[] | null) ?? [])
+        setTodayShowtimes(rows.map((r) => ({
+          movieId: r.movieId,
+          showTime: r.showTime,
+          theaterId: r.theaterId,
+          theater: r.theater,
+          movie: r.movie,
+        })))
       }, () => {})
     return () => { cancelled = true }
   }, [open])
@@ -130,20 +126,20 @@ export function useCurationData(open: boolean, regionId: string | null, refreshK
 
     const byMovie = new Map<string, TodayShowFilm>()
     for (const row of todayShowtimes) {
-      if (row.show_time <= cutoffHHMM) continue
-      if (row.show_time > windowEndHHMM) continue
-      if (byMovie.has(row.movie_id)) continue
-      const movieRaw = row.movies
-      const theaterRaw = row.theaters
-      if (!movieRaw || !theaterRaw) continue
-      if (regionId && getRegionFromCity(theaterRaw.city) !== regionId) continue
-      byMovie.set(row.movie_id, {
-        movie: rowToMovie(movieRaw),
-        nextShowTime: row.show_time.slice(0, 5),
-        theaterId: theaterRaw.id,
-        theaterName: theaterRaw.name,
-        theaterLat: Number(theaterRaw.lat),
-        theaterLng: Number(theaterRaw.lng),
+      if (row.showTime <= cutoffHHMM) continue
+      if (row.showTime > windowEndHHMM) continue
+      if (byMovie.has(row.movieId)) continue
+      const movie = row.movie
+      const theater = row.theater
+      if (!movie || !theater) continue
+      if (regionId && getRegionFromCity(theater.city) !== regionId) continue
+      byMovie.set(row.movieId, {
+        movie,
+        nextShowTime: row.showTime.slice(0, 5),
+        theaterId: theater.id,
+        theaterName: theater.name,
+        theaterLat: Number(theater.lat),
+        theaterLng: Number(theater.lng),
       })
     }
     const films = [...byMovie.values()]
