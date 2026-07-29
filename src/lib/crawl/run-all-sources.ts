@@ -45,6 +45,10 @@ export async function runAllSources(
         createdCount: candidates.length,
         updatedCount: 0,
         warningCount: candidates.reduce((sum, c) => sum + c.warnings.length, 0),
+        structureWarning:
+          candidates.length === 0
+            ? '파싱 결과 0건 — 사이트 구조 변경으로 파서가 깨졌을 가능성 있음, 확인 필요'
+            : undefined,
       }
       await saveCrawlRun(run)
       runs[index] = run

@@ -13,6 +13,7 @@ import {
   fetchText,
   BROWSER_UA,
   browserHeaders,
+  withRetry,
   mapWithConcurrency,
   extractDtryxCgid,
   extractMovieeTheaterId,
@@ -124,16 +125,18 @@ export async function resolveCrawlInput(
   if (inputKind === 'csv') return SAMPLE_CRAWL_CSV
   if (inputKind === 'fixture') return SAMPLE_CRAWL_HTML
   if (inputKind === 'url' && url) {
-    const response = await fetch(url, {
-      headers: browserHeaders(),
-      signal: AbortSignal.timeout(30000),
-    })
+    return withRetry(async () => {
+      const response = await fetch(url, {
+        headers: browserHeaders(),
+        signal: AbortSignal.timeout(30000),
+      })
 
-    if (!response.ok) {
-      throw new Error(`크롤링 요청 실패: ${response.status}`)
-    }
+      if (!response.ok) {
+        throw new Error(`크롤링 요청 실패: ${response.status}`)
+      }
 
-    return response.text()
+      return response.text()
+    }, { label: `${url} 요청` })
   }
 
   return SAMPLE_CRAWL_HTML

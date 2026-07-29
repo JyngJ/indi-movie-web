@@ -1,6 +1,6 @@
 import type { CrawledShowtimeCandidate } from '@/types/admin'
 import type { ParseContext } from './utils'
-import { buildCandidate, dedupeCandidates } from './utils'
+import { buildCandidate, dedupeCandidates, withRetry } from './utils'
 
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
 
@@ -84,13 +84,15 @@ function rowsToCandidate(
 }
 
 async function fetchSsrHtml(url: string): Promise<string> {
-  const res = await fetch(url, {
-    headers: { 'user-agent': UA, accept: 'text/html,*/*', 'accept-language': 'ko-KR,ko;q=0.9' },
-    cache: 'no-store',
-    signal: AbortSignal.timeout(30_000),
-  })
-  if (!res.ok) throw new Error(`TinyTicket fetch failed: HTTP ${res.status}`)
-  return res.text()
+  return withRetry(async () => {
+    const res = await fetch(url, {
+      headers: { 'user-agent': UA, accept: 'text/html,*/*', 'accept-language': 'ko-KR,ko;q=0.9' },
+      cache: 'no-store',
+      signal: AbortSignal.timeout(30_000),
+    })
+    if (!res.ok) throw new Error(`TinyTicket fetch failed: HTTP ${res.status}`)
+    return res.text()
+  }, { label: 'TinyTicket 페이지 요청' })
 }
 
 async function crawlTinyticketCsr(url: string, year: number): Promise<TinyTicketRow[]> {
