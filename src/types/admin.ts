@@ -125,6 +125,8 @@ export interface CrawlRun {
   updatedCount: number
   warningCount: number
   error?: string
+  /** 파싱 성공했지만 후보 0건 — 사이트 구조 변경으로 파서가 깨졌을 가능성 경고 */
+  structureWarning?: string
 }
 
 export interface ShowtimeApprovalPayload {

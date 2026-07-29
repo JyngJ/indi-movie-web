@@ -107,32 +107,67 @@ export function browserHeaders(extra: Record<string, string> = {}): Record<strin
   }
 }
 
-export async function fetchJson<T>(url: string, headers: Record<string, string>): Promise<T> {
-  const response = await fetch(url, {
-    headers,
-    cache: 'no-store',
-    signal: AbortSignal.timeout(30000),
-  })
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
 
-  if (!response.ok) {
-    throw new Error(`디트릭스 API 요청 실패: ${response.status}`)
+/**
+ * 일시적 네트워크 오류(타임아웃, 5xx, 연결 끊김)를 지수 백오프로 재시도한다.
+ * dtryx IP 밴처럼 지속적으로 실패하는 경우는 retries 소진 후 그대로 던진다.
+ */
+export async function withRetry<T>(
+  fn: () => Promise<T>,
+  options: { retries?: number; baseDelayMs?: number; label?: string } = {},
+): Promise<T> {
+  const { retries = 2, baseDelayMs = 500, label } = options
+  let lastError: unknown
+
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      return await fn()
+    } catch (err) {
+      lastError = err
+      if (attempt === retries) break
+      const wait = baseDelayMs * 2 ** attempt
+      const message = err instanceof Error ? err.message : String(err)
+      console.warn(`${label ?? '요청'} 실패 (${attempt + 1}/${retries + 1}), ${wait}ms 후 재시도: ${message}`)
+      await delay(wait)
+    }
   }
 
-  return response.json() as Promise<T>
+  throw lastError
+}
+
+export async function fetchJson<T>(url: string, headers: Record<string, string>): Promise<T> {
+  return withRetry(async () => {
+    const response = await fetch(url, {
+      headers,
+      cache: 'no-store',
+      signal: AbortSignal.timeout(30000),
+    })
+
+    if (!response.ok) {
+      throw new Error(`디트릭스 API 요청 실패: ${response.status}`)
+    }
+
+    return response.json() as Promise<T>
+  }, { label: '디트릭스 API 요청' })
 }
 
 export async function fetchText(url: string) {
-  const response = await fetch(url, {
-    headers: browserHeaders(),
-    cache: 'no-store',
-    signal: AbortSignal.timeout(30000),
-  })
+  return withRetry(async () => {
+    const response = await fetch(url, {
+      headers: browserHeaders(),
+      cache: 'no-store',
+      signal: AbortSignal.timeout(30000),
+    })
 
-  if (!response.ok) {
-    throw new Error(`무비랜드 상품 페이지 요청 실패: ${response.status}`)
-  }
+    if (!response.ok) {
+      throw new Error(`무비랜드 상품 페이지 요청 실패: ${response.status}`)
+    }
 
-  return response.text()
+    return response.text()
+  }, { label: '무비랜드 상품 페이지 요청' })
 }
 
 export async function mapWithConcurrency<T>(

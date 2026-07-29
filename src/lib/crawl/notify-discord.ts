@@ -76,6 +76,10 @@ export async function notifyDiscord(payload: NotifyPayload) {
       return `\`${cnt}개\` ${r.sourceName}${warn}`
     })
 
+  const structureWarningLines = ok
+    .filter((r) => r.structureWarning)
+    .map((r) => `• ${r.sourceName}`)
+
   const failedLines = failed.map((r) => {
     const err = r.error ? ` \`${r.error.slice(0, 80)}\`` : ''
     return `• ${r.sourceName}${err}`
@@ -90,6 +94,16 @@ export async function notifyDiscord(payload: NotifyPayload) {
       : `✅ 성공 (${ok.length}개)`
     fields.push({ name: label, value: chunk || '없음', inline: false })
   })
+
+  if (structureWarningLines.length > 0) {
+    const structChunks = chunkLines(structureWarningLines)
+    structChunks.forEach((chunk, i) => {
+      const label = structChunks.length > 1
+        ? `🧩 구조 변경 의심 (${structureWarningLines.length}건) [${i + 1}/${structChunks.length}]`
+        : `🧩 구조 변경 의심 (${structureWarningLines.length}건)`
+      fields.push({ name: label, value: chunk, inline: false })
+    })
+  }
 
   if (failedLines.length > 0) {
     const failChunks = chunkLines(failedLines)
