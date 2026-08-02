@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 import { cookieStorageAdapter } from '@/lib/adapters/cookieStorage'
 import { getRecentlyViewed } from '@/lib/curation/recentlyViewed'
 import { getRegionFromCity } from '@/lib/regions'
@@ -58,22 +57,20 @@ export function useCurationData(open: boolean, regionId: string | null, refreshK
   const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewedEntry[]>([])
   const [todayShowtimes, setTodayShowtimes] = useState<RawTodayShowtime[]>([])
 
-  // Supabase 스냅샷 — open 첫 진입 시 1회
+  // curation_cache 스냅샷 — open 첫 진입 시 1회
+  // /api/public/curation-cache 서버 라우트 경유 — CDN 캐시로 Supabase egress 절감
   useEffect(() => {
     if (!open) return
     let cancelled = false
-    createSupabaseBrowserClient()
-      .from('curation_cache')
-      .select('returning_films, new_indie_films, last_week_films, solo_theater_films')
-      .eq('id', 1)
-      .single()
-      .then(({ data }) => {
-        if (cancelled) return
+    fetch('/api/public/curation-cache')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled || !data) return
         setCacheData({
-          returningFilms: (data?.returning_films as ReturningFilm[] | null) ?? [],
-          newIndieFilms: (data?.new_indie_films as NewIndieFilm[] | null) ?? [],
-          lastWeekFilms: (data?.last_week_films as LastWeekFilm[] | null) ?? [],
-          soloTheaterFilmsByRegion: (data?.solo_theater_films as SoloTheaterFilmsByRegion | null) ?? {},
+          returningFilms: (data.returningFilms as ReturningFilm[]) ?? [],
+          newIndieFilms: (data.newIndieFilms as NewIndieFilm[]) ?? [],
+          lastWeekFilms: (data.lastWeekFilms as LastWeekFilm[]) ?? [],
+          soloTheaterFilmsByRegion: (data.soloTheaterFilmsByRegion as SoloTheaterFilmsByRegion) ?? {},
         })
       }, () => {})
     return () => { cancelled = true }
