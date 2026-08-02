@@ -9,7 +9,6 @@ import { movieRowToMovie } from './movieRow'
 import { festivalRowToFestival } from './festivalRow'
 import { formatLocalDate, toKstIsoDate } from '@/lib/date'
 import { getRegionFromCity } from '@/lib/regions'
-import { getMovieTheaterShowtimes as getMovieTheaterShowtimesPure } from '@/lib/catalog/getMovieTheaterShowtimes'
 import type { MovieTheaterEntry } from '@/lib/catalog/getMovieTheaterShowtimes'
 
 function supabase() {
@@ -119,67 +118,34 @@ export function useMovieDetail(movieId: string | null, initialData?: MovieDetail
     enabled: !!movieId,
     initialData: initialData ?? undefined,
     queryFn: async () => {
-      const { data, error } = await supabase()
-        .from('movies')
-        .select(`
-          id, title, original_title, year, poster_url, genre, director,
-          nation, kmdb_id, tmdb_id, rating,
-          movie_details (
-            synopsis,
-            runtime_minutes,
-            certification,
-            cast_members
-          )
-        `)
-        .eq('id', movieId!)
-        .single()
-
-      if (error) throw error
-      if (!data) return null
-
-      const row = data as Record<string, unknown>
-      const details = row.movie_details as Record<string, unknown> | null
-
-      return {
-        id: String(row.id),
-        title: String(row.title),
-        originalTitle: row.original_title ? String(row.original_title) : undefined,
-        year: Number(row.year),
-        posterUrl: row.poster_url ? String(row.poster_url) : undefined,
-        genre: (row.genre as string[] | null) ?? [],
-        director: (row.director as string[] | null) ?? [],
-        nation: row.nation ? String(row.nation) : undefined,
-        kmdbId: row.kmdb_id ? String(row.kmdb_id) : undefined,
-        tmdbId: row.tmdb_id ? Number(row.tmdb_id) : undefined,
-        rating: row.rating ? Number(row.rating) : undefined,
-        synopsis: details?.synopsis ? String(details.synopsis) : undefined,
-        runtimeMinutes: details?.runtime_minutes ? Number(details.runtime_minutes) : undefined,
-        certification: details?.certification ? String(details.certification) : undefined,
-        cast: (details?.cast_members as MovieDetail['cast'] | null) ?? [],
-      }
+      const res = await fetch(`/api/public/movie/${movieId}`)
+      if (res.status === 404) return null
+      if (!res.ok) throw new Error(`movie-detail fetch 실패: ${res.status}`)
+      return res.json()
     },
     staleTime: 10 * 60 * 1000,
   })
 }
 
 /* ── 오늘 포함 미래 상영 스케줄이 있는 영화 ID 목록 ─────────────── */
+async function fetchActiveShowtimePairs(theaterIds: string[] | null): Promise<{ movieId: string; theaterId: string }[]> {
+  if (theaterIds !== null && theaterIds.length === 0) return []
+  const qs = theaterIds !== null ? `?theaterIds=${theaterIds.join(',')}` : ''
+  const res = await fetch(`/api/public/active-showtimes${qs}`)
+  if (!res.ok) throw new Error(`active-showtimes fetch 실패: ${res.status}`)
+  return res.json()
+}
+
 export function useActiveMovieIds() {
   const today = formatLocalDate(new Date())
 
   return useQuery<string[]>({
     queryKey: ['active-movie-ids', today],
     queryFn: async () => {
-      const { data, error } = await supabase()
-        .from('showtimes')
-        .select('movie_id')
-        .eq('is_active', true)
-        .gte('show_date', today)
-
-      if (error) throw error
-
-      return Array.from(new Set((data ?? []).map((r) => r.movie_id).filter(Boolean)))
+      const pairs = await fetchActiveShowtimePairs(null)
+      return Array.from(new Set(pairs.map((p) => p.movieId)))
     },
-    staleTime: 2 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
   })
 }
 
@@ -195,21 +161,10 @@ export function useActiveMovieIdsByRegion(regionId: string | null) {
   return useQuery<string[]>({
     queryKey: ['active-movie-ids-region', today, regionId ?? 'all'],
     queryFn: async () => {
-      if (theaterIds !== null && theaterIds.length === 0) return []
-
-      let q = supabase()
-        .from('showtimes')
-        .select('movie_id')
-        .eq('is_active', true)
-        .gte('show_date', today)
-
-      if (theaterIds !== null) q = q.in('theater_id', theaterIds)
-
-      const { data, error } = await q
-      if (error) throw error
-      return Array.from(new Set((data ?? []).map((r) => r.movie_id).filter(Boolean)))
+      const pairs = await fetchActiveShowtimePairs(theaterIds)
+      return Array.from(new Set(pairs.map((p) => p.movieId)))
     },
-    staleTime: 2 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
     enabled: regionId === null || theaters.length > 0,
   })
 }
@@ -225,31 +180,8 @@ export function useActiveMovieTheaterPairs(regionId: string | null) {
 
   return useQuery<{ movieId: string; theaterId: string }[]>({
     queryKey: ['active-movie-theater-pairs', today, regionId ?? 'all'],
-    queryFn: async () => {
-      if (theaterIds !== null && theaterIds.length === 0) return []
-
-      let q = supabase()
-        .from('showtimes')
-        .select('movie_id, theater_id')
-        .eq('is_active', true)
-        .gte('show_date', today)
-
-      if (theaterIds !== null) q = q.in('theater_id', theaterIds)
-
-      const { data, error } = await q
-      if (error) throw error
-
-      const seen = new Set<string>()
-      const result: { movieId: string; theaterId: string }[] = []
-      for (const r of data ?? []) {
-        const key = `${r.theater_id}:${r.movie_id}`
-        if (seen.has(key)) continue
-        seen.add(key)
-        result.push({ movieId: r.movie_id, theaterId: r.theater_id })
-      }
-      return result
-    },
-    staleTime: 2 * 60 * 1000,
+    queryFn: () => fetchActiveShowtimePairs(theaterIds),
+    staleTime: 5 * 60 * 1000,
     enabled: regionId === null || theaters.length > 0,
   })
 }
@@ -508,66 +440,12 @@ export function useTheaterAllMovies(theaterId: string | null) {
     queryKey: ['theater-all-movies', theaterId, today],
     enabled: !!theaterId,
     queryFn: async () => {
-      const { data, error } = await supabase()
-        .from('showtimes')
-        .select(`
-          movie_id,
-          show_date,
-          movies (
-            id, title, original_title, year, poster_url, genre, director,
-            nation, kmdb_id, tmdb_id, rating,
-            movie_details(synopsis, runtime_minutes, certification)
-          )
-        `)
-        .eq('theater_id', theaterId!)
-        .eq('is_active', true)
-        .gte('show_date', today)
-        .lte('show_date', endDate)
-        .order('show_date')
-        .limit(1000)
-
-      if (error) throw error
-
-      const entryMap = new Map<string, TheaterMovieEntry>()
-      for (const r of data ?? []) {
-        const m = r.movies as unknown as Record<string, unknown> | null
-        if (!m) continue
-        const movieId = String(m.id)
-
-        if (!entryMap.has(movieId)) {
-          const details = m.movie_details as Record<string, unknown> | null
-          entryMap.set(movieId, {
-            movie: {
-              id: movieId,
-              title: String(m.title),
-              originalTitle: m.original_title ? String(m.original_title) : undefined,
-              year: Number(m.year),
-              posterUrl: m.poster_url ? String(m.poster_url) : undefined,
-              genre: (m.genre as string[]) ?? [],
-              director: (m.director as string[]) ?? [],
-              nation: m.nation ? String(m.nation) : undefined,
-              synopsis: details?.synopsis ? String(details.synopsis) : undefined,
-              runtimeMinutes: details?.runtime_minutes ? Number(details.runtime_minutes) : undefined,
-              certification: details?.certification ? String(details.certification) : undefined,
-              kmdbId: m.kmdb_id ? String(m.kmdb_id) : undefined,
-              tmdbId: m.tmdb_id ? Number(m.tmdb_id) : undefined,
-              rating: m.rating ? Number(m.rating) : undefined,
-            },
-            showtimeCount: 0,
-            earliestDate: r.show_date,
-            availableDates: new Set(),
-          })
-        }
-
-        const entry = entryMap.get(movieId)!
-        entry.showtimeCount++
-        entry.availableDates.add(r.show_date)
-        if (r.show_date < entry.earliestDate) entry.earliestDate = r.show_date
-      }
-
-      return Array.from(entryMap.values()).sort((a, b) => b.showtimeCount - a.showtimeCount)
+      const res = await fetch(`/api/public/theater/${theaterId}/movies?from=${today}&to=${endDate}`)
+      if (!res.ok) throw new Error(`theater-movies fetch 실패: ${res.status}`)
+      const rows: Array<Omit<TheaterMovieEntry, 'availableDates'> & { availableDates: string[] }> = await res.json()
+      return rows.map((r) => ({ ...r, availableDates: new Set(r.availableDates) }))
     },
-    staleTime: 2 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
   })
 }
 
@@ -577,92 +455,11 @@ export function useTheaterShowtimes(theaterId: string | null, date: string) {
     queryKey: ['theater-showtimes', theaterId, date],
     enabled: !!theaterId,
     queryFn: async () => {
-      const { data, error } = await supabase()
-        .from('showtimes')
-        .select(`
-          id,
-          screen_name,
-          show_date,
-          show_time,
-          end_time,
-          format_type,
-          language,
-          seat_available,
-          seat_total,
-          price,
-          booking_url,
-          movie_id,
-          movies (
-            id,
-            title,
-            original_title,
-            year,
-            poster_url,
-            genre,
-            director,
-            nation,
-            kmdb_id,
-            tmdb_id,
-            rating,
-            movie_details(synopsis, runtime_minutes, certification)
-          )
-        `)
-        .eq('theater_id', theaterId!)
-        .eq('show_date', date)
-        .eq('is_active', true)
-        .order('show_time')
-
-      if (error) throw error
-
-      const rows = data ?? []
-
-      // movie 중복 제거
-      const movieMap = new Map<string, Movie>()
-      for (const r of rows) {
-        const m = r.movies as unknown as Record<string, unknown> | null
-        if (!m || movieMap.has(r.movie_id)) continue
-        const details = m.movie_details as Record<string, unknown> | null
-        movieMap.set(r.movie_id, {
-          id: String(m.id),
-          title: String(m.title),
-          originalTitle: m.original_title ? String(m.original_title) : undefined,
-          year: Number(m.year),
-          posterUrl: m.poster_url ? String(m.poster_url) : undefined,
-          genre: (m.genre as string[]) ?? [],
-          director: (m.director as string[]) ?? [],
-          nation: m.nation ? String(m.nation) : undefined,
-          synopsis: details?.synopsis ? String(details.synopsis) : undefined,
-          runtimeMinutes: details?.runtime_minutes ? Number(details.runtime_minutes) : undefined,
-          certification: details?.certification ? String(details.certification) : undefined,
-          kmdbId: m.kmdb_id ? String(m.kmdb_id) : undefined,
-          tmdbId: m.tmdb_id ? Number(m.tmdb_id) : undefined,
-          rating: m.rating ? Number(m.rating) : undefined,
-        })
-      }
-
-      const showtimes: Showtime[] = rows.map((r) => ({
-        id: r.id,
-        movieId: r.movie_id,
-        movieTitle: (r.movies as unknown as Record<string, unknown> | null)?.title as string ?? '',
-        theaterId: theaterId!,
-        screenName: r.screen_name,
-        showDate: r.show_date,
-        showTime: r.show_time,
-        endTime: r.end_time ?? undefined,
-        formatType: r.format_type as Showtime['formatType'],
-        language: r.language as Showtime['language'],
-        seatAvailable: r.seat_available,
-        seatTotal: r.seat_total,
-        price: r.price,
-        bookingUrl: r.booking_url ?? undefined,
-      }))
-
-      return {
-        movies: Array.from(movieMap.values()),
-        showtimes,
-      }
+      const res = await fetch(`/api/public/theater/${theaterId}/showtimes?date=${date}`)
+      if (!res.ok) throw new Error(`theater-showtimes fetch 실패: ${res.status}`)
+      return res.json()
     },
-    staleTime: 2 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
   })
 }
 
@@ -679,8 +476,12 @@ export function useMovieTheaterShowtimes(movieId: string | null, initialData?: M
     // SSR initialData는 ISR 캐시(최대 1시간 전) 산물 — 즉시 stale 처리해서
     // 화면엔 바로 그리되 마운트 직후 백그라운드 refetch로 신선도 회복
     initialDataUpdatedAt: initialData ? 0 : undefined,
-    queryFn: () => getMovieTheaterShowtimesPure(supabase(), movieId!),
-    staleTime: 2 * 60 * 1000,
+    queryFn: async () => {
+      const res = await fetch(`/api/public/movie/${movieId}/theaters`)
+      if (!res.ok) throw new Error(`movie-theater-showtimes fetch 실패: ${res.status}`)
+      return res.json()
+    },
+    staleTime: 5 * 60 * 1000,
   })
 }
 
@@ -699,20 +500,9 @@ export function useDirectorProfile(name: string | null) {
     enabled: !!name,
     queryFn: async () => {
       if (!name) return null
-      const { data, error } = await supabase()
-        .from('directors')
-        .select('name, original_name, photo_url, bio, source')
-        .eq('name', name)
-        .single()
-      if (error || !data) return null
-      const row = data as Record<string, unknown>
-      return {
-        name: String(row.name),
-        originalName: row.original_name ? String(row.original_name) : undefined,
-        photoUrl: row.photo_url ? String(row.photo_url) : undefined,
-        bio: row.bio ? String(row.bio) : undefined,
-        source: row.source ? String(row.source) : undefined,
-      }
+      const res = await fetch(`/api/public/director?name=${encodeURIComponent(name)}`)
+      if (!res.ok) return null
+      return res.json()
     },
     staleTime: 30 * 60 * 1000,
   })
@@ -738,18 +528,9 @@ export function useFilmRankings() {
   return useQuery<FilmRankingRow | null>({
     queryKey: ['film-rankings'],
     queryFn: async () => {
-      const { data } = await supabase()
-        .from('film_rankings')
-        .select('week_start, rankings')
-        .order('week_start', { ascending: false })
-        .limit(1)
-        .single()
-      if (!data) return null
-      const row = data as Record<string, unknown>
-      return {
-        week_start: String(row.week_start),
-        rankings: (row.rankings as FilmRankingEntry[]) ?? [],
-      }
+      const res = await fetch('/api/public/film-rankings')
+      if (!res.ok) return null
+      return res.json()
     },
     staleTime: 60 * 60 * 1000,
   })
