@@ -1943,7 +1943,7 @@ export function TheaterSheet({
           {/* 상영시간표 */}
           <div ref={showtimeSectionRef} style={{ padding: `8px var(--gutter) ${selectedShowtimeId ? 88 : 40}px` }}>
             {showtimesLoading ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(var(--comp-showtime-min-width), 1fr))', gap: 8 }}>
                 {Array.from({ length: 6 }).map((_, i) => (
                   <Skeleton key={i} height={60} style={{ borderRadius: 8 }} />
                 ))}
@@ -1958,7 +1958,7 @@ export function TheaterSheet({
                 선택한 날짜에 상영 정보가 없습니다.
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(var(--comp-showtime-min-width), 1fr))', gap: 8 }}>
                 {filteredShowtimes.map((st) => {
                   const [sh, sm] = st.showTime.split(':').map(Number)
                   const startMin = sh * 60 + sm
@@ -1979,7 +1979,6 @@ export function TheaterSheet({
                       endTime={st.endTime ? st.endTime.slice(0, 5) : ''}
                       seatAvailable={st.seatAvailable}
                       seatTotal={st.seatTotal}
-                      screenName={st.screenName}
                       kind={kind}
                       selected={st.id === selectedShowtimeId}
                       onClick={kind !== 'soldout' && kind !== 'nowplaying' && kind !== 'ended' ? () => handleShowtimeSelect(st) : undefined}

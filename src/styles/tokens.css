@@ -175,6 +175,7 @@
   /* 상영시간표 셀 */
   --comp-showtime-p:      12px;
   --comp-showtime-radius: var(--radius-control);   /* 12px */
+  --comp-showtime-min-width: 104px;   /* 2.0: 셀 최소폭 — 열 수는 auto-fill이 결정 (390=3열, 320=2열) */
 
   /* 포스터 썸네일 */
   --comp-poster-radius:        var(--radius-poster);   /* 8px — 기존 6px에서 8px로 흡수(의도된 변경) */

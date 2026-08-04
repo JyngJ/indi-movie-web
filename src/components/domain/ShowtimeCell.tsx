@@ -7,7 +7,6 @@ interface ShowtimeCellProps {
   endTime: string
   seatAvailable: number
   seatTotal: number
-  screenName?: string
   promo?: string
   kind?: ShowtimeKind
   selected?: boolean
@@ -15,30 +14,8 @@ interface ShowtimeCellProps {
   onUnavailableClick?: (e: React.MouseEvent<HTMLDivElement>) => void
 }
 
-/* 인라인 배지 — 심야 전용 */
-function InlineBadge({ text, color }: { text: string; color: string }) {
-  return (
-    <span
-      className="inline-flex items-center flex-shrink-0"
-      style={{
-        height: 18,
-        padding: '0 8px',
-        borderRadius: 'var(--radius-badge)',
-        backgroundColor: color,
-        color: 'var(--color-on-accent)',
-        fontSize: 'var(--text-badge)',
-        fontWeight: 700,
-        letterSpacing: '0.4px',
-        whiteSpace: 'nowrap',
-      }}
-    >
-      {text}
-    </span>
-  )
-}
-
 export function ShowtimeCell({
-  startTime, endTime, seatAvailable, seatTotal, screenName, promo,
+  startTime, endTime, seatAvailable, seatTotal, promo,
   kind = 'normal', selected = false, onClick, onUnavailableClick,
 }: ShowtimeCellProps) {
   const isSoldout    = kind === 'soldout'
@@ -94,6 +71,12 @@ export function ShowtimeCell({
             -{endTime}
           </span>
         )}
+        {/* 2.0: 심야 = 시간 줄 인라인 달 — 배지(라벨+배경)는 정보 중복이라 강등 */}
+        {isLate && !isPast && (
+          <svg width={11} height={11} viewBox="0 0 24 24" fill="var(--color-primary-base)" style={{ flexShrink: 0 }} aria-label="심야 상영">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+          </svg>
+        )}
       </div>
 
       {/* 잔여석 / 상태 */}
@@ -116,18 +99,6 @@ export function ShowtimeCell({
           </>
         )}
       </div>
-
-      {/* 상영관 + 심야 배지 */}
-      {(screenName || isLate) && (
-        <div style={{ marginTop: 4, display: 'flex', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
-          {screenName && (
-            <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-sub)', flexShrink: 1, minWidth: 0 }}>
-              {screenName}
-            </span>
-          )}
-          {isLate && !isPast && <InlineBadge text="심야" color="var(--color-primary-base)" />}
-        </div>
-      )}
 
       {promo && (
         <div className="mt-[6px]" style={{ fontSize: 10, color: 'var(--color-primary-base)', fontWeight: 500 }}>
