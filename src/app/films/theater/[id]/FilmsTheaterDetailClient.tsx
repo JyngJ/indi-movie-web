@@ -115,7 +115,7 @@ function ShowtimeChip({ st, selected, onClick }: { st: Showtime; selected?: bool
         )}
       </div>
       {st.seatTotal > 0 && (
-        <div style={{ marginTop: 4, fontSize: 11, fontFeatureSettings: '"tnum"' }}>
+        <div style={{ marginTop: 4, fontSize: 'var(--text-badge)', fontFeatureSettings: '"tnum"' }}>
           <span style={{ fontWeight: 600, color: seatColor }}>{st.seatAvailable}</span>
           <span style={{ color: 'var(--color-text-sub)' }}>/{st.seatTotal}석</span>
           {low && !soldout && <span style={{ marginLeft: 4, fontSize: 10, color: 'var(--color-warning)', fontWeight: 600 }}>잔여↓</span>}
@@ -192,7 +192,7 @@ function MovieShowtimeCard({
           {movie.genre.length > 0 && (
             <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
               {movie.genre.slice(0, 2).map((g) => (
-                <span key={g} style={{ fontSize: 11, padding: '4px 8px', borderRadius: 9999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, border: '1px solid var(--color-border)', color: 'var(--color-text-caption)', backgroundColor: 'var(--color-surface-raised)' }}>
+                <span key={g} style={{ fontSize: 'var(--text-badge)', padding: '4px 8px', borderRadius: 9999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, border: '1px solid var(--color-border)', color: 'var(--color-text-caption)', backgroundColor: 'var(--color-surface-raised)' }}>
                   {g}
                 </span>
               ))}
@@ -412,7 +412,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
         padding: isDesktop ? '28px 28px 24px' : '20px 16px 20px',
       }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', padding: '4px 12px', borderRadius: 9999, border: '1px solid color-mix(in srgb, var(--color-primary-base) 55%, transparent)', backgroundColor: 'var(--color-primary-subtle-l)', marginBottom: 12 }}>
-          <span style={{ fontSize: 11, fontWeight: 600, lineHeight: 1, color: 'var(--color-primary-base)' }}>독립·예술영화관</span>
+          <span style={{ fontSize: 'var(--text-badge)', fontWeight: 600, lineHeight: 1, color: 'var(--color-primary-base)' }}>독립·예술영화관</span>
         </div>
         <h1 style={{ margin: '0 0 12px', fontSize: isDesktop ? 32 : 24, fontWeight: 700, fontFamily: 'var(--font-serif)', color: 'var(--color-text-primary)', lineHeight: 1.2 }}>
           {theater.name}
@@ -426,7 +426,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" />
           </svg>
           <span>{theater.address}</span>
-          <span style={{ marginLeft: 4, display: 'flex', alignItems: 'center', gap: 4, color: copied ? 'var(--color-primary-base)' : 'var(--color-text-caption)', fontSize: 11, fontWeight: 500 }}>
+          <span style={{ marginLeft: 4, display: 'flex', alignItems: 'center', gap: 4, color: copied ? 'var(--color-primary-base)' : 'var(--color-text-caption)', fontSize: 'var(--text-badge)', fontWeight: 500 }}>
             <IcoCopy />
             {copied ? '복사됨' : '복사'}
           </span>
@@ -488,7 +488,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
                 }}
                 disabled={!hasShows}
               >
-                <span style={{ fontSize: 11, fontWeight: 500, color: isSelected ? 'var(--color-primary-base)' : isHoliday ? 'var(--color-error)' : 'var(--color-text-caption)' }}>
+                <span style={{ fontSize: 'var(--text-badge)', fontWeight: 500, color: isSelected ? 'var(--color-primary-base)' : isHoliday ? 'var(--color-error)' : 'var(--color-text-caption)' }}>
                   {i === 0 ? '오늘' : day}
                 </span>
                 <span style={{ fontSize: 18, fontWeight: 700, fontFeatureSettings: '"tnum"', color: isSelected ? 'var(--color-primary-base)' : isHoliday ? 'var(--color-error)' : 'var(--color-text-primary)' }}>
@@ -573,7 +573,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
           <div style={{ position: 'fixed', right: 32, bottom: 32, width: 300, zIndex: 100, borderRadius: 16, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', boxShadow: '0 6px 24px color-mix(in srgb, var(--color-primary-base) 55%, transparent)', overflow: 'hidden' }}>
             <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', color: 'var(--color-text-caption)' }}>회차 선택됨</span>
+                <span style={{ fontSize: 'var(--text-badge)', fontWeight: 700, letterSpacing: '0.5px', color: 'var(--color-text-caption)' }}>회차 선택됨</span>
                 <CloseRoundButton variant="card" onClick={() => { setSelectedShowtimeId(null); setSelectedMovieTitle(null) }} />
               </div>
               <div>

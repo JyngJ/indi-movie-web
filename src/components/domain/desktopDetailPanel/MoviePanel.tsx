@@ -88,7 +88,7 @@ export function MoviePanel({
           )}
         </div>
         <div style={{ flex: 1, minWidth: 0, paddingTop: 4 }}>
-          <h1 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, lineHeight: 1.2, color: 'var(--color-text-primary)', wordBreak: 'keep-all' }}>
+          <h1 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 'var(--text-h2)', fontWeight: 700, lineHeight: 1.2, color: 'var(--color-text-primary)', wordBreak: 'keep-all' }}>
             {movie.title}
           </h1>
           {movie.originalTitle && (
@@ -102,7 +102,7 @@ export function MoviePanel({
                 <span key={g} style={{
                   height: 22, padding: '0 8px',
                   display: 'inline-flex', alignItems: 'center',
-                  borderRadius: 9999, fontSize: 11, fontWeight: 500,
+                  borderRadius: 9999, fontSize: 'var(--text-badge)', fontWeight: 500,
                   backgroundColor: 'var(--color-primary-subtle-l)',
                   border: '1px solid color-mix(in srgb, var(--color-primary-base) 40%, transparent)',
                   color: 'var(--color-primary-base)',
@@ -162,7 +162,7 @@ export function MoviePanel({
 
 function MovieInfoTab({ movie, onDirectorClick }: { movie: NonNullable<ReturnType<typeof useMovieDetail>['data']>; onDirectorClick: (n: string) => void }) {
   const divider: React.CSSProperties = { borderTop: '1px solid var(--color-border)', margin: '0 var(--gutter)' }
-  const sectionLabel: React.CSSProperties = { fontSize: 11, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)', marginBottom: 12 }
+  const sectionLabel: React.CSSProperties = { fontSize: 'var(--text-badge)', fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)', marginBottom: 12 }
 
   return (
     <div style={{ paddingBottom: 32 }}>
@@ -193,8 +193,8 @@ function MovieInfoTab({ movie, onDirectorClick }: { movie: NonNullable<ReturnTyp
                   <IcoUser />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)' }}>{name}</div>
-                  <div style={{ marginTop: 4, fontSize: 11, color: 'var(--color-primary-base)', fontWeight: 500, textDecoration: 'underline' }}>감독 페이지 보기</div>
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{name}</div>
+                  <div style={{ marginTop: 4, fontSize: 'var(--text-badge)', color: 'var(--color-primary-base)', fontWeight: 500, textDecoration: 'underline' }}>감독 페이지 보기</div>
                 </div>
                 <IcoChevronRight />
               </button>
@@ -251,7 +251,7 @@ function MovieTheatersTab({
       <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'flex-start' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)' }}>{entry.theaterName}</div>
-          <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 4, color: 'var(--color-text-sub)', fontSize: 11 }}>
+          <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 4, color: 'var(--color-text-sub)', fontSize: 'var(--text-badge)' }}>
             <IcoPin />{entry.theaterAddress}
           </div>
         </div>
@@ -264,7 +264,7 @@ function MovieTheatersTab({
               display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-start',
               borderRadius: 9999, border: '1px solid var(--color-border)',
               backgroundColor: 'var(--color-surface-raised)', color: 'var(--color-text-body)',
-              fontSize: 11, fontWeight: 500, fontFeatureSettings: '"tnum"', whiteSpace: 'nowrap',
+              fontSize: 'var(--text-badge)', fontWeight: 500, fontFeatureSettings: '"tnum"', whiteSpace: 'nowrap',
             }}>
               {distance}
             </span>
@@ -275,7 +275,7 @@ function MovieTheatersTab({
             trackEvent('movie theater selected', { movie_id: movieId, theater_id: entry.theaterId, theater_name: entry.theaterName, source: 'desktop_panel' })
             onTheaterOpen(entry.theaterId, entry.dateGroups[0]?.date ?? '')
           }}
-          style={{ flexShrink: 0, alignSelf: 'center', height: 26, padding: '0 12px', borderRadius: 9999, border: '1px solid color-mix(in srgb, var(--color-primary-base) 35%, transparent)', backgroundColor: 'var(--color-primary-subtle-l)', color: 'var(--color-primary-base)', fontSize: 11, fontWeight: 700, cursor: 'pointer', minHeight: 'auto' }}
+          style={{ flexShrink: 0, alignSelf: 'center', height: 26, padding: '0 12px', borderRadius: 9999, border: '1px solid color-mix(in srgb, var(--color-primary-base) 35%, transparent)', backgroundColor: 'var(--color-primary-subtle-l)', color: 'var(--color-primary-base)', fontSize: 'var(--text-badge)', fontWeight: 700, cursor: 'pointer', minHeight: 'auto' }}
         >
           영화관 보기
         </button>
@@ -306,10 +306,10 @@ function MovieTheatersTab({
                     {st.endTime && <span style={{ fontSize: 10, color: 'var(--color-text-caption)', marginLeft: 4 }}>-{st.endTime.slice(0, 5)}</span>}
                   </div>
                   {st.seatTotal > 0 && (
-                    <div style={{ marginTop: 4, fontSize: 11, fontFeatureSettings: '"tnum"' }}>
+                    <div style={{ marginTop: 4, fontSize: 'var(--text-badge)', fontFeatureSettings: '"tnum"' }}>
                       <span style={{ fontWeight: 600, color: seatColor }}>{st.seatAvailable}</span>
                       <span style={{ color: 'var(--color-text-sub)' }}>/{st.seatTotal}석</span>
-                      {soldout && <span style={{ marginLeft: 4, fontSize: 9, color: 'var(--color-error)', fontWeight: 700 }}>매진</span>}
+                      {soldout && <span style={{ marginLeft: 4, fontSize: 'var(--text-badge)', color: 'var(--color-error)', fontWeight: 700 }}>매진</span>}
                     </div>
                   )}
                 </button>
@@ -324,7 +324,7 @@ function MovieTheatersTab({
   const sectionDivider = (label: string) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0' }}>
       <div style={{ flex: 1, height: 1, backgroundColor: 'var(--color-border)' }} />
-      <span style={{ fontSize: 11, color: 'var(--color-text-caption)', fontWeight: 500, whiteSpace: 'nowrap' }}>{label}</span>
+      <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)', fontWeight: 500, whiteSpace: 'nowrap' }}>{label}</span>
       <div style={{ flex: 1, height: 1, backgroundColor: 'var(--color-border)' }} />
     </div>
   )

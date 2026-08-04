@@ -98,7 +98,7 @@ export default async function FilmsAreaPage({
           background: 'var(--color-primary-base, #2b6cb0)',
           color: 'var(--color-on-accent)',
           fontWeight: 600,
-          fontSize: 15,
+          fontSize: 'var(--text-subtitle)',
           borderRadius: 12,
           textDecoration: 'none',
           boxShadow: '0 4px 14px rgba(40, 55, 75, 0.22)',

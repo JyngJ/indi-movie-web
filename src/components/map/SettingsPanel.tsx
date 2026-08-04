@@ -139,7 +139,7 @@ export function SettingsMainPage({
         {/* 만든 사람 탭 임시 숨김 */}
         <Link href="/privacy" style={{ ...footerLink, textDecoration: 'none' }}>개인정보 처리방침</Link>
       </div>
-      <div style={{ textAlign: 'center', marginTop: 8, fontSize: 11, color: 'var(--color-text-placeholder)' }}>
+      <div style={{ textAlign: 'center', marginTop: 8, fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)' }}>
         영화볼지도 · v0.1.0
       </div>
     </div>
@@ -242,7 +242,7 @@ export function SettingsReportPage({
           placeholder="예) 라이카시네마 상영 시간표가 어제 날짜로 표시돼요."
           style={{ ...inputStyle, minHeight: 120 }}
         />
-        <div style={{ textAlign: 'right', fontSize: 11, color: 'var(--color-text-placeholder)', marginTop: 4 }}>{detail.length}/500</div>
+        <div style={{ textAlign: 'right', fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)', marginTop: 4 }}>{detail.length}/500</div>
       </div>
 
       {/* 스크린샷 */}
@@ -315,8 +315,8 @@ export function SettingsAttributionPage() {
             <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-sub)" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
           </div>
           <div>
-            <div style={{ fontSize: 11, color: 'var(--color-text-placeholder)', letterSpacing: '0.4px', textTransform: 'uppercase', fontWeight: 600 }}>지도 데이터</div>
-            <div style={{ fontSize: 15, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>OpenStreetMap</div>
+            <div style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)', letterSpacing: '0.4px', textTransform: 'uppercase', fontWeight: 600 }}>지도 데이터</div>
+            <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>OpenStreetMap</div>
           </div>
         </div>
         <div style={valueBox}>© OpenStreetMap contributors</div>
@@ -330,8 +330,8 @@ export function SettingsAttributionPage() {
         <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid var(--color-border)' }}>
           <div style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18, fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--color-text-sub)' }}>T</div>
           <div>
-            <div style={{ fontSize: 11, color: 'var(--color-text-placeholder)', letterSpacing: '0.4px', textTransform: 'uppercase', fontWeight: 600 }}>서체</div>
-            <div style={{ fontSize: 15, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>KIMM 서체</div>
+            <div style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)', letterSpacing: '0.4px', textTransform: 'uppercase', fontWeight: 600 }}>서체</div>
+            <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>KIMM 서체</div>
           </div>
         </div>
         <div style={valueBox}>출처 – 한국기계연구원, kimm.re.kr</div>
@@ -362,7 +362,7 @@ export function SettingsAboutPage() {
 
       {/* 만든 사람 */}
       <div style={{ margin: '0 16px', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)' }}>
-        <div style={{ padding: '8px 16px', fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', color: 'var(--color-text-placeholder)', textTransform: 'uppercase', borderBottom: '1px solid var(--color-border)' }}>만든 사람</div>
+        <div style={{ padding: '8px 16px', fontSize: 'var(--text-badge)', fontWeight: 700, letterSpacing: '0.5px', color: 'var(--color-text-placeholder)', textTransform: 'uppercase', borderBottom: '1px solid var(--color-border)' }}>만든 사람</div>
         {team.map((member, i) => (
           <div key={member.name} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px', borderBottom: i < team.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
             <div style={{ flex: 1, minWidth: 0 }}>

@@ -56,7 +56,7 @@ export function DirectorPanel({
           <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
         </div>
         <div>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, color: 'var(--color-text-primary)' }}>{directorName}</div>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-h2)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{directorName}</div>
           <div style={{ marginTop: 4, fontSize: 13, color: 'var(--color-text-caption)' }}>작품 {directorMovies.length}편</div>
         </div>
       </div>
@@ -85,7 +85,7 @@ export function DirectorPanel({
       <div style={{ padding: '16px var(--gutter) 32px' }}>
         <div style={{ marginBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>
+            <span style={{ fontSize: 'var(--text-badge)', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>
               작품 · {directorMovies.length}편
             </span>
             <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
@@ -94,7 +94,7 @@ export function DirectorPanel({
                   key={s}
                   onClick={() => setSort(s)}
                   style={{
-                    height: 24, padding: '0 12px', borderRadius: 9999, fontSize: 11, fontWeight: 500, cursor: 'pointer', border: '1px solid var(--color-border)',
+                    height: 24, padding: '0 12px', borderRadius: 9999, fontSize: 'var(--text-badge)', fontWeight: 500, cursor: 'pointer', border: '1px solid var(--color-border)',
                     backgroundColor: sort === s ? 'var(--color-primary-base)' : 'transparent',
                     color: sort === s ? '#fff' : 'var(--color-text-caption)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, minHeight: 'auto',
@@ -107,7 +107,7 @@ export function DirectorPanel({
           </div>
           <div style={{ 
             marginTop: 12,
-            fontSize: 11,
+            fontSize: 'var(--text-badge)',
             color: 'var(--color-text-sub)',
             lineHeight: 1.4,
           }}>
@@ -119,7 +119,7 @@ export function DirectorPanel({
               borderRadius: 4, 
               backgroundColor: 'var(--color-primary-base)', 
               color: 'var(--color-on-accent)', 
-              fontSize: 9, 
+              fontSize: 'var(--text-badge)', 
               fontWeight: 700, 
               verticalAlign: 'text-bottom',
               margin: '0 4px'
@@ -154,7 +154,7 @@ export function DirectorPanel({
                   <div style={{ fontSize: 14, fontWeight: 600, color: isActive ? 'var(--color-primary-base)' : 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {movie.title}
                     {isActive && (
-                      <span style={{ marginLeft: 8, padding: 4, borderRadius: 4, fontSize: 9, fontWeight: 700, lineHeight: 1, display: 'inline-flex', alignItems: 'center', color: 'var(--color-on-accent)', backgroundColor: 'var(--color-primary-base)', verticalAlign: 'middle' }}>상영중</span>
+                      <span style={{ marginLeft: 8, padding: 4, borderRadius: 4, fontSize: 'var(--text-badge)', fontWeight: 700, lineHeight: 1, display: 'inline-flex', alignItems: 'center', color: 'var(--color-on-accent)', backgroundColor: 'var(--color-primary-base)', verticalAlign: 'middle' }}>상영중</span>
                     )}
                   </div>
                   <div style={{ marginTop: 4, fontSize: 12, color: 'var(--color-text-caption)' }}>

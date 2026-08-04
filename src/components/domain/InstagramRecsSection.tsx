@@ -258,7 +258,7 @@ function InstagramRecCard({
         <div
           style={{
             position: 'absolute', bottom: 6, right: 6, padding: '4px 8px', borderRadius: 'var(--radius-badge)',
-            fontSize: 11, fontWeight: 600, lineHeight: 1, display: 'inline-flex', alignItems: 'center',
+            fontSize: 'var(--text-badge)', fontWeight: 600, lineHeight: 1, display: 'inline-flex', alignItems: 'center',
             backgroundColor: 'var(--color-success)',
             color: 'var(--color-on-accent)',
           }}

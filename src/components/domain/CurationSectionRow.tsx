@@ -258,7 +258,7 @@ function MovieCard({
               position: 'absolute', top: 6, right: 6,
               padding: '4px 8px',
               borderRadius: 'var(--radius-badge)',
-              fontSize: 11, fontWeight: 600, lineHeight: 1,
+              fontSize: 'var(--text-badge)', fontWeight: 600, lineHeight: 1,
               color: 'var(--color-on-accent)',
               backgroundColor: daysLeft === 0 ? 'var(--color-error)' : daysLeft === 1 ? 'var(--color-warning)' : '#78716C',
               boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
@@ -365,7 +365,7 @@ export function CurationSectionRow({
                   {movie.genre.slice(0, 1).map((g) => (
                     <GenreChip key={g}>{g}</GenreChip>
                   ))}
-                  <span style={{ fontSize: 11, color: 'var(--color-text-caption)', fontWeight: 600 }}>{movie.year}</span>
+                  <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)', fontWeight: 600 }}>{movie.year}</span>
                 </div>
               </div>
             </div>

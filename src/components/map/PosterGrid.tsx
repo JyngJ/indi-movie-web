@@ -40,7 +40,7 @@ export function ScheduleRows({ days, showTimes = true }: {
       {days.map((day) => (
         <div key={day.date} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{
-            minWidth: 29, fontSize: 9, fontWeight: 700, whiteSpace: 'nowrap',
+            minWidth: 29, fontSize: 'var(--text-badge)', fontWeight: 700, whiteSpace: 'nowrap',
             color: dayLabelColor(day),
           }}>{day.label}</span>
           {showTimes && (
@@ -55,7 +55,7 @@ export function ScheduleRows({ days, showTimes = true }: {
                 }}>{t}</span>
               ))}
               {day.times.length > 3 && (
-                <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--color-text-caption)', alignSelf: 'center' }}>
+                <span style={{ fontSize: 'var(--text-badge)', fontWeight: 600, color: 'var(--color-text-caption)', alignSelf: 'center' }}>
                   +{day.times.length - 3}
                 </span>
               )}
@@ -147,7 +147,7 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
                 <div style={{
                   position: 'absolute', top: -8, right: -8,
                   backgroundColor: 'var(--color-primary-base)', color: 'var(--color-on-accent)',
-                  borderRadius: 9999, padding: '4px 8px', fontSize: 9, fontWeight: 700,
+                  borderRadius: 9999, padding: '4px 8px', fontSize: 'var(--text-badge)', fontWeight: 700,
                   zIndex: 10, whiteSpace: 'nowrap',
                   boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
                   border: '1.5px solid var(--color-surface-bg)',
@@ -158,7 +158,7 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
             </div>
             <div style={{ borderLeft: '1px dashed var(--color-border)', paddingLeft: 8 }}>
               <div style={{
-                fontSize: 9, fontWeight: 700, textAlign: 'center', whiteSpace: 'nowrap',
+                fontSize: 'var(--text-badge)', fontWeight: 700, textAlign: 'center', whiteSpace: 'nowrap',
                 color: 'var(--color-primary-base)', backgroundColor: 'var(--color-primary-subtle-l)',
                 borderRadius: 9999, padding: '4px 8px', marginBottom: 4,
               }}>
@@ -183,7 +183,7 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
                         borderRadius: 'var(--radius-badge)',  /* 지도 포스터 예외 — 최소 라운딩 */
                         backgroundColor: 'var(--color-primary-base)', color: 'var(--color-on-accent)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 15, fontWeight: 800,
+                        fontSize: 'var(--text-subtitle)', fontWeight: 800,
                         boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.18)',
                         whiteSpace: 'nowrap',
                       }}>

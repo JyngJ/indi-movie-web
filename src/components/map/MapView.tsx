@@ -2498,7 +2498,7 @@ export default function MapView() {
               <span style={{ minWidth: 0, flex: 1 }}>
                 <span style={{
                   display: 'block',
-                  fontSize: 15,
+                  fontSize: 'var(--text-subtitle)',
                   fontWeight: 700,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
@@ -2582,7 +2582,7 @@ export default function MapView() {
               <span style={{ minWidth: 0, flex: 1 }}>
                 <span style={{
                   display: 'block',
-                  fontSize: 15,
+                  fontSize: 'var(--text-subtitle)',
                   fontWeight: 700,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
@@ -2701,7 +2701,7 @@ export default function MapView() {
                   <div style={{
                     minWidth: 0,
                     flex: 1,
-                    fontSize: 15,
+                    fontSize: 'var(--text-subtitle)',
                     fontWeight: 700,
                     color: 'var(--color-text-primary)',
                     overflow: 'hidden',
@@ -2718,7 +2718,7 @@ export default function MapView() {
                       borderRadius: 4,
                       display: 'inline-flex',
                       alignItems: 'center',
-                      fontSize: 11,
+                      fontSize: 'var(--text-badge)',
                       fontWeight: 700,
                       color: 'var(--color-primary-base)',
                       backgroundColor: 'var(--color-primary-subtle-l)',
@@ -2813,7 +2813,7 @@ export default function MapView() {
                 {director.name.slice(0, 1)}
               </div>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+                <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
                   {director.name}
                 </div>
                 <div style={{
@@ -2905,7 +2905,7 @@ export default function MapView() {
                 </span>
               </span>
               <span style={{ minWidth: 0, flex: 1 }}>
-                <span style={{ display: 'block', fontSize: 15, fontWeight: 700 }}>
+                <span style={{ display: 'block', fontSize: 'var(--text-subtitle)', fontWeight: 700 }}>
                   {station.name}
                 </span>
                 <span style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 4 }}>
@@ -2918,7 +2918,7 @@ export default function MapView() {
                         height: 18,
                         padding: '0 8px',
                         borderRadius: 4,
-                        fontSize: 11,
+                        fontSize: 'var(--text-badge)',
                         fontWeight: 700,
                         color: 'var(--color-on-accent)',
                         backgroundColor: subwayLineColor({ name: line }, isDark),
@@ -2992,7 +2992,7 @@ export default function MapView() {
                   </svg>
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 15, fontWeight: 700 }}>{area.name}</div>
+                  <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700 }}>{area.name}</div>
                   <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4 }}>
                     영화관 {area.theaters.length}곳
                   </div>

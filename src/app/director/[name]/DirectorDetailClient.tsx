@@ -66,7 +66,7 @@ function NavBar({ onBack, onClose }: { onBack: () => void; onClose: () => void }
       flexShrink: 0,
     }}>
       <button style={btn} onClick={onBack}><IcoChevronLeft /></button>
-      <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-text-primary)' }}>감독 정보</span>
+      <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 600, color: 'var(--color-text-primary)' }}>감독 정보</span>
       <button style={btn} onClick={onClose}><IcoClose /></button>
     </div>
   )
@@ -204,7 +204,7 @@ function FilmographyRow({
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{
             fontFamily: 'var(--font-serif)',
-            fontSize: 15,
+            fontSize: 'var(--text-subtitle)',
             fontWeight: 700,
             color: isActive ? 'var(--color-primary-base)' : 'var(--color-text-primary)',
             overflow: 'hidden',
@@ -219,7 +219,7 @@ function FilmographyRow({
               height: 18, padding: '0 8px',
               borderRadius: 4,
               display: 'inline-flex', alignItems: 'center',
-              fontSize: 9, fontWeight: 700,
+              fontSize: 'var(--text-badge)', fontWeight: 700,
               color: 'var(--color-on-accent)',
               backgroundColor: 'var(--color-primary-base)',
               flexShrink: 0,
@@ -347,7 +347,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
-              <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>
+              <span style={{ fontSize: 'var(--text-badge)', fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>
                 작품 · {directorMovies.length}편
               </span>
               <SortChips active={sort} onChange={setSort} />
@@ -367,7 +367,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
                 borderRadius: 4, 
                 backgroundColor: 'var(--color-primary-base)', 
                 color: 'var(--color-on-accent)', 
-                fontSize: 9, 
+                fontSize: 'var(--text-badge)', 
                 fontWeight: 700, 
                 verticalAlign: 'text-bottom',
                 margin: '0 4px'

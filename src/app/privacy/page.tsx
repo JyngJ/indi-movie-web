@@ -20,7 +20,7 @@ export default function PrivacyPolicyPage() {
         padding: '40px var(--gutter) 80px',
         color: 'var(--color-text-body)',
         lineHeight: 1.7,
-        fontSize: 15,
+        fontSize: 'var(--text-subtitle)',
       }}
     >
       <BackLink />
@@ -163,7 +163,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <h2
         style={{
           fontFamily: 'var(--font-display)',
-          fontSize: 17,
+          fontSize: 'var(--text-title)',
           fontWeight: 700,
           color: 'var(--color-text-primary)',
           margin: '0 0 8px',

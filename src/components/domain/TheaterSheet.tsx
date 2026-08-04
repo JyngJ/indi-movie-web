@@ -832,9 +832,9 @@ export function TheaterSheet({
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 8,
     minHeight: 44,
-    padding: '0 10px',
+    padding: '0 12px',
     border: 'none',
     borderRadius: 'var(--radius-button)',
     background: 'transparent',
@@ -1121,7 +1121,7 @@ export function TheaterSheet({
           </button>
           <span style={{
             flex: 1, textAlign: 'center',
-            fontSize: 15, fontWeight: 600,
+            fontSize: 'var(--text-subtitle)', fontWeight: 600,
             color: 'var(--color-text-primary)',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             padding: '0 8px',
@@ -1284,7 +1284,7 @@ export function TheaterSheet({
                                 borderRadius: 'var(--radius-badge)',
                                 display: 'inline-flex',
                                 alignItems: 'center',
-                                fontSize: 11,
+                                fontSize: 'var(--text-badge)',
                                 fontWeight: 600,
                                 lineHeight: 1,
                                 color: 'var(--color-on-accent)',
@@ -1308,7 +1308,7 @@ export function TheaterSheet({
                           </div>
                           <div style={{
                             marginTop: 8,
-                            fontSize: 11,
+                            fontSize: 'var(--text-badge)',
                             fontWeight: 600,
                             color: 'var(--color-text-primary)',
                             fontFamily: 'var(--font-serif)',
@@ -1366,7 +1366,7 @@ export function TheaterSheet({
           {!panelMode && <div ref={theaterNameRef} style={{ padding: '4px var(--gutter-sheet) 16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <div style={{
-                fontSize: 22, fontWeight: 700,
+                fontSize: 'var(--text-h2)', fontWeight: 700,
                 fontFamily: 'var(--font-display)',
                 color: 'var(--color-text-primary)',
                 lineHeight: 1.12, letterSpacing: '-0.3px', minWidth: 0,
@@ -1536,7 +1536,7 @@ export function TheaterSheet({
                     borderColor: filtersOn ? 'var(--color-primary-base)' : 'var(--color-border)',
                     backgroundColor: filtersOn ? 'var(--color-primary-subtle-l)' : 'transparent',
                     color: filtersOn ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
-                    fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                    fontSize: 'var(--text-badge)', fontWeight: 600, cursor: 'pointer',
                     display: 'flex', alignItems: 'center', gap: 4, minHeight: 'auto',
                   }}
                 >
@@ -1550,7 +1550,7 @@ export function TheaterSheet({
             {/* <label style={{
               display: 'flex', alignItems: 'center', gap: 8,
               padding: '8px 16px',
-              cursor: 'pointer', fontSize: 11, userSelect: 'none',
+              cursor: 'pointer', fontSize: 'var(--text-badge)', userSelect: 'none',
               color: showTodayFirst ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
               fontWeight: showTodayFirst ? 600 : 400,
             }}>
@@ -1653,7 +1653,7 @@ export function TheaterSheet({
                                     position: 'absolute', bottom: 6, right: 6,
                                     padding: '4px 8px', borderRadius: 'var(--radius-badge)',
                                     display: 'inline-flex', alignItems: 'center', lineHeight: 1,
-                                    fontSize: 11, fontWeight: 600, color: 'var(--color-on-accent)',
+                                    fontSize: 'var(--text-badge)', fontWeight: 600, color: 'var(--color-on-accent)',
                                     backgroundColor: 'var(--color-error)',
                                     pointerEvents: 'none', zIndex: 2,
                                   }}>매진</div>
@@ -1711,7 +1711,7 @@ export function TheaterSheet({
                                 })()}
                               </div>
                               <div style={{
-                                marginTop: 8, fontSize: 11, fontWeight: 600,
+                                marginTop: 8, fontSize: 'var(--text-badge)', fontWeight: 600,
                                 color: 'var(--color-text-primary)', fontFamily: 'var(--font-serif)',
                                 lineHeight: 1.35, overflow: 'hidden',
                                 display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
@@ -1758,7 +1758,7 @@ export function TheaterSheet({
                                     </div>
                                   </div>
                                   <div style={{
-                                    marginTop: 8, fontSize: 11, fontWeight: 600,
+                                    marginTop: 8, fontSize: 'var(--text-badge)', fontWeight: 600,
                                     color: 'var(--color-text-primary)', fontFamily: 'var(--font-serif)',
                                     lineHeight: 1.35, overflow: 'hidden',
                                     display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
@@ -1965,7 +1965,7 @@ export function TheaterSheet({
             {!showtimesLoading && filteredShowtimes.length > 0 && (
               <div style={{
                 marginTop: 12,
-                fontSize: 11,
+                fontSize: 'var(--text-badge)',
                 color: 'var(--color-text-caption)',
                 textAlign: 'center',
                 lineHeight: 1.5,
@@ -2143,7 +2143,7 @@ export function TheaterSheet({
               }}>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>예매 가능한 영화만</div>
-                  <div style={{ fontSize: 11, color: 'var(--color-text-caption)', marginTop: 4 }}>잔여석이 있는 상영회만 표시</div>
+                  <div style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)', marginTop: 4 }}>잔여석이 있는 상영회만 표시</div>
                 </div>
                 <div
                   onClick={() => setPendingFilters(prev => ({ ...prev, bookable: !prev.bookable }))}
@@ -2176,7 +2176,7 @@ export function TheaterSheet({
                 style={{
                   width: '100%', height: 50, borderRadius: 12,
                   border: 'none', backgroundColor: 'var(--color-primary-base)',
-                  color: 'var(--color-on-accent)', fontSize: 15, fontWeight: 700, cursor: 'pointer',
+                  color: 'var(--color-on-accent)', fontSize: 'var(--text-subtitle)', fontWeight: 700, cursor: 'pointer',
                   letterSpacing: '-0.2px',
                 }}
               >

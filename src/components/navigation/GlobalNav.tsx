@@ -115,7 +115,7 @@ function MobileTabBar({ pathname, filmsHref }: { pathname: string; filmsHref: st
             }}
           >
             <Icon size={23} />
-            <span style={{ fontSize: 11, fontWeight: 600 }}>{label}</span>
+            <span style={{ fontSize: 'var(--text-badge)', fontWeight: 600 }}>{label}</span>
           </Link>
         )
       })}

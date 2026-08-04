@@ -266,9 +266,9 @@ export default function FilmsPage() {
       return [
         f.movie.id,
         <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
-          <span style={{ fontSize: 11, color: 'var(--color-text-caption)' }}>{dir}</span>
-          <span style={{ fontSize: 11, color: 'var(--color-primary-base)', fontWeight: 600 }}>{theaterName}</span>
-          <span style={{ fontSize: 11, color: 'var(--color-primary-hover-l)' }}>{dateText}</span>
+          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)' }}>{dir}</span>
+          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-primary-base)', fontWeight: 600 }}>{theaterName}</span>
+          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-primary-hover-l)' }}>{dateText}</span>
         </div>
       ]
     })
@@ -333,9 +333,9 @@ export default function FilmsPage() {
       return [
         f.movie.id,
         <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
-          <span style={{ fontSize: 11, color: 'var(--color-text-caption)' }}>{dir}</span>
-          <span style={{ fontSize: 11, color: 'var(--color-primary-base)', fontWeight: 600 }}>{theaterName}</span>
-          <span style={{ fontSize: 11, color: 'var(--color-primary-hover-l)' }}>{dateText}</span>
+          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)' }}>{dir}</span>
+          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-primary-base)', fontWeight: 600 }}>{theaterName}</span>
+          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-primary-hover-l)' }}>{dateText}</span>
         </div>
       ]
     })
@@ -375,9 +375,9 @@ export default function FilmsPage() {
       return [
         f.movie.id,
         <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
-          <span style={{ fontSize: 11, color: 'var(--color-text-caption)' }}>{dir}</span>
-          <span style={{ fontSize: 11, color: 'var(--color-primary-base)', fontWeight: 600 }}>{theaterName}</span>
-          <span style={{ fontSize: 11, color: 'var(--color-primary-hover-l)' }}>{dateText}</span>
+          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)' }}>{dir}</span>
+          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-primary-base)', fontWeight: 600 }}>{theaterName}</span>
+          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-primary-hover-l)' }}>{dateText}</span>
         </div>
       ]
     })
@@ -406,9 +406,9 @@ export default function FilmsPage() {
       return [
         f.movie.id,
         <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
-          <span style={{ fontSize: 11, color: 'var(--color-text-caption)' }}>{dir}</span>
-          <span style={{ fontSize: 11, color: 'var(--color-primary-base)', fontWeight: 600 }}>{f.theaterName}</span>
-          <span style={{ fontSize: 11, color: 'var(--color-primary-hover-l)' }}>{`오늘 ${f.nextShowTime}`}</span>
+          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)' }}>{dir}</span>
+          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-primary-base)', fontWeight: 600 }}>{f.theaterName}</span>
+          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-primary-hover-l)' }}>{`오늘 ${f.nextShowTime}`}</span>
         </div>
       ]
     })

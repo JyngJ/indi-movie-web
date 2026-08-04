@@ -275,7 +275,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
                       <span style={{ flex: 1, fontSize: 14, color: 'var(--color-text-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         <HighlightMatch text={s.label} query={query} />
                       </span>
-                      <span style={{ fontSize: 11, color: 'var(--color-text-caption)', flexShrink: 0 }}>
+                      <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)', flexShrink: 0 }}>
                         {TYPE_LABEL[s.type]}
                       </span>
                     </button>
@@ -368,7 +368,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
                     <span style={{ flex: 1, fontSize: 14, color: 'var(--color-text-body)' }}>
                       <HighlightMatch text={s.label} query={mInput} />
                     </span>
-                    <span style={{ fontSize: 11, color: 'var(--color-text-caption)', flexShrink: 0 }}>{TYPE_LABEL[s.type]}</span>
+                    <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)', flexShrink: 0 }}>{TYPE_LABEL[s.type]}</span>
                   </button>
                 ))}
               </div>
