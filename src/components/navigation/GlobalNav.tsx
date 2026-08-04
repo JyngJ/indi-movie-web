@@ -189,8 +189,14 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
         zIndex: 1150,
       }}
     >
+      {/* 오른쪽 본문 패널이 레일 위에 떠 있는 것처럼 — 본문 왼쪽 가장자리가 레일에 드리우는 그림자 */}
+      <div aria-hidden style={{
+        position: 'absolute', top: 0, bottom: 0, right: 0, width: 10,
+        background: 'linear-gradient(to left, rgba(20, 15, 10, 0.10), rgba(20, 15, 10, 0.03) 55%, transparent)',
+        pointerEvents: 'none',
+      }} />
       <Link href="/" aria-label="지도 홈" style={{ display: 'block' }}>
-        <Image src="/icon.svg" alt="" width={38} height={38} style={{ borderRadius: 12 }} />
+        <Image src="/logo-tile.png" alt="" width={40} height={40} />
       </Link>
 
       {/* 순서: 지도 - 영화 (검색은 지도 상단 검색창으로 진입 — 레일 탭 제거) */}
