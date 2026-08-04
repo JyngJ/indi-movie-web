@@ -2,7 +2,7 @@ import type { GvEvent } from '@/data/gv-events'
 import { isFestivalGroup } from '@/data/gv-events'
 import { GvBottomSlot, GV_MARKER_STEM_H, GV_MARKER_DOT_D } from './GvPinSlots'
 
-const GV_AMBER = '#B9800E'
+const GV_AMBER = '#3E1782'  // 2.0: GV도 보라 통일 (앰버는 warning 오커와 충돌) — 상수명 정리는 추후
 const GV_PURPLE = '#3E1782'
 
 interface GvMarkerIconProps {

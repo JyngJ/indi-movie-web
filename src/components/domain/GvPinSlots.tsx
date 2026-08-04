@@ -2,7 +2,7 @@ import type { GvEvent } from '@/data/gv-events'
 import { isFestivalGroup } from '@/data/gv-events'
 import { gvEventTypeColor } from '@/lib/gv/adapter'
 
-const GV_AMBER = '#B9800E'
+const GV_AMBER = '#3E1782'  // 2.0: GV도 보라 통일 (앰버는 warning 오커와 충돌) — 상수명 정리는 추후
 const GV_PURPLE = '#3E1782'
 const SLOT_W = 130
 
@@ -82,7 +82,7 @@ function GvCollapsedChip({ count, theaterName, selected, festivalTitle }: { coun
           justifyContent: 'center',
           gap: 'var(--spacing-1)',
           padding: 'var(--spacing-1) 10px',
-          borderRadius: 'var(--radius-poster)', // 지도 팝업 용도 — docs/DESIGN.md 반경 토큰
+          borderRadius: 'var(--radius-control)', // 2.0: 지도 팝업 — poster(2px로 축소)에서 control(12)로 이관
           background: GV_PURPLE,
           cursor: 'pointer',
           boxShadow: selected

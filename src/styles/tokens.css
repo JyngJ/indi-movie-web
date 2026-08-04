@@ -170,7 +170,7 @@
   /* 날짜 셀 */
   --comp-date-cell-pt:     6px;
   --comp-date-cell-pb:     8px;
-  --comp-date-cell-radius: var(--radius-poster);   /* 8px */
+  --comp-date-cell-radius: var(--radius-button);   /* 8px — poster가 2.0에서 2px로 줄며 분리 */
 
   /* 상영시간표 셀 */
   --comp-showtime-p:      12px;
