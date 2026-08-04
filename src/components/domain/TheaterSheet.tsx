@@ -56,7 +56,7 @@ const IconClose = () => (
 )
 
 const IconChevronLeft = () => (
-  <svg width={22} height={22} viewBox="0 0 24 24" fill="none"
+  <svg width={20} height={20} viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
     <path d="M15 18l-6-6 6-6" />
   </svg>
@@ -1068,8 +1068,8 @@ export function TheaterSheet({
                 marginTop: 8,
                 minWidth: 0,
                 color: 'var(--color-text-sub)',
-                fontSize: 13,
-                lineHeight: 1.35,
+                fontSize: 'var(--text-body)',
+                lineHeight: 1.5,
               }}>
                 <span style={{
                   minWidth: 0,
@@ -1108,15 +1108,17 @@ export function TheaterSheet({
           </div>
         </div>
       ) : (
-        /* Expanded 헤더 — nav row만 고정 (극장 정보는 스크롤 안으로) */
+        /* Expanded 헤더 — nav row만 고정 (극장 정보는 스크롤 안으로)
+           피그마: h56, pad 좌우 24 — 글리프(20)가 24 정렬선에 오도록 버튼 여백(8) 상쇄 */
         <div style={{
           flexShrink: 0,
-          padding: '0 var(--gutter-sheet) 8px',
+          minHeight: 56,
+          padding: '0 var(--gutter-sheet)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
         }}>
-          <button style={iconBtn} onClick={onBack ?? onCollapse}>
+          <button style={{ ...iconBtn, marginLeft: -8 }} onClick={onBack ?? onCollapse}>
             <IconChevronLeft />
           </button>
           <span style={{
@@ -1136,7 +1138,7 @@ export function TheaterSheet({
               <IconStar filled={favorited} />
             </button>
             */}
-            <button style={iconBtn} onClick={onClose}>
+            <button style={{ ...iconBtn, marginRight: -8 }} onClick={onClose}>
               <IconClose />
             </button>
           </div>
@@ -1160,7 +1162,7 @@ export function TheaterSheet({
         backgroundColor: 'var(--color-surface-bg)',
         flexShrink: 0,
         // 스크롤 비례 높이 축소 (228 → 90) + 하단 탭바 및 safe-area만큼 높이 확장
-        maxHeight: `calc(${228 - 138 * posterProgress}px + ${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`,
+        maxHeight: `calc(${262 - 172 * posterProgress}px + ${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`,
         overflow: 'hidden',
         position: 'relative',  // 스크롤 버튼 절대 위치 기준
       }}>
@@ -1208,7 +1210,7 @@ export function TheaterSheet({
           onScroll={updatePosterScrollEdge}
           style={{
             display: 'flex',
-            gap: 12 - 4 * posterProgress,           // 12 → 8
+            gap: 16 - 8 * posterProgress,           // 16(피그마) → 8
             overflowX: 'auto',
             paddingTop: 12,    /* 2.0: 피그마 posters pad */
             paddingLeft: POSTER_PAD_LEFT,
@@ -1363,13 +1365,13 @@ export function TheaterSheet({
           }}
         >
           {/* 극장 정보 — 스크롤 시 위로 밀림 */}
-          {!panelMode && <div ref={theaterNameRef} style={{ padding: '4px var(--gutter-sheet) 16px' }}>
+          {!panelMode && <div ref={theaterNameRef} style={{ padding: '8px var(--gutter-sheet) 12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <div style={{
-                fontSize: 'var(--text-h2)', fontWeight: 700,
+                fontSize: 'var(--text-h1)', fontWeight: 700,
                 fontFamily: 'var(--font-display)',
                 color: 'var(--color-text-primary)',
-                lineHeight: 1.12, letterSpacing: '-0.3px', minWidth: 0,
+                lineHeight: 1.25, letterSpacing: '0.05em', minWidth: 0,
               }}>
                 {theater.name}
               </div>
@@ -1380,13 +1382,13 @@ export function TheaterSheet({
               )}
             </div>
             <div style={{
-              fontSize: 13, color: 'var(--color-text-sub)',
-              marginTop: 8, lineHeight: 1.25,
+              fontSize: 'var(--text-body)', color: 'var(--color-text-sub)',
+              marginTop: 8, lineHeight: 1.5,
               display: 'flex', alignItems: 'center', gap: 4,
             }}>
               <span style={{ minWidth: 0 }}>{theater.address}</span>
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 16 }}>
               <button style={actionBtn} onClick={openDirections}>
                 <IconRoute size={13} />길찾기
               </button>
