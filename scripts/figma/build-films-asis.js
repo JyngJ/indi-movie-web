@@ -1,6 +1,7 @@
-// build-films-asis v2 — 상영작(films) 탭 ASIS 그레이스케일 골격 생성 (Scripter용)
+// build-films-asis v3 — 상영작(films) 탭 ASIS 그레이스케일 골격 생성 (Scripter용)
 //
-// v2: layoutSizing FILL은 반드시 부모에 appendChild 후 설정 (피그마 API 제약)
+// v3: PC 프레임 사이징 축 수정(HORIZONTAL은 primary=가로), 포스터 행 402 클립,
+//     rail 72×FILL 고정. FILL은 appendChild 후 설정 (피그마 API 제약)
 // 생성물: "Design System - work" 페이지 → 섹션 "FilmsTab ASIS (grayscale)"
 
 const G = { bg:'#FAF9F8', card:'#FFFFFF', raised:'#EAE5E1', line:'#DDD9CF',
@@ -32,6 +33,8 @@ const mkText = (chars, size, opts={}) => {
 const mkBox = (w,h,c=G.poster,r=2) => { const b=figma.createRectangle(); b.resize(w,h); b.fills=fill(c); b.cornerRadius=r; return b }
 // 부모에 붙인 뒤 가로 FILL — API 제약 대응 헬퍼
 const addFill = (parent, child) => { parent.appendChild(child); child.layoutSizingHorizontal = 'FILL'; return child }
+// 가로 스크롤 행 — 부모 폭 채우고 넘치는 포스터는 클립 (실물의 스크롤 잘림 표현)
+const addRow = (parent, row) => { parent.appendChild(row); row.layoutSizingHorizontal = 'FILL'; row.clipsContent = true; return row }
 
 // ── 조립 블록 ──
 const secTitle = (title, sub) => {
@@ -118,7 +121,7 @@ mobile.fills = fill(G.bg)
   const sub = mkAuto('sub','VERTICAL',0,[16,16,0,16]); sub.fills=fill(G.raised)
   addFill(mobile, sub)
   sub.appendChild(mkText('아트나인 상영작',14,{weight:'Bold'}))
-  sub.appendChild(posterRow(3,120,i=>posterItem(120,['멜랑콜리아','백치들','어둠 속의 댄서'][i],'라스 폰 트리에')))
+  addRow(sub, posterRow(3,120,i=>posterItem(120,['멜랑콜리아','백치들','어둠 속의 댄서'][i],'라스 폰 트리에')))
 }
 // 4. 테마 특별전 다크 히어로
 {
@@ -134,11 +137,11 @@ mobile.fills = fill(G.bg)
 // 5·6·7. 큐레이션 행 3종
 {
   addFill(mobile, secTitle('지금 출발하면 볼 수 있는','지금 출발하면 늦지 않게 볼 수 있는 회차예요'))
-  mobile.appendChild(posterRow(3,130,i=>posterItem(130,['경멸','모아나','소영의 노력'][i],['장-뤽 고다르','토마스 카일','오재형'][i],'오늘 18:20')))
+  addRow(mobile, posterRow(3,130,i=>posterItem(130,['경멸','모아나','소영의 노력'][i],['장-뤽 고다르','토마스 카일','오재형'][i],'오늘 18:20')))
   addFill(mobile, secTitle('막바지 상영','상영관이 줄고 있어요. 미리 확인하고 예매하세요'))
-  mobile.appendChild(posterRow(3,130,i=>posterItem(130,['그녀가 돌아온 날','총총총','엘 시드'][i],['홍상수','한창록','안소니 만'][i],null,'오늘')))
+  addRow(mobile, posterRow(3,130,i=>posterItem(130,['그녀가 돌아온 날','총총총','엘 시드'][i],['홍상수','한창록','안소니 만'][i],null,'오늘')))
   addFill(mobile, secTitle('이번 주 새롭게 상영하는 영화','이번 주 스크린에 새로 오른 영화들'))
-  mobile.appendChild(posterRow(3,130,i=>posterItem(130,['노 어더 랜드','남매의 여름밤','잘 알지도 못하면서'][i],['드라마 · 2024','드라마 · 2019','드라마 · 2009'][i])))
+  addRow(mobile, posterRow(3,130,i=>posterItem(130,['노 어더 랜드','남매의 여름밤','잘 알지도 못하면서'][i],['드라마 · 2024','드라마 · 2019','드라마 · 2009'][i])))
 }
 // 8. 수상작 카드
 {
@@ -156,11 +159,13 @@ mobile.fills = fill(G.bg)
 }
 
 // ── PC 1280 (rail 72 + 본문) ──
-const pc = mkAuto('ASIS · PC','HORIZONTAL',0,[0,0,0,0],1280)
+const pc = mkAuto('ASIS · PC','HORIZONTAL',0,[0,0,0,0])
+pc.resize(1280, 900)
+pc.primaryAxisSizingMode='FIXED'   // 가로 1280 고정
+pc.counterAxisSizingMode='AUTO'    // 세로는 본문 허그
 pc.fills = fill(G.raised)
 {
   const rail = mkAuto('rail','VERTICAL',20,[16,12,16,12])
-  rail.resize(72, 900); rail.primaryAxisSizingMode='FIXED'; rail.counterAxisSizingMode='FIXED'
   rail.fills=fill(G.raised); rail.counterAxisAlignItems='CENTER'
   rail.appendChild(mkBox(40,40,'#404E81',4))
   for (const label of ['지도','상영작']) {
@@ -171,10 +176,12 @@ pc.fills = fill(G.raised)
     rail.appendChild(t2)
   }
   pc.appendChild(rail)
+  rail.layoutSizingHorizontal='FIXED'; rail.resize(72, rail.height)
+  rail.layoutSizingVertical='FILL'   // 레일은 본문 높이 따라감
   const body = mkAuto('body','VERTICAL',0,[0,0,0,0]); body.fills=fill(G.bg)
   body.topLeftRadius=16; body.bottomLeftRadius=16
   pc.appendChild(body)
-  body.layoutSizingHorizontal='FILL'; body.layoutSizingVertical='FILL'
+  body.layoutSizingHorizontal='FILL'
   // 헤더
   const h = mkAuto('header','HORIZONTAL',24,[20,24,12,24])
   h.counterAxisAlignItems='CENTER'; h.primaryAxisAlignItems='SPACE_BETWEEN'
@@ -199,11 +206,106 @@ pc.fills = fill(G.raised)
   addFill(body, secTitle('지금 출발하면 볼 수 있는','지금 출발하면 늦지 않게 볼 수 있는 회차예요'))
   const row1 = mkAuto('row','HORIZONTAL',16,[8,24,16,24])
   for (let i=0;i<6;i++) row1.appendChild(posterItem(176,'영화 제목','감독','오늘 18:20'))
-  body.appendChild(row1)
+  addRow(body, row1)
   addFill(body, secTitle('막바지 상영','상영관이 줄고 있어요'))
-  const row2 = mkAuto('row','HORIZONTAL',16,[8,24,24,24])
+  const row2 = mkAuto('row','HORIZONTAL',16,[8,24,16,24])
   for (let i=0;i<6;i++) row2.appendChild(posterItem(176,'영화 제목','장르 · 연도',null,'오늘'))
-  body.appendChild(row2)
+  addRow(body, row2)
+
+  // ── 개인화: 〈X〉를 보셨다면 ──
+  addFill(body, secTitle('〈경멸〉을 보셨다면','최근 본 영화와 닿아 있는 작품들'))
+  const rowP = mkAuto('row','HORIZONTAL',16,[8,24,16,24])
+  for (let i=0;i<6;i++) rowP.appendChild(posterItem(176,'영화 제목','감독'))
+  addRow(body, rowP)
+
+  // ── 인스타그램 추천 — 다크 히어로 (검정 카드 + 우측 커버 이미지) ──
+  {
+    const wrap = mkAuto('insta-wrap','VERTICAL',0,[24,24,8,24])
+    addFill(body, wrap)
+    const hero = mkAuto('insta-hero','HORIZONTAL',0,[0,0,0,0]); hero.fills=fill('#000000'); hero.cornerRadius=12
+    hero.clipsContent = true
+    addFill(wrap, hero)
+    const left = mkAuto('left','VERTICAL',8,[28,28,28,28])
+    left.appendChild(mkText('2026년 여름, 영화 소식을 소개할지도',11,{color:'#A7A19A'}))
+    left.appendChild(mkText('자려고 누웠는데\n특별 상영전',22,{kimm:true,ls:5,lh:130,color:'#FFFFFF'}))
+    hero.appendChild(left)
+    const img = mkBox(560,180,'#4A4540',0); img.name='cover-img'
+    hero.appendChild(img)
+    img.layoutSizingHorizontal='FILL'
+  }
+
+  // ── 감독 특별전 — 좌 감독카드 + 우 포스터 행 ──
+  addFill(body, secTitle('라스 폰 트리에 특별전'))
+  {
+    const row = mkAuto('special-row','HORIZONTAL',16,[0,24,16,24])
+    addFill(body, row)
+    const card = mkAuto('director-card','VERTICAL',12,[20,20,20,20]); card.fills=fill(G.card); card.cornerRadius=12
+    card.strokes=fill(G.line); card.strokeWeight=1
+    card.resize(300, card.height); card.counterAxisSizingMode='FIXED'; card.primaryAxisSizingMode='AUTO'
+    const rr = mkAuto('r','HORIZONTAL',12,[0,0,0,0]); rr.counterAxisAlignItems='CENTER'
+    const av = figma.createEllipse(); av.resize(48,48); av.fills=fill(G.t800)
+    rr.appendChild(av); rr.appendChild(mkText('라스 폰 트리에',18,{weight:'Bold'}))
+    card.appendChild(rr)
+    card.appendChild(mkText('감독 설명이 아직 없습니다',13,{color:G.t500}))
+    const btn = mkAuto('btn','HORIZONTAL',0,[10,16,10,16]); btn.cornerRadius=8; btn.strokes=fill(G.line); btn.strokeWeight=1
+    btn.primaryAxisAlignItems='CENTER'
+    btn.appendChild(mkText('감독 상세 보기',13,{weight:'Medium',color:G.t600,lh:100}))
+    addFill(card, btn)
+    const th = mkAuto('t','VERTICAL',4,[8,0,0,0])
+    th.appendChild(mkText('아트나인',14,{weight:'Bold'}))
+    th.appendChild(mkText('서울 · 5편 상영중',12,{color:G.t500}))
+    addFill(card, th)
+    const cta = mkAuto('cta','HORIZONTAL',0,[10,16,10,16]); cta.cornerRadius=8; cta.fills=fill('#404E81')
+    cta.primaryAxisAlignItems='CENTER'
+    cta.appendChild(mkText('영화관 보기',13,{weight:'Bold',color:'#FFFFFF',lh:100}))
+    addFill(th, cta)
+    row.appendChild(card)
+    const sub = mkAuto('sub','VERTICAL',8,[16,16,16,16]); sub.fills=fill(G.raised); sub.cornerRadius=12
+    sub.appendChild(mkText('아트나인 상영작',14,{weight:'Bold'}))
+    const pr = mkAuto('pr','HORIZONTAL',16,[0,0,0,0])
+    for (let i=0;i<4;i++) pr.appendChild(posterItem(176,'영화 제목','라스 폰 트리에'))
+    sub.appendChild(pr)
+    row.appendChild(sub)
+    sub.layoutSizingHorizontal='FILL'
+  }
+
+  // ── 기념일 sparse — 2열 compact 카드 ──
+  {
+    const pair = mkAuto('anniversary-pair','HORIZONTAL',12,[24,24,8,24])
+    addFill(body, pair)
+    for (const [t,d] of [['오즈 야스지로 기일','12월 12일 — 감독 오즈 야스지로'],['잉마르 베리만 탄생','7월 14일 — 감독 잉마르 베리만']]) {
+      const c = mkAuto('ann-card','VERTICAL',8,[14,16,14,16]); c.fills=fill(G.card); c.cornerRadius=12
+      c.strokes=fill(G.line); c.strokeWeight=1
+      c.appendChild(mkText(t,14,{weight:'Bold'}))
+      c.appendChild(mkText(d,12,{color:G.t500}))
+      const pr = mkAuto('pr','HORIZONTAL',12,[4,0,0,0])
+      pr.appendChild(mkBox(80,120)); pr.appendChild(mkBox(80,120))
+      c.appendChild(pr)
+      pair.appendChild(c)
+      c.layoutSizingHorizontal='FILL'
+    }
+  }
+
+  // ── 수상작 sparse — 2열 compact 카드 (베니스/거장의 데뷔작) ──
+  {
+    const pair = mkAuto('award-pair','HORIZONTAL',12,[24,24,24,24])
+    addFill(body, pair)
+    for (const [t,d,m,cap] of [['베니스 황금사자상','세계에서 가장 오래된 영화제가 선택한 영화들','애정만세','차이밍량 · 드라마 · 1994'],['거장의 데뷔작','지금의 거장이 처음 카메라를 든 순간','천국보다 낯선','짐 자무쉬 · 코미디 · 1984']]) {
+      const c = mkAuto('award-card','VERTICAL',8,[14,16,14,16]); c.fills=fill(G.card); c.cornerRadius=12
+      c.strokes=fill(G.line); c.strokeWeight=1
+      c.appendChild(mkText(t,14,{weight:'Bold'}))
+      c.appendChild(mkText(d,12,{color:G.t500}))
+      const rr = mkAuto('r','HORIZONTAL',12,[4,0,0,0]); rr.counterAxisAlignItems='CENTER'
+      rr.appendChild(mkBox(56,84))
+      const cc = mkAuto('c','VERTICAL',2,[0,0,0,0])
+      cc.appendChild(mkText(m,14,{weight:'Bold'}))
+      cc.appendChild(mkText(cap,12,{color:G.t500}))
+      rr.appendChild(cc)
+      c.appendChild(rr)
+      pair.appendChild(c)
+      c.layoutSizingHorizontal='FILL'
+    }
+  }
 }
 
 // ── 섹션 배치 ──
