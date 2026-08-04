@@ -84,8 +84,10 @@
   --color-gv:      #3E1782;   /* gv/900 — 핀·배지 솔리드+텍스트 3겸직 (구 #7C3AED 형광 강등) */
 
   /* 시맨틱 틴트·보조 (2.0 신설 — 배지 배경/틴트 위 텍스트) */
-  --color-warning-tint: #FDF1D8;  --color-warning-deep: #885907;
-  --color-success-tint: #E4F1E8;  --color-success-deep: #2B5036;
+  --color-warning-tint: #FDF1D8;
+  --color-warning-deep: #885907;
+  --color-success-tint: #E4F1E8;
+  --color-success-deep: #2B5036;
   --color-error-tint:   #F5E1E0;  --color-error-mid:    #BD4E4C;   /* 아이콘·보더 전용 */
   --color-gv-tint:      #E7DCF9;
 
@@ -168,9 +170,9 @@
   --comp-chip-font-size: 13px;
 
   /* 날짜 셀 */
-  --comp-date-cell-pt:     6px;
+  --comp-date-cell-pt:     8px;   /* 2.0: 피그마 DateCell pad */
   --comp-date-cell-pb:     8px;
-  --comp-date-cell-radius: var(--radius-button);   /* 8px — poster가 2.0에서 2px로 줄며 분리 */
+  --comp-date-cell-radius: var(--radius-control);   /* 12px — 2.0 피그마 오늘 셀 박스 */
 
   /* 상영시간표 셀 */
   --comp-showtime-p:      16px;   /* 2.0: 셀 내부 여백 12→16 (피그마 확정) */

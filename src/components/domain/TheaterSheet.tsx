@@ -27,16 +27,14 @@ import type { GvEvent } from '@/data/gv-events'
 // 접힌 상태에서 보이는 높이 = 핸들(20) + 헤더(88, 액션버튼 포함) + 포스터스트립(228) + 테두리(2) + 탭바 여백 + safe-area 여유분
 export const THEATER_SHEET_COLLAPSED_H = 344 + GLOBAL_NAV_MOBILE_HEIGHT + 34
 
-/* ── 포스터 캐러셀 레이아웃 — 기본 3열, 너무 좁으면 2열·넓으면 4열 ── */
-const POSTER_GAP = 16  /* 2.0: 12→16 (피그마 확정) */
-const POSTER_PAD_LEFT = 16  // = --gutter (시트 좌우 정렬선) — JS 폭 계산에 쓰므로 숫자 유지
+/* ── 포스터 캐러셀 레이아웃 — 2.0: 고정폭 128 (피그마 PosterItem 스펙) ──
+   화면 분할(N열 딱 맞춤) 폐지 — 스크롤 리스트는 다음 아이템이 잘려 보이는 게 어포던스.
+   좁은 화면(<360)만 112로 한 단계 축소. */
+const POSTER_GAP = 16
+const POSTER_PAD_LEFT = 24  // = --gutter-sheet (시트 좌우 정렬선)
 function calcPosterItemW(w: number): number {
-  if (w <= 0) return 88   // 마운트 전 폴백 (기존 고정폭)
-  const calc = (n: number) => (w - POSTER_PAD_LEFT * 2 - POSTER_GAP * (n - 1)) / n
-  let n = 3
-  if (calc(3) < 80) n = 2
-  else if (calc(3) > 120) n = 4
-  return calc(n)
+  if (w <= 0) return 128
+  return w < 360 ? 112 : 128
 }
 
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
@@ -992,7 +990,7 @@ export function TheaterSheet({
               </button>
               <button style={actionBtn} onClick={shareTheater}>
                 <IconShare size={13} />
-                공유
+                공유하기
               </button>
               {hasInstagram && (
                 <button style={actionBtn} onClick={openInstagram}>
@@ -1099,7 +1097,7 @@ export function TheaterSheet({
             </button>
             <button style={actionBtn} onClick={shareTheater}>
               <IconShare size={13} />
-              공유
+              공유하기
             </button>
             {hasInstagram && (
               <button style={actionBtn} onClick={openInstagram}>
@@ -1212,10 +1210,10 @@ export function TheaterSheet({
             display: 'flex',
             gap: 12 - 4 * posterProgress,           // 12 → 8
             overflowX: 'auto',
-            paddingTop: 22 - 6 * posterProgress,    // 22 → 16 (배지 8px 여백 포함)
+            paddingTop: 12,    /* 2.0: 피그마 posters pad */
             paddingLeft: POSTER_PAD_LEFT,
             paddingRight: POSTER_PAD_LEFT,
-            paddingBottom: `calc(${14 - 6 * posterProgress}px + ${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`,
+            paddingBottom: `calc(12px + ${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`,
             scrollbarWidth: 'none',
             cursor: 'grab',
             userSelect: 'none',
@@ -1393,7 +1391,7 @@ export function TheaterSheet({
                 <IconRoute size={13} />길찾기
               </button>
               <button style={actionBtn} onClick={shareTheater}>
-                <IconShare size={13} />공유
+                <IconShare size={13} />공유하기
               </button>
               {hasInstagram && (
                 <button style={actionBtn} onClick={openInstagram}>
@@ -1458,7 +1456,7 @@ export function TheaterSheet({
             {(availableGenres.length > 0 || availableNations.length > 0) && (
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 8,
-                paddingLeft: 'var(--gutter-sheet)', paddingRight: 'var(--gutter-sheet)', paddingTop: 8, paddingBottom: 4,
+                paddingLeft: 'var(--gutter-sheet)', paddingRight: 'var(--gutter-sheet)', paddingTop: 16, paddingBottom: 16,
               }}>
                 {/* 왼쪽: 편수 + 활성 칩들 */}
                 <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 8, overflowX: 'auto', scrollbarWidth: 'none' }}>
