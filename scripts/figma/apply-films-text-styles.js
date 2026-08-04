@@ -1,4 +1,7 @@
-// apply-films-text-styles — FilmsTab TOBE 텍스트 전부에 2.0 텍스트 스타일 일괄 적용 (Scripter용)
+// apply-films-text-styles — FilmsTab TOBE 텍스트 스타일 일괄 적용 + 섹션 넘김 버튼 (Scripter용)
+//
+// 추가: 각 sec-title을 가로 행으로 바꾸고 우측에 ‹ › 플랫 화살표 부착
+//       (종이 문법 — 떠 있는 원형 버튼 대신 현행 배포의 우상단 플랫 방식)
 //
 // 스타일 미지정 텍스트를 (크기, 굵기) 기준으로 매핑:
 //   24 KIMM → 2.0/display/h1     22·20 KIMM → 2.0/display/h2
@@ -64,8 +67,54 @@ for (const t of texts) {
   }
 }
 
+// ── 섹션 넘김 버튼 — sec-title 우측 ‹ › ──
+const chevrons = { left:null, right:null }
+for (const page of figma.root.children) {
+  walk(page, n => {
+    if (n.type === 'COMPONENT' && n.name === '2.0/icon/chevron-left') chevrons.left = n
+    if (n.type === 'COMPONENT' && n.name === '2.0/icon/chevron-right') chevrons.right = n
+  })
+}
+let navCount = 0
+if (chevrons.left && chevrons.right) {
+  const secTitles = []
+  walk(tobe, n => { if (n.type === 'FRAME' && n.name === 'sec-title') secTitles.push(n) })
+  for (const st of secTitles) {
+    try {
+      if (st.children.some(c => c.name === 'nav')) continue   // 이미 처리됨
+      // 기존 타이틀·부제를 세로 스택으로 묶기
+      const titles = figma.createFrame()
+      titles.name = 'titles'
+      titles.layoutMode = 'VERTICAL'; titles.itemSpacing = 4; titles.fills = []
+      titles.primaryAxisSizingMode = 'AUTO'; titles.counterAxisSizingMode = 'AUTO'
+      const kids = [...st.children]
+      st.appendChild(titles)
+      for (const k of kids) titles.appendChild(k)
+      // 컨테이너를 가로 행으로
+      st.layoutMode = 'HORIZONTAL'
+      st.primaryAxisAlignItems = 'SPACE_BETWEEN'
+      st.counterAxisAlignItems = 'CENTER'
+      st.itemSpacing = 8
+      // 우측 ‹ ›
+      const nav = figma.createFrame()
+      nav.name = 'nav'
+      nav.layoutMode = 'HORIZONTAL'; nav.itemSpacing = 12; nav.fills = []
+      nav.counterAxisAlignItems = 'CENTER'
+      nav.primaryAxisSizingMode = 'AUTO'; nav.counterAxisSizingMode = 'AUTO'
+      for (const side of ['left','right']) {
+        const inst = chevrons[side].createInstance()
+        nav.appendChild(inst)
+        inst.rescale(16 / inst.width)
+      }
+      st.appendChild(nav)
+      navCount++
+    } catch (e) { report.unmatched.push('nav: ' + String(e).slice(0, 50)) }
+  }
+}
+
 await figma.loadFontAsync({ family:'Pretendard', style:'Regular' })
 const msg = ['apply-films-text-styles 결과',
+  `sec-title 넘김 버튼 부착: ${navCount}개`,
   ...Object.entries(report.applied).map(([k,v]) => `${k}: ${v}개`),
   `이미 스타일 있음(스킵): ${report.skipped}`,
   ...(report.unmatched.length ? ['실패:', ...report.unmatched] : [])].join('\n')
