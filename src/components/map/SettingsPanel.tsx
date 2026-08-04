@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { Sun, Moon, HeartHandshake } from 'lucide-react'
+import { HeartHandshake } from 'lucide-react'
 import Link from 'next/link'
 import { useLockBodyScroll } from '@/hooks/useLockBodyScroll'
 import { Button, Input } from '@/components/primitives'
@@ -97,10 +97,8 @@ const footerDot: React.CSSProperties = {
 
 /* ── 설정 메인 ── */
 export function SettingsMainPage({
-  isDark, onSetTheme, onNavigate,
+  onNavigate,
 }: {
-  isDark: boolean
-  onSetTheme: (theme: 'light' | 'dark') => void
   onNavigate: (page: Page) => void
 }) {
   const row: React.CSSProperties = {
@@ -112,41 +110,6 @@ export function SettingsMainPage({
   }
   return (
     <div style={{ flex: 1, overflowY: 'auto', backgroundColor: 'var(--color-surface-bg)', paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}>
-      {/* 카드 1: 화면 모드 */}
-      <div style={{ margin: '16px 16px 0', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
-        <div style={{ ...row, cursor: 'default', borderBottom: 'none' }}>
-          <div style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-sub)" strokeWidth={1.75} strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>화면 모드</div>
-            <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4 }}>{isDark ? '다크' : '라이트'}</div>
-          </div>
-          {/* 토글 스위치 */}
-          <button
-            onClick={() => onSetTheme(isDark ? 'light' : 'dark')}
-            aria-label={isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}
-            style={{
-              width: 76, height: 40, borderRadius: 9999, padding: 4,
-              border: '1px solid var(--color-border)',
-              backgroundColor: isDark ? 'var(--color-surface-card)' : 'var(--color-surface-raised)',
-              boxShadow: 'var(--shadow-sm)', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', overflow: 'hidden', position: 'relative', flexShrink: 0,
-              minHeight: 'unset',
-            }}
-          >
-            <div style={{ position: 'absolute', width: 32, height: 32, borderRadius: '50%', backgroundColor: 'var(--color-surface-bg)', boxShadow: '0 1px 6px rgba(0,0,0,0.18)', left: isDark ? 40 : 4, transition: 'left 240ms cubic-bezier(0.4,0,0.2,1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isDark ? 'var(--color-text-caption)' : 'var(--color-warning)', zIndex: 1 }}>
-              {isDark
-                ? <svg width={13} height={13} viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" /></svg>
-                : <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="5" fill="currentColor" stroke="none"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-              }
-            </div>
-            <div style={{ width: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-warning)', opacity: isDark ? 0.2 : 0 }}><Sun size={16} strokeWidth={2.5} color="currentColor" /></div>
-            <div style={{ width: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isDark ? 0 : 0.3, color: 'var(--color-text-body)' }}><Moon size={16} strokeWidth={2.5} color="currentColor" /></div>
-          </button>
-        </div>
-      </div>
-
       {/* 카드 2: 버그 리포트 */}
       <div style={{ margin: '12px 16px 0', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
         <button style={{ ...row, borderBottom: 'none' }} onClick={() => onNavigate('report')}>
@@ -433,8 +396,6 @@ export function SettingsPanel({
   isOpen,
   onClose,
   isDesktopLayout,
-  isDark,
-  onSetTheme,
   selectedMovieId,
   selectedTheaterName,
   initialPage = 'main',
@@ -442,8 +403,6 @@ export function SettingsPanel({
   isOpen: boolean
   onClose: () => void
   isDesktopLayout: boolean
-  isDark: boolean
-  onSetTheme: (theme: 'light' | 'dark') => void
   selectedMovieId?: string | null
   selectedTheaterName?: string
   initialPage?: Page
@@ -498,7 +457,7 @@ export function SettingsPanel({
       />
 
       {page === 'main' && (
-        <SettingsMainPage isDark={isDark} onSetTheme={onSetTheme} onNavigate={setPage} />
+        <SettingsMainPage onNavigate={setPage} />
       )}
       {page === 'report' && !reportSuccess && (
         <SettingsReportPage

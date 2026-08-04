@@ -33,7 +33,6 @@ import { SEOUL_GU, SEOUL_DONG } from '@/data/seoul-areas'
 import { normalizeGenre } from '@/lib/genres'
 import { getRegionFromCity, getRegionFromCoords, REGION_BOUNDS } from '@/lib/regions'
 import { getStoredRegion, setStoredRegion, subscribeStoredRegion } from '@/lib/regionStorage'
-import { useThemeStore } from '@/store/themeStore'
 import { useUIStore } from '@/store/uiStore'
 import { REPORT_CATEGORIES } from '@/lib/reports/types'
 import {
@@ -1028,7 +1027,6 @@ export default function MapView() {
   const { state: locPermState, coords, modalSuppressed: locModalSuppressed, request: locRequest, dismiss: locDismiss, refetch } = useLocationPermission()
   const isDark = useIsDark()
   const isDesktopLayout = useIsDesktopLayout()
-  const { setTheme } = useThemeStore()
   const { data: theaters = EMPTY_THEATERS, isLoading: theatersLoading } = useTheaters()
   const { data: stations = EMPTY_STATIONS } = useStations()
   const { data: movies = EMPTY_MOVIES } = useMovies()
@@ -1207,12 +1205,6 @@ export default function MapView() {
   }, [movies.length, theaters.length, theatersLoading, searchParams])
 
   useEffect(() => { setRecentSearches(loadRecentSearches()) }, [])
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('movie-app-theme')
-      if (stored === 'light' || stored === 'dark' || stored === 'system') void setTheme(stored)
-    } catch {}
-  }, [setTheme])
 
   // PC 패널 브라우저 히스토리 베이스라인 — 마운트 시 현재 엔트리에 빈 스택 기록
   useEffect(() => {
@@ -2084,60 +2076,6 @@ export default function MapView() {
   }, [coords, refetch, collapseCurationOnMapInteraction])
 
 
-  const renderThemeToggle = (style?: CSSProperties) => (
-    <button
-      onClick={() => void setTheme(isDark ? 'light' : 'dark')}
-      aria-label={isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}
-      style={{
-        width: 76, height: 40,
-        borderRadius: 9999,
-        padding: 4,
-        border: '1px solid var(--color-border)',
-        backgroundColor: isDark ? 'var(--color-surface-card)' : 'var(--color-surface-raised)',
-        boxShadow: 'var(--shadow-md)',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        flexShrink: 0,
-        overflow: 'hidden',
-        position: 'relative',
-        ...style,
-      }}
-    >
-      <div style={{
-        position: 'absolute',
-        width: 32, height: 32,
-        borderRadius: '50%',
-        backgroundColor: 'var(--color-surface-bg)',
-        boxShadow: '0 1px 6px rgba(0,0,0,0.18)',
-        left: isDark ? 40 : 4,
-        transition: 'left 240ms cubic-bezier(0.4, 0, 0.2, 1)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: isDark ? 'var(--color-text-caption)' : 'var(--color-warning)',
-        zIndex: 1,
-      }}>
-        {isDark ? (
-          <svg width={14} height={14} viewBox="0 0 24 24" fill="currentColor">
-            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
-          </svg>
-        ) : (
-          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <circle cx="12" cy="12" r="5" fill="currentColor" stroke="none"/>
-            <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-            <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-          </svg>
-        )}
-      </div>
-      <div style={{ width: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-warning)', opacity: isDark ? 0.25 : 0 }}>
-        <IcoSun />
-      </div>
-      <div style={{ width: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-caption)', opacity: isDark ? 0 : 0.35 }}>
-        <IcoMoon />
-      </div>
-    </button>
-  )
 
 
   // 퇴장 애니메이션 후 완전히 언마운트
@@ -3800,8 +3738,6 @@ export default function MapView() {
           isOpen={settingsOpen}
           onClose={() => setSettingsOpen(false)}
           isDesktopLayout={isDesktopLayout}
-          isDark={isDark}
-          onSetTheme={(theme) => void setTheme(theme)}
           selectedMovieId={selectedMovieId}
           selectedTheaterName={selectedTheater?.name}
           initialPage={settingsInitialPage}
