@@ -118,7 +118,7 @@ function MobileTabBar({ pathname, filmsHref }: { pathname: string; filmsHref: st
               flexDirection: 'column',
               alignItems: 'center',
               gap: 4,
-              padding: '6px 14px',
+              padding: '8px var(--gutter-md)',
               borderRadius: 8,
               background: active ? 'color-mix(in srgb, var(--color-primary-base) 11%, transparent)' : 'transparent',
               color,

@@ -298,6 +298,7 @@ export function CurationSectionRow({
 }: CurationSectionRowProps) {
   const { width, height } = isDesktop ? POSTER_SIZE.desktop : POSTER_SIZE.mobile
   const scaleBleed = Math.ceil(height * 0.04)
+  const [rowHovered, setRowHovered] = useState(false)
   const gap = isDesktop ? 16 : 10
   const scrollAmount = (width + gap) * 3
 
@@ -336,9 +337,25 @@ export function CurationSectionRow({
 
   // compact 모드: flex item으로 렌더, 1~2편 inline 표시 (스크롤 없음)
   if (compact) {
+    const AWARD_DECO: Record<string, string> = {
+      festival_venice_lion: '/awards/venice-lion.svg',
+      festival_cannes_palme: '/awards/cannes-palm.svg',
+    }
+    const decoSrc = id ? AWARD_DECO[id] : undefined
     return (
       <div ref={setSectionRef} style={{ flex: 1, minWidth: 0, display: 'flex' }}>
-      <CardContainer style={{ flex: 1, minWidth: 0 }}>
+      <CardContainer style={{ flex: 1, minWidth: 0, position: 'relative', overflow: 'hidden' }}>
+        {/* 수상 문양 워터마크 — 종이에 찍힌 도장 (저대비·회전·우측 블리드) */}
+        {decoSrc && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={decoSrc} alt="" aria-hidden
+            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+            style={{
+              position: 'absolute', right: '-8%', top: '50%',
+              height: '150%', transform: 'translateY(-50%) rotate(-10deg)',
+              opacity: 0.07, pointerEvents: 'none',
+            }} />
+        )}
         {/* 헤더 */}
         <div style={{ padding: '12px 0', borderBottom: '1px solid var(--color-border)' }}>
           <SectionHeader title={title} description={description} isDesktop={isDesktop} />
@@ -376,35 +393,35 @@ export function CurationSectionRow({
     )
   }
 
-  // 좌우 스크롤 버튼 — 제목 줄 오른쪽 끝에 배치(docs/DESIGN.md Primitives의 ScrollNavButton 표준 사용,
-  // 포스터 위 플로팅 원형 버튼 방식은 지양)
-  const navButtons = (canScrollLeft || canScrollRight) && (
-    <div style={{ display: 'flex', gap: 8 }}>
-      <ScrollNavButton
-        direction="left"
-        size={isDesktop ? 40 : 32}
-        disabled={!canScrollLeft}
-        style={{ position: 'static', top: 'auto', left: 'auto', transform: 'none', boxShadow: 'none', opacity: canScrollLeft ? 1 : 0.35 }}
-        onClick={() => scrollByAmount(-scrollAmount)}
-      />
-      <ScrollNavButton
-        direction="right"
-        size={isDesktop ? 40 : 32}
-        disabled={!canScrollRight}
-        style={{ position: 'static', top: 'auto', right: 'auto', transform: 'none', boxShadow: 'none', opacity: canScrollRight ? 1 : 0.35 }}
-        onClick={() => scrollByAmount(scrollAmount)}
-      />
-    </div>
-  )
+  // 2.0: 헤더 우측 버튼 폐기 — 스크롤 행 hover 시 좌/우 가장자리 오버레이 (PC 전용)
+  const posterMidY = scaleBleed + 8 + height / 2
 
   return (
     <section ref={setSectionRef} id={id} style={{ paddingTop: noHeader ? 0 : (isDesktop ? 48 : 24) }}>
       {!noHeader && (
         <div>
-          <SectionHeader title={title} description={description} isDesktop={isDesktop} trailing={navButtons} />
+          <SectionHeader title={title} description={description} isDesktop={isDesktop} />
         </div>
       )}
-      <div style={{ position: 'relative' }}>
+      <div
+        style={{ position: 'relative' }}
+        onMouseEnter={isDesktop ? () => setRowHovered(true) : undefined}
+        onMouseLeave={isDesktop ? () => setRowHovered(false) : undefined}
+      >
+        {isDesktop && rowHovered && canScrollLeft && (
+          <ScrollNavButton
+            direction="left"
+            style={{ top: posterMidY, transform: 'translateY(-50%)', zIndex: 3 }}
+            onClick={() => scrollByAmount(-scrollAmount)}
+          />
+        )}
+        {isDesktop && rowHovered && canScrollRight && (
+          <ScrollNavButton
+            direction="right"
+            style={{ top: posterMidY, transform: 'translateY(-50%)', zIndex: 3 }}
+            onClick={() => scrollByAmount(scrollAmount)}
+          />
+        )}
         <div
           ref={scrollRef}
           onScroll={updateScrollEdge}

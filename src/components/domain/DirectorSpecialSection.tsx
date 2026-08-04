@@ -330,22 +330,7 @@ export function DirectorSpecialSection({
     </div>
   )
 
-  const filmScrollWithHeader = (
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
-      {/* 상영 극장 한 줄 타이틀 */}
-      <div style={{
-        padding: '16px 16px 0',
-        fontSize: isDesktop ? 'var(--text-subtitle)' : 'var(--text-body)',
-        fontWeight: 700,
-        color: 'var(--color-text-primary)',
-        fontFamily: 'var(--font-display)',
-      }}>
-        {theater.name} 상영작
-      </div>
-      {filmScroll}
-    </div>
-  )
-
+  /* 2.0: 카드 2장(감독 카드+회색 블록) 폐기 — 맨 종이 위 플랫 헤더 + 포스터 행 (피그마 TOBE) */
   return (
     <section style={{ paddingTop: isDesktop ? 48 : 24 }}>
       <h2 style={{
@@ -353,6 +338,7 @@ export function DirectorSpecialSection({
         fontSize: isDesktop ? 'var(--text-h2)' : 'var(--text-h3)',
         fontWeight: 700,
         fontFamily: 'var(--font-display)',
+        letterSpacing: '0.05em',
         color: 'var(--color-text-primary)',
         marginBottom: 12,
         display: 'flex',
@@ -361,43 +347,36 @@ export function DirectorSpecialSection({
       }}>
         {directorName} 특별전
       </h2>
-      {isDesktop ? (
-        /* ── 데스크톱: 좌우 분할, 동일 마진 ─────── */
-        <div style={{
-          margin: '0 var(--gutter)',
-          display: 'flex',
-          borderRadius: 12,
-          overflow: 'hidden',
-          border: '1px solid var(--color-border)',
-        }}>
-          <div style={{ width: 260, flexShrink: 0, background: 'var(--color-surface-card)' }}>
-            <LeftPanel
-              directorName={directorName} theater={theater} filmCount={films.length}
-              distSuffix={distSuffix} isDesktop={isDesktop}
-              onDirectorClick={onDirectorClick ? () => onDirectorClick(directorName) : undefined}
-              onTheaterClick={onTheaterClick ? () => onTheaterClick(theater.id) : undefined}
-            />
-          </div>
-          <div style={{ flex: 1, minWidth: 0, background: 'var(--color-surface-raised)' }}>
-            {filmScrollWithHeader}
-          </div>
+      {/* 극장 플랫 헤더 — [클래퍼보드 + 극장명/캡션] ... 영화관 보기 › */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0 var(--gutter) 4px' }}>
+        <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-body)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+          <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z" />
+          <path d="m6.2 5.3 3.1 3.9" />
+          <path d="m12.4 3.4 3.1 4" />
+          <path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
+        </svg>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={{ fontSize: 'var(--text-title)', fontWeight: 700, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {theater.name}
+          </span>
+          <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
+            {films.length}편 상영중{distSuffix ? ` ${distSuffix}` : ''}
+          </span>
         </div>
-      ) : (
-        /* ── 모바일: 위아래 적층, 동일 마진 ─────── */
-        <div style={{ margin: '0 var(--gutter)', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
-          <div style={{ background: 'var(--color-surface-card)' }}>
-            <LeftPanel
-              directorName={directorName} theater={theater} filmCount={films.length}
-              distSuffix={distSuffix} isDesktop={isDesktop}
-              onDirectorClick={onDirectorClick ? () => onDirectorClick(directorName) : undefined}
-              onTheaterClick={onTheaterClick ? () => onTheaterClick(theater.id) : undefined}
-            />
-          </div>
-          <div style={{ background: 'var(--color-surface-raised)' }}>
-            {filmScrollWithHeader}
-          </div>
-        </div>
-      )}
+        {onTheaterClick && (
+          <button
+            onClick={() => onTheaterClick(theater.id)}
+            style={{
+              border: 'none', background: 'transparent', padding: '12px 0',
+              fontSize: 'var(--text-body)', fontWeight: 500, color: 'var(--color-text-sub)',
+              cursor: 'pointer', whiteSpace: 'nowrap', minHeight: 'auto',
+            }}
+          >
+            영화관 보기 ›
+          </button>
+        )}
+      </div>
+      {filmScroll}
     </section>
   )
 }

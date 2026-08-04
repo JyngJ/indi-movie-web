@@ -115,9 +115,13 @@ function FestivalBannerCard({ festival, today, isDesktop, onClick }: { festival:
     <div>
       <SectionHeader
         title="주목할 영화제"
-        description={`${FESTIVAL_STATUS_LABEL[status]} · ${dateLabel} · ${festival.city}`}
         isDesktop={isDesktop}
-        trailing={<ChevronRight size={18} strokeWidth={1.75} color="var(--color-text-caption)" />}
+        trailing={
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)', whiteSpace: 'nowrap' }}>
+            {`${dateLabel} · ${festival.city}`}
+            <ChevronRight size={14} strokeWidth={1.75} color="var(--color-text-caption)" />
+          </span>
+        }
       />
 
       {/* 배너 이미지 — banner_url 있을 때만. 전체 폭 띠에 surface-raised 배경을 깔고
@@ -400,18 +404,15 @@ export default function FilmsPage() {
   const leaveNowCaptions = new Map(
     leaveNowFilms.map((f) => [f.movie.id, `${f.nextShowTime} ${f.theaterName}`]),
   )
+  /* 2.0: [시간 / 극장명] 두 줄 — "언제"가 먼저 잡히게 (피그마 확정 문법) */
   const leaveNowCustomInfos = new Map<string, React.ReactNode>(
-    leaveNowFilms.map((f) => {
-      const dir = f.movie.director.length > 0 ? f.movie.director[0] : '감독 미상'
-      return [
-        f.movie.id,
-        <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
-          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)' }}>{dir}</span>
-          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-primary-base)', fontWeight: 600 }}>{f.theaterName}</span>
-          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-primary-hover-l)' }}>{`오늘 ${f.nextShowTime}`}</span>
-        </div>
-      ]
-    })
+    leaveNowFilms.map((f) => [
+      f.movie.id,
+      <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
+        <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-neutral-800)', fontWeight: 600, fontFeatureSettings: '"tnum"' }}>{`오늘 ${f.nextShowTime}`}</span>
+        <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.theaterName}</span>
+      </div>,
+    ])
   )
 
   const handleLeaveNowMovieClick = (movieId: string) => {
@@ -561,7 +562,11 @@ export default function FilmsPage() {
           }} />
         </>
       )}
-      <header ref={headerRef} style={{ padding: '20px 16px 0' }}>
+      <header ref={headerRef} style={{
+        padding: '20px 16px 0',
+        /* 2.0: PC는 헤더 고정 — 콘텐츠가 구분선 아래로 스크롤 */
+        ...(isDesktop ? { position: 'sticky' as const, top: 0, zIndex: 100, backgroundColor: 'var(--color-surface-bg)' } : {}),
+      }}>
         {isDesktop ? (
           /* 데스크톱: [영화+서브타이틀]  ←─검색창 절대 중앙─→  [지역칩] */
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center', minHeight: 52 }}>
@@ -706,6 +711,8 @@ export default function FilmsPage() {
         <div style={{ marginTop: 16, height: 1, background: 'var(--color-border)' }} />
       </header>
 
+      {/* 2.0: PC 콘텐츠 최대폭 컬럼 (내부 gutter 포함 시각 ≈1000) — 프레임은 풀블리드 유지 */}
+      <div style={isDesktop ? { maxWidth: 1048, margin: '0 auto' } : undefined}>
       {!locModalSuppressed && (locState === 'prompt' || locState === 'denied' || locState === 'requesting') && (
         <LocationPermissionModal
           state={locState}
@@ -887,7 +894,7 @@ export default function FilmsPage() {
             const position = startIndex + active.indexOf(s)
             return (
               <CurationSectionRow key={s.listId} id={s.listId}
-                title={s.nameKo} description={s.description}
+                title={s.nameKo}   /* 2.0: 부제 삭제 */
                 displayMode={s.displayMode as SectionDisplayMode}
                 movies={s.movies} isDesktop={isDesktop}
                 posterBadges={s.posterBadges} movieCaptions={s.movieCaptions}
@@ -1037,6 +1044,8 @@ export default function FilmsPage() {
           </>
         )
       })()}
+
+      </div>
 
       {/* scroll-to-top: 헤더가 뷰포트 밖으로 나가면 표시 */}
       {showScrollTop && (

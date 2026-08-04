@@ -18,6 +18,7 @@ export function SectionHeader({ title, emoji, description, isDesktop = false, tr
         fontSize: isDesktop ? 'var(--text-h2)' : 'var(--text-h3)',
         fontWeight: 700,
         fontFamily: 'var(--font-display)',
+        letterSpacing: '0.05em',   /* 2.0/display 자간 */
         color: 'var(--color-text-primary)',
         display: 'flex',
         alignItems: 'center',
