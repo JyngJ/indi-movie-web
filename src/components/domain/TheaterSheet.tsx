@@ -1033,7 +1033,7 @@ export function TheaterSheet({
         /* PC 패널 헤더 — 극장 정보 고정 */
         <div style={{
           flexShrink: 0,
-          padding: '20px var(--gutter-sheet) 16px',
+          padding: '20px var(--gutter-sheet) 6px',   /* 액션 버튼 히트박스(44) 하단 여백 ~11 감안 — 시각 간격 ~16 */
           borderBottom: '1px solid var(--color-border)',
           backgroundColor: 'var(--color-surface-card)',
           boxShadow: '0 1px 0 rgba(0,0,0,0.02)',
