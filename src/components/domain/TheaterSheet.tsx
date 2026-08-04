@@ -1183,7 +1183,7 @@ export function TheaterSheet({
         {posterCanScrollLeft && (
           <button
             style={{
-              position: 'absolute', top: '50%', left: 6,
+              position: 'absolute', top: 12 + posterItemH / 2, left: 6,   /* 포스터 이미지 세로 중앙 (캡션 제외) */
               transform: 'translateY(-50%)',
               width: 32, height: 32, borderRadius: '50%', zIndex: 3,
               border: 'none', cursor: 'pointer',
@@ -1202,7 +1202,7 @@ export function TheaterSheet({
         {posterCanScrollRight && (
           <button
             style={{
-              position: 'absolute', top: '50%', right: 6,
+              position: 'absolute', top: 12 + posterItemH / 2, right: 6,
               transform: 'translateY(-50%)',
               width: 32, height: 32, borderRadius: '50%', zIndex: 3,
               border: 'none', cursor: 'pointer',
@@ -1581,7 +1581,8 @@ export function TheaterSheet({
                   posterScrollRef.current?.scrollBy({ left: dir * (posterItemW + POSTER_GAP) * 3, behavior: 'smooth' })
                 }
                 const btnStyle: React.CSSProperties = {
-                  position: 'absolute', top: '50%', transform: 'translateY(-50%)',
+                  /* 포스터 이미지 세로 중앙 — 스트립 padTop 12 + 이미지 절반 (캡션 높이 제외) */
+                  position: 'absolute', top: 12 + posterItemH / 2, transform: 'translateY(-50%)',
                   width: 32, height: 32, borderRadius: '50%', zIndex: panelMode ? 2 : 3,
                   border: 'none', cursor: 'pointer',
                   backgroundColor: `color-mix(in srgb, var(--color-surface-card) ${panelMode ? 55 : 72}%, transparent)`,
