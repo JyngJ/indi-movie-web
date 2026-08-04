@@ -185,8 +185,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
         gap: 20,
         paddingTop: 16,
         paddingBottom: 16,
-        background: 'var(--color-surface-card)',
-        borderRight: '1px solid var(--color-border)',
+        background: 'var(--color-surface-raised)',   /* 피그마 rail: neutral/200 — 패널보다 한 단 가라앉힘 */
         zIndex: 1150,
       }}
     >
