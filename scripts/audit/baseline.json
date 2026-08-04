@@ -1,12 +1,18 @@
 {
-  "risk": { "BUG": 0, "LOSSLESS": 0, "LOW": 0, "MED": 0, "REVIEW": 101 },
+  "risk": {
+    "BUG": 0,
+    "LOSSLESS": 0,
+    "LOW": 0,
+    "MED": 0,
+    "REVIEW": 98
+  },
   "summary": {
-    "gutter": 70,
+    "gutter": 67,
     "color": 30,
     "fontSize": 1,
     "asymmetryLR": 8,
-    "asymmetryTB": 33,
+    "asymmetryTB": 32,
     "gutterKinds": 6,
-    "primitiveAdoptionPct": 9.7
+    "primitiveAdoptionPct": 9.9
   }
 }
