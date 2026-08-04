@@ -188,7 +188,13 @@ function getKmdbServiceKey() {
 }
 
 function cleanTitle(value?: string) {
-  const cleaned = cleanText(value).replace(/\s*!HS\s*/g, '').replace(/\s*!HE\s*/g, '').trim()
+  const cleaned = cleanText(value)
+    .replace(/\s*!HS\s*/g, '')
+    .replace(/\s*!HE\s*/g, '')
+    // KMDB 원본 제목은 옛날 표기 관례로 문장부호 앞에도 띄어쓰기가 들어있는 경우가 있다
+    // (예: "오 , 형제여 , 어디 에 있는가 ?"). 문장부호 앞 공백만 제거한다.
+    .replace(/\s+([,.!?？:：])/g, '$1')
+    .trim()
   // KMDB는 간혹 "제목 : 줄거리…" 형태로 시놉시스가 제목 필드에 그대로 섞여 들어온다.
   // 콜론 앞이 짧고(≤30자) 뒤가 문장형으로 길면(40자+, 마침표/말줄임 포함) 제목 부분만 취한다.
   const glued = cleaned.match(/^(.{1,30}?)\s*[:：]\s*(.{40,})$/)
