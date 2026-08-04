@@ -58,7 +58,7 @@ function RankBadge({ rank, prevRank }: { rank: number; prevRank: number | null }
 
 // ── 랭킹 설명 호버 툴팁 ──────────────────────────────────────────
 const METRICS = [
-  { icon: MapPin, label: '상영관 수',      pct: 45, color: 'var(--color-info)', desc: '전국 독립·예술영화 전용관 중 상영 중인 극장 수' },
+  { icon: MapPin, label: '상영관 수',      pct: 45, color: 'var(--color-primary-400)' /* 2.0: info 폐지 — 차트·보조 스탑 */, desc: '전국 독립·예술영화 전용관 중 상영 중인 극장 수' },
   { icon: Film, label: '상영 회차',      pct: 30, color: '#10B981', desc: '집계 기간 동안 편성된 총 상영 회차' },
   { icon: Eye, label: '영화볼지도 조회', pct: 25, color: '#8B5CF6', desc: '앱에서 이 영화·상영관을 찾아본 횟수' },
 ] as const

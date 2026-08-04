@@ -27,7 +27,7 @@ function getDayTextColor(type: DayType): string {
   /* docs/DESIGN.md DateBar dayCell 스펙 기준 */
   switch (type) {
     case 'today':    return 'var(--color-primary-base)'      /* 비선택 시 primary 색으로 강조 */
-    case 'saturday': return 'var(--color-primary-hover-l)'  /* #5C7896 */
+    case 'saturday': return 'var(--color-primary-500)'  /* 2.0: 토요일 = primary/500 (hover-l은 800으로 어두워져 부적합) */
     case 'sunday':
     case 'holiday':  return 'var(--color-error)'             /* #B94A48 */
     default:         return 'var(--color-text-sub)'          /* #635D55 */

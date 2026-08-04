@@ -9,7 +9,7 @@ import type { TheaterPosterMovie, PosterSlot, ScreeningDay } from '@/lib/map/pos
 function dayLabelColor(day: ScreeningDay): string {
   if (day.label === '오늘') return 'var(--color-primary-base)'
   const dow = dayOfWeek(day.date)
-  if (dow === 6) return 'var(--color-info)'
+  if (dow === 6) return 'var(--color-primary-500)'  /* 2.0: 토요일 — info 폐지, DateBar와 통일 */
   if (dow === 0) return 'var(--color-error)'
   return 'var(--color-text-caption)'
 }

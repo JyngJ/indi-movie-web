@@ -9,12 +9,13 @@ interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   children: ReactNode
 }
 
+/* 2.0: 틴트는 불투명 토큰(웜 종이 위에서도 일관), 글자는 딥 스탑 — "틴트 배경 + 900 텍스트" 문법 */
 const variantStyles: Record<Variant, { bg: string; color: string }> = {
-  default: { bg: 'var(--color-border)',                    color: 'var(--color-text-secondary)' },
-  success: { bg: 'rgba(74,124,89,0.15)',                   color: 'var(--color-success)' },
-  warning: { bg: 'rgba(217,119,6,0.15)',                   color: 'var(--color-warning)' },
-  error:   { bg: 'rgba(185,74,72,0.15)',                   color: 'var(--color-error)' },
-  info:    { bg: 'rgba(59,130,246,0.15)',                  color: 'var(--color-info)' },
+  default: { bg: 'var(--color-border)',              color: 'var(--color-text-secondary)' },
+  success: { bg: 'var(--color-success-tint)',        color: 'var(--color-success-deep)' },
+  warning: { bg: 'var(--color-warning-tint)',        color: 'var(--color-warning-deep)' },
+  error:   { bg: 'var(--color-error-tint)',          color: 'var(--color-error)' },
+  info:    { bg: 'var(--color-primary-subtle-l)',    color: 'var(--color-primary-text)' },
 }
 
 export function Badge({ variant = 'default', children, className = '', style, ...props }: BadgeProps) {
