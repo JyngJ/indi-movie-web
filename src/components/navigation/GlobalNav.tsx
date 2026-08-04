@@ -92,7 +92,7 @@ function MobileTabBar({ pathname, filmsHref }: { pathname: string; filmsHref: st
         display: 'flex',
         background: 'var(--color-surface-card)',
         borderTop: '1px solid var(--color-border)',
-        boxShadow: 'var(--shadow-sheet)',   /* 피그마 tabbar: 2.0/shadow/sheet */
+        boxShadow: 'var(--shadow-sm)',   /* PC 패널과 동일 스타일로 통일 */
         zIndex: 1150,
       }}
     >
@@ -107,16 +107,25 @@ function MobileTabBar({ pathname, filmsHref }: { pathname: string; filmsHref: st
             style={{
               flex: 1,
               display: 'flex',
-              flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 4,
-              color,
               textDecoration: 'none',
             }}
           >
-            <Icon size={23} />
-            <span style={{ fontSize: 'var(--text-badge)', fontWeight: 600 }}>{label}</span>
+            {/* 데스크톱 레일과 동일한 선택 문법 — 틴트 라운드 박스 */}
+            <span style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 4,
+              padding: '6px 14px',
+              borderRadius: 8,
+              background: active ? 'color-mix(in srgb, var(--color-primary-base) 11%, transparent)' : 'transparent',
+              color,
+            }}>
+              <Icon size={23} />
+              <span style={{ fontSize: 'var(--text-badge)', fontWeight: 600 }}>{label}</span>
+            </span>
           </Link>
         )
       })}
