@@ -8,7 +8,6 @@ import L from 'leaflet'
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { Map as LeafletMap, Point as LeafletPoint } from 'leaflet'
 import { useLocationPermission } from '@/hooks/useLocationPermission'
-import { useIsDark } from '@/hooks/useIsDark'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { SearchBarButton, FabRound, Toast } from '@/components/primitives'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
@@ -1025,7 +1024,7 @@ export default function MapView() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { state: locPermState, coords, modalSuppressed: locModalSuppressed, request: locRequest, dismiss: locDismiss, refetch } = useLocationPermission()
-  const isDark = useIsDark()
+  const isDark = false  /* 2.0: 다크 폐지 — 배선(핀·타일·지하철)은 넓어 상수 고정, 제거는 지도 리팩토링 때 */
   const isDesktopLayout = useIsDesktopLayout()
   const { data: theaters = EMPTY_THEATERS, isLoading: theatersLoading } = useTheaters()
   const { data: stations = EMPTY_STATIONS } = useStations()
