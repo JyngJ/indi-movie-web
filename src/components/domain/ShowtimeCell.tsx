@@ -60,26 +60,27 @@ export function ShowtimeCell({
       tabIndex={isClickable ? 0 : undefined}
     >
 
-      {/* 시간 */}
-      <div className="flex items-baseline gap-1 flex-wrap" style={{ color: (isSoldout || isEnded) ? 'var(--color-text-placeholder)' : 'var(--color-text-primary)' }}>
+      {/* 시간 줄 — 피그마 time-row: 시작시간 + (심야면) 달, space-between */}
+      <div className="flex items-center justify-between" style={{ color: (isSoldout || isEnded) ? 'var(--color-text-placeholder)' : 'var(--color-text-primary)' }}>
         <span style={{
           fontSize: 'var(--text-time)', fontWeight: 700, fontFeatureSettings: '"tnum"', whiteSpace: 'nowrap',
           textDecoration: isEnded ? 'line-through' : 'none',
         }}>
           {startTime}
         </span>
-        {endTime && (
-          <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', fontFeatureSettings: '"tnum"', whiteSpace: 'nowrap' }}>
-            -{endTime}
-          </span>
-        )}
         {/* 2.0: 심야 = 시간 줄 인라인 달 — 배지(라벨+배경)는 정보 중복이라 강등 */}
         {isLate && !isPast && (
-          <svg width={11} height={11} viewBox="0 0 24 24" fill="var(--color-primary-base)" style={{ flexShrink: 0 }} aria-label="심야 상영">
+          <svg width={14} height={14} viewBox="0 0 24 24" fill="var(--color-primary-base)" style={{ flexShrink: 0 }} aria-label="심야 상영">
             <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
           </svg>
         )}
       </div>
+      {/* 종료시간 — 별도 줄 (피그마) */}
+      {endTime && (
+        <div className="mt-1" style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', fontFeatureSettings: '"tnum"', whiteSpace: 'nowrap' }}>
+          -{endTime}
+        </div>
+      )}
 
       {/* 잔여석 / 상태 */}
       <div

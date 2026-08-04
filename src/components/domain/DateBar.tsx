@@ -124,10 +124,15 @@ export function DateBar({ days, selectedDate, onSelectDate, onPrev, onNext, hasP
               key={d.date}
               type="button"
               disabled={isDisabled}
-              className="flex-1 flex flex-col items-center"
+              className="flex flex-col items-center"
               style={{
                 paddingTop: 'var(--comp-date-cell-pt)',
                 paddingBottom: 'var(--comp-date-cell-pb)',
+                /* 선택 셀은 좌우 16으로 넓어져 시각적으로 도드라짐 (피그마 오늘 54 vs 38) */
+                paddingLeft: active ? 16 : 8,
+                paddingRight: active ? 16 : 8,
+                transition: 'padding 260ms cubic-bezier(0.34, 1.56, 0.64, 1), background 160ms',
+                animation: active ? 'date-cell-pop 260ms cubic-bezier(0.34, 1.56, 0.64, 1)' : undefined,
                 borderRadius: 'var(--comp-date-cell-radius)',
                 backgroundColor: active ? 'var(--color-primary-base)' : 'transparent',
                 cursor: isDisabled ? 'default' : 'pointer',
@@ -174,6 +179,8 @@ export function DateBar({ days, selectedDate, onSelectDate, onPrev, onNext, hasP
                     width: 'var(--comp-date-ind-w)',
                     height: 'var(--comp-date-ind-h)',
                     borderRadius: 9999,
+                    /* 선택 순간 점(3px)에서 선(22px)으로 자라남 */
+                    animation: active ? 'date-ind-grow 240ms 60ms cubic-bezier(0.34, 1.56, 0.64, 1) backwards' : undefined,
                     backgroundColor: active ? 'var(--color-primary-100)' : 'var(--color-neutral-500)',
                   }}
                 />

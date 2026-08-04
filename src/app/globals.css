@@ -157,6 +157,17 @@ img {
   50%       { opacity: 0.75; }
 }
 
+/* 날짜 셀 선택 — 뽈롱(오버슈트 스케일) + 밑줄 점→선 */
+@keyframes date-cell-pop {
+  0%   { transform: scale(0.92); }
+  55%  { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+@keyframes date-ind-grow {
+  from { width: 3px; }
+  to   { width: var(--comp-date-ind-w); }
+}
+
 /* 핀 선택 애니메이션 */
 @keyframes pin-label-select {
   from { opacity: 0; transform: scale(0.95) translateY(2px); }

@@ -92,6 +92,7 @@ function MobileTabBar({ pathname, filmsHref }: { pathname: string; filmsHref: st
         display: 'flex',
         background: 'var(--color-surface-card)',
         borderTop: '1px solid var(--color-border)',
+        boxShadow: 'var(--shadow-sheet)',   /* 피그마 tabbar: 2.0/shadow/sheet */
         zIndex: 1150,
       }}
     >

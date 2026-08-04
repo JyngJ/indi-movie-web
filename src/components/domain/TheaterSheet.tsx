@@ -1090,7 +1090,8 @@ export function TheaterSheet({
             display: 'flex',
             flexWrap: 'wrap',
             gap: 0,
-            marginTop: 16,
+            /* 피그마 주소→액션 시각 간격 16 = gap 4 + 액션 pad 12. 버튼 히트박스(44) 안 여백 ~11이 이미 있으므로 4만 더함 */
+            marginTop: 4,
             marginLeft: -8,
           }}>
             <button style={actionBtn} onClick={openDirections}>
@@ -1390,7 +1391,7 @@ export function TheaterSheet({
             }}>
               <span style={{ minWidth: 0 }}>{theater.address}</span>
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 0, marginTop: 16, marginLeft: -8 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 0, marginTop: 4, marginLeft: -8 }}>
               <button style={actionBtn} onClick={openDirections}>
                 <IconRoute size={14} />길찾기
               </button>
