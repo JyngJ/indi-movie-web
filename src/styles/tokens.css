@@ -106,17 +106,19 @@
   --font-serif-en: 'Libre Baskerville', Georgia, serif;         /* 영문 원제·감독명 이탤릭 (선택적) */
   --font-mono:     'SF Mono', 'ui-monospace', 'Courier New', monospace;
 
-  /* ── Typography: Scale (docs/DESIGN.md 타입 스케일 참고) ── */
-  --text-h1:      24px;   /* 영화 대제목 / font-serif / 700 */
-  --text-h2:      22px;   /* 극장명 상세 / font-serif / 700 */
-  --text-h3:      20px;   /* 바텀시트 극장명 / font-serif / 700 */
-  --text-title:   17px;   /* 카드 제목 / Pretendard / 700 */
-  --text-subtitle: 15px;  /* 소제목·카드 헤더 / Pretendard / 600~700 — TASK-10 감사에서 실사용 33곳(18개 파일) 확인, body(14)·title(17) 사이 갭 */
-  --text-body:    14px;   /* 본문 / Pretendard / 500 */
-  --text-meta:    13px;   /* 메타·주소 / Pretendard / 400 */
-  --text-caption: 11px;   /* 라벨 caps / Pretendard / 500 / uppercase */
-  --text-badge:    9px;   /* D-1 배지 / Pretendard / 700 / uppercase */
-  --text-time:    17px;   /* 시작 시간 / tnum / 700 */
+  /* ── Typography: Scale — 2.0 통합 (13종 → 6단계: 10·12·14·16·20·24) ──
+     인접 크기 병합, 위계는 weight·색이 담당 ("Size isn't everything").
+     행간 규칙: 24=125% / 20=130% / 16=140% / 14·12=150% / 라벨류 140% / tnum 숫자=100% */
+  --text-h1:      24px;   /* 영화 대제목 / KIMM / 700 / 자간 5% */
+  --text-h2:      20px;   /* 극장명·섹션 헤더 / KIMM / 700 — 구 22, h3(20)와 통합 */
+  --text-h3:      20px;   /* = h2 (호환 alias — 신규 코드는 h2 사용) */
+  --text-title:   16px;   /* 카드 제목 / 700 — 구 17 */
+  --text-subtitle: 14px;  /* 소제목 / 700 — 구 15. body와 같은 크기, weight·색(600)으로 위계 */
+  --text-body:    14px;   /* 본문 / 500 */
+  --text-meta:    12px;   /* 메타·주소·영문원제 / 400 — 구 13 */
+  --text-caption: 12px;   /* 라벨 caps / 500 / uppercase / 자간 0.4 — 구 11 */
+  --text-badge:   10px;   /* 배지·최소 라벨 / 700 — 구 9 */
+  --text-time:    16px;   /* 시작 시간 / tnum / 700 — 구 17, date와 통합 */
   --text-seat:    12px;   /* 좌석수 / tnum / 600 */
   --text-dow:     10px;   /* 요일 / 500 */
   --text-date:    16px;   /* 날짜 / tnum / 700 */
