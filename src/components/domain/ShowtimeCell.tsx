@@ -69,7 +69,7 @@ export function ShowtimeCell({
           {startTime}
         </span>
         {endTime && (
-          <span style={{ fontSize: 10, color: 'var(--color-text-sub)', fontFeatureSettings: '"tnum"', whiteSpace: 'nowrap' }}>
+          <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', fontFeatureSettings: '"tnum"', whiteSpace: 'nowrap' }}>
             -{endTime}
           </span>
         )}
@@ -83,7 +83,7 @@ export function ShowtimeCell({
 
       {/* 잔여석 / 상태 */}
       <div
-        className="mt-[6px]"
+        className="mt-1"
         style={{
           fontSize: 'var(--text-seat)',
           fontFeatureSettings: '"tnum"',
@@ -91,9 +91,9 @@ export function ShowtimeCell({
         }}
       >
         {isNowPlaying ? (
-          <span style={{ color: 'var(--color-success)', fontWeight: 700 }}>상영중</span>
+          <span style={{ fontSize: 'var(--text-body)', color: 'var(--color-success)', fontWeight: 700 }}>상영중</span>
         ) : isEnded ? (
-          <span style={{ color: 'var(--color-text-caption)', fontWeight: 600 }}>상영 완료</span>
+          <span style={{ fontSize: 'var(--text-body)', color: 'var(--color-text-placeholder)', fontWeight: 700 }}>상영 완료</span>
         ) : (
           <>
             <span style={{ color: seatColor, fontWeight: 600, textDecoration: isSoldout ? 'line-through' : 'none' }}>{seatAvailable}</span>

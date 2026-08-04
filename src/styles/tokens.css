@@ -88,7 +88,8 @@
   --color-warning-deep: #885907;
   --color-success-tint: #E4F1E8;
   --color-success-deep: #2B5036;
-  --color-error-tint:   #F5E1E0;  --color-error-mid:    #BD4E4C;   /* 아이콘·보더 전용 */
+  --color-error-tint:   #F5E1E0;
+  --color-error-mid:    #BD4E4C;   /* 아이콘·보더·요일(일) 전용 */
   --color-gv-tint:      #E7DCF9;
 
   /* ── Multiplex (핀 전용, 텍스트 미사용) ── */
@@ -122,7 +123,7 @@
   --text-badge:   10px;   /* 배지·최소 라벨 / 700 — 구 9 */
   --text-time:    16px;   /* 시작 시간 / tnum / 700 — 구 17, date와 통합 */
   --text-seat:    12px;   /* 좌석수 / tnum / 600 */
-  --text-dow:     10px;   /* 요일 / 500 */
+  --text-dow:     12px;   /* 요일 = 2.0/meta (피그마) / 400 */
   --text-date:    16px;   /* 날짜 / tnum / 700 */
 
   /* Libre Baskerville 전용 */
@@ -173,10 +174,12 @@
   --comp-date-cell-pt:     8px;   /* 2.0: 피그마 DateCell pad */
   --comp-date-cell-pb:     8px;
   --comp-date-cell-radius: var(--radius-button);   /* 8px — 날짜 셀 선택 박스 */
+  --comp-date-ind-w:       22px;   /* 상영있음 인디케이터 (피그마 22×3) */
+  --comp-date-ind-h:       3px;
 
   /* 상영시간표 셀 */
   --comp-showtime-p:      16px;   /* 2.0: 셀 내부 여백 12→16 (피그마 확정) */
-  --comp-showtime-radius: var(--radius-control);   /* 12px */
+  --comp-showtime-radius: 16px;   /* 피그마 ShowtimeCell r16 */
   --comp-showtime-min-width: 104px;   /* 2.0: 셀 최소폭 — 열 수는 auto-fill이 결정 (390=3열, 320=2열) */
 
   /* 포스터 썸네일 */
