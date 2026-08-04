@@ -104,7 +104,7 @@ export function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number
 
   const tags = [
     ...movie.genre.slice(0, 2),
-    ...(movie.nation ? [withFlag(movie.nation)] : []),
+    ...(movie.nation ? [withFlag(movie.nation.split(/[,，/·]+/)[0].trim())] : []),
   ]
 
   const cardWidth = 220
