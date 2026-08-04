@@ -196,7 +196,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
         pointerEvents: 'none',
       }} />
       <Link href="/" aria-label="지도 홈" style={{ display: 'block' }}>
-        <Image src="/logo-tile.png" alt="" width={40} height={40} />
+        <Image src="/logo-tile.png" alt="" width={40} height={40} style={{ borderRadius: 'var(--radius-poster)' }} />  {/* 마스터 r16을 40px로 리스케일 ≈ 2px */}
       </Link>
 
       {/* 순서: 지도 - 영화 (검색은 지도 상단 검색창으로 진입 — 레일 탭 제거) */}
