@@ -173,7 +173,7 @@
   --comp-date-cell-radius: var(--radius-button);   /* 8px — poster가 2.0에서 2px로 줄며 분리 */
 
   /* 상영시간표 셀 */
-  --comp-showtime-p:      12px;
+  --comp-showtime-p:      16px;   /* 2.0: 셀 내부 여백 12→16 (피그마 확정) */
   --comp-showtime-radius: var(--radius-control);   /* 12px */
   --comp-showtime-min-width: 104px;   /* 2.0: 셀 최소폭 — 열 수는 auto-fill이 결정 (390=3열, 320=2열) */
 
@@ -226,6 +226,7 @@
 
   /* ── Layout ── */
   --gutter:    16px;   /* 최상위 좌우 여백. 중첩 시 12 → 8 */
+  --gutter-sheet: 24px; /* 2.0: 시트·패널 전용 거터 — 전역 gutter 개정 전 과도기 토큰 */
   --gutter-md: 12px;
   --gutter-sm:  8px;
   --max-width-mobile: 480px;

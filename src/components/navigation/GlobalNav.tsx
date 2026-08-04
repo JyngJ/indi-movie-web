@@ -26,10 +26,13 @@ function IconMap({ size = 23 }: { size?: number }) {
 }
 
 function IconFilm({ size = 23 }: { size?: number }) {
+  /* 2.0: 필름 스트립 → 클래퍼보드 — "영화를 본다"는 행위에 더 직관적 (Lucide clapperboard) */
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="4" width="18" height="16" rx="2" />
-      <path d="M3 9h18M3 15h18M8 4v5M8 15v5M16 4v5M16 15v5" />
+      <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z" />
+      <path d="m6.2 5.3 3.1 3.9" />
+      <path d="m12.4 3.4 3.1 4" />
+      <path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
     </svg>
   )
 }

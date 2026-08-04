@@ -28,7 +28,7 @@ import type { GvEvent } from '@/data/gv-events'
 export const THEATER_SHEET_COLLAPSED_H = 344 + GLOBAL_NAV_MOBILE_HEIGHT + 34
 
 /* ── 포스터 캐러셀 레이아웃 — 기본 3열, 너무 좁으면 2열·넓으면 4열 ── */
-const POSTER_GAP = 12
+const POSTER_GAP = 16  /* 2.0: 12→16 (피그마 확정) */
 const POSTER_PAD_LEFT = 16  // = --gutter (시트 좌우 정렬선) — JS 폭 계산에 쓰므로 숫자 유지
 function calcPosterItemW(w: number): number {
   if (w <= 0) return 88   // 마운트 전 폴백 (기존 고정폭)
@@ -150,7 +150,7 @@ function SynopsisCard({ synopsis, tags, visible, onSearchTheaters }: SynopsisCar
       flexShrink: 0,
     }}>
       <div style={{ overflow: 'hidden', minHeight: 0 }}>
-        <div style={{ padding: '16px var(--gutter) 20px' }}>
+        <div style={{ padding: '16px var(--gutter-sheet) 20px' }}>
           {/* 태그 — 있을 때만 */}
           {tags && tags.length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
@@ -945,7 +945,7 @@ export function TheaterSheet({
       {!shownExpanded ? (
         /* Collapsed 헤더 */
         <div style={{
-          padding: '0 var(--gutter) 12px',
+          padding: '0 var(--gutter-sheet) 12px',
           position: 'relative',
           flexShrink: 0,
         }}>
@@ -1014,7 +1014,7 @@ export function TheaterSheet({
             </button>
           </div>
           {onBack && (
-            <div style={{ position: 'absolute', top: -2, left: 'var(--gutter)' }}>
+            <div style={{ position: 'absolute', top: -2, left: 'var(--gutter-sheet)' }}>
               <button style={iconBtn} onClick={onBack} aria-label="이전으로">
                 <IconChevronLeft />
               </button>
@@ -1025,7 +1025,7 @@ export function TheaterSheet({
         /* PC 패널 헤더 — 극장 정보 고정 */
         <div style={{
           flexShrink: 0,
-          padding: '20px var(--gutter) 16px',
+          padding: '20px var(--gutter-sheet) 16px',
           borderBottom: '1px solid var(--color-border)',
           backgroundColor: 'var(--color-surface-card)',
           boxShadow: '0 1px 0 rgba(0,0,0,0.02)',
@@ -1113,7 +1113,7 @@ export function TheaterSheet({
         /* Expanded 헤더 — nav row만 고정 (극장 정보는 스크롤 안으로) */
         <div style={{
           flexShrink: 0,
-          padding: '0 var(--gutter-md) 8px',
+          padding: '0 var(--gutter-sheet) 8px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -1267,7 +1267,7 @@ export function TheaterSheet({
                               width={posterItemW}
                               height={posterItemH}
                               size="lg"
-                              radius={0}
+                              radius={2}
                               alt={movie.title}
                               src={movie.posterUrl}
                               selected={shownExpanded && selectedMovieId === movie.id}
@@ -1365,7 +1365,7 @@ export function TheaterSheet({
           }}
         >
           {/* 극장 정보 — 스크롤 시 위로 밀림 */}
-          {!panelMode && <div ref={theaterNameRef} style={{ padding: '4px var(--gutter) 16px' }}>
+          {!panelMode && <div ref={theaterNameRef} style={{ padding: '4px var(--gutter-sheet) 16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <div style={{
                 fontSize: 22, fontWeight: 700,
@@ -1458,7 +1458,7 @@ export function TheaterSheet({
             {(availableGenres.length > 0 || availableNations.length > 0) && (
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 8,
-                paddingLeft: 'var(--gutter)', paddingRight: 'var(--gutter)', paddingTop: 8, paddingBottom: 4,
+                paddingLeft: 'var(--gutter-sheet)', paddingRight: 'var(--gutter-sheet)', paddingTop: 8, paddingBottom: 4,
               }}>
                 {/* 왼쪽: 편수 + 활성 칩들 */}
                 <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 8, overflowX: 'auto', scrollbarWidth: 'none' }}>
@@ -1644,7 +1644,7 @@ export function TheaterSheet({
                             <div style={{ width: posterItemW }}>
                               <div style={{ position: 'relative' }}>
                                 <PosterThumb
-                                  width={posterItemW} height={posterItemH} size="lg" radius={0}
+                                  width={posterItemW} height={posterItemH} size="lg" radius={2}
                                   alt={movie.title}
                                   src={movie.posterUrl}
                                   selected={selectedMovieId === movie.id}
@@ -1747,7 +1747,7 @@ export function TheaterSheet({
                               <div key={movie.id} style={{ flexShrink: 0, width: posterItemW, overflow: 'visible', opacity: 0.38 }}>
                                 <div style={{ width: posterItemW }}>
                                   <div style={{ position: 'relative' }}>
-                                    <PosterThumb width={posterItemW} height={posterItemH} size="lg" radius={0} alt={movie.title} src={movie.posterUrl} />
+                                    <PosterThumb width={posterItemW} height={posterItemH} size="lg" radius={2} alt={movie.title} src={movie.posterUrl} />
                                     <div style={{
                                       position: 'absolute', inset: 0,
                                       borderRadius: 0,
@@ -1794,13 +1794,13 @@ export function TheaterSheet({
             const { movie } = entry
             return (
               <div style={{
-                margin: '8px var(--gutter)',
+                margin: '8px var(--gutter-sheet)',
                 border: '1px solid var(--color-border)',
                 borderRadius: 12,
                 overflow: 'hidden',
                 backgroundColor: 'var(--color-surface-card)',
               }}>
-                <div style={{ display: 'flex', gap: 12, padding: 'var(--gutter-md)' }}>
+                <div style={{ display: 'flex', gap: 12, padding: 'var(--gutter-sheet)' }}>
                   {/* 포스터 */}
                   <div style={{ flexShrink: 0, width: 60, height: 90, borderRadius: 8, overflow: 'hidden', backgroundColor: 'var(--color-neutral-700)' }}>
                     {movie.posterUrl && (
@@ -1810,8 +1810,9 @@ export function TheaterSheet({
                   {/* 영화 정보 */}
                   <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
                     <div style={{
-                      fontSize: 17, fontWeight: 700,
+                      fontSize: 'var(--text-h2)', fontWeight: 700,
                       fontFamily: 'var(--font-display)',
+                      letterSpacing: '0.05em',
                       color: 'var(--color-text-primary)',
                       lineHeight: 1.3,
                       overflow: 'hidden',
@@ -1821,39 +1822,18 @@ export function TheaterSheet({
                     }}>
                       {movie.title}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                      {movie.nation && movie.nation.split(/[,，/·]+/).map(n => n.trim()).filter(Boolean).map(n => (
-                        <span key={n} style={{
-                          fontSize: 10, fontWeight: 500,
-                          padding: '4px 8px',
-                          borderRadius: 9999,
-                          border: '1px solid var(--color-border)',
-                          color: 'var(--color-text-sub)',
-                        }}>
-                          {withFlag(n)}
-                        </span>
-                      ))}
-                      {movie.runtimeMinutes && (
-                        <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>
-                          {movie.runtimeMinutes}분
-                        </span>
-                      )}
+                    {/* 2.0: 정보 태그는 칩 옷 벗김 — 아웃라인 pill은 '누를 수 있는 것' 전용 문법 */}
+                    <div style={{
+                      fontSize: 'var(--text-meta)', fontWeight: 400,
+                      color: 'var(--color-text-caption)',
+                      lineHeight: 1.5,
+                    }}>
+                      {[
+                        movie.nation ? movie.nation.split(/[,，/·]+/).map(n => n.trim()).filter(Boolean).map(n => withFlag(n)).join(' ') : null,
+                        movie.runtimeMinutes ? `${movie.runtimeMinutes}분` : null,
+                        movie.genre && movie.genre.length > 0 ? movie.genre.join(' · ') : null,
+                      ].filter(Boolean).join(' · ')}
                     </div>
-                    {movie.genre && movie.genre.length > 0 && (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                        {movie.genre.map(g => (
-                          <span key={g} style={{
-                            fontSize: 10, fontWeight: 500,
-                            padding: '4px 8px',
-                            borderRadius: 9999,
-                            border: '1px solid var(--color-border)',
-                            color: 'var(--color-text-sub)',
-                          }}>
-                            {g}
-                          </span>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </div>
                 {/* 감독 행 */}
@@ -1869,7 +1849,7 @@ export function TheaterSheet({
                     style={{
                       borderTop: '1px solid var(--color-border)',
                       display: 'flex', alignItems: 'center', gap: 12,
-                      padding: 'var(--gutter-md)',
+                      padding: 'var(--gutter-sheet)',
                       cursor: 'pointer',
                       opacity: movieNavPendingId === `director-${movie.id}` ? 0.5 : 1,
                     }}
@@ -1931,9 +1911,9 @@ export function TheaterSheet({
           })()}
 
           {/* 상영시간표 */}
-          <div ref={showtimeSectionRef} style={{ padding: `8px var(--gutter) ${selectedShowtimeId ? 88 : 40}px` }}>
+          <div ref={showtimeSectionRef} style={{ padding: `8px var(--gutter-sheet) ${selectedShowtimeId ? 88 : 40}px` }}>
             {showtimesLoading ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(var(--comp-showtime-min-width), 1fr))', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(var(--comp-showtime-min-width), 1fr))', gap: 12 }}>
                 {Array.from({ length: 6 }).map((_, i) => (
                   <Skeleton key={i} height={60} style={{ borderRadius: 8 }} />
                 ))}
@@ -1948,7 +1928,7 @@ export function TheaterSheet({
                 선택한 날짜에 상영 정보가 없습니다.
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(var(--comp-showtime-min-width), 1fr))', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(var(--comp-showtime-min-width), 1fr))', gap: 12 }}>
                 {filteredShowtimes.map((st) => {
                   const [sh, sm] = st.showTime.split(':').map(Number)
                   const startMin = sh * 60 + sm
@@ -2012,7 +1992,7 @@ export function TheaterSheet({
             transition: 'transform 0.28s cubic-bezier(0.32, 0.72, 0, 1)',
             backgroundColor: 'var(--color-surface-card)',
             borderTop: '1px solid var(--color-border)',
-            padding: '12px var(--gutter)',
+            padding: '12px var(--gutter-sheet)',
             paddingBottom: panelMode ? 'max(12px, env(safe-area-inset-bottom))' : `calc(12px + ${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`,
             zIndex: 10,
             display: 'flex', gap: 12,
@@ -2092,7 +2072,7 @@ export function TheaterSheet({
             {/* 헤더 */}
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '20px var(--gutter) 12px',
+              padding: '20px var(--gutter-sheet) 12px',
             }}>
               <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text-primary)' }}>영화 필터</span>
               <button
@@ -2104,7 +2084,7 @@ export function TheaterSheet({
             </div>
 
             {/* 본문 (스크롤) */}
-            <div style={{ padding: '0 var(--gutter)', maxHeight: '50vh', overflowY: 'auto' }}>
+            <div style={{ padding: '0 var(--gutter-sheet)', maxHeight: '50vh', overflowY: 'auto' }}>
               {/* 장르 */}
               {availableGenres.length > 0 && (
                 <>
@@ -2192,7 +2172,7 @@ export function TheaterSheet({
             </div>
 
             {/* 적용하기 버튼 */}
-            <div style={{ padding: '0 var(--gutter) 20px' }}>
+            <div style={{ padding: '0 var(--gutter-sheet) 20px' }}>
               <button
                 onClick={() => { applySheetFilters(pendingFilters); setFilterSheetOpen(false) }}
                 style={{

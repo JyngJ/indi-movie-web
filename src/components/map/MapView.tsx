@@ -73,7 +73,7 @@ const KOREA_MAP_BOUNDS: L.LatLngBoundsExpression = [
 ]
 
 /** 데스크톱 좌측 상시 도크 폭 — 검색 패널과 같은 폭(440 * 0.8) */
-const DESKTOP_DOCK_WIDTH = 352
+const DESKTOP_DOCK_WIDTH = 440  /* 2.0: 시간표 3열(104×3+gap)+거터 24 근거 — 지도앱 관례(408~440) 상한 */
 
 function dateRangeForFilter(filter: FilterState) {
   const today = startOfLocalDay(new Date())

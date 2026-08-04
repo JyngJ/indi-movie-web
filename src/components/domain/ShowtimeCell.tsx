@@ -43,12 +43,14 @@ export function ShowtimeCell({
         paddingLeft: 'var(--comp-showtime-p)',
         paddingRight: 'var(--comp-showtime-p)',
         borderRadius: 'var(--comp-showtime-radius)',
-        backgroundColor: selected ? 'var(--color-primary-subtle-l)' : 'var(--color-surface-card)',
+        /* 2.0 반전 수법: 죽은 회차 = 틴트로 가라앉히고, 살아있는 회차만 흰 카드로 띄움 */
+        backgroundColor: (isSoldout || isEnded)
+          ? 'var(--color-surface-raised)'
+          : selected ? 'var(--color-primary-subtle-l)' : 'var(--color-surface-card)',
         border: selected
           ? '1.5px solid var(--color-primary-base)'
-          : '1px solid var(--color-border)',
+          : (isSoldout || isEnded) ? '1px solid transparent' : '1px solid var(--color-border)',
         position: 'relative',
-        opacity: (isSoldout || isPast) ? 0.45 : 1,
         fontFamily: 'var(--font-sans)',
         cursor: isClickable ? 'pointer' : 'default',
         transition: 'border-color 150ms ease, background-color 150ms ease',
@@ -59,7 +61,7 @@ export function ShowtimeCell({
     >
 
       {/* 시간 */}
-      <div className="flex items-baseline gap-1 flex-wrap" style={{ color: 'var(--color-text-primary)' }}>
+      <div className="flex items-baseline gap-1 flex-wrap" style={{ color: (isSoldout || isEnded) ? 'var(--color-text-placeholder)' : 'var(--color-text-primary)' }}>
         <span style={{
           fontSize: 'var(--text-time)', fontWeight: 700, fontFeatureSettings: '"tnum"', whiteSpace: 'nowrap',
           textDecoration: isEnded ? 'line-through' : 'none',
@@ -89,9 +91,9 @@ export function ShowtimeCell({
         }}
       >
         {isNowPlaying ? (
-          <span style={{ color: 'var(--color-warning)', fontWeight: 700 }}>상영중</span>
+          <span style={{ color: 'var(--color-success)', fontWeight: 700 }}>상영중</span>
         ) : isEnded ? (
-          <span style={{ color: 'var(--color-error)', fontWeight: 700 }}>상영 완료</span>
+          <span style={{ color: 'var(--color-text-caption)', fontWeight: 600 }}>상영 완료</span>
         ) : (
           <>
             <span style={{ color: seatColor, fontWeight: 600, textDecoration: isSoldout ? 'line-through' : 'none' }}>{seatAvailable}</span>
