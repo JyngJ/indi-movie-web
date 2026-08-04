@@ -179,8 +179,8 @@ export function DateBar({ days, selectedDate, onSelectDate, onPrev, onNext, hasP
                     width: 'var(--comp-date-ind-w)',
                     height: 'var(--comp-date-ind-h)',
                     borderRadius: 9999,
-                    /* 선택 순간 점(3px)에서 선(22px)으로 자라남 */
-                    animation: active ? 'date-ind-grow 240ms 60ms cubic-bezier(0.34, 1.56, 0.64, 1) backwards' : undefined,
+                    /* 영화 선택 시 상영하는 모든 날에서 점(3px)→선(22px)으로 자라남 (마운트 애니메이션) */
+                    animation: 'date-ind-grow 240ms 60ms cubic-bezier(0.34, 1.56, 0.64, 1) backwards',
                     backgroundColor: active ? 'var(--color-primary-100)' : 'var(--color-neutral-500)',
                   }}
                 />
