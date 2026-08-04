@@ -731,11 +731,6 @@ export function TheaterSheet({
     window.open(theater.website, '_blank', 'noopener')
   }
 
-  const copyAddress = () => {
-    shareAdapter.copyToClipboard(theater.address)
-    setCopyCount(c => c + 1)
-  }
-
   const openDirections = () => {
     trackEvent('directions clicked', {
       theater_id: theater.id,
@@ -833,18 +828,20 @@ export function TheaterSheet({
     color: 'var(--color-text-body)',
   }
 
+  /* 2.0: 고스트 유틸리티 — 이 화면의 주 행동은 포스터·시간표라 액션은 침묵.
+     시각은 텍스트+아이콘만, 히트박스는 44 유지(시각 크기 ≠ 터치 크기) */
   const actionBtn: React.CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-    minHeight: 30,
-    padding: '0 12px',
-    border: '1px solid var(--color-border)',
-    borderRadius: 'var(--radius-pill)',
-    background: 'var(--color-surface-card)',
-    color: 'var(--color-text-body)',
-    fontSize: 12,
+    gap: 6,
+    minHeight: 44,
+    padding: '0 10px',
+    border: 'none',
+    borderRadius: 'var(--radius-button)',
+    background: 'transparent',
+    color: 'var(--color-text-sub)',
+    fontSize: 13,
     fontWeight: 600,
     lineHeight: 1,
     whiteSpace: 'nowrap',
@@ -954,10 +951,11 @@ export function TheaterSheet({
         }}>
           <div>
             <div style={{
-              fontSize: 20, fontWeight: 700,
+              fontSize: 'var(--text-h1)', fontWeight: 700,
+              fontFamily: 'var(--font-display)',
               color: 'var(--color-text-primary)',
-              lineHeight: 1.12,
-              letterSpacing: '-0.2px',
+              lineHeight: 1.25,
+              letterSpacing: '0.05em',
               display: 'flex',
               alignItems: 'center',
               gap: 4,
@@ -981,9 +979,6 @@ export function TheaterSheet({
               gap: 4,
             }}>
               <span style={{ minWidth: 0 }}>{theater.address}</span>
-              <button style={inlineIconBtn} onClick={copyAddress} aria-label="주소 복사">
-                <IconCopy size={10} />
-              </button>
             </div>
             <div style={{
               display: 'flex',
@@ -1050,10 +1045,11 @@ export function TheaterSheet({
                 <h2 style={{
                   margin: 0,
                   minWidth: 0,
-                  fontSize: 22,
-                  fontWeight: 800,
+                  fontSize: 'var(--text-h1)',
+                  fontWeight: 700,
                   fontFamily: 'var(--font-display)',
-                  lineHeight: 1.16,
+                  lineHeight: 1.25,
+                  letterSpacing: '0.05em',
                   color: 'var(--color-text-primary)',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
@@ -1085,9 +1081,6 @@ export function TheaterSheet({
                 }}>
                   {theater.address}
                 </span>
-                <button style={inlineIconBtn} onClick={copyAddress} aria-label="주소 복사">
-                  <IconCopy size={10} />
-                </button>
               </div>
             </div>
             <button style={iconBtn} onClick={onClose} aria-label="닫기">
@@ -1394,9 +1387,6 @@ export function TheaterSheet({
               display: 'flex', alignItems: 'center', gap: 4,
             }}>
               <span style={{ minWidth: 0 }}>{theater.address}</span>
-              <button style={inlineIconBtn} onClick={copyAddress} aria-label="주소 복사">
-                <IconCopy size={10} />
-              </button>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
               <button style={actionBtn} onClick={openDirections}>
