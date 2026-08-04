@@ -172,7 +172,7 @@
   /* 날짜 셀 */
   --comp-date-cell-pt:     8px;   /* 2.0: 피그마 DateCell pad */
   --comp-date-cell-pb:     8px;
-  --comp-date-cell-radius: var(--radius-control);   /* 12px — 2.0 피그마 오늘 셀 박스 */
+  --comp-date-cell-radius: var(--radius-button);   /* 8px — 날짜 셀 선택 박스 */
 
   /* 상영시간표 셀 */
   --comp-showtime-p:      16px;   /* 2.0: 셀 내부 여백 12→16 (피그마 확정) */
