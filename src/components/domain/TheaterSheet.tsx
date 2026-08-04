@@ -307,7 +307,7 @@ export function TheaterSheet({
       bookable: next.bookable,
     })
     setSheetFilters(next)
-    if (posterScrollRef.current) posterScrollRef.current.scrollLeft = 0
+    // 스크롤 위치는 센터링 이펙트가 결정 — 선택 영화가 필터에 걸리면 센터, 빠지면 맨 왼쪽
   }
 
   /* ── 진입 애니메이션 ─────────────────────────────────────────── */
@@ -597,6 +597,7 @@ export function TheaterSheet({
   const sortedFilteredEntries = filteredMovieEntries
 
   /* ── 선택 영화로 포스터 스트립 스크롤 ── */
+  const posterCenterDone = useRef(false)
   useEffect(() => {
     const el = posterScrollRef.current
     if (!el || !selectedMovieId || allMovieEntries.length === 0) return
@@ -607,6 +608,12 @@ export function TheaterSheet({
       const matchedIds = new Set(filteredMovieEntries.map(e => e.movie.id))
       const nonMatching = allMovieEntries.filter(e => !matchedIds.has(e.movie.id))
       visualEntries = [...filteredMovieEntries, ...nonMatching]
+
+      // 필터로 선택 영화가 밀려났으면 센터링 대신 맨 왼쪽 — 상영하는 영화들이 보이게
+      if (!matchedIds.has(selectedMovieId)) {
+        el.scrollTo({ left: 0, behavior: 'smooth' })
+        return
+      }
     } else {
       visualEntries = allMovieEntries
     }
@@ -618,7 +625,10 @@ export function TheaterSheet({
     const gap = POSTER_GAP
     const paddingLeft = POSTER_PAD_LEFT
     const targetLeft = paddingLeft + idx * (itemW + gap)
-    el.scrollLeft = Math.max(0, targetLeft - el.clientWidth / 2 + itemW / 2)
+    const left = Math.max(0, targetLeft - el.clientWidth / 2 + itemW / 2)
+    // 시트 첫 진입은 즉시 배치, 이후 선택 변경은 부드럽게 이동
+    el.scrollTo({ left, behavior: posterCenterDone.current ? 'smooth' : 'auto' })
+    posterCenterDone.current = true
   // selectedMovieId 변경(외부 진입 포함) + 데이터 로드 시 실행
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedMovieId, allMovieEntries, filteredMovieEntries, shownExpanded, posterItemW])

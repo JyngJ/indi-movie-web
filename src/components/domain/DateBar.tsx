@@ -131,7 +131,7 @@ export function DateBar({ days, selectedDate, onSelectDate, onPrev, onNext, hasP
                 /* 선택 셀은 좌우 16으로 넓어져 시각적으로 도드라짐 (피그마 오늘 54 vs 38) */
                 paddingLeft: active ? 16 : 8,
                 paddingRight: active ? 16 : 8,
-                transition: 'padding 260ms cubic-bezier(0.34, 1.56, 0.64, 1), background 160ms',
+                transition: 'padding 200ms ease, background 160ms',   /* 오버슈트는 팝(transform)만 — padding 진동 방지 */
                 animation: active ? 'date-cell-pop 260ms cubic-bezier(0.34, 1.56, 0.64, 1)' : undefined,
                 borderRadius: 'var(--comp-date-cell-radius)',
                 backgroundColor: active ? 'var(--color-primary-base)' : 'transparent',
