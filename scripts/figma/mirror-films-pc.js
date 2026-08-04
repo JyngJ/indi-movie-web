@@ -5,6 +5,8 @@
 // 3. 지금출발 캡션: [오늘 18:20 / 극장명] 두 줄
 // 4. 막바지 캡션 위계 정상화 (제목 위 · 보조 아래)
 // 5. ‹› 넘김 버튼은 PC 유지 (마우스 환경 — 호버 노출은 코드 몫)
+// 6. 최대 너비 컬럼: 프레임 1440으로 확장, 본문 콘텐츠는 1200 컬럼 중앙 정렬,
+//    포스터 스크롤 행만 오른쪽 블리드 (잘림 = 스크롤 어포던스)
 //
 // 실행: Scripter 붙여넣고 Run.
 
@@ -126,6 +128,37 @@ const C = { ink:{r:0x0C/255,g:0x0A/255,b:0x08/255}, t600:{r:0x72/255,g:0x6B/255,
     }
     report.push(`지금출발 캡션 ${departN}개 · 막바지 정상화 ${lastN}개`)
   } catch (e) { report.push('✗ 캡션: ' + String(e).slice(0, 60)) }
+}
+
+// ── 6. 최대 너비 1200 컬럼 (프레임 1440) ──
+{
+  try {
+    pc.resize(1440, pc.height)
+    const body = findAll(pc, n => n.name === 'body')[0]
+    if (body) {
+      // body 1368 — 좌우 60 + 자식 내부 24 = 콘텐츠 정렬선 84, 컬럼 1200
+      body.paddingLeft = 60; body.paddingRight = 60
+      body.clipsContent = true
+      const bodyW = 1440 - 72          // rail 72 제외
+      const bleedW = bodyW - 60        // 왼쪽 60부터 body 오른쪽 끝까지
+      for (const child of body.children) {
+        const isRow = child.name === 'row' || child.name === 'pr'
+        if (isRow) {
+          // 스크롤 행: 오른쪽 블리드 — 고정폭으로 컬럼을 넘겨 body 끝까지
+          child.layoutSizingHorizontal = 'FIXED'
+          child.resize(bleedW, child.height)
+          child.clipsContent = true
+          if ('paddingLeft' in child) { child.paddingLeft = 24; child.paddingRight = 0 }
+        } else {
+          if ('layoutSizingHorizontal' in child) child.layoutSizingHorizontal = 'FILL'
+          if ('paddingLeft' in child && child.layoutMode && child.layoutMode !== 'NONE') {
+            child.paddingLeft = 24; child.paddingRight = 24
+          }
+        }
+      }
+    }
+    report.push('컬럼 적용 — 프레임 1440 · 콘텐츠 1200 · 행 블리드')
+  } catch (e) { report.push('✗ 컬럼: ' + String(e).slice(0, 60)) }
 }
 
 // ── 리포트 ──
