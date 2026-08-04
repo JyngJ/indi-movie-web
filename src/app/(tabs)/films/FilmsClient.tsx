@@ -546,6 +546,21 @@ export default function FilmsPage() {
         backgroundColor: 'var(--color-surface-bg)',
       }}
     >
+      {/* 데스크톱: 본문이 레일 위에 뜬 카드처럼 — 좌상/좌하 코너를 레일색으로 깎는 고정 마스크 (지도 탭 패널 r16과 동일 문법) */}
+      {isDesktop && (
+        <>
+          <div aria-hidden style={{
+            position: 'fixed', left: GLOBAL_NAV_DESKTOP_WIDTH, top: 0, width: 16, height: 16,
+            background: 'radial-gradient(circle 16px at 100% 100%, transparent 98%, var(--color-surface-raised) 100%)',
+            zIndex: 1100, pointerEvents: 'none',
+          }} />
+          <div aria-hidden style={{
+            position: 'fixed', left: GLOBAL_NAV_DESKTOP_WIDTH, bottom: 0, width: 16, height: 16,
+            background: 'radial-gradient(circle 16px at 100% 0%, transparent 98%, var(--color-surface-raised) 100%)',
+            zIndex: 1100, pointerEvents: 'none',
+          }} />
+        </>
+      )}
       <header ref={headerRef} style={{ padding: '20px 16px 0' }}>
         {isDesktop ? (
           /* 데스크톱: [영화+서브타이틀]  ←─검색창 절대 중앙─→  [지역칩] */
