@@ -1,6 +1,6 @@
 import type { GvEvent } from '@/data/gv-events'
 
-const GV_AMBER = '#D97706'
+const GV_AMBER = '#B9800E'
 
 export const GV_PIN_W = 148
 export const GV_PIN_CALLOUT_H = 66

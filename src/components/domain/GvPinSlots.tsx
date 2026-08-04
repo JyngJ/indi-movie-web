@@ -2,8 +2,8 @@ import type { GvEvent } from '@/data/gv-events'
 import { isFestivalGroup } from '@/data/gv-events'
 import { gvEventTypeColor } from '@/lib/gv/adapter'
 
-const GV_AMBER = '#D97706'
-const GV_PURPLE = '#7C3AED'
+const GV_AMBER = '#B9800E'
+const GV_PURPLE = '#3E1782'
 const SLOT_W = 130
 
 export const GV_MARKER_STEM_H = 28
@@ -125,7 +125,7 @@ function GvCollapsedChip({ count, theaterName, selected, festivalTitle }: { coun
 
 // ── Expanded stack row ─────────────────────────────────────────────
 function GvStackRow({ ev }: { ev: GvEvent }) {
-  const statusColor = ev.status === '매진' ? '#b91c1c' : ev.status === '매진 임박' ? '#ea580c' : '#16a34a'
+  const statusColor = ev.status === '매진' ? '#9B3331' : ev.status === '매진 임박' ? '#B9800E' : '#4A7C59'
   return (
     <div data-gv-row={ev.id} style={{
       display: 'flex',
@@ -213,7 +213,7 @@ function GvExpandedStack({ events, theaterName, festivalTitle }: { events: GvEve
 
 // ── Zoom 14+ DS card ──────────────────────────────────────────────
 function GvDsCard({ ev, first }: { ev: GvEvent; first: boolean }) {
-  const statusColor = ev.status === '매진' ? '#b91c1c' : ev.status === '매진 임박' ? '#ea580c' : '#16a34a'
+  const statusColor = ev.status === '매진' ? '#9B3331' : ev.status === '매진 임박' ? '#B9800E' : '#4A7C59'
   return (
     <div data-gv-row={ev.id} style={{
       width: SLOT_W,

@@ -2,8 +2,8 @@ import type { GvEvent } from '@/data/gv-events'
 import { isFestivalGroup } from '@/data/gv-events'
 import { GvBottomSlot, GV_MARKER_STEM_H, GV_MARKER_DOT_D } from './GvPinSlots'
 
-const GV_AMBER = '#D97706'
-const GV_PURPLE = '#7C3AED'
+const GV_AMBER = '#B9800E'
+const GV_PURPLE = '#3E1782'
 
 interface GvMarkerIconProps {
   events: GvEvent[]

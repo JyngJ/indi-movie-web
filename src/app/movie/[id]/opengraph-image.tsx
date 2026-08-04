@@ -75,7 +75,7 @@ export default async function OgImage({ params }: { params: Promise<{ id: string
           }}
         >
           {/* 상단: 앱 이름 */}
-          <div style={{ display: 'flex', fontSize: 20, color: '#4A6380', fontFamily: 'KIMM', fontWeight: 700 }}>
+          <div style={{ display: 'flex', fontSize: 20, color: '#8794C5', fontFamily: 'KIMM', fontWeight: 700 }}>
             영화볼지도
           </div>
 
@@ -90,8 +90,8 @@ export default async function OgImage({ params }: { params: Promise<{ id: string
                       display: 'flex',
                       fontSize: 16,
                       fontWeight: 600,
-                      color: '#4A6380',
-                      background: '#1A2530',
+                      color: '#8794C5',
+                      background: '#1F2747',
                       borderRadius: 6,
                       padding: '3px 12px',
                     }}
@@ -106,14 +106,14 @@ export default async function OgImage({ params }: { params: Promise<{ id: string
                 fontFamily: 'KIMM',
                 fontSize: title.length > 10 ? 56 : 72,
                 fontWeight: 700,
-                color: '#F8F6F2',
+                color: '#FAF9F8',
                 lineHeight: 1.1,
               }}
             >
               {title}
             </div>
             {originalTitle && (
-              <div style={{ fontSize: 20, color: '#635D55', fontStyle: 'italic' }}>
+              <div style={{ fontSize: 20, color: '#726B65', fontStyle: 'italic' }}>
                 {originalTitle}
               </div>
             )}
