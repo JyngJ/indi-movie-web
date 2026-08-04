@@ -3426,6 +3426,17 @@ export default function MapView() {
         />
       )}
 
+      {/* 패널 왼쪽 라운드 코너 뒤로 레일 면이 이어져 보이게 하는 언더레이 (패널류 z 900/940 아래) */}
+      {isDesktopLayout && (searchOpen || !!selectedTheater || !!displayedPanel || !dockCollapsed) && (
+        <div aria-hidden style={{
+          position: 'absolute',
+          top: 0, bottom: 0, left: GLOBAL_NAV_DESKTOP_WIDTH, width: 16,
+          backgroundColor: 'var(--color-surface-raised)',
+          zIndex: 890,
+          pointerEvents: 'none',
+        }} />
+      )}
+
       {/* 큐레이션 도크 — 데스크톱 전용 좌측 상시 패널. 검색 패널·극장 시트와 같은 슬롯·크기를 공유하며 셋 다 비활성일 때만 노출(네이버 지도 레퍼런스) */}
       {isDesktopLayout && !searchOpen && !selectedTheater && !displayedPanel && (
         <div style={{
@@ -3437,7 +3448,7 @@ export default function MapView() {
           display: 'flex',
           flexDirection: 'column',
           zIndex: 900,
-          boxShadow: 'var(--shadow-md)',   /* 피그마 PC panel: 2.0/shadow/md */
+          boxShadow: 'var(--shadow-sm)',   /* 패널 부상 — md는 과함 */
           borderRadius: '16px 0 0 16px',   /* 레일 위에 뜬 본문 카드 — 왼쪽 코너만 */
           overflow: 'hidden',
           transform: dockCollapsed ? 'translateX(-100%)' : 'translateX(0)',
@@ -3671,7 +3682,7 @@ export default function MapView() {
             display: 'flex',
             flexDirection: 'column',
             zIndex: 900,
-            boxShadow: 'var(--shadow-md)',
+            boxShadow: 'var(--shadow-sm)',
             borderRadius: '16px 0 0 16px',
             overflow: 'hidden',
             transform: dockCollapsed ? 'translateX(-100%)' : 'translateX(0)',
@@ -3693,7 +3704,7 @@ export default function MapView() {
           display: 'flex',
           flexDirection: 'column',
           zIndex: 940,
-          boxShadow: 'var(--shadow-md)',
+          boxShadow: 'var(--shadow-sm)',
           borderRadius: '16px 0 0 16px',
           overflow: 'hidden',
           transform: panelIn ? 'translateX(0)' : 'translateX(-100%)',
