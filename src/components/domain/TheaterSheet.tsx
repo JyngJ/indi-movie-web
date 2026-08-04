@@ -24,8 +24,8 @@ import { BookingCtaButton, ShareScheduleButton } from './booking/BookingActions'
 import type { GvEvent } from '@/data/gv-events'
 
 /* ── 상수 ──────────────────────────────────────────────────────── */
-// 접힌 상태에서 보이는 높이 = 핸들(20) + 헤더(88, 액션버튼 포함) + 포스터스트립(228) + 테두리(2) + 탭바 여백 + safe-area 여유분
-export const THEATER_SHEET_COLLAPSED_H = 344 + GLOBAL_NAV_MOBILE_HEIGHT + 34
+// 접힌 상태에서 보이는 높이 — 피그마 TOBE collapsed: 핸들(24) + 헤더(128) + 포스터스트립(262, 포스터 238 + 상하 12)
+export const THEATER_SHEET_COLLAPSED_H = 414 + GLOBAL_NAV_MOBILE_HEIGHT
 
 /* ── 포스터 캐러셀 레이아웃 — 2.0: 고정폭 128 (피그마 PosterItem 스펙) ──
    화면 분할(N열 딱 맞춤) 폐지 — 스크롤 리스트는 다음 아이템이 잘려 보이는 게 어포던스.
@@ -898,7 +898,7 @@ export function TheaterSheet({
         zIndex: dockMode ? undefined : 1200,  // GlobalNav 모바일 탭바(zIndex 1150)보다 위 — 시트가 하단 메뉴를 가려야 함
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: dockMode ? 'transparent' : panelMode ? 'var(--color-surface-card)' : 'var(--color-surface-raised)',
+        backgroundColor: dockMode ? 'transparent' : panelMode ? 'var(--color-surface-card)' : 'var(--color-surface-bg)',
         border: dockMode ? undefined : panelMode ? '1px solid var(--color-border)' : undefined,
         borderRadius: dockMode
           ? 0
@@ -1404,7 +1404,7 @@ export function TheaterSheet({
           {/* DateBar — sticky */}
           <div ref={dateBarStickyRef} style={{
             position: 'sticky', top: 0, zIndex: 10,
-            backgroundColor: panelMode ? 'var(--color-surface-card)' : 'var(--color-surface-raised)',
+            backgroundColor: panelMode ? 'var(--color-surface-card)' : 'var(--color-surface-bg)',
             borderTop: panelMode ? 'none' : '1px solid var(--color-border)',
             borderBottom: panelMode ? '1px solid var(--color-border)' : undefined,
           }}>
