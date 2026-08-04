@@ -3438,6 +3438,7 @@ export default function MapView() {
           flexDirection: 'column',
           zIndex: 900,
           boxShadow: 'var(--shadow-md)',   /* 피그마 PC panel: 2.0/shadow/md */
+          borderRadius: '16px 0 0 16px',   /* 레일 위에 뜬 본문 카드 — 왼쪽 코너만 */
           overflow: 'hidden',
           transform: dockCollapsed ? 'translateX(-100%)' : 'translateX(0)',
           transition: 'transform 220ms cubic-bezier(0.32, 0.72, 0, 1)',
@@ -3671,6 +3672,7 @@ export default function MapView() {
             flexDirection: 'column',
             zIndex: 900,
             boxShadow: 'var(--shadow-md)',
+            borderRadius: '16px 0 0 16px',
             overflow: 'hidden',
             transform: dockCollapsed ? 'translateX(-100%)' : 'translateX(0)',
             transition: 'transform 220ms cubic-bezier(0.32, 0.72, 0, 1)',
@@ -3692,6 +3694,7 @@ export default function MapView() {
           flexDirection: 'column',
           zIndex: 940,
           boxShadow: 'var(--shadow-md)',
+          borderRadius: '16px 0 0 16px',
           overflow: 'hidden',
           transform: panelIn ? 'translateX(0)' : 'translateX(-100%)',
           transition: panelIn
