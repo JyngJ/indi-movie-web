@@ -396,6 +396,11 @@ export function CurationSectionRow({
   // 2.0: 헤더 우측 버튼 폐기 — 스크롤 행 hover 시 좌/우 가장자리 오버레이 (PC 전용)
   const posterMidY = scaleBleed + 8 + height / 2
 
+  // PC: 더 스크롤할 방향만 가장자리 페이드 — 딱 잘리는 어색함 완화, 끝에 닿으면 페이드 없음
+  const rowMask = isDesktop
+    ? `linear-gradient(90deg, ${canScrollLeft ? 'transparent 0%, #000 4%' : '#000 0%'}, ${canScrollRight ? '#000 96%, transparent 100%' : '#000 100%'})`
+    : undefined
+
   return (
     <section ref={setSectionRef} id={id} style={{ paddingTop: noHeader ? 0 : (isDesktop ? 48 : 32) }}>
       {!noHeader && (
@@ -433,6 +438,7 @@ export function CurationSectionRow({
             /* 호버 스케일 여유(scaleBleed)는 음수 마진으로 상쇄 — 포스터 시작선 = 거터 24 */
             padding: `${scaleBleed + 8}px calc(${scaleBleed}px + var(--gutter-sheet))`,
             margin: `0 ${-scaleBleed}px`,
+            WebkitMaskImage: rowMask, maskImage: rowMask,
           }}
         >
           {movies.map((movie) => (

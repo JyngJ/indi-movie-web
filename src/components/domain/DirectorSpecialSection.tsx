@@ -319,7 +319,15 @@ export function DirectorSpecialSection({
         ref={scrollRef}
         onScroll={updateScrollEdge}
         className="no-scrollbar"
-        style={{ display: 'flex', gap, overflowX: 'auto', padding: `${scaleBleed + 8}px calc(${scaleBleed}px + var(--gutter-sheet))`, margin: `0 ${-scaleBleed}px` }}
+        style={{
+          display: 'flex', gap, overflowX: 'auto',
+          padding: `${scaleBleed + 8}px calc(${scaleBleed}px + var(--gutter-sheet))`,
+          margin: `0 ${-scaleBleed}px`,
+          ...(isDesktop ? (() => {
+            const m = `linear-gradient(90deg, ${canScrollLeft ? 'transparent 0%, #000 4%' : '#000 0%'}, ${canScrollRight ? '#000 96%, transparent 100%' : '#000 100%'})`
+            return { WebkitMaskImage: m, maskImage: m }
+          })() : {}),
+        }}
       >
         {films.map((movie) => (
           <MovieCard
