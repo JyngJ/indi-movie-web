@@ -164,7 +164,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
     <div className="page-slide-in" style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
       {navBar}
 
-      <div style={{ maxWidth: isDesktop ? 1200 : undefined, margin: isDesktop ? '0 auto' : undefined }}>
+      <div style={{ maxWidth: isDesktop ? 1000 : undefined, margin: isDesktop ? '0 auto' : undefined }}>
         {heroSection}
 
         {/* 소개 */}
