@@ -356,11 +356,17 @@ export function DirectorSpecialSection({
       }}>
         {directorName} 특별전
       </h2>
-      {/* 극장 플랫 헤더 — [클래퍼보드 + 극장명/캡션] ... 영화관 보기 › */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0 var(--gutter-sheet) 4px' }}>
+      {/* 극장 헤더 — 모바일: 통짜 틴트 바(피그마 Frame 27), PC: 플랫 행 */}
+      <div style={isDesktop ? { display: 'flex', alignItems: 'center', gap: 12, padding: '0 var(--gutter-sheet) 4px' } : {
+        display: 'flex', alignItems: 'center', gap: 12,
+        margin: '0 var(--gutter-sheet) 4px',
+        padding: 'var(--spacing-2) var(--spacing-4) var(--spacing-2) var(--spacing-2)',
+        backgroundColor: 'var(--color-primary-subtle-l)',
+        borderRadius: 'var(--radius-button)',
+      }}>
         <span style={{
           width: 40, height: 40, flexShrink: 0, borderRadius: 'var(--radius-badge)',
-          backgroundColor: 'var(--color-primary-subtle-l)',
+          backgroundColor: isDesktop ? 'var(--color-primary-subtle-l)' : 'transparent',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           <TheaterIcon size={21} strokeWidth={1.75} color="var(--color-primary-base)" />
@@ -375,9 +381,11 @@ export function DirectorSpecialSection({
         </div>
         {onTheaterClick && (
           <button
+            className="hover-raise"
             onClick={() => onTheaterClick(theater.id)}
             style={{
-              border: 'none', background: 'transparent', padding: '12px 0',
+              border: 'none', background: 'transparent', padding: 'var(--spacing-3) var(--spacing-2)',
+              borderRadius: 'var(--radius-button)',
               fontSize: 'var(--text-body)', fontWeight: 500, color: 'var(--color-text-sub)',
               cursor: 'pointer', whiteSpace: 'nowrap', minHeight: 'auto',
             }}

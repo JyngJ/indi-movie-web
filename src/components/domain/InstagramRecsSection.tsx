@@ -346,9 +346,10 @@ export function InstagramRecsSection({
           <button
             onClick={() => window.open(INSTAGRAM_PROFILE_URL, '_blank', 'noopener,noreferrer')}
             aria-label="인스타그램에서 더 보기"
+            className="hover-raise"
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              width: 28, height: 28, minHeight: 'auto', padding: 0,
+              width: 28, height: 28, minHeight: 'auto', padding: 0, borderRadius: 'var(--radius-button)',
               border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-text-caption)',
             }}
           >

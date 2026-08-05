@@ -160,7 +160,7 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
           </div>
 
           {/* 정렬 드롭다운 */}
-          <select
+          <select className="hover-raise"
             value={sortKey}
             onChange={(e) => setSortKey(e.target.value as SortKey)}
             style={{

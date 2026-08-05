@@ -29,7 +29,7 @@ export function FilterChip({ label, value, open, selected, hasDropdown, onClick,
   }
 
   return (
-    <button
+    <button className="hover-raise"
       ref={chipRef}
       onClick={onClick}
       style={{

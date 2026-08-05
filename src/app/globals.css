@@ -157,6 +157,12 @@ img {
   50%       { opacity: 0.75; }
 }
 
+/* 호버 인벤토리 공통 — 칩·링크·아이콘 버튼: hover 시 눌린 면 배경 */
+.hover-raise { transition: background-color 120ms ease; }
+@media (hover: hover) {
+  .hover-raise:hover { background-color: var(--color-surface-raised); }
+}
+
 /* 시의성 캡션 — 통째 clickable, 호버 시 배경 */
 .caption-link {
   border-radius: 8px;
