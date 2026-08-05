@@ -119,14 +119,16 @@ function MobileTabBar({ pathname, filmsHref }: { pathname: string; filmsHref: st
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
+              justifyContent: 'center',
               gap: 4,
+              minWidth: 52,   /* 아이콘+짧은 라벨도 정사각형에 가깝게 (피그마 51×53) */
               padding: '8px var(--gutter-md)',
               borderRadius: 8,
               background: active ? 'color-mix(in srgb, var(--color-primary-base) 11%, transparent)' : 'transparent',
               color,
             }}>
               <Icon size={23} />
-              <span style={{ fontSize: 'var(--text-badge)', fontWeight: 600 }}>{label}</span>
+              <span style={{ fontSize: 'var(--text-badge)', fontWeight: 600, lineHeight: 1 }}>{label}</span>
             </span>
           </Link>
         )

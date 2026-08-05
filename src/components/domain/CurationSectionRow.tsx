@@ -404,7 +404,7 @@ export function CurationSectionRow({
         </div>
       )}
       <div
-        style={{ position: 'relative' }}
+        style={{ position: 'relative', overflowX: 'clip' }}   /* 음수 마진 행이 페이지 가로 스크롤 안 만들게 */
         onMouseEnter={isDesktop ? () => setRowHovered(true) : undefined}
         onMouseLeave={isDesktop ? () => setRowHovered(false) : undefined}
       >

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { Theater as TheaterIcon } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import type { Movie, Theater } from '@/types/api'
 import { PosterThumb } from '@/components/domain/PosterThumb'
@@ -296,7 +297,7 @@ export function DirectorSpecialSection({
 
   const filmScroll = (
     <div
-      style={{ position: 'relative' }}
+      style={{ position: 'relative', overflowX: 'clip' }}
       onMouseEnter={() => setScrollAreaHovered(true)}
       onMouseLeave={() => setScrollAreaHovered(false)}
     >
@@ -354,12 +355,7 @@ export function DirectorSpecialSection({
           backgroundColor: 'var(--color-primary-subtle-l)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <svg width={21} height={21} viewBox="0 0 24 24" fill="none" stroke="var(--color-primary-base)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z" />
-            <path d="m6.2 5.3 3.1 3.9" />
-            <path d="m12.4 3.4 3.1 4" />
-            <path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
-          </svg>
+          <TheaterIcon size={21} strokeWidth={1.75} color="var(--color-primary-base)" />
         </span>
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
           <span style={{ fontSize: 'var(--text-title)', fontWeight: 700, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
