@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { GLOBAL_NAV_DESKTOP_WIDTH } from '@/components/navigation/GlobalNav'
+import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 
 /** 라우트 전환 진행 표시 — navStart() 호출로 시작.
  *  피그마 확정: 3px, 트랙 neutral/300 · 바 neutral/800, 프로그레스바 방식(좌→우 채움).
@@ -41,8 +41,10 @@ export function RouteProgressBar({ isDesktop }: { isDesktop: boolean }) {
       aria-hidden
       style={{
         position: 'fixed',
-        top: 0,
-        // 모바일: 뷰포트 최상단 전체 폭 / 웹: 본문(레일 제외) 상단
+        // 모바일: 바텀 탭바 바로 위에 밀착 / 웹: 본문(레일 제외) 상단
+        ...(isDesktop
+          ? { top: 0 }
+          : { bottom: `calc(${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))` }),
         left: isDesktop ? GLOBAL_NAV_DESKTOP_WIDTH : 0,
         right: 0,
         height: 3,
