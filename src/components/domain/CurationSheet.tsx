@@ -253,7 +253,7 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
           transform: hovered ? 'scale(1.1)' : 'scale(1)',
           transformOrigin: 'center center',
         }}>
-          <PosterThumb src={item.posterUrl} alt={item.title} width={posterSize.width} height={posterSize.height} size="lg" radius={0} shadow={false} />
+          <PosterThumb src={item.posterUrl} alt={item.title} width={posterSize.width} height={posterSize.height} size="lg" shadow={false} />
           {item.distanceLabel && (
             <div style={{
               position: 'absolute',

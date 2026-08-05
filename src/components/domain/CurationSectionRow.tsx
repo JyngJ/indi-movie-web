@@ -263,7 +263,7 @@ function MovieCard({
             position: 'relative',
           }}
         >
-          <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} radius={0} shadow={false} />
+          <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} shadow={false} />
           {daysLeft != null && (
             <span style={{
               position: 'absolute', top: 6, right: 6,
@@ -380,7 +380,7 @@ export function CurationSectionRow({
               style={{ display: 'flex', gap: 8, alignItems: 'flex-start', flex: 1, minWidth: 0, cursor: onMovieClick ? 'pointer' : undefined }}
             >
               <div style={{ flexShrink: 0 }}>
-                <PosterThumb src={movie.posterUrl} alt={movie.title} width={108} height={162} radius={0} shadow={false} />
+                <PosterThumb src={movie.posterUrl} alt={movie.title} width={108} height={162} shadow={false} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, justifyContent: 'center' }}>
                 <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-body)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3 }}>

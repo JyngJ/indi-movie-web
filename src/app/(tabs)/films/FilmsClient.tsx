@@ -290,7 +290,7 @@ export default function FilmsPage() {
   )
 
   /* 시의성 캡션 — [시간 / 극장] 통째 clickable → 극장 상세 시간표. PC는 폰트 한 단계 승격 */
-  const theaterCaption = (movieKey: string, theaterId: string, timeText: string, theaterName: string, deep?: { date: string; time: string }) => {
+  const theaterCaption = (movieKey: string, theaterId: string, timeText: string, theaterName: string, deep?: { date: string; time: string }, seatText?: string) => {
     const href = deep
       ? `/films/theater/${theaterId}?movie=${movieKey}&date=${deep.date}&time=${deep.time}`
       : `/films/theater/${theaterId}`
@@ -305,7 +305,10 @@ export default function FilmsPage() {
       onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); go() } }}
       style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4, minHeight: 'auto' }}
     >
-      <span style={{ fontSize: isDesktop ? 'var(--text-body)' : 'var(--text-meta)', color: 'var(--color-neutral-800)', fontWeight: 600, fontFeatureSettings: '"tnum"' }}>{timeText}</span>
+      <span style={{ fontSize: isDesktop ? 'var(--text-body)' : 'var(--text-meta)', color: 'var(--color-neutral-800)', fontWeight: 600, fontFeatureSettings: '"tnum"' }}>
+        {timeText}
+        {seatText && <span style={{ color: 'var(--color-error)', marginLeft: 'var(--spacing-2)' }}>{seatText}</span>}
+      </span>
       <span style={{ fontSize: isDesktop ? 'var(--text-body)' : 'var(--text-meta)', color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{theaterName}</span>
     </div>
     )
@@ -320,10 +323,13 @@ export default function FilmsPage() {
       const theaterName = first?.theaterName ?? ''
 
       const theaterId = first?.theaterId ?? ''
+      // 잔여석은 크롤 스냅샷 — 0석이면 표시하지 않음 (isAlmostSoldOut이 매진을 거르지만 방어)
+      const seatText = first && first.seatAvailable > 0 ? `잔여 ${first.seatAvailable}석` : undefined
       return [
         f.movie.id,
         theaterCaption(f.movie.id, theaterId, dateText, theaterName,
-          first ? { date: first.showDate, time: first.showTime } : undefined),
+          first ? { date: first.showDate, time: first.showTime } : undefined,
+          seatText),
       ]
     })
   )
