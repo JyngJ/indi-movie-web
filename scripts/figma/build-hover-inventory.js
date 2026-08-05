@@ -74,11 +74,19 @@ function sample(kind, hover) {
       }
       break
     }
-    case 'link':      // 영화관 보기 › · 감독 상세 · 인스타 더보기 · 시의성 캡션
+    case 'link':      // 영화관 보기 › · 감독 상세 · 인스타 더보기
       f.cornerRadius = 8
       f.fills = hover ? fill(C.raised) : []
       f.appendChild(mkText('영화관 보기 ›', 14, 'Medium', C.t600))
       break
+    case 'caption': {  // 시의성 캡션 — [시간 / 극장] 2줄 통째 클릭
+      const b = mkAuto('caption', 'VERTICAL', 4, [4, 8, 4, 8])
+      b.cornerRadius = 8
+      b.fills = hover ? fill(C.raised) : []
+      b.appendChild(mkText('오늘 18:40', 12, 'Bold', '#2B2622'))
+      b.appendChild(mkText('황성시네마', 12, 'Regular', C.t500))
+      return b
+    }
     case 'navbtn': {  // ‹› 원형
       const b = figma.createFrame()
       b.resize(28, 28); b.cornerRadius = 9999
@@ -120,7 +128,7 @@ const ITEMS = [
   ['예매 가능만 보기 · 필터 필', 'chip'],
   ['플랫 링크 — 영화관 보기 › · 감독 상세', 'link'],
   ['인스타 더 보기 ↗ (섹션 타이틀 우측)', 'link'],
-  ['시의성 캡션 (시간/극장 — 통째 클릭)', 'link'],
+  ['시의성 캡션 (시간/극장 — 통째 클릭 → 극장 상세)', 'caption'],
   ['‹ › 원형 넘김 버튼 (hover 노출 + hover 배경)', 'navbtn'],
   ['탭 (레일·모바일 하단)', 'tab'],
   ['정렬 셀렉트 (전체 그리드)', 'select'],
