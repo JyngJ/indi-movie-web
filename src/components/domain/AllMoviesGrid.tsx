@@ -90,21 +90,12 @@ interface Props {
 export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMovie, onMovieClick }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>('theaters_desc')
 
-  if (movies.length === 0) return null
-
-  const tcMap = theaterCountByMovie ?? new Map<string, number>()
-  const sorted = sortMovies(movies, sortKey, tcMap)
-  const regionText = regionLabel ? `${regionLabel} ` : ''
-
-  const logoSize = isDesktop ? 120 : 90
-  const bottomSafeArea = isDesktop ? 32 : GLOBAL_NAV_MOBILE_HEIGHT + 24
-
-  /* 무한 로드 — 스크롤 하단 도달 시 청크 단위로 추가, 로드 중엔 고스트 */
-  const CHUNK = isDesktop ? 24 : 18
+  /* 무한 로드 — 훅은 얼리 리턴보다 항상 먼저 (Rules of Hooks) */
+  const CHUNK = isDesktop ? 12 : 9   /* 3줄씩 (웹 4열·모바일 3열) */
   const [visibleCount, setVisibleCount] = useState(CHUNK)
   const [loadingMore, setLoadingMore] = useState(false)
   const sentinelRef = useRef<HTMLDivElement>(null)
-  const hasMore = visibleCount < sorted.length
+  const hasMore = visibleCount < movies.length
   useEffect(() => {
     const el = sentinelRef.current
     if (!el || !hasMore) return
@@ -117,6 +108,15 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
     io.observe(el)
     return () => io.disconnect()
   }, [hasMore, loadingMore, CHUNK])
+
+  if (movies.length === 0) return null
+
+  const tcMap = theaterCountByMovie ?? new Map<string, number>()
+  const sorted = sortMovies(movies, sortKey, tcMap)
+  const regionText = regionLabel ? `${regionLabel} ` : ''
+
+  const logoSize = isDesktop ? 120 : 90
+  const bottomSafeArea = isDesktop ? 32 : GLOBAL_NAV_MOBILE_HEIGHT + 24
 
   return (
     <>
