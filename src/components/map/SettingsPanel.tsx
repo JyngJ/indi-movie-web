@@ -88,11 +88,12 @@ export function SettingsHeader({ title, onBack, onClose, submitting }: { title: 
 const footerLink: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', height: 30, padding: '0 8px',
   background: 'none', border: 'none', cursor: 'pointer', minHeight: 'unset',
-  fontSize: 13, color: 'var(--color-text-sub)',
+  fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)',
+  fontFamily: 'var(--font-sans)', fontWeight: 500, borderRadius: 'var(--radius-button)',
 }
 const footerDot: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', height: 30,
-  fontSize: 13, color: 'var(--color-text-placeholder)',
+  fontSize: 'var(--text-meta)', color: 'var(--color-text-placeholder)',
 }
 
 /* ── 설정 메인 ── */
@@ -134,10 +135,10 @@ export function SettingsMainPage({
 
       {/* 푸터 링크 */}
       <div style={{ margin: '24px 16px 0', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
-        <Button variant="ghost" size="sm" onClick={() => onNavigate('attribution')}>출처 표기 정보</Button>
+        <Button variant="ghost" size="sm" style={{ color: 'var(--color-text-sub)', fontWeight: 500 }} onClick={() => onNavigate('attribution')}>출처 표기 정보</Button>
         <span style={footerDot}>·</span>
         {/* 만든 사람 탭 임시 숨김 */}
-        <Link href="/privacy" style={{ ...footerLink, textDecoration: 'none' }}>개인정보 처리방침</Link>
+        <Link href="/privacy" className="hover-raise" style={{ ...footerLink, height: 32, textDecoration: 'none' }}>개인정보 처리방침</Link>
       </div>
       <div style={{ textAlign: 'center', marginTop: 8, fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)' }}>
         영화볼지도 · v0.1.0

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { SectionHeader, MovieCardSkeleton } from '@/components/primitives'
 import { AllMoviesGrid } from '@/components/domain/AllMoviesGrid'
+import { RouteProgressBar, navStart } from '@/components/domain/RouteProgressBar'
 import { AnniversarySection } from '@/components/domain/AnniversarySection'
 import { CurationSectionRow } from '@/components/domain/CurationSectionRow'
 import { DirectorSpecialSection } from '@/components/domain/DirectorSpecialSection'
@@ -197,8 +198,8 @@ export default function FilmsPage() {
     if (sessionStorage.getItem('yh_region_tip') === 'closed') setRegionHintDismissed(true)
   }, [])
 
-  const handleMovieClick = (id: string) => router.push(`/films/movie/${id}`)
-  const handleDirectorClick = (name: string) => router.push(`/films/director/${encodeURIComponent(name)}`)
+  const handleMovieClick = (id: string) => { navStart(); router.push(`/films/movie/${id}`) }
+  const handleDirectorClick = (name: string) => { navStart(); router.push(`/films/director/${encodeURIComponent(name)}`) }
 
   const { state: locState, coords: locCoords, modalSuppressed: locModalSuppressed, request: requestLoc, dismiss: dismissLoc } = useLocationPermission()
   const isDesktop = mounted && isDesktopLayout
@@ -289,20 +290,26 @@ export default function FilmsPage() {
   )
 
   /* 시의성 캡션 — [시간 / 극장] 통째 clickable → 극장 상세 시간표. PC는 폰트 한 단계 승격 */
-  const theaterCaption = (movieKey: string, theaterId: string, timeText: string, theaterName: string) => (
+  const theaterCaption = (movieKey: string, theaterId: string, timeText: string, theaterName: string, deep?: { date: string; time: string }) => {
+    const href = deep
+      ? `/films/theater/${theaterId}?movie=${movieKey}&date=${deep.date}&time=${deep.time}`
+      : `/films/theater/${theaterId}`
+    const go = () => { navStart(); router.push(href) }
+    return (
     <div
       key={movieKey}
       className="caption-link"
       role="button"
       tabIndex={0}
-      onClick={(e) => { e.stopPropagation(); router.push(`/films/theater/${theaterId}`) }}
-      onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); router.push(`/films/theater/${theaterId}`) } }}
+      onClick={(e) => { e.stopPropagation(); go() }}
+      onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); go() } }}
       style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4, minHeight: 'auto' }}
     >
       <span style={{ fontSize: isDesktop ? 'var(--text-body)' : 'var(--text-meta)', color: 'var(--color-neutral-800)', fontWeight: 600, fontFeatureSettings: '"tnum"' }}>{timeText}</span>
       <span style={{ fontSize: isDesktop ? 'var(--text-body)' : 'var(--text-meta)', color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{theaterName}</span>
     </div>
-  )
+    )
+  }
 
   const almostSoldOutCustomInfos = new Map<string, React.ReactNode>(
     almostSoldOutFilms.map((f) => {
@@ -315,7 +322,8 @@ export default function FilmsPage() {
       const theaterId = first?.theaterId ?? ''
       return [
         f.movie.id,
-        theaterCaption(f.movie.id, theaterId, dateText, theaterName),
+        theaterCaption(f.movie.id, theaterId, dateText, theaterName,
+          first ? { date: first.showDate, time: first.showTime } : undefined),
       ]
     })
   )
@@ -378,7 +386,8 @@ export default function FilmsPage() {
       const theaterId = first?.theaterId ?? ''
       return [
         f.movie.id,
-        theaterCaption(f.movie.id, theaterId, dateText, theaterName),
+        theaterCaption(f.movie.id, theaterId, dateText, theaterName,
+          first ? { date: first.showDate, time: first.showTime } : undefined),
       ]
     })
   )
@@ -416,7 +425,8 @@ export default function FilmsPage() {
       const theaterId = first?.theaterId ?? ''
       return [
         f.movie.id,
-        theaterCaption(f.movie.id, theaterId, dateText, theaterName),
+        theaterCaption(f.movie.id, theaterId, dateText, theaterName,
+          first ? { date: first.showDate, time: first.showTime } : undefined),
       ]
     })
   )
@@ -744,6 +754,8 @@ export default function FilmsPage() {
         {/* 구분선 */}
         <div style={{ marginTop: 16, height: 1, background: 'var(--color-border)' }} />
       </header>
+
+      <RouteProgressBar isDesktop={isDesktop} />
 
       {/* 2.0: PC 콘텐츠 최대폭 컬럼 (내부 gutter 포함 시각 ≈1000) — 프레임은 풀블리드 유지 */}
       <div style={isDesktop ? { maxWidth: 1048, margin: '0 auto' } : undefined}>

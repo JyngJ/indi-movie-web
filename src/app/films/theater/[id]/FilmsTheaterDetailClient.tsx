@@ -306,30 +306,42 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
     setSelectedMovieTitle(null)
   }, [selectedDate])
 
-  // 공유 링크로 진입 시 선택된 회차 복원
+  // 공유 링크·큐레이션 캡션 진입 시 선택된 회차 복원 (+ 해당 영화 카드로 스크롤)
   useEffect(() => {
     if (restoredShareRef.current) return
     const dateParam = searchParams.get('date')
     const showtimeParam = searchParams.get('showtime')
-    if (!dateParam || !showtimeParam) return
+    const movieParam = searchParams.get('movie')
+    const timeParam = searchParams.get('time')
+    if (!dateParam || (!showtimeParam && !(movieParam && timeParam))) return
     if (dayShowtimes.length === 0) return
     if (selectedDate !== dateParam) {
-      // 공유된 날짜로 먼저 이동 — dayShowtimes가 새 날짜로 다시 로드된 뒤 이 effect가 재실행된다
+      // 해당 날짜로 먼저 이동 — dayShowtimes가 새 날짜로 다시 로드된 뒤 이 effect가 재실행된다
       suppressResetOnDateChangeRef.current = true
       setSelectedDate(dateParam)
       return
     }
 
-    const st = dayShowtimes.find((s) => s.id === showtimeParam)
+    const st = showtimeParam
+      ? dayShowtimes.find((s) => s.id === showtimeParam)
+      : dayShowtimes.find((s) => s.movieId === movieParam && s.showTime.startsWith(timeParam!))
     if (!st) return
 
     restoredShareRef.current = true
     setSelectedShowtimeId(st.id)
     setSelectedMovieTitle(st.movieTitle)
 
+    // 방금 선택한 상영표가 있는 영화 카드로 스크롤
+    setTimeout(() => {
+      document.querySelector(`[data-movie-anchor="${st.movieId}"]`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 150)
+
     const url = new URL(window.location.href)
     url.searchParams.delete('date')
     url.searchParams.delete('showtime')
+    url.searchParams.delete('movie')
+    url.searchParams.delete('time')
     window.history.replaceState({}, '', url.toString())
   }, [searchParams, dayShowtimes, selectedDate])
 
@@ -520,8 +532,8 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
         ) : (
           <div style={isDesktop ? { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 0, columnGap: 16 } : {}}>
             {movieShowtimeGroups.map(({ movie, showtimes }) => (
+              <div key={movie.id} data-movie-anchor={movie.id}>
               <MovieShowtimeCard
-                key={movie.id}
                 movie={movie}
                 showtimes={showtimes}
                 isDesktop={isDesktop}
@@ -544,6 +556,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
                 }}
                 selectedShowtimeId={selectedShowtimeId}
               />
+              </div>
             ))}
           </div>
         )}
