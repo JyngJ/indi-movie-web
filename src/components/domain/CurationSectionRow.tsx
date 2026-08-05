@@ -397,7 +397,7 @@ export function CurationSectionRow({
   const posterMidY = scaleBleed + 8 + height / 2
 
   return (
-    <section ref={setSectionRef} id={id} style={{ paddingTop: noHeader ? 0 : (isDesktop ? 48 : 24) }}>
+    <section ref={setSectionRef} id={id} style={{ paddingTop: noHeader ? 0 : (isDesktop ? 48 : 32) }}>
       {!noHeader && (
         <div>
           <SectionHeader title={title} description={description} isDesktop={isDesktop} />
@@ -430,7 +430,7 @@ export function CurationSectionRow({
             display: 'flex',
             gap,
             overflowX: 'auto',
-            padding: `${scaleBleed + 8}px calc(${scaleBleed}px + var(--gutter))`,
+            padding: `${scaleBleed + 8}px calc(${scaleBleed}px + var(--gutter-sheet))`,
           }}
         >
           {movies.map((movie) => (

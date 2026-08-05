@@ -318,7 +318,7 @@ export function DirectorSpecialSection({
         ref={scrollRef}
         onScroll={updateScrollEdge}
         className="no-scrollbar"
-        style={{ display: 'flex', gap, overflowX: 'auto', padding: `${scaleBleed + 8}px calc(${scaleBleed}px + var(--gutter))` }}
+        style={{ display: 'flex', gap, overflowX: 'auto', padding: `${scaleBleed + 8}px calc(${scaleBleed}px + var(--gutter-sheet))` }}
       >
         {films.map((movie) => (
           <MovieCard
@@ -332,9 +332,9 @@ export function DirectorSpecialSection({
 
   /* 2.0: 카드 2장(감독 카드+회색 블록) 폐기 — 맨 종이 위 플랫 헤더 + 포스터 행 (피그마 TOBE) */
   return (
-    <section style={{ paddingTop: isDesktop ? 48 : 24 }}>
+    <section style={{ paddingTop: isDesktop ? 48 : 32 }}>
       <h2 style={{
-        margin: 0, padding: '0 var(--gutter)',
+        margin: 0, padding: '0 var(--gutter-sheet)',
         fontSize: isDesktop ? 'var(--text-h2)' : 'var(--text-h3)',
         fontWeight: 700,
         fontFamily: 'var(--font-display)',
@@ -348,7 +348,7 @@ export function DirectorSpecialSection({
         {directorName} 특별전
       </h2>
       {/* 극장 플랫 헤더 — [클래퍼보드 + 극장명/캡션] ... 영화관 보기 › */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0 var(--gutter) 4px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0 var(--gutter-sheet) 4px' }}>
         <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-body)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
           <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z" />
           <path d="m6.2 5.3 3.1 3.9" />

@@ -133,8 +133,10 @@ function FestivalBannerCard({ festival, today, isDesktop, onClick }: { festival:
               objectFit:cover가 중앙 크롭하므로 레이아웃은 안 깨짐 */}
           <div style={{
             position: 'relative', aspectRatio: '21 / 4',
-            width: isDesktop ? FESTIVAL_BANNER_DESKTOP_WIDTH : '100%',
-            margin: isDesktop ? '0 auto' : 0,
+            width: isDesktop ? FESTIVAL_BANNER_DESKTOP_WIDTH : 'calc(100% - var(--gutter-sheet) * 2)',
+            margin: isDesktop ? '0 auto' : '0 auto',
+            borderRadius: isDesktop ? 0 : 'var(--radius-button)',
+            overflow: 'hidden',
           }}>
             <Image
               src={festival.bannerUrl}
@@ -558,7 +560,7 @@ export default function FilmsPage() {
         </>
       )}
       <header ref={headerRef} style={{
-        padding: '20px 16px 0',
+        padding: '20px var(--gutter-sheet) 0',
         /* 2.0: PC는 헤더 고정 — 콘텐츠가 구분선 아래로 스크롤 */
         ...(isDesktop ? { position: 'sticky' as const, top: 0, zIndex: 100, backgroundColor: 'var(--color-surface-bg)' } : {}),
       }}>
@@ -863,7 +865,7 @@ export default function FilmsPage() {
                   films={films} isDesktop={isDesktop} onMovieClick={handleMovieClick} />
               ))}
               {rows.map((pair, ri) => (
-                <div key={`ann_sparse_${ri}`} style={{ display: 'flex', gap: 12, padding: isDesktop ? '48px 16px 0' : '24px 16px 0' }}>
+                <div key={`ann_sparse_${ri}`} style={{ display: 'flex', gap: 12, padding: isDesktop ? '48px var(--gutter-sheet) 0' : '32px var(--gutter-sheet) 0' }}>
                   {pair.map(({ ann, films }) => (
                     <AnniversarySection key={`ann_${ann.nameKo}_${ann.eventType}`}
                       sectionTitle={ann.sectionTitle} sectionDesc={ann.sectionDesc}
@@ -912,7 +914,7 @@ export default function FilmsPage() {
           if (!isDesktop) {
             return <>{active.map((s) =>
               s.movies.length <= 2
-                ? <div key={s.listId} style={{ display: 'flex', padding: '24px 16px 0' }}>{rowFor(s, true)}</div>
+                ? <div key={s.listId} style={{ display: 'flex', padding: '32px var(--gutter-sheet) 0' }}>{rowFor(s, true)}</div>
                 : rowFor(s, false)
             )}</>
           }
@@ -928,7 +930,7 @@ export default function FilmsPage() {
             }
             if (sparse && pending != null) {
               nodes.push(
-                <div key={`${keyPrefix}_pair_${pending.listId}`} style={{ display: 'flex', gap: 12, padding: '48px 16px 0' }}>
+                <div key={`${keyPrefix}_pair_${pending.listId}`} style={{ display: 'flex', gap: 12, padding: '48px var(--gutter-sheet) 0' }}>
                   {rowFor(pending, true)}
                   {rowFor(s, true)}
                 </div>
@@ -945,7 +947,7 @@ export default function FilmsPage() {
           if (pending != null) {
             // 끝까지 짝을 못 찾은 sparse — 큰 포스터 1~2장에 빈 공간 안 남게 단독 카드로
             nodes.push(
-              <div key={`${keyPrefix}_solo_${pending.listId}`} style={{ display: 'flex', gap: 12, padding: '48px 16px 0' }}>
+              <div key={`${keyPrefix}_solo_${pending.listId}`} style={{ display: 'flex', gap: 12, padding: '48px var(--gutter-sheet) 0' }}>
                 {rowFor(pending, true)}
               </div>
             )

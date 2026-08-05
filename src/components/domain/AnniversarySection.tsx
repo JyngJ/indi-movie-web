@@ -145,9 +145,9 @@ export function AnniversarySection({
   // 일반 모드 — 가로 스크롤
   return (
     <div style={{ paddingTop: isDesktop ? 48 : 24 }}>
-      <div style={{ margin: '0 var(--gutter)' }}>{header}</div>
+      <div style={{ margin: '0 var(--gutter-sheet)' }}>{header}</div>
       <div style={{
-        margin: '0 var(--gutter)',
+        margin: '0 var(--gutter-sheet)',
         borderRadius: '0 0 10px 10px',
         border: filmBorder, borderTop: 'none',
         overflow: 'hidden',
