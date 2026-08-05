@@ -116,12 +116,7 @@ function FestivalBannerCard({ festival, today, isDesktop, onClick }: { festival:
       <SectionHeader
         title="주목할 영화제"
         isDesktop={isDesktop}
-        trailing={
-          <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)', whiteSpace: 'nowrap' }}>
-            {`${dateLabel} · ${festival.city}`}
-            <ChevronRight size={14} strokeWidth={1.75} color="var(--color-text-caption)" />
-          </span>
-        }
+        trailing={<ChevronRight size={18} strokeWidth={1.75} color="var(--color-text-caption)" />}
       />
 
       {/* 배너 이미지 — banner_url 있을 때만. 전체 폭 띠에 surface-raised 배경을 깔고
@@ -913,9 +908,13 @@ export default function FilmsPage() {
                 compact={compact} />
             )
           }
-          // 모바일에서는 2열로 묶지 않음 — 가로로 합쳐서 보여주면 잘려서 잘 안 보임
+          // 모바일: 2열로 묶진 않지만, sparse(≤2편)는 카드 문법(수상 워터마크 포함)으로
           if (!isDesktop) {
-            return <>{active.map((s) => rowFor(s, false))}</>
+            return <>{active.map((s) =>
+              s.movies.length <= 2
+                ? <div key={s.listId} style={{ display: 'flex', padding: '24px 16px 0' }}>{rowFor(s, true)}</div>
+                : rowFor(s, false)
+            )}</>
           }
           // 데스크톱: sparse(≤2편) 섹션끼리 짝지어 2열로 — 인접하지 않아도 사이의 rich 섹션은
           // 잠깐 미뤄뒀다가 짝을 맺은 직후 원래 순서대로 이어서 낸다 (건너뛴 줄만큼 빈 공간 안 남게)

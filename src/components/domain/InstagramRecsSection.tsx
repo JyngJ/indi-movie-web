@@ -224,7 +224,7 @@ function InstagramRecCard({
           </div>
           {/* 좌우로 더 있다는 걸 알리는 넘김 버튼 — 다른 섹션(docs/DESIGN.md Primitives)과 같은 ScrollNavButton,
               포스터 줄 세로 중앙. 그 방향으로 더 스크롤할 게 없으면 버튼 자체를 숨긴다 */}
-          {canScrollLeft && (
+          {isDesktop && canScrollLeft && (
             <ScrollNavButton
               direction="left"
               size={28}
@@ -232,7 +232,7 @@ function InstagramRecCard({
               style={stripNavLeftStyle}
             />
           )}
-          {canScrollRight && (
+          {isDesktop && canScrollRight && (
             <ScrollNavButton
               direction="right"
               size={28}
