@@ -5,6 +5,8 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
+// 링크 미리보기 봇(카카오톡·디스코드 등)이 같은 영화 URL을 반복 요청 — ISR로 Supabase 재조회 억제
+export const revalidate = 3600
 
 export default async function OgImage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
