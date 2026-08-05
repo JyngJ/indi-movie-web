@@ -41,6 +41,9 @@ body {
   color: var(--color-text-primary);
   background-color: var(--color-surface-bg);
   line-height: var(--leading-normal);
+  /* 한국어 줄바꿈: 단어(어절) 단위로 — 넘치는 초장문 단어만 예외적으로 쪼갬 */
+  word-break: keep-all;
+  overflow-wrap: break-word;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background-color var(--transition-base), color var(--transition-base);

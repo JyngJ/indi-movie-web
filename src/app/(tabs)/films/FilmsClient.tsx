@@ -305,10 +305,10 @@ export default function FilmsPage() {
       onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); go() } }}
       style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4, minHeight: 'auto' }}
     >
-      <span style={{ fontSize: isDesktop ? 'var(--text-body)' : 'var(--text-meta)', color: 'var(--color-neutral-800)', fontWeight: 600, fontFeatureSettings: '"tnum"' }}>
-        {timeText}
-        {seatText && <span style={{ color: 'var(--color-error)', marginLeft: 'var(--spacing-2)' }}>{seatText}</span>}
-      </span>
+      <span style={{ fontSize: isDesktop ? 'var(--text-body)' : 'var(--text-meta)', color: 'var(--color-neutral-800)', fontWeight: 600, fontFeatureSettings: '"tnum"' }}>{timeText}</span>
+      {seatText && (
+        <span style={{ fontSize: isDesktop ? 'var(--text-body)' : 'var(--text-meta)', color: 'var(--color-error)', fontWeight: 600, fontFeatureSettings: '"tnum"' }}>{seatText}</span>
+      )}
       <span style={{ fontSize: isDesktop ? 'var(--text-body)' : 'var(--text-meta)', color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{theaterName}</span>
     </div>
     )

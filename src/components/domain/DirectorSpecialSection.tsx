@@ -395,7 +395,9 @@ export function DirectorSpecialSection({
             style={{
               border: 'none', background: 'transparent', padding: 'var(--spacing-3) var(--spacing-2)',
               borderRadius: 'var(--radius-button)',
-              fontSize: 'var(--text-body)', fontWeight: 500, color: 'var(--color-text-sub)',
+              fontSize: 'var(--text-body)', fontWeight: 500,
+              /* 모바일: primary/100 틴트 바 위 — neutral은 물빠져 보여서 primary로 */
+              color: isDesktop ? 'var(--color-text-sub)' : 'var(--color-primary-base)',
               cursor: 'pointer', whiteSpace: 'nowrap', minHeight: 'auto',
             }}
           >
