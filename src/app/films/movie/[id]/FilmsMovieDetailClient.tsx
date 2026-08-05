@@ -4,6 +4,8 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
+import { DateBar } from '@/components/domain/DateBar'
+import { ShowtimeCell } from '@/components/domain/ShowtimeCell'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import Image from 'next/image'
 import { useMovieTheaterShowtimes, useDirectorProfile } from '@/lib/supabase/queries'
@@ -352,29 +354,51 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
           </div>
           <IcoChevronRight />
         </button>
-        <div style={{ padding: '12px 16px 16px', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {entry.showtimes.map((st) => (
-            <ShowtimeChip
-              key={st.id} st={st}
-              selected={selectedShowtimeId === st.id}
-              onClick={() => {
-                trackEvent('showtime selected', {
-                  theater_id: entry.theaterId,
-                  theater_name: entry.theaterName,
-                  movie_id: movie.id,
-                  movie_title: movie.title,
-                  showtime_id: st.id,
-                  show_date: st.showDate,
-                  show_time: st.showTime,
-                  seat_available: st.seatAvailable,
-                  seat_total: st.seatTotal,
-                  has_booking_url: Boolean(st.bookingUrl),
-                  source: 'films_movie_detail',
-                })
-                setSelectedShowtimeId(st.id); setSelectedTheaterId(entry.theaterId)
-              }}
-            />
-          ))}
+        <div style={{ padding: '12px 16px 16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(var(--comp-showtime-min-width), 1fr))', gap: 12 }}>
+          {entry.showtimes.map((st) => {
+            /* TheaterSheet과 동일한 kind 분류 */
+            const [sh, sm] = st.showTime.split(':').map(Number)
+            const startMin = sh * 60 + sm
+            const endMin = st.endTime ? (() => { const [eh, em] = st.endTime!.split(':').map(Number); return eh * 60 + em })() : startMin + 120
+            const now = new Date()
+            const nowMinutes = now.getHours() * 60 + now.getMinutes()
+            const isToday = selectedDate === dates[0]
+            const kind: import('@/components/domain/ShowtimeCell').ShowtimeKind = (() => {
+              if (isToday && endMin <= nowMinutes) return 'ended'
+              if (isToday && startMin < nowMinutes && endMin > nowMinutes) return 'nowplaying'
+              if (st.seatAvailable === 0) return 'soldout'
+              if (st.seatTotal > 0 && st.seatAvailable <= st.seatTotal * 0.1) return 'low'
+              if (sh >= 21) return 'late'
+              return 'normal'
+            })()
+            return (
+              <ShowtimeCell
+                key={st.id}
+                startTime={st.showTime.slice(0, 5)}
+                endTime={st.endTime ? st.endTime.slice(0, 5) : ''}
+                seatAvailable={st.seatAvailable}
+                seatTotal={st.seatTotal}
+                kind={kind}
+                selected={selectedShowtimeId === st.id}
+                onClick={() => {
+                  trackEvent('showtime selected', {
+                    theater_id: entry.theaterId,
+                    theater_name: entry.theaterName,
+                    movie_id: movie.id,
+                    movie_title: movie.title,
+                    showtime_id: st.id,
+                    show_date: st.showDate,
+                    show_time: st.showTime,
+                    seat_available: st.seatAvailable,
+                    seat_total: st.seatTotal,
+                    has_booking_url: Boolean(st.bookingUrl),
+                    source: 'films_movie_detail',
+                  })
+                  setSelectedShowtimeId(st.id); setSelectedTheaterId(entry.theaterId)
+                }}
+              />
+            )
+          })}
         </div>
       </div>
     )
@@ -403,26 +427,22 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
         </p>
       )}
 
-      {/* 날짜 탭 */}
-      <div style={{ borderBottom: '1px solid var(--color-border)', marginTop: 12 }}>
-        <div style={{ display: 'flex', overflowX: 'auto', padding: '0 4px' }} className="no-scrollbar">
-          {dates.map((d, i) => {
-            const { day, date, isHoliday } = formatDateTab(d)
-            const isSelected = d === selectedDate
-            const hasShows = activeDates.has(d)
-            return (
-              <button
-                key={d}
-                onClick={() => hasShows && setSelectedDate(d)}
-                style={{ flexShrink: 0, width: 56, height: 58, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, border: 'none', background: 'none', cursor: hasShows ? 'pointer' : 'default', opacity: hasShows ? 1 : 0.35, borderBottom: isSelected ? '2px solid var(--color-primary-base)' : '2px solid transparent', minHeight: 'auto' }}
-                disabled={!hasShows}
-              >
-                <span style={{ fontSize: 'var(--text-badge)', fontWeight: 500, color: isSelected ? 'var(--color-primary-base)' : isHoliday ? 'var(--color-error)' : 'var(--color-text-caption)' }}>{i === 0 ? '오늘' : day}</span>
-                <span style={{ fontSize: 18, fontWeight: 700, fontFeatureSettings: '"tnum"', color: isSelected ? 'var(--color-primary-base)' : isHoliday ? 'var(--color-error)' : 'var(--color-text-primary)' }}>{date}</span>
-              </button>
-            )
+      {/* 날짜 바 — TheaterSheet과 동일한 DateBar 2.0 */}
+      <div style={{ marginTop: 12, padding: isDesktop ? 0 : '0 16px' }}>
+        <DateBar
+          days={dates.map((d, i) => {
+            const { day, isHoliday } = formatDateTab(d)
+            return {
+              dow: i === 0 ? '오늘' : day,
+              date: String(new Date(d + 'T00:00:00').getDate()),
+              isoDate: d,
+              type: i === 0 ? 'today' : isHoliday ? 'sunday' : day === '토' ? 'saturday' : 'weekday',
+              disabled: !activeDates.has(d),
+            } as import('@/components/domain/DateBar').Day
           })}
-        </div>
+          selectedDate={selectedDate}
+          onSelectDate={(d) => setSelectedDate(d)}
+        />
       </div>
 
       {/* 극장별 목록 */}
@@ -537,7 +557,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
     return (
       <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
         <DetailTopBar crumbLabel="영화" crumbHref="/films" title={movie.title} isDesktop trailing={<RegionFilterWidget onRegionChange={setRegionId} />} />
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 var(--gutter)' }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 var(--gutter)' }}>
           {/* hero */}
           {heroSection}
 
