@@ -297,7 +297,7 @@ export default function FilmsPage() {
       tabIndex={0}
       onClick={(e) => { e.stopPropagation(); router.push(`/films/theater/${theaterId}`) }}
       onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); router.push(`/films/theater/${theaterId}`) } }}
-      style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4, minHeight: 'auto' }}
     >
       <span style={{ fontSize: isDesktop ? 'var(--text-body)' : 'var(--text-meta)', color: 'var(--color-neutral-800)', fontWeight: 600, fontFeatureSettings: '"tnum"' }}>{timeText}</span>
       <span style={{ fontSize: isDesktop ? 'var(--text-body)' : 'var(--text-meta)', color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{theaterName}</span>

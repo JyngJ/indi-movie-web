@@ -164,7 +164,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
         style={{ textDecoration: 'none' }}
       >
         <div
-          className={active ? undefined : 'hover-raise'}
+          className={active ? undefined : 'hover-card'}
           style={{
             display: 'flex',
             flexDirection: 'column',
@@ -221,7 +221,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
             openSettingsPage('report')
           }}
           aria-label="신고"
-          className="hover-raise"
+          className="hover-card"
           style={{
             display: 'flex',
             flexDirection: 'column',
@@ -246,7 +246,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
           target="_blank"
           rel="noopener noreferrer"
           aria-label="인스타그램 바로가기"
-          className="hover-raise"
+          className="hover-card"
           style={{
             display: 'flex',
             flexDirection: 'column',
@@ -274,7 +274,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
             openSettingsPage('main')
           }}
           aria-label="설정"
-          className="hover-raise"
+          className="hover-card"
           style={{
             display: 'flex',
             flexDirection: 'column',

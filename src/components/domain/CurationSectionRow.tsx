@@ -83,6 +83,7 @@ function MovieCardInfo({ movie, isDesktop, caption, customBottomInfo }: { movie:
               whiteSpace: 'nowrap',
               alignSelf: 'flex-start',
               maxWidth: '100%',
+              minHeight: 'auto',
             }}
           >
             {caption ?? (director ?? '감독 미상')}

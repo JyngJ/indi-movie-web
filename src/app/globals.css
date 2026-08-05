@@ -162,6 +162,11 @@ img {
 @media (hover: hover) {
   .hover-raise:hover { background-color: var(--color-surface-raised); }
 }
+/* 이미 눌린 면(레일 등) 위에서는 raised가 배경과 동색 — 흰 카드로 떠오르게 */
+.hover-card { background-color: transparent; transition: background-color 120ms ease; }
+@media (hover: hover) {
+  .hover-card:hover { background-color: var(--color-surface-card); }
+}
 
 /* 시의성 캡션 — 통째 clickable, 호버 시 배경 */
 .caption-link {

@@ -92,7 +92,7 @@ function MovieCard({
             className={director ? 'caption-link' : undefined}
             role={director ? 'button' : undefined}
             onClick={director ? (e) => { e.stopPropagation(); router.push(`/films/director/${encodeURIComponent(director)}`) } : undefined}
-            style={{ fontSize: fontSize - 1, color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', alignSelf: 'flex-start', maxWidth: '100%' }}
+            style={{ fontSize: fontSize - 1, color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', alignSelf: 'flex-start', maxWidth: '100%', minHeight: 'auto' }}
           >
             {director ?? '감독 미상'}
           </span>

@@ -243,6 +243,7 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
                       whiteSpace: 'nowrap',
                       alignSelf: 'flex-start',
                       maxWidth: '100%',
+                      minHeight: 'auto',
                     }}
                   >
                     {movie.director[0]}
