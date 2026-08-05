@@ -3,6 +3,9 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { addDaysIso, toKstIsoDate } from '@/lib/date'
+import { DetailTopBar } from '@/components/navigation/DetailTopBar'
+import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import Image from 'next/image'
 import { useTheaterShowtimes, useTheaterAllMovies } from '@/lib/supabase/queries'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
@@ -27,11 +30,10 @@ function useIsDesktop() {
 
 /* ── 날짜 유틸 ─────────────────────────────────────────────────── */
 function getDateRange(days = 7): string[] {
-  return Array.from({ length: days }, (_, i) => {
-    const d = new Date()
-    d.setDate(d.getDate() + i)
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  })
+  // KST 고정: 서버는 UTC로 돌아 로컬 날짜를 쓰면 자정~오전 9시(KST) 사이 SSR HTML과
+  // 클라이언트 날짜가 하루 어긋나 hydration mismatch가 난다
+  const todayKst = toKstIsoDate(new Date())
+  return Array.from({ length: days }, (_, i) => addDaysIso(todayKst, i))
 }
 
 function formatDateTab(dateStr: string): { day: string; date: number; isHoliday: boolean } {
@@ -567,19 +569,8 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
   if (isDesktop) {
     return (
       <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
-        {/* 상단 NavBar */}
-        <div style={{ position: 'sticky', top: 0, zIndex: 50, paddingTop: 'env(safe-area-inset-top)', backgroundColor: 'var(--color-surface-bg)', borderBottom: '1px solid var(--color-border)' }}>
-          <div style={{ height: 52, display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 4, paddingRight: 12, gap: 8, maxWidth: 1200, margin: '0 auto' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
-              <button onClick={() => router.back()} style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-text-body)', flexShrink: 0 }}><IcoChevronLeft /></button>
-              <button onClick={() => router.push('/films')} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-caption)', fontSize: 13, minHeight: 'auto', flexShrink: 0 }}>영화</button>
-              <span style={{ color: 'var(--color-text-caption)', fontSize: 13, flexShrink: 0 }}>&gt;</span>
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{theater.name}</span>
-            </div>
-            <RegionFilterWidget />
-          </div>
-        </div>
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        <DetailTopBar crumbLabel="영화" crumbHref="/films" title={theater.name} isDesktop trailing={<RegionFilterWidget />} />
+        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
           {content}
         </div>
         {selectedShowtimeData && (
@@ -636,29 +627,13 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
 
   return (
     <div className="page-slide-in" style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
-      {/* 모바일 NavBar */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 50, paddingTop: 'env(safe-area-inset-top)', backgroundColor: 'var(--color-surface-bg)' }}>
-        <div style={{ height: 52, display: 'flex', alignItems: 'center', borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-primary-subtle-l)' }}>
-          <button
-            onClick={() => router.back()}
-            style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-text-body)', flexShrink: 0 }}
-          >
-            <IcoChevronLeft />
-          </button>
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, minWidth: 0 }}>
-            <button onClick={() => router.push('/films')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-caption)', fontSize: 13, minHeight: 'auto', padding: 0, flexShrink: 0 }}>영화</button>
-            <span style={{ color: 'var(--color-text-caption)', flexShrink: 0 }}>&gt;</span>
-            <span style={{ fontWeight: 600, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{theater.name}</span>
-          </div>
-          <div style={{ paddingRight: 12, flexShrink: 0 }}><RegionFilterWidget /></div>
-        </div>
-      </div>
+      <DetailTopBar crumbLabel="영화" crumbHref="/films" title={theater.name} isDesktop={false} trailing={<RegionFilterWidget />} />
       {content}
       <div style={{ height: 'env(safe-area-inset-bottom)' }} />
       {selectedShowtimeData && typeof document !== 'undefined' && createPortal(
         // .page-slide-in의 transform이 컨테이닝 블록을 만들어 fixed가 페이지 하단(전체 콘텐츠 끝)에
         // 붙어버리는 문제 — 뷰포트 기준으로 뜨도록 body에 직접 포탈로 렌더한다.
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100, backgroundColor: 'var(--color-surface-card)', borderTop: '1px solid var(--color-border)', padding: '12px 16px', paddingBottom: 'max(16px, env(safe-area-inset-bottom))', boxShadow: '0 -4px 20px rgba(0,0,0,0.12)' }}>
+        <div style={{ position: 'fixed', bottom: isDesktop ? 0 : `calc(${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`, left: isDesktop ? GLOBAL_NAV_DESKTOP_WIDTH : 0, right: 0, zIndex: 100, backgroundColor: 'var(--color-surface-card)', borderTop: '1px solid var(--color-border)', padding: '12px 16px', paddingBottom: isDesktop ? 'max(16px, env(safe-area-inset-bottom))' : '16px', boxShadow: '0 -4px 20px rgba(0,0,0,0.12)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-serif)', fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>

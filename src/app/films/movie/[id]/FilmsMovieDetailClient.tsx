@@ -3,6 +3,11 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { addDaysIso, toKstIsoDate } from '@/lib/date'
+import { DetailTopBar } from '@/components/navigation/DetailTopBar'
+import { DateBar } from '@/components/domain/DateBar'
+import { ShowtimeCell } from '@/components/domain/ShowtimeCell'
+import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import Image from 'next/image'
 import { useMovieTheaterShowtimes, useDirectorProfile } from '@/lib/supabase/queries'
 import type { MovieDetail } from '@/lib/supabase/queries'
@@ -28,11 +33,11 @@ function useIsDesktop() {
 }
 
 /* ── 날짜 유틸 ─────────────────────────────────────────────────── */
-function getDateRange(days = 7) {
-  return Array.from({ length: days }, (_, i) => {
-    const d = new Date(); d.setDate(d.getDate() + i)
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  })
+function getDateRange(days = 7): string[] {
+  // KST 고정: 서버는 UTC로 돌아 로컬 날짜를 쓰면 자정~오전 9시(KST) 사이 SSR HTML과
+  // 클라이언트 날짜가 하루 어긋나 hydration mismatch가 난다
+  const todayKst = toKstIsoDate(new Date())
+  return Array.from({ length: days }, (_, i) => addDaysIso(todayKst, i))
 }
 function formatDateTab(dateStr: string) {
   const DOW = ['일', '월', '화', '수', '목', '금', '토']
@@ -350,29 +355,51 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
           </div>
           <IcoChevronRight />
         </button>
-        <div style={{ padding: '12px 16px 16px', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {entry.showtimes.map((st) => (
-            <ShowtimeChip
-              key={st.id} st={st}
-              selected={selectedShowtimeId === st.id}
-              onClick={() => {
-                trackEvent('showtime selected', {
-                  theater_id: entry.theaterId,
-                  theater_name: entry.theaterName,
-                  movie_id: movie.id,
-                  movie_title: movie.title,
-                  showtime_id: st.id,
-                  show_date: st.showDate,
-                  show_time: st.showTime,
-                  seat_available: st.seatAvailable,
-                  seat_total: st.seatTotal,
-                  has_booking_url: Boolean(st.bookingUrl),
-                  source: 'films_movie_detail',
-                })
-                setSelectedShowtimeId(st.id); setSelectedTheaterId(entry.theaterId)
-              }}
-            />
-          ))}
+        <div style={{ padding: '12px 16px 16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(var(--comp-showtime-min-width), 1fr))', gap: 12 }}>
+          {entry.showtimes.map((st) => {
+            /* TheaterSheet과 동일한 kind 분류 */
+            const [sh, sm] = st.showTime.split(':').map(Number)
+            const startMin = sh * 60 + sm
+            const endMin = st.endTime ? (() => { const [eh, em] = st.endTime!.split(':').map(Number); return eh * 60 + em })() : startMin + 120
+            const now = new Date()
+            const nowMinutes = now.getHours() * 60 + now.getMinutes()
+            const isToday = selectedDate === dates[0]
+            const kind: import('@/components/domain/ShowtimeCell').ShowtimeKind = (() => {
+              if (isToday && endMin <= nowMinutes) return 'ended'
+              if (isToday && startMin < nowMinutes && endMin > nowMinutes) return 'nowplaying'
+              if (st.seatAvailable === 0) return 'soldout'
+              if (st.seatTotal > 0 && st.seatAvailable <= st.seatTotal * 0.1) return 'low'
+              if (sh >= 21) return 'late'
+              return 'normal'
+            })()
+            return (
+              <ShowtimeCell
+                key={st.id}
+                startTime={st.showTime.slice(0, 5)}
+                endTime={st.endTime ? st.endTime.slice(0, 5) : ''}
+                seatAvailable={st.seatAvailable}
+                seatTotal={st.seatTotal}
+                kind={kind}
+                selected={selectedShowtimeId === st.id}
+                onClick={() => {
+                  trackEvent('showtime selected', {
+                    theater_id: entry.theaterId,
+                    theater_name: entry.theaterName,
+                    movie_id: movie.id,
+                    movie_title: movie.title,
+                    showtime_id: st.id,
+                    show_date: st.showDate,
+                    show_time: st.showTime,
+                    seat_available: st.seatAvailable,
+                    seat_total: st.seatTotal,
+                    has_booking_url: Boolean(st.bookingUrl),
+                    source: 'films_movie_detail',
+                  })
+                  setSelectedShowtimeId(st.id); setSelectedTheaterId(entry.theaterId)
+                }}
+              />
+            )
+          })}
         </div>
       </div>
     )
@@ -401,26 +428,22 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
         </p>
       )}
 
-      {/* 날짜 탭 */}
-      <div style={{ borderBottom: '1px solid var(--color-border)', marginTop: 12 }}>
-        <div style={{ display: 'flex', overflowX: 'auto', padding: '0 4px' }} className="no-scrollbar">
-          {dates.map((d, i) => {
-            const { day, date, isHoliday } = formatDateTab(d)
-            const isSelected = d === selectedDate
-            const hasShows = activeDates.has(d)
-            return (
-              <button
-                key={d}
-                onClick={() => hasShows && setSelectedDate(d)}
-                style={{ flexShrink: 0, width: 56, height: 58, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, border: 'none', background: 'none', cursor: hasShows ? 'pointer' : 'default', opacity: hasShows ? 1 : 0.35, borderBottom: isSelected ? '2px solid var(--color-primary-base)' : '2px solid transparent', minHeight: 'auto' }}
-                disabled={!hasShows}
-              >
-                <span style={{ fontSize: 'var(--text-badge)', fontWeight: 500, color: isSelected ? 'var(--color-primary-base)' : isHoliday ? 'var(--color-error)' : 'var(--color-text-caption)' }}>{i === 0 ? '오늘' : day}</span>
-                <span style={{ fontSize: 18, fontWeight: 700, fontFeatureSettings: '"tnum"', color: isSelected ? 'var(--color-primary-base)' : isHoliday ? 'var(--color-error)' : 'var(--color-text-primary)' }}>{date}</span>
-              </button>
-            )
+      {/* 날짜 바 — TheaterSheet과 동일한 DateBar 2.0 */}
+      <div style={{ marginTop: 12, padding: isDesktop ? 0 : '0 16px' }}>
+        <DateBar
+          days={dates.map((d, i) => {
+            const { day, isHoliday } = formatDateTab(d)
+            return {
+              dow: i === 0 ? '오늘' : day,
+              date: String(new Date(d + 'T00:00:00').getDate()),
+              isoDate: d,
+              type: i === 0 ? 'today' : isHoliday ? 'sunday' : day === '토' ? 'saturday' : 'weekday',
+              disabled: !activeDates.has(d),
+            } as import('@/components/domain/DateBar').Day
           })}
-        </div>
+          selectedDate={selectedDate}
+          onSelectDate={(d) => setSelectedDate(d)}
+        />
       </div>
 
       {/* 극장별 목록 */}
@@ -534,19 +557,8 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
   if (isDesktop) {
     return (
       <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
-        {/* NavBar */}
-        <div style={{ position: 'sticky', top: 0, zIndex: 50, paddingTop: 'env(safe-area-inset-top)', backgroundColor: 'var(--color-surface-bg)', borderBottom: '1px solid var(--color-border)' }}>
-          <div style={{ height: 52, display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 4, paddingRight: 12, gap: 8, maxWidth: 1200, margin: '0 auto' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
-              <button onClick={() => router.back()} style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-text-body)', flexShrink: 0 }}><IcoChevronLeft /></button>
-              <button onClick={() => router.push('/films')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-caption)', fontSize: 13, minHeight: 'auto' }}>영화</button>
-              <span style={{ color: 'var(--color-text-caption)', fontSize: 13 }}>&gt;</span>
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{movie.title}</span>
-            </div>
-            <RegionFilterWidget onRegionChange={setRegionId} />
-          </div>
-        </div>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 var(--gutter)' }}>
+        <DetailTopBar crumbLabel="영화" crumbHref="/films" title={movie.title} isDesktop trailing={<RegionFilterWidget onRegionChange={setRegionId} />} />
+        <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 var(--gutter)' }}>
           {/* hero */}
           {heroSection}
 
@@ -571,17 +583,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
 
   return (
     <div className="page-slide-in" style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
-      <div style={{ position: 'sticky', top: 0, zIndex: 50, paddingTop: 'env(safe-area-inset-top)', backgroundColor: 'var(--color-surface-bg)' }}>
-        <div style={{ height: 52, display: 'flex', alignItems: 'center', borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-primary-subtle-l)' }}>
-          <button onClick={() => router.back()} style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-text-body)', flexShrink: 0 }}><IcoChevronLeft /></button>
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, minWidth: 0 }}>
-            <button onClick={() => router.push('/films')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-caption)', fontSize: 13, minHeight: 'auto', padding: 0, flexShrink: 0 }}>영화</button>
-            <span style={{ color: 'var(--color-text-caption)', flexShrink: 0 }}>&gt;</span>
-            <span style={{ fontWeight: 600, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{movie.title}</span>
-          </div>
-          <div style={{ paddingRight: 12, flexShrink: 0 }}><RegionFilterWidget onRegionChange={setRegionId} /></div>
-        </div>
-      </div>
+      <DetailTopBar crumbLabel="영화" crumbHref="/films" title={movie.title} isDesktop={false} trailing={<RegionFilterWidget onRegionChange={setRegionId} />} />
       {heroSection}
       {synopsisSection}
       {showtimesSection}
@@ -589,7 +591,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
       {selectedShowtimeData && typeof document !== 'undefined' && createPortal(
         // .page-slide-in의 transform이 컨테이닝 블록을 만들어 fixed가 페이지 하단(전체 콘텐츠 끝)에
         // 붙어버리는 문제 — 뷰포트 기준으로 뜨도록 body에 직접 포탈로 렌더한다.
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100, backgroundColor: 'var(--color-surface-card)', borderTop: '1px solid var(--color-border)', padding: '12px 16px', paddingBottom: 'max(16px, env(safe-area-inset-bottom))', boxShadow: '0 -4px 20px rgba(0,0,0,0.12)' }}>
+        <div style={{ position: 'fixed', bottom: isDesktop ? 0 : `calc(${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`, left: isDesktop ? GLOBAL_NAV_DESKTOP_WIDTH : 0, right: 0, zIndex: 100, backgroundColor: 'var(--color-surface-card)', borderTop: '1px solid var(--color-border)', padding: '12px 16px', paddingBottom: isDesktop ? 'max(16px, env(safe-area-inset-bottom))' : '16px', boxShadow: '0 -4px 20px rgba(0,0,0,0.12)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-serif)', fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>
