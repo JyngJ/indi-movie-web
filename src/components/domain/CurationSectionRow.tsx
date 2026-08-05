@@ -397,9 +397,9 @@ export function CurationSectionRow({
   // 2.0: 헤더 우측 버튼 폐기 — 스크롤 행 hover 시 좌/우 가장자리 오버레이 (PC 전용)
   const posterMidY = scaleBleed + 8 + height / 2
 
-  // PC: 더 스크롤할 방향만 가장자리 페이드 — 딱 잘리는 어색함 완화, 끝에 닿으면 페이드 없음
+  // PC: 더 스크롤할 방향만 가장자리 페이드 — 좁게(24px) 모서리만 눅임 (넓으면 캡션이 유령글자 됨)
   const rowMask = isDesktop
-    ? `linear-gradient(90deg, ${canScrollLeft ? 'transparent 0%, #000 4%' : '#000 0%'}, ${canScrollRight ? '#000 96%, transparent 100%' : '#000 100%'})`
+    ? `linear-gradient(90deg, ${canScrollLeft ? 'transparent 0, #000 24px' : '#000 0'}, ${canScrollRight ? '#000 calc(100% - 24px), transparent 100%' : '#000 100%'})`
     : undefined
 
   return (

@@ -324,7 +324,7 @@ export function DirectorSpecialSection({
           padding: `${scaleBleed + 8}px calc(${scaleBleed}px + var(--gutter-sheet))`,
           margin: `0 ${-scaleBleed}px`,
           ...(isDesktop ? (() => {
-            const m = `linear-gradient(90deg, ${canScrollLeft ? 'transparent 0%, #000 4%' : '#000 0%'}, ${canScrollRight ? '#000 96%, transparent 100%' : '#000 100%'})`
+            const m = `linear-gradient(90deg, ${canScrollLeft ? 'transparent 0, #000 24px' : '#000 0'}, ${canScrollRight ? '#000 calc(100% - 24px), transparent 100%' : '#000 100%'})`
             return { WebkitMaskImage: m, maskImage: m }
           })() : {}),
         }}
