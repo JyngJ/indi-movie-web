@@ -318,7 +318,7 @@ export function DirectorSpecialSection({
         ref={scrollRef}
         onScroll={updateScrollEdge}
         className="no-scrollbar"
-        style={{ display: 'flex', gap, overflowX: 'auto', padding: `${scaleBleed + 8}px calc(${scaleBleed}px + var(--gutter-sheet))` }}
+        style={{ display: 'flex', gap, overflowX: 'auto', padding: `${scaleBleed + 8}px calc(${scaleBleed}px + var(--gutter-sheet))`, margin: `0 ${-scaleBleed}px` }}
       >
         {films.map((movie) => (
           <MovieCard

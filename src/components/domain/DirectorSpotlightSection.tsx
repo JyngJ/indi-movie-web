@@ -143,13 +143,14 @@ export function DirectorSpotlightSection({
 
   return (
     <section style={{ paddingTop: isDesktop ? 56 : 28 }}>
-      <div style={{ padding: '0 16px' }}>
+      <div style={{ padding: '0 var(--gutter-sheet)' }}>
         <h2
           style={{
             margin: 0,
             fontSize: isDesktop ? 'var(--text-h2)' : 'var(--text-h3)',
             fontWeight: 700,
             fontFamily: 'var(--font-display)',
+            letterSpacing: '0.05em',
             color: 'var(--color-text-primary)',
             display: 'flex',
             alignItems: 'center',
@@ -158,9 +159,6 @@ export function DirectorSpotlightSection({
         >
           감독 스포트라이트
         </h2>
-        <p style={{ margin: '4px 0 0', fontSize: isDesktop ? 'var(--text-meta)' : 'var(--text-caption)', color: 'var(--color-text-caption)' }}>
-          지금 주목할 만한 감독
-        </p>
       </div>
 
       <div
@@ -169,7 +167,7 @@ export function DirectorSpotlightSection({
           display: 'flex',
           gap: isDesktop ? 'var(--spacing-5)' : 14,
           overflowX: 'auto',
-          padding: '12px 16px 8px',
+          padding: '12px var(--gutter-sheet) 8px',
         }}
       >
         {directors.map((dir) => (

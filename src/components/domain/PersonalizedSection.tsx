@@ -78,7 +78,6 @@ export function PersonalizedSection({
     <CurationSectionRow
       id="personalized"
       title="이런 작품은 어때요"
-      description={reasonDescription(group.reason)}
       displayMode="default"
       movies={group.movies}
       isDesktop={isDesktop}

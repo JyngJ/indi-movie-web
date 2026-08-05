@@ -360,8 +360,8 @@ export function CurationSectionRow({
         <div style={{ padding: '12px 0', borderBottom: '1px solid var(--color-border)' }}>
           <SectionHeader title={title} description={description} isDesktop={isDesktop} />
         </div>
-        {/* 영화 inline */}
-        <div style={{ display: 'flex', gap: 12, padding: '12px 16px', background: 'var(--color-surface-card)', flex: 1 }}>
+        {/* 영화 세로 스택 — 피그마 TOBE 카드 문법 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '12px 16px', background: 'var(--color-surface-card)', flex: 1 }}>
           {movies.slice(0, 2).map((movie) => (
             <div
               key={movie.id}
@@ -430,7 +430,9 @@ export function CurationSectionRow({
             display: 'flex',
             gap,
             overflowX: 'auto',
+            /* 호버 스케일 여유(scaleBleed)는 음수 마진으로 상쇄 — 포스터 시작선 = 거터 24 */
             padding: `${scaleBleed + 8}px calc(${scaleBleed}px + var(--gutter-sheet))`,
+            margin: `0 ${-scaleBleed}px`,
           }}
         >
           {movies.map((movie) => (

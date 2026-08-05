@@ -126,7 +126,7 @@ function FestivalBannerCard({ festival, today, isDesktop, onClick }: { festival:
           onClick={onClick}
           style={{
             display: 'block', width: '100%', padding: 0, margin: '12px 0 0', border: 'none',
-            backgroundColor: 'var(--color-surface-raised)', cursor: 'pointer', minHeight: 'auto',
+            backgroundColor: isDesktop ? 'var(--color-surface-raised)' : 'transparent', cursor: 'pointer', minHeight: 'auto',
           }}
         >
           {/* 21/4 — jiff28 배너 실제 크기(1260x240) 기준. 다른 영화제 배너가 비율이 달라도
