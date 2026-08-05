@@ -215,7 +215,7 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span
                   style={{
-                    fontSize: isDesktop ? 13 : 12,
+                    fontSize: isDesktop ? 'var(--text-title)' : 'var(--text-subtitle)',
                     fontWeight: 700,
                     color: 'var(--color-text-body)',
                     display: '-webkit-box',
@@ -231,7 +231,7 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
                 {movie.director.length > 0 && (
                   <span
                     style={{
-                      fontSize: isDesktop ? 12 : 11,
+                      fontSize: 'var(--text-meta)',
                       color: 'var(--color-text-caption)',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',

@@ -9,7 +9,7 @@ import { useUIStore } from '@/store/uiStore'
 import { Flag } from 'lucide-react'
 
 /** §5 바텀 탭바 표준 높이(safe-area 포함) — 다른 화면 요소가 이 값만큼 비켜야 함 */
-export const GLOBAL_NAV_MOBILE_HEIGHT = 60
+export const GLOBAL_NAV_MOBILE_HEIGHT = 64
 /** §5 아이콘 레일 표준 폭 */
 export const GLOBAL_NAV_DESKTOP_WIDTH = 64
 
@@ -89,7 +89,9 @@ function MobileTabBar({ pathname, filmsHref }: { pathname: string; filmsHref: st
         bottom: 0,
         height: `calc(${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`,
         paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingLeft: 'var(--spacing-12)', paddingRight: 'var(--spacing-12)',   /* 48 — 탭 3개 중앙으로 (피그마 tabbar pad) */
         display: 'flex',
+        alignItems: 'center',
         background: 'var(--color-surface-card)',
         borderTop: '1px solid var(--color-border)',
         boxShadow: 'var(--shadow-sm)',   /* PC 패널과 동일 스타일로 통일 */

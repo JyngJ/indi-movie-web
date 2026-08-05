@@ -349,12 +349,18 @@ export function DirectorSpecialSection({
       </h2>
       {/* 극장 플랫 헤더 — [클래퍼보드 + 극장명/캡션] ... 영화관 보기 › */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0 var(--gutter-sheet) 4px' }}>
-        <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-body)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-          <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z" />
-          <path d="m6.2 5.3 3.1 3.9" />
-          <path d="m12.4 3.4 3.1 4" />
-          <path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
-        </svg>
+        <span style={{
+          width: 40, height: 40, flexShrink: 0, borderRadius: 'var(--radius-badge)',
+          backgroundColor: 'var(--color-primary-subtle-l)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <svg width={21} height={21} viewBox="0 0 24 24" fill="none" stroke="var(--color-primary-base)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z" />
+            <path d="m6.2 5.3 3.1 3.9" />
+            <path d="m12.4 3.4 3.1 4" />
+            <path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
+          </svg>
+        </span>
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
           <span style={{ fontSize: 'var(--text-title)', fontWeight: 700, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {theater.name}

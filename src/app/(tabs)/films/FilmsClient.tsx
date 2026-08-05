@@ -290,7 +290,6 @@ export default function FilmsPage() {
 
   const almostSoldOutCustomInfos = new Map<string, React.ReactNode>(
     almostSoldOutFilms.map((f) => {
-      const dir = f.movie.director.length > 0 ? f.movie.director[0] : '감독 미상'
       const first = f.showings[0]
       const dayLabel = first?.showDate === asoToday ? '오늘' : '내일'
       const rest = f.showings.length - 1
@@ -300,9 +299,8 @@ export default function FilmsPage() {
       return [
         f.movie.id,
         <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
-          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)' }}>{dir}</span>
-          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-primary-base)', fontWeight: 600 }}>{theaterName}</span>
-          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-primary-hover-l)' }}>{dateText}</span>
+          <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-neutral-800)', fontWeight: 600, fontFeatureSettings: '"tnum"' }}>{dateText}</span>
+          <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{theaterName}</span>
         </div>
       ]
     })
@@ -357,7 +355,6 @@ export default function FilmsPage() {
 
   const lateNightCustomInfos = new Map<string, React.ReactNode>(
     lateNightFilms.map((f) => {
-      const dir = f.movie.director.length > 0 ? f.movie.director[0] : '감독 미상'
       const first = f.showings[0]
       const dayLabel = first?.showDate === lnToday ? '오늘' : '내일'
       const rest = f.showings.length - 1
@@ -367,9 +364,8 @@ export default function FilmsPage() {
       return [
         f.movie.id,
         <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
-          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)' }}>{dir}</span>
-          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-primary-base)', fontWeight: 600 }}>{theaterName}</span>
-          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-primary-hover-l)' }}>{dateText}</span>
+          <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-neutral-800)', fontWeight: 600, fontFeatureSettings: '"tnum"' }}>{dateText}</span>
+          <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{theaterName}</span>
         </div>
       ]
     })
@@ -399,7 +395,6 @@ export default function FilmsPage() {
   )
   const weekendCustomInfos = new Map<string, React.ReactNode>(
     weekendFilms.map((f) => {
-      const dir = f.movie.director.length > 0 ? f.movie.director[0] : '감독 미상'
       const first = f.showings[0]
       const dayLabel = first?.showDate === lnToday ? '오늘' : dayOfWeekLabel(first?.showDate ?? lnToday)
       const rest = f.showings.length - 1
@@ -409,9 +404,8 @@ export default function FilmsPage() {
       return [
         f.movie.id,
         <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
-          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)' }}>{dir}</span>
-          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-primary-base)', fontWeight: 600 }}>{theaterName}</span>
-          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-primary-hover-l)' }}>{dateText}</span>
+          <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-neutral-800)', fontWeight: 600, fontFeatureSettings: '"tnum"' }}>{dateText}</span>
+          <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{theaterName}</span>
         </div>
       ]
     })
