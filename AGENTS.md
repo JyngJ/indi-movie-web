@@ -30,7 +30,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Keep branch names lowercase and hyphen-separated.
 - Keep each branch focused on one coherent change. If a task grows into unrelated work, split it into a new branch from `main`.
 - Do not merge into `main` without explicit user approval.
-- Prefer merging through a pull request. If the user asks for a direct local merge, summarize the diff and verification first.
+- **Never push to `main` directly.** "메인에 반영해줘/넣어두자" always means: push the feature branch and open a pull request for the user to review and merge. It is never permission for a local merge + push.
+- A direct local merge is allowed only when the user explicitly says to skip the PR in that same message; summarize the diff and verification first.
 - Before asking to merge, run the relevant checks for the branch and report any failures clearly.
 
 ## Architecture Rules
