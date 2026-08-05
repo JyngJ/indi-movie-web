@@ -238,13 +238,14 @@ function MovieCard({
     <>
       <div
         ref={cardRef}
-        onMouseEnter={isDesktop ? onMouseEnter : undefined}
-        onMouseLeave={isDesktop ? onMouseLeave : undefined}
         onClick={onClick}
         style={{ display: 'flex', flexDirection: 'column', gap: 8, width, flexShrink: 0, cursor: onClick ? 'pointer' : undefined }}
       >
-        {/* 포스터: scale은 있으나 layout size 유지 → 부모 padding 안에서 visual overflow */}
+        {/* 포스터: scale은 있으나 layout size 유지 → 부모 padding 안에서 visual overflow.
+            호버 확대는 포스터 위에서만 — 캡션 호버로 커지면 오작동처럼 느껴짐 */}
         <div
+          onMouseEnter={isDesktop ? onMouseEnter : undefined}
+          onMouseLeave={isDesktop ? onMouseLeave : undefined}
           style={{
             transition: 'transform 130ms ease',
             transform: hovered ? 'scale(1.1)' : 'scale(1)',

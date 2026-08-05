@@ -164,6 +164,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
         style={{ textDecoration: 'none' }}
       >
         <div
+          className={active ? undefined : 'hover-raise'}
           style={{
             display: 'flex',
             flexDirection: 'column',
@@ -172,7 +173,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
             padding: '8px 4px',
             margin: '0 8px',
             borderRadius: 8,
-            background: active ? 'color-mix(in srgb, var(--color-primary-base) 11%, transparent)' : 'transparent',
+            background: active ? 'color-mix(in srgb, var(--color-primary-base) 11%, transparent)' : undefined,
             color,
           }}
         >
@@ -220,6 +221,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
             openSettingsPage('report')
           }}
           aria-label="신고"
+          className="hover-raise"
           style={{
             display: 'flex',
             flexDirection: 'column',
@@ -231,7 +233,6 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
             width: 'calc(100% - 16px)',
             borderRadius: 12,
             border: 'none',
-            background: 'transparent',
             color: INACTIVE_COLOR,
             cursor: 'pointer',
           }}
@@ -245,6 +246,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
           target="_blank"
           rel="noopener noreferrer"
           aria-label="인스타그램 바로가기"
+          className="hover-raise"
           style={{
             display: 'flex',
             flexDirection: 'column',
@@ -272,6 +274,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
             openSettingsPage('main')
           }}
           aria-label="설정"
+          className="hover-raise"
           style={{
             display: 'flex',
             flexDirection: 'column',
@@ -283,7 +286,6 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
             width: 'calc(100% - 16px)',
             borderRadius: 12,
             border: 'none',
-            background: 'transparent',
             color: INACTIVE_COLOR,
             cursor: 'pointer',
           }}

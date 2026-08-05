@@ -64,12 +64,13 @@ function MovieCard({
     <>
       <div
         ref={cardRef}
-        onMouseEnter={isDesktop ? onMouseEnter : undefined}
-        onMouseLeave={isDesktop ? onMouseLeave : undefined}
         onClick={onClick}
         style={{ display: 'flex', flexDirection: 'column', gap: 8, width, flexShrink: 0, cursor: onClick ? 'pointer' : undefined }}
       >
-        <div style={{
+        <div
+          onMouseEnter={isDesktop ? onMouseEnter : undefined}
+          onMouseLeave={isDesktop ? onMouseLeave : undefined}
+          style={{
           transition: 'transform 130ms ease',
           transform: hovered ? 'scale(1.1)' : 'scale(1)',
           transformOrigin: 'center center',
