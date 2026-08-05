@@ -24,7 +24,8 @@
 ## 2. 2.0 확정 문법 (코드에 반영됨)
 
 - 거터: 콘텐츠 좌우 **24 (`--gutter-sheet`)**, 섹션 리듬 모바일 32 / PC 48.
-- KIMM(display)은 **h1 24 / h2 20 + 자간 5%만**. 소제목·UI 텍스트는 Pretendard 토큰.
+- KIMM(display)은 **h1 24 / h2 20 + 자간 5%만**. 소제목·UI 텍스트는 Pretendard 토큰. **`.display-h1`/`.display-h2` 클래스(globals.css) 사용 — 인라인 KIMM 스타일 금지** (2026-08-05 클래스화 완료).
+- 검색바 radius = `--comp-search-radius` = **r12(control)** — pill 폐기 (2026-08-05). Tailwind에서 `text-[var(--text-*)]`는 색상으로 오해석돼 글자색이 깨짐 — 반드시 `text-[length:var(--text-*)]`.
 - 캡션: 제목 14 bold(모바일)/16(PC), 보조 meta 12(모바일)/body 14(PC). 시의성 캡션 = **[시간(neutral-800·600·tnum) / 극장명(caption)] 두 줄**, 통째 클릭 → 극장 상세 딥링크(`?movie&date&time`) + 해당 카드 스크롤.
 - 포스터: r2(`--radius-poster`), 시트 고정폭 128, hover 확대는 **포스터 위에서만**.
 - hover 규칙: `.hover-raise`(종이 위 → raised) / `.hover-card`(raised 면 위(레일) → 흰 카드) / `.caption-link`(캡션·감독명). **role="button"엔 min-height 44 전역 규칙이 걸리니 텍스트류는 `minHeight:'auto'` 필수.**
@@ -38,7 +39,8 @@
 
 1. **상영작 탭 마감**: 사용자 브라우저 확인 대기 중인 것 — 진행 바, 캡션 스크롤, 레일 hover(흰 카드), 감독 pill.
 2. **수상 SVG**: `/public/awards/venice-lion.svg`·`cannes-palm.svg` — 사용자 반입 완료 여부 확인 (없으면 워터마크 조용히 숨김).
-3. **피그마 쪽 밀린 것**: bump-pc-captions.js(PC 캡션 16/14) Run 여부 확인, hover 인벤토리 최신본 Run 여부.
+3. **피그마 쪽 밀린 것**: bump-pc-captions.js(PC 캡션 16/14) Run 여부 확인, hover 인벤토리 최신본 Run 여부, **sync-insta-hero-20260805.js Run** (아이브로 삭제·인스타 제목 문구).
+3-1. **덤프 대조 잔여 (디자인 결정 필요)**: 포스터 규격(코드 120/210 vs 덤프 128)·캡션 장르칩+연도(코드에만 있음)·기념일 카드(코드 틴트 액센트 vs 덤프 흰 카드 2.0) — 코드 우위로 잠정 유지 중.
 4. **다음 스크린 후보**: 영화 상세 → 검색 → 설정(타이포만 잡음, 간격·카드 미이식) → 온보딩(구팔레트) → GV 이벤트 카드(피그마 미설계, 사용자 숙제).
 5. 설정 화면 전체 2.0 이식은 별도 챕터.
 6. 메모리의 나머지 TODO: `movie-redesign-todos.md` (Lucide Moon 교체, --color-info 폐지 등).
