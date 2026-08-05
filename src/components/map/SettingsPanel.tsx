@@ -74,7 +74,7 @@ export function SettingsHeader({ title, onBack, onClose, submitting }: { title: 
       {onBack && (
         <button style={btn} onClick={onBack} disabled={submitting}><IcoChevronLeft /></button>
       )}
-      <span style={{ flex: 1, fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      <span style={{ flex: 1, fontSize: 'var(--text-h2)', fontWeight: 700, fontFamily: 'var(--font-display)', letterSpacing: '0.05em', color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {title}
       </span>
       {onClose && (
@@ -151,7 +151,7 @@ export function ReportSuccessNotice() {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32, backgroundColor: 'var(--color-surface-bg)' }}>
       <HeartHandshake size={48} strokeWidth={1.5} color="var(--color-text-sub)" />
-      <div style={{ fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>감사합니다!</div>
+      <div style={{ fontSize: 'var(--text-title)', fontWeight: 700, color: 'var(--color-text-primary)' }}>감사합니다!</div>
       <div style={{ fontSize: 13, color: 'var(--color-text-sub)', textAlign: 'center', lineHeight: 1.6 }}>제보해 주셔서 감사합니다.<br/>확인 후 이메일로 답변 드리겠습니다.</div>
     </div>
   )
@@ -316,7 +316,7 @@ export function SettingsAttributionPage() {
           </div>
           <div>
             <div style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)', letterSpacing: '0.4px', textTransform: 'uppercase', fontWeight: 600 }}>지도 데이터</div>
-            <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>OpenStreetMap</div>
+            <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)' }}>OpenStreetMap</div>
           </div>
         </div>
         <div style={valueBox}>© OpenStreetMap contributors</div>
@@ -331,7 +331,7 @@ export function SettingsAttributionPage() {
           <div style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18, fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--color-text-sub)' }}>T</div>
           <div>
             <div style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)', letterSpacing: '0.4px', textTransform: 'uppercase', fontWeight: 600 }}>서체</div>
-            <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>KIMM 서체</div>
+            <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)' }}>KIMM 서체</div>
           </div>
         </div>
         <div style={valueBox}>출처 – 한국기계연구원, kimm.re.kr</div>
@@ -356,7 +356,7 @@ export function SettingsAboutPage() {
         <div style={{ width: 72, height: 72, borderRadius: 20, overflow: 'hidden', marginBottom: 12 }}>
           <img src="/squarelogo.svg" alt="영화볼지도" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
-        <div style={{ fontSize: 20, fontWeight: 800, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>영화볼지도</div>
+        <div style={{ fontSize: 'var(--text-h2)', fontWeight: 700, fontFamily: 'var(--font-display)', letterSpacing: '0.05em', color: 'var(--color-text-primary)' }}>영화볼지도</div>
         <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4, fontStyle: 'italic', fontFamily: 'var(--font-serif-en)' }}>independent cinema map</div>
       </div>
 
@@ -366,7 +366,7 @@ export function SettingsAboutPage() {
         {team.map((member, i) => (
           <div key={member.name} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px', borderBottom: i < team.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>{member.name}</div>
+              <div style={{ fontSize: 'var(--text-body)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{member.name}</div>
               <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4 }}>{member.role}</div>
             </div>
             {member.linkedin && (
