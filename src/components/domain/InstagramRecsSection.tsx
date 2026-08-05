@@ -91,12 +91,12 @@ function InstagramRecCard({
   // 웹: 카드뉴스 이미지는 고정 폭(DESKTOP_IMAGE_WIDTH)이라 카드가 넓어져도 사진 크기는
   // 그대로고, 그만큼 오른쪽 배경 여백만 늘어난다. 모바일: 기존처럼 카드 전체 폭에 걸쳐
   // mask로 페이드(뷰포트가 좁아 "남는 공간" 개념이 없음).
-  /* 2.0: 이미지가 오른쪽에서 배어나오고 왼쪽은 잉크가 덮음 — 좌측 텍스트 자리 확보 (피그마 TOBE) */
+  /* 2.0: 이미지가 왼쪽에 보이고 오른쪽으로 갈수록 검정 — 포스터가 검정 위에 얹힘 */
   const imageBoxStyle: React.CSSProperties =
-    { position: 'absolute', right: 0, top: 0, bottom: 0, width: '62%' }
+    { position: 'absolute', left: 0, top: 0, bottom: 0, width: '62%' }
   const imageMaskStyle: React.CSSProperties = {
-    WebkitMaskImage: 'linear-gradient(90deg, transparent 0%, #000 48%)',
-    maskImage: 'linear-gradient(90deg, transparent 0%, #000 48%)',
+    WebkitMaskImage: 'linear-gradient(90deg, #000 52%, transparent 100%)',
+    maskImage: 'linear-gradient(90deg, #000 52%, transparent 100%)',
   }
 
   // 모바일: 포스터 1개일 때도 여러 개일 때(strip 안 포스터)와 같은 top/bottom 12% 기준
@@ -169,6 +169,9 @@ function InstagramRecCard({
         <Image src={rec.cardImageUrl} alt={title} fill sizes="(max-width: 1280px) 100vw, 480px" style={{ objectFit: 'cover', objectPosition: 'center 78%' }} />
       </div>
 
+      {/* 텍스트 대비 스크림 — 이미지가 밝아도 좌상단 글자가 읽히게 */}
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(115deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.25) 38%, transparent 60%)', pointerEvents: 'none' }} />
+
       {/* 좌측 텍스트 — 아이브로 + KIMM 타이틀 (피그마 TOBE) */}
       <div style={{ position: 'absolute', left: isDesktop ? 24 : 16, top: isDesktop ? 24 : 16, right: '45%', display: 'flex', flexDirection: 'column', gap: 8, pointerEvents: 'none' }}>
         <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-neutral-400)', letterSpacing: '0.02em' }}>
@@ -183,13 +186,6 @@ function InstagramRecCard({
         </span>
       </div>
 
-      {/* 우상단 external-link — 인스타로 나가는 카드 어포던스 */}
-      <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="var(--color-on-accent)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"
-        style={{ position: 'absolute', top: 14, right: 14, opacity: 0.6 }}>
-        <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
-        <polyline points="15 3 21 3 21 9" />
-        <line x1="10" y1="14" x2="21" y2="3" />
-      </svg>
 
       {/* 드러난 오른쪽 영역 — 영화 포스터(1편이면 고정, 여러 편이면 좌우 스크롤)/영화제 배너.
           연결 끊겨 이미지가 하나도 없으면 생략 */}

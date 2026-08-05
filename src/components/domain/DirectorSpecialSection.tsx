@@ -300,14 +300,14 @@ export function DirectorSpecialSection({
       onMouseEnter={() => setScrollAreaHovered(true)}
       onMouseLeave={() => setScrollAreaHovered(false)}
     >
-      {canScrollLeft && (
+      {scrollAreaHovered && canScrollLeft && (
         <ScrollNavButton
           direction="left"
           style={{ position: 'absolute', top: posterMidY, transform: 'translateY(-50%)', left: 6, zIndex: 3 }}
           onClick={() => scrollRef.current?.scrollBy({ left: -scrollAmount, behavior: 'smooth' })}
         />
       )}
-      {canScrollRight && (
+      {scrollAreaHovered && canScrollRight && (
         <ScrollNavButton
           direction="right"
           style={{ position: 'absolute', top: posterMidY, transform: 'translateY(-50%)', right: 6, zIndex: 3 }}
@@ -355,7 +355,7 @@ export function DirectorSpecialSection({
           <path d="m12.4 3.4 3.1 4" />
           <path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
         </svg>
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
           <span style={{ fontSize: 'var(--text-title)', fontWeight: 700, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {theater.name}
           </span>
