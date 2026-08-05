@@ -111,7 +111,7 @@ export function AnniversarySection({
               }}
             >
               <div style={{ flexShrink: 0 }}>
-                <PosterThumb src={film.posterUrl} alt={film.title} width={90} height={135} radius={0} shadow={false} />
+                <PosterThumb src={film.posterUrl} alt={film.title} width={90} height={135} shadow={false} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, justifyContent: 'center' }}>
                 <span style={{
@@ -126,13 +126,13 @@ export function AnniversarySection({
                 <div style={{ display: 'flex', gap: 'var(--spacing-1)', alignItems: 'center' }}>
                   {film.genre.slice(0, 1).map((g) => (
                     <span key={g} style={{
-                      fontSize: 11, padding: '4px', borderRadius: 'var(--radius-pill)',
+                      fontSize: 'var(--text-badge)', padding: '4px', borderRadius: 'var(--radius-pill)',
                       display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
                       background: 'var(--color-surface-raised)', color: 'var(--color-text-caption)',
                       border: '1px solid var(--color-border)',
                     }}>{g}</span>
                   ))}
-                  <span style={{ fontSize: 11, color: 'var(--color-text-caption)', fontWeight: 600 }}>{film.year}</span>
+                  <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)', fontWeight: 600 }}>{film.year}</span>
                 </div>
               </div>
             </div>
@@ -145,9 +145,9 @@ export function AnniversarySection({
   // 일반 모드 — 가로 스크롤
   return (
     <div style={{ paddingTop: isDesktop ? 48 : 24 }}>
-      <div style={{ margin: '0 var(--gutter)' }}>{header}</div>
+      <div style={{ margin: '0 var(--gutter-sheet)' }}>{header}</div>
       <div style={{
-        margin: '0 var(--gutter)',
+        margin: '0 var(--gutter-sheet)',
         borderRadius: '0 0 10px 10px',
         border: filmBorder, borderTop: 'none',
         overflow: 'hidden',

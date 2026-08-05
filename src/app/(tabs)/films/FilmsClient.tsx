@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { SectionHeader, MovieCardSkeleton } from '@/components/primitives'
 import { AllMoviesGrid } from '@/components/domain/AllMoviesGrid'
+import { RouteProgressBar, navStart } from '@/components/domain/RouteProgressBar'
 import { AnniversarySection } from '@/components/domain/AnniversarySection'
 import { CurationSectionRow } from '@/components/domain/CurationSectionRow'
 import { DirectorSpecialSection } from '@/components/domain/DirectorSpecialSection'
@@ -103,6 +104,40 @@ const FESTIVAL_STATUS_LABEL: Record<FestivalStatus, string> = { upcoming: '예�
 // 데스크톱 배너 고정 폭 — 포스터 3장 가로 길이 정도(CurationSectionRow 데스크톱 포스터 210px × 3 + gap 16px × 2)
 const FESTIVAL_BANNER_DESKTOP_WIDTH = 662
 
+/* ── 섹션 지연 마운트 — 뷰포트 근접 시 실제 렌더, 그 전엔 고스트 행.
+   섹션 전체를 한 번에 그리면 초기 렌더가 무거워서 스크롤 도달 시점에 나눠 그린다 ── */
+function GhostSectionRow({ isDesktop }: { isDesktop: boolean }) {
+  return (
+    <div style={{ paddingTop: isDesktop ? 48 : 32 }}>
+      {/* 실제 섹션과 동일 규격: h2(26px)+행 상단 여백 16, 포스터 210/120·gap 16/10 */}
+      <div style={{ width: 180, height: 26, borderRadius: 'var(--radius-badge)', margin: '0 var(--gutter-sheet) 16px', backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite' }} />
+      <div style={{ display: 'flex', gap: isDesktop ? 16 : 10, overflow: 'hidden', padding: '0 var(--gutter-sheet)' }}>
+        {Array.from({ length: isDesktop ? 6 : 3 }).map((_, i) => (
+          <div key={i} style={{ width: isDesktop ? 210 : 120, flexShrink: 0 }}>
+            <MovieCardSkeleton />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function LazyBlock({ isDesktop, children }: { isDesktop: boolean; children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [shown, setShown] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el || shown) return
+    if (typeof IntersectionObserver === 'undefined') { setShown(true); return }
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { setShown(true); io.disconnect() }
+    }, { rootMargin: '900px 0px' })   // 4~5섹션 분량 미리 — 도달 전에 채워짐
+    io.observe(el)
+    return () => io.disconnect()
+  }, [shown])
+  return <div ref={ref}>{shown ? children : <GhostSectionRow isDesktop={isDesktop} />}</div>
+}
+
 /* ── 주목할 영화제 배너 — 카드 아님. 제목줄은 다른 섹션과 같은 SectionHeader(왼쪽 고정,
    배너 폭과 무관), 배너만 별도로 모바일은 좌우 꽉 채움 / 데스크톱은 폭 고정 + 중앙 정렬,
    양옆 빈 공간은 배경보다 살짝 어두운 surface-raised로 채운다.
@@ -115,7 +150,6 @@ function FestivalBannerCard({ festival, today, isDesktop, onClick }: { festival:
     <div>
       <SectionHeader
         title="주목할 영화제"
-        description={`${FESTIVAL_STATUS_LABEL[status]} · ${dateLabel} · ${festival.city}`}
         isDesktop={isDesktop}
         trailing={<ChevronRight size={18} strokeWidth={1.75} color="var(--color-text-caption)" />}
       />
@@ -127,15 +161,17 @@ function FestivalBannerCard({ festival, today, isDesktop, onClick }: { festival:
           onClick={onClick}
           style={{
             display: 'block', width: '100%', padding: 0, margin: '12px 0 0', border: 'none',
-            backgroundColor: 'var(--color-surface-raised)', cursor: 'pointer', minHeight: 'auto',
+            backgroundColor: isDesktop ? 'var(--color-surface-raised)' : 'transparent', cursor: 'pointer', minHeight: 'auto',
           }}
         >
           {/* 21/4 — jiff28 배너 실제 크기(1260x240) 기준. 다른 영화제 배너가 비율이 달라도
               objectFit:cover가 중앙 크롭하므로 레이아웃은 안 깨짐 */}
           <div style={{
             position: 'relative', aspectRatio: '21 / 4',
-            width: isDesktop ? FESTIVAL_BANNER_DESKTOP_WIDTH : '100%',
-            margin: isDesktop ? '0 auto' : 0,
+            width: isDesktop ? FESTIVAL_BANNER_DESKTOP_WIDTH : 'calc(100% - var(--gutter-sheet) * 2)',
+            margin: isDesktop ? '0 auto' : '0 auto',
+            borderRadius: isDesktop ? 0 : 'var(--radius-button)',
+            overflow: 'hidden',
           }}>
             <Image
               src={festival.bannerUrl}
@@ -163,8 +199,8 @@ export default function FilmsPage() {
     if (sessionStorage.getItem('yh_region_tip') === 'closed') setRegionHintDismissed(true)
   }, [])
 
-  const handleMovieClick = (id: string) => router.push(`/films/movie/${id}`)
-  const handleDirectorClick = (name: string) => router.push(`/films/director/${encodeURIComponent(name)}`)
+  const handleMovieClick = (id: string) => { navStart(); router.push(`/films/movie/${id}`) }
+  const handleDirectorClick = (name: string) => { navStart(); router.push(`/films/director/${encodeURIComponent(name)}`) }
 
   const { state: locState, coords: locCoords, modalSuppressed: locModalSuppressed, request: requestLoc, dismiss: dismissLoc } = useLocationPermission()
   const isDesktop = mounted && isDesktopLayout
@@ -254,22 +290,47 @@ export default function FilmsPage() {
     almostSoldOutFilms.map((f) => [f.movie.id, formatAlmostSoldOutCaption(f, asoToday)]),
   )
 
+  /* 시의성 캡션 — [시간 / 극장] 통째 clickable → 극장 상세 시간표. PC는 폰트 한 단계 승격 */
+  const theaterCaption = (movieKey: string, theaterId: string, timeText: string, theaterName: string, deep?: { date: string; time: string }, seatText?: string) => {
+    const href = deep
+      ? `/films/theater/${theaterId}?movie=${movieKey}&date=${deep.date}&time=${deep.time}`
+      : `/films/theater/${theaterId}`
+    const go = () => { navStart(); router.push(href) }
+    return (
+    <div
+      key={movieKey}
+      className="caption-link"
+      role="button"
+      tabIndex={0}
+      onClick={(e) => { e.stopPropagation(); go() }}
+      onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); go() } }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4, minHeight: 'auto' }}
+    >
+      <span style={{ fontSize: isDesktop ? 'var(--text-body)' : 'var(--text-meta)', color: 'var(--color-neutral-800)', fontWeight: 600, fontFeatureSettings: '"tnum"' }}>{timeText}</span>
+      {seatText && (
+        <span style={{ fontSize: isDesktop ? 'var(--text-body)' : 'var(--text-meta)', color: 'var(--color-error)', fontWeight: 600, fontFeatureSettings: '"tnum"' }}>{seatText}</span>
+      )}
+      <span style={{ fontSize: isDesktop ? 'var(--text-body)' : 'var(--text-meta)', color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{theaterName}</span>
+    </div>
+    )
+  }
+
   const almostSoldOutCustomInfos = new Map<string, React.ReactNode>(
     almostSoldOutFilms.map((f) => {
-      const dir = f.movie.director.length > 0 ? f.movie.director[0] : '감독 미상'
       const first = f.showings[0]
       const dayLabel = first?.showDate === asoToday ? '오늘' : '내일'
       const rest = f.showings.length - 1
       const dateText = first ? `${dayLabel} ${first.showTime}${rest > 0 ? ` · 외 ${rest}회` : ''}` : ''
       const theaterName = first?.theaterName ?? ''
 
+      const theaterId = first?.theaterId ?? ''
+      // 잔여석은 크롤 스냅샷 — 0석이면 표시하지 않음 (isAlmostSoldOut이 매진을 거르지만 방어)
+      const seatText = first && first.seatAvailable > 0 ? `잔여 ${first.seatAvailable}석` : undefined
       return [
         f.movie.id,
-        <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
-          <span style={{ fontSize: 11, color: 'var(--color-text-caption)' }}>{dir}</span>
-          <span style={{ fontSize: 11, color: 'var(--color-primary-base)', fontWeight: 600 }}>{theaterName}</span>
-          <span style={{ fontSize: 11, color: 'var(--color-primary-hover-l)' }}>{dateText}</span>
-        </div>
+        theaterCaption(f.movie.id, theaterId, dateText, theaterName,
+          first ? { date: first.showDate, time: first.showTime } : undefined,
+          seatText),
       ]
     })
   )
@@ -323,20 +384,17 @@ export default function FilmsPage() {
 
   const lateNightCustomInfos = new Map<string, React.ReactNode>(
     lateNightFilms.map((f) => {
-      const dir = f.movie.director.length > 0 ? f.movie.director[0] : '감독 미상'
       const first = f.showings[0]
       const dayLabel = first?.showDate === lnToday ? '오늘' : '내일'
       const rest = f.showings.length - 1
       const dateText = first ? `${dayLabel} ${first.showTime}${rest > 0 ? ` · 외 ${rest}회` : ''}` : ''
       const theaterName = first?.theaterName ?? ''
 
+      const theaterId = first?.theaterId ?? ''
       return [
         f.movie.id,
-        <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
-          <span style={{ fontSize: 11, color: 'var(--color-text-caption)' }}>{dir}</span>
-          <span style={{ fontSize: 11, color: 'var(--color-primary-base)', fontWeight: 600 }}>{theaterName}</span>
-          <span style={{ fontSize: 11, color: 'var(--color-primary-hover-l)' }}>{dateText}</span>
-        </div>
+        theaterCaption(f.movie.id, theaterId, dateText, theaterName,
+          first ? { date: first.showDate, time: first.showTime } : undefined),
       ]
     })
   )
@@ -365,20 +423,17 @@ export default function FilmsPage() {
   )
   const weekendCustomInfos = new Map<string, React.ReactNode>(
     weekendFilms.map((f) => {
-      const dir = f.movie.director.length > 0 ? f.movie.director[0] : '감독 미상'
       const first = f.showings[0]
       const dayLabel = first?.showDate === lnToday ? '오늘' : dayOfWeekLabel(first?.showDate ?? lnToday)
       const rest = f.showings.length - 1
       const dateText = first ? `${dayLabel} ${first.showTime}${rest > 0 ? ` · 외 ${rest}회` : ''}` : ''
       const theaterName = first?.theaterName ?? ''
 
+      const theaterId = first?.theaterId ?? ''
       return [
         f.movie.id,
-        <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
-          <span style={{ fontSize: 11, color: 'var(--color-text-caption)' }}>{dir}</span>
-          <span style={{ fontSize: 11, color: 'var(--color-primary-base)', fontWeight: 600 }}>{theaterName}</span>
-          <span style={{ fontSize: 11, color: 'var(--color-primary-hover-l)' }}>{dateText}</span>
-        </div>
+        theaterCaption(f.movie.id, theaterId, dateText, theaterName,
+          first ? { date: first.showDate, time: first.showTime } : undefined),
       ]
     })
   )
@@ -400,18 +455,15 @@ export default function FilmsPage() {
   const leaveNowCaptions = new Map(
     leaveNowFilms.map((f) => [f.movie.id, `${f.nextShowTime} ${f.theaterName}`]),
   )
+  /* 2.0: [시간 / 극장명] 두 줄 — "언제"가 먼저 잡히게 (피그마 확정 문법) */
   const leaveNowCustomInfos = new Map<string, React.ReactNode>(
-    leaveNowFilms.map((f) => {
-      const dir = f.movie.director.length > 0 ? f.movie.director[0] : '감독 미상'
-      return [
-        f.movie.id,
-        <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
-          <span style={{ fontSize: 11, color: 'var(--color-text-caption)' }}>{dir}</span>
-          <span style={{ fontSize: 11, color: 'var(--color-primary-base)', fontWeight: 600 }}>{f.theaterName}</span>
-          <span style={{ fontSize: 11, color: 'var(--color-primary-hover-l)' }}>{`오늘 ${f.nextShowTime}`}</span>
-        </div>
-      ]
-    })
+    leaveNowFilms.map((f) => [
+      f.movie.id,
+      <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
+        <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-neutral-800)', fontWeight: 600, fontFeatureSettings: '"tnum"' }}>{`오늘 ${f.nextShowTime}`}</span>
+        <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.theaterName}</span>
+      </div>,
+    ])
   )
 
   const handleLeaveNowMovieClick = (movieId: string) => {
@@ -546,25 +598,36 @@ export default function FilmsPage() {
         backgroundColor: 'var(--color-surface-bg)',
       }}
     >
-      <header ref={headerRef} style={{ padding: '20px 16px 0' }}>
+      {/* 데스크톱: 본문이 레일 위에 뜬 카드처럼 — 좌상/좌하 코너를 레일색으로 깎는 고정 마스크 (지도 탭 패널 r16과 동일 문법) */}
+      {isDesktop && (
+        <>
+          <div aria-hidden style={{
+            position: 'fixed', left: GLOBAL_NAV_DESKTOP_WIDTH, top: 0, width: 16, height: 16,
+            background: 'radial-gradient(circle 16px at 100% 100%, transparent 98%, var(--color-surface-raised) 100%)',
+            zIndex: 1100, pointerEvents: 'none',
+          }} />
+          <div aria-hidden style={{
+            position: 'fixed', left: GLOBAL_NAV_DESKTOP_WIDTH, bottom: 0, width: 16, height: 16,
+            background: 'radial-gradient(circle 16px at 100% 0%, transparent 98%, var(--color-surface-raised) 100%)',
+            zIndex: 1100, pointerEvents: 'none',
+          }} />
+        </>
+      )}
+      <header ref={headerRef} style={{
+        padding: '20px var(--gutter-sheet) 0',
+        /* 2.0: PC는 헤더 고정 — 콘텐츠가 구분선 아래로 스크롤 */
+        ...(isDesktop ? { position: 'sticky' as const, top: 0, zIndex: 100, backgroundColor: 'var(--color-surface-bg)' } : {}),
+      }}>
         {isDesktop ? (
           /* 데스크톱: [영화+서브타이틀]  ←─검색창 절대 중앙─→  [지역칩] */
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center', minHeight: 52 }}>
 
             {/* Left: title (flow) */}
             <div style={{ flexShrink: 0, zIndex: 1 }}>
-              <h1
-                style={{
-                  margin: 0,
-                  fontSize: 24,
-                  fontWeight: 700,
-                  fontFamily: 'var(--font-display)',
-                  color: 'var(--color-text-primary)',
-                }}
-              >
+              <h1 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)' }}>
                 상영작
               </h1>
-              <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-caption)', whiteSpace: 'nowrap' }}>
+              <p style={{ margin: '4px 0 0', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', whiteSpace: 'nowrap' }}>
                 {subtitle}
               </p>
             </div>
@@ -626,15 +689,7 @@ export default function FilmsPage() {
           /* 모바일: 제목 + 지역칩 → 검색창 → 서브타이틀 순 */
           <>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <h1
-                style={{
-                  margin: 0,
-                  fontSize: 24,
-                  fontWeight: 700,
-                  fontFamily: 'var(--font-display)',
-                  color: 'var(--color-text-primary)',
-                }}
-              >
+              <h1 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)' }}>
                 상영작
               </h1>
               <div style={{ position: 'relative' }}>
@@ -682,7 +737,7 @@ export default function FilmsPage() {
         )}
 
         {!isDesktop && (
-          <p style={{ margin: '8px 0 0', fontSize: 13, color: 'var(--color-text-caption)' }}>
+          <p style={{ margin: '8px 0 0', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
             {subtitle}
           </p>
         )}
@@ -691,6 +746,10 @@ export default function FilmsPage() {
         <div style={{ marginTop: 16, height: 1, background: 'var(--color-border)' }} />
       </header>
 
+      <RouteProgressBar isDesktop={isDesktop} />
+
+      {/* 2.0: PC 콘텐츠 최대폭 컬럼 (내부 gutter 포함 시각 ≈1000) — 프레임은 풀블리드 유지 */}
+      <div style={isDesktop ? { maxWidth: 1048, margin: '0 auto' } : undefined}>
       {!locModalSuppressed && (locState === 'prompt' || locState === 'denied' || locState === 'requesting') && (
         <LocationPermissionModal
           state={locState}
@@ -846,7 +905,7 @@ export default function FilmsPage() {
                   films={films} isDesktop={isDesktop} onMovieClick={handleMovieClick} />
               ))}
               {rows.map((pair, ri) => (
-                <div key={`ann_sparse_${ri}`} style={{ display: 'flex', gap: 12, padding: isDesktop ? '48px 16px 0' : '24px 16px 0' }}>
+                <div key={`ann_sparse_${ri}`} style={{ display: 'flex', gap: 12, padding: isDesktop ? '48px var(--gutter-sheet) 0' : '32px var(--gutter-sheet) 0' }}>
                   {pair.map(({ ann, films }) => (
                     <AnniversarySection key={`ann_${ann.nameKo}_${ann.eventType}`}
                       sectionTitle={ann.sectionTitle} sectionDesc={ann.sectionDesc}
@@ -872,7 +931,7 @@ export default function FilmsPage() {
             const position = startIndex + active.indexOf(s)
             return (
               <CurationSectionRow key={s.listId} id={s.listId}
-                title={s.nameKo} description={s.description}
+                title={s.nameKo}   /* 2.0: 부제 삭제 */
                 displayMode={s.displayMode as SectionDisplayMode}
                 movies={s.movies} isDesktop={isDesktop}
                 posterBadges={s.posterBadges} movieCaptions={s.movieCaptions}
@@ -891,9 +950,15 @@ export default function FilmsPage() {
                 compact={compact} />
             )
           }
-          // 모바일에서는 2열로 묶지 않음 — 가로로 합쳐서 보여주면 잘려서 잘 안 보임
+          // 모바일: 2열로 묶진 않지만, sparse(≤2편)는 카드 문법(수상 워터마크 포함)으로
           if (!isDesktop) {
-            return <>{active.map((s) => rowFor(s, false))}</>
+            return <>{active.map((s) =>
+              <LazyBlock key={s.listId} isDesktop={isDesktop}>
+                {s.movies.length <= 2
+                  ? <div style={{ display: 'flex', padding: '32px var(--gutter-sheet) 0' }}>{rowFor(s, true)}</div>
+                  : rowFor(s, false)}
+              </LazyBlock>
+            )}</>
           }
           // 데스크톱: sparse(≤2편) 섹션끼리 짝지어 2열로 — 인접하지 않아도 사이의 rich 섹션은
           // 잠깐 미뤄뒀다가 짝을 맺은 직후 원래 순서대로 이어서 낸다 (건너뛴 줄만큼 빈 공간 안 남게)
@@ -907,28 +972,32 @@ export default function FilmsPage() {
             }
             if (sparse && pending != null) {
               nodes.push(
-                <div key={`${keyPrefix}_pair_${pending.listId}`} style={{ display: 'flex', gap: 12, padding: '48px 16px 0' }}>
-                  {rowFor(pending, true)}
-                  {rowFor(s, true)}
-                </div>
+                <LazyBlock key={`${keyPrefix}_pair_${pending.listId}`} isDesktop={isDesktop}>
+                  <div style={{ display: 'flex', gap: 12, padding: '48px var(--gutter-sheet) 0' }}>
+                    {rowFor(pending, true)}
+                    {rowFor(s, true)}
+                  </div>
+                </LazyBlock>
               )
               pending = null
-              deferred.forEach((d) => nodes.push(rowFor(d, false)))
+              deferred.forEach((d) => nodes.push(<LazyBlock key={d.listId} isDesktop={isDesktop}>{rowFor(d, false)}</LazyBlock>))
               deferred.length = 0
               continue
             }
             // rich 섹션: 짝을 기다리는 sparse가 있으면 뒤로 미뤄두고, 없으면 바로 낸다
             if (pending != null) deferred.push(s)
-            else nodes.push(rowFor(s, false))
+            else nodes.push(<LazyBlock key={s.listId} isDesktop={isDesktop}>{rowFor(s, false)}</LazyBlock>)
           }
           if (pending != null) {
             // 끝까지 짝을 못 찾은 sparse — 큰 포스터 1~2장에 빈 공간 안 남게 단독 카드로
             nodes.push(
-              <div key={`${keyPrefix}_solo_${pending.listId}`} style={{ display: 'flex', gap: 12, padding: '48px 16px 0' }}>
-                {rowFor(pending, true)}
-              </div>
+              <LazyBlock key={`${keyPrefix}_solo_${pending.listId}`} isDesktop={isDesktop}>
+                <div style={{ display: 'flex', gap: 12, padding: '48px var(--gutter-sheet) 0' }}>
+                  {rowFor(pending, true)}
+                </div>
+              </LazyBlock>
             )
-            deferred.forEach((d) => nodes.push(rowFor(d, false)))
+            deferred.forEach((d) => nodes.push(<LazyBlock key={d.listId} isDesktop={isDesktop}>{rowFor(d, false)}</LazyBlock>))
           }
           return <>{nodes}</>
         }
@@ -1002,26 +1071,32 @@ export default function FilmsPage() {
             {renderRun(run1, 'run1', 0)}
 
             {/* 4. 특별전 #1 (interleaved) */}
-            {renderSpecial(special1)}
+            {special1 && <LazyBlock isDesktop={isDesktop}>{renderSpecial(special1)}</LazyBlock>}
 
             {/* 5~10. 신작·심야 · 거장/수상 · 시기별 · 연도별 · 평론가 · 무브먼트 — 연속 sparse 자동 페어링 */}
             {renderRun(run2, 'run2', run1.length)}
 
             {/* 11. 감독 스포트라이트 */}
-            <DirectorSpotlightSection
-              movies={movies} activeMovieIds={activeMovieIdSet}
-              isDesktop={isDesktop} onDirectorClick={handleDirectorClick} />
+            <LazyBlock isDesktop={isDesktop}>
+              <DirectorSpotlightSection
+                movies={movies} activeMovieIds={activeMovieIdSet}
+                isDesktop={isDesktop} onDirectorClick={handleDirectorClick} />
+            </LazyBlock>
 
             {/* 12. 전체 상영작 그리드 */}
+            <LazyBlock isDesktop={isDesktop}>
             <AllMoviesGrid
               movies={movies.filter((m) => activeMovieIdSet.has(m.id))}
               isDesktop={isDesktop}
               regionLabel={selectedRegion ?? undefined}
               theaterCountByMovie={theaterCountByMovie}
               onMovieClick={handleMovieClick} />
+            </LazyBlock>
           </>
         )
       })()}
+
+      </div>
 
       {/* scroll-to-top: 헤더가 뷰포트 밖으로 나가면 표시 */}
       {showScrollTop && (

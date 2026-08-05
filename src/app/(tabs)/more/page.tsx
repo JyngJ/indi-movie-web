@@ -11,9 +11,7 @@ import {
   type SettingsPage,
 } from '@/components/map/SettingsPanel'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
-import { useIsDark } from '@/hooks/useIsDark'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
-import { useThemeStore } from '@/store/themeStore'
 
 const PAGE_TITLES: Record<SettingsPage, string> = {
   main: '설정',
@@ -43,8 +41,6 @@ function DesktopPlaceholder() {
 
 export default function MorePage() {
   const isDesktop = useIsDesktopLayout()
-  const isDark = useIsDark()
-  const { setTheme } = useThemeStore()
   const [page, setPage] = useState<SettingsPage>('main')
   const [reportSuccess, setReportSuccess] = useState(false)
 
@@ -65,7 +61,7 @@ export default function MorePage() {
       <SettingsHeader title={PAGE_TITLES[page]} onBack={page !== 'main' ? handleBack : undefined} />
 
       {page === 'main' && (
-        <SettingsMainPage isDark={isDark} onSetTheme={(theme) => void setTheme(theme)} onNavigate={setPage} />
+        <SettingsMainPage onNavigate={setPage} />
       )}
       {page === 'report' && !reportSuccess && (
         <SettingsReportPage onSuccess={() => setReportSuccess(true)} />

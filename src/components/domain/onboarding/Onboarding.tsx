@@ -11,7 +11,6 @@ import { useCallback, useEffect, useRef, useState, type ComponentType, type Reac
 import { usePathname, useRouter } from 'next/navigation'
 import { useTheaters } from '@/lib/supabase/queries'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
-import { useIsDark } from '@/hooks/useIsDark'
 import { useLocationPermission } from '@/hooks/useLocationPermission'
 import { markOnboardingSeen } from '@/lib/onboarding'
 import { storageAdapter } from '@/lib/adapters/storage'
@@ -56,7 +55,7 @@ interface Props {
 
 export function Onboarding({ onClose, variant }: Props) {
   const isDesktop = useIsDesktopLayout()
-  const isDark = useIsDark()
+  const isDark = false  /* 2.0: 다크 폐지 */
   const router = useRouter()
   const pathname = usePathname()
   const { request: requestLocation, dismiss: dismissLocation, suppressModal: suppressLocationModal } = useLocationPermission()

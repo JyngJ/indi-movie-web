@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { Sun, Moon, HeartHandshake } from 'lucide-react'
+import { HeartHandshake } from 'lucide-react'
 import Link from 'next/link'
 import { useLockBodyScroll } from '@/hooks/useLockBodyScroll'
 import { Button, Input } from '@/components/primitives'
@@ -74,7 +74,7 @@ export function SettingsHeader({ title, onBack, onClose, submitting }: { title: 
       {onBack && (
         <button style={btn} onClick={onBack} disabled={submitting}><IcoChevronLeft /></button>
       )}
-      <span style={{ flex: 1, fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      <span className="display-h2" style={{ flex: 1, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {title}
       </span>
       {onClose && (
@@ -88,19 +88,18 @@ export function SettingsHeader({ title, onBack, onClose, submitting }: { title: 
 const footerLink: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', height: 30, padding: '0 8px',
   background: 'none', border: 'none', cursor: 'pointer', minHeight: 'unset',
-  fontSize: 13, color: 'var(--color-text-sub)',
+  fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)',
+  fontFamily: 'var(--font-sans)', fontWeight: 500, borderRadius: 'var(--radius-button)',
 }
 const footerDot: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', height: 30,
-  fontSize: 13, color: 'var(--color-text-placeholder)',
+  fontSize: 'var(--text-meta)', color: 'var(--color-text-placeholder)',
 }
 
 /* ── 설정 메인 ── */
 export function SettingsMainPage({
-  isDark, onSetTheme, onNavigate,
+  onNavigate,
 }: {
-  isDark: boolean
-  onSetTheme: (theme: 'light' | 'dark') => void
   onNavigate: (page: Page) => void
 }) {
   const row: React.CSSProperties = {
@@ -112,41 +111,6 @@ export function SettingsMainPage({
   }
   return (
     <div style={{ flex: 1, overflowY: 'auto', backgroundColor: 'var(--color-surface-bg)', paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}>
-      {/* 카드 1: 화면 모드 */}
-      <div style={{ margin: '16px 16px 0', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
-        <div style={{ ...row, cursor: 'default', borderBottom: 'none' }}>
-          <div style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-sub)" strokeWidth={1.75} strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>화면 모드</div>
-            <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4 }}>{isDark ? '다크' : '라이트'}</div>
-          </div>
-          {/* 토글 스위치 */}
-          <button
-            onClick={() => onSetTheme(isDark ? 'light' : 'dark')}
-            aria-label={isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}
-            style={{
-              width: 76, height: 40, borderRadius: 9999, padding: 4,
-              border: '1px solid var(--color-border)',
-              backgroundColor: isDark ? 'var(--color-surface-card)' : 'var(--color-surface-raised)',
-              boxShadow: 'var(--shadow-sm)', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', overflow: 'hidden', position: 'relative', flexShrink: 0,
-              minHeight: 'unset',
-            }}
-          >
-            <div style={{ position: 'absolute', width: 32, height: 32, borderRadius: '50%', backgroundColor: 'var(--color-surface-bg)', boxShadow: '0 1px 6px rgba(0,0,0,0.18)', left: isDark ? 40 : 4, transition: 'left 240ms cubic-bezier(0.4,0,0.2,1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isDark ? 'var(--color-text-caption)' : 'var(--color-warning)', zIndex: 1 }}>
-              {isDark
-                ? <svg width={13} height={13} viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" /></svg>
-                : <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="5" fill="currentColor" stroke="none"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-              }
-            </div>
-            <div style={{ width: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-warning)', opacity: isDark ? 0.2 : 0 }}><Sun size={16} strokeWidth={2.5} color="currentColor" /></div>
-            <div style={{ width: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isDark ? 0 : 0.3, color: 'var(--color-text-body)' }}><Moon size={16} strokeWidth={2.5} color="currentColor" /></div>
-          </button>
-        </div>
-      </div>
-
       {/* 카드 2: 버그 리포트 */}
       <div style={{ margin: '12px 16px 0', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
         <button style={{ ...row, borderBottom: 'none' }} onClick={() => onNavigate('report')}>
@@ -171,12 +135,12 @@ export function SettingsMainPage({
 
       {/* 푸터 링크 */}
       <div style={{ margin: '24px 16px 0', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
-        <Button variant="ghost" size="sm" onClick={() => onNavigate('attribution')}>출처 표기 정보</Button>
+        <Button variant="ghost" size="sm" style={{ color: 'var(--color-text-sub)', fontWeight: 500 }} onClick={() => onNavigate('attribution')}>출처 표기 정보</Button>
         <span style={footerDot}>·</span>
         {/* 만든 사람 탭 임시 숨김 */}
-        <Link href="/privacy" style={{ ...footerLink, textDecoration: 'none' }}>개인정보 처리방침</Link>
+        <Link href="/privacy" className="hover-raise" style={{ ...footerLink, height: 32, textDecoration: 'none' }}>개인정보 처리방침</Link>
       </div>
-      <div style={{ textAlign: 'center', marginTop: 8, fontSize: 11, color: 'var(--color-text-placeholder)' }}>
+      <div style={{ textAlign: 'center', marginTop: 8, fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)' }}>
         영화볼지도 · v0.1.0
       </div>
     </div>
@@ -188,7 +152,7 @@ export function ReportSuccessNotice() {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32, backgroundColor: 'var(--color-surface-bg)' }}>
       <HeartHandshake size={48} strokeWidth={1.5} color="var(--color-text-sub)" />
-      <div style={{ fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>감사합니다!</div>
+      <div style={{ fontSize: 'var(--text-title)', fontWeight: 700, color: 'var(--color-text-primary)' }}>감사합니다!</div>
       <div style={{ fontSize: 13, color: 'var(--color-text-sub)', textAlign: 'center', lineHeight: 1.6 }}>제보해 주셔서 감사합니다.<br/>확인 후 이메일로 답변 드리겠습니다.</div>
     </div>
   )
@@ -279,7 +243,7 @@ export function SettingsReportPage({
           placeholder="예) 라이카시네마 상영 시간표가 어제 날짜로 표시돼요."
           style={{ ...inputStyle, minHeight: 120 }}
         />
-        <div style={{ textAlign: 'right', fontSize: 11, color: 'var(--color-text-placeholder)', marginTop: 4 }}>{detail.length}/500</div>
+        <div style={{ textAlign: 'right', fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)', marginTop: 4 }}>{detail.length}/500</div>
       </div>
 
       {/* 스크린샷 */}
@@ -352,8 +316,8 @@ export function SettingsAttributionPage() {
             <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-sub)" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
           </div>
           <div>
-            <div style={{ fontSize: 11, color: 'var(--color-text-placeholder)', letterSpacing: '0.4px', textTransform: 'uppercase', fontWeight: 600 }}>지도 데이터</div>
-            <div style={{ fontSize: 15, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>OpenStreetMap</div>
+            <div style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)', letterSpacing: '0.4px', textTransform: 'uppercase', fontWeight: 600 }}>지도 데이터</div>
+            <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)' }}>OpenStreetMap</div>
           </div>
         </div>
         <div style={valueBox}>© OpenStreetMap contributors</div>
@@ -367,8 +331,8 @@ export function SettingsAttributionPage() {
         <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid var(--color-border)' }}>
           <div style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18, fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--color-text-sub)' }}>T</div>
           <div>
-            <div style={{ fontSize: 11, color: 'var(--color-text-placeholder)', letterSpacing: '0.4px', textTransform: 'uppercase', fontWeight: 600 }}>서체</div>
-            <div style={{ fontSize: 15, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>KIMM 서체</div>
+            <div style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)', letterSpacing: '0.4px', textTransform: 'uppercase', fontWeight: 600 }}>서체</div>
+            <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)' }}>KIMM 서체</div>
           </div>
         </div>
         <div style={valueBox}>출처 – 한국기계연구원, kimm.re.kr</div>
@@ -393,17 +357,17 @@ export function SettingsAboutPage() {
         <div style={{ width: 72, height: 72, borderRadius: 20, overflow: 'hidden', marginBottom: 12 }}>
           <img src="/squarelogo.svg" alt="영화볼지도" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
-        <div style={{ fontSize: 20, fontWeight: 800, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>영화볼지도</div>
+        <div className="display-h2" style={{ color: 'var(--color-text-primary)' }}>영화볼지도</div>
         <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4, fontStyle: 'italic', fontFamily: 'var(--font-serif-en)' }}>independent cinema map</div>
       </div>
 
       {/* 만든 사람 */}
       <div style={{ margin: '0 16px', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)' }}>
-        <div style={{ padding: '8px 16px', fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', color: 'var(--color-text-placeholder)', textTransform: 'uppercase', borderBottom: '1px solid var(--color-border)' }}>만든 사람</div>
+        <div style={{ padding: '8px 16px', fontSize: 'var(--text-badge)', fontWeight: 700, letterSpacing: '0.5px', color: 'var(--color-text-placeholder)', textTransform: 'uppercase', borderBottom: '1px solid var(--color-border)' }}>만든 사람</div>
         {team.map((member, i) => (
           <div key={member.name} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px', borderBottom: i < team.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)' }}>{member.name}</div>
+              <div style={{ fontSize: 'var(--text-body)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{member.name}</div>
               <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4 }}>{member.role}</div>
             </div>
             {member.linkedin && (
@@ -433,8 +397,6 @@ export function SettingsPanel({
   isOpen,
   onClose,
   isDesktopLayout,
-  isDark,
-  onSetTheme,
   selectedMovieId,
   selectedTheaterName,
   initialPage = 'main',
@@ -442,8 +404,6 @@ export function SettingsPanel({
   isOpen: boolean
   onClose: () => void
   isDesktopLayout: boolean
-  isDark: boolean
-  onSetTheme: (theme: 'light' | 'dark') => void
   selectedMovieId?: string | null
   selectedTheaterName?: string
   initialPage?: Page
@@ -498,7 +458,7 @@ export function SettingsPanel({
       />
 
       {page === 'main' && (
-        <SettingsMainPage isDark={isDark} onSetTheme={onSetTheme} onNavigate={setPage} />
+        <SettingsMainPage onNavigate={setPage} />
       )}
       {page === 'report' && !reportSuccess && (
         <SettingsReportPage

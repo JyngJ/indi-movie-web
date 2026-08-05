@@ -46,7 +46,7 @@ export default async function OgImage({ params }: { params: Promise<{ id: string
           <div
             style={{
               fontSize: 22,
-              color: '#4A6380',
+              color: '#8794C5',
               letterSpacing: '0.05em',
               fontFamily: 'KIMM',
               fontWeight: 700,
@@ -55,7 +55,7 @@ export default async function OgImage({ params }: { params: Promise<{ id: string
             영화볼지도
           </div>
           <div style={{ color: '#2C2820', fontSize: 22 }}>·</div>
-          <div style={{ fontSize: 20, color: '#635D55' }}>독립·예술영화관 상영 정보</div>
+          <div style={{ fontSize: 20, color: '#726B65' }}>독립·예술영화관 상영 정보</div>
         </div>
 
         {/* 중앙: 극장 정보 */}
@@ -66,8 +66,8 @@ export default async function OgImage({ params }: { params: Promise<{ id: string
                 display: 'flex',
                 fontSize: 18,
                 fontWeight: 600,
-                color: '#4A6380',
-                background: '#1A2530',
+                color: '#8794C5',
+                background: '#1F2747',
                 borderRadius: 6,
                 padding: '4px 14px',
                 width: 'fit-content',
@@ -81,14 +81,14 @@ export default async function OgImage({ params }: { params: Promise<{ id: string
               fontFamily: 'KIMM',
               fontSize: name.length > 8 ? 64 : 80,
               fontWeight: 700,
-              color: '#F8F6F2',
+              color: '#FAF9F8',
               lineHeight: 1.1,
             }}
           >
             {name}
           </div>
           {address ? (
-            <div style={{ fontSize: 22, color: '#635D55', marginTop: 4 }}>{address}</div>
+            <div style={{ fontSize: 22, color: '#726B65', marginTop: 4 }}>{address}</div>
           ) : null}
         </div>
 

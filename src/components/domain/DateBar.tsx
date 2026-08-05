@@ -23,13 +23,24 @@ interface DateBarProps {
   hasNext?: boolean
 }
 
+function getDateNumColor(type: DayType): string {
+  /* 피그마: 숫자는 평일 800 · 주말 900 — 유채색은 요일 글자만 */
+  switch (type) {
+    case 'today':    return 'var(--color-primary-base)'
+    case 'saturday':
+    case 'sunday':
+    case 'holiday':  return 'var(--color-neutral-900)'
+    default:         return 'var(--color-neutral-800)'
+  }
+}
+
 function getDayTextColor(type: DayType): string {
   /* docs/DESIGN.md DateBar dayCell 스펙 기준 */
   switch (type) {
     case 'today':    return 'var(--color-primary-base)'      /* 비선택 시 primary 색으로 강조 */
-    case 'saturday': return 'var(--color-primary-hover-l)'  /* #5C7896 */
+    case 'saturday': return 'var(--color-primary-500)'  /* 2.0: 토요일 = primary/500 (hover-l은 800으로 어두워져 부적합) */
     case 'sunday':
-    case 'holiday':  return 'var(--color-error)'             /* #B94A48 */
+    case 'holiday':  return 'var(--color-error-mid)'         /* 피그마 error/700 #BD4E4C */
     default:         return 'var(--color-text-sub)'          /* #635D55 */
   }
 }
@@ -81,7 +92,7 @@ export function DateBar({ days, selectedDate, onSelectDate, onPrev, onNext, hasP
     <div
       style={{
         width: '100%',
-        padding: '8px',
+        padding: '8px 12px',   /* 피그마 datebar pad [8,12] */
         backgroundColor: 'var(--color-surface-card)',
         borderTop: '1px solid var(--color-border)',
         borderBottom: '1px solid var(--color-border)',
@@ -104,16 +115,24 @@ export function DateBar({ days, selectedDate, onSelectDate, onPrev, onNext, hasP
           const textColor = isDisabled
             ? 'var(--color-text-placeholder)'
             : getDayTextColor(d.type)
+          const dateColor = isDisabled
+            ? 'var(--color-text-placeholder)'
+            : getDateNumColor(d.type)
 
           return (
             <button
               key={d.date}
               type="button"
               disabled={isDisabled}
-              className="flex-1 flex flex-col items-center"
+              className="flex flex-col items-center"
               style={{
                 paddingTop: 'var(--comp-date-cell-pt)',
                 paddingBottom: 'var(--comp-date-cell-pb)',
+                /* 선택 셀은 좌우 16으로 넓어져 시각적으로 도드라짐 (피그마 오늘 54 vs 38) */
+                paddingLeft: active ? 16 : 8,
+                paddingRight: active ? 16 : 8,
+                transition: 'padding 200ms ease, background 160ms',   /* 오버슈트는 팝(transform)만 — padding 진동 방지 */
+                animation: active ? 'date-cell-pop 260ms cubic-bezier(0.34, 1.56, 0.64, 1)' : undefined,
                 borderRadius: 'var(--comp-date-cell-radius)',
                 backgroundColor: active ? 'var(--color-primary-base)' : 'transparent',
                 cursor: isDisabled ? 'default' : 'pointer',
@@ -128,10 +147,10 @@ export function DateBar({ days, selectedDate, onSelectDate, onPrev, onNext, hasP
               <span
                 style={{
                   fontSize: 'var(--text-dow)',
-                  fontWeight: 500,
+                  fontWeight: 400,
                   lineHeight: 1,
                   marginBottom: 4,
-                  color: active ? 'rgba(255,255,255,0.85)' : textColor,
+                  color: active ? 'var(--color-primary-100)' : textColor,
                 }}
               >
                 {d.type === 'today' ? '오늘' : d.dow}
@@ -142,7 +161,7 @@ export function DateBar({ days, selectedDate, onSelectDate, onPrev, onNext, hasP
                   fontWeight: 700,
                   fontFeatureSettings: '"tnum"',
                   lineHeight: 1,
-                  color: active ? '#FFFFFF' : textColor,
+                  color: active ? 'var(--color-neutral-50)' : dateColor,
                   // disabled 날짜에 가로줄 — shorthand(textDecoration) 혼용 금지
                   textDecorationLine: isDisabled ? 'line-through' : 'none',
                   textDecorationColor: 'var(--color-text-placeholder)',
@@ -157,10 +176,12 @@ export function DateBar({ days, selectedDate, onSelectDate, onPrev, onNext, hasP
                     bottom: 2,
                     left: '50%',
                     transform: 'translateX(-50%)',
-                    width: 12,
-                    height: 2,
-                    borderRadius: 4,
-                    backgroundColor: active ? 'rgba(255,255,255,0.85)' : 'var(--color-primary-base)',
+                    width: 'var(--comp-date-ind-w)',
+                    height: 'var(--comp-date-ind-h)',
+                    borderRadius: 9999,
+                    /* 영화 선택 시 상영하는 모든 날에서 점(3px)→선(22px)으로 자라남 (마운트 애니메이션) */
+                    animation: 'date-ind-grow 240ms 60ms cubic-bezier(0.34, 1.56, 0.64, 1) backwards',
+                    backgroundColor: active ? 'var(--color-primary-100)' : 'var(--color-neutral-500)',
                   }}
                 />
               )}

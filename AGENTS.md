@@ -11,6 +11,10 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - If you need to run Next.js directly, pass `--webpack` explicitly.
 - Before changing Next.js CLI flags or bundler behavior, read `node_modules/next/dist/docs/01-app/03-api-reference/06-cli/next.md` and update this section plus `README.md`.
 
+## Design 2.0 Refactor (feature/design-refactor)
+
+- 디자인 2.0 작업을 이어받는 세션은 반드시 `docs/HANDOFF-design-refactor.md`를 먼저 읽을 것 — 피그마 Scripter 파이프라인, 확정 문법, 미결 목록, 함정이 정리돼 있다.
+
 ## Branching Rules
 
 - Do all non-trivial work on a dedicated branch. Do not implement directly on `main`.
@@ -26,7 +30,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Keep branch names lowercase and hyphen-separated.
 - Keep each branch focused on one coherent change. If a task grows into unrelated work, split it into a new branch from `main`.
 - Do not merge into `main` without explicit user approval.
-- Prefer merging through a pull request. If the user asks for a direct local merge, summarize the diff and verification first.
+- **Never push to `main` directly.** "메인에 반영해줘/넣어두자" always means: push the feature branch and open a pull request for the user to review and merge. It is never permission for a local merge + push.
+- A direct local merge is allowed only when the user explicitly says to skip the PR in that same message; summarize the diff and verification first.
 - Before asking to merge, run the relevant checks for the branch and report any failures clearly.
 
 ## Architecture Rules

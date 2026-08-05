@@ -49,7 +49,7 @@ export function DropdownRow({ kind, label, sub, selected, onClick, isLast }: Dro
           {label}
         </div>
         {sub && (
-          <div style={{ fontSize: 11, color: 'var(--color-text-caption)', marginTop: 4 }}>
+          <div style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)', marginTop: 4 }}>
             {sub}
           </div>
         )}

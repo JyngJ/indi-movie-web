@@ -9,7 +9,7 @@ import { useUIStore } from '@/store/uiStore'
 import { Flag } from 'lucide-react'
 
 /** §5 바텀 탭바 표준 높이(safe-area 포함) — 다른 화면 요소가 이 값만큼 비켜야 함 */
-export const GLOBAL_NAV_MOBILE_HEIGHT = 60
+export const GLOBAL_NAV_MOBILE_HEIGHT = 64
 /** §5 아이콘 레일 표준 폭 */
 export const GLOBAL_NAV_DESKTOP_WIDTH = 64
 
@@ -26,10 +26,13 @@ function IconMap({ size = 23 }: { size?: number }) {
 }
 
 function IconFilm({ size = 23 }: { size?: number }) {
+  /* 2.0: 필름 스트립 → 클래퍼보드 — "영화를 본다"는 행위에 더 직관적 (Lucide clapperboard) */
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="4" width="18" height="16" rx="2" />
-      <path d="M3 9h18M3 15h18M8 4v5M8 15v5M16 4v5M16 15v5" />
+      <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z" />
+      <path d="m6.2 5.3 3.1 3.9" />
+      <path d="m12.4 3.4 3.1 4" />
+      <path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
     </svg>
   )
 }
@@ -86,9 +89,12 @@ function MobileTabBar({ pathname, filmsHref }: { pathname: string; filmsHref: st
         bottom: 0,
         height: `calc(${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`,
         paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingLeft: 'var(--spacing-12)', paddingRight: 'var(--spacing-12)',   /* 48 — 탭 3개 중앙으로 (피그마 tabbar pad) */
         display: 'flex',
+        alignItems: 'center',
         background: 'var(--color-surface-card)',
         borderTop: '1px solid var(--color-border)',
+        boxShadow: 'var(--shadow-sm)',   /* PC 패널과 동일 스타일로 통일 */
         zIndex: 1150,
       }}
     >
@@ -103,16 +109,27 @@ function MobileTabBar({ pathname, filmsHref }: { pathname: string; filmsHref: st
             style={{
               flex: 1,
               display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textDecoration: 'none',
+            }}
+          >
+            {/* 데스크톱 레일과 동일한 선택 문법 — 틴트 라운드 박스 */}
+            <span style={{
+              display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
               gap: 4,
+              minWidth: 52,   /* 아이콘+짧은 라벨도 정사각형에 가깝게 (피그마 51×53) */
+              padding: '8px var(--gutter-md)',
+              borderRadius: 8,
+              background: active ? 'color-mix(in srgb, var(--color-primary-base) 11%, transparent)' : 'transparent',
               color,
-              textDecoration: 'none',
-            }}
-          >
-            <Icon size={23} />
-            <span style={{ fontSize: 11, fontWeight: 600 }}>{label}</span>
+            }}>
+              <Icon size={23} />
+              <span style={{ fontSize: 'var(--text-badge)', fontWeight: 600, lineHeight: 1 }}>{label}</span>
+            </span>
           </Link>
         )
       })}
@@ -147,6 +164,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
         style={{ textDecoration: 'none' }}
       >
         <div
+          className={active ? undefined : 'hover-card'}
           style={{
             display: 'flex',
             flexDirection: 'column',
@@ -154,8 +172,8 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
             gap: 4,
             padding: '8px 4px',
             margin: '0 8px',
-            borderRadius: 12,
-            background: active ? 'color-mix(in srgb, var(--color-primary-base) 11%, transparent)' : 'transparent',
+            borderRadius: 8,
+            background: active ? 'color-mix(in srgb, var(--color-primary-base) 11%, transparent)' : undefined,
             color,
           }}
         >
@@ -181,13 +199,12 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
         gap: 20,
         paddingTop: 16,
         paddingBottom: 16,
-        background: 'var(--color-surface-card)',
-        borderRight: '1px solid var(--color-border)',
+        background: 'var(--color-surface-raised)',   /* 피그마 rail: neutral/200 — 패널보다 한 단 가라앉힘 */
         zIndex: 1150,
       }}
     >
       <Link href="/" aria-label="지도 홈" style={{ display: 'block' }}>
-        <Image src="/icon.svg" alt="" width={38} height={38} style={{ borderRadius: 12 }} />
+        <Image src="/logo-tile.png" alt="" width={40} height={40} style={{ borderRadius: 4 }} />
       </Link>
 
       {/* 순서: 지도 - 영화 (검색은 지도 상단 검색창으로 진입 — 레일 탭 제거) */}
@@ -204,6 +221,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
             openSettingsPage('report')
           }}
           aria-label="신고"
+          className="hover-card"
           style={{
             display: 'flex',
             flexDirection: 'column',
@@ -215,7 +233,6 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
             width: 'calc(100% - 16px)',
             borderRadius: 12,
             border: 'none',
-            background: 'transparent',
             color: INACTIVE_COLOR,
             cursor: 'pointer',
           }}
@@ -229,6 +246,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
           target="_blank"
           rel="noopener noreferrer"
           aria-label="인스타그램 바로가기"
+          className="hover-card"
           style={{
             display: 'flex',
             flexDirection: 'column',
@@ -256,6 +274,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
             openSettingsPage('main')
           }}
           aria-label="설정"
+          className="hover-card"
           style={{
             display: 'flex',
             flexDirection: 'column',
@@ -267,7 +286,6 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
             width: 'calc(100% - 16px)',
             borderRadius: 12,
             border: 'none',
-            background: 'transparent',
             color: INACTIVE_COLOR,
             cursor: 'pointer',
           }}

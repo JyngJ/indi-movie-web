@@ -184,13 +184,13 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
                     <div style={{
                       position: 'absolute', top: 6, left: 6,
                       background: gvEventTypeColor(ev.type), color: 'var(--color-on-accent)',
-                      fontSize: 11, fontWeight: 600, borderRadius: 'var(--radius-badge)', padding: '4px 8px', letterSpacing: '0.3px',
+                      fontSize: 'var(--text-badge)', fontWeight: 600, borderRadius: 'var(--radius-badge)', padding: '4px 8px', letterSpacing: '0.3px',
                       display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
                     }}>{ev.type}</div>
                     <div style={{
                       position: 'absolute', bottom: 6, right: 6,
                       background: 'rgba(0,0,0,0.5)', color: 'var(--color-on-accent)',
-                      fontSize: 11, fontWeight: 600, borderRadius: 'var(--radius-badge)', padding: '4px 8px',
+                      fontSize: 'var(--text-badge)', fontWeight: 600, borderRadius: 'var(--radius-badge)', padding: '4px 8px',
                       display: 'inline-flex', alignItems: 'center', lineHeight: 1,
                       backdropFilter: 'blur(4px)',
                       whiteSpace: 'nowrap',
@@ -227,7 +227,7 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
                         {ev.guest}
                       </div>
                     )}
-                    <span style={{ fontSize: 9, fontWeight: 600, color: sc, whiteSpace: 'nowrap', display: 'block', marginTop: 4 }}>
+                    <span style={{ fontSize: 'var(--text-badge)', fontWeight: 600, color: sc, whiteSpace: 'nowrap', display: 'block', marginTop: 4 }}>
                       ● {ev.status}
                     </span>
                   </div>

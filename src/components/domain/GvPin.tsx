@@ -1,6 +1,6 @@
 import type { GvEvent } from '@/data/gv-events'
 
-const GV_AMBER = '#D97706'
+const GV_AMBER = '#3E1782'  // 2.0: GV도 보라 통일 (앰버는 warning 오커와 충돌) — 상수명 정리는 추후
 
 export const GV_PIN_W = 148
 export const GV_PIN_CALLOUT_H = 66

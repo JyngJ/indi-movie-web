@@ -115,7 +115,7 @@ function ShowtimeChip({ st, selected, onClick }: { st: Showtime; selected?: bool
         )}
       </div>
       {st.seatTotal > 0 && (
-        <div style={{ marginTop: 4, fontSize: 11, fontFeatureSettings: '"tnum"' }}>
+        <div style={{ marginTop: 4, fontSize: 'var(--text-badge)', fontFeatureSettings: '"tnum"' }}>
           <span style={{ fontWeight: 600, color: seatColor }}>{st.seatAvailable}</span>
           <span style={{ color: 'var(--color-text-sub)' }}>/{st.seatTotal}석</span>
           {low && !soldout && <span style={{ marginLeft: 4, fontSize: 10, color: 'var(--color-warning)', fontWeight: 600 }}>잔여↓</span>}
@@ -192,7 +192,7 @@ function MovieShowtimeCard({
           {movie.genre.length > 0 && (
             <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
               {movie.genre.slice(0, 2).map((g) => (
-                <span key={g} style={{ fontSize: 11, padding: '4px 8px', borderRadius: 9999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, border: '1px solid var(--color-border)', color: 'var(--color-text-caption)', backgroundColor: 'var(--color-surface-raised)' }}>
+                <span key={g} style={{ fontSize: 'var(--text-badge)', padding: '4px 8px', borderRadius: 9999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, border: '1px solid var(--color-border)', color: 'var(--color-text-caption)', backgroundColor: 'var(--color-surface-raised)' }}>
                   {g}
                 </span>
               ))}
@@ -306,30 +306,42 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
     setSelectedMovieTitle(null)
   }, [selectedDate])
 
-  // 공유 링크로 진입 시 선택된 회차 복원
+  // 공유 링크·큐레이션 캡션 진입 시 선택된 회차 복원 (+ 해당 영화 카드로 스크롤)
   useEffect(() => {
     if (restoredShareRef.current) return
     const dateParam = searchParams.get('date')
     const showtimeParam = searchParams.get('showtime')
-    if (!dateParam || !showtimeParam) return
+    const movieParam = searchParams.get('movie')
+    const timeParam = searchParams.get('time')
+    if (!dateParam || (!showtimeParam && !(movieParam && timeParam))) return
     if (dayShowtimes.length === 0) return
     if (selectedDate !== dateParam) {
-      // 공유된 날짜로 먼저 이동 — dayShowtimes가 새 날짜로 다시 로드된 뒤 이 effect가 재실행된다
+      // 해당 날짜로 먼저 이동 — dayShowtimes가 새 날짜로 다시 로드된 뒤 이 effect가 재실행된다
       suppressResetOnDateChangeRef.current = true
       setSelectedDate(dateParam)
       return
     }
 
-    const st = dayShowtimes.find((s) => s.id === showtimeParam)
+    const st = showtimeParam
+      ? dayShowtimes.find((s) => s.id === showtimeParam)
+      : dayShowtimes.find((s) => s.movieId === movieParam && s.showTime.startsWith(timeParam!))
     if (!st) return
 
     restoredShareRef.current = true
     setSelectedShowtimeId(st.id)
     setSelectedMovieTitle(st.movieTitle)
 
+    // 방금 선택한 상영표가 있는 영화 카드로 스크롤
+    setTimeout(() => {
+      document.querySelector(`[data-movie-anchor="${st.movieId}"]`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 150)
+
     const url = new URL(window.location.href)
     url.searchParams.delete('date')
     url.searchParams.delete('showtime')
+    url.searchParams.delete('movie')
+    url.searchParams.delete('time')
     window.history.replaceState({}, '', url.toString())
   }, [searchParams, dayShowtimes, selectedDate])
 
@@ -412,7 +424,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
         padding: isDesktop ? '28px 28px 24px' : '20px 16px 20px',
       }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', padding: '4px 12px', borderRadius: 9999, border: '1px solid color-mix(in srgb, var(--color-primary-base) 55%, transparent)', backgroundColor: 'var(--color-primary-subtle-l)', marginBottom: 12 }}>
-          <span style={{ fontSize: 11, fontWeight: 600, lineHeight: 1, color: 'var(--color-primary-base)' }}>독립·예술영화관</span>
+          <span style={{ fontSize: 'var(--text-badge)', fontWeight: 600, lineHeight: 1, color: 'var(--color-primary-base)' }}>독립·예술영화관</span>
         </div>
         <h1 style={{ margin: '0 0 12px', fontSize: isDesktop ? 32 : 24, fontWeight: 700, fontFamily: 'var(--font-serif)', color: 'var(--color-text-primary)', lineHeight: 1.2 }}>
           {theater.name}
@@ -426,7 +438,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" />
           </svg>
           <span>{theater.address}</span>
-          <span style={{ marginLeft: 4, display: 'flex', alignItems: 'center', gap: 4, color: copied ? 'var(--color-primary-base)' : 'var(--color-text-caption)', fontSize: 11, fontWeight: 500 }}>
+          <span style={{ marginLeft: 4, display: 'flex', alignItems: 'center', gap: 4, color: copied ? 'var(--color-primary-base)' : 'var(--color-text-caption)', fontSize: 'var(--text-badge)', fontWeight: 500 }}>
             <IcoCopy />
             {copied ? '복사됨' : '복사'}
           </span>
@@ -488,7 +500,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
                 }}
                 disabled={!hasShows}
               >
-                <span style={{ fontSize: 11, fontWeight: 500, color: isSelected ? 'var(--color-primary-base)' : isHoliday ? 'var(--color-error)' : 'var(--color-text-caption)' }}>
+                <span style={{ fontSize: 'var(--text-badge)', fontWeight: 500, color: isSelected ? 'var(--color-primary-base)' : isHoliday ? 'var(--color-error)' : 'var(--color-text-caption)' }}>
                   {i === 0 ? '오늘' : day}
                 </span>
                 <span style={{ fontSize: 18, fontWeight: 700, fontFeatureSettings: '"tnum"', color: isSelected ? 'var(--color-primary-base)' : isHoliday ? 'var(--color-error)' : 'var(--color-text-primary)' }}>
@@ -520,8 +532,8 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
         ) : (
           <div style={isDesktop ? { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 0, columnGap: 16 } : {}}>
             {movieShowtimeGroups.map(({ movie, showtimes }) => (
+              <div key={movie.id} data-movie-anchor={movie.id}>
               <MovieShowtimeCard
-                key={movie.id}
                 movie={movie}
                 showtimes={showtimes}
                 isDesktop={isDesktop}
@@ -544,6 +556,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
                 }}
                 selectedShowtimeId={selectedShowtimeId}
               />
+              </div>
             ))}
           </div>
         )}
@@ -573,7 +586,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
           <div style={{ position: 'fixed', right: 32, bottom: 32, width: 300, zIndex: 100, borderRadius: 16, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', boxShadow: '0 6px 24px color-mix(in srgb, var(--color-primary-base) 55%, transparent)', overflow: 'hidden' }}>
             <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', color: 'var(--color-text-caption)' }}>회차 선택됨</span>
+                <span style={{ fontSize: 'var(--text-badge)', fontWeight: 700, letterSpacing: '0.5px', color: 'var(--color-text-caption)' }}>회차 선택됨</span>
                 <CloseRoundButton variant="card" onClick={() => { setSelectedShowtimeId(null); setSelectedMovieTitle(null) }} />
               </div>
               <div>

@@ -1,6 +1,8 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
 import type { Movie } from '@/types/api'
+import { ScrollNavButton } from '@/components/primitives'
 import { useDirectorProfile } from '@/lib/supabase/queries'
 
 interface DirectorSpotlight {
@@ -137,19 +139,31 @@ export function DirectorSpotlightSection({
   isDesktop,
   onDirectorClick,
 }: DirectorSpotlightSectionProps) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [rowHovered, setRowHovered] = useState(false)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
+  function updateScrollEdge() {
+    const el = scrollRef.current
+    if (!el) return
+    setCanScrollLeft(el.scrollLeft > 4)
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4)
+  }
+
+  // 마운트·데이터 변경 시 측정 — 안 하면 넘칠 게 없어도 hover 버튼이 떠서 헛클릭 유발
+  useEffect(() => { updateScrollEdge() }, [movies, activeMovieIds])
+
   const directors = getSpotlight(movies, activeMovieIds)
 
   if (directors.length === 0) return null
 
   return (
     <section style={{ paddingTop: isDesktop ? 56 : 28 }}>
-      <div style={{ padding: '0 16px' }}>
+      <div style={{ padding: '0 var(--gutter-sheet)' }}>
         <h2
+          className="display-h2"
           style={{
             margin: 0,
-            fontSize: isDesktop ? 'var(--text-h2)' : 'var(--text-h3)',
-            fontWeight: 700,
-            fontFamily: 'var(--font-display)',
             color: 'var(--color-text-primary)',
             display: 'flex',
             alignItems: 'center',
@@ -158,18 +172,30 @@ export function DirectorSpotlightSection({
         >
           감독 스포트라이트
         </h2>
-        <p style={{ margin: '4px 0 0', fontSize: isDesktop ? 'var(--text-meta)' : 'var(--text-caption)', color: 'var(--color-text-caption)' }}>
-          지금 주목할 만한 감독
-        </p>
       </div>
 
       <div
+        style={{ position: 'relative' }}
+        onMouseEnter={isDesktop ? () => setRowHovered(true) : undefined}
+        onMouseLeave={isDesktop ? () => setRowHovered(false) : undefined}
+      >
+        {isDesktop && rowHovered && canScrollLeft && (
+          <ScrollNavButton direction="left" style={{ zIndex: 3 }}
+            onClick={() => scrollRef.current?.scrollBy({ left: -400, behavior: 'smooth' })} />
+        )}
+        {isDesktop && rowHovered && canScrollRight && (
+          <ScrollNavButton direction="right" style={{ zIndex: 3 }}
+            onClick={() => scrollRef.current?.scrollBy({ left: 400, behavior: 'smooth' })} />
+        )}
+      <div
+        ref={scrollRef}
+        onScroll={updateScrollEdge}
         className="no-scrollbar"
         style={{
           display: 'flex',
           gap: isDesktop ? 'var(--spacing-5)' : 14,
           overflowX: 'auto',
-          padding: '12px 16px 8px',
+          padding: '12px var(--gutter-sheet) 8px',
         }}
       >
         {directors.map((dir) => (
@@ -180,6 +206,7 @@ export function DirectorSpotlightSection({
             onClick={onDirectorClick ? () => onDirectorClick(dir.name) : undefined}
           />
         ))}
+      </div>
       </div>
     </section>
   )

@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from 'next'
 import { ReactNode } from 'react'
 import './globals.css'
 import { Providers } from './providers'
-import { initTheme } from '@/store/themeStore'
 import { AnalyticsScripts } from '@/components/analytics/AnalyticsScripts'
 
 export const metadata: Metadata = {
@@ -57,7 +56,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="ko" suppressHydrationWarning>
       <head>
         {/* FOUC 방지: 렌더링 전 테마 적용 — React 19 알려진 경고(개발환경 only, 프로덕션 무관) */}
-        <script dangerouslySetInnerHTML={{ __html: initTheme() }} />
       </head>
       <body>
         <Providers>

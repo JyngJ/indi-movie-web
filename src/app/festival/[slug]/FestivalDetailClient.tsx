@@ -42,7 +42,7 @@ function LineupPoster({ src, alt }: { src?: string; alt: string }) {
         <Image src={proxiedImageUrl(src, 280)} alt={alt} fill sizes="140px" style={{ objectFit: 'cover' }} />
       ) : (
         <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px 8px' }}>
-          <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-caption)', textAlign: 'center', lineHeight: 1.3, wordBreak: 'keep-all' }}>
+          <span style={{ fontSize: 'var(--text-badge)', fontWeight: 600, color: 'var(--color-text-caption)', textAlign: 'center', lineHeight: 1.3, wordBreak: 'keep-all' }}>
             {alt}
           </span>
         </div>
@@ -124,7 +124,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
         />
       ) : (
         <div style={{ width: '100%', aspectRatio: '21/4', position: 'relative', backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
-          <span style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)', textAlign: 'center' }}>
+          <span style={{ fontSize: 'var(--text-h2)', fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)', textAlign: 'center' }}>
             {festival.name}
           </span>
         </div>

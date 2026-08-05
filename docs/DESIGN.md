@@ -1,356 +1,226 @@
-# 디자인 시스템
+# 디자인 시스템 2.0
 
 > 예술영화관 상영 통합 조회 서비스 — 디자인 토큰 & 컴포넌트 가이드
+> 2.0 개정 2026-08-04 · Refactoring UI 기반 리디자인 (색·타이포·간격·그림자 전면)
 
-**문서 체계**: 값의 유일한 원본 = `src/styles/tokens.css` (CSS 변수) · 역할/규칙/컴포넌트 스펙 설명 = 이 문서 · 회귀 감시 = `scripts/audit` (`npm run audit:ui:check`)
-
-> 과거 루트에 있던 JS 토큰 스펙 파일과 아이콘 지침 문서는 이 두 파일로 통합·삭제됨. 표의 "JS 키" 컬럼은 Figma Variables 네이밍 매핑용 역사적 표기.
+**문서 체계**: 값의 유일한 원본 = `src/styles/tokens.css` · 역할/규칙 설명 = 이 문서 · 회귀 감시 = `npm run audit:ui:check` · 피그마 원본 = "영화볼지도 Design System" 파일의 2.0 변수 컬렉션·스타일
 
 ---
+
+## 세계관
+
+**종이와 잉크.** 미색 종이(웜그레이) 위에 잉크(먹·인디고·오커) — 인쇄물의 물성.
+독립·예술영화관 아카이브의 진지함 + 극장의 낭만 약간. **라이트 단일 테마** (2.0에서 다크 폐지).
 
 ## 원칙
 
-- 컴포넌트에서 hex 하드코딩 절대 금지
-- 모든 색상·간격·타이포그래피는 CSS 변수(`var(--...)`) 참조
-- Figma 변수 네이밍과 코드 네이밍 일치
-- **Primitives 우선**: UI 구성의 기본이 되는 조립형 컴포넌트(`HoverPopup`, `ScrollNavButton`, `SectionHeader`, `GenreChip` 등)를 적극 사용해 AI-Vibe(매직 넘버, 과도한 Glassmorphism, 의미없는 거대 그림자)를 지양한다.
-- **새 코드는 px 리터럴 대신 토큰을 쓴다.** 토큰에 없는 값이 필요하면 스케일에 토큰을 추가하고
-  이 문서에 기록한다 — 새 이름을 즉흥적으로 만들지 말 것(예: `--font-size-*`, `--space-*` 같은
-  병렬 네이밍 금지, 기존 `--text-*`/`--spacing-*`/`--radius-*` 체계를 확장한다).
+- 컴포넌트에서 hex 하드코딩 절대 금지 — 모든 값은 `var(--...)` 참조
+- **색은 상태와 행동에만** — 정적 정보는 뉴트럴. 한 화면에 인디고(행동·활성) + 시맨틱(상태) 외 색 금지
+- 위계는 크기·굵기·색 셋 중 둘 이상으로 — 크기 하나로 만들지 않는다
+- 500 이하 명도 낮은 색(neutral/500, 각 시맨틱 500)에는 "없어도 되는 정보"만
+- 새 값이 필요하면 스케일에 토큰을 추가하고 이 문서에 기록 — 즉흥 이름 금지
 
 ---
 
-## 색상 토큰
+## 색상
 
-### Primary
+### Neutral — 웜그레이 램프 (H 27~40, S가 양끝으로 상승하는 U자)
 
-| JS 키 | CSS 변수 | 값 | 용도 |
-|-------|----------|----|------|
-| `color.primary.base` | `--color-primary-base` | `#4A6380` | 독립영화관 핀, 활성 칩, CTA, 오늘 날짜 |
-| `color.primary.hoverLight` | `--color-primary-hover-l` | `#5C7896` | 라이트 모드 hover/press |
-| `color.primary.hoverDark` | — | `#3A5068` | 다크 모드 hover/press |
-| `color.primary.subtleLight` | `--color-primary-subtle-l` | `#E8EEF4` | 활성 칩 배경 (라이트) |
-| `color.primary.subtleDark` | — | `#1A2530` | 활성 칩 배경 (다크) |
-| `color.primary.text` | `--color-primary-text` | `#2B3D50` | primary 위 텍스트 |
+| 토큰 | 값 | 역할 |
+|------|----|------|
+| `--color-neutral-900` | `#0C0A08` | 텍스트 프라이머리·제목 |
+| `--color-neutral-800` | `#2B2622` | 강조 텍스트·인버스 배경(날짜 활성 셀) |
+| `--color-neutral-700` | `#58524B` | 본문 텍스트(긴 글) |
+| `--color-neutral-600` | `#726B65` | 서브 텍스트·본문(짧은 글)·소제목 색 |
+| `--color-neutral-500` | `#8D8781` | 캡션·메타 — 경계 정보만 |
+| `--color-neutral-400` | `#A7A19A` | 플레이스홀더 |
+| `--color-neutral-300` | `#C6BFB9` | 비활성·보조 구분 (2.0 신설) |
+| `--color-neutral-200` | `#EAE5E1` | 보더·구분선 |
+| `--color-neutral-100` | `#EAE5E1` | 눌린 면·비활성 배경 |
+| `--color-neutral-50`  | `#FAF9F8` | 페이지 배경 (미색 종이) |
 
-> `--color-primary-hover-d`/`--color-primary-subtle-d`/`--color-primary-text-d`는 미사용으로 tokens.css에서 삭제됨 — 다크 모드 값은 별도 `-d` 변수가 아니라 `[data-theme=dark]` 오버라이드 방식으로 적용한다.
+### Surface — 종이 위에 흰 카드가 뜨는 구조
 
-### Multiplex (지도 핀 전용, 본문 사용 금지)
+| 토큰 | 값 | 역할 |
+|------|----|------|
+| `--color-surface-bg` | `#FAF9F8` | 페이지 (미색 종이) |
+| `--color-surface-card` | `#FFFFFF` | 카드·시트·시간표 셀 — "새 종이 한 장" |
+| `--color-surface-raised` | `#EAE5E1` | 눌린 면·비활성 칩 |
+| `--color-border` | `#EAE5E1` | 보더 |
 
-| JS 키 | 값 |
-|-------|-----|
-| `color.multiplex.cgv` | `#E30613` |
-| `color.multiplex.mega` | `#6C1E9F` |
-| `color.multiplex.lotte` | `#ED1C24` |
+카드가 페이지보다 어두우면 "파인 홈"으로 읽힌다 — 콘텐츠 면은 항상 배경보다 밝게.
 
-### Semantic
+### Primary — 인디고 (H227, 9단계)
 
-| JS 키 | CSS 변수 | 값 | 용도 |
-|-------|----------|----|------|
-| `color.semantic.warning` | `--color-warning` | `#D97706` | 잔여석 적음·종료임박 |
-| `color.semantic.success` | `--color-success` | `#4A7C59` | 예매완료·저장 확인 |
-| `color.semantic.error` | `--color-error` | `#B94A48` | 매진 강조·에러·일/공휴일 dow |
+슬레이트 → 인디고 전환. 잉크·염색(쪽) 계열, 종이와 온도 대비로 발화.
 
-### Neutral
+| 토큰 | 값 | 역할 |
+|------|----|------|
+| `--color-primary-900` | `#1F2747` | 틴트 위 텍스트 |
+| `--color-primary-800` | `#2F3A65` | hover·프레스 (**어두운 방향** — 1.0 라이트닝에서 반전) |
+| `--color-primary-700` | `#404E81` | **base** — 버튼·CTA·활성(오늘 셀·선택 링·활성 탭) |
+| `--color-primary-600` | `#51629E` | 보조 액센트 |
+| `--color-primary-500` | `#6D7CB0` | 아이콘 액센트·토요일 — **글자 얹기 금지** |
+| `--color-primary-400` | `#8794C5` | 차트·보조·다크 배경 위 인디고(OG) |
+| `--color-primary-300` | `#A6B1D9` | 연한 보더 |
+| `--color-primary-200` | `#C4CCE9` | 틴트 보더 |
+| `--color-primary-100` | `#ECEFF9` | subtle — 활성 칩 틴트·솔리드 위 크림 글자 |
 
-| JS 키 | 값 |
-|-------|-----|
-| `color.neutral[50]` | `#F8F6F2` |
-| `color.neutral[100]` | `#F0EDE6` |
-| `color.neutral[200]` | `#DDD9CF` |
-| `color.neutral[400]` | `#A9A39A` |
-| `color.neutral[500]` | `#857F76` |
-| `color.neutral[600]` | `#635D55` |
-| `color.neutral[700]` | `#4A4540` |
-| `color.neutral[800]` | `#2E2A25` |
-| `color.neutral[900]` | `#1A1714` |
+호환 별칭: `-base`=700, `-hover-l`=800, `-subtle-l`=100, `-text`=900.
 
-> ⚠️ `neutral[300]` 미정의 — 필요 시 `#C4BFB6` 추가 고려
+### Semantic — 뮤트 계급 통일 (형광 제거)
 
-### Surface
+| 토큰 | 값 | 역할 |
+|------|----|------|
+| `--color-warning` | `#B9800E` | 오커 700 — 잔여석 적음. 색 텍스트+솔리드 배지 겸직 |
+| `--color-success` | `#4A7C59` | 상영중 |
+| `--color-error` | `#9B3331` | 매진 — 텍스트+칩 겸직 (900. L50대는 무인지대라 금지) |
+| `--color-gv` | `#3E1782` | GV·페스티벌·이벤트 전 타입 통일 보라 (핀·배지·텍스트 3겸직) |
+| `--color-info` | (폐지) | 임시 primary-500 — 신규 사용 금지 |
 
-| JS 키 | CSS 변수 | 라이트 | 다크 |
-|-------|----------|--------|------|
-| `surface.page` | `--color-surface-bg` | `#F8F6F2` | `#0E0D0B` |
-| `surface.card` | `--color-surface-card` | `#FFFFFF` | `#1A1814` |
-| `surface.raised` | `--color-surface-raised` | `#F0EDE6` | `#242019` |
-| `surface.border` | `--color-border` | `#DDD9CF` | `#2C2820` |
+틴트·딥: `--color-{warning,success,error}-tint`(배지 배경) + `-deep`(틴트 위 텍스트), `--color-error-mid`(아이콘·보더 전용), `--color-gv-tint`.
 
-### Text
+**배지 문법**: 틴트 배경 + 딥 텍스트. 솔리드 배지 = 겸직값 배경 + 크림/흰 글자.
+**금지**: 상태색을 정체성 색으로 유용(1.0의 GV=warning 사태), L50대 솔리드에 글자, 순검정 그림자.
 
-| JS 키 | CSS 변수 | 라이트 | 다크 |
-|-------|----------|--------|------|
-| `text.primary` | `--color-text-primary` | `#1A1714` | `#F8F6F2` |
-| `text.body` | `--color-text-body` | `#4A4540` | `#DDD9CF` |
-| `text.sub` | `--color-text-sub` | `#635D55` | `#A9A39A` |
-| `text.caption` | `--color-text-caption` | `#857F76` | `#857F76` |
-| `text.placeholder` | `--color-text-placeholder` | `#A9A39A` | `#635D55` |
-| `text.onAccent` | `--color-on-accent` | `#FFFFFF` | `#FFFFFF` |
+### Multiplex (핀 전용, 본문 금지 — 외부 브랜드라 램프화 금지)
 
-> `text.onAccent`: 솔리드 accent(primary·semantic·브랜드 고정색) 위 텍스트·아이콘. `text.inverse`와 달리 테마에 따라 뒤집히지 않음(항상 흰색 고정).
+cgv `#E30613` · mega `#6C1E9F` · lotte `#ED1C24`
 
 ---
 
 ## 타이포그래피
 
-### 폰트 패밀리
+### 패밀리
 
-```
-display(KIMM)  제목·간판 전용. 한국기계연구원 서체(로고타입 기반의 기하학적 디스플레이체).
-               굵기가 Light(300)/Bold(700) 2종뿐이라 본문에는 쓰지 않고,
-               큰 제목·극장명·영화명·지도 라벨 등 "간판처럼 보여야 하는" 곳에만 Bold로 사용.
-               한글 + 라틴(영문 대소문자) + 숫자 + 기호 모두 지원 →
-               한·영 혼용 제목도 KIMM 한 벌로 처리 가능.
-               (뒤의 Pretendard는 폰트 로드 실패 시 폴백용)
-               ※ 출처 표시 필수: "출처 – 한국기계연구원, kimm.re.kr"
+| 토큰 | 폰트 | 용도 |
+|------|------|------|
+| `--font-display` | KIMM Bold | 제목·간판 전용, **자간 +5%**. 본문 금지. 출처 표기 필수: "출처 – 한국기계연구원, kimm.re.kr" |
+| `--font-sans` | Pretendard | UI 전반·본문 |
+| `--font-serif-en` | Libre Baskerville | **폐지 수순** — 영문 원제는 Pretendard 흡수, meta 색으로 구분 |
+| `--font-mono` | SF Mono | 수치 정렬 예비 (실사용은 tnum으로 해결) |
 
-latin          영문 원제·감독명을 세리프 이탤릭으로 멋부릴 때 쓰는 선택적 악센트
-               (예: dir. Bong Joon-ho). 굳이 안 써도 되고,
-               영문 제목도 KIMM(display)으로 통일 가능.
+로고 손글씨는 로고 전용 — UI 텍스트 사용 금지.
 
-ui             UI 전반·본문·12px 이하 작은 텍스트. 한글/영문/숫자 모두.
+### 스케일 — 6단계 (10·12·14·16·20·24)
 
-mono           HEX, 상영 시간, 좌석수 등 정렬이 필요한 수치(tnum).
-```
+인접 크기 병합, 위계는 weight·색이 담당. 행간: 클수록 조임.
 
-| JS 키 | CSS 변수 | 폰트 | 용도 |
-|-------|----------|------|------|
-| `type.family.display` | `--font-display` | `'KIMM', 'Pretendard', sans-serif` | 제목·간판·지도 라벨 (KIMM Bold) |
-| `type.family.korean` | `--font-serif` | `'KIMM', 'Pretendard', sans-serif` | = display, 기존 코드 호환 alias |
-| `type.family.ui` | `--font-sans` | `'Pretendard', -apple-system, sans-serif` | UI 전반·본문 |
-| `type.family.latin` | `--font-serif-en` | `'Libre Baskerville', serif` | 영문 원제·감독명 이탤릭 (선택적) |
-| `type.family.mono` | `--font-mono` | `'SF Mono', 'ui-monospace', monospace` | HEX, 상영 시간, 좌석수 |
+| 토큰 | size | weight | 행간 | 용도 |
+|------|------|--------|------|------|
+| `h1` | 24 | 700 KIMM | 125% | 영화 대제목·극장명 히어로 |
+| `h2`(=h3) | 20 | 700 KIMM | 130% | 섹션·바텀시트 헤더 |
+| `title` | 16 | 700 | 140% | 카드·리스트 제목 |
+| `subtitle` | 14 | 700 | 150% | 소제목 — body와 동크기, **weight+색(600)으로 위계** |
+| `body` | 14 | 500 | 150% | 본문 (색 600, 긴 글은 700) |
+| `meta` | 12 | 400 | 150% | 메타·주소·영문원제 (색 500) |
+| `caption` | 12 | 500 | 140% | 라벨 CAPS, 자간 0.4px |
+| `badge` | 10 | 700 | 100% | 배지·최소 라벨 |
+| `time`/`date` | 16 | 700 tnum | 100% | 시간·날짜 |
+| `seat` | 12 | 600 tnum | 100% | 좌석수 |
+| `dow` | 10 | 500 | 100% | 요일 |
 
-**KIMM체 출처 표기 필수**: `출처 – 한국기계연구원, kimm.re.kr`
-
-**KIMM @font-face 로드**:
-```css
-@font-face { font-family:'KIMM'; font-weight:300; src:url('/fonts/KIMM_Light.ttf') format('truetype'); }
-@font-face { font-family:'KIMM'; font-weight:700; src:url('/fonts/KIMM_bold.ttf')  format('truetype'); }
-```
-
-### 타입 스케일
-
-| JS 키 | size | weight | lineHeight | 폰트 | 용도 |
-|-------|------|--------|------------|------|------|
-| `h1` | 24px | 700 | 1.25 | KIMM Bold | 영화 대제목 |
-| `h2` | 22px | 700 | 1.3 | KIMM Bold | 극장명 헤더 |
-| `h3` | 20px | 700 | 1.3 | KIMM Bold | 바텀시트 극장명 |
-| `mapLabel` | 11px | 700 | 1 | KIMM Bold | 지도 핀 라벨 |
-| `title` | 17px | 700 | 1.4 | Pretendard | 카드 제목 |
-| `subtitle` | 15px | 600~700 | 1.4 | Pretendard | 소제목·카드 헤더 (TASK-10 감사에서 추가 — 실사용 33곳) |
-| `body` | 14px | 500 | 1.5 | Pretendard | 본문 |
-| `meta` | 13px | 400 | 1.5 | Pretendard | 메타·주소 |
-| `caption` | 11px | 500 | 1.4 | Pretendard | 라벨 caps (letter-spacing 0.4px, uppercase) |
-| `badge` | 9px | 700 | 1 | Pretendard | D-1 배지 (letter-spacing 0.4px, uppercase) |
-| `time` | 17px | 700 | 1 | Pretendard | 상영 시작 시간 (tnum) |
-| `seat` | 12px | 600 | 1 | Pretendard | 좌석수 (tnum) |
-| `dow` | 10px | 500 | 1 | Pretendard | 날짜 바 요일 |
-| `date` | 16px | 700 | 1 | Pretendard | 날짜 바 일자 (tnum) |
-
-> ⚠️ `h1~h3`, `mapLabel`은 KIMM Bold 사용. `title` 이하는 Pretendard.
+숫자(tnum)와 한 줄 라벨은 행간 100% — 여러 줄 텍스트에만 150% 규칙 적용.
 
 ---
 
-## 간격 (spacing)
+## 간격 — n = px÷4, 인접 차 ≥33%
 
-| CSS 변수 | 값 | 비고 |
-|----------|----|----|
-| `--spacing-1` | 4px | |
-| `--spacing-2` | 8px | |
-| `--spacing-3` | 12px | |
-| `--spacing-4` | 16px | |
-| `--spacing-5` | 20px | |
-| `--spacing-6` | 24px | |
-| `--spacing-8` | 32px | `--spacing-7`(28px)는 실사용 0건 확인돼 미정의 유지 |
-| `--spacing-10` | 40px | |
+`4 · 8 · 12 · 16 · 24 · 32 · 48 · 64 · 96 · 128`
+(spacing-1·2·3·4·6·8·12·16·24·32. **5(20)·10(40)은 폐지 수순** — 신규 사용 금지)
 
-`--spacing-1-5`(6px)·`--spacing-2-5`(10px)는 4px 배수 규칙 위반으로 폐기(tokens.css에서 삭제) — 인접 4px 배수 토큰으로 수렴한다.
-2px·14px·18px 등은 실사용이 적어(10건 미만) 별도 토큰화하지 않음 — stage 2에서 인접 토큰으로 수렴 대상.
+| 구간 | 용도 |
+|------|------|
+| 4~8 | 칩 내부·요소 간 기본 |
+| 12~16 | 카드 내부·패딩·거터 |
+| 24~32 | 그룹 사이·카드 사이 |
+| 48~128 | 섹션·화면·히어로·엠티 스테이트 |
 
-레이아웃 거터 토큰: `--gutter`(16px) / `--gutter-md`(12px) / `--gutter-sm`(8px).
+거터: `--gutter` 16 / `-md` 12 / `-sm` 8. **시트 2.0 목업 거터는 24** — 코드 이관 시 gutter 체계 개정 예정.
+폭 티어는 만들지 않는다 — 폭은 컴포넌트 스펙(`--comp-*`)이 소유. 스크롤 리스트는 폭 유도 근거 금지(잘리는 게 기능).
 
 ---
 
-## 반경 (radius)
+## 반경 (역할 기반)
 
-역할 기반 네이밍으로 개편 — 크기 기반 토큰(`--radius-sm/md/lg/xl/2xl/full`)은 모두 삭제됨.
+| 토큰 | 값 | 용도 |
+|------|----|------|
+| `--radius-badge` | 4 | 배지·라벨 |
+| `--radius-poster` | **2** | 포스터·썸네일 — 인쇄물 모서리 (2.0에서 8→2) |
+| `--radius-button` | 8 | 버튼·날짜 셀 |
+| `--radius-control` | 12 | 입력·칩·카드·시간표 셀·지도 팝업 |
+| `--radius-popover` | 16 | 드롭다운·모달 |
+| `--radius-sheet` | 20 | 바텀시트 상단 |
+| `--radius-pill` | 9999 | 검색창·필터 칩·FAB |
 
-| CSS 변수 | 값 | 용도 |
-|----------|----|------|
-| `--radius-badge` | 4px | 배지·라벨·인디케이터 |
-| `--radius-poster` | 8px | 포스터·썸네일·날짜 셀·지도 팝업 |
-| `--radius-button` | 8px | 버튼 (control 12px가 버튼엔 과해 분리) |
-| `--radius-control` | 12px | 입력·칩·카드·상영시간표 셀 |
-| `--radius-popover` | 16px | 드롭다운·팝오버·모달 |
-| `--radius-sheet` | 20px | 바텀시트 상단 |
-| `--radius-pill` | 9999px | pill — 검색창·칩·FAB |
-| — (`circle`) | 50% | 핀·FAB round·체크 배지 |
-
-> TASK-10 감사에서 드리프트 확인 — stage 2에서 역할 토큰으로 수렴 예정:
-> `borderRadius: 10`(34곳)이 `--radius-poster`(8)/`--radius-control`(12) 사이에서 카드류에 혼용,
-> `99`(19곳)는 `--radius-pill`(9999)의 이형(異形). 상세는 "알려진 불일치" 섹션 참고.
+poster를 빌려 쓰던 날짜 셀·지도 팝업은 2.0에서 button/control로 이관 완료.
 
 ---
 
-## 그림자 (shadow)
+## 그림자 — 2겹(direct+ambient), 색은 `--shadow-base #140F0A` 웜 브라운 고정
 
-| JS 키 | CSS 변수 | 라이트 | 다크 |
-|-------|----------|--------|------|
-| `sm` | `--shadow-sm` | `0 2px 6px rgba(20,15,10,0.06)` | `0 2px 6px rgba(0,0,0,0.30)` |
-| `md` | `--shadow-md` | `0 4px 12px rgba(20,15,10,0.08)` | `0 4px 12px rgba(0,0,0,0.45)` |
-| `sheet` | `--shadow-sheet` | `0 -8px 24px rgba(20,15,10,0.06)` | `0 -8px 24px rgba(0,0,0,0.40)` |
-| `popup` | — | `0 8px 24px rgba(20,15,10,0.18)` | `0 8px 24px rgba(0,0,0,0.55)` |
-| `pin` | — | `0 2px 6px rgba(0,0,0,0.18)` | — |
+| 토큰 | 고도 | 용도 |
+|------|------|------|
+| `--shadow-sm` | E1 | 카드·버튼 hover |
+| `--shadow-md` | E2 | FAB·드롭다운·지도 팝업·PC 패널 |
+| `--shadow-lg` | E3 | 모달·다이얼로그 |
+| `--shadow-sheet` | 특수 | 바텀시트 — **offset 0 ambient** (하단 고정 면은 위 가장자리만 노출) |
+
+지도 = E0 바닥. 그 위에 뜨는 모든 면(시트·패널·FAB·핀)은 고도 표시 필수.
+elevation은 **컴포넌트 종류**가 결정 — 선택 등 상태 표현에 그림자 유용 금지(상태는 보더·딤).
 
 ---
 
-## 컴포넌트 스펙
-
-### FilterChip
-
-- height: 32px, paddingH: 14px, radius: `--radius-pill`, font: 13px/500
-- default: `surface.raised` bg, `surface.border` border
-- active: `primary.subtleLight` bg, `primary.base` border
-
-> ⚠️ active text 다크 모드: `#B8C7D8` (하드코딩 — 토큰화 예정)
-
-### MapPin
-
-- dotSize: 22px, border: `2px solid #FFFFFF`, shadow: `0 2px 6px rgba(0,0,0,0.18)`
-- 선택 상태 ring: 전체 44px (`--comp-pin-selected-size`), ring opacity 0.25
-- label: font 11px/600, bg `rgba(255,255,255,0.85)`, radius `--radius-badge`, padding `2px 6px`
-
-> ⚠️ `mapPin.label.font` weight 600 vs `type.scale.mapLabel` weight 700 — 불일치. mapLabel 700로 통일 권장.
-
-### PosterThumb
-
-| 크기 | width | height | radius |
-|------|-------|--------|--------|
-| `sm` | 68px | 102px | `--radius-poster` (8px) |
-| `md` | 96px | 144px | `--radius-poster` (8px) |
-| `lg` | 별도 지정 | — | `--radius-poster` (8px) |
-
-> ⚠️ `lg` 크기는 고정 스펙 미정의 — MapView에서 zoom에 따라 동적 계산. 88×132 (zoom 14+) 기준.
-
-- selected ring: `primary.base` 2px, badgeSize 20px, badgeBorder `2px solid #FFFFFF`
-- overflow overlay: `rgba(15,12,9,0.62)`, font 18px/600, color `#FFFFFF`
-
-### 포스터 오버레이 칩
-
-포스터 위에 absolute로 얹는 상태 칩(D-N, 매진, 상영 상태, GV 타입/일시 등) 공통 스펙:
-
-- font: 11px/600, lineHeight 1
-- padding: `4px 8px`, radius: `--radius-badge`
-- display: `inline-flex` + `alignItems: center` (세로 중앙정렬)
-- 포스터 모서리에서 offset 6px
-- 배경/글자색은 칩별 의미색 유지 (매진 `semantic.error`, 상영 중 `semantic.success` 등)
-- 예외: 지도 핀 미니 배지(GvPinSlots)·랭킹 순위 숫자 같은 장식성 요소는 이 스펙 대상 아님
-
-### BottomSheet
-
-- borderRadius: `var(--radius-sheet) var(--radius-sheet) 0 0` (20px, 상단만)
-- handle: 36×4px, radius 2px
-- posterScrollBg: `#EAE6DC` (라이트) / `#1B1813` (다크)
-- 헤더 아이콘 버튼(닫기 등): 36×36px, radius circle
-
-### DateBar
-
-- dayCell: radius `--radius-poster`, activeColor `primary.base`
-- holiday(일/공휴일): `semantic.error`
-- saturday: `primary.base` (라이트) / `primary.hoverLight` (다크)
-- timeChip: height 30px, paddingH 12px, radius `--radius-pill`, font 12px/500
+## 컴포넌트 스펙 (2.0 확정분)
 
 ### ShowtimeCell
+- 3줄: 시간(16/700 tnum)+종료(-hh:mm 10) / 좌석(잔여=상태색 600 + `/총석`=sub 400) / — (관 번호 줄 삭제)
+- 심야: 시간 줄 인라인 달 아이콘(11, primary) — 배지 폐지
+- 상태: soldout=좌석 취소선+딤, ended=시간 취소선("지나간 시간" 전용), nowplaying/low=상태색
+- 그리드: `repeat(auto-fill, minmax(var(--comp-showtime-min-width) 104px, 1fr))` — 셀 최소폭이 열 수 결정
 
-- padding: 12px, radius: `--radius-control`, width: 100px
-- time: 17px/700 (tnum), endTime: 11px, seat: 12px/600, hall: 11px
-- soldout: opacity 0.45, line-through
-- low(잔여석 적음): `semantic.warning`, D-1 badge
-- late(심야): `#1A2530` bg + Moon 아이콘 (`primary.subtleLight`)
+### DateCell (날짜바)
+- radius `--radius-button`, 오늘 = primary-700 배경+크림, 토=primary-500, 일=error
+- 밑줄 인디케이터 = "선택 영화가 그 날 상영"(availableDates) — 장식 아님
 
-### FAB
+### Badge
+- 틴트 배경(불투명 토큰) + 딥 텍스트. rgba 틴트 하드코딩 금지
 
-**Round**: 44×44px, radius circle  
-**Pill**: height 44px, paddingL 14px, paddingR 16px, gap 8px, font 13px/600  
-innerIcon: 22×22px circle, `primary.subtleLight` bg, `primary.base` icon
+### GV·이벤트
+- 전 타입 gv 보라 단일. 타입 구분은 배지 텍스트가 담당
+
+### 포스터 오버레이 칩
+- 11/600, padding 4×8, `--radius-badge`, offset 6, lineHeight 1
+- D-day: 오늘=error, D-1=warning, D-2+=`#78716C`, 그림자 0 1px 4px rgba(0,0,0,0.35)
+
+### FAB / 검색창 / 필터 칩
+- 1.0 스펙 유지 (`--comp-*` 참조). 필터 활성 = primary 틴트 문법(100 배경+900 글자+700 보더)
 
 ### 아이콘
+- Lucide, stroke 1.75, round cap, `currentColor` 상속. 크기 16/20/24
+- **확대 금지** — 크게 쓸 땐 도형(원 배경)에 가두기. 축소는 허용
+- 시그니처(핀·탭바) 커스텀은 미정 — placeholder 금지(출시 전 전수 0개)
 
-- **라이브러리**: [Lucide React](https://lucide.dev/)
-- **stroke width 표준**: `1.75` — 얇고 모던한 UI 톤앤매너 기준. (아래 표의 1.6~1.8은 초기 스펙 값 — 신규 코드는 1.75를 기본으로 쓰고, 기존 값 수렴은 stage 2 대상)
-- **크기 가이드**: `14~16px` 캡션·툴팁·버튼 내부 등 작은 요소 / `20~24px` 글로벌 네비게이션(탭바)·모달 헤더·주요 리스트 아이콘
-- **색상 하드코딩 절대 금지**: 아이콘 색은 부모 텍스트 색 상속 — `color="currentColor"`(또는 `text-current`). 다크모드 전환 시 자동 대응.
-  - 예: `<Film size={20} strokeWidth={1.75} className="text-current" />`
-
-| 이름 | 기본 크기 | stroke | 용도 |
-|------|----------|--------|------|
-| Search | 16px | 1.8 | 검색창 좌측 |
-| Star | 16px | 1.6 | 즐겨찾기 |
-| Close | 16px | 1.8 | 바텀시트 닫기·칩 해제 |
-| Plus/Minus | 18px | 1.8 | 줌인/아웃 FAB |
-| Expand | 16px | 1.8 | 전체화면 FAB |
-| Back | 16px | 1.8 | 뒤로가기 |
-| Moon | 9px | filled | 심야 배지 내부 |
-| Swap | 12px | 1.8 | 극장↔영화 FAB |
+### 로고
+- tile(정사각, 인디고/잉크 + 직각 모서리 토글) · og(1200×630 카톡 썸네일) · wordmark(인디고/잉크/크림, 마스터 h48)
+- 클리어스페이스 25%, 최소: 타일 32 / 워드마크 h16. 타일 배경 primary-700 고정
 
 ---
 
-## 다크/라이트 모드
+## 다크 모드 — 폐지 (2026-08-04)
 
-```
-시스템 설정(prefers-color-scheme)
-  ↓ 첫 진입
-storageAdapter.getItem('movie-app-theme')
-  ↓ 없으면 시스템 설정 적용
-document.documentElement.setAttribute('data-theme', 'dark' | 'light')
-```
-
-FOUC 방지: `src/app/layout.tsx` `<head>` 인라인 스크립트 → `src/store/themeStore.ts`의 `initTheme()`.
-
-```ts
-const { setTheme } = useThemeStore()
-setTheme('dark' | 'light' | 'system')
-```
-
----
-
-## 레이아웃 유틸
-
-```css
-/* iOS Safe Area */
-padding-bottom: env(safe-area-inset-bottom);
-
-/* ✅ 100dvh 사용 (100vh 금지) */
-height: 100dvh;
-```
+`[data-theme=dark]` 토큰 블록·테마 스토어·설정 UI 제거. 라이트 단일.
+잔재: 온보딩 module.css의 dark 셀렉터(데드), MapView isDark 배선(상수 false) — 지도 리팩토링 때 일괄 제거.
 
 ---
 
 ## 알려진 불일치 (TODO)
 
-| 위치 | 불일치 내용 |
-|------|------------|
-| `component.filterChip.active.text.dark` | `#B8C7D8` 하드코딩 — 토큰화 필요 |
-| `component.mapPin.label.font.weight` | 600 vs `type.scale.mapLabel` 700 — 통일 필요 |
-| `component.posterThumb` | `lg` 크기 미정의 (실제 88×132 사용) |
-| `color.neutral` | `[300]` 없음 (50→100→200→400 건너뜀) |
-| `type.scale.caption.letterSpacing` | `0.4` (단위 미기재, px 가정) |
-
-### TASK-10 하드코딩 감사 (2026-07-06)
-
-`grep -rEoh "fontSize: [0-9]+" src/components src/app --include="*.tsx"` 등으로 실사용 분포를 수집한 결과.
-전면 재설계 대신 기존 스케일에 진짜 누락분만 추가(`--text-subtitle`; `--spacing-1-5`·`--spacing-2-5`도 이때 추가했으나 이후 4px 배수 규칙 위반으로 폐기)했고,
-아래는 stage 2(적용 감사 + 치환)에서 처리할 드리프트 수렴 대상이다 — 시각 변화가 생기므로 이 표만
-보고 기계적으로 치환하지 말 것, 각 치환 PR에서 개별 검토·스크린샷 확인 필요.
-
-| 항목 | 실사용 건수 | 수렴 후보 | 비고 |
-|------|------------|----------|------|
-| `borderRadius: 10` | 34곳 | `--radius-poster`(8) 또는 `--radius-control`(12) | 카드류에 8/10/12가 혼용 중 — 어느 쪽으로 모을지 stage 2에서 결정 |
-| `borderRadius: 99` | 19곳 | `--radius-pill`(9999) | pill의 이형 표기, 의미상 완전 동일 |
-| `borderRadius: 14/16/18` | 5+10+1곳 | `--radius-control`(12) 또는 `--radius-popover`(16) | `16`은 `--radius-popover` 신설로 수렴 가능 — stage 2에서 케이스별 판단 |
-| `fontSize: 15` | 33곳(18개 파일) | — (토큰화 완료) | `--text-subtitle` 추가로 해소, 이번 PR에 포함 |
-| `fontSize: 7/8/17/19/21/23/26/28/40` | 각 10곳 미만 | 해당 없음 | 아이콘 배지·헤딩 변형 등 일회성 — 토큰화 보류, 개별 판단 |
-| `gap: 6` | 41곳 | `--spacing-1`(4) 또는 `--spacing-2`(8) | `--spacing-1-5`로 토큰화했으나 4px 배수 규칙 위반으로 폐기 — 인접 토큰으로 수렴 |
-| `gap: 10` | 31곳 | `--spacing-2`(8) 또는 `--spacing-3`(12) | `--spacing-2-5`로 토큰화했으나 4px 배수 규칙 위반으로 폐기 — 인접 토큰으로 수렴 |
-| `gap: 2/5/7/14/18` | 각 10곳 내외 | 인접 spacing 토큰 | 실사용 적어 stage 2에서 케이스별 수렴 |
+| 항목 | 내용 |
+|------|------|
+| 시트 헤더 | 극장명 22/800 → h1 24/700 KIMM 자간 5% 이관 중 |
+| 액션 버튼 | 아웃라인 → 고스트(유틸리티 강등) 이관 중, 주소 복사 버튼 제거 예정 |
+| 온보딩 일러스트 | 구팔레트 잔존 — 아트 재작업 시 일괄 |
+| `--spacing-5/-10`, `--text-h3`, `--font-serif-en`, `--color-info` | 폐지 수순 — 참조 소멸 후 삭제 |
+| 거터 | 목업 24 vs 코드 16 — 시트 구조 개편 때 통일 |
+| 포맷 배지 | 크롤 데이터에 포맷 필드 생기면 예외(더빙·필름)만 배지로 |

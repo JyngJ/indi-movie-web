@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { Theater as TheaterIcon } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { createPortal } from 'react-dom'
 import type { Movie, Theater } from '@/types/api'
 import { PosterThumb } from '@/components/domain/PosterThumb'
@@ -41,6 +43,8 @@ function hashColor(name: string): string {
 function MovieCard({
   movie, width, height, isDesktop, onClick,
 }: { movie: Movie; width: number; height: number; isDesktop: boolean; onClick?: () => void }) {
+  const router = useRouter()
+  const director = movie.director.length > 0 ? movie.director[0] : null
   const cardRef = useRef<HTMLDivElement>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [hovered, setHovered] = useState(false)
@@ -57,24 +61,26 @@ function MovieCard({
     setHovered(false); setPopupPos(null)
   }
 
-  const fontSize = isDesktop ? 14 : 12
+  /* 피그마 캡션: 제목 body-strong 14(모바일)/title 16(PC), 메타 12/14 */
+  const fontSize = isDesktop ? 16 : 14
 
   return (
     <>
       <div
         ref={cardRef}
-        onMouseEnter={isDesktop ? onMouseEnter : undefined}
-        onMouseLeave={isDesktop ? onMouseLeave : undefined}
         onClick={onClick}
         style={{ display: 'flex', flexDirection: 'column', gap: 8, width, flexShrink: 0, cursor: onClick ? 'pointer' : undefined }}
       >
-        <div style={{
+        <div
+          onMouseEnter={isDesktop ? onMouseEnter : undefined}
+          onMouseLeave={isDesktop ? onMouseLeave : undefined}
+          style={{
           transition: 'transform 130ms ease',
           transform: hovered ? 'scale(1.1)' : 'scale(1)',
           transformOrigin: 'center center',
           borderRadius: 'var(--radius-poster)',
         }}>
-          <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} radius={0} shadow={false} />
+          <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} shadow={false} />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <span style={{
@@ -83,8 +89,13 @@ function MovieCard({
           }}>
             {normalizeTitle(movie.title)}
           </span>
-          <span style={{ fontSize: fontSize - 1, color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {movie.director.length > 0 ? movie.director[0] : '감독 미상'}
+          <span
+            className={director ? 'caption-link' : undefined}
+            role={director ? 'button' : undefined}
+            onClick={director ? (e) => { e.stopPropagation(); router.push(`/films/director/${encodeURIComponent(director)}`) } : undefined}
+            style={{ fontSize: isDesktop ? 'var(--text-body)' : 'var(--text-meta)', color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', alignSelf: 'flex-start', maxWidth: '100%', minHeight: 'auto' }}
+          >
+            {director ?? '감독 미상'}
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-1)', flexWrap: 'wrap' }}>
             {movie.genre.slice(0, 1).map((g) => (
@@ -296,18 +307,18 @@ export function DirectorSpecialSection({
 
   const filmScroll = (
     <div
-      style={{ position: 'relative' }}
+      style={{ position: 'relative', overflowX: 'clip' }}
       onMouseEnter={() => setScrollAreaHovered(true)}
       onMouseLeave={() => setScrollAreaHovered(false)}
     >
-      {canScrollLeft && (
+      {scrollAreaHovered && canScrollLeft && (
         <ScrollNavButton
           direction="left"
           style={{ position: 'absolute', top: posterMidY, transform: 'translateY(-50%)', left: 6, zIndex: 3 }}
           onClick={() => scrollRef.current?.scrollBy({ left: -scrollAmount, behavior: 'smooth' })}
         />
       )}
-      {canScrollRight && (
+      {scrollAreaHovered && canScrollRight && (
         <ScrollNavButton
           direction="right"
           style={{ position: 'absolute', top: posterMidY, transform: 'translateY(-50%)', right: 6, zIndex: 3 }}
@@ -318,7 +329,15 @@ export function DirectorSpecialSection({
         ref={scrollRef}
         onScroll={updateScrollEdge}
         className="no-scrollbar"
-        style={{ display: 'flex', gap, overflowX: 'auto', padding: `${scaleBleed + 8}px calc(${scaleBleed}px + var(--gutter))` }}
+        style={{
+          display: 'flex', gap, overflowX: 'auto',
+          padding: `${scaleBleed + 8}px calc(${scaleBleed}px + var(--gutter-sheet))`,
+          margin: `0 ${-scaleBleed}px`,
+          ...(isDesktop ? (() => {
+            const m = `linear-gradient(90deg, ${canScrollLeft ? 'transparent 0, #000 24px' : '#000 0'}, ${canScrollRight ? '#000 calc(100% - 24px), transparent 100%' : '#000 100%'})`
+            return { WebkitMaskImage: m, maskImage: m }
+          })() : {}),
+        }}
       >
         {films.map((movie) => (
           <MovieCard
@@ -330,29 +349,11 @@ export function DirectorSpecialSection({
     </div>
   )
 
-  const filmScrollWithHeader = (
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
-      {/* 상영 극장 한 줄 타이틀 */}
-      <div style={{
-        padding: '16px 16px 0',
-        fontSize: isDesktop ? 'var(--text-subtitle)' : 'var(--text-body)',
-        fontWeight: 700,
-        color: 'var(--color-text-primary)',
-        fontFamily: 'var(--font-display)',
-      }}>
-        {theater.name} 상영작
-      </div>
-      {filmScroll}
-    </div>
-  )
-
+  /* 2.0: 카드 2장(감독 카드+회색 블록) 폐기 — 맨 종이 위 플랫 헤더 + 포스터 행 (피그마 TOBE) */
   return (
-    <section style={{ paddingTop: isDesktop ? 48 : 24 }}>
-      <h2 style={{
-        margin: 0, padding: '0 var(--gutter)',
-        fontSize: isDesktop ? 'var(--text-h2)' : 'var(--text-h3)',
-        fontWeight: 700,
-        fontFamily: 'var(--font-display)',
+    <section style={{ paddingTop: isDesktop ? 48 : 32 }}>
+      <h2 className="display-h2" style={{
+        margin: 0, padding: '0 var(--gutter-sheet)',
         color: 'var(--color-text-primary)',
         marginBottom: 12,
         display: 'flex',
@@ -361,43 +362,47 @@ export function DirectorSpecialSection({
       }}>
         {directorName} 특별전
       </h2>
-      {isDesktop ? (
-        /* ── 데스크톱: 좌우 분할, 동일 마진 ─────── */
-        <div style={{
-          margin: '0 var(--gutter)',
-          display: 'flex',
-          borderRadius: 12,
-          overflow: 'hidden',
-          border: '1px solid var(--color-border)',
+      {/* 극장 헤더 — 모바일: 통짜 틴트 바(피그마 Frame 27), PC: 플랫 행 */}
+      <div style={isDesktop ? { display: 'flex', alignItems: 'center', gap: 12, padding: '0 var(--gutter-sheet) 4px' } : {
+        display: 'flex', alignItems: 'center', gap: 12,
+        margin: '0 var(--gutter-sheet) 4px',
+        padding: 'var(--spacing-2) var(--spacing-4) var(--spacing-2) var(--spacing-2)',
+        backgroundColor: 'var(--color-primary-subtle-l)',
+        borderRadius: 'var(--radius-button)',
+      }}>
+        <span style={{
+          width: 40, height: 40, flexShrink: 0, borderRadius: 'var(--radius-badge)',
+          backgroundColor: isDesktop ? 'var(--color-primary-subtle-l)' : 'transparent',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <div style={{ width: 260, flexShrink: 0, background: 'var(--color-surface-card)' }}>
-            <LeftPanel
-              directorName={directorName} theater={theater} filmCount={films.length}
-              distSuffix={distSuffix} isDesktop={isDesktop}
-              onDirectorClick={onDirectorClick ? () => onDirectorClick(directorName) : undefined}
-              onTheaterClick={onTheaterClick ? () => onTheaterClick(theater.id) : undefined}
-            />
-          </div>
-          <div style={{ flex: 1, minWidth: 0, background: 'var(--color-surface-raised)' }}>
-            {filmScrollWithHeader}
-          </div>
+          <TheaterIcon size={21} strokeWidth={1.75} color="var(--color-primary-base)" />
+        </span>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={{ fontSize: isDesktop ? 'var(--text-title)' : 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {theater.name}
+          </span>
+          <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
+            {theater.city} · {films.length}편 상영중{distSuffix ? ` ${distSuffix}` : ''}
+          </span>
         </div>
-      ) : (
-        /* ── 모바일: 위아래 적층, 동일 마진 ─────── */
-        <div style={{ margin: '0 var(--gutter)', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
-          <div style={{ background: 'var(--color-surface-card)' }}>
-            <LeftPanel
-              directorName={directorName} theater={theater} filmCount={films.length}
-              distSuffix={distSuffix} isDesktop={isDesktop}
-              onDirectorClick={onDirectorClick ? () => onDirectorClick(directorName) : undefined}
-              onTheaterClick={onTheaterClick ? () => onTheaterClick(theater.id) : undefined}
-            />
-          </div>
-          <div style={{ background: 'var(--color-surface-raised)' }}>
-            {filmScrollWithHeader}
-          </div>
-        </div>
-      )}
+        {onTheaterClick && (
+          <button
+            className="hover-raise"
+            onClick={() => onTheaterClick(theater.id)}
+            style={{
+              border: 'none', background: 'transparent', padding: 'var(--spacing-3) var(--spacing-2)',
+              borderRadius: 'var(--radius-button)',
+              fontSize: 'var(--text-body)', fontWeight: 500,
+              /* 모바일: primary/100 틴트 바 위 — neutral은 물빠져 보여서 primary로 */
+              color: isDesktop ? 'var(--color-text-sub)' : 'var(--color-primary-base)',
+              cursor: 'pointer', whiteSpace: 'nowrap', minHeight: 'auto',
+            }}
+          >
+            영화관 보기 ›
+          </button>
+        )}
+      </div>
+      {filmScroll}
     </section>
   )
 }
