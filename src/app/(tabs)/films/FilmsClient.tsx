@@ -626,9 +626,10 @@ export default function FilmsPage() {
               <h1
                 style={{
                   margin: 0,
-                  fontSize: 24,
+                  fontSize: 'var(--text-h1)',
                   fontWeight: 700,
                   fontFamily: 'var(--font-display)',
+                  letterSpacing: '0.05em',   /* 2.0/display 자간 */
                   color: 'var(--color-text-primary)',
                 }}
               >
@@ -699,9 +700,10 @@ export default function FilmsPage() {
               <h1
                 style={{
                   margin: 0,
-                  fontSize: 24,
+                  fontSize: 'var(--text-h1)',
                   fontWeight: 700,
                   fontFamily: 'var(--font-display)',
+                  letterSpacing: '0.05em',   /* 2.0/display 자간 */
                   color: 'var(--color-text-primary)',
                 }}
               >

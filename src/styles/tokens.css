@@ -163,7 +163,7 @@
   /* 검색창 */
   --comp-search-height: 44px;
   --comp-search-px:     18px;
-  --comp-search-radius: var(--radius-pill);
+  --comp-search-radius: var(--radius-control);   /* 2.0: 피그마 search 프레임 r12 — pill 폐기 (2026-08-05) */
 
   /* 필터 칩 — height는 var(--filter-chip-height) 참고(FilterChip.tsx 실사용) */
   --comp-chip-px:        14px;

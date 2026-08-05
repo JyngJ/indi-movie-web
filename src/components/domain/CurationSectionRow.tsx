@@ -362,7 +362,7 @@ export function CurationSectionRow({
           <img src={decoSrc} alt="" aria-hidden
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
             style={{
-              position: 'absolute', right: '-8%', top: '50%',
+              position: 'absolute', right: '-16%', top: '64%',
               height: '150%', transform: 'translateY(-50%) rotate(-10deg)',
               opacity: 0.07, pointerEvents: 'none',
             }} />

@@ -28,8 +28,9 @@ export default function PrivacyPolicyPage() {
       <h1
         style={{
           fontFamily: 'var(--font-display)',
-          fontSize: 24,
+          fontSize: 'var(--text-h1)',
           fontWeight: 700,
+          letterSpacing: '0.05em',
           color: 'var(--color-text-primary)',
           margin: '20px 0 8px',
         }}

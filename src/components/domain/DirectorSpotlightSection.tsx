@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Movie } from '@/types/api'
 import { ScrollNavButton } from '@/components/primitives'
 import { useDirectorProfile } from '@/lib/supabase/queries'
@@ -142,13 +142,16 @@ export function DirectorSpotlightSection({
   const scrollRef = useRef<HTMLDivElement>(null)
   const [rowHovered, setRowHovered] = useState(false)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
-  const [canScrollRight, setCanScrollRight] = useState(true)
+  const [canScrollRight, setCanScrollRight] = useState(false)
   function updateScrollEdge() {
     const el = scrollRef.current
     if (!el) return
     setCanScrollLeft(el.scrollLeft > 4)
     setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4)
   }
+
+  // 마운트·데이터 변경 시 측정 — 안 하면 넘칠 게 없어도 hover 버튼이 떠서 헛클릭 유발
+  useEffect(() => { updateScrollEdge() }, [movies, activeMovieIds])
 
   const directors = getSpotlight(movies, activeMovieIds)
 
