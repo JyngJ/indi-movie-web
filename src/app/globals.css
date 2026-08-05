@@ -158,7 +158,7 @@ img {
 }
 
 /* 호버 인벤토리 공통 — 칩·링크·아이콘 버튼: hover 시 눌린 면 배경 */
-.hover-raise { transition: background-color 120ms ease; }
+.hover-raise { background-color: transparent; transition: background-color 120ms ease; }
 @media (hover: hover) {
   .hover-raise:hover { background-color: var(--color-surface-raised); }
 }
