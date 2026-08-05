@@ -18,6 +18,19 @@ const fill = h => [{ type:'SOLID', color:hex(h) }]
 
 for (const st of ['Regular','Medium','Bold']) await figma.loadFontAsync({ family:'Pretendard', style:st })
 
+// 셰브런다운 컴포넌트 (지역 칩 — 코드의 hasDropdown ∨)
+let chevDown = null
+for (const page of figma.root.children) {
+  await page.loadAsync()
+  const stack = [page]
+  while (stack.length) {
+    const n = stack.pop()
+    if (n.type === 'COMPONENT' && n.name === '2.0/icon/chevron-down') { chevDown = n; break }
+    if ('children' in n) for (const c of n.children) stack.push(c)
+  }
+  if (chevDown) break
+}
+
 const mkText = (chars, size, weight='Regular', color=C.ink) => {
   const t = figma.createText()
   t.fontName = { family:'Pretendard', style:weight }
@@ -40,12 +53,27 @@ function sample(kind, hover) {
   const f = mkAuto('sample', 'HORIZONTAL', 4, [6, 12, 6, 12])
   f.counterAxisAlignItems = 'CENTER'
   switch (kind) {
-    case 'chip':      // 지역 칩·예매 필·필터
+    case 'chip': {    // 지역 칩 — 라벨 + ∨ (코드 hasDropdown)
       f.cornerRadius = 9999
       f.fills = fill(hover ? C.raised : C.card)
       f.strokes = fill(C.line); f.strokeWeight = 1
       f.appendChild(mkText('검색 지역', 12, 'Medium', C.t600))
+      if (chevDown) {
+        const i = chevDown.createInstance()
+        f.appendChild(i)
+        i.rescale(12 / i.width)
+      } else {
+        // 아이콘 세트에 chevron-down 없으면 벡터로
+        const v = figma.createVector()
+        f.appendChild(v)
+        v.resize(8, 5)
+        v.vectorPaths = [{ windingRule: 'NONE', data: 'M 0 0 L 4 5 L 8 0' }]
+        v.strokes = fill(C.t600); v.strokeWeight = 1.5
+        v.strokeCap = 'ROUND'; v.strokeJoin = 'ROUND'
+        v.fills = []
+      }
       break
+    }
     case 'link':      // 영화관 보기 › · 감독 상세 · 인스타 더보기 · 시의성 캡션
       f.cornerRadius = 8
       f.fills = hover ? fill(C.raised) : []
