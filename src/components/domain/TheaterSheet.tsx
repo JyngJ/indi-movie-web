@@ -959,12 +959,8 @@ export function TheaterSheet({
           flexShrink: 0,
         }}>
           <div>
-            <div style={{
-              fontSize: 'var(--text-h1)', fontWeight: 700,
-              fontFamily: 'var(--font-display)',
+            <div className="display-h1" style={{
               color: 'var(--color-text-primary)',
-              lineHeight: 1.25,
-              letterSpacing: '0.05em',
               display: 'flex',
               alignItems: 'center',
               gap: 4,
@@ -1051,14 +1047,9 @@ export function TheaterSheet({
             )}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <h2 style={{
+                <h2 className="display-h1" style={{
                   margin: 0,
                   minWidth: 0,
-                  fontSize: 'var(--text-h1)',
-                  fontWeight: 700,
-                  fontFamily: 'var(--font-display)',
-                  lineHeight: 1.25,
-                  letterSpacing: '0.05em',
                   color: 'var(--color-text-primary)',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
@@ -1381,11 +1372,8 @@ export function TheaterSheet({
           {/* 극장 정보 — 스크롤 시 위로 밀림 */}
           {!panelMode && <div ref={theaterNameRef} style={{ padding: '8px var(--gutter-sheet) 12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <div style={{
-                fontSize: 'var(--text-h1)', fontWeight: 700,
-                fontFamily: 'var(--font-display)',
-                color: 'var(--color-text-primary)',
-                lineHeight: 1.25, letterSpacing: '0.05em', minWidth: 0,
+              <div className="display-h1" style={{
+                color: 'var(--color-text-primary)', minWidth: 0,
               }}>
                 {theater.name}
               </div>
@@ -1824,12 +1812,8 @@ export function TheaterSheet({
                   </div>
                   {/* 영화 정보 */}
                   <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <div style={{
-                      fontSize: 'var(--text-h2)', fontWeight: 700,
-                      fontFamily: 'var(--font-display)',
-                      letterSpacing: '0.05em',
+                    <div className="display-h2" style={{
                       color: 'var(--color-text-primary)',
-                      lineHeight: 1.3,
                       overflow: 'hidden',
                       display: '-webkit-box',
                       WebkitLineClamp: 2,

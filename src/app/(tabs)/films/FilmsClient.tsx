@@ -623,19 +623,10 @@ export default function FilmsPage() {
 
             {/* Left: title (flow) */}
             <div style={{ flexShrink: 0, zIndex: 1 }}>
-              <h1
-                style={{
-                  margin: 0,
-                  fontSize: 'var(--text-h1)',
-                  fontWeight: 700,
-                  fontFamily: 'var(--font-display)',
-                  letterSpacing: '0.05em',   /* 2.0/display 자간 */
-                  color: 'var(--color-text-primary)',
-                }}
-              >
+              <h1 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)' }}>
                 상영작
               </h1>
-              <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-caption)', whiteSpace: 'nowrap' }}>
+              <p style={{ margin: '4px 0 0', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', whiteSpace: 'nowrap' }}>
                 {subtitle}
               </p>
             </div>
@@ -697,16 +688,7 @@ export default function FilmsPage() {
           /* 모바일: 제목 + 지역칩 → 검색창 → 서브타이틀 순 */
           <>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <h1
-                style={{
-                  margin: 0,
-                  fontSize: 'var(--text-h1)',
-                  fontWeight: 700,
-                  fontFamily: 'var(--font-display)',
-                  letterSpacing: '0.05em',   /* 2.0/display 자간 */
-                  color: 'var(--color-text-primary)',
-                }}
-              >
+              <h1 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)' }}>
                 상영작
               </h1>
               <div style={{ position: 'relative' }}>
@@ -754,7 +736,7 @@ export default function FilmsPage() {
         )}
 
         {!isDesktop && (
-          <p style={{ margin: '8px 0 0', fontSize: 13, color: 'var(--color-text-caption)' }}>
+          <p style={{ margin: '8px 0 0', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
             {subtitle}
           </p>
         )}

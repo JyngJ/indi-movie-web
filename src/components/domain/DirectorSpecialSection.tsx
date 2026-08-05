@@ -61,7 +61,8 @@ function MovieCard({
     setHovered(false); setPopupPos(null)
   }
 
-  const fontSize = isDesktop ? 14 : 12
+  /* 피그마 캡션: 제목 body-strong 14(모바일)/title 16(PC), 메타 12/14 */
+  const fontSize = isDesktop ? 16 : 14
 
   return (
     <>
@@ -92,7 +93,7 @@ function MovieCard({
             className={director ? 'caption-link' : undefined}
             role={director ? 'button' : undefined}
             onClick={director ? (e) => { e.stopPropagation(); router.push(`/films/director/${encodeURIComponent(director)}`) } : undefined}
-            style={{ fontSize: fontSize - 1, color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', alignSelf: 'flex-start', maxWidth: '100%', minHeight: 'auto' }}
+            style={{ fontSize: isDesktop ? 'var(--text-body)' : 'var(--text-meta)', color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', alignSelf: 'flex-start', maxWidth: '100%', minHeight: 'auto' }}
           >
             {director ?? '감독 미상'}
           </span>
@@ -351,12 +352,8 @@ export function DirectorSpecialSection({
   /* 2.0: 카드 2장(감독 카드+회색 블록) 폐기 — 맨 종이 위 플랫 헤더 + 포스터 행 (피그마 TOBE) */
   return (
     <section style={{ paddingTop: isDesktop ? 48 : 32 }}>
-      <h2 style={{
+      <h2 className="display-h2" style={{
         margin: 0, padding: '0 var(--gutter-sheet)',
-        fontSize: isDesktop ? 'var(--text-h2)' : 'var(--text-h3)',
-        fontWeight: 700,
-        fontFamily: 'var(--font-display)',
-        letterSpacing: '0.05em',
         color: 'var(--color-text-primary)',
         marginBottom: 12,
         display: 'flex',
@@ -381,11 +378,11 @@ export function DirectorSpecialSection({
           <TheaterIcon size={21} strokeWidth={1.75} color="var(--color-primary-base)" />
         </span>
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <span style={{ fontSize: 'var(--text-title)', fontWeight: 700, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <span style={{ fontSize: isDesktop ? 'var(--text-title)' : 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {theater.name}
           </span>
           <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
-            {films.length}편 상영중{distSuffix ? ` ${distSuffix}` : ''}
+            {theater.city} · {films.length}편 상영중{distSuffix ? ` ${distSuffix}` : ''}
           </span>
         </div>
         {onTheaterClick && (

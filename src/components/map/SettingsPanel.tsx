@@ -74,7 +74,7 @@ export function SettingsHeader({ title, onBack, onClose, submitting }: { title: 
       {onBack && (
         <button style={btn} onClick={onBack} disabled={submitting}><IcoChevronLeft /></button>
       )}
-      <span style={{ flex: 1, fontSize: 'var(--text-h2)', fontWeight: 700, fontFamily: 'var(--font-display)', letterSpacing: '0.05em', color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      <span className="display-h2" style={{ flex: 1, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {title}
       </span>
       {onClose && (
@@ -357,7 +357,7 @@ export function SettingsAboutPage() {
         <div style={{ width: 72, height: 72, borderRadius: 20, overflow: 'hidden', marginBottom: 12 }}>
           <img src="/squarelogo.svg" alt="영화볼지도" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
-        <div style={{ fontSize: 'var(--text-h2)', fontWeight: 700, fontFamily: 'var(--font-display)', letterSpacing: '0.05em', color: 'var(--color-text-primary)' }}>영화볼지도</div>
+        <div className="display-h2" style={{ color: 'var(--color-text-primary)' }}>영화볼지도</div>
         <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4, fontStyle: 'italic', fontFamily: 'var(--font-serif-en)' }}>independent cinema map</div>
       </div>
 

@@ -26,11 +26,8 @@ export default function PrivacyPolicyPage() {
       <BackLink />
 
       <h1
+        className="display-h1"
         style={{
-          fontFamily: 'var(--font-display)',
-          fontSize: 'var(--text-h1)',
-          fontWeight: 700,
-          letterSpacing: '0.05em',
           color: 'var(--color-text-primary)',
           margin: '20px 0 8px',
         }}

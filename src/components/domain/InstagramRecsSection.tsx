@@ -167,14 +167,10 @@ function InstagramRecCard({
       {/* 텍스트 대비 스크림 — 이미지가 밝아도 좌상단 글자가 읽히게 */}
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(115deg, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0.35) 100%)', pointerEvents: 'none' }} />
 
-      {/* 좌측 텍스트 — 아이브로 + KIMM 타이틀 (피그마 TOBE) */}
+      {/* 좌측 텍스트 — KIMM 타이틀 (아이브로 폐기 2026-08-05) */}
       <div style={{ position: 'absolute', left: isDesktop ? 24 : 16, top: isDesktop ? 24 : 16, right: '45%', display: 'flex', flexDirection: 'column', gap: 8, pointerEvents: 'none' }}>
-        <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-neutral-400)', letterSpacing: '0.02em' }}>
-          영화 소식을 소개할지도
-        </span>
-        <span style={{
-          fontSize: 'var(--text-h2)', fontWeight: 700, fontFamily: 'var(--font-display)',
-          letterSpacing: '0.05em', lineHeight: 1.3, color: 'var(--color-on-accent)',
+        <span className="display-h2" style={{
+          color: 'var(--color-on-accent)',
           display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
         }}>
           {title}
@@ -338,7 +334,7 @@ export function InstagramRecsSection({
   return (
     <section ref={sectionRef} style={{ paddingTop: isDesktop ? 48 : 32 }}>
       <SectionHeader
-        title="인스타그램에서 추천한 그 영화"
+        title="인스타그램에서 추천한 영화"
         isDesktop={isDesktop}
         trailing={
           // "더보기" 화살표가 아니라 우리 인스타 프로필로 나가는 외부 링크 — 이 섹션 자체가
