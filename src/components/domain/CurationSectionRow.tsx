@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useRouter } from 'next/navigation'
 import { PosterThumb } from '@/components/domain/PosterThumb'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import type { SectionDisplayMode } from '@/lib/curation/filmsTabLists'
@@ -41,6 +42,8 @@ const POSTER_SIZE = {
 
 /* ── 포스터 하단 정보: 제목 / 감독 / 장르칩+연도 ───────────────── */
 function MovieCardInfo({ movie, isDesktop, caption, customBottomInfo }: { movie: Movie; isDesktop: boolean; caption?: string; customBottomInfo?: React.ReactNode }) {
+  const router = useRouter()
+  const director = movie.director.length > 0 ? movie.director[0] : null
   /* 피그마 캡션(제목 14·보조 12)은 128 포스터 기준 — PC 210 포스터에선 한 단계 승격 */
   const fontSize = isDesktop ? 16 : 14
 
@@ -66,8 +69,11 @@ function MovieCardInfo({ movie, isDesktop, caption, customBottomInfo }: { movie:
         customBottomInfo
       ) : (
         <>
-          {/* 서브텍스트(있으면) 또는 감독 */}
+          {/* 서브텍스트(있으면) 또는 감독 — 감독은 통째 clickable → 감독 상세 */}
           <span
+            className={!caption && director ? 'caption-link' : undefined}
+            role={!caption && director ? 'button' : undefined}
+            onClick={!caption && director ? (e) => { e.stopPropagation(); router.push(`/films/director/${encodeURIComponent(director)}`) } : undefined}
             style={{
               fontSize: isDesktop ? 'var(--text-body)' : 'var(--text-meta)',
               color: caption ? 'var(--color-text-body)' : 'var(--color-text-caption)',
@@ -75,9 +81,11 @@ function MovieCardInfo({ movie, isDesktop, caption, customBottomInfo }: { movie:
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
+              alignSelf: 'flex-start',
+              maxWidth: '100%',
             }}
           >
-            {caption ?? (movie.director.length > 0 ? movie.director[0] : '감독 미상')}
+            {caption ?? (director ?? '감독 미상')}
           </span>
 
           {/* 장르칩 + 연도 */}

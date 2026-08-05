@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Theater as TheaterIcon } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { createPortal } from 'react-dom'
 import type { Movie, Theater } from '@/types/api'
 import { PosterThumb } from '@/components/domain/PosterThumb'
@@ -42,6 +43,8 @@ function hashColor(name: string): string {
 function MovieCard({
   movie, width, height, isDesktop, onClick,
 }: { movie: Movie; width: number; height: number; isDesktop: boolean; onClick?: () => void }) {
+  const router = useRouter()
+  const director = movie.director.length > 0 ? movie.director[0] : null
   const cardRef = useRef<HTMLDivElement>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [hovered, setHovered] = useState(false)
@@ -85,8 +88,13 @@ function MovieCard({
           }}>
             {normalizeTitle(movie.title)}
           </span>
-          <span style={{ fontSize: fontSize - 1, color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {movie.director.length > 0 ? movie.director[0] : '감독 미상'}
+          <span
+            className={director ? 'caption-link' : undefined}
+            role={director ? 'button' : undefined}
+            onClick={director ? (e) => { e.stopPropagation(); router.push(`/films/director/${encodeURIComponent(director)}`) } : undefined}
+            style={{ fontSize: fontSize - 1, color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', alignSelf: 'flex-start', maxWidth: '100%' }}
+          >
+            {director ?? '감독 미상'}
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-1)', flexWrap: 'wrap' }}>
             {movie.genre.slice(0, 1).map((g) => (

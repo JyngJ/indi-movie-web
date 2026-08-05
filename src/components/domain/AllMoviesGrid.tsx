@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import type { Movie } from '@/types/api'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
@@ -88,6 +89,7 @@ interface Props {
 }
 
 export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMovie, onMovieClick }: Props) {
+  const router = useRouter()
   const [sortKey, setSortKey] = useState<SortKey>('theaters_desc')
 
   /* 무한 로드 — 훅은 얼리 리턴보다 항상 먼저 (Rules of Hooks) */
@@ -230,12 +232,17 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
 
                 {movie.director.length > 0 && (
                   <span
+                    className="caption-link"
+                    role="button"
+                    onClick={(e) => { e.stopPropagation(); router.push(`/films/director/${encodeURIComponent(movie.director[0])}`) }}
                     style={{
                       fontSize: 'var(--text-meta)',
                       color: 'var(--color-text-caption)',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
+                      alignSelf: 'flex-start',
+                      maxWidth: '100%',
                     }}
                   >
                     {movie.director[0]}
