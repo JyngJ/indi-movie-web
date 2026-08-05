@@ -1,6 +1,8 @@
 'use client'
 
+import { useRef, useState } from 'react'
 import type { Movie } from '@/types/api'
+import { ScrollNavButton } from '@/components/primitives'
 import { useDirectorProfile } from '@/lib/supabase/queries'
 
 interface DirectorSpotlight {
@@ -137,6 +139,17 @@ export function DirectorSpotlightSection({
   isDesktop,
   onDirectorClick,
 }: DirectorSpotlightSectionProps) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [rowHovered, setRowHovered] = useState(false)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(true)
+  function updateScrollEdge() {
+    const el = scrollRef.current
+    if (!el) return
+    setCanScrollLeft(el.scrollLeft > 4)
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4)
+  }
+
   const directors = getSpotlight(movies, activeMovieIds)
 
   if (directors.length === 0) return null
@@ -162,6 +175,21 @@ export function DirectorSpotlightSection({
       </div>
 
       <div
+        style={{ position: 'relative' }}
+        onMouseEnter={isDesktop ? () => setRowHovered(true) : undefined}
+        onMouseLeave={isDesktop ? () => setRowHovered(false) : undefined}
+      >
+        {isDesktop && rowHovered && canScrollLeft && (
+          <ScrollNavButton direction="left" style={{ zIndex: 3 }}
+            onClick={() => scrollRef.current?.scrollBy({ left: -400, behavior: 'smooth' })} />
+        )}
+        {isDesktop && rowHovered && canScrollRight && (
+          <ScrollNavButton direction="right" style={{ zIndex: 3 }}
+            onClick={() => scrollRef.current?.scrollBy({ left: 400, behavior: 'smooth' })} />
+        )}
+      <div
+        ref={scrollRef}
+        onScroll={updateScrollEdge}
         className="no-scrollbar"
         style={{
           display: 'flex',
@@ -178,6 +206,7 @@ export function DirectorSpotlightSection({
             onClick={onDirectorClick ? () => onDirectorClick(dir.name) : undefined}
           />
         ))}
+      </div>
       </div>
     </section>
   )

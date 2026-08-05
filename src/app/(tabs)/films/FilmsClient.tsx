@@ -103,6 +103,39 @@ const FESTIVAL_STATUS_LABEL: Record<FestivalStatus, string> = { upcoming: '예�
 // 데스크톱 배너 고정 폭 — 포스터 3장 가로 길이 정도(CurationSectionRow 데스크톱 포스터 210px × 3 + gap 16px × 2)
 const FESTIVAL_BANNER_DESKTOP_WIDTH = 662
 
+/* ── 섹션 지연 마운트 — 뷰포트 근접 시 실제 렌더, 그 전엔 고스트 행.
+   섹션 전체를 한 번에 그리면 초기 렌더가 무거워서 스크롤 도달 시점에 나눠 그린다 ── */
+function GhostSectionRow({ isDesktop }: { isDesktop: boolean }) {
+  return (
+    <div style={{ paddingTop: isDesktop ? 48 : 32 }}>
+      <div style={{ width: 180, height: 24, borderRadius: 4, margin: '0 var(--gutter-sheet) 16px', backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite' }} />
+      <div style={{ display: 'flex', gap: isDesktop ? 16 : 12, overflow: 'hidden', padding: '0 var(--gutter-sheet)' }}>
+        {Array.from({ length: isDesktop ? 6 : 3 }).map((_, i) => (
+          <div key={i} style={{ width: isDesktop ? 210 : 130, flexShrink: 0 }}>
+            <MovieCardSkeleton />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function LazyBlock({ isDesktop, children }: { isDesktop: boolean; children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [shown, setShown] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el || shown) return
+    if (typeof IntersectionObserver === 'undefined') { setShown(true); return }
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { setShown(true); io.disconnect() }
+    }, { rootMargin: '900px 0px' })   // 4~5섹션 분량 미리 — 도달 전에 채워짐
+    io.observe(el)
+    return () => io.disconnect()
+  }, [shown])
+  return <div ref={ref}>{shown ? children : <GhostSectionRow isDesktop={isDesktop} />}</div>
+}
+
 /* ── 주목할 영화제 배너 — 카드 아님. 제목줄은 다른 섹션과 같은 SectionHeader(왼쪽 고정,
    배너 폭과 무관), 배너만 별도로 모바일은 좌우 꽉 채움 / 데스크톱은 폭 고정 + 중앙 정렬,
    양옆 빈 공간은 배경보다 살짝 어두운 surface-raised로 채운다.
@@ -913,9 +946,11 @@ export default function FilmsPage() {
           // 모바일: 2열로 묶진 않지만, sparse(≤2편)는 카드 문법(수상 워터마크 포함)으로
           if (!isDesktop) {
             return <>{active.map((s) =>
-              s.movies.length <= 2
-                ? <div key={s.listId} style={{ display: 'flex', padding: '32px var(--gutter-sheet) 0' }}>{rowFor(s, true)}</div>
-                : rowFor(s, false)
+              <LazyBlock key={s.listId} isDesktop={isDesktop}>
+                {s.movies.length <= 2
+                  ? <div style={{ display: 'flex', padding: '32px var(--gutter-sheet) 0' }}>{rowFor(s, true)}</div>
+                  : rowFor(s, false)}
+              </LazyBlock>
             )}</>
           }
           // 데스크톱: sparse(≤2편) 섹션끼리 짝지어 2열로 — 인접하지 않아도 사이의 rich 섹션은
@@ -930,28 +965,32 @@ export default function FilmsPage() {
             }
             if (sparse && pending != null) {
               nodes.push(
-                <div key={`${keyPrefix}_pair_${pending.listId}`} style={{ display: 'flex', gap: 12, padding: '48px var(--gutter-sheet) 0' }}>
-                  {rowFor(pending, true)}
-                  {rowFor(s, true)}
-                </div>
+                <LazyBlock key={`${keyPrefix}_pair_${pending.listId}`} isDesktop={isDesktop}>
+                  <div style={{ display: 'flex', gap: 12, padding: '48px var(--gutter-sheet) 0' }}>
+                    {rowFor(pending, true)}
+                    {rowFor(s, true)}
+                  </div>
+                </LazyBlock>
               )
               pending = null
-              deferred.forEach((d) => nodes.push(rowFor(d, false)))
+              deferred.forEach((d) => nodes.push(<LazyBlock key={d.listId} isDesktop={isDesktop}>{rowFor(d, false)}</LazyBlock>))
               deferred.length = 0
               continue
             }
             // rich 섹션: 짝을 기다리는 sparse가 있으면 뒤로 미뤄두고, 없으면 바로 낸다
             if (pending != null) deferred.push(s)
-            else nodes.push(rowFor(s, false))
+            else nodes.push(<LazyBlock key={s.listId} isDesktop={isDesktop}>{rowFor(s, false)}</LazyBlock>)
           }
           if (pending != null) {
             // 끝까지 짝을 못 찾은 sparse — 큰 포스터 1~2장에 빈 공간 안 남게 단독 카드로
             nodes.push(
-              <div key={`${keyPrefix}_solo_${pending.listId}`} style={{ display: 'flex', gap: 12, padding: '48px var(--gutter-sheet) 0' }}>
-                {rowFor(pending, true)}
-              </div>
+              <LazyBlock key={`${keyPrefix}_solo_${pending.listId}`} isDesktop={isDesktop}>
+                <div style={{ display: 'flex', gap: 12, padding: '48px var(--gutter-sheet) 0' }}>
+                  {rowFor(pending, true)}
+                </div>
+              </LazyBlock>
             )
-            deferred.forEach((d) => nodes.push(rowFor(d, false)))
+            deferred.forEach((d) => nodes.push(<LazyBlock key={d.listId} isDesktop={isDesktop}>{rowFor(d, false)}</LazyBlock>))
           }
           return <>{nodes}</>
         }
@@ -1025,23 +1064,27 @@ export default function FilmsPage() {
             {renderRun(run1, 'run1', 0)}
 
             {/* 4. 특별전 #1 (interleaved) */}
-            {renderSpecial(special1)}
+            {special1 && <LazyBlock isDesktop={isDesktop}>{renderSpecial(special1)}</LazyBlock>}
 
             {/* 5~10. 신작·심야 · 거장/수상 · 시기별 · 연도별 · 평론가 · 무브먼트 — 연속 sparse 자동 페어링 */}
             {renderRun(run2, 'run2', run1.length)}
 
             {/* 11. 감독 스포트라이트 */}
-            <DirectorSpotlightSection
-              movies={movies} activeMovieIds={activeMovieIdSet}
-              isDesktop={isDesktop} onDirectorClick={handleDirectorClick} />
+            <LazyBlock isDesktop={isDesktop}>
+              <DirectorSpotlightSection
+                movies={movies} activeMovieIds={activeMovieIdSet}
+                isDesktop={isDesktop} onDirectorClick={handleDirectorClick} />
+            </LazyBlock>
 
             {/* 12. 전체 상영작 그리드 */}
+            <LazyBlock isDesktop={isDesktop}>
             <AllMoviesGrid
               movies={movies.filter((m) => activeMovieIdSet.has(m.id))}
               isDesktop={isDesktop}
               regionLabel={selectedRegion ?? undefined}
               theaterCountByMovie={theaterCountByMovie}
               onMovieClick={handleMovieClick} />
+            </LazyBlock>
           </>
         )
       })()}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Movie } from '@/types/api'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
@@ -99,6 +99,25 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
   const logoSize = isDesktop ? 120 : 90
   const bottomSafeArea = isDesktop ? 32 : GLOBAL_NAV_MOBILE_HEIGHT + 24
 
+  /* 무한 로드 — 스크롤 하단 도달 시 청크 단위로 추가, 로드 중엔 고스트 */
+  const CHUNK = isDesktop ? 24 : 18
+  const [visibleCount, setVisibleCount] = useState(CHUNK)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const sentinelRef = useRef<HTMLDivElement>(null)
+  const hasMore = visibleCount < sorted.length
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el || !hasMore) return
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting || loadingMore) return
+      setLoadingMore(true)
+      // 고스트가 한 프레임이라도 보이게 — 렌더 자체는 동기라 짧은 지연 후 확장
+      setTimeout(() => { setVisibleCount((c) => c + CHUNK); setLoadingMore(false) }, 250)
+    }, { rootMargin: '400px 0px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [hasMore, loadingMore, CHUNK])
+
   return (
     <>
       {/* 구분선 — 특별전 상영작 배경색과 통일 */}
@@ -174,13 +193,13 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
           style={{
             display: 'grid',
             gridTemplateColumns: isDesktop
-              ? 'repeat(auto-fill, minmax(240px, 1fr))'
+              ? 'repeat(4, 1fr)'   /* 웹: 한 줄 4개 고정 */
               : 'repeat(3, 1fr)',
             gap: isDesktop ? 20 : 12,
             padding: isDesktop ? '16px var(--gutter) 0' : '14px var(--gutter) 0',
           }}
         >
-          {sorted.map((movie) => (
+          {sorted.slice(0, visibleCount).map((movie) => (
             <div
               key={movie.id}
               onClick={onMovieClick ? () => onMovieClick(movie.id) : undefined}
@@ -251,7 +270,14 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
               </div>
             </div>
           ))}
+          {loadingMore && Array.from({ length: isDesktop ? 4 : 3 }).map((_, i) => (
+            <div key={`ghost_${i}`} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ width: '100%', aspectRatio: '2/3', backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 120}ms` }} />
+              <div style={{ width: '70%', height: 12, borderRadius: 4, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 120}ms` }} />
+            </div>
+          ))}
         </div>
+        {hasMore && <div ref={sentinelRef} style={{ height: 1 }} />}
 
         {/* 푸터 로고 */}
         <div style={{
