@@ -42,6 +42,19 @@ for (const sec of sections(['FilmsTab Loading 상태'])) {
   }
 }
 
+// ── 1.5) Loading 섹션에 남은 인스타 아이브로 제거 (insta 스크립트 대상 밖이었음) ──
+for (const sec of sections(['FilmsTab Loading 상태'])) {
+  for (const t of sec.findAll(n => n.type === 'TEXT' && n.characters === '영화 소식을 소개할지도')) {
+    report.push(`아이브로 삭제 (${sec.name} / ${t.parent.name})`)
+    t.remove()
+  }
+  for (const t of sec.findAll(n => n.type === 'TEXT' && n.characters === '인스타그램에서 추천한 그 영화')) {
+    await figma.loadFontAsync(t.fontName)
+    t.characters = '인스타그램에서 추천한 영화'
+    report.push(`인스타 제목 문구 수정 (${sec.name})`)
+  }
+}
+
 // ── 2·3) TOBE 두 벌: theater-link 색 + award-deco 위치 ─────────
 const PRIMARY = { r: 0x4A / 255, g: 0x63 / 255, b: 0x80 / 255 }   // primary/base
 for (const sec of sections(['FilmsTab TOBE (Color)', 'FilmsTab TOBE (grayscale)', 'FilmsTab Loading 상태'])) {
