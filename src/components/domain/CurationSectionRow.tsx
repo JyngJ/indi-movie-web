@@ -41,7 +41,8 @@ const POSTER_SIZE = {
 
 /* ── 포스터 하단 정보: 제목 / 감독 / 장르칩+연도 ───────────────── */
 function MovieCardInfo({ movie, isDesktop, caption, customBottomInfo }: { movie: Movie; isDesktop: boolean; caption?: string; customBottomInfo?: React.ReactNode }) {
-  const fontSize = isDesktop ? 14 : 12
+  /* 피그마 캡션(제목 14·보조 12)은 128 포스터 기준 — PC 210 포스터에선 한 단계 승격 */
+  const fontSize = isDesktop ? 16 : 14
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -68,7 +69,7 @@ function MovieCardInfo({ movie, isDesktop, caption, customBottomInfo }: { movie:
           {/* 서브텍스트(있으면) 또는 감독 */}
           <span
             style={{
-              fontSize: fontSize - 1,
+              fontSize: isDesktop ? 'var(--text-body)' : 'var(--text-meta)',
               color: caption ? 'var(--color-text-body)' : 'var(--color-text-caption)',
               fontWeight: caption ? 600 : undefined,
               overflow: 'hidden',
@@ -84,7 +85,7 @@ function MovieCardInfo({ movie, isDesktop, caption, customBottomInfo }: { movie:
             {movie.genre.slice(0, 1).map((g) => (
               <GenreChip key={g}>{g}</GenreChip>
             ))}
-            <span style={{ fontSize: 10, color: 'var(--color-text-caption)', fontWeight: 600 }}>
+            <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', fontWeight: 600 }}>
               {movie.year}
             </span>
           </div>

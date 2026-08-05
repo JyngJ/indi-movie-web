@@ -57,6 +57,7 @@ function InstagramRecCard({
   const posterStripRef = useRef<HTMLDivElement | null>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(false)
+  const [cardHovered, setCardHovered] = useState(false)
 
   function updateScrollEdge() {
     const el = posterStripRef.current
@@ -112,17 +113,9 @@ function InstagramRecCard({
 
   // top/transform은 ScrollNavButton 기본값(50% 중앙정렬)을 그대로 씀 — 포스터 줄 자체가
   // 카드 세로 중앙에 대칭 배치(top/bottom 12%)라 카드 중앙 = 포스터 줄 중앙과 일치한다.
-  const navButtonDarkStyle: React.CSSProperties = {
-    backgroundColor: '#000', border: 'none', color: 'var(--color-on-accent)', boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-  }
-  const stripNavLeftStyle: React.CSSProperties = {
-    ...navButtonDarkStyle,
-    left: isDesktop ? 320 : 16,
-  }
-  const stripNavRightStyle: React.CSSProperties = {
-    ...navButtonDarkStyle,
-    right: isDesktop ? 20 : '4%',
-  }
+  /* 2.0: 다른 행과 같은 흰 원형 버튼 — hover 시만 노출 */
+  const stripNavLeftStyle: React.CSSProperties = { left: isDesktop ? 320 : 16 }
+  const stripNavRightStyle: React.CSSProperties = { right: isDesktop ? 20 : '4%' }
 
   // 포스터 줄 가장자리 페이드 — 더 스크롤할 방향에만 준다(첫/마지막 포스터는 딱 잘림 없이
   // 페이드도 없음, 안 그러면 "더 있다"는 착시가 생김)
@@ -144,6 +137,8 @@ function InstagramRecCard({
       role="button"
       tabIndex={0}
       onClick={onClick}
+      onMouseEnter={() => setCardHovered(true)}
+      onMouseLeave={() => setCardHovered(false)}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault()
@@ -170,7 +165,7 @@ function InstagramRecCard({
       </div>
 
       {/* 텍스트 대비 스크림 — 이미지가 밝아도 좌상단 글자가 읽히게 */}
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(115deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.25) 38%, transparent 60%)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(115deg, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0.35) 100%)', pointerEvents: 'none' }} />
 
       {/* 좌측 텍스트 — 아이브로 + KIMM 타이틀 (피그마 TOBE) */}
       <div style={{ position: 'absolute', left: isDesktop ? 24 : 16, top: isDesktop ? 24 : 16, right: '45%', display: 'flex', flexDirection: 'column', gap: 8, pointerEvents: 'none' }}>
@@ -224,7 +219,7 @@ function InstagramRecCard({
           </div>
           {/* 좌우로 더 있다는 걸 알리는 넘김 버튼 — 다른 섹션(docs/DESIGN.md Primitives)과 같은 ScrollNavButton,
               포스터 줄 세로 중앙. 그 방향으로 더 스크롤할 게 없으면 버튼 자체를 숨긴다 */}
-          {isDesktop && canScrollLeft && (
+          {isDesktop && cardHovered && canScrollLeft && (
             <ScrollNavButton
               direction="left"
               size={28}
@@ -232,7 +227,7 @@ function InstagramRecCard({
               style={stripNavLeftStyle}
             />
           )}
-          {isDesktop && canScrollRight && (
+          {isDesktop && cardHovered && canScrollRight && (
             <ScrollNavButton
               direction="right"
               size={28}
