@@ -288,6 +288,22 @@ export default function FilmsPage() {
     almostSoldOutFilms.map((f) => [f.movie.id, formatAlmostSoldOutCaption(f, asoToday)]),
   )
 
+  /* 시의성 캡션 — [시간 / 극장] 통째 clickable → 극장 상세 시간표. PC는 폰트 한 단계 승격 */
+  const theaterCaption = (movieKey: string, theaterId: string, timeText: string, theaterName: string) => (
+    <div
+      key={movieKey}
+      className="caption-link"
+      role="button"
+      tabIndex={0}
+      onClick={(e) => { e.stopPropagation(); router.push(`/films/theater/${theaterId}`) }}
+      onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); router.push(`/films/theater/${theaterId}`) } }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}
+    >
+      <span style={{ fontSize: isDesktop ? 'var(--text-body)' : 'var(--text-meta)', color: 'var(--color-neutral-800)', fontWeight: 600, fontFeatureSettings: '"tnum"' }}>{timeText}</span>
+      <span style={{ fontSize: isDesktop ? 'var(--text-body)' : 'var(--text-meta)', color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{theaterName}</span>
+    </div>
+  )
+
   const almostSoldOutCustomInfos = new Map<string, React.ReactNode>(
     almostSoldOutFilms.map((f) => {
       const first = f.showings[0]
@@ -296,12 +312,10 @@ export default function FilmsPage() {
       const dateText = first ? `${dayLabel} ${first.showTime}${rest > 0 ? ` · 외 ${rest}회` : ''}` : ''
       const theaterName = first?.theaterName ?? ''
 
+      const theaterId = first?.theaterId ?? ''
       return [
         f.movie.id,
-        <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
-          <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-neutral-800)', fontWeight: 600, fontFeatureSettings: '"tnum"' }}>{dateText}</span>
-          <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{theaterName}</span>
-        </div>
+        theaterCaption(f.movie.id, theaterId, dateText, theaterName),
       ]
     })
   )
@@ -361,12 +375,10 @@ export default function FilmsPage() {
       const dateText = first ? `${dayLabel} ${first.showTime}${rest > 0 ? ` · 외 ${rest}회` : ''}` : ''
       const theaterName = first?.theaterName ?? ''
 
+      const theaterId = first?.theaterId ?? ''
       return [
         f.movie.id,
-        <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
-          <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-neutral-800)', fontWeight: 600, fontFeatureSettings: '"tnum"' }}>{dateText}</span>
-          <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{theaterName}</span>
-        </div>
+        theaterCaption(f.movie.id, theaterId, dateText, theaterName),
       ]
     })
   )
@@ -401,12 +413,10 @@ export default function FilmsPage() {
       const dateText = first ? `${dayLabel} ${first.showTime}${rest > 0 ? ` · 외 ${rest}회` : ''}` : ''
       const theaterName = first?.theaterName ?? ''
 
+      const theaterId = first?.theaterId ?? ''
       return [
         f.movie.id,
-        <div key={f.movie.id} style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
-          <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-neutral-800)', fontWeight: 600, fontFeatureSettings: '"tnum"' }}>{dateText}</span>
-          <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{theaterName}</span>
-        </div>
+        theaterCaption(f.movie.id, theaterId, dateText, theaterName),
       ]
     })
   )

@@ -157,6 +157,18 @@ img {
   50%       { opacity: 0.75; }
 }
 
+/* 시의성 캡션 — 통째 clickable, 호버 시 배경 */
+.caption-link {
+  border-radius: 8px;
+  margin: -4px -8px;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+@media (hover: hover) {
+  .caption-link:hover { background: var(--color-surface-raised); }
+}
+
 /* 날짜 셀 선택 — 뽈롱(오버슈트 스케일) + 밑줄 점→선 */
 @keyframes date-cell-pop {
   0%   { transform: scale(0.97); }
