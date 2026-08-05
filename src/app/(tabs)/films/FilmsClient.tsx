@@ -109,10 +109,11 @@ const FESTIVAL_BANNER_DESKTOP_WIDTH = 662
 function GhostSectionRow({ isDesktop }: { isDesktop: boolean }) {
   return (
     <div style={{ paddingTop: isDesktop ? 48 : 32 }}>
-      <div style={{ width: 180, height: 24, borderRadius: 4, margin: '0 var(--gutter-sheet) 16px', backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite' }} />
-      <div style={{ display: 'flex', gap: isDesktop ? 16 : 12, overflow: 'hidden', padding: '0 var(--gutter-sheet)' }}>
+      {/* 실제 섹션과 동일 규격: h2(26px)+행 상단 여백 16, 포스터 210/120·gap 16/10 */}
+      <div style={{ width: 180, height: 26, borderRadius: 'var(--radius-badge)', margin: '0 var(--gutter-sheet) 16px', backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite' }} />
+      <div style={{ display: 'flex', gap: isDesktop ? 16 : 10, overflow: 'hidden', padding: '0 var(--gutter-sheet)' }}>
         {Array.from({ length: isDesktop ? 6 : 3 }).map((_, i) => (
-          <div key={i} style={{ width: isDesktop ? 210 : 130, flexShrink: 0 }}>
+          <div key={i} style={{ width: isDesktop ? 210 : 120, flexShrink: 0 }}>
             <MovieCardSkeleton />
           </div>
         ))}

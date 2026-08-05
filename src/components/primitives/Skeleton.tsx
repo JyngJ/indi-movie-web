@@ -43,11 +43,12 @@ export function Skeleton({
 
 // 영화 카드용 프리셋
 export function MovieCardSkeleton() {
+  // 실제 카드 문법과 동일: 포스터 2:3(r2) + 제목 14 + 메타 12 두 줄
   return (
     <div className="flex flex-col gap-2">
-      <Skeleton width="100%" height={220} rounded="lg" />
-      <Skeleton width="75%" height={16} />
-      <Skeleton width="50%" height={13} />
+      <Skeleton width="100%" style={{ aspectRatio: '2 / 3' }} />
+      <Skeleton width="75%" height={18} />
+      <Skeleton width="50%" height={14} />
     </div>
   )
 }

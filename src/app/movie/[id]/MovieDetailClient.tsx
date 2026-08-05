@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMovieDetail, useMovieTheaterShowtimes, useActiveMovieIds } from '@/lib/supabase/queries'
@@ -19,19 +20,7 @@ import { MovieInfoTable } from '@/components/domain/movieDetail/MovieInfoTable'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 
 function useIsDesktopDetail() {
-  const [isDesktop, setIsDesktop] = useState(
-    () => typeof window !== 'undefined' && window.matchMedia('(min-width: 1280px)').matches,
-  )
-
-  useEffect(() => {
-    const media = window.matchMedia('(min-width: 1280px)')
-    const update = () => setIsDesktop(media.matches)
-    update()
-    media.addEventListener('change', update)
-    return () => media.removeEventListener('change', update)
-  }, [])
-
-  return isDesktop
+  return useMediaQuery('(min-width: 1280px)')
 }
 
 /* ── 아이콘 ─────────────────────────────────────────────────────── */

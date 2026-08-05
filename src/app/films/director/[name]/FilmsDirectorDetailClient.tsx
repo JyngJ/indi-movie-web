@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useMovies, useActiveMovieIds, useDirectorProfile } from '@/lib/supabase/queries'
@@ -11,13 +12,7 @@ import { trackEvent } from '@/lib/analytics/client'
 import { Toast } from '@/components/primitives'
 
 function useIsDesktop() {
-  const [v, setV] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 1280px)').matches)
-  useEffect(() => {
-    const m = window.matchMedia('(min-width: 1280px)')
-    const fn = () => setV(m.matches); fn()
-    m.addEventListener('change', fn); return () => m.removeEventListener('change', fn)
-  }, [])
-  return v
+  return useMediaQuery('(min-width: 1280px)')
 }
 
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
