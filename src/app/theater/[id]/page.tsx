@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { toTheaterSchema } from '@/lib/seo/toTheaterSchema'
 import { safeUrl } from '@/lib/seo/safeUrl'
-import { formatLocalDate } from '@/lib/date'
+import { toKstIsoDate } from '@/lib/date'
 import type { Theater } from '@/types/api'
 import { TheaterDetailClient } from './TheaterDetailClient'
 
@@ -19,7 +19,7 @@ async function fetchTodayMovieTitles(theaterId: string): Promise<string[]> {
     .select('movie_id, movies(title)')
     .eq('theater_id', theaterId)
     .eq('is_active', true)
-    .eq('show_date', formatLocalDate(new Date()))
+    .eq('show_date', toKstIsoDate(new Date()))   // 서버는 UTC — KST 기준 오늘로
     .order('show_time', { ascending: true })
     .limit(20)
 

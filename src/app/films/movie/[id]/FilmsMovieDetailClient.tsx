@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { addDaysIso, toKstIsoDate } from '@/lib/date'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
 import { DateBar } from '@/components/domain/DateBar'
 import { ShowtimeCell } from '@/components/domain/ShowtimeCell'
@@ -32,11 +33,11 @@ function useIsDesktop() {
 }
 
 /* ── 날짜 유틸 ─────────────────────────────────────────────────── */
-function getDateRange(days = 7) {
-  return Array.from({ length: days }, (_, i) => {
-    const d = new Date(); d.setDate(d.getDate() + i)
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  })
+function getDateRange(days = 7): string[] {
+  // KST 고정: 서버는 UTC로 돌아 로컬 날짜를 쓰면 자정~오전 9시(KST) 사이 SSR HTML과
+  // 클라이언트 날짜가 하루 어긋나 hydration mismatch가 난다
+  const todayKst = toKstIsoDate(new Date())
+  return Array.from({ length: days }, (_, i) => addDaysIso(todayKst, i))
 }
 function formatDateTab(dateStr: string) {
   const DOW = ['일', '월', '화', '수', '목', '금', '토']
