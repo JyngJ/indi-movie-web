@@ -196,7 +196,7 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
               ? 'repeat(4, 1fr)'   /* 웹: 한 줄 4개 고정 */
               : 'repeat(3, 1fr)',
             gap: isDesktop ? 20 : 12,
-            padding: isDesktop ? '16px var(--gutter) 0' : '14px var(--gutter) 0',
+            padding: isDesktop ? '16px var(--gutter-sheet) 0' : '14px var(--gutter-sheet) 0',
           }}
         >
           {sorted.slice(0, visibleCount).map((movie) => (
