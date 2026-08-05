@@ -69,7 +69,7 @@ function ShowtimeChip({ st, selected, onClick }: { st: Showtime; selected?: bool
         {st.endTime && <span style={{ fontSize: 10, color: 'var(--color-text-caption)', fontFeatureSettings: '"tnum"' }}>-{st.endTime.slice(0, 5)}</span>}
       </div>
       {st.seatTotal > 0 && (
-        <div style={{ marginTop: 4, fontSize: 11, fontFeatureSettings: '"tnum"' }}>
+        <div style={{ marginTop: 4, fontSize: 'var(--text-badge)', fontFeatureSettings: '"tnum"' }}>
           <span style={{ fontWeight: 600, color: seatColor }}>{st.seatAvailable}</span>
           <span style={{ color: 'var(--color-text-sub)' }}>/{st.seatTotal}석</span>
           {soldout && <span style={{ marginLeft: 4, fontSize: 10, color: 'var(--color-error)', fontWeight: 700 }}>매진</span>}
@@ -87,7 +87,7 @@ function DirectorChip({ name, photoUrl, onClick }: { name: string; photoUrl?: st
         {photoUrl ? <img src={photoUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} /> : <IcoUser />}
       </div>
       <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)' }}>{name}</span>
-      <span style={{ fontSize: 11, color: 'var(--color-primary-base)', fontWeight: 500 }}>감독 →</span>
+      <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-primary-base)', fontWeight: 500 }}>감독 →</span>
     </button>
   )
 }
@@ -343,7 +343,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
           style={{ width: '100%', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, padding: '16px 16px 12px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', minHeight: 'auto', borderBottom: '1px solid var(--color-border)' }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>
-            <span style={{ fontSize: 15, fontWeight: 700, fontFamily: 'var(--font-serif)', color: 'var(--color-text-primary)', display: 'block', lineHeight: 1.3 }}>{entry.theaterName}</span>
+            <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, fontFamily: 'var(--font-serif)', color: 'var(--color-text-primary)', display: 'block', lineHeight: 1.3 }}>{entry.theaterName}</span>
             <div style={{ marginTop: 4, display: 'flex', alignItems: 'flex-start', gap: 4, color: 'var(--color-text-sub)', fontSize: 12 }}>
               <IcoPin /><span style={{ wordBreak: 'keep-all', lineHeight: 1.45 }}>{entry.theaterAddress}</span>
             </div>
@@ -415,7 +415,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
                 style={{ flexShrink: 0, width: 56, height: 58, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, border: 'none', background: 'none', cursor: hasShows ? 'pointer' : 'default', opacity: hasShows ? 1 : 0.35, borderBottom: isSelected ? '2px solid var(--color-primary-base)' : '2px solid transparent', minHeight: 'auto' }}
                 disabled={!hasShows}
               >
-                <span style={{ fontSize: 11, fontWeight: 500, color: isSelected ? 'var(--color-primary-base)' : isHoliday ? 'var(--color-error)' : 'var(--color-text-caption)' }}>{i === 0 ? '오늘' : day}</span>
+                <span style={{ fontSize: 'var(--text-badge)', fontWeight: 500, color: isSelected ? 'var(--color-primary-base)' : isHoliday ? 'var(--color-error)' : 'var(--color-text-caption)' }}>{i === 0 ? '오늘' : day}</span>
                 <span style={{ fontSize: 18, fontWeight: 700, fontFeatureSettings: '"tnum"', color: isSelected ? 'var(--color-primary-base)' : isHoliday ? 'var(--color-error)' : 'var(--color-text-primary)' }}>{date}</span>
               </button>
             )
@@ -440,7 +440,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
               <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0' }}>
                   <div style={{ flex: 1, height: 1, backgroundColor: 'var(--color-border)' }} />
-                  <span style={{ fontSize: 11, color: 'var(--color-text-caption)', fontWeight: 500, whiteSpace: 'nowrap' }}>{regionId} 외 지역 영화관</span>
+                  <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)', fontWeight: 500, whiteSpace: 'nowrap' }}>{regionId} 외 지역 영화관</span>
                   <div style={{ flex: 1, height: 1, backgroundColor: 'var(--color-border)' }} />
                 </div>
                 {otherRegionEntries.map(renderTheaterCard)}
@@ -486,7 +486,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
     <div style={{ borderRadius: 16, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', boxShadow: '0 6px 24px color-mix(in srgb, var(--color-primary-base) 55%, transparent)', overflow: 'hidden' }}>
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', color: 'var(--color-text-caption)' }}>회차 선택됨</span>
+          <span style={{ fontSize: 'var(--text-badge)', fontWeight: 700, letterSpacing: '0.5px', color: 'var(--color-text-caption)' }}>회차 선택됨</span>
           <CloseRoundButton variant="card" onClick={() => { setSelectedShowtimeId(null); setSelectedTheaterId(null) }} />
         </div>
         <div>
@@ -642,8 +642,8 @@ function DirectorSideCard({ name, onClick }: { name: string; onClick: () => void
         {profile?.photoUrl ? <img src={profile.photoUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} /> : <IcoUser />}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 15, fontWeight: 700, fontFamily: 'var(--font-serif)', color: 'var(--color-text-primary)' }}>{name}</div>
-        <div style={{ marginTop: 4, fontSize: 11, color: 'var(--color-primary-base)', fontWeight: 500 }}>감독 페이지 보기 →</div>
+        <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, fontFamily: 'var(--font-serif)', color: 'var(--color-text-primary)' }}>{name}</div>
+        <div style={{ marginTop: 4, fontSize: 'var(--text-badge)', color: 'var(--color-primary-base)', fontWeight: 500 }}>감독 페이지 보기 →</div>
       </div>
       <IcoChevronRight />
     </button>

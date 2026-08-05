@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useMovies, useActiveMovieIds, useDirectorProfile } from '@/lib/supabase/queries'
@@ -11,13 +12,7 @@ import { trackEvent } from '@/lib/analytics/client'
 import { Toast } from '@/components/primitives'
 
 function useIsDesktop() {
-  const [v, setV] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 1280px)').matches)
-  useEffect(() => {
-    const m = window.matchMedia('(min-width: 1280px)')
-    const fn = () => setV(m.matches); fn()
-    m.addEventListener('change', fn); return () => m.removeEventListener('change', fn)
-  }, [])
-  return v
+  return useMediaQuery('(min-width: 1280px)')
 }
 
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
@@ -68,10 +63,10 @@ function FilmographyRow({ movie, isLast, isActive, onClick, isDesktop }: { movie
       <MiniPoster src={movie.posterUrl} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontFamily: 'var(--font-serif)', fontSize: 15, fontWeight: 700, color: isActive ? 'var(--color-primary-base)' : 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: isDesktop ? 360 : 180 }}>
+          <span style={{ fontFamily: 'var(--font-serif)', fontSize: 'var(--text-subtitle)', fontWeight: 700, color: isActive ? 'var(--color-primary-base)' : 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: isDesktop ? 360 : 180 }}>
             {normalizeTitle(movie.title)}
           </span>
-          {isActive && <span style={{ height: 18, padding: '0 8px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', fontSize: 9, fontWeight: 700, color: 'var(--color-on-accent)', backgroundColor: 'var(--color-primary-base)', flexShrink: 0 }}>상영중</span>}
+          {isActive && <span style={{ height: 18, padding: '0 8px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', fontSize: 'var(--text-badge)', fontWeight: 700, color: 'var(--color-on-accent)', backgroundColor: 'var(--color-primary-base)', flexShrink: 0 }}>상영중</span>}
         </div>
         <div style={{ marginTop: 4, fontSize: 12, color: 'var(--color-text-caption)' }}>
           {[movie.year, movie.genre[0]].filter(Boolean).join(' · ')}

@@ -1,27 +1,30 @@
 /* ================================
-   Design Tokens — 영화 앱
+   Design Tokens — 영화 앱 (2.0 팔레트 반영 2026-08-04)
+   2.0: 웜그레이 재조정 · 인디고 primary(H227) · 뮤트 시맨틱(오커 warning) · 포스터 radius 2 · 그림자 2겹
+   피그마 원본: "영화볼지도 색상 - 2.0" 변수 컬렉션 / 크기·타이포 개편은 2차
    이 파일이 값의 유일한 원본 (source of truth) — 설명·역할·컴포넌트 스펙은 docs/DESIGN.md
    ================================ */
 
 /* ─── Light Mode ──────────────────────────────────────────────────── */
 :root {
 
-  /* ── Neutral scale (불변) ── */
-  --color-neutral-50:  #F8F6F2;
-  --color-neutral-100: #F0EDE6;
-  --color-neutral-200: #DDD9CF;
-  --color-neutral-400: #A9A39A;
-  --color-neutral-500: #857F76;
-  --color-neutral-600: #635D55;
-  --color-neutral-700: #4A4540;
-  --color-neutral-800: #2E2A25;
-  --color-neutral-900: #1A1714;
+  /* ── Neutral scale — 2.0 웜그레이 램프 (S가 양끝으로 상승하는 U자 곡선, H 27~40) ── */
+  --color-neutral-50:  #FAF9F8;   /* 페이지 배경 (미색 종이) */
+  --color-neutral-100: #EAE5E1;   /* 눌린 면·비활성 배경 */
+  --color-neutral-200: #EAE5E1;   /* 보더·구분선 */
+  --color-neutral-300: #C6BFB9;   /* 비활성·보조 구분 (2.0 신설) */
+  --color-neutral-400: #A7A19A;   /* 플레이스홀더 */
+  --color-neutral-500: #8D8781;   /* 캡션·메타 — "없어도 되는 정보"만 */
+  --color-neutral-600: #726B65;   /* 서브 텍스트·본문(짧은 글) */
+  --color-neutral-700: #58524B;   /* 본문 텍스트(긴 글) */
+  --color-neutral-800: #2B2622;   /* 강조 텍스트·인버스 배경(날짜 활성 셀) */
+  --color-neutral-900: #0C0A08;   /* 텍스트 프라이머리·제목 */
 
-  /* ── Surface ── */
-  --color-surface-bg:     #F8F6F2;   /* page */
-  --color-surface-card:   #FFFFFF;   /* 카드·시트·시간표 셀 */
-  --color-surface-raised: #F0EDE6;   /* 비활성 칩·스크롤 hint */
-  --color-border:         #DDD9CF;
+  /* ── Surface — 2.0: 페이지(미색 종이) 위에 순백 카드가 뜨는 구조 ── */
+  --color-surface-bg:     #FAF9F8;   /* page (neutral/50) */
+  --color-surface-card:   #FFFFFF;   /* 카드·시트·시간표 셀 — "새 종이 한 장" */
+  --color-surface-raised: #EAE5E1;   /* 눌린 면·비활성 칩 (neutral/100) */
+  --color-border:         #EAE5E1;   /* 보더·구분선 (neutral/200) */
   --color-surface-overlay: rgba(0, 0, 0, 0.06);   /* 닫기 버튼·장르 칩·배지 등 표면 위 옅은 오버레이 배경 */
 
   /* ── Text (라이트 모드)
@@ -53,18 +56,41 @@
   --color-text:          var(--color-text-primary);
   --color-primary-light: var(--color-primary-hover-l);
 
-  /* ── Primary ── */
-  --color-primary-base:     #4A6380;
-  --color-primary-hover-l:  #5C7896;
-  --color-primary-subtle-l: #E8EEF4;
-  --color-primary-text:     #2B3D50;
+  /* ── Primary — 2.0 인디고 (H227, S U자 곡선 9단계) ──
+     base=700(버튼·CTA·활성), hover=800(어둡게 — 구 라이트닝 방향에서 반전),
+     subtle=100(활성 칩 틴트), text=900(틴트 위 텍스트) */
+  --color-primary-base:     #404E81;   /* primary/700 */
+  --color-primary-hover-l:  #2F3A65;   /* primary/800 */
+  --color-primary-subtle-l: #ECEFF9;   /* primary/100 */
+  --color-primary-text:     #1F2747;   /* primary/900 */
 
-  /* ── Semantic ── */
-  --color-warning: #D97706;
-  --color-success: #4A7C59;
-  --color-error:   #B94A48;
-  --color-info:    #3B82F6;
-  --color-gv:      #7C3AED;   /* GV/페스티벌 브랜드 보라 — 지도 GV 핀·페스티벌 이벤트 타입 강조색 */
+  /* 전체 램프 (2.0 신설 — 차트·보더 등 세부 용도) */
+  --color-primary-900: #1F2747;   /* 틴트 위 텍스트 */
+  --color-primary-800: #2F3A65;   /* hover·프레스 */
+  --color-primary-700: #404E81;   /* base — 버튼·CTA·활성 */
+  --color-primary-600: #51629E;   /* 보조 액센트 */
+  --color-primary-500: #6D7CB0;   /* 아이콘 액센트 — 텍스트 금지 */
+  --color-primary-400: #8794C5;   /* 차트·보조 */
+  --color-primary-300: #A6B1D9;   /* 연한 보더 */
+  --color-primary-200: #C4CCE9;   /* 틴트 보더 */
+  --color-primary-100: #ECEFF9;   /* subtle — 활성 칩·틴트 배경 */
+
+  /* ── Semantic — 2.0 뮤트 계급 통일 (형광 제거) ──
+     주 사용 스탑: 밝은 배경 위 텍스트 + 솔리드 칩 배경 겸직 값 */
+  --color-warning: #B9800E;   /* 오커 700 — 잔여석 적음. 구 #D97706(형광 앰버) 강등 */
+  --color-success: #4A7C59;   /* 700 유지 — 상영중 */
+  --color-error:   #9B3331;   /* 900 — "매진" 텍스트+칩 겸직 (L40, 구 #B94A48은 L52 무인지대) */
+  --color-info:    #6D7CB0;   /* 폐지 예정 — 임시로 primary/500 (구 #3B82F6 형광 파랑 제거) */
+  --color-gv:      #3E1782;   /* gv/900 — 핀·배지 솔리드+텍스트 3겸직 (구 #7C3AED 형광 강등) */
+
+  /* 시맨틱 틴트·보조 (2.0 신설 — 배지 배경/틴트 위 텍스트) */
+  --color-warning-tint: #FDF1D8;
+  --color-warning-deep: #885907;
+  --color-success-tint: #E4F1E8;
+  --color-success-deep: #2B5036;
+  --color-error-tint:   #F5E1E0;
+  --color-error-mid:    #BD4E4C;   /* 아이콘·보더·요일(일) 전용 */
+  --color-gv-tint:      #E7DCF9;
 
   /* ── Multiplex (핀 전용, 텍스트 미사용) ── */
   --color-cgv:   #E30613;
@@ -83,19 +109,21 @@
   --font-serif-en: 'Libre Baskerville', Georgia, serif;         /* 영문 원제·감독명 이탤릭 (선택적) */
   --font-mono:     'SF Mono', 'ui-monospace', 'Courier New', monospace;
 
-  /* ── Typography: Scale (docs/DESIGN.md 타입 스케일 참고) ── */
-  --text-h1:      24px;   /* 영화 대제목 / font-serif / 700 */
-  --text-h2:      22px;   /* 극장명 상세 / font-serif / 700 */
-  --text-h3:      20px;   /* 바텀시트 극장명 / font-serif / 700 */
-  --text-title:   17px;   /* 카드 제목 / Pretendard / 700 */
-  --text-subtitle: 15px;  /* 소제목·카드 헤더 / Pretendard / 600~700 — TASK-10 감사에서 실사용 33곳(18개 파일) 확인, body(14)·title(17) 사이 갭 */
-  --text-body:    14px;   /* 본문 / Pretendard / 500 */
-  --text-meta:    13px;   /* 메타·주소 / Pretendard / 400 */
-  --text-caption: 11px;   /* 라벨 caps / Pretendard / 500 / uppercase */
-  --text-badge:    9px;   /* D-1 배지 / Pretendard / 700 / uppercase */
-  --text-time:    17px;   /* 시작 시간 / tnum / 700 */
+  /* ── Typography: Scale — 2.0 통합 (13종 → 6단계: 10·12·14·16·20·24) ──
+     인접 크기 병합, 위계는 weight·색이 담당 ("Size isn't everything").
+     행간 규칙: 24=125% / 20=130% / 16=140% / 14·12=150% / 라벨류 140% / tnum 숫자=100% */
+  --text-h1:      24px;   /* 영화 대제목 / KIMM / 700 / 자간 5% */
+  --text-h2:      20px;   /* 극장명·섹션 헤더 / KIMM / 700 — 구 22, h3(20)와 통합 */
+  --text-h3:      20px;   /* = h2 (호환 alias — 신규 코드는 h2 사용) */
+  --text-title:   16px;   /* 카드 제목 / 700 — 구 17 */
+  --text-subtitle: 14px;  /* 소제목 / 700 — 구 15. body와 같은 크기, weight·색(600)으로 위계 */
+  --text-body:    14px;   /* 본문 / 500 */
+  --text-meta:    12px;   /* 메타·주소·영문원제 / 400 — 구 13 */
+  --text-caption: 12px;   /* 라벨 caps / 500 / uppercase / 자간 0.4 — 구 11 */
+  --text-badge:   10px;   /* 배지·최소 라벨 / 700 — 구 9 */
+  --text-time:    16px;   /* 시작 시간 / tnum / 700 — 구 17, date와 통합 */
   --text-seat:    12px;   /* 좌석수 / tnum / 600 */
-  --text-dow:     10px;   /* 요일 / 500 */
+  --text-dow:     12px;   /* 요일 = 2.0/meta (피그마) / 400 */
   --text-date:    16px;   /* 날짜 / tnum / 700 */
 
   /* Libre Baskerville 전용 */
@@ -111,14 +139,19 @@
   --spacing-5: 20px;
   --spacing-6: 24px;
   --spacing-8: 32px;
-  --spacing-10: 40px;
+  --spacing-10: 40px;  /* 2.0에서 수렴 예정 (32 또는 48로) — 신규 코드 사용 금지 */
+  /* 2.0 확장 — 과감한 여백용 상단 스케일 (n = px÷4) */
+  --spacing-12: 48px;   /* 섹션 사이 */
+  --spacing-16: 64px;   /* 큰 섹션·화면 상하 */
+  --spacing-24: 96px;   /* 히어로 위아래 */
+  --spacing-32: 128px;  /* 특대 — 엠티 스테이트·랜딩 */
 
   /* ── Border Radius (4배수 · 역할 기반 이름) ──
      기존 --radius-sm/md/lg/xl/2xl/full 은 전부 삭제됨.
      같은 이름에 다른 값을 넣으면 기존 참조부가 조용히 바뀌므로 이름을 교체.
      부수효과: Tailwind v4 --radius-* 네임스페이스 충돌 해소. */
   --radius-badge:    4px;   /* 배지·라벨·인디케이터 */
-  --radius-poster:   8px;   /* 포스터·썸네일·날짜 셀·지도 팝업 */
+  --radius-poster:   2px;   /* 포스터·썸네일 — 2.0: 인쇄물 모서리 (8→2, 2026-08-03 결정). 날짜 셀·지도 팝업은 control/popover로 이관 예정 */
   --radius-button:   8px;   /* 버튼 — control(12)이 버튼엔 과해 분리 (2026-07-28 사용자 결정) */
   --radius-control: 12px;   /* 입력·칩·카드·상영시간표 셀 */
   --radius-popover: 16px;   /* 드롭다운·팝오버·모달 */
@@ -130,7 +163,7 @@
   /* 검색창 */
   --comp-search-height: 44px;
   --comp-search-px:     18px;
-  --comp-search-radius: var(--radius-pill);
+  --comp-search-radius: var(--radius-control);   /* 2.0: 피그마 search 프레임 r12 — pill 폐기 (2026-08-05) */
 
   /* 필터 칩 — height는 var(--filter-chip-height) 참고(FilterChip.tsx 실사용) */
   --comp-chip-px:        14px;
@@ -138,13 +171,16 @@
   --comp-chip-font-size: 13px;
 
   /* 날짜 셀 */
-  --comp-date-cell-pt:     6px;
+  --comp-date-cell-pt:     8px;   /* 2.0: 피그마 DateCell pad */
   --comp-date-cell-pb:     8px;
-  --comp-date-cell-radius: var(--radius-poster);   /* 8px */
+  --comp-date-cell-radius: var(--radius-button);   /* 8px — 날짜 셀 선택 박스 */
+  --comp-date-ind-w:       22px;   /* 상영있음 인디케이터 (피그마 22×3) */
+  --comp-date-ind-h:       3px;
 
   /* 상영시간표 셀 */
-  --comp-showtime-p:      12px;
-  --comp-showtime-radius: var(--radius-control);   /* 12px */
+  --comp-showtime-p:      16px;   /* 2.0: 셀 내부 여백 12→16 (피그마 확정) */
+  --comp-showtime-radius: 16px;   /* 피그마 ShowtimeCell r16 */
+  --comp-showtime-min-width: 104px;   /* 2.0: 셀 최소폭 — 열 수는 auto-fill이 결정 (390=3열, 320=2열) */
 
   /* 포스터 썸네일 */
   --comp-poster-radius:        var(--radius-poster);   /* 8px — 기존 6px에서 8px로 흡수(의도된 변경) */
@@ -174,18 +210,20 @@
 
   /* ── Filter UI (라이트 모드) ── */
   --filter-chip-height:     36px;
-  --filter-chip-value:      #2B3D50;           /* 칩 선택값 텍스트 */
-  --filter-chip-open-text:  #2B3D50;           /* 드롭다운 열림 칩 라벨 */
+  --filter-chip-value:      #1F2747;           /* 칩 선택값 텍스트 (primary/900) */
+  --filter-chip-open-text:  #1F2747;           /* 드롭다운 열림 칩 라벨 (primary/900) */
   --filter-chip-open-caret: var(--color-primary-hover-l);   /* 열림 캐럿 */
-  --filter-row-label-sel:   #2B3D50;           /* 선택된 드롭다운 행 라벨 */
+  --filter-row-label-sel:   #1F2747;           /* 선택된 드롭다운 행 라벨 (primary/900) */
   --filter-dismiss-bg:      rgba(0,0,0,0.08);  /* × 버튼 배경 */
   --filter-indicator-bd:    rgba(0,0,0,0.1);   /* 미선택 인디케이터 테두리 */
 
-  /* ── Shadows ── */
-  --shadow-sm:    0 2px 6px rgba(20, 15, 10, 0.06);
-  --shadow-md:    0 4px 12px rgba(20, 15, 10, 0.08);
-  --shadow-lg:    0 8px 24px rgba(20, 15, 10, 0.12);
-  --shadow-sheet: 0 -4px 24px rgba(20, 15, 10, 0.12), 0 -1px 6px rgba(20, 15, 10, 0.08);
+  /* ── Shadows — 2.0: 2겹(direct+ambient), 색은 shadow-base 웜 브라운 고정 (순검정 금지) ──
+     고도: sm=E1 카드·버튼 hover / md=E2 FAB·드롭다운·팝업 / lg=E3 모달 / sheet=하단 고정 면(offset 0 ambient) */
+  --shadow-base:  #140F0A;
+  --shadow-sm:    0 1px 2px rgba(20, 15, 10, 0.10), 0 2px 8px rgba(20, 15, 10, 0.04);
+  --shadow-md:    0 2px 4px rgba(20, 15, 10, 0.10), 0 8px 20px rgba(20, 15, 10, 0.06);
+  --shadow-lg:    0 4px 8px rgba(20, 15, 10, 0.10), 0 16px 40px rgba(20, 15, 10, 0.08);
+  --shadow-sheet: 0 0 24px rgba(20, 15, 10, 0.14), 0 0 6px rgba(20, 15, 10, 0.08);
 
   /* ── Transitions ── */
   --transition-fast: 150ms ease;
@@ -193,6 +231,7 @@
 
   /* ── Layout ── */
   --gutter:    16px;   /* 최상위 좌우 여백. 중첩 시 12 → 8 */
+  --gutter-sheet: 24px; /* 2.0: 시트·패널 전용 거터 — 전역 gutter 개정 전 과도기 토큰 */
   --gutter-md: 12px;
   --gutter-sm:  8px;
   --max-width-mobile: 480px;
@@ -200,49 +239,4 @@
   --touch-target:     44px;
 }
 
-/* ─── Dark Mode ──────────────────────────────────────────────────── */
-[data-theme="dark"] {
-  --comp-poster-border: rgba(255, 255, 255, 0.10);
-
-  /* ── Surface ── */
-  --color-surface-bg:     #0E0D0B;
-  --color-surface-card:   #1A1814;
-  --color-surface-raised: #242019;
-  --color-border:         #2C2820;
-  --color-surface-overlay: rgba(255, 255, 255, 0.08);
-
-  /* ── Text (다크 모드)
-      역할          토큰           HEX
-      Primary       neutral/50     #F8F6F2
-      Body          neutral/200    #DDD9CF
-      Sub           neutral/400    #A9A39A
-      Caption/Meta  neutral/500    #857F76  (고정)
-      Placeholder   neutral/600    #635D55
-  ── */
-  --color-text-primary:     var(--color-neutral-50);    /* #F8F6F2 */
-  --color-text-body:        var(--color-neutral-200);   /* #DDD9CF */
-  --color-text-sub:         var(--color-neutral-400);   /* #A9A39A */
-  --color-text-caption:     var(--color-neutral-500);   /* #857F76 — 고정 */
-  --color-text-placeholder: var(--color-neutral-600);   /* #635D55 */
-  --color-text-inverse:     #1A1714;
-
-  /* Primary subtle 교체 */
-  --color-primary-subtle-l: #1A2530;
-
-  /* 활성 칩 텍스트 — 다크 배경에서 읽히는 밝은 파란색 */
-  --color-primary-text:     #B8C7D8;
-
-  /* ── Filter UI (다크 모드 오버라이드) ── */
-  --filter-chip-value:      #E4F0FA;
-  --filter-chip-open-text:  #B8CDE0;
-  --filter-chip-open-caret: #7AA8C8;
-  --filter-row-label-sel:   #D0E4F4;
-  --filter-dismiss-bg:      rgba(255,255,255,0.1);
-  --filter-indicator-bd:    rgba(255,255,255,0.08);
-
-  /* ── Shadows ── */
-  --shadow-sm:    0 2px 6px rgba(0, 0, 0, 0.30);
-  --shadow-md:    0 4px 12px rgba(0, 0, 0, 0.45);
-  --shadow-lg:    0 8px 24px rgba(0, 0, 0, 0.40);
-  --shadow-sheet: 0 -8px 24px rgba(0, 0, 0, 0.40);
-}
+/* 2.0: 다크모드 폐지 (2026-08-04) — [data-theme="dark"] 블록 제거. 라이트 단일 테마 */

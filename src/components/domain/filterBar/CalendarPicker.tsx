@@ -70,7 +70,7 @@ export function CalendarPicker({ startDate, endDate, onApply, onCancel, style }:
           <button style={navBtn} onClick={() => setViewMonth(new Date(year, month - 1, 1))}>
             <IcoNavPrev />
           </button>
-          <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-text-primary)' }}>
+          <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 600, color: 'var(--color-text-primary)' }}>
             {year}년 {month + 1}월
           </span>
           <button style={navBtn} onClick={() => setViewMonth(new Date(year, month + 1, 1))}>
@@ -88,7 +88,7 @@ export function CalendarPicker({ startDate, endDate, onApply, onCancel, style }:
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 4 }}>
           {DOW.map((d, i) => (
             <div key={d} style={{
-              textAlign: 'center', fontSize: 11, fontWeight: 600,
+              textAlign: 'center', fontSize: 'var(--text-badge)', fontWeight: 600,
               color: i === 0 ? '#E30613' : i === 6 ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
               padding: '4px 0',
             }}>

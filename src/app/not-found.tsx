@@ -20,7 +20,7 @@ export default function NotFound() {
       />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <p style={{
-          fontSize: 15,
+          fontSize: 'var(--text-subtitle)',
           fontWeight: 600,
           color: 'var(--color-text-primary)',
           fontFamily: 'var(--font-serif)',

@@ -11,6 +11,7 @@ export function ScrollNavButton({ direction, style, size = 32, ...props }: Scrol
   return (
     <button
       {...props}
+      className="hover-raise"
       style={{
         position: 'absolute',
         top: '50%',

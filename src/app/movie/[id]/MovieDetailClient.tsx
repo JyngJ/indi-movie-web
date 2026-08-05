@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMovieDetail, useMovieTheaterShowtimes, useActiveMovieIds } from '@/lib/supabase/queries'
@@ -19,19 +20,7 @@ import { MovieInfoTable } from '@/components/domain/movieDetail/MovieInfoTable'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 
 function useIsDesktopDetail() {
-  const [isDesktop, setIsDesktop] = useState(
-    () => typeof window !== 'undefined' && window.matchMedia('(min-width: 1280px)').matches,
-  )
-
-  useEffect(() => {
-    const media = window.matchMedia('(min-width: 1280px)')
-    const update = () => setIsDesktop(media.matches)
-    update()
-    media.addEventListener('change', update)
-    return () => media.removeEventListener('change', update)
-  }, [])
-
-  return isDesktop
+  return useMediaQuery('(min-width: 1280px)')
 }
 
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
@@ -95,7 +84,7 @@ function NavBar({
       <span style={{
         flex: 1,
         textAlign: 'center',
-        fontSize: 15,
+        fontSize: 'var(--text-subtitle)',
         fontWeight: 600,
         color: 'var(--color-text-primary)',
         overflow: 'hidden',
@@ -185,7 +174,7 @@ function HeroSection({ movie, titleRef, desktop = false }: { movie: MovieDetail;
             <span style={{ color: 'var(--color-warning)', fontSize: desktop ? 18 : 14 }}>★</span>
             <span style={{ fontSize: desktop ? 22 : 16, fontWeight: 700, color: 'var(--color-text-primary)', fontFeatureSettings: '"tnum"' }}>{movie.rating.toFixed(1)}</span>
             <span style={{ fontSize: 12, color: 'var(--color-text-sub)' }}>&nbsp;/ 10</span>
-            <span style={{ fontSize: 11, color: 'var(--color-text-caption)' }}>관객 평점</span>
+            <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)' }}>관객 평점</span>
           </div>
         )}
       </div>
@@ -237,7 +226,7 @@ function TabBar({ active, onChange, desktop = false }: { active: 'info' | 'theat
 /* ── InfoTab ── */
 function InfoTab({ movie, onDirectorClick, desktop = false }: { movie: MovieDetail; onDirectorClick: (name: string) => void; desktop?: boolean }) {
   const sectionLabel: React.CSSProperties = {
-    fontSize: 11, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase',
+    fontSize: 'var(--text-badge)', fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase',
     color: 'var(--color-text-caption)', marginBottom: 12,
   }
   const divider: React.CSSProperties = { borderTop: '1px solid var(--color-border)', margin: '0 var(--gutter)' }
@@ -280,8 +269,8 @@ function InfoTab({ movie, onDirectorClick, desktop = false }: { movie: MovieDeta
                   <IcoUser />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: 'var(--font-serif)', fontSize: 17, fontWeight: 700, color: 'var(--color-text-primary)' }}>{name}</div>
-                  <div style={{ marginTop: 4, fontSize: 11, color: 'var(--color-primary-base)', fontWeight: 500, textDecoration: 'underline' }}>감독 페이지 보기</div>
+                  <div style={{ fontFamily: 'var(--font-serif)', fontSize: 'var(--text-title)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{name}</div>
+                  <div style={{ marginTop: 4, fontSize: 'var(--text-badge)', color: 'var(--color-primary-base)', fontWeight: 500, textDecoration: 'underline' }}>감독 페이지 보기</div>
                 </div>
                 <IcoChevronRight />
               </button>
@@ -323,7 +312,7 @@ function TheaterShowtimeChips({
       {/* 극장 헤더 */}
       <div style={{ padding: '16px 16px 12px', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: 'var(--font-serif)', fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.3 }}>
+          <div style={{ fontFamily: 'var(--font-serif)', fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.3 }}>
             {entry.theaterName}
           </div>
           <div style={{ marginTop: 4, display: 'flex', alignItems: 'flex-start', gap: 4, color: 'var(--color-text-sub)', fontSize: 12, lineHeight: 1.45 }}>
@@ -384,7 +373,7 @@ function TheaterShowtimeChips({
       {/* 날짜별 상영시간 */}
       {entry.dateGroups.map((group) => (
         <div key={group.date} style={{ borderTop: '1px solid var(--color-border)', padding: '12px 16px' }}>
-          <div style={{ marginBottom: 8, fontSize: 11, fontWeight: 600, color: 'var(--color-text-caption)', letterSpacing: '0.3px' }}>
+          <div style={{ marginBottom: 8, fontSize: 'var(--text-badge)', fontWeight: 600, color: 'var(--color-text-caption)', letterSpacing: '0.3px' }}>
             {formatDateLabel(group.date)}
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -508,7 +497,7 @@ function TheatersTab({ movieId, onMapClick, onGoToTheater, desktop = false, init
   const sectionDivider = (label: string) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '24px 0 16px' }}>
       <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
-      <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-caption)', whiteSpace: 'nowrap', letterSpacing: '0.3px' }}>
+      <span style={{ fontSize: 'var(--text-badge)', fontWeight: 600, color: 'var(--color-text-caption)', whiteSpace: 'nowrap', letterSpacing: '0.3px' }}>
         {label}
       </span>
       <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
@@ -593,7 +582,7 @@ function SeoShowtimesSection({ movie, entries }: { movie: MovieDetail; entries: 
   return (
     <div ref={ref}>
       <section aria-label={`${movie.title} 상영 시간표`} style={{ padding: '20px var(--gutter) 0' }}>
-        <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+        <h2 style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
           {movie.title} 상영 시간표
         </h2>
         {sorted.map((entry) => (

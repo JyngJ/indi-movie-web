@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useRouter } from 'next/navigation'
 import { PosterThumb } from '@/components/domain/PosterThumb'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import type { SectionDisplayMode } from '@/lib/curation/filmsTabLists'
@@ -41,7 +42,10 @@ const POSTER_SIZE = {
 
 /* ── 포스터 하단 정보: 제목 / 감독 / 장르칩+연도 ───────────────── */
 function MovieCardInfo({ movie, isDesktop, caption, customBottomInfo }: { movie: Movie; isDesktop: boolean; caption?: string; customBottomInfo?: React.ReactNode }) {
-  const fontSize = isDesktop ? 14 : 12
+  const router = useRouter()
+  const director = movie.director.length > 0 ? movie.director[0] : null
+  /* 피그마 캡션(제목 14·보조 12)은 128 포스터 기준 — PC 210 포스터에선 한 단계 승격 */
+  const fontSize = isDesktop ? 16 : 14
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -65,18 +69,24 @@ function MovieCardInfo({ movie, isDesktop, caption, customBottomInfo }: { movie:
         customBottomInfo
       ) : (
         <>
-          {/* 서브텍스트(있으면) 또는 감독 */}
+          {/* 서브텍스트(있으면) 또는 감독 — 감독은 통째 clickable → 감독 상세 */}
           <span
+            className={!caption && director ? 'caption-link' : undefined}
+            role={!caption && director ? 'button' : undefined}
+            onClick={!caption && director ? (e) => { e.stopPropagation(); router.push(`/films/director/${encodeURIComponent(director)}`) } : undefined}
             style={{
-              fontSize: fontSize - 1,
+              fontSize: isDesktop ? 'var(--text-body)' : 'var(--text-meta)',
               color: caption ? 'var(--color-text-body)' : 'var(--color-text-caption)',
               fontWeight: caption ? 600 : undefined,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
+              alignSelf: 'flex-start',
+              maxWidth: '100%',
+              minHeight: 'auto',
             }}
           >
-            {caption ?? (movie.director.length > 0 ? movie.director[0] : '감독 미상')}
+            {caption ?? (director ?? '감독 미상')}
           </span>
 
           {/* 장르칩 + 연도 */}
@@ -84,7 +94,7 @@ function MovieCardInfo({ movie, isDesktop, caption, customBottomInfo }: { movie:
             {movie.genre.slice(0, 1).map((g) => (
               <GenreChip key={g}>{g}</GenreChip>
             ))}
-            <span style={{ fontSize: 10, color: 'var(--color-text-caption)', fontWeight: 600 }}>
+            <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', fontWeight: 600 }}>
               {movie.year}
             </span>
           </div>
@@ -237,13 +247,14 @@ function MovieCard({
     <>
       <div
         ref={cardRef}
-        onMouseEnter={isDesktop ? onMouseEnter : undefined}
-        onMouseLeave={isDesktop ? onMouseLeave : undefined}
         onClick={onClick}
         style={{ display: 'flex', flexDirection: 'column', gap: 8, width, flexShrink: 0, cursor: onClick ? 'pointer' : undefined }}
       >
-        {/* 포스터: scale은 있으나 layout size 유지 → 부모 padding 안에서 visual overflow */}
+        {/* 포스터: scale은 있으나 layout size 유지 → 부모 padding 안에서 visual overflow.
+            호버 확대는 포스터 위에서만 — 캡션 호버로 커지면 오작동처럼 느껴짐 */}
         <div
+          onMouseEnter={isDesktop ? onMouseEnter : undefined}
+          onMouseLeave={isDesktop ? onMouseLeave : undefined}
           style={{
             transition: 'transform 130ms ease',
             transform: hovered ? 'scale(1.1)' : 'scale(1)',
@@ -252,13 +263,13 @@ function MovieCard({
             position: 'relative',
           }}
         >
-          <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} radius={0} shadow={false} />
+          <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} shadow={false} />
           {daysLeft != null && (
             <span style={{
               position: 'absolute', top: 6, right: 6,
               padding: '4px 8px',
               borderRadius: 'var(--radius-badge)',
-              fontSize: 11, fontWeight: 600, lineHeight: 1,
+              fontSize: 'var(--text-badge)', fontWeight: 600, lineHeight: 1,
               color: 'var(--color-on-accent)',
               backgroundColor: daysLeft === 0 ? 'var(--color-error)' : daysLeft === 1 ? 'var(--color-warning)' : '#78716C',
               boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
@@ -298,6 +309,7 @@ export function CurationSectionRow({
 }: CurationSectionRowProps) {
   const { width, height } = isDesktop ? POSTER_SIZE.desktop : POSTER_SIZE.mobile
   const scaleBleed = Math.ceil(height * 0.04)
+  const [rowHovered, setRowHovered] = useState(false)
   const gap = isDesktop ? 16 : 10
   const scrollAmount = (width + gap) * 3
 
@@ -336,15 +348,31 @@ export function CurationSectionRow({
 
   // compact 모드: flex item으로 렌더, 1~2편 inline 표시 (스크롤 없음)
   if (compact) {
+    const AWARD_DECO: Record<string, string> = {
+      festival_venice_lion: '/awards/venice-lion.svg',
+      festival_cannes_palme: '/awards/cannes-palm.svg',
+    }
+    const decoSrc = id ? AWARD_DECO[id] : undefined
     return (
       <div ref={setSectionRef} style={{ flex: 1, minWidth: 0, display: 'flex' }}>
-      <CardContainer style={{ flex: 1, minWidth: 0 }}>
+      <CardContainer style={{ flex: 1, minWidth: 0, position: 'relative', overflow: 'hidden' }}>
+        {/* 수상 문양 워터마크 — 종이에 찍힌 도장 (저대비·회전·우측 블리드) */}
+        {decoSrc && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={decoSrc} alt="" aria-hidden
+            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+            style={{
+              position: 'absolute', right: '-16%', top: '64%',
+              height: '150%', transform: 'translateY(-50%) rotate(-10deg)',
+              opacity: 0.07, pointerEvents: 'none',
+            }} />
+        )}
         {/* 헤더 */}
         <div style={{ padding: '12px 0', borderBottom: '1px solid var(--color-border)' }}>
           <SectionHeader title={title} description={description} isDesktop={isDesktop} />
         </div>
-        {/* 영화 inline */}
-        <div style={{ display: 'flex', gap: 12, padding: '12px 16px', background: 'var(--color-surface-card)', flex: 1 }}>
+        {/* 영화 세로 스택 — 피그마 TOBE 카드 문법 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '12px 16px', background: 'var(--color-surface-card)', flex: 1 }}>
           {movies.slice(0, 2).map((movie) => (
             <div
               key={movie.id}
@@ -352,7 +380,7 @@ export function CurationSectionRow({
               style={{ display: 'flex', gap: 8, alignItems: 'flex-start', flex: 1, minWidth: 0, cursor: onMovieClick ? 'pointer' : undefined }}
             >
               <div style={{ flexShrink: 0 }}>
-                <PosterThumb src={movie.posterUrl} alt={movie.title} width={108} height={162} radius={0} shadow={false} />
+                <PosterThumb src={movie.posterUrl} alt={movie.title} width={108} height={162} shadow={false} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, justifyContent: 'center' }}>
                 <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-body)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3 }}>
@@ -365,7 +393,7 @@ export function CurationSectionRow({
                   {movie.genre.slice(0, 1).map((g) => (
                     <GenreChip key={g}>{g}</GenreChip>
                   ))}
-                  <span style={{ fontSize: 11, color: 'var(--color-text-caption)', fontWeight: 600 }}>{movie.year}</span>
+                  <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)', fontWeight: 600 }}>{movie.year}</span>
                 </div>
               </div>
             </div>
@@ -376,35 +404,40 @@ export function CurationSectionRow({
     )
   }
 
-  // 좌우 스크롤 버튼 — 제목 줄 오른쪽 끝에 배치(docs/DESIGN.md Primitives의 ScrollNavButton 표준 사용,
-  // 포스터 위 플로팅 원형 버튼 방식은 지양)
-  const navButtons = (canScrollLeft || canScrollRight) && (
-    <div style={{ display: 'flex', gap: 8 }}>
-      <ScrollNavButton
-        direction="left"
-        size={isDesktop ? 40 : 32}
-        disabled={!canScrollLeft}
-        style={{ position: 'static', top: 'auto', left: 'auto', transform: 'none', boxShadow: 'none', opacity: canScrollLeft ? 1 : 0.35 }}
-        onClick={() => scrollByAmount(-scrollAmount)}
-      />
-      <ScrollNavButton
-        direction="right"
-        size={isDesktop ? 40 : 32}
-        disabled={!canScrollRight}
-        style={{ position: 'static', top: 'auto', right: 'auto', transform: 'none', boxShadow: 'none', opacity: canScrollRight ? 1 : 0.35 }}
-        onClick={() => scrollByAmount(scrollAmount)}
-      />
-    </div>
-  )
+  // 2.0: 헤더 우측 버튼 폐기 — 스크롤 행 hover 시 좌/우 가장자리 오버레이 (PC 전용)
+  const posterMidY = scaleBleed + 8 + height / 2
+
+  // PC: 더 스크롤할 방향만 가장자리 페이드 — 좁게(24px) 모서리만 눅임 (넓으면 캡션이 유령글자 됨)
+  const rowMask = isDesktop
+    ? `linear-gradient(90deg, ${canScrollLeft ? 'transparent 0, #000 24px' : '#000 0'}, ${canScrollRight ? '#000 calc(100% - 24px), transparent 100%' : '#000 100%'})`
+    : undefined
 
   return (
-    <section ref={setSectionRef} id={id} style={{ paddingTop: noHeader ? 0 : (isDesktop ? 48 : 24) }}>
+    <section ref={setSectionRef} id={id} style={{ paddingTop: noHeader ? 0 : (isDesktop ? 48 : 32) }}>
       {!noHeader && (
         <div>
-          <SectionHeader title={title} description={description} isDesktop={isDesktop} trailing={navButtons} />
+          <SectionHeader title={title} description={description} isDesktop={isDesktop} />
         </div>
       )}
-      <div style={{ position: 'relative' }}>
+      <div
+        style={{ position: 'relative', overflowX: 'clip' }}   /* 음수 마진 행이 페이지 가로 스크롤 안 만들게 */
+        onMouseEnter={isDesktop ? () => setRowHovered(true) : undefined}
+        onMouseLeave={isDesktop ? () => setRowHovered(false) : undefined}
+      >
+        {isDesktop && rowHovered && canScrollLeft && (
+          <ScrollNavButton
+            direction="left"
+            style={{ top: posterMidY, transform: 'translateY(-50%)', zIndex: 3 }}
+            onClick={() => scrollByAmount(-scrollAmount)}
+          />
+        )}
+        {isDesktop && rowHovered && canScrollRight && (
+          <ScrollNavButton
+            direction="right"
+            style={{ top: posterMidY, transform: 'translateY(-50%)', zIndex: 3 }}
+            onClick={() => scrollByAmount(scrollAmount)}
+          />
+        )}
         <div
           ref={scrollRef}
           onScroll={updateScrollEdge}
@@ -413,7 +446,10 @@ export function CurationSectionRow({
             display: 'flex',
             gap,
             overflowX: 'auto',
-            padding: `${scaleBleed + 8}px calc(${scaleBleed}px + var(--gutter))`,
+            /* 호버 스케일 여유(scaleBleed)는 음수 마진으로 상쇄 — 포스터 시작선 = 거터 24 */
+            padding: `${scaleBleed + 8}px calc(${scaleBleed}px + var(--gutter-sheet))`,
+            margin: `0 ${-scaleBleed}px`,
+            WebkitMaskImage: rowMask, maskImage: rowMask,
           }}
         >
           {movies.map((movie) => (

@@ -8,7 +8,6 @@ import L from 'leaflet'
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { Map as LeafletMap, Point as LeafletPoint } from 'leaflet'
 import { useLocationPermission } from '@/hooks/useLocationPermission'
-import { useIsDark } from '@/hooks/useIsDark'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { SearchBarButton, FabRound, Toast } from '@/components/primitives'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
@@ -33,7 +32,6 @@ import { SEOUL_GU, SEOUL_DONG } from '@/data/seoul-areas'
 import { normalizeGenre } from '@/lib/genres'
 import { getRegionFromCity, getRegionFromCoords, REGION_BOUNDS } from '@/lib/regions'
 import { getStoredRegion, setStoredRegion, subscribeStoredRegion } from '@/lib/regionStorage'
-import { useThemeStore } from '@/store/themeStore'
 import { useUIStore } from '@/store/uiStore'
 import { REPORT_CATEGORIES } from '@/lib/reports/types'
 import {
@@ -75,7 +73,7 @@ const KOREA_MAP_BOUNDS: L.LatLngBoundsExpression = [
 ]
 
 /** 데스크톱 좌측 상시 도크 폭 — 검색 패널과 같은 폭(440 * 0.8) */
-const DESKTOP_DOCK_WIDTH = 352
+const DESKTOP_DOCK_WIDTH = 440  /* 2.0: 시간표 3열(104×3+gap)+거터 24 근거 — 지도앱 관례(408~440) 상한 */
 
 function dateRangeForFilter(filter: FilterState) {
   const today = startOfLocalDay(new Date())
@@ -1026,9 +1024,8 @@ export default function MapView() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { state: locPermState, coords, modalSuppressed: locModalSuppressed, request: locRequest, dismiss: locDismiss, refetch } = useLocationPermission()
-  const isDark = useIsDark()
+  const isDark = false  /* 2.0: 다크 폐지 — 배선(핀·타일·지하철)은 넓어 상수 고정, 제거는 지도 리팩토링 때 */
   const isDesktopLayout = useIsDesktopLayout()
-  const { setTheme } = useThemeStore()
   const { data: theaters = EMPTY_THEATERS, isLoading: theatersLoading } = useTheaters()
   const { data: stations = EMPTY_STATIONS } = useStations()
   const { data: movies = EMPTY_MOVIES } = useMovies()
@@ -1207,12 +1204,6 @@ export default function MapView() {
   }, [movies.length, theaters.length, theatersLoading, searchParams])
 
   useEffect(() => { setRecentSearches(loadRecentSearches()) }, [])
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('movie-app-theme')
-      if (stored === 'light' || stored === 'dark' || stored === 'system') void setTheme(stored)
-    } catch {}
-  }, [setTheme])
 
   // PC 패널 브라우저 히스토리 베이스라인 — 마운트 시 현재 엔트리에 빈 스택 기록
   useEffect(() => {
@@ -2084,60 +2075,6 @@ export default function MapView() {
   }, [coords, refetch, collapseCurationOnMapInteraction])
 
 
-  const renderThemeToggle = (style?: CSSProperties) => (
-    <button
-      onClick={() => void setTheme(isDark ? 'light' : 'dark')}
-      aria-label={isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}
-      style={{
-        width: 76, height: 40,
-        borderRadius: 9999,
-        padding: 4,
-        border: '1px solid var(--color-border)',
-        backgroundColor: isDark ? 'var(--color-surface-card)' : 'var(--color-surface-raised)',
-        boxShadow: 'var(--shadow-md)',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        flexShrink: 0,
-        overflow: 'hidden',
-        position: 'relative',
-        ...style,
-      }}
-    >
-      <div style={{
-        position: 'absolute',
-        width: 32, height: 32,
-        borderRadius: '50%',
-        backgroundColor: 'var(--color-surface-bg)',
-        boxShadow: '0 1px 6px rgba(0,0,0,0.18)',
-        left: isDark ? 40 : 4,
-        transition: 'left 240ms cubic-bezier(0.4, 0, 0.2, 1)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: isDark ? 'var(--color-text-caption)' : 'var(--color-warning)',
-        zIndex: 1,
-      }}>
-        {isDark ? (
-          <svg width={14} height={14} viewBox="0 0 24 24" fill="currentColor">
-            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
-          </svg>
-        ) : (
-          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <circle cx="12" cy="12" r="5" fill="currentColor" stroke="none"/>
-            <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-            <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-          </svg>
-        )}
-      </div>
-      <div style={{ width: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-warning)', opacity: isDark ? 0.25 : 0 }}>
-        <IcoSun />
-      </div>
-      <div style={{ width: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-caption)', opacity: isDark ? 0 : 0.35 }}>
-        <IcoMoon />
-      </div>
-    </button>
-  )
 
 
   // 퇴장 애니메이션 후 완전히 언마운트
@@ -2561,7 +2498,7 @@ export default function MapView() {
               <span style={{ minWidth: 0, flex: 1 }}>
                 <span style={{
                   display: 'block',
-                  fontSize: 15,
+                  fontSize: 'var(--text-subtitle)',
                   fontWeight: 700,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
@@ -2645,7 +2582,7 @@ export default function MapView() {
               <span style={{ minWidth: 0, flex: 1 }}>
                 <span style={{
                   display: 'block',
-                  fontSize: 15,
+                  fontSize: 'var(--text-subtitle)',
                   fontWeight: 700,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
@@ -2764,7 +2701,7 @@ export default function MapView() {
                   <div style={{
                     minWidth: 0,
                     flex: 1,
-                    fontSize: 15,
+                    fontSize: 'var(--text-subtitle)',
                     fontWeight: 700,
                     color: 'var(--color-text-primary)',
                     overflow: 'hidden',
@@ -2781,7 +2718,7 @@ export default function MapView() {
                       borderRadius: 4,
                       display: 'inline-flex',
                       alignItems: 'center',
-                      fontSize: 11,
+                      fontSize: 'var(--text-badge)',
                       fontWeight: 700,
                       color: 'var(--color-primary-base)',
                       backgroundColor: 'var(--color-primary-subtle-l)',
@@ -2876,7 +2813,7 @@ export default function MapView() {
                 {director.name.slice(0, 1)}
               </div>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+                <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
                   {director.name}
                 </div>
                 <div style={{
@@ -2968,7 +2905,7 @@ export default function MapView() {
                 </span>
               </span>
               <span style={{ minWidth: 0, flex: 1 }}>
-                <span style={{ display: 'block', fontSize: 15, fontWeight: 700 }}>
+                <span style={{ display: 'block', fontSize: 'var(--text-subtitle)', fontWeight: 700 }}>
                   {station.name}
                 </span>
                 <span style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 4 }}>
@@ -2981,7 +2918,7 @@ export default function MapView() {
                         height: 18,
                         padding: '0 8px',
                         borderRadius: 4,
-                        fontSize: 11,
+                        fontSize: 'var(--text-badge)',
                         fontWeight: 700,
                         color: 'var(--color-on-accent)',
                         backgroundColor: subwayLineColor({ name: line }, isDark),
@@ -3055,7 +2992,7 @@ export default function MapView() {
                   </svg>
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 15, fontWeight: 700 }}>{area.name}</div>
+                  <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700 }}>{area.name}</div>
                   <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4 }}>
                     영화관 {area.theaters.length}곳
                   </div>
@@ -3489,6 +3426,17 @@ export default function MapView() {
         />
       )}
 
+      {/* 패널 왼쪽 라운드 코너 뒤로 레일 면이 이어져 보이게 하는 언더레이 (패널류 z 900/940 아래) */}
+      {isDesktopLayout && (searchOpen || !!selectedTheater || !!displayedPanel || !dockCollapsed) && (
+        <div aria-hidden style={{
+          position: 'absolute',
+          top: 0, bottom: 0, left: GLOBAL_NAV_DESKTOP_WIDTH, width: 16,
+          backgroundColor: 'var(--color-surface-raised)',
+          zIndex: 890,
+          pointerEvents: 'none',
+        }} />
+      )}
+
       {/* 큐레이션 도크 — 데스크톱 전용 좌측 상시 패널. 검색 패널·극장 시트와 같은 슬롯·크기를 공유하며 셋 다 비활성일 때만 노출(네이버 지도 레퍼런스) */}
       {isDesktopLayout && !searchOpen && !selectedTheater && !displayedPanel && (
         <div style={{
@@ -3496,11 +3444,12 @@ export default function MapView() {
           inset: `0 auto 0 ${GLOBAL_NAV_DESKTOP_WIDTH}px`,
           width: DESKTOP_DOCK_WIDTH,
           maxWidth: `calc(100vw - ${GLOBAL_NAV_DESKTOP_WIDTH}px)`,
-          backgroundColor: 'var(--color-surface-card)',
+          backgroundColor: 'var(--color-surface-bg)',
           display: 'flex',
           flexDirection: 'column',
           zIndex: 900,
-          borderRight: '1px solid var(--color-border)',
+          boxShadow: 'var(--shadow-sm)',   /* 패널 부상 — md는 과함 */
+          borderRadius: '16px 0 0 16px',   /* 레일 위에 뜬 본문 카드 — 왼쪽 코너만 */
           overflow: 'hidden',
           transform: dockCollapsed ? 'translateX(-100%)' : 'translateX(0)',
           transition: 'transform 220ms cubic-bezier(0.32, 0.72, 0, 1)',
@@ -3729,11 +3678,12 @@ export default function MapView() {
             inset: `0 auto 0 ${GLOBAL_NAV_DESKTOP_WIDTH}px`,
             width: DESKTOP_DOCK_WIDTH,
             maxWidth: `calc(100vw - ${GLOBAL_NAV_DESKTOP_WIDTH}px)`,
-            backgroundColor: 'var(--color-surface-card)',
+            backgroundColor: 'var(--color-surface-bg)',
             display: 'flex',
             flexDirection: 'column',
             zIndex: 900,
-            borderRight: '1px solid var(--color-border)',
+            boxShadow: 'var(--shadow-sm)',
+            borderRadius: '16px 0 0 16px',
             overflow: 'hidden',
             transform: dockCollapsed ? 'translateX(-100%)' : 'translateX(0)',
             transition: 'transform 220ms cubic-bezier(0.32, 0.72, 0, 1)',
@@ -3750,11 +3700,12 @@ export default function MapView() {
           inset: `0 auto 0 ${GLOBAL_NAV_DESKTOP_WIDTH}px`,
           width: DESKTOP_DOCK_WIDTH,
           maxWidth: `calc(100vw - ${GLOBAL_NAV_DESKTOP_WIDTH}px)`,
-          backgroundColor: 'var(--color-surface-card)',
+          backgroundColor: 'var(--color-surface-bg)',
           display: 'flex',
           flexDirection: 'column',
           zIndex: 940,
-          borderRight: '1px solid var(--color-border)',
+          boxShadow: 'var(--shadow-sm)',
+          borderRadius: '16px 0 0 16px',
           overflow: 'hidden',
           transform: panelIn ? 'translateX(0)' : 'translateX(-100%)',
           transition: panelIn
@@ -3800,8 +3751,6 @@ export default function MapView() {
           isOpen={settingsOpen}
           onClose={() => setSettingsOpen(false)}
           isDesktopLayout={isDesktopLayout}
-          isDark={isDark}
-          onSetTheme={(theme) => void setTheme(theme)}
           selectedMovieId={selectedMovieId}
           selectedTheaterName={selectedTheater?.name}
           initialPage={settingsInitialPage}

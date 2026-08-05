@@ -7,7 +7,6 @@ interface ShowtimeCellProps {
   endTime: string
   seatAvailable: number
   seatTotal: number
-  screenName?: string
   promo?: string
   kind?: ShowtimeKind
   selected?: boolean
@@ -15,30 +14,8 @@ interface ShowtimeCellProps {
   onUnavailableClick?: (e: React.MouseEvent<HTMLDivElement>) => void
 }
 
-/* 인라인 배지 — 심야 전용 */
-function InlineBadge({ text, color }: { text: string; color: string }) {
-  return (
-    <span
-      className="inline-flex items-center flex-shrink-0"
-      style={{
-        height: 18,
-        padding: '0 8px',
-        borderRadius: 'var(--radius-badge)',
-        backgroundColor: color,
-        color: 'var(--color-on-accent)',
-        fontSize: 'var(--text-badge)',
-        fontWeight: 700,
-        letterSpacing: '0.4px',
-        whiteSpace: 'nowrap',
-      }}
-    >
-      {text}
-    </span>
-  )
-}
-
 export function ShowtimeCell({
-  startTime, endTime, seatAvailable, seatTotal, screenName, promo,
+  startTime, endTime, seatAvailable, seatTotal, promo,
   kind = 'normal', selected = false, onClick, onUnavailableClick,
 }: ShowtimeCellProps) {
   const isSoldout    = kind === 'soldout'
@@ -66,12 +43,14 @@ export function ShowtimeCell({
         paddingLeft: 'var(--comp-showtime-p)',
         paddingRight: 'var(--comp-showtime-p)',
         borderRadius: 'var(--comp-showtime-radius)',
-        backgroundColor: selected ? 'var(--color-primary-subtle-l)' : 'var(--color-surface-card)',
+        /* 2.0 반전 수법: 죽은 회차 = 틴트로 가라앉히고, 살아있는 회차만 흰 카드로 띄움 */
+        backgroundColor: (isSoldout || isEnded)
+          ? 'var(--color-surface-raised)'
+          : selected ? 'var(--color-primary-subtle-l)' : 'var(--color-surface-card)',
         border: selected
           ? '1.5px solid var(--color-primary-base)'
-          : '1px solid var(--color-border)',
+          : (isSoldout || isEnded) ? '1px solid transparent' : '1px solid var(--color-border)',
         position: 'relative',
-        opacity: (isSoldout || isPast) ? 0.45 : 1,
         fontFamily: 'var(--font-sans)',
         cursor: isClickable ? 'pointer' : 'default',
         transition: 'border-color 150ms ease, background-color 150ms ease',
@@ -81,24 +60,31 @@ export function ShowtimeCell({
       tabIndex={isClickable ? 0 : undefined}
     >
 
-      {/* 시간 */}
-      <div className="flex items-baseline gap-1 flex-wrap" style={{ color: 'var(--color-text-primary)' }}>
+      {/* 시간 줄 — 피그마 time-row: 시작시간 + (심야면) 달, space-between */}
+      <div className="flex items-center justify-between" style={{ color: (isSoldout || isEnded) ? 'var(--color-text-placeholder)' : 'var(--color-text-primary)' }}>
         <span style={{
           fontSize: 'var(--text-time)', fontWeight: 700, fontFeatureSettings: '"tnum"', whiteSpace: 'nowrap',
           textDecoration: isEnded ? 'line-through' : 'none',
         }}>
           {startTime}
         </span>
-        {endTime && (
-          <span style={{ fontSize: 10, color: 'var(--color-text-sub)', fontFeatureSettings: '"tnum"', whiteSpace: 'nowrap' }}>
-            -{endTime}
-          </span>
+        {/* 2.0: 심야 = 시간 줄 인라인 달 — 배지(라벨+배경)는 정보 중복이라 강등 */}
+        {isLate && !isPast && (
+          <svg width={14} height={14} viewBox="0 0 24 24" fill="var(--color-primary-base)" style={{ flexShrink: 0 }} aria-label="심야 상영">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+          </svg>
         )}
       </div>
+      {/* 종료시간 — 별도 줄 (피그마) */}
+      {endTime && (
+        <div className="mt-1" style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', fontFeatureSettings: '"tnum"', whiteSpace: 'nowrap' }}>
+          -{endTime}
+        </div>
+      )}
 
       {/* 잔여석 / 상태 */}
       <div
-        className="mt-[6px]"
+        className="mt-1"
         style={{
           fontSize: 'var(--text-seat)',
           fontFeatureSettings: '"tnum"',
@@ -106,9 +92,9 @@ export function ShowtimeCell({
         }}
       >
         {isNowPlaying ? (
-          <span style={{ color: 'var(--color-warning)', fontWeight: 700 }}>상영중</span>
+          <span style={{ fontSize: 'var(--text-body)', color: 'var(--color-success)', fontWeight: 700 }}>상영중</span>
         ) : isEnded ? (
-          <span style={{ color: 'var(--color-error)', fontWeight: 700 }}>상영 완료</span>
+          <span style={{ fontSize: 'var(--text-body)', color: 'var(--color-text-placeholder)', fontWeight: 700 }}>상영 완료</span>
         ) : (
           <>
             <span style={{ color: seatColor, fontWeight: 600, textDecoration: isSoldout ? 'line-through' : 'none' }}>{seatAvailable}</span>
@@ -116,18 +102,6 @@ export function ShowtimeCell({
           </>
         )}
       </div>
-
-      {/* 상영관 + 심야 배지 */}
-      {(screenName || isLate) && (
-        <div style={{ marginTop: 4, display: 'flex', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
-          {screenName && (
-            <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-sub)', flexShrink: 1, minWidth: 0 }}>
-              {screenName}
-            </span>
-          )}
-          {isLate && !isPast && <InlineBadge text="심야" color="var(--color-primary-base)" />}
-        </div>
-      )}
 
       {promo && (
         <div className="mt-[6px]" style={{ fontSize: 10, color: 'var(--color-primary-base)', fontWeight: 500 }}>

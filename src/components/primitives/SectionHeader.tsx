@@ -12,12 +12,10 @@ interface SectionHeaderProps {
 export function SectionHeader({ title, emoji, description, isDesktop = false, trailing }: SectionHeaderProps) {
   const titleEl = (
     <h2
+      className="display-h2"
       style={{
         margin: 0,
         minWidth: 0,
-        fontSize: isDesktop ? 'var(--text-h2)' : 'var(--text-h3)',
-        fontWeight: 700,
-        fontFamily: 'var(--font-display)',
         color: 'var(--color-text-primary)',
         display: 'flex',
         alignItems: 'center',
@@ -33,7 +31,7 @@ export function SectionHeader({ title, emoji, description, isDesktop = false, tr
     <p
       style={{
         margin: '4px 0 0',
-        padding: isDesktop ? 0 : '0 16px',
+        padding: isDesktop ? 0 : '0 var(--gutter-sheet)',
         fontSize: isDesktop ? 'var(--text-meta)' : 'var(--text-caption)',
         color: 'var(--color-text-caption)',
         lineHeight: 1.5,
@@ -46,7 +44,7 @@ export function SectionHeader({ title, emoji, description, isDesktop = false, tr
   // 데스크톱: trailing을 제목+설명 블록 전체의 세로 중앙에 맞춤
   if (isDesktop) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '0 16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '0 var(--gutter-sheet)' }}>
         <div style={{ minWidth: 0 }}>
           {titleEl}
           {descEl}
@@ -59,7 +57,7 @@ export function SectionHeader({ title, emoji, description, isDesktop = false, tr
   // 모바일: trailing은 제목 줄에만 맞추고, 설명은 그 아래 별도 줄
   return (
     <>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '0 16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '0 var(--gutter-sheet)' }}>
         {titleEl}
         {trailing && <div style={{ flexShrink: 0 }}>{trailing}</div>}
       </div>

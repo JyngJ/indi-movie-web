@@ -81,7 +81,7 @@ export function GvDetailPanel({ ev, onClose, onCloseAll, panelMode }: GvDetailPa
           <span style={{ fontSize: 12, color: 'var(--color-text-caption)', flexShrink: 0 }}>/</span>
           <span style={{
             background: gvEventTypeColor(ev.type), color: 'var(--color-on-accent)',
-            fontSize: 9, fontWeight: 800, borderRadius: 4,
+            fontSize: 'var(--text-badge)', fontWeight: 800, borderRadius: 4,
             padding: 4, letterSpacing: '0.3px', lineHeight: 1, flexShrink: 0,
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           }}>{ev.type}</span>
@@ -135,13 +135,13 @@ export function GvDetailPanel({ ev, onClose, onCloseAll, panelMode }: GvDetailPa
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
               <span style={{
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
-                fontSize: 11, fontWeight: 600, color: statusColor,
+                fontSize: 'var(--text-badge)', fontWeight: 600, color: statusColor,
                 background: `${statusColor}18`, borderRadius: 4, padding: '4px 8px',
               }}>
                 {ev.status}
               </span>
               {ev.status === '매진 임박' && ev.seatTotal != null && ev.seatAvailable != null && (
-                <span style={{ fontSize: 11, color: statusColor, fontWeight: 500 }}>
+                <span style={{ fontSize: 'var(--text-badge)', color: statusColor, fontWeight: 500 }}>
                   {ev.seatTotal}석 중 {ev.seatAvailable}석 남음
                 </span>
               )}
@@ -158,7 +158,7 @@ export function GvDetailPanel({ ev, onClose, onCloseAll, panelMode }: GvDetailPa
         {/* Guests */}
         {ev.guest && (
           <div style={{ borderTop: '1px solid var(--color-border)', padding: '16px var(--gutter)' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-caption)', letterSpacing: '0.5px', marginBottom: 12 }}>
+            <div style={{ fontSize: 'var(--text-badge)', fontWeight: 600, color: 'var(--color-text-caption)', letterSpacing: '0.5px', marginBottom: 12 }}>
               참석 게스트
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -172,7 +172,7 @@ export function GvDetailPanel({ ev, onClose, onCloseAll, panelMode }: GvDetailPa
         {/* GV note */}
         {ev.gvNote && (
           <div style={{ borderTop: '1px solid var(--color-border)', padding: '16px var(--gutter)' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-caption)', letterSpacing: '0.5px', marginBottom: 8 }}>
+            <div style={{ fontSize: 'var(--text-badge)', fontWeight: 600, color: 'var(--color-text-caption)', letterSpacing: '0.5px', marginBottom: 8 }}>
               안내
             </div>
             <p style={{ margin: 0, fontSize: 13, color: 'var(--color-text-body)', lineHeight: 1.65, whiteSpace: 'pre-line' }}>
@@ -219,7 +219,7 @@ function InfoRow({ label, value, last }: { label: string; value: string; last?: 
       borderBottom: last ? 'none' : '1px solid var(--color-border)',
       gap: 12,
     }}>
-      <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-caption)', width: 28, flexShrink: 0 }}>
+      <span style={{ fontSize: 'var(--text-badge)', fontWeight: 600, color: 'var(--color-text-caption)', width: 28, flexShrink: 0 }}>
         {label}
       </span>
       <span style={{ fontSize: 13, color: 'var(--color-text-body)', flex: 1 }}>

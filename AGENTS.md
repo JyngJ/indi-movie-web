@@ -11,6 +11,10 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - If you need to run Next.js directly, pass `--webpack` explicitly.
 - Before changing Next.js CLI flags or bundler behavior, read `node_modules/next/dist/docs/01-app/03-api-reference/06-cli/next.md` and update this section plus `README.md`.
 
+## Design 2.0 Refactor (feature/design-refactor)
+
+- 디자인 2.0 작업을 이어받는 세션은 반드시 `docs/HANDOFF-design-refactor.md`를 먼저 읽을 것 — 피그마 Scripter 파이프라인, 확정 문법, 미결 목록, 함정이 정리돼 있다.
+
 ## Branching Rules
 
 - Do all non-trivial work on a dedicated branch. Do not implement directly on `main`.

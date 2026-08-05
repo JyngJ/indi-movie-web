@@ -495,8 +495,7 @@ export default function ComponentsPage() {
                   <p className="mb-2" style={captionStyle}>{c.label}</p>
                   <ShowtimeCell
                     startTime={c.start} endTime={c.end}
-                    seatAvailable={c.avail} seatTotal={c.total}
-                    screenName={c.screen} promo={c.promo}
+                    seatAvailable={c.avail} seatTotal={c.total} promo={c.promo}
                     kind={c.kind}
                     selected={selectedShowtime === c.id}
                     onClick={() => setSelectedShowtime(c.id)}

@@ -66,9 +66,9 @@ interface CurationSheetProps {
   hidden?: boolean
 }
 
-/** 모바일: 가로 스크롤 행 / 데스크톱(도크): 한 줄 3개 고정 그리드 — 도크 폭(352, 좌우 패딩 20) 기준 칸당 96px */
+/** 모바일: 가로 스크롤 행 / 데스크톱(도크): 한 줄 3개 고정 그리드 — 도크 폭 440(거터 16×2, gap 12×2) 기준 칸당 128px = 피그마 PosterItem */
 const POSTER_SIZE = { width: 92, height: 138 }
-const POSTER_SIZE_DESKTOP = { width: 96, height: 144 }
+const POSTER_SIZE_DESKTOP = { width: 128, height: 192 }
 
 /** 감독이 여러 명이면 첫 번째 이름 + "외"로 줄여서 표시 */
 function formatDirectors(directors: string[]): string {
@@ -253,7 +253,7 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
           transform: hovered ? 'scale(1.1)' : 'scale(1)',
           transformOrigin: 'center center',
         }}>
-          <PosterThumb src={item.posterUrl} alt={item.title} width={posterSize.width} height={posterSize.height} size="lg" radius={0} shadow={false} />
+          <PosterThumb src={item.posterUrl} alt={item.title} width={posterSize.width} height={posterSize.height} size="lg" shadow={false} />
           {item.distanceLabel && (
             <div style={{
               position: 'absolute',
@@ -263,7 +263,7 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
               color: 'var(--color-on-accent)',
               borderRadius: 'var(--radius-badge)',
               padding: '4px 8px',
-              fontSize: 11,
+              fontSize: 'var(--text-badge)',
               fontWeight: 600,
               lineHeight: 1,
               whiteSpace: 'nowrap',
@@ -282,7 +282,7 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
                 color: 'var(--color-on-accent)',
                 borderRadius: 'var(--radius-badge)',
                 padding: '4px 8px',
-                fontSize: 11,
+                fontSize: 'var(--text-badge)',
                 fontWeight: 600,
                 lineHeight: 1,
                 maxWidth: 'calc(100% - 12px)',

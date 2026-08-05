@@ -37,11 +37,11 @@ function formatGvTime(eventDate: string, eventTime?: string): string {
 }
 
 /** 이벤트 타입별 강조색 — docs/DESIGN.md semantic 컬러 재사용 (GV: warning, 토크: success, 상영회·이벤트: error, 페스티벌: 보라) */
-export function gvEventTypeColor(type: GvEventType): string {
-  if (type === '페스티벌') return 'var(--color-gv)'
-  if (type === '토크') return 'var(--color-success)'
-  if (type === '상영회' || type === '이벤트') return 'var(--color-error)'
-  return 'var(--color-warning)'
+export function gvEventTypeColor(_type: GvEventType): string {
+  /* 2.0: 이벤트 타입은 전부 gv 보라 단일 — 타입 구분은 배지 텍스트가 담당.
+     상태색(warning/error/success)을 정체성 색으로 유용하던 1.0 방식 폐지
+     (오커=잔여석 경고와 충돌, 빨강=매진과 충돌). */
+  return 'var(--color-gv)'
 }
 
 export function theaterEventToGvEvent(ev: TheaterEvent): GvEvent {

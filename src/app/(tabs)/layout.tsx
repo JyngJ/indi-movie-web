@@ -6,8 +6,6 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { GlobalNav } from '@/components/navigation/GlobalNav'
 import { SettingsPanel } from '@/components/map/SettingsPanel'
 import { useUIStore } from '@/store/uiStore'
-import { useIsDark } from '@/hooks/useIsDark'
-import { useThemeStore } from '@/store/themeStore'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useLandingVariant } from '@/hooks/useLandingVariant'
 import { trackEvent } from '@/lib/analytics/client'
@@ -24,8 +22,6 @@ export default function TabsLayout({ children }: { children: ReactNode }) {
   const settingsOpen = useUIStore((s) => s.isSettingsOpen)
   const setSettingsOpen = useUIStore((s) => s.setSettingsOpen)
   const settingsInitialPage = useUIStore((s) => s.settingsInitialPage)
-  const isDark = useIsDark()
-  const { setTheme } = useThemeStore()
   const isDesktopLayout = useIsDesktopLayout()
   const assignment = useLandingVariant()
 
@@ -102,8 +98,6 @@ export default function TabsLayout({ children }: { children: ReactNode }) {
           isOpen={settingsOpen}
           onClose={() => setSettingsOpen(false)}
           isDesktopLayout={isDesktopLayout}
-          isDark={isDark}
-          onSetTheme={(theme) => void setTheme(theme)}
           initialPage={settingsInitialPage}
         />
       )}

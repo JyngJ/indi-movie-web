@@ -197,11 +197,10 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
             onClick={() => desktopRef.current?.focus()}
             style={{
               display: 'flex', alignItems: 'center', gap: 12,
-              height: 44, paddingLeft: 16, paddingRight: 12,
+              height: 'var(--comp-search-height)', paddingLeft: 16, paddingRight: 12,
               backgroundColor: 'var(--color-surface-card)',
               border: `1.5px solid ${ACCENT}`,
-              borderBottom: 'none',
-              borderRadius: '22px 22px 0 0',
+              borderRadius: 'var(--comp-search-radius)',
               cursor: 'text',
             }}
           >
@@ -251,10 +250,10 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
         {/* ── Dropdown ── */}
         {focused && (
           <div style={{
-            position: 'absolute', top: '100%', left: 0, right: 0,
+            position: 'absolute', top: 'calc(100% + 8px)', left: 0, right: 0,
             backgroundColor: 'var(--color-surface-card)',
-            border: `1.5px solid ${ACCENT}`, borderTop: 'none',
-            borderRadius: '0 0 16px 16px',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-popover)',
             boxShadow: '0 6px 20px rgba(20,15,10,0.12)',
             overflow: 'hidden', zIndex: 50,
           }}>
@@ -275,7 +274,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
                       <span style={{ flex: 1, fontSize: 14, color: 'var(--color-text-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         <HighlightMatch text={s.label} query={query} />
                       </span>
-                      <span style={{ fontSize: 11, color: 'var(--color-text-caption)', flexShrink: 0 }}>
+                      <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)', flexShrink: 0 }}>
                         {TYPE_LABEL[s.type]}
                       </span>
                     </button>
@@ -368,7 +367,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
                     <span style={{ flex: 1, fontSize: 14, color: 'var(--color-text-body)' }}>
                       <HighlightMatch text={s.label} query={mInput} />
                     </span>
-                    <span style={{ fontSize: 11, color: 'var(--color-text-caption)', flexShrink: 0 }}>{TYPE_LABEL[s.type]}</span>
+                    <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)', flexShrink: 0 }}>{TYPE_LABEL[s.type]}</span>
                   </button>
                 ))}
               </div>

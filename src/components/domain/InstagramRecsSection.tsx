@@ -57,6 +57,7 @@ function InstagramRecCard({
   const posterStripRef = useRef<HTMLDivElement | null>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(false)
+  const [cardHovered, setCardHovered] = useState(false)
 
   function updateScrollEdge() {
     const el = posterStripRef.current
@@ -91,19 +92,13 @@ function InstagramRecCard({
   // 웹: 카드뉴스 이미지는 고정 폭(DESKTOP_IMAGE_WIDTH)이라 카드가 넓어져도 사진 크기는
   // 그대로고, 그만큼 오른쪽 배경 여백만 늘어난다. 모바일: 기존처럼 카드 전체 폭에 걸쳐
   // mask로 페이드(뷰포트가 좁아 "남는 공간" 개념이 없음).
-  const imageBoxStyle: React.CSSProperties = isDesktop
-    ? { position: 'absolute', left: 0, top: 0, bottom: 0, width: DESKTOP_IMAGE_WIDTH }
-    // 모바일: 카드 폭의 3/4만 채우고 나머지 1/4은 카드 배경(#000) 그대로 노출
-    : { position: 'absolute', left: 0, top: 0, bottom: 0, width: '75%' }
-  const imageMaskStyle: React.CSSProperties = isDesktop
-    ? {
-        WebkitMaskImage: 'linear-gradient(90deg, #000 0%, #000 72%, transparent 100%)',
-        maskImage: 'linear-gradient(90deg, #000 0%, #000 72%, transparent 100%)',
-      }
-    : {
-        WebkitMaskImage: 'linear-gradient(90deg, #000 0%, #000 60%, transparent 100%)',
-        maskImage: 'linear-gradient(90deg, #000 0%, #000 60%, transparent 100%)',
-      }
+  /* 2.0: 이미지가 왼쪽에 보이고 오른쪽으로 갈수록 검정 — 포스터가 검정 위에 얹힘 */
+  const imageBoxStyle: React.CSSProperties =
+    { position: 'absolute', left: 0, top: 0, bottom: 0, width: '62%' }
+  const imageMaskStyle: React.CSSProperties = {
+    WebkitMaskImage: 'linear-gradient(90deg, #000 52%, transparent 100%)',
+    maskImage: 'linear-gradient(90deg, #000 52%, transparent 100%)',
+  }
 
   // 모바일: 포스터 1개일 때도 여러 개일 때(strip 안 포스터)와 같은 top/bottom 12% 기준
   // 크기로 맞춤 — 이전엔 위/아래 값이 달라 1개/여러개일 때 포스터 크기가 서로 달랐음.
@@ -112,24 +107,15 @@ function InstagramRecCard({
     : { position: 'absolute', top: '12%', bottom: '12%', right: '4%', aspectRatio: '2/3' }
 
   const stripStyle: React.CSSProperties = isDesktop
-    ? { position: 'absolute', top: '12%', bottom: '12%', left: DESKTOP_IMAGE_WIDTH + 24, right: 20 }
-    // 포스터 2개 이상 보이려면 사진 페이드 구간(60~100%) 위로 겹쳐야 폭이 나옴 —
-    // 페이드가 이미 투명해지는 구간이라 사진을 가리는 느낌 없이 자연스럽게 올라감.
-    : { position: 'absolute', top: '12%', bottom: '12%', left: '52%', right: '4%' }
+    ? { position: 'absolute', top: '14%', bottom: '14%', left: 320, right: 20 }
+    // 모바일: 좌상단 텍스트 아래 하단 띠
+    : { position: 'absolute', top: '38%', bottom: 14, left: 16, right: 0 }
 
   // top/transform은 ScrollNavButton 기본값(50% 중앙정렬)을 그대로 씀 — 포스터 줄 자체가
   // 카드 세로 중앙에 대칭 배치(top/bottom 12%)라 카드 중앙 = 포스터 줄 중앙과 일치한다.
-  const navButtonDarkStyle: React.CSSProperties = {
-    backgroundColor: '#000', border: 'none', color: 'var(--color-on-accent)', boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-  }
-  const stripNavLeftStyle: React.CSSProperties = {
-    ...navButtonDarkStyle,
-    left: isDesktop ? DESKTOP_IMAGE_WIDTH + 24 : '52%',
-  }
-  const stripNavRightStyle: React.CSSProperties = {
-    ...navButtonDarkStyle,
-    right: isDesktop ? 20 : '4%',
-  }
+  /* 2.0: 다른 행과 같은 흰 원형 버튼 — hover 시만 노출 */
+  const stripNavLeftStyle: React.CSSProperties = { left: isDesktop ? 320 : 16 }
+  const stripNavRightStyle: React.CSSProperties = { right: isDesktop ? 20 : '4%' }
 
   // 포스터 줄 가장자리 페이드 — 더 스크롤할 방향에만 준다(첫/마지막 포스터는 딱 잘림 없이
   // 페이드도 없음, 안 그러면 "더 있다"는 착시가 생김)
@@ -143,16 +129,6 @@ function InstagramRecCard({
     ? { position: 'absolute', top: '50%', right: 28, transform: 'translateY(-50%)', width: 320, aspectRatio: '21/4' }
     : { position: 'absolute', top: '50%', right: '6%', transform: 'translateY(-50%)', width: '38%', aspectRatio: '21/4' }
 
-  // 검정 배경만 있으면 사진 페이드 경계가 뚝 끊겨 보임 — 사진 자체를 오른쪽 끝만
-  // 크게 늘려서(스트레치) 블러 처리, 그 자리의 "평균색"처럼 보이게 깔아준다(캔버스로
-  // 픽셀 평균 내는 대신 CSS만으로 — 외부 이미지 CORS 오염 문제도 없음).
-  const edgeBleedStyle: React.CSSProperties = {
-    position: 'absolute', inset: 0,
-    backgroundImage: `url(${rec.cardImageUrl})`,
-    backgroundSize: '500% 100%', backgroundPosition: 'right center', backgroundRepeat: 'no-repeat',
-    filter: 'blur(60px) saturate(1.25)',
-    transform: 'scale(1.2)',
-  }
 
   // 카드 안에 ScrollNavButton(<button>)이 들어가는데, HTML상 <button> 안에 <button>은
   // 허용되지 않아 하이드레이션 에러가 남 — 바깥 카드는 div[role=button]으로 처리.
@@ -161,6 +137,8 @@ function InstagramRecCard({
       role="button"
       tabIndex={0}
       onClick={onClick}
+      onMouseEnter={() => setCardHovered(true)}
+      onMouseLeave={() => setCardHovered(false)}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault()
@@ -173,7 +151,7 @@ function InstagramRecCard({
         // 웹: 세로 높이 고정, 가로만 컨테이너 폭에 맞춰 늘어남. 모바일: "사진이 너무 큼"은
         // 박스 크기가 아니라 cover 크롭이 과하게 확대돼 보이는 문제였음 — 박스를 덜 납작하게
         // (세로 여유를 더 줘서) 잘리는 비율을 줄이는 쪽으로 수정, 원래 2:1로 되돌림.
-        ...(isDesktop ? { height: DESKTOP_CARD_HEIGHT } : { aspectRatio: '2/1' }),
+        ...(isDesktop ? { height: DESKTOP_CARD_HEIGHT } : { aspectRatio: '4/3' }),
         // 카드뉴스 원본이 흰/검 배경 섞여있어 var(--color-surface-card)(라이트/다크 테마 따라 바뀜)로
         // 두면 mask 페이드 경계에서 사진 자체 배경색과 안 맞아 이질감 생김 — 항상 검정 고정.
         backgroundColor: '#000',
@@ -181,15 +159,24 @@ function InstagramRecCard({
       }}
       aria-label={title}
     >
-      {/* 사진 오른쪽 끝 색을 늘려 블러 — 검정 배경과 사진 페이드 경계가 뚝 끊기지 않게.
-          포스터/영화제 배너보다 먼저 그려야(DOM 순서=쌓임 순서) 그 위에 얹힌다 */}
-      <div style={edgeBleedStyle} />
-
-      {/* 카드뉴스 이미지 — 오른쪽 끝에서 실제 투명해짐(색으로 덮는 게 아니라 mask).
-          objectPosition을 아래쪽으로 당겨서 카드뉴스 하단 카피 문구까지 보이게 함 */}
+      {/* 카드뉴스 이미지 — 오른쪽에서 배어남 (왼쪽 페이드 mask) */}
       <div style={{ ...imageBoxStyle, ...imageMaskStyle }}>
         <Image src={rec.cardImageUrl} alt={title} fill sizes="(max-width: 1280px) 100vw, 480px" style={{ objectFit: 'cover', objectPosition: 'center 78%' }} />
       </div>
+
+      {/* 텍스트 대비 스크림 — 이미지가 밝아도 좌상단 글자가 읽히게 */}
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(115deg, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0.35) 100%)', pointerEvents: 'none' }} />
+
+      {/* 좌측 텍스트 — KIMM 타이틀 (아이브로 폐기 2026-08-05) */}
+      <div style={{ position: 'absolute', left: isDesktop ? 24 : 16, top: isDesktop ? 24 : 16, right: '45%', display: 'flex', flexDirection: 'column', gap: 8, pointerEvents: 'none' }}>
+        <span className="display-h2" style={{
+          color: 'var(--color-on-accent)',
+          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+        }}>
+          {title}
+        </span>
+      </div>
+
 
       {/* 드러난 오른쪽 영역 — 영화 포스터(1편이면 고정, 여러 편이면 좌우 스크롤)/영화제 배너.
           연결 끊겨 이미지가 하나도 없으면 생략 */}
@@ -228,7 +215,7 @@ function InstagramRecCard({
           </div>
           {/* 좌우로 더 있다는 걸 알리는 넘김 버튼 — 다른 섹션(docs/DESIGN.md Primitives)과 같은 ScrollNavButton,
               포스터 줄 세로 중앙. 그 방향으로 더 스크롤할 게 없으면 버튼 자체를 숨긴다 */}
-          {canScrollLeft && (
+          {isDesktop && cardHovered && canScrollLeft && (
             <ScrollNavButton
               direction="left"
               size={28}
@@ -236,7 +223,7 @@ function InstagramRecCard({
               style={stripNavLeftStyle}
             />
           )}
-          {canScrollRight && (
+          {isDesktop && cardHovered && canScrollRight && (
             <ScrollNavButton
               direction="right"
               size={28}
@@ -258,7 +245,7 @@ function InstagramRecCard({
         <div
           style={{
             position: 'absolute', bottom: 6, right: 6, padding: '4px 8px', borderRadius: 'var(--radius-badge)',
-            fontSize: 11, fontWeight: 600, lineHeight: 1, display: 'inline-flex', alignItems: 'center',
+            fontSize: 'var(--text-badge)', fontWeight: 600, lineHeight: 1, display: 'inline-flex', alignItems: 'center',
             backgroundColor: 'var(--color-success)',
             color: 'var(--color-on-accent)',
           }}
@@ -347,7 +334,7 @@ export function InstagramRecsSection({
   return (
     <section ref={sectionRef} style={{ paddingTop: isDesktop ? 48 : 32 }}>
       <SectionHeader
-        title="인스타그램에서 추천한 그 영화"
+        title="인스타그램에서 추천한 영화"
         isDesktop={isDesktop}
         trailing={
           // "더보기" 화살표가 아니라 우리 인스타 프로필로 나가는 외부 링크 — 이 섹션 자체가
@@ -355,9 +342,10 @@ export function InstagramRecsSection({
           <button
             onClick={() => window.open(INSTAGRAM_PROFILE_URL, '_blank', 'noopener,noreferrer')}
             aria-label="인스타그램에서 더 보기"
+            className="hover-raise"
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              width: 28, height: 28, minHeight: 'auto', padding: 0,
+              width: 28, height: 28, minHeight: 'auto', padding: 0, borderRadius: 'var(--radius-button)',
               border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-text-caption)',
             }}
           >
@@ -365,7 +353,7 @@ export function InstagramRecsSection({
           </button>
         }
       />
-      <div style={{ padding: '12px var(--gutter)' }}>
+      <div style={{ padding: '12px var(--gutter-sheet)' }}>
         <InstagramRecCard
           rec={pick}
           activeMovieIds={activeMovieIds}
