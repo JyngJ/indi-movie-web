@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
+import { Chip } from '@/components/primitives'
 import { addDaysIso, toKstIsoDate } from '@/lib/date'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
 import { DateBar } from '@/components/domain/DateBar'
@@ -462,21 +463,10 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
       </div>
 
       {/* 예매 가능만 보기 — 날짜 바 바로 아래 오른쪽 */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: isDesktop ? '12px 0 0' : '12px 16px 0' }}>
-        <button
-          onClick={() => setBookableOnly((v) => !v)}
-          style={{
-            height: 28, padding: '0 12px', borderRadius: 9999,
-            border: '1px solid',
-            borderColor: bookableOnly ? 'var(--color-primary-base)' : 'var(--color-neutral-300)',
-            backgroundColor: bookableOnly ? 'var(--color-primary-subtle-l)' : 'transparent',
-            color: bookableOnly ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
-            fontSize: 'var(--text-meta)', fontWeight: 500, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', minHeight: 'auto', whiteSpace: 'nowrap',
-          }}
-        >
+      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: isDesktop ? 'var(--spacing-3) 0 0' : 'var(--spacing-3) var(--gutter) 0' }}>
+        <Chip selected={bookableOnly} onClick={() => setBookableOnly((v) => !v)} style={{ minHeight: 'auto', whiteSpace: 'nowrap' }}>
           예매 가능만 보기
-        </button>
+        </Chip>
       </div>
 
       {/* 극장별 목록 */}
