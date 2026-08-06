@@ -46,6 +46,13 @@
 5. 설정 화면 전체 2.0 이식은 별도 챕터.
 6. 메모리의 나머지 TODO: `movie-redesign-todos.md` (Lucide Moon 교체, --color-info 폐지 등).
 
+## 3.9 미해결 — 상세 직진입 hydration 스톨 (2026-08-06 조사)
+
+- 증상: /films/movie·theater/[id] **직진입(SSR) 시 간헐적으로 hydration이 영영 안 끝남** — effects·react-query 전부 미실행, 회차 무한 로딩. 클라 네비게이션은 정상. 프로드·로컬 모두 재현되나 **라우트/환경별로 뒤집히는 레이스** (dev: movie fail·theater pass ↔ prod build: 반대).
+- 소거 완료(무죄): DetailShell, page Suspense, loading.tsx, ld+json, 클라이언트 JSX 전체(트리비얼도 스톨), useSearchParams, localStorage useState 초기화(→수정함), .next 캐시, 스트리밍 메타데이터 스크립트(→비활성화함).
+- 판정 도구: `버튼.__reactFiber$*` 키 존재 여부(hydration 완료), `performance` API 호출 수, `curl | grep '<!--$?-->'`(스트림 균형).
+- 현재 완화: force-dynamic(영화·극장 상세) + htmlLimitedBots(스트리밍 메타 차단) + mismatch 소스 제거. **완전 근절 미확인 — Next 16.2.4 selective hydration 레이스 의심.** Next 패치 추적할 것.
+
 ## 4. 함정·규칙 리마인드
 
 - **Turbopack 금지** — 항상 --webpack (npm 스크립트 사용).
