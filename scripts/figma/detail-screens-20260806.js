@@ -67,6 +67,7 @@ function F(name, o = {}) {
   if (o.mainAlign) f.primaryAxisAlignItems = o.mainAlign // 'MIN'|'CENTER'|'MAX'|'SPACE_BETWEEN'
   if (o.w != null && o.h != null) f.resize(o.w, o.h)
   else if (o.w != null) f.resize(o.w, f.height)
+  else if (o.h != null) f.resize(f.width, o.h)   // h만 지정 시에도 반드시 resize — 안 하면 기본 100 유지
   // 사이징: 지정한 축만 FIXED, 안 준 축은 HUG — 안 그러면 기본 100px 높이가 그대로 남는다
   if (f.layoutMode === 'HORIZONTAL') {
     f.primaryAxisSizingMode = o.w != null ? 'FIXED' : 'AUTO'
@@ -94,10 +95,13 @@ function box(w, h, o = {}) {   // 포스터·이미지 플레이스홀더
   r.cornerRadius = o.r ?? 2
   return r
 }
-function inst(name, fallbackW, fallbackH) {
+function inst(name, targetW, targetH) {
   const c = comp(name)
-  if (c) return c.createInstance()
-  return box(fallbackW, fallbackH, { fill: 'neutral/300', r: 4 })
+  if (!c) return box(targetW, targetH, { fill: 'neutral/300', r: 4 })
+  const i = c.createInstance()
+  // 원본 크기 그대로 꽂으면 로고 같은 큰 컴포넌트가 프레임을 덮는다 — 목표 폭 기준 rescale
+  if (targetW && Math.abs(i.width - targetW) > 1) i.rescale(targetW / i.width)
+  return i
 }
 // FILL 사이징은 반드시 appendChild 후에
 function fill(node) { node.layoutSizingHorizontal = 'FILL' }
@@ -200,6 +204,7 @@ function pcShell(name, crumbTitle) {
   panel.appendChild(topBar(1376, crumbTitle))
   const col = F('content-1000', { dir: 'V', gap: 0, pad: [0, 0, 0, 0], w: 1000 })
   panel.appendChild(col)
+  col.layoutSizingVertical = 'FILL'
   panel.counterAxisAlignItems = 'CENTER'   // 본문 컬럼 중앙
   return { root, col }
 }
@@ -209,6 +214,7 @@ function mobileShell(name, crumbTitle) {
   root.appendChild(topBar(402, crumbTitle))
   const col = F('content', { dir: 'V', gap: 0, pad: [0, 0, 0, 0], w: 402 })
   root.appendChild(col)
+  col.layoutSizingVertical = 'FILL'   // 탭바를 프레임 바닥으로 밀착
   return { root, col, addTabbar: () => {
     const tb = F('tabbar', { dir: 'H', gap: 0, pad: [6, 60, 6, 60], fill: 'white', align: 'CENTER', mainAlign: 'SPACE_BETWEEN', w: 402, h: 64 })
     tb.primaryAxisSizingMode = 'FIXED'; tb.counterAxisSizingMode = 'FIXED'

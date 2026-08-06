@@ -145,6 +145,8 @@ function LazyBlock({ isDesktop, children }: { isDesktop: boolean; children: Reac
 function FestivalBannerCard({ festival, today, isDesktop, onClick }: { festival: Festival; today: string; isDesktop: boolean; onClick: () => void }) {
   const status = getFestivalStatus(festival.startDate, festival.endDate, today)
   const dateLabel = getFestivalDateLabel(status, festival.startDate, festival.endDate, today)
+  // 외부 배너 URL이 죽는 경우(원본 삭제·403)가 실제로 있었음 — 깨진 이미지 띠 대신 통째 숨김
+  const [bannerBroken, setBannerBroken] = useState(false)
 
   return (
     <div>
@@ -156,7 +158,7 @@ function FestivalBannerCard({ festival, today, isDesktop, onClick }: { festival:
 
       {/* 배너 이미지 — banner_url 있을 때만. 전체 폭 띠에 surface-raised 배경을 깔고
           그 안에서 데스크톱만 고정폭으로 중앙 정렬(모바일은 100%라 여백 자체가 없음) */}
-      {festival.bannerUrl && (
+      {festival.bannerUrl && !bannerBroken && (
         <button
           onClick={onClick}
           style={{
@@ -180,6 +182,7 @@ function FestivalBannerCard({ festival, today, isDesktop, onClick }: { festival:
               priority
               sizes={isDesktop ? `${FESTIVAL_BANNER_DESKTOP_WIDTH}px` : '100vw'}
               style={{ objectFit: 'cover' }}
+              onError={() => setBannerBroken(true)}
             />
           </div>
         </button>
