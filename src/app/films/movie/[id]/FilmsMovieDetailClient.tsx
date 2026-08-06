@@ -25,7 +25,7 @@ import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/compo
 function useIsDesktop() {
   const [v, setV] = useState(false)
   useEffect(() => {
-    const m = window.matchMedia('(min-width: 1280px)')
+    const m = window.matchMedia('(min-width: 1024px)')   // DetailShell(1024)과 기준 통일
     const fn = () => setV(m.matches); fn()
     m.addEventListener('change', fn); return () => m.removeEventListener('change', fn)
   }, [])
@@ -114,6 +114,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
   useEffect(() => { setRegionId(getStoredRegion()) }, [])
   const [selectedShowtimeId, setSelectedShowtimeId] = useState<string | null>(null)
   const [selectedTheaterId, setSelectedTheaterId] = useState<string | null>(null)
+  const [bookableOnly, setBookableOnly] = useState(false)
   // 공유 링크(?date=&theater=&showtime=)로 들어왔을 때, 날짜 변경 시 선택 초기화하는
   // 아래 effect가 복원 직후 곧바로 리셋해버리지 않도록 1회 억제한다.
   const suppressResetOnDateChangeRef = useRef(false)
@@ -204,10 +205,11 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
     return theaterEntries
       .map((entry) => ({
         ...entry,
-        showtimes: entry.dateGroups.find((g) => g.date === selectedDate)?.showtimes ?? [],
+        showtimes: (entry.dateGroups.find((g) => g.date === selectedDate)?.showtimes ?? [])
+          .filter((st) => !bookableOnly || st.seatAvailable > 0),
       }))
       .filter((entry) => entry.showtimes.length > 0)
-  }, [theaterEntries, selectedDate])
+  }, [theaterEntries, selectedDate, bookableOnly])
 
   const totalTheaterCount = theaterEntries.length
   const { inRegion: inRegionEntries, otherRegion: otherRegionEntries } = useMemo(() => {
@@ -358,7 +360,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
           </div>
           <IcoChevronRight />
         </button>
-        <div style={{ padding: '12px 16px 16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(var(--comp-showtime-min-width), 1fr))', gap: 12 }}>
+        <div style={{ padding: '12px 16px 16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
           {entry.showtimes.map((st) => {
             /* TheaterSheet과 동일한 kind 분류 */
             const [sh, sm] = st.showTime.split(':').map(Number)
@@ -457,6 +459,24 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
             />
           )
         })()}
+      </div>
+
+      {/* 예매 가능만 보기 — 날짜 바 바로 아래 오른쪽 */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: isDesktop ? '12px 0 0' : '12px 16px 0' }}>
+        <button
+          onClick={() => setBookableOnly((v) => !v)}
+          style={{
+            height: 28, padding: '0 12px', borderRadius: 9999,
+            border: '1px solid',
+            borderColor: bookableOnly ? 'var(--color-primary-base)' : 'var(--color-neutral-300)',
+            backgroundColor: bookableOnly ? 'var(--color-primary-subtle-l)' : 'transparent',
+            color: bookableOnly ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
+            fontSize: 'var(--text-meta)', fontWeight: 500, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', minHeight: 'auto', whiteSpace: 'nowrap',
+          }}
+        >
+          예매 가능만 보기
+        </button>
       </div>
 
       {/* 극장별 목록 */}

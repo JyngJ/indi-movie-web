@@ -153,10 +153,13 @@ function oldDateTabs(width) {   // 극장 상세: 구 날짜탭(56×60 언더라
 }
 
 function showtimeGrid(width, count) {
-  const grid = F('showtime-grid', { dir: 'H', gap: 12, pad: [12, 16, 16, 16], w: width })
-  grid.layoutWrap = 'WRAP'
-  grid.counterAxisSpacing = 12
-  for (let i = 0; i < count; i++) grid.appendChild(inst('2.0/ShowtimeCell', 0, 0, 'State=예정'))
+  // 3열 균등 채움 (코드: grid repeat(3,1fr)) — 셀들 가로 FILL
+  const grid = F('showtime-grid', { dir: 'H', gap: 8, pad: [12, 16, 16, 16], w: width })
+  for (let i = 0; i < count; i++) {
+    const c = inst('2.0/ShowtimeCell', 0, 0, 'State=예정')
+    grid.appendChild(c)
+    c.layoutSizingHorizontal = 'FILL'
+  }
   return grid
 }
 
@@ -349,19 +352,31 @@ function buildTheaterDetail() {
   const pc = pcShell('TheaterDetail · PC', '더숲 아트시네마')
   pc.col.appendChild(theaterHero(1000, true))
   pc.col.appendChild(oldDateTabs(1000))
-  const listPc = F('movies', { dir: 'V', gap: 12, pad: [16, 0, 64, 0], w: 1000 })
-  listPc.appendChild(theaterMovieCard(1000))
+  pc.col.appendChild(bookableRow(1000))
+  // 카드 절반 폭 — 1개여도 좌측 절반만 차지 (코드: PC 2열 그리드)
+  const listPc = F('movies', { dir: 'V', gap: 12, pad: [16, 28, 64, 28], w: 1000 })
+  listPc.appendChild(theaterMovieCard(464))
   pc.col.appendChild(listPc)
 
   const mo = mobileShell('TheaterDetail · Mobile', '더숲 아트시네마')
   mo.col.appendChild(theaterHero(402, false))
   mo.col.appendChild(oldDateTabs(402))
+  mo.col.appendChild(bookableRow(402))
   const listM = F('movies', { dir: 'V', gap: 12, pad: [12, 16, 24, 16], w: 402 })
   listM.appendChild(theaterMovieCard(370))
   mo.col.appendChild(listM)
   mo.addTabbar()
   return [pc.root, mo.root]
 }
+
+function bookableRow(width) {   // 날짜탭 아래 오른쪽 '예매 가능만 보기' 토글
+  const row = F('bookable-row', { dir: 'H', gap: 0, pad: [12, 28, 0, 28], mainAlign: 'MAX', w: width })
+  const pill = F('pill', { dir: 'H', pad: [0, 12, 0, 12], r: 9999, align: 'CENTER', h: 28, stroke: 'neutral/300' })
+  pill.appendChild(T('예매 가능만 보기', { size: 12, weight: 'Medium', color: 'neutral/500' }))
+  row.appendChild(pill)
+  return row
+}
+
 function theaterMovieCard(width) {   // 극장 상세: 영화별 카드 (포스터 68 + 제목 + 셀)
   const card = F('movie-card', { dir: 'V', gap: 0, pad: [0, 0, 0, 0], fill: 'white', r: 16, stroke: 'neutral/200', w: width, clip: true })
   const head = F('head', { dir: 'H', gap: 12, pad: [16, 16, 12, 16], align: 'CENTER', w: width })
@@ -377,21 +392,25 @@ function theaterMovieCard(width) {   // 극장 상세: 영화별 카드 (포스�
 
 /* ── 3) 감독 상세 ─────────────────────────────────────────────── */
 function directorHero(width) {
-  const hero = F('hero', { dir: 'V', gap: 8, pad: [32, 16, 24, 16], align: 'CENTER', w: width })
-  const av = figma.createEllipse(); av.resize(112, 112); av.fills = [paint('neutral/100')]
+  // 영화 상세 히어로 문법: 왼쪽 아바타 + 오른쪽 텍스트/CTA 좌측 정렬
+  const desktop = width > 500
+  const hero = F('hero', { dir: 'H', gap: desktop ? 32 : 16, pad: desktop ? [32, 0, 28, 0] : [24, 16, 20, 16], w: width })
+  const av = figma.createEllipse(); av.resize(desktop ? 160 : 100, desktop ? 160 : 100); av.fills = [paint('neutral/100')]
   av.strokes = [paint('neutral/200')]; av.strokeWeight = 1
   hero.appendChild(av)
-  hero.appendChild(T('라스 폰 트리에', { size: 24, serif: true, color: 'neutral/900' }))
-  hero.appendChild(T('Lars von Trier', { size: 14, color: 'neutral/600' }))
-  hero.appendChild(T('상영중 6편', { size: 13, weight: 'SemiBold', color: 'primary/700' }))
-  const ctas = F('ctas', { dir: 'H', gap: 8, pad: [12, 0, 0, 0] })
+  const tx = F('texts', { dir: 'V', gap: 8, pad: [4, 0, 0, 0] })
+  hero.appendChild(tx)
+  tx.appendChild(T('라스 폰 트리에', { size: desktop ? 34 : 22, serif: true, color: 'neutral/900' }))
+  tx.appendChild(T('Lars von Trier', { size: desktop ? 14 : 12, color: 'neutral/600' }))
+  tx.appendChild(T('상영중 6편', { size: 13, weight: 'SemiBold', color: 'primary/700' }))
+  const ctas = F('ctas', { dir: 'H', gap: 8, pad: [8, 0, 0, 0] })
   const map = F('btn', { dir: 'H', gap: 8, pad: [0, 16, 0, 16], fill: 'primary/700', r: 12, align: 'CENTER', h: 40 })
   map.appendChild(T('지도에서 필터로 보기', { size: 13, weight: 'SemiBold', color: 'white' }))
   ctas.appendChild(map)
   const share = F('share', { dir: 'H', pad: [0, 0, 0, 0], fill: 'white', r: 12, stroke: 'neutral/200', align: 'CENTER', mainAlign: 'CENTER', w: 40, h: 40 })
   share.appendChild(inst('2.0/icon/share-2', 16, 16))
   ctas.appendChild(share)
-  hero.appendChild(ctas)
+  tx.appendChild(ctas)
   return hero
 }
 function buildDirectorDetail() {
