@@ -42,9 +42,11 @@ function comp(name) {
   if (compCache.has(name)) return compCache.get(name)
   let found = null
   for (const page of figma.root.children) {
-    found = page.findOne(n => n.type === 'COMPONENT' && n.name === name)
+    found = page.findOne(n => (n.type === 'COMPONENT' || n.type === 'COMPONENT_SET') && n.name === name)
     if (found) break
   }
+  // 배리언트 세트면 기본 배리언트 사용 (2.0/ShowtimeCell·DateCell·PosterItem·FilterPill·logo/tile 전부 세트)
+  if (found && found.type === 'COMPONENT_SET') found = found.defaultVariant
   compCache.set(name, found)
   if (!found) report.push(`컴포넌트 없음: ${name} → 회색 박스 폴백`)
   return found
@@ -65,6 +67,14 @@ function F(name, o = {}) {
   if (o.mainAlign) f.primaryAxisAlignItems = o.mainAlign // 'MIN'|'CENTER'|'MAX'|'SPACE_BETWEEN'
   if (o.w != null && o.h != null) f.resize(o.w, o.h)
   else if (o.w != null) f.resize(o.w, f.height)
+  // 사이징: 지정한 축만 FIXED, 안 준 축은 HUG — 안 그러면 기본 100px 높이가 그대로 남는다
+  if (f.layoutMode === 'HORIZONTAL') {
+    f.primaryAxisSizingMode = o.w != null ? 'FIXED' : 'AUTO'
+    f.counterAxisSizingMode = o.h != null ? 'FIXED' : 'AUTO'
+  } else if (f.layoutMode === 'VERTICAL') {
+    f.primaryAxisSizingMode = o.h != null ? 'FIXED' : 'AUTO'
+    f.counterAxisSizingMode = o.w != null ? 'FIXED' : 'AUTO'
+  }
   f.clipsContent = o.clip ?? false
   return f
 }
@@ -455,6 +465,11 @@ function buildDirectorDetail() {
 }
 
 /* ── 조립 ──────────────────────────────────────────────────────── */
+// 재실행 대비: 같은 이름 섹션 있으면 제거
+for (const page of figma.root.children) {
+  const prev = page.children.find(n => n.type === 'SECTION' && n.name === 'Detail Screens TOBE (code sync 2026-08-06)')
+  if (prev) { prev.remove(); report.push('기존 섹션 삭제 후 재생성') }
+}
 const section = figma.createSection()
 section.name = 'Detail Screens TOBE (code sync 2026-08-06)'
 figma.currentPage.appendChild(section)

@@ -205,7 +205,10 @@ export default function FilmsPage() {
   const { state: locState, coords: locCoords, modalSuppressed: locModalSuppressed, request: requestLoc, dismiss: dismissLoc } = useLocationPermission()
   const isDesktop = mounted && isDesktopLayout
 
-  const [selectedRegion, setSelectedRegion] = useState<string | null>(() => getStoredRegion())
+  // getStoredRegion(localStorage)을 useState 초기화에서 읽으면 SSR(null)과 클라 첫 렌더가
+  // 갈려 hydration mismatch → 트리 재생성 (상세 직진입 무한로딩 스톨의 진원). effect에서 읽는다.
+  const [selectedRegion, setSelectedRegion] = useState<string | null>(null)
+  useEffect(() => { setSelectedRegion(getStoredRegion()) }, [])
 
   function pickRegion(id: string | null) {
     setSelectedRegion(id)
