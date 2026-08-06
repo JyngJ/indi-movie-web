@@ -15,7 +15,7 @@ import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWi
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { shareAdapter } from '@/lib/adapters/share'
 import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/components/domain/booking/BookingActions'
-import { Skeleton } from '@/components/primitives'
+import { Skeleton, Chip } from '@/components/primitives'
 
 function useIsDesktop() {
   const [v, setV] = useState(false)
@@ -521,21 +521,10 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
       </div>
 
       {/* 예매 가능만 보기 — 날짜탭 바로 아래 오른쪽 (TheaterSheet 퀵 토글과 동일 문법) */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: isDesktop ? '12px 28px 0' : '12px 16px 0' }}>
-        <button
-          onClick={() => setBookableOnly((v) => !v)}
-          style={{
-            height: 28, padding: '0 12px', borderRadius: 9999,
-            border: '1px solid',
-            borderColor: bookableOnly ? 'var(--color-primary-base)' : 'var(--color-neutral-300)',
-            backgroundColor: bookableOnly ? 'var(--color-primary-subtle-l)' : 'transparent',
-            color: bookableOnly ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
-            fontSize: 'var(--text-meta)', fontWeight: 500, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', minHeight: 'auto', whiteSpace: 'nowrap',
-          }}
-        >
+      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: isDesktop ? 'var(--spacing-3) 28px 0' : 'var(--spacing-3) var(--gutter) 0' }}>
+        <Chip selected={bookableOnly} onClick={() => setBookableOnly((v) => !v)} style={{ minHeight: 'auto', whiteSpace: 'nowrap' }}>
           예매 가능만 보기
-        </button>
+        </Chip>
       </div>
 
       {/* 현재 상영중 */}
