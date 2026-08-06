@@ -38,16 +38,21 @@ catch { report.push('세리프 폰트 없음 → 제목류 Pretendard Bold 대�
 
 /* ── 컴포넌트 찾기 (2.0 라이브러리) ─────────────────────────────── */
 const compCache = new Map()
-function comp(name) {
-  if (compCache.has(name)) return compCache.get(name)
+function comp(name, variantName) {
+  const key = name + '|' + (variantName || '')
+  if (compCache.has(key)) return compCache.get(key)
   let found = null
   for (const page of figma.root.children) {
     found = page.findOne(n => (n.type === 'COMPONENT' || n.type === 'COMPONENT_SET') && n.name === name)
     if (found) break
   }
-  // 배리언트 세트면 기본 배리언트 사용 (2.0/ShowtimeCell·DateCell·PosterItem·FilterPill·logo/tile 전부 세트)
-  if (found && found.type === 'COMPONENT_SET') found = found.defaultVariant
-  compCache.set(name, found)
+  if (found && found.type === 'COMPONENT_SET') {
+    // 덤프 실명 배리언트 지정 (없으면 기본) — 예: 'Kind=평일', 'State=예정'
+    const v = variantName ? found.children.find(c => c.name === variantName) : null
+    found = v || found.defaultVariant
+    if (variantName && !v) report.push(`배리언트 없음: ${name} / ${variantName} → 기본 배리언트`)
+  }
+  compCache.set(key, found)
   if (!found) report.push(`컴포넌트 없음: ${name} → 회색 박스 폴백`)
   return found
 }
@@ -95,11 +100,11 @@ function box(w, h, o = {}) {   // 포스터·이미지 플레이스홀더
   r.cornerRadius = o.r ?? 2
   return r
 }
-function inst(name, targetW, targetH) {
-  const c = comp(name)
+function inst(name, targetW, targetH, variantName) {
+  const c = comp(name, variantName)
   if (!c) return box(targetW, targetH, { fill: 'neutral/300', r: 4 })
   const i = c.createInstance()
-  // 원본 크기 그대로 꽂으면 로고 같은 큰 컴포넌트가 프레임을 덮는다 — 목표 폭 기준 rescale
+  // 원본 크기 그대로 꽂으면 로고(351px) 같은 컴포넌트가 프레임을 덮는다 — 목표 폭 기준 rescale
   if (targetW && Math.abs(i.width - targetW) > 1) i.rescale(targetW / i.width)
   return i
 }
@@ -122,15 +127,15 @@ function topBar(width, crumbTitle) {
   left.appendChild(T('영화', { size: 12, color: 'neutral/500' }))
   left.appendChild(T('>', { size: 12, color: 'neutral/500' }))
   left.appendChild(T(crumbTitle, { size: 12, weight: 'SemiBold', color: 'neutral/900' }))
-  const pill = inst('2.0/FilterPill', 96, 28)
+  const pill = inst('2.0/FilterPill', 0, 0, 'State=Default')
   bar.appendChild(pill)
   return bar
 }
 
-function dateBar2(width) {   // 영화 상세: DateBar 2.0 — DateCell 인스턴스 7개
-  const row = F('DateBar 2.0', { dir: 'H', gap: 0, pad: [8, 4, 8, 4], align: 'CENTER', mainAlign: 'SPACE_BETWEEN', w: width, h: 74 })
-  row.primaryAxisSizingMode = 'FIXED'
-  for (let i = 0; i < 7; i++) row.appendChild(inst('2.0/DateCell', 44, 58))
+function dateBar2(width) {   // 영화 상세: DateBar 2.0 — DateCell 배리언트 실명(덤프) 7칸
+  const row = F('DateBar 2.0', { dir: 'H', gap: 0, pad: [8, 12, 8, 12], align: 'CENTER', mainAlign: 'SPACE_BETWEEN', w: width, h: 79, fill: 'white' })
+  const kinds = ['Kind=오늘', 'Kind=평일', 'Kind=토요일', 'Kind=일요일', 'Kind=평일', 'Kind=평일', 'Kind=평일']
+  for (const k of kinds) row.appendChild(inst('2.0/DateCell', 0, 0, k))   // 원본 크기 그대로 (54/38 x 63)
   return row
 }
 
@@ -156,7 +161,7 @@ function showtimeGrid(width, count) {
   grid.primaryAxisSizingMode = 'FIXED'
   grid.layoutWrap = 'WRAP'
   grid.counterAxisSpacing = 12
-  for (let i = 0; i < count; i++) grid.appendChild(inst('2.0/ShowtimeCell', 104, 64))
+  for (let i = 0; i < count; i++) grid.appendChild(inst('2.0/ShowtimeCell', 0, 0, 'State=예정'))
   return grid
 }
 
@@ -196,7 +201,7 @@ function pcShell(name, crumbTitle) {
   root.primaryAxisSizingMode = 'FIXED'; root.counterAxisSizingMode = 'FIXED'
   const rail = F('rail', { dir: 'V', gap: 20, pad: [16, 12, 16, 12], fill: 'neutral/100', align: 'CENTER', w: 64, h: 1600 })
   rail.primaryAxisSizingMode = 'FIXED'; rail.counterAxisSizingMode = 'FIXED'
-  rail.appendChild(inst('2.0/logo/tile', 40, 40))
+  rail.appendChild(inst('2.0/logo/tile', 40, 40, 'Color=인디고'))
   root.appendChild(rail)
   const panel = F('panel', { dir: 'V', gap: 0, pad: [0, 0, 0, 0], fill: 'neutral/50', rTL: 16, w: 1376, h: 1600, clip: true })
   panel.primaryAxisSizingMode = 'FIXED'; panel.counterAxisSizingMode = 'FIXED'
@@ -439,7 +444,7 @@ function buildDirectorDetail() {
     now.primaryAxisSizingMode = 'FIXED'
     now.appendChild(T('지금 상영중', { size: 20, weight: 'Bold', color: 'neutral/900' }))
     const row = F('posters', { dir: 'H', gap: 16, pad: [0, 0, 4, 0] })
-    for (let i = 0; i < 3; i++) row.appendChild(inst('2.0/PosterItem', 128, 240))
+    for (let i = 0; i < 3; i++) row.appendChild(inst('2.0/PosterItem', 128, 240, 'Selected=False'))
     now.appendChild(row)
     shell.col.appendChild(now)
     const filmo = F('filmography', { dir: 'V', gap: 12, pad: [20, 16, 52, 16], w: width })
@@ -458,7 +463,7 @@ function buildDirectorDetail() {
     filmo.appendChild(fh)
     const grid = F('grid', { dir: 'H', gap: 16, pad: [0, 0, 0, 0], w: width - 32 })
     grid.primaryAxisSizingMode = 'FIXED'; grid.layoutWrap = 'WRAP'; grid.counterAxisSpacing = 24
-    for (let i = 0; i < (width > 500 ? 6 : 3); i++) grid.appendChild(inst('2.0/PosterItem', 128, 240))
+    for (let i = 0; i < (width > 500 ? 6 : 3); i++) grid.appendChild(inst('2.0/PosterItem', 128, 240, 'Selected=False'))
     filmo.appendChild(grid)
     shell.col.appendChild(filmo)
   }
