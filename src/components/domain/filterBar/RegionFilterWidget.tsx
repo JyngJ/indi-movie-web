@@ -6,7 +6,9 @@ import { RegionDropdown } from './RegionDropdown'
 import { getStoredRegion, setStoredRegion } from '@/lib/regionStorage'
 
 export function RegionFilterWidget({ onRegionChange }: { onRegionChange?: (id: string | null) => void } = {}) {
-  const [region, setRegion] = useState<string | null>(() => getStoredRegion())
+  // localStorage 초기화 금지 — SSR(null)과 갈려 hydration mismatch 나던 자리 (effect에서 로드)
+  const [region, setRegion] = useState<string | null>(null)
+  useEffect(() => { setRegion(getStoredRegion()) }, [])
   const [open, setOpen] = useState(false)
   const chipRef = useRef<HTMLButtonElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)

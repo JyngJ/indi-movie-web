@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { addDaysIso, toKstIsoDate } from '@/lib/date'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
 import { DateBar } from '@/components/domain/DateBar'
@@ -105,12 +105,13 @@ function DirectorChipLoader({ name, onClick }: { name: string; onClick: () => vo
 /* ── 메인 ────────────────────────────────────────────────────────── */
 export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const isDesktop = useIsDesktop()
 
   const dates = useMemo(() => getDateRange(7), [])
   const [selectedDate, setSelectedDate] = useState(dates[0])
-  const [regionId, setRegionId] = useState<string | null>(() => getStoredRegion())
+  // localStorage 초기화 금지 — hydration mismatch 방지 (effect에서 로드)
+  const [regionId, setRegionId] = useState<string | null>(null)
+  useEffect(() => { setRegionId(getStoredRegion()) }, [])
   const [selectedShowtimeId, setSelectedShowtimeId] = useState<string | null>(null)
   const [selectedTheaterId, setSelectedTheaterId] = useState<string | null>(null)
   // 공유 링크(?date=&theater=&showtime=)로 들어왔을 때, 날짜 변경 시 선택 초기화하는
@@ -142,6 +143,8 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
   const restoredShareRef = useRef(false)
   useEffect(() => {
     if (restoredShareRef.current) return
+    // useSearchParams는 정적(ISR) 렌더에서 suspend해 CSR 바운더리를 만든다 — window에서 직접 읽는다
+    const searchParams = new URLSearchParams(window.location.search)
     const dateParam = searchParams.get('date')
     const theaterParam = searchParams.get('theater')
     const showtimeParam = searchParams.get('showtime')
@@ -164,7 +167,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
     url.searchParams.delete('theater')
     url.searchParams.delete('showtime')
     window.history.replaceState({}, '', url.toString())
-  }, [searchParams, theaterEntries])
+  }, [theaterEntries])
 
   // 날짜별 showtimes 유무
   const activeDates = useMemo(() => {
@@ -428,10 +431,12 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
         </p>
       )}
 
-      {/* 날짜 바 — TheaterSheet과 동일한 DateBar 2.0 */}
+      {/* 날짜 바 — TheaterSheet과 동일한 DateBar 2.0.
+          주의: DateBar 계약은 ISO가 아니라 표시용 일자(d.date, "6") — 선택/콜백 모두 변환해서 쓸 것
+          (ISO를 그대로 넘기면 클릭 시 dayTheaters 필터가 빗나가 회차 목록이 사라진다) */}
       <div style={{ marginTop: 12, padding: isDesktop ? 0 : '0 16px' }}>
-        <DateBar
-          days={dates.map((d, i) => {
+        {(() => {
+          const dateBarDays = dates.map((d, i) => {
             const { day, isHoliday } = formatDateTab(d)
             return {
               dow: i === 0 ? '오늘' : day,
@@ -440,10 +445,18 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
               type: i === 0 ? 'today' : isHoliday ? 'sunday' : day === '토' ? 'saturday' : 'weekday',
               disabled: !activeDates.has(d),
             } as import('@/components/domain/DateBar').Day
-          })}
-          selectedDate={selectedDate}
-          onSelectDate={(d) => setSelectedDate(d)}
-        />
+          })
+          return (
+            <DateBar
+              days={dateBarDays}
+              selectedDate={dateBarDays.find((d) => d.isoDate === selectedDate)?.date}
+              onSelectDate={(disp) => {
+                const iso = dateBarDays.find((d) => d.date === disp)?.isoDate
+                if (iso) setSelectedDate(iso)
+              }}
+            />
+          )
+        })()}
       </div>
 
       {/* 극장별 목록 */}

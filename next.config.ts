@@ -30,6 +30,10 @@ const nextConfig: NextConfig = {
     imageSizes: [80, 100, 120, 140, 220],
     deviceSizes: [480, 640, 750, 1080],
   },
+  // 스트리밍 메타데이터 비활성(전 UA 차단 목록 처리) — 동적 상세에서 메타 link를
+  // body→head로 옮기는 인라인 스크립트가 hydration과 경합해 페이지가 영영 hydrate되지
+  // 않는 스톨(직진입 무한 로딩)을 일으켜서, 메타데이터를 블로킹으로 강제한다.
+  htmlLimitedBots: /.*/,
   // 구 라우트(/theater/[id]) → films 탭 라우트로 영구 리다이렉트.
   // sitemap도 신규 경로로만 생성하지만, 과거에 색인/공유된 구 링크를 위해 유지.
   async redirects() {

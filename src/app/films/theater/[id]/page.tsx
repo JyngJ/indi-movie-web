@@ -8,7 +8,8 @@ import { formatLocalDate } from '@/lib/date'
 import type { Theater } from '@/types/api'
 import { FilmsTheaterDetailClient } from './FilmsTheaterDetailClient'
 
-export const revalidate = 3600
+// 영화 상세와 동일: ISR 정적 셸 hydration 정지 버그 회피 — 동적 렌더 강제
+export const dynamic = 'force-dynamic'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { addDaysIso, toKstIsoDate } from '@/lib/date'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
@@ -250,7 +250,6 @@ function MovieShowtimeCardSkeleton({ isDesktop }: { isDesktop: boolean }) {
 /* ── 메인 ────────────────────────────────────────────────────────── */
 export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const isDesktop = useIsDesktop()
 
   const dates = useMemo(() => getDateRange(7), [])
@@ -311,6 +310,8 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
   // 공유 링크·큐레이션 캡션 진입 시 선택된 회차 복원 (+ 해당 영화 카드로 스크롤)
   useEffect(() => {
     if (restoredShareRef.current) return
+    // useSearchParams suspend → ISR 미완성 shell 캐시 → hydration 정지 방지 (영화 상세와 동일)
+    const searchParams = new URLSearchParams(window.location.search)
     const dateParam = searchParams.get('date')
     const showtimeParam = searchParams.get('showtime')
     const movieParam = searchParams.get('movie')
@@ -345,7 +346,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
     url.searchParams.delete('movie')
     url.searchParams.delete('time')
     window.history.replaceState({}, '', url.toString())
-  }, [searchParams, dayShowtimes, selectedDate])
+  }, [dayShowtimes, selectedDate])
 
   // 영화별로 showtimes 묶기
   const movieShowtimeGroups = useMemo(() => {
