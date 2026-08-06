@@ -5,7 +5,9 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import type { MovieDetail } from '@/lib/supabase/queries'
 import { FilmsMovieDetailClient } from './FilmsMovieDetailClient'
 
-export const revalidate = 3600
+// ISR(revalidate) 정적 셸 + 스트리밍 조합에서 hydration이 영구 정지하는 버그(직진입 시
+// 회차 무한 로딩·effects 미실행)가 있어 동적 렌더로 강제. 원인 규명 후 ISR 복원 검토.
+export const dynamic = 'force-dynamic'
 
 async function fetchMovie(id: string): Promise<MovieDetail | null> {
   const supabase = createSupabaseServerClient()

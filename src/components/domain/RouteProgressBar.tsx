@@ -49,7 +49,8 @@ export function RouteProgressBar({ isDesktop }: { isDesktop: boolean }) {
         right: 0,
         height: 3,
         backgroundColor: 'var(--color-neutral-300)',
-        zIndex: 1400,
+        /* r16 코너 마스크(z 1100)보다 아래 — 위로 가면 패널 라운드 밖으로 삐져나옴 */
+        zIndex: 1050,
         pointerEvents: 'none',
       }}
     >
