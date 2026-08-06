@@ -110,37 +110,39 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
   )
 
   const heroSection = (
+    /* 영화 상세 히어로 문법: 왼쪽 이미지(아바타) + 오른쪽 텍스트/CTA 좌측 정렬 */
     <div style={{
       background: 'var(--color-surface-bg)',
-      padding: '32px var(--gutter) 24px',
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      padding: isDesktop ? '32px 0 28px' : '24px var(--gutter) 20px',
+      display: 'flex', gap: isDesktop ? 32 : 16, alignItems: 'flex-start',
     }}>
       {/* 아바타 */}
-      <div style={{ width: 112, height: 112, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, boxShadow: '0 8px 24px rgba(0,0,0,0.18)' }}>
+      <div style={{ width: isDesktop ? 160 : 100, height: isDesktop ? 160 : 100, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px rgba(0,0,0,0.18)' }}>
         {profile?.photoUrl ? (
           <img src={profile.photoUrl} alt={directorName} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
         ) : (
-          <span style={{ fontSize: 40, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'rgba(255,255,255,0.7)' }}>{directorName.charAt(0)}</span>
+          <span style={{ fontSize: isDesktop ? 56 : 36, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'rgba(255,255,255,0.7)' }}>{directorName.charAt(0)}</span>
         )}
       </div>
 
-      {/* 이름 */}
-      <h1 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 24, fontWeight: 700, color: 'var(--color-text-primary)', textAlign: 'center' }}>
+      {/* 텍스트 */}
+      <div style={{ flex: 1, minWidth: 0, paddingTop: 4 }}>
+      <h1 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: isDesktop ? 34 : 22, fontWeight: 700, lineHeight: 1.2, color: 'var(--color-text-primary)' }}>
         {directorName}
       </h1>
       {profile?.originalName && (
-        <div style={{ marginTop: 4, fontSize: 14, color: 'var(--color-text-sub)', fontStyle: 'italic', textAlign: 'center' }}>{profile.originalName}</div>
+        <div style={{ marginTop: 4, fontSize: isDesktop ? 14 : 12, color: 'var(--color-text-sub)', fontStyle: 'italic' }}>{profile.originalName}</div>
       )}
 
       {/* 메타 정보 */}
-      <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--color-text-caption)' }}>
+      <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--color-text-caption)' }}>
         {nowPlaying.length > 0 && (
           <span style={{ color: 'var(--color-primary-base)', fontWeight: 600 }}>상영중 {nowPlaying.length}편</span>
         )}
       </div>
 
       {/* CTA 버튼 */}
-      <div style={{ marginTop: 20, display: 'flex', gap: 8 }}>
+      <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
         <button
           onClick={() => router.push(`/?director=${encodeURIComponent(directorName)}`)}
           style={{ height: 40, padding: '0 16px', display: 'flex', alignItems: 'center', gap: 8, borderRadius: 12, border: '1px solid var(--color-primary-base)', backgroundColor: 'var(--color-primary-base)', color: 'var(--color-on-accent)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
@@ -156,6 +158,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
         >
           <IcoShare />
         </button>
+      </div>
       </div>
     </div>
   )

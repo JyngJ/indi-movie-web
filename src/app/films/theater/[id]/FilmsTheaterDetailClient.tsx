@@ -20,7 +20,7 @@ import { Skeleton } from '@/components/primitives'
 function useIsDesktop() {
   const [v, setV] = useState(false)
   useEffect(() => {
-    const m = window.matchMedia('(min-width: 1280px)')
+    const m = window.matchMedia('(min-width: 1024px)')   // DetailShell(1024)과 기준 통일
     const fn = () => setV(m.matches)
     fn(); m.addEventListener('change', fn)
     return () => m.removeEventListener('change', fn)
@@ -205,8 +205,8 @@ function MovieShowtimeCard({
         <IcoChevronRight />
       </button>
 
-      {/* 상영시간 */}
-      <div style={{ padding: '0 16px 16px', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+      {/* 상영시간 — 3열 균등 채움 */}
+      <div style={{ padding: '0 16px 16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
         {showtimes.map((st) => (
           <ShowtimeChip
             key={st.id} st={st}
@@ -257,6 +257,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
   const [copied, setCopied] = useState(false)
   const [selectedShowtimeId, setSelectedShowtimeId] = useState<string | null>(null)
   const [selectedMovieTitle, setSelectedMovieTitle] = useState<string | null>(null)
+  const [bookableOnly, setBookableOnly] = useState(false)
   // 공유 링크(?date=&showtime=)로 들어왔을 때, 날짜 변경 시 선택 초기화하는
   // 아래 effect가 복원 직후 곧바로 리셋해버리지 않도록 1회 억제한다.
   const suppressResetOnDateChangeRef = useRef(false)
@@ -356,8 +357,12 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
       map.get(st.movieId)!.push(st)
     }
     return dayMovies.map((m) => ({ movie: m, showtimes: map.get(m.id) ?? [] }))
+      .map((g) => bookableOnly
+        ? { ...g, showtimes: g.showtimes.filter((st) => st.seatAvailable > 0) }
+        : g)
+      .filter((g) => g.showtimes.length > 0)
       .sort((a, b) => (a.showtimes[0]?.showTime ?? '') < (b.showtimes[0]?.showTime ?? '') ? -1 : 1)
-  }, [dayMovies, dayShowtimes])
+  }, [dayMovies, dayShowtimes, bookableOnly])
 
   const selectedShowtimeData = useMemo(() => {
     if (!selectedShowtimeId || !selectedMovieTitle) return null
@@ -513,6 +518,24 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
             )
           })}
         </div>
+      </div>
+
+      {/* 예매 가능만 보기 — 날짜탭 바로 아래 오른쪽 (TheaterSheet 퀵 토글과 동일 문법) */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: isDesktop ? '12px 28px 0' : '12px 16px 0' }}>
+        <button
+          onClick={() => setBookableOnly((v) => !v)}
+          style={{
+            height: 28, padding: '0 12px', borderRadius: 9999,
+            border: '1px solid',
+            borderColor: bookableOnly ? 'var(--color-primary-base)' : 'var(--color-neutral-300)',
+            backgroundColor: bookableOnly ? 'var(--color-primary-subtle-l)' : 'transparent',
+            color: bookableOnly ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
+            fontSize: 'var(--text-meta)', fontWeight: 500, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', minHeight: 'auto', whiteSpace: 'nowrap',
+          }}
+        >
+          예매 가능만 보기
+        </button>
       </div>
 
       {/* 현재 상영중 */}
