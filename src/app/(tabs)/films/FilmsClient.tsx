@@ -46,7 +46,7 @@ function RegionHintBubble({ onDismiss }: { onDismiss: () => void }) {
         top: 'calc(100% + 10px)',
         right: 0,
         zIndex: 60,
-        width: 236,
+        width: 276,   /* 안내 문구가 두 줄로 떨어지는 폭 */
         animation: 'tipIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), tipGlow 0.7s ease-out',
       }}
     >

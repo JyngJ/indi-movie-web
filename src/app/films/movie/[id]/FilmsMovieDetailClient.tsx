@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import { Chip } from '@/components/primitives'
 import { addDaysIso, toKstIsoDate } from '@/lib/date'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
-import { DateBar } from '@/components/domain/DateBar'
 import { ShowtimeCell } from '@/components/domain/ShowtimeCell'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import Image from 'next/image'
@@ -434,32 +433,37 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
         </p>
       )}
 
-      {/* 날짜 바 — TheaterSheet과 동일한 DateBar 2.0.
-          주의: DateBar 계약은 ISO가 아니라 표시용 일자(d.date, "6") — 선택/콜백 모두 변환해서 쓸 것
-          (ISO를 그대로 넘기면 클릭 시 dayTheaters 필터가 빗나가 회차 목록이 사라진다) */}
-      <div style={{ marginTop: 12, padding: isDesktop ? 0 : '0 16px' }}>
-        {(() => {
-          const dateBarDays = dates.map((d, i) => {
-            const { day, isHoliday } = formatDateTab(d)
-            return {
-              dow: i === 0 ? '오늘' : day,
-              date: String(new Date(d + 'T00:00:00').getDate()),
-              isoDate: d,
-              type: i === 0 ? 'today' : isHoliday ? 'sunday' : day === '토' ? 'saturday' : 'weekday',
-              disabled: !activeDates.has(d),
-            } as import('@/components/domain/DateBar').Day
-          })
-          return (
-            <DateBar
-              days={dateBarDays}
-              selectedDate={dateBarDays.find((d) => d.isoDate === selectedDate)?.date}
-              onSelectDate={(disp) => {
-                const iso = dateBarDays.find((d) => d.date === disp)?.isoDate
-                if (iso) setSelectedDate(iso)
-              }}
-            />
-          )
-        })()}
+      {/* 날짜 탭 — 극장 상세와 동일한 언더라인 탭 (상영 있는 날만 활성) */}
+      <div style={{ borderBottom: '1px solid var(--color-border)', marginTop: 12 }}>
+        <div style={{ display: 'flex', overflowX: 'auto', padding: '0 4px' }} className="no-scrollbar">
+          {dates.map((d, i) => {
+            const { day, date, isHoliday } = formatDateTab(d)
+            const isSelected = d === selectedDate
+            const hasShows = activeDates.has(d)
+            return (
+              <button
+                key={d}
+                onClick={() => hasShows && setSelectedDate(d)}
+                style={{
+                  flexShrink: 0, width: 56, height: 60,
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
+                  border: 'none', background: 'none', cursor: hasShows ? 'pointer' : 'default',
+                  opacity: hasShows ? 1 : 0.35,
+                  borderBottom: isSelected ? '2px solid var(--color-primary-base)' : '2px solid transparent',
+                  minHeight: 'auto',
+                }}
+                disabled={!hasShows}
+              >
+                <span style={{ fontSize: 'var(--text-badge)', fontWeight: 500, color: isSelected ? 'var(--color-primary-base)' : isHoliday ? 'var(--color-error)' : 'var(--color-text-caption)' }}>
+                  {i === 0 ? '오늘' : day}
+                </span>
+                <span style={{ fontSize: 18, fontWeight: 700, fontFeatureSettings: '"tnum"', color: isSelected ? 'var(--color-primary-base)' : isHoliday ? 'var(--color-error)' : 'var(--color-text-primary)' }}>
+                  {date}
+                </span>
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {/* 예매 가능만 보기 — 날짜 바 바로 아래 오른쪽 */}
