@@ -38,16 +38,21 @@ catch { report.push('세리프 폰트 없음 → 제목류 Pretendard Bold 대�
 
 /* ── 컴포넌트 찾기 (2.0 라이브러리) ─────────────────────────────── */
 const compCache = new Map()
-function comp(name) {
-  if (compCache.has(name)) return compCache.get(name)
+function comp(name, variantName) {
+  const key = name + '|' + (variantName || '')
+  if (compCache.has(key)) return compCache.get(key)
   let found = null
   for (const page of figma.root.children) {
     found = page.findOne(n => (n.type === 'COMPONENT' || n.type === 'COMPONENT_SET') && n.name === name)
     if (found) break
   }
-  // 배리언트 세트면 기본 배리언트 사용 (2.0/ShowtimeCell·DateCell·PosterItem·FilterPill·logo/tile 전부 세트)
-  if (found && found.type === 'COMPONENT_SET') found = found.defaultVariant
-  compCache.set(name, found)
+  if (found && found.type === 'COMPONENT_SET') {
+    // 덤프 실명 배리언트 지정 (없으면 기본) — 예: 'Kind=평일', 'State=예정'
+    const v = variantName ? found.children.find(c => c.name === variantName) : null
+    found = v || found.defaultVariant
+    if (variantName && !v) report.push(`배리언트 없음: ${name} / ${variantName} → 기본 배리언트`)
+  }
+  compCache.set(key, found)
   if (!found) report.push(`컴포넌트 없음: ${name} → 회색 박스 폴백`)
   return found
 }
@@ -67,6 +72,7 @@ function F(name, o = {}) {
   if (o.mainAlign) f.primaryAxisAlignItems = o.mainAlign // 'MIN'|'CENTER'|'MAX'|'SPACE_BETWEEN'
   if (o.w != null && o.h != null) f.resize(o.w, o.h)
   else if (o.w != null) f.resize(o.w, f.height)
+  else if (o.h != null) f.resize(f.width, o.h)   // h만 지정 시에도 반드시 resize — 안 하면 기본 100 유지
   // 사이징: 지정한 축만 FIXED, 안 준 축은 HUG — 안 그러면 기본 100px 높이가 그대로 남는다
   if (f.layoutMode === 'HORIZONTAL') {
     f.primaryAxisSizingMode = o.w != null ? 'FIXED' : 'AUTO'
@@ -94,10 +100,13 @@ function box(w, h, o = {}) {   // 포스터·이미지 플레이스홀더
   r.cornerRadius = o.r ?? 2
   return r
 }
-function inst(name, fallbackW, fallbackH) {
-  const c = comp(name)
-  if (c) return c.createInstance()
-  return box(fallbackW, fallbackH, { fill: 'neutral/300', r: 4 })
+function inst(name, targetW, targetH, variantName) {
+  const c = comp(name, variantName)
+  if (!c) return box(targetW, targetH, { fill: 'neutral/300', r: 4 })
+  const i = c.createInstance()
+  // 원본 크기 그대로 꽂으면 로고(351px) 같은 컴포넌트가 프레임을 덮는다 — 목표 폭 기준 rescale
+  if (targetW && Math.abs(i.width - targetW) > 1) i.rescale(targetW / i.width)
+  return i
 }
 // FILL 사이징은 반드시 appendChild 후에
 function fill(node) { node.layoutSizingHorizontal = 'FILL' }
@@ -105,40 +114,36 @@ function fill(node) { node.layoutSizingHorizontal = 'FILL' }
 /* ── 공통 부품 ─────────────────────────────────────────────────── */
 function topBar(width, crumbTitle) {
   const bar = F('DetailTopBar', { dir: 'H', gap: 8, pad: [0, 12, 0, 0], fill: 'neutral/50', align: 'CENTER', mainAlign: 'SPACE_BETWEEN', w: width, h: 52 })
-  bar.primaryAxisSizingMode = 'FIXED'; bar.counterAxisSizingMode = 'FIXED'
   bar.strokes = [paint('neutral/200')]; bar.strokeWeight = 1
   bar.strokeAlign = 'INSIDE'; bar.strokeTopWeight = 0; bar.strokeLeftWeight = 0; bar.strokeRightWeight = 0; bar.strokeBottomWeight = 1
   const left = F('crumbs', { dir: 'H', gap: 4, pad: [0, 0, 0, 0], align: 'CENTER' })
   bar.appendChild(left)
   const back = F('back', { dir: 'H', pad: [0, 0, 0, 0], align: 'CENTER', mainAlign: 'CENTER', w: 44, h: 44 })
-  back.primaryAxisSizingMode = 'FIXED'; back.counterAxisSizingMode = 'FIXED'
   const chev = inst('2.0/icon/chevron-left', 22, 22)
   back.appendChild(chev)
   left.appendChild(back)
   left.appendChild(T('영화', { size: 12, color: 'neutral/500' }))
   left.appendChild(T('>', { size: 12, color: 'neutral/500' }))
   left.appendChild(T(crumbTitle, { size: 12, weight: 'SemiBold', color: 'neutral/900' }))
-  const pill = inst('2.0/FilterPill', 96, 28)
+  const pill = inst('2.0/FilterPill', 0, 0, 'State=Default')
   bar.appendChild(pill)
   return bar
 }
 
-function dateBar2(width) {   // 영화 상세: DateBar 2.0 — DateCell 인스턴스 7개
-  const row = F('DateBar 2.0', { dir: 'H', gap: 0, pad: [8, 4, 8, 4], align: 'CENTER', mainAlign: 'SPACE_BETWEEN', w: width, h: 74 })
-  row.primaryAxisSizingMode = 'FIXED'
-  for (let i = 0; i < 7; i++) row.appendChild(inst('2.0/DateCell', 44, 58))
+function dateBar2(width) {   // 영화 상세: DateBar 2.0 — DateCell 배리언트 실명(덤프) 7칸
+  const row = F('DateBar 2.0', { dir: 'H', gap: 0, pad: [8, 12, 8, 12], align: 'CENTER', mainAlign: 'SPACE_BETWEEN', w: width, h: 79, fill: 'white' })
+  const kinds = ['Kind=오늘', 'Kind=평일', 'Kind=토요일', 'Kind=일요일', 'Kind=평일', 'Kind=평일', 'Kind=평일']
+  for (const k of kinds) row.appendChild(inst('2.0/DateCell', 0, 0, k))   // 원본 크기 그대로 (54/38 x 63)
   return row
 }
 
 function oldDateTabs(width) {   // 극장 상세: 구 날짜탭(56×60 언더라인) — 코드 현행 그대로
   const row = F('date-tabs (legacy)', { dir: 'H', gap: 0, pad: [0, 4, 0, 4], w: width, h: 60 })
-  row.primaryAxisSizingMode = 'FIXED'
   row.strokes = [paint('neutral/200')]; row.strokeWeight = 1; row.strokeAlign = 'INSIDE'
   row.strokeTopWeight = 0; row.strokeLeftWeight = 0; row.strokeRightWeight = 0; row.strokeBottomWeight = 1
   const labels = [['오늘', '6', true], ['금', '7', false], ['토', '8', false], ['일', '9', false], ['월', '10', false], ['화', '11', false], ['수', '12', false]]
   for (const [dow, num, sel] of labels) {
     const cell = F('tab', { dir: 'V', gap: 4, pad: [0, 0, 0, 0], align: 'CENTER', mainAlign: 'CENTER', w: 56, h: 60 })
-    cell.primaryAxisSizingMode = 'FIXED'; cell.counterAxisSizingMode = 'FIXED'
     if (sel) { cell.strokes = [paint('primary/700')]; cell.strokeWeight = 1; cell.strokeAlign = 'INSIDE'; cell.strokeTopWeight = 0; cell.strokeLeftWeight = 0; cell.strokeRightWeight = 0; cell.strokeBottomWeight = 2 }
     cell.appendChild(T(dow, { size: 10, weight: 'Medium', color: sel ? 'primary/700' : 'neutral/500' }))
     cell.appendChild(T(num, { size: 18, weight: 'Bold', color: sel ? 'primary/700' : 'neutral/900' }))
@@ -148,19 +153,19 @@ function oldDateTabs(width) {   // 극장 상세: 구 날짜탭(56×60 언더라
 }
 
 function showtimeGrid(width, count) {
-  const grid = F('showtime-grid', { dir: 'H', gap: 12, pad: [12, 16, 16, 16], w: width })
-  grid.primaryAxisSizingMode = 'FIXED'
-  grid.layoutWrap = 'WRAP'
-  grid.counterAxisSpacing = 12
-  for (let i = 0; i < count; i++) grid.appendChild(inst('2.0/ShowtimeCell', 104, 64))
+  // 3열 균등 채움 (코드: grid repeat(3,1fr)) — 셀들 가로 FILL
+  const grid = F('showtime-grid', { dir: 'H', gap: 8, pad: [12, 16, 16, 16], w: width })
+  for (let i = 0; i < count; i++) {
+    const c = inst('2.0/ShowtimeCell', 0, 0, 'State=예정')
+    grid.appendChild(c)
+    c.layoutSizingHorizontal = 'FILL'
+  }
   return grid
 }
 
 function theaterCard(width) {   // 영화 상세: 극장 카드 (r16 border)
   const card = F('theater-card', { dir: 'V', gap: 0, pad: [0, 0, 0, 0], fill: 'white', r: 16, stroke: 'neutral/200', w: width, clip: true })
-  card.primaryAxisSizingMode = 'AUTO'
   const head = F('head', { dir: 'H', gap: 12, pad: [16, 16, 12, 16], align: 'MIN', mainAlign: 'SPACE_BETWEEN', w: width })
-  head.primaryAxisSizingMode = 'FIXED'
   head.strokes = [paint('neutral/200')]; head.strokeWeight = 1; head.strokeAlign = 'INSIDE'
   head.strokeTopWeight = 0; head.strokeLeftWeight = 0; head.strokeRightWeight = 0; head.strokeBottomWeight = 1
   const info = F('info', { dir: 'V', gap: 4, pad: [0, 0, 0, 0] })
@@ -175,10 +180,8 @@ function theaterCard(width) {   // 영화 상세: 극장 카드 (r16 border)
 
 function sectionTitleRow(width, title) {
   const row = F('sec-head', { dir: 'H', gap: 8, pad: [16, 0, 0, 0], align: 'CENTER', mainAlign: 'SPACE_BETWEEN', w: width })
-  row.primaryAxisSizingMode = 'FIXED'
   row.appendChild(T(title, { size: 20, weight: 'Bold', color: 'neutral/900' }))
   const cta = F('map-cta', { dir: 'H', gap: 4, pad: [0, 12, 0, 12], fill: 'primary/700', r: 9999, align: 'CENTER', h: 30 })
-  cta.counterAxisSizingMode = 'FIXED'
   cta.appendChild(T('지도에서 필터로 보기', { size: 12, weight: 'SemiBold', color: 'white' }))
   row.appendChild(cta)
   return row
@@ -189,29 +192,26 @@ function labelCaps(text) { return T(text, { size: 13, weight: 'Medium', color: '
 /* ── PC 프레임 셸: 레일 64 + 패널(r16 좌측) + 상단바 풀폭 + 본문 1000 ── */
 function pcShell(name, crumbTitle) {
   const root = F(name, { dir: 'H', gap: 0, pad: [0, 0, 0, 0], fill: 'neutral/100', w: 1440, h: 1600 })
-  root.primaryAxisSizingMode = 'FIXED'; root.counterAxisSizingMode = 'FIXED'
   const rail = F('rail', { dir: 'V', gap: 20, pad: [16, 12, 16, 12], fill: 'neutral/100', align: 'CENTER', w: 64, h: 1600 })
-  rail.primaryAxisSizingMode = 'FIXED'; rail.counterAxisSizingMode = 'FIXED'
-  rail.appendChild(inst('2.0/logo/tile', 40, 40))
+  rail.appendChild(inst('2.0/logo/tile', 40, 40, 'Color=인디고'))
   root.appendChild(rail)
   const panel = F('panel', { dir: 'V', gap: 0, pad: [0, 0, 0, 0], fill: 'neutral/50', rTL: 16, w: 1376, h: 1600, clip: true })
-  panel.primaryAxisSizingMode = 'FIXED'; panel.counterAxisSizingMode = 'FIXED'
   root.appendChild(panel)
   panel.appendChild(topBar(1376, crumbTitle))
   const col = F('content-1000', { dir: 'V', gap: 0, pad: [0, 0, 0, 0], w: 1000 })
   panel.appendChild(col)
+  col.layoutSizingVertical = 'FILL'
   panel.counterAxisAlignItems = 'CENTER'   // 본문 컬럼 중앙
   return { root, col }
 }
 function mobileShell(name, crumbTitle) {
   const root = F(name, { dir: 'V', gap: 0, pad: [0, 0, 0, 0], fill: 'neutral/50', w: 402, h: 1400 })
-  root.primaryAxisSizingMode = 'FIXED'; root.counterAxisSizingMode = 'FIXED'
   root.appendChild(topBar(402, crumbTitle))
   const col = F('content', { dir: 'V', gap: 0, pad: [0, 0, 0, 0], w: 402 })
   root.appendChild(col)
+  col.layoutSizingVertical = 'FILL'   // 탭바를 프레임 바닥으로 밀착
   return { root, col, addTabbar: () => {
     const tb = F('tabbar', { dir: 'H', gap: 0, pad: [6, 60, 6, 60], fill: 'white', align: 'CENTER', mainAlign: 'SPACE_BETWEEN', w: 402, h: 64 })
-    tb.primaryAxisSizingMode = 'FIXED'; tb.counterAxisSizingMode = 'FIXED'
     for (const [icon, label, active] of [['2.0/icon/map', '지도', false], ['2.0/icon/clapperboard', '상영작', true], ['2.0/icon/settings', '설정', false]]) {
       const tab = F('tab', { dir: 'V', gap: 4, pad: [6, 14, 6, 14], align: 'CENTER', r: 8, fill: active ? 'primary/100' : undefined })
       tab.appendChild(inst(icon, 23, 23))
@@ -226,7 +226,6 @@ function mobileShell(name, crumbTitle) {
 /* ── 1) 영화 상세 ─────────────────────────────────────────────── */
 function movieHero(width, desktop) {
   const hero = F('hero', { dir: 'H', gap: desktop ? 32 : 16, pad: desktop ? [32, 0, 28, 0] : [24, 16, 20, 16], w: width })
-  hero.primaryAxisSizingMode = 'FIXED'
   hero.appendChild(box(desktop ? 200 : 100, desktop ? 300 : 150))
   const tx = F('texts', { dir: 'V', gap: 12, pad: [4, 0, 0, 0] })
   tx.appendChild(T('도그빌', { size: desktop ? 34 : 22, serif: true, color: 'neutral/900' }))
@@ -234,7 +233,6 @@ function movieHero(width, desktop) {
   const pills = F('genres', { dir: 'H', gap: 8, pad: [0, 0, 0, 0] })
   for (const g of ['드라마', '미스터리', '스릴러']) {
     const p = F('pill', { dir: 'H', pad: [0, 12, 0, 12], fill: 'primary/100', r: 9999, align: 'CENTER', h: 24 })
-    p.counterAxisSizingMode = 'FIXED'
     p.strokes = [paint('primary/700')]; p.strokeWeight = 1; p.opacity = 1
     p.appendChild(T(g, { size: 12, weight: 'Medium', color: 'primary/700' }))
     pills.appendChild(p)
@@ -252,7 +250,6 @@ function movieHero(width, desktop) {
 }
 function synopsis(width, pad) {
   const s = F('synopsis', { dir: 'V', gap: 8, pad, w: width })
-  s.primaryAxisSizingMode = 'FIXED'
   s.appendChild(labelCaps('시놉시스'))
   const body = T('록키 산맥에 자리한 작은 마을 도그빌. 이 평온한 곳에 어느 날 밤 총소리가 들린다. 그리고 한 미모의 여자가 마을로 숨어 들어온다…', { size: 14, color: 'neutral/700' })
   s.appendChild(body)
@@ -262,14 +259,11 @@ function synopsis(width, pad) {
 }
 function detailInfoTable(width) {
   const wrap = F('detail-info', { dir: 'V', gap: 8, pad: [0, 0, 0, 0], w: width })
-  wrap.primaryAxisSizingMode = 'FIXED'
   wrap.appendChild(labelCaps('상세 정보'))
   const table = F('table', { dir: 'V', gap: 0, pad: [0, 0, 0, 0], fill: 'white', r: 12, stroke: 'neutral/200', w: width, clip: true })
-  table.primaryAxisSizingMode = 'AUTO'
   const rows = [['국가', '🇩🇰덴마크, 🇸🇪스웨덴, 🇫🇷프랑스'], ['개봉', '2003'], ['상영 시간', '177분'], ['장르', '드라마, 미스터리, 스릴러']]
   rows.forEach(([k, v], i) => {
     const r = F('row', { dir: 'H', gap: 0, pad: [12, 16, 12, 16], align: 'CENTER', w: width })
-    r.primaryAxisSizingMode = 'FIXED'
     if (i < rows.length - 1) { r.strokes = [paint('neutral/200')]; r.strokeWeight = 1; r.strokeAlign = 'INSIDE'; r.strokeTopWeight = 0; r.strokeLeftWeight = 0; r.strokeRightWeight = 0; r.strokeBottomWeight = 1 }
     const key = T(k, { size: 12, weight: 'Medium', color: 'neutral/600' }); key.resize(72, key.height)
     r.appendChild(key)
@@ -284,22 +278,18 @@ function buildMovieDetail() {
   const pc = pcShell('MovieDetail · PC', '도그빌')
   pc.col.appendChild(movieHero(1000, true))
   const grid = F('two-col', { dir: 'H', gap: 32, pad: [0, 0, 64, 0], align: 'MIN', w: 1000 })
-  grid.primaryAxisSizingMode = 'FIXED'
   const main = F('main', { dir: 'V', gap: 0, pad: [0, 0, 0, 0], w: 648 })
   main.appendChild(synopsis(648, [0, 0, 20, 0]))
   main.appendChild(sectionTitleRow(648, '상영 영화관 및 일정'))
   main.appendChild(dateBar2(648))
   const cardWrapPc = F('cards', { dir: 'V', gap: 12, pad: [16, 0, 0, 0], w: 648 })
-  cardWrapPc.primaryAxisSizingMode = 'FIXED'
   cardWrapPc.appendChild(theaterCard(648))
   main.appendChild(cardWrapPc)
   grid.appendChild(main)
   const side = F('sidebar', { dir: 'V', gap: 20, pad: [8, 0, 0, 0], w: 320 })
   const dwrap = F('director', { dir: 'V', gap: 8, pad: [0, 0, 0, 0], w: 320 })
-  dwrap.primaryAxisSizingMode = 'FIXED'
   dwrap.appendChild(labelCaps('감독'))
   const dcard = F('card', { dir: 'H', gap: 12, pad: [12, 16, 12, 16], fill: 'white', r: 12, stroke: 'neutral/200', align: 'CENTER', mainAlign: 'SPACE_BETWEEN', w: 320 })
-  dcard.primaryAxisSizingMode = 'FIXED'
   const dl = F('l', { dir: 'H', gap: 12, pad: [0, 0, 0, 0], align: 'CENTER' })
   const dav = figma.createEllipse(); dav.resize(48, 48); dav.fills = [paint('neutral/100')]
   dl.appendChild(dav)
@@ -320,11 +310,9 @@ function buildMovieDetail() {
   mo.col.appendChild(movieHero(402, false))
   mo.col.appendChild(synopsis(402, [0, 16, 16, 16]))
   const secM = F('sec', { dir: 'V', gap: 0, pad: [8, 16, 0, 16], w: 402 })
-  secM.primaryAxisSizingMode = 'FIXED'
   secM.appendChild(sectionTitleRow(370, '상영 영화관 및 일정'))
   secM.appendChild(dateBar2(370))
   const cardWrapM = F('cards', { dir: 'V', gap: 12, pad: [12, 0, 24, 0], w: 370 })
-  cardWrapM.primaryAxisSizingMode = 'FIXED'
   cardWrapM.appendChild(theaterCard(370))
   secM.appendChild(cardWrapM)
   mo.col.appendChild(secM)
@@ -335,7 +323,6 @@ function buildMovieDetail() {
 /* ── 2) 극장 상세 ─────────────────────────────────────────────── */
 function theaterHero(width, desktop) {
   const hero = F('hero', { dir: 'V', gap: 12, pad: desktop ? [28, 28, 24, 28] : [20, 16, 20, 16], w: width })
-  hero.primaryAxisSizingMode = 'FIXED'
   hero.fills = [{
     type: 'GRADIENT_LINEAR',
     gradientTransform: [[0, 1, 0], [-1, 0, 1]],
@@ -352,7 +339,6 @@ function theaterHero(width, desktop) {
   const ctas = F('ctas', { dir: 'H', gap: 8, pad: [8, 0, 0, 0] })
   const mk = (label, primary) => {
     const b = F('btn', { dir: 'H', gap: 8, pad: [0, 16, 0, 16], r: 12, align: 'CENTER', h: 40, fill: primary ? 'primary/700' : 'white', stroke: primary ? undefined : 'neutral/200' })
-    b.counterAxisSizingMode = 'FIXED'
     b.appendChild(T(label, { size: 13, weight: 'SemiBold', color: primary ? 'white' : 'neutral/700' }))
     return b
   }
@@ -366,26 +352,34 @@ function buildTheaterDetail() {
   const pc = pcShell('TheaterDetail · PC', '더숲 아트시네마')
   pc.col.appendChild(theaterHero(1000, true))
   pc.col.appendChild(oldDateTabs(1000))
-  const listPc = F('movies', { dir: 'V', gap: 12, pad: [16, 0, 64, 0], w: 1000 })
-  listPc.primaryAxisSizingMode = 'FIXED'
-  listPc.appendChild(theaterMovieCard(1000))
+  pc.col.appendChild(bookableRow(1000))
+  // 카드 절반 폭 — 1개여도 좌측 절반만 차지 (코드: PC 2열 그리드)
+  const listPc = F('movies', { dir: 'V', gap: 12, pad: [16, 28, 64, 28], w: 1000 })
+  listPc.appendChild(theaterMovieCard(464))
   pc.col.appendChild(listPc)
 
   const mo = mobileShell('TheaterDetail · Mobile', '더숲 아트시네마')
   mo.col.appendChild(theaterHero(402, false))
   mo.col.appendChild(oldDateTabs(402))
+  mo.col.appendChild(bookableRow(402))
   const listM = F('movies', { dir: 'V', gap: 12, pad: [12, 16, 24, 16], w: 402 })
-  listM.primaryAxisSizingMode = 'FIXED'
   listM.appendChild(theaterMovieCard(370))
   mo.col.appendChild(listM)
   mo.addTabbar()
   return [pc.root, mo.root]
 }
+
+function bookableRow(width) {   // 날짜탭 아래 오른쪽 '예매 가능만 보기' 토글
+  const row = F('bookable-row', { dir: 'H', gap: 0, pad: [12, 28, 0, 28], mainAlign: 'MAX', w: width })
+  const pill = F('pill', { dir: 'H', pad: [0, 12, 0, 12], r: 9999, align: 'CENTER', h: 28, stroke: 'neutral/300' })
+  pill.appendChild(T('예매 가능만 보기', { size: 12, weight: 'Medium', color: 'neutral/500' }))
+  row.appendChild(pill)
+  return row
+}
+
 function theaterMovieCard(width) {   // 극장 상세: 영화별 카드 (포스터 68 + 제목 + 셀)
   const card = F('movie-card', { dir: 'V', gap: 0, pad: [0, 0, 0, 0], fill: 'white', r: 16, stroke: 'neutral/200', w: width, clip: true })
-  card.primaryAxisSizingMode = 'AUTO'
   const head = F('head', { dir: 'H', gap: 12, pad: [16, 16, 12, 16], align: 'CENTER', w: width })
-  head.primaryAxisSizingMode = 'FIXED'
   head.appendChild(box(68, 102))
   const info = F('info', { dir: 'V', gap: 4, pad: [0, 0, 0, 0] })
   info.appendChild(T('도그빌', { size: 15, weight: 'Bold', serif: true, color: 'neutral/900' }))
@@ -398,31 +392,31 @@ function theaterMovieCard(width) {   // 극장 상세: 영화별 카드 (포스�
 
 /* ── 3) 감독 상세 ─────────────────────────────────────────────── */
 function directorHero(width) {
-  const hero = F('hero', { dir: 'V', gap: 8, pad: [32, 16, 24, 16], align: 'CENTER', w: width })
-  hero.primaryAxisSizingMode = 'FIXED'
-  const av = figma.createEllipse(); av.resize(112, 112); av.fills = [paint('neutral/100')]
+  // 영화 상세 히어로 문법: 왼쪽 아바타 + 오른쪽 텍스트/CTA 좌측 정렬
+  const desktop = width > 500
+  const hero = F('hero', { dir: 'H', gap: desktop ? 32 : 16, pad: desktop ? [32, 0, 28, 0] : [24, 16, 20, 16], w: width })
+  const av = figma.createEllipse(); av.resize(desktop ? 160 : 100, desktop ? 160 : 100); av.fills = [paint('neutral/100')]
   av.strokes = [paint('neutral/200')]; av.strokeWeight = 1
   hero.appendChild(av)
-  hero.appendChild(T('라스 폰 트리에', { size: 24, serif: true, color: 'neutral/900' }))
-  hero.appendChild(T('Lars von Trier', { size: 14, color: 'neutral/600' }))
-  hero.appendChild(T('상영중 6편', { size: 13, weight: 'SemiBold', color: 'primary/700' }))
-  const ctas = F('ctas', { dir: 'H', gap: 8, pad: [12, 0, 0, 0] })
+  const tx = F('texts', { dir: 'V', gap: 8, pad: [4, 0, 0, 0] })
+  hero.appendChild(tx)
+  tx.appendChild(T('라스 폰 트리에', { size: desktop ? 34 : 22, serif: true, color: 'neutral/900' }))
+  tx.appendChild(T('Lars von Trier', { size: desktop ? 14 : 12, color: 'neutral/600' }))
+  tx.appendChild(T('상영중 6편', { size: 13, weight: 'SemiBold', color: 'primary/700' }))
+  const ctas = F('ctas', { dir: 'H', gap: 8, pad: [8, 0, 0, 0] })
   const map = F('btn', { dir: 'H', gap: 8, pad: [0, 16, 0, 16], fill: 'primary/700', r: 12, align: 'CENTER', h: 40 })
-  map.counterAxisSizingMode = 'FIXED'
   map.appendChild(T('지도에서 필터로 보기', { size: 13, weight: 'SemiBold', color: 'white' }))
   ctas.appendChild(map)
   const share = F('share', { dir: 'H', pad: [0, 0, 0, 0], fill: 'white', r: 12, stroke: 'neutral/200', align: 'CENTER', mainAlign: 'CENTER', w: 40, h: 40 })
-  share.primaryAxisSizingMode = 'FIXED'; share.counterAxisSizingMode = 'FIXED'
   share.appendChild(inst('2.0/icon/share-2', 16, 16))
   ctas.appendChild(share)
-  hero.appendChild(ctas)
+  tx.appendChild(ctas)
   return hero
 }
 function buildDirectorDetail() {
   const mk = (shell, width) => {
     shell.col.appendChild(directorHero(width))
     const bio = F('bio', { dir: 'V', gap: 8, pad: [20, 16, 20, 16], w: width })
-    bio.primaryAxisSizingMode = 'FIXED'
     bio.strokes = [paint('neutral/200')]; bio.strokeWeight = 1; bio.strokeAlign = 'INSIDE'
     bio.strokeLeftWeight = 0; bio.strokeRightWeight = 0
     bio.appendChild(labelCaps('소개'))
@@ -430,29 +424,26 @@ function buildDirectorDetail() {
     bio.appendChild(t); t.layoutSizingHorizontal = 'FILL'; t.lineHeight = { value: 180, unit: 'PERCENT' }
     shell.col.appendChild(bio)
     const now = F('now-playing', { dir: 'V', gap: 16, pad: [20, 16, 0, 16], w: width })
-    now.primaryAxisSizingMode = 'FIXED'
     now.appendChild(T('지금 상영중', { size: 20, weight: 'Bold', color: 'neutral/900' }))
     const row = F('posters', { dir: 'H', gap: 16, pad: [0, 0, 4, 0] })
-    for (let i = 0; i < 3; i++) row.appendChild(inst('2.0/PosterItem', 128, 240))
+    for (let i = 0; i < 3; i++) row.appendChild(inst('2.0/PosterItem', 128, 240, 'Selected=False'))
     now.appendChild(row)
     shell.col.appendChild(now)
     const filmo = F('filmography', { dir: 'V', gap: 12, pad: [20, 16, 52, 16], w: width })
-    filmo.primaryAxisSizingMode = 'FIXED'
     const fh = F('head', { dir: 'H', gap: 8, pad: [0, 0, 12, 0], align: 'CENTER', mainAlign: 'SPACE_BETWEEN', w: width - 32 })
-    fh.primaryAxisSizingMode = 'FIXED'
     fh.appendChild(T('전체 필모그래피', { size: 20, weight: 'Bold', color: 'neutral/900' }))
     const sorts = F('sorts', { dir: 'H', gap: 8, pad: [0, 0, 0, 0] })
     for (const [label, on] of [['상영중', true], ['연도순', false]]) {
       const p = F('pill', { dir: 'H', pad: [0, 12, 0, 12], r: 9999, align: 'CENTER', h: 26, fill: on ? 'primary/100' : undefined, stroke: on ? 'primary/700' : 'neutral/200' })
-      p.counterAxisSizingMode = 'FIXED'
       p.appendChild(T(label, { size: 12, weight: on ? 'SemiBold' : 'Regular', color: on ? 'primary/700' : 'neutral/500' }))
       sorts.appendChild(p)
     }
     fh.appendChild(sorts)
     filmo.appendChild(fh)
     const grid = F('grid', { dir: 'H', gap: 16, pad: [0, 0, 0, 0], w: width - 32 })
-    grid.primaryAxisSizingMode = 'FIXED'; grid.layoutWrap = 'WRAP'; grid.counterAxisSpacing = 24
-    for (let i = 0; i < (width > 500 ? 6 : 3); i++) grid.appendChild(inst('2.0/PosterItem', 128, 240))
+    grid.layoutWrap = 'WRAP'
+    grid.counterAxisSpacing = 24
+    for (let i = 0; i < (width > 500 ? 6 : 3); i++) grid.appendChild(inst('2.0/PosterItem', 128, 240, 'Selected=False'))
     filmo.appendChild(grid)
     shell.col.appendChild(filmo)
   }

@@ -2731,8 +2731,7 @@ export default function MapView() {
                 {movie.originalTitle && (
                   <div style={{
                     marginTop: 4,
-                    fontFamily: 'var(--font-serif-en)',
-                    fontSize: 'var(--text-bask-meta)',
+                                        fontSize: 'var(--text-bask-meta)',
                     fontStyle: 'normal',
                     fontWeight: 400,
                     color: 'var(--color-text-caption)',
@@ -3347,7 +3346,7 @@ export default function MapView() {
           style={{
             position: 'absolute',
             inset: 0,
-            backgroundColor: isDark ? 'var(--color-neutral-50)' : 'var(--color-neutral-900)',
+            backgroundColor: isDark ? 'var(--color-neutral-100)' : 'var(--color-neutral-900)',
             WebkitMaskImage: 'url(/logo.svg)',
             maskImage: 'url(/logo.svg)',
             WebkitMaskRepeat: 'no-repeat',

@@ -1318,7 +1318,6 @@ export function TheaterSheet({
                             fontSize: 'var(--text-badge)',
                             fontWeight: 600,
                             color: 'var(--color-text-primary)',
-                            fontFamily: 'var(--font-serif)',
                             lineHeight: 1.35,
                             overflow: 'hidden',
                             display: '-webkit-box',
@@ -1717,7 +1716,7 @@ export function TheaterSheet({
                               </div>
                               <div style={{
                                 marginTop: 8, fontSize: 'var(--text-badge)', fontWeight: 600,
-                                color: 'var(--color-text-primary)', fontFamily: 'var(--font-serif)',
+                                color: 'var(--color-text-primary)',
                                 lineHeight: 1.35, overflow: 'hidden',
                                 display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
                                 opacity: unavailable ? 0.4 : 1,
@@ -1764,7 +1763,7 @@ export function TheaterSheet({
                                   </div>
                                   <div style={{
                                     marginTop: 8, fontSize: 'var(--text-badge)', fontWeight: 600,
-                                    color: 'var(--color-text-primary)', fontFamily: 'var(--font-serif)',
+                                    color: 'var(--color-text-primary)',
                                     lineHeight: 1.35, overflow: 'hidden',
                                     display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
                                   }}>{movie.title}</div>

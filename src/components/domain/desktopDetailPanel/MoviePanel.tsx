@@ -92,7 +92,7 @@ export function MoviePanel({
             {movie.title}
           </h1>
           {movie.originalTitle && (
-            <div style={{ marginTop: 4, fontFamily: 'var(--font-serif-en)', fontStyle: 'italic', fontSize: 12, color: 'var(--color-text-caption)' }}>
+            <div style={{ marginTop: 4, fontSize: 12, color: 'var(--color-text-caption)' }}>
               {movie.originalTitle}
             </div>
           )}

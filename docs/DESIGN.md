@@ -35,9 +35,9 @@
 | `--color-neutral-500` | `#8D8781` | 캡션·메타 — 경계 정보만 |
 | `--color-neutral-400` | `#A7A19A` | 플레이스홀더 |
 | `--color-neutral-300` | `#C6BFB9` | 비활성·보조 구분 (2.0 신설) |
-| `--color-neutral-200` | `#EAE5E1` | 보더·구분선 |
-| `--color-neutral-100` | `#EAE5E1` | 눌린 면·비활성 배경 |
-| `--color-neutral-50`  | `#FAF9F8` | 페이지 배경 (미색 종이) |
+| `--color-neutral-200` | `#EAE5E1` | 보더·구분선·눌린 면 (피그마 neutral/200) |
+| `--color-neutral-150` | `#F3F0ED` | 옅은 면 — 배경과 눌린 면 사이 (피그마 스탑 추가 예정) |
+| `--color-neutral-100` | `#FAF9F8` | 페이지 배경 (미색 종이, 피그마 neutral/100 — 2026-08-07 스케일 정합, 구 50 폐지) |
 
 ### Surface — 종이 위에 흰 카드가 뜨는 구조
 

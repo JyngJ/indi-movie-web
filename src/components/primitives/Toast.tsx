@@ -41,7 +41,7 @@ export function Toast({ message, trigger = 0, visible, duration = 1600 }: ToastP
         pointerEvents: 'none',
         zIndex: 9999,
         background: 'var(--color-neutral-900)',
-        color: 'var(--color-neutral-50)',
+        color: 'var(--color-neutral-100)',
         fontSize: 14,
         fontWeight: 600,
         padding: '12px 16px',

@@ -3,9 +3,10 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
+import { Chip, Avatar } from '@/components/primitives'
+import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
 import { addDaysIso, toKstIsoDate } from '@/lib/date'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
-import { DateBar } from '@/components/domain/DateBar'
 import { ShowtimeCell } from '@/components/domain/ShowtimeCell'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import Image from 'next/image'
@@ -25,7 +26,7 @@ import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/compo
 function useIsDesktop() {
   const [v, setV] = useState(false)
   useEffect(() => {
-    const m = window.matchMedia('(min-width: 1280px)')
+    const m = window.matchMedia('(min-width: 1024px)')   // DetailShell(1024)과 기준 통일
     const fn = () => setV(m.matches); fn()
     m.addEventListener('change', fn); return () => m.removeEventListener('change', fn)
   }, [])
@@ -88,9 +89,7 @@ function ShowtimeChip({ st, selected, onClick }: { st: Showtime; selected?: bool
 function DirectorChip({ name, photoUrl, onClick }: { name: string; photoUrl?: string; onClick: () => void }) {
   return (
     <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px 8px 8px', borderRadius: 9999, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', cursor: 'pointer', minHeight: 'auto' }}>
-      <div style={{ width: 28, height: 28, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-caption)' }}>
-        {photoUrl ? <img src={photoUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} /> : <IcoUser />}
-      </div>
+      <Avatar name={name} photoUrl={photoUrl} size={28} />
       <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)' }}>{name}</span>
       <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-primary-base)', fontWeight: 500 }}>감독 →</span>
     </button>
@@ -114,6 +113,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
   useEffect(() => { setRegionId(getStoredRegion()) }, [])
   const [selectedShowtimeId, setSelectedShowtimeId] = useState<string | null>(null)
   const [selectedTheaterId, setSelectedTheaterId] = useState<string | null>(null)
+  const [bookableOnly, setBookableOnly] = useState(false)
   // 공유 링크(?date=&theater=&showtime=)로 들어왔을 때, 날짜 변경 시 선택 초기화하는
   // 아래 effect가 복원 직후 곧바로 리셋해버리지 않도록 1회 억제한다.
   const suppressResetOnDateChangeRef = useRef(false)
@@ -204,10 +204,11 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
     return theaterEntries
       .map((entry) => ({
         ...entry,
-        showtimes: entry.dateGroups.find((g) => g.date === selectedDate)?.showtimes ?? [],
+        showtimes: (entry.dateGroups.find((g) => g.date === selectedDate)?.showtimes ?? [])
+          .filter((st) => !bookableOnly || st.seatAvailable > 0),
       }))
       .filter((entry) => entry.showtimes.length > 0)
-  }, [theaterEntries, selectedDate])
+  }, [theaterEntries, selectedDate, bookableOnly])
 
   const totalTheaterCount = theaterEntries.length
   const { inRegion: inRegionEntries, otherRegion: otherRegionEntries } = useMemo(() => {
@@ -301,11 +302,11 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
 
       {/* 텍스트 */}
       <div style={{ flex: 1, minWidth: 0, paddingTop: 4 }}>
-        <h1 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: isDesktop ? 34 : 22, fontWeight: 700, lineHeight: 1.2, color: 'var(--color-text-primary)', wordBreak: 'keep-all' }}>
+        <h1 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)', wordBreak: 'keep-all' }}>
           {movie.title}
         </h1>
         {movie.originalTitle && (
-          <div style={{ marginTop: 4, fontFamily: 'var(--font-serif-en)', fontStyle: 'italic', fontSize: isDesktop ? 14 : 12, color: 'var(--color-text-caption)' }}>
+          <div style={{ marginTop: 4, fontSize: isDesktop ? 14 : 12, color: 'var(--color-text-caption)' }}>
             {movie.originalTitle}
           </div>
         )}
@@ -351,14 +352,14 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
           style={{ width: '100%', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, padding: '16px 16px 12px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', minHeight: 'auto', borderBottom: '1px solid var(--color-border)' }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>
-            <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, fontFamily: 'var(--font-serif)', color: 'var(--color-text-primary)', display: 'block', lineHeight: 1.3 }}>{entry.theaterName}</span>
+            <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)', display: 'block', lineHeight: 1.3 }}>{entry.theaterName}</span>
             <div style={{ marginTop: 4, display: 'flex', alignItems: 'flex-start', gap: 4, color: 'var(--color-text-sub)', fontSize: 12 }}>
               <IcoPin /><span style={{ wordBreak: 'keep-all', lineHeight: 1.45 }}>{entry.theaterAddress}</span>
             </div>
           </div>
           <IcoChevronRight />
         </button>
-        <div style={{ padding: '12px 16px 16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(var(--comp-showtime-min-width), 1fr))', gap: 12 }}>
+        <div style={{ padding: '12px 16px 16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, backgroundColor: 'var(--color-neutral-100)' }}>
           {entry.showtimes.map((st) => {
             /* TheaterSheet과 동일한 kind 분류 */
             const [sh, sm] = st.showTime.split(':').map(Number)
@@ -431,32 +432,16 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
         </p>
       )}
 
-      {/* 날짜 바 — TheaterSheet과 동일한 DateBar 2.0.
-          주의: DateBar 계약은 ISO가 아니라 표시용 일자(d.date, "6") — 선택/콜백 모두 변환해서 쓸 것
-          (ISO를 그대로 넘기면 클릭 시 dayTheaters 필터가 빗나가 회차 목록이 사라진다) */}
-      <div style={{ marginTop: 12, padding: isDesktop ? 0 : '0 16px' }}>
-        {(() => {
-          const dateBarDays = dates.map((d, i) => {
-            const { day, isHoliday } = formatDateTab(d)
-            return {
-              dow: i === 0 ? '오늘' : day,
-              date: String(new Date(d + 'T00:00:00').getDate()),
-              isoDate: d,
-              type: i === 0 ? 'today' : isHoliday ? 'sunday' : day === '토' ? 'saturday' : 'weekday',
-              disabled: !activeDates.has(d),
-            } as import('@/components/domain/DateBar').Day
-          })
-          return (
-            <DateBar
-              days={dateBarDays}
-              selectedDate={dateBarDays.find((d) => d.isoDate === selectedDate)?.date}
-              onSelectDate={(disp) => {
-                const iso = dateBarDays.find((d) => d.date === disp)?.isoDate
-                if (iso) setSelectedDate(iso)
-              }}
-            />
-          )
-        })()}
+      {/* 날짜 탭 — 극장 상세와 동일 (공용 DetailDateTabs) */}
+      <div style={{ borderBottom: '1px solid var(--color-border)', marginTop: 12 }}>
+        <DetailDateTabs dates={dates} selectedDate={selectedDate} activeDates={activeDates} onSelect={setSelectedDate} />
+      </div>
+
+      {/* 예매 가능만 보기 — 날짜 바 바로 아래 오른쪽 */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: isDesktop ? 'var(--spacing-3) 0 0' : 'var(--spacing-3) var(--gutter) 0' }}>
+        <Chip selected={bookableOnly} onClick={() => setBookableOnly((v) => !v)} style={{ minHeight: 'auto', whiteSpace: 'nowrap' }}>
+          예매 가능만 보기
+        </Chip>
       </div>
 
       {/* 극장별 목록 */}
@@ -526,7 +511,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
           <CloseRoundButton variant="card" onClick={() => { setSelectedShowtimeId(null); setSelectedTheaterId(null) }} />
         </div>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-serif)', lineHeight: 1.3 }}>{movie.title}</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.3 }}>{movie.title}</div>
           <div style={{ marginTop: 4, fontSize: 12, fontWeight: 700, color: 'var(--color-primary-base)' }}>{selectedShowtimeData.theaterName}</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
@@ -607,7 +592,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
         <div style={{ position: 'fixed', bottom: isDesktop ? 0 : `calc(${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`, left: isDesktop ? GLOBAL_NAV_DESKTOP_WIDTH : 0, right: 0, zIndex: 100, backgroundColor: 'var(--color-surface-card)', borderTop: '1px solid var(--color-border)', padding: '12px 16px', paddingBottom: isDesktop ? 'max(16px, env(safe-area-inset-bottom))' : '16px', boxShadow: '0 -4px 20px rgba(0,0,0,0.12)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-serif)', fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>
+              <div style={{ fontSize: 16, fontWeight: 700, fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>
                 {selectedShowtimeData.st.showTime.slice(0, 5)}
                 {selectedShowtimeData.st.endTime && <span style={{ fontSize: 12, color: 'var(--color-text-caption)', marginLeft: 8, fontWeight: 400 }}>→ {selectedShowtimeData.st.endTime.slice(0, 5)}</span>}
               </div>
@@ -653,11 +638,9 @@ function DirectorSideCard({ name, onClick }: { name: string; onClick: () => void
       onClick={onClick}
       style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 12, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', cursor: 'pointer', textAlign: 'left', minHeight: 'auto', marginBottom: 8 }}
     >
-      <div style={{ width: 44, height: 44, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-caption)' }}>
-        {profile?.photoUrl ? <img src={profile.photoUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} /> : <IcoUser />}
-      </div>
+      <Avatar name={name} photoUrl={profile?.photoUrl} size={48} />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, fontFamily: 'var(--font-serif)', color: 'var(--color-text-primary)' }}>{name}</div>
+        <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{name}</div>
         <div style={{ marginTop: 4, fontSize: 'var(--text-badge)', color: 'var(--color-primary-base)', fontWeight: 500 }}>감독 페이지 보기 →</div>
       </div>
       <IcoChevronRight />

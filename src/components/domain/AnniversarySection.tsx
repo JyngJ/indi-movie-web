@@ -75,7 +75,7 @@ export function AnniversarySection({
         </span>
         <span style={{
           fontSize: 'var(--text-caption)', color: text, opacity: 0.7,
-          fontStyle: 'italic', fontFamily: 'var(--font-serif-en)',
+          
         }}>
           {nameEn} · {years}
         </span>

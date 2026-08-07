@@ -234,7 +234,7 @@ export function ToastStatic({ message }: { message: string }) {
     <div style={{
       display: 'inline-block',
       background: 'var(--color-neutral-900)',
-      color: 'var(--color-neutral-50)',
+      color: 'var(--color-neutral-100)',
       fontSize: 14,
       fontWeight: 600,
       padding: '12px 16px',

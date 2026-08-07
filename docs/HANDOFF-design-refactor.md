@@ -45,6 +45,7 @@
 4-1. **재방문 피드백 설문 모달 2.0 재디자인** (`src/components/domain/survey/FeedbackSurvey.tsx` + `survey.module.css`) — "다시 찾아주셨네요 👋" 2단계 설문. 구 팔레트/구 radius 상태, 2.0 문법(토큰·display 타이포·Button 프리미티브)으로 다시 그릴 것 (2026-08-05 사용자 요청).
 5. 설정 화면 전체 2.0 이식은 별도 챕터.
 6. 메모리의 나머지 TODO: `movie-redesign-todos.md` (Lucide Moon 교체, --color-info 폐지 등).
+7. **디자인 부채 전수 목록: `docs/DESIGN-DEBT.md`** (2026-08-07) — 화면별 미준수(색·폰트·프리미티브)와 컴포넌트 추출 후보(ShowtimeGroupCard·Avatar·BookingCta 등). 상세 작업 전 여기부터 볼 것.
 
 ## 3.9 미해결 — 상세 직진입 hydration 스톨 (2026-08-06 조사)
 
