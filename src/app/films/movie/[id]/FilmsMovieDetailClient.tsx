@@ -359,7 +359,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
           </div>
           <IcoChevronRight />
         </button>
-        <div style={{ padding: '12px 16px 16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, backgroundColor: 'var(--color-surface-raised)' }}>
+        <div style={{ padding: '12px 16px 16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, backgroundColor: 'var(--color-neutral-100)' }}>
           {entry.showtimes.map((st) => {
             /* TheaterSheet과 동일한 kind 분류 */
             const [sh, sm] = st.showTime.split(':').map(Number)

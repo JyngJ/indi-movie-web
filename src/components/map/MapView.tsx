@@ -3346,7 +3346,7 @@ export default function MapView() {
           style={{
             position: 'absolute',
             inset: 0,
-            backgroundColor: isDark ? 'var(--color-neutral-50)' : 'var(--color-neutral-900)',
+            backgroundColor: isDark ? 'var(--color-neutral-100)' : 'var(--color-neutral-900)',
             WebkitMaskImage: 'url(/logo.svg)',
             maskImage: 'url(/logo.svg)',
             WebkitMaskRepeat: 'no-repeat',
