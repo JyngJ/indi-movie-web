@@ -17,6 +17,7 @@ import { shareAdapter } from '@/lib/adapters/share'
 import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/components/domain/booking/BookingActions'
 import { Skeleton, Chip } from '@/components/primitives'
 import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
+import { ShowtimeCell } from '@/components/domain/ShowtimeCell'
 
 function useIsDesktop() {
   const [v, setV] = useState(false)
@@ -137,6 +138,7 @@ function MovieShowtimeCard({
   movie,
   showtimes,
   isDesktop,
+  isTodaySelected,
   onMovieClick,
   onChipClick,
   selectedShowtimeId,
@@ -144,6 +146,7 @@ function MovieShowtimeCard({
   movie: Movie
   showtimes: Showtime[]
   isDesktop: boolean
+  isTodaySelected: boolean
   onMovieClick: (id: string) => void
   onChipClick?: (st: Showtime, movieTitle: string) => void
   selectedShowtimeId?: string | null
@@ -206,15 +209,36 @@ function MovieShowtimeCard({
         <IcoChevronRight />
       </button>
 
-      {/* 상영시간 — 3열 균등 채움 */}
-      <div style={{ padding: '0 16px 16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-        {showtimes.map((st) => (
-          <ShowtimeChip
-            key={st.id} st={st}
-            selected={selectedShowtimeId === st.id}
-            onClick={() => onChipClick?.(st, movie.title)}
-          />
-        ))}
+      {/* 상영시간 — 2.0 ShowtimeCell 3열, 눌린 트레이 위 흰 셀 반전 (피그마 ShowtimeGroupCard) */}
+      <div style={{ padding: '12px 16px 16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, backgroundColor: 'var(--color-surface-raised)' }}>
+        {showtimes.map((st) => {
+          const [sh, sm] = st.showTime.split(':').map(Number)
+          const startMin = sh * 60 + sm
+          const endMin = st.endTime ? (() => { const [eh, em] = st.endTime!.split(':').map(Number); return eh * 60 + em })() : startMin + 120
+          const now = new Date()
+          const nowMinutes = now.getHours() * 60 + now.getMinutes()
+          const kind: import('@/components/domain/ShowtimeCell').ShowtimeKind = (() => {
+            if (isTodaySelected && endMin <= nowMinutes) return 'ended'
+            if (isTodaySelected && startMin < nowMinutes && endMin > nowMinutes) return 'nowplaying'
+            if (st.seatAvailable === 0) return 'soldout'
+            if (st.seatTotal > 0 && st.seatAvailable <= st.seatTotal * 0.1) return 'low'
+            if (sh >= 21) return 'late'
+            return 'normal'
+          })()
+          return (
+            <ShowtimeCell
+              key={st.id}
+              startTime={st.showTime.slice(0, 5)}
+              endTime={st.endTime ? st.endTime.slice(0, 5) : ''}
+              seatAvailable={st.seatAvailable}
+              seatTotal={st.seatTotal}
+              promo={/GV/i.test(st.screenName ?? '') ? 'GV' : undefined}
+              kind={kind}
+              selected={selectedShowtimeId === st.id}
+              onClick={() => onChipClick?.(st, movie.title)}
+            />
+          )
+        })}
       </div>
     </div>
   )
@@ -525,6 +549,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
                 movie={movie}
                 showtimes={showtimes}
                 isDesktop={isDesktop}
+                isTodaySelected={selectedDate === dates[0]}
                 onMovieClick={(id) => router.push(`/films/movie/${id}`)}
                 onChipClick={(st, movieTitle) => {
                   trackEvent('showtime selected', {

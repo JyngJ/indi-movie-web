@@ -10,7 +10,7 @@ import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import type { Movie } from '@/types/api'
 import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWidget'
 import { trackEvent } from '@/lib/analytics/client'
-import { Toast } from '@/components/primitives'
+import { Toast, Avatar } from '@/components/primitives'
 
 function useIsDesktop() {
   return useMediaQuery('(min-width: 1280px)')
@@ -117,13 +117,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
       display: 'flex', gap: isDesktop ? 32 : 16, alignItems: 'flex-start',
     }}>
       {/* 아바타 */}
-      <div style={{ width: isDesktop ? 160 : 100, height: isDesktop ? 160 : 100, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px rgba(0,0,0,0.18)' }}>
-        {profile?.photoUrl ? (
-          <img src={profile.photoUrl} alt={directorName} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
-        ) : (
-          <span style={{ fontSize: isDesktop ? 56 : 36, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'rgba(255,255,255,0.7)' }}>{directorName.charAt(0)}</span>
-        )}
-      </div>
+      <Avatar name={directorName} photoUrl={profile?.photoUrl} size={isDesktop ? 160 : 100} />
 
       {/* 텍스트 */}
       <div style={{ flex: 1, minWidth: 0, paddingTop: 4 }}>

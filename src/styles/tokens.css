@@ -150,6 +150,9 @@
      기존 --radius-sm/md/lg/xl/2xl/full 은 전부 삭제됨.
      같은 이름에 다른 값을 넣으면 기존 참조부가 조용히 바뀌므로 이름을 교체.
      부수효과: Tailwind v4 --radius-* 네임스페이스 충돌 해소. */
+  /* 프로필 이미지 inset 링 — 피그마 2.0/shadow/inset 대응 (실값은 덤프 개선 후 재확인, 잠정) */
+  --shadow-inset: inset 0 0 0 1px var(--color-border);
+
   --radius-badge:    4px;   /* 배지·라벨·인디케이터 */
   --radius-poster:   2px;   /* 포스터·썸네일 — 2.0: 인쇄물 모서리 (8→2, 2026-08-03 결정). 날짜 셀·지도 팝업은 control/popover로 이관 예정 */
   --radius-button:   8px;   /* 버튼 — control(12)이 버튼엔 과해 분리 (2026-07-28 사용자 결정) */
