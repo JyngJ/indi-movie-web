@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import type { ReactNode } from 'react'
+import { getPrevPathname } from '@/components/navigation/GlobalNav'
 
 const IcoChevronLeft = () => (
   <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -30,7 +31,13 @@ export function DetailTopBar({ crumbLabel, crumbHref, title, trailing, isDesktop
       <div style={{ height: 52, display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: isDesktop ? 4 : 0, paddingRight: 12, gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
           <button
-            onClick={() => router.back()}
+            onClick={() => {
+              // 직전이 상영작 흐름(/films*)이면 히스토리 back, 아니면(지도 등 다른 탭 경유)
+              // 상영작 탭으로 — "직전 페이지"가 아니라 "이 흐름의 이전"으로 가는 규칙
+              const prev = getPrevPathname()
+              if (prev && prev.startsWith(crumbHref)) router.back()
+              else router.push(crumbHref)
+            }}
             aria-label="뒤로가기"
             style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-text-body)', flexShrink: 0 }}
           >

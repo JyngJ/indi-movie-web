@@ -299,6 +299,13 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
 }
 
 const FILMS_LAST_PATH_KEY = 'lastFilmsPath'
+const PREV_PATH_KEY = 'yh_prev_path'
+const CUR_PATH_KEY = 'yh_cur_path'
+
+/** 직전 pathname — 상세 뒤로가기가 브라우저 히스토리 대신 흐름 기준으로 판단할 때 사용 */
+export function getPrevPathname(): string | null {
+  try { return sessionStorage.getItem(PREV_PATH_KEY) } catch { return null }
+}
 
 /** 글로벌 네비게이션 — 모바일: 하단 탭바(지도·영화·설정), 데스크톱: 좌측 아이콘 레일 */
 export function GlobalNav() {
@@ -319,6 +326,14 @@ export function GlobalNav() {
       sessionStorage.setItem(FILMS_LAST_PATH_KEY, pathname)
       setFilmsHref(pathname)
     }
+    // 직전 경로 기록 — GlobalNav는 탭·상세 전부에서 렌더되므로 전역 추적 지점으로 적합
+    try {
+      const cur = sessionStorage.getItem(CUR_PATH_KEY)
+      if (cur !== pathname) {
+        if (cur) sessionStorage.setItem(PREV_PATH_KEY, cur)
+        sessionStorage.setItem(CUR_PATH_KEY, pathname)
+      }
+    } catch { /* sessionStorage 불가 환경 무시 */ }
   }, [pathname, mounted])
 
   if (!mounted) return null
