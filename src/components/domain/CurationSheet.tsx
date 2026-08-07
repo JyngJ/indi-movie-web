@@ -417,7 +417,7 @@ function RecentList({
             display: 'flex',
             alignItems: 'center',
             padding: '8px 12px',
-            backgroundColor: 'var(--color-surface-bg)',
+            backgroundColor: 'var(--color-surface-raised)',
             borderRadius: 'var(--radius-control)',
             gap: 12,
             opacity: pendingId === `${item.kind}-${item.id}` ? 0.5 : 1,
@@ -600,7 +600,8 @@ export function CurationSections({
         const btnStyle = {
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-1)',
           padding: '8px 0', border: 'none', borderRadius: 'var(--radius-button)',
-          background: 'var(--color-surface-bg)', color: 'var(--color-text-caption)',
+          /* 패널 배경(surface-bg)과 동색이면 버튼이 안 보임 — 한 단 눌린 면으로 */
+          background: 'var(--color-surface-raised)', color: 'var(--color-text-sub)',
           fontSize: 12, fontWeight: 600, cursor: 'pointer',
         } as const
 
