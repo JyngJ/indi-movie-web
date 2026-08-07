@@ -91,11 +91,11 @@ function ProfileHero({
           </svg>
         )}
       </div>
-      <h1 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 24, fontWeight: 700, color: 'var(--color-text-primary)', textAlign: 'center' }}>
+      <h1 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)', textAlign: 'center' }}>
         {name}
       </h1>
       {originalName && (
-        <div style={{ marginTop: 4, fontSize: 14, color: 'var(--color-text-sub)', fontStyle: 'italic', textAlign: 'center' }}>
+        <div style={{ marginTop: 4, fontSize: 14, color: 'var(--color-text-sub)', textAlign: 'center' }}>
           {originalName}
         </div>
       )}
@@ -192,7 +192,6 @@ function FilmographyRow({
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{
-            fontFamily: 'var(--font-serif)',
             fontSize: 'var(--text-subtitle)',
             fontWeight: 700,
             color: isActive ? 'var(--color-primary-base)' : 'var(--color-text-primary)',

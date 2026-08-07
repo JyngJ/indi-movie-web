@@ -358,7 +358,7 @@ export function SettingsAboutPage() {
           <img src="/squarelogo.svg" alt="영화볼지도" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
         <div className="display-h2" style={{ color: 'var(--color-text-primary)' }}>영화볼지도</div>
-        <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4, fontStyle: 'italic', fontFamily: 'var(--font-serif-en)' }}>independent cinema map</div>
+        <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4 }}>independent cinema map</div>
       </div>
 
       {/* 만든 사람 */}

@@ -143,12 +143,12 @@ function HeroSection({ movie, titleRef, desktop = false }: { movie: MovieDetail;
       <div style={{ flex: 1, minWidth: 0, paddingTop: desktop ? 8 : 4, maxWidth: desktop ? 720 : undefined }}>
         <h1
           ref={titleRef}
-          style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: desktop ? 36 : 21, fontWeight: 700, lineHeight: desktop ? 1.12 : 1.2, color: 'var(--color-text-primary)', wordBreak: 'keep-all' }}
+          className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)', wordBreak: 'keep-all' }}
         >
           {movie.title}
         </h1>
         {movie.originalTitle && (
-          <div style={{ marginTop: desktop ? 8 : 4, fontFamily: 'var(--font-serif-en)', fontStyle: 'italic', fontSize: desktop ? 15 : 11, color: 'var(--color-text-caption)', lineHeight: 1.4 }}>
+          <div style={{ marginTop: desktop ? 8 : 4, fontSize: desktop ? 15 : 11, color: 'var(--color-text-caption)', lineHeight: 1.4 }}>
             {movie.originalTitle}
           </div>
         )}
@@ -269,7 +269,7 @@ function InfoTab({ movie, onDirectorClick, desktop = false }: { movie: MovieDeta
                   <IcoUser />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: 'var(--font-serif)', fontSize: 'var(--text-title)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{name}</div>
+                  <div style={{ fontSize: 'var(--text-title)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{name}</div>
                   <div style={{ marginTop: 4, fontSize: 'var(--text-badge)', color: 'var(--color-primary-base)', fontWeight: 500, textDecoration: 'underline' }}>감독 페이지 보기</div>
                 </div>
                 <IcoChevronRight />
@@ -312,7 +312,7 @@ function TheaterShowtimeChips({
       {/* 극장 헤더 */}
       <div style={{ padding: '16px 16px 12px', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: 'var(--font-serif)', fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.3 }}>
+          <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.3 }}>
             {entry.theaterName}
           </div>
           <div style={{ marginTop: 4, display: 'flex', alignItems: 'flex-start', gap: 4, color: 'var(--color-text-sub)', fontSize: 12, lineHeight: 1.45 }}>

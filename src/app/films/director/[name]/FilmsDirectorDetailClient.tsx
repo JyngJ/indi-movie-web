@@ -64,7 +64,7 @@ function FilmographyRow({ movie, isLast, isActive, onClick, isDesktop }: { movie
       <MiniPoster src={movie.posterUrl} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontFamily: 'var(--font-serif)', fontSize: 'var(--text-subtitle)', fontWeight: 700, color: isActive ? 'var(--color-primary-base)' : 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: isDesktop ? 360 : 180 }}>
+          <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: isActive ? 'var(--color-primary-base)' : 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: isDesktop ? 360 : 180 }}>
             {normalizeTitle(movie.title)}
           </span>
           {isActive && <span style={{ height: 18, padding: '0 8px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', fontSize: 'var(--text-badge)', fontWeight: 700, color: 'var(--color-on-accent)', backgroundColor: 'var(--color-primary-base)', flexShrink: 0 }}>상영중</span>}
@@ -127,11 +127,11 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
 
       {/* 텍스트 */}
       <div style={{ flex: 1, minWidth: 0, paddingTop: 4 }}>
-      <h1 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: isDesktop ? 34 : 22, fontWeight: 700, lineHeight: 1.2, color: 'var(--color-text-primary)' }}>
+      <h1 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)' }}>
         {directorName}
       </h1>
       {profile?.originalName && (
-        <div style={{ marginTop: 4, fontSize: isDesktop ? 14 : 12, color: 'var(--color-text-sub)', fontStyle: 'italic' }}>{profile.originalName}</div>
+        <div style={{ marginTop: 4, fontSize: isDesktop ? 14 : 12, color: 'var(--color-text-sub)' }}>{profile.originalName}</div>
       )}
 
       {/* 메타 정보 */}

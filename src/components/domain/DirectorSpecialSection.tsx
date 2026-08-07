@@ -171,7 +171,7 @@ function LeftPanel({
           {directorName}
         </div>
         {profile?.originalName && (
-          <div style={{ fontSize: 'var(--text-caption)', fontStyle: 'italic', color: 'var(--color-text-caption)', fontFamily: 'var(--font-serif-en)', marginTop: 4 }}>
+          <div style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-caption)', marginTop: 4 }}>
             {profile.originalName}
           </div>
         )}
