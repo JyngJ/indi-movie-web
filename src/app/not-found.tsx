@@ -23,7 +23,6 @@ export default function NotFound() {
           fontSize: 'var(--text-subtitle)',
           fontWeight: 600,
           color: 'var(--color-text-primary)',
-          fontFamily: 'var(--font-serif)',
         }}>
           페이지를 찾을 수 없습니다
         </p>

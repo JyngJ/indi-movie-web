@@ -105,8 +105,8 @@
   */
   --font-display:  'KIMM', 'Pretendard', sans-serif;            /* 제목·간판 (KIMM Bold) */
   --font-sans:     'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;  /* UI 전반·본문 */
-  --font-serif:    'KIMM', 'Pretendard', sans-serif;            /* = display — 기존 코드 호환용 alias */
-  --font-serif-en: 'Libre Baskerville', Georgia, serif;         /* 영문 원제·감독명 이탤릭 (선택적) */
+  --font-serif:    'KIMM', 'Pretendard', sans-serif;            /* 폐지(2026-08-07) — 사용처 0, dev 갤러리 호환용으로만 유지 */
+  --font-serif-en: 'Libre Baskerville', Georgia, serif;         /* 폐지(2026-08-07) — Baskerville은 2.0/meta로 흡수 (Typography 2.0 스펙) */
   --font-mono:     'SF Mono', 'ui-monospace', 'Courier New', monospace;
 
   /* ── Typography: Scale — 2.0 통합 (13종 → 6단계: 10·12·14·16·20·24) ──

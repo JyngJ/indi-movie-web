@@ -30,7 +30,7 @@
 | CalendarPicker | `filterBar/CalendarPicker.tsx` | raw 5, 2.0 DateCell 문법 미적용 |
 
 ### 폰트 규칙 위반 요약
-- `--font-serif`(상세 제목·시간): films 상세 3종 + 레거시 2종. **2.0 확정 문법엔 없음** — ① KIMM으로 교체 ② serif를 공식 토큰으로 승격, 둘 중 결정.
+- ~~세리프~~ **해소(2026-08-07)**: Typography 2.0 스펙(피그마)대로 Baskerville 폐지 — `--font-serif-en` 사용처 8곳 → meta(Pretendard·이탤릭 제거), `--font-serif`(KIMM alias) 23곳 → 히어로 h1 5곳 `.display-h1`, 나머지 Pretendard 상속. 토큰 2종 폐지 주석.
 - KIMM 오용: `privacy` Section h2가 KIMM 16 (display는 h1 24/h2 20만 허용).
 - 하드 fontSize: audit 0건 (2026-08-07 해소).
 

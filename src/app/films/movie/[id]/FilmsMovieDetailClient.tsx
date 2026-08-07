@@ -304,11 +304,11 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
 
       {/* 텍스트 */}
       <div style={{ flex: 1, minWidth: 0, paddingTop: 4 }}>
-        <h1 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: isDesktop ? 34 : 22, fontWeight: 700, lineHeight: 1.2, color: 'var(--color-text-primary)', wordBreak: 'keep-all' }}>
+        <h1 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)', wordBreak: 'keep-all' }}>
           {movie.title}
         </h1>
         {movie.originalTitle && (
-          <div style={{ marginTop: 4, fontFamily: 'var(--font-serif-en)', fontStyle: 'italic', fontSize: isDesktop ? 14 : 12, color: 'var(--color-text-caption)' }}>
+          <div style={{ marginTop: 4, fontSize: isDesktop ? 14 : 12, color: 'var(--color-text-caption)' }}>
             {movie.originalTitle}
           </div>
         )}
@@ -354,7 +354,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
           style={{ width: '100%', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, padding: '16px 16px 12px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', minHeight: 'auto', borderBottom: '1px solid var(--color-border)' }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>
-            <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, fontFamily: 'var(--font-serif)', color: 'var(--color-text-primary)', display: 'block', lineHeight: 1.3 }}>{entry.theaterName}</span>
+            <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)', display: 'block', lineHeight: 1.3 }}>{entry.theaterName}</span>
             <div style={{ marginTop: 4, display: 'flex', alignItems: 'flex-start', gap: 4, color: 'var(--color-text-sub)', fontSize: 12 }}>
               <IcoPin /><span style={{ wordBreak: 'keep-all', lineHeight: 1.45 }}>{entry.theaterAddress}</span>
             </div>
@@ -513,7 +513,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
           <CloseRoundButton variant="card" onClick={() => { setSelectedShowtimeId(null); setSelectedTheaterId(null) }} />
         </div>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-serif)', lineHeight: 1.3 }}>{movie.title}</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.3 }}>{movie.title}</div>
           <div style={{ marginTop: 4, fontSize: 12, fontWeight: 700, color: 'var(--color-primary-base)' }}>{selectedShowtimeData.theaterName}</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
@@ -594,7 +594,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
         <div style={{ position: 'fixed', bottom: isDesktop ? 0 : `calc(${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`, left: isDesktop ? GLOBAL_NAV_DESKTOP_WIDTH : 0, right: 0, zIndex: 100, backgroundColor: 'var(--color-surface-card)', borderTop: '1px solid var(--color-border)', padding: '12px 16px', paddingBottom: isDesktop ? 'max(16px, env(safe-area-inset-bottom))' : '16px', boxShadow: '0 -4px 20px rgba(0,0,0,0.12)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-serif)', fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>
+              <div style={{ fontSize: 16, fontWeight: 700, fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>
                 {selectedShowtimeData.st.showTime.slice(0, 5)}
                 {selectedShowtimeData.st.endTime && <span style={{ fontSize: 12, color: 'var(--color-text-caption)', marginLeft: 8, fontWeight: 400 }}>→ {selectedShowtimeData.st.endTime.slice(0, 5)}</span>}
               </div>
@@ -644,7 +644,7 @@ function DirectorSideCard({ name, onClick }: { name: string; onClick: () => void
         {profile?.photoUrl ? <img src={profile.photoUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} /> : <IcoUser />}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, fontFamily: 'var(--font-serif)', color: 'var(--color-text-primary)' }}>{name}</div>
+        <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{name}</div>
         <div style={{ marginTop: 4, fontSize: 'var(--text-badge)', color: 'var(--color-primary-base)', fontWeight: 500 }}>감독 페이지 보기 →</div>
       </div>
       <IcoChevronRight />

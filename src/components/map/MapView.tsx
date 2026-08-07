@@ -2731,8 +2731,7 @@ export default function MapView() {
                 {movie.originalTitle && (
                   <div style={{
                     marginTop: 4,
-                    fontFamily: 'var(--font-serif-en)',
-                    fontSize: 'var(--text-bask-meta)',
+                                        fontSize: 'var(--text-bask-meta)',
                     fontStyle: 'normal',
                     fontWeight: 400,
                     color: 'var(--color-text-caption)',

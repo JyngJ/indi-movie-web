@@ -184,7 +184,7 @@ function MovieShowtimeCard({
 
         {/* 텍스트 */}
         <div style={{ flex: 1, minWidth: 0, paddingTop: 4 }}>
-          <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-serif)', display: 'block', lineHeight: 1.3, wordBreak: 'keep-all' }}>
+          <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text-primary)', display: 'block', lineHeight: 1.3, wordBreak: 'keep-all' }}>
             {normalizeTitle(movie.title)}
           </span>
           {meta && (
@@ -435,7 +435,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
         <div style={{ display: 'inline-flex', alignItems: 'center', padding: '4px 12px', borderRadius: 9999, border: '1px solid color-mix(in srgb, var(--color-primary-base) 55%, transparent)', backgroundColor: 'var(--color-primary-subtle-l)', marginBottom: 12 }}>
           <span style={{ fontSize: 'var(--text-badge)', fontWeight: 600, lineHeight: 1, color: 'var(--color-primary-base)' }}>독립·예술영화관</span>
         </div>
-        <h1 style={{ margin: '0 0 12px', fontSize: isDesktop ? 32 : 24, fontWeight: 700, fontFamily: 'var(--font-serif)', color: 'var(--color-text-primary)', lineHeight: 1.2 }}>
+        <h1 className="display-h1" style={{ margin: '0 0 12px', color: 'var(--color-text-primary)' }}>
           {theater.name}
         </h1>
         {/* 주소 + 복사 */}
@@ -567,7 +567,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
                 <CloseRoundButton variant="card" onClick={() => { setSelectedShowtimeId(null); setSelectedMovieTitle(null) }} />
               </div>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-serif)', lineHeight: 1.3 }}>{selectedShowtimeData.movieTitle}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.3 }}>{selectedShowtimeData.movieTitle}</div>
                 <div style={{ marginTop: 4, fontSize: 12, fontWeight: 700, color: 'var(--color-primary-base)' }}>{theater.name}</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
@@ -622,7 +622,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
         <div style={{ position: 'fixed', bottom: isDesktop ? 0 : `calc(${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`, left: isDesktop ? GLOBAL_NAV_DESKTOP_WIDTH : 0, right: 0, zIndex: 100, backgroundColor: 'var(--color-surface-card)', borderTop: '1px solid var(--color-border)', padding: '12px 16px', paddingBottom: isDesktop ? 'max(16px, env(safe-area-inset-bottom))' : '16px', boxShadow: '0 -4px 20px rgba(0,0,0,0.12)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-serif)', fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>
+              <div style={{ fontSize: 16, fontWeight: 700, fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>
                 {selectedShowtimeData.st.showTime.slice(0, 5)}
                 {selectedShowtimeData.st.endTime && <span style={{ fontSize: 12, color: 'var(--color-text-caption)', marginLeft: 8, fontWeight: 400 }}>→ {selectedShowtimeData.st.endTime.slice(0, 5)}</span>}
               </div>
