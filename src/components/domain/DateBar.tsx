@@ -161,7 +161,7 @@ export function DateBar({ days, selectedDate, onSelectDate, onPrev, onNext, hasP
                   fontWeight: 700,
                   fontFeatureSettings: '"tnum"',
                   lineHeight: 1,
-                  color: active ? 'var(--color-neutral-50)' : dateColor,
+                  color: active ? 'var(--color-neutral-100)' : dateColor,
                   // disabled 날짜에 가로줄 — shorthand(textDecoration) 혼용 금지
                   textDecorationLine: isDisabled ? 'line-through' : 'none',
                   textDecorationColor: 'var(--color-text-placeholder)',
