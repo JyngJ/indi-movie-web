@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
-import { Chip } from '@/components/primitives'
+import { Chip, Avatar } from '@/components/primitives'
 import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
 import { addDaysIso, toKstIsoDate } from '@/lib/date'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
@@ -89,9 +89,7 @@ function ShowtimeChip({ st, selected, onClick }: { st: Showtime; selected?: bool
 function DirectorChip({ name, photoUrl, onClick }: { name: string; photoUrl?: string; onClick: () => void }) {
   return (
     <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px 8px 8px', borderRadius: 9999, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', cursor: 'pointer', minHeight: 'auto' }}>
-      <div style={{ width: 28, height: 28, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-caption)' }}>
-        {photoUrl ? <img src={photoUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} /> : <IcoUser />}
-      </div>
+      <Avatar name={name} photoUrl={photoUrl} size={28} />
       <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)' }}>{name}</span>
       <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-primary-base)', fontWeight: 500 }}>감독 →</span>
     </button>
@@ -361,7 +359,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
           </div>
           <IcoChevronRight />
         </button>
-        <div style={{ padding: '12px 16px 16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+        <div style={{ padding: '12px 16px 16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, backgroundColor: 'var(--color-surface-raised)' }}>
           {entry.showtimes.map((st) => {
             /* TheaterSheet과 동일한 kind 분류 */
             const [sh, sm] = st.showTime.split(':').map(Number)
@@ -640,9 +638,7 @@ function DirectorSideCard({ name, onClick }: { name: string; onClick: () => void
       onClick={onClick}
       style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 12, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', cursor: 'pointer', textAlign: 'left', minHeight: 'auto', marginBottom: 8 }}
     >
-      <div style={{ width: 44, height: 44, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-caption)' }}>
-        {profile?.photoUrl ? <img src={profile.photoUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} /> : <IcoUser />}
-      </div>
+      <Avatar name={name} photoUrl={profile?.photoUrl} size={48} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{name}</div>
         <div style={{ marginTop: 4, fontSize: 'var(--text-badge)', color: 'var(--color-primary-base)', fontWeight: 500 }}>감독 페이지 보기 →</div>
