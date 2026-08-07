@@ -16,6 +16,7 @@ import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { shareAdapter } from '@/lib/adapters/share'
 import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/components/domain/booking/BookingActions'
 import { Skeleton, Chip } from '@/components/primitives'
+import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
 
 function useIsDesktop() {
   const [v, setV] = useState(false)
@@ -489,35 +490,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
         backgroundColor: 'var(--color-surface-bg)',
         borderBottom: '1px solid var(--color-border)',
       }}>
-        <div style={{ display: 'flex', overflowX: 'auto', padding: '0 4px' }} className="no-scrollbar">
-          {dates.map((d, i) => {
-            const { day, date, isHoliday } = formatDateTab(d)
-            const isSelected = d === selectedDate
-            const hasShows = activeDates.has(d)
-            return (
-              <button
-                key={d}
-                onClick={() => setSelectedDate(d)}
-                style={{
-                  flexShrink: 0, width: 56, height: 60,
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
-                  border: 'none', background: 'none', cursor: hasShows ? 'pointer' : 'default',
-                  opacity: hasShows ? 1 : 0.35,
-                  borderBottom: isSelected ? '2px solid var(--color-primary-base)' : '2px solid transparent',
-                  minHeight: 'auto',
-                }}
-                disabled={!hasShows}
-              >
-                <span style={{ fontSize: 'var(--text-badge)', fontWeight: 500, color: isSelected ? 'var(--color-primary-base)' : isHoliday ? 'var(--color-error)' : 'var(--color-text-caption)' }}>
-                  {i === 0 ? '오늘' : day}
-                </span>
-                <span style={{ fontSize: 18, fontWeight: 700, fontFeatureSettings: '"tnum"', color: isSelected ? 'var(--color-primary-base)' : isHoliday ? 'var(--color-error)' : 'var(--color-text-primary)' }}>
-                  {date}
-                </span>
-              </button>
-            )
-          })}
-        </div>
+        <DetailDateTabs dates={dates} selectedDate={selectedDate} activeDates={activeDates} onSelect={setSelectedDate} />
       </div>
 
       {/* 예매 가능만 보기 — 날짜탭 바로 아래 오른쪽 (TheaterSheet 퀵 토글과 동일 문법) */}
