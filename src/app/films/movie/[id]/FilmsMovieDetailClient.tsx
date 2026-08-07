@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { Chip } from '@/components/primitives'
+import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
 import { addDaysIso, toKstIsoDate } from '@/lib/date'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
 import { ShowtimeCell } from '@/components/domain/ShowtimeCell'
@@ -433,37 +434,9 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
         </p>
       )}
 
-      {/* 날짜 탭 — 극장 상세와 동일한 언더라인 탭 (상영 있는 날만 활성) */}
+      {/* 날짜 탭 — 극장 상세와 동일 (공용 DetailDateTabs) */}
       <div style={{ borderBottom: '1px solid var(--color-border)', marginTop: 12 }}>
-        <div style={{ display: 'flex', overflowX: 'auto', padding: '0 4px' }} className="no-scrollbar">
-          {dates.map((d, i) => {
-            const { day, date, isHoliday } = formatDateTab(d)
-            const isSelected = d === selectedDate
-            const hasShows = activeDates.has(d)
-            return (
-              <button
-                key={d}
-                onClick={() => hasShows && setSelectedDate(d)}
-                style={{
-                  flexShrink: 0, width: 56, height: 60,
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
-                  border: 'none', background: 'none', cursor: hasShows ? 'pointer' : 'default',
-                  opacity: hasShows ? 1 : 0.35,
-                  borderBottom: isSelected ? '2px solid var(--color-primary-base)' : '2px solid transparent',
-                  minHeight: 'auto',
-                }}
-                disabled={!hasShows}
-              >
-                <span style={{ fontSize: 'var(--text-badge)', fontWeight: 500, color: isSelected ? 'var(--color-primary-base)' : isHoliday ? 'var(--color-error)' : 'var(--color-text-caption)' }}>
-                  {i === 0 ? '오늘' : day}
-                </span>
-                <span style={{ fontSize: 18, fontWeight: 700, fontFeatureSettings: '"tnum"', color: isSelected ? 'var(--color-primary-base)' : isHoliday ? 'var(--color-error)' : 'var(--color-text-primary)' }}>
-                  {date}
-                </span>
-              </button>
-            )
-          })}
-        </div>
+        <DetailDateTabs dates={dates} selectedDate={selectedDate} activeDates={activeDates} onSelect={setSelectedDate} />
       </div>
 
       {/* 예매 가능만 보기 — 날짜 바 바로 아래 오른쪽 */}
