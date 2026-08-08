@@ -11,15 +11,19 @@ const nextConfig: NextConfig = {
     VERCEL_PROJECT_PRODUCTION_URL: 'www.xn--hq1bv8o5phw2d7wt.com',
   },
   images: {
+    // 전체 개방('**')이면 /_next/image?url=<아무 URL>로 외부인이 변환 쿼터를 소진할 수
+    // 있는 열린 프록시가 됨 (2026-08-08 쿼터 4.9k/5k 조사에서 잠금 결정).
+    // 목록은 DB 실측 포스터/배너 호스트 — 새 호스트의 포스터가 안 뜨면 여기 추가.
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
-      {
-        protocol: 'http',
-        hostname: '**',
-      },
+      { protocol: 'https', hostname: 'file.koreafilm.or.kr' },   // KMDB 포스터 (대부분)
+      { protocol: 'https', hostname: 'image.cine21.com' },
+      { protocol: 'https', hostname: '*.supabase.co' },          // 어드민 업로드 스토리지
+      { protocol: 'https', hostname: 'upload.wikimedia.org' },
+      { protocol: 'https', hostname: 'images.justwatch.com' },
+      { protocol: 'https', hostname: 'i.pinimg.com' },
+      { protocol: 'https', hostname: 'cdn.mania.kr' },
+      { protocol: 'https', hostname: 'artinsight.co.kr' },
+      { protocol: 'http', hostname: 'file.koreafilm.or.kr' },    // 구 데이터에 http 포스터 존재
     ],
     // 포스터는 한번 정해지면 사실상 안 바뀌는 콘텐츠 — 기본 캐시 수명이 짧아
     // 배포마다/짧은 주기로 같은 이미지가 재변환되며 Image Optimization 사용량이
