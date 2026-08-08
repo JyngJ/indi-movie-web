@@ -9,7 +9,7 @@
 
 import { useEffect, useState } from 'react'
 import {
-  Button, Card, CardContainer, Chip, Badge, Input, Toast, GenreChip,
+  Button, IconButton, SortToggle, Card, CardContainer, Chip, Badge, Input, Toast, GenreChip,
   SectionHeader, ScrollNavButton, Skeleton, MovieCardSkeleton, TheaterCardSkeleton,
   BottomSheet, SearchBar, SearchBarButton, FabRound, FabPill,
 } from '@/components/primitives'
@@ -32,6 +32,8 @@ const IcoPlus   = () => <svg width={18} height={18} viewBox="0 0 24 24" fill="no
 const IcoMinus  = () => <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"><path d="M5 12h14" /></svg>
 const IcoExpand = () => <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></svg>
 const IcoSearchSm = () => <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+const IcoChevL  = () => <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+const IcoX      = () => <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
 
 /* ── 샘플 데이터 ─────────────────────────────────────────────── */
 const SAMPLE_DAYS = [
@@ -250,15 +252,15 @@ export default function ComponentsPage() {
         {/* ═══ 버튼 ═════════════════════════════════════════════════ */}
         <Section id="sec-buttons" title="버튼">
 
-          <Entry id="btn-button" name="Button — 4 variant × 3 size"
-            screens="영화 상세 · 관리자 콘솔 · 감독 특별전 섹션"
+          <Entry id="btn-button" name="Button 2.0 — 5 variant × 4 size (2026-08-08 확정)"
+            screens="전 화면 — 인벤토리 297곳 통합 스펙"
             source="src/components/primitives/Button.tsx">
             <div className="flex flex-col gap-3">
-              {(['primary', 'secondary', 'ghost', 'danger'] as const).map((v) => (
+              {(['primary', 'secondary', 'tertiary', 'text', 'danger'] as const).map((v) => (
                 <div key={v} className="flex items-center gap-3 flex-wrap">
                   <span className="w-[76px]" style={captionStyle}>{v}</span>
                   {(['sm', 'md', 'lg'] as const).map((s) => (
-                    <Button key={s} variant={v} size={s}>{s}</Button>
+                    <Button key={s} variant={v} size={s}>{v === 'danger' ? '삭제' : '적용하기'}</Button>
                   ))}
                 </div>
               ))}
@@ -267,9 +269,31 @@ export default function ComponentsPage() {
                 <Button loading>로딩</Button>
                 <Button disabled>비활성</Button>
               </div>
-              <div style={{ maxWidth: 280 }}>
-                <Button fullWidth>fullWidth</Button>
+              <div style={{ maxWidth: 358 }}>
+                <Button size="full">예매하러 가기 (full 358)</Button>
               </div>
+            </div>
+          </Entry>
+
+          <Entry id="btn-iconbutton" name="IconButton 2.0 — ghost/overlay × 32/44"
+            screens="뒤로가기 · 닫기 × · 지우기 — 아이콘 전용 49곳 통합"
+            source="src/components/primitives/IconButton.tsx">
+            <div className="flex items-center gap-3 flex-wrap">
+              <IconButton variant="ghost" size={32} aria-label="뒤로가기"><IcoChevL /></IconButton>
+              <IconButton variant="ghost" size={44} aria-label="뒤로가기"><IcoChevL /></IconButton>
+              <IconButton variant="overlay" size={32} aria-label="닫기"><IcoX /></IconButton>
+              <IconButton variant="overlay" size={44} aria-label="닫기"><IcoX /></IconButton>
+            </div>
+          </Entry>
+
+          <Entry id="btn-sorttoggle" name="SortToggle 2.0 — 텍스트 pill h28"
+            screens="최신순 정렬 · 예매 가능만 보기"
+            source="src/components/primitives/SortToggle.tsx">
+            <div className="flex items-center gap-3 flex-wrap">
+              <SortToggle>최신순 ↓</SortToggle>
+              <SortToggle active>최신순 ↓</SortToggle>
+              <SortToggle>예매 가능만</SortToggle>
+              <SortToggle active>예매 가능만</SortToggle>
             </div>
           </Entry>
 

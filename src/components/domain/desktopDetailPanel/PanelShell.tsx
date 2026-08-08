@@ -1,3 +1,4 @@
+import { IconButton } from '@/components/primitives'
 import { IcoClose, IcoChevronLeft } from './icons'
 
 /* ── 공통 패널 래퍼 ── */
@@ -15,12 +16,6 @@ export function PanelShell({
   embedded?: boolean
   children: React.ReactNode
 }) {
-  const btn: React.CSSProperties = {
-    width: 36, height: 36,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    border: 'none', background: 'none', cursor: 'pointer',
-    color: 'var(--color-text-body)', borderRadius: 8, flexShrink: 0,
-  }
   return (
     <div style={{
       display: 'flex',
@@ -42,7 +37,7 @@ export function PanelShell({
         gap: 4,
       }}>
         {onBack && (
-          <button style={btn} onClick={onBack}><IcoChevronLeft /></button>
+          <IconButton variant="ghost" size={32} aria-label="뒤로가기" onClick={onBack}><IcoChevronLeft /></IconButton>
         )}
         <span style={{
           flex: 1,
@@ -56,7 +51,7 @@ export function PanelShell({
         }}>
           {title}
         </span>
-        <button style={btn} onClick={onClose}><IcoClose /></button>
+        <IconButton variant="ghost" size={32} aria-label="닫기" onClick={onClose}><IcoClose /></IconButton>
       </div>
 
       {/* 내용 */}

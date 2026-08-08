@@ -6,6 +6,9 @@ import { PosterThumb } from './PosterThumb'
 import { DateBar, type Day, type DayType } from './DateBar'
 import { ShowtimeCell } from './ShowtimeCell'
 import { Button } from '@/components/primitives/Button'
+import { IconButton } from '@/components/primitives/IconButton'
+import { SortToggle } from '@/components/primitives/SortToggle'
+import { Chip } from '@/components/primitives/Chip'
 import { Toast } from '@/components/primitives/Toast'
 import { useTheaterShowtimes, useTheaterAllMovies } from '@/lib/supabase/queries'
 import type { TheaterMovieEntry } from '@/lib/supabase/queries'
@@ -820,23 +823,6 @@ export function TheaterSheet({
     window.open(webUrl, '_blank', 'noopener')
   }
 
-  /* ── 공통 아이콘 버튼 스타일 ─────────────────────────────────── */
-  const iconBtn: React.CSSProperties = {
-    // flex: '0 0 36px' — 너비/높이 동시에 고정. flex 환경에서 찌그러짐 방지
-    flex: '0 0 36px',
-    width: 36, height: 36,
-    padding: 0,
-    boxSizing: 'border-box',
-    border: 'none',
-    background: 'none',
-    borderRadius: '50%',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: 'var(--color-text-body)',
-  }
-
   /* 2.0: 고스트 유틸리티 — 이 화면의 주 행동은 포스터·시간표라 액션은 침묵.
      시각은 텍스트+아이콘만, 히트박스는 44 유지(시각 크기 ≠ 터치 크기) */
   const actionBtn: React.CSSProperties = {
@@ -1014,15 +1000,15 @@ export function TheaterSheet({
             display: 'flex',
             gap: 8,
           }}>
-            <button style={iconBtn} onClick={onClose}>
+            <IconButton variant="ghost" size={32} aria-label="닫기" onClick={onClose}>
               <IconClose />
-            </button>
+            </IconButton>
           </div>
           {onBack && (
             <div style={{ position: 'absolute', top: -2, left: 'var(--gutter-sheet)' }}>
-              <button style={iconBtn} onClick={onBack} aria-label="이전으로">
+              <IconButton variant="ghost" size={32} aria-label="이전으로" onClick={onBack}>
                 <IconChevronLeft />
-              </button>
+              </IconButton>
             </div>
           )}
         </div>
@@ -1041,9 +1027,9 @@ export function TheaterSheet({
             gap: 12,
           }}>
             {onBack && (
-              <button style={{ ...iconBtn, flexShrink: 0 }} onClick={onBack} aria-label="이전으로">
+              <IconButton variant="ghost" size={32} aria-label="이전으로" onClick={onBack}>
                 <IconChevronLeft />
-              </button>
+              </IconButton>
             )}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -1084,9 +1070,9 @@ export function TheaterSheet({
                 </span>
               </div>
             </div>
-            <button style={iconBtn} onClick={onClose} aria-label="닫기">
+            <IconButton variant="ghost" size={32} aria-label="닫기" onClick={onClose}>
               <IconClose />
-            </button>
+            </IconButton>
           </div>
           <div style={{
             display: 'flex',
@@ -1123,9 +1109,9 @@ export function TheaterSheet({
           alignItems: 'center',
           justifyContent: 'space-between',
         }}>
-          <button style={{ ...iconBtn, marginLeft: -8 }} onClick={onBack ?? onCollapse}>
+          <IconButton variant="ghost" size={32} aria-label="뒤로" style={{ marginLeft: -8 }} onClick={onBack ?? onCollapse}>
             <IconChevronLeft />
-          </button>
+          </IconButton>
           <span style={{
             flex: 1, textAlign: 'center',
             fontSize: 'var(--text-subtitle)', fontWeight: 600,
@@ -1139,13 +1125,13 @@ export function TheaterSheet({
           </span>
           <div style={{ display: 'flex', gap: 8 }}>
             {/* 즐겨찾기 — 계정 기능 구현 전 비활성화
-            <button style={iconBtn} onClick={onFavorite}>
+            <IconButton variant="ghost" size={32} aria-label="즐겨찾기" onClick={onFavorite}>
               <IconStar filled={favorited} />
-            </button>
+            </IconButton>
             */}
-            <button style={{ ...iconBtn, marginRight: -8 }} onClick={onClose}>
+            <IconButton variant="ghost" size={32} aria-label="닫기" style={{ marginRight: -8 }} onClick={onClose}>
               <IconClose />
-            </button>
+            </IconButton>
           </div>
         </div>
       )}
@@ -1472,80 +1458,45 @@ export function TheaterSheet({
                     {filtersOn ? `${matched}/${total}편` : `${total}편 상영`}
                   </span>
                   {/* 예매 가능만 보기 — 즉시 토글, 드로어 열지 않음 */}
-                  <button
+                  <SortToggle
+                    active={sheetFilters.bookable}
                     onClick={() => applySheetFilters({ ...sheetFilters, bookable: !sheetFilters.bookable }, 'theater_sheet_quick')}
-                    style={{
-                      flexShrink: 0, height: 28, padding: '0 12px',
-                      borderRadius: 9999,
-                      border: '1px solid',
-                      borderColor: sheetFilters.bookable ? 'var(--color-primary-base)' : 'var(--color-neutral-300)',
-                      backgroundColor: sheetFilters.bookable ? 'var(--color-primary-subtle-l)' : 'transparent',
-                      color: sheetFilters.bookable ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
-                      fontSize: 'var(--text-meta)', fontWeight: 500, cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', minHeight: 'auto',
-                      whiteSpace: 'nowrap',
-                    }}
                   >
                     예매 가능만 보기
-                  </button>
+                  </SortToggle>
                   {sheetFilters.genres.map(g => (
-                    <button
+                    <SortToggle
                       key={`g:${g}`}
+                      active
                       onClick={() => applySheetFilters({ ...sheetFilters, genres: sheetFilters.genres.filter(x => x !== g) })}
-                      style={{
-                        flexShrink: 0, height: 28, padding: '0 12px',
-                        borderRadius: 9999,
-                        border: '1px solid var(--color-primary-base)',
-                        backgroundColor: 'var(--color-primary-subtle-l)',
-                        color: 'var(--color-primary-base)',
-                        fontSize: 'var(--text-meta)', fontWeight: 500, cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', gap: 4, minHeight: 'auto',
-                      }}
                     >
                       {g}
                       <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
-                    </button>
+                    </SortToggle>
                   ))}
                   {sheetFilters.nations.map(n => (
-                    <button
+                    <SortToggle
                       key={`n:${n}`}
+                      active
                       onClick={() => applySheetFilters({ ...sheetFilters, nations: sheetFilters.nations.filter(x => x !== n) })}
-                      style={{
-                        flexShrink: 0, height: 28, padding: '0 12px',
-                        borderRadius: 9999,
-                        border: '1px solid var(--color-primary-base)',
-                        backgroundColor: 'var(--color-primary-subtle-l)',
-                        color: 'var(--color-primary-base)',
-                        fontSize: 'var(--text-meta)', fontWeight: 500, cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', gap: 4, minHeight: 'auto',
-                      }}
                     >
                       {withFlag(n)}
                       <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
-                    </button>
+                    </SortToggle>
                   ))}
                 </div>
                 {/* 오른쪽: 필터 버튼 */}
-                <button
+                <SortToggle
+                  active={filtersOn}
                   onClick={() => {
                     trackEvent('theater sheet filter opened', { theater_id: theater.id, source: 'theater_sheet' })
                     setPendingFilters(sheetFilters)
                     setFilterSheetOpen(true)
                   }}
-                  style={{
-                    flexShrink: 0, height: 28, padding: '0 12px',
-                    borderRadius: 9999,
-                    border: '1px solid',
-                    borderColor: filtersOn ? 'var(--color-primary-base)' : 'var(--color-neutral-300)',
-                    backgroundColor: filtersOn ? 'var(--color-primary-subtle-l)' : 'transparent',
-                    color: filtersOn ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
-                    fontSize: 'var(--text-meta)', fontWeight: 500, cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', gap: 4, minHeight: 'auto',
-                  }}
                 >
                   <IconFilter size={12} />
                   필터{activeCount > 0 ? ` ${activeCount}` : ''}
-                </button>
+                </SortToggle>
               </div>
             )}
 
@@ -2077,12 +2028,13 @@ export function TheaterSheet({
               padding: '20px var(--gutter-sheet) 12px',
             }}>
               <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text-primary)' }}>영화 필터</span>
-              <button
+              <Button
+                variant="text"
+                size="sm"
                 onClick={() => setPendingFilters({ genres: [], nations: [], bookable: false })}
-                style={{ border: 'none', background: 'none', fontSize: 12, color: 'var(--color-text-caption)', cursor: 'pointer', padding: '4px 0' }}
               >
                 모두 선택해제
-              </button>
+              </Button>
             </div>
 
             {/* 본문 (스크롤) */}
@@ -2093,22 +2045,14 @@ export function TheaterSheet({
                   <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-sub)', marginBottom: 12 }}>장르</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
                     {availableGenres.map(g => (
-                      <button
+                      <Chip
                         key={g}
+                        selected={pendingFilters.genres.includes(g)}
                         onClick={() => setPendingFilters(prev => ({
                           ...prev,
                           genres: prev.genres.includes(g) ? prev.genres.filter(x => x !== g) : [...prev.genres, g],
                         }))}
-                        style={{
-                          height: 34, padding: '0 16px', borderRadius: 9999,
-                          border: '1px solid',
-                          borderColor: pendingFilters.genres.includes(g) ? 'var(--color-primary-base)' : 'var(--color-border)',
-                          backgroundColor: pendingFilters.genres.includes(g) ? 'var(--color-primary-subtle-l)' : 'var(--color-surface-bg)',
-                          color: pendingFilters.genres.includes(g) ? 'var(--color-primary-base)' : 'var(--color-text-body)',
-                          fontSize: 13, fontWeight: pendingFilters.genres.includes(g) ? 600 : 400,
-                          cursor: 'pointer', minHeight: 'auto',
-                        }}
-                      >{g}</button>
+                      >{g}</Chip>
                     ))}
                   </div>
                 </>
@@ -2119,22 +2063,14 @@ export function TheaterSheet({
                   <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-sub)', marginBottom: 12 }}>국가</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
                     {availableNations.map(n => (
-                      <button
+                      <Chip
                         key={n}
+                        selected={pendingFilters.nations.includes(n)}
                         onClick={() => setPendingFilters(prev => ({
                           ...prev,
                           nations: prev.nations.includes(n) ? prev.nations.filter(x => x !== n) : [...prev.nations, n],
                         }))}
-                        style={{
-                          height: 34, padding: '0 16px', borderRadius: 9999,
-                          border: '1px solid',
-                          borderColor: pendingFilters.nations.includes(n) ? 'var(--color-primary-base)' : 'var(--color-border)',
-                          backgroundColor: pendingFilters.nations.includes(n) ? 'var(--color-primary-subtle-l)' : 'var(--color-surface-bg)',
-                          color: pendingFilters.nations.includes(n) ? 'var(--color-primary-base)' : 'var(--color-text-body)',
-                          fontSize: 13, fontWeight: pendingFilters.nations.includes(n) ? 600 : 400,
-                          cursor: 'pointer', minHeight: 'auto',
-                        }}
-                      >{withFlag(n)}</button>
+                      >{withFlag(n)}</Chip>
                     ))}
                   </div>
                 </>
@@ -2175,17 +2111,13 @@ export function TheaterSheet({
 
             {/* 적용하기 버튼 */}
             <div style={{ padding: '0 var(--gutter-sheet) 20px' }}>
-              <button
+              <Button
+                variant="primary"
+                size="full"
                 onClick={() => { applySheetFilters(pendingFilters); setFilterSheetOpen(false) }}
-                style={{
-                  width: '100%', height: 50, borderRadius: 12,
-                  border: 'none', backgroundColor: 'var(--color-primary-base)',
-                  color: 'var(--color-on-accent)', fontSize: 'var(--text-subtitle)', fontWeight: 700, cursor: 'pointer',
-                  letterSpacing: '-0.2px',
-                }}
               >
                 적용하기
-              </button>
+              </Button>
             </div>
           </div>
         </div>

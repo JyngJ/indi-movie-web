@@ -124,6 +124,9 @@ export function FilterBar({
     const stored = getStoredRegion()
     if (stored) { userPickedRegionRef.current = true; setRegionId(stored); return }
     setRegionId(defaultRegionId ?? null)
+    // GPS 기본값도 공유 저장소에 반영 — 안 그러면 지도 탭에만 적용되고
+    // 상영작 탭은 지역 미설정 상태로 갈라짐 (이벤트로 전 화면 동기)
+    if (defaultRegionId) setStoredRegion(defaultRegionId)
   }, [defaultRegionId])
 
   // 다른 화면(상영작 탭 등)에서 지역이 바뀌면 필터바 라벨도 즉시 동기화
@@ -418,21 +421,10 @@ export function FilterBar({
             top: 52,
             left: regionHintLeft,
             zIndex: 60,
-            width: 236,
+            width: 276,   /* 상영작 탭 말풍선과 동일 폭 — 문구가 두 줄로 떨어짐 (2026-08-09 통일, 꼬리 제거) */
             transition: 'left 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
             animation: 'tipIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), tipGlow 0.7s ease-out',
           }}>
-            {/* 꼬리 */}
-            <div style={{
-              position: 'absolute',
-              top: -5,
-              left: 24,
-              width: 11,
-              height: 11,
-              background: 'var(--color-primary-base)',
-              transform: 'rotate(45deg)',
-              borderRadius: 4,
-            }} />
             {/* 본체 */}
             <div style={{
               position: 'relative',

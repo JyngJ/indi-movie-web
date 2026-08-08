@@ -15,7 +15,7 @@ import { locationAdapter } from '@/lib/adapters/location'
 import { calculateAndFormatDistance, calculateDistanceKm } from '@/lib/map/distanceUtils'
 import { getRegionFromAddress, getRegionFromCoords } from '@/lib/regions'
 import { formatDateLabel } from '@/lib/date'
-import { Toast } from '@/components/primitives'
+import { Toast, IconButton } from '@/components/primitives'
 import { MovieInfoTable } from '@/components/domain/movieDetail/MovieInfoTable'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 
@@ -64,11 +64,6 @@ function NavBar({
   onBack: () => void
   onClose: () => void
 }) {
-  const btn: React.CSSProperties = {
-    width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center',
-    border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-text-body)',
-    flexShrink: 0,
-  }
   return (
     <div style={{
       height: 52,
@@ -80,7 +75,7 @@ function NavBar({
       borderBottom: '1px solid var(--color-border)',
       backgroundColor: 'var(--color-primary-subtle-l)',
     }}>
-      <button style={btn} onClick={onBack}><IcoChevronLeft /></button>
+      <IconButton variant="ghost" size={44} aria-label="뒤로가기" onClick={onBack}><IcoChevronLeft /></IconButton>
       <span style={{
         flex: 1,
         textAlign: 'center',
@@ -96,7 +91,7 @@ function NavBar({
       }}>
         {title}
       </span>
-      <button style={btn} onClick={onClose}><IcoClose /></button>
+      <IconButton variant="ghost" size={44} aria-label="닫기" onClick={onClose}><IcoClose /></IconButton>
     </div>
   )
 }

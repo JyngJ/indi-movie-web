@@ -10,7 +10,7 @@ import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import type { Movie } from '@/types/api'
 import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWidget'
 import { trackEvent } from '@/lib/analytics/client'
-import { Toast, Avatar } from '@/components/primitives'
+import { Toast, Avatar, Button, IconButton, SortToggle } from '@/components/primitives'
 
 function useIsDesktop() {
   return useMediaQuery('(min-width: 1280px)')
@@ -137,21 +137,20 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
 
       {/* CTA 버튼 */}
       <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
-        <button
-          onClick={() => router.push(`/?director=${encodeURIComponent(directorName)}`)}
-          style={{ height: 40, padding: '0 16px', display: 'flex', alignItems: 'center', gap: 8, borderRadius: 12, border: '1px solid var(--color-primary-base)', backgroundColor: 'var(--color-primary-base)', color: 'var(--color-on-accent)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
-        >
+        <Button variant="primary" size="md" onClick={() => router.push(`/?director=${encodeURIComponent(directorName)}`)}>
           <IcoMap /> 지도에서 필터로 보기
-        </button>
-        <button
+        </Button>
+        <IconButton
+          variant="overlay"
+          size={44}
+          aria-label="공유"
           onClick={() => {
             trackEvent('share clicked', { director_name: directorName, source: 'films_director_detail' })
             navigator.share?.({ title: directorName, url: window.location.href }).catch(() => {})
           }}
-          style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 12, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', color: 'var(--color-text-body)', cursor: 'pointer', flexShrink: 0 }}
         >
           <IcoShare />
-        </button>
+        </IconButton>
       </div>
       </div>
     </div>
@@ -200,13 +199,9 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
             </span>
             <div style={{ display: 'flex', gap: 8 }}>
               {(['newest', 'oldest'] as SortKey[]).map((k) => (
-                <button
-                  key={k}
-                  onClick={() => setSort(k)}
-                  style={{ height: 26, padding: '0 12px', borderRadius: 9999, border: '1px solid', borderColor: sort === k ? 'var(--color-primary-base)' : 'var(--color-border)', backgroundColor: sort === k ? 'var(--color-primary-subtle-l)' : 'transparent', color: sort === k ? 'var(--color-primary-base)' : 'var(--color-text-caption)', fontSize: 12, fontWeight: sort === k ? 600 : 400, cursor: 'pointer', minHeight: 'auto' }}
-                >
+                <SortToggle key={k} active={sort === k} onClick={() => setSort(k)}>
                   {k === 'newest' ? '최신순' : '오래된순'}
-                </button>
+                </SortToggle>
               ))}
             </div>
           </div>

@@ -106,7 +106,7 @@ const info = []  // 참고 항목
 const asym = []
 const gutters = new Map()
 const adoption = []
-const PRIM = /<(Button|Card|CardContainer|Badge|Chip|GenreChip|Input|SearchBar|FAB)[\s/>]/g
+const PRIM = /<(Button|IconButton|SortToggle|Card|CardContainer|Badge|Chip|GenreChip|Input|SearchBar|FAB)[\s/>]/g
 const RAW = /<(button|input|textarea|select)[\s/>]/g
 
 const push = (cat, f, line, key, from, to, risk, note = '') =>
@@ -114,7 +114,8 @@ const push = (cat, f, line, key, from, to, risk, note = '') =>
 
 for (const f of code) {
   const txt = fs.readFileSync(f, 'utf8'); const R = rel(f)
-  if (/\.(tsx|jsx)$/.test(f)) {
+  if (/\.(tsx|jsx)$/.test(f) && !R.includes('components/primitives/')) {
+    // 프리미티브 정의 파일 자체의 내부 <button>은 채택률 분모에서 제외 — 콜사이트만 측정
     const p = (txt.match(PRIM) || []).length, r = (txt.match(RAW) || []).length
     if (p + r > 0) adoption.push({ file: R, prim: p, raw: r })
   }
