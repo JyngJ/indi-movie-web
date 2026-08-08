@@ -574,3 +574,23 @@
     transform: translateX(0);
   }
 }
+
+/* ── 온보딩 밖 재사용(지역 SEO 랜딩) — 지도 일러스트 색 변수 공급 래퍼 ── */
+.illoVars {
+  position: relative;
+  overflow: hidden;
+  --ob-land: #ece6d8;
+  --ob-block: #f3eee2;
+  --ob-road: #fbf8f0;
+  --ob-water: #cfe0e6;
+  --ob-park: #d6e3c8;
+  --ob-label: rgba(74, 99, 128, 0.34);
+}
+:global([data-theme='dark']) .illoVars {
+  --ob-land: #15130e;
+  --ob-block: #1b1813;
+  --ob-road: #262119;
+  --ob-water: #13202b;
+  --ob-park: #16241a;
+  --ob-label: rgba(120, 150, 180, 0.4);
+}

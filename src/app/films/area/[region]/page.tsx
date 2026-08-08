@@ -6,6 +6,8 @@ import { getRegionFromCity, REGIONS } from '@/lib/regions'
 import { getScreeningIndex } from '@/lib/seo/getScreeningIndex'
 import { toScreeningListSchema } from '@/lib/seo/toScreeningListSchema'
 import { AreaCtas } from './AreaCtas'
+import { IlloCollected } from '@/components/domain/onboarding/illustrations'
+import ob from '@/components/domain/onboarding/onboarding.module.css'
 
 export const revalidate = 3600
 
@@ -67,6 +69,8 @@ export default async function FilmsAreaPage({
     `${region} 독립·예술영화관 오늘 상영작`,
   )
 
+  const backdropPosters = data.movies.map((m) => m.posterUrl).filter((u): u is string => !!u).slice(0, 5)
+
   return (
     <main style={{ position: 'relative', minHeight: '100svh', overflow: 'hidden', backgroundColor: 'var(--color-surface-bg)' }}>
       <script
@@ -74,38 +78,59 @@ export default async function FilmsAreaPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(listSchema) }}
       />
 
-      {/* 지도 느낌 백드롭 — 토큰 색 블러 블롭 (물·공원·땅) + 스크림. 실제 지도 대신 정적 연출 */}
-      <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-        <div style={{ position: 'absolute', top: '-10%', left: '-8%', width: '55%', height: '50%', borderRadius: '50%', backgroundColor: 'var(--color-primary-100)', filter: 'blur(80px)', opacity: 0.7 }} />
-        <div style={{ position: 'absolute', bottom: '-12%', right: '-10%', width: '60%', height: '55%', borderRadius: '50%', backgroundColor: 'var(--color-success-tint)', filter: 'blur(90px)', opacity: 0.8 }} />
-        <div style={{ position: 'absolute', top: '30%', right: '10%', width: '35%', height: '35%', borderRadius: '50%', backgroundColor: 'var(--color-warning-tint)', filter: 'blur(70px)', opacity: 0.55 }} />
-        <div style={{ position: 'absolute', bottom: '20%', left: '8%', width: '40%', height: '40%', borderRadius: '50%', backgroundColor: 'var(--color-surface-raised)', filter: 'blur(60px)', opacity: 0.8 }} />
+      {/* 백드롭 — 이 지역 상영작 포스터를 크게 블러 (연출용, plain img라 옵티마이저 미경유) */}
+      <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', display: 'flex' }}>
+        {backdropPosters.map((u, i) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img key={i} src={u} alt="" style={{ flex: 1, minWidth: 0, objectFit: 'cover', filter: 'blur(28px) saturate(0.9)', transform: 'scale(1.15)', opacity: 0.45 }} />
+        ))}
+        <div style={{ position: 'absolute', inset: 0, backgroundColor: 'color-mix(in srgb, var(--color-surface-bg) 62%, transparent)' }} />
       </div>
 
-      {/* 온보딩 모달 문법의 센터 카드 */}
-      <div style={{ position: 'relative', maxWidth: 480, margin: '0 auto', padding: 'var(--spacing-8) var(--gutter) var(--spacing-16)' }}>
+      {/* 온보딩 데스크톱 모달 문법 — 좌 일러스트 / 우 콘텐츠 */}
+      <div style={{ position: 'relative', maxWidth: 880, margin: '0 auto', padding: 'var(--spacing-12) var(--gutter) var(--spacing-16)' }}>
         <div style={{
           backgroundColor: 'var(--color-surface-card)',
           borderRadius: 'var(--radius-popover)',
           border: '1px solid var(--color-border)',
-          boxShadow: '0 20px 60px rgba(20, 15, 10, 0.14)',
-          padding: 'var(--gutter-sheet)',
+          boxShadow: '0 20px 60px rgba(20, 15, 10, 0.18)',
+          overflow: 'hidden',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
         }}>
-          <h1 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)' }}>
-            {region} 독립영화관<br />상영시간표
-          </h1>
-          <p style={{ margin: 'var(--spacing-3) 0 0', fontSize: 'var(--text-body)', lineHeight: 1.6, color: 'var(--color-text-sub)' }}>
-            {region} 지역 독립·예술영화관에서 오늘 상영 중인 독립영화와 극장 정보입니다.
-            멀티플렉스엔 걸리지 않는 독립·예술영화를 {region}에서 어디서 볼 수 있는지 확인하세요.
-          </p>
-          <p style={{ margin: 'var(--spacing-3) 0 var(--spacing-4)', fontSize: 'var(--text-meta)', fontWeight: 600, color: 'var(--color-text-caption)' }}>
-            영화관 {data.theaters.length}곳 · 오늘 상영작 {data.movies.length}편
-          </p>
+          {/* 좌: 온보딩 1페이지 지도 일러스트 */}
+          <div className={ob.illoVars} style={{ minHeight: 320 }}>
+            <IlloCollected />
+          </div>
 
-          <AreaCtas region={region} />
+          {/* 우: 콘텐츠 */}
+          <div style={{ padding: 'var(--spacing-8) var(--gutter-sheet)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <h1 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)' }}>
+              {region} 독립영화관<br />상영시간표
+            </h1>
+            <p style={{ margin: 'var(--spacing-3) 0 0', fontSize: 'var(--text-body)', lineHeight: 1.6, color: 'var(--color-text-sub)' }}>
+              {region} 지역 독립·예술영화관에서 오늘 상영 중인 독립영화와 극장 정보입니다.
+              멀티플렉스엔 걸리지 않는 독립·예술영화를 {region}에서 어디서 볼 수 있는지 확인하세요.
+            </p>
+            <p style={{ margin: 'var(--spacing-3) 0 var(--spacing-4)', fontSize: 'var(--text-meta)', fontWeight: 600, color: 'var(--color-text-caption)' }}>
+              영화관 {data.theaters.length}곳 · 오늘 상영작 {data.movies.length}편
+            </p>
+            <AreaCtas region={region} />
+          </div>
+        </div>
 
-          {/* 목록은 검색엔진 콘텐츠 — 카드 안에 컴팩트로 유지 */}
-          <section style={{ marginTop: 'var(--spacing-6)' }}>
+        {/* 목록 — 검색엔진 콘텐츠. 시각적으론 접어두고(details) DOM엔 항상 존재 */}
+        <details style={{
+          marginTop: 'var(--spacing-4)',
+          backgroundColor: 'color-mix(in srgb, var(--color-surface-card) 82%, transparent)',
+          borderRadius: 'var(--radius-popover)',
+          border: '1px solid var(--color-border)',
+          padding: 'var(--spacing-4) var(--gutter-sheet)',
+        }}>
+          <summary style={{ cursor: 'pointer', fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+            {region} 독립·예술영화관 {data.theaters.length}곳 · 오늘 상영작 전체 보기
+          </summary>
+          <section style={{ marginTop: 'var(--spacing-4)' }}>
             <h2 style={{ margin: '0 0 var(--spacing-2)', fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
               {region} 독립·예술영화관
             </h2>
@@ -120,7 +145,6 @@ export default async function FilmsAreaPage({
               ))}
             </ul>
           </section>
-
           {data.movies.length > 0 && (
             <section style={{ marginTop: 'var(--spacing-6)' }}>
               <h2 style={{ margin: '0 0 var(--spacing-2)', fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
@@ -138,7 +162,7 @@ export default async function FilmsAreaPage({
               </p>
             </section>
           )}
-        </div>
+        </details>
       </div>
     </main>
   )
