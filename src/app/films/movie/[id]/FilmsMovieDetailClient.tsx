@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
-import { Chip, Avatar } from '@/components/primitives'
+import { Chip, Avatar, Button, IconButton } from '@/components/primitives'
 import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
 import { addDaysIso, toKstIsoDate } from '@/lib/date'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
@@ -273,16 +273,17 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
 
   /* ── 공통 섹션들 ──────────────────────────────────────────────── */
   const shareButton = (
-    <button
+    <IconButton
+      variant="overlay"
+      size={44}
+      aria-label="공유"
       onClick={() => {
         trackEvent('share clicked', { movie_id: movie.id, movie_title: movie.title, source: 'films_movie_detail' })
         navigator.share?.({ title: movie.title, url: window.location.href }).catch(() => {})
       }}
-      aria-label="공유"
-      style={{ width: 'var(--touch-target)', height: 'var(--touch-target)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', color: 'var(--color-text-body)', cursor: 'pointer', flexShrink: 0 }}
     >
       <IcoShare />
-    </button>
+    </IconButton>
   )
 
   const heroSection = (
@@ -415,12 +416,9 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
         <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
           상영 영화관 및 일정
         </span>
-        <button
-          onClick={() => router.push(mapUrlWithSelection())}
-          style={{ height: 30, padding: '0 12px', borderRadius: 9999, border: '1px solid var(--color-primary-base)', backgroundColor: 'var(--color-primary-base)', color: 'var(--color-on-accent)', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, minHeight: 'auto' }}
-        >
+        <Button variant="primary" size="sm" onClick={() => router.push(mapUrlWithSelection())}>
           <IcoMap /> 지도에서 필터로 보기
-        </button>
+        </Button>
       </div>
       {!isLoading && totalTheaterCount > 0 && (
         <p style={{ margin: 0, padding: isDesktop ? '6px 0 0' : '6px 16px 0', fontSize: 12, color: 'var(--color-text-caption)', lineHeight: 1.5 }}>

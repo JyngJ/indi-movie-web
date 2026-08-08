@@ -15,7 +15,7 @@ import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWi
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { shareAdapter } from '@/lib/adapters/share'
 import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/components/domain/booking/BookingActions'
-import { Skeleton, Chip } from '@/components/primitives'
+import { Skeleton, Chip, Button } from '@/components/primitives'
 import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
 import { ShowtimeCell } from '@/components/domain/ShowtimeCell'
 
@@ -439,16 +439,6 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
     })
   }
 
-  const btnBase: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-    height: 40, padding: '0 16px', borderRadius: 12,
-    border: '1px solid var(--color-border)',
-    backgroundColor: 'var(--color-surface-card)',
-    color: 'var(--color-text-body)',
-    fontSize: 13, fontWeight: 600,
-    cursor: 'pointer', minHeight: 'auto', flexShrink: 0,
-  }
-
   const content = (
     <div style={{ paddingBottom: isDesktop ? (selectedShowtimeData ? 220 : 64) : (selectedShowtimeData ? 148 : 80) }}>
       {/* 헤더 */}
@@ -479,24 +469,28 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
 
         {/* CTA 버튼 */}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button
-            style={{ ...btnBase, backgroundColor: 'var(--color-primary-base)', color: 'var(--color-on-accent)', border: 'none', flex: isDesktop ? undefined : 1 }}
+          <Button
+            variant="primary"
+            size="md"
+            style={{ flex: isDesktop ? undefined : 1 }}
             onClick={() => router.push(mapUrlWithSelection())}
           >
             <IcoMap />
             지도에서 보기
-          </button>
+          </Button>
           {theater.address && (
-            <button
-              style={btnBase}
+            <Button
+              variant="secondary"
+              size="md"
               onClick={() => window.open(`https://map.naver.com/p/search/${encodeURIComponent(theater.address)}`, '_blank')}
             >
               <IcoNav />
               길찾기
-            </button>
+            </Button>
           )}
-          <button
-            style={btnBase}
+          <Button
+            variant="secondary"
+            size="md"
             onClick={() => {
               trackEvent('share clicked', { theater_id: theater.id, theater_name: theater.name, source: 'films_theater_detail' })
               navigator.share?.({ title: theater.name, url: window.location.href }).catch(() => {})
@@ -504,7 +498,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
           >
             <IcoShare />
             공유
-          </button>
+          </Button>
         </div>
       </div>
 
