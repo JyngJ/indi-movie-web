@@ -23,7 +23,8 @@
     "check:crawl-health": "tsx --env-file=.env.local scripts/check-crawl-health.ts",
     "backtest:last-week": "tsx --env-file=.env.local src/scripts/backtest-last-week-copy.ts",
     "audit:ui": "node scripts/audit/audit-ui-v3.mjs . --out .audit-out",
-    "audit:ui:check": "node scripts/audit/check-regression.mjs"
+    "audit:ui:check": "node scripts/audit/check-regression.mjs",
+    "check:image-hosts": "node scripts/check-image-hosts.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0",
