@@ -105,17 +105,17 @@ export default async function FilmsAreaPage({
           border: '1px solid var(--color-border)',
           boxShadow: '0 20px 60px rgba(20, 15, 10, 0.18)',
           overflow: 'hidden',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-          minHeight: 520,   /* 온보딩 데스크톱 모달(880×520)과 동일 비율 */
+          display: 'flex',
+          flexWrap: 'wrap',
+          minHeight: 520,   /* 온보딩 데스크톱 모달(880×520)과 동일 규격 */
         }}>
-          {/* 좌: 온보딩 1페이지 지도 일러스트 */}
-          <div className={ob.illoVars} style={{ minHeight: 320 }}>
+          {/* 좌: 온보딩 1페이지 지도 일러스트 — 온보딩 mIllo와 동일 420 고정폭 (좁으면 스택) */}
+          <div className={ob.illoVars} style={{ flex: '1 1 420px', maxWidth: 420, minHeight: 320 }}>
             <IlloCollected />
           </div>
 
-          {/* 우: 콘텐츠 */}
-          <div style={{ padding: 'var(--spacing-8) var(--gutter-sheet)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          {/* 우: 콘텐츠 — 온보딩 mText와 동일 패딩(56/48/40) */}
+          <div style={{ flex: '1 1 320px', minWidth: 0, padding: '56px 48px 40px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <h1 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)' }}>
               {region} 독립영화관<br />상영시간표
             </h1>

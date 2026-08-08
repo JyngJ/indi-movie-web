@@ -302,10 +302,10 @@ export function Onboarding({ onClose, variant }: Props) {
               {isLast ? (
                 <div className={s.mCtas}>
                   <button type="button" className={s.ctaGhost} onClick={handleBrowseCta}>
-                    위치 없이<br />둘러보기
+                    위치 없이 둘러보기
                   </button>
                   <button type="button" className={s.nextBtn} onClick={handleLocationCta}>
-                    위치 켜고<br />시작하기
+                    위치 켜고 시작하기
                   </button>
                 </div>
               ) : (

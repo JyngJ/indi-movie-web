@@ -511,7 +511,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
+}
+/* [이전] [────다음────] — 다음이 남은 폭 전부 차지 */
+.mFooter .nextBtn {
+  flex: 1;
+  justify-content: center;
 }
 .mFooter .dots {
   margin-top: 0;
@@ -541,20 +546,30 @@
 .mCtas {
   display: flex;
   align-items: stretch;
-  gap: 6px;
+  gap: 8px;
+  flex: 1;
+}
+.mCtas .nextBtn {
+  flex: 1.4;
 }
 
 .ctaGhost {
+  /* Button 2.0 tertiary — 그레이스케일 면 */
   min-height: 52px;
-  padding: 8px 12px;
-  font-size: 14px;
+  padding: 8px 16px;
+  border-radius: var(--radius-button);
+  font-size: var(--text-body);
   font-weight: 600;
   line-height: 1.2;
   text-align: center;
   white-space: nowrap;
-  color: var(--color-text-caption);
-  background: none;
+  color: var(--color-text-primary);
+  background: var(--color-surface-raised);
   border: none;
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
 }
 
