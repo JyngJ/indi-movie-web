@@ -124,6 +124,9 @@ export function FilterBar({
     const stored = getStoredRegion()
     if (stored) { userPickedRegionRef.current = true; setRegionId(stored); return }
     setRegionId(defaultRegionId ?? null)
+    // GPS 기본값도 공유 저장소에 반영 — 안 그러면 지도 탭에만 적용되고
+    // 상영작 탭은 지역 미설정 상태로 갈라짐 (이벤트로 전 화면 동기)
+    if (defaultRegionId) setStoredRegion(defaultRegionId)
   }, [defaultRegionId])
 
   // 다른 화면(상영작 탭 등)에서 지역이 바뀌면 필터바 라벨도 즉시 동기화
