@@ -291,22 +291,18 @@ export function Onboarding({ onClose, variant }: Props) {
             <div className={s.spacer} />
             {p.footnote && <div className={`${s.footnote} ${s.mFootnote}`}>{p.footnote}</div>}
             <div className={s.mFooter}>
-              <button
-                type="button"
-                className={s.mPrevBtn}
-                onClick={() => goTo(page - 1)}
-                style={{ visibility: page === 0 ? 'hidden' : 'visible' }}
-              >
-                <IcArrow size={16} /> 이전
-              </button>
-              {dots}
+              {page > 0 && (
+                <button type="button" className={s.mPrevBtn} onClick={() => goTo(page - 1)}>
+                  <IcArrow size={16} /> 이전
+                </button>
+              )}
               {isLast ? (
-                <div className={s.mCtas}>
+                <div className={s.mCtaCol}>
                   <button type="button" className={s.ctaGhost} onClick={handleBrowseCta}>
-                    위치 없이<br />둘러보기
+                    위치 없이 둘러보기
                   </button>
                   <button type="button" className={s.nextBtn} onClick={handleLocationCta}>
-                    위치 켜고<br />시작하기
+                    위치 켜고 시작하기
                   </button>
                 </div>
               ) : (
@@ -317,6 +313,8 @@ export function Onboarding({ onClose, variant }: Props) {
             </div>
           </div>
         </div>
+        {/* 페이지네이션 — 카드 밖 하단 (어두운 스크림 위, modalDots가 도트 색 반전) */}
+        <div className={`${s.dots} ${s.modalDots}`}>{dots.props.children}</div>
       </div>
     )
   }

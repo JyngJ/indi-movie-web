@@ -204,7 +204,7 @@
 
 .dots {
   display: flex;
-  gap: 1px;
+  gap: 4px;
   justify-content: center;
   align-items: center;
   margin-top: 14px;
@@ -228,7 +228,7 @@
   height: 7px;
   border-radius: 999px;
   background: var(--color-border);
-  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .dotOn {
@@ -247,14 +247,14 @@
 }
 
 .cta {
-  min-height: 56px;
+  min-height: 52px;
   padding: 8px 0;
-  border-radius: 14px;
+  border-radius: var(--radius-button);
   background: var(--color-primary-base);
   color: #fff;
-  font-family: var(--font-display);
+  font-family: var(--font-sans);
   font-weight: 700;
-  font-size: 16.5px;
+  font-size: var(--text-title);
   line-height: 1.2;
   text-align: center;
   display: flex;
@@ -268,7 +268,7 @@
 .ctaSub {
   min-height: 44px;
   padding: 6px 12px;
-  font-size: 13.5px;
+  font-size: var(--text-body);
   font-weight: 600;
   line-height: 1.2;
   text-align: center;
@@ -362,7 +362,7 @@
 }
 
 .pcard {
-  border-radius: 7px;
+  border-radius: var(--radius-button);
   padding: 3px;
   background: var(--color-surface-card);
   box-shadow: 0 6px 18px rgba(20, 15, 10, 0.22);
@@ -420,8 +420,21 @@
 .desktopRoot {
   background: rgba(20, 15, 10, 0.42);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 20px;
+}
+
+/* 모달 밖(아래) 페이지네이션 — 어두운 스크림 위라 도트 색 반전 */
+.modalDots .dot {
+  background: rgba(255, 255, 255, 0.38);
+}
+.modalDots .dotOn {
+  background: #ffffff;
+}
+.modalDots.dots {
+  margin-top: 0;
 }
 
 .modal {
@@ -432,7 +445,7 @@
   max-height: calc(100dvh - 80px);
   background: var(--color-surface-card);
   color: var(--color-text-primary);
-  border-radius: 22px;
+  border-radius: var(--radius-sheet);
   overflow: hidden;
   display: flex;
   box-shadow: 0 30px 70px rgba(20, 15, 10, 0.45);
@@ -450,7 +463,7 @@
 .mText {
   flex: 1;
   min-width: 0;
-  padding: 56px 52px 40px;
+  padding: 56px 48px 40px;
   display: flex;
   flex-direction: column;
   animation: obSlideIn 0.34s cubic-bezier(0.22, 1, 0.36, 1);
@@ -458,12 +471,12 @@
 
 .mSkip {
   position: absolute;
-  top: 22px;
-  right: 26px;
+  top: 24px;
+  right: 24px;
   z-index: 5;
   min-height: 40px;
   padding: 0 8px;
-  font-size: 13.5px;
+  font-size: var(--text-body);
   font-weight: 600;
   color: var(--color-text-caption);
   display: flex;
@@ -474,11 +487,11 @@
 }
 
 .mHead {
-  font-size: 29px;
+  font-size: 24px; /* display-h1 스케일 정합 */
 }
 
 .mSub {
-  font-size: 15.5px;
+  font-size: 16px;
   max-width: 330px;
 }
 
@@ -496,9 +509,14 @@
 
 .mFooter {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
+}
+/* [이전] [────다음────] — 다음이 남은 폭 전부 차지 */
+.mFooter .nextBtn {
+  flex: 1;
+  justify-content: center;
 }
 .mFooter .dots {
   margin-top: 0;
@@ -506,14 +524,14 @@
 
 .nextBtn {
   min-height: 52px;
-  padding: 8px 22px;
-  border-radius: 13px;
+  padding: 8px 24px;
+  border-radius: var(--radius-button);
   white-space: nowrap;
   background: var(--color-primary-base);
   color: #fff;
-  font-family: var(--font-display);
+  font-family: var(--font-sans);
   font-weight: 700;
-  font-size: 15.5px;
+  font-size: var(--text-title);
   line-height: 1.2;
   text-align: center;
   display: inline-flex;
@@ -525,43 +543,64 @@
   box-shadow: 0 6px 16px color-mix(in srgb, var(--color-primary-base) 26%, transparent);
 }
 
-.mCtas {
+.mCtaCol {
   display: flex;
+  flex-direction: column;
   align-items: stretch;
-  gap: 6px;
+  gap: 8px;
+  flex: 1;
+}
+.mCtaCol .nextBtn {
+  width: 100%;
 }
 
 .ctaGhost {
-  min-height: 52px;
-  padding: 8px 12px;
-  font-size: 14px;
+  /* Button 2.0 text — 투명, hover 시 면 */
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: var(--radius-button);
+  font-size: var(--text-body);
   font-weight: 600;
   line-height: 1.2;
   text-align: center;
   white-space: nowrap;
-  color: var(--color-text-caption);
+  color: var(--color-text-sub);
   background: none;
   border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease;
   cursor: pointer;
 }
 
 /* 데스크톱 모달 이전 버튼 */
 .mPrevBtn {
+  /* Button 2.0 tertiary */
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
-  min-height: 44px;
-  padding: 0 8px;
-  font-size: 14px;
+  min-height: 52px;
+  padding: 0 20px;
+  border-radius: var(--radius-button);
+  font-size: var(--text-body);
   font-weight: 600;
-  color: var(--color-text-caption);
-  background: none;
+  color: var(--color-text-primary);
+  background: var(--color-surface-raised);
   border: none;
+  flex-shrink: 0;
   cursor: pointer;
   white-space: nowrap;
 }
 .mPrevBtn svg {
   transform: scaleX(-1);
+}
+
+@media (hover: hover) {
+  .ctaGhost:hover {
+    background: var(--color-surface-raised);
+  }
 }
 
 @keyframes obSlideIn {
@@ -573,4 +612,24 @@
     opacity: 1;
     transform: translateX(0);
   }
+}
+
+/* ── 온보딩 밖 재사용(지역 SEO 랜딩) — 지도 일러스트 색 변수 공급 래퍼 ── */
+.illoVars {
+  position: relative;
+  overflow: hidden;
+  --ob-land: #ece6d8;
+  --ob-block: #f3eee2;
+  --ob-road: #fbf8f0;
+  --ob-water: #cfe0e6;
+  --ob-park: #d6e3c8;
+  --ob-label: rgba(74, 99, 128, 0.34);
+}
+:global([data-theme='dark']) .illoVars {
+  --ob-land: #15130e;
+  --ob-block: #1b1813;
+  --ob-road: #262119;
+  --ob-water: #13202b;
+  --ob-park: #16241a;
+  --ob-label: rgba(120, 150, 180, 0.4);
 }

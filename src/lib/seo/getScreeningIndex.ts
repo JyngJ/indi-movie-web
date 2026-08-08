@@ -19,6 +19,7 @@ export interface ScreeningMovie {
   year: number | null
   director: string[]
   nation: string | null
+  posterUrl: string | null
 }
 
 export interface ScreeningTheater {
@@ -84,7 +85,7 @@ export async function getScreeningIndex(regionId?: string): Promise<ScreeningInd
 
   const { data: movieRows } = await supabase
     .from('movies')
-    .select('id,title,year,director,nation')
+    .select('id,title,year,director,nation,poster_url')
     .in('id', movieIds)
     .order('title')
 
@@ -94,6 +95,7 @@ export async function getScreeningIndex(regionId?: string): Promise<ScreeningInd
     year: m.year != null ? Number(m.year) : null,
     director: (m.director as string[] | null) ?? [],
     nation: m.nation != null ? String(m.nation) : null,
+    posterUrl: m.poster_url != null ? String(m.poster_url) : null,
   }))
 
   return { date: today, movies, theaters }
