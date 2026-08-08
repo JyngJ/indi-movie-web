@@ -291,16 +291,13 @@ export function Onboarding({ onClose, variant }: Props) {
             <div className={s.spacer} />
             {p.footnote && <div className={`${s.footnote} ${s.mFootnote}`}>{p.footnote}</div>}
             <div className={s.mFooter}>
-              <button
-                type="button"
-                className={s.mPrevBtn}
-                onClick={() => goTo(page - 1)}
-                style={{ visibility: page === 0 ? 'hidden' : 'visible' }}
-              >
-                <IcArrow size={16} /> 이전
-              </button>
+              {page > 0 && (
+                <button type="button" className={s.mPrevBtn} onClick={() => goTo(page - 1)}>
+                  <IcArrow size={16} /> 이전
+                </button>
+              )}
               {isLast ? (
-                <div className={s.mCtas}>
+                <div className={s.mCtaCol}>
                   <button type="button" className={s.ctaGhost} onClick={handleBrowseCta}>
                     위치 없이 둘러보기
                   </button>

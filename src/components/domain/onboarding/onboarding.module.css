@@ -509,7 +509,7 @@
 
 .mFooter {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 12px;
 }
@@ -543,19 +543,20 @@
   box-shadow: 0 6px 16px color-mix(in srgb, var(--color-primary-base) 26%, transparent);
 }
 
-.mCtas {
+.mCtaCol {
   display: flex;
+  flex-direction: column;
   align-items: stretch;
   gap: 8px;
   flex: 1;
 }
-.mCtas .nextBtn {
-  flex: 1.4;
+.mCtaCol .nextBtn {
+  width: 100%;
 }
 
 .ctaGhost {
-  /* Button 2.0 tertiary — 그레이스케일 면 */
-  min-height: 52px;
+  /* Button 2.0 text — 투명, hover 시 면 */
+  min-height: 44px;
   padding: 8px 16px;
   border-radius: var(--radius-button);
   font-size: var(--text-body);
@@ -563,33 +564,43 @@
   line-height: 1.2;
   text-align: center;
   white-space: nowrap;
-  color: var(--color-text-primary);
-  background: var(--color-surface-raised);
+  color: var(--color-text-sub);
+  background: none;
   border: none;
-  flex: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: background-color 0.15s ease;
   cursor: pointer;
 }
 
 /* 데스크톱 모달 이전 버튼 */
 .mPrevBtn {
+  /* Button 2.0 tertiary */
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
-  min-height: 44px;
-  padding: 0 8px;
-  font-size: 14px;
+  min-height: 52px;
+  padding: 0 20px;
+  border-radius: var(--radius-button);
+  font-size: var(--text-body);
   font-weight: 600;
-  color: var(--color-text-caption);
-  background: none;
+  color: var(--color-text-primary);
+  background: var(--color-surface-raised);
   border: none;
+  flex-shrink: 0;
   cursor: pointer;
   white-space: nowrap;
 }
 .mPrevBtn svg {
   transform: scaleX(-1);
+}
+
+@media (hover: hover) {
+  .ctaGhost:hover {
+    background: var(--color-surface-raised);
+  }
 }
 
 @keyframes obSlideIn {
