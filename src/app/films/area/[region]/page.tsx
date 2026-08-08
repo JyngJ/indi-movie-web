@@ -115,7 +115,7 @@ export default async function FilmsAreaPage({
           </div>
 
           {/* 우: 콘텐츠 — 온보딩 mText와 동일 패딩(56/48/40) */}
-          <div style={{ flex: '1 1 320px', minWidth: 0, padding: '56px 48px 40px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div style={{ flex: '1 1 320px', minWidth: 0, padding: '56px var(--spacing-12) 40px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <h1 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)' }}>
               {region} 독립영화관<br />상영시간표
             </h1>
