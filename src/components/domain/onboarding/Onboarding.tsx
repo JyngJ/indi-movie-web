@@ -299,7 +299,6 @@ export function Onboarding({ onClose, variant }: Props) {
               >
                 <IcArrow size={16} /> 이전
               </button>
-              {dots}
               {isLast ? (
                 <div className={s.mCtas}>
                   <button type="button" className={s.ctaGhost} onClick={handleBrowseCta}>
@@ -317,6 +316,8 @@ export function Onboarding({ onClose, variant }: Props) {
             </div>
           </div>
         </div>
+        {/* 페이지네이션 — 카드 밖 하단 (어두운 스크림 위, modalDots가 도트 색 반전) */}
+        <div className={`${s.dots} ${s.modalDots}`}>{dots.props.children}</div>
       </div>
     )
   }

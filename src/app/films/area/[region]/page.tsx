@@ -101,12 +101,13 @@ export default async function FilmsAreaPage({
       <div style={{ position: 'relative', minHeight: '100svh', display: 'flex', flexDirection: 'column', justifyContent: 'center', maxWidth: 880, margin: '0 auto', padding: 'var(--spacing-24) var(--gutter)' }}>
         <div style={{
           backgroundColor: 'var(--color-surface-card)',
-          borderRadius: 'var(--radius-popover)',
+          borderRadius: 'var(--radius-sheet)',
           border: '1px solid var(--color-border)',
           boxShadow: '0 20px 60px rgba(20, 15, 10, 0.18)',
           overflow: 'hidden',
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          minHeight: 520,   /* 온보딩 데스크톱 모달(880×520)과 동일 비율 */
         }}>
           {/* 좌: 온보딩 1페이지 지도 일러스트 */}
           <div className={ob.illoVars} style={{ minHeight: 320 }}>
