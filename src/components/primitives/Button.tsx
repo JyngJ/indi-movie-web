@@ -2,8 +2,14 @@
 
 import { ButtonHTMLAttributes, ReactNode } from 'react'
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger'
-type Size = 'sm' | 'md' | 'lg'
+/** Button 2.0 (2026-08-08 피그마 확정)
+ *  variant: primary(솔리드 CTA) / secondary(소프트 면 150) / tertiary(그레이스케일 면 200)
+ *           / text(투명, tertiary 액션) / danger(확인 모달 전용 — 목록 안 파괴 액션은 secondary·text로)
+ *  size: sm 32 / md 44 / lg 52 / full(모바일 풀폭 = lg 스펙 + w-full)
+ *  상태: hover·pressed = 단계 다크닝, disabled = 40% 불투명. 'ghost'는 text의 구명칭 alias. */
+
+type Variant = 'primary' | 'secondary' | 'tertiary' | 'text' | 'ghost' | 'danger'
+type Size = 'sm' | 'md' | 'lg' | 'full'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant
@@ -13,32 +19,47 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode
 }
 
-const variantStyles: Record<Variant, string> = {
+const variantStyles: Record<Exclude<Variant, 'ghost'>, string> = {
   primary: `
     bg-[var(--color-primary-base)] text-[var(--color-text-inverse)]
-    hover:bg-[var(--color-primary-hover-l)]
-    active:opacity-80
+    hover:bg-[var(--color-primary-800)]
+    active:bg-[var(--color-primary-900)]
   `,
   secondary: `
-    bg-transparent text-[var(--color-primary-base)]
-    border border-[var(--color-primary-base)]
-    hover:bg-[var(--color-primary-subtle-l)]
+    bg-[var(--color-surface-soft)] text-[var(--color-text-primary)]
+    hover:bg-[var(--color-surface-raised)]
+    active:bg-[var(--color-neutral-300)]
   `,
-  ghost: `
-    bg-transparent text-[var(--color-text-body)]
-    hover:bg-[var(--color-surface-raised)] hover:text-[var(--color-text-primary)]
+  tertiary: `
+    bg-[var(--color-surface-raised)] text-[var(--color-text-primary)]
+    hover:bg-[var(--color-neutral-300)]
+    active:bg-[var(--color-neutral-400)]
+  `,
+  text: `
+    bg-transparent text-[var(--color-text-sub)]
+    hover:bg-[var(--color-surface-raised)] hover:text-[var(--color-text-body)]
+    active:bg-[var(--color-neutral-300)]
   `,
   danger: `
     bg-[var(--color-error)] text-[var(--color-text-inverse)]
-    hover:opacity-90
-    active:opacity-80
+    hover:bg-[var(--color-error-hover)]
+    active:bg-[var(--color-error-pressed)]
   `,
 }
 
 const sizeStyles: Record<Size, string> = {
-  sm: 'h-8 px-3 text-[length:var(--text-meta)] rounded-[var(--radius-button)]',
-  md: 'h-11 px-4 text-[length:var(--text-body)] rounded-[var(--radius-button)]',
-  lg: 'h-14 px-6 text-[length:var(--text-title)] rounded-[var(--radius-button)]',
+  sm: 'px-[var(--comp-btn-px-sm)] text-[length:var(--text-meta)] font-normal',
+  md: 'px-[var(--comp-btn-px-md)] text-[length:var(--text-body)] font-medium',
+  lg: 'px-[var(--comp-btn-px-lg)] text-[length:var(--text-title)] font-bold',
+  full: 'w-full px-[var(--comp-btn-px-lg)] text-[length:var(--text-title)] font-bold',
+}
+
+/* 높이는 인라인으로 — 전역 button { min-height: 44 }가 무레이어라 @layer utilities 클래스를 이김 */
+const sizeHeights: Record<Size, string> = {
+  sm: 'var(--comp-btn-h-sm)',
+  md: 'var(--comp-btn-h-md)',
+  lg: 'var(--comp-btn-h-lg)',
+  full: 'var(--comp-btn-h-lg)',
 }
 
 export function Button({
@@ -49,22 +70,26 @@ export function Button({
   disabled,
   children,
   className = '',
+  style,
   ...props
 }: ButtonProps) {
   const isDisabled = disabled || loading
+  const v = variant === 'ghost' ? 'text' : variant
 
   return (
     <button
       disabled={isDisabled}
       className={`
-        inline-flex items-center justify-center gap-2
-        font-medium transition-all duration-150
-        ${variantStyles[variant]}
+        inline-flex items-center justify-center gap-[var(--comp-btn-gap)]
+        rounded-[var(--comp-btn-radius)]
+        transition-colors duration-150
+        ${variantStyles[v]}
         ${sizeStyles[size]}
         ${fullWidth ? 'w-full' : ''}
         ${isDisabled ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}
         ${className}
       `.replace(/\s+/g, ' ').trim()}
+      style={{ height: sizeHeights[size], minHeight: sizeHeights[size], ...style }}
       {...props}
     >
       {loading && (

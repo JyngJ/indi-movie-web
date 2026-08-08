@@ -27,6 +27,8 @@
   --color-surface-raised: #EAE5E1;   /* 눌린 면·비활성 칩 (neutral/200) */
   --color-border:         #EAE5E1;   /* 보더·구분선 (neutral/200) */
   --color-surface-overlay: rgba(0, 0, 0, 0.06);   /* 닫기 버튼·장르 칩·배지 등 표면 위 옅은 오버레이 배경 */
+  --color-surface-overlay-hover: rgba(0, 0, 0, 0.10);   /* IconButton overlay hover (Material state-layer식) */
+  --color-surface-overlay-pressed: rgba(0, 0, 0, 0.14); /* IconButton overlay pressed */
 
   /* ── Text (라이트 모드)
       역할          토큰           HEX
@@ -91,6 +93,8 @@
   --color-success-deep: #2B5036;
   --color-error-tint:   #F5E1E0;
   --color-error-mid:    #BD4E4C;   /* 아이콘·보더·요일(일) 전용 */
+  --color-error-hover:  #872C2A;   /* Button danger hover — 900에서 한 단계 다크 */
+  --color-error-pressed: #722523;  /* Button danger pressed — 두 단계 다크 */
   --color-gv-tint:      #E7DCF9;
 
   /* ── Multiplex (핀 전용, 텍스트 미사용) ── */
@@ -205,6 +209,20 @@
   --comp-fab-pill-pl:     14px;
   --comp-fab-pill-pr:     16px;
   --comp-fab-pill-radius: var(--radius-pill);
+
+  /* Button 2.0 (2026-08-08 피그마 확정 — sm/md/lg = 32/44/52, pad 16/32/48, 웨이트 400/500/700) */
+  --comp-btn-h-sm: 32px;
+  --comp-btn-h-md: 44px;
+  --comp-btn-h-lg: 52px;
+  --comp-btn-px-sm: var(--spacing-4);
+  --comp-btn-px-md: var(--spacing-8);
+  --comp-btn-px-lg: var(--spacing-12);
+  --comp-btn-gap: var(--spacing-2);
+  --comp-btn-radius: var(--radius-button);
+
+  /* SortToggle (텍스트 pill — 최신순·예매 가능만) */
+  --comp-sort-h: 28px;
+  --comp-sort-px: var(--spacing-2);
 
   /* 바텀시트 */
   --comp-sheet-radius:        var(--radius-sheet) var(--radius-sheet) 0 0;
