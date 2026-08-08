@@ -115,7 +115,8 @@ export default async function FilmsAreaPage({
           </div>
 
           {/* 우: 콘텐츠 — 온보딩 mText와 동일 패딩(56/48/40) */}
-          <div style={{ flex: '1 1 320px', minWidth: 0, padding: '56px var(--spacing-12) 40px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          {/* 온보딩 mText 문법 — 상단부터 흐르고 스페이서가 CTA를 하단에 고정 */}
+          <div style={{ flex: '1 1 320px', minWidth: 0, padding: '56px var(--spacing-12) 40px', display: 'flex', flexDirection: 'column' }}>
             <h1 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)' }}>
               {region} 독립영화관<br />상영시간표
             </h1>
@@ -126,6 +127,7 @@ export default async function FilmsAreaPage({
             <p style={{ margin: 'var(--spacing-6) 0 var(--spacing-6)', fontSize: 'var(--text-meta)', fontWeight: 600, color: 'var(--color-text-caption)' }}>
               영화관 {data.theaters.length}곳 · 오늘 상영작 {data.movies.length}편
             </p>
+            <div style={{ flex: 1, minHeight: 'var(--spacing-4)' }} />
             <AreaCtas region={region} />
           </div>
         </div>
