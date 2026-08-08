@@ -3,12 +3,15 @@
 import { useState, useRef, useEffect } from 'react'
 import { FilterChip } from './FilterChip'
 import { RegionDropdown } from './RegionDropdown'
-import { getStoredRegion, setStoredRegion } from '@/lib/regionStorage'
+import { getStoredRegion, setStoredRegion, subscribeStoredRegion } from '@/lib/regionStorage'
 
 export function RegionFilterWidget({ onRegionChange }: { onRegionChange?: (id: string | null) => void } = {}) {
   // localStorage 초기화 금지 — SSR(null)과 갈려 hydration mismatch 나던 자리 (effect에서 로드)
   const [region, setRegion] = useState<string | null>(null)
   useEffect(() => { setRegion(getStoredRegion()) }, [])
+  // 지도 탭 등 다른 화면에서 지역이 바뀌면 이벤트로 동기 — persistent 탭 마운트라 재마운트가 없음.
+  // onRegionChange는 부르지 않는다(부모 핸들러가 setStoredRegion을 다시 불러 이벤트 루프가 됨).
+  useEffect(() => subscribeStoredRegion(setRegion), [])
   const [open, setOpen] = useState(false)
   const chipRef = useRef<HTMLButtonElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)

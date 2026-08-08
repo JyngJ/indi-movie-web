@@ -31,7 +31,7 @@ import { buildYearsOnScreenCaptions } from '@/lib/curation/yearsOnScreenCaption'
 import { formatLocalDate, formatLocalTimeHHMM, toKstIsoDate } from '@/lib/date'
 import { useActiveMovieIdsByRegion, useActiveMovieTheaterPairs, useAlmostSoldOutCandidates, useCurationLists, useFestivals, useFilmRankings, useInstagramRecommendations, useLateNightCandidates, useMovies, useTheaters } from '@/lib/supabase/queries'
 import { getRegionFromCity } from '@/lib/regions'
-import { getStoredRegion, setStoredRegion } from '@/lib/regionStorage'
+import { getStoredRegion, setStoredRegion, subscribeStoredRegion } from '@/lib/regionStorage'
 import { getFestivalDateLabel, getFestivalStatus, type FestivalStatus } from '@/lib/festival/status'
 import type { Theater } from '@/types/api'
 import type { Festival } from '@/types/festival'
@@ -212,6 +212,8 @@ export default function FilmsPage() {
   // 갈려 hydration mismatch → 트리 재생성 (상세 직진입 무한로딩 스톨의 진원). effect에서 읽는다.
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null)
   useEffect(() => { setSelectedRegion(getStoredRegion()) }, [])
+  // 지도 탭에서 지역 바꿔도 동기 — persistent 탭 마운트라 이벤트 구독으로만 전달됨
+  useEffect(() => subscribeStoredRegion(setSelectedRegion), [])
 
   function pickRegion(id: string | null) {
     setSelectedRegion(id)

@@ -15,7 +15,7 @@ import type { MovieDetail } from '@/lib/supabase/queries'
 import { withFlagsRaw } from '@/lib/nations'
 import type { Showtime } from '@/types/api'
 import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWidget'
-import { getStoredRegion } from '@/lib/regionStorage'
+import { getStoredRegion, subscribeStoredRegion } from '@/lib/regionStorage'
 import { getRegionFromAddress } from '@/lib/regions'
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { recordRecentlyViewed } from '@/lib/curation/recentlyViewed'
@@ -111,6 +111,8 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
   // localStorage 초기화 금지 — hydration mismatch 방지 (effect에서 로드)
   const [regionId, setRegionId] = useState<string | null>(null)
   useEffect(() => { setRegionId(getStoredRegion()) }, [])
+  // 다른 화면(지도 탭 등)의 지역 변경 동기
+  useEffect(() => subscribeStoredRegion(setRegionId), [])
   const [selectedShowtimeId, setSelectedShowtimeId] = useState<string | null>(null)
   const [selectedTheaterId, setSelectedTheaterId] = useState<string | null>(null)
   const [bookableOnly, setBookableOnly] = useState(false)
