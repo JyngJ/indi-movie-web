@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useMovies, useActiveMovieIds } from '@/lib/supabase/queries'
-import { Toast } from '@/components/primitives'
+import { Toast, SortToggle } from '@/components/primitives'
 import { PanelShell } from './PanelShell'
 import { IcoMap, IcoChevronRight, IcoChevronDown } from './icons'
 
@@ -90,18 +90,9 @@ export function DirectorPanel({
             </span>
             <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
               {(['newest', 'oldest'] as const).map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setSort(s)}
-                  style={{
-                    height: 24, padding: '0 12px', borderRadius: 9999, fontSize: 'var(--text-badge)', fontWeight: 500, cursor: 'pointer', border: '1px solid var(--color-border)',
-                    backgroundColor: sort === s ? 'var(--color-primary-base)' : 'transparent',
-                    color: sort === s ? '#fff' : 'var(--color-text-caption)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, minHeight: 'auto',
-                  }}
-                >
+                <SortToggle key={s} active={sort === s} onClick={() => setSort(s)}>
                   {s === 'newest' ? '최신순' : '오래된순'}
-                </button>
+                </SortToggle>
               ))}
             </div>
           </div>

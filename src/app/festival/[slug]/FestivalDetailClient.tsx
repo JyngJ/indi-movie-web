@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { ChevronDown, ChevronLeft, ExternalLink, MapPin, X, ZoomIn } from 'lucide-react'
-import { SectionHeader, ScrollNavButton } from '@/components/primitives'
+import { Button, IconButton, SectionHeader, ScrollNavButton } from '@/components/primitives'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { getFestivalDateLabel, getFestivalStatus, type FestivalStatus } from '@/lib/festival/status'
@@ -99,13 +99,9 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
           films/theater/[id]와 같은 패턴: 뒤로가기 + 브레드크럼 */}
       <div style={{ position: 'sticky', top: 0, zIndex: 50, paddingTop: 'env(safe-area-inset-top)', backgroundColor: 'var(--color-surface-bg)', borderBottom: '1px solid var(--color-border)' }}>
         <div style={{ height: 52, display: 'flex', alignItems: 'center', gap: 4, paddingLeft: 4, paddingRight: 12, maxWidth: isDesktop ? 1200 : undefined, margin: isDesktop ? '0 auto' : undefined }}>
-          <button
-            onClick={() => router.back()}
-            style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-text-body)', flexShrink: 0 }}
-            aria-label="뒤로"
-          >
+          <IconButton variant="ghost" size={44} aria-label="뒤로가기" onClick={() => router.back()}>
             <ChevronLeft size={22} strokeWidth={1.75} color="currentColor" />
-          </button>
+          </IconButton>
           <button onClick={() => router.push('/films')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-caption)', fontSize: 13, minHeight: 'auto', padding: 0, flexShrink: 0 }}>영화</button>
           <span style={{ color: 'var(--color-text-caption)', fontSize: 13, flexShrink: 0 }}>&gt;</span>
           <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{festival.name}</span>
@@ -165,17 +161,9 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
               </a>
             )}
             {firstLinkedTheaterId && (
-              <button
-                onClick={() => router.push(`/?theater=${firstLinkedTheaterId}`)}
-                style={{
-                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  height: 44, borderRadius: 12, backgroundColor: 'var(--color-surface-raised)',
-                  border: '1px solid var(--color-border)', color: 'var(--color-text-body)',
-                  fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 'auto',
-                }}
-              >
+              <Button variant="secondary" size="md" onClick={() => router.push(`/?theater=${firstLinkedTheaterId}`)} style={{ flex: 1 }}>
                 <MapPin size={16} strokeWidth={1.75} color="currentColor" /> 지도에서 보기
-              </button>
+              </Button>
             )}
           </div>
         )}

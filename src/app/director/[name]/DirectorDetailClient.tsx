@@ -5,7 +5,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMovies, useActiveMovieIds, useDirectorProfile } from '@/lib/supabase/queries'
 import type { Movie } from '@/types/api'
-import { Toast } from '@/components/primitives'
+import { Toast, IconButton, SortToggle } from '@/components/primitives'
 
 function useIsDesktopDetail() {
   return useMediaQuery('(min-width: 1280px)')
@@ -42,10 +42,6 @@ const IcoMap = () => (
 
 /* ── NavBar ── */
 function NavBar({ onBack, onClose }: { onBack: () => void; onClose: () => void }) {
-  const btn: React.CSSProperties = {
-    width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center',
-    border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-text-body)',
-  }
   return (
     <div style={{
       height: 52, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -54,9 +50,9 @@ function NavBar({ onBack, onClose }: { onBack: () => void; onClose: () => void }
       backgroundColor: 'var(--color-primary-subtle-l)',
       flexShrink: 0,
     }}>
-      <button style={btn} onClick={onBack}><IcoChevronLeft /></button>
+      <IconButton variant="ghost" size={44} aria-label="뒤로가기" onClick={onBack}><IcoChevronLeft /></IconButton>
       <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 600, color: 'var(--color-text-primary)' }}>감독 정보</span>
-      <button style={btn} onClick={onClose}><IcoClose /></button>
+      <IconButton variant="ghost" size={44} aria-label="닫기" onClick={onClose}><IcoClose /></IconButton>
     </div>
   )
 }
@@ -113,29 +109,9 @@ function SortChips({ active, onChange }: { active: SortKey; onChange: (k: SortKe
   return (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
       {opts.map((o) => (
-        <button
-          key={o.key}
-          onClick={() => onChange(o.key)}
-          style={{
-            height: 24,
-            padding: '0 12px',
-            borderRadius: 9999,
-            border: '1px solid',
-            borderColor: active === o.key ? 'var(--color-primary-base)' : 'var(--color-border)',
-            backgroundColor: active === o.key ? 'var(--color-primary-subtle-l)' : 'transparent',
-            color: active === o.key ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
-            fontSize: 12,
-            fontWeight: active === o.key ? 600 : 400,
-            cursor: 'pointer',
-            minHeight: 'auto',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            lineHeight: 1,
-          }}
-        >
+        <SortToggle key={o.key} active={active === o.key} onClick={() => onChange(o.key)}>
           {o.label}
-        </button>
+        </SortToggle>
       ))}
     </div>
   )
