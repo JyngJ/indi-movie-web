@@ -26,7 +26,7 @@ const variantStyles: Record<Exclude<Variant, 'ghost'>, string> = {
     active:bg-[var(--color-primary-900)]
   `,
   secondary: `
-    bg-[var(--color-surface-soft)] text-[var(--color-text-primary)]
+    bg-[var(--color-surface-soft)] text-[var(--color-primary-900)]
     hover:bg-[var(--color-surface-raised)]
     active:bg-[var(--color-neutral-300)]
   `,
