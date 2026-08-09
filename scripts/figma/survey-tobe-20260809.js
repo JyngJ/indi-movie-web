@@ -76,18 +76,28 @@ function dots(activeIdx) {
   return row
 }
 
-// 닫기 × — 코드의 IconButton ghost 32 대응, 카드 우상단 absolute
+// 닫기 × — 기존 2.0/icon/x 인스턴스 (IconButton ghost 32 대응), 카드 우상단 absolute
+function findComp(name) {
+  for (const page of figma.root.children) {
+    const found = page.findOne(n => (n.type === 'COMPONENT' || n.type === 'COMPONENT_SET') && n.name === name)
+    if (found) return found.type === 'COMPONENT_SET' ? found.defaultVariant : found
+  }
+  return null
+}
 function closeBtn(card) {
   const b = F('close ×', { dir: 'H', align: 'CENTER', mainAlign: 'CENTER', w: 32, h: 32, r: 8 })
-  for (const rot of [45, -45]) {
-    const l = figma.createRectangle()
-    l.resize(14, 1.75)
-    l.cornerRadius = 1
-    l.fills = [paint('neutral/500')]
-    b.appendChild(l)
-    l.layoutPositioning = 'ABSOLUTE'
-    l.x = (32 - 14) / 2; l.y = (32 - 1.75) / 2
-    l.rotation = rot
+  const xComp = findComp('2.0/icon/x')
+  if (xComp) {
+    const inst = xComp.createInstance()
+    if (inst.width !== 16) inst.rescale(16 / inst.width)   // resize는 크롭 — rescale
+    const p = paint('neutral/500')
+    for (const v of inst.findAll(n => 'strokes' in n || 'fills' in n)) {
+      try {
+        if (v.strokes && v.strokes.length) v.strokes = [p]
+        if (v.fills && v.fills !== figma.mixed && v.fills.length) v.fills = [p]
+      } catch { /* 잠긴 속성 무시 */ }
+    }
+    b.appendChild(inst)
   }
   card.appendChild(b)
   b.layoutPositioning = 'ABSOLUTE'
@@ -102,7 +112,7 @@ function cardBase(name) {
 }
 
 function head(card, titleText, subText, stepIdx) {
-  if (stepIdx != null) card.appendChild(dots(stepIdx))
+  // 도트 제거 (2026-08-09 결정) — stepIdx 미사용
   const title = T(titleText, { kimm: true, weight: 'Bold', size: 20, lh: 130, ls: kimmOK ? 5 : 0 })
   card.appendChild(title)
   title.layoutSizingHorizontal = 'FILL'
@@ -111,10 +121,6 @@ function head(card, titleText, subText, stepIdx) {
   card.appendChild(sub)
   sub.layoutSizingHorizontal = 'FILL'
   const sp2 = F('sp', { dir: 'V', h: 20 }); card.appendChild(sp2)
-  if (stepIdx != null) {
-    // 도트 아래 간격
-    card.insertChild(1, F('sp', { dir: 'V', h: 12 }))
-  }
 }
 
 function choice(label, on) {
@@ -237,8 +243,7 @@ note.characters = [
   '· 제목 display-h2(KIMM 20) — 구 17 Pretendard에서 승격. 단계 표시 = 온보딩 도트 문법(2개)',
   '· 선택지: h48 · surface-soft(150) r-control(12) · 선택 시 primary/100 + primary/700 1px + 체크 원',
   '· 푸터: step1 = primary 풀폭 다음 / step2 = [건너뛰기 text] [제출 primary flex] (온보딩 푸터 문법)',
-  '· 닫기 × = 전 단계 우상단 고정 (IconButton ghost 32, top/right 14)',
-  '· 도트 = 온보딩 dots 문법 동일 (7px·활성 20 pill·히트 20×28·gap 1)',
+  '· 닫기 × = 2.0/icon/x 인스턴스, 전 단계 우상단 고정 (ghost 32, top/right 14). 도트 없음(2026-08-09 결정)',
   ...(kimmOK ? [] : ['⚠ KIMM_Bold 폰트 미로드 — 제목이 Pretendard로 렌더됨']),
 ].join('\n')
 note.fills = [{ type: 'SOLID', color: rgb('#726B65') }]
