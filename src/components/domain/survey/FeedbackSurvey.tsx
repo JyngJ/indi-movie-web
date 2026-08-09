@@ -53,6 +53,9 @@ export function FeedbackSurvey({ onClose }: Props) {
   }, [])
 
   const options = verdict === 'bad' ? SURVEY_BAD_POINTS : SURVEY_GOOD_POINTS
+  // 기타는 내용 없으면 데이터 가치가 없다 — 텍스트 입력 전까지 제출 잠금
+  const etcBlocked = selected.includes('etc') && etcText.trim().length === 0
+  const canSubmit = selected.length > 0 && !etcBlocked
 
   function pickVerdict(v: SurveyVerdict) {
     trackEvent('survey verdict', { verdict: v })
@@ -71,7 +74,7 @@ export function FeedbackSurvey({ onClose }: Props) {
   }
 
   async function submit() {
-    if (submitting || !verdict || selected.length === 0) return
+    if (submitting || !verdict || !canSubmit) return
     setSubmitting(true)
     trackEvent('survey submitted', { verdict, points: selected.join(','), count: selected.length })
     try {
@@ -202,7 +205,7 @@ export function FeedbackSurvey({ onClose }: Props) {
                 size="full"
                 data-rc="survey-submit"
                 onClick={submit}
-                disabled={selected.length === 0}
+                disabled={!canSubmit}
                 loading={submitting}
               >
                 {submitting ? '보내는 중…' : '제출'}
