@@ -18,12 +18,16 @@ function discordEnv(name: string) {
   return process.env[name] ?? ''
 }
 
+// 검수(duplicated) 채널 전용 — report 채널 폴백 금지 (2026-08-09).
+// 폴백이 있으면 전용 env 미설정 시 검수 메시지가 report 채널을 오염시킨다.
+// DISCORD_MATCH_REVIEW_CHANNEL_ID(봇 전송·버튼 인터랙션) 또는
+// DISCORD_MATCH_REVIEW_WEBHOOK_URL 중 하나를 설정할 것 — 둘 다 없으면 전송 스킵.
 function matchReviewChannelId() {
-  return discordEnv('DISCORD_MATCH_REVIEW_CHANNEL_ID') || discordEnv('DISCORD_REPORT_CHANNEL_ID') || discordEnv('DISCORD_CHANNEL_ID')
+  return discordEnv('DISCORD_MATCH_REVIEW_CHANNEL_ID')
 }
 
 function matchReviewWebhookUrl() {
-  return discordEnv('DISCORD_MATCH_REVIEW_WEBHOOK_URL') || discordEnv('DISCORD_REPORT_WEBHOOK_URL') || discordEnv('DISCORD_WEBHOOK_URL')
+  return discordEnv('DISCORD_MATCH_REVIEW_WEBHOOK_URL')
 }
 
 /** movie_match 버튼의 custom_id에 영화 제목 대신 넣을 짧은 해시 — Discord custom_id는 100자 제한이라 원문 제목 대신 사용 */
@@ -107,7 +111,10 @@ async function sendGroupMessage(group: AmbiguousMovieGroup) {
   }
 
   const webhookUrl = matchReviewWebhookUrl()
-  if (!webhookUrl) return null
+  if (!webhookUrl) {
+    console.warn('[matchReview] DISCORD_MATCH_REVIEW_CHANNEL_ID/WEBHOOK_URL 미설정 — 동명 영화 검수 알림 스킵')
+    return null
+  }
 
   const url = new URL(webhookUrl)
   url.searchParams.set('wait', 'true')
