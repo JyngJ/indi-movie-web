@@ -100,8 +100,8 @@ export function DateBar({ days, selectedDate, onSelectDate, onPrev, onNext, hasP
         {days.map((d) => {
           const isSelected = d.date === selectedDate
           const isDisabled = !!d.disabled
-          // disabled이면 선택 불가 → 선택 상태도 해제해서 보여줌
-          const active     = isSelected && !isDisabled
+          // 상영 없는 날도 선택할 수 있다 — 선택하면 똑같이 선택 상태로 보인다
+          const active     = isSelected
 
           const textColor = isDisabled
             ? 'var(--color-text-placeholder)'
@@ -115,8 +115,9 @@ export function DateBar({ days, selectedDate, onSelectDate, onPrev, onNext, hasP
               key={d.date}
               type="button"
               data-rc="datebar-date"
-              disabled={isDisabled}
-              className="flex flex-col items-center"
+              /* 상영 없는 날도 누를 수 있다 — 그 날로 옮겨 다른 영화를 고를 수 있어야 한다.
+                 흐린 표시는 "이 날은 없음"을 알리는 것이지 못 누른다는 뜻이 아니다 */
+              className={`flex flex-col items-center${active ? '' : ' date-cell--hoverable'}`}
               style={{
                 paddingTop: 'var(--comp-date-cell-pt)',
                 paddingBottom: 'var(--comp-date-cell-pb)',
@@ -127,14 +128,14 @@ export function DateBar({ days, selectedDate, onSelectDate, onPrev, onNext, hasP
                 animation: active ? 'date-cell-pop 260ms cubic-bezier(0.34, 1.56, 0.64, 1)' : undefined,
                 borderRadius: 'var(--comp-date-cell-radius)',
                 backgroundColor: active ? 'var(--color-primary-base)' : 'transparent',
-                cursor: isDisabled ? 'default' : 'pointer',
+                cursor: 'pointer',
                 border: (d.type === 'today' && !active)
                   ? '1.5px solid color-mix(in srgb, var(--color-primary-base) 50%, transparent)'
                   : '1.5px solid transparent',
-                opacity: isDisabled ? 0.4 : 1,
+                opacity: isDisabled && !active ? 0.4 : 1,
                 position: 'relative',
               }}
-              onClick={isDisabled ? undefined : () => onSelectDate?.(d.date)}
+              onClick={() => onSelectDate?.(d.date)}
             >
               <span
                 style={{
@@ -155,7 +156,7 @@ export function DateBar({ days, selectedDate, onSelectDate, onPrev, onNext, hasP
                   lineHeight: 1,
                   color: active ? 'var(--color-neutral-100)' : dateColor,
                   // disabled 날짜에 가로줄 — shorthand(textDecoration) 혼용 금지
-                  textDecorationLine: isDisabled ? 'line-through' : 'none',
+                  textDecorationLine: isDisabled && !active ? 'line-through' : 'none',
                   textDecorationColor: 'var(--color-text-placeholder)',
                 }}
               >

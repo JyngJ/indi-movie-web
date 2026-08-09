@@ -7,6 +7,9 @@ import { withFlag } from '@/lib/nations'
 import { dayOfWeek } from '@/lib/map/posterLogic'
 import type { TheaterPosterMovie, PosterSlot, ScreeningDay } from '@/lib/map/posterLogic'
 
+/** 포스터 슬롯 간격 — 피그마 2.0/PosterPin 확정(카드 패딩 8 · 간격 8) */
+const SLOT_GAP = 8
+
 function dayLabelColor(day: ScreeningDay): string {
   if (day.label === '오늘') return 'var(--color-primary-base)'
   const dow = dayOfWeek(day.date)
@@ -53,26 +56,25 @@ export function ScheduleRows({ days, showTimes = true }: {
   showTimes?: boolean
 }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: SLOT_GAP }}>
       {days.map((day) => (
-        <div key={day.date} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div key={day.date} style={{ display: 'flex', alignItems: 'center', gap: SLOT_GAP }}>
           <span style={{
-            minWidth: 29, fontSize: 'var(--text-badge)', fontWeight: 700, whiteSpace: 'nowrap',
+            minWidth: 28, fontSize: 'var(--text-badge)', fontWeight: 500, whiteSpace: 'nowrap',
             color: dayLabelColor(day),
           }}>{day.label}</span>
           {showTimes && (
             <span style={{ display: 'flex', gap: 4 }}>
               {day.times.slice(0, 3).map((t) => (
                 <span key={t} style={{
-                  fontFamily: "'SF Mono', ui-monospace, monospace",
-                  fontSize: 10,
-                  letterSpacing: 0.2,
+                  fontSize: 'var(--text-meta)',
                   fontWeight: 600,
+                  fontVariantNumeric: 'tabular-nums',
                   color: 'var(--color-text-primary)',
                 }}>{t}</span>
               ))}
               {day.times.length > 3 && (
-                <span style={{ fontSize: 'var(--text-badge)', fontWeight: 600, color: 'var(--color-text-caption)', alignSelf: 'center' }}>
+                <span style={{ fontSize: 'var(--text-badge)', fontWeight: 500, color: 'var(--color-text-caption)', alignSelf: 'center' }}>
                   +{day.times.length - 3}
                 </span>
               )}
@@ -105,7 +107,7 @@ export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, 
   const scheduleMode = !!schedule && schedule.length > 0 && count === 1
   const showMatchChip = !hideMatchChip && filtersActive && matchCount != null && matchCount > 0
   const perRow = count > 3 ? 3 : count
-  const cardWidth = perRow * posterW + Math.max(0, perRow - 1) * 4 + 16
+  const cardWidth = perRow * posterW + Math.max(0, perRow - 1) * SLOT_GAP + 16
   const tailInset = 14
   const safeTailOffset = finiteNumber(tailOffset)
   const tailX = scheduleMode
@@ -151,16 +153,23 @@ export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, 
           </div>
         )}
         {scheduleMode ? (
-          <div data-movie-id={slots[0].movie?.id} style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative', zIndex: 1 }}>
-            <div style={{ position: 'relative', width: posterW, height: posterH, flexShrink: 0 }}>
-              <PosterThumb
-                src={slots[0].movie?.posterUrl}
-                alt={slots[0].movie?.title ?? ''}
-                width={posterW}
-                height={posterH}
-                size="sm"
-                radius={4} /* 지도 포스터 예외 — 최소 라운딩(--radius-badge 값) */
-              />
+          <div data-movie-id={slots[0].movie?.id} style={{ display: 'flex', alignItems: 'stretch', gap: SLOT_GAP, position: 'relative', zIndex: 1 }}>
+            {/* 포스터가 카드 세로를 꽉 채운다 — 폭은 2:3 비율에서 나온다 (피그마 2.0/PosterPinSchedule) */}
+            <div style={{
+              position: 'relative', flexShrink: 0,
+              aspectRatio: '2 / 3', minHeight: posterH,
+              borderRadius: 4, overflow: 'hidden',
+              backgroundColor: 'var(--color-neutral-800)',
+              boxShadow: 'inset 0 0 0 1px var(--comp-poster-border)',
+            }}>
+              {slots[0].movie?.posterUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={slots[0].movie.posterUrl}
+                  alt={slots[0].movie.title ?? ''}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                />
+              )}
               {occurrenceCount != null && occurrenceCount > 0 && (
                 <div style={{
                   position: 'absolute', top: -8, right: -8,
@@ -174,11 +183,13 @@ export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, 
                 </div>
               )}
             </div>
-            <div style={{ borderLeft: '1px dashed var(--color-border)', paddingLeft: 8 }}>
+            {/* 실선 디바이더 — 점선에서 변경 (피그마 확정) */}
+            <div style={{ width: 1, alignSelf: 'stretch', backgroundColor: 'var(--color-border)', flexShrink: 0 }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: SLOT_GAP }}>
               <div style={{
-                fontSize: 'var(--text-badge)', fontWeight: 700, textAlign: 'center', whiteSpace: 'nowrap',
+                fontSize: 'var(--text-badge)', fontWeight: 500, textAlign: 'center', whiteSpace: 'nowrap',
                 color: 'var(--color-primary-base)', backgroundColor: 'var(--color-primary-subtle-l)',
-                borderRadius: 9999, padding: '4px 8px', marginBottom: 4,
+                borderRadius: 9999, padding: '4px 8px',
               }}>
                 상영 일정
               </div>
@@ -186,9 +197,9 @@ export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, 
             </div>
           </div>
         ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: SLOT_GAP, position: 'relative', zIndex: 1 }}>
           {Array.from({ length: count > 3 ? 2 : 1 }).map((_, row) => (
-            <div key={row} style={{ display: 'flex', gap: 4 }}>
+            <div key={row} style={{ display: 'flex', gap: SLOT_GAP }}>
               {Array.from({ length: perRow }).map((_, col) => {
                 const idx = row * perRow + col
                 const slot = slots[idx]

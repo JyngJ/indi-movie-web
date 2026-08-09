@@ -612,6 +612,8 @@ export function TheaterSheet({
   //   return [...playing, ...notPlaying]
   // }, [filteredMovieEntries, selectedIsoDate, showTodayFirst])
   const sortedFilteredEntries = filteredMovieEntries
+  /* 선택 영화 카드가 뜨는지 — 카드의 아래 margin과 시간표 섹션 padTop이 겹치는 걸 막는다 */
+  const hasSelectedMovieCard = allMovieEntries.some(e => e.movie.id === selectedMovieId)
 
   /* ── 선택 영화로 포스터 스트립 스크롤 ── */
   const posterCenterDone = useRef(false)
@@ -856,7 +858,7 @@ export function TheaterSheet({
     padding: '0 8px',
     border: 'none',
     borderRadius: 'var(--radius-button)',
-    background: 'transparent',
+    /* 배경은 hover-raise가 관리 — 인라인으로 두면 클래스의 :hover를 이겨서 호버가 죽는다 */
     color: 'var(--color-text-sub)',
     fontSize: 'var(--text-body)',
     fontWeight: 500,
@@ -999,16 +1001,16 @@ export function TheaterSheet({
               gap: 8,
               marginTop: 12,
             }}>
-              <button style={actionBtn} onClick={openDirections}>
+              <button className="hover-raise" style={actionBtn} onClick={openDirections}>
                 <IconRoute size={14} />
                 길찾기
               </button>
-              <button style={actionBtn} onClick={shareTheater}>
+              <button className="hover-raise" style={actionBtn} onClick={shareTheater}>
                 <IconShare size={14} />
                 공유하기
               </button>
               {hasInstagram && (
-                <button style={actionBtn} onClick={openInstagram}>
+                <button className="hover-raise" style={actionBtn} onClick={openInstagram}>
                   <IconInstagram size={14} />
                   인스타그램
                 </button>
@@ -1104,16 +1106,16 @@ export function TheaterSheet({
             marginTop: 4,
             marginLeft: -8,
           }}>
-            <button style={actionBtn} onClick={openDirections}>
+            <button className="hover-raise" style={actionBtn} onClick={openDirections}>
               <IconRoute size={14} />
               길찾기
             </button>
-            <button style={actionBtn} onClick={shareTheater}>
+            <button className="hover-raise" style={actionBtn} onClick={shareTheater}>
               <IconShare size={14} />
               공유하기
             </button>
             {hasInstagram && (
-              <button style={actionBtn} onClick={openInstagram}>
+              <button className="hover-raise" style={actionBtn} onClick={openInstagram}>
                 <IconInstagram size={14} />
                 인스타그램
               </button>
@@ -1397,14 +1399,14 @@ export function TheaterSheet({
               <span style={{ minWidth: 0 }}>{theater.address}</span>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 0, marginTop: 4, marginLeft: -8 }}>
-              <button style={actionBtn} onClick={openDirections}>
+              <button className="hover-raise" style={actionBtn} onClick={openDirections}>
                 <IconRoute size={14} />길찾기
               </button>
-              <button style={actionBtn} onClick={shareTheater}>
+              <button className="hover-raise" style={actionBtn} onClick={shareTheater}>
                 <IconShare size={14} />공유하기
               </button>
               {hasInstagram && (
-                <button style={actionBtn} onClick={openInstagram}>
+                <button className="hover-raise" style={actionBtn} onClick={openInstagram}>
                   <IconInstagram size={14} />인스타그램
                 </button>
               )}
@@ -1688,7 +1690,7 @@ export function TheaterSheet({
                                 })()}
                               </div>
                               <div style={{
-                                marginTop: 8, fontSize: 'var(--text-badge)', fontWeight: 600,
+                                marginTop: 8, fontSize: 'var(--text-meta)', fontWeight: 600,
                                 color: 'var(--color-text-primary)',
                                 lineHeight: 1.35, overflow: 'hidden',
                                 display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
@@ -1735,7 +1737,7 @@ export function TheaterSheet({
                                     </div>
                                   </div>
                                   <div style={{
-                                    marginTop: 8, fontSize: 'var(--text-badge)', fontWeight: 600,
+                                    marginTop: 8, fontSize: 'var(--text-meta)', fontWeight: 600,
                                     color: 'var(--color-text-primary)',
                                     lineHeight: 1.35, overflow: 'hidden',
                                     display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
@@ -1762,7 +1764,8 @@ export function TheaterSheet({
             )
           })()}
 
-          {/* 선택된 영화 카드 */}
+          {/* 선택된 영화 카드 — 카드가 있으면 아래 간격은 카드 margin(gutter-sheet)만으로 잡는다.
+              시간표 섹션이 padTop을 또 얹으면 아래만 넓어져 좌우 마진과 어긋난다 */}
           {(() => {
             const entry = allMovieEntries.find(e => e.movie.id === selectedMovieId)
             if (!entry) return null
@@ -1810,6 +1813,7 @@ export function TheaterSheet({
                 {/* 감독 행 */}
                 {movie.director && movie.director.length > 0 && (
                   <div
+                    className="hover-raise"
                     onClick={(e) => {
                       e.stopPropagation()
                       if (onDirectorOpen) onDirectorOpen(movie.director[0])
@@ -1847,12 +1851,13 @@ export function TheaterSheet({
                 {/* 액션 버튼 */}
                 <div style={{ borderTop: '1px solid var(--color-border)', display: 'flex' }}>
                   <button
+                    className="hover-raise"
                     onClick={() => onMovieDetailOpen ? onMovieDetailOpen(movie.id) : navigateMovie(movie.id, `/movie/${movie.id}?theater=${theater.id}`)}
                     style={{
                       flex: 1, minHeight: 56, padding: 0,
                       fontSize: 'var(--text-body)', fontWeight: 500,
                       color: 'var(--color-text-body)',
-                      background: 'none', border: 'none',
+                      border: 'none',
                       cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
                       opacity: movieNavPendingId === movie.id ? 0.5 : 1,
@@ -1868,12 +1873,13 @@ export function TheaterSheet({
                   </button>
                   <div style={{ width: 1, backgroundColor: 'var(--color-border)' }} />
                   <button
+                    className="hover-raise"
                     onClick={() => { onMovieSearch?.(movie.id, movie.title); onClose() }}
                     style={{
                       flex: 1, minHeight: 56, padding: 0,
                       fontSize: 'var(--text-body)', fontWeight: 500,
                       color: 'var(--color-text-body)',
-                      background: 'none', border: 'none',
+                      border: 'none',
                       cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
                     }}
@@ -1887,7 +1893,7 @@ export function TheaterSheet({
           })()}
 
           {/* 상영시간표 */}
-          <div ref={showtimeSectionRef} style={{ padding: `12px var(--gutter-sheet) ${selectedShowtimeId ? 88 : 40}px` }}>
+          <div ref={showtimeSectionRef} style={{ padding: `${hasSelectedMovieCard ? 0 : 12}px var(--gutter-sheet) ${selectedShowtimeId ? 88 : 40}px` }}>
             {showtimesLoading ? (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(var(--comp-showtime-min-width), 1fr))', gap: 12 }}>
                 {Array.from({ length: 6 }).map((_, i) => (

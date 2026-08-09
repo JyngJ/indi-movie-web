@@ -1,9 +1,5 @@
 import type { GvEvent } from '@/data/gv-events'
-import { isFestivalGroup } from '@/data/gv-events'
 import { GvBottomSlot, GV_MARKER_STEM_H, GV_MARKER_DOT_D } from './GvPinSlots'
-
-const GV_AMBER = '#3E1782'  // 2.0: GV도 보라 통일 (앰버는 warning 오커와 충돌) — 상수명 정리는 추후
-const GV_PURPLE = '#3E1782'
 
 interface GvMarkerIconProps {
   events: GvEvent[]
@@ -16,19 +12,18 @@ interface GvMarkerIconProps {
 
 // Pure function — no hooks. Safe for renderToStaticMarkup.
 export function GvMarkerIcon({ events, zoom, expanded, theaterName, selected, slotW }: GvMarkerIconProps) {
-  const accent = isFestivalGroup(events) ? GV_PURPLE : GV_AMBER
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: slotW, overflow: 'visible' }}>
       <GvBottomSlot events={events} zoom={zoom} expanded={expanded} theaterName={theaterName} selected={selected} />
       {/* stem */}
-      <div style={{ width: 1.5, height: GV_MARKER_STEM_H, background: accent, opacity: 0.75 }} />
+      <div style={{ width: 2, height: GV_MARKER_STEM_H, background: 'var(--color-gv)', opacity: 0.75 }} />
       {/* dot */}
       <div style={{
         width: GV_MARKER_DOT_D,
         height: GV_MARKER_DOT_D,
         borderRadius: '50%',
-        background: accent,
-        border: '2px solid var(--color-surface-bg, #fff)',
+        background: 'var(--color-gv)',
+        border: '2px solid var(--color-surface-bg)',
         boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
       }} />
     </div>
