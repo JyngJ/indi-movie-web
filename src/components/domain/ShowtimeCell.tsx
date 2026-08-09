@@ -36,6 +36,7 @@ export function ShowtimeCell({
 
   return (
     <div
+      className={isClickable ? 'showtime-cell--clickable' : undefined}
       style={{
         minWidth: 0,
         paddingTop: 'var(--comp-showtime-p)',

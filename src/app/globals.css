@@ -178,6 +178,14 @@ img {
 }
 
 /* 호버 인벤토리 공통 — 칩·링크·아이콘 버튼: hover 시 눌린 면 배경 */
+/* 클릭 가능한 회차 셀 — 호버 시 보더를 primary로 올려 누를 수 있음을 보인다 */
+@media (hover: hover) {
+  .showtime-cell--clickable:hover {
+    border-color: var(--color-primary-base);
+    background-color: var(--color-primary-subtle-l);
+  }
+}
+
 .hover-raise { background-color: transparent; transition: background-color 120ms ease; }
 @media (hover: hover) {
   .hover-raise:hover { background-color: var(--color-surface-raised); }

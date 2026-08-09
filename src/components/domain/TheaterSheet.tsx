@@ -999,16 +999,16 @@ export function TheaterSheet({
               gap: 8,
               marginTop: 12,
             }}>
-              <button style={actionBtn} onClick={openDirections}>
+              <button className="hover-raise" style={actionBtn} onClick={openDirections}>
                 <IconRoute size={14} />
                 길찾기
               </button>
-              <button style={actionBtn} onClick={shareTheater}>
+              <button className="hover-raise" style={actionBtn} onClick={shareTheater}>
                 <IconShare size={14} />
                 공유하기
               </button>
               {hasInstagram && (
-                <button style={actionBtn} onClick={openInstagram}>
+                <button className="hover-raise" style={actionBtn} onClick={openInstagram}>
                   <IconInstagram size={14} />
                   인스타그램
                 </button>
@@ -1104,16 +1104,16 @@ export function TheaterSheet({
             marginTop: 4,
             marginLeft: -8,
           }}>
-            <button style={actionBtn} onClick={openDirections}>
+            <button className="hover-raise" style={actionBtn} onClick={openDirections}>
               <IconRoute size={14} />
               길찾기
             </button>
-            <button style={actionBtn} onClick={shareTheater}>
+            <button className="hover-raise" style={actionBtn} onClick={shareTheater}>
               <IconShare size={14} />
               공유하기
             </button>
             {hasInstagram && (
-              <button style={actionBtn} onClick={openInstagram}>
+              <button className="hover-raise" style={actionBtn} onClick={openInstagram}>
                 <IconInstagram size={14} />
                 인스타그램
               </button>
@@ -1397,14 +1397,14 @@ export function TheaterSheet({
               <span style={{ minWidth: 0 }}>{theater.address}</span>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 0, marginTop: 4, marginLeft: -8 }}>
-              <button style={actionBtn} onClick={openDirections}>
+              <button className="hover-raise" style={actionBtn} onClick={openDirections}>
                 <IconRoute size={14} />길찾기
               </button>
-              <button style={actionBtn} onClick={shareTheater}>
+              <button className="hover-raise" style={actionBtn} onClick={shareTheater}>
                 <IconShare size={14} />공유하기
               </button>
               {hasInstagram && (
-                <button style={actionBtn} onClick={openInstagram}>
+                <button className="hover-raise" style={actionBtn} onClick={openInstagram}>
                   <IconInstagram size={14} />인스타그램
                 </button>
               )}
@@ -1810,6 +1810,7 @@ export function TheaterSheet({
                 {/* 감독 행 */}
                 {movie.director && movie.director.length > 0 && (
                   <div
+                    className="hover-raise"
                     onClick={(e) => {
                       e.stopPropagation()
                       if (onDirectorOpen) onDirectorOpen(movie.director[0])
@@ -1847,6 +1848,7 @@ export function TheaterSheet({
                 {/* 액션 버튼 */}
                 <div style={{ borderTop: '1px solid var(--color-border)', display: 'flex' }}>
                   <button
+                    className="hover-raise"
                     onClick={() => onMovieDetailOpen ? onMovieDetailOpen(movie.id) : navigateMovie(movie.id, `/movie/${movie.id}?theater=${theater.id}`)}
                     style={{
                       flex: 1, minHeight: 56, padding: 0,
@@ -1868,6 +1870,7 @@ export function TheaterSheet({
                   </button>
                   <div style={{ width: 1, backgroundColor: 'var(--color-border)' }} />
                   <button
+                    className="hover-raise"
                     onClick={() => { onMovieSearch?.(movie.id, movie.title); onClose() }}
                     style={{
                       flex: 1, minHeight: 56, padding: 0,

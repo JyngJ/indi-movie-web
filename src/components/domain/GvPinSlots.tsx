@@ -68,23 +68,38 @@ function GvCollapsedChip({ count, theaterName, selected, festivalTitle }: {
   )
 }
 
-/* ── 배지 (GV · +N) ──────────────────────────────────────────── */
+/* ── 배지 ────────────────────────────────────────────────────── */
+const badgeBase: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  padding: '4px 8px',
+  borderRadius: 9999,
+  background: 'var(--color-gv)',
+  color: 'var(--color-on-accent)',
+  fontSize: 'var(--text-badge)',
+  fontWeight: 500,
+  lineHeight: 1,
+  whiteSpace: 'nowrap',
+}
+
 function GvBadge({ children }: { children: React.ReactNode }) {
+  return <span style={{ ...badgeBase, flexShrink: 0 }}>{children}</span>
+}
+
+/** 개수 배지 — 카드 우상단 코너. 포스터 핀 코너 칩과 같은 규격
+ *  (offset -8 · 보더 1.5 surface-bg · shadow) */
+function GvCountBadge({ count }: { count: number }) {
   return (
     <span style={{
-      flexShrink: 0,
-      display: 'inline-flex',
-      alignItems: 'center',
-      padding: '4px 8px',
-      borderRadius: 9999,
-      background: 'var(--color-gv)',
-      color: 'var(--color-on-accent)',
-      fontSize: 'var(--text-badge)',
-      fontWeight: 500,
-      lineHeight: 1,
-      whiteSpace: 'nowrap',
+      ...badgeBase,
+      position: 'absolute',
+      top: -8,
+      right: -8,
+      zIndex: 1,
+      border: '1.5px solid var(--color-surface-bg)',
+      boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
     }}>
-      {children}
+      +{count}
     </span>
   )
 }
@@ -102,6 +117,7 @@ function GvCard({ ev, extra, selected, width }: {
     <div
       data-gv-row={ev.id}
       style={{
+        position: 'relative',
         width,
         height: CARD_H,
         boxSizing: 'border-box',
@@ -116,12 +132,12 @@ function GvCard({ ev, extra, selected, width }: {
         cursor: 'pointer',
       }}
     >
+      {extra > 0 && <GvCountBadge count={extra} />}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <GvBadge>{ev.type}</GvBadge>
         <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', ...ellipsis }}>
           {ev.time}
         </span>
-        {extra > 0 && <GvBadge>+{extra}</GvBadge>}
       </div>
       <div style={{ fontSize: 'var(--text-body)', fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.5, ...ellipsis }}>
         {ev.movie}
