@@ -63,6 +63,7 @@ function DateNavButton({ direction, onClick, enabled, label }: { direction: 'pre
   return (
     <button
       type="button"
+      data-rc={`datebar-week-${direction}`}
       onClick={onClick}
       disabled={!enabled}
       onPointerDown={() => enabled && setPressed(true)}
@@ -123,6 +124,7 @@ export function DateBar({ days, selectedDate, onSelectDate, onPrev, onNext, hasP
             <button
               key={d.date}
               type="button"
+              data-rc="datebar-date"
               disabled={isDisabled}
               className="flex flex-col items-center"
               style={{

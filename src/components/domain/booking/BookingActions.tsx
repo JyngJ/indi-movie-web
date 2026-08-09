@@ -26,6 +26,7 @@ export function BookingCtaButton({
   if (bookingUrl) {
     return (
       <a
+        data-rc="booking-cta"
         href={bookingUrl}
         target="_blank"
         rel="noopener noreferrer"

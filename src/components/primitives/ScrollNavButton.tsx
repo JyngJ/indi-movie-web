@@ -10,6 +10,7 @@ export function ScrollNavButton({ direction, style, size = 32, ...props }: Scrol
   const iconSize = Math.round(size * 0.44)
   return (
     <button
+      data-rc={`carousel-nav-${direction}`}
       {...props}
       className="hover-raise"
       style={{

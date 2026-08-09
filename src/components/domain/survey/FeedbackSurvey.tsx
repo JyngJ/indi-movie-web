@@ -88,9 +88,16 @@ export function FeedbackSurvey({ onClose }: Props) {
   }
 
   return (
-    <div className={styles.overlay} role="dialog" aria-modal="true" aria-label="피드백 설문">
+    <div
+      className={styles.overlay}
+      data-rc="survey-scrim"
+      data-rc-dead="scrim"
+      role="dialog"
+      aria-modal="true"
+      aria-label="피드백 설문"
+    >
       <div className={styles.card}>
-        <button type="button" className={styles.close} onClick={dismiss} aria-label="닫기">
+        <button type="button" data-rc="survey-close" className={styles.close} onClick={dismiss} aria-label="닫기">
           ✕
         </button>
 
@@ -135,7 +142,7 @@ export function FeedbackSurvey({ onClose }: Props) {
               )}
             </div>
             <div className={styles.actions}>
-              <Button type="button" onClick={goStep2} disabled={selected.length === 0}>
+              <Button type="button" data-rc="survey-next" onClick={goStep2} disabled={selected.length === 0}>
                 다음
               </Button>
             </div>

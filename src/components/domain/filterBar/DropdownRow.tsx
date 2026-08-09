@@ -13,6 +13,7 @@ interface DropdownRowProps {
 export function DropdownRow({ kind, label, sub, selected, onClick, isLast }: DropdownRowProps) {
   return (
     <button
+      data-rc={`filter-row-${kind}`}
       onClick={onClick}
       style={{
         display: 'flex',
