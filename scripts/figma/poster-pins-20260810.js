@@ -133,17 +133,17 @@ function toComponent(node, name) {
 }
 
 /* ── 규격 ────────────────────────────────────────────────────
-   포스터 44×66 r4 · 카드 패딩 12 · 슬롯 간격 8 · r8 · 보더 1.5
-   (v2까지 패딩 8·간격 4였는데 답답하다는 지적으로 확대 — 3열 카드 폭 148 → 172) */
+   포스터 44×66 r4 · 카드 패딩 8 · 슬롯 간격 8 · r8 · 보더 1.5 (사용자 확정, 3열 카드 폭 164)
+   일정 모드: 포스터가 카드 세로를 꽉 채우고(2:3 유지) · 디바이더 실선 · 시간 2.0/num/seat(12) */
 const PW = 44, PH = 66
 const SLOT_GAP = 8
-const CARD_PAD = 12
+const CARD_PAD = 8
 const TAIL = 11                    // 지역 힌트 팝업과 동일 (11×11 rotate45, 팁 r4)
 const CHIP_BLEED = 8
 
 /** 포스터 한 장 — PosterThumb placeholder */
-async function poster(title, { highlighted = false } = {}) {
-  const p = F('poster', { dir: 'V', w: PW, h: PH, r: 4, fill: 'neutral/800', align: 'CENTER', mainAlign: 'CENTER', pad: 4, clip: true })
+async function poster(title, { highlighted = false, w = PW, h = PH } = {}) {
+  const p = F('poster', { dir: 'V', w, h, r: 4, fill: 'neutral/800', align: 'CENTER', mainAlign: 'CENTER', pad: 4, clip: true })
   const t = await ST(title, '2.0/caption', 'white', { font: P('Bold'), size: 11 })
   t.textAlignHorizontal = 'CENTER'
   p.appendChild(t)
@@ -192,25 +192,19 @@ async function gridCard({ capacity, selected, highlightFirst = false }) {
   return card
 }
 
-/** 일정 모드 카드 — 포스터 · 점선 · 일정 열. 좌우/상하 패딩 전부 CARD_PAD로 통일 */
+/** 일정 모드 카드 — 포스터가 세로를 꽉 채우고(2:3 비율 유지) · 실선 디바이더 · 일정 열.
+ *  포스터/디바이더는 h:FILL이라 카드 높이는 일정 열이 결정한다. 그래서 열을 먼저 만들어
+ *  높이를 재고, 그 높이에서 2:3으로 포스터 폭을 정한다. */
 async function scheduleCard({ showTimes }) {
   const card = await shell('card', { dir: 'H', selected: false, align: 'CENTER' })
-  card.appendChild(await poster('꽁치의 맛'))
 
-  const div = F('divider', { dir: 'V', w: 1, h: PH })
-  div.fills = []
-  div.strokes = [paint('neutral/200')]
-  div.strokeWeight = 1
-  div.dashPattern = [3, 3]
-  card.appendChild(div)
-
+  /* 일정 열 먼저 — 높이가 카드 높이를 결정한다 */
   const col = F('schedule', { dir: 'V', gap: SLOT_GAP })
-  card.appendChild(col)
   const pill = F('pill', { dir: 'H', pad: [4, 8, 4, 8], r: 9999, fill: 'primary/100', align: 'CENTER' })
-  pill.appendChild(await ST('상영 일정', '2.0/label', 'primary/700', { font: P('Bold'), size: 10 }))
+  const pillText = await ST('상영 일정', '2.0/label', 'primary/700', { font: P('Bold'), size: 10 })
+  pill.appendChild(pillText)
   col.appendChild(pill)
   pill.layoutSizingHorizontal = 'FILL'
-  const pillText = pill.children[0]
   pillText.textAlignHorizontal = 'CENTER'
   pillText.textAutoResize = 'HEIGHT'
   pillText.layoutSizingHorizontal = 'FILL'
@@ -221,19 +215,42 @@ async function scheduleCard({ showTimes }) {
         { label: '토', color: 'primary/500', times: ['14:00', '16:20'], more: 2 },
         { label: '일', color: 'error/900', times: ['15:30'] },
       ]
-    : [{ label: '오늘', color: 'primary/700', times: [] }]
+    : [
+        { label: '오늘', color: 'primary/700', times: [] },
+        { label: '토', color: 'primary/500', times: [] },
+        { label: '일', color: 'error/900', times: [] },
+      ]
   for (const r of ROWS) {
     const row = F('row', { dir: 'H', gap: SLOT_GAP, align: 'CENTER' })
     col.appendChild(row)
     const lb = await ST(r.label, '2.0/label', r.color, { font: P('Bold'), size: 10 })
     row.appendChild(lb)
     lb.textAutoResize = 'HEIGHT'
-    lb.resize(28, lb.height)              // 요일 열 정렬선 (코드 minWidth 29 → 4배수 28)
+    lb.resize(28, lb.height)              // 요일 열 정렬선
+    // 시간이 없는 dates 모드에서 빈 times 프레임을 만들면 폭·높이가 늘어난다 — 아예 만들지 않는다
+    if (r.times.length === 0 && !r.more) continue
     const times = F('times', { dir: 'H', gap: 4, align: 'CENTER' })
     row.appendChild(times)
-    for (const tm of r.times) times.appendChild(await ST(tm, '2.0/num/time', 'neutral/900', { font: P('SemiBold'), size: 10 }))
+    for (const tm of r.times) times.appendChild(await ST(tm, '2.0/num/seat', 'neutral/900', { font: P('SemiBold'), size: 12 }))
     if (r.more) times.appendChild(await ST(`+${r.more}`, '2.0/label', 'neutral/500', { font: P('SemiBold'), size: 10 }))
   }
+
+  /* 포스터 — 일정 열 높이에 맞춰 2:3 */
+  const colH = col.height
+  const pw = Math.round(colH * 2 / 3)
+  const ps = await poster('꽁치의 맛', { w: pw, h: colH })
+  card.appendChild(ps)
+
+  /* 실선 디바이더 (점선에서 변경) */
+  const div = F('divider', { dir: 'V', w: 1, h: colH })
+  div.fills = []
+  div.strokes = [paint('neutral/200')]
+  div.strokeWeight = 1
+  card.appendChild(div)
+
+  card.appendChild(col)
+  // 셋 다 카드 세로를 꽉 채운다
+  for (const n of [ps, div, col]) { try { n.layoutSizingVertical = 'FILL' } catch { /* 무시 */ } }
   return card
 }
 
@@ -284,6 +301,7 @@ async function pinFrame(parent, card, { selected, chipLabel }) {
   area.appendChild(tl)                       // 카드보다 먼저 = 뒤
   area.appendChild(card)
   card.x = 0; card.y = top
+  area.resize(card.width + CHIP_BLEED, card.height + top)   // 카드 최종 크기로 다시 맞춘다
   placeTail(tl, area, card)
   if (chipLabel) {
     const chip = await cornerChip(chipLabel)
@@ -366,8 +384,8 @@ const matchArea = await pinFrame(g3, matchCard, { selected: false, chipLabel: '3
 /* 4. 노트 */
 const g4 = await group('규격 노트', null)
 const note = await ST([
-  `· 포스터 ${PW}×${PH} r4(badge) · 카드 패딩 ${CARD_PAD} · 슬롯 간격 ${SLOT_GAP} · r8(button) · 보더 1.5 neutral/200 · shadow md(선택 시 lg)`,
-  `  → 3열 카드 폭 ${PW * 3 + SLOT_GAP * 2 + CARD_PAD * 2}. v2(패딩 8·간격 4)의 148에서 넓어졌으니 코드 이식 시 지도 밀도 확인 필요`,
+  `· 포스터 ${PW}×${PH} r4(badge) · 카드 패딩 ${CARD_PAD} · 슬롯 간격 ${SLOT_GAP} · r8(button) · 보더 1.5 neutral/200 · shadow md(선택 시 lg) → 3열 카드 폭 ${PW * 3 + SLOT_GAP * 2 + CARD_PAD * 2}`,
+  '· 일정 모드(사용자 확정): 포스터가 카드 세로를 꽉 채운다(2:3 유지) · 디바이더 실선 · 시간 2.0/num/seat(12) · 요일 라벨 2.0/label(10) 28px 정렬선',
   `· 꼬리: 지역 힌트 팝업과 동일 문법 — ${TAIL}×${TAIL} 정사각 r4 rotate45, 팁 쪽 두 변(top·left)만 보더. 회전 원점 탓에 좌표가 어긋나므로 바운딩박스로 보정한다`,
   '· 코너 칩 공용: 2.0/label(10) · pad 4/8 · pill · primary/700 면 · neutral/100 보더 1.5 · shadow sm',
   '· 줌 용량: ≤13 → 0(점 핀) · 14 → 1 · 15 → 3 · 16+ → 6(3×2)',
