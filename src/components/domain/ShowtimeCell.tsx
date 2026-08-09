@@ -99,7 +99,7 @@ export function ShowtimeCell({
         }}
       >
         {isNowPlaying ? (
-          <span style={{ fontSize: 'var(--text-body)', color: 'var(--color-success)', fontWeight: 700 }}>상영중</span>
+          <span style={{ fontSize: 'var(--text-body)', color: 'var(--color-success)', fontWeight: 700 }}>지금 상영중</span>
         ) : isEnded ? (
           <span style={{ fontSize: 'var(--text-body)', color: 'var(--color-text-placeholder)', fontWeight: 700 }}>상영 완료</span>
         ) : (
