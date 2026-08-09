@@ -106,7 +106,7 @@ const info = []  // 참고 항목
 const asym = []
 const gutters = new Map()
 const adoption = []
-const PRIM = /<(Button|IconButton|SortToggle|Card|CardContainer|Badge|Chip|GenreChip|Input|SearchBar|FAB)[\s/>]/g
+const PRIM = /<(Button|IconButton|SortToggle|FilterPill|Card|CardContainer|Badge|Chip|GenreChip|Input|SearchBar|FAB)[\s/>]/g
 const RAW = /<(button|input|textarea|select)[\s/>]/g
 
 const push = (cat, f, line, key, from, to, risk, note = '') =>

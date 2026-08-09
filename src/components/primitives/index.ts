@@ -1,6 +1,7 @@
 export { Button } from './Button'
 export { IconButton } from './IconButton'
 export { SortToggle } from './SortToggle'
+export { FilterPill } from './FilterPill'
 export { Card } from './Card'
 export { Chip } from './Chip'
 export { Avatar } from './Avatar'

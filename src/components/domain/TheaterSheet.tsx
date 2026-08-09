@@ -7,7 +7,7 @@ import { DateBar, type Day, type DayType } from './DateBar'
 import { ShowtimeCell } from './ShowtimeCell'
 import { Button } from '@/components/primitives/Button'
 import { IconButton } from '@/components/primitives/IconButton'
-import { SortToggle } from '@/components/primitives/SortToggle'
+import { FilterPill } from '@/components/primitives/FilterPill'
 import { Chip } from '@/components/primitives/Chip'
 import { Toast } from '@/components/primitives/Toast'
 import { useTheaterShowtimes, useTheaterAllMovies } from '@/lib/supabase/queries'
@@ -1457,36 +1457,36 @@ export function TheaterSheet({
                     {filtersOn ? `${matched}/${total}편` : `${total}편 상영`}
                   </span>
                   {/* 예매 가능만 보기 — 즉시 토글, 드로어 열지 않음 */}
-                  <Chip
-                    selected={sheetFilters.bookable}
+                  <FilterPill
+                    active={sheetFilters.bookable}
                     onClick={() => applySheetFilters({ ...sheetFilters, bookable: !sheetFilters.bookable }, 'theater_sheet_quick')}
                   >
                     예매 가능만 보기
-                  </Chip>
+                  </FilterPill>
                   {sheetFilters.genres.map(g => (
-                    <Chip
+                    <FilterPill
                       key={`g:${g}`}
-                      selected
+                      active
                       onClick={() => applySheetFilters({ ...sheetFilters, genres: sheetFilters.genres.filter(x => x !== g) })}
                     >
                       {g}
                       <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
-                    </Chip>
+                    </FilterPill>
                   ))}
                   {sheetFilters.nations.map(n => (
-                    <Chip
+                    <FilterPill
                       key={`n:${n}`}
-                      selected
+                      active
                       onClick={() => applySheetFilters({ ...sheetFilters, nations: sheetFilters.nations.filter(x => x !== n) })}
                     >
                       {withFlag(n)}
                       <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
-                    </Chip>
+                    </FilterPill>
                   ))}
                 </div>
                 {/* 오른쪽: 필터 버튼 */}
-                <Chip
-                  selected={filtersOn}
+                <FilterPill
+                  active={filtersOn}
                   onClick={() => {
                     trackEvent('theater sheet filter opened', { theater_id: theater.id, source: 'theater_sheet' })
                     setPendingFilters(sheetFilters)
@@ -1495,7 +1495,7 @@ export function TheaterSheet({
                 >
                   <IconFilter size={12} />
                   필터{activeCount > 0 ? ` ${activeCount}` : ''}
-                </Chip>
+                </FilterPill>
               </div>
             )}
 
@@ -1746,7 +1746,7 @@ export function TheaterSheet({
             const { movie } = entry
             return (
               <div style={{
-                margin: '8px var(--gutter-sheet)',
+                margin: 'var(--gutter-sheet)',
                 border: '1px solid var(--color-border)',
                 borderRadius: 12,
                 overflow: 'hidden',

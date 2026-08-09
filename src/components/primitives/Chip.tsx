@@ -19,7 +19,8 @@ export function Chip({ selected = false, onDismiss, children, className = '', on
       type="button"
       className={`inline-flex items-center border transition-colors duration-150 ${className}`}
       style={{
-        /* height 대신 padding으로 세로 크기 제어 */
+        /* height 대신 padding으로 세로 크기 제어 — 전역 button min-height(44) 무력화 필수 */
+        minHeight: 'unset',
         paddingTop: 4,
         paddingBottom: 4,
         paddingLeft: 'var(--comp-chip-px)',
