@@ -70,20 +70,20 @@ function frame(name, w, h, opts = {}) {
 const PW = 44, PH = 66  // 모바일 기본 포스터
 
 /** PosterThumb placeholder — neutral/800 + 흰 제목, r4, 얇은 inset 보더 */
-function poster(parent, title, { overlay, highlighted = false } = {}) {
-  const p = frame('poster', PW, PH, { fill: paint(['neutral/800'], HEX['neutral/800']), radius: 4, clip: true })
+function poster(parent, title, { overlay, highlighted = false, pw = PW, ph = PH } = {}) {
+  const p = frame('poster', pw, ph, { fill: paint(['neutral/800'], HEX['neutral/800']), radius: 4, clip: true })
   parent.appendChild(p)
   if (title) {
     const t = text(p, title, P('Bold'), 11, { type: 'SOLID', color: rgba('#FFFFFF', 0.9) }, { lh: 1.3 })
     t.textAlignHorizontal = 'CENTER'
-    t.resize(PW - 8, t.height)
-    t.x = 4; t.y = PH / 2 - t.height / 2
+    t.resize(pw - 8, t.height)
+    t.x = 4; t.y = ph / 2 - t.height / 2
   }
   if (overlay != null) {
-    const ov = frame('overflow', PW, PH, { fill: { type: 'SOLID', color: rgb('#0F0C09'), opacity: 0.62 }, radius: 4 })
+    const ov = frame('overflow', pw, ph, { fill: { type: 'SOLID', color: rgb('#0F0C09'), opacity: 0.62 }, radius: 4 })
     p.appendChild(ov); ov.x = 0; ov.y = 0
     const t = text(ov, overlay, P('SemiBold'), 15, { type: 'SOLID', color: rgb('#FFFFFF') })
-    t.x = PW / 2 - t.width / 2; t.y = PH / 2 - t.height / 2
+    t.x = pw / 2 - t.width / 2; t.y = ph / 2 - t.height / 2
   }
   // 얇은 포스터 보더 (inset 1px)
   p.strokes = [{ type: 'SOLID', color: rgb('#000000'), opacity: 0.12 }]
@@ -173,28 +173,32 @@ function stageZ16() {
   return wrap
 }
 
-/** 일정 모드 — 단건 + 점선 구분 + "상영 일정" pill + 요일 행 */
-function stageSchedule() {
-  const rows = [
+/** 일정 모드 — 단건 + 점선 구분 + "상영 일정" pill + 요일 행
+ *  showTimes: false면 요일 라벨만 (dates 임계~full 임계 사이 구간)
+ *  pw/ph: 포스터 크기 — 데스크톱 zoom<17 = 74×111 */
+function stageSchedule({ name = 'zoom14 · 일정 모드', pw = PW, ph = PH, showTimes = true, chipLabel = '3회', title = '괴인' } = {}) {
+  const rows = showTimes ? [
     { label: '오늘', color: paint(['primary/base', 'primary/700'], HEX['primary/700']), times: ['19:30', '21:10'] },
     { label: '토', color: paint(['primary/500'], HEX['primary/500']), times: ['14:00', '16:20', '19:00'], more: 2 },
     { label: '일', color: paint(['error', 'error/900'], HEX['error/900']), times: ['15:30'] },
+  ] : [
+    { label: '오늘', color: paint(['primary/base', 'primary/700'], HEX['primary/700']), times: [] },
   ]
-  const schedW = 110
-  const contentW = PW + 8 + 1 + 8 + schedW
-  const { wrap, card } = posterCard('zoom14 · 일정 모드', contentW, PH)
-  const p = poster(card, '괴인')
+  const schedW = showTimes ? 110 : 64
+  const contentW = pw + 8 + 1 + 8 + schedW
+  const { wrap, card } = posterCard(name, contentW, ph)
+  const p = poster(card, title, { pw, ph })
   p.x = 8; p.y = 8
   // 점선 구분선
   const div = figma.createLine()
-  div.resize(PH, 0)
+  div.resize(ph, 0)
   div.rotation = 90
   div.strokes = [paint(['neutral/200', 'border'], HEX['neutral/200'])]
   div.strokeWeight = 1
   div.dashPattern = [3, 3]
   card.appendChild(div)
-  div.x = 8 + PW + 8; div.y = 8 + PH
-  const sx = 8 + PW + 8 + 1 + 8
+  div.x = 8 + pw + 8; div.y = 8 + ph
+  const sx = 8 + pw + 8 + 1 + 8
   // "상영 일정" pill
   const pill = frame('pill', schedW, 18, { fill: paint(['primary/subtle-l', 'primary/100'], HEX['primary/100']), radius: 999 })
   const pt = text(pill, '상영 일정', P('Bold'), 10, paint(['primary/base', 'primary/700'], HEX['primary/700']))
@@ -214,7 +218,7 @@ function stageSchedule() {
     if (r.more) text(card, `+${r.more}`, P('SemiBold'), 10, paint(['neutral/500', 'text/caption'], HEX['neutral/500']), { x: tx, y: ry + 1 })
     ry += 13 + 4
   }
-  matchChip(wrap, card, '3회')
+  matchChip(wrap, card, chipLabel)
   return wrap
 }
 
@@ -236,18 +240,21 @@ function rowLabel(chars, y) {
   return t
 }
 
-rowLabel('zoom 14 — 용량 1: 단건 / 다건("N편" 오버레이) / 일정 모드("N회" 칩 + 요일 행)', 40)
+rowLabel('zoom 14 — 용량 1: 단건 / 다건("N편" 오버레이) / 일정 모드 full("N회" 칩 + 요일+시간 행)', 40)
 place(stageZ14Single('괴인'), 40, 64)
 place(stageZ14Multi(), 130, 64)
 place(stageSchedule(), 220, 64)
 
-rowLabel('zoom 15 — 용량 3: 2장 + "+N" / selected(primary 면 + shadow.lg) / 필터 매치("N편 일치" + 하이라이트 링)', 190)
-place(stageZ15(), 40, 214)
-place(stageZ15({ selected: true }), 210, 214)
-place(stageZ15({ withChip: true }), 380, 214)
+rowLabel('일정 모드 dates-only — 데스크톱 zoom 15~16 (포스터 74×111 · 요일만 · 시간 숨김)', 150)
+place(stageSchedule({ name: '데스크톱 zoom15~16 · 일정 dates-only', pw: 74, ph: 111, showTimes: false, chipLabel: '1회', title: '꽁치의 맛' }), 40, 174)
 
-rowLabel('zoom 16+ — 용량 6: 3×2, 마지막 슬롯 "+N"', 340)
-place(stageZ16(), 40, 364)
+rowLabel('zoom 15 — 용량 3: 2장 + "+N" / selected(primary 면 + shadow.lg) / 필터 매치("N편 일치" + 하이라이트 링)', 330)
+place(stageZ15(), 40, 354)
+place(stageZ15({ selected: true }), 210, 354)
+place(stageZ15({ withChip: true }), 380, 354)
+
+rowLabel('zoom 16+ — 용량 6: 3×2, 마지막 슬롯 "+N"', 480)
+place(stageZ16(), 40, 504)
 
 const note = text(section, [
   '지도 포스터 시트 — 단계별 (PosterGrid.tsx / PosterThumb.tsx / posterLogic.ts 실측)',
@@ -256,11 +263,11 @@ const note = text(section, [
   '· 포스터 크기(모바일): 기본 44×66 — 줌 17→56×84 · 18→60×90 · 19→66×99 / 데스크톱 74·90·108·126 폭',
   '· 카드: r8 · pad 8 · gap 4 · 보더 1.5 neutral/200 · shadow.md · 꼬리 10×10 rotate45 top-6 (오른쪽 꼬리 변형도 있음)',
   '· selected: primary/700 면 + 보더 rgba(0,0,0,.14) + shadow.lg / 필터 매치 포스터: primary 링 2 + 흰 inset 1.5',
-  '· 일정 모드: 단건+일정 있을 때 — 요일색: 오늘 primary·토 primary/500·일 error/900·평일 caption, 시간 SF Mono 10/600',
+  '· 일정 모드: 단건+일정 있을 때 — 요일색: 오늘 primary·토 primary/500·일 error/900·평일 caption, 시간 SF Mono 10/600\n· 일정 임계값: 데스크톱 dates 15 / full 17 · 모바일 dates 13 / full 15 — dates~full 구간은 요일만(시간 숨김)',
   '· 호버 툴팁(pm-tip)·전체 목록(po-list)은 CSS 모듈 — 이번 역싱크 범위 밖',
 ].join('\n'), P('Regular'), 12, { type: 'SOLID', color: rgb('#726B65') })
-note.x = 40; note.y = 560
+note.x = 40; note.y = 700
 
-section.resizeWithoutConstraints(620, 760)
+section.resizeWithoutConstraints(620, 900)
 figma.viewport.scrollAndZoomIntoView([section])
 figma.notify('포스터 핀 단계별 역싱크 완료')
