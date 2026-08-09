@@ -178,11 +178,15 @@ img {
 }
 
 /* 호버 인벤토리 공통 — 칩·링크·아이콘 버튼: hover 시 눌린 면 배경 */
-/* 클릭 가능한 회차 셀 — 호버 시 보더를 primary로 올려 누를 수 있음을 보인다 */
+/* 클릭 가능한 회차 셀 — 호버 시 안쪽 링으로 누를 수 있음을 보인다.
+   셀은 상태에 따라 border/background를 인라인으로 쓴다(인라인이 클래스를 이긴다) —
+   그래서 인라인이 손대지 않는 box-shadow로 링을 그린다. */
 @media (hover: hover) {
+  .showtime-cell--clickable {
+    transition: box-shadow 150ms ease, border-color 150ms ease, background-color 150ms ease;
+  }
   .showtime-cell--clickable:hover {
-    border-color: var(--color-primary-base);
-    background-color: var(--color-primary-subtle-l);
+    box-shadow: inset 0 0 0 1.5px var(--color-primary-base);
   }
 }
 

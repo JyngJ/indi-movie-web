@@ -856,7 +856,7 @@ export function TheaterSheet({
     padding: '0 8px',
     border: 'none',
     borderRadius: 'var(--radius-button)',
-    background: 'transparent',
+    /* 배경은 hover-raise가 관리 — 인라인으로 두면 클래스의 :hover를 이겨서 호버가 죽는다 */
     color: 'var(--color-text-sub)',
     fontSize: 'var(--text-body)',
     fontWeight: 500,
@@ -1854,7 +1854,7 @@ export function TheaterSheet({
                       flex: 1, minHeight: 56, padding: 0,
                       fontSize: 'var(--text-body)', fontWeight: 500,
                       color: 'var(--color-text-body)',
-                      background: 'none', border: 'none',
+                      border: 'none',
                       cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
                       opacity: movieNavPendingId === movie.id ? 0.5 : 1,
@@ -1876,7 +1876,7 @@ export function TheaterSheet({
                       flex: 1, minHeight: 56, padding: 0,
                       fontSize: 'var(--text-body)', fontWeight: 500,
                       color: 'var(--color-text-body)',
-                      background: 'none', border: 'none',
+                      border: 'none',
                       cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
                     }}
