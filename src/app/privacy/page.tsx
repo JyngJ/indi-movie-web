@@ -160,7 +160,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     <section style={{ marginBottom: 28 }}>
       <h2
         style={{
-          fontFamily: 'var(--font-display)',
           fontSize: 'var(--text-title)',
           fontWeight: 700,
           color: 'var(--color-text-primary)',

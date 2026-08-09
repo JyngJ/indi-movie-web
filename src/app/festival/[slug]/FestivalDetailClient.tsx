@@ -120,7 +120,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
         />
       ) : (
         <div style={{ width: '100%', aspectRatio: '21/4', position: 'relative', backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
-          <span style={{ fontSize: 'var(--text-h2)', fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)', textAlign: 'center' }}>
+          <span className="display-h2" style={{ color: 'var(--color-text-primary)', textAlign: 'center' }}>
             {festival.name}
           </span>
         </div>
@@ -134,7 +134,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
           </span>
           <span style={{ fontSize: 13, color: 'var(--color-text-caption)', fontWeight: 600 }}>{dateLabel}</span>
         </div>
-        <h1 style={{ margin: 0, fontSize: isDesktop ? 26 : 22, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)', wordBreak: 'keep-all' }}>
+        <h1 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)', wordBreak: 'keep-all' }}>
           {festival.name}
         </h1>
         <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--color-text-caption)' }}>
