@@ -1318,7 +1318,6 @@ export function TheaterSheet({
                             <div style={{
                               marginTop: 4,
                               fontSize: 10,
-                              fontFamily: 'var(--font-display)',
                               color: 'var(--color-text-caption)',
                               overflow: 'hidden',
                               whiteSpace: 'nowrap',
@@ -1675,7 +1674,7 @@ export function TheaterSheet({
                               }}>{movie.title}</div>
                               {movie.director && movie.director.length > 0 && (
                                 <div style={{
-                                  marginTop: 4, fontSize: 10, fontFamily: 'var(--font-display)',
+                                  marginTop: 4, fontSize: 10,
                                   color: 'var(--color-text-caption)',
                                   overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
                                   opacity: unavailable ? 0.3 : 1,
@@ -1720,7 +1719,7 @@ export function TheaterSheet({
                                   }}>{movie.title}</div>
                                   {movie.director && movie.director.length > 0 && (
                                     <div style={{
-                                      marginTop: 4, fontSize: 10, fontFamily: 'var(--font-display)',
+                                      marginTop: 4, fontSize: 10,
                                       color: 'var(--color-text-caption)',
                                       overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
                                     }}>{movie.director[0]}</div>
