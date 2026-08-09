@@ -774,13 +774,38 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
     updated.push(candidateFromRow(data as CandidateRow))
   }
 
+  // 경고 기반 판정은 같은 후보 행에만 유효 — 크롤마다 새 행이 생기면 리셋돼
+  // 같은 동명 그룹이 반복 게시됐다. discord_match_notices(제목 해시 영구 기록)로 한 번만 알린다.
   const newAmbiguousGroups = Array.from(ambiguousGroups.values()).filter((g) => !g.alreadyNotified)
   if (newAmbiguousGroups.length > 0) {
-    await notifyAmbiguousMovieMatches(newAmbiguousGroups.map((g) => ({
-      title: g.title,
-      theaterNames: Array.from(g.theaterNames),
-      options: g.options,
-    })))
+    let toNotify = newAmbiguousGroups
+    let noticeTableOk = false
+    const hashes = newAmbiguousGroups.map((g) => titleHash(g.title))
+    const { data: seen, error: seenError } = await supabase
+      .from('discord_match_notices')
+      .select('title_hash')
+      .in('title_hash', hashes)
+    if (seenError) {
+      // 테이블 미생성(마이그레이션 전) 등 — 기존 동작으로 폴백
+      console.error('[autoMatch] discord_match_notices 조회 실패 — dedup 없이 전송:', seenError.message)
+    } else {
+      noticeTableOk = true
+      const seenSet = new Set((seen ?? []).map((r) => r.title_hash as string))
+      toNotify = newAmbiguousGroups.filter((g) => !seenSet.has(titleHash(g.title)))
+    }
+    if (toNotify.length > 0) {
+      await notifyAmbiguousMovieMatches(toNotify.map((g) => ({
+        title: g.title,
+        theaterNames: Array.from(g.theaterNames),
+        options: g.options,
+      })))
+      if (noticeTableOk) {
+        const { error: insertError } = await supabase
+          .from('discord_match_notices')
+          .upsert(toNotify.map((g) => ({ title_hash: titleHash(g.title), title: g.title })), { onConflict: 'title_hash', ignoreDuplicates: true })
+        if (insertError) console.error('[autoMatch] discord_match_notices 기록 실패:', insertError.message)
+      }
+    }
   }
 
   return { matched, autoApproved, needsReview, updated }

@@ -1,4 +1,4 @@
-import { surveyGoodPointLabel } from './types'
+import { surveyBadPointLabel, surveyGoodPointLabel, type SurveyVerdict } from './types'
 
 function surveyWebhookUrl() {
   return process.env.DISCORD_REPORT_WEBHOOK_URL || process.env.DISCORD_WEBHOOK_URL
@@ -6,22 +6,30 @@ function surveyWebhookUrl() {
 
 /** 재방문자 설문 응답을 디스코드로 알림 (운영자 확인용). 실패는 무시. */
 export async function notifySurveyToDiscord(
+  verdict: SurveyVerdict,
   goodPoints: string[],
+  badPoints: string[],
   etcText?: string | null,
-  improvement?: string | null,
+  movieMissingText?: string | null,
 ) {
   const url = surveyWebhookUrl()
   if (!url) return
 
-  const labels = goodPoints
-    .map((g) => (g === 'etc' && etcText?.trim() ? `기타: ${etcText.trim()}` : surveyGoodPointLabel(g)))
-    .join('\n')
-
-  const fields: { name: string; value: string; inline: boolean }[] = [
-    { name: '👍 좋은 점', value: labels || '-', inline: false },
-  ]
-  if (improvement?.trim()) {
-    fields.push({ name: '🔧 개선할 점', value: improvement.trim().slice(0, 900), inline: false })
+  const fields: { name: string; value: string; inline: boolean }[] = []
+  if (verdict === 'good') {
+    const labels = goodPoints
+      .map((g) => (g === 'etc' && etcText?.trim() ? `기타: ${etcText.trim()}` : surveyGoodPointLabel(g)))
+      .join('\n')
+    fields.push({ name: '👍 좋은 점', value: labels || '-', inline: false })
+  } else {
+    const labels = badPoints
+      .map((b) => {
+        if (b === 'etc' && etcText?.trim()) return `기타: ${etcText.trim()}`
+        if (b === 'movie_missing' && movieMissingText?.trim()) return `찾는 영화 없음: ${movieMissingText.trim()}`
+        return surveyBadPointLabel(b)
+      })
+      .join('\n')
+    fields.push({ name: '👎 아쉬운 점', value: labels || '-', inline: false })
   }
 
   await fetch(url, {
@@ -30,8 +38,8 @@ export async function notifySurveyToDiscord(
     body: JSON.stringify({
       embeds: [
         {
-          title: '📝 재방문자 설문',
-          color: 0x5b8def,
+          title: verdict === 'good' ? '📝 재방문자 설문 — 좋아요' : '📝 재방문자 설문 — 아쉬워요',
+          color: verdict === 'good' ? 0x2ECC71 : 0xF39C12,
           fields,
           footer: { text: new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }) },
         },

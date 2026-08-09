@@ -37,6 +37,7 @@ export type AnalyticsEventName =
   | 'add request submitted'
   | 'landing variant assigned'
   | 'survey shown'
+  | 'survey verdict'
   | 'survey good selected'
   | 'survey submitted'
   | 'survey dismissed'

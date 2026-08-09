@@ -1,7 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { SURVEY_GOOD_POINTS, type SurveyGoodPoint } from '@/lib/survey/types'
+import {
+  SURVEY_BAD_POINTS,
+  SURVEY_GOOD_POINTS,
+  type SurveyBadPoint,
+  type SurveyGoodPoint,
+  type SurveyVerdict,
+} from '@/lib/survey/types'
 import { markSurvey } from '@/lib/survey/gate'
 import { trackEvent } from '@/lib/analytics/client'
 import { Button, IconButton, Input } from '@/components/primitives'
@@ -26,11 +32,19 @@ function analyticsSessionId() {
   }
 }
 
+const IcoX = () => (
+  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
+    <path d="M18 6L6 18M6 6l12 12" />
+  </svg>
+)
+
+/** 재방문 설문 v2 (2026-08-09 피그마 TOBE 확정) — 잘 쓰고 계세요? → 좋은 점 | 아쉬운 점 → 감사.
+ *  주관식 단계 제거. 기타·찾는 영화 없음은 선택 시 인라인 후속 입력. */
 export function FeedbackSurvey({ onClose }: Props) {
-  const [step, setStep] = useState<1 | 2>(1)
-  const [selected, setSelected] = useState<SurveyGoodPoint[]>([])
+  const [verdict, setVerdict] = useState<SurveyVerdict | null>(null)
+  const [selected, setSelected] = useState<string[]>([])
   const [etcText, setEtcText] = useState('')
-  const [improvement, setImprovement] = useState('')
+  const [movieMissingText, setMovieMissingText] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
 
@@ -38,51 +52,47 @@ export function FeedbackSurvey({ onClose }: Props) {
     trackEvent('survey shown')
   }, [])
 
-  const etcSelected = selected.includes('etc')
+  const options = verdict === 'bad' ? SURVEY_BAD_POINTS : SURVEY_GOOD_POINTS
 
-  function toggle(value: SurveyGoodPoint) {
-    setSelected((prev) =>
-      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value],
-    )
+  function pickVerdict(v: SurveyVerdict) {
+    trackEvent('survey verdict', { verdict: v })
+    setVerdict(v)
+    setSelected([])
   }
 
-  function goStep2() {
-    if (selected.length === 0) return
-    trackEvent('survey good selected', { good_points: selected.join(','), count: selected.length })
-    setStep(2)
+  function toggle(value: string) {
+    setSelected((prev) => (prev.includes(value) ? prev.filter((x) => x !== value) : [...prev, value]))
   }
 
   function dismiss() {
     void markSurvey('dismissed')
-    trackEvent('survey dismissed', { step })
+    trackEvent('survey dismissed', { step: verdict ? 2 : 1 })
     onClose()
   }
 
   async function submit() {
-    if (submitting) return
+    if (submitting || !verdict || selected.length === 0) return
     setSubmitting(true)
+    trackEvent('survey submitted', { verdict, points: selected.join(','), count: selected.length })
     try {
       await fetch('/api/survey', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          goodPoints: selected,
-          etcText: etcSelected ? etcText.trim() || undefined : undefined,
-          improvement: improvement.trim() || undefined,
+          verdict,
+          goodPoints: verdict === 'good' ? (selected as SurveyGoodPoint[]) : [],
+          badPoints: verdict === 'bad' ? (selected as SurveyBadPoint[]) : [],
+          etcText: etcText || undefined,
+          movieMissingText: movieMissingText || undefined,
           sessionId: analyticsSessionId(),
           device: deviceType(),
           pageUrl: typeof window !== 'undefined' ? window.location.pathname : undefined,
         }),
       })
     } catch {
-      /* 저장 실패해도 사용자 흐름은 완료 처리 */
+      /* 실패해도 사용자 흐름은 막지 않음 */
     }
     void markSurvey('done')
-    trackEvent('survey submitted', {
-      good_points: selected.join(','),
-      count: selected.length,
-      has_improvement: improvement.trim().length > 0,
-    })
     setSubmitting(false)
     setDone(true)
   }
@@ -102,76 +112,99 @@ export function FeedbackSurvey({ onClose }: Props) {
           size={32}
           data-rc="survey-close"
           style={{ position: 'absolute', top: 14, right: 14 }}
-          onClick={dismiss}
+          onClick={done ? onClose : dismiss}
           aria-label="닫기"
         >
-          ✕
+          <IcoX />
         </IconButton>
 
         {done ? (
           <div className={styles.thanks}>
             <div className={styles.thanksEmoji} aria-hidden>🎬</div>
-            <p className={styles.thanksTitle}>고맙습니다!</p>
-            <p className={styles.thanksSub}>남겨주신 의견은 다음 개선에 바로 반영할게요.</p>
-            <Button type="button" fullWidth onClick={onClose}>
-              닫기
-            </Button>
-          </div>
-        ) : step === 1 ? (
-          <>
-            <p className={styles.stepMeta}>1 / 2</p>
-            <h2 className={styles.title}>다시 찾아주셨네요 👋</h2>
-            <p className={styles.sub}>어떤 점이 좋았나요? (여러 개 선택할 수 있어요)</p>
-            <div className={styles.choices}>
-              {SURVEY_GOOD_POINTS.map((g) => {
-                const on = selected.includes(g.value)
-                return (
-                  <button
-                    key={g.value}
-                    type="button"
-                    className={`${styles.choice} ${on ? styles.choiceOn : ''}`}
-                    aria-pressed={on}
-                    onClick={() => toggle(g.value)}
-                  >
-                    <span className={styles.check} aria-hidden>{on ? '✓' : ''}</span>
-                    {g.label}
-                  </button>
-                )
-              })}
-              {etcSelected && (
-                <Input
-                  type="text"
-                  value={etcText}
-                  onChange={(e) => setEtcText(e.target.value.slice(0, 200))}
-                  placeholder="어떤 점이 좋았는지 직접 적어주세요"
-                  autoFocus
-                />
-              )}
+            <p className={`display-h2 ${styles.title}`}>고맙습니다!</p>
+            <p className={styles.sub}>남겨주신 의견은 다음 개선에 바로 반영할게요.</p>
+            <div className={styles.ctaCol}>
+              <Button type="button" variant="secondary" size="full" onClick={onClose}>
+                닫기
+              </Button>
             </div>
-            <div className={styles.actions}>
-              <Button type="button" data-rc="survey-next" onClick={goStep2} disabled={selected.length === 0}>
-                다음
+          </div>
+        ) : verdict === null ? (
+          <>
+            <h2 className={`display-h2 ${styles.title}`}>다시 찾아주셨네요 👋</h2>
+            <p className={styles.sub}>영화볼지도, 잘 쓰고 계세요?</p>
+            <div className={styles.ctaCol}>
+              <Button type="button" size="full" data-rc="survey-verdict-good" onClick={() => pickVerdict('good')}>
+                👍  네, 좋아요
+              </Button>
+              <Button
+                type="button"
+                size="full"
+                data-rc="survey-verdict-bad"
+                style={{ backgroundColor: 'var(--color-primary-subtle-l)', color: 'var(--color-primary-base)' }}
+                onClick={() => pickVerdict('bad')}
+              >
+                👎  아쉬운 점이 있어요
               </Button>
             </div>
           </>
         ) : (
           <>
-            <p className={styles.stepMeta}>2 / 2</p>
-            <h2 className={styles.title}>개선하면 좋을 점이 있을까요?</h2>
-            <p className={styles.sub}>자유롭게 적어주세요. (선택 — 비워두셔도 됩니다)</p>
-            <textarea
-              className={styles.textarea}
-              value={improvement}
-              onChange={(e) => setImprovement(e.target.value.slice(0, 500))}
-              placeholder="예: 특정 지역 극장이 더 있으면 좋겠어요 / 필터가 헷갈려요 …"
-              rows={4}
-              autoFocus
-            />
-            <div className={styles.actions}>
-              <Button type="button" variant="ghost" onClick={submit} disabled={submitting}>
-                건너뛰기
-              </Button>
-              <Button type="button" onClick={submit} loading={submitting}>
+            <h2 className={`display-h2 ${styles.title}`}>
+              {verdict === 'good' ? '어떤 점이 좋았나요?' : '어떤 점이 아쉬웠나요?'}
+            </h2>
+            <p className={styles.sub}>여러 개 선택할 수 있어요</p>
+            <div className={styles.choices}>
+              {options.map((o) => {
+                const on = selected.includes(o.value)
+                return (
+                  <div key={o.value}>
+                    <button
+                      type="button"
+                      className={`${styles.choice} ${on ? styles.choiceOn : ''}`}
+                      aria-pressed={on}
+                      onClick={() => toggle(o.value)}
+                    >
+                      <span className={`${styles.check} ${on ? styles.checkOn : ''}`} aria-hidden>
+                        {on ? '✓' : ''}
+                      </span>
+                      {o.label}
+                    </button>
+                    {on && o.value === 'etc' && (
+                      <div className={styles.followUp}>
+                        <Input
+                          type="text"
+                          value={etcText}
+                          onChange={(e) => setEtcText(e.target.value.slice(0, 200))}
+                          placeholder="직접 적어주세요"
+                          autoFocus
+                        />
+                      </div>
+                    )}
+                    {on && o.value === 'movie_missing' && (
+                      <div className={styles.followUp}>
+                        <Input
+                          type="text"
+                          value={movieMissingText}
+                          onChange={(e) => setMovieMissingText(e.target.value.slice(0, 200))}
+                          placeholder="어떤 영화를 찾으셨나요?"
+                          autoFocus
+                        />
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+            <div className={styles.ctaCol}>
+              <Button
+                type="button"
+                size="full"
+                data-rc="survey-submit"
+                onClick={submit}
+                disabled={selected.length === 0}
+                loading={submitting}
+              >
                 {submitting ? '보내는 중…' : '제출'}
               </Button>
             </div>
