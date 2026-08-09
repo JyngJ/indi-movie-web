@@ -4,6 +4,7 @@ import type { Movie } from '@/types/api'
 import type { AnniversaryEventType } from '@/lib/curation/directorAnniversaries'
 import { CurationSectionRow } from '@/components/domain/CurationSectionRow'
 import { PosterThumb } from '@/components/domain/PosterThumb'
+import { RevealItem } from '@/components/motion'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 
 interface Props {
@@ -101,9 +102,11 @@ export function AnniversarySection({
           background: 'var(--color-surface-card)',
           flex: 1,
         }}>
-          {films.slice(0, 2).map((film) => (
-            <div
+          {films.slice(0, 2).map((film, i) => (
+            <RevealItem
               key={film.id}
+              preset="slide"
+              staggerIndex={i}
               onClick={onMovieClick ? () => onMovieClick(film.id) : undefined}
               style={{
                 display: 'flex', gap: 8, alignItems: 'flex-start', flex: 1, minWidth: 0,
@@ -135,7 +138,7 @@ export function AnniversarySection({
                   <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)', fontWeight: 600 }}>{film.year}</span>
                 </div>
               </div>
-            </div>
+            </RevealItem>
           ))}
         </div>
       </div>

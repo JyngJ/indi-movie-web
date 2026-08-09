@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { PosterThumb } from '@/components/domain/PosterThumb'
+import { RevealItem, RevealGroup } from '@/components/motion'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { withFlag } from '@/lib/nations'
 import { Button, ScrollNavButton } from '@/components/primitives'
@@ -124,9 +125,10 @@ function InfoTooltip({ weekStart }: { weekStart: string }) {
 }
 
 // ── 랭킹 카드 ─────────────────────────────────────────────────────
-function RankingCard({ entry, movie, rank, isDesktop, gapRight, onClick }: { entry: FilmRankingEntry; movie?: Movie; rank: number; isDesktop: boolean; gapRight: number; onClick?: () => void }) {
+function RankingCard({ entry, movie, rank, isDesktop, gapRight, onClick, revealIndex }: { entry: FilmRankingEntry; movie?: Movie; rank: number; isDesktop: boolean; gapRight: number; onClick?: () => void; revealIndex: number }) {
   const { width, height } = POSTER
   const cardRef = useRef<HTMLDivElement>(null)
+  const [posterReady, setPosterReady] = useState(!movie?.posterUrl)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [hovered, setHovered] = useState(false)
   const [popupPos, setPopupPos] = useState<{ x: number; y: number } | null>(null)
@@ -144,13 +146,18 @@ function RankingCard({ entry, movie, rank, isDesktop, gapRight, onClick }: { ent
 
   return (
     <>
-      <div
+      <RevealItem
         ref={cardRef}
-        onMouseEnter={isDesktop ? onMouseEnter : undefined}
-        onMouseLeave={isDesktop ? onMouseLeave : undefined}
+        preset="slide"
+        ready={posterReady}
+        staggerIndex={revealIndex}
         onClick={onClick}
         style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)', width, flexShrink: 0, cursor: onClick ? 'pointer' : undefined, marginRight: gapRight }}
       >
+        <div
+          onMouseEnter={isDesktop ? onMouseEnter : undefined}
+          onMouseLeave={isDesktop ? onMouseLeave : undefined}
+        >
         <div style={{ position: 'relative', overflow: 'visible' }}>
           {/* 순위 — 포스터 왼쪽 뒤에, 반투명 테두리만 */}
           <span style={{
@@ -171,7 +178,7 @@ function RankingCard({ entry, movie, rank, isDesktop, gapRight, onClick }: { ent
             transform: hovered ? 'scale(1.1)' : 'scale(1)',
             transformOrigin: 'center center',
           }}>
-            <PosterThumb src={movie?.posterUrl} alt={movie?.title ?? ''} width={width} height={height} shadow={false} />
+            <PosterThumb src={movie?.posterUrl} alt={movie?.title ?? ''} width={width} height={height} shadow={false} onReady={() => setPosterReady(true)} />
           </div>
         </div>
 
@@ -184,7 +191,8 @@ function RankingCard({ entry, movie, rank, isDesktop, gapRight, onClick }: { ent
           </span>
           <RankBadge rank={entry.rank} prevRank={entry.prev_rank} />
         </div>
-      </div>
+        </div>
+      </RevealItem>
 
       {popupPos && isDesktop && movie && (
         <HoverPopup movie={movie} x={popupPos.x} y={popupPos.y} />
@@ -273,6 +281,7 @@ export function FilmRankingSection({ weekStart, rankings, movies, isDesktop, onM
             onClick={() => scrollRef.current?.scrollBy({ left: scrollAmount, behavior: 'smooth' })}
           />
         )}
+        <RevealGroup>
         <div
           ref={scrollRef}
           onScroll={updateScrollEdge}
@@ -291,10 +300,12 @@ export function FilmRankingSection({ weekStart, rankings, movies, isDesktop, onM
               rank={entry.rank}
               isDesktop={isDesktop}
               gapRight={getGapRight(rankings[i + 1]?.rank)}
+              revealIndex={Math.min(i, 5)}
               onClick={onMovieClick && entry.movie_id ? () => onMovieClick(entry.movie_id) : undefined}
             />
           ))}
         </div>
+        </RevealGroup>
       </div>
     </section>
   )

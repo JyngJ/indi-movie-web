@@ -10,6 +10,7 @@ import { useDirectorProfile } from '@/lib/supabase/queries'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { withFlag } from '@/lib/nations'
 import { Button, ScrollNavButton } from '@/components/primitives'
+import { RevealItem, RevealGroup } from '@/components/motion'
 import { HoverPopup } from '@/components/domain/CurationSectionRow'
 import { MapPin } from 'lucide-react'
 
@@ -41,11 +42,12 @@ function hashColor(name: string): string {
 
 // ── 영화 카드 (CurationSectionRow 동일 패턴) ────────────────────
 function MovieCard({
-  movie, width, height, isDesktop, onClick,
-}: { movie: Movie; width: number; height: number; isDesktop: boolean; onClick?: () => void }) {
+  movie, width, height, isDesktop, onClick, revealIndex,
+}: { movie: Movie; width: number; height: number; isDesktop: boolean; onClick?: () => void; revealIndex: number }) {
   const router = useRouter()
   const director = movie.director.length > 0 ? movie.director[0] : null
   const cardRef = useRef<HTMLDivElement>(null)
+  const [posterReady, setPosterReady] = useState(!movie.posterUrl)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [hovered, setHovered] = useState(false)
   const [popupPos, setPopupPos] = useState<{ x: number; y: number } | null>(null)
@@ -66,8 +68,11 @@ function MovieCard({
 
   return (
     <>
-      <div
+      <RevealItem
         ref={cardRef}
+        preset="slide"
+        ready={posterReady}
+        staggerIndex={revealIndex}
         onClick={onClick}
         style={{ display: 'flex', flexDirection: 'column', gap: 8, width, flexShrink: 0, cursor: onClick ? 'pointer' : undefined }}
       >
@@ -80,7 +85,7 @@ function MovieCard({
           transformOrigin: 'center center',
           borderRadius: 'var(--radius-poster)',
         }}>
-          <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} shadow={false} />
+          <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} shadow={false} onReady={() => setPosterReady(true)} />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <span style={{
@@ -109,7 +114,7 @@ function MovieCard({
             <span style={{ fontSize: 10, color: 'var(--color-text-caption)', fontWeight: 600 }}>{movie.year}</span>
           </div>
         </div>
-      </div>
+      </RevealItem>
       {popupPos && isDesktop && <HoverPopup movie={movie} x={popupPos.x} y={popupPos.y} />}
     </>
   )
@@ -305,6 +310,7 @@ export function DirectorSpecialSection({
           onClick={() => scrollRef.current?.scrollBy({ left: scrollAmount, behavior: 'smooth' })}
         />
       )}
+      <RevealGroup>
       <div
         ref={scrollRef}
         onScroll={updateScrollEdge}
@@ -319,13 +325,15 @@ export function DirectorSpecialSection({
           })() : {}),
         }}
       >
-        {films.map((movie) => (
+        {films.map((movie, i) => (
           <MovieCard
             key={movie.id} movie={movie} width={width} height={height} isDesktop={isDesktop}
+            revealIndex={Math.min(i, 5)}
             onClick={onMovieClick ? () => onMovieClick(movie.id) : undefined}
           />
         ))}
       </div>
+      </RevealGroup>
     </div>
   )
 
