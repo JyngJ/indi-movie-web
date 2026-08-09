@@ -387,6 +387,18 @@ export function TheaterSheet({
   }, [allMovieEntries])
 
   const [dateWindowOffset, setDateWindowOffset] = useState(0)
+  /* 상영 데이터가 있는 마지막 날이 속한 주 — 그 너머로는 넘길 수 없다.
+     고정 상한(21)이면 데이터가 없는 빈 주까지 넘어가 화면이 통째로 비었다. */
+  const maxDateWindowOffset = useMemo(() => {
+    if (theaterAvailableDates.size === 0) return 0
+    const last = [...theaterAvailableDates].sort().at(-1)!
+    const dayDiff = Math.round((Date.parse(`${last}T00:00:00`) - Date.parse(`${todayIso}T00:00:00`)) / 86_400_000)
+    return Math.max(0, Math.floor(dayDiff / 7) * 7)
+  }, [theaterAvailableDates, todayIso])
+  /* 데이터가 늦게 도착해 상한이 줄면 현재 오프셋도 되돌린다 */
+  useEffect(() => {
+    setDateWindowOffset((o) => Math.min(o, maxDateWindowOffset))
+  }, [maxDateWindowOffset])
   const days = buildDays(7, theaterAvailableDates, dateWindowOffset)
   const selectedDate = days.find((d) => d.isoDate === selectedIsoDate)?.date ?? days[0].date
 
@@ -444,6 +456,7 @@ export function TheaterSheet({
     posterCanScrollLeft,
     posterCanScrollRight,
     updatePosterScrollEdge,
+    scrollByPage,
   } = useMomentumScroll(posterScrollRef, shownExpanded, allMovieEntries)
 
   /* ── 캐러셀 반응형 아이템 폭 (스크롤러 폭 기준 2~4열) ── */
@@ -602,9 +615,17 @@ export function TheaterSheet({
 
   /* ── 선택 영화로 포스터 스트립 스크롤 ── */
   const posterCenterDone = useRef(false)
+  /* 이 조합으로 이미 한 번 맞췄으면 다시 건드리지 않는다.
+     filteredMovieEntries는 렌더마다 새 배열이라 그냥 두면 effect가 매 렌더 돌면서
+     사용자가 좌우 버튼·드래그로 옮긴 위치를 곧바로 선택 영화 자리로 되돌린다. */
+  const lastCenterKey = useRef('')
   useEffect(() => {
     const el = posterScrollRef.current
     if (!el || !selectedMovieId || allMovieEntries.length === 0) return
+
+    const centerKey = `${selectedMovieId}|${shownExpanded}|${allMovieEntries.length}|${filteredMovieEntries.length}|${posterItemW}`
+    if (lastCenterKey.current === centerKey) return
+    lastCenterKey.current = centerKey
 
     // 현재 모드별 포스터 순서 계산
     let visualEntries: typeof allMovieEntries
@@ -629,7 +650,8 @@ export function TheaterSheet({
     const gap = POSTER_GAP
     const paddingLeft = POSTER_PAD_LEFT
     const targetLeft = paddingLeft + idx * (itemW + gap)
-    const left = Math.max(0, targetLeft - el.clientWidth / 2 + itemW / 2)
+    const max = Math.max(0, el.scrollWidth - el.clientWidth)
+    const left = Math.min(max, Math.max(0, targetLeft - el.clientWidth / 2 + itemW / 2))
     // 시트 첫 진입은 즉시 배치, 이후 선택 변경은 부드럽게 이동
     el.scrollTo({ left, behavior: posterCenterDone.current ? 'smooth' : 'auto' })
     posterCenterDone.current = true
@@ -1172,7 +1194,7 @@ export function TheaterSheet({
               boxShadow: '0 1px 6px rgba(0,0,0,0.12)',
               minHeight: 'auto',
             }}
-            onClick={() => posterScrollRef.current?.scrollBy({ left: -(posterItemW + POSTER_GAP) * 3, behavior: 'smooth' })}
+            onClick={() => scrollByPage(-1, posterItemW + POSTER_GAP)}
           >
             <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
@@ -1191,7 +1213,7 @@ export function TheaterSheet({
               boxShadow: '0 1px 6px rgba(0,0,0,0.12)',
               minHeight: 'auto',
             }}
-            onClick={() => posterScrollRef.current?.scrollBy({ left: (posterItemW + POSTER_GAP) * 3, behavior: 'smooth' })}
+            onClick={() => scrollByPage(1, posterItemW + POSTER_GAP)}
           >
             <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
           </button>
@@ -1400,9 +1422,9 @@ export function TheaterSheet({
               days={daysWithMovieAvailability}
               selectedDate={selectedDate}
               hasPrev={dateWindowOffset > 0}
-              hasNext={dateWindowOffset < 21}
+              hasNext={dateWindowOffset < maxDateWindowOffset}
               onPrev={() => setDateWindowOffset((o) => Math.max(0, o - 7))}
-              onNext={() => setDateWindowOffset((o) => o + 7)}
+              onNext={() => setDateWindowOffset((o) => Math.min(maxDateWindowOffset, o + 7))}
               onSelectDate={(date) => {
                 const day = days.find((d) => d.date === date)
                 if (day) {
@@ -1435,13 +1457,16 @@ export function TheaterSheet({
             const matched = filteredMovieEntries.length
             const matchedIds = filtersOn ? new Set(filteredMovieEntries.map(e => e.movie.id)) : null
             const nonMatchingEntries = filtersOn ? allMovieEntries.filter(e => !matchedIds!.has(e.movie.id)) : []
+            // 필터 칩 기준 위/아래 여백 대칭 — 위: DateBar pad 8 + 필터 행 padTop 16 = 24,
+            // 아래: 필터 행 padBottom 16 + 스트립 padTop 8 = 24 (스트립 단독일 땐 16 유지)
+            const hasFilterRow = availableGenres.length > 0 || availableNations.length > 0
             return (
           <div style={{
             borderBottom: '1px solid var(--color-border)',
             backgroundColor: 'var(--color-surface-bg)',
           }}>
             {/* 필터 행 */}
-            {(availableGenres.length > 0 || availableNations.length > 0) && (
+            {hasFilterRow && (
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 8,
                 paddingLeft: 'var(--gutter-sheet)', paddingRight: 'var(--gutter-sheet)', paddingTop: 16, paddingBottom: 16,
@@ -1515,9 +1540,7 @@ export function TheaterSheet({
             <div style={{ position: 'relative' }}>
               {/* 포스터 좌우 스크롤 버튼 — expanded 전체(모바일/PC 패널) */}
               {(() => {
-                const scrollBy = (dir: 1 | -1) => {
-                  posterScrollRef.current?.scrollBy({ left: dir * (posterItemW + POSTER_GAP) * 3, behavior: 'smooth' })
-                }
+                const scrollBy = (dir: 1 | -1) => scrollByPage(dir, posterItemW + POSTER_GAP)
                 const btnStyle: React.CSSProperties = {
                   /* 포스터 이미지 세로 중앙 — 스트립 padTop 12 + 이미지 절반 (캡션 높이 제외) */
                   position: 'absolute', top: 12 + posterItemH / 2, transform: 'translateY(-50%)',
@@ -1553,7 +1576,7 @@ export function TheaterSheet({
                 display: 'flex',
                 gap: 12,
                 overflowX: 'auto',
-                paddingTop: 16,
+                paddingTop: hasFilterRow ? 8 : 16,
                 paddingLeft: POSTER_PAD_LEFT,
                 paddingRight: POSTER_PAD_LEFT,
                 paddingBottom: 8,
