@@ -84,20 +84,29 @@ function findComp(name) {
   }
   return null
 }
+function findVariant(setName, variantName) {
+  for (const page of figma.root.children) {
+    const set = page.findOne(n => n.type === 'COMPONENT_SET' && n.name === setName)
+    if (set) return set.children.find(c => c.name === variantName) ?? null
+  }
+  return null
+}
 function closeBtn(card) {
-  const b = F('close ×', { dir: 'H', align: 'CENTER', mainAlign: 'CENTER', w: 32, h: 32, r: 8 })
+  // 확정 컴포넌트 사용 — 2.0/IconButton ghost 32 + 내부 아이콘을 2.0/icon/x로 스왑
+  const variant = findVariant('2.0/IconButton', 'Variant=ghost, Size=32, State=default')
   const xComp = findComp('2.0/icon/x')
-  if (xComp) {
-    const inst = xComp.createInstance()
-    if (inst.width !== 16) inst.rescale(16 / inst.width)   // resize는 크롭 — rescale
-    const p = paint('neutral/500')
-    for (const v of inst.findAll(n => 'strokes' in n || 'fills' in n)) {
-      try {
-        if (v.strokes && v.strokes.length) v.strokes = [p]
-        if (v.fills && v.fills !== figma.mixed && v.fills.length) v.fills = [p]
-      } catch { /* 잠긴 속성 무시 */ }
+  let b
+  if (variant) {
+    b = variant.createInstance()
+    const innerIcon = b.findOne(n => n.type === 'INSTANCE')
+    if (innerIcon && xComp) { try { innerIcon.swapComponent(xComp) } catch { /* 스왑 실패 시 기본 아이콘 유지 */ } }
+  } else {
+    b = F('close ×', { dir: 'H', align: 'CENTER', mainAlign: 'CENTER', w: 32, h: 32, r: 8 })
+    if (xComp) {
+      const inst = xComp.createInstance()
+      if (inst.width !== 16) inst.rescale(16 / inst.width)
+      b.appendChild(inst)
     }
-    b.appendChild(inst)
   }
   card.appendChild(b)
   b.layoutPositioning = 'ABSOLUTE'
@@ -138,6 +147,17 @@ function choice(label, on) {
 }
 
 function btn(label, kind, w) {
+  // 확정 컴포넌트 사용 — 2.0/Button (Buttons 2.0 제안 세트)
+  const map = { primary: 'Primary', secondary: 'Secondary', text: 'TextOnly' }
+  const variant = findVariant('2.0/Button', `Variant=${map[kind]}, Size=md, Icon=none, State=default`)
+  if (variant) {
+    const inst = variant.createInstance()
+    const t = inst.findOne(n => n.type === 'TEXT')
+    if (t) { try { t.characters = label } catch { /* 폰트 미로드 시 무시 */ } }
+    if (w) inst.resize(w, inst.height)
+    return inst
+  }
+  // 폴백 (세트 없음)
   const b = F(`btn · ${kind}`, { dir: 'H', gap: 8, pad: [0, 24, 0, 24], align: 'CENTER', mainAlign: 'CENTER', h: 44 })
   if (kind === 'primary') b.fills = [paint('primary/700')]
   else if (kind === 'secondary') b.fills = [paint('neutral/150')]
@@ -243,7 +263,7 @@ note.characters = [
   '· 제목 display-h2(KIMM 20) — 구 17 Pretendard에서 승격. 단계 표시 = 온보딩 도트 문법(2개)',
   '· 선택지: h48 · surface-soft(150) r-control(12) · 선택 시 primary/100 + primary/700 1px + 체크 원',
   '· 푸터: step1 = primary 풀폭 다음 / step2 = [건너뛰기 text] [제출 primary flex] (온보딩 푸터 문법)',
-  '· 닫기 × = 2.0/icon/x 인스턴스, 전 단계 우상단 고정 (ghost 32, top/right 14). 도트 없음(2026-08-09 결정)',
+  '· 버튼 = 2.0/Button 인스턴스(Primary/Secondary/TextOnly·md), 닫기 = 2.0/IconButton ghost 32 + icon/x 스왑. 도트 없음',
   ...(kimmOK ? [] : ['⚠ KIMM_Bold 폰트 미로드 — 제목이 Pretendard로 렌더됨']),
 ].join('\n')
 note.fills = [{ type: 'SOLID', color: rgb('#726B65') }]
