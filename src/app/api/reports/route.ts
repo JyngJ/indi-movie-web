@@ -1,10 +1,20 @@
 import { REPORT_CATEGORIES, type CreateReportInput, type ReportCategory, type ReportFileMeta } from '@/lib/reports/types'
 import { createReport, setReportDiscordMessageId } from '@/lib/reports/store'
 import { discordReportEnabled, sendReportToDiscord } from '@/lib/reports/discord'
+import { enforceRateLimit } from '@/lib/rateLimit/guard'
+import { RATE_LIMIT_POLICIES } from '@/lib/rateLimit/policies'
 
 export const dynamic = 'force-dynamic'
 
+/** 첨부 상한 — UI는 이미지 3장까지만 붙이지만, 라우트는 UI를 거치지 않은 요청도 받는다. */
+const MAX_FILES = 3
+const MAX_FILE_BYTES = 8 * 1024 * 1024
+const MAX_TOTAL_BYTES = 20 * 1024 * 1024
+
 export async function POST(request: Request) {
+  const limited = await enforceRateLimit(request, RATE_LIMIT_POLICIES.reports)
+  if (limited) return limited
+
   try {
     const form = await request.formData()
     const input = reportInputFromForm(form)
@@ -70,25 +80,47 @@ function reportInputFromForm(form: FormData): CreateReportInput {
 }
 
 function fileMetaFromForm(form: FormData): ReportFileMeta[] {
-  return filesFromForm(form)
-    .slice(0, 3)
-    .map((file) => ({
-      name: file.name,
-      type: file.type,
-      size: file.size,
-    }))
+  return filesFromForm(form).map((file) => ({
+    name: file.name,
+    type: file.type,
+    size: file.size,
+  }))
 }
 
 async function discordUploadsFromForm(form: FormData) {
-  return Promise.all(filesFromForm(form).slice(0, 3).map(async (file) => ({
+  return Promise.all(filesFromForm(form).map(async (file) => ({
     name: file.name,
     type: file.type,
     buffer: await file.arrayBuffer(),
   })))
 }
 
+/**
+ * 첨부 검증 후 목록 반환. 메타 생성과 Discord 업로드가 같은 규칙을 보도록 여기 한 곳에 모은다.
+ * arrayBuffer()로 메모리에 올리기 **전에** 크기를 거른다 — 통과한 파일만 버퍼링한다.
+ */
 function filesFromForm(form: FormData) {
-  return form.getAll('files').filter((value): value is File => value instanceof File)
+  const files = form.getAll('files').filter((value): value is File => value instanceof File)
+
+  if (files.length > MAX_FILES) {
+    throw new Error(`첨부는 최대 ${MAX_FILES}개까지 가능합니다.`)
+  }
+
+  let total = 0
+  for (const file of files) {
+    if (!file.type.startsWith('image/')) {
+      throw new Error('첨부는 이미지 파일만 가능합니다.')
+    }
+    if (file.size > MAX_FILE_BYTES) {
+      throw new Error(`첨부 파일은 개당 ${MAX_FILE_BYTES / 1024 / 1024}MB 이하여야 합니다.`)
+    }
+    total += file.size
+  }
+  if (total > MAX_TOTAL_BYTES) {
+    throw new Error(`첨부 파일 총합은 ${MAX_TOTAL_BYTES / 1024 / 1024}MB 이하여야 합니다.`)
+  }
+
+  return files
 }
 
 function stringValue(value: FormDataEntryValue | null) {

@@ -1,3 +1,5 @@
+import { enforceRateLimit } from '@/lib/rateLimit/guard'
+import { RATE_LIMIT_POLICIES } from '@/lib/rateLimit/policies'
 import { createSurveyResponse } from '@/lib/survey/store'
 import { notifySurveyToDiscord } from '@/lib/survey/discord'
 import {
@@ -11,6 +13,9 @@ import {
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
+  const limited = await enforceRateLimit(request, RATE_LIMIT_POLICIES.survey)
+  if (limited) return limited
+
   try {
     const body = await request.json().catch(() => ({}))
 
