@@ -418,7 +418,7 @@ function RecentList({
             display: 'flex',
             alignItems: 'center',
             padding: '8px 12px',
-            backgroundColor: 'var(--color-surface-soft)',
+            backgroundColor: 'var(--color-surface-raised)',
             borderRadius: 'var(--radius-control)',
             gap: 12,
             opacity: pendingId === `${item.kind}-${item.id}` ? 0.5 : 1,
@@ -601,8 +601,7 @@ export function CurationSections({
         const btnStyle = {
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-1)',
           padding: '8px 0', border: 'none', borderRadius: 'var(--radius-button)',
-          /* 패널 배경과 레일색(raised) 사이 중간 단계 — 옅은 면 */
-          background: 'var(--color-surface-soft)', color: 'var(--color-text-sub)',
+          background: 'var(--color-surface-raised)', color: 'var(--color-text-sub)',
           fontSize: 12, fontWeight: 600, cursor: 'pointer',
         } as const
 
@@ -613,14 +612,14 @@ export function CurationSections({
               <PosterRow items={visibleItems} onSelect={handleSelect} emptyText={section.emptyText} desktop={desktop} />
               {hasMore && expandState === 'collapsed' && (
                 <div style={{ margin: '0 20px' }}>
-                  <Button type="button" variant="secondary" size="sm" fullWidth onClick={() => setExpand(section.key, 'partial')}>
+                  <Button type="button" variant="tertiary" size="md" fullWidth onClick={() => setExpand(section.key, 'partial')}>
                     더보기 <ChevronDown size={14} strokeWidth={1.75} color="currentColor" />
                   </Button>
                 </div>
               )}
               {hasMore && expandState === 'partial' && (
                 <div style={{ display: 'flex', gap: 'var(--spacing-2)', margin: '0 20px' }}>
-                  <Button type="button" variant="secondary" size="sm" fullWidth onClick={() => {
+                  <Button type="button" variant="tertiary" size="md" fullWidth onClick={() => {
                     setExpand(section.key, 'collapsed')
                     sectionRefs.current[section.key]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                   }}>

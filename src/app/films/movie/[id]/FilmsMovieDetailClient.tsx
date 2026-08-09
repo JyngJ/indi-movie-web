@@ -277,6 +277,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
   const shareButton = (
     <IconButton
       variant="overlay"
+      shape="round"
       size={44}
       aria-label="공유"
       onClick={() => {

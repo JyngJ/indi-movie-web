@@ -15,7 +15,7 @@ import { locationAdapter } from '@/lib/adapters/location'
 import { calculateAndFormatDistance, calculateDistanceKm } from '@/lib/map/distanceUtils'
 import { getRegionFromAddress, getRegionFromCoords } from '@/lib/regions'
 import { formatDateLabel } from '@/lib/date'
-import { Toast, IconButton } from '@/components/primitives'
+import { Toast, IconButton, Button } from '@/components/primitives'
 import { MovieInfoTable } from '@/components/domain/movieDetail/MovieInfoTable'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 
@@ -337,7 +337,9 @@ function TheaterShowtimeChips({
               {distance}
             </span>
           )}
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => {
               const date = entry.dateGroups[0]?.date ?? ''
               trackEvent('movie theater selected', {
@@ -349,19 +351,10 @@ function TheaterShowtimeChips({
               })
               onGoTo(date)
             }}
-            style={{
-              flexShrink: 0,
-              height: 28, padding: '0 12px',
-              borderRadius: 9999,
-              border: '1px solid color-mix(in srgb, var(--color-primary-base) 35%, transparent)',
-              backgroundColor: 'var(--color-primary-subtle-l)',
-              color: 'var(--color-primary-base)',
-              fontSize: 12, fontWeight: 700,
-              cursor: 'pointer', minHeight: 'auto',
-            }}
+            style={{ flexShrink: 0 }}
           >
             영화관 보기
-          </button>
+          </Button>
         </div>
       </div>
 

@@ -29,9 +29,9 @@ export function Chip({ selected = false, onDismiss, children, className = '', on
         fontWeight: 500,
         lineHeight: 1.2,
         gap: 4,
-        backgroundColor: selected ? 'var(--color-primary-subtle-l)' : 'var(--color-surface-raised)',
+        backgroundColor: selected ? 'var(--color-primary-subtle-l)' : 'var(--color-surface-bg)',
         color: selected ? 'var(--color-primary-text)' : 'var(--color-text-body)',
-        borderColor: selected ? 'var(--color-primary-base)' : 'var(--color-border)',
+        borderColor: selected ? 'var(--color-primary-base)' : 'var(--color-neutral-300)',
         ...externalStyle,
       }}
       onClick={onClick}

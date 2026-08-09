@@ -5,7 +5,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMovies, useActiveMovieIds, useDirectorProfile } from '@/lib/supabase/queries'
 import type { Movie } from '@/types/api'
-import { Toast, IconButton, SortToggle } from '@/components/primitives'
+import { Toast, IconButton, SortToggle, Button } from '@/components/primitives'
 
 function useIsDesktopDetail() {
   return useMediaQuery('(min-width: 1280px)')
@@ -268,23 +268,15 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
       )}
 
       <div style={{ maxWidth: isDesktop ? 860 : undefined, margin: isDesktop ? '20px auto 0' : undefined, padding: isDesktop ? 0 : '16px var(--gutter) 0' }}>
-        <button
+        <Button
+          variant="secondary"
+          size="md"
+          fullWidth
           onClick={() => router.push(`/?director=${encodeURIComponent(directorName)}`)}
-          style={{
-            width: '100%', height: 44,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            borderRadius: 12,
-            border: '1px solid var(--color-primary-base)',
-            backgroundColor: 'var(--color-primary-subtle-l)',
-            color: 'var(--color-primary-base)',
-            fontSize: 14,
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
         >
           <IcoMap />
           지도에서 필터로 보기
-        </button>
+        </Button>
       </div>
 
       {/* 작품 목록 */}

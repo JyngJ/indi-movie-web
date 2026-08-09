@@ -139,9 +139,9 @@ export function FeedbackSurvey({ onClose }: Props) {
               </Button>
               <Button
                 type="button"
+                variant="secondary"
                 size="full"
                 data-rc="survey-verdict-bad"
-                style={{ backgroundColor: 'var(--color-primary-subtle-l)', color: 'var(--color-primary-base)' }}
                 onClick={() => pickVerdict('bad')}
               >
                 👎  아쉬운 점이 있어요

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import type { Movie } from '@/types/api'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
+import { RevealItem } from '@/components/motion'
 
 type SortKey = 'theaters_desc' | 'theaters_asc' | 'year_desc' | 'year_asc' | 'alpha'
 
@@ -36,7 +37,7 @@ function sortMovies(
   }
 }
 
-function GridPoster({ src, alt, interactive }: { src?: string; alt: string; interactive?: boolean }) {
+function GridPoster({ src, alt, interactive, onReady }: { src?: string; alt: string; interactive?: boolean; onReady?: () => void }) {
   return (
     <div
       className={interactive ? 'hover-lift' : undefined}
@@ -56,6 +57,10 @@ function GridPoster({ src, alt, interactive }: { src?: string; alt: string; inte
           alt={alt}
           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           loading="lazy"
+          /* 캐시된 이미지는 onLoad가 안 뜰 수 있어 complete도 함께 본다 */
+          ref={(node) => { if (node?.complete) onReady?.() }}
+          onLoad={onReady}
+          onError={onReady}
         />
       ) : (
         <div
@@ -77,6 +82,55 @@ function GridPoster({ src, alt, interactive }: { src?: string; alt: string; inte
         }}
       />
     </div>
+  )
+}
+
+/**
+ * 그리드 카드 한 장 — 포스터가 실제로 그려진 뒤에야 등장 모션을 재생한다.
+ * 이미지가 없는 영화(제목 타일 대체)는 기다릴 게 없으므로 바로 준비 완료.
+ */
+function GridCard({
+  movie,
+  staggerIndex,
+  interactive,
+  onClick,
+  children,
+}: {
+  movie: Movie
+  staggerIndex: number
+  interactive: boolean
+  onClick?: () => void
+  children: React.ReactNode
+}) {
+  const [ready, setReady] = useState(!movie.posterUrl)
+
+  return (
+    <RevealItem
+      preset="slide"
+      ready={ready}
+      staggerIndex={staggerIndex}
+      /* 전체 그리드는 빠르게 — 화면에 닿기 전(아래 10% 여유)부터, 살짝만 보여도 시작.
+         행 캐러셀보다 이르게 잡는 이유: 세로로 계속 훑는 화면이라 늦게 뜨면 빈칸이 먼저 눈에 든다 */
+      rootMargin="0px 0px 10% 0px"
+      threshold={0.05}
+      settleMs={0}
+      readyTimeoutMs={600}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+        cursor: onClick ? 'pointer' : undefined,
+      }}
+      onClick={onClick}
+    >
+      <GridPoster
+        src={movie.posterUrl}
+        alt={movie.title}
+        interactive={interactive}
+        onReady={() => setReady(true)}
+      />
+      {children}
+    </RevealItem>
   )
 }
 
@@ -190,7 +244,7 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
           </select>
         </div>
 
-        {/* 그리드 */}
+        {/* 그리드 — 각 카드는 "화면에 들어옴 + 포스터 디코드 완료" 뒤에 뜬다 (RevealItem) */}
         <div
           style={{
             display: 'grid',
@@ -201,19 +255,15 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
             padding: isDesktop ? '16px var(--gutter-sheet) 0' : '14px var(--gutter-sheet) 0',
           }}
         >
-          {sorted.slice(0, visibleCount).map((movie) => (
-            <div
+          {sorted.slice(0, visibleCount).map((movie, i) => (
+            <GridCard
               key={movie.id}
+              movie={movie}
+              /* 한 행 안에서만 계단식 — 아래 행은 스크롤해 들어올 때 각자 재생된다 */
+              staggerIndex={i % (isDesktop ? 4 : 3)}
+              interactive={!!onMovieClick}
               onClick={onMovieClick ? () => onMovieClick(movie.id) : undefined}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 8,
-                cursor: onMovieClick ? 'pointer' : undefined,
-              }}
             >
-              <GridPoster src={movie.posterUrl} alt={movie.title} interactive={!!onMovieClick} />
-
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span
                   style={{
@@ -276,7 +326,7 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
                   </span>
                 </div>
               </div>
-            </div>
+            </GridCard>
           ))}
           {loadingMore && Array.from({ length: isDesktop ? 4 : 3 }).map((_, i) => (
             <div key={`ghost_${i}`} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

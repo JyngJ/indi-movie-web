@@ -32,6 +32,7 @@ import {
   IlloMapDetail,
   type IconProps,
 } from './illustrations'
+import { TransitionPanel, slideVariants } from '@/components/motion'
 import s from './onboarding.module.css'
 
 const PAGE_COUNT = 4
@@ -153,9 +154,13 @@ export function Onboarding({ onClose, variant }: Props) {
     if (idx !== pageRef.current) setPage(idx)
   }, [])
 
+  /* 데스크톱 패널 전환 방향 — 1: 다음(오른쪽에서 들어옴) / -1: 이전 */
+  const [direction, setDirection] = useState(1)
+
   const goTo = useCallback(
     (idx: number) => {
       const clamped = Math.min(PAGE_COUNT - 1, Math.max(0, idx))
+      setDirection(clamped >= pageRef.current ? 1 : -1)
       const el = swipeRef.current
       if (el && el.clientWidth) {
         el.scrollTo({ left: clamped * el.clientWidth, behavior: 'smooth' })
@@ -283,13 +288,31 @@ export function Onboarding({ onClose, variant }: Props) {
           <button type="button" data-rc="onboarding-skip" className={s.mSkip} onClick={handleSkip}>
             건너뛰기
           </button>
-          <div className={s.mIllo} key={`illo-${page}`}>
-            <p.Illo dark={isDark} />
-          </div>
-          <div className={s.mText} key={`text-${page}`}>
-            <div className={`${s.head} ${s.mHead}`}>{p.head}</div>
-            {renderBody(p)}
-            <div className={s.spacer} />
+          {/* 일러스트·본문 모두 이동 방향을 따라 슬라이드 (좌: 420px 폭, 우: 본문 폭) */}
+          <TransitionPanel
+            className={s.mIllo}
+            activeIndex={page}
+            direction={direction}
+            variants={slideVariants(420)}
+          >
+            {pages.map((pg, i) => (
+              <pg.Illo key={i} dark={isDark} />
+            ))}
+          </TransitionPanel>
+          <div className={s.mText}>
+            <TransitionPanel
+              activeIndex={page}
+              direction={direction}
+              variants={slideVariants(360)}
+              style={{ flex: 1, minHeight: 0 }}
+            >
+              {pages.map((pg, i) => (
+                <div key={i}>
+                  <div className={`${s.head} ${s.mHead}`}>{pg.head}</div>
+                  {renderBody(pg)}
+                </div>
+              ))}
+            </TransitionPanel>
             {p.footnote && <div className={`${s.footnote} ${s.mFootnote}`}>{p.footnote}</div>}
             <div className={s.mFooter}>
               {page > 0 && (

@@ -16,6 +16,8 @@ interface PosterThumbProps {
   radius?: number | string
   /** false면 드롭섀도우를 뺀다(선택 링은 유지) — 기본 true */
   shadow?: boolean
+  /** 이미지가 실제로 그려진 시점 알림 — 등장 모션을 이미지에 맞춰 재생할 때 사용 */
+  onReady?: () => void
 }
 
 export function PosterThumb({
@@ -30,6 +32,7 @@ export function PosterThumb({
   onClick,
   radius,
   shadow = true,
+  onReady,
 }: PosterThumbProps) {
   const radiusVar = radius ?? (size === 'lg'
     ? 'var(--comp-poster-sheet-radius)'   /* 8px */
@@ -69,6 +72,10 @@ export function PosterThumb({
             src={src}
             alt={alt}
             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            /* 캐시된 이미지는 onLoad가 안 뜰 수 있어 complete도 함께 본다 */
+            ref={(node) => { if (node?.complete) onReady?.() }}
+            onLoad={onReady}
+            onError={onReady}
           />
         ) : (
           <div

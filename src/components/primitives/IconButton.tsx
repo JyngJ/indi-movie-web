@@ -2,13 +2,15 @@
 
 import { ButtonHTMLAttributes, ReactNode } from 'react'
 
-/** IconButton 2.0 (2026-08-08 피그마 확정) — 아이콘 전용 버튼 49곳 통합.
- *  variant: ghost(투명 r8 — 뒤로가기·지우기류) / overlay(black 6% 원형 — 닫기 ×)
- *  size: 32 / 44. 상태: ghost는 hover-raise 계열(투명→200→300), overlay는 state-layer(6→10→14%).
+/** IconButton 2.0 — 아이콘 전용 버튼.
+ *  variant: ghost(투명 — 뒤로가기·지우기류) / overlay(black 6% 면 — 닫기 ×)
+ *  shape: square(r8 — 기본, 버튼과 나란히 설 때) / round(원형 — 단독 배치·스크림 위)
+ *  size: 32 / 44. 상태: ghost는 hover-raise 계열, overlay는 state-layer(6→10→14%).
  *  aria-label 필수 — 아이콘만 있어서 접근성 라벨 없으면 안 됨. */
 
 interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'ghost' | 'overlay'
+  shape?: 'square' | 'round'
   size?: 32 | 44
   'aria-label': string
   children: ReactNode
@@ -16,12 +18,12 @@ interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles = {
   ghost: `
-    rounded-[var(--comp-btn-radius)] bg-transparent
+    bg-transparent
     hover:bg-[var(--color-surface-raised)]
     active:bg-[var(--color-neutral-300)]
   `,
   overlay: `
-    rounded-full bg-[var(--color-surface-overlay)]
+    bg-[var(--color-surface-overlay)]
     hover:bg-[var(--color-surface-overlay-hover)]
     active:bg-[var(--color-surface-overlay-pressed)]
   `,
@@ -29,6 +31,7 @@ const variantStyles = {
 
 export function IconButton({
   variant = 'ghost',
+  shape = 'square',
   size = 44,
   children,
   className = '',
@@ -40,6 +43,7 @@ export function IconButton({
       type="button"
       className={`
         inline-flex items-center justify-center shrink-0
+        ${shape === 'round' ? 'rounded-full' : 'rounded-[var(--comp-btn-radius)]'}
         text-[var(--color-text-body)] transition-colors duration-150 cursor-pointer
         ${variantStyles[variant]}
         ${className}

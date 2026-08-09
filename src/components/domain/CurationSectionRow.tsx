@@ -10,6 +10,7 @@ import { withFlag } from '@/lib/nations'
 import type { Movie } from '@/types/api'
 import { GenreChip, SectionHeader, CardContainer, ScrollNavButton } from '@/components/primitives'
 import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
+import { Carousel, CarouselContent, CarouselItem, useCarousel, RevealItem, RevealGroup } from '@/components/motion'
 
 interface CurationSectionRowProps {
   title: string
@@ -212,6 +213,7 @@ function MovieCard({
   caption,
   customBottomInfo,
   onClick,
+  revealIndex,
 }: {
   movie: Movie
   width: number
@@ -221,8 +223,11 @@ function MovieCard({
   caption?: string
   customBottomInfo?: React.ReactNode
   onClick?: () => void
+  /** 행 안에서의 순번 — 등장 모션 계단 간격용 */
+  revealIndex: number
 }) {
   const cardRef = useRef<HTMLDivElement>(null)
+  const [posterReady, setPosterReady] = useState(!movie.posterUrl)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [hovered, setHovered] = useState(false)
   const [popupPos, setPopupPos] = useState<{ x: number; y: number } | null>(null)
@@ -245,8 +250,11 @@ function MovieCard({
 
   return (
     <>
-      <div
+      <RevealItem
         ref={cardRef}
+        preset="slide"
+        ready={posterReady}
+        staggerIndex={revealIndex}
         onClick={onClick}
         style={{ display: 'flex', flexDirection: 'column', gap: 8, width, flexShrink: 0, cursor: onClick ? 'pointer' : undefined }}
       >
@@ -263,7 +271,7 @@ function MovieCard({
             position: 'relative',
           }}
         >
-          <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} shadow={false} />
+          <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} shadow={false} onReady={() => setPosterReady(true)} />
           {daysLeft != null && (
             <span style={{
               position: 'absolute', top: 6, right: 6,
@@ -281,7 +289,7 @@ function MovieCard({
         </div>
 
         <MovieCardInfo movie={movie} isDesktop={isDesktop} caption={caption} customBottomInfo={customBottomInfo} />
-      </div>
+      </RevealItem>
 
       {popupPos && isDesktop && (
         <HoverPopup movie={movie} x={popupPos.x} y={popupPos.y} />
@@ -309,36 +317,7 @@ export function CurationSectionRow({
 }: CurationSectionRowProps) {
   const { width, height } = isDesktop ? POSTER_SIZE.desktop : POSTER_SIZE.mobile
   const scaleBleed = Math.ceil(height * 0.04)
-  const [rowHovered, setRowHovered] = useState(false)
   const gap = isDesktop ? 16 : 10
-  const scrollAmount = (width + gap) * 3
-
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const [canScrollLeft, setCanScrollLeft] = useState(false)
-  const [canScrollRight, setCanScrollRight] = useState(false)
-  // smooth scroll 애니메이션 도중 재클릭하면 거리가 계속 누적돼 "안 눌렸나?" 하고 연타하게 됨 — 진행 중엔 무시
-  const scrollingRef = useRef(false)
-
-  function updateScrollEdge() {
-    const el = scrollRef.current
-    if (!el) return
-    setCanScrollLeft(el.scrollLeft > 4)
-    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4)
-  }
-
-  function scrollByAmount(delta: number) {
-    const el = scrollRef.current
-    if (!el || scrollingRef.current) return
-    scrollingRef.current = true
-    el.scrollBy({ left: delta, behavior: 'smooth' })
-    window.setTimeout(() => {
-      scrollingRef.current = false
-    }, 350)
-  }
-
-  useEffect(() => {
-    updateScrollEdge()
-  }, [movies])
 
   const sectionRef = useRef<HTMLElement | null>(null)
   const setSectionRef = (node: HTMLElement | null) => { sectionRef.current = node }
@@ -407,11 +386,6 @@ export function CurationSectionRow({
   // 2.0: 헤더 우측 버튼 폐기 — 스크롤 행 hover 시 좌/우 가장자리 오버레이 (PC 전용)
   const posterMidY = scaleBleed + 8 + height / 2
 
-  // PC: 더 스크롤할 방향만 가장자리 페이드 — 좁게(24px) 모서리만 눅임 (넓으면 캡션이 유령글자 됨)
-  const rowMask = isDesktop
-    ? `linear-gradient(90deg, ${canScrollLeft ? 'transparent 0, #000 24px' : '#000 0'}, ${canScrollRight ? '#000 calc(100% - 24px), transparent 100%' : '#000 100%'})`
-    : undefined
-
   return (
     <section ref={setSectionRef} id={id} style={{ paddingTop: noHeader ? 0 : (isDesktop ? 48 : 32) }}>
       {!noHeader && (
@@ -419,43 +393,94 @@ export function CurationSectionRow({
           <SectionHeader title={title} description={description} isDesktop={isDesktop} />
         </div>
       )}
-      <div
-        style={{ position: 'relative', overflowX: 'clip' }}   /* 음수 마진 행이 페이지 가로 스크롤 안 만들게 */
-        onMouseEnter={isDesktop ? () => setRowHovered(true) : undefined}
-        onMouseLeave={isDesktop ? () => setRowHovered(false) : undefined}
+      {/* 가로 스크롤은 embla(Carousel)가 담당 — 드래그 관성 + 스냅.
+          기존 네이티브 overflow 스크롤 대비: 버튼 연타 시 거리 누적 문제가 사라진다(embla가 진행 중 요청을 흡수) */}
+      <Carousel
+        options={{
+          align: 'start',
+          containScroll: 'trimSnaps',
+          dragFree: true,      /* 자유 드래그 — 포스터 행은 칸 단위 스냅보다 훑는 느낌이 맞다 */
+          slidesToScroll: 3,   /* 화살표 1회 = 3편 (기존 scrollAmount와 동일) */
+        }}
       >
-        {isDesktop && rowHovered && canScrollLeft && (
-          <ScrollNavButton
-            direction="left"
-            style={{ top: posterMidY, transform: 'translateY(-50%)', zIndex: 3 }}
-            onClick={() => scrollByAmount(-scrollAmount)}
-          />
-        )}
-        {isDesktop && rowHovered && canScrollRight && (
-          <ScrollNavButton
-            direction="right"
-            style={{ top: posterMidY, transform: 'translateY(-50%)', zIndex: 3 }}
-            onClick={() => scrollByAmount(scrollAmount)}
-          />
-        )}
-        <div
-          ref={scrollRef}
-          onScroll={updateScrollEdge}
-          className="no-scrollbar"
-          style={{
-            display: 'flex',
-            gap,
-            overflowX: 'auto',
-            /* 호버 스케일 여유(scaleBleed)는 음수 마진으로 상쇄 — 포스터 시작선 = 거터 24 */
-            padding: `${scaleBleed + 8}px calc(${scaleBleed}px + var(--gutter-sheet))`,
-            margin: `0 ${-scaleBleed}px`,
-            WebkitMaskImage: rowMask, maskImage: rowMask,
-          }}
-        >
-          {movies.map((movie) => (
+        <CurationRowTrack
+          movies={movies}
+          width={width}
+          height={height}
+          gap={gap}
+          scaleBleed={scaleBleed}
+          isDesktop={isDesktop}
+          posterMidY={posterMidY}
+          posterBadges={posterBadges}
+          movieCaptions={movieCaptions}
+          customBottomInfos={customBottomInfos}
+          onMovieClick={onMovieClick}
+        />
+      </Carousel>
+    </section>
+  )
+}
+
+/* ── 캐러셀 트랙 — embla 상태(끝 도달)를 읽어 가장자리 페이드·화살표를 그린다 ── */
+function CurationRowTrack({
+  movies, width, height, gap, scaleBleed, isDesktop, posterMidY,
+  posterBadges, movieCaptions, customBottomInfos, onMovieClick,
+}: {
+  movies: Movie[]
+  width: number
+  height: number
+  gap: number
+  scaleBleed: number
+  isDesktop: boolean
+  posterMidY: number
+  posterBadges?: Map<string, number>
+  movieCaptions?: Map<string, string>
+  customBottomInfos?: Map<string, React.ReactNode>
+  onMovieClick?: (movieId: string) => void
+}) {
+  const { canScrollPrev, canScrollNext, scrollPrev, scrollNext } = useCarousel()
+  const [rowHovered, setRowHovered] = useState(false)
+
+  // PC: 더 스크롤할 방향만 가장자리 페이드 — 좁게(24px) 모서리만 눅임 (넓으면 캡션이 유령글자 됨)
+  const rowMask = isDesktop
+    ? `linear-gradient(90deg, ${canScrollPrev ? 'transparent 0, #000 24px' : '#000 0'}, ${canScrollNext ? '#000 calc(100% - 24px), transparent 100%' : '#000 100%'})`
+    : undefined
+
+  return (
+    <div
+      style={{ position: 'relative', overflowX: 'clip' }}   /* 음수 마진 행이 페이지 가로 스크롤 안 만들게 */
+      onMouseEnter={isDesktop ? () => setRowHovered(true) : undefined}
+      onMouseLeave={isDesktop ? () => setRowHovered(false) : undefined}
+    >
+      {isDesktop && rowHovered && canScrollPrev && (
+        <ScrollNavButton
+          direction="left"
+          style={{ top: posterMidY, transform: 'translateY(-50%)', zIndex: 3 }}
+          onClick={scrollPrev}
+        />
+      )}
+      {isDesktop && rowHovered && canScrollNext && (
+        <ScrollNavButton
+          direction="right"
+          style={{ top: posterMidY, transform: 'translateY(-50%)', zIndex: 3 }}
+          onClick={scrollNext}
+        />
+      )}
+      <RevealGroup>
+      <CarouselContent
+        viewportStyle={{
+          /* 호버 스케일 여유(scaleBleed)는 음수 마진으로 상쇄 — 포스터 시작선 = 거터 24 */
+          padding: `${scaleBleed + 8}px calc(${scaleBleed}px + var(--gutter-sheet))`,
+          margin: `0 ${-scaleBleed}px`,
+          WebkitMaskImage: rowMask, maskImage: rowMask,
+        }}
+        style={{ gap }}
+      >
+        {movies.map((movie, i) => (
+          <CarouselItem key={movie.id}>
             <MovieCard
-              key={movie.id}
               movie={movie}
+              revealIndex={Math.min(i, 5)}
               width={width}
               height={height}
               isDesktop={isDesktop}
@@ -464,9 +489,10 @@ export function CurationSectionRow({
               customBottomInfo={customBottomInfos?.get(movie.id)}
               onClick={onMovieClick ? () => onMovieClick(movie.id) : undefined}
             />
-          ))}
-        </div>
-      </div>
-    </section>
+          </CarouselItem>
+        ))}
+      </CarouselContent>
+      </RevealGroup>
+    </div>
   )
 }

@@ -457,7 +457,7 @@
   position: relative;
   overflow: hidden;
   background: var(--ob-land);
-  animation: obSlideIn 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+  /* 전환 모션은 TransitionPanel(motion)이 담당 — CSS obSlideIn 폐지 */
 }
 
 .mText {
@@ -466,7 +466,6 @@
   padding: 56px 48px 40px;
   display: flex;
   flex-direction: column;
-  animation: obSlideIn 0.34s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .mSkip {
@@ -603,16 +602,6 @@
   }
 }
 
-@keyframes obSlideIn {
-  from {
-    opacity: 0;
-    transform: translateX(14px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
 
 /* ── 온보딩 밖 재사용(지역 SEO 랜딩) — 지도 일러스트 색 변수 공급 래퍼 ── */
 .illoVars {

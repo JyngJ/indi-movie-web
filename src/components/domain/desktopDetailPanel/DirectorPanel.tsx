@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useMovies, useActiveMovieIds } from '@/lib/supabase/queries'
-import { Toast, SortToggle } from '@/components/primitives'
+import { Toast, SortToggle, Button } from '@/components/primitives'
 import { PanelShell } from './PanelShell'
 import { IcoMap, IcoChevronRight, IcoChevronDown } from './icons'
 
@@ -62,23 +62,15 @@ export function DirectorPanel({
       </div>
 
       <div style={{ padding: '16px var(--gutter) 0' }}>
-        <button
+        <Button
+          variant="secondary"
+          size="md"
+          fullWidth
           onClick={() => onDirectorFilterOnMap(directorName)}
-          style={{
-            width: '100%', height: 40,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            borderRadius: 12,
-            border: '1px solid var(--color-primary-base)',
-            backgroundColor: 'var(--color-primary-subtle-l)',
-            color: 'var(--color-primary-base)',
-            fontSize: 13,
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
         >
           <IcoMap />
           지도에서 필터로 보기
-        </button>
+        </Button>
       </div>
 
       {/* 정렬 + 목록 */}
