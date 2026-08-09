@@ -62,15 +62,37 @@ function T(chars, o = {}) {
 const CARD_W = 440, PAD = 24, INNER = CARD_W - PAD * 2
 
 function dots(activeIdx) {
-  const row = F('dots', { dir: 'H', gap: 4, pad: [0, 0, 0, 0], align: 'CENTER' })
+  // 온보딩 .dots 문법 그대로 — gap 1, 도트당 20×28 히트 래퍼, 도트 7 / 활성 20 pill
+  const row = F('dots', { dir: 'H', gap: 1, pad: [0, 0, 0, 0], align: 'CENTER' })
   for (let i = 0; i < 2; i++) {
+    const wrap = F('dotBtn', { dir: 'H', pad: [0, 3, 0, 3], align: 'CENTER', mainAlign: 'CENTER', h: 28 })
     const d = figma.createRectangle()
     d.resize(i === activeIdx ? 20 : 7, 7)
     d.cornerRadius = 999
     d.fills = [paint(i === activeIdx ? 'primary/700' : 'neutral/200')]
-    row.appendChild(d)
+    wrap.appendChild(d)
+    row.appendChild(wrap)
   }
   return row
+}
+
+// 닫기 × — 코드의 IconButton ghost 32 대응, 카드 우상단 absolute
+function closeBtn(card) {
+  const b = F('close ×', { dir: 'H', align: 'CENTER', mainAlign: 'CENTER', w: 32, h: 32, r: 8 })
+  for (const rot of [45, -45]) {
+    const l = figma.createRectangle()
+    l.resize(14, 1.75)
+    l.cornerRadius = 1
+    l.fills = [paint('neutral/500')]
+    b.appendChild(l)
+    l.layoutPositioning = 'ABSOLUTE'
+    l.x = (32 - 14) / 2; l.y = (32 - 1.75) / 2
+    l.rotation = rot
+  }
+  card.appendChild(b)
+  b.layoutPositioning = 'ABSOLUTE'
+  b.x = CARD_W - 14 - 32
+  b.y = 14
 }
 
 function cardBase(name) {
@@ -201,6 +223,7 @@ section.name = SECTION_NAME
 page.appendChild(section)
 
 const cards = [step0(), step1(), step1bad(), thanks()]
+for (const c of cards) closeBtn(c)
 let x = 60
 for (const c of cards) { section.appendChild(c); c.x = x; c.y = 100; x += CARD_W + 40 }
 
@@ -214,7 +237,8 @@ note.characters = [
   '· 제목 display-h2(KIMM 20) — 구 17 Pretendard에서 승격. 단계 표시 = 온보딩 도트 문법(2개)',
   '· 선택지: h48 · surface-soft(150) r-control(12) · 선택 시 primary/100 + primary/700 1px + 체크 원',
   '· 푸터: step1 = primary 풀폭 다음 / step2 = [건너뛰기 text] [제출 primary flex] (온보딩 푸터 문법)',
-  '· 닫기 ×(우상단 IconButton ghost 32)는 코드 기존 유지 — 프레임 생략',
+  '· 닫기 × = 전 단계 우상단 고정 (IconButton ghost 32, top/right 14)',
+  '· 도트 = 온보딩 dots 문법 동일 (7px·활성 20 pill·히트 20×28·gap 1)',
   ...(kimmOK ? [] : ['⚠ KIMM_Bold 폰트 미로드 — 제목이 Pretendard로 렌더됨']),
 ].join('\n')
 note.fills = [{ type: 'SOLID', color: rgb('#726B65') }]
