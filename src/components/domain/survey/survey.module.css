@@ -1,6 +1,6 @@
 /* 재방문 설문 v2 (2026-08-09 피그마 TOBE) — 2.0 문법.
    카드 440·r-popover(16)·pad 24, 딤 rgba(20,15,10,0.42)(온보딩 스크림 동일),
-   선택지 h48 soft 면 r-control(12), 선택 시 primary 틴트 + 700 보더 + 체크. */
+   선택지 h48 raised 면 r-control(12), 선택 시 primary 틴트 + 700 보더 + 체크. */
 
 .overlay {
   position: fixed;
@@ -75,7 +75,7 @@
   padding: 0 var(--spacing-4);
   border: 1px solid transparent;
   border-radius: var(--radius-control);
-  background: var(--color-surface-soft);
+  background: var(--color-surface-raised);
   color: var(--color-text-body);
   font-size: var(--text-body);
   font-weight: 500;
