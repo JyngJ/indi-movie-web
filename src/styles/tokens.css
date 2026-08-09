@@ -231,7 +231,7 @@
   --comp-sheet-handle-radius: 2px;
 
   /* ── Filter UI (라이트 모드) ── */
-  --filter-chip-height:     36px;
+  --filter-chip-height:     32px;           /* 피그마 2.0/Chip h32 정합 (2026-08-09, 구 36) */
   --filter-chip-value:      #1F2747;           /* 칩 선택값 텍스트 (primary/900) */
   --filter-chip-open-text:  #1F2747;           /* 드롭다운 열림 칩 라벨 (primary/900) */
   --filter-chip-open-caret: var(--color-primary-hover-l);   /* 열림 캐럿 */

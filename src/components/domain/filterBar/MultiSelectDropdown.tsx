@@ -1,3 +1,4 @@
+import { Button } from '@/components/primitives'
 import { DropdownRow } from './DropdownRow'
 
 /* -- MultiSelectDropdown ----------------------------------------- */
@@ -47,16 +48,9 @@ export function MultiSelectDropdown({ options, selectedValues, setSelectedValues
           {selectedValues.length > 0 ? `${selectedValues.length}개 선택됨` : ''}
         </span>
         {selectedValues.length > 0 && (
-          <button
-            onClick={() => setSelectedValues([])}
-            style={{
-              background: 'none', border: 'none', padding: 0,
-              fontSize: 12, fontWeight: 500, color: 'var(--color-primary-base)',
-              cursor: 'pointer', minHeight: 'unset',
-            }}
-          >
+          <Button variant="text" size="sm" onClick={() => setSelectedValues([])}>
             모두 선택 해제
-          </button>
+          </Button>
         )}
       </div>
     </div>
