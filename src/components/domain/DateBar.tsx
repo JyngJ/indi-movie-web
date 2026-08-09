@@ -116,7 +116,7 @@ export function DateBar({ days, selectedDate, onSelectDate, onPrev, onNext, hasP
               type="button"
               data-rc="datebar-date"
               disabled={isDisabled}
-              className="flex flex-col items-center"
+              className={`flex flex-col items-center${!isDisabled && !active ? ' date-cell--hoverable' : ''}`}
               style={{
                 paddingTop: 'var(--comp-date-cell-pt)',
                 paddingBottom: 'var(--comp-date-cell-pb)',
