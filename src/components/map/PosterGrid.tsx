@@ -1,6 +1,7 @@
 'use client'
 
 import { PosterThumb } from '@/components/domain'
+import { BubbleTail } from '@/components/primitives'
 import { finiteNumber } from '@/lib/map/searchUtils'
 import { withFlag } from '@/lib/nations'
 import { dayOfWeek } from '@/lib/map/posterLogic'
@@ -28,6 +29,22 @@ export function MovieListCard({ movies }: { movies: TheaterPosterMovie[] }) {
         <div className="po-list-more">+{movies.length - 10}편 더</div>
       )}
     </div>
+  )
+}
+
+/** 카드 우상단 코너 칩 — "N편 일치" / "+N" 공용 문법 */
+function CornerChip({ children }: { children: React.ReactNode }) {
+  return (
+    <span style={{
+      backgroundColor: 'var(--color-primary-base)', color: 'var(--color-on-accent)',
+      borderRadius: 9999, padding: '4px 8px',
+      fontSize: 'var(--text-badge)', fontWeight: 700, lineHeight: 1,
+      whiteSpace: 'nowrap',
+      boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+      border: '1.5px solid var(--color-surface-bg)',
+    }}>
+      {children}
+    </span>
   )
 }
 
@@ -67,8 +84,10 @@ export function ScheduleRows({ days, showTimes = true }: {
   )
 }
 
-export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filtersActive = false, selected = false, posterW = 44, posterH = 66, allMovies, schedule, scheduleShowTimes = true, occurrenceCount, hideMatchChip = false }: {
+export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, matchCount, filtersActive = false, selected = false, posterW = 44, posterH = 66, allMovies, schedule, scheduleShowTimes = true, occurrenceCount, hideMatchChip = false }: {
   slots: PosterSlot[]
+  /** 슬롯에 못 담은 편수 — 우상단 "+N" 칩 */
+  overflowCount?: number
   tailDir?: 'up' | 'right'
   tailOffset?: number
   matchCount?: number
@@ -84,6 +103,7 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
 }) {
   const count = slots.length
   const scheduleMode = !!schedule && schedule.length > 0 && count === 1
+  const showMatchChip = !hideMatchChip && filtersActive && matchCount != null && matchCount > 0
   const perRow = count > 3 ? 3 : count
   const cardWidth = perRow * posterW + Math.max(0, perRow - 1) * 4 + 16
   const tailInset = 14
@@ -95,21 +115,16 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
   const tailBg = selected ? 'var(--color-primary-base)' : 'var(--color-surface-card)'
   const tailBorder = selected ? '1.5px solid rgba(0,0,0,0.14)' : '1.5px solid var(--color-border)'
 
-  const tailStyle: React.CSSProperties | null = tailDir === 'up' ? {
-    position: 'absolute', width: 10, height: 10,
-    backgroundColor: tailBg, borderTop: tailBorder, borderRight: tailBorder,
-    borderTopRightRadius: 2, top: -6, left: scheduleMode ? '50%' : tailX,
-    transform: 'translateX(-50%) rotate(45deg)', zIndex: 0, pointerEvents: 'none',
-  } : tailDir === 'right' ? {
-    position: 'absolute', width: 10, height: 10,
-    backgroundColor: tailBg, borderRight: tailBorder, borderBottom: tailBorder,
-    borderBottomRightRadius: 2, top: '50%', right: -6,
-    transform: 'translateY(-50%) rotate(45deg)', zIndex: 0, pointerEvents: 'none',
-  } : null
-
   return (
     <div style={{ position: 'relative', marginTop: 8 }}>
-      {tailStyle && <div style={tailStyle} />}
+      {tailDir && (
+        <BubbleTail
+          dir={tailDir}
+          offset={scheduleMode ? '50%' : tailX}
+          background={tailBg}
+          border={tailBorder}
+        />
+      )}
       <div style={{
         backgroundColor: selected ? 'var(--color-primary-base)' : 'var(--color-surface-card)',
         border: selected ? '1.5px solid rgba(0,0,0,0.14)' : '1.5px solid var(--color-border)',
@@ -120,16 +135,19 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
         position: 'relative',
         zIndex: 1,
       }}>
-        {!hideMatchChip && filtersActive && matchCount != null && matchCount > 0 && (
+        {/* 코너 칩 — 필터 일치수 · 넘친 편수. 둘 다면 가로로 붙는다 */}
+        {(showMatchChip || overflowCount > 0) && (
           <div style={{
-            position: 'absolute', top: -8, right: -8,
-            backgroundColor: 'var(--color-primary-base)', color: 'var(--color-on-accent)',
-            borderRadius: 9999, padding: '4px 8px', fontSize: 10, fontWeight: 700,
-            zIndex: 10, whiteSpace: 'nowrap',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
-            border: '1.5px solid var(--color-surface-bg)',
+            position: 'absolute', top: -8, right: -8, zIndex: 10,
+            display: 'flex', alignItems: 'center', gap: 4,
           }}>
-            {matchCount}편 일치
+            {showMatchChip && <CornerChip>{matchCount}편 일치</CornerChip>}
+            {overflowCount > 0 && (
+              <span className="po-wrap" style={{ display: 'inline-flex' }}>
+                <CornerChip>+{overflowCount}</CornerChip>
+                {allMovies && allMovies.length > 0 && <MovieListCard movies={allMovies} />}
+              </span>
+            )}
           </div>
         )}
         {scheduleMode ? (
@@ -176,23 +194,7 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
                 const slot = slots[idx]
                 if (!slot) return null
                 return (
-                  slot.countLabel ? (
-                    <div key={idx} className="po-wrap" style={{ position: 'relative', width: posterW, height: posterH }}>
-                      <div style={{
-                        width: posterW, height: posterH,
-                        borderRadius: 'var(--radius-badge)',  /* 지도 포스터 예외 — 최소 라운딩 */
-                        backgroundColor: 'var(--color-primary-base)', color: 'var(--color-on-accent)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 'var(--text-subtitle)', fontWeight: 800,
-                        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.18)',
-                        whiteSpace: 'nowrap',
-                      }}>
-                        {slot.countLabel}
-                      </div>
-                      {allMovies && allMovies.length > 0 && <MovieListCard movies={allMovies} />}
-                    </div>
-                  ) : (
-                    <div key={idx} data-movie-id={slot.movie?.id} className={slot.overflow ? 'po-wrap' : 'pm-wrap'} style={{ position: 'relative', width: posterW, height: posterH }}>
+                    <div key={idx} data-movie-id={slot.movie?.id} className="pm-wrap" style={{ position: 'relative', width: posterW, height: posterH }}>
                       <PosterThumb
                         src={slot.movie?.posterUrl}
                         alt={slot.movie?.title ?? ''}
@@ -200,10 +202,9 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
                         height={posterH}
                         size="sm"
                         radius={4} /* 지도 포스터 예외 — 최소 라운딩(--radius-badge 값) */
-                        overflow={slot.overflow}
-                        highlighted={filtersActive && !slot.overflow && !!slot.movie?.matchesFilter}
+                        highlighted={filtersActive && !!slot.movie?.matchesFilter}
                       />
-                      {slot.movie && !slot.overflow && (
+                      {slot.movie && (
                         <div className="pm-tip">
                           <div className="pm-tip-title">{slot.movie.title}</div>
                           {slot.movie.director?.[0] && (
@@ -234,9 +235,7 @@ export function PosterGrid({ slots, tailDir, tailOffset = 0, matchCount, filters
                           <div className="pm-tip-tail" />
                         </div>
                       )}
-                      {slot.overflow && allMovies && allMovies.length > 0 && <MovieListCard movies={allMovies} />}
                     </div>
-                  )
                 )
               })}
             </div>
