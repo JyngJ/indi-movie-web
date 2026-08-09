@@ -51,6 +51,7 @@ export function ShowtimeCell({
           ? '1.5px solid var(--color-primary-base)'
           : (isSoldout || isEnded) ? '1px solid transparent' : '1px solid var(--color-border)',
         position: 'relative',
+        overflow: isNowPlaying ? 'hidden' : undefined,
         fontFamily: 'var(--font-sans)',
         cursor: isClickable ? 'pointer' : 'default',
         transition: 'border-color 150ms ease, background-color 150ms ease',
@@ -59,6 +60,12 @@ export function ShowtimeCell({
       role={isClickable ? 'button' : undefined}
       tabIndex={isClickable ? 0 : undefined}
     >
+      {/* 상영중 — 좌상단 영사기 빛 (globals .projector-beam, 콘텐츠 아래 깔림) */}
+      {isNowPlaying && (
+        <span className="projector-beam" aria-hidden>
+          <i /><i /><i />
+        </span>
+      )}
 
       {/* 시간 줄 — 피그마 time-row: 시작시간 + (심야면) 달, space-between */}
       <div className="flex items-center justify-between" style={{ color: (isSoldout || isEnded) ? 'var(--color-text-placeholder)' : 'var(--color-text-primary)' }}>

@@ -459,6 +459,13 @@ img {
   animation: slideInFromRight 220ms ease both;
 }
 
+/* 모핑 다이얼로그 표면 — box-shadow를 인라인 style로 주면 motion의 레이아웃 스케일
+   보정이 var()를 숫자로 못 읽어 `NaN`을 뱉고 애니메이션이 멈춘다. 클래스로 분리한다. */
+.morph-dialog-surface {
+  background-color: var(--color-surface-card);
+  box-shadow: var(--shadow-sheet);
+}
+
 /* prefers-reduced-motion 지원 */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -466,4 +473,74 @@ img {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ── 영사기 빛 — ShowtimeCell 상영중 상태 (2026-08-09 확정) ──
+   좌상단 렌즈 원점에서 오커 쐐기 2겹 + 얇은 흰 하이라이트.
+   플리커(불규칙 스텝) + 스웨이(한 몸, 위상차 0.1s). 색은 --color-warning(#B9800E) 계열 rgba. */
+.projector-beam {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  width: 150%;
+  height: 150%;
+  pointer-events: none;
+  animation: projFlick 2.6s steps(1, end) infinite;
+}
+.projector-beam i {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+  display: block;
+  animation: projSway 5.2s ease-in-out infinite;
+}
+.projector-beam i:nth-child(2) { animation-delay: -0.15s; }
+.projector-beam i:nth-child(3) { animation-delay: -0.08s; }
+.projector-beam i::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, rgba(185, 128, 14, 0.34) 0%, rgba(185, 128, 14, 0.10) 42%, rgba(185, 128, 14, 0) 72%);
+  clip-path: polygon(0 0, 100% 22%, 100% 46%, 0 10%);
+}
+.projector-beam i:nth-child(2)::before {
+  clip-path: polygon(0 0, 100% 44%, 84% 86%, 0 18%);
+  background: linear-gradient(130deg, rgba(185, 128, 14, 0.18) 0%, rgba(185, 128, 14, 0.05) 50%, rgba(185, 128, 14, 0) 76%);
+}
+.projector-beam i:nth-child(3)::before {
+  clip-path: polygon(0 0, 100% 26%, 100% 33%, 0 4%);
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.35) 45%, rgba(255, 255, 255, 0) 75%);
+}
+.projector-beam::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(253, 241, 216, 0.95) 0%, rgba(185, 128, 14, 0.55) 45%, rgba(185, 128, 14, 0) 75%);
+}
+@keyframes projFlick {
+  0%, 100% { opacity: 1; }
+  7% { opacity: 0.82; }
+  9% { opacity: 0.97; }
+  23% { opacity: 0.9; }
+  31% { opacity: 1; }
+  44% { opacity: 0.84; }
+  47% { opacity: 0.98; }
+  66% { opacity: 0.92; }
+  74% { opacity: 1; }
+  88% { opacity: 0.87; }
+}
+@keyframes projSway {
+  0%, 100% { transform: rotate(-1.1deg); }
+  50% { transform: rotate(1.1deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .projector-beam,
+  .projector-beam i { animation: none; }
 }
