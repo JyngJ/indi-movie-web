@@ -279,8 +279,7 @@ function gvExpandedStack() {
     effects: [shadow('#000000', 0.15, 0, 4, 16)],
     clip: true,
   })
-  const hdr = frame('header', W, 32, { fill: rgba(HEX['gv/900'], 0.078) })
-  hdr.fills = [{ type: 'SOLID', color: rgb(HEX['gv/900']), opacity: 0.078 }]  // accent+14(hex alpha)
+  const hdr = frame('header', W, 32, { fill: { type: 'SOLID', color: rgb(HEX['gv/900']), opacity: 0.078 } })  // accent+14(hex alpha)
   f.appendChild(hdr); hdr.x = 0; hdr.y = 0
   const hb = frame('hdrBorder', W, 1, { fill: paint(['neutral/200', 'border'], HEX['neutral/200']) })
   f.appendChild(hb); hb.x = 0; hb.y = 31
