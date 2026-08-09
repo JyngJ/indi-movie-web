@@ -9,7 +9,7 @@ import { PosterThumb } from '@/components/domain/PosterThumb'
 import { useDirectorProfile } from '@/lib/supabase/queries'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { withFlag } from '@/lib/nations'
-import { ScrollNavButton } from '@/components/primitives'
+import { Button, ScrollNavButton } from '@/components/primitives'
 import { HoverPopup } from '@/components/domain/CurationSectionRow'
 import { MapPin } from 'lucide-react'
 
@@ -145,9 +145,6 @@ function LeftPanel({
     return () => ro.disconnect()
   }, [])
 
-  const [dirBtnHovered, setDirBtnHovered] = useState(false)
-  const [theaterBtnHovered, setTheaterBtnHovered] = useState(false)
-
   const avatarRow = (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
       <div style={{
@@ -180,23 +177,14 @@ function LeftPanel({
   )
 
   const directorButton = onDirectorClick && (
-    <button
+    <Button
+      variant="secondary"
+      size="sm"
       onClick={onDirectorClick}
-      onMouseEnter={() => setDirBtnHovered(true)}
-      onMouseLeave={() => setDirBtnHovered(false)}
-      style={{
-        ...(wide ? { flexShrink: 0 } : { marginTop: 'auto' }),
-        minHeight: 32, padding: '0 16px', lineHeight: 1, whiteSpace: 'nowrap', borderRadius: 'var(--radius-button)',
-        border: '1px solid var(--color-border)',
-        background: dirBtnHovered ? 'var(--color-surface-raised)' : 'var(--color-surface-card)',
-        color: 'var(--color-text-body)',
-        transition: 'background var(--transition-fast)',
-        fontSize: 'var(--text-meta)', fontWeight: 600, cursor: 'pointer',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-1)',
-      }}
+      style={wide ? { flexShrink: 0 } : { marginTop: 'auto' }}
     >
       감독 상세 보기
-    </button>
+    </Button>
   )
 
   return (
@@ -255,22 +243,14 @@ function LeftPanel({
           </div>
         </div>
         {onTheaterClick && (
-          <button
+          <Button
+            variant="primary"
+            size="sm"
             onClick={onTheaterClick}
-            onMouseEnter={() => setTheaterBtnHovered(true)}
-            onMouseLeave={() => setTheaterBtnHovered(false)}
-            style={{
-              ...(wide ? { flexShrink: 0 } : {}),
-              minHeight: 32, padding: '0 16px', lineHeight: 1, whiteSpace: 'nowrap', borderRadius: 'var(--radius-button)', border: 'none',
-              background: theaterBtnHovered ? 'var(--color-primary-hover-l)' : 'var(--color-primary-base)',
-              color: 'var(--color-on-accent)',
-              transition: 'background var(--transition-fast)',
-              fontSize: 'var(--text-meta)', fontWeight: 600, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-1)',
-            }}
+            style={wide ? { flexShrink: 0 } : undefined}
           >
             영화관 보기
-          </button>
+          </Button>
         )}
       </div>
     </div>
@@ -386,20 +366,13 @@ export function DirectorSpecialSection({
           </span>
         </div>
         {onTheaterClick && (
-          <button
-            className="hover-raise"
+          <Button
+            variant="text"
+            size="sm"
             onClick={() => onTheaterClick(theater.id)}
-            style={{
-              border: 'none', background: 'transparent', padding: 'var(--spacing-3) var(--spacing-2)',
-              borderRadius: 'var(--radius-button)',
-              fontSize: 'var(--text-body)', fontWeight: 500,
-              /* 모바일: primary/100 틴트 바 위 — neutral은 물빠져 보여서 primary로 */
-              color: isDesktop ? 'var(--color-text-sub)' : 'var(--color-primary-base)',
-              cursor: 'pointer', whiteSpace: 'nowrap', minHeight: 'auto',
-            }}
           >
             영화관 보기 ›
-          </button>
+          </Button>
         )}
       </div>
       {filmScroll}

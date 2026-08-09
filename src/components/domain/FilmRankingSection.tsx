@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { PosterThumb } from '@/components/domain/PosterThumb'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { withFlag } from '@/lib/nations'
-import { ScrollNavButton } from '@/components/primitives'
+import { Button, ScrollNavButton } from '@/components/primitives'
 import { HoverPopup } from '@/components/domain/CurationSectionRow'
 import { MapPin, Film, Eye, Scale, Clock, Info, TrendingUp, TrendingDown } from 'lucide-react'
 import type { FilmRankingEntry } from '@/lib/supabase/queries'
@@ -246,16 +246,9 @@ export function FilmRankingSection({ weekStart, rankings, movies, isDesktop, onM
               onMouseEnter={() => setInfoHover(true)}
               onMouseLeave={() => setInfoHover(false)}
             >
-              <button
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  padding: 4, color: 'var(--color-text-caption)', fontSize: 'var(--text-body)',
-                  display: 'flex', alignItems: 'center',
-                }}
-                aria-label="랭킹 기준 보기"
-              >
+              <Button variant="text" size="sm" aria-label="랭킹 기준 보기">
                 <Info size={16} strokeWidth={1.75} color="currentColor" />
-              </button>
+              </Button>
               {infoHover && <InfoTooltip weekStart={weekStart} />}
             </div>
           </div>
