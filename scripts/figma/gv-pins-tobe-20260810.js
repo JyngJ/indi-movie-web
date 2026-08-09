@@ -226,18 +226,24 @@ async function chip({ festival = false, selected = false } = {}) {
 }
 
 /* ── 컴포넌트 세트 만들기 ─────────────────────────────────── */
-async function toComponent(node, name) {
-  const c = figma.createComponent()
+/** 프레임 → 컴포넌트. createComponentFromNode가 패딩·fill·radius·이펙트까지 그대로 보존한다.
+ *  (자식만 옮기는 방식은 프레임 속성이 날아가 칩 패딩이 사라졌었다) */
+function toComponent(node, name) {
+  let c
+  if (typeof figma.createComponentFromNode === 'function') {
+    c = figma.createComponentFromNode(node)
+  } else {
+    c = figma.createComponent()
+    c.resize(node.width, node.height)
+    for (const k of ['layoutMode', 'itemSpacing', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
+      'primaryAxisAlignItems', 'counterAxisAlignItems', 'primaryAxisSizingMode', 'counterAxisSizingMode',
+      'fills', 'strokes', 'strokeWeight', 'strokeAlign', 'cornerRadius', 'effects', 'clipsContent', 'opacity']) {
+      try { c[k] = node[k] } catch { /* 일부 속성은 레이아웃 모드에 따라 불가 */ }
+    }
+    for (const child of [...node.children]) c.appendChild(child)
+    node.remove()
+  }
   c.name = name
-  c.layoutMode = node.layoutMode
-  c.itemSpacing = node.itemSpacing
-  c.counterAxisAlignItems = node.counterAxisAlignItems
-  c.primaryAxisSizingMode = 'AUTO'
-  c.counterAxisSizingMode = 'AUTO'
-  c.fills = []
-  c.clipsContent = false
-  for (const child of [...node.children]) c.appendChild(child)
-  node.remove()
   return c
 }
 
@@ -261,7 +267,7 @@ for (const stack of [false, true]) {
   for (const selected of [false, true]) {
     const node = await pin({ selected, stack })
     section.appendChild(node)
-    pinComps.push(await toComponent(node, `Count=${stack ? 'stack' : 'single'}, State=${selected ? 'selected' : 'default'}`))
+    pinComps.push(toComponent(node, `Count=${stack ? 'stack' : 'single'}, State=${selected ? 'selected' : 'default'}`))
   }
 }
 const pinSet = figma.combineAsVariants(pinComps, section)
@@ -280,7 +286,7 @@ for (const festival of [false, true]) {
   for (const selected of [false, true]) {
     const node = await chip({ festival, selected })
     section.appendChild(node)
-    chipComps.push(await toComponent(node, `Type=${festival ? 'festival' : 'gv'}, State=${selected ? 'selected' : 'default'}`))
+    chipComps.push(toComponent(node, `Type=${festival ? 'festival' : 'gv'}, State=${selected ? 'selected' : 'default'}`))
   }
 }
 const chipSet = figma.combineAsVariants(chipComps, section)
