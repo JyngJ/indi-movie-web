@@ -3,7 +3,7 @@ import { isFestivalGroup } from '@/data/gv-events'
 
 /* 피그마 2.0/GvPin · 2.0/GvChip (2026-08-10 확정)
    지도 위에 표(카드 그리드·확장 스택)를 띄우던 방식을 폐지하고,
-   다건은 "카드가 여러 장 쌓인" 모습 + 우상단 +N 배지 하나로 끝낸다. */
+   다건이어도 카드는 한 장 — 개수는 우상단 +N 배지 하나로 끝낸다. */
 
 export const GV_MARKER_STEM_H = 28
 export const GV_MARKER_DOT_D = 8
@@ -12,10 +12,6 @@ export const GV_MARKER_DOT_D = 8
 const CARD_PAD = 12
 const ROW_GAP = 4
 const CARD_H = CARD_PAD * 2 + 22 + ROW_GAP + 21 + ROW_GAP + 18   // 93
-/** 쌓임: 뒤 카드 2장이 아래로 6px씩 내려가며 좌우로 8px씩 좁아진다 */
-const STACK_STEP_Y = 6
-const STACK_INSET_X = 8
-const GHOST_H = 40
 const CHIP_H = 30
 
 /** 카드 폭 — 지도 밀도를 위해 줌이 낮을수록 좁게 (문자 크기는 고정) */
@@ -30,14 +26,12 @@ function chipWidth(isFestival: boolean): number {
   return isFestival ? 160 : 112
 }
 
-const isStacked = (count: number) => count > 1
-
-export function computeGvSlotH(count: number, zoom: number, expanded: boolean, _selected = false, isFestival = false): number {
-  if (zoom <= 13 && !expanded) return isFestival ? CHIP_H : CHIP_H
-  return isStacked(count) ? CARD_H + STACK_STEP_Y * 2 : CARD_H
+export function computeGvSlotH(_count: number, zoom: number, expanded: boolean, _selected = false, _isFestival = false): number {
+  if (zoom <= 13 && !expanded) return CHIP_H
+  return CARD_H
 }
 
-export function computeGvSlotW(count: number, zoom: number, expanded: boolean, _selected = false, isFestival = false): number {
+export function computeGvSlotW(_count: number, zoom: number, expanded: boolean, _selected = false, isFestival = false): number {
   if (zoom <= 13 && !expanded) return chipWidth(isFestival)
   return cardWidth(zoom)
 }
@@ -139,24 +133,6 @@ function GvCard({ ev, extra, selected, width }: {
   )
 }
 
-/** 뒤에 깔리는 실루엣 — 내용 없이 카드 모양만 */
-function GvGhostCard({ width, offsetY, selected }: { width: number; offsetY: number; selected?: boolean }) {
-  return (
-    <div style={{
-      position: 'absolute',
-      left: '50%',
-      transform: 'translateX(-50%)',
-      top: CARD_H - GHOST_H + offsetY,
-      width,
-      height: GHOST_H,
-      borderRadius: 'var(--radius-control)',
-      background: 'var(--color-surface-card)',
-      border: selected ? '2px solid var(--color-primary-base)' : '1.5px solid var(--color-border)',
-      boxShadow: selected ? 'var(--shadow-md)' : 'var(--shadow-sm)',
-    }} />
-  )
-}
-
 /* ── 메인 ────────────────────────────────────────────────────── */
 interface GvBottomSlotProps {
   events: GvEvent[]
@@ -174,16 +150,7 @@ export function GvBottomSlot({ events, zoom, expanded, theaterName, selected }: 
     return <GvCollapsedChip count={events.length} theaterName={theaterName} selected={selected} festivalTitle={festivalTitle} />
   }
 
-  const width = cardWidth(zoom)
-  const stacked = isStacked(events.length)
-  const card = <GvCard ev={events[0]} extra={events.length - 1} selected={selected} width={width} />
-  if (!stacked) return card
-
-  return (
-    <div style={{ position: 'relative', width, height: CARD_H + STACK_STEP_Y * 2 }}>
-      <GvGhostCard width={width - STACK_INSET_X * 2} offsetY={STACK_STEP_Y * 2} selected={selected} />
-      <GvGhostCard width={width - STACK_INSET_X} offsetY={STACK_STEP_Y} selected={selected} />
-      <div style={{ position: 'relative' }}>{card}</div>
-    </div>
-  )
+  /* 다건도 카드는 한 장 — 개수는 우상단 +N 배지가 말한다.
+     쌓인 실루엣은 지도 위(이미 포스터 카드가 떠 있다)에서 그림자 층만 늘려 노이즈가 됐다. */
+  return <GvCard ev={events[0]} extra={events.length - 1} selected={selected} width={cardWidth(zoom)} />
 }

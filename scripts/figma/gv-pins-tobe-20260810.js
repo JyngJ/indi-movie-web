@@ -3,8 +3,9 @@
 //    구 색이 붙던 문제 해소 (치환표는 _pin-common.md)
 //  · 배치: 섹션 절대 좌표 폐지 → 섹션 안 루트 오토 레이아웃 프레임 하나에 전부 쌓는다
 //  · 컴포넌트화는 createComponentFromNode — 자식만 옮기면 패딩이 날아가 칩이 찌그러진다
-//  방향(v2에서 확정): DS 카드·확장 스택 폐지, 다건은 카드가 쌓인 모습 + 우상단 +N
-//  세트: 2.0/GvPin (Count=single|stack × State=default|selected) · 2.0/GvChip (Type=gv|festival × State)
+//  방향: DS 카드·확장 스택 폐지. 다건이어도 카드는 한 장 — 개수는 우상단 +N 배지만.
+//    (쌓인 실루엣은 지도 위에서 그림자 층만 늘려 노이즈가 돼 폐기)
+//  세트: 2.0/GvPin (Count=single|multi × State=default|selected) · 2.0/GvChip (Type=gv|festival × State)
 // Scripter에서 Run. 기존 'GV 핀 — 개선안' 섹션은 교체된다.
 
 const report = []
@@ -133,13 +134,9 @@ function toComponent(node, name) {
 
 /* ── 규격 ────────────────────────────────────────────────────
    카드 폭 168 · 패딩 12 · 행 간격 4 · r12(control)
-   타이포: 배지 2.0/label(10) · 시간·감독 2.0/meta(12) · 제목 2.0/body-strong(14)
-   쌓임: 뒤 카드 2장이 아래로 6·12px 내려가며 좌우로 8·16px 좁아진다 */
+   타이포: 배지 2.0/label(10) · 시간·감독 2.0/meta(12) · 제목 2.0/body-strong(14) */
 const CARD_W = 168
 const CARD_PAD = 12
-const STACK_STEP_Y = 6
-const STACK_INSET_X = 8
-const GHOST_H = 40
 const STEM_H = 28
 const DOT_D = 8
 
@@ -151,13 +148,12 @@ async function badge(label) {
 }
 
 /** 카드 한 장 */
-async function card({ selected = false, extra = 0, ghost = false, width = CARD_W } = {}) {
-  const c = F(ghost ? 'card/뒤' : 'card', {
-    dir: 'V', gap: 4, pad: ghost ? 0 : CARD_PAD, fill: 'white', r: 12, w: width, h: ghost ? GHOST_H : undefined,
+async function card({ selected = false, extra = 0, width = CARD_W } = {}) {
+  const c = F('card', {
+    dir: 'V', gap: 4, pad: CARD_PAD, fill: 'white', r: 12, w: width,
     stroke: selected ? 'primary/700' : 'neutral/200', strokeW: selected ? 2 : 1.5,
   })
   await applyShadow(c, selected ? '2.0/shadow/md' : '2.0/shadow/sm')
-  if (ghost) return c   // 뒤에 깔리는 카드는 내용 없이 실루엣만
 
   const top = F('row/top', { dir: 'H', gap: 8, align: 'CENTER' })
   c.appendChild(top)
@@ -181,26 +177,10 @@ async function card({ selected = false, extra = 0, ghost = false, width = CARD_W
   return c
 }
 
-/** 카드 영역 — stack이면 뒤에 실루엣 2장 */
-async function cardArea({ selected, stack }) {
-  const main = await card({ selected, extra: stack ? 2 : 0 })
-  if (!stack) return main
-  const area = F('cards/쌓임', { dir: 'NONE' })
-  area.clipsContent = false
-  const back2 = await card({ selected, ghost: true, width: CARD_W - STACK_INSET_X * 2 })
-  const back1 = await card({ selected, ghost: true, width: CARD_W - STACK_INSET_X })
-  area.appendChild(back2); area.appendChild(back1); area.appendChild(main)
-  area.resize(CARD_W, main.height + STACK_STEP_Y * 2)
-  main.x = 0; main.y = 0
-  back1.x = STACK_INSET_X / 2; back1.y = main.height - back1.height + STACK_STEP_Y
-  back2.x = STACK_INSET_X; back2.y = main.height - back2.height + STACK_STEP_Y * 2
-  return area
-}
-
-/** 핀 = 카드 영역 + 스템 + 점 */
-async function pin({ selected = false, stack = false } = {}) {
+/** 핀 = 카드 + 스템 + 점 */
+async function pin({ selected = false, multi = false } = {}) {
   const wrap = F('GvPin', { dir: 'V', gap: 0, align: 'CENTER' })
-  wrap.appendChild(await cardArea({ selected, stack }))
+  wrap.appendChild(await card({ selected, extra: multi ? 2 : 0 }))
   const stem = F('stem', { dir: 'V', w: 2, h: STEM_H, fill: 'gv/900' })
   stem.opacity = 0.75
   wrap.appendChild(stem)
@@ -253,13 +233,13 @@ async function group(title, desc) {
 }
 
 /* 1. 핀 */
-const g1 = await group('2.0/GvPin', '단건 / 다건(카드 쌓임 + N) × 기본 / 선택')
+const g1 = await group('2.0/GvPin', '단건 / 다건(+N 배지) × 기본 / 선택 — 카드는 항상 한 장')
 const pinComps = []
-for (const stack of [false, true]) {
+for (const multi of [false, true]) {
   for (const selected of [false, true]) {
-    const node = await pin({ selected, stack })
+    const node = await pin({ selected, multi })
     g1.appendChild(node)
-    pinComps.push(toComponent(node, `Count=${stack ? 'stack' : 'single'}, State=${selected ? 'selected' : 'default'}`))
+    pinComps.push(toComponent(node, `Count=${multi ? 'multi' : 'single'}, State=${selected ? 'selected' : 'default'}`))
   }
 }
 const pinSet = figma.combineAsVariants(pinComps, g1)
@@ -293,9 +273,9 @@ chipSet.counterAxisSizingMode = 'AUTO'
 /* 3. 노트 */
 const g3 = await group('규격 노트', null)
 g3.appendChild(await ST([
-  '· DS 카드·확장 스택 폐지 — 지도 위에 표를 띄우지 않는다. 다건은 카드가 쌓인 모습 + 우상단 +N 하나로 끝낸다.',
+  '· DS 카드·확장 스택 폐지 — 지도 위에 표를 띄우지 않는다. 다건이어도 카드는 한 장, 개수는 우상단 +N 배지만.',
+  '· 쌓인 실루엣도 폐기 — 지도엔 이미 포스터 카드가 떠 있어 그림자 층만 늘어나고, 개수는 배지가 이미 말한다.',
   `· 카드: 폭 ${CARD_W} · 패딩 ${CARD_PAD} · 행 간격 4 · r12(control) · 보더 1.5 neutral/200 · shadow sm(선택 시 md)`,
-  `· 쌓임: 뒤 카드 2장이 아래로 ${STACK_STEP_Y}px씩 내려가며 좌우로 ${STACK_INSET_X}px씩 좁아진다`,
   '· 타이포: 배지 2.0/label(10) · 시간·감독 2.0/meta(12) · 제목 2.0/body-strong(14)',
   '· 선택: primary/700 보더 2 + shadow md (gv 보라는 정체성 배지·스템·점에만)',
   '· 색은 2.0 컬렉션에서만 바인딩 — 레거시 Primitives/Semantic에 같은 이름이 있어 구 색이 붙던 문제가 있었다',
