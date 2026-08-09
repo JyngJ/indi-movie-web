@@ -1746,7 +1746,7 @@ export function TheaterSheet({
             const { movie } = entry
             return (
               <div style={{
-                margin: '8px var(--gutter-sheet)',
+                margin: 'var(--gutter-sheet)',
                 border: '1px solid var(--color-border)',
                 borderRadius: 12,
                 overflow: 'hidden',
