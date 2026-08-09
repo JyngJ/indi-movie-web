@@ -1457,36 +1457,36 @@ export function TheaterSheet({
                     {filtersOn ? `${matched}/${total}편` : `${total}편 상영`}
                   </span>
                   {/* 예매 가능만 보기 — 즉시 토글, 드로어 열지 않음 */}
-                  <SortToggle
-                    active={sheetFilters.bookable}
+                  <Chip
+                    selected={sheetFilters.bookable}
                     onClick={() => applySheetFilters({ ...sheetFilters, bookable: !sheetFilters.bookable }, 'theater_sheet_quick')}
                   >
                     예매 가능만 보기
-                  </SortToggle>
+                  </Chip>
                   {sheetFilters.genres.map(g => (
-                    <SortToggle
+                    <Chip
                       key={`g:${g}`}
-                      active
+                      selected
                       onClick={() => applySheetFilters({ ...sheetFilters, genres: sheetFilters.genres.filter(x => x !== g) })}
                     >
                       {g}
                       <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
-                    </SortToggle>
+                    </Chip>
                   ))}
                   {sheetFilters.nations.map(n => (
-                    <SortToggle
+                    <Chip
                       key={`n:${n}`}
-                      active
+                      selected
                       onClick={() => applySheetFilters({ ...sheetFilters, nations: sheetFilters.nations.filter(x => x !== n) })}
                     >
                       {withFlag(n)}
                       <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
-                    </SortToggle>
+                    </Chip>
                   ))}
                 </div>
                 {/* 오른쪽: 필터 버튼 */}
-                <SortToggle
-                  active={filtersOn}
+                <Chip
+                  selected={filtersOn}
                   onClick={() => {
                     trackEvent('theater sheet filter opened', { theater_id: theater.id, source: 'theater_sheet' })
                     setPendingFilters(sheetFilters)
@@ -1495,7 +1495,7 @@ export function TheaterSheet({
                 >
                   <IconFilter size={12} />
                   필터{activeCount > 0 ? ` ${activeCount}` : ''}
-                </SortToggle>
+                </Chip>
               </div>
             )}
 

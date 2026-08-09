@@ -428,10 +428,21 @@ export function FilterBar({
             top: 52,
             left: regionHintLeft,
             zIndex: 60,
-            width: 276,   /* 상영작 탭 말풍선과 동일 폭 — 문구가 두 줄로 떨어짐 (2026-08-09 통일, 꼬리 제거) */
+            width: 276,   /* 상영작 탭 말풍선과 동일 폭 — 두 줄 */
             transition: 'left 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
             animation: 'tipIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), tipGlow 0.7s ease-out',
           }}>
+            {/* 꼬리 — 지역 칩에 닿는 툴팁 문법 (2026-08-09 복원) */}
+            <div style={{
+              position: 'absolute',
+              top: -5,
+              left: 24,
+              width: 11,
+              height: 11,
+              background: 'var(--color-primary-base)',
+              transform: 'rotate(45deg)',
+              borderRadius: 4,
+            }} />
             {/* 본체 */}
             <div style={{
               position: 'relative',

@@ -612,14 +612,14 @@ export function CurationSections({
               <PosterRow items={visibleItems} onSelect={handleSelect} emptyText={section.emptyText} desktop={desktop} />
               {hasMore && expandState === 'collapsed' && (
                 <div style={{ margin: '0 20px' }}>
-                  <Button type="button" variant="secondary" size="sm" fullWidth onClick={() => setExpand(section.key, 'partial')}>
+                  <Button type="button" variant="secondary" size="md" fullWidth onClick={() => setExpand(section.key, 'partial')}>
                     더보기 <ChevronDown size={14} strokeWidth={1.75} color="currentColor" />
                   </Button>
                 </div>
               )}
               {hasMore && expandState === 'partial' && (
                 <div style={{ display: 'flex', gap: 'var(--spacing-2)', margin: '0 20px' }}>
-                  <Button type="button" variant="secondary" size="sm" fullWidth onClick={() => {
+                  <Button type="button" variant="secondary" size="md" fullWidth onClick={() => {
                     setExpand(section.key, 'collapsed')
                     sectionRefs.current[section.key]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                   }}>

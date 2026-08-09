@@ -43,13 +43,24 @@ function RegionHintBubble({ onDismiss }: { onDismiss: () => void }) {
     <div
       style={{
         position: 'absolute',
-        top: 'calc(100% + 10px)',
+        top: 'calc(100% + 8px)',
         right: 0,
         zIndex: 60,
         width: 276,   /* 안내 문구가 두 줄로 떨어지는 폭 */
         animation: 'tipIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), tipGlow 0.7s ease-out',
       }}
     >
+      {/* 꼬리 — 지역 칩에 닿는 툴팁 문법 (우측 칩 정렬) */}
+      <div style={{
+        position: 'absolute',
+        top: -5,
+        right: 24,
+        width: 11,
+        height: 11,
+        background: 'var(--color-primary-base)',
+        transform: 'rotate(45deg)',
+        borderRadius: 4,
+      }} />
       <div style={{
         position: 'relative',
         background: 'var(--color-primary-base)',
