@@ -159,7 +159,7 @@ function makePinIcon(
   // 선택된 극장은 충돌 감지 무시 — 항상 중앙
   const safePosterOffsetX = selected ? 0 : finiteNumber(posterOffsetX)
   const forceMinOne = filtersActive && posterMovies.some(m => m.matchesFilter)
-  const slots = posterSlotsForZoom(posterMovies, zoom, filtersActive, forceMinOne)
+  const { slots, overflowCount } = posterSlotsForZoom(posterMovies, zoom, filtersActive, forceMinOne)
   const matchCount = filtersActive ? posterMovies.filter(m => m.matchesFilter).length : undefined
   const { dates: showtimeDatesThreshold, full: showtimeFullThreshold } = showtimeZoomThresholds(isDesktop)
   const showSchedule = singleMovieMode && zoom >= showtimeDatesThreshold && slots.length === 1 && !!scheduleData?.days.length
@@ -179,6 +179,7 @@ function makePinIcon(
     const posterMarkup = renderToStaticMarkup(
       <PosterGrid
         slots={slots}
+        overflowCount={overflowCount}
         tailDir={usePosterLeft ? 'right' : 'up'}
         tailOffset={usePosterLeft ? 0 : safePosterOffsetX}
         matchCount={matchCount}

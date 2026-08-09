@@ -30,11 +30,36 @@ export function useMomentumScroll(
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  /** 목록이 줄어 스크롤 위치가 콘텐츠 끝을 넘어가면 되돌린다.
+   *  (필터·날짜 변경으로 포스터가 사라지면 빈 영역만 보이는 상태로 남는다 — iOS Safari는
+   *   콘텐츠가 줄어도 scrollLeft를 즉시 클램프하지 않는다.) */
+  const clampScroll = useCallback(() => {
+    const el = posterScrollRef.current
+    if (!el) return
+    const max = Math.max(0, el.scrollWidth - el.clientWidth)
+    if (el.scrollLeft > max) el.scrollLeft = max
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   useEffect(() => {
+    clampScroll()
     updatePosterScrollEdge()
-    const id = setTimeout(updatePosterScrollEdge, 120)
+    const id = setTimeout(() => { clampScroll(); updatePosterScrollEdge() }, 120)
     return () => clearTimeout(id)
-  }, [recalcDep, updatePosterScrollEdge, shownExpanded])
+  }, [recalcDep, updatePosterScrollEdge, clampScroll, shownExpanded])
+
+  /** 좌우 버튼 스크롤 — 한 화면에 들어가는 아이템 수만큼만 이동하고,
+   *  목표를 [0, max]로 잘라 콘텐츠 없는 영역으로 넘어가지 않게 한다.
+   *  (기존엔 화면 폭과 무관하게 3칸씩 scrollBy 해서 끝에서 한 번에 건너뛰었다.) */
+  const scrollByPage = useCallback((dir: 1 | -1, itemStride: number) => {
+    const el = posterScrollRef.current
+    if (!el || itemStride <= 0) return
+    const max = Math.max(0, el.scrollWidth - el.clientWidth)
+    const perPage = Math.max(1, Math.floor(el.clientWidth / itemStride))
+    const target = Math.max(0, Math.min(max, el.scrollLeft + dir * perPage * itemStride))
+    el.scrollTo({ left: target, behavior: 'smooth' })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   /* 포스터 가로 드래그 + momentum — native 이벤트 (preventDefault 필요) */
   useEffect(() => {
@@ -157,5 +182,6 @@ export function useMomentumScroll(
     posterCanScrollLeft,
     posterCanScrollRight,
     updatePosterScrollEdge,
+    scrollByPage,
   }
 }

@@ -13,8 +13,13 @@ export interface TheaterPosterMovie {
 
 export interface PosterSlot {
   movie?: TheaterPosterMovie
-  overflow?: number | string
-  countLabel?: string
+}
+
+/** 줌 용량만큼 보여줄 포스터와, 자리에 못 들어간 나머지 편수 */
+export interface PosterSlotSet {
+  slots: PosterSlot[]
+  /** 슬롯에 못 담은 영화 수 — 카드 우상단 "+N" 칩으로 표시 */
+  overflowCount: number
 }
 
 export interface ScreeningDay {
@@ -65,30 +70,24 @@ export function posterSizeForZoom(zoom: number, isDesktop: boolean): { w: number
   return { w: 74, h: 111 }
 }
 
+const EMPTY_SLOTS: PosterSlotSet = { slots: [], overflowCount: 0 }
+
 export function posterSlotsForZoom(
   movies: TheaterPosterMovie[],
   zoom: number,
   filtersActive = false,
   forceMinOne = false,
-): PosterSlot[] {
+): PosterSlotSet {
   const rawCapacity = posterCountForZoom(zoom)
   const capacity = forceMinOne && rawCapacity === 0 ? 1 : rawCapacity
-  if (capacity === 0 || movies.length === 0) return []
+  if (capacity === 0 || movies.length === 0) return EMPTY_SLOTS
 
   // 필터 활성 시엔 매칭되는 영화만 — 안 맞는 영화는 dim 처리해서 같이 보여주지 않고 아예 제외한다
   const sorted = filtersActive ? movies.filter((m) => m.matchesFilter) : movies
-  if (sorted.length === 0) return []
+  if (sorted.length === 0) return EMPTY_SLOTS
 
-  if (capacity === 1) {
-    return sorted.length === 1
-      ? [{ movie: sorted[0] }]
-      : [{ movie: sorted[0], overflow: `${sorted.length}편` }]
-  }
-  if (sorted.length <= capacity) return sorted.map((m) => ({ movie: m }))
-
-  const visiblePosterCount = capacity - 1
-  return [
-    ...sorted.slice(0, visiblePosterCount).map((m) => ({ movie: m })),
-    { movie: sorted[visiblePosterCount], overflow: sorted.length - visiblePosterCount },
-  ]
+  // 마지막 칸을 어둡게 덮던 오버플로우 슬롯 폐지 (2026-08-10) — 용량만큼 온전히 보여주고
+  // 남는 편수는 카드 우상단 칩으로 뺀다. 포스터를 가리지 않아 같은 자리에서 한 편 더 보인다.
+  const visible = sorted.slice(0, capacity)
+  return { slots: visible.map((m) => ({ movie: m })), overflowCount: sorted.length - visible.length }
 }
