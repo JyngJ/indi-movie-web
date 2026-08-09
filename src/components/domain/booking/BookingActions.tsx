@@ -2,6 +2,8 @@
 
 import { ExternalLink, Share2, X } from 'lucide-react'
 
+import { IconButton } from '@/components/primitives'
+
 /**
  * 예매 CTA 통일 스펙 (2026-07 디자인 핸드오프).
  * "바"(BookingBar — 시트/상세 모바일/GV패널)와 "카드"(BookingCard — 데스크톱 사이드바/플로팅)
@@ -61,38 +63,17 @@ export function BookingCtaButton({
 export function ShareScheduleButton({ variant, onClick }: { variant: Variant; onClick: () => void }) {
   const s = SPEC[variant]
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label="상영 시간표 공유"
-      title="상영 시간표 공유"
-      style={{
-        flexShrink: 0, width: s.actionBtn, height: s.actionBtn, borderRadius: s.radius,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)',
-        color: 'var(--color-text-sub)', cursor: 'pointer', padding: 0, minHeight: 'unset',
-      }}
-    >
+    <IconButton variant="overlay" size={44} onClick={onClick} aria-label="상영 시간표 공유" title="상영 시간표 공유">
       <Share2 size={s.shareIcon} strokeWidth={1.75} />
-    </button>
+    </IconButton>
   )
 }
 
 export function CloseRoundButton({ variant, onClick, label = '선택 해제' }: { variant: Variant; onClick: () => void; label?: string }) {
   const s = SPEC[variant]
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      style={{
-        flexShrink: 0, width: s.closeBtn, height: s.closeBtn, borderRadius: 9999,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        border: 'none', backgroundColor: 'var(--color-surface-raised)', color: 'var(--color-text-caption)',
-        cursor: 'pointer', padding: 0, minHeight: 'unset',
-      }}
-    >
+    <IconButton variant="overlay" size={32} onClick={onClick} aria-label={label}>
       <X size={s.closeIcon} strokeWidth={1.75} />
-    </button>
+    </IconButton>
   )
 }
