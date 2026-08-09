@@ -138,7 +138,7 @@ function toComponent(node, name) {
 const PW = 44, PH = 66
 const SLOT_GAP = 8
 const CARD_PAD = 12
-const TAIL_W = 16, TAIL_H = 8      // 삼각형 꼬리
+const TAIL = 11                    // 지역 힌트 팝업과 동일 (11×11 rotate45, 팁 r4)
 const CHIP_BLEED = 8
 
 /** 포스터 한 장 — PosterThumb placeholder */
@@ -237,31 +237,54 @@ async function scheduleCard({ showTimes }) {
   return card
 }
 
-/** 삼각형 꼬리 — 카드 뒤에 깔고 밑변을 카드에 겹쳐 밑변 보더를 가린다 */
+/** 꼬리 — 지역 힌트 팝업과 같은 문법: 11×11 정사각 · r4 · rotate45.
+ *  팝업은 면이 솔리드라 보더가 없지만 카드는 보더가 있으니, rotate45에서 팁이 되는
+ *  꼭짓점(좌상단)에서 만나는 두 변(top·left)에만 같은 보더를 준다. 나머지 두 변은
+ *  카드에 가려지므로 0. (코드의 BubbleTail 프리미티브와 동일)
+ *  회전 원점 때문에 x/y 계산이 어긋나므로, 붙인 뒤 실제 바운딩박스로 위치를 보정한다. */
 function tail({ selected }) {
-  const t = figma.createPolygon()
+  const t = figma.createRectangle()
   t.name = 'tail'
-  t.pointCount = 3
-  t.resize(TAIL_W, TAIL_H)
+  t.resize(TAIL, TAIL)
+  t.cornerRadius = 4
   t.fills = [selected ? paint('primary/700') : paint('white')]
   t.strokes = [selected ? { type: 'SOLID', color: rgb('#000000'), opacity: 0.14 } : paint('neutral/200')]
-  t.strokeWeight = 1.5
   t.strokeAlign = 'INSIDE'
+  // 개별 변 두께 — 팁 쪽 두 변만 (미지원 환경이면 전체 두께로 폴백)
+  try {
+    t.strokeTopWeight = 1.5
+    t.strokeLeftWeight = 1.5
+    t.strokeRightWeight = 0
+    t.strokeBottomWeight = 0
+  } catch { t.strokeWeight = 1.5 }
+  t.rotation = 45
   return t
 }
 
-/** 카드 + 꼬리 + 코너 칩 (겹침이라 오토 레이아웃 밖) */
-async function pinFrame(card, { selected, chipLabel }) {
+/** 회전 후 실제 바운딩박스 기준으로 꼬리를 카드 상단 중앙에 맞춘다.
+ *  목표: 팝업과 동일하게 사각형 중심이 카드 상단 모서리에 얹힌다(팝업 top:-5, 11px → 중심 +0.5) */
+function placeTail(tl, area, card) {
+  const ab = area.absoluteBoundingBox, tb = tl.absoluteBoundingBox
+  if (!ab || !tb) { tl.x = card.x + card.width / 2 - TAIL / 2; tl.y = card.y - TAIL / 2; return }
+  const wantCx = ab.x + card.x + card.width / 2
+  const wantCy = ab.y + card.y + 0.5
+  tl.x += wantCx - (tb.x + tb.width / 2)
+  tl.y += wantCy - (tb.y + tb.height / 2)
+}
+
+/** 카드 + 꼬리 + 코너 칩 (겹침이라 오토 레이아웃 밖).
+ *  꼬리 위치 보정에 absoluteBoundingBox가 필요해서 부모에 먼저 붙인다. */
+async function pinFrame(parent, card, { selected, chipLabel }) {
   const area = F('PosterPin', { dir: 'NONE' })
   area.clipsContent = false
-  const top = TAIL_H + CHIP_BLEED           // 꼬리와 칩이 카드 위로 나오는 여유
+  parent.appendChild(area)
+  const top = Math.ceil(TAIL * Math.SQRT2 / 2) + CHIP_BLEED   // 꼬리 팁과 칩이 카드 위로 나오는 여유
   area.resize(card.width + CHIP_BLEED, card.height + top)
   const tl = tail({ selected })
   area.appendChild(tl)                       // 카드보다 먼저 = 뒤
   area.appendChild(card)
   card.x = 0; card.y = top
-  tl.x = Math.round(card.width / 2 - TAIL_W / 2)
-  tl.y = top - TAIL_H + 1                    // 밑변 1px을 카드에 물려 보더 이음새를 가린다
+  placeTail(tl, area, card)
   if (chipLabel) {
     const chip = await cornerChip(chipLabel)
     area.appendChild(chip)
@@ -305,8 +328,7 @@ const pinComps = []
 for (const capacity of [1, 3, 6]) {
   for (const selected of [false, true]) {
     const card = await gridCard({ capacity, selected })
-    const area = await pinFrame(card, { selected, chipLabel: OVERFLOW[capacity] })
-    g1.appendChild(area)
+    const area = await pinFrame(g1, card, { selected, chipLabel: OVERFLOW[capacity] })
     pinComps.push(toComponent(area, `Capacity=${capacity}, State=${selected ? 'selected' : 'default'}`))
   }
 }
@@ -324,8 +346,7 @@ const g2 = await group('2.0/PosterPinSchedule', '단일 영화 필터 시 — fu
 const schComps = []
 for (const showTimes of [true, false]) {
   const card = await scheduleCard({ showTimes })
-  const area = await pinFrame(card, { selected: false, chipLabel: showTimes ? '3회' : '1회' })
-  g2.appendChild(area)
+  const area = await pinFrame(g2, card, { selected: false, chipLabel: showTimes ? '3회' : '1회' })
   schComps.push(toComponent(area, `Mode=${showTimes ? 'full' : 'dates'}`))
 }
 const schSet = figma.combineAsVariants(schComps, g2)
@@ -340,15 +361,14 @@ schSet.counterAxisSizingMode = 'AUTO'
 /* 3. 필터 매치 예시 — 배리언트는 늘리지 않는다 */
 const g3 = await group('필터 매치', '칩 라벨이 "N편 일치"로 바뀌고 매칭 포스터에 primary 링')
 const matchCard = await gridCard({ capacity: 3, selected: false, highlightFirst: true })
-const matchArea = await pinFrame(matchCard, { selected: false, chipLabel: '3편 일치' })
-g3.appendChild(matchArea)
+const matchArea = await pinFrame(g3, matchCard, { selected: false, chipLabel: '3편 일치' })
 
 /* 4. 노트 */
 const g4 = await group('규격 노트', null)
 const note = await ST([
   `· 포스터 ${PW}×${PH} r4(badge) · 카드 패딩 ${CARD_PAD} · 슬롯 간격 ${SLOT_GAP} · r8(button) · 보더 1.5 neutral/200 · shadow md(선택 시 lg)`,
   `  → 3열 카드 폭 ${PW * 3 + SLOT_GAP * 2 + CARD_PAD * 2}. v2(패딩 8·간격 4)의 148에서 넓어졌으니 코드 이식 시 지도 밀도 확인 필요`,
-  `· 꼬리: 삼각형 ${TAIL_W}×${TAIL_H}, 카드 뒤에 깔고 밑변 1px을 물려 보더를 잇는다 (회전 사각형은 원점 때문에 어긋난다)`,
+  `· 꼬리: 지역 힌트 팝업과 동일 문법 — ${TAIL}×${TAIL} 정사각 r4 rotate45, 팁 쪽 두 변(top·left)만 보더. 회전 원점 탓에 좌표가 어긋나므로 바운딩박스로 보정한다`,
   '· 코너 칩 공용: 2.0/label(10) · pad 4/8 · pill · primary/700 면 · neutral/100 보더 1.5 · shadow sm',
   '· 줌 용량: ≤13 → 0(점 핀) · 14 → 1 · 15 → 3 · 16+ → 6(3×2)',
   '· 포스터 줌 스케일(모바일): 기본 44×66 · 17 → 56×84 · 18 → 60×90 · 19 → 66×99 / 데스크톱 74·90·108·126 폭',
