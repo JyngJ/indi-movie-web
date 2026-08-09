@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { SURVEY_GOOD_POINTS, type SurveyGoodPoint } from '@/lib/survey/types'
 import { markSurvey } from '@/lib/survey/gate'
 import { trackEvent } from '@/lib/analytics/client'
-import { Button, Input } from '@/components/primitives'
+import { Button, IconButton, Input } from '@/components/primitives'
 import styles from './survey.module.css'
 
 interface Props {
@@ -97,9 +97,16 @@ export function FeedbackSurvey({ onClose }: Props) {
       aria-label="피드백 설문"
     >
       <div className={styles.card}>
-        <button type="button" data-rc="survey-close" className={styles.close} onClick={dismiss} aria-label="닫기">
+        <IconButton
+          variant="ghost"
+          size={32}
+          data-rc="survey-close"
+          style={{ position: 'absolute', top: 14, right: 14 }}
+          onClick={dismiss}
+          aria-label="닫기"
+        >
           ✕
-        </button>
+        </IconButton>
 
         {done ? (
           <div className={styles.thanks}>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { IconButton } from '@/components/primitives'
 
 export type DayType = 'weekday' | 'saturday' | 'sunday' | 'holiday' | 'today'
 
@@ -45,24 +46,14 @@ function getDayTextColor(type: DayType): string {
   }
 }
 
-const NAV_BTN: React.CSSProperties = {
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-  width: 28, height: 28, flexShrink: 0,
-  background: 'none', border: 'none',
-  borderRadius: '50%',
-  color: 'var(--color-text-sub)',
-  cursor: 'pointer',
-  padding: 0,
-  minHeight: 'unset',
-}
-
 /* 이전/다음 주 이동 버튼 — 누르면 쫀득하게 눌렸다 튕겨 돌아옴(:active는 터치에서 잘 안 먹어 포인터 이벤트로 직접 제어) */
 function DateNavButton({ direction, onClick, enabled, label }: { direction: 'prev' | 'next'; onClick?: () => void; enabled?: boolean; label: string }) {
   const [pressed, setPressed] = useState(false)
   const release = () => setPressed(false)
   return (
-    <button
-      type="button"
+    <IconButton
+      variant="ghost"
+      size={32}
       data-rc={`datebar-week-${direction}`}
       onClick={onClick}
       disabled={!enabled}
@@ -71,7 +62,6 @@ function DateNavButton({ direction, onClick, enabled, label }: { direction: 'pre
       onPointerLeave={release}
       onPointerCancel={release}
       style={{
-        ...NAV_BTN,
         opacity: enabled ? 1 : 0.25,
         cursor: enabled ? 'pointer' : 'default',
         transform: pressed ? 'scale(0.78)' : 'scale(1)',
@@ -84,7 +74,7 @@ function DateNavButton({ direction, onClick, enabled, label }: { direction: 'pre
       <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
         <path d={direction === 'prev' ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6'} />
       </svg>
-    </button>
+    </IconButton>
   )
 }
 

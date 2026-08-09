@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { usePendingNavItem } from '@/hooks/usePendingNavItem'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
+import { Button } from '@/components/primitives'
 import { PosterThumb } from './PosterThumb'
 import { HoverPopup } from './CurationSectionRow'
 import { ChevronDown } from 'lucide-react'
@@ -611,19 +612,20 @@ export function CurationSections({
             <Section title={section.title}>
               <PosterRow items={visibleItems} onSelect={handleSelect} emptyText={section.emptyText} desktop={desktop} />
               {hasMore && expandState === 'collapsed' && (
-                <button type="button" onClick={() => setExpand(section.key, 'partial')}
-                  style={{ ...btnStyle, margin: '0 20px' }}>
-                  더보기 <ChevronDown size={14} strokeWidth={1.75} color="currentColor" />
-                </button>
+                <div style={{ margin: '0 20px' }}>
+                  <Button type="button" variant="secondary" size="sm" fullWidth onClick={() => setExpand(section.key, 'partial')}>
+                    더보기 <ChevronDown size={14} strokeWidth={1.75} color="currentColor" />
+                  </Button>
+                </div>
               )}
               {hasMore && expandState === 'partial' && (
                 <div style={{ display: 'flex', gap: 'var(--spacing-2)', margin: '0 20px' }}>
-                  <button type="button" onClick={() => {
+                  <Button type="button" variant="secondary" size="sm" fullWidth onClick={() => {
                     setExpand(section.key, 'collapsed')
                     sectionRefs.current[section.key]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                  }} style={{ ...btnStyle, flex: 1 }}>
+                  }}>
                     접기 <ChevronDown size={14} strokeWidth={1.75} color="currentColor" style={{ transform: 'rotate(180deg)' }} />
-                  </button>
+                  </Button>
                   {hasManyMore && SECTION_FILMS_HREF[section.key] && (
                     <a href={SECTION_FILMS_HREF[section.key]!}
                       style={{ ...btnStyle, flex: 1, textDecoration: 'none',
@@ -641,17 +643,9 @@ export function CurationSections({
       })}
       <Section title="최근 찾아본" action={
         onClearRecentlyViewed && recentlyViewed.length > 0 ? (
-          <button
-            type="button"
-            onClick={onClearRecentlyViewed}
-            style={{
-              background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-              fontSize: 'var(--text-caption)', color: 'var(--color-text-caption)',
-              textDecoration: 'underline', flexShrink: 0,
-            }}
-          >
+          <Button type="button" variant="text" size="sm" onClick={onClearRecentlyViewed}>
             모두 지우기
-          </button>
+          </Button>
         ) : undefined
       }>
         <RecentList items={recentlyViewed.slice(0, 10)} onRemove={onRemoveRecentlyViewed} onItemClick={onRecentItemClick} />

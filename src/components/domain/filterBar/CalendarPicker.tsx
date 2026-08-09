@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Button, IconButton } from '@/components/primitives'
 import { DOW, today, fmtMD, isSameDay } from './dateHelpers'
 import { IcoNavPrev, IcoNavNext } from './icons'
 
@@ -49,13 +50,6 @@ export function CalendarPicker({ startDate, endDate, onApply, onCancel, style }:
     setRangeEnd(e)
   }
 
-  const navBtn: React.CSSProperties = {
-    width: 36, height: 36, borderRadius: '50%',
-    background: 'transparent', border: 'none',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    cursor: 'pointer', color: 'var(--color-text-body)', minHeight: 'unset',
-  }
-
   return (
     <div style={{
       background: 'var(--color-surface-card)',
@@ -67,15 +61,15 @@ export function CalendarPicker({ startDate, endDate, onApply, onCancel, style }:
     }}>
       <div style={{ padding: '16px 16px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-          <button style={navBtn} onClick={() => setViewMonth(new Date(year, month - 1, 1))}>
+          <IconButton variant="ghost" size={32} aria-label="이전 달" onClick={() => setViewMonth(new Date(year, month - 1, 1))}>
             <IcoNavPrev />
-          </button>
+          </IconButton>
           <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 600, color: 'var(--color-text-primary)' }}>
             {year}년 {month + 1}월
           </span>
-          <button style={navBtn} onClick={() => setViewMonth(new Date(year, month + 1, 1))}>
+          <IconButton variant="ghost" size={32} aria-label="다음 달" onClick={() => setViewMonth(new Date(year, month + 1, 1))}>
             <IcoNavNext />
-          </button>
+          </IconButton>
         </div>
         <div style={{
           textAlign: 'center', fontSize: 13,
@@ -169,35 +163,12 @@ export function CalendarPicker({ startDate, endDate, onApply, onCancel, style }:
         borderTop: '1px solid var(--color-border)',
         background: 'var(--color-surface-raised)',
       }}>
-        <button
-          onClick={onCancel}
-          style={{
-            flex: 1, height: 40, borderRadius: 9999,
-            background: 'transparent',
-            border: '1px solid var(--color-border)',
-            fontSize: 14, fontWeight: 500,
-            color: 'var(--color-text-body)',
-            cursor: 'pointer', minHeight: 'unset',
-          }}
-        >
+        <Button variant="text" size="sm" style={{ flex: 1 }} onClick={onCancel}>
           취소
-        </button>
-        <button
-          disabled={!canApply}
-          onClick={() => canApply && onApply(rangeStart!, rangeEnd!)}
-          style={{
-            flex: 2, height: 40, borderRadius: 9999,
-            background: canApply ? 'var(--color-primary-base)' : 'var(--color-surface-raised)',
-            border: canApply ? 'none' : '1px solid var(--color-border)',
-            fontSize: 14, fontWeight: 600,
-            color: canApply ? '#fff' : 'var(--color-text-placeholder)',
-            cursor: canApply ? 'pointer' : 'default',
-            transition: 'background 150ms, color 150ms',
-            minHeight: 'unset',
-          }}
-        >
+        </Button>
+        <Button variant="primary" size="sm" style={{ flex: 2 }} disabled={!canApply} onClick={() => canApply && onApply(rangeStart!, rangeEnd!)}>
           적용
-        </button>
+        </Button>
       </div>
     </div>
   )

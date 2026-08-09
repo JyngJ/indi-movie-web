@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, type ReactNode, type RefObject } from 'react'
-import { SearchBar } from '@/components/primitives'
+import { Button, IconButton, SearchBar } from '@/components/primitives'
 import { AddRequestModal, AddRequestCtaButton } from '@/components/domain/AddRequestModal'
 
 const SEARCH_GUIDE_EXAMPLES = [
@@ -113,12 +113,9 @@ export function SearchPanel({
               <div style={{ marginBottom: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                   <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-caption)', margin: 0 }}>최근 검색</p>
-                  <button
-                    onClick={onRecentClearAll}
-                    style={{ fontSize: 12, color: 'var(--color-text-caption)', background: 'none', border: 0, cursor: 'pointer', padding: 0 }}
-                  >
+                  <Button variant="text" size="sm" onClick={onRecentClearAll}>
                     전체 삭제
-                  </button>
+                  </Button>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   {recentSearches.map(q => (
@@ -135,14 +132,11 @@ export function SearchPanel({
                       >
                         {q}
                       </button>
-                      <button
-                        onClick={() => onRecentRemove(q)}
-                        style={{ background: 'none', border: 0, cursor: 'pointer', padding: 4, color: 'var(--color-text-caption)', lineHeight: 1, flexShrink: 0 }}
-                      >
+                      <IconButton variant="ghost" size={32} aria-label="삭제" onClick={() => onRecentRemove(q)}>
                         <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                           <path d="M6 6l12 12M18 6 6 18" />
                         </svg>
-                      </button>
+                      </IconButton>
                     </div>
                   ))}
                 </div>

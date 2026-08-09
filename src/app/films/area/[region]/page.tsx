@@ -97,26 +97,34 @@ export default async function FilmsAreaPage({
         <div style={{ position: 'absolute', inset: 0, backgroundColor: 'color-mix(in srgb, var(--color-surface-bg) 55%, transparent)' }} />
       </div>
 
-      {/* 온보딩 데스크톱 모달 문법 — 좌 일러스트 / 우 콘텐츠 */}
-      <div style={{ position: 'relative', minHeight: '100svh', display: 'flex', flexDirection: 'column', justifyContent: 'center', maxWidth: 880, margin: '0 auto', padding: 'var(--spacing-24) var(--gutter)' }}>
-        <div style={{
+      {/* 반응형 배치 — 데스크톱: 온보딩 모달(좌 일러 420/우 텍스트), 모바일: 온보딩 모바일(일러 상단 축소 + 한 화면) */}
+      <style>{`
+        .areaWrap { position: relative; min-height: 100svh; display: flex; flex-direction: column; justify-content: center; max-width: 880px; margin: 0 auto; padding: var(--spacing-24) var(--gutter); }
+        .areaCard { min-height: 520px; display: flex; flex-wrap: wrap; }
+        .areaIllo { flex: 1 1 420px; max-width: 420px; min-height: 320px; }
+        .areaText { flex: 1 1 320px; min-width: 0; padding: 56px var(--spacing-12) 40px; display: flex; flex-direction: column; }
+        @media (max-width: 680px) {
+          .areaWrap { padding: var(--spacing-4) var(--gutter); }
+          .areaCard { min-height: 0; flex-wrap: nowrap; flex-direction: column; }
+          .areaIllo { flex: 0 0 auto; max-width: none; width: 100%; min-height: 30svh; }
+          .areaText { flex: 1 1 auto; padding: var(--spacing-6) var(--gutter-sheet) var(--gutter-sheet); }
+        }
+      `}</style>
+      <div className="areaWrap">
+        <div className="areaCard" style={{
           backgroundColor: 'var(--color-surface-card)',
           borderRadius: 'var(--radius-sheet)',
           border: '1px solid var(--color-border)',
           boxShadow: '0 20px 60px rgba(20, 15, 10, 0.18)',
           overflow: 'hidden',
-          display: 'flex',
-          flexWrap: 'wrap',
-          minHeight: 520,   /* 온보딩 데스크톱 모달(880×520)과 동일 규격 */
         }}>
-          {/* 좌: 온보딩 1페이지 지도 일러스트 — 온보딩 mIllo와 동일 420 고정폭 (좁으면 스택) */}
-          <div className={ob.illoVars} style={{ flex: '1 1 420px', maxWidth: 420, minHeight: 320 }}>
+          {/* 좌: 온보딩 1페이지 지도 일러스트 — 데스크톱 420 고정폭, 모바일 상단 30svh */}
+          <div className={`${ob.illoVars} areaIllo`}>
             <IlloCollected />
           </div>
 
-          {/* 우: 콘텐츠 — 온보딩 mText와 동일 패딩(56/48/40) */}
-          {/* 온보딩 mText 문법 — 상단부터 흐르고 스페이서가 CTA를 하단에 고정 */}
-          <div style={{ flex: '1 1 320px', minWidth: 0, padding: '56px var(--spacing-12) 40px', display: 'flex', flexDirection: 'column' }}>
+          {/* 우: 콘텐츠 — 온보딩 mText 문법, 스페이서가 CTA를 하단 고정 */}
+          <div className="areaText">
             <h1 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)' }}>
               {region} 독립영화관<br />상영시간표
             </h1>

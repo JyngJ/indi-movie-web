@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { HeartHandshake } from 'lucide-react'
 import Link from 'next/link'
 import { useLockBodyScroll } from '@/hooks/useLockBodyScroll'
-import { Button, Input } from '@/components/primitives'
+import { Button, Chip, IconButton, Input } from '@/components/primitives'
 
 export type SettingsPage = 'main' | 'report' | 'attribution' | 'about'
 type Page = SettingsPage
@@ -58,11 +58,6 @@ const IcoGitHub = () => (
 
 /* ── 공통 헤더 ── */
 export function SettingsHeader({ title, onBack, onClose, submitting }: { title: string; onBack?: () => void; onClose?: () => void; submitting?: boolean }) {
-  const btn: React.CSSProperties = {
-    width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center',
-    border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-text-body)',
-    borderRadius: 8, flexShrink: 0, minHeight: 'unset',
-  }
   return (
     <div style={{
       height: 52,
@@ -72,13 +67,13 @@ export function SettingsHeader({ title, onBack, onClose, submitting }: { title: 
       gap: 4, flexShrink: 0, backgroundColor: 'var(--color-surface-card)',
     }}>
       {onBack && (
-        <button style={btn} onClick={onBack} disabled={submitting}><IcoChevronLeft /></button>
+        <IconButton variant="ghost" size={44} aria-label="뒤로가기" onClick={onBack} disabled={submitting}><IcoChevronLeft /></IconButton>
       )}
       <span className="display-h2" style={{ flex: 1, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {title}
       </span>
       {onClose && (
-        <button style={btn} onClick={onClose} disabled={submitting}><IcoClose /></button>
+        <IconButton variant="ghost" size={44} aria-label="닫기" onClick={onClose} disabled={submitting}><IcoClose /></IconButton>
       )}
     </div>
   )
@@ -222,12 +217,7 @@ export function SettingsReportPage({
         <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-sub)', marginBottom: 8 }}>분류</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {REPORT_CATEGORIES.map(cat => (
-            <button key={cat} onClick={() => setCategory(cat)} style={{
-              padding: '8px 16px', borderRadius: 9999, fontSize: 13, fontWeight: 500, cursor: 'pointer', minHeight: 'unset',
-              border: category === cat ? '1px solid var(--color-primary-base)' : '1px solid var(--color-border)',
-              backgroundColor: category === cat ? 'var(--color-primary-subtle-l)' : 'var(--color-surface-bg)',
-              color: category === cat ? 'var(--color-primary-text)' : 'var(--color-text-body)',
-            }}>{cat}</button>
+            <Chip key={cat} selected={category === cat} onClick={() => setCategory(cat)}>{cat}</Chip>
           ))}
         </div>
       </div>
@@ -249,13 +239,9 @@ export function SettingsReportPage({
       {/* 스크린샷 */}
       <div>
         <input ref={fileInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={e => setFiles(Array.from(e.target.files ?? []).slice(0, 3))} />
-        <button onClick={() => fileInputRef.current?.click()} style={{
-          display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 9999,
-          border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-bg)',
-          fontSize: 13, fontWeight: 500, color: 'var(--color-text-body)', cursor: 'pointer', minHeight: 'unset',
-        }}>
+        <Button variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()}>
           <IcoCamera /> 스크린샷 첨부
-        </button>
+        </Button>
         {files.length > 0 && (
           <div style={{ marginTop: 8, fontSize: 12, color: 'var(--color-text-caption)' }}>
             {files.map(f => f.name).join(', ')}

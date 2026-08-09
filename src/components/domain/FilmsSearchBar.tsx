@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { usePendingNavItem } from '@/hooks/usePendingNavItem'
-import { SearchBar, SearchBarButton } from '@/components/primitives'
+import { Button, IconButton, SearchBar, SearchBarButton } from '@/components/primitives'
 import { AddRequestModal, AddRequestCtaButton } from '@/components/domain/AddRequestModal'
 // 지도 탭과 검색 기록을 공유 — 같은 localStorage 키를 쓰는 지도 쪽 유틸을 그대로 재사용한다.
 // 지도에서 검색한 극장/영화가 상영작 탭 "최근 검색"에도 보이고, 그 반대도 마찬가지.
@@ -237,12 +237,14 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
             }}
           />
           {query && (
-            <button
+            <IconButton
+              variant="ghost"
+              size={32}
+              aria-label="검색어 지우기"
               onMouseDown={e => { e.preventDefault(); setQuery(''); desktopRef.current?.focus() }}
-              style={{ flexShrink: 0, display: 'flex', background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--color-text-caption)', minHeight: 'unset' }}
             >
               <CloseIcon size={14} />
-            </button>
+            </IconButton>
           )}
         </div>
         )}
@@ -385,15 +387,15 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
                 <div style={{ marginBottom: 16 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                     <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-caption)', margin: 0 }}>최근 검색</p>
-                    <button onClick={() => { setHistory([]); clearRecentSearches() }} style={{ fontSize: 12, color: 'var(--color-text-caption)', background: 'none', border: 0, cursor: 'pointer', padding: 0 }}>전체 삭제</button>
+                    <Button variant="text" size="sm" onClick={() => { setHistory([]); clearRecentSearches() }}>전체 삭제</Button>
                   </div>
                   {history.map(q => (
                     <div key={q} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--color-border)' }}>
                       <span style={{ flexShrink: 0, display: 'flex', color: 'var(--color-text-caption)' }}><SearchIcon size={14} /></span>
                       <button onClick={() => setMInput(q)} style={{ flex: 1, background: 'none', border: 0, cursor: 'pointer', textAlign: 'left', padding: 0, fontSize: 14, color: 'var(--color-text-body)' }}>{q}</button>
-                      <button onClick={() => setHistory(prev => prev.filter(h => h !== q))} style={{ background: 'none', border: 0, cursor: 'pointer', padding: 4, color: 'var(--color-text-caption)', minHeight: 'unset' }}>
+                      <IconButton variant="ghost" size={32} aria-label="삭제" onClick={() => setHistory(prev => prev.filter(h => h !== q))}>
                         <CloseIcon size={12} />
-                      </button>
+                      </IconButton>
                     </div>
                   ))}
                 </div>

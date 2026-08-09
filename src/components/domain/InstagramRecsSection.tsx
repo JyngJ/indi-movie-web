@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { ExternalLink } from 'lucide-react'
-import { SectionHeader, ScrollNavButton } from '@/components/primitives'
+import { SectionHeader, ScrollNavButton, IconButton } from '@/components/primitives'
 import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
 import { trackEvent } from '@/lib/analytics/client'
 import { getFestivalDateLabel, getFestivalStatus } from '@/lib/festival/status'
@@ -339,18 +339,14 @@ export function InstagramRecsSection({
         trailing={
           // "더보기" 화살표가 아니라 우리 인스타 프로필로 나가는 외부 링크 — 이 섹션 자체가
           // 인스타 콘텐츠 소개라 "더 보려면 인스타로" 쪽이 맞음
-          <button
+          <IconButton
+            variant="ghost"
+            size={32}
             onClick={() => window.open(INSTAGRAM_PROFILE_URL, '_blank', 'noopener,noreferrer')}
             aria-label="인스타그램에서 더 보기"
-            className="hover-raise"
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              width: 28, height: 28, minHeight: 'auto', padding: 0, borderRadius: 'var(--radius-button)',
-              border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-text-caption)',
-            }}
           >
             <ExternalLink size={16} strokeWidth={1.75} color="currentColor" />
-          </button>
+          </IconButton>
         }
       />
       <div style={{ padding: '12px var(--gutter-sheet)' }}>

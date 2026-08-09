@@ -322,7 +322,9 @@ export function GlobalNav() {
 
   useEffect(() => {
     if (!mounted) return
-    if (pathname.startsWith('/films')) {
+    // /films/area/*는 검색 유입용 SEO 랜딩 — 탭 상태가 아니므로 복원 대상에서 제외
+    // (랜딩 → 지도 CTA → 상영작 탭을 누르면 랜딩으로 돌아가버리는 문제 방지)
+    if (pathname.startsWith('/films') && !pathname.startsWith('/films/area')) {
       sessionStorage.setItem(FILMS_LAST_PATH_KEY, pathname)
       setFilmsHref(pathname)
     }

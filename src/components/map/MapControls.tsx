@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import type { Map as LeafletMap } from 'leaflet'
+import { IconButton } from '@/components/primitives'
 
 /* ── SVG 아이콘 ─────────────────────────────────────────────────── */
 export const IcoPlus = () => (
@@ -204,13 +205,6 @@ export function ZoomSlider({
     applyZoom(SLIDER_ZOOM_LEVELS[next])
   }, [applyZoom, stepIdx])
 
-  const btn: React.CSSProperties = {
-    width: 34, height: 34, fontSize: 20, fontWeight: 300, lineHeight: 1,
-    border: 'none', background: 'none', cursor: 'pointer', minHeight: 'auto',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    color: 'var(--color-text-body)', flexShrink: 0,
-  }
-
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -220,7 +214,7 @@ export function ZoomSlider({
       boxShadow: 'var(--shadow-md)',
       userSelect: 'none',
     }}>
-      <button style={btn} onClick={() => stepStep(1)}>+</button>
+      <IconButton variant="ghost" size={32} aria-label="지도 확대" style={{ fontSize: 20, fontWeight: 300, lineHeight: 1 }} onClick={() => stepStep(1)}>+</IconButton>
       <div style={{ width: 20, height: 1, backgroundColor: 'var(--color-border)', flexShrink: 0 }} />
       <div
         onPointerDown={handlePointerDown}
@@ -271,7 +265,7 @@ export function ZoomSlider({
         </div>
       </div>
       <div style={{ width: 20, height: 1, backgroundColor: 'var(--color-border)', flexShrink: 0 }} />
-      <button style={btn} onClick={() => stepStep(-1)}>−</button>
+      <IconButton variant="ghost" size={32} aria-label="지도 축소" style={{ fontSize: 20, fontWeight: 300, lineHeight: 1 }} onClick={() => stepStep(-1)}>−</IconButton>
     </div>
   )
 }
