@@ -9,7 +9,7 @@ import { locationAdapter } from '@/lib/adapters/location'
 import { calculateAndFormatDistance, calculateDistanceKm } from '@/lib/map/distanceUtils'
 import { getRegionFromAddress } from '@/lib/regions'
 import { formatDateLabel } from '@/lib/date'
-import { Toast } from '@/components/primitives'
+import { Toast, Button } from '@/components/primitives'
 import { MovieInfoTable } from '@/components/domain/movieDetail/MovieInfoTable'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 import { PanelShell } from './PanelShell'
@@ -270,15 +270,17 @@ function MovieTheatersTab({
             </span>
           ) : null
         })()}
-        <button
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={() => {
             trackEvent('movie theater selected', { movie_id: movieId, theater_id: entry.theaterId, theater_name: entry.theaterName, source: 'desktop_panel' })
             onTheaterOpen(entry.theaterId, entry.dateGroups[0]?.date ?? '')
           }}
-          style={{ flexShrink: 0, alignSelf: 'center', height: 26, padding: '0 12px', borderRadius: 9999, border: '1px solid color-mix(in srgb, var(--color-primary-base) 35%, transparent)', backgroundColor: 'var(--color-primary-subtle-l)', color: 'var(--color-primary-base)', fontSize: 'var(--text-badge)', fontWeight: 700, cursor: 'pointer', minHeight: 'auto' }}
+          style={{ flexShrink: 0, alignSelf: 'center' }}
         >
           영화관 보기
-        </button>
+        </Button>
       </div>
       {/* 날짜별 상영시간 */}
       {entry.dateGroups.map((group) => (
