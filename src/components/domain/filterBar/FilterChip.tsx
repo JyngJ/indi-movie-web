@@ -11,9 +11,11 @@ interface FilterChipProps {
   onClear?: () => void
   chipRef?: React.Ref<HTMLButtonElement>
   separator?: string
+  /** rage/dead click 집계 키 — 라벨은 한글·동적이라 별도 식별자를 둔다 */
+  rc?: string
 }
 
-export function FilterChip({ label, value, open, selected, hasDropdown, onClick, onClear, chipRef, separator = '·' }: FilterChipProps) {
+export function FilterChip({ label, value, open, selected, hasDropdown, onClick, onClear, chipRef, separator = '·', rc }: FilterChipProps) {
   let bg = 'var(--color-surface-card)'
   let border = '1px solid var(--color-border)'
   let pl = '14px'
@@ -31,6 +33,7 @@ export function FilterChip({ label, value, open, selected, hasDropdown, onClick,
   return (
     <button className="hover-raise"
       ref={chipRef}
+      data-rc={rc ? `filter-chip-${rc}` : undefined}
       onClick={onClick}
       style={{
         display: 'inline-flex', alignItems: 'center',

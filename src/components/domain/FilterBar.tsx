@@ -342,6 +342,7 @@ export function FilterBar({
         {movieFilter && (
           <FilterChip
             label="영화"
+            rc="movie"
             value={movieFilter.title.length > 10 ? movieFilter.title.slice(0, 10) + '…' : movieFilter.title}
             selected
             onClick={() => {}}
@@ -351,6 +352,7 @@ export function FilterBar({
         {directorFilter && (
           <FilterChip
             label="감독"
+            rc="director"
             value={directorFilter.name.length > 10 ? directorFilter.name.slice(0, 10) + '…' : directorFilter.name}
             selected
             onClick={() => {}}
@@ -360,6 +362,7 @@ export function FilterBar({
         )}
         <FilterChip
           label="검색 지역"
+          rc="region"
           value={regionId ?? undefined}
           open={openPanel === 'region'}
           selected={!!regionId}
@@ -370,6 +373,7 @@ export function FilterBar({
         />
         <FilterChip
           label="상영 일정"
+          rc="date"
           value={dateLabel}
           open={isDateOpen}
           selected={!!dateId}
@@ -380,6 +384,7 @@ export function FilterBar({
         />
         <FilterChip
           label="장르"
+          rc="genre"
           value={genreLabel}
           open={openPanel === 'genre'}
           selected={genres.length > 0}
@@ -391,6 +396,7 @@ export function FilterBar({
         {nationOptions.length > 0 && (
           <FilterChip
             label="국가"
+            rc="nation"
             value={nationLabel}
             open={openPanel === 'nation'}
             selected={nations.length > 0}
@@ -402,6 +408,7 @@ export function FilterBar({
         )}
         <FilterChip
           label="예매 가능"
+          rc="bookable"
           selected={bookable}
           onClick={() => { setBookable(b => !b); chip({ bookable: !bookable }) }}
         />

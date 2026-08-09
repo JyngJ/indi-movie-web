@@ -40,6 +40,7 @@ export type AnalyticsEventName =
   | 'survey good selected'
   | 'survey submitted'
   | 'survey dismissed'
+  | 'dead click'
 
 export type AnalyticsSource =
   | 'direct'

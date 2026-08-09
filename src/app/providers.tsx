@@ -4,6 +4,13 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { useEffect, ReactNode } from 'react'
 import { getQueryClient } from '@/lib/query-client'
+import { installDeadClickTracking } from '@/lib/analytics/deadClick'
+
+/** disabled 컨트롤·스크림 위의 무반응 클릭을 잡는 전역 리스너 */
+function DeadClickTracking() {
+  useEffect(() => installDeadClickTracking(), [])
+  return null
+}
 
 function OrientationLock() {
   useEffect(() => {
@@ -29,6 +36,7 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <OrientationLock />
+      <DeadClickTracking />
       {children}
       {process.env.NODE_ENV === 'development' && (
         <ReactQueryDevtools initialIsOpen={false} />
