@@ -179,7 +179,7 @@ export function FeedbackSurvey({ onClose }: Props) {
                           type="text"
                           value={etcText}
                           onChange={(e) => setEtcText(e.target.value.slice(0, 200))}
-                          placeholder="직접 적어주세요"
+                          placeholder={verdict === 'good' ? '특히 좋았던 점이 있나요?' : '어떤 점을 보완하면 좋을까요?'}
                           autoFocus
                         />
                       </div>
