@@ -3,7 +3,7 @@
 import { ButtonHTMLAttributes, ReactNode } from 'react'
 
 /** IconButton 2.0 (2026-08-08 피그마 확정) — 아이콘 전용 버튼 49곳 통합.
- *  variant: ghost(투명 r8 — 뒤로가기·지우기류) / overlay(black 6% 원형 — 닫기 ×)
+ *  variant: ghost(투명 — 뒤로가기·지우기류) / overlay(black 6% 면 — 닫기 ×). 둘 다 r8 사각 (2026-08-09 원형 폐지 — 버튼과 나란히 설 때 도형 충돌)
  *  size: 32 / 44. 상태: ghost는 hover-raise 계열(투명→200→300), overlay는 state-layer(6→10→14%).
  *  aria-label 필수 — 아이콘만 있어서 접근성 라벨 없으면 안 됨. */
 
@@ -21,7 +21,7 @@ const variantStyles = {
     active:bg-[var(--color-neutral-300)]
   `,
   overlay: `
-    rounded-full bg-[var(--color-surface-overlay)]
+    rounded-[var(--comp-btn-radius)] bg-[var(--color-surface-overlay)]
     hover:bg-[var(--color-surface-overlay-hover)]
     active:bg-[var(--color-surface-overlay-pressed)]
   `,
