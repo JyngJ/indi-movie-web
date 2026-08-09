@@ -1690,7 +1690,7 @@ export function TheaterSheet({
                                 })()}
                               </div>
                               <div style={{
-                                marginTop: 8, fontSize: 'var(--text-badge)', fontWeight: 600,
+                                marginTop: 8, fontSize: 'var(--text-meta)', fontWeight: 600,
                                 color: 'var(--color-text-primary)',
                                 lineHeight: 1.35, overflow: 'hidden',
                                 display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
@@ -1737,7 +1737,7 @@ export function TheaterSheet({
                                     </div>
                                   </div>
                                   <div style={{
-                                    marginTop: 8, fontSize: 'var(--text-badge)', fontWeight: 600,
+                                    marginTop: 8, fontSize: 'var(--text-meta)', fontWeight: 600,
                                     color: 'var(--color-text-primary)',
                                     lineHeight: 1.35, overflow: 'hidden',
                                     display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
@@ -1787,7 +1787,7 @@ export function TheaterSheet({
                   </div>
                   {/* 영화 정보 */}
                   <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <div className="display-h1" style={{
+                    <div className="display-h2" style={{
                       color: 'var(--color-text-primary)',
                       overflow: 'hidden',
                       display: '-webkit-box',
