@@ -197,7 +197,15 @@ function step1bad() {
   const card = cardBase('FeedbackSurvey TOBE · step1 bad')
   head(card, '어떤 점이 아쉬웠나요?', '여러 개 선택할 수 있어요', 1)
   const list = F('choices', { dir: 'V', gap: 8, pad: [0, 0, 0, 0], w: INNER })
-  ;[['원하는 지역에 극장 정보가 부족해요', true], ['상영 정보가 부정확하거나 늦어요', false], ['지도가 무겁거나 느려요', false], ['필터·검색이 헷갈려요', true], ['찾는 영화가 없어요', false], ['기타', false]].forEach(([l, on]) => list.appendChild(choice(l, on)))
+  ;[['원하는 지역에 극장 정보가 부족해요', true], ['상영 정보가 부정확하거나 늦어요', false], ['지도가 무겁거나 느려요', false], ['필터·검색이 헷갈려요', true], ['찾는 영화가 없어요', true], ['기타', false]].forEach(([l, on]) => {
+    list.appendChild(choice(l, on))
+    if (l === '찾는 영화가 없어요') {
+      // 선택 시 인라인 후속 입력 — 기타도 동일 문법
+      const input = F('followUp input', { dir: 'V', gap: 0, pad: [12, 16, 12, 16], w: INNER, fill: 'white', r: 12, stroke: 'neutral/300' })
+      input.appendChild(T('어떤 영화를 찾으셨나요?', { size: 14, color: 'neutral/500' }))
+      list.appendChild(input)
+    }
+  })
   card.appendChild(list)
   card.appendChild(F('sp', { dir: 'V', h: 20 }))
   card.appendChild(btn('제출', 'primary', INNER))
@@ -263,7 +271,8 @@ note.characters = [
   '· 제목 display-h2(KIMM 20) — 구 17 Pretendard에서 승격. 단계 표시 = 온보딩 도트 문법(2개)',
   '· 선택지: h48 · surface-soft(150) r-control(12) · 선택 시 primary/100 + primary/700 1px + 체크 원',
   '· 푸터: step1 = primary 풀폭 다음 / step2 = [건너뛰기 text] [제출 primary flex] (온보딩 푸터 문법)',
-  '· 버튼 = 2.0/Button 인스턴스(Primary/Secondary/TextOnly·md), 닫기 = 2.0/IconButton ghost 32 + icon/x 스왑. 도트 없음',
+  '· 버튼 = 2.0/Button 인스턴스, 닫기 = IconButton ghost 32 + icon/x. 도트 없음',
+  '· 기타·찾는 영화 없음 선택 시 인라인 후속 입력 (bad 프레임에 예시)',
   ...(kimmOK ? [] : ['⚠ KIMM_Bold 폰트 미로드 — 제목이 Pretendard로 렌더됨']),
 ].join('\n')
 note.fills = [{ type: 'SOLID', color: rgb('#726B65') }]
