@@ -612,6 +612,8 @@ export function TheaterSheet({
   //   return [...playing, ...notPlaying]
   // }, [filteredMovieEntries, selectedIsoDate, showTodayFirst])
   const sortedFilteredEntries = filteredMovieEntries
+  /* 선택 영화 카드가 뜨는지 — 카드의 아래 margin과 시간표 섹션 padTop이 겹치는 걸 막는다 */
+  const hasSelectedMovieCard = allMovieEntries.some(e => e.movie.id === selectedMovieId)
 
   /* ── 선택 영화로 포스터 스트립 스크롤 ── */
   const posterCenterDone = useRef(false)
@@ -1762,7 +1764,8 @@ export function TheaterSheet({
             )
           })()}
 
-          {/* 선택된 영화 카드 */}
+          {/* 선택된 영화 카드 — 카드가 있으면 아래 간격은 카드 margin(gutter-sheet)만으로 잡는다.
+              시간표 섹션이 padTop을 또 얹으면 아래만 넓어져 좌우 마진과 어긋난다 */}
           {(() => {
             const entry = allMovieEntries.find(e => e.movie.id === selectedMovieId)
             if (!entry) return null
@@ -1784,7 +1787,7 @@ export function TheaterSheet({
                   </div>
                   {/* 영화 정보 */}
                   <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <div className="display-h2" style={{
+                    <div className="display-h1" style={{
                       color: 'var(--color-text-primary)',
                       overflow: 'hidden',
                       display: '-webkit-box',
@@ -1890,7 +1893,7 @@ export function TheaterSheet({
           })()}
 
           {/* 상영시간표 */}
-          <div ref={showtimeSectionRef} style={{ padding: `12px var(--gutter-sheet) ${selectedShowtimeId ? 88 : 40}px` }}>
+          <div ref={showtimeSectionRef} style={{ padding: `${hasSelectedMovieCard ? 0 : 12}px var(--gutter-sheet) ${selectedShowtimeId ? 88 : 40}px` }}>
             {showtimesLoading ? (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(var(--comp-showtime-min-width), 1fr))', gap: 12 }}>
                 {Array.from({ length: 6 }).map((_, i) => (
