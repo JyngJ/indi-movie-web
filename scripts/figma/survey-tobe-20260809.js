@@ -63,7 +63,7 @@ const CARD_W = 440, PAD = 24, INNER = CARD_W - PAD * 2
 
 function dots(activeIdx) {
   const row = F('dots', { dir: 'H', gap: 4, pad: [0, 0, 0, 0], align: 'CENTER' })
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 2; i++) {
     const d = figma.createRectangle()
     d.resize(i === activeIdx ? 20 : 7, 7)
     d.cornerRadius = 999
@@ -139,7 +139,7 @@ function step1() {
   ;[['지도로 한눈에 보여서 편해요', true], ['여러 극장을 비교하기 좋아요', false], ['상영작 탭 큐레이션·추천이 좋아요', true], ['놓칠 뻔한 상영을 발견했어요', false], ['기타', false]].forEach(([l, on]) => list.appendChild(choice(l, on)))
   card.appendChild(list)
   card.appendChild(F('sp', { dir: 'V', h: 20 }))
-  const next = btn('다음', 'primary', INNER)
+  const next = btn('제출', 'primary', INNER)
   card.appendChild(next)
   return card
 }
@@ -152,7 +152,7 @@ function step1bad() {
   ;[['원하는 지역에 극장 정보가 부족해요', true], ['상영 정보가 부정확하거나 늦어요', false], ['지도가 무겁거나 느려요', false], ['필터·검색이 헷갈려요', true], ['찾는 영화가 없어요', false], ['기타', false]].forEach(([l, on]) => list.appendChild(choice(l, on)))
   card.appendChild(list)
   card.appendChild(F('sp', { dir: 'V', h: 20 }))
-  card.appendChild(btn('다음', 'primary', INNER))
+  card.appendChild(btn('제출', 'primary', INNER))
   return card
 }
 
@@ -200,7 +200,7 @@ const section = figma.createSection()
 section.name = SECTION_NAME
 page.appendChild(section)
 
-const cards = [step0(), step1(), step1bad(), step2(), thanks()]
+const cards = [step0(), step1(), step1bad(), thanks()]
 let x = 60
 for (const c of cards) { section.appendChild(c); c.x = x; c.y = 100; x += CARD_W + 40 }
 
@@ -209,7 +209,7 @@ note.fontName = { family: 'Pretendard', style: 'Regular' }
 note.fontSize = 13
 note.characters = [
   'FeedbackSurvey 2.0 TOBE 제안 v2 (2026-08-09) — ASIS는 Popups 섹션 참고',
-  '· 플로우: step0 잘 쓰고 계세요?(좋아요 primary/아쉬워요 secondary) → 1a 좋은 점 | 1b 아쉬운 점(신설 6종) → 주관식 → thanks. 도트 3단계',
+  '· 플로우: step0 잘 쓰고 계세요?(좋아요 primary/아쉬워요 secondary) → 1a 좋은 점 | 1b 아쉬운 점(신설 6종) → thanks. 주관식 제거(2026-08-09), 도트 2단계',
   '· 카드 440 · r-popover(16) · pad 24 · 딤 rgba(20,15,10,0.42) (온보딩 스크림과 동일, 프레임엔 미표현)',
   '· 제목 display-h2(KIMM 20) — 구 17 Pretendard에서 승격. 단계 표시 = 온보딩 도트 문법(2개)',
   '· 선택지: h48 · surface-soft(150) r-control(12) · 선택 시 primary/100 + primary/700 1px + 체크 원',
