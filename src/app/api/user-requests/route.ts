@@ -1,10 +1,15 @@
 import { USER_REQUEST_KINDS, type CreateUserRequestInput, type UserRequestKind } from '@/lib/userRequests/types'
+import { enforceRateLimit } from '@/lib/rateLimit/guard'
+import { RATE_LIMIT_POLICIES } from '@/lib/rateLimit/policies'
 import { createUserRequest, setUserRequestDiscordMessageId } from '@/lib/userRequests/store'
 import { discordUserRequestEnabled, sendUserRequestToDiscord } from '@/lib/userRequests/discord'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
+  const limited = await enforceRateLimit(request, RATE_LIMIT_POLICIES.userRequests)
+  if (limited) return limited
+
   try {
     const body = await request.json()
     const input = userRequestInputFromBody(body)
