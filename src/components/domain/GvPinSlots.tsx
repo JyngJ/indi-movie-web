@@ -87,7 +87,9 @@ function GvBadge({ children }: { children: React.ReactNode }) {
 }
 
 /** 개수 배지 — 카드 우상단 코너. 포스터 핀 코너 칩과 같은 규격
- *  (offset -8 · 보더 1.5 surface-bg · shadow) */
+ *  (offset -8 · 보더 1.5 surface-bg · shadow)
+ *  절대 위치의 기준은 border box가 아니라 padding box라, 패딩 있는 카드 안에 두면
+ *  -8이 카드 안쪽으로 들어간다. 그래서 패딩 없는 래퍼에 카드와 형제로 둔다. */
 function GvCountBadge({ count }: { count: number }) {
   return (
     <span style={{
@@ -105,9 +107,8 @@ function GvCountBadge({ count }: { count: number }) {
 }
 
 /* ── 카드 ────────────────────────────────────────────────────── */
-function GvCard({ ev, extra, selected, width }: {
+function GvCard({ ev, selected, width }: {
   ev: GvEvent
-  extra: number
   selected?: boolean
   width: number
 }) {
@@ -132,7 +133,6 @@ function GvCard({ ev, extra, selected, width }: {
         cursor: 'pointer',
       }}
     >
-      {extra > 0 && <GvCountBadge count={extra} />}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <GvBadge>{ev.type}</GvBadge>
         <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', ...ellipsis }}>
@@ -168,5 +168,15 @@ export function GvBottomSlot({ events, zoom, expanded, theaterName, selected }: 
 
   /* 다건도 카드는 한 장 — 개수는 우상단 +N 배지가 말한다.
      쌓인 실루엣은 지도 위(이미 포스터 카드가 떠 있다)에서 그림자 층만 늘려 노이즈가 됐다. */
-  return <GvCard ev={events[0]} extra={events.length - 1} selected={selected} width={cardWidth(zoom)} />
+  const width = cardWidth(zoom)
+  const extra = events.length - 1
+  const card = <GvCard ev={events[0]} selected={selected} width={width} />
+  if (extra <= 0) return card
+
+  return (
+    <div style={{ position: 'relative', width }}>
+      {card}
+      <GvCountBadge count={extra} />
+    </div>
+  )
 }
