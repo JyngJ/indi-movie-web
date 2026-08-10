@@ -2255,7 +2255,7 @@ export default function MapView() {
     params.delete('movie')
     params.delete('showtime')
     const qs = params.toString()
-    router.replace(qs ? `/?${qs}` : '/', { scroll: false })
+    router.replace(qs ? `/map?${qs}` : '/map', { scroll: false })
 
   }, [closeSearch, flyToForTheater, isDesktopLayout, mapReadyTick, movies.length, openTheaterForMovie, router, searchParams, theaters])
 
@@ -2281,7 +2281,7 @@ export default function MapView() {
     const params = new URLSearchParams(Array.from(searchParams.entries()))
     params.delete('movie')
     const qs = params.toString()
-    router.replace(qs ? `/?${qs}` : '/', { scroll: false })
+    router.replace(qs ? `/map?${qs}` : '/map', { scroll: false })
   }, [clearTheaterSelection, movies, router, searchParams])
 
   // 감독 상세 / 패널에서 ?director= 파라미터로 지도 필터만 복원
@@ -2299,7 +2299,7 @@ export default function MapView() {
     const params = new URLSearchParams(Array.from(searchParams.entries()))
     params.delete('director')
     const qs = params.toString()
-    router.replace(qs ? `/?${qs}` : '/', { scroll: false })
+    router.replace(qs ? `/map?${qs}` : '/map', { scroll: false })
   }, [applyDirectorFilter, router, searchParams])
 
 

@@ -63,18 +63,21 @@ interface MobileTab {
   Icon: (props: { size?: number }) => React.JSX.Element
 }
 
+// 홈('/')은 상영작 탭 — 진입점이 상영작으로 바뀌면서 지도는 '/map'으로 내려갔다.
 const MOBILE_TABS: MobileTab[] = [
-  { key: 'map', href: '/', label: '지도', Icon: IconMap },
-  { key: 'films', href: '/films', label: '상영작', Icon: IconFilm },
+  { key: 'map', href: '/map', label: '지도', Icon: IconMap },
+  { key: 'films', href: '/', label: '상영작', Icon: IconFilm },
   { key: 'more', href: '/more', label: '설정', Icon: IconSettings },
 ]
 
 /** 데스크톱 레일 — 모바일의 '설정' 탭은 제외(레일 하단 설정 버튼이 그 내용을 대신 트리거) */
 const DESKTOP_RAIL_TABS = MOBILE_TABS.filter((tab) => tab.key !== 'more')
 
-function isTabActive(pathname: string, href: string): boolean {
-  if (href === '/') return pathname === '/'
-  return pathname === href || pathname.startsWith(`${href}/`)
+/** 탭 활성 판정은 key 기준 — 상영작 탭은 홈('/')과 구 경로('/films/*') 양쪽을 모두 자기 영역으로 본다 */
+function isTabActive(pathname: string, key: string): boolean {
+  if (key === 'map') return pathname === '/map'
+  if (key === 'films') return pathname === '/' || pathname === '/films' || pathname.startsWith('/films/')
+  return pathname === '/more' || pathname.startsWith('/more/')
 }
 
 function MobileTabBar({ pathname, filmsHref }: { pathname: string; filmsHref: string }) {
@@ -99,7 +102,7 @@ function MobileTabBar({ pathname, filmsHref }: { pathname: string; filmsHref: st
       }}
     >
       {tabs.map(({ key, href, label, Icon }) => {
-        const active = isTabActive(pathname, key === 'films' ? '/films' : href)
+        const active = isTabActive(pathname, key)
         const color = active ? ACTIVE_COLOR : INACTIVE_COLOR
         return (
           <Link
@@ -145,7 +148,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
 
   const renderRailTab = ({ key, href, label, Icon }: MobileTab) => {
     // 검색 패널이 열려있는 동안은 라우트 탭의 활성 표시를 끈다 — 메뉴는 한 번에 하나만 선택 상태
-    const active = !isSearchOpen && isTabActive(pathname, key === 'films' ? '/films' : href)
+    const active = !isSearchOpen && isTabActive(pathname, key)
     const resolvedHref = key === 'films' ? filmsHref : href
     const color = active ? ACTIVE_COLOR : INACTIVE_COLOR
     return (
@@ -159,7 +162,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
             return
           }
           // 지도 화면에서 '지도' 탭 재클릭 — 좌측 도크를 슬라이드 토글 (검색 오버레이 중엔 제외, 위에서 처리)
-          if (key === 'map' && pathname === '/') toggleMapDockCollapsed()
+          if (key === 'map' && pathname === '/map') toggleMapDockCollapsed()
         }}
         style={{ textDecoration: 'none' }}
       >
@@ -203,7 +206,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
         zIndex: 1150,
       }}
     >
-      <Link href="/" aria-label="지도 홈" style={{ display: 'block' }}>
+      <Link href="/" aria-label="홈(상영작)" style={{ display: 'block' }}>
         <Image src="/logo-tile.png" alt="" width={40} height={40} style={{ borderRadius: 4 }} />
       </Link>
 
@@ -312,7 +315,7 @@ export function GlobalNav() {
   const isDesktop = useIsDesktopLayout()
   const pathname = usePathname()
   const [mounted, setMounted] = useState(false)
-  const [filmsHref, setFilmsHref] = useState('/films')
+  const [filmsHref, setFilmsHref] = useState('/')
 
   useEffect(() => {
     setMounted(true)
@@ -324,7 +327,8 @@ export function GlobalNav() {
     if (!mounted) return
     // /films/area/*는 검색 유입용 SEO 랜딩 — 탭 상태가 아니므로 복원 대상에서 제외
     // (랜딩 → 지도 CTA → 상영작 탭을 누르면 랜딩으로 돌아가버리는 문제 방지)
-    if (pathname.startsWith('/films') && !pathname.startsWith('/films/area')) {
+    // 상영작 탭 루트는 '/'이고 상세는 여전히 '/films/*' 아래에 있다.
+    if (pathname === '/' || (pathname.startsWith('/films') && !pathname.startsWith('/films/area'))) {
       sessionStorage.setItem(FILMS_LAST_PATH_KEY, pathname)
       setFilmsHref(pathname)
     }

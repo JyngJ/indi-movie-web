@@ -14,7 +14,6 @@ import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useLocationPermission } from '@/hooks/useLocationPermission'
 import { markOnboardingSeen } from '@/lib/onboarding'
 import { storageAdapter } from '@/lib/adapters/storage'
-import type { LandingVariant } from '@/lib/experiments/landingVariant'
 import { trackEvent } from '@/lib/analytics/client'
 import {
   IcArrow,
@@ -50,11 +49,9 @@ interface PageDef {
 
 interface Props {
   onClose: () => void
-  // 랜딩 A/B 배정 — 아직 resolve 전(null)이면 control과 동일하게 취급(보수적 기본값)
-  variant: LandingVariant | null
 }
 
-export function Onboarding({ onClose, variant }: Props) {
+export function Onboarding({ onClose }: Props) {
   const isDesktop = useIsDesktopLayout()
   const isDark = false  /* 2.0: 다크 폐지 */
   const router = useRouter()
@@ -99,14 +96,10 @@ export function Onboarding({ onClose, variant }: Props) {
     onClose()
   }, [onClose, suppressLocationModal])
 
-  // Test arm은 온보딩이 끝나도 강제로 지도(/)로 보내지 않는다 — /films 랜딩 실험을 이 강제 이동이 무력화하므로
+  // 온보딩을 상세/지도에서 닫았을 때만 홈(상영작)으로 보낸다 — 이미 홈이면 이동하지 않는다
   const goToLanding = useCallback(() => {
-    if (variant === 'test') {
-      if (pathname !== '/films') router.push('/films')
-      return
-    }
     if (pathname !== '/') router.push('/')
-  }, [pathname, router, variant])
+  }, [pathname, router])
 
   const handleSkip = useCallback(() => {
     if (closedRef.current) return

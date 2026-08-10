@@ -32,13 +32,13 @@ export function AreaCtas({ region }: { region: string }) {
         size="full"
         onClick={() => {
           setStoredRegion(region)
-          router.push('/')
+          router.push('/map')
         }}
       >
         <IcoMapPinned />
         지도에서 {region} 독립영화관 찾기
       </Button>
-      <Button variant="secondary" size="full" onClick={() => router.push('/films')}>
+      <Button variant="secondary" size="full" onClick={() => router.push('/')}>
         <IcoClapperboard />
         전체 상영작 보기
       </Button>

@@ -253,7 +253,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
         marginLeft: isDesktop ? -28 : 0,
         marginRight: isDesktop ? -28 : 0,
       }}>
-        <NavBar onBack={() => fromPath ? router.push(fromPath) : router.back()} onClose={() => router.push('/')} />
+        <NavBar onBack={() => fromPath ? router.push(fromPath) : router.back()} onClose={() => router.push('/map')} />
       </div>
 
       <ProfileHero name={directorName} originalName={profile?.originalName} photoUrl={profile?.photoUrl} />
@@ -272,7 +272,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
           variant="secondary"
           size="md"
           fullWidth
-          onClick={() => router.push(`/?director=${encodeURIComponent(directorName)}`)}
+          onClick={() => router.push(`/map?director=${encodeURIComponent(directorName)}`)}
         >
           <IcoMap />
           지도에서 필터로 보기
