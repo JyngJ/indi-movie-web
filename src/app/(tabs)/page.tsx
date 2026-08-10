@@ -6,7 +6,11 @@ import FilmsClient from './FilmsClient'
 // 홈(진입점) = 상영작. 랜딩 A/B 실험에서 상영작 랜딩(test arm)이 이겨서 기본 진입점으로 승격했고,
 // 클라이언트 리다이렉트(`/` → `/films`)를 없애기 위해 라우트 자체를 뒤집었다: 상영작 '/', 지도 '/map'.
 // 구 링크(`/films`)는 next.config.ts에서 '/'로 영구 리다이렉트한다.
-export const revalidate = 3600
+//
+// SEO 크롤러용 텍스트라 1시간 단위 신선도 불필요 — getScreeningIndex는 Supabase-js 호출이라
+// Next Data Cache 대상이 아니고(fetch()만 자동 캐시됨) 페이지 재생성 때마다 DB를 직접 침.
+// 재생성 빈도 자체를 낮춰 Supabase 요청량을 줄인다 (2026-08 Cached Egress 스파이크 대응).
+export const revalidate = 21600
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'
 
