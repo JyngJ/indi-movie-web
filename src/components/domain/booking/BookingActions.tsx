@@ -11,9 +11,12 @@ import { IconButton } from '@/components/primitives'
  */
 type Variant = 'bar' | 'card'
 
+/* 높이는 Button 스케일(md 44 · lg 52) 위에만 둔다. 바와 카드 안에서 CTA와 아이콘 버튼이
+   같은 높이를 쓰지 않으면 나란히 섰을 때 어긋나 보인다 — actionBtn이 선언만 되고
+   쓰이지 않아 공유 버튼이 44로 남아 있던 게 그 사고다. */
 const SPEC = {
-  bar:  { height: 52, font: 16, radius: 12, gap: 8, extIcon: 18, actionBtn: 52, shareIcon: 20, closeBtn: 30, closeIcon: 15 },
-  card: { height: 48, font: 15, radius: 12, gap: 8, extIcon: 17, actionBtn: 48, shareIcon: 18, closeBtn: 22, closeIcon: 13 },
+  bar:  { height: 52, font: 16, radius: 12, gap: 8, extIcon: 18, actionBtn: 52, shareIcon: 20, closeIcon: 15 },
+  card: { height: 44, font: 15, radius: 12, gap: 8, extIcon: 17, actionBtn: 44, shareIcon: 18, closeIcon: 13 },
 } as const
 
 export function BookingCtaButton({
@@ -63,7 +66,7 @@ export function BookingCtaButton({
 export function ShareScheduleButton({ variant, onClick }: { variant: Variant; onClick: () => void }) {
   const s = SPEC[variant]
   return (
-    <IconButton variant="overlay" size={44} onClick={onClick} aria-label="상영 시간표 공유" title="상영 시간표 공유">
+    <IconButton variant="overlay" size={s.actionBtn} onClick={onClick} aria-label="상영 시간표 공유" title="상영 시간표 공유">
       <Share2 size={s.shareIcon} strokeWidth={1.75} />
     </IconButton>
   )
