@@ -11,7 +11,9 @@ import { AreaCtas } from './AreaCtas'
 import { IlloCollected } from '@/components/domain/onboarding/illustrations'
 import ob from '@/components/domain/onboarding/onboarding.module.css'
 
-export const revalidate = 3600
+// SEO 크롤러용 텍스트라 1시간 단위 신선도 불필요 — 17개 지역 페이지가 각각 재생성마다
+// Supabase를 직접 치므로 재생성 빈도를 낮춰 요청량 절감 ((tabs)/page.tsx 주석 참고)
+export const revalidate = 21600
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'
 
