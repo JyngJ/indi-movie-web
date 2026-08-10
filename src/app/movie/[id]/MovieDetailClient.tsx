@@ -643,10 +643,10 @@ export function MovieDetailClient({ movieId, theaterId, initialData, initialShow
   }, [movie])
 
   const fromCuration = searchParams.get('from') === 'curation'
-  const handleBack = () => fromCuration ? router.push('/') : router.back()
-  const handleClose = () => theaterId ? router.push(`/?theater=${theaterId}`) : router.push('/')
+  const handleBack = () => fromCuration ? router.push('/map') : router.back()
+  const handleClose = () => theaterId ? router.push(`/map?theater=${theaterId}`) : router.push('/map')
   const handleDirectorClick = (name: string) => router.push(`/director/${encodeURIComponent(name)}`)
-  const handleMapClick = () => router.push(`/?movie=${movieId}`)
+  const handleMapClick = () => router.push(`/map?movie=${movieId}`)
 
   if (isLoading) {
     return (
@@ -718,7 +718,7 @@ export function MovieDetailClient({ movieId, theaterId, initialData, initialShow
         : <TheatersTab
             movieId={movieId}
             onMapClick={handleMapClick}
-            onGoToTheater={(tid, date) => router.push(`/?theater=${tid}&movie=${movieId}&date=${date}&fromMovie=${movieId}`)}
+            onGoToTheater={(tid, date) => router.push(`/map?theater=${tid}&movie=${movieId}&date=${date}&fromMovie=${movieId}`)}
             desktop={isDesktop}
             initialShowtimes={initialShowtimes}
           />

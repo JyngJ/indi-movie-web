@@ -137,7 +137,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
 
       {/* CTA 버튼 */}
       <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
-        <Button variant="primary" size="md" onClick={() => router.push(`/?director=${encodeURIComponent(directorName)}`)}>
+        <Button variant="primary" size="md" onClick={() => router.push(`/map?director=${encodeURIComponent(directorName)}`)}>
           <IcoMap /> 지도에서 필터로 보기
         </Button>
         <IconButton

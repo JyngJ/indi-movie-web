@@ -70,11 +70,16 @@ const nextConfig: NextConfig = {
   // body→head로 옮기는 인라인 스크립트가 hydration과 경합해 페이지가 영영 hydrate되지
   // 않는 스톨(직진입 무한 로딩)을 일으켜서, 메타데이터를 블로킹으로 강제한다.
   htmlLimitedBots: /.*/,
-  // 구 라우트(/theater/[id]) → films 탭 라우트로 영구 리다이렉트.
-  // sitemap도 신규 경로로만 생성하지만, 과거에 색인/공유된 구 링크를 위해 유지.
+  // 구 라우트 → 신규 라우트 영구 리다이렉트.
+  // sitemap은 신규 경로로만 생성하지만, 과거에 색인/공유된 구 링크를 위해 유지.
+  // - /theater/[id] → films 탭 상세
+  // - /films(정확히 그 경로만) → '/' : 상영작이 홈으로 승격되면서 탭 루트가 옮겨졌다.
+  //   /films/movie, /films/theater, /films/director, /films/area 하위는 그대로 유지되므로
+  //   와일드카드 없이 정확 일치만 리다이렉트한다.
   async redirects() {
     return [
       { source: '/theater/:id', destination: '/films/theater/:id', permanent: true },
+      { source: '/films', destination: '/', permanent: true },
     ]
   },
 };

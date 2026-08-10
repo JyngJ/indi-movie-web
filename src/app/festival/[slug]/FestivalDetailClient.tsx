@@ -102,7 +102,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
           <IconButton variant="ghost" size={44} aria-label="뒤로가기" onClick={() => router.back()}>
             <ChevronLeft size={22} strokeWidth={1.75} color="currentColor" />
           </IconButton>
-          <button onClick={() => router.push('/films')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-caption)', fontSize: 13, minHeight: 'auto', padding: 0, flexShrink: 0 }}>영화</button>
+          <button onClick={() => router.push('/')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-caption)', fontSize: 13, minHeight: 'auto', padding: 0, flexShrink: 0 }}>영화</button>
           <span style={{ color: 'var(--color-text-caption)', fontSize: 13, flexShrink: 0 }}>&gt;</span>
           <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{festival.name}</span>
         </div>
@@ -161,7 +161,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
               </a>
             )}
             {firstLinkedTheaterId && (
-              <Button variant="secondary" size="md" onClick={() => router.push(`/?theater=${firstLinkedTheaterId}`)} style={{ flex: 1 }}>
+              <Button variant="secondary" size="md" onClick={() => router.push(`/map?theater=${firstLinkedTheaterId}`)} style={{ flex: 1 }}>
                 <MapPin size={16} strokeWidth={1.75} color="currentColor" /> 지도에서 보기
               </Button>
             )}

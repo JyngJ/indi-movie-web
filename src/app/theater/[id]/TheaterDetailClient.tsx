@@ -24,7 +24,7 @@ export function TheaterDetailClient({ theater }: { theater: Theater }) {
   const router = useRouter()
 
   useEffect(() => {
-    router.replace(`/?theater=${theater.id}`)
+    router.replace(`/map?theater=${theater.id}`)
   }, [router, theater.id])
 
   return <div style={s.page}>지도로 이동 중...</div>

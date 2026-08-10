@@ -1,5 +1,4 @@
 import type { AnalyticsProperties, AnalyticsSurface, SessionIntent } from './types'
-import type { LandingVariant } from '@/lib/experiments/landingVariant'
 
 const SESSION_KEY = 'movie:analytics-session:v1'
 
@@ -11,20 +10,20 @@ interface StoredSession {
   utm: Record<string, string>
   milestones: Record<string, number>
   intent?: SessionIntent
-  landingVariant?: LandingVariant
   /** 이 세션에서 방문한 탭 표면(방문 순서 유지). v1 세션에는 없을 수 있어 optional. */
   surfaces?: AnalyticsSurface[]
 }
 
 /**
  * 경로를 탭 단위 표면으로 접는다.
+ * 홈('/')은 상영작 탭이다 — 지도는 '/map'.
  * /movie/[id], /theater/[id]는 지도 탭에서 여는 상세라 map으로 본다.
  */
 export function surfaceFromPath(pathname: string): AnalyticsSurface {
-  if (pathname === '/films' || pathname.startsWith('/films/')) return 'films'
+  if (pathname === '/' || pathname === '/films' || pathname.startsWith('/films/')) return 'films'
   if (pathname === '/more' || pathname.startsWith('/more/')) return 'more'
   if (
-    pathname === '/'
+    pathname === '/map'
     || pathname.startsWith('/movie/')
     || pathname.startsWith('/theater/')
   ) return 'map'
@@ -95,19 +94,6 @@ function recordSurface(session: StoredSession): AnalyticsSurface[] {
   return surfaces
 }
 
-/**
- * 진입 표면을 덮어쓴다. 도착 경로와 사용자가 실제로 처음 본 화면이 다를 때만 쓴다
- * — 랜딩 A/B의 test arm은 `/`로 도착한 뒤 곧바로 `/films`로 replace되므로,
- * 경로만 보면 지도 진입으로 잘못 집계된다. `landing_path`(실제 도착 경로)는 유입
- * 분석에 필요하므로 건드리지 않고 표면 여정만 고친다.
- */
-export function setEntrySurface(surface: AnalyticsSurface) {
-  const session = getOrCreateSession()
-  if (!session) return
-  session.surfaces = [surface]
-  writeSession(session)
-}
-
 export function getSessionContext(): AnalyticsProperties {
   const session = getOrCreateSession()
   if (!session || typeof window === 'undefined') return {}
@@ -128,7 +114,6 @@ export function getSessionContext(): AnalyticsProperties {
     viewport_height: window.innerHeight,
     ...session.utm,
     session_intent: session.intent,
-    landing_variant: session.landingVariant,
     entry_surface: entrySurface,
     current_surface: currentSurface,
     surfaces_visited: visited,
@@ -158,13 +143,5 @@ export function setSessionIntent(intent: SessionIntent) {
   } else {
     session.intent = intent
   }
-  writeSession(session)
-}
-
-/** variant는 세션마다 1개 — session_intent와 달리 병합 없이 최초 배정 값을 그대로 유지한다 */
-export function setLandingVariant(variant: LandingVariant) {
-  const session = getOrCreateSession()
-  if (!session || session.landingVariant) return
-  session.landingVariant = variant
   writeSession(session)
 }
