@@ -3,7 +3,7 @@
 import type { GvEvent } from '@/data/gv-events'
 import { gvEventTypeColor } from '@/lib/gv/adapter'
 import { trackEvent } from '@/lib/analytics/client'
-import { shareAdapter } from '@/lib/adapters/share'
+import { shareAndTrack } from '@/lib/analytics/shareTracking'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { IconButton } from '@/components/primitives'
 import { BookingCtaButton, ShareScheduleButton } from './booking/BookingActions'
@@ -20,29 +20,25 @@ export function GvDetailPanel({ ev, onClose, onCloseAll, panelMode }: GvDetailPa
   const statusColor = ev.status === '매진' ? 'var(--color-error)' : ev.status === '매진 임박' ? 'var(--color-warning)' : 'var(--color-success)'
 
   const shareEvent = () => {
-    trackEvent('share clicked', {
-      theater_name: ev.theaterName,
-      movie_title: ev.movie,
-      gv_event_id: ev.id,
-      source: 'gv_detail',
-    })
-
-    const url = new URL(window.location.origin)
+    // '/map' — 지도 파라미터는 '/map'에서만 마운트되는 MapView가 읽는다 (#262 이후)
+    const url = new URL('/map', window.location.origin)
     if (ev.theaterId) url.searchParams.set('theater', ev.theaterId)
     if (ev.movieId) url.searchParams.set('movie', ev.movieId)
     if (ev.eventDate) url.searchParams.set('date', ev.eventDate)
-    const shareUrl = url.toString()
-    const payload = { title: `${ev.theaterName} - ${ev.movie}`, url: shareUrl }
 
-    const copyFallback = () => { shareAdapter.copyToClipboardAsync(shareUrl) }
-
-    if (shareAdapter.canShare(payload)) {
-      shareAdapter.share(payload).then((result) => {
-        if (result === 'error') copyFallback()
-      })
-      return
-    }
-    copyFallback()
+    void shareAndTrack({
+      payload: { title: `${ev.theaterName} - ${ev.movie}`, url: url.toString() },
+      source: 'gv_detail',
+      scope: 'page',
+      properties: {
+        // 이름만 실으면 다른 이벤트와 조인이 안 된다 — 아이디도 함께 남긴다
+        theater_id: ev.theaterId ?? null,
+        theater_name: ev.theaterName,
+        movie_id: ev.movieId ?? null,
+        movie_title: ev.movie,
+        gv_event_id: ev.id,
+      },
+    })
   }
 
   return (

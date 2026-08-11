@@ -20,7 +20,7 @@ import { withFlag } from '@/lib/nations'
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { useDragSheet } from '@/hooks/useDragSheet'
 import { useMomentumScroll } from '@/hooks/useMomentumScroll'
-import { shareAdapter } from '@/lib/adapters/share'
+import { shareAndTrack } from '@/lib/analytics/shareTracking'
 import { GvEventSection } from './GvEventSection'
 import { GvDetailPanel } from './GvDetailPanel'
 import { BookingCtaButton, ShareScheduleButton } from './booking/BookingActions'
@@ -786,15 +786,9 @@ export function TheaterSheet({
     const selectedEntry = allMovieEntries.find((e) => e.movie.id === selectedMovieId)
     const selectedShowtime = filteredShowtimes.find((st) => st.id === selectedShowtimeId)
 
-    trackEvent('share clicked', {
-      theater_id: theater.id,
-      theater_name: theater.name,
-      selected_movie_id: selectedMovieId || null,
-      selected_showtime_id: selectedShowtimeId || null,
-      source: 'theater_sheet',
-    })
-
-    const url = new URL(window.location.origin)
+    // '/map' — 진입점이 상영작으로 바뀐 뒤(#262) 지도 파라미터를 읽는 건 MapView 하나뿐이고
+    // 그건 '/map'에서만 마운트된다. 루트로 보내면 받은 사람에게 파라미터가 통째로 무시된다.
+    const url = new URL('/map', window.location.origin)
     url.searchParams.set('theater', theater.id)
     let title = theater.name
     if (selectedEntry) {
@@ -806,24 +800,19 @@ export function TheaterSheet({
         title += ` ${selectedShowtime.showTime.slice(0, 5)}`
       }
     }
-    const shareUrl = url.toString()
-    // text + url 동시에 넘기면 iOS Safari가 url을 무시하는 버그 있음 → title + url만 사용
-    const payload = { title, url: shareUrl }
-
-    const copyFallback = () => {
-      shareAdapter.copyToClipboardAsync(shareUrl).then((ok) => {
-        if (ok) setCopyCount(c => c + 1)
-      })
-    }
-
-    if (shareAdapter.canShare(payload)) {
-      shareAdapter.share(payload).then((result) => {
-        if (result === 'error') copyFallback()
-      })
-      return
-    }
-
-    copyFallback()
+    void shareAndTrack({
+      // text + url 동시에 넘기면 iOS Safari가 url을 무시하는 버그 있음 → title + url만 사용
+      payload: { title, url: url.toString() },
+      source: 'theater_sheet',
+      scope: selectedShowtime ? 'showtime' : 'page',
+      properties: {
+        theater_id: theater.id,
+        theater_name: theater.name,
+        selected_movie_id: selectedMovieId || null,
+        selected_showtime_id: selectedShowtimeId || null,
+      },
+      onCopied: () => setCopyCount(c => c + 1),
+    })
   }
 
   const hasInstagram = Boolean(theater.instagramUrl)

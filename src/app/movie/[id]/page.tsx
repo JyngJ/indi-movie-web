@@ -4,6 +4,7 @@ import { toMovieSchema } from '@/lib/seo/toMovieSchema'
 import { toScreeningEventSchema } from '@/lib/seo/toScreeningEventSchema'
 import { getMovieTheaterShowtimes } from '@/lib/catalog/getMovieTheaterShowtimes'
 import { MovieDetailClient } from './MovieDetailClient'
+import { ogImageUrl } from '@/lib/og/cards'
 import type { MovieDetail, MovieTheaterEntry } from '@/lib/supabase/queries'
 
 export const revalidate = 3600
@@ -79,15 +80,13 @@ export async function generateMetadata({
       description,
       url,
       type: 'website',
-      ...(movie.posterUrl && {
-        images: [{ url: movie.posterUrl, alt: `${movie.title} 포스터` }],
-      }),
+      images: [ogImageUrl({ type: 'movie', id })],
     },
     twitter: {
-      card: movie.posterUrl ? 'summary_large_image' : 'summary',
+      card: 'summary_large_image',
       title,
       description,
-      ...(movie.posterUrl && { images: [movie.posterUrl] }),
+      images: [ogImageUrl({ type: 'movie', id })],
     },
     alternates: {
       canonical: url,

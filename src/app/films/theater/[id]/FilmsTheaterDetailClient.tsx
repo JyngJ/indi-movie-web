@@ -13,7 +13,7 @@ import { withFlagsRaw } from '@/lib/nations'
 import type { Theater, Movie, Showtime } from '@/types/api'
 import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWidget'
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
-import { shareAdapter } from '@/lib/adapters/share'
+import { shareAndTrack } from '@/lib/analytics/shareTracking'
 import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/components/domain/booking/BookingActions'
 import { Skeleton, Chip, Button } from '@/components/primitives'
 import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
@@ -398,7 +398,8 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
 
   // 회차가 선택돼있으면 그 회차(영화+날짜+시간)까지 실어서 지도로 — 선택 안 돼있으면 극장만
   function mapUrlWithSelection() {
-    const url = new URL('/', window.location.origin)
+    // '/map' — 지도 파라미터는 '/map'에서만 마운트되는 MapView가 읽는다 (#262 이후)
+    const url = new URL('/map', window.location.origin)
     url.searchParams.set('theater', theater.id)
     if (selectedShowtimeData) {
       url.searchParams.set('movie', selectedShowtimeData.st.movieId)
@@ -410,26 +411,24 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
 
   const shareSelectedShowtime = () => {
     if (!selectedShowtimeData) return
-    trackEvent('share clicked', {
-      theater_id: theater.id,
-      theater_name: theater.name,
-      movie_id: selectedShowtimeData.st.movieId,
-      movie_title: selectedShowtimeData.movieTitle,
-      showtime_id: selectedShowtimeData.st.id,
-      source: 'films_theater_detail',
-    })
     const url = new URL(window.location.href)
     url.searchParams.set('date', selectedDate)
     url.searchParams.set('showtime', selectedShowtimeData.st.id)
-    const shareUrl = url.toString()
-    const title = `${theater.name} - ${selectedShowtimeData.movieTitle} ${selectedShowtimeData.st.showTime.slice(0, 5)}`
-    const payload = { title, url: shareUrl }
-    const copyFallback = () => { shareAdapter.copyToClipboardAsync(shareUrl) }
-    if (shareAdapter.canShare(payload)) {
-      shareAdapter.share(payload).then((result) => { if (result === 'error') copyFallback() })
-      return
-    }
-    copyFallback()
+    void shareAndTrack({
+      payload: {
+        title: `${theater.name} - ${selectedShowtimeData.movieTitle} ${selectedShowtimeData.st.showTime.slice(0, 5)}`,
+        url: url.toString(),
+      },
+      source: 'films_theater_detail',
+      scope: 'showtime',
+      properties: {
+        theater_id: theater.id,
+        theater_name: theater.name,
+        movie_id: selectedShowtimeData.st.movieId,
+        movie_title: selectedShowtimeData.movieTitle,
+        showtime_id: selectedShowtimeData.st.id,
+      },
+    })
   }
 
   function copyAddress() {
@@ -492,8 +491,12 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
             variant="secondary"
             size="md"
             onClick={() => {
-              trackEvent('share clicked', { theater_id: theater.id, theater_name: theater.name, source: 'films_theater_detail' })
-              navigator.share?.({ title: theater.name, url: window.location.href }).catch(() => {})
+              void shareAndTrack({
+                payload: { title: theater.name, url: window.location.href },
+                source: 'films_theater_detail',
+                scope: 'page',
+                properties: { theater_id: theater.id, theater_name: theater.name },
+              })
             }}
           >
             <IcoShare />

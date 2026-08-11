@@ -31,7 +31,9 @@ const GUTTER_TARGET = 16
 /* ── 감사 대상 외 ──────────────────────────────────────────────── */
 const EXCLUDE = [
   'onboarding/illustrations', 'GvPinSlots', 'GvPin', 'MapPin', 'GvMarkerIcon',
-  'opengraph-image', 'dev/components', 'src/app/admin', 'subwayUtils',
+  // src/lib/og: OG 카드 공용 렌더러. satori는 CSS 변수를 못 읽어 토큰을 리터럴로 박아야
+  // 한다 — opengraph-image를 제외하는 이유와 같다(렌더러만 모듈로 뺐을 뿐).
+  'opengraph-image', 'src/lib/og', 'dev/components', 'src/app/admin', 'subwayUtils',
 ]
 const isExcluded = f => EXCLUDE.some(x => f.includes(x))
 

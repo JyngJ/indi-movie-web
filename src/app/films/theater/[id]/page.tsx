@@ -7,6 +7,7 @@ import { safeUrl } from '@/lib/seo/safeUrl'
 import { formatLocalDate } from '@/lib/date'
 import type { Theater } from '@/types/api'
 import { FilmsTheaterDetailClient } from './FilmsTheaterDetailClient'
+import { ogImageUrl } from '@/lib/og/cards'
 
 // 영화 상세와 동일: ISR 정적 셸 hydration 정지 버그 회피 — 동적 렌더 강제
 export const dynamic = 'force-dynamic'
@@ -69,10 +70,12 @@ async function fetchTheater(id: string): Promise<Theater | null> {
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }): Promise<Metadata> {
-  const { id } = await params
+  const [{ id }, query] = await Promise.all([params, searchParams])
   const theater = await fetchTheater(id)
   if (!theater) return { title: '영화볼지도' }
 
@@ -82,6 +85,9 @@ export async function generateMetadata({
     ? `${theater.name}에서 이번 주 상영 중: ${todayTitles.join(', ')}. 시간표와 예매 정보를 지도에서 확인하세요.`
     : `${theater.name} 상영 정보. ${theater.address}`
   const url = `${BASE_URL}/films/theater/${id}`
+  /* 회차까지 골라서 공유한 링크(?showtime=)면 카드에 그 회차를 싣는다 */
+  const showtime = typeof query.showtime === 'string' ? query.showtime : undefined
+  const images = [ogImageUrl({ type: 'theater', id, showtime })]
 
   return {
     title,
@@ -91,11 +97,13 @@ export async function generateMetadata({
       description,
       url,
       type: 'website',
+      images,
     },
     twitter: {
-      card: 'summary',
+      card: 'summary_large_image',
       title,
       description,
+      images,
     },
     alternates: {
       canonical: url,
