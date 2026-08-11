@@ -3,6 +3,7 @@ import { readFile } from 'fs/promises'
 import path from 'path'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { formatDateLabel } from '@/lib/date'
+import { isAlmostSoldOut } from '@/lib/catalog/seatAvailability'
 
 /* 링크 미리보기(카카오톡·디스코드·트위터) OG 카드 공용 렌더러.
  *
@@ -24,6 +25,14 @@ const OG_COLOR = {
   chipBg: '#ECEFF9',    // primary/100 — 틴트 배경
   chipText: '#1F2747',  // primary/900 — 틴트 위 텍스트
   wordmark: '#404E81',  // primary/700 — 워드마크
+  // 회차 셀
+  cardSurface: '#FFFFFF',   // surface/card — 종이 위 새 종이 한 장
+  border: '#EAE5E1',        // neutral/200
+  timeText: '#2B2622',      // neutral/800 — 시각
+  caption: '#8D8781',       // neutral/500 — 종료 시각
+  seatNormal: '#404E81',    // primary/700 — 잔여석
+  seatLow: '#B9800E',       // warning — 잔여 10% 이하
+  seatSoldout: '#A7A19A',   // neutral/400 (text/placeholder) — 매진
 } as const
 
 const OG_SIZE = { width: 1200, height: 630 }
@@ -71,7 +80,14 @@ function ogResponse(node: React.ReactElement, fontBold: Buffer) {
 }
 
 /** 공유 링크에 회차가 실려 있을 때 카드에 얹는 맥락 — [8월 12일(화)] 제목 / 19:30 · 상대편 이름 */
-type ShowtimeContext = { dateLabel: string; time: string; counterpart: string }
+type ShowtimeContext = {
+  dateLabel: string
+  time: string
+  counterpart: string
+  endTime: string | null
+  seatAvailable: number
+  seatTotal: number
+}
 
 /** showtimes.show_time 은 TIME 이라 "19:30:00" 꼴로 온다 — 초를 잘라낸다 */
 const hhmm = (t: string) => t.slice(0, 5)
@@ -132,7 +148,7 @@ async function fetchShowtimeContext(
   const supabase = createSupabaseServerClient()
   const { data } = await supabase
     .from('showtimes')
-    .select('show_date, show_time, theater_id, movie_id')
+    .select('show_date, show_time, end_time, seat_available, seat_total, theater_id, movie_id')
     .eq('id', showtimeId)
     .single()
   if (!data) return null
@@ -146,7 +162,61 @@ async function fetchShowtimeContext(
     : (named as { title: string } | null)?.title
   if (!name) return null
 
-  return { dateLabel: formatDateLabel(data.show_date), time: hhmm(data.show_time), counterpart: name }
+  return {
+    dateLabel: formatDateLabel(data.show_date),
+    time: hhmm(data.show_time),
+    counterpart: name,
+    endTime: data.end_time ? hhmm(data.end_time) : null,
+    seatAvailable: Number(data.seat_available ?? 0),
+    seatTotal: Number(data.seat_total ?? 0),
+  }
+}
+
+/**
+ * 회차 셀 — 피그마 공유 카드(2026-08-12 수정본)의 `2.0/ShowtimeCell` 인스턴스 실측 그대로.
+ * 446×216 · r16 · 흰 면 · 보더 neutral/200 · padding 32 · gap 4,
+ * 시각 KIMM 48(자간 5%) / 종료 24 / 좌석 Bold 32.
+ *
+ * 화면의 ShowtimeCell(104×95)을 카드 크기로 키운 배리언트라 수치를 공유하지 않는다.
+ * 좌석 색만 화면과 같은 규칙을 쓴다 — 매진은 회색, 잔여 10% 이하는 오커, 그 외 primary.
+ */
+function ShowtimeCellBlock({ showtime }: { showtime: ShowtimeContext }) {
+  const soldout = showtime.seatAvailable <= 0
+  const seatColor = soldout
+    ? OG_COLOR.seatSoldout
+    : isAlmostSoldOut(showtime.seatAvailable, showtime.seatTotal)
+      ? OG_COLOR.seatLow
+      : OG_COLOR.seatNormal
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 4,
+        width: 446,
+        padding: 32,
+        borderRadius: 16,
+        backgroundColor: OG_COLOR.cardSurface,
+        border: `1px solid ${OG_COLOR.border}`,
+      }}
+    >
+      {/* 자간 5% — satori는 em을 못 읽어 px로 환산한다 (48 × 0.05) */}
+      <div style={{ fontFamily: 'KIMM', fontSize: 48, fontWeight: 700, letterSpacing: 2.4, lineHeight: 1.25, color: OG_COLOR.timeText }}>
+        {showtime.time}
+      </div>
+      {/* 문자열은 항상 하나로 합쳐 넘긴다 — satori는 자식이 둘 이상인 div에 display:flex를 요구한다 */}
+      {showtime.endTime && (
+        <div style={{ fontSize: 24, lineHeight: 1.5, color: OG_COLOR.caption }}>{`-${showtime.endTime}`}</div>
+      )}
+      {showtime.seatTotal > 0 && (
+        <div style={{ display: 'flex', fontSize: 32, fontWeight: 700, lineHeight: 1.5 }}>
+          <span style={{ color: seatColor, textDecoration: soldout ? 'line-through' : 'none' }}>{showtime.seatAvailable}</span>
+          <span style={{ color: OG_COLOR.meta, textDecoration: soldout ? 'line-through' : 'none' }}>{`/${showtime.seatTotal}석`}</span>
+        </div>
+      )}
+    </div>
+  )
 }
 
 export async function renderMovieOg(id: string, showtimeId?: string) {
@@ -211,6 +281,7 @@ export async function renderMovieOg(id: string, showtimeId?: string) {
                 {year && <span>{year}</span>}
               </div>
             ) : null}
+            {showtime && <ShowtimeCellBlock showtime={showtime} />}
           </div>
 
           <Wordmark src={wordmark} />
