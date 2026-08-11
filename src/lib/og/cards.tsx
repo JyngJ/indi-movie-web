@@ -79,11 +79,11 @@ function ogResponse(node: React.ReactElement, fontBold: Buffer) {
   })
 }
 
-/** 공유 링크에 회차가 실려 있을 때 카드에 얹는 맥락 — [8월 12일(화)] 제목 / 19:30 · 상대편 이름 */
+/** 공유 링크에 회차가 실려 있을 때 카드에 얹는 맥락 — [8월 12일(화)] 영화 제목 / 19:30 · 극장 */
 type ShowtimeContext = {
   dateLabel: string
   time: string
-  counterpart: string
+  theaterName: string
   endTime: string | null
   seatAvailable: number
   seatTotal: number
@@ -127,7 +127,7 @@ function Chip({ label, size = 16, padV = 3, padH = 12 }: { label: string; size?:
 }
 
 /** 세로 카드 껍데기(극장·감독) — 정보 위, 워드마크 아래 */
-function StackCard({ children, wordmark, cell }: { children: React.ReactNode; wordmark: string; cell?: React.ReactNode }) {
+function StackCard({ children, wordmark }: { children: React.ReactNode; wordmark: string }) {
   return (
     <div
       style={{
@@ -141,43 +141,32 @@ function StackCard({ children, wordmark, cell }: { children: React.ReactNode; wo
         gap: 12,
       }}
     >
-      {/* 회차 셀은 info 밖 형제 — 영화 카드와 같은 골격 */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>{children}</div>
-      {cell}
       <WordmarkBottom src={wordmark} />
     </div>
   )
 }
 
 /**
- * 회차 맥락 조회. 영화 카드에서는 상대편이 극장, 극장 카드에서는 상대편이 영화다.
+ * 회차 맥락 조회. 회차 카드는 언제나 영화가 주인공이라 상대편은 늘 극장이다.
  * 회차가 사라졌거나(비활성·크롤 갱신) 아이디가 엉터리면 null — 카드는 회차 없이 그려진다.
  */
-async function fetchShowtimeContext(
-  showtimeId: string,
-  counterpart: 'theater' | 'movie',
-): Promise<ShowtimeContext | null> {
+async function fetchShowtimeContext(showtimeId: string): Promise<ShowtimeContext | null> {
   const supabase = createSupabaseServerClient()
   const { data } = await supabase
     .from('showtimes')
-    .select('show_date, show_time, end_time, seat_available, seat_total, theater_id, movie_id')
+    .select('show_date, show_time, end_time, seat_available, seat_total, theater_id')
     .eq('id', showtimeId)
     .single()
   if (!data) return null
 
-  const { data: named } = counterpart === 'theater'
-    ? await supabase.from('theaters').select('name').eq('id', data.theater_id).single()
-    : await supabase.from('movies').select('title').eq('id', data.movie_id).single()
-
-  const name = counterpart === 'theater'
-    ? (named as { name: string } | null)?.name
-    : (named as { title: string } | null)?.title
-  if (!name) return null
+  const { data: theater } = await supabase.from('theaters').select('name').eq('id', data.theater_id).single()
+  if (!theater?.name) return null
 
   return {
     dateLabel: formatDateLabel(data.show_date),
     time: hhmm(data.show_time),
-    counterpart: name,
+    theaterName: theater.name,
     endTime: data.end_time ? hhmm(data.end_time) : null,
     seatAvailable: Number(data.seat_available ?? 0),
     seatTotal: Number(data.seat_total ?? 0),
@@ -186,8 +175,8 @@ async function fetchShowtimeContext(
 
 /**
  * 회차 셀 — 피그마 공유 카드(2026-08-12 수정본)의 `2.0/ShowtimeCell` 인스턴스 실측 그대로.
- * 446×216 · r16 · 흰 면 · 보더 neutral/200 · padding 32 · gap 4,
- * 시각 KIMM 48(자간 5%) / 종료 24 / 좌석 Bold 32.
+ * r16 · 흰 면 · 보더 neutral/200 · padding 32 · gap 4 · 폭은 텍스트 열 꽉,
+ * 시각 KIMM 48(자간 4px) / 종료 24 / 좌석 Bold 32.
  *
  * 화면의 ShowtimeCell(104×95)을 카드 크기로 키운 배리언트라 수치를 공유하지 않는다.
  * 좌석 색만 화면과 같은 규칙을 쓴다 — 매진은 회색, 잔여 10% 이하는 오커, 그 외 primary.
@@ -235,7 +224,7 @@ export async function renderMovieOg(id: string, showtimeId?: string) {
   const supabase = createSupabaseServerClient()
   const [{ data }, showtime] = await Promise.all([
     supabase.from('movies').select('title, director, genre, year, poster_url').eq('id', id).single(),
-    showtimeId ? fetchShowtimeContext(showtimeId, 'theater') : Promise.resolve(null),
+    showtimeId ? fetchShowtimeContext(showtimeId) : Promise.resolve(null),
   ])
 
   const [fontBold, wordmark] = await Promise.all([loadKimmBold(), loadWordmarkDataUri()])
@@ -285,7 +274,7 @@ export async function renderMovieOg(id: string, showtimeId?: string) {
               <div style={{ display: 'flex', fontSize: 22, color: OG_COLOR.meta, gap: 12 }}>
                 <span>{showtime.time}</span>
                 <span>·</span>
-                <span>{showtime.counterpart}</span>
+                <span>{showtime.theaterName}</span>
               </div>
             ) : (directors.length > 0 || year) ? (
               <div style={{ display: 'flex', fontSize: 22, color: OG_COLOR.meta, gap: 12 }}>
@@ -308,33 +297,28 @@ export async function renderMovieOg(id: string, showtimeId?: string) {
 
 export async function renderTheaterOg(id: string, showtimeId?: string) {
   const supabase = createSupabaseServerClient()
-  const [{ data }, showtime] = await Promise.all([
-    supabase.from('theaters').select('name, city, address').eq('id', id).single(),
-    showtimeId ? fetchShowtimeContext(showtimeId, 'movie') : Promise.resolve(null),
-  ])
 
+  /* 회차가 실린 링크는 사실상 그 영화를 공유하는 것이다 — 극장 카드가 아니라 영화 카드를 굽는다.
+   * (포스터가 왼쪽에 서고 제목이 영화가 된다. 극장은 회차 줄에 남는다.) */
+  if (showtimeId) {
+    const { data: st } = await supabase.from('showtimes').select('movie_id').eq('id', showtimeId).single()
+    if (st?.movie_id) return renderMovieOg(st.movie_id, showtimeId)
+  }
+
+  const { data } = await supabase.from('theaters').select('name, address').eq('id', id).single()
   const [fontBold, wordmark] = await Promise.all([loadKimmBold(), loadWordmarkDataUri()])
 
   const name = data?.name ?? '영화볼지도'
-  const city = data?.city ?? ''
   const address = data?.address ?? ''
 
   return ogResponse(
     (
-      <StackCard wordmark={wordmark} cell={showtime ? <ShowtimeCellBlock showtime={showtime} /> : undefined}>
-        {/* 회차가 실린 링크면 도시·주소 대신 그 회차를 앞세운다 */}
-        {showtime ? <Chip label={showtime.dateLabel} size={18} padV={4} padH={14} />
-          : city ? <Chip label={city} size={18} padV={4} padH={14} /> : null}
+      /* 도시 칩은 뺐다 — 주소 첫 토막과 같은 말이라 두 번 읽힌다 */
+      <StackCard wordmark={wordmark}>
         <div style={{ fontFamily: 'KIMM', fontSize: name.length > 8 ? 64 : 80, fontWeight: 700, color: OG_COLOR.title, lineHeight: 1.1 }}>
           {name}
         </div>
-        {showtime ? (
-          <div style={{ display: 'flex', fontSize: 22, color: OG_COLOR.meta, gap: 12 }}>
-            <span>{showtime.time}</span>
-            <span>·</span>
-            <span>{showtime.counterpart}</span>
-          </div>
-        ) : address ? <div style={{ fontSize: 22, color: OG_COLOR.meta }}>{address}</div> : null}
+        {address ? <div style={{ fontSize: 22, color: OG_COLOR.meta }}>{address}</div> : null}
       </StackCard>
     ),
     fontBold,
