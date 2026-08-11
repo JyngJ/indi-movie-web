@@ -55,10 +55,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return {
     title,
     description,
-    openGraph: {
-      title, description,
-      ...(movie.posterUrl && { images: [{ url: movie.posterUrl, alt: `${movie.title} 포스터` }] }),
-    },
+    /* images는 지정하지 않는다 — 같은 폴더의 opengraph-image.tsx(1200×630)가
+     * 파일 기반 메타데이터로 config를 덮어쓴다. 포스터 원본 URL을 넣으면 세로 비율이라
+     * 카카오톡·트위터 미리보기에서 잘린다. */
+    openGraph: { title, description, type: 'website' },
+    twitter: { card: 'summary_large_image', title, description },
     alternates: { canonical: `/movie/${id}` },
   }
 }

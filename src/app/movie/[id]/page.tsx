@@ -74,20 +74,18 @@ export async function generateMetadata({
   return {
     title,
     description,
+    /* images는 opengraph-image.tsx(1200×630)가 파일 기반으로 덮어쓴다 — 포스터 원본은
+     * 세로 비율이라 미리보기에서 잘려 여기서 지정하지 않는다 */
     openGraph: {
       title,
       description,
       url,
       type: 'website',
-      ...(movie.posterUrl && {
-        images: [{ url: movie.posterUrl, alt: `${movie.title} 포스터` }],
-      }),
     },
     twitter: {
-      card: movie.posterUrl ? 'summary_large_image' : 'summary',
+      card: 'summary_large_image',
       title,
       description,
-      ...(movie.posterUrl && { images: [movie.posterUrl] }),
     },
     alternates: {
       canonical: url,

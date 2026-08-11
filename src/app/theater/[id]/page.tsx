@@ -97,7 +97,8 @@ export async function generateMetadata({
       type: 'website',
     },
     twitter: {
-      card: 'summary',
+      /* opengraph-image.tsx가 1200×630을 생성하므로 큰 카드로 */
+      card: 'summary_large_image',
       title,
       description,
     },
