@@ -13,6 +13,15 @@ export const metadata: Metadata = {
     description: '전국 독립·예술영화관과 오늘 상영작을 지도에서 한눈에.',
     url: '/map',
     type: 'website',
+    // 중첩 키는 통째로 덮어써진다 — images를 빼면 루트의 브랜드 카드까지 사라진다.
+    // 지도 시트·GV 공유가 이 경로로 오므로 미리보기가 비면 그대로 드러난다.
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: '독립영화관 지도 | 영화볼지도',
+    description: '전국 독립·예술영화관과 오늘 상영작을 지도에서 한눈에.',
+    images: ['/og-image.png'],
   },
 }
 

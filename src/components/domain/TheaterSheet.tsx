@@ -794,7 +794,9 @@ export function TheaterSheet({
       source: 'theater_sheet',
     })
 
-    const url = new URL(window.location.origin)
+    // '/map' — 진입점이 상영작으로 바뀐 뒤(#262) 지도 파라미터를 읽는 건 MapView 하나뿐이고
+    // 그건 '/map'에서만 마운트된다. 루트로 보내면 받은 사람에게 파라미터가 통째로 무시된다.
+    const url = new URL('/map', window.location.origin)
     url.searchParams.set('theater', theater.id)
     let title = theater.name
     if (selectedEntry) {

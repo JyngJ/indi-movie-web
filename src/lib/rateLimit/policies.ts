@@ -18,6 +18,12 @@ export const RATE_LIMIT_POLICIES = {
    * 캐시를 무력화하는 공격만 이 선에 걸린다.
    */
   showtimesWindow: { name: 'showtimes-window', windowSeconds: 60, limit: 120 },
+  /**
+   * 공유 미리보기(OG) 카드 굽기. 카카오톡·디스코드 봇이 같은 링크를 여러 번 긁어가고
+   * 한 번 구울 때마다 Supabase 조회 + 이미지 합성이 붙는다. CDN이 앞에 있어 이 카운터는
+   * 캐시 미스에서만 는다 — 아이디를 흔들어 캐시를 무력화하는 요청만 이 선에 걸린다.
+   */
+  ogCards: { name: 'og-cards', windowSeconds: 60, limit: 60 },
 } as const satisfies Record<string, RateLimitPolicy>
 
 /**

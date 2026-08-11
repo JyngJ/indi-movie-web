@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import type { MovieDetail } from '@/lib/supabase/queries'
 import { FilmsMovieDetailClient } from './FilmsMovieDetailClient'
+import { ogImageUrl } from '@/lib/og/cards'
 
 // ISR(revalidate) 정적 셸 + 스트리밍 조합에서 hydration이 영구 정지하는 버그(직진입 시
 // 회차 무한 로딩·effects 미실행)가 있어 동적 렌더로 강제. 원인 규명 후 ISR 복원 검토.
@@ -44,22 +45,24 @@ async function fetchMovie(id: string): Promise<MovieDetail | null> {
   }
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  const { id } = await params
+export async function generateMetadata(
+  { params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> },
+): Promise<Metadata> {
+  const [{ id }, query] = await Promise.all([params, searchParams])
   const movie = await fetchMovie(id)
   if (!movie) return { title: '영화볼지도' }
 
   const title = `${movie.title} | 영화볼지도`
   const description = movie.synopsis?.slice(0, 110) ?? `${movie.title} 상영 정보`
+  /* 회차까지 골라서 공유한 링크(?showtime=)면 카드에 그 회차를 싣는다 */
+  const showtime = typeof query.showtime === 'string' ? query.showtime : undefined
+  const images = [ogImageUrl({ type: 'movie', id, showtime })]
 
   return {
     title,
     description,
-    /* images는 지정하지 않는다 — 같은 폴더의 opengraph-image.tsx(1200×630)가
-     * 파일 기반 메타데이터로 config를 덮어쓴다. 포스터 원본 URL을 넣으면 세로 비율이라
-     * 카카오톡·트위터 미리보기에서 잘린다. */
-    openGraph: { title, description, type: 'website' },
-    twitter: { card: 'summary_large_image', title, description },
+    openGraph: { title, description, type: 'website', images },
+    twitter: { card: 'summary_large_image', title, description, images },
     alternates: { canonical: `/movie/${id}` },
   }
 }

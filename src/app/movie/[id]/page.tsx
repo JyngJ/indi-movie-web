@@ -4,6 +4,7 @@ import { toMovieSchema } from '@/lib/seo/toMovieSchema'
 import { toScreeningEventSchema } from '@/lib/seo/toScreeningEventSchema'
 import { getMovieTheaterShowtimes } from '@/lib/catalog/getMovieTheaterShowtimes'
 import { MovieDetailClient } from './MovieDetailClient'
+import { ogImageUrl } from '@/lib/og/cards'
 import type { MovieDetail, MovieTheaterEntry } from '@/lib/supabase/queries'
 
 export const revalidate = 3600
@@ -74,18 +75,18 @@ export async function generateMetadata({
   return {
     title,
     description,
-    /* images는 opengraph-image.tsx(1200×630)가 파일 기반으로 덮어쓴다 — 포스터 원본은
-     * 세로 비율이라 미리보기에서 잘려 여기서 지정하지 않는다 */
     openGraph: {
       title,
       description,
       url,
       type: 'website',
+      images: [ogImageUrl({ type: 'movie', id })],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
+      images: [ogImageUrl({ type: 'movie', id })],
     },
     alternates: {
       canonical: url,

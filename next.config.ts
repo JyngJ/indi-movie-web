@@ -80,6 +80,16 @@ const nextConfig: NextConfig = {
     return [
       { source: '/theater/:id', destination: '/films/theater/:id', permanent: true },
       { source: '/films', destination: '/', permanent: true },
+      // 지도 딥링크 구제 — '/'가 상영작이 되기 전에 공유된 링크는 '/?theater=…&movie=…' 꼴이다.
+      // 지도 파라미터를 읽는 MapView는 '/map'에서만 마운트되므로 루트로 오면 통째로 무시된다.
+      // 쿼리스트링은 Next가 목적지로 그대로 넘겨준다. 영구가 아닌 이유는 루트의 의미가
+      // 또 바뀔 수 있어서다(진입점은 실험으로 정해진다).
+      ...(['theater', 'movie', 'director'] as const).map((key) => ({
+        source: '/',
+        has: [{ type: 'query' as const, key }],
+        destination: '/map',
+        permanent: false,
+      })),
     ]
   },
 };

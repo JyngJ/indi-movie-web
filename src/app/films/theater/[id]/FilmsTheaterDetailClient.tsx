@@ -398,7 +398,8 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
 
   // 회차가 선택돼있으면 그 회차(영화+날짜+시간)까지 실어서 지도로 — 선택 안 돼있으면 극장만
   function mapUrlWithSelection() {
-    const url = new URL('/', window.location.origin)
+    // '/map' — 지도 파라미터는 '/map'에서만 마운트되는 MapView가 읽는다 (#262 이후)
+    const url = new URL('/map', window.location.origin)
     url.searchParams.set('theater', theater.id)
     if (selectedShowtimeData) {
       url.searchParams.set('movie', selectedShowtimeData.st.movieId)

@@ -27,7 +27,8 @@ export function GvDetailPanel({ ev, onClose, onCloseAll, panelMode }: GvDetailPa
       source: 'gv_detail',
     })
 
-    const url = new URL(window.location.origin)
+    // '/map' — 지도 파라미터는 '/map'에서만 마운트되는 MapView가 읽는다 (#262 이후)
+    const url = new URL('/map', window.location.origin)
     if (ev.theaterId) url.searchParams.set('theater', ev.theaterId)
     if (ev.movieId) url.searchParams.set('movie', ev.movieId)
     if (ev.eventDate) url.searchParams.set('date', ev.eventDate)

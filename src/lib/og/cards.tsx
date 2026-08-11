@@ -2,6 +2,7 @@ import { ImageResponse } from 'next/og'
 import { readFile } from 'fs/promises'
 import path from 'path'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { formatDateLabel } from '@/lib/date'
 
 /* 링크 미리보기(카카오톡·디스코드·트위터) OG 카드 공용 렌더러.
  *
@@ -26,6 +27,22 @@ const OG_COLOR = {
 } as const
 
 const OG_SIZE = { width: 1200, height: 630 }
+
+/**
+ * generateMetadata가 og:image로 가리킬 경로. 루트 layout의 metadataBase가 절대 URL로 만들어 준다.
+ * 회차(showtime)가 있으면 카드에 그 회차가 실린다.
+ */
+export function ogImageUrl(
+  target: { type: 'movie' | 'theater'; id: string; showtime?: string } | { type: 'director'; name: string },
+): { url: string; width: number; height: number } {
+  const q = new URLSearchParams({ type: target.type })
+  if (target.type === 'director') q.set('name', target.name)
+  else {
+    q.set('id', target.id)
+    if (target.showtime) q.set('showtime', target.showtime)
+  }
+  return { url: `/api/og?${q.toString()}`, ...OG_SIZE }
+}
 /* 피그마 공유 카드 실측 — 포스터 340×510(콘텐츠 높이 꽉), 워드마크 141×48 */
 const POSTER = { width: 340, height: 510 }
 const WORDMARK = { width: 141, height: 48 }
@@ -45,8 +62,19 @@ function ogResponse(node: React.ReactElement, fontBold: Buffer) {
   return new ImageResponse(node, {
     ...OG_SIZE,
     fonts: [{ name: 'KIMM', data: fontBold, weight: 700, style: 'normal' }],
+    /* 미리보기 봇은 같은 링크를 여러 번 긁어간다 — CDN에 세워 Supabase 재조회를 막는다.
+     * 파일 규약(opengraph-image.tsx)의 revalidate=3600을 대신하는 자리다. */
+    headers: {
+      'Cache-Control': 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400',
+    },
   })
 }
+
+/** 공유 링크에 회차가 실려 있을 때 카드에 얹는 맥락 — [8월 12일(화)] 제목 / 19:30 · 상대편 이름 */
+type ShowtimeContext = { dateLabel: string; time: string; counterpart: string }
+
+/** showtimes.show_time 은 TIME 이라 "19:30:00" 꼴로 온다 — 초를 잘라낸다 */
+const hhmm = (t: string) => t.slice(0, 5)
 
 function Wordmark({ src }: { src: string }) {
   /* eslint-disable-next-line @next/next/no-img-element */
@@ -93,13 +121,40 @@ function StackCard({ children, wordmark }: { children: React.ReactNode; wordmark
   )
 }
 
-export async function renderMovieOg(id: string) {
+/**
+ * 회차 맥락 조회. 영화 카드에서는 상대편이 극장, 극장 카드에서는 상대편이 영화다.
+ * 회차가 사라졌거나(비활성·크롤 갱신) 아이디가 엉터리면 null — 카드는 회차 없이 그려진다.
+ */
+async function fetchShowtimeContext(
+  showtimeId: string,
+  counterpart: 'theater' | 'movie',
+): Promise<ShowtimeContext | null> {
   const supabase = createSupabaseServerClient()
   const { data } = await supabase
-    .from('movies')
-    .select('title, director, genre, year, poster_url')
-    .eq('id', id)
+    .from('showtimes')
+    .select('show_date, show_time, theater_id, movie_id')
+    .eq('id', showtimeId)
     .single()
+  if (!data) return null
+
+  const { data: named } = counterpart === 'theater'
+    ? await supabase.from('theaters').select('name').eq('id', data.theater_id).single()
+    : await supabase.from('movies').select('title').eq('id', data.movie_id).single()
+
+  const name = counterpart === 'theater'
+    ? (named as { name: string } | null)?.name
+    : (named as { title: string } | null)?.title
+  if (!name) return null
+
+  return { dateLabel: formatDateLabel(data.show_date), time: hhmm(data.show_time), counterpart: name }
+}
+
+export async function renderMovieOg(id: string, showtimeId?: string) {
+  const supabase = createSupabaseServerClient()
+  const [{ data }, showtime] = await Promise.all([
+    supabase.from('movies').select('title, director, genre, year, poster_url').eq('id', id).single(),
+    showtimeId ? fetchShowtimeContext(showtimeId, 'theater') : Promise.resolve(null),
+  ])
 
   const [fontBold, wordmark] = await Promise.all([loadKimmBold(), loadWordmarkDataUri()])
 
@@ -131,22 +186,31 @@ export async function renderMovieOg(id: string) {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flex: 1, minWidth: 0 }}>
+          {/* 회차가 실린 링크면 장르·감독 대신 그 회차를 앞세운다 — 공유한 사람이 보여주려던 게 그것이다 */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {genres.length > 0 && (
+            {showtime ? (
+              <Chip label={showtime.dateLabel} size={18} padV={4} padH={14} />
+            ) : genres.length > 0 ? (
               <div style={{ display: 'flex', gap: 8 }}>
                 {genres.slice(0, 3).map((g) => <Chip key={g} label={g} />)}
               </div>
-            )}
+            ) : null}
             <div style={{ fontFamily: 'KIMM', fontSize: title.length > 10 ? 56 : 72, fontWeight: 700, color: OG_COLOR.title, lineHeight: 1.1 }}>
               {title}
             </div>
-            {(directors.length > 0 || year) && (
+            {showtime ? (
+              <div style={{ display: 'flex', fontSize: 22, color: OG_COLOR.meta, gap: 12 }}>
+                <span>{showtime.time}</span>
+                <span>·</span>
+                <span>{showtime.counterpart}</span>
+              </div>
+            ) : (directors.length > 0 || year) ? (
               <div style={{ display: 'flex', fontSize: 22, color: OG_COLOR.meta, gap: 12 }}>
                 {directors.length > 0 && <span>{directors.join(', ')} 감독</span>}
                 {directors.length > 0 && year && <span>·</span>}
                 {year && <span>{year}</span>}
               </div>
-            )}
+            ) : null}
           </div>
 
           <Wordmark src={wordmark} />
@@ -157,13 +221,12 @@ export async function renderMovieOg(id: string) {
   )
 }
 
-export async function renderTheaterOg(id: string) {
+export async function renderTheaterOg(id: string, showtimeId?: string) {
   const supabase = createSupabaseServerClient()
-  const { data } = await supabase
-    .from('theaters')
-    .select('name, city, address')
-    .eq('id', id)
-    .single()
+  const [{ data }, showtime] = await Promise.all([
+    supabase.from('theaters').select('name, city, address').eq('id', id).single(),
+    showtimeId ? fetchShowtimeContext(showtimeId, 'movie') : Promise.resolve(null),
+  ])
 
   const [fontBold, wordmark] = await Promise.all([loadKimmBold(), loadWordmarkDataUri()])
 
@@ -174,11 +237,19 @@ export async function renderTheaterOg(id: string) {
   return ogResponse(
     (
       <StackCard wordmark={wordmark}>
-        {city ? <Chip label={city} size={18} padV={4} padH={14} /> : null}
+        {/* 회차가 실린 링크면 도시·주소 대신 그 회차를 앞세운다 */}
+        {showtime ? <Chip label={showtime.dateLabel} size={18} padV={4} padH={14} />
+          : city ? <Chip label={city} size={18} padV={4} padH={14} /> : null}
         <div style={{ fontFamily: 'KIMM', fontSize: name.length > 8 ? 64 : 80, fontWeight: 700, color: OG_COLOR.title, lineHeight: 1.1 }}>
           {name}
         </div>
-        {address ? <div style={{ fontSize: 22, color: OG_COLOR.meta }}>{address}</div> : null}
+        {showtime ? (
+          <div style={{ display: 'flex', fontSize: 22, color: OG_COLOR.meta, gap: 12 }}>
+            <span>{showtime.time}</span>
+            <span>·</span>
+            <span>{showtime.counterpart}</span>
+          </div>
+        ) : address ? <div style={{ fontSize: 22, color: OG_COLOR.meta }}>{address}</div> : null}
       </StackCard>
     ),
     fontBold,
