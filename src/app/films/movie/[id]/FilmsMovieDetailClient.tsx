@@ -20,7 +20,7 @@ import { getRegionFromAddress } from '@/lib/regions'
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { recordRecentlyViewed } from '@/lib/curation/recentlyViewed'
 import { cookieStorageAdapter } from '@/lib/adapters/cookieStorage'
-import { shareAdapter } from '@/lib/adapters/share'
+import { shareAndTrack } from '@/lib/analytics/shareTracking'
 import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/components/domain/booking/BookingActions'
 
 function useIsDesktop() {
@@ -232,27 +232,25 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
 
   const shareSelectedShowtime = () => {
     if (!selectedShowtimeData || !selectedTheaterId) return
-    trackEvent('share clicked', {
-      movie_id: movie.id,
-      movie_title: movie.title,
-      theater_id: selectedTheaterId,
-      theater_name: selectedShowtimeData.theaterName,
-      showtime_id: selectedShowtimeData.st.id,
-      source: 'films_movie_detail',
-    })
     const url = new URL(window.location.href)
     url.searchParams.set('date', selectedDate)
     url.searchParams.set('theater', selectedTheaterId)
     url.searchParams.set('showtime', selectedShowtimeData.st.id)
-    const shareUrl = url.toString()
-    const title = `${movie.title} - ${selectedShowtimeData.theaterName} ${selectedShowtimeData.st.showTime.slice(0, 5)}`
-    const payload = { title, url: shareUrl }
-    const copyFallback = () => { shareAdapter.copyToClipboardAsync(shareUrl) }
-    if (shareAdapter.canShare(payload)) {
-      shareAdapter.share(payload).then((result) => { if (result === 'error') copyFallback() })
-      return
-    }
-    copyFallback()
+    void shareAndTrack({
+      payload: {
+        title: `${movie.title} - ${selectedShowtimeData.theaterName} ${selectedShowtimeData.st.showTime.slice(0, 5)}`,
+        url: url.toString(),
+      },
+      source: 'films_movie_detail',
+      scope: 'showtime',
+      properties: {
+        movie_id: movie.id,
+        movie_title: movie.title,
+        theater_id: selectedTheaterId,
+        theater_name: selectedShowtimeData.theaterName,
+        showtime_id: selectedShowtimeData.st.id,
+      },
+    })
   }
 
   // 회차가 선택돼있으면 그 회차까지 실어서 지도로 — 선택 안 돼있으면 영화 필터만
@@ -282,8 +280,12 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
       size={44}
       aria-label="공유"
       onClick={() => {
-        trackEvent('share clicked', { movie_id: movie.id, movie_title: movie.title, source: 'films_movie_detail' })
-        navigator.share?.({ title: movie.title, url: window.location.href }).catch(() => {})
+        void shareAndTrack({
+          payload: { title: movie.title, url: window.location.href },
+          source: 'films_movie_detail',
+          scope: 'page',
+          properties: { movie_id: movie.id, movie_title: movie.title },
+        })
       }}
     >
       <IcoShare />

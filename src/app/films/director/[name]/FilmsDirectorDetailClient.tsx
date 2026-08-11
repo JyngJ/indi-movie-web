@@ -9,7 +9,7 @@ import { useMovies, useActiveMovieIds, useDirectorProfile } from '@/lib/supabase
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import type { Movie } from '@/types/api'
 import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWidget'
-import { trackEvent } from '@/lib/analytics/client'
+import { shareAndTrack } from '@/lib/analytics/shareTracking'
 import { Toast, Avatar, Button, IconButton, SortToggle } from '@/components/primitives'
 
 function useIsDesktop() {
@@ -145,8 +145,12 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
           size={44}
           aria-label="공유"
           onClick={() => {
-            trackEvent('share clicked', { director_name: directorName, source: 'films_director_detail' })
-            navigator.share?.({ title: directorName, url: window.location.href }).catch(() => {})
+            void shareAndTrack({
+              payload: { title: directorName, url: window.location.href },
+              source: 'films_director_detail',
+              scope: 'page',
+              properties: { director_name: directorName },
+            })
           }}
         >
           <IcoShare />

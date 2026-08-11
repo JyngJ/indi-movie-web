@@ -20,6 +20,9 @@ export type AnalyticsEventName =
   | 'website clicked'
   | 'instagram clicked'
   | 'share clicked'
+  /** 공유 결과 — result: shared|cancelled|copied|error, method: native|clipboard|clipboard_fallback.
+   *  'share clicked'는 버튼을 눌렀다는 뜻일 뿐이라 실제 공유율을 재려면 이 이벤트를 봐야 한다. */
+  | 'share completed'
   | 'movie detail viewed'
   | 'movie detail tab changed'
   | 'movie theaters map opened'
