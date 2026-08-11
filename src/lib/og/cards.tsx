@@ -92,9 +92,18 @@ type ShowtimeContext = {
 /** showtimes.show_time 은 TIME 이라 "19:30:00" 꼴로 온다 — 초를 잘라낸다 */
 const hhmm = (t: string) => t.slice(0, 5)
 
-function Wordmark({ src }: { src: string }) {
-  /* eslint-disable-next-line @next/next/no-img-element */
-  return <img src={src} alt="영화볼지도" width={WORDMARK.width} height={WORDMARK.height} />
+/**
+ * 워드마크 — 카드 종류와 무관하게 항상 아래 가운데. 카드 패딩과 같은 60을 띄운다.
+ * 흐름에서 빼는(absolute) 이유: 영화 카드 포스터가 340×510(2:3 고정)이라,
+ * 흐름에 넣으면 포스터를 깎아 비율이 틀어진다.
+ */
+function WordmarkBottom({ src }: { src: string }) {
+  return (
+    <div style={{ position: 'absolute', bottom: 60, left: 0, width: OG_SIZE.width, display: 'flex', justifyContent: 'center' }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src} alt="영화볼지도" width={WORDMARK.width} height={WORDMARK.height} />
+    </div>
+  )
 }
 
 /** 틴트 칩 — 장르·도시·역할. alignSelf로 붙인다(satori가 width:fit-content를 무시한다) */
@@ -128,11 +137,11 @@ function StackCard({ children, wordmark }: { children: React.ReactNode; wordmark
         height: '100%',
         backgroundColor: OG_COLOR.bg,
         padding: '60px 80px',
-        justifyContent: 'space-between',
+        position: 'relative',
       }}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>{children}</div>
-      <Wordmark src={wordmark} />
+      <WordmarkBottom src={wordmark} />
     </div>
   )
 }
@@ -194,15 +203,15 @@ function ShowtimeCellBlock({ showtime }: { showtime: ShowtimeContext }) {
         display: 'flex',
         flexDirection: 'column',
         gap: 4,
-        width: 446,
+        width: '100%',
         padding: 32,
         borderRadius: 16,
         backgroundColor: OG_COLOR.cardSurface,
         border: `1px solid ${OG_COLOR.border}`,
       }}
     >
-      {/* 자간 5% — satori는 em을 못 읽어 px로 환산한다 (48 × 0.05) */}
-      <div style={{ fontFamily: 'KIMM', fontSize: 48, fontWeight: 700, letterSpacing: 2.4, lineHeight: 1.25, color: OG_COLOR.timeText }}>
+      {/* 자간 — satori는 em을 못 읽어 px 정수로 준다 */}
+      <div style={{ fontFamily: 'KIMM', fontSize: 48, fontWeight: 700, letterSpacing: 4, lineHeight: 1.25, color: OG_COLOR.timeText }}>
         {showtime.time}
       </div>
       {/* 문자열은 항상 하나로 합쳐 넘긴다 — satori는 자식이 둘 이상인 div에 display:flex를 요구한다 */}
@@ -236,7 +245,7 @@ export async function renderMovieOg(id: string, showtimeId?: string) {
 
   return ogResponse(
     (
-      <div style={{ display: 'flex', width: '100%', height: '100%', backgroundColor: OG_COLOR.bg, padding: '60px 80px' }}>
+      <div style={{ display: 'flex', width: '100%', height: '100%', backgroundColor: OG_COLOR.bg, padding: '60px 80px', position: 'relative' }}>
         <div
           style={{
             display: 'flex',
@@ -255,7 +264,8 @@ export async function renderMovieOg(id: string, showtimeId?: string) {
           )}
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flex: 1, minWidth: 0 }}>
+        {/* 회차 셀은 info 밖 형제로 두고 열 폭을 꽉 채운다 (피그마 2026-08-12 수정본) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: 1, minWidth: 0 }}>
           {/* 회차가 실린 링크면 장르·감독 대신 그 회차를 앞세운다 — 공유한 사람이 보여주려던 게 그것이다 */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {showtime ? (
@@ -281,11 +291,12 @@ export async function renderMovieOg(id: string, showtimeId?: string) {
                 {year && <span>{year}</span>}
               </div>
             ) : null}
-            {showtime && <ShowtimeCellBlock showtime={showtime} />}
           </div>
 
-          <Wordmark src={wordmark} />
+          {showtime && <ShowtimeCellBlock showtime={showtime} />}
         </div>
+
+        <WordmarkBottom src={wordmark} />
       </div>
     ),
     fontBold,
