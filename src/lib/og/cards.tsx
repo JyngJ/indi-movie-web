@@ -127,7 +127,7 @@ function Chip({ label, size = 16, padV = 3, padH = 12 }: { label: string; size?:
 }
 
 /** 세로 카드 껍데기(극장·감독) — 정보 위, 워드마크 아래 */
-function StackCard({ children, wordmark }: { children: React.ReactNode; wordmark: string }) {
+function StackCard({ children, wordmark, cell }: { children: React.ReactNode; wordmark: string; cell?: React.ReactNode }) {
   return (
     <div
       style={{
@@ -138,9 +138,12 @@ function StackCard({ children, wordmark }: { children: React.ReactNode; wordmark
         backgroundColor: OG_COLOR.bg,
         padding: '60px 80px',
         position: 'relative',
+        gap: 12,
       }}
     >
+      {/* 회차 셀은 info 밖 형제 — 영화 카드와 같은 골격 */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>{children}</div>
+      {cell}
       <WordmarkBottom src={wordmark} />
     </div>
   )
@@ -318,7 +321,7 @@ export async function renderTheaterOg(id: string, showtimeId?: string) {
 
   return ogResponse(
     (
-      <StackCard wordmark={wordmark}>
+      <StackCard wordmark={wordmark} cell={showtime ? <ShowtimeCellBlock showtime={showtime} /> : undefined}>
         {/* 회차가 실린 링크면 도시·주소 대신 그 회차를 앞세운다 */}
         {showtime ? <Chip label={showtime.dateLabel} size={18} padV={4} padH={14} />
           : city ? <Chip label={city} size={18} padV={4} padH={14} /> : null}
