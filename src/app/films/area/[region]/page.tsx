@@ -107,11 +107,11 @@ export default async function FilmsAreaPage({
       <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', display: 'flex' }}>
         {mapBackdrop ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={mapBackdrop} alt="" style={{ flex: 1, minWidth: 0, objectFit: 'cover', filter: 'blur(24px) saturate(0.92)', transform: 'scale(1.12)' }} />
+          <img src={mapBackdrop} alt="" aria-hidden style={{ flex: 1, minWidth: 0, objectFit: 'cover', filter: 'blur(24px) saturate(0.92)', transform: 'scale(1.12)' }} />
         ) : (
           backdropPosters.map((u, i) => (
             // eslint-disable-next-line @next/next/no-img-element
-            <img key={i} src={u} alt="" style={{ flex: 1, minWidth: 0, objectFit: 'cover', filter: 'blur(28px) saturate(0.9)', transform: 'scale(1.15)', opacity: 0.45 }} />
+            <img key={i} src={u} alt="" aria-hidden style={{ flex: 1, minWidth: 0, objectFit: 'cover', filter: 'blur(28px) saturate(0.9)', transform: 'scale(1.15)', opacity: 0.45 }} />
           ))
         )}
         <div style={{ position: 'absolute', inset: 0, backgroundColor: 'color-mix(in srgb, var(--color-surface-bg) 55%, transparent)' }} />

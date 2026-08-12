@@ -636,9 +636,9 @@ export default function FilmsPage() {
 
             {/* Left: title (flow) */}
             <div style={{ flexShrink: 0, zIndex: 1 }}>
-              <h1 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)' }}>
+              <h2 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)' }}>
                 상영작
-              </h1>
+              </h2>
               <p style={{ margin: '4px 0 0', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', whiteSpace: 'nowrap' }}>
                 {subtitle}
               </p>
@@ -701,9 +701,9 @@ export default function FilmsPage() {
           /* 모바일: 제목 + 지역칩 → 검색창 → 서브타이틀 순 */
           <>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <h1 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)' }}>
+              <h2 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)' }}>
                 상영작
-              </h1>
+              </h2>
               <div style={{ position: 'relative' }}>
                 <FilterChip
                   label="검색 지역"
