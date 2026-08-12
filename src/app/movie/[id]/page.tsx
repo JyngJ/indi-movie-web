@@ -1,56 +1,19 @@
 import type { Metadata } from 'next'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { getMovieDetail } from '@/lib/catalog/getMovieDetail'
 import { toMovieSchema } from '@/lib/seo/toMovieSchema'
 import { toScreeningEventSchema } from '@/lib/seo/toScreeningEventSchema'
-import { getMovieTheaterShowtimes } from '@/lib/catalog/getMovieTheaterShowtimes'
+import { getMovieShowtimesForSsr } from '@/lib/catalog/getMovieShowtimesCached'
 import { MovieDetailClient } from './MovieDetailClient'
 import { ogImageUrl } from '@/lib/og/cards'
-import type { MovieDetail, MovieTheaterEntry } from '@/lib/supabase/queries'
+import type { MovieTheaterEntry } from '@/lib/supabase/queries'
 
+// 주의: 아래 페이지 컴포넌트가 searchParams(?theater=)를 읽기 때문에 이 라우트는
+// 실제로는 ISR이 아니라 동적 렌더다(빌드 라우트 표에 ƒ로 찍힌다) — 이 값은 현재
+// 무시된다. searchParams 의존을 걷어내야 비로소 정적 셸+CDN 캐시가 붙는다.
 export const revalidate = 3600
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'
-
-async function fetchMovieFull(id: string): Promise<MovieDetail | null> {
-  const supabase = createSupabaseServerClient()
-  const { data } = await supabase
-    .from('movies')
-    .select(`
-      id, title, original_title, year, poster_url, genre, director,
-      nation, kmdb_id, tmdb_id, rating,
-      movie_details (
-        synopsis,
-        runtime_minutes,
-        certification,
-        cast_members
-      )
-    `)
-    .eq('id', id)
-    .single()
-
-  if (!data) return null
-
-  const row = data as Record<string, unknown>
-  const details = row.movie_details as Record<string, unknown> | null
-
-  return {
-    id: String(row.id),
-    title: String(row.title),
-    originalTitle: row.original_title ? String(row.original_title) : undefined,
-    year: Number(row.year),
-    posterUrl: row.poster_url ? String(row.poster_url) : undefined,
-    genre: (row.genre as string[] | null) ?? [],
-    director: (row.director as string[] | null) ?? [],
-    nation: row.nation ? String(row.nation) : undefined,
-    kmdbId: row.kmdb_id ? String(row.kmdb_id) : undefined,
-    tmdbId: row.tmdb_id ? Number(row.tmdb_id) : undefined,
-    rating: row.rating ? Number(row.rating) : undefined,
-    synopsis: details?.synopsis ? String(details.synopsis) : undefined,
-    runtimeMinutes: details?.runtime_minutes ? Number(details.runtime_minutes) : undefined,
-    certification: details?.certification ? String(details.certification) : undefined,
-    cast: (details?.cast_members as MovieDetail['cast'] | null) ?? [],
-  }
-}
 
 export async function generateStaticParams() {
   const supabase = createSupabaseServerClient()
@@ -64,7 +27,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>
 }): Promise<Metadata> {
   const { id } = await params
-  const movie = await fetchMovieFull(id)
+  const movie = await getMovieDetail(id)
 
   if (!movie) return { title: '영화볼지도' }
 
@@ -102,9 +65,9 @@ export default async function MovieDetailPage({
   searchParams: Promise<{ theater?: string }>
 }) {
   const [{ id }, sp] = await Promise.all([params, searchParams])
-  const movie = await fetchMovieFull(id)
+  const movie = await getMovieDetail(id)
   const showtimes: MovieTheaterEntry[] = movie
-    ? await getMovieTheaterShowtimes(createSupabaseServerClient(), id)
+    ? await getMovieShowtimesForSsr(id)
     : []
 
   const schema = movie ? toMovieSchema(movie, BASE_URL) : null

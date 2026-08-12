@@ -19,6 +19,7 @@ export function toTheaterSchema(theater: Theater, baseUrl: string) {
     },
     ...(theater.phone && { telephone: theater.phone }),
     ...(safeUrl(theater.website) && { url: safeUrl(theater.website) }),
-    sameAs: `${baseUrl}/theater/${theater.id}`,
+    /* /theater/:id는 next.config에서 /films/theater/:id로 영구 리다이렉트된다 — 최종 URL로 */
+    sameAs: `${baseUrl}/films/theater/${theater.id}`,
   }
 }

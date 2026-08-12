@@ -114,6 +114,14 @@ export interface Movie {
   rating?: number
 }
 
+/** 영화 상세 — movie_details 조인까지 포함한 도메인 타입 */
+export interface MovieDetail extends Movie {
+  synopsis?: string
+  runtimeMinutes?: number
+  certification?: string
+  cast: Array<{ name: string; character?: string; profileUrl?: string }>
+}
+
 export interface MoviesResponse {
   movies: Movie[]
 }
