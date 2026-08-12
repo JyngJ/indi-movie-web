@@ -123,7 +123,7 @@ export function SettingsMainPage({
       {/* 안내 배너 */}
       <div style={{ margin: '12px 16px 0', backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, var(--color-surface-bg))', border: '1px solid color-mix(in srgb, var(--color-warning) 25%, transparent)', borderRadius: 12, padding: '12px 16px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
         <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="var(--color-warning)" strokeWidth={1.75} strokeLinecap="round" style={{ flexShrink: 0, marginTop: 4 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <p style={{ margin: 0, fontSize: 12, lineHeight: 1.55, color: 'var(--color-text-sub)' }}>
+        <p className="text-note" style={{ margin: 0, color: 'var(--color-text-sub)' }}>
           상영 정보는 실시간으로 불러오지 않으므로 실제 좌석 현황과 다를 수 있습니다.
         </p>
       </div>
@@ -208,7 +208,7 @@ export function SettingsReportPage({
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: '16px var(--gutter)', paddingBottom: 'max(24px, env(safe-area-inset-bottom))', display: 'flex', flexDirection: 'column', gap: 20, backgroundColor: 'var(--color-surface-bg)' }}>
-      <p style={{ margin: 0, fontSize: 13, color: 'var(--color-text-sub)', lineHeight: 1.55 }}>
+      <p className="text-note" style={{ margin: 0, color: 'var(--color-text-sub)' }}>
         발견하신 오류를 알려주세요. 어떤 화면에서 무엇이 잘못됐는지 적어주시면 큰 도움이 됩니다.
       </p>
 

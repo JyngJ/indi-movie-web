@@ -448,7 +448,7 @@ export function FilterBar({
               position: 'relative',
               background: 'var(--color-primary-base)',
               borderRadius: 12,
-              boxShadow: '0 10px 28px rgba(40, 55, 75, 0.34)',
+              boxShadow: 'var(--shadow-popover)',
               padding: '12px 12px 12px 16px',
               display: 'flex',
               alignItems: 'flex-start',
@@ -461,14 +461,7 @@ export function FilterBar({
                 <circle cx="12" cy="10" r="3" />
               </svg>
               {/* 문구 */}
-              <span style={{
-                flex: 1,
-                fontFamily: 'Pretendard, sans-serif',
-                fontSize: 'var(--text-meta)',
-                lineHeight: 1.55,
-                fontWeight: 500,
-                color: 'var(--color-on-accent)',
-              }}>
+              <span className="text-note" style={{ flex: 1, color: 'var(--color-on-accent)' }}>
                 지역을 설정해서 내 주변 영화관의 상영 정보를 조회하세요
               </span>
               {/* 닫기 버튼 */}
