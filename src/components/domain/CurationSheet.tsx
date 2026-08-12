@@ -398,7 +398,8 @@ function RecentList({
     }
     const key = `${item.kind}-${item.id}`
     if (item.kind === 'movie') navigate(key, `/movie/${item.id}`)
-    else if (item.kind === 'theater') navigate(key, `/theater/${item.id}`)
+    /* /theater/:id는 리다이렉트만 되는 경로 — 왕복 한 번 줄이려고 최종 경로로 직접 */
+    else if (item.kind === 'theater') navigate(key, `/films/theater/${item.id}`)
     else if (item.kind === 'director') navigate(key, `/director/${encodeURIComponent(item.id)}`)
   }
 
