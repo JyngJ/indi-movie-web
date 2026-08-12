@@ -3,8 +3,7 @@ import path from 'node:path'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { getRegionFromCity, REGIONS } from '@/lib/regions'
+import { REGIONS } from '@/lib/regions'
 import { getScreeningIndex } from '@/lib/seo/getScreeningIndex'
 import { toScreeningListSchema } from '@/lib/seo/toScreeningListSchema'
 import { toFaqSchema } from '@/lib/seo/toFaqSchema'
@@ -13,9 +12,14 @@ import { AreaCtas } from './AreaCtas'
 import { IlloCollected } from '@/components/domain/onboarding/illustrations'
 import ob from '@/components/domain/onboarding/onboarding.module.css'
 
-// SEO 크롤러용 텍스트라 1시간 단위 신선도 불필요 — 17개 지역 페이지가 각각 재생성마다
-// Supabase를 직접 치므로 재생성 빈도를 낮춰 요청량 절감 ((tabs)/page.tsx 주석 참고)
-export const revalidate = 21600
+// 동적 렌더 강제. ISR이면 Next가 x-next-cache-tags 헤더에 경로 태그를 싣는데,
+// generateStaticParams가 준 raw 한글('서울')이 그대로 들어가 λ 렌더가
+// `TypeError: Invalid character in header content`로 500이 났다 — 2026-07-25부터
+// Search Console이 이 페이지들을 5xx로 색인 거부한 실제 원인 (Vercel 로그로 확인.
+// 캐시 서빙은 멀쩡해서 curl로는 재현이 안 됐고, 캐시를 우회하는 Googlebot 라이브
+// 테스트만 걸렸다). 동적 라우트는 이 헤더를 보내지 않는다. 데이터는
+// getScreeningIndex의 unstable_cache(6시간)가 받치므로 요청마다 DB를 치지 않는다.
+export const dynamic = 'force-dynamic'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'
 
@@ -23,16 +27,6 @@ const REGION_IDS = new Set(REGIONS.map((r) => r.id))
 
 function isValidRegion(id: string): boolean {
   return REGION_IDS.has(id)
-}
-
-/** 실제로 극장이 존재하는 지역만 프리렌더 — 극장 0개 지역의 thin page 방지 */
-export async function generateStaticParams() {
-  const supabase = createSupabaseServerClient()
-  const { data } = await supabase.from('theaters').select('city')
-  const regions = new Set(
-    (data ?? []).map((t) => getRegionFromCity(String(t.city ?? ''))),
-  )
-  return REGIONS.filter((r) => regions.has(r.id)).map((r) => ({ region: r.id }))
 }
 
 export async function generateMetadata({
