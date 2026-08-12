@@ -623,6 +623,15 @@ export default function FilmsPage() {
             background: 'radial-gradient(circle 16px at 100% 0%, transparent 98%, var(--color-surface-raised) 100%)',
             zIndex: 1100, pointerEvents: 'none',
           }} />
+          {/* 카드가 레일 위에 떠 있다면 그림자가 레일 쪽으로 떨어져야 한다 — 코너만 깎여 있고
+              그림자가 없어 평평하게 붙어 보였다(지도 탭 도크의 --shadow-sm과 같은 세기).
+              본문이 카드 요소가 아니라(전폭 + paddingLeft) boxShadow를 못 걸므로,
+              경계 왼쪽 레일 위에 고정 그라데이션 띠로 같은 인상을 만든다. */}
+          <div aria-hidden style={{
+            position: 'fixed', left: GLOBAL_NAV_DESKTOP_WIDTH - 14, top: 0, bottom: 0, width: 14,
+            background: 'linear-gradient(90deg, transparent, rgba(20, 15, 10, 0.03) 45%, rgba(20, 15, 10, 0.08))',
+            zIndex: 1200, pointerEvents: 'none',
+          }} />
         </>
       )}
       <header ref={headerRef} style={{
