@@ -5,6 +5,8 @@ export type AnalyticsEventName =
   | 'search result selected'
   | 'map viewed'
   | 'map filter changed'
+  /** 위치 동의 사용자에게 접속 지역을 필터로 최초 1회 자동 지정 — region 속성 */
+  | 'region auto assigned'
   | 'map pin clicked'
   | 'theater sheet opened'
   | 'theater sheet expanded'
