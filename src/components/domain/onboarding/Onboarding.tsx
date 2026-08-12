@@ -150,16 +150,39 @@ export function Onboarding({ onClose }: Props) {
   /* 데스크톱 패널 전환 방향 — 1: 다음(오른쪽에서 들어옴) / -1: 이전 */
   const [direction, setDirection] = useState(1)
 
+  /* 스냅 복원 타이머 — goTo가 연달아 불릴 때 이전 예약을 덮어쓴다 */
+  const snapRestoreRef = useRef<number | null>(null)
+  useEffect(() => () => {
+    if (snapRestoreRef.current) window.clearTimeout(snapRestoreRef.current)
+  }, [])
+
   const goTo = useCallback(
     (idx: number) => {
       const clamped = Math.min(PAGE_COUNT - 1, Math.max(0, idx))
       setDirection(clamped >= pageRef.current ? 1 : -1)
       const el = swipeRef.current
-      if (el && el.clientWidth) {
-        el.scrollTo({ left: clamped * el.clientWidth, behavior: 'smooth' })
-      } else {
+      if (!el || !el.clientWidth) {
         setPage(clamped)
+        return
       }
+
+      // iOS Safari는 scroll-snap-type: x mandatory 컨테이너에서 프로그램적 smooth 스크롤을
+      // 무시하거나 스냅과 충돌해 제자리로 되돌린다 — 탭이 먹통으로 보여 연타(rage click)로 이어졌다.
+      // 스냅을 잠깐 끄고 스크롤한 뒤 되돌리고, 그래도 안 움직였으면 즉시 점프로 보정한다.
+      const target = clamped * el.clientWidth
+      el.style.scrollSnapType = 'none'
+      el.scrollTo({ left: target, behavior: 'smooth' })
+      // 스크롤 성공 여부와 무관하게 도트·상태는 즉시 진행시킨다(무반응 인상 제거)
+      setPage(clamped)
+
+      if (snapRestoreRef.current) window.clearTimeout(snapRestoreRef.current)
+      snapRestoreRef.current = window.setTimeout(() => {
+        snapRestoreRef.current = null
+        const node = swipeRef.current
+        if (!node) return
+        if (Math.abs(node.scrollLeft - target) > 4) node.scrollLeft = target
+        node.style.scrollSnapType = ''
+      }, 420)
     },
     [],
   )

@@ -62,7 +62,10 @@ function DateNavButton({ direction, onClick, enabled, label }: { direction: 'pre
       onPointerLeave={release}
       onPointerCancel={release}
       style={{
-        opacity: enabled ? 1 : 0.25,
+        /* 못 누르는 버튼을 흐리게라도 남겨두면 "눌러도 아무 일 없는 것"으로 읽혀 연타를 부른다.
+           자리(layout)는 지키되 보이지 않게 한다. */
+        visibility: enabled ? 'visible' : 'hidden',
+        opacity: enabled ? 1 : 0,
         cursor: enabled ? 'pointer' : 'default',
         transform: pressed ? 'scale(0.78)' : 'scale(1)',
         transition: pressed

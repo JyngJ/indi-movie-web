@@ -388,7 +388,9 @@ export function TheaterSheet({
 
   const [dateWindowOffset, setDateWindowOffset] = useState(0)
   /* 상영 데이터가 있는 마지막 날이 속한 주 — 그 너머로는 넘길 수 없다.
-     고정 상한(21)이면 데이터가 없는 빈 주까지 넘어가 화면이 통째로 비었다. */
+     고정 상한(21)이면 데이터가 없는 빈 주까지 넘어가 화면이 통째로 비었다.
+     주의: useTheaterAllMovies의 조회 범위(THEATER_MOVIES_WINDOW_DAYS)가 상한을 결정한다.
+     7일이던 시절엔 dayDiff ≤ 6 → 이 값이 항상 0이라 "다음 주"가 영구 비활성이었다. */
   const maxDateWindowOffset = useMemo(() => {
     if (theaterAvailableDates.size === 0) return 0
     const last = [...theaterAvailableDates].sort().at(-1)!

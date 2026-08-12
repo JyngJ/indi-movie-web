@@ -10,6 +10,7 @@ import { getFestivalDateLabel, getFestivalStatus } from '@/lib/festival/status'
 import { isInstagramRecActiveNow, sortInstagramRecommendations } from '@/lib/curation/sortInstagramRecommendations'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import type { InstagramRecommendation } from '@/types/instagramRecommendation'
+import { scrollRailBy } from '@/lib/ui/railScroll'
 
 interface Props {
   recommendations: InstagramRecommendation[]
@@ -86,7 +87,7 @@ function InstagramRecCard({
   const title = normalizeTitle(rec.festival?.name ?? rec.titleSnapshot)
 
   function scrollPosters(dir: -1 | 1) {
-    posterStripRef.current?.scrollBy({ left: dir * 160, behavior: 'smooth' })
+    scrollRailBy(posterStripRef.current, dir * 160)
   }
 
   // 웹: 카드뉴스 이미지는 고정 폭(DESKTOP_IMAGE_WIDTH)이라 카드가 넓어져도 사진 크기는

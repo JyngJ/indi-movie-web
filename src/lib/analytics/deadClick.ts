@@ -81,6 +81,42 @@ function resolveTarget(hit: Element | null, x: number, y: number): DeadClickTarg
   return scanInertDescendant(hit, x, y)
 }
 
+/* ── no-op click ──────────────────────────────────────────────────
+ * disabled가 아닌데도 눌러서 아무 일이 안 일어나는 클릭. 실제 rage click의 대부분이
+ * 여기 있었다(온보딩 smooth scroll 무시, 캐러셀 애니메이션 중 클릭 흡수 등).
+ * 클릭 후 짧은 창 동안 DOM 변화·URL 변화·스크롤 변화가 하나도 없으면 무반응으로 본다.
+ * ---------------------------------------------------------------- */
+
+/** 반응을 기다리는 시간 — 트랜지션(≈400ms)보다 넉넉히 길게 */
+const NOOP_WINDOW_MS = 700
+
+function watchForResponse(rc: string, path: string): void {
+  const startUrl = window.location.href
+  const startScrollY = window.scrollY
+  const startScrollX = window.scrollX
+  let changed = false
+
+  const observer = new MutationObserver(() => {
+    changed = true
+    observer.disconnect()
+  })
+  observer.observe(document.body, {
+    subtree: true,
+    childList: true,
+    attributes: true,
+    characterData: true,
+  })
+
+  window.setTimeout(() => {
+    observer.disconnect()
+    if (changed) return
+    if (window.location.href !== startUrl) return
+    if (window.scrollY !== startScrollY || window.scrollX !== startScrollX) return
+
+    trackEvent('no-op click', { rc, path })
+  }, NOOP_WINDOW_MS)
+}
+
 export function installDeadClickTracking(): () => void {
   if (typeof document === 'undefined') return () => {}
 
@@ -106,7 +142,15 @@ export function installDeadClickTracking(): () => void {
 
     const hit = document.elementFromPoint(e.clientX, e.clientY)
     const target = resolveTarget(hit, e.clientX, e.clientY)
-    if (!target) return
+    if (!target) {
+      // disabled는 아니지만 계측 표식이 있는 요소 — 반응이 있었는지 지켜본다
+      const node = hit?.closest(`[${RC_ATTR}]`)
+      const rc = node?.getAttribute(RC_ATTR)
+      if (rc && allow(`noop:${rc}`, Date.now())) {
+        watchForResponse(rc, window.location.pathname)
+      }
+      return
+    }
 
     const now = Date.now()
     if (streakRc === target.rc && now - streakAt < STREAK_RESET_MS) {

@@ -11,6 +11,7 @@ import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { getFestivalDateLabel, getFestivalStatus, type FestivalStatus } from '@/lib/festival/status'
 import { toKstIsoDate } from '@/lib/date'
 import type { FestivalDetail } from '@/types/festival'
+import { scrollRailBy } from '@/lib/ui/railScroll'
 
 // http:// 원본(예: jiff.kr — HTTPS 인증서가 깨져있음)을 브라우저가 직접 요청하면 mixed-content
 // 자동 https 승격 때문에 깨진다. Next 이미지 최적화 엔드포인트를 거치면 서버가 대신
@@ -84,7 +85,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
   const scrollLineup = (dir: -1 | 1) => {
     const el = lineupRef.current
     if (!el) return
-    el.scrollBy({ left: dir * Math.max(320, el.clientWidth * 0.8), behavior: 'smooth' })
+    scrollRailBy(el, dir * Math.max(320, el.clientWidth * 0.8))
   }
   const timetables = festival.timetables
   const currentTimetable = timetables[ttIndex]

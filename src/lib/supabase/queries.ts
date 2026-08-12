@@ -428,12 +428,16 @@ export interface TheaterMovieEntry {
   availableDates: Set<string>
 }
 
+/** 극장 시트 날짜바가 넘길 수 있는 범위 — 2주(오늘 포함 14일).
+ *  7일이면 maxDateWindowOffset이 항상 0이라 "다음 주" 버튼이 영원히 비활성이었다. */
+export const THEATER_MOVIES_WINDOW_DAYS = 14
+
 export function useTheaterAllMovies(theaterId: string | null) {
   const today = formatLocalDate(new Date())
-  const endDate = formatLocalDate(new Date(Date.now() + 6 * 24 * 60 * 60 * 1000))
+  const endDate = formatLocalDate(new Date(Date.now() + (THEATER_MOVIES_WINDOW_DAYS - 1) * 24 * 60 * 60 * 1000))
 
   return useQuery<TheaterMovieEntry[]>({
-    queryKey: ['theater-all-movies', theaterId, today],
+    queryKey: ['theater-all-movies', theaterId, today, THEATER_MOVIES_WINDOW_DAYS],
     enabled: !!theaterId,
     queryFn: async () => {
       const res = await fetch(`/api/public/theater/${theaterId}/movies?from=${today}&to=${endDate}`)

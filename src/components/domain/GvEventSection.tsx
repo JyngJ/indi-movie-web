@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
 import type { GvEvent } from '@/data/gv-events'
 import { gvEventTypeColor } from '@/lib/gv/adapter'
+import { scrollRailBy } from '@/lib/ui/railScroll'
 
 const navBtn: React.CSSProperties = {
   position: 'absolute', top: '50%',
@@ -115,7 +116,7 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
           {canLeft && (
             <button
               style={{ ...navBtn, left: 6 }}
-              onClick={() => scrollRef.current?.scrollBy({ left: -CARD_STEP * 2, behavior: 'smooth' })}
+              onClick={() => scrollRailBy(scrollRef.current, -CARD_STEP * 2)}
             >
               <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
             </button>
@@ -123,7 +124,7 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
           {canRight && (
             <button
               style={{ ...navBtn, right: 6 }}
-              onClick={() => scrollRef.current?.scrollBy({ left: CARD_STEP * 2, behavior: 'smooth' })}
+              onClick={() => scrollRailBy(scrollRef.current, CARD_STEP * 2)}
             >
               <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
             </button>

@@ -13,6 +13,7 @@ import { Button, ScrollNavButton } from '@/components/primitives'
 import { RevealItem, RevealGroup } from '@/components/motion'
 import { HoverPopup } from '@/components/domain/CurationSectionRow'
 import { MapPin } from 'lucide-react'
+import { scrollRailBy } from '@/lib/ui/railScroll'
 
 interface Props {
   directorName: string
@@ -300,14 +301,14 @@ export function DirectorSpecialSection({
         <ScrollNavButton
           direction="left"
           style={{ position: 'absolute', top: posterMidY, transform: 'translateY(-50%)', left: 6, zIndex: 3 }}
-          onClick={() => scrollRef.current?.scrollBy({ left: -scrollAmount, behavior: 'smooth' })}
+          onClick={() => scrollRailBy(scrollRef.current, -scrollAmount)}
         />
       )}
       {scrollAreaHovered && canScrollRight && (
         <ScrollNavButton
           direction="right"
           style={{ position: 'absolute', top: posterMidY, transform: 'translateY(-50%)', right: 6, zIndex: 3 }}
-          onClick={() => scrollRef.current?.scrollBy({ left: scrollAmount, behavior: 'smooth' })}
+          onClick={() => scrollRailBy(scrollRef.current, scrollAmount)}
         />
       )}
       <RevealGroup>
