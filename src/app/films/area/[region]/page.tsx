@@ -7,6 +7,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getRegionFromCity, REGIONS } from '@/lib/regions'
 import { getScreeningIndex } from '@/lib/seo/getScreeningIndex'
 import { toScreeningListSchema } from '@/lib/seo/toScreeningListSchema'
+import { toFaqSchema } from '@/lib/seo/toFaqSchema'
 import { AreaCtas } from './AreaCtas'
 import { IlloCollected } from '@/components/domain/onboarding/illustrations'
 import ob from '@/components/domain/onboarding/onboarding.module.css'
@@ -72,6 +73,19 @@ export default async function FilmsAreaPage({
     BASE_URL,
     `${region} 독립·예술영화관 오늘 상영작`,
   )
+  /* 아래 본문에 실제로 있는 문답만 스키마로도 낸다 — 답변형 AI가 그대로 인용할 수 있게 */
+  const faqSchema = toFaqSchema([
+    {
+      question: `${region}에서 독립영화는 어디서 볼 수 있나요?`,
+      answer: `${region} 지역 독립·예술영화관 ${data.theaters.length}곳에서 볼 수 있습니다: ${data.theaters.map((t) => t.name).join(', ')}.`,
+    },
+    {
+      question: `${region}에서 오늘 상영하는 독립영화는 무엇인가요?`,
+      answer: data.movies.length > 0
+        ? `오늘 ${data.movies.length}편이 상영합니다: ${data.movies.map((m) => m.title).slice(0, 20).join(', ')}${data.movies.length > 20 ? ' 등' : ''}.`
+        : `오늘 ${region}에 등록된 독립·예술영화 상영이 없습니다.`,
+    },
+  ])
 
   const backdropPosters = data.movies.map((m) => m.posterUrl).filter((u): u is string => !!u).slice(0, 5)
   const mapBackdrop = fs.existsSync(path.join(process.cwd(), 'public', 'area-backdrops', `${region}.jpg`))
@@ -83,6 +97,10 @@ export default async function FilmsAreaPage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(listSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
 
       {/* 백드롭 — 이 지역 지도 캡처 블러 (scripts 캡처 산출물), 없으면 상영작 포스터 폴백 */}

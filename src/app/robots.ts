@@ -23,12 +23,33 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
     (_, i) => `${BASE_URL}/movie/sitemap/${i}.xml`,
   )
 
+  const disallow = ['/admin', '/api/', '/dev/']
+
   return {
-    rules: {
-      userAgent: '*',
-      allow: '/',
-      disallow: ['/admin', '/api/', '/dev/'],
-    },
+    rules: [
+      { userAgent: '*', allow: '/', disallow },
+      /* 답변형 AI 크롤러를 명시적으로 허용한다. `*` 규칙으로도 통과하지만,
+         일부 크롤러는 자기 이름의 규칙이 있는지부터 보고 없으면 보수적으로 굴며
+         WAF·CDN 쪽에서 UA 기준으로 막히는 사고도 흔하다. 의도를 문서로 남기는 의미도 있다.
+         (GPTBot=학습, OAI-SearchBot/ChatGPT-User=ChatGPT 검색·인용) */
+      {
+        userAgent: [
+          'GPTBot',
+          'OAI-SearchBot',
+          'ChatGPT-User',
+          'PerplexityBot',
+          'Perplexity-User',
+          'ClaudeBot',
+          'Claude-User',
+          'Claude-SearchBot',
+          'Google-Extended',
+          'Applebot-Extended',
+          'Bingbot',
+        ],
+        allow: '/',
+        disallow,
+      },
+    ],
     sitemap: [`${BASE_URL}/sitemap.xml`, ...movieSitemaps],
   }
 }

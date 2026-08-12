@@ -3,6 +3,9 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getTheaterDetail, getTheaterTodayMovieTitles } from '@/lib/catalog/getTheaterDetail'
 import { toTheaterSchema } from '@/lib/seo/toTheaterSchema'
+import { getTheaterScreenings } from '@/lib/seo/getTheaterScreenings'
+import { toFaqSchema } from '@/lib/seo/toFaqSchema'
+import { TheaterSeoContent } from '@/components/seo/TheaterSeoContent'
 import { FilmsTheaterDetailClient } from './FilmsTheaterDetailClient'
 import { ogImageUrl } from '@/lib/og/cards'
 
@@ -64,6 +67,24 @@ export default async function FilmsTheaterDetailPage({
   if (!theater) notFound()
 
   const schema = toTheaterSchema(theater, BASE_URL)
+  /* 시간표는 클라이언트가 그려 서버 HTML이 비어 있었다 — 크롤러·답변형 AI가 읽을
+     같은 내용을 서버에서 렌더한다 (지역 페이지와 같은 방식) */
+  const seoData = await getTheaterScreenings(id)
+
+  const todayMovies = seoData.days.find((d) => d.date === seoData.date)?.movies ?? []
+  /* 본문(TheaterSeoContent)에 실제로 있는 문답만 스키마로도 낸다 */
+  const faqSchema = toFaqSchema([
+    {
+      question: `${theater.name}에서 오늘 무슨 영화를 상영하나요?`,
+      answer: todayMovies.length > 0
+        ? `${todayMovies.map((m) => `${m.movieTitle} (${m.times.join(', ')})`).join(', ')}을 상영합니다.`
+        : `오늘은 등록된 상영이 없습니다. 영화볼지도는 상영 시간표를 매일 갱신합니다.`,
+    },
+    {
+      question: `${theater.name}은 어디에 있나요?`,
+      answer: `${theater.address}에 있습니다.`,
+    },
+  ])
 
   return (
     <>
@@ -71,6 +92,11 @@ export default async function FilmsTheaterDetailPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+      <TheaterSeoContent theater={theater} data={seoData} />
       <Suspense>
         <FilmsTheaterDetailClient theater={theater} />
       </Suspense>
