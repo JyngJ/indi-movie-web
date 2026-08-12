@@ -9,7 +9,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import type { Map as LeafletMap, Point as LeafletPoint } from 'leaflet'
 import { useLocationPermission } from '@/hooks/useLocationPermission'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
-import { SearchBarButton, FabRound, Toast } from '@/components/primitives'
+import { SearchBarButton, FabRound, Toast, Wordmark } from '@/components/primitives'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { THEATER_SHEET_COLLAPSED_H } from '@/components/domain/TheaterSheet'
 import { MapPin, TheaterSheet, CurationSheet, CurationSections, FilterBar, LocationPermissionModal, CURATION_PEEK_HEIGHT } from '@/components/domain'
@@ -3343,23 +3343,13 @@ export default function MapView() {
           pointerEvents: 'none',
         }}
       >
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            backgroundColor: isDark ? 'var(--color-neutral-100)' : 'var(--color-neutral-900)',
-            WebkitMaskImage: 'url(/logo.svg)',
-            maskImage: 'url(/logo.svg)',
-            WebkitMaskRepeat: 'no-repeat',
-            maskRepeat: 'no-repeat',
-            WebkitMaskPosition: 'center',
-            maskPosition: 'center',
-            WebkitMaskSize: 'contain',
-            maskSize: 'contain',
-            filter: isDark
-              ? 'drop-shadow(0 4px 14px rgba(0, 0, 0, 0.85)) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.95))'
-              : 'drop-shadow(0 4px 14px rgba(0, 0, 0, 0.42)) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5))',
-          }}
+        {/* 피그마 2.0/logo/wordmark · Color=테두리 — 지도 타일은 배경색을 통제할 수 없어
+            글자 둘레에 테두리를 두른다. 예전엔 마스크 한 겹 + drop-shadow 두 겹으로 대신했는데,
+            밝은 타일 위에서 그림자가 뭉개져 글자 윤곽이 사라졌다. 테두리는 배경과 무관하게 산다. */}
+        <Wordmark
+          color="var(--color-neutral-900)"
+          outlineColor="var(--color-text-inverse)"
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
         />
       </div>
 
