@@ -11,6 +11,7 @@ import { HoverPopup } from '@/components/domain/CurationSectionRow'
 import { MapPin, Film, Eye, Scale, Clock, Info, TrendingUp, TrendingDown } from 'lucide-react'
 import type { FilmRankingEntry } from '@/lib/supabase/queries'
 import type { Movie } from '@/types/api'
+import { scrollRailBy } from '@/lib/ui/railScroll'
 
 interface FilmRankingSectionProps {
   weekStart: string
@@ -271,14 +272,14 @@ export function FilmRankingSection({ weekStart, rankings, movies, isDesktop, onM
           <ScrollNavButton
             direction="left"
             style={{ position: 'absolute', top: posterMidY, transform: 'translateY(-50%)', left: 6, zIndex: 3 }}
-            onClick={() => scrollRef.current?.scrollBy({ left: -scrollAmount, behavior: 'smooth' })}
+            onClick={() => scrollRailBy(scrollRef.current, -scrollAmount)}
           />
         )}
         {canScrollRight && (
           <ScrollNavButton
             direction="right"
             style={{ position: 'absolute', top: posterMidY, transform: 'translateY(-50%)', right: 6, zIndex: 3 }}
-            onClick={() => scrollRef.current?.scrollBy({ left: scrollAmount, behavior: 'smooth' })}
+            onClick={() => scrollRailBy(scrollRef.current, scrollAmount)}
           />
         )}
         <RevealGroup>

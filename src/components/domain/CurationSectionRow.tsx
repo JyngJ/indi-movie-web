@@ -452,17 +452,30 @@ function CurationRowTrack({
       onMouseEnter={isDesktop ? () => setRowHovered(true) : undefined}
       onMouseLeave={isDesktop ? () => setRowHovered(false) : undefined}
     >
-      {isDesktop && rowHovered && canScrollPrev && (
+      {/* 호버로 마운트/언마운트하면 커서가 버튼 위로 들어오는 순간 행을 벗어나 언마운트되거나
+          클릭 직전에 사라져 첫 클릭이 통째로 증발한다(rage click 2위 원인).
+          항상 마운트해두고 opacity/pointer-events로만 감춘다. */}
+      {isDesktop && canScrollPrev && (
         <ScrollNavButton
           direction="left"
-          style={{ top: posterMidY, transform: 'translateY(-50%)', zIndex: 3 }}
+          style={{
+            top: posterMidY, transform: 'translateY(-50%)', zIndex: 3,
+            opacity: rowHovered ? 1 : 0,
+            pointerEvents: rowHovered ? 'auto' : 'none',
+            transition: 'opacity 140ms ease',
+          }}
           onClick={scrollPrev}
         />
       )}
-      {isDesktop && rowHovered && canScrollNext && (
+      {isDesktop && canScrollNext && (
         <ScrollNavButton
           direction="right"
-          style={{ top: posterMidY, transform: 'translateY(-50%)', zIndex: 3 }}
+          style={{
+            top: posterMidY, transform: 'translateY(-50%)', zIndex: 3,
+            opacity: rowHovered ? 1 : 0,
+            pointerEvents: rowHovered ? 'auto' : 'none',
+            transition: 'opacity 140ms ease',
+          }}
           onClick={scrollNext}
         />
       )}

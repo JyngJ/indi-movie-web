@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { Movie } from '@/types/api'
 import { ScrollNavButton } from '@/components/primitives'
 import { useDirectorProfile } from '@/lib/supabase/queries'
+import { scrollRailBy } from '@/lib/ui/railScroll'
 
 interface DirectorSpotlight {
   name: string
@@ -181,11 +182,11 @@ export function DirectorSpotlightSection({
       >
         {isDesktop && rowHovered && canScrollLeft && (
           <ScrollNavButton direction="left" style={{ zIndex: 3 }}
-            onClick={() => scrollRef.current?.scrollBy({ left: -400, behavior: 'smooth' })} />
+            onClick={() => scrollRailBy(scrollRef.current, -400)} />
         )}
         {isDesktop && rowHovered && canScrollRight && (
           <ScrollNavButton direction="right" style={{ zIndex: 3 }}
-            onClick={() => scrollRef.current?.scrollBy({ left: 400, behavior: 'smooth' })} />
+            onClick={() => scrollRailBy(scrollRef.current, 400)} />
         )}
       <div
         ref={scrollRef}

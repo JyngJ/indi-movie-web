@@ -16,6 +16,9 @@ export type AnalyticsEventName =
   | 'showtime unavailable clicked'
   | 'showtime selected'
   | 'booking clicked'
+  /** 외부 예매 사이트에 다녀와 앱으로 돌아온 순간 — 이탈/재탐색을 재는 짝 이벤트.
+   *  away_seconds가 아주 짧으면 링크가 안 열렸다는 뜻(중복 클릭의 원인). */
+  | 'booking returned'
   | 'directions clicked'
   | 'website clicked'
   | 'instagram clicked'
@@ -45,6 +48,9 @@ export type AnalyticsEventName =
   | 'survey submitted'
   | 'survey dismissed'
   | 'dead click'
+  /** 활성 상태인데 눌러도 화면이 전혀 안 변한 클릭 — disabled만 보던 'dead click'의 사각지대.
+   *  온보딩/캐러셀처럼 "핸들러는 있는데 조용히 아무 일도 안 하는" 무반응을 잡는다. */
+  | 'no-op click'
 
 export type AnalyticsSource =
   | 'direct'

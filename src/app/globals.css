@@ -624,3 +624,14 @@ img {
   /* 애니메이션이 꺼지면 gateLit의 첫 프레임도 안 잡히므로 색을 여기서 확정한다 */
   .projector-gate { color: var(--color-success); }
 }
+
+/* 예매 CTA — 외부 사이트가 열리는 동안의 진행 표시 */
+@keyframes bookingCtaSpin {
+  to { transform: rotate(360deg); }
+}
+.booking-cta-spin {
+  animation: bookingCtaSpin 800ms linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .booking-cta-spin { animation: none; }
+}
