@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { FilmsDirectorDetailClient } from './FilmsDirectorDetailClient'
 import { DirectorSeoContent } from '@/components/seo/DirectorSeoContent'
@@ -37,6 +38,10 @@ export default async function FilmsDirectorDetailPage({ params }: { params: Prom
   /* 목록·상영정보는 클라이언트가 그리지만, 그 결과가 서버 HTML엔 남지 않는다.
      크롤러와 답변형 AI가 읽을 같은 내용을 서버에서 한 번 더 렌더한다. */
   const seoData = await getDirectorScreenings(directorName)
+  /* 감독명은 URL에서 그대로 오므로 아무 문자열이나 페이지가 생긴다.
+     작품이 하나도 없으면 존재하지 않는 감독이다 — 빈 페이지를 색인 대상으로
+     남기면 임의 문자열마다 thin page가 무한히 생성된다. */
+  if (seoData.films.length === 0) notFound()
 
   const breadcrumbSchema = toBreadcrumbSchema([
     { name: '영화볼지도', path: '/' },
