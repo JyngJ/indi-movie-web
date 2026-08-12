@@ -8,6 +8,7 @@ import { getRegionFromCity, REGIONS } from '@/lib/regions'
 import { getScreeningIndex } from '@/lib/seo/getScreeningIndex'
 import { toScreeningListSchema } from '@/lib/seo/toScreeningListSchema'
 import { toFaqSchema } from '@/lib/seo/toFaqSchema'
+import { toBreadcrumbSchema } from '@/lib/seo/toBreadcrumbSchema'
 import { AreaCtas } from './AreaCtas'
 import { IlloCollected } from '@/components/domain/onboarding/illustrations'
 import ob from '@/components/domain/onboarding/onboarding.module.css'
@@ -87,6 +88,11 @@ export default async function FilmsAreaPage({
     },
   ])
 
+  const breadcrumbSchema = toBreadcrumbSchema([
+    { name: '영화볼지도', path: '/' },
+    { name: `${region} 독립영화관` },
+  ], BASE_URL)
+
   const backdropPosters = data.movies.map((m) => m.posterUrl).filter((u): u is string => !!u).slice(0, 5)
   const mapBackdrop = fs.existsSync(path.join(process.cwd(), 'public', 'area-backdrops', `${region}.jpg`))
     ? `/area-backdrops/${encodeURIComponent(region)}.jpg`
@@ -101,6 +107,10 @@ export default async function FilmsAreaPage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
 
       {/* 백드롭 — 이 지역 지도 캡처 블러 (scripts 캡처 산출물), 없으면 상영작 포스터 폴백 */}
@@ -195,7 +205,7 @@ export default async function FilmsAreaPage({
                 {data.movies.map((m, i) => (
                   <span key={m.id}>
                     {i > 0 && ' · '}
-                    <Link href={`/films/movie/${m.id}`} style={{ color: 'var(--color-text-body)', textDecoration: 'none' }}>
+                    <Link href={`/movie/${m.id}`} style={{ color: 'var(--color-text-body)', textDecoration: 'none' }}>
                       {m.title}{m.year ? ` (${m.year})` : ''}
                     </Link>
                   </span>

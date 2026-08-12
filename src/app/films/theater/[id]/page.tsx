@@ -5,6 +5,8 @@ import { getTheaterDetail, getTheaterTodayMovieTitles } from '@/lib/catalog/getT
 import { toTheaterSchema } from '@/lib/seo/toTheaterSchema'
 import { getTheaterScreenings } from '@/lib/seo/getTheaterScreenings'
 import { toFaqSchema } from '@/lib/seo/toFaqSchema'
+import { toBreadcrumbSchema } from '@/lib/seo/toBreadcrumbSchema'
+import { getRegionFromCity } from '@/lib/regions'
 import { TheaterSeoContent } from '@/components/seo/TheaterSeoContent'
 import { FilmsTheaterDetailClient } from './FilmsTheaterDetailClient'
 import { ogImageUrl } from '@/lib/og/cards'
@@ -71,6 +73,13 @@ export default async function FilmsTheaterDetailPage({
      같은 내용을 서버에서 렌더한다 (지역 페이지와 같은 방식) */
   const seoData = await getTheaterScreenings(id)
 
+  const region = getRegionFromCity(theater.city ?? '')
+  const breadcrumbSchema = toBreadcrumbSchema([
+    { name: '영화볼지도', path: '/' },
+    { name: `${region} 독립영화관`, path: `/films/area/${encodeURIComponent(region)}` },
+    { name: theater.name },
+  ], BASE_URL)
+
   const todayMovies = seoData.days.find((d) => d.date === seoData.date)?.movies ?? []
   /* 본문(TheaterSeoContent)에 실제로 있는 문답만 스키마로도 낸다 */
   const faqSchema = toFaqSchema([
@@ -95,6 +104,10 @@ export default async function FilmsTheaterDetailPage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <TheaterSeoContent theater={theater} data={seoData} />
       <Suspense>

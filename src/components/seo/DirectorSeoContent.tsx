@@ -33,7 +33,7 @@ export function DirectorSeoContent({
           <ul>
             {data.screenings.map((s) => (
               <li key={`${s.movieId}-${s.theaterId}-${s.date}`}>
-                <Link href={`/films/movie/${s.movieId}`}>{s.movieTitle}</Link>
+                <Link href={`/movie/${s.movieId}`}>{s.movieTitle}</Link>
                 {' — '}
                 <Link href={`/films/theater/${s.theaterId}`}>{s.theaterName}</Link>
                 {s.theaterCity ? ` (${s.theaterCity})` : ''}
@@ -52,7 +52,7 @@ export function DirectorSeoContent({
               const coDirectors = f.director.filter((d) => d !== directorName)
               return (
                 <li key={f.id}>
-                  <Link href={`/films/movie/${f.id}`}>
+                  <Link href={`/movie/${f.id}`}>
                     {f.title}
                     {f.year ? ` (${f.year})` : ''}
                   </Link>
