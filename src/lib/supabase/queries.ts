@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import type { AlmostSoldOutCandidate, CurationListRow, LateNightCandidate } from '@/lib/curation/types'
-import type { Theater, Movie, Showtime, Station } from '@/types/api'
+import type { Theater, Movie, MovieDetail, Showtime, Station } from '@/types/api'
 import type { TheaterEvent } from '@/types/admin'
 import type { Festival } from '@/types/festival'
 import type { InstagramRecommendation, InstagramRecommendationTargetType } from '@/types/instagramRecommendation'
@@ -105,12 +105,8 @@ export function useMovies() {
 }
 
 /* ── 영화 상세 (movie_details 조인) ────────────────────────────── */
-export interface MovieDetail extends Movie {
-  synopsis?: string
-  runtimeMinutes?: number
-  certification?: string
-  cast: Array<{ name: string; character?: string; profileUrl?: string }>
-}
+/** 타입 본체는 `@/types/api`로 이동 — 기존 import 경로 호환용 재export */
+export type { MovieDetail }
 
 export function useMovieDetail(movieId: string | null, initialData?: MovieDetail) {
   return useQuery<MovieDetail | null>({
