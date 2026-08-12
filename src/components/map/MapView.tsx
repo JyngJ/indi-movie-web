@@ -2,6 +2,7 @@
 
 import 'leaflet/dist/leaflet.css'
 import { useEffect, useRef, useState, useCallback, useMemo, type CSSProperties } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { GeoJSON, MapContainer, TileLayer, Marker } from 'react-leaflet'
 import L from 'leaflet'
@@ -3418,13 +3419,33 @@ export default function MapView() {
 
       {/* 패널 왼쪽 라운드 코너 뒤로 레일 면이 이어져 보이게 하는 언더레이 (패널류 z 900/940 아래) */}
       {isDesktopLayout && (searchOpen || !!selectedTheater || !!displayedPanel || !dockCollapsed) && (
-        <div aria-hidden style={{
-          position: 'absolute',
-          top: 0, bottom: 0, left: GLOBAL_NAV_DESKTOP_WIDTH, width: 16,
-          backgroundColor: 'var(--color-surface-raised)',
-          zIndex: 890,
-          pointerEvents: 'none',
-        }} />
+        <>
+          <div aria-hidden style={{
+            position: 'absolute',
+            top: 0, bottom: 0, left: GLOBAL_NAV_DESKTOP_WIDTH, width: 16,
+            backgroundColor: 'var(--color-surface-raised)',
+            zIndex: 890,
+            pointerEvents: 'none',
+          }} />
+          {/* 왼쪽 경계 그림자 — 패널 자신의 boxShadow는 레일(GlobalNav z 1150)에 덮여
+              보이지 않고, 지도 래퍼가 zIndex:0 스태킹 컨텍스트라 이 트리 안에서는
+              어떤 z로도 레일 위에 못 그린다. body로 포털해 상영작 탭과 같은
+              문법(z 1200 고정 캐스터)으로 세운다. 라운딩(16px)을 따라 곡선으로 떨어진다. */}
+          {createPortal(
+            <div aria-hidden style={{
+              position: 'fixed',
+              top: 0, bottom: 0, left: GLOBAL_NAV_DESKTOP_WIDTH, width: 16,
+              borderRadius: '16px 0 0 16px',
+              boxShadow: 'var(--shadow-panel-left)',
+              /* 블러(8px)가 오프셋(-2px)보다 커서 요소 오른쪽으로도 번진다 —
+                 본문 위에 흐린 세로선으로 보였다. 오른쪽 경계에서 잘라낸다. */
+              clipPath: 'inset(-24px 0 -24px -24px)',
+              zIndex: 1200,
+              pointerEvents: 'none',
+            }} />,
+            document.body,
+          )}
+        </>
       )}
 
       {/* 큐레이션 도크 — 데스크톱 전용 좌측 상시 패널. 검색 패널·극장 시트와 같은 슬롯·크기를 공유하며 셋 다 비활성일 때만 노출(네이버 지도 레퍼런스) */}
@@ -3438,7 +3459,7 @@ export default function MapView() {
           display: 'flex',
           flexDirection: 'column',
           zIndex: 900,
-          boxShadow: 'var(--shadow-sm)',   /* 패널 부상 — md는 과함 */
+          boxShadow: 'var(--shadow-sm)',   /* 패널 부상 — 왼쪽 경계 그림자는 아래 캐스터가 레일 위(z 1200)에 그린다 */
           borderRadius: '16px 0 0 16px',   /* 레일 위에 뜬 본문 카드 — 왼쪽 코너만 */
           overflow: 'hidden',
           transform: dockCollapsed ? 'translateX(-100%)' : 'translateX(0)',

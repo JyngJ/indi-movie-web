@@ -623,6 +623,20 @@ export default function FilmsPage() {
             background: 'radial-gradient(circle 16px at 100% 0%, transparent 98%, var(--color-surface-raised) 100%)',
             zIndex: 1100, pointerEvents: 'none',
           }} />
+          {/* 카드가 레일 위에 떠 있다면 그림자가 레일 쪽으로 떨어져야 한다 — 코너만 깎여 있고
+              그림자가 없어 평평하게 붙어 보였다. 본문이 카드 요소가 아니라(전폭 + paddingLeft)
+              boxShadow를 직접 못 걸므로, 카드 왼쪽 라인과 같은 라운딩의 투명 요소를 세워
+              그 그림자만 쓴다 — 직선 그라데이션 띠는 코너 곡선을 무시해 어긋나 보였다.
+              세기는 --shadow-sm을 수평으로 눕힌 값. 레일(z 1150) 위에 보이도록 z 1200. */}
+          <div aria-hidden style={{
+            position: 'fixed', left: GLOBAL_NAV_DESKTOP_WIDTH, top: 0, bottom: 0, width: 16,
+            borderRadius: '16px 0 0 16px',
+            boxShadow: 'var(--shadow-panel-left)',
+            /* 블러(8px)가 오프셋(-2px)보다 커서 요소 오른쪽으로도 번진다 —
+               본문 위에 흐린 세로선으로 보였다. 오른쪽 경계에서 잘라낸다. */
+            clipPath: 'inset(-24px 0 -24px -24px)',
+            zIndex: 1200, pointerEvents: 'none',
+          }} />
         </>
       )}
       <header ref={headerRef} style={{
