@@ -631,7 +631,7 @@ export default function FilmsPage() {
           <div aria-hidden style={{
             position: 'fixed', left: GLOBAL_NAV_DESKTOP_WIDTH, top: 0, bottom: 0, width: 16,
             borderRadius: '16px 0 0 16px',
-            boxShadow: '-1px 0 2px rgba(20, 15, 10, 0.10), -2px 0 8px rgba(20, 15, 10, 0.04)',
+            boxShadow: 'var(--shadow-panel-left)',
             zIndex: 1200, pointerEvents: 'none',
           }} />
         </>

@@ -3438,7 +3438,7 @@ export default function MapView() {
           display: 'flex',
           flexDirection: 'column',
           zIndex: 900,
-          boxShadow: 'var(--shadow-sm)',   /* 패널 부상 — md는 과함 */
+          boxShadow: 'var(--shadow-sm), var(--shadow-panel-left)',   /* 부상(아래) + 레일 경계(왼쪽) — 상영작 탭과 동일 */
           borderRadius: '16px 0 0 16px',   /* 레일 위에 뜬 본문 카드 — 왼쪽 코너만 */
           overflow: 'hidden',
           transform: dockCollapsed ? 'translateX(-100%)' : 'translateX(0)',
