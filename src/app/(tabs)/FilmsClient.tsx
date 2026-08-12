@@ -628,8 +628,8 @@ export default function FilmsPage() {
               본문이 카드 요소가 아니라(전폭 + paddingLeft) boxShadow를 못 걸므로,
               경계 왼쪽 레일 위에 고정 그라데이션 띠로 같은 인상을 만든다. */}
           <div aria-hidden style={{
-            position: 'fixed', left: GLOBAL_NAV_DESKTOP_WIDTH - 14, top: 0, bottom: 0, width: 14,
-            background: 'linear-gradient(90deg, transparent, rgba(20, 15, 10, 0.03) 45%, rgba(20, 15, 10, 0.08))',
+            position: 'fixed', left: GLOBAL_NAV_DESKTOP_WIDTH - 20, top: 0, bottom: 0, width: 20,
+            background: 'linear-gradient(90deg, transparent, rgba(20, 15, 10, 0.05) 40%, rgba(20, 15, 10, 0.16))',
             zIndex: 1200, pointerEvents: 'none',
           }} />
         </>
