@@ -8,13 +8,15 @@ import {
   type SurveyGoodPoint,
   type SurveyVerdict,
 } from '@/lib/survey/types'
-import { markSurvey } from '@/lib/survey/gate'
+import { markSurvey, nextMilestone } from '@/lib/survey/gate'
 import { trackEvent } from '@/lib/analytics/client'
 import { Button, IconButton, Input } from '@/components/primitives'
 import styles from './survey.module.css'
 
 interface Props {
   onClose: () => void
+  /** 이 설문이 뜬 방문 회차 — 분석에 싣고, "다음에"의 다음 회차를 계산한다 */
+  visits: number
 }
 
 function deviceType() {
@@ -40,7 +42,7 @@ const IcoX = () => (
 
 /** 재방문 설문 v2 (2026-08-09 피그마 TOBE 확정) — 잘 쓰고 계세요? → 좋은 점 | 아쉬운 점 → 감사.
  *  주관식 단계 제거. 기타·찾는 영화 없음은 선택 시 인라인 후속 입력. */
-export function FeedbackSurvey({ onClose }: Props) {
+export function FeedbackSurvey({ onClose, visits }: Props) {
   const [verdict, setVerdict] = useState<SurveyVerdict | null>(null)
   const [selected, setSelected] = useState<string[]>([])
   const [etcText, setEtcText] = useState('')
@@ -49,8 +51,19 @@ export function FeedbackSurvey({ onClose }: Props) {
   const [done, setDone] = useState(false)
 
   useEffect(() => {
-    trackEvent('survey shown')
-  }, [])
+    trackEvent('survey shown', { visits })
+  }, [visits])
+
+  /* ESC = 다음에 (스크림 탭과 같은 취급) */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      if (done) onClose()
+      else dismiss('close_button')
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
 
   const options = verdict === 'bad' ? SURVEY_BAD_POINTS : SURVEY_GOOD_POINTS
   // 기타는 내용 없으면 데이터 가치가 없다 — 텍스트 입력 전까지 제출 잠금
@@ -67,9 +80,15 @@ export function FeedbackSurvey({ onClose }: Props) {
     setSelected((prev) => (prev.includes(value) ? prev.filter((x) => x !== value) : [...prev, value]))
   }
 
-  function dismiss() {
-    void markSurvey('dismissed')
-    trackEvent('survey dismissed', { step: verdict ? 2 : 1 })
+  /** 닫기 = "다음에". 영구 소각하지 않는다 — 실수 탭 한 번으로 응답 기회를 잃던 걸 되돌린다.
+   *  대신 아무 때나 다시 묻지 않고 다음 마일스톤(2·5·10회차)에만 다시 뜬다. */
+  function dismiss(via: 'close_button' | 'scrim') {
+    trackEvent('survey dismissed', {
+      step: verdict ? 2 : 1,
+      via,
+      visits,
+      next_visit: nextMilestone(visits),
+    })
     onClose()
   }
 
@@ -104,10 +123,16 @@ export function FeedbackSurvey({ onClose }: Props) {
     <div
       className={styles.overlay}
       data-rc="survey-scrim"
-      data-rc-dead="scrim"
       role="dialog"
       aria-modal="true"
       aria-label="피드백 설문"
+      /* 스크림 자신을 탭하면 닫는다 — 핸들러가 없어 밖을 눌러도 안 닫히던 게
+         dead click 1위였다. 카드 내부 클릭은 여기까지 올라오지만 target으로 걸러낸다. */
+      onClick={(e) => {
+        if (e.target !== e.currentTarget) return
+        if (done) onClose()
+        else dismiss('scrim')
+      }}
     >
       <div className={styles.card}>
         <IconButton
@@ -115,7 +140,7 @@ export function FeedbackSurvey({ onClose }: Props) {
           size={32}
           data-rc="survey-close"
           style={{ position: 'absolute', top: 14, right: 14 }}
-          onClick={done ? onClose : dismiss}
+          onClick={done ? onClose : () => dismiss('close_button')}
           aria-label="닫기"
         >
           <IcoX />

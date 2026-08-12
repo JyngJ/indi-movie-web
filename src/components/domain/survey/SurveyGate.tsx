@@ -2,28 +2,30 @@
 
 // ================================
 // SurveyGate — 재방문자 피드백 설문 노출 게이트
-// 재방문(2회차 이상) + 온보딩 완료 + 미응답일 때만, 진입 15초 뒤 1회 노출한다.
-// 온보딩 완료 조건은 shouldShowSurvey 안에 있다 — "재방문자는 당연히 온보딩을 끝냈다"는
-// 예전 가정이 틀렸다(1회차에 온보딩 중 이탈하면 2회차에 둘이 겹친다). gate.ts 주석 참고.
+// 방문 2·5·10회차에만, 온보딩을 끝낸 사람에게, 진입 15초 뒤 1회 노출한다.
+// 닫기는 영구 소각이 아니라 "다음에" — 다음 마일스톤에 다시 묻고, 제출하면 끝.
+// 노출 조건 전체는 shouldShowSurvey(gate.ts)에 있다.
 // ================================
 
 import { useEffect, useState } from 'react'
-import { shouldShowSurvey } from '@/lib/survey/gate'
+import { markSurveyShown, shouldShowSurvey } from '@/lib/survey/gate'
 import { FeedbackSurvey } from './FeedbackSurvey'
 
 const DELAY_MS = 15000
 
 export function SurveyGate() {
-  const [show, setShow] = useState(false)
+  const [visits, setVisits] = useState<number | null>(null)
 
   useEffect(() => {
     let cancelled = false
     let timer: ReturnType<typeof setTimeout> | undefined
 
-    void shouldShowSurvey().then((should) => {
-      if (cancelled || !should) return
+    void shouldShowSurvey().then((showAtVisits) => {
+      if (cancelled || showAtVisits === null) return
       timer = setTimeout(() => {
-        if (!cancelled) setShow(true)
+        if (cancelled) return
+        void markSurveyShown(showAtVisits)
+        setVisits(showAtVisits)
       }, DELAY_MS)
     })
 
@@ -33,6 +35,6 @@ export function SurveyGate() {
     }
   }, [])
 
-  if (!show) return null
-  return <FeedbackSurvey onClose={() => setShow(false)} />
+  if (visits === null) return null
+  return <FeedbackSurvey visits={visits} onClose={() => setVisits(null)} />
 }
