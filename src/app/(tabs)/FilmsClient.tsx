@@ -624,12 +624,14 @@ export default function FilmsPage() {
             zIndex: 1100, pointerEvents: 'none',
           }} />
           {/* 카드가 레일 위에 떠 있다면 그림자가 레일 쪽으로 떨어져야 한다 — 코너만 깎여 있고
-              그림자가 없어 평평하게 붙어 보였다(지도 탭 도크의 --shadow-sm과 같은 세기).
-              본문이 카드 요소가 아니라(전폭 + paddingLeft) boxShadow를 못 걸므로,
-              경계 왼쪽 레일 위에 고정 그라데이션 띠로 같은 인상을 만든다. */}
+              그림자가 없어 평평하게 붙어 보였다. 본문이 카드 요소가 아니라(전폭 + paddingLeft)
+              boxShadow를 직접 못 걸므로, 카드 왼쪽 라인과 같은 라운딩의 투명 요소를 세워
+              그 그림자만 쓴다 — 직선 그라데이션 띠는 코너 곡선을 무시해 어긋나 보였다.
+              세기는 --shadow-sm을 수평으로 눕힌 값. 레일(z 1150) 위에 보이도록 z 1200. */}
           <div aria-hidden style={{
-            position: 'fixed', left: GLOBAL_NAV_DESKTOP_WIDTH - 20, top: 0, bottom: 0, width: 20,
-            background: 'linear-gradient(90deg, transparent, rgba(20, 15, 10, 0.05) 40%, rgba(20, 15, 10, 0.16))',
+            position: 'fixed', left: GLOBAL_NAV_DESKTOP_WIDTH, top: 0, bottom: 0, width: 16,
+            borderRadius: '16px 0 0 16px',
+            boxShadow: '-1px 0 2px rgba(20, 15, 10, 0.10), -2px 0 8px rgba(20, 15, 10, 0.04)',
             zIndex: 1200, pointerEvents: 'none',
           }} />
         </>
