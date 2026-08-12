@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getMovieDetail } from '@/lib/catalog/getMovieDetail'
 import { toMovieSchema } from '@/lib/seo/toMovieSchema'
@@ -66,21 +67,21 @@ export default async function MovieDetailPage({
 }) {
   const [{ id }, sp] = await Promise.all([params, searchParams])
   const movie = await getMovieDetail(id)
-  const showtimes: MovieTheaterEntry[] = movie
-    ? await getMovieShowtimesForSsr(id)
-    : []
+  /* 삭제된 영화 id로 들어오면 지금까지 빈 상세 페이지를 200으로 돌려줬다
+     (Search Console soft 404). 존재하지 않으면 명시적으로 없는 페이지로 처리한다. */
+  if (!movie) notFound()
 
-  const schema = movie ? toMovieSchema(movie, BASE_URL) : null
-  const screeningEventSchemas = movie ? toScreeningEventSchema(movie, showtimes, BASE_URL) : []
+  const showtimes: MovieTheaterEntry[] = await getMovieShowtimesForSsr(id)
+
+  const schema = toMovieSchema(movie, BASE_URL)
+  const screeningEventSchemas = toScreeningEventSchema(movie, showtimes, BASE_URL)
 
   return (
     <>
-      {schema && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-        />
-      )}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      />
       {screeningEventSchemas.map((eventSchema, i) => (
         <script
           key={i}
@@ -91,7 +92,7 @@ export default async function MovieDetailPage({
       <MovieDetailClient
         movieId={id}
         theaterId={sp.theater}
-        initialData={movie ?? undefined}
+        initialData={movie}
         initialShowtimes={showtimes}
       />
     </>
