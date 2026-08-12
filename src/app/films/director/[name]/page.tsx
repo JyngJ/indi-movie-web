@@ -4,9 +4,12 @@ import { FilmsDirectorDetailClient } from './FilmsDirectorDetailClient'
 import { DirectorSeoContent } from '@/components/seo/DirectorSeoContent'
 import { getDirectorScreenings } from '@/lib/seo/getDirectorScreenings'
 import { toFaqSchema } from '@/lib/seo/toFaqSchema'
+import { toBreadcrumbSchema } from '@/lib/seo/toBreadcrumbSchema'
 import { ogImageUrl } from '@/lib/og/cards'
 
 export const revalidate = 3600
+
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
   const { name } = await params
@@ -35,6 +38,11 @@ export default async function FilmsDirectorDetailPage({ params }: { params: Prom
      크롤러와 답변형 AI가 읽을 같은 내용을 서버에서 한 번 더 렌더한다. */
   const seoData = await getDirectorScreenings(directorName)
 
+  const breadcrumbSchema = toBreadcrumbSchema([
+    { name: '영화볼지도', path: '/' },
+    { name: `${directorName} 감독` },
+  ], BASE_URL)
+
   const nowShowing = [...new Map(seoData.screenings.map((s) => [s.movieId, s])).values()]
   const theaterNames = [...new Set(seoData.screenings.map((s) => s.theaterName))]
   /* 본문(DirectorSeoContent)에 실제로 있는 문답만 스키마로도 낸다 */
@@ -56,6 +64,10 @@ export default async function FilmsDirectorDetailPage({ params }: { params: Prom
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <DirectorSeoContent directorName={directorName} data={seoData} />
       <Suspense>

@@ -39,7 +39,7 @@ export function TheaterSeoContent({
           <ul>
             {today.movies.map((m) => (
               <li key={m.movieId}>
-                <Link href={`/films/movie/${m.movieId}`}>
+                <Link href={`/movie/${m.movieId}`}>
                   {m.movieTitle}
                   {m.year ? ` (${m.year})` : ''}
                 </Link>
@@ -60,7 +60,7 @@ export function TheaterSeoContent({
               <ul>
                 {day.movies.map((m) => (
                   <li key={`${day.date}-${m.movieId}`}>
-                    <Link href={`/films/movie/${m.movieId}`}>{m.movieTitle}</Link>
+                    <Link href={`/movie/${m.movieId}`}>{m.movieTitle}</Link>
                     {` · ${m.times.join(', ')}`}
                   </li>
                 ))}

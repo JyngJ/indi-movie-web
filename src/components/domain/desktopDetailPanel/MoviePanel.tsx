@@ -82,7 +82,7 @@ export function MoviePanel({
         <div style={{ flexShrink: 0, width: 90, height: 135 }}>
           {movie.posterUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={movie.posterUrl} alt="" style={{ width: 90, height: 135, borderRadius: 0, objectFit: 'cover', display: 'block', boxShadow: 'inset 0 0 0 1px var(--comp-poster-border)' }} />
+            <img src={movie.posterUrl} alt={`${movie.title} 포스터`} style={{ width: 90, height: 135, borderRadius: 0, objectFit: 'cover', display: 'block', boxShadow: 'inset 0 0 0 1px var(--comp-poster-border)' }} />
           ) : (
             <div style={{ width: 90, height: 135, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-neutral-800)' }} />
           )}

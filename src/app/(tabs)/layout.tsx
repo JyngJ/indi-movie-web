@@ -48,8 +48,10 @@ export default function TabsLayout({ children }: { children: ReactNode }) {
         </div>
       )}
 
-      {/* 지도 외 탭 콘텐츠 */}
-      {!isOnMap && children}
+      {/* 탭 콘텐츠. 지도 경로에서도 렌더해야 한다 — /map 페이지는 화면에 그릴 UI가 없고
+          크롤러용 sr-only 본문만 반환한다. 여기서 걸러내면 /map의 서버 HTML이
+          통째로 비어 h1도 본문도 없는 페이지가 된다(Bing URL 검사에서 확인). */}
+      {children}
 
       {/* 설정 팝업 — 지도 탭 외에서도 열릴 수 있도록 layout 레벨에서 렌더 */}
       {!isOnMap && (

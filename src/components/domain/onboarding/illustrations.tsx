@@ -110,7 +110,7 @@ function Poster({ w, h, src, r = 6 }: PosterProps) {
   return (
     <div className={s.poster} style={{ width: w, height: h, borderRadius: r }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt="" width={w} height={h} draggable={false} loading="eager" />
+      <img src={src} alt="" aria-hidden width={w} height={h} draggable={false} loading="eager" />
     </div>
   )
 }
@@ -166,7 +166,7 @@ function MapBase({ dark = false }: { dark?: boolean }) {
             const y = TILE_CY + dy
             return (
               // eslint-disable-next-line @next/next/no-img-element
-              <img key={`${dx}_${dy}`} src={tileUrl(x, y, dark)} alt="" width={256} height={256} draggable={false} />
+              <img key={`${dx}_${dy}`} src={tileUrl(x, y, dark)} alt="" aria-hidden width={256} height={256} draggable={false} />
             )
           }),
         )}
