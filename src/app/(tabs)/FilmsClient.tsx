@@ -632,6 +632,9 @@ export default function FilmsPage() {
             position: 'fixed', left: GLOBAL_NAV_DESKTOP_WIDTH, top: 0, bottom: 0, width: 16,
             borderRadius: '16px 0 0 16px',
             boxShadow: 'var(--shadow-panel-left)',
+            /* 블러(8px)가 오프셋(-2px)보다 커서 요소 오른쪽으로도 번진다 —
+               본문 위에 흐린 세로선으로 보였다. 오른쪽 경계에서 잘라낸다. */
+            clipPath: 'inset(-24px 0 -24px -24px)',
             zIndex: 1200, pointerEvents: 'none',
           }} />
         </>
