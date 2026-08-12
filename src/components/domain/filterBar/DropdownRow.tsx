@@ -45,7 +45,7 @@ export function DropdownRow({ kind, label, sub, selected, onClick, isLast, badge
       }}>
         {selected && <IcoCheck />}
       </div>
-      <div>
+      <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
           fontSize: 13,
           fontWeight: selected ? 600 : 500,
@@ -58,6 +58,7 @@ export function DropdownRow({ kind, label, sub, selected, onClick, isLast, badge
           {label}
           {badge && (
             <span style={{
+              marginLeft: 'auto',
               fontSize: 'var(--text-badge)',
               fontWeight: 600,
               lineHeight: 1,
