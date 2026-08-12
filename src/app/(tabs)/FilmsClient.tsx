@@ -21,6 +21,7 @@ import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useCurationData } from '@/hooks/useCurationData'
 import { useLocationPermission } from '@/hooks/useLocationPermission'
+import { useCurrentLocationRegion } from '@/hooks/useCurrentLocationRegion'
 import { getFilmsTabCurationSections, SECTION_GROUP } from '@/lib/curation/filmsTabLists'
 import { formatAlmostSoldOutCaption, getAlmostSoldOutFilms } from '@/lib/curation/getAlmostSoldOutFilms'
 import { dayOfWeekLabel, formatLateNightCaption, getLateNightFilms } from '@/lib/curation/getLateNightFilms'
@@ -210,6 +211,8 @@ export default function FilmsPage() {
   const handleDirectorClick = (name: string) => { navStart(); router.push(`/films/director/${encodeURIComponent(name)}`) }
 
   const { state: locState, coords: locCoords, modalSuppressed: locModalSuppressed, request: requestLoc, dismiss: dismissLoc } = useLocationPermission()
+  // 접속 위치 지역 — 드롭다운 배지·자동 스크롤 + (미설정 사용자에 한해) 최초 1회 자동 지정
+  const currentLocationRegion = useCurrentLocationRegion()
   const isDesktop = mounted && isDesktopLayout
 
   // getStoredRegion(localStorage)을 useState 초기화에서 읽으면 SSR(null)과 클라 첫 렌더가
@@ -666,6 +669,7 @@ export default function FilmsPage() {
                 >
                   <RegionDropdown
                     selectedId={selectedRegion}
+                    currentLocationId={currentLocationRegion}
                     onSelect={(id) => { pickRegion(id); setDropdownOpen(false) }}
                   />
                 </div>
@@ -722,6 +726,7 @@ export default function FilmsPage() {
                   >
                     <RegionDropdown
                       selectedId={selectedRegion}
+                      currentLocationId={currentLocationRegion}
                       onSelect={(id) => { pickRegion(id); setDropdownOpen(false) }}
                     />
                   </div>

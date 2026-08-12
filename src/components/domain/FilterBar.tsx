@@ -6,6 +6,7 @@ import type { MouseEvent as ReactMouseEvent, WheelEvent as ReactWheelEvent } fro
 import { GENRES } from '@/lib/genres'
 import { withFlag } from '@/lib/nations'
 import { getStoredRegion, setStoredRegion, subscribeStoredRegion } from '@/lib/regionStorage'
+import { useCurrentLocationRegion } from '@/hooks/useCurrentLocationRegion'
 import { type DateId, buildDateOptions, fmtFull, fmtMD, isSameDay } from './filterBar/dateHelpers'
 import { CalendarPicker } from './filterBar/CalendarPicker'
 import { DateDropdown } from './filterBar/DateDropdown'
@@ -68,6 +69,8 @@ export function FilterBar({
   const [bookable, setBookable] = useState(false)
   const [indie, setIndie] = useState(false)
   const [regionId, setRegionId] = useState<string | null>(null)
+  // 접속 위치 지역 — 드롭다운 배지·자동 스크롤용 (자동 지정은 훅이 기기당 1회만 수행)
+  const currentLocationRegion = useCurrentLocationRegion()
   // 사용자가 직접 지역을 선택했으면 GPS auto-set 막기 (clear하면 다시 허용)
   const userPickedRegionRef = useRef(false)
   const [openPanel, setOpenPanel] = useState<OpenPanel>(null)
@@ -521,6 +524,7 @@ export function FilterBar({
           {openPanel === 'region' && (
             <RegionDropdown
               selectedId={regionId}
+              currentLocationId={currentLocationRegion}
               onSelect={(id) => { userPickedRegionRef.current = !!id; setRegionId(id); setStoredRegion(id); if (id) setOpenPanel(null); chip({ regionId: id }) }}
               style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, zIndex: 99999 }}
             />
