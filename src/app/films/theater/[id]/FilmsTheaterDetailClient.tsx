@@ -448,9 +448,9 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
         <div style={{ display: 'inline-flex', alignItems: 'center', padding: '4px 12px', borderRadius: 9999, border: '1px solid color-mix(in srgb, var(--color-primary-base) 55%, transparent)', backgroundColor: 'var(--color-primary-subtle-l)', marginBottom: 12 }}>
           <span style={{ fontSize: 'var(--text-badge)', fontWeight: 600, lineHeight: 1, color: 'var(--color-primary-base)' }}>독립·예술영화관</span>
         </div>
-        <h1 className="display-h1" style={{ margin: '0 0 12px', color: 'var(--color-text-primary)' }}>
+        <h2 className="display-h1" style={{ margin: '0 0 12px', color: 'var(--color-text-primary)' }}>
           {theater.name}
-        </h1>
+        </h2>
         {/* 주소 + 복사 */}
         <button
           onClick={copyAddress}

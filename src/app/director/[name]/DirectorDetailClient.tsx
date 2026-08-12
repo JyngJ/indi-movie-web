@@ -118,12 +118,12 @@ function SortChips({ active, onChange }: { active: SortKey; onChange: (k: SortKe
 }
 
 /* ── 포스터 플레이스홀더 ── */
-function MiniPoster({ src }: { src?: string }) {
+function MiniPoster({ src, title }: { src?: string; title?: string }) {
   return (
     <div style={{ width: 52, height: 76, borderRadius: 8, overflow: 'hidden', flexShrink: 0, backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)' }}>
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        <img src={src} alt={title ? `${title} 포스터` : ''} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
       ) : (
         <div style={{ width: '100%', height: '100%', background: 'var(--color-neutral-800)' }} />
       )}
@@ -164,7 +164,7 @@ function FilmographyRow({
         minHeight: 'auto',
       }}
     >
-      <MiniPoster src={movie.posterUrl} />
+      <MiniPoster src={movie.posterUrl} title={movie.title} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{

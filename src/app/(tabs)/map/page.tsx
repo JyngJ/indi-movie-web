@@ -1,8 +1,14 @@
 import type { Metadata } from 'next'
+import { getScreeningIndex } from '@/lib/seo/getScreeningIndex'
+import { ScreeningIndexSeoContent } from '@/components/seo/ScreeningIndexSeoContent'
 
 // 지도 탭 라우트. 지도(MapView)는 탭 전환에도 상태를 보존해야 해서 (tabs)/layout.tsx에서
-// 마운트되고, 이 페이지는 라우트와 메타데이터만 담당한다
-// (레이아웃이 지도 경로에서는 children을 렌더하지 않는다).
+// 마운트되며 `ssr: false`다. 그래서 이 경로의 서버 HTML에는 아무 텍스트도 남지 않았고
+// h1조차 없었다(Bing URL 검사에서 확인). 화면에 그릴 UI는 여전히 레이아웃이 담당하고,
+// 이 페이지는 메타데이터와 크롤러용 sr-only 본문을 맡는다.
+//
+// SEO 크롤러용 텍스트라 신선도 불필요 — 홈과 같은 6시간 (Supabase 요청량 절감)
+export const revalidate = 21600
 export const metadata: Metadata = {
   title: '독립영화관 지도 — 내 주변 상영관 찾기 | 영화볼지도',
   description:
@@ -25,6 +31,14 @@ export const metadata: Metadata = {
   },
 }
 
-export default function MapPage() {
-  return null
+export default async function MapPage() {
+  const data = await getScreeningIndex()
+
+  return (
+    <ScreeningIndexSeoContent
+      heading="독립영화관 지도 — 내 주변 상영관 찾기"
+      intro="전국 독립·예술영화관을 지도에서 찾을 수 있습니다. 극장 위치와 오늘 상영작, 상영 시간표를 지도 한 장에서 확인하세요. 지하철역, 감독, 영화 제목으로도 검색할 수 있습니다."
+      data={data}
+    />
+  )
 }

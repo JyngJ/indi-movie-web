@@ -2686,7 +2686,7 @@ export default function MapView() {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={movie.posterUrl}
-                    alt=""
+                    alt={`${movie.title} 포스터`}
                     style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                   />
                 ) : (

@@ -26,10 +26,10 @@ const IcoShare = () => <svg width={16} height={16} viewBox="0 0 24 24" fill="non
 type SortKey = 'newest' | 'oldest'
 
 /* ── MiniPoster ─────────────────────────────────────────────────── */
-function MiniPoster({ src }: { src?: string }) {
+function MiniPoster({ src, title }: { src?: string; title?: string }) {
   return (
     <div style={{ width: 52, height: 76, borderRadius: 8, overflow: 'hidden', flexShrink: 0, backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)' }}>
-      {src ? <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> : <div style={{ width: '100%', height: '100%', background: 'var(--color-neutral-800)' }} />}
+      {src ? <img src={src} alt={title ? `${title} 포스터` : ''} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> : <div style={{ width: '100%', height: '100%', background: 'var(--color-neutral-800)' }} />}
     </div>
   )
 }
@@ -61,7 +61,7 @@ function FilmographyRow({ movie, isLast, isActive, onClick, isDesktop }: { movie
       onClick={onClick}
       style={{ display: 'flex', alignItems: 'center', gap: 12, padding: isDesktop ? '14px 18px' : '12px 16px', background: 'transparent', border: 'none', borderBottom: isLast ? 'none' : '1px solid var(--color-border)', width: '100%', cursor: 'pointer', textAlign: 'left', minHeight: 'auto' }}
     >
-      <MiniPoster src={movie.posterUrl} />
+      <MiniPoster src={movie.posterUrl} title={movie.title} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: isActive ? 'var(--color-primary-base)' : 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: isDesktop ? 360 : 180 }}>
