@@ -19,6 +19,32 @@ export const ONBOARDING_SEEN_KEY = 'onboarding_seen_v1'
  */
 let sessionSeenOnWriteFailure = false
 
+/**
+ * 이번 세션에 온보딩을 막 끝냈는지 표시하는 마커.
+ * 온보딩을 닫자마자 15초 뒤 피드백 설문이 덮치는 걸 막는 데 쓴다 —
+ * 이제 막 처음 써보기 시작한 사람에게 "잘 쓰고 계세요?"는 이르다.
+ */
+const ONBOARDED_THIS_SESSION_KEY = 'movie:onboarded-this-session:v1'
+
+function markOnboardedThisSession(): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.sessionStorage.setItem(ONBOARDED_THIS_SESSION_KEY, '1')
+  } catch {
+    /* 프라이빗 모드 등 — 무시 */
+  }
+}
+
+/** 이번 세션에서 온보딩을 닫았는가 */
+export function didOnboardThisSession(): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    return window.sessionStorage.getItem(ONBOARDED_THIS_SESSION_KEY) !== null
+  } catch {
+    return false
+  }
+}
+
 /** 온보딩을 보여줘야 하는가 — 플래그가 없을 때만 true */
 export async function shouldShowOnboarding(storage: IStorageAdapter): Promise<boolean> {
   if (sessionSeenOnWriteFailure) return false
@@ -28,6 +54,7 @@ export async function shouldShowOnboarding(storage: IStorageAdapter): Promise<bo
 
 /** 온보딩을 봤다고 기록 — 값은 디버깅용 타임스탬프 (존재 여부만 판단에 사용) */
 export async function markOnboardingSeen(storage: IStorageAdapter): Promise<void> {
+  markOnboardedThisSession()
   const persisted = await storage.setItem(ONBOARDING_SEEN_KEY, new Date().toISOString())
   if (!persisted) sessionSeenOnWriteFailure = true
 }
