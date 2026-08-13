@@ -369,7 +369,7 @@ export function CurationSectionRow({
                   {movie.genre.slice(0, 1).map((g) => (
                     <GenreChip key={g}>{g}</GenreChip>
                   ))}
-                  <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)', fontWeight: 600 }}>{movie.year}</span>
+                  <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', fontWeight: 600 }}>{movie.year}</span>
                 </div>
               </div>
             </div>

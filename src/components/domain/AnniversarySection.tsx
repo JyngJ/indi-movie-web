@@ -5,6 +5,7 @@ import type { AnniversaryEventType } from '@/lib/curation/directorAnniversaries'
 import { CurationSectionRow } from '@/components/domain/CurationSectionRow'
 import { PosterThumb } from '@/components/domain/PosterThumb'
 import { RevealItem } from '@/components/motion'
+import { GenreChip } from '@/components/primitives'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 
 interface Props {
@@ -128,14 +129,9 @@ export function AnniversarySection({
                 </span>
                 <div style={{ display: 'flex', gap: 'var(--spacing-1)', alignItems: 'center' }}>
                   {film.genre.slice(0, 1).map((g) => (
-                    <span key={g} style={{
-                      fontSize: 'var(--text-badge)', padding: '4px', borderRadius: 'var(--radius-pill)',
-                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
-                      background: 'var(--color-surface-raised)', color: 'var(--color-text-caption)',
-                      border: '1px solid var(--color-border)',
-                    }}>{g}</span>
+                    <GenreChip key={g}>{g}</GenreChip>
                   ))}
-                  <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)', fontWeight: 600 }}>{film.year}</span>
+                  <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', fontWeight: 600 }}>{film.year}</span>
                 </div>
               </div>
             </RevealItem>
@@ -147,7 +143,9 @@ export function AnniversarySection({
 
   // 일반 모드 — 가로 스크롤
   return (
-    <div style={{ paddingTop: isDesktop ? 48 : 24 }}>
+    /* 섹션 리듬은 모바일 32 · PC 48 — 다른 섹션(CurationSectionRow·특별전)과 같은 값.
+       예전엔 모바일만 24라 기념일 위에서만 간격이 좁았다. */
+    <div style={{ paddingTop: isDesktop ? 48 : 32 }}>
       <div style={{ margin: '0 var(--gutter-sheet)' }}>{header}</div>
       <div style={{
         margin: '0 var(--gutter-sheet)',

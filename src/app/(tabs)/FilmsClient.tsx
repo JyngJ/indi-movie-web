@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { SectionHeader, MovieCardSkeleton } from '@/components/primitives'
+import { SectionHeader, MovieCardSkeleton, FabRound } from '@/components/primitives'
 import { AllMoviesGrid } from '@/components/domain/AllMoviesGrid'
 import { RouteProgressBar, navStart } from '@/components/domain/RouteProgressBar'
 import { AnniversarySection } from '@/components/domain/AnniversarySection'
@@ -1182,30 +1182,23 @@ export default function FilmsPage() {
 
       {/* scroll-to-top: 헤더가 뷰포트 밖으로 나가면 표시 */}
       {showScrollTop && (
-        <button
+        /* 지도 탭 FAB와 같은 프리미티브 — 크기(44)·그림자(--shadow-md)·테두리를 공유한다.
+           예전엔 40px 인라인 버튼이라 지도와 크기가 어긋났고 hit area도 44 미만이었다. */
+        <FabRound
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          aria-label="맨 위로"
+          title="맨 위로"
           style={{
             position: 'fixed',
             right: isDesktop ? 32 : 20,
             bottom: isDesktop
               ? 32
               : `calc(${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom) + 16px)`,
-            width: 40, height: 40,
-            borderRadius: '50%',
-            border: 'none',
-            cursor: 'pointer',
-            background: 'var(--color-surface-card)',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
-            color: 'var(--color-text-body)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
             zIndex: 100,
-            minHeight: 'unset',
-            transition: 'opacity 0.15s',
           }}
-          title="맨 위로"
         >
           <ArrowUp size={20} strokeWidth={1.75} color="currentColor" />
-        </button>
+        </FabRound>
       )}
     </div>
   )
