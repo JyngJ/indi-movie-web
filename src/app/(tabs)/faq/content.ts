@@ -1,37 +1,23 @@
-import type { Metadata } from 'next'
-import Link from 'next/link'
-import { toFaqSchema, type FaqEntry } from '@/lib/seo/toFaqSchema'
-import { getScreeningIndex } from '@/lib/seo/getScreeningIndex'
-import { BackLink } from '../privacy/BackLink'
-
-export const metadata: Metadata = {
-  title: '자주 묻는 질문 | 영화볼지도',
-  description:
-    '영화볼지도 FAQ — 서비스 소개, 상영시간표 업데이트 주기, 등록 극장, 예매 방법, GV 상영, 데이터 출처 등 자주 묻는 질문과 답변.',
-  alternates: { canonical: '/faq' },
-}
-
-// llms.txt와 같은 판단 — 극장 수 같은 숫자만 바뀌므로 6시간 캐시
-export const revalidate = 21600
+import type { FaqEntry } from '@/lib/seo/toFaqSchema'
 
 /** 답변 아래에 붙는 이동 버튼 — 제보/요청은 더보기 탭의 리포트 폼으로 연결한다 */
-interface FaqAction {
+export interface FaqAction {
   label: string
   href: string
 }
 
-interface FaqItem extends FaqEntry {
+export interface FaqItem extends FaqEntry {
   action?: FaqAction
 }
 
-interface FaqSection {
+export interface FaqSection {
   title: string
   items: FaqItem[]
 }
 
 const reportHref = (category: string) => `/more?page=report&category=${encodeURIComponent(category)}`
 
-function buildSections(theaterCount: number): FaqSection[] {
+export function buildSections(theaterCount: number): FaqSection[] {
   return [
     {
       title: '서비스 소개',
@@ -129,79 +115,4 @@ function buildSections(theaterCount: number): FaqSection[] {
       ],
     },
   ]
-}
-
-export default async function FaqPage() {
-  const data = await getScreeningIndex()
-  const sections = buildSections(data.theaters.length)
-  const faqSchema = toFaqSchema(sections.flatMap((s) => s.items.map(({ question, answer }) => ({ question, answer }))))
-
-  return (
-    <main
-      style={{
-        maxWidth: 760,
-        margin: '0 auto',
-        padding: '40px var(--gutter) 80px',
-        color: 'var(--color-text-body)',
-        lineHeight: 1.7,
-        fontSize: 'var(--text-subtitle)',
-      }}
-    >
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
-
-      <BackLink />
-
-      <h1 className="display-h1" style={{ color: 'var(--color-text-primary)', margin: '20px 0 8px' }}>
-        자주 묻는 질문
-      </h1>
-      <p style={{ marginBottom: 32, color: 'var(--color-text-sub)' }}>
-        영화볼지도는 전국 독립·예술영화관의 상영 시간표를 지도 한 장에 모은 무료 서비스입니다.
-        서비스를 이용하며 자주 묻는 질문들을 모았습니다.
-      </p>
-
-      {sections.map((section) => (
-        <section key={section.title} style={{ marginBottom: 40 }}>
-          <h2
-            className="display-h2"
-            style={{
-              color: 'var(--color-text-primary)',
-              margin: '0 0 16px',
-              paddingBottom: 8,
-              borderBottom: '1px solid var(--color-border)',
-            }}
-          >
-            {section.title}
-          </h2>
-          {section.items.map((item) => (
-            <div key={item.question} style={{ marginBottom: 24 }}>
-              <h3 style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)', margin: '0 0 8px' }}>
-                Q. {item.question}
-              </h3>
-              <p style={{ margin: 0 }}>{item.answer}</p>
-              {item.action && (
-                <Link
-                  href={item.action.href}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    marginTop: 8,
-                    padding: '8px 16px',
-                    borderRadius: 'var(--radius-button)',
-                    border: '1px solid var(--color-border)',
-                    backgroundColor: 'var(--color-surface-card)',
-                    color: 'var(--color-text-primary)',
-                    fontSize: 'var(--text-meta)',
-                    fontWeight: 600,
-                    textDecoration: 'none',
-                  }}
-                >
-                  {item.action.label}
-                </Link>
-              )}
-            </div>
-          ))}
-        </section>
-      ))}
-    </main>
-  )
 }
