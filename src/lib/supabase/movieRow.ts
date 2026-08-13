@@ -24,6 +24,7 @@ export function movieRowToMovie(row: Record<string, unknown>): Movie {
     kmdbId: row.kmdb_id ? String(row.kmdb_id) : undefined,
     tmdbId: row.tmdb_id ? Number(row.tmdb_id) : undefined,
     rating: row.rating ? Number(row.rating) : undefined,
+    runtimeMinutes: row.runtime ? Number(row.runtime) : undefined,
   }
 }
 
@@ -41,5 +42,6 @@ export function rowToMovie(movieRaw: Record<string, unknown>): Movie {
     kmdbId: movieRaw.kmdb_id != null ? String(movieRaw.kmdb_id) : undefined,
     tmdbId: movieRaw.tmdb_id != null ? Number(movieRaw.tmdb_id) : undefined,
     rating: movieRaw.rating != null ? Number(movieRaw.rating) : undefined,
+    runtimeMinutes: movieRaw.runtime != null ? Number(movieRaw.runtime) : undefined,
   }
 }

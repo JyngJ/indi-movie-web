@@ -71,7 +71,7 @@ async function fetchBookingClicks(weekStart: string, weekEnd: string): Promise<M
   const query = `
     SELECT properties.movie_id, count() AS cnt
     FROM events
-    WHERE event = 'booking_clicked'
+    WHERE event = 'booking clicked'
       AND timestamp >= toDateTime('${weekStart} 00:00:00')
       AND timestamp < toDateTime('${nextDay(weekEnd)} 00:00:00')
       AND isNotNull(properties.movie_id)

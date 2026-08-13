@@ -1,6 +1,6 @@
 import type { CurationListRow } from '@/lib/curation/types'
 import type { Movie } from '@/types/api'
-import { Ghost, Heart, Video, Disc, Leaf, Crown, Award, Trophy, Star, Film, VenetianMask, Building2, Clapperboard, TreePine, Clock } from 'lucide-react'
+import { Ghost, Heart, Video, Disc, Leaf, Crown, Award, Trophy, Star, Film, VenetianMask, Building2, Clapperboard, TreePine, Clock, CloudRain, Coffee, Popcorn, MoonStar, Palette, EyeOff, Umbrella, Sunrise, Contrast, BookOpen } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 // ─────────────────────────────────────────────
@@ -65,6 +65,16 @@ const SECTION_CONFIG: Record<string, SectionConfig> = {
   collection_masters_debut: { emoji: <Clapperboard size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '지금의 거장이 처음 카메라를 든 순간' },
   seasonal_christmas:       { emoji: <TreePine size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '크리스마스의 온도를 가진 영화들 — 따뜻하거나, 쓸쓸하거나' },
   seasonal_yearend:         { emoji: <Clock size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '한 해가 저물 때 꺼내보고 싶은 위대한 영화들' },
+  theme_tearjerker:         { emoji: <CloudRain size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '참지 말고 극장 어둠 속에서 실컷 우세요' },
+  theme_healing:            { emoji: <Coffee size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '고요하게 마음을 쓸어주는 잔잔한 영화들' },
+  theme_no_brainer:         { emoji: <Popcorn size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '아무 생각 없이 웃다 나오는 영화들' },
+  theme_summer_night:       { emoji: <MoonStar size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '해 지고 나서 더 좋아지는 여름의 장면들' },
+  theme_visual_feast:       { emoji: <Palette size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '프레임마다 그림이 되는 색감과 영상미' },
+  theme_no_spoiler:         { emoji: <EyeOff size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '줄거리 검색은 금물, 모르고 볼수록 커지는 영화' },
+  theme_rainy_day:          { emoji: <Umbrella size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '창밖에 비 내리는 날 꺼내보고 싶은 영화들' },
+  theme_late_night_alone:   { emoji: <Sunrise size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '잠 안 오는 새벽, 조용히 곁에 두는 영화들' },
+  theme_black_white:        { emoji: <Contrast size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '색을 덜어내서 더 선명해지는 장면들' },
+  theme_based_on_novel:     { emoji: <BookOpen size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '책으로 읽고, 극장에서 다시 만나는 이야기' },
 }
 
 export interface CurationSectionData {
@@ -99,6 +109,17 @@ export const SECTION_GROUP: Record<string, number> = {
   movement_taiwan_new_wave: 5,
   movement_nouvelle_vague:  5,
   movement_hk_art_cinema:   5,
+  // 테마 (상황·감정)
+  theme_summer_night:       1,
+  theme_tearjerker:         6,
+  theme_healing:            6,
+  theme_no_brainer:         6,
+  theme_visual_feast:       6,
+  theme_no_spoiler:         6,
+  theme_rainy_day:          6,
+  theme_late_night_alone:   6,
+  theme_black_white:        6,
+  theme_based_on_novel:     6,
 }
 
 export function getFilmsTabCurationSections(
@@ -108,15 +129,18 @@ export function getFilmsTabCurationSections(
 ): CurationSectionData[] {
   return lists
     .filter((list) => isInSeason(list.seasonTrigger))
-    .map((list) => {
+    .flatMap((list) => {
       const config = SECTION_CONFIG[list.listId] ?? { emoji: <Clapperboard size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default' as SectionDisplayMode }
-      return {
+      const sectionMovies = movies.filter((movie) => isCurationListMember(movie, list) && activeMovieIds.has(movie.id))
+      // min_n 미달 리스트는 섹션 자체를 숨긴다 (예: 코미디처럼 보유작이 적은 테마)
+      if (sectionMovies.length < (list.minN ?? 0)) return []
+      return [{
         listId: list.listId,
         nameKo: list.nameKo,
         emoji: config.emoji,
         description: config.description,
         displayMode: config.displayMode,
-        movies: movies.filter((movie) => isCurationListMember(movie, list) && activeMovieIds.has(movie.id)),
-      }
+        movies: sectionMovies,
+      }]
     })
 }
