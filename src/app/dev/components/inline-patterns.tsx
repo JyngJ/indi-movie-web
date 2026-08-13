@@ -8,14 +8,14 @@ import React from 'react'
 import { PosterThumb } from '@/components/domain'
 import { captionStyle } from './gallery-shared'
 
-/* ── 포스터 오버레이 칩 정책: 11px/600 · 4px 8px · --radius-badge · offset 6px ── */
+/* ── 포스터 오버레이 칩 정책: --text-meta(12)/700 · 8px 12px · --radius-badge · offset 6px ── */
 
 const overlayChipBase: React.CSSProperties = {
   position: 'absolute',
-  padding: '4px 8px',
+  padding: '8px 12px',
   borderRadius: 'var(--radius-badge)',
-  fontSize: 11,
-  fontWeight: 600,
+  fontSize: 'var(--text-meta)',
+  fontWeight: 700,
   lineHeight: 1,
   whiteSpace: 'nowrap',
   color: 'var(--color-on-accent)',
@@ -82,6 +82,61 @@ export function PosterOverlayChips() {
           <span style={{ ...captionStyle, textTransform: 'none' }}>{p.caption}</span>
         </div>
       ))}
+    </div>
+  )
+}
+
+/* ── 랭킹 순위 오버레이 — 포스터 좌하단 스크림 + KIMM 숫자 ────────
+   원본: CurationSectionRow.tsx MovieCard (showRank). 스크림 높이 = 포스터 높이의 42%,
+   숫자 = 31%, 좌하단 offset 8/4. 좌하단은 순위 전용으로 비워 두는 자리다. */
+
+function RankOverlay({ rank, width, height }: { rank: number; width: number; height: number }) {
+  return (
+    <div style={{ position: 'relative', width, height }}>
+      <PosterThumb width={width} height={height} alt="파과" />
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute', left: 0, right: 0, bottom: 0,
+          height: Math.round(height * 0.42),
+          borderRadius: '0 0 var(--radius-poster) var(--radius-poster)',
+          background: 'linear-gradient(to top, rgba(15,12,9,0.78), rgba(15,12,9,0))',
+          pointerEvents: 'none',
+        }}
+      >
+        <span style={{
+          position: 'absolute', left: 8, bottom: 4,
+          fontFamily: 'var(--font-display)',
+          fontSize: Math.round(height * 0.31),
+          fontWeight: 700,
+          lineHeight: 0.85,
+          color: 'var(--color-on-accent)',
+          fontVariantNumeric: 'tabular-nums',
+        }}>
+          {rank}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+export function RankOverlayRow() {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-end gap-3">
+        {[1, 2, 3, 9, 10].map((r) => (
+          <RankOverlay key={r} rank={r} width={120} height={180} />
+        ))}
+        <span style={{ ...captionStyle, textTransform: 'none', maxWidth: 200 }}>
+          모바일 120×180 — 두 자릿수여도 카드 폭이 안 변한다(숫자가 포스터 안에 있어서)
+        </span>
+      </div>
+      <div className="flex items-end gap-3">
+        <RankOverlay rank={1} width={210} height={315} />
+        <span style={{ ...captionStyle, textTransform: 'none', maxWidth: 200 }}>
+          PC 210×315 — 스크림·숫자 모두 포스터 높이에 비례
+        </span>
+      </div>
     </div>
   )
 }

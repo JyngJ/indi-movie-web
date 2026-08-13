@@ -6,6 +6,9 @@ import type { Movie } from '@/types/api'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { RevealItem } from '@/components/motion'
+import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
+import { trackEvent } from '@/lib/analytics/client'
+import { buildSectionAnalytics } from '@/lib/curation/sectionRuns'
 
 type SortKey = 'theaters_desc' | 'theaters_asc' | 'year_desc' | 'year_asc' | 'alpha'
 
@@ -165,6 +168,15 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
     return () => io.disconnect()
   }, [hasMore, loadingMore, CHUNK])
 
+  /* 맨 아래 폴백 그리드. 큐레이션 행을 지나쳐 여기까지 온 비율을 알아야
+     "위 섹션들이 제 역할을 했는가"를 판단할 수 있다. */
+  const sectionRef = useRef<HTMLElement>(null)
+  const analytics = buildSectionAnalytics({
+    listId: 'all_movies_grid', sectionTitle: '전체 상영작',
+    run: 'fixed_bottom', movieCount: movies.length, layout: 'grid',
+  })
+  useSectionDwellTracking(sectionRef, movies.length > 0 ? 'all_movies_grid' : undefined, analytics)
+
   if (movies.length === 0) return null
 
   const tcMap = theaterCountByMovie ?? new Map<string, number>()
@@ -186,7 +198,7 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
         marginTop: isDesktop ? 64 : 32,
       }} />
 
-      <section>
+      <section ref={sectionRef}>
         {/* 헤더 */}
         <div style={{
           display: 'flex',
@@ -262,7 +274,13 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
               /* 한 행 안에서만 계단식 — 아래 행은 스크롤해 들어올 때 각자 재생된다 */
               staggerIndex={i % (isDesktop ? 4 : 3)}
               interactive={!!onMovieClick}
-              onClick={onMovieClick ? () => onMovieClick(movie.id) : undefined}
+              onClick={onMovieClick ? () => {
+                trackEvent('curation movie selected', {
+                  ...analytics, movie_id: movie.id, movie_title: movie.title,
+                  grid_index: i, sort: sortKey,
+                })
+                onMovieClick(movie.id)
+              } : undefined}
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span

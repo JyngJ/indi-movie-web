@@ -6,6 +6,7 @@ import { trackEvent } from '@/lib/analytics/client'
 import { getPersonalizedFilms } from '@/lib/curation/getPersonalizedFilms'
 import type { PersonalizedReason } from '@/lib/curation/getPersonalizedFilms'
 import type { RecentlyViewedEntry } from '@/lib/curation/types'
+import { buildSectionAnalytics } from '@/lib/curation/sectionRuns'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import type { Movie } from '@/types/api'
 
@@ -74,16 +75,27 @@ export function PersonalizedSection({
 
   if (!group) return null
 
+  /* dwell·클릭에 같은 메타를 실어 다른 큐레이션 행과 같은 축으로 비교되게 한다.
+     이 섹션은 run 밖(상단 고정)이라 position이 없다 — run 값으로 그걸 구분한다. */
+  const analytics = {
+    ...buildSectionAnalytics({
+      listId: 'personalized', sectionTitle: '이런 작품은 어때요',
+      run: 'fixed_top', movieCount: group.movies.length, compact: false,
+    }),
+    reason_type: group.reason.type,
+  }
+
   return (
     <CurationSectionRow
       id="personalized"
       title="이런 작품은 어때요"
       movies={group.movies}
       isDesktop={isDesktop}
+      analytics={analytics}
       onMovieClick={(movieId) => {
         trackEvent('personalized movie clicked', {
+          ...analytics,
           movie_id: movieId,
-          reason_type: group.reason.type,
         })
         onMovieClick(movieId)
       }}

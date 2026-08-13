@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { ExternalLink } from 'lucide-react'
 import { SectionHeader, ScrollNavButton, IconButton } from '@/components/primitives'
 import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
+import { buildSectionAnalytics } from '@/lib/curation/sectionRuns'
 import { trackEvent } from '@/lib/analytics/client'
 import { getFestivalDateLabel, getFestivalStatus } from '@/lib/festival/status'
 import { isInstagramRecActiveNow, sortInstagramRecommendations } from '@/lib/curation/sortInstagramRecommendations'
@@ -286,7 +287,12 @@ export function InstagramRecsSection({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted, candidates.map((c) => c.id).join(',')])
 
-  useSectionDwellTracking(sectionRef, pick ? 'instagram_recs' : undefined, position != null ? { position } : undefined)
+  /* 다른 섹션과 같은 메타 축으로 맞춘다 — 예전엔 position만 실려서 섹션 간 비교가 안 됐다 */
+  const analytics = buildSectionAnalytics({
+    listId: 'instagram_recs', sectionTitle: '인스타그램에서 추천한 영화',
+    run: 'fixed_top', position, movieCount: pick?.movies.length ?? 0, layout: 'hero',
+  })
+  useSectionDwellTracking(sectionRef, pick ? 'instagram_recs' : undefined, analytics)
 
   if (!mounted || !pick) return null
 
@@ -294,14 +300,12 @@ export function InstagramRecsSection({
     const linkedMovieIds = rec.movies.map((m) => m.movieId).filter((id): id is string => !!id)
 
     trackEvent('curation movie selected', {
-      list_id: 'instagram_recs',
-      source: 'films_tab',
+      ...analytics,
       target_type: rec.targetType,
       movie_ids: linkedMovieIds.join(','),
       movie_count: linkedMovieIds.length,
       festival_id: rec.festivalId ?? undefined,
       is_active_now: isInstagramRecActiveNow(rec, activeMovieIds, today),
-      ...(position != null ? { position } : {}),
     })
 
     // 영화 1편만 연결돼 있으면 그 영화 상세로, 여러 편이면(개별 상세 하나로 대표할 수 없음)
@@ -321,13 +325,11 @@ export function InstagramRecsSection({
   // 별도 타깃이라 계측도 따로(어떤 편이 눌렸는지 movie_ids가 1개짜리로 남는다)
   function handlePosterClick(rec: InstagramRecommendation, movieId: string) {
     trackEvent('curation movie selected', {
-      list_id: 'instagram_recs',
-      source: 'films_tab',
+      ...analytics,
       target_type: rec.targetType,
       movie_ids: movieId,
       movie_count: 1,
       is_active_now: activeMovieIds.has(movieId),
-      ...(position != null ? { position } : {}),
     })
     onMovieClick(movieId)
   }

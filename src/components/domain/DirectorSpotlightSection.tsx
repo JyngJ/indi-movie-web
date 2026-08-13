@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Movie } from '@/types/api'
 import { ScrollNavButton } from '@/components/primitives'
+import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
+import { trackEvent } from '@/lib/analytics/client'
+import { buildSectionAnalytics } from '@/lib/curation/sectionRuns'
 import { useDirectorProfile } from '@/lib/supabase/queries'
 import { scrollRailBy } from '@/lib/ui/railScroll'
 
@@ -156,10 +159,19 @@ export function DirectorSpotlightSection({
 
   const directors = getSpotlight(movies, activeMovieIds)
 
+  /* 하단 고정 섹션. 스크롤 끝까지 내려온 사람만 보므로 체류가 짧게 나오는 게 정상이고,
+     그걸 확인하려면 계측이 있어야 한다 (여기까지 오는 사람이 얼마나 되는지 포함) */
+  const sectionRef = useRef<HTMLElement>(null)
+  const analytics = buildSectionAnalytics({
+    listId: 'director_spotlight', sectionTitle: '감독 스포트라이트',
+    run: 'fixed_bottom', movieCount: directors.length, layout: 'avatar',
+  })
+  useSectionDwellTracking(sectionRef, directors.length > 0 ? 'director_spotlight' : undefined, analytics)
+
   if (directors.length === 0) return null
 
   return (
-    <section style={{ paddingTop: isDesktop ? 56 : 28 }}>
+    <section ref={sectionRef} style={{ paddingTop: isDesktop ? 56 : 28 }}>
       <div style={{ padding: '0 var(--gutter-sheet)' }}>
         <h2
           className="display-h2"
@@ -204,7 +216,10 @@ export function DirectorSpotlightSection({
             key={dir.name}
             director={dir}
             isDesktop={isDesktop}
-            onClick={onDirectorClick ? () => onDirectorClick(dir.name) : undefined}
+            onClick={onDirectorClick ? () => {
+              trackEvent('curation director selected', { ...analytics, director: dir.name })
+              onDirectorClick(dir.name)
+            } : undefined}
           />
         ))}
       </div>

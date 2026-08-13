@@ -23,6 +23,9 @@ import { useCurationData } from '@/hooks/useCurationData'
 import { useLocationPermission } from '@/hooks/useLocationPermission'
 import { useCurrentLocationRegion } from '@/hooks/useCurrentLocationRegion'
 import { getFilmsTabCurationSections, SECTION_GROUP } from '@/lib/curation/filmsTabLists'
+import { mergePopularRanking } from '@/lib/curation/popularRanking'
+import { buildSectionAnalytics, computeRunStartIndexes } from '@/lib/curation/sectionRuns'
+import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
 import { getAnniversaryFilms } from '@/lib/curation/getAnniversaryFilms'
 import { formatAlmostSoldOutCaption, getAlmostSoldOutFilms } from '@/lib/curation/getAlmostSoldOutFilms'
 import { dayOfWeekLabel, formatLateNightCaption, getLateNightFilms } from '@/lib/curation/getLateNightFilms'
@@ -150,12 +153,29 @@ function LazyBlock({ isDesktop, children }: { isDesktop: boolean; children: Reac
    지역 필터 무관, 전국에서 가장 임박한 영화제 1개 ── */
 function FestivalBannerCard({ festival, today, isDesktop, onClick }: { festival: Festival; today: string; isDesktop: boolean; onClick: () => void }) {
   const status = getFestivalStatus(festival.startDate, festival.endDate, today)
+  /* 상영작 탭 최상단 — 여길 눌러 나가는 비율이 아래 큐레이션 행들의 노출 기회를 깎는다.
+     순서 논의에서 "배너가 위에 있어도 되는가"를 판단하려면 계측이 필요하다. */
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const analytics = {
+    ...buildSectionAnalytics({
+      listId: 'festival_banner', sectionTitle: '주목할 영화제',
+      run: 'fixed_top', movieCount: 0, layout: 'banner',
+    }),
+    festival_slug: festival.slug,
+    festival_name: festival.name,
+    festival_status: status,
+  }
+  useSectionDwellTracking(sectionRef, 'festival_banner', analytics)
   const dateLabel = getFestivalDateLabel(status, festival.startDate, festival.endDate, today)
+  const handleBannerClick = () => {
+    trackEvent('curation movie selected', { ...analytics, target_type: 'festival' })
+    onClick()
+  }
   // 외부 배너 URL이 죽는 경우(원본 삭제·403)가 실제로 있었음 — 깨진 이미지 띠 대신 통째 숨김
   const [bannerBroken, setBannerBroken] = useState(false)
 
   return (
-    <div>
+    <div ref={sectionRef}>
       <SectionHeader
         title="주목할 영화제"
         isDesktop={isDesktop}
@@ -166,7 +186,7 @@ function FestivalBannerCard({ festival, today, isDesktop, onClick }: { festival:
           그 안에서 데스크톱만 고정폭으로 중앙 정렬(모바일은 100%라 여백 자체가 없음) */}
       {festival.bannerUrl && !bannerBroken && (
         <button
-          onClick={onClick}
+          onClick={handleBannerClick}
           style={{
             display: 'block', width: '100%', padding: 0, margin: '12px 0 0', border: 'none',
             backgroundColor: isDesktop ? 'var(--color-surface-raised)' : 'transparent', cursor: 'pointer', minHeight: 'auto',
@@ -352,35 +372,12 @@ export default function FilmsPage() {
     })
   )
 
-  // run1/run2 내 커스텀 클릭 핸들러를 쓰는 5개 섹션(지금출발하면·막바지·매진임박·이번주말·심야·단독)의
-  // 논리적 순번 — run1/run2 배열 조립 규칙(하단 IIFE)과 정확히 같은 순서로 카운트한다.
-  // function 선언이라 호이스팅되므로 이 아래에서 정의되는 const들을 참조해도 안전(호출 시점엔 이미 다 초기화됨).
-  function getRealtimePositions() {
-    const leaveNow = leaveNowFilms.length > 0 ? 1 : 0
-    const lastWeek = lastWeekFilms.length > 0 ? 1 : 0
-    const weekend = weekendFilms.length > 0 ? 1 : 0
-    const newAndReturning = (newIndieFilms.length > 0 ? 1 : 0) + (returningFilms.length > 0 ? 1 : 0)
-    const lateNight = lateNightFilms.length > 0 ? 1 : 0
-    return {
-      leaveNow: 0,
-      lastWeek: leaveNow,
-      almostSoldOut: leaveNow + lastWeek,
-      weekend: 0,
-      lateNight: weekend + newAndReturning,
-      solo: weekend + newAndReturning + lateNight,
-    }
-  }
+  /* 예전엔 getRealtimePositions()가 run 조립 규칙을 손으로 복제해 커스텀 클릭 핸들러에
+     position을 넣어줬다. 그 복제본이 startIndex(run1 길이)도, run2 앞의 랭킹 섹션도 세지 않아
+     같은 섹션의 dwell 이벤트와 click 이벤트가 서로 다른 position을 보내고 있었다.
+     이제 순번은 renderRun이 실제 렌더 순서에서 한 번만 계산하고, 커스텀 핸들러는 없앴다
+     — 다섯 개 다 trackEvent + handleMovieClick뿐이라 기본 경로와 하는 일이 같았다. */
 
-  const handleAlmostSoldOutMovieClick = (movieId: string) => {
-    trackEvent('curation movie selected', {
-      movie_id: movieId,
-      movie_title: almostSoldOutFilms.find((f) => f.movie.id === movieId)?.movie.title,
-      source: 'films_tab',
-      list_id: 'realtime_almost_soldout',
-      position: getRealtimePositions().almostSoldOut,
-    })
-    handleMovieClick(movieId)
-  }
 
   // 심야 상영 — 오늘~D+7 회차 기준, 심야 시각 판정은 순수 함수에 위임
   const lnNow = new Date()
@@ -416,16 +413,6 @@ export default function FilmsPage() {
     })
   )
 
-  const handleLateNightMovieClick = (movieId: string) => {
-    trackEvent('curation movie selected', {
-      movie_id: movieId,
-      movie_title: lateNightFilms.find((f) => f.movie.id === movieId)?.movie.title,
-      source: 'films_tab',
-      list_id: 'realtime_late_night',
-      position: getRealtimePositions().lateNight,
-    })
-    handleMovieClick(movieId)
-  }
 
   // 이번 주말 상영 — 심야와 같은 오늘~D+7 candidates 재사용, 판정만 별도 순수 함수에 위임
   const weekendFilms = getWeekendFilms(
@@ -455,16 +442,6 @@ export default function FilmsPage() {
     })
   )
 
-  const handleWeekendMovieClick = (movieId: string) => {
-    trackEvent('curation movie selected', {
-      movie_id: movieId,
-      movie_title: weekendFilms.find((f) => f.movie.id === movieId)?.movie.title,
-      source: 'films_tab',
-      list_id: 'realtime_weekend',
-      position: getRealtimePositions().weekend,
-    })
-    handleMovieClick(movieId)
-  }
 
   // 지금 출발하면 볼 수 있는 — useCurationData의 todayShowFilms(출발 버퍼 30분 + 4시간 창) 재사용.
   // 훅 자체엔 최소 편수 게이트가 없어 여기서 3편 미만이면 숨긴다.
@@ -483,16 +460,6 @@ export default function FilmsPage() {
     ])
   )
 
-  const handleLeaveNowMovieClick = (movieId: string) => {
-    trackEvent('curation movie selected', {
-      movie_id: movieId,
-      movie_title: leaveNowFilms.find((f) => f.movie.id === movieId)?.movie.title,
-      source: 'films_tab',
-      list_id: 'realtime_leave_now',
-      position: getRealtimePositions().leaveNow,
-    })
-    handleMovieClick(movieId)
-  }
 
   // 단독 상영 — soloTheaterFilms는 지역 미선택 시 훅이 빈 배열을 반환(지도 탭과 동일 제약).
   // 크롤 커버리지가 낮은 지역에선 "단독"이 진짜 유일 상영이 아니라 "이 지도가 아는 극장이 하나뿐"일 수 있어
@@ -500,16 +467,6 @@ export default function FilmsPage() {
   const soloFilms = soloTheaterFilms.length >= 3 ? soloTheaterFilms : []
   const soloCaptions = new Map(soloFilms.map((f) => [f.movie.id, f.theaterName]))
 
-  const handleSoloMovieClick = (movieId: string) => {
-    trackEvent('curation movie selected', {
-      movie_id: movieId,
-      movie_title: soloFilms.find((f) => f.movie.id === movieId)?.movie.title,
-      source: 'films_tab',
-      list_id: 'realtime_solo_theater',
-      position: getRealtimePositions().solo,
-    })
-    handleMovieClick(movieId)
-  }
 
   // 오래된 작품(15년↑)에만 제작연도 카피 — movies.year는 제작연도라 "N년 만에 재개봉" 단정 금지
   const returningYearCaptions = buildYearsOnScreenCaptions(
@@ -820,6 +777,7 @@ export default function FilmsPage() {
           movies: import('@/types/api').Movie[]
           posterBadges?: Map<string, number>
           movieCaptions?: Map<string, string>
+          showRank?: boolean
           customBottomInfos?: Map<string, React.ReactNode>
           onMovieClick?: (movieId: string) => void
         }
@@ -842,7 +800,6 @@ export default function FilmsPage() {
           description: '최근 확인 기준, 오늘·내일 회차의 좌석이 얼마 남지 않았어요',
           movieCaptions: almostSoldOutCaptions,
           customBottomInfos: almostSoldOutCustomInfos,
-          onMovieClick: handleAlmostSoldOutMovieClick,
           movies: almostSoldOutFilms.map((f) => f.movie),
         }] : []
 
@@ -853,7 +810,6 @@ export default function FilmsPage() {
           description: '하루의 끝, 밤 깊은 시간에 시작하는 회차들이에요',
           movieCaptions: lateNightCaptions,
           customBottomInfos: lateNightCustomInfos,
-          onMovieClick: handleLateNightMovieClick,
           movies: lateNightFilms.map((f) => f.movie),
         }] : []
 
@@ -864,7 +820,6 @@ export default function FilmsPage() {
           description: '이번 주말 볼 수 있는 회차예요',
           movieCaptions: weekendCaptions,
           customBottomInfos: weekendCustomInfos,
-          onMovieClick: handleWeekendMovieClick,
           movies: weekendFilms.map((f) => f.movie),
         }] : []
 
@@ -875,7 +830,6 @@ export default function FilmsPage() {
           description: '지금 출발하면 늦지 않게 볼 수 있는 회차예요',
           movieCaptions: leaveNowCaptions,
           customBottomInfos: leaveNowCustomInfos,
-          onMovieClick: handleLeaveNowMovieClick,
           movies: leaveNowFilms.map((f) => f.movie),
         }] : []
 
@@ -885,31 +839,25 @@ export default function FilmsPage() {
           nameKo: `${selectedRegion ?? '이 지역'}에서 단 한 곳`,
           description: '이 지역에서는 이 극장에서만 상영해요',
           movieCaptions: soloCaptions,
-          onMovieClick: handleSoloMovieClick,
           movies: soloFilms.map((f) => f.movie),
         }] : []
 
-        // 최근 7일 예매 클릭 / 상세 조회 랭킹 — 현재 상영작만, 3편 미만이면 숨김
-        function rankingSection(
-          listId: string, nameKo: string, description: string, captionSuffix: string,
-          entries: { movieId: string; count: number }[] | undefined,
-        ): AnySection[] {
-          const ranked = (entries ?? [])
-            .filter((e) => activeMovieIdSet.has(e.movieId) && movieById.has(e.movieId))
-            .slice(0, 10)
-          if (ranked.length < 3) return []
-          return [{
-            listId, nameKo, description,
-            movieCaptions: new Map(ranked.map((e, i) => [e.movieId, `${captionSuffix} ${i + 1}위`])),
-            movies: ranked.map((e) => movieById.get(e.movieId)!),
-          }]
-        }
-        const rtBookingRank = rankingSection(
-          'realtime_booking_rank', '지금 예매 많은 영화',
-          '최근 7일, 예매하러 가장 많이 떠난 영화들이에요', '예매', clickRankings?.booking)
-        const rtViewRank = rankingSection(
-          'realtime_view_rank', '이번 주 많이 찾아본 영화',
-          '최근 7일 동안 사람들이 가장 많이 들여다본 영화들이에요', '조회', clickRankings?.views)
+        /* 인기 랭킹 — 예매 클릭·상세 조회를 합쳐 하나로. 예전엔 두 섹션이었는데 상위 10의
+           겹침이 4/10라 절반이 같은 포스터였고, 각각은 표본이 작아 하위권이 전부 동점이었다
+           (근거와 가중치는 lib/curation/popularRanking.ts 주석). 순위는 캡션 텍스트가 아니라
+           포스터 좌하단 숫자로 보여주므로 캡션 자리는 감독명에 돌려준다. */
+        const popularRanked = mergePopularRanking(
+          clickRankings?.booking,
+          clickRankings?.views,
+          (movieId) => activeMovieIdSet.has(movieId) && movieById.has(movieId),
+        )
+        const rtPopularRank: AnySection[] = popularRanked.length >= 3 ? [{
+          listId: 'realtime_popular_rank',
+          nameKo: '지금 가장 많이 찾는 영화',
+          description: '최근 7일, 예매하러 떠나고 상세를 열어본 걸 합쳐 매겼어요',
+          showRank: true,
+          movies: popularRanked.map((e) => movieById.get(e.movieId)!),
+        }] : []
 
         // 개봉 N주년 — 10의 배수 해를 맞은 활성 상영작, 3편 미만이면 빈 배열로 숨김
         const releaseAnniversaryFilms = getAnniversaryFilms(movies, activeMovieIdSet, new Date().getFullYear())
@@ -946,7 +894,7 @@ export default function FilmsPage() {
         // 특별전 interleave 준비
         const [special0, special1] = specialDirectorSections
 
-        function renderSpecial(s: typeof specialDirectorSections[number] | undefined) {
+        function renderSpecial(s: typeof specialDirectorSections[number] | undefined, slot?: number) {
           if (!s) return null
           const dist = userLocation
             ? haversineKm(userLocation.lat, userLocation.lng, s.theater.lat, s.theater.lng)
@@ -956,7 +904,7 @@ export default function FilmsPage() {
             <DirectorSpecialSection
               key={`special_${s.directorName}_${s.theater.id}`}
               directorName={s.directorName} theater={s.theater} films={s.films}
-              distSuffix={distSuffix} isDesktop={isDesktop}
+              distSuffix={distSuffix} isDesktop={isDesktop} slot={slot}
               onTheaterClick={(id) => router.push(`/films/theater/${id}`)}
               onMovieClick={handleMovieClick}
             />
@@ -1005,25 +953,31 @@ export default function FilmsPage() {
           if (active.length === 0) return null
           const nodes: React.ReactNode[] = []
           function rowFor(s: AnySection, compact: boolean) {
-            // 논리적 순번(run 내 상대 위치) — 화면 절대 순번 아님, position prop 주석 참고
+            /* 순번은 실제 렌더 순서에서 여기서만 계산한다. 그날 게이트를 통과한 섹션만
+               세므로 날짜 간 절대 비교용이 아니다 — 시점 간 비교는 list_id로 한다. */
             const position = startIndex + active.indexOf(s)
+            /* dwell 이벤트와 click 이벤트에 같은 객체를 실어 둘의 속성이 어긋나지 않게 한다 */
+            const analytics = buildSectionAnalytics({
+              listId: s.listId, sectionTitle: s.nameKo, run: keyPrefix,
+              position, movieCount: s.movies.length, compact,
+            })
             return (
               <CurationSectionRow key={s.listId} id={s.listId}
                 title={s.nameKo}   /* 2.0: 부제 삭제 */
                 movies={s.movies} isDesktop={isDesktop}
                 posterBadges={s.posterBadges} movieCaptions={s.movieCaptions}
+                showRank={s.showRank}
                 customBottomInfos={s.customBottomInfos}
-                position={position}
-                onMovieClick={s.onMovieClick ?? ((movieId) => {
+                analytics={analytics}
+                onMovieClick={(movieId) => {
                   trackEvent('curation movie selected', {
+                    ...analytics,
                     movie_id: movieId,
                     movie_title: movieById.get(movieId)?.title,
-                    source: 'films_tab',
-                    list_id: s.listId,
-                    position,
+                    movie_rank: s.showRank ? s.movies.findIndex((m) => m.id === movieId) + 1 : undefined,
                   })
                   handleMovieClick(movieId)
-                })}
+                }}
                 compact={compact} />
             )
           }
@@ -1081,19 +1035,30 @@ export default function FilmsPage() {
 
         // 특별전 앞뒤 경계를 기준으로 두 개의 run 구성 — 30일 CTR 기준 재배치:
         // 시의성(막바지·매진임박)을 최상단으로, 저CTR 시기별(seasonal)은 명당에서 강등
-        const run1: AnySection[] = [...rtLeaveNow, ...rtLastWeek, ...rtAlmostSoldOut]
-        const run2: AnySection[] = [
-          ...rtBookingRank, ...rtViewRank,
-          ...rtWeekend, ...rtNew, ...rtLateNight,
-          ...rtSolo,
+        /* run을 넷으로 나눈다. sparse(≤2편) 페어링이 run 안에서만 일어나므로, run 경계가
+           곧 "이것들끼리는 한 줄에 묶지 말라"는 선언이다. 시의성(run1)과 지식형(run1b)을
+           한 배열에 넣으면 PC에서 "매진 임박" 옆에 "비 오는 날 보는 영화"가 붙는다. */
+        const runTop: AnySection[] = [...rtPopularRank]                    // 최상단 — 인기 랭킹 단독
+        const run1: AnySection[] = [...rtLeaveNow, ...rtLastWeek, ...rtAlmostSoldOut]   // 시의성
+        const run1b: AnySection[] = [                                      // 지식형 — 특별전 앞
           ...rtShortRuntime,
           ...rtReleaseAnniversary,
           ...themes,
           ...rtLongRuntime,
+        ]
+        const run2: AnySection[] = [                                       // 나머지 — 특별전 뒤
+          ...rtWeekend, ...rtNew, ...rtLateNight,
+          ...rtSolo,
           ...awards,
           ...seasonal,
           ...decades, ...critics, ...movements,
         ]
+
+        /* startIndex는 "그날 실제로 그려진 섹션 수"로 이어붙인다. 예전엔 run1.length(게이트
+           통과 여부를 안 본 배열 길이)를 썼는데, 숨은 섹션까지 세어 run2 순번이 부풀었다.
+           산술은 순수 함수에 맡긴다 — 손으로 관리하다 어긋난 게 이번 버그의 원인이었다. */
+        const [startTop, startRun1, startRun1b, startRun2] =
+          computeRunStartIndexes([runTop, run1, run1b, run2])
 
         return (
           <>
@@ -1123,7 +1088,11 @@ export default function FilmsPage() {
               </div>
             )}
 
-            {/* 0. 개인화 — 최근 본 영화 기반, 이력 없으면 미노출 */}
+            {/* 0. 인기 랭킹 — 순번 체계의 첫 자리. 상단 고정 섹션(개인화·기념일·특별전·인스타)과
+                달리 renderRun을 그대로 타므로 dwell/클릭 계측이 다른 큐레이션 행과 동일하다 */}
+            {renderRun(runTop, 'top', startTop)}
+
+            {/* 1. 개인화 — 최근 본 영화 기반, 이력 없으면 미노출 */}
             <PersonalizedSection
               movies={movies}
               activeMovieIds={activeMovieIds}
@@ -1132,11 +1101,11 @@ export default function FilmsPage() {
               onMovieClick={handleMovieClick}
             />
 
-            {/* 1. 기념일 */}
+            {/* 2. 기념일 */}
             {renderAnniversaries(anniversarySections)}
 
-            {/* 2. 특별전 #0 */}
-            {renderSpecial(special0)}
+            {/* 3. 특별전 #0 */}
+            {renderSpecial(special0, 0)}
 
             {/* 인스타그램에서 추천한 그 영화 — run1/run2 순번 체계 밖(개인화·기념일·특별전과 동일),
                 발견 성격이라 시의성 run1보다 위, 상단권에 배치 */}
@@ -1149,14 +1118,18 @@ export default function FilmsPage() {
               onFestivalClick={(slug) => router.push(`/festival/${slug}`)}
             />
 
-            {/* 3. 이번주 마지막 + 매진 임박 — 연속 sparse 자동 페어링 */}
-            {renderRun(run1, 'run1', 0)}
+            {/* 3. 지금 출발하면 + 막바지 + 매진 임박 — 시의성. 연속 sparse 자동 페어링 */}
+            {renderRun(run1, 'run1', startRun1)}
+
+            {/* 4. 러닝타임·개봉주년·테마 — 지식형. run1(시의성)과 나눠서 PC 2열 페어링이
+                두 성격을 한 줄에 묶지 않게 한다 */}
+            {renderRun(run1b, 'run1b', startRun1b)}
 
             {/* 4. 특별전 #1 (interleaved) */}
-            {special1 && <LazyBlock isDesktop={isDesktop}>{renderSpecial(special1)}</LazyBlock>}
+            {special1 && <LazyBlock isDesktop={isDesktop}>{renderSpecial(special1, 1)}</LazyBlock>}
 
-            {/* 5~10. 신작·심야 · 거장/수상 · 시기별 · 연도별 · 평론가 · 무브먼트 — 연속 sparse 자동 페어링 */}
-            {renderRun(run2, 'run2', run1.length)}
+            {/* 5~10. 주말·신작·심야·단독 · 거장/수상 · 시기별 · 연도별 · 평론가 · 무브먼트 */}
+            {renderRun(run2, 'run2', startRun2)}
 
             {/* 11. 감독 스포트라이트 */}
             <LazyBlock isDesktop={isDesktop}>

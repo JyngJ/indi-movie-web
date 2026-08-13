@@ -14,7 +14,7 @@ const VISIBILITY_THRESHOLD = 0.5
 export function useSectionDwellTracking(
   ref: RefObject<HTMLElement | null>,
   listId: string | undefined,
-  extraProps?: Record<string, string | number>,
+  extraProps?: Record<string, string | number | undefined>,
 ) {
   useEffect(() => {
     if (!listId) return

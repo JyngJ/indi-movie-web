@@ -8,6 +8,7 @@ import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { withFlag } from '@/lib/nations'
 import type { Movie } from '@/types/api'
 import { GenreChip, SectionHeader, CardContainer, ScrollNavButton } from '@/components/primitives'
+import type { SectionAnalytics } from '@/lib/curation/sectionRuns'
 import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
 import { Carousel, CarouselContent, CarouselItem, useCarousel, RevealItem, RevealGroup } from '@/components/motion'
 
@@ -21,6 +22,8 @@ interface CurationSectionRowProps {
   posterBadges?: Map<string, number>
   /** movieId → 카드 하단 서브텍스트 (예: "오늘 19:30 에무시네마") — 있으면 감독 대신 표시 */
   movieCaptions?: Map<string, string>
+  /** true면 포스터 좌하단에 1-based 순위(배열 순서)를 얹는다 — 랭킹 섹션용 */
+  showRank?: boolean
   /** movieId → 하단 정보 전체 커스텀 (감독, 장르, 연도 등 기본 렌더를 완전히 덮어씀) */
   customBottomInfos?: Map<string, React.ReactNode>
   onMovieClick?: (movieId: string) => void
@@ -29,9 +32,10 @@ interface CurationSectionRowProps {
   /** compact: 외부 여백 없이 flex item으로 렌더 — 1~2편 섹션을 2열로 묶을 때 사용 */
   compact?: boolean
   id?: string
-  /** run1/run2 배열 내 논리적 순번(0-based) — dwell/클릭 이벤트에 실어 재배치 전후 CTR 비교에 사용.
-   *  화면 최상단 기준 절대 순번이 아님(개인화·기념일·특별전은 이 번호 체계 밖) — run 내 상대 순번으로만 해석할 것 */
-  position?: number
+  /** dwell 이벤트에 함께 실을 섹션 메타 (position·run·section_title·movie_count 등).
+   *  클릭 이벤트에도 같은 값이 실리도록 호출부에서 동일 객체를 쓴다 — 두 이벤트의 속성이
+   *  어긋나면 PostHog에서 join이 안 된다 (예전엔 dwell과 click의 position이 실제로 달랐다). */
+  analytics?: SectionAnalytics
 }
 
 const POSTER_SIZE = {
@@ -211,6 +215,7 @@ function MovieCard({
   caption,
   customBottomInfo,
   onClick,
+  rank,
   revealIndex,
 }: {
   movie: Movie
@@ -221,6 +226,8 @@ function MovieCard({
   caption?: string
   customBottomInfo?: React.ReactNode
   onClick?: () => void
+  /** 1-based 순위 — 주면 포스터 좌하단에 스크림 + 큰 숫자를 얹는다 */
+  rank?: number
   /** 행 안에서의 순번 — 등장 모션 계단 간격용 */
   revealIndex: number
 }) {
@@ -270,12 +277,42 @@ function MovieCard({
           }}
         >
           <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} shadow={false} onReady={() => setPosterReady(true)} />
+
+          {/* 순위 — 포스터 좌하단. 네 모서리 중 유일하게 비어 있는 자리라 기존 칩과 안 부딪힌다.
+              스크림이 대비를 보장하므로 포스터 그림이 밝든 어둡든 숫자가 읽힌다
+              (배경 바깥에 큰 숫자를 두는 방식은 포스터 시작선이 거터 24에서 밀려 못 쓴다). */}
+          {rank != null && (
+            <div
+              aria-hidden
+              style={{
+                position: 'absolute', left: 0, right: 0, bottom: 0,
+                height: Math.round(height * 0.42),
+                borderRadius: '0 0 var(--radius-poster) var(--radius-poster)',
+                background: 'linear-gradient(to top, rgba(15,12,9,0.78), rgba(15,12,9,0))',
+                pointerEvents: 'none',
+              }}
+            >
+              <span style={{
+                position: 'absolute', left: 8, bottom: 4,
+                fontFamily: 'var(--font-display)',
+                fontSize: Math.round(height * 0.31),
+                fontWeight: 700,
+                lineHeight: 0.85,
+                color: 'var(--color-on-accent)',
+                fontVariantNumeric: 'tabular-nums',
+              }}>
+                {rank}
+              </span>
+            </div>
+          )}
+          {rank != null && <span className="sr-only">{rank}위</span>}
+
           {daysLeft != null && (
             <span style={{
               position: 'absolute', top: 6, right: 6,
-              padding: '4px 8px',
+              padding: '8px 12px',
               borderRadius: 'var(--radius-badge)',
-              fontSize: 'var(--text-badge)', fontWeight: 600, lineHeight: 1,
+              fontSize: 'var(--text-meta)', fontWeight: 700, lineHeight: 1,
               color: 'var(--color-on-accent)',
               backgroundColor: daysLeft === 0 ? 'var(--color-error)' : daysLeft === 1 ? 'var(--color-warning)' : '#78716C',
               boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
@@ -305,12 +342,13 @@ export function CurationSectionRow({
   isDesktop = false,
   posterBadges,
   movieCaptions,
+  showRank = false,
   customBottomInfos,
   onMovieClick,
   noHeader = false,
   compact = false,
   id,
-  position,
+  analytics,
 }: CurationSectionRowProps) {
   const { width, height } = isDesktop ? POSTER_SIZE.desktop : POSTER_SIZE.mobile
   const scaleBleed = Math.ceil(height * 0.04)
@@ -318,7 +356,7 @@ export function CurationSectionRow({
 
   const sectionRef = useRef<HTMLElement | null>(null)
   const setSectionRef = (node: HTMLElement | null) => { sectionRef.current = node }
-  useSectionDwellTracking(sectionRef, id, position != null ? { position } : undefined)
+  useSectionDwellTracking(sectionRef, id, analytics)
 
   if (movies.length === 0) return null
 
@@ -410,6 +448,7 @@ export function CurationSectionRow({
           posterMidY={posterMidY}
           posterBadges={posterBadges}
           movieCaptions={movieCaptions}
+          showRank={showRank}
           customBottomInfos={customBottomInfos}
           onMovieClick={onMovieClick}
         />
@@ -421,7 +460,7 @@ export function CurationSectionRow({
 /* ── 캐러셀 트랙 — embla 상태(끝 도달)를 읽어 가장자리 페이드·화살표를 그린다 ── */
 function CurationRowTrack({
   movies, width, height, gap, scaleBleed, isDesktop, posterMidY,
-  posterBadges, movieCaptions, customBottomInfos, onMovieClick,
+  posterBadges, movieCaptions, showRank, customBottomInfos, onMovieClick,
 }: {
   movies: Movie[]
   width: number
@@ -432,6 +471,7 @@ function CurationRowTrack({
   posterMidY: number
   posterBadges?: Map<string, number>
   movieCaptions?: Map<string, string>
+  showRank?: boolean
   customBottomInfos?: Map<string, React.ReactNode>
   onMovieClick?: (movieId: string) => void
 }) {
@@ -496,6 +536,7 @@ function CurationRowTrack({
               isDesktop={isDesktop}
               daysLeft={posterBadges?.get(movie.id)}
               caption={movieCaptions?.get(movie.id)}
+              rank={showRank ? i + 1 : undefined}
               customBottomInfo={customBottomInfos?.get(movie.id)}
               onClick={onMovieClick ? () => onMovieClick(movie.id) : undefined}
             />
