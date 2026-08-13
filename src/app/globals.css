@@ -635,3 +635,24 @@ img {
 @media (prefers-reduced-motion: reduce) {
   .booking-cta-spin { animation: none; }
 }
+
+/* 스켈레톤 → 콘텐츠 교체 시 부드러운 등장 (skeleton reveal) */
+@keyframes reveal-rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+.reveal-rise {
+  animation: reveal-rise 280ms ease both;
+}
+
+/* 툴팁 — 등장만 지연 + 페이드, 퇴장은 즉시 언마운트 */
+.tooltip-in {
+  animation: tipIn 160ms ease 80ms both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-rise,
+  .tooltip-in {
+    animation: none;
+  }
+}

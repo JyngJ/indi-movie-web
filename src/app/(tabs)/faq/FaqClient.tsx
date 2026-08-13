@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
@@ -8,9 +9,115 @@ import type { FaqSection } from './content'
 /**
  * FAQ 본문 — 상영작 탭과 같은 프레임을 쓴다.
  * 헤더는 전폭(구분선 포함), 본문은 데스크톱에서 최대폭 컬럼으로 중앙 정렬.
- * 문답은 네이티브 <details>로 접고 편다 — 접혀 있어도 답변이 서버 HTML에
- * 그대로 남아 크롤러가 읽는다(FAQPage 스키마와 본문 일치 유지).
+ * 문답은 카드형 아코디언 — 답변은 항상 DOM에 있고 grid-rows(0fr→1fr)로 접고 펴서
+ * 크롤러가 접힌 상태에서도 본문을 읽는다(FAQPage 스키마와 본문 일치 유지).
  */
+
+function FaqCard({
+  item,
+}: {
+  item: FaqSection['items'][number]
+}) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <div
+      style={{
+        backgroundColor: 'var(--color-surface-card)',
+        border: '1px solid var(--color-border)',
+        borderRadius: 'var(--radius-popover)',
+        overflow: 'hidden',
+      }}
+    >
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          width: '100%',
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          textAlign: 'left',
+          padding: '16px',
+          fontSize: 'var(--text-subtitle)',
+          fontWeight: 600,
+          fontFamily: 'inherit',
+          color: 'var(--color-text-primary)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          minHeight: 'unset',
+        }}
+      >
+        <span style={{ color: 'var(--color-text-caption)', fontWeight: 700, flexShrink: 0 }}>Q.</span>
+        <span style={{ flex: 1 }}>{item.question}</span>
+        <svg
+          width={16}
+          height={16}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="var(--color-text-placeholder)"
+          strokeWidth={1.75}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{
+            flexShrink: 0,
+            transform: open ? 'rotate(180deg)' : 'none',
+            transition: 'transform 200ms cubic-bezier(0.32,0.72,0,1)',
+          }}
+        >
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+
+      {/* grid-rows 높이 전환 — 답변은 항상 DOM에 존재 */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateRows: open ? '1fr' : '0fr',
+          transition: 'grid-template-rows 240ms cubic-bezier(0.32,0.72,0,1)',
+        }}
+      >
+        <div style={{ overflow: 'hidden', minHeight: 0 }}>
+          <div
+            style={{
+              paddingInline: 16,
+              paddingBottom: 16,
+              fontSize: 'var(--text-subtitle)',
+              opacity: open ? 1 : 0,
+              transition: `opacity 200ms ease ${open ? '60ms' : '0ms'}`,
+            }}
+          >
+            <p style={{ margin: 0 }}>{item.answer}</p>
+            {item.action && (
+              <Link
+                href={item.action.href}
+                tabIndex={open ? 0 : -1}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  marginTop: 12,
+                  padding: '8px 16px',
+                  borderRadius: 'var(--radius-button)',
+                  border: '1px solid var(--color-border)',
+                  backgroundColor: 'var(--color-surface-raised)',
+                  color: 'var(--color-text-primary)',
+                  fontSize: 'var(--text-meta)',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                }}
+              >
+                {item.action.label}
+              </Link>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function FaqClient({ sections }: { sections: FaqSection[] }) {
   const isDesktop = useIsDesktopLayout()
 
@@ -52,83 +159,21 @@ export function FaqClient({ sections }: { sections: FaqSection[] }) {
         }}
       >
         {sections.map((section) => (
-          <section key={section.title} style={{ marginTop: 56 }}>
+          <section key={section.title} style={{ marginTop: 48 }}>
             <h2
               className="display-h2"
-              style={{ color: 'var(--color-text-primary)', margin: '0 0 8px' }}
+              style={{ color: 'var(--color-text-primary)', margin: '0 0 12px' }}
             >
               {section.title}
             </h2>
-            {section.items.map((item) => (
-              <details
-                key={item.question}
-                style={{ borderBottom: '1px solid var(--color-border)' }}
-              >
-                <summary
-                  style={{
-                    cursor: 'pointer',
-                    padding: '16px 0',
-                    fontSize: 'var(--text-subtitle)',
-                    fontWeight: 600,
-                    color: 'var(--color-text-primary)',
-                    listStyle: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                  }}
-                >
-                  <span style={{ color: 'var(--color-text-caption)', fontWeight: 700, flexShrink: 0 }}>Q.</span>
-                  <span style={{ flex: 1 }}>{item.question}</span>
-                  <svg
-                    className="faq-chevron"
-                    width={16}
-                    height={16}
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="var(--color-text-placeholder)"
-                    strokeWidth={1.75}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    style={{ flexShrink: 0 }}
-                  >
-                    <path d="M6 9l6 6 6-6" />
-                  </svg>
-                </summary>
-                <div style={{ paddingBottom: 16, fontSize: 'var(--text-subtitle)' }}>
-                  <p style={{ margin: 0 }}>{item.answer}</p>
-                  {item.action && (
-                    <Link
-                      href={item.action.href}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        marginTop: 12,
-                        padding: '8px 16px',
-                        borderRadius: 'var(--radius-button)',
-                        border: '1px solid var(--color-border)',
-                        backgroundColor: 'var(--color-surface-card)',
-                        color: 'var(--color-text-primary)',
-                        fontSize: 'var(--text-meta)',
-                        fontWeight: 600,
-                        textDecoration: 'none',
-                      }}
-                    >
-                      {item.action.label}
-                    </Link>
-                  )}
-                </div>
-              </details>
-            ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {section.items.map((item) => (
+                <FaqCard key={item.question} item={item} />
+              ))}
+            </div>
           </section>
         ))}
       </main>
-
-      {/* summary 기본 마커 제거 + 열림 상태 셰브론 회전 */}
-      <style>{`
-        .faq-chevron { transition: transform 0.15s ease; }
-        details[open] .faq-chevron { transform: rotate(180deg); }
-        details > summary::-webkit-details-marker { display: none; }
-      `}</style>
     </div>
   )
 }

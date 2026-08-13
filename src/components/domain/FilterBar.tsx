@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { motion, AnimatePresence } from 'motion/react'
 import type { MouseEvent as ReactMouseEvent, WheelEvent as ReactWheelEvent } from 'react'
 import { GENRES } from '@/lib/genres'
 import { withFlag } from '@/lib/nations'
@@ -495,49 +496,66 @@ export function FilterBar({
         </>
       )}
 
-      {mounted && openPanel && createPortal(
+      {mounted && createPortal(
         <div ref={portalDropdownRef}>
-          {openPanel === 'date' && (
-            <DateDropdown
-              selectedId={dateId}
-              onSelect={selectDate}
-              onPickCustom={openCalendar}
-              style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, zIndex: 99999 }}
-            />
-          )}
-          {openPanel === 'genre' && (
-            <MultiSelectDropdown
-              options={GENRES}
-              selectedValues={draftGenres}
-              setSelectedValues={setDraftGenres}
-              style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, zIndex: 99999 }}
-            />
-          )}
-          {openPanel === 'nation' && (
-            <MultiSelectDropdown
-              options={nationOptions}
-              selectedValues={draftNations}
-              setSelectedValues={setDraftNations}
-              style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, zIndex: 99999 }}
-            />
-          )}
-          {openPanel === 'region' && (
-            <RegionDropdown
-              selectedId={regionId}
-              currentLocationId={currentLocationRegion}
-              onSelect={(id) => { userPickedRegionRef.current = !!id; setRegionId(id); setStoredRegion(id); if (id) setOpenPanel(null); chip({ regionId: id }) }}
-              style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, zIndex: 99999 }}
-            />
-          )}
-          {openPanel === 'calendar' && (
-            <CalendarPicker
-              startDate={customStart}
-              endDate={customEnd}
-              onApply={selectCustomRange}
-              onCancel={() => setOpenPanel(null)}
-              style={{ position: 'fixed', top: dropdownPos.top, left: 8, right: 8, zIndex: 99999 }}
-            />
-          )}
+          <AnimatePresence>
+            {openPanel && (
+              <motion.div
+                key={openPanel}
+                initial={{ opacity: 0, scale: 0.95, y: -6 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.97, y: -4, transition: { duration: 0.12, ease: 'easeIn' } }}
+                transition={{ type: 'spring', duration: 0.28, bounce: 0.15 }}
+                style={{
+                  position: 'fixed',
+                  top: dropdownPos.top,
+                  zIndex: 99999,
+                  // 트리거 칩 쪽에서 자라나는 origin-aware 전환
+                  transformOrigin: openPanel === 'calendar' ? 'top center' : 'top left',
+                  ...(openPanel === 'calendar'
+                    ? { left: 8, right: 8 }
+                    : { left: dropdownPos.left }),
+                }}
+              >
+                {openPanel === 'date' && (
+                  <DateDropdown
+                    selectedId={dateId}
+                    onSelect={selectDate}
+                    onPickCustom={openCalendar}
+                  />
+                )}
+                {openPanel === 'genre' && (
+                  <MultiSelectDropdown
+                    options={GENRES}
+                    selectedValues={draftGenres}
+                    setSelectedValues={setDraftGenres}
+                  />
+                )}
+                {openPanel === 'nation' && (
+                  <MultiSelectDropdown
+                    options={nationOptions}
+                    selectedValues={draftNations}
+                    setSelectedValues={setDraftNations}
+                  />
+                )}
+                {openPanel === 'region' && (
+                  <RegionDropdown
+                    selectedId={regionId}
+                    currentLocationId={currentLocationRegion}
+                    onSelect={(id) => { userPickedRegionRef.current = !!id; setRegionId(id); setStoredRegion(id); if (id) setOpenPanel(null); chip({ regionId: id }) }}
+                  />
+                )}
+                {openPanel === 'calendar' && (
+                  <CalendarPicker
+                    startDate={customStart}
+                    endDate={customEnd}
+                    onApply={selectCustomRange}
+                    onCancel={() => setOpenPanel(null)}
+                  />
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>,
         document.body
       )}

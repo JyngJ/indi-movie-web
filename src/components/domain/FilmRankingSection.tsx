@@ -79,6 +79,7 @@ function InfoTooltip({ weekStart }: { weekStart: string }) {
       zIndex: 9990, pointerEvents: 'none',
       width: 288,
     }}>
+      <div className="tooltip-in" style={{ position: 'relative' }}>
       {/* 꼬리 */}
       <div style={{
         position: 'absolute', top: -5, left: '60%', transform: 'translateX(-50%) rotate(45deg)',
@@ -120,6 +121,7 @@ function InfoTooltip({ weekStart }: { weekStart: string }) {
         <span style={{ fontSize: 10, color: 'var(--color-text-caption)', borderTop: '1px solid var(--color-border)', paddingTop: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
           <Clock size={12} strokeWidth={1.75} color="currentColor" /> 매주 월요일 오전 6시 자동 갱신 · {label} 기준
         </span>
+      </div>
       </div>
     </div>
   )

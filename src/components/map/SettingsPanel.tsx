@@ -375,14 +375,14 @@ export function SettingsAboutPage() {
               <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4 }}>{member.role}</div>
             </div>
             {member.linkedin && (
-              <button onClick={() => window.open(member.linkedin!, '_blank', 'noopener')} style={{ width: 32, height: 32, borderRadius: 8, border: 'none', backgroundColor: '#0A66C2', color: 'var(--color-on-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, minHeight: 'unset' }}>
+              <IconButton size={32} aria-label={`${member.name} 링크드인`} onClick={() => window.open(member.linkedin!, '_blank', 'noopener')} style={{ backgroundColor: '#0A66C2', color: 'var(--color-on-accent)' }}>
                 <IcoLinkedIn />
-              </button>
+              </IconButton>
             )}
             {member.github && (
-              <button onClick={() => window.open(member.github!, '_blank', 'noopener')} style={{ width: 32, height: 32, borderRadius: 8, border: 'none', backgroundColor: '#24292e', color: 'var(--color-on-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, minHeight: 'unset' }}>
+              <IconButton size={32} aria-label={`${member.name} 깃허브`} onClick={() => window.open(member.github!, '_blank', 'noopener')} style={{ backgroundColor: '#24292e', color: 'var(--color-on-accent)' }}>
                 <IcoGitHub />
-              </button>
+              </IconButton>
             )}
           </div>
         ))}
@@ -415,6 +415,21 @@ export function SettingsPanel({
   const [page, setPage] = useState<Page>('main')
   const [reportSuccess, setReportSuccess] = useState(false)
 
+  // 열림/닫힘 전환 — isOpen이 꺼져도 퇴장 전환 동안 마운트를 유지한다
+  const [render, setRender] = useState(isOpen)
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    if (isOpen) {
+      setRender(true)
+      // 마운트 직후 한 프레임 뒤에 켜야 진입 전환이 걸린다
+      const raf = requestAnimationFrame(() => setVisible(true))
+      return () => cancelAnimationFrame(raf)
+    }
+    setVisible(false)
+    const timer = setTimeout(() => setRender(false), 220)
+    return () => clearTimeout(timer)
+  }, [isOpen])
+
   useLockBodyScroll(isOpen)
 
   // 열릴 때마다 요청된 첫 페이지로 진입 — 좌측 레일 '신고' 버튼은 바로 report로 들어옴
@@ -437,7 +452,7 @@ export function SettingsPanel({
     about: '만든 사람',
   }
 
-  if (!isOpen) return null
+  if (!render) return null
 
   const content = (
     <div
@@ -452,6 +467,11 @@ export function SettingsPanel({
         borderRadius: isDesktopLayout ? 20 : 0,
         boxShadow: 'var(--shadow-sheet)',
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
+        transform: visible
+          ? 'none'
+          : isDesktopLayout ? 'scale(0.96) translateY(12px)' : 'translateY(24px)',
+        opacity: visible ? 1 : 0,
+        transition: 'transform 220ms cubic-bezier(0.32,0.72,0,1), opacity 180ms ease',
       }}
     >
       <SettingsHeader
@@ -485,7 +505,8 @@ export function SettingsPanel({
       style={{
         position: 'fixed', inset: 0, zIndex: 2100,  /* absolute면 스크롤된 컨테이너 기준으로 떠서 이탈 — 뷰포트 고정 */
         height: '100dvh',
-        backgroundColor: 'rgba(0,0,0,0.38)',
+        backgroundColor: visible ? 'rgba(0,0,0,0.38)' : 'rgba(0,0,0,0)',
+        transition: 'background-color 220ms ease',
         display: 'flex',
         alignItems: isDesktopLayout ? 'center' : 'stretch',
         justifyContent: isDesktopLayout ? 'center' : 'stretch',

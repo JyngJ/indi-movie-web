@@ -35,9 +35,12 @@ export function Toast({ message, trigger = 0, visible, duration = 1600 }: ToastP
         position: 'fixed',
         bottom: 100,
         left: '50%',
-        transform: `translateX(-50%) translateY(${show ? 0 : 8}px)`,
+        transform: `translateX(-50%) translateY(${show ? 0 : 12}px) scale(${show ? 1 : 0.94})`,
         opacity: show ? 1 : 0,
-        transition: 'opacity 0.18s ease, transform 0.18s ease',
+        filter: show ? 'blur(0px)' : 'blur(4px)',
+        transition: show
+          ? 'opacity 0.24s ease, transform 0.3s cubic-bezier(0.22,1.2,0.36,1), filter 0.24s ease'
+          : 'opacity 0.16s ease, transform 0.16s ease, filter 0.16s ease',
         pointerEvents: 'none',
         zIndex: 9999,
         background: 'var(--color-neutral-900)',

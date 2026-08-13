@@ -539,7 +539,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
             이 날 상영 정보가 없습니다
           </div>
         ) : (
-          <div style={isDesktop ? { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 0, columnGap: 16 } : {}}>
+          <div className="reveal-rise" style={isDesktop ? { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 0, columnGap: 16 } : {}}>
             {movieShowtimeGroups.map(({ movie, showtimes }) => (
               <div key={movie.id} data-movie-anchor={movie.id}>
               <MovieShowtimeCard
