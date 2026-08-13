@@ -421,9 +421,13 @@ export function SettingsPanel({
   useEffect(() => {
     if (isOpen) {
       setRender(true)
-      // 마운트 직후 한 프레임 뒤에 켜야 진입 전환이 걸린다
-      const raf = requestAnimationFrame(() => setVisible(true))
-      return () => cancelAnimationFrame(raf)
+      // 더블 rAF — 첫 rAF는 마운트 프레임 페인트 전에 실행되어 숨김 상태가
+      // 화면에 찍히지 않고 전환이 스킵된다. 한 프레임 더 미뤄야 진입 전환이 걸린다.
+      let raf2 = 0
+      const raf = requestAnimationFrame(() => {
+        raf2 = requestAnimationFrame(() => setVisible(true))
+      })
+      return () => { cancelAnimationFrame(raf); cancelAnimationFrame(raf2) }
     }
     setVisible(false)
     const timer = setTimeout(() => setRender(false), 220)
