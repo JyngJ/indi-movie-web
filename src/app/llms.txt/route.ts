@@ -43,6 +43,7 @@ export async function GET() {
 - [영화 상세](${BASE_URL}/movie/{movieId}): 작품 정보 + 상영 중인 극장과 시간
 - [극장 상세](${BASE_URL}/films/theater/{theaterId}): 극장 정보 + 2주간 상영 시간표
 - [감독 상세](${BASE_URL}/films/director/{directorName}): 감독 작품 목록 + 현재 상영 극장
+- [자주 묻는 질문](${BASE_URL}/faq): 서비스 소개, 업데이트 주기, 데이터 출처, 인용 정책
 
 ## 지역별 페이지
 

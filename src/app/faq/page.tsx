@@ -1,0 +1,207 @@
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import { toFaqSchema, type FaqEntry } from '@/lib/seo/toFaqSchema'
+import { getScreeningIndex } from '@/lib/seo/getScreeningIndex'
+import { BackLink } from '../privacy/BackLink'
+
+export const metadata: Metadata = {
+  title: '자주 묻는 질문 | 영화볼지도',
+  description:
+    '영화볼지도 FAQ — 서비스 소개, 상영시간표 업데이트 주기, 등록 극장, 예매 방법, GV 상영, 데이터 출처 등 자주 묻는 질문과 답변.',
+  alternates: { canonical: '/faq' },
+}
+
+// llms.txt와 같은 판단 — 극장 수 같은 숫자만 바뀌므로 6시간 캐시
+export const revalidate = 21600
+
+/** 답변 아래에 붙는 이동 버튼 — 제보/요청은 더보기 탭의 리포트 폼으로 연결한다 */
+interface FaqAction {
+  label: string
+  href: string
+}
+
+interface FaqItem extends FaqEntry {
+  action?: FaqAction
+}
+
+interface FaqSection {
+  title: string
+  items: FaqItem[]
+}
+
+const reportHref = (category: string) => `/more?page=report&category=${encodeURIComponent(category)}`
+
+function buildSections(theaterCount: number): FaqSection[] {
+  return [
+    {
+      title: '서비스 소개',
+      items: [
+        {
+          question: "'영화볼지도'는 어떤 서비스인가요?",
+          answer:
+            '전국 독립·예술영화관의 상영시간표를 지도 한 장으로 모아볼 수 있는 서비스입니다. 대형 멀티플렉스에서 접하기 어려운 독립·예술영화가 오늘 어느 극장에서 몇 시에 상영하는지 한눈에 확인할 수 있습니다.',
+        },
+        {
+          question: '왜 만들었나요?',
+          answer:
+            '독립·예술영화관의 상영 정보는 극장마다 인스타그램, 홈페이지, 블로그 등으로 파편화되어 있어 매번 일일이 찾아봐야 하는 번거로움이 있었습니다. 이 불편을 줄이고, 더 쉽게 독립영화관을 찾을 수 있도록 만들었습니다.',
+        },
+        {
+          question: '무료로 이용할 수 있나요?',
+          answer: '네, 모든 서비스는 별도의 회원가입 없이 무료로 이용하실 수 있습니다.',
+        },
+        {
+          question: '모바일 앱도 있나요?',
+          answer:
+            '현재는 모바일 및 PC 웹 브라우저로만 이용할 수 있습니다. 모바일 환경에서도 편하게 이용하실 수 있도록 최적화되어 있으며, 추후 전용 앱 출시도 준비할 예정입니다.',
+        },
+      ],
+    },
+    {
+      title: '상영 정보',
+      items: [
+        {
+          question: '상영시간표는 얼마나 자주 업데이트되나요?',
+          answer: '전국 극장의 상영시간표를 매일 약 3회 주기적으로 자동 수집하여 업데이트합니다.',
+        },
+        {
+          question: '어떤 극장들이 등록되어 있나요?',
+          answer: `전국의 독립·예술영화 전용관, 시네마테크, 지역 예술영화관 ${theaterCount}곳의 시간표를 제공하고 있습니다.`,
+        },
+        {
+          question: 'CGV·메가박스·롯데시네마 같은 대형 멀티플렉스는 왜 없나요?',
+          answer:
+            '멀티플렉스는 자체 앱을 통한 정보 확인이 용이한 반면, 독립·예술영화관은 정보 접근성이 낮아 이에 우선적으로 집중하고 있습니다. 또한 기술적/정책적 제약으로 대형 극장 체인의 데이터 연동이 어려운 점 양해 부탁드립니다.',
+        },
+        {
+          question: '상영 정보가 실제와 다르면 어떻게 하나요?',
+          answer:
+            '극장 사정에 의해 상영 일정이 갑작스럽게 변경되거나 취소될 수 있습니다. 방문 전 해당 극장의 공식 공지를 한 번 더 확인하시는 것을 권장합니다. 잘못된 정보를 발견하셨다면 제보해 주시면 빠르게 반영하겠습니다.',
+          action: { label: '잘못된 정보 제보하기', href: reportHref('데이터 수정') },
+        },
+        {
+          question: '찾고 있는 극장이 없습니다. 추가를 요청할 수 있나요?',
+          answer: '네, 원하시는 극장을 알려주시면 검토 후 순차적으로 업데이트하겠습니다.',
+          action: { label: '극장 추가 요청하기', href: reportHref('영화관 추가 요청') },
+        },
+      ],
+    },
+    {
+      title: '기능',
+      items: [
+        {
+          question: '예매는 어떻게 진행되나요?',
+          answer:
+            "'영화볼지도'는 직접 예매 기능을 제공하지 않습니다. 원하시는 회차의 [예매하러 가기] 버튼을 누르시면 해당 극장의 공식 예매 페이지로 이동하여 결제를 진행하실 수 있습니다.",
+        },
+        {
+          question: 'GV(관객과의 대화) 상영 회차도 확인할 수 있나요?',
+          answer: '네, GV 및 시네토크가 예정된 상영 회차는 지도와 시간표 내에 별도 태그로 구분하여 표시됩니다.',
+        },
+        {
+          question: "'오늘이 마지막' 표시는 무슨 뜻인가요?",
+          answer:
+            '해당 극장에서의 상영 종료가 임박한 작품에 붙는 안내 배지입니다. 극장 재상영이 드문 독립·예술영화 특성을 고려해 관람 기회를 놓치지 않도록 제공하는 기능입니다. 단, 데이터 수집 시점에 따라 실제 종영 일자와 약간의 차이가 있을 수 있으니 오류 발견 시 제보해 주시면 신속히 수정하겠습니다.',
+        },
+        {
+          question: '영화제 상영 일정도 함께 볼 수 있나요?',
+          answer: '네, 진행 중인 주요 영화제의 상영 일정 및 관련 정보도 수집하여 함께 안내해 드립니다.',
+        },
+      ],
+    },
+    {
+      title: '데이터 & 기타',
+      items: [
+        {
+          question: '영화 상세 정보(줄거리·감독·포스터)는 어디서 가져오나요?',
+          answer: '한국영상자료원(KMDb) 및 씨네21의 공개 데이터를 기반으로 제공됩니다.',
+        },
+        {
+          question: '수집된 데이터를 외부에서 재가공하거나 사용할 수 있나요?',
+          answer:
+            "상영시간표의 원천 데이터에 대한 권리는 각 극장에 있습니다. '영화볼지도'가 수집 및 가공한 데이터를 무단으로 복제, 배포, 상업적 이용하는 것은 제한되며, 정보 안내 목적으로 인용 시에는 영화볼지도 링크를 추가해주세요.",
+        },
+        {
+          question: '특정 영화의 개봉이나 상영 알림을 받을 수 있나요?',
+          answer:
+            '현재 특정 영화의 상영 알림 기능은 준비 중입니다. 빠르게 선보일 수 있도록 개발에 집중하고 있으니 조금만 기다려 주세요!',
+        },
+      ],
+    },
+  ]
+}
+
+export default async function FaqPage() {
+  const data = await getScreeningIndex()
+  const sections = buildSections(data.theaters.length)
+  const faqSchema = toFaqSchema(sections.flatMap((s) => s.items.map(({ question, answer }) => ({ question, answer }))))
+
+  return (
+    <main
+      style={{
+        maxWidth: 760,
+        margin: '0 auto',
+        padding: '40px var(--gutter) 80px',
+        color: 'var(--color-text-body)',
+        lineHeight: 1.7,
+        fontSize: 'var(--text-subtitle)',
+      }}
+    >
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+
+      <BackLink />
+
+      <h1 className="display-h1" style={{ color: 'var(--color-text-primary)', margin: '20px 0 8px' }}>
+        자주 묻는 질문
+      </h1>
+      <p style={{ marginBottom: 32, color: 'var(--color-text-sub)' }}>
+        영화볼지도는 전국 독립·예술영화관의 상영 시간표를 지도 한 장에 모은 무료 서비스입니다.
+        서비스를 이용하며 자주 묻는 질문들을 모았습니다.
+      </p>
+
+      {sections.map((section) => (
+        <section key={section.title} style={{ marginBottom: 40 }}>
+          <h2
+            className="display-h2"
+            style={{
+              color: 'var(--color-text-primary)',
+              margin: '0 0 16px',
+              paddingBottom: 8,
+              borderBottom: '1px solid var(--color-border)',
+            }}
+          >
+            {section.title}
+          </h2>
+          {section.items.map((item) => (
+            <div key={item.question} style={{ marginBottom: 24 }}>
+              <h3 style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)', margin: '0 0 8px' }}>
+                Q. {item.question}
+              </h3>
+              <p style={{ margin: 0 }}>{item.answer}</p>
+              {item.action && (
+                <Link
+                  href={item.action.href}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    marginTop: 8,
+                    padding: '8px 16px',
+                    borderRadius: 'var(--radius-button)',
+                    border: '1px solid var(--color-border)',
+                    backgroundColor: 'var(--color-surface-card)',
+                    color: 'var(--color-text-primary)',
+                    fontSize: 'var(--text-meta)',
+                    fontWeight: 600,
+                    textDecoration: 'none',
+                  }}
+                >
+                  {item.action.label}
+                </Link>
+              )}
+            </div>
+          ))}
+        </section>
+      ))}
+    </main>
+  )
+}

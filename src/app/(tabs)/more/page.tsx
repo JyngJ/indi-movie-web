@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import {
   ReportSuccessNotice,
   SettingsAboutPage,
@@ -39,9 +40,15 @@ function DesktopPlaceholder() {
   )
 }
 
-export default function MorePage() {
+// FAQ의 제보/요청 버튼이 ?page=report&category=…로 진입한다 — 리포트 폼을 분류까지
+// 채워서 바로 연다. useSearchParams는 Suspense 경계가 필요해 내용을 분리했다.
+function MorePageContent() {
   const isDesktop = useIsDesktopLayout()
-  const [page, setPage] = useState<SettingsPage>('main')
+  const searchParams = useSearchParams()
+  const initialCategory = searchParams.get('category') ?? undefined
+  const [page, setPage] = useState<SettingsPage>(
+    searchParams.get('page') === 'report' ? 'report' : 'main'
+  )
   const [reportSuccess, setReportSuccess] = useState(false)
 
   if (isDesktop) return <DesktopPlaceholder />
@@ -64,11 +71,19 @@ export default function MorePage() {
         <SettingsMainPage onNavigate={setPage} />
       )}
       {page === 'report' && !reportSuccess && (
-        <SettingsReportPage onSuccess={() => setReportSuccess(true)} />
+        <SettingsReportPage initialCategory={initialCategory} onSuccess={() => setReportSuccess(true)} />
       )}
       {page === 'report' && reportSuccess && <ReportSuccessNotice />}
       {page === 'attribution' && <SettingsAttributionPage />}
       {page === 'about' && <SettingsAboutPage />}
     </div>
+  )
+}
+
+export default function MorePage() {
+  return (
+    <Suspense>
+      <MorePageContent />
+    </Suspense>
   )
 }
