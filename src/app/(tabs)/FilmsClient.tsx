@@ -23,6 +23,7 @@ import { useCurationData } from '@/hooks/useCurationData'
 import { useLocationPermission } from '@/hooks/useLocationPermission'
 import { useCurrentLocationRegion } from '@/hooks/useCurrentLocationRegion'
 import { getFilmsTabCurationSections, SECTION_GROUP } from '@/lib/curation/filmsTabLists'
+import { mergePopularRanking } from '@/lib/curation/popularRanking'
 import { getAnniversaryFilms } from '@/lib/curation/getAnniversaryFilms'
 import { formatAlmostSoldOutCaption, getAlmostSoldOutFilms } from '@/lib/curation/getAlmostSoldOutFilms'
 import { dayOfWeekLabel, formatLateNightCaption, getLateNightFilms } from '@/lib/curation/getLateNightFilms'
@@ -820,6 +821,7 @@ export default function FilmsPage() {
           movies: import('@/types/api').Movie[]
           posterBadges?: Map<string, number>
           movieCaptions?: Map<string, string>
+          showRank?: boolean
           customBottomInfos?: Map<string, React.ReactNode>
           onMovieClick?: (movieId: string) => void
         }
@@ -889,27 +891,22 @@ export default function FilmsPage() {
           movies: soloFilms.map((f) => f.movie),
         }] : []
 
-        // 최근 7일 예매 클릭 / 상세 조회 랭킹 — 현재 상영작만, 3편 미만이면 숨김
-        function rankingSection(
-          listId: string, nameKo: string, description: string, captionSuffix: string,
-          entries: { movieId: string; count: number }[] | undefined,
-        ): AnySection[] {
-          const ranked = (entries ?? [])
-            .filter((e) => activeMovieIdSet.has(e.movieId) && movieById.has(e.movieId))
-            .slice(0, 10)
-          if (ranked.length < 3) return []
-          return [{
-            listId, nameKo, description,
-            movieCaptions: new Map(ranked.map((e, i) => [e.movieId, `${captionSuffix} ${i + 1}위`])),
-            movies: ranked.map((e) => movieById.get(e.movieId)!),
-          }]
-        }
-        const rtBookingRank = rankingSection(
-          'realtime_booking_rank', '지금 예매 많은 영화',
-          '최근 7일, 예매하러 가장 많이 떠난 영화들이에요', '예매', clickRankings?.booking)
-        const rtViewRank = rankingSection(
-          'realtime_view_rank', '이번 주 많이 찾아본 영화',
-          '최근 7일 동안 사람들이 가장 많이 들여다본 영화들이에요', '조회', clickRankings?.views)
+        /* 인기 랭킹 — 예매 클릭·상세 조회를 합쳐 하나로. 예전엔 두 섹션이었는데 상위 10의
+           겹침이 4/10라 절반이 같은 포스터였고, 각각은 표본이 작아 하위권이 전부 동점이었다
+           (근거와 가중치는 lib/curation/popularRanking.ts 주석). 순위는 캡션 텍스트가 아니라
+           포스터 좌하단 숫자로 보여주므로 캡션 자리는 감독명에 돌려준다. */
+        const popularRanked = mergePopularRanking(
+          clickRankings?.booking,
+          clickRankings?.views,
+          (movieId) => activeMovieIdSet.has(movieId) && movieById.has(movieId),
+        )
+        const rtPopularRank: AnySection[] = popularRanked.length >= 3 ? [{
+          listId: 'realtime_popular_rank',
+          nameKo: '지금 가장 많이 찾는 영화',
+          description: '최근 7일, 예매하러 떠나고 상세를 열어본 걸 합쳐 매겼어요',
+          showRank: true,
+          movies: popularRanked.map((e) => movieById.get(e.movieId)!),
+        }] : []
 
         // 개봉 N주년 — 10의 배수 해를 맞은 활성 상영작, 3편 미만이면 빈 배열로 숨김
         const releaseAnniversaryFilms = getAnniversaryFilms(movies, activeMovieIdSet, new Date().getFullYear())
@@ -1012,6 +1009,7 @@ export default function FilmsPage() {
                 title={s.nameKo}   /* 2.0: 부제 삭제 */
                 movies={s.movies} isDesktop={isDesktop}
                 posterBadges={s.posterBadges} movieCaptions={s.movieCaptions}
+                showRank={s.showRank}
                 customBottomInfos={s.customBottomInfos}
                 position={position}
                 onMovieClick={s.onMovieClick ?? ((movieId) => {
@@ -1083,7 +1081,7 @@ export default function FilmsPage() {
         // 시의성(막바지·매진임박)을 최상단으로, 저CTR 시기별(seasonal)은 명당에서 강등
         const run1: AnySection[] = [...rtLeaveNow, ...rtLastWeek, ...rtAlmostSoldOut]
         const run2: AnySection[] = [
-          ...rtBookingRank, ...rtViewRank,
+          ...rtPopularRank,
           ...rtWeekend, ...rtNew, ...rtLateNight,
           ...rtSolo,
           ...rtShortRuntime,

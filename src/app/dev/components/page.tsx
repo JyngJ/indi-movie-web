@@ -23,7 +23,7 @@ import { SurfacesSection } from './surfaces'
 import { ProposalsSection } from './proposals'
 import { MotionSection } from './motion-patterns'
 import {
-  PosterOverlayChips, ActionBtnRow, MoreButtonRow,
+  PosterOverlayChips, RankOverlayRow, ActionBtnRow, MoreButtonRow,
   HoverLiftDemo, PmTipDemo, ToastStatic,
 } from './inline-patterns'
 
@@ -389,8 +389,14 @@ export default function ComponentsPage() {
 
           <Entry id="chip-overlay" name="포스터 오버레이 칩 — D-N / 거리 / 정보"
             screens="상영작 탭 (종영 임박 D-N) · 큐레이션 시트 (거리 · 상영시각)" inline
-            source="src/components/domain/CurationSectionRow.tsx · CurationSheet.tsx — 정책: 11px/600 · 4px 8px · --radius-badge · offset 6px">
+            source="src/components/domain/CurationSectionRow.tsx · CurationSheet.tsx — 정책: --text-meta(12)/700 · 8px 12px · --radius-badge · offset 6px">
             <PosterOverlayChips />
+          </Entry>
+
+          <Entry id="chip-rank" name="랭킹 순위 오버레이 — 포스터 좌하단 스크림 + 숫자"
+            screens="상영작 탭 (지금 가장 많이 찾는 영화)" inline
+            source="src/components/domain/CurationSectionRow.tsx MovieCard(showRank) — 스크림 높이 42% · 숫자 31% · offset 8/4">
+            <RankOverlayRow />
           </Entry>
         </Section>
 
