@@ -364,12 +364,6 @@
   filter: saturate(0.7) brightness(0.92);
   opacity: 0.82;
 }
-.maptiles img {
-  display: block;
-  width: 256px;
-  height: 256px;
-}
-
 /* 하단 페이드 — 텍스트 영역으로 자연스럽게 연결 */
 .mapscrim {
   position: absolute;
@@ -435,13 +429,6 @@
   background: var(--color-surface-raised);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
-.poster img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
 /* ── 데스크톱: 중앙 모달 (풀스크린 금지) ─────────────────────── */
 
 .desktopRoot {

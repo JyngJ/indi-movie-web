@@ -110,12 +110,10 @@ export default async function FilmsAreaPage({
       {/* 백드롭 — 이 지역 지도 캡처 블러 (scripts 캡처 산출물), 없으면 상영작 포스터 폴백 */}
       <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', display: 'flex' }}>
         {mapBackdrop ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={mapBackdrop} alt="" aria-hidden style={{ flex: 1, minWidth: 0, objectFit: 'cover', filter: 'blur(24px) saturate(0.92)', transform: 'scale(1.12)' }} />
+          <div style={{ flex: 1, minWidth: 0, backgroundImage: `url(${mapBackdrop})`, backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(24px) saturate(0.92)', transform: 'scale(1.12)' }} />
         ) : (
           backdropPosters.map((u, i) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img key={i} src={u} alt="" aria-hidden style={{ flex: 1, minWidth: 0, objectFit: 'cover', filter: 'blur(28px) saturate(0.9)', transform: 'scale(1.15)', opacity: 0.45 }} />
+            <div key={i} style={{ flex: 1, minWidth: 0, backgroundImage: `url(${u})`, backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(28px) saturate(0.9)', transform: 'scale(1.15)', opacity: 0.45 }} />
           ))
         )}
         <div style={{ position: 'absolute', inset: 0, backgroundColor: 'color-mix(in srgb, var(--color-surface-bg) 55%, transparent)' }} />
