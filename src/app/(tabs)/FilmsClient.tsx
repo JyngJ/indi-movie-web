@@ -957,7 +957,6 @@ export default function FilmsPage() {
               key={`special_${s.directorName}_${s.theater.id}`}
               directorName={s.directorName} theater={s.theater} films={s.films}
               distSuffix={distSuffix} isDesktop={isDesktop}
-              onDirectorClick={handleDirectorClick}
               onTheaterClick={(id) => router.push(`/films/theater/${id}`)}
               onMovieClick={handleMovieClick}
             />
