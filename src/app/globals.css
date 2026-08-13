@@ -210,6 +210,12 @@ img {
 @media (hover: hover) {
   .hover-raise:hover { background-color: var(--color-surface-raised); }
 }
+/* 자체 배경을 가진 칩용 — hover-raise는 base가 transparent라 칩 배경을 지워버린다 */
+.chip-raise { background-color: var(--color-surface-bg); transition: background-color 120ms ease; }
+@media (hover: hover) {
+  .chip-raise:hover { background-color: var(--color-surface-raised); }
+}
+
 /* 이미 눌린 면(레일 등) 위에서는 raised가 배경과 동색 — 흰 카드로 떠오르게 */
 .hover-card { background-color: transparent; transition: background-color 120ms ease; }
 @media (hover: hover) {

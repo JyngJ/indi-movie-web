@@ -9,6 +9,7 @@ import { Button } from '@/components/primitives/Button'
 import { IconButton } from '@/components/primitives/IconButton'
 import { FilterPill } from '@/components/primitives/FilterPill'
 import { Chip } from '@/components/primitives/Chip'
+import { DirectorChip } from '@/components/primitives/DirectorChip'
 import { Toast } from '@/components/primitives/Toast'
 import { useTheaterShowtimes, useTheaterAllMovies } from '@/lib/supabase/queries'
 import type { TheaterMovieEntry } from '@/lib/supabase/queries'
@@ -1799,46 +1800,20 @@ export function TheaterSheet({
                         movie.genre && movie.genre.length > 0 ? movie.genre.join(' · ') : null,
                       ].filter(Boolean).join(' · ')}
                     </div>
+                    {/* 감독 칩 — 피그마 2.0/MovieCard 개선안. 예전엔 카드 아래 전체폭 행이라
+                        카드가 한 줄 더 길었다. 정보 칼럼 안으로 들여 그 줄을 없앤다 */}
+                    {movie.director && movie.director.length > 0 && (
+                      <DirectorChip
+                        name={movie.director[0]}
+                        pending={movieNavPendingId === `director-${movie.id}`}
+                        onClick={() => {
+                          if (onDirectorOpen) onDirectorOpen(movie.director[0])
+                          else navigateMovie(`director-${movie.id}`, `/director/${encodeURIComponent(movie.director[0])}`)
+                        }}
+                      />
+                    )}
                   </div>
                 </div>
-                {/* 감독 행 */}
-                {movie.director && movie.director.length > 0 && (
-                  <div
-                    className="hover-raise"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      if (onDirectorOpen) onDirectorOpen(movie.director[0])
-                      else navigateMovie(`director-${movie.id}`, `/director/${encodeURIComponent(movie.director[0])}`)
-                    }}
-                    role="button"
-                    tabIndex={0}
-                    style={{
-                      borderTop: '1px solid var(--color-border)',
-                      display: 'flex', alignItems: 'center', gap: 12,
-                      padding: '16px var(--gutter-sheet)',
-                      cursor: 'pointer',
-                      opacity: movieNavPendingId === `director-${movie.id}` ? 0.5 : 1,
-                    }}
-                  >
-                    <div style={{
-                      width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
-                      backgroundColor: 'var(--color-surface-bg)',
-                      border: '1px solid var(--color-border)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-caption)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="8" r="4" />
-                        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-                      </svg>
-                    </div>
-                    <span style={{ flex: 1, fontSize: 'var(--text-title)', fontWeight: 700, color: 'var(--color-text-primary)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {movie.director[0]}
-                    </span>
-                    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-caption)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M9 18l6-6-6-6" />
-                    </svg>
-                  </div>
-                )}
                 {/* 액션 버튼 */}
                 <div style={{ borderTop: '1px solid var(--color-border)', display: 'flex' }}>
                   <button

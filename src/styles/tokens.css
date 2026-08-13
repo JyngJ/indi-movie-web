@@ -202,6 +202,8 @@
   --comp-poster-radius:        var(--radius-poster);   /* 8px — 기존 6px에서 8px로 흡수(의도된 변경) */
   --comp-poster-chip-pad:      8px 12px;   /* 포스터 오버레이 칩 안쪽 여백 (AGENTS 칩 정책) */
   --comp-poster-chip-offset:   6px;        /* 포스터 모서리에서 칩까지 */
+  --comp-director-chip-pad:    8px 12px 8px 8px;   /* 감독 칩 — 좌측은 아바타가 채워 8, 우측은 글자라 12 (피그마 2.0/MovieCard) */
+  --comp-director-chip-avatar: 24px;   /* 감독 칩 아바타 지름 */
   --comp-poster-sheet-radius:  var(--radius-poster);   /* 8px */
   --comp-poster-border:        rgba(0, 0, 0, 0.10);
 
