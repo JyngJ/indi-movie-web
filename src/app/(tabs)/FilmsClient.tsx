@@ -831,6 +831,7 @@ export default function FilmsPage() {
         const decades    = visibleSections.filter((s) => (SECTION_GROUP[s.listId] ?? 99) === 3)
         const critics    = visibleSections.filter((s) => (SECTION_GROUP[s.listId] ?? 99) === 4)
         const movements  = visibleSections.filter((s) => (SECTION_GROUP[s.listId] ?? 99) === 5)
+        const themes     = visibleSections.filter((s) => (SECTION_GROUP[s.listId] ?? 99) === 6)
 
         const rtLastWeek = realtimeSections.filter((s) => s.listId === 'realtime_last_week')
         const rtNew      = realtimeSections.filter((s) => s.listId !== 'realtime_last_week')
@@ -1039,6 +1040,7 @@ export default function FilmsPage() {
         const run2: AnySection[] = [
           ...rtWeekend, ...rtNew, ...rtLateNight,
           ...rtSolo,
+          ...themes,
           ...awards,
           ...seasonal,
           ...decades, ...critics, ...movements,
