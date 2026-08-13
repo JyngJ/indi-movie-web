@@ -1,6 +1,6 @@
 import type { CurationListRow } from '@/lib/curation/types'
 import type { Movie } from '@/types/api'
-import { Ghost, Heart, Video, Disc, Leaf, Crown, Award, Trophy, Star, Film, VenetianMask, Building2, Clapperboard, TreePine, Clock, CloudRain, Coffee, Popcorn, MoonStar, Palette, EyeOff } from 'lucide-react'
+import { Ghost, Heart, Video, Disc, Leaf, Crown, Award, Trophy, Star, Film, VenetianMask, Building2, Clapperboard, TreePine, Clock, CloudRain, Coffee, Popcorn, MoonStar, Palette, EyeOff, Umbrella, Sunrise, Contrast, BookOpen } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 // ─────────────────────────────────────────────
@@ -71,6 +71,10 @@ const SECTION_CONFIG: Record<string, SectionConfig> = {
   theme_summer_night:       { emoji: <MoonStar size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '해 지고 나서 더 좋아지는 여름의 장면들' },
   theme_visual_feast:       { emoji: <Palette size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '프레임마다 그림이 되는 색감과 영상미' },
   theme_no_spoiler:         { emoji: <EyeOff size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '줄거리 검색은 금물, 모르고 볼수록 커지는 영화' },
+  theme_rainy_day:          { emoji: <Umbrella size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '창밖에 비 내리는 날 꺼내보고 싶은 영화들' },
+  theme_late_night_alone:   { emoji: <Sunrise size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '잠 안 오는 새벽, 조용히 곁에 두는 영화들' },
+  theme_black_white:        { emoji: <Contrast size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '색을 덜어내서 더 선명해지는 장면들' },
+  theme_based_on_novel:     { emoji: <BookOpen size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, displayMode: 'default', description: '책으로 읽고, 극장에서 다시 만나는 이야기' },
 }
 
 export interface CurationSectionData {
@@ -112,6 +116,10 @@ export const SECTION_GROUP: Record<string, number> = {
   theme_no_brainer:         6,
   theme_visual_feast:       6,
   theme_no_spoiler:         6,
+  theme_rainy_day:          6,
+  theme_late_night_alone:   6,
+  theme_black_white:        6,
+  theme_based_on_novel:     6,
 }
 
 export function getFilmsTabCurationSections(

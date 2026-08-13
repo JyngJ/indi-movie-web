@@ -208,6 +208,24 @@ export function useCurationLists() {
   })
 }
 
+/* ── 최근 7일 PostHog 랭킹 (예매 클릭 / 상세 조회) ────────────────── */
+export interface ClickRankingEntry {
+  movieId: string
+  count: number
+}
+
+export function useClickRankings() {
+  return useQuery<{ booking: ClickRankingEntry[]; views: ClickRankingEntry[] }>({
+    queryKey: ['click-rankings'],
+    queryFn: async () => {
+      const res = await fetch('/api/public/click-rankings')
+      if (!res.ok) throw new Error(`click-rankings fetch 실패: ${res.status}`)
+      return res.json()
+    },
+    staleTime: 60 * 60 * 1000,
+  })
+}
+
 /* ── 진행중/예정 영화제 (상영작 탭 "주목할 영화제" 배너) ─────────── */
 // 지역 필터를 안 탐 — festivals는 전국 대상. end_date >= today로 종료된 건 제외,
 // start_date 임박순 정렬(진행중이 upcoming보다 먼저 오도록 start_date가 이미 과거인

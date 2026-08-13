@@ -23,6 +23,7 @@ import { useCurationData } from '@/hooks/useCurationData'
 import { useLocationPermission } from '@/hooks/useLocationPermission'
 import { useCurrentLocationRegion } from '@/hooks/useCurrentLocationRegion'
 import { getFilmsTabCurationSections, SECTION_GROUP } from '@/lib/curation/filmsTabLists'
+import { getAnniversaryFilms } from '@/lib/curation/getAnniversaryFilms'
 import { formatAlmostSoldOutCaption, getAlmostSoldOutFilms } from '@/lib/curation/getAlmostSoldOutFilms'
 import { dayOfWeekLabel, formatLateNightCaption, getLateNightFilms } from '@/lib/curation/getLateNightFilms'
 import { formatWeekendCaption, getWeekendFilms } from '@/lib/curation/getWeekendFilms'
@@ -30,7 +31,7 @@ import { getTodayAnniversaries } from '@/lib/curation/directorAnniversaries'
 import { trackEvent } from '@/lib/analytics/client'
 import { buildYearsOnScreenCaptions } from '@/lib/curation/yearsOnScreenCaption'
 import { formatLocalDate, formatLocalTimeHHMM, toKstIsoDate } from '@/lib/date'
-import { useActiveMovieIdsByRegion, useActiveMovieTheaterPairs, useAlmostSoldOutCandidates, useCurationLists, useFestivals, useFilmRankings, useInstagramRecommendations, useLateNightCandidates, useMovies, useTheaters } from '@/lib/supabase/queries'
+import { useActiveMovieIdsByRegion, useActiveMovieTheaterPairs, useAlmostSoldOutCandidates, useClickRankings, useCurationLists, useFestivals, useFilmRankings, useInstagramRecommendations, useLateNightCandidates, useMovies, useTheaters } from '@/lib/supabase/queries'
 import { getRegionFromCity } from '@/lib/regions'
 import { getStoredRegion, setStoredRegion, subscribeStoredRegion } from '@/lib/regionStorage'
 import { getFestivalDateLabel, getFestivalStatus, type FestivalStatus } from '@/lib/festival/status'
@@ -276,6 +277,7 @@ export default function FilmsPage() {
   const { data: activeMovieIds = [] } = useActiveMovieIdsByRegion(selectedRegion)
   const { data: movieTheaterPairs = [] } = useActiveMovieTheaterPairs(selectedRegion)
   const { data: filmRankingRow } = useFilmRankings()
+  const { data: clickRankings } = useClickRankings()
   const { data: festivals = [] } = useFestivals()
   const { data: instagramRecs = [] } = useInstagramRecommendations()
   const { lastWeekFilms, newIndieFilms, returningFilms, recentlyViewed, soloTheaterFilms, todayShowFilms } =
@@ -895,6 +897,40 @@ export default function FilmsPage() {
           movies: soloFilms.map((f) => f.movie),
         }] : []
 
+        // 최근 7일 예매 클릭 / 상세 조회 랭킹 — 현재 상영작만, 3편 미만이면 숨김
+        function rankingSection(
+          listId: string, nameKo: string, description: string, captionSuffix: string,
+          entries: { movieId: string; count: number }[] | undefined,
+        ): AnySection[] {
+          const ranked = (entries ?? [])
+            .filter((e) => activeMovieIdSet.has(e.movieId) && movieById.has(e.movieId))
+            .slice(0, 10)
+          if (ranked.length < 3) return []
+          return [{
+            listId, nameKo, description,
+            displayMode: 'default',
+            movieCaptions: new Map(ranked.map((e, i) => [e.movieId, `${captionSuffix} ${i + 1}위`])),
+            movies: ranked.map((e) => movieById.get(e.movieId)!),
+          }]
+        }
+        const rtBookingRank = rankingSection(
+          'realtime_booking_rank', '지금 예매 많은 영화',
+          '최근 7일, 예매하러 가장 많이 떠난 영화들이에요', '예매', clickRankings?.booking)
+        const rtViewRank = rankingSection(
+          'realtime_view_rank', '이번 주 많이 찾아본 영화',
+          '최근 7일 동안 사람들이 가장 많이 들여다본 영화들이에요', '조회', clickRankings?.views)
+
+        // 개봉 N주년 — 10의 배수 해를 맞은 활성 상영작, 3편 미만이면 빈 배열로 숨김
+        const releaseAnniversaryFilms = getAnniversaryFilms(movies, activeMovieIdSet, new Date().getFullYear())
+        const rtReleaseAnniversary: AnySection[] = releaseAnniversaryFilms.length > 0 ? [{
+          listId: 'realtime_release_anniversary',
+          nameKo: '개봉 N주년, 다시 스크린에',
+          description: '올해로 딱 떨어지는 주년을 맞아 돌아온 영화들이에요',
+          displayMode: 'default',
+          movieCaptions: new Map(releaseAnniversaryFilms.map((f) => [f.movie.id, `개봉 ${f.age}주년`])),
+          movies: releaseAnniversaryFilms.map((f) => f.movie),
+        }] : []
+
         // 특별전 interleave 준비
         const [special0, special1] = specialDirectorSections
 
@@ -1038,8 +1074,10 @@ export default function FilmsPage() {
         // 시의성(막바지·매진임박)을 최상단으로, 저CTR 시기별(seasonal)은 명당에서 강등
         const run1: AnySection[] = [...rtLeaveNow, ...rtLastWeek, ...rtAlmostSoldOut]
         const run2: AnySection[] = [
+          ...rtBookingRank, ...rtViewRank,
           ...rtWeekend, ...rtNew, ...rtLateNight,
           ...rtSolo,
+          ...rtReleaseAnniversary,
           ...themes,
           ...awards,
           ...seasonal,
