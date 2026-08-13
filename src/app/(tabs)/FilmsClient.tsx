@@ -523,7 +523,6 @@ export default function FilmsPage() {
       listId: 'realtime_last_week',
       nameKo: '막바지 상영',
       description: '상영관이 줄고 있어요. 미리 확인하고 예매하세요',
-      displayMode: 'default' as const,
       posterBadges: lastWeekBadgeMap,
       movies: lastWeekFilms.map((f) => f.movie),
     },
@@ -531,14 +530,12 @@ export default function FilmsPage() {
       listId: 'realtime_new_indie',
       nameKo: '이번 주 새롭게 상영하는 영화',
       description: '이번 주 스크린에 새로 오른 영화들',
-      displayMode: 'default' as const,
       movies: newIndieFilms.map((f) => f.movie),
     },
     {
       listId: 'realtime_returning',
       nameKo: '오랜만에 상영하는 영화',
       description: '잠시 사라졌다가 다시 스크린으로 돌아온 영화들',
-      displayMode: 'default' as const,
       movieCaptions: returningYearCaptions,
       movies: returningFilms.map((f) => f.movie),
     },
@@ -820,7 +817,7 @@ export default function FilmsPage() {
       {(() => {
         type AnySection = {
           listId: string; nameKo: string; description?: string
-          displayMode: string; movies: import('@/types/api').Movie[]
+          movies: import('@/types/api').Movie[]
           posterBadges?: Map<string, number>
           movieCaptions?: Map<string, string>
           customBottomInfos?: Map<string, React.ReactNode>
@@ -843,7 +840,6 @@ export default function FilmsPage() {
           listId: 'realtime_almost_soldout',
           nameKo: '매진 임박',
           description: '최근 확인 기준, 오늘·내일 회차의 좌석이 얼마 남지 않았어요',
-          displayMode: 'default',
           movieCaptions: almostSoldOutCaptions,
           customBottomInfos: almostSoldOutCustomInfos,
           onMovieClick: handleAlmostSoldOutMovieClick,
@@ -855,7 +851,6 @@ export default function FilmsPage() {
           listId: 'realtime_late_night',
           nameKo: '심야 상영',
           description: '하루의 끝, 밤 깊은 시간에 시작하는 회차들이에요',
-          displayMode: 'default',
           movieCaptions: lateNightCaptions,
           customBottomInfos: lateNightCustomInfos,
           onMovieClick: handleLateNightMovieClick,
@@ -867,7 +862,6 @@ export default function FilmsPage() {
           listId: 'realtime_weekend',
           nameKo: '이번 주말 상영',
           description: '이번 주말 볼 수 있는 회차예요',
-          displayMode: 'default',
           movieCaptions: weekendCaptions,
           customBottomInfos: weekendCustomInfos,
           onMovieClick: handleWeekendMovieClick,
@@ -879,7 +873,6 @@ export default function FilmsPage() {
           listId: 'realtime_leave_now',
           nameKo: '지금 출발하면 볼 수 있는',
           description: '지금 출발하면 늦지 않게 볼 수 있는 회차예요',
-          displayMode: 'default',
           movieCaptions: leaveNowCaptions,
           customBottomInfos: leaveNowCustomInfos,
           onMovieClick: handleLeaveNowMovieClick,
@@ -891,7 +884,6 @@ export default function FilmsPage() {
           listId: 'realtime_solo_theater',
           nameKo: `${selectedRegion ?? '이 지역'}에서 단 한 곳`,
           description: '이 지역에서는 이 극장에서만 상영해요',
-          displayMode: 'default',
           movieCaptions: soloCaptions,
           onMovieClick: handleSoloMovieClick,
           movies: soloFilms.map((f) => f.movie),
@@ -908,7 +900,6 @@ export default function FilmsPage() {
           if (ranked.length < 3) return []
           return [{
             listId, nameKo, description,
-            displayMode: 'default',
             movieCaptions: new Map(ranked.map((e, i) => [e.movieId, `${captionSuffix} ${i + 1}위`])),
             movies: ranked.map((e) => movieById.get(e.movieId)!),
           }]
@@ -926,7 +917,6 @@ export default function FilmsPage() {
           listId: 'realtime_release_anniversary',
           nameKo: '개봉 N주년, 다시 스크린에',
           description: '올해로 딱 떨어지는 주년을 맞아 돌아온 영화들이에요',
-          displayMode: 'default',
           movieCaptions: new Map(releaseAnniversaryFilms.map((f) => [f.movie.id, `개봉 ${f.age}주년`])),
           movies: releaseAnniversaryFilms.map((f) => f.movie),
         }] : []
@@ -942,7 +932,6 @@ export default function FilmsPage() {
           if (films.length < 3) return []
           return [{
             listId, nameKo, description,
-            displayMode: 'default',
             movieCaptions: new Map(films.map((m) => [m.id, `${m.runtimeMinutes}분`])),
             movies: films,
           }]
@@ -1016,14 +1005,12 @@ export default function FilmsPage() {
           const active = list.filter((s) => s.movies.length > 0)
           if (active.length === 0) return null
           const nodes: React.ReactNode[] = []
-          type SectionDisplayMode = import('@/lib/curation/filmsTabLists').SectionDisplayMode
           function rowFor(s: AnySection, compact: boolean) {
             // 논리적 순번(run 내 상대 위치) — 화면 절대 순번 아님, position prop 주석 참고
             const position = startIndex + active.indexOf(s)
             return (
               <CurationSectionRow key={s.listId} id={s.listId}
                 title={s.nameKo}   /* 2.0: 부제 삭제 */
-                displayMode={s.displayMode as SectionDisplayMode}
                 movies={s.movies} isDesktop={isDesktop}
                 posterBadges={s.posterBadges} movieCaptions={s.movieCaptions}
                 customBottomInfos={s.customBottomInfos}

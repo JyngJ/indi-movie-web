@@ -156,7 +156,7 @@ export function AnniversarySection({
         overflow: 'hidden',
       }}>
         <CurationSectionRow
-          title="" displayMode="default"
+          title=""
           movies={films} isDesktop={isDesktop}
           onMovieClick={onMovieClick}
           noHeader
