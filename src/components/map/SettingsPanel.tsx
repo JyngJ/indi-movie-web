@@ -415,24 +415,21 @@ export function SettingsPanel({
   const [page, setPage] = useState<Page>('main')
   const [reportSuccess, setReportSuccess] = useState(false)
 
-  // 열림/닫힘 전환 — isOpen이 꺼져도 퇴장 전환 동안 마운트를 유지한다
+  // 열림/닫힘 전환 — 진입은 CSS 키프레임(마운트 시 항상 재생), 퇴장은
+  // closing 상태로 transition을 걸고 끝난 뒤 언마운트한다
   const [render, setRender] = useState(isOpen)
-  const [visible, setVisible] = useState(false)
+  const [closing, setClosing] = useState(false)
   useEffect(() => {
     if (isOpen) {
       setRender(true)
-      // 더블 rAF — 첫 rAF는 마운트 프레임 페인트 전에 실행되어 숨김 상태가
-      // 화면에 찍히지 않고 전환이 스킵된다. 한 프레임 더 미뤄야 진입 전환이 걸린다.
-      let raf2 = 0
-      const raf = requestAnimationFrame(() => {
-        raf2 = requestAnimationFrame(() => setVisible(true))
-      })
-      return () => { cancelAnimationFrame(raf); cancelAnimationFrame(raf2) }
+      setClosing(false)
+      return
     }
-    setVisible(false)
-    const timer = setTimeout(() => setRender(false), 220)
+    if (!render) return
+    setClosing(true)
+    const timer = setTimeout(() => { setRender(false); setClosing(false) }, 220)
     return () => clearTimeout(timer)
-  }, [isOpen])
+  }, [isOpen, render])
 
   useLockBodyScroll(isOpen)
 
@@ -461,6 +458,8 @@ export function SettingsPanel({
   const content = (
     <div
       onClick={e => e.stopPropagation()}
+      /* fill-mode both가 살아 있으면 퇴장 transition을 덮어쓰므로 닫힐 땐 클래스 제거 */
+      className={closing ? undefined : isDesktopLayout ? 'modal-card-in' : 'modal-card-in-mobile'}
       style={{
         width: isDesktopLayout ? 400 : '100%',
         maxWidth: isDesktopLayout ? 'calc(100vw - 48px)' : undefined,
@@ -471,10 +470,10 @@ export function SettingsPanel({
         borderRadius: isDesktopLayout ? 20 : 0,
         boxShadow: 'var(--shadow-sheet)',
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
-        transform: visible
-          ? 'none'
-          : isDesktopLayout ? 'scale(0.96) translateY(12px)' : 'translateY(24px)',
-        opacity: visible ? 1 : 0,
+        transform: closing
+          ? (isDesktopLayout ? 'scale(0.96) translateY(12px)' : 'translateY(24px)')
+          : 'none',
+        opacity: closing ? 0 : 1,
         transition: 'transform 220ms cubic-bezier(0.32,0.72,0,1), opacity 180ms ease',
       }}
     >
@@ -505,11 +504,12 @@ export function SettingsPanel({
     <div
       role="dialog"
       aria-modal="true"
+      className={closing ? undefined : 'modal-backdrop-in'}
       onClick={handleClose}
       style={{
         position: 'fixed', inset: 0, zIndex: 2100,  /* absolute면 스크롤된 컨테이너 기준으로 떠서 이탈 — 뷰포트 고정 */
         height: '100dvh',
-        backgroundColor: visible ? 'rgba(0,0,0,0.38)' : 'rgba(0,0,0,0)',
+        backgroundColor: closing ? 'rgba(0,0,0,0)' : 'rgba(0,0,0,0.38)',
         transition: 'background-color 220ms ease',
         display: 'flex',
         alignItems: isDesktopLayout ? 'center' : 'stretch',

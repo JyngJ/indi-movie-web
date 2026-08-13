@@ -656,3 +656,25 @@ img {
     animation: none;
   }
 }
+
+/* 설정 모달 진입 — 키프레임은 마운트 시 항상 처음부터 재생되므로
+   상태 플립(rAF) 방식과 달리 첫 페인트 타이밍 레이스가 없다 */
+@keyframes modal-backdrop-in {
+  from { background-color: rgba(0, 0, 0, 0); }
+}
+@keyframes modal-card-in {
+  from { opacity: 0; transform: scale(0.96) translateY(12px); }
+}
+@keyframes modal-card-in-mobile {
+  from { opacity: 0; transform: translateY(24px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal-backdrop-in,
+  .modal-card-in,
+  .modal-card-in-mobile {
+    animation: none !important;
+  }
+}
+.modal-backdrop-in { animation: modal-backdrop-in 220ms ease both; }
+.modal-card-in { animation: modal-card-in 220ms cubic-bezier(0.32,0.72,0,1) both; }
+.modal-card-in-mobile { animation: modal-card-in-mobile 220ms cubic-bezier(0.32,0.72,0,1) both; }
