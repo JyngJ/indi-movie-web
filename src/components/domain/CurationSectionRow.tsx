@@ -7,7 +7,7 @@ import { PosterThumb } from '@/components/domain/PosterThumb'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { withFlag } from '@/lib/nations'
 import type { Movie } from '@/types/api'
-import { GenreChip, PosterChip, SectionHeader, CardContainer, ScrollNavButton } from '@/components/primitives'
+import { BubbleTail, bubbleTailReach, GenreChip, PosterChip, SectionHeader, CardContainer, ScrollNavButton } from '@/components/primitives'
 import type { SectionAnalytics } from '@/lib/curation/sectionRuns'
 import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
 import { Carousel, CarouselContent, CarouselItem, useCarousel, RevealItem, RevealGroup } from '@/components/motion'
@@ -110,7 +110,18 @@ function MovieCardInfo({ movie, isDesktop, caption, customBottomInfo }: { movie:
 }
 
 /* ── 호버 팝업 카드 ─────────────────────────────────────────────── */
-export function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number }) {
+/** 꼬리 세로 위치 — 카드 상단에서 이만큼. 포스터 상단 근처를 가리켜야 어느 포스터를
+ *  가리키는지 헷갈리지 않는다(카드가 포스터보다 짧아 50%면 중앙이 어긋난다) */
+const TAIL_TOP = 28
+
+export function HoverPopup({ movie, x, y, posterWidth = 0 }: {
+  movie: Movie
+  /** 포스터의 시각적 오른쪽 끝 (hover scale 반영) */
+  x: number
+  y: number
+  /** 왼쪽으로 뒤집힐 때 포스터 너비만큼 더 넘겨야 해서 필요 */
+  posterWidth?: number
+}) {
   const synopsis = movie.synopsis
     ? movie.synopsis.length > 90
       ? movie.synopsis.slice(0, 90) + '...'
@@ -123,8 +134,16 @@ export function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number
   ]
 
   const cardWidth = 220
-  const adjustedX =
-    x + cardWidth > window.innerWidth - 16 ? x - cardWidth - 156 : x
+  /* 꼬리 팁이 포스터 끝에 닿도록 꼬리 길이만큼 밀어 둔다 — x는 포스터의 시각적 가장자리다 */
+  const reach = bubbleTailReach()
+  /* 오른쪽에 자리가 없으면 포스터 왼쪽으로 넘긴다. 그때는 꼬리도 반대편으로.
+     뷰포트 폭을 못 읽는 상황(SSR 직후 등)에선 뒤집지 않는다 — 0으로 읽혀 늘 뒤집히면
+     멀쩡한 자리에서도 왼쪽으로 튄다 */
+  const viewport = typeof window !== 'undefined' && window.innerWidth > 0 ? window.innerWidth : Infinity
+  const flipped = x + reach + cardWidth > viewport - 16
+  /* x는 hover로 1.1배 커진 포스터의 오른쪽 끝이라, 왼쪽 끝은 폭의 1.1배만큼 왼쪽이다 */
+  const left = flipped ? x - posterWidth * 1.1 - reach - cardWidth : x + reach
+  const border = '1px solid var(--color-border)'
 
   // position:fixed는 transform 있는 조상(도크 슬라이드 패널) 기준이 되어 잘리므로
   // body로 portal해 진짜 뷰포트 기준으로 띄운다
@@ -133,10 +152,10 @@ export function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number
       style={{
         position: 'fixed',
         top: y,
-        left: adjustedX,
+        left,
         width: cardWidth,
         background: 'var(--color-surface-card)',
-        border: '1px solid var(--color-border)',
+        border,
         borderRadius: 16,
         boxShadow: '0 12px 40px rgba(0,0,0,0.48)',
         zIndex: 999999,
@@ -147,6 +166,13 @@ export function HoverPopup({ movie, x, y }: { movie: Movie; x: number; y: number
         gap: 'var(--spacing-2)',
       }}
     >
+      {/* 꼬리 — 포스터 쪽을 가리킨다. 세로 위치는 포스터 상단에서 조금 내린 지점 */}
+      <BubbleTail
+        dir={flipped ? 'right' : 'left'}
+        offset={TAIL_TOP}
+        background="var(--color-surface-card)"
+        border={border}
+      />
       <span
         style={{
           fontSize: 'var(--text-subtitle)',
@@ -247,7 +273,7 @@ function MovieCard({
       const rect = cardRef.current?.getBoundingClientRect()
       if (rect) {
         setHovered(true)
-        setPopupPos({ x: rect.right + 8, y: rect.top })
+        setPopupPos({ x: rect.right + width * 0.05, y: rect.top })
       }
     }, 400)
   }
@@ -335,7 +361,7 @@ function MovieCard({
       </RevealItem>
 
       {popupPos && isDesktop && (
-        <HoverPopup movie={movie} x={popupPos.x} y={popupPos.y} />
+        <HoverPopup movie={movie} x={popupPos.x} y={popupPos.y} posterWidth={width} />
       )}
     </>
   )
