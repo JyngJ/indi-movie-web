@@ -8,6 +8,7 @@ import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { withFlag } from '@/lib/nations'
 import type { Movie } from '@/types/api'
 import { GenreChip, SectionHeader, CardContainer, ScrollNavButton } from '@/components/primitives'
+import type { SectionAnalytics } from '@/lib/curation/sectionRuns'
 import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
 import { Carousel, CarouselContent, CarouselItem, useCarousel, RevealItem, RevealGroup } from '@/components/motion'
 
@@ -31,9 +32,10 @@ interface CurationSectionRowProps {
   /** compact: 외부 여백 없이 flex item으로 렌더 — 1~2편 섹션을 2열로 묶을 때 사용 */
   compact?: boolean
   id?: string
-  /** run1/run2 배열 내 논리적 순번(0-based) — dwell/클릭 이벤트에 실어 재배치 전후 CTR 비교에 사용.
-   *  화면 최상단 기준 절대 순번이 아님(개인화·기념일·특별전은 이 번호 체계 밖) — run 내 상대 순번으로만 해석할 것 */
-  position?: number
+  /** dwell 이벤트에 함께 실을 섹션 메타 (position·run·section_title·movie_count 등).
+   *  클릭 이벤트에도 같은 값이 실리도록 호출부에서 동일 객체를 쓴다 — 두 이벤트의 속성이
+   *  어긋나면 PostHog에서 join이 안 된다 (예전엔 dwell과 click의 position이 실제로 달랐다). */
+  analytics?: SectionAnalytics
 }
 
 const POSTER_SIZE = {
@@ -346,7 +348,7 @@ export function CurationSectionRow({
   noHeader = false,
   compact = false,
   id,
-  position,
+  analytics,
 }: CurationSectionRowProps) {
   const { width, height } = isDesktop ? POSTER_SIZE.desktop : POSTER_SIZE.mobile
   const scaleBleed = Math.ceil(height * 0.04)
@@ -354,7 +356,7 @@ export function CurationSectionRow({
 
   const sectionRef = useRef<HTMLElement | null>(null)
   const setSectionRef = (node: HTMLElement | null) => { sectionRef.current = node }
-  useSectionDwellTracking(sectionRef, id, position != null ? { position } : undefined)
+  useSectionDwellTracking(sectionRef, id, analytics)
 
   if (movies.length === 0) return null
 
