@@ -931,6 +931,29 @@ export default function FilmsPage() {
           movies: releaseAnniversaryFilms.map((f) => f.movie),
         }] : []
 
+        // 러닝타임 — 100분 이내 / 3시간 이상, 활성 상영작만, 3편 미만 숨김
+        function runtimeSection(
+          listId: string, nameKo: string, description: string,
+          match: (runtime: number) => boolean, sort: (a: number, b: number) => number,
+        ): AnySection[] {
+          const films = movies
+            .filter((m) => m.runtimeMinutes != null && match(m.runtimeMinutes) && activeMovieIdSet.has(m.id))
+            .sort((a, b) => sort(a.runtimeMinutes!, b.runtimeMinutes!))
+          if (films.length < 3) return []
+          return [{
+            listId, nameKo, description,
+            displayMode: 'default',
+            movieCaptions: new Map(films.map((m) => [m.id, `${m.runtimeMinutes}분`])),
+            movies: films,
+          }]
+        }
+        const rtShortRuntime = runtimeSection(
+          'realtime_short_runtime', '퇴근 후 부담 없는, 100분 이내',
+          '짧아서 더 오래 남는 영화들이에요', (r) => r <= 100 && r >= 60, (a, b) => a - b)
+        const rtLongRuntime = runtimeSection(
+          'realtime_long_runtime', '3시간, 각오하고 보는 영화',
+          '긴 호흡만이 데려갈 수 있는 곳이 있어요', (r) => r >= 180, (a, b) => b - a)
+
         // 특별전 interleave 준비
         const [special0, special1] = specialDirectorSections
 
@@ -1077,8 +1100,10 @@ export default function FilmsPage() {
           ...rtBookingRank, ...rtViewRank,
           ...rtWeekend, ...rtNew, ...rtLateNight,
           ...rtSolo,
+          ...rtShortRuntime,
           ...rtReleaseAnniversary,
           ...themes,
+          ...rtLongRuntime,
           ...awards,
           ...seasonal,
           ...decades, ...critics, ...movements,

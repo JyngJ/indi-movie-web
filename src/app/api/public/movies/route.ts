@@ -7,7 +7,7 @@ export async function GET() {
   const supabase = createSupabaseAdminClient()
   const { data, error } = await supabase
     .from('movies')
-    .select('id,title,original_title,year,poster_url,genre,director,nation,kmdb_id,tmdb_id,rating')
+    .select('id,title,original_title,year,poster_url,genre,director,nation,kmdb_id,tmdb_id,rating,runtime')
     .order('title')
 
   if (error) return Response.json({ error: error.message }, { status: 500 })
