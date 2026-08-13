@@ -39,3 +39,26 @@ export function getAnniversaryFilms(
   films.sort((a, b) => b.age - a.age)
   return films.length >= MIN_ANNIVERSARY_FILMS ? films : []
 }
+
+/**
+ * movieId → 주년(10의 배수) 맵.
+ *
+ * 섹션용 getAnniversaryFilms와 달리 MIN_ANNIVERSARY_FILMS 게이트가 없다 —
+ * 주년은 이제 독립 섹션이 아니라 포스터 칩이라, 그날 몇 편이든 붙으면 된다.
+ * 섹션은 한 줄을 통째로 차지하는 값이 있어야 성립하지만 칩은 아니다.
+ */
+export function buildAnniversaryAges(
+  movies: Movie[],
+  activeMovieIds: ReadonlySet<string>,
+  currentYear: number,
+): Map<string, number> {
+  const ages = new Map<string, number>()
+  for (const movie of movies) {
+    if (!activeMovieIds.has(movie.id)) continue
+    if (!movie.year) continue
+    const age = currentYear - movie.year
+    if (age < MIN_AGE || age % 10 !== 0) continue
+    ages.set(movie.id, age)
+  }
+  return ages
+}

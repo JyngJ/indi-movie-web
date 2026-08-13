@@ -7,7 +7,7 @@ import { PosterThumb } from '@/components/domain/PosterThumb'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { withFlag } from '@/lib/nations'
 import type { Movie } from '@/types/api'
-import { GenreChip, SectionHeader, CardContainer, ScrollNavButton } from '@/components/primitives'
+import { GenreChip, PosterChip, SectionHeader, CardContainer, ScrollNavButton } from '@/components/primitives'
 import type { SectionAnalytics } from '@/lib/curation/sectionRuns'
 import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
 import { Carousel, CarouselContent, CarouselItem, useCarousel, RevealItem, RevealGroup } from '@/components/motion'
@@ -24,6 +24,8 @@ interface CurationSectionRowProps {
   movieCaptions?: Map<string, string>
   /** true면 포스터 좌하단에 1-based 순위(배열 순서)를 얹는다 — 랭킹 섹션용 */
   showRank?: boolean
+  /** movieId → 개봉 주년(10의 배수) — 포스터 좌상단 칩. 섹션 종류와 무관하게 붙는다 */
+  posterAnniversaries?: Map<string, number>
   /** movieId → 하단 정보 전체 커스텀 (감독, 장르, 연도 등 기본 렌더를 완전히 덮어씀) */
   customBottomInfos?: Map<string, React.ReactNode>
   onMovieClick?: (movieId: string) => void
@@ -216,6 +218,7 @@ function MovieCard({
   customBottomInfo,
   onClick,
   rank,
+  anniversaryAge,
   revealIndex,
 }: {
   movie: Movie
@@ -228,6 +231,8 @@ function MovieCard({
   onClick?: () => void
   /** 1-based 순위 — 주면 포스터 좌하단에 스크림 + 큰 숫자를 얹는다 */
   rank?: number
+  /** 개봉 주년(10의 배수) — 주면 포스터 좌상단에 칩 */
+  anniversaryAge?: number
   /** 행 안에서의 순번 — 등장 모션 계단 간격용 */
   revealIndex: number
 }) {
@@ -307,19 +312,22 @@ function MovieCard({
           )}
           {rank != null && <span className="sr-only">{rank}위</span>}
 
+          {/* 개봉 주년 — 좌상단. films 탭 포스터에서 우상단은 D-N, 좌하단은 순위가 쓰므로
+              남는 모서리가 여기다. 예전엔 "개봉 N주년, 다시 스크린에" 섹션을 통째로 차지했는데
+              한 줄을 쓸 만한 정보가 아니라 칩으로 내렸다 — 대신 어느 섹션에 나오든 따라붙는다 */}
+          {anniversaryAge != null && (
+            <PosterChip corner="top-left" tone="primary" label={`개봉 ${anniversaryAge}주년`}>
+              {anniversaryAge}주년
+            </PosterChip>
+          )}
+
           {daysLeft != null && (
-            <span style={{
-              position: 'absolute', top: 6, right: 6,
-              padding: '8px 12px',
-              borderRadius: 'var(--radius-badge)',
-              fontSize: 'var(--text-meta)', fontWeight: 700, lineHeight: 1,
-              color: 'var(--color-on-accent)',
-              backgroundColor: daysLeft === 0 ? 'var(--color-error)' : daysLeft === 1 ? 'var(--color-warning)' : '#78716C',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
-              whiteSpace: 'nowrap',
-            }}>
+            <PosterChip
+              corner="top-right"
+              tone={daysLeft === 0 ? 'error' : daysLeft === 1 ? 'warning' : 'neutral'}
+            >
               {daysLeft === 0 ? '오늘' : `D-${daysLeft}`}
-            </span>
+            </PosterChip>
           )}
         </div>
 
@@ -343,6 +351,7 @@ export function CurationSectionRow({
   posterBadges,
   movieCaptions,
   showRank = false,
+  posterAnniversaries,
   customBottomInfos,
   onMovieClick,
   noHeader = false,
@@ -449,6 +458,7 @@ export function CurationSectionRow({
           posterBadges={posterBadges}
           movieCaptions={movieCaptions}
           showRank={showRank}
+          posterAnniversaries={posterAnniversaries}
           customBottomInfos={customBottomInfos}
           onMovieClick={onMovieClick}
         />
@@ -460,7 +470,7 @@ export function CurationSectionRow({
 /* ── 캐러셀 트랙 — embla 상태(끝 도달)를 읽어 가장자리 페이드·화살표를 그린다 ── */
 function CurationRowTrack({
   movies, width, height, gap, scaleBleed, isDesktop, posterMidY,
-  posterBadges, movieCaptions, showRank, customBottomInfos, onMovieClick,
+  posterBadges, movieCaptions, showRank, posterAnniversaries, customBottomInfos, onMovieClick,
 }: {
   movies: Movie[]
   width: number
@@ -472,6 +482,7 @@ function CurationRowTrack({
   posterBadges?: Map<string, number>
   movieCaptions?: Map<string, string>
   showRank?: boolean
+  posterAnniversaries?: Map<string, number>
   customBottomInfos?: Map<string, React.ReactNode>
   onMovieClick?: (movieId: string) => void
 }) {
@@ -537,6 +548,7 @@ function CurationRowTrack({
               daysLeft={posterBadges?.get(movie.id)}
               caption={movieCaptions?.get(movie.id)}
               rank={showRank ? i + 1 : undefined}
+              anniversaryAge={posterAnniversaries?.get(movie.id)}
               customBottomInfo={customBottomInfos?.get(movie.id)}
               onClick={onMovieClick ? () => onMovieClick(movie.id) : undefined}
             />
