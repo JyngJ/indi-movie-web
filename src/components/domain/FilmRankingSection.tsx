@@ -137,7 +137,7 @@ function RankingCard({ entry, movie, rank, isDesktop, gapRight, onClick, revealI
   function onMouseEnter() {
     timerRef.current = setTimeout(() => {
       const rect = cardRef.current?.getBoundingClientRect()
-      if (rect) { setHovered(true); setPopupPos({ x: rect.right + 8, y: rect.top }) }
+      if (rect) { setHovered(true); setPopupPos({ x: rect.right + width * 0.05, y: rect.top }) }
     }, 180)
   }
   function onMouseLeave() {
@@ -196,7 +196,7 @@ function RankingCard({ entry, movie, rank, isDesktop, gapRight, onClick, revealI
       </RevealItem>
 
       {popupPos && isDesktop && movie && (
-        <HoverPopup movie={movie} x={popupPos.x} y={popupPos.y} />
+        <HoverPopup movie={movie} x={popupPos.x} y={popupPos.y} posterWidth={width} />
       )}
     </>
   )
