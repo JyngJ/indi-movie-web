@@ -635,3 +635,48 @@ img {
 @media (prefers-reduced-motion: reduce) {
   .booking-cta-spin { animation: none; }
 }
+
+/* 스켈레톤 → 콘텐츠 교체 시 부드러운 등장 (skeleton reveal) */
+@keyframes reveal-rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+.reveal-rise {
+  animation: reveal-rise 280ms ease both;
+}
+
+/* 툴팁 — 등장만 지연 + 페이드, 퇴장은 즉시 언마운트 */
+.tooltip-in {
+  animation: tipIn 160ms ease 80ms both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-rise,
+  .tooltip-in {
+    animation: none;
+  }
+}
+
+/* 설정 모달 진입 — 키프레임은 마운트 시 항상 처음부터 재생되므로
+   상태 플립(rAF) 방식과 달리 첫 페인트 타이밍 레이스가 없다 */
+@keyframes modal-backdrop-in {
+  from { background-color: rgba(0, 0, 0, 0); }
+}
+@keyframes modal-card-in {
+  from { opacity: 0; transform: scale(0.96) translateY(12px); }
+}
+@keyframes modal-card-in-mobile {
+  from { opacity: 0; transform: translateY(24px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal-backdrop-in,
+  .modal-card-in,
+  .modal-card-in-mobile {
+    animation: none !important;
+  }
+}
+/* fill은 backwards만 — forwards로 잡아두면 종료 후에도 애니메이션 값이 살아서
+   닫힘 transition(인라인 스타일 변경)을 덮어쓴다 */
+.modal-backdrop-in { animation: modal-backdrop-in 220ms ease backwards; }
+.modal-card-in { animation: modal-card-in 220ms cubic-bezier(0.32,0.72,0,1) backwards; }
+.modal-card-in-mobile { animation: modal-card-in-mobile 220ms cubic-bezier(0.32,0.72,0,1) backwards; }

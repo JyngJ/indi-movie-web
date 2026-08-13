@@ -375,14 +375,14 @@ export function SettingsAboutPage() {
               <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4 }}>{member.role}</div>
             </div>
             {member.linkedin && (
-              <button onClick={() => window.open(member.linkedin!, '_blank', 'noopener')} style={{ width: 32, height: 32, borderRadius: 8, border: 'none', backgroundColor: '#0A66C2', color: 'var(--color-on-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, minHeight: 'unset' }}>
+              <IconButton size={32} aria-label={`${member.name} 링크드인`} onClick={() => window.open(member.linkedin!, '_blank', 'noopener')} style={{ backgroundColor: '#0A66C2', color: 'var(--color-on-accent)' }}>
                 <IcoLinkedIn />
-              </button>
+              </IconButton>
             )}
             {member.github && (
-              <button onClick={() => window.open(member.github!, '_blank', 'noopener')} style={{ width: 32, height: 32, borderRadius: 8, border: 'none', backgroundColor: '#24292e', color: 'var(--color-on-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, minHeight: 'unset' }}>
+              <IconButton size={32} aria-label={`${member.name} 깃허브`} onClick={() => window.open(member.github!, '_blank', 'noopener')} style={{ backgroundColor: '#24292e', color: 'var(--color-on-accent)' }}>
                 <IcoGitHub />
-              </button>
+              </IconButton>
             )}
           </div>
         ))}
@@ -415,6 +415,25 @@ export function SettingsPanel({
   const [page, setPage] = useState<Page>('main')
   const [reportSuccess, setReportSuccess] = useState(false)
 
+  // 열림/닫힘 전환 — 진입은 CSS 키프레임(마운트 시 항상 재생), 퇴장은
+  // closing 상태로 transition을 걸고 끝난 뒤 언마운트한다.
+  // 진입 애니메이션이 활성인 동안엔 그 속성들에 transition이 생성되지 않으므로,
+  // 애니메이션이 끝나면(entered) 클래스를 떼서 퇴장 transition 경로를 비워 둔다.
+  const [render, setRender] = useState(isOpen)
+  const [closing, setClosing] = useState(false)
+  const [entered, setEntered] = useState(false)
+  useEffect(() => {
+    if (isOpen) {
+      setRender(true)
+      setClosing(false)
+      return
+    }
+    if (!render) return
+    setClosing(true)
+    const timer = setTimeout(() => { setRender(false); setClosing(false); setEntered(false) }, 220)
+    return () => clearTimeout(timer)
+  }, [isOpen, render])
+
   useLockBodyScroll(isOpen)
 
   // 열릴 때마다 요청된 첫 페이지로 진입 — 좌측 레일 '신고' 버튼은 바로 report로 들어옴
@@ -437,11 +456,14 @@ export function SettingsPanel({
     about: '만든 사람',
   }
 
-  if (!isOpen) return null
+  if (!render) return null
 
   const content = (
     <div
       onClick={e => e.stopPropagation()}
+      /* 종료 후 클래스 제거는 값 변화가 없어(backwards fill) 안전하다 */
+      className={entered ? undefined : isDesktopLayout ? 'modal-card-in' : 'modal-card-in-mobile'}
+      onAnimationEnd={e => { if (e.animationName.startsWith('modal-card-in')) setEntered(true) }}
       style={{
         width: isDesktopLayout ? 400 : '100%',
         maxWidth: isDesktopLayout ? 'calc(100vw - 48px)' : undefined,
@@ -452,6 +474,11 @@ export function SettingsPanel({
         borderRadius: isDesktopLayout ? 20 : 0,
         boxShadow: 'var(--shadow-sheet)',
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
+        transform: closing
+          ? (isDesktopLayout ? 'scale(0.96) translateY(12px)' : 'translateY(24px)')
+          : 'none',
+        opacity: closing ? 0 : 1,
+        transition: 'transform 220ms cubic-bezier(0.32,0.72,0,1), opacity 180ms ease',
       }}
     >
       <SettingsHeader
@@ -481,11 +508,13 @@ export function SettingsPanel({
     <div
       role="dialog"
       aria-modal="true"
+      className={entered ? undefined : 'modal-backdrop-in'}
       onClick={handleClose}
       style={{
         position: 'fixed', inset: 0, zIndex: 2100,  /* absolute면 스크롤된 컨테이너 기준으로 떠서 이탈 — 뷰포트 고정 */
         height: '100dvh',
-        backgroundColor: 'rgba(0,0,0,0.38)',
+        backgroundColor: closing ? 'rgba(0,0,0,0)' : 'rgba(0,0,0,0.38)',
+        transition: 'background-color 220ms ease',
         display: 'flex',
         alignItems: isDesktopLayout ? 'center' : 'stretch',
         justifyContent: isDesktopLayout ? 'center' : 'stretch',
