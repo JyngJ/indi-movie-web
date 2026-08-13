@@ -25,6 +25,7 @@ import { useCurrentLocationRegion } from '@/hooks/useCurrentLocationRegion'
 import { getFilmsTabCurationSections, SECTION_GROUP } from '@/lib/curation/filmsTabLists'
 import { mergePopularRanking } from '@/lib/curation/popularRanking'
 import { buildSectionAnalytics, computeRunStartIndexes } from '@/lib/curation/sectionRuns'
+import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
 import { getAnniversaryFilms } from '@/lib/curation/getAnniversaryFilms'
 import { formatAlmostSoldOutCaption, getAlmostSoldOutFilms } from '@/lib/curation/getAlmostSoldOutFilms'
 import { dayOfWeekLabel, formatLateNightCaption, getLateNightFilms } from '@/lib/curation/getLateNightFilms'
@@ -152,12 +153,29 @@ function LazyBlock({ isDesktop, children }: { isDesktop: boolean; children: Reac
    지역 필터 무관, 전국에서 가장 임박한 영화제 1개 ── */
 function FestivalBannerCard({ festival, today, isDesktop, onClick }: { festival: Festival; today: string; isDesktop: boolean; onClick: () => void }) {
   const status = getFestivalStatus(festival.startDate, festival.endDate, today)
+  /* 상영작 탭 최상단 — 여길 눌러 나가는 비율이 아래 큐레이션 행들의 노출 기회를 깎는다.
+     순서 논의에서 "배너가 위에 있어도 되는가"를 판단하려면 계측이 필요하다. */
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const analytics = {
+    ...buildSectionAnalytics({
+      listId: 'festival_banner', sectionTitle: '주목할 영화제',
+      run: 'fixed_top', movieCount: 0, layout: 'banner',
+    }),
+    festival_slug: festival.slug,
+    festival_name: festival.name,
+    festival_status: status,
+  }
+  useSectionDwellTracking(sectionRef, 'festival_banner', analytics)
   const dateLabel = getFestivalDateLabel(status, festival.startDate, festival.endDate, today)
+  const handleBannerClick = () => {
+    trackEvent('curation movie selected', { ...analytics, target_type: 'festival' })
+    onClick()
+  }
   // 외부 배너 URL이 죽는 경우(원본 삭제·403)가 실제로 있었음 — 깨진 이미지 띠 대신 통째 숨김
   const [bannerBroken, setBannerBroken] = useState(false)
 
   return (
-    <div>
+    <div ref={sectionRef}>
       <SectionHeader
         title="주목할 영화제"
         isDesktop={isDesktop}
@@ -168,7 +186,7 @@ function FestivalBannerCard({ festival, today, isDesktop, onClick }: { festival:
           그 안에서 데스크톱만 고정폭으로 중앙 정렬(모바일은 100%라 여백 자체가 없음) */}
       {festival.bannerUrl && !bannerBroken && (
         <button
-          onClick={onClick}
+          onClick={handleBannerClick}
           style={{
             display: 'block', width: '100%', padding: 0, margin: '12px 0 0', border: 'none',
             backgroundColor: isDesktop ? 'var(--color-surface-raised)' : 'transparent', cursor: 'pointer', minHeight: 'auto',
@@ -876,7 +894,7 @@ export default function FilmsPage() {
         // 특별전 interleave 준비
         const [special0, special1] = specialDirectorSections
 
-        function renderSpecial(s: typeof specialDirectorSections[number] | undefined) {
+        function renderSpecial(s: typeof specialDirectorSections[number] | undefined, slot?: number) {
           if (!s) return null
           const dist = userLocation
             ? haversineKm(userLocation.lat, userLocation.lng, s.theater.lat, s.theater.lng)
@@ -886,7 +904,7 @@ export default function FilmsPage() {
             <DirectorSpecialSection
               key={`special_${s.directorName}_${s.theater.id}`}
               directorName={s.directorName} theater={s.theater} films={s.films}
-              distSuffix={distSuffix} isDesktop={isDesktop}
+              distSuffix={distSuffix} isDesktop={isDesktop} slot={slot}
               onTheaterClick={(id) => router.push(`/films/theater/${id}`)}
               onMovieClick={handleMovieClick}
             />
@@ -1087,7 +1105,7 @@ export default function FilmsPage() {
             {renderAnniversaries(anniversarySections)}
 
             {/* 3. 특별전 #0 */}
-            {renderSpecial(special0)}
+            {renderSpecial(special0, 0)}
 
             {/* 인스타그램에서 추천한 그 영화 — run1/run2 순번 체계 밖(개인화·기념일·특별전과 동일),
                 발견 성격이라 시의성 run1보다 위, 상단권에 배치 */}
@@ -1108,7 +1126,7 @@ export default function FilmsPage() {
             {renderRun(run1b, 'run1b', startRun1b)}
 
             {/* 4. 특별전 #1 (interleaved) */}
-            {special1 && <LazyBlock isDesktop={isDesktop}>{renderSpecial(special1)}</LazyBlock>}
+            {special1 && <LazyBlock isDesktop={isDesktop}>{renderSpecial(special1, 1)}</LazyBlock>}
 
             {/* 5~10. 주말·신작·심야·단독 · 거장/수상 · 시기별 · 연도별 · 평론가 · 무브먼트 */}
             {renderRun(run2, 'run2', startRun2)}

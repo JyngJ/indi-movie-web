@@ -34,6 +34,9 @@ export type AnalyticsEventName =
   | 'movie theater selected'
   | 'curation movie selected'
   | 'curation section dwell'
+  /** 섹션 안에서 영화가 아닌 대상을 누른 경우 — 특별전의 극장, 스포트라이트의 감독 */
+  | 'curation theater selected'
+  | 'curation director selected'
   | 'personalized section viewed'
   | 'personalized movie clicked'
   | 'director theaters map opened'

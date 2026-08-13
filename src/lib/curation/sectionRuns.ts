@@ -17,6 +17,15 @@ export interface RunnableSection {
   movies: unknown[]
 }
 
+/** 섹션이 실제로 그려지는 모양 */
+export type SectionLayout =
+  | 'row'      // 가로 스크롤 포스터 행
+  | 'card'     // 2편 이하 카드 문법
+  | 'grid'     // 전체 상영작 그리드
+  | 'banner'   // 영화제 배너
+  | 'hero'     // 인스타 히어로 카드
+  | 'avatar'   // 감독 아바타 행
+
 export interface SectionAnalytics {
   source: 'films_tab'
   list_id: string
@@ -26,8 +35,9 @@ export interface SectionAnalytics {
   /** run 체계 안의 순번. 상단 고정 섹션(개인화·기념일·특별전)은 없음 */
   position?: number
   movie_count: number
-  /** 'row' = 가로 스크롤 행 · 'card' = 2편 이하 카드 문법 */
-  layout: 'row' | 'card'
+  /** 행 문법 — 같은 섹션도 그날 편수에 따라 row/card로 갈리므로 어느 모양일 때
+   *  잘 눌리는지 가를 수 있어야 한다 */
+  layout: SectionLayout
   /** 섹션별 추가 속성(개인화의 reason_type 등)을 얹을 수 있게 열어 둔다 */
   [key: string]: string | number | undefined
 }
@@ -44,7 +54,9 @@ export function buildSectionAnalytics(args: {
   run: string
   position?: number
   movieCount: number
-  compact: boolean
+  /** 행 문법. 생략하면 compact 여부로 row/card를 고른다 */
+  layout?: SectionLayout
+  compact?: boolean
 }): SectionAnalytics {
   return {
     source: 'films_tab',
@@ -53,7 +65,7 @@ export function buildSectionAnalytics(args: {
     run: args.run,
     ...(args.position != null ? { position: args.position } : {}),
     movie_count: args.movieCount,
-    layout: args.compact ? 'card' : 'row',
+    layout: args.layout ?? (args.compact ? 'card' : 'row'),
   }
 }
 

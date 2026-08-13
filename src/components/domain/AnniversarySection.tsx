@@ -1,11 +1,15 @@
 'use client'
 
+import { useRef } from 'react'
 import type { Movie } from '@/types/api'
 import type { AnniversaryEventType } from '@/lib/curation/directorAnniversaries'
 import { CurationSectionRow } from '@/components/domain/CurationSectionRow'
 import { PosterThumb } from '@/components/domain/PosterThumb'
 import { RevealItem } from '@/components/motion'
+import { trackEvent } from '@/lib/analytics/client'
 import { GenreChip } from '@/components/primitives'
+import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
+import { buildSectionAnalytics } from '@/lib/curation/sectionRuns'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 
 interface Props {
@@ -42,6 +46,19 @@ export function AnniversarySection({
   month, day,
   films, isDesktop, compact = false, onMovieClick,
 }: Props) {
+  /* 상단 고정 섹션이라 run 순번 밖이다. 순서 재배치 논의에 쓰려면 체류·클릭이 다른 행과
+     같은 축으로 찍혀야 해서 같은 메타를 싣는다. */
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const analytics = {
+    ...buildSectionAnalytics({
+      listId: 'anniversary', sectionTitle: sectionTitle,
+      run: 'fixed_top', movieCount: films.length, compact,
+    }),
+    event_type: eventType,
+    person: nameKo,
+  }
+  useSectionDwellTracking(sectionRef, films.length > 0 ? 'anniversary' : undefined, analytics)
+
   if (films.length === 0) return null
 
   const { bg, border, text } = accentColors(eventType)
@@ -93,7 +110,7 @@ export function AnniversarySection({
   if (compact) {
     // 1~2편 — 포스터 + 정보 inline (스크롤 없음)
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+      <div ref={sectionRef} style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
         {header}
         <div style={{
           display: 'flex', gap: 12, alignItems: 'flex-start',
@@ -108,7 +125,10 @@ export function AnniversarySection({
               key={film.id}
               preset="slide"
               staggerIndex={i}
-              onClick={onMovieClick ? () => onMovieClick(film.id) : undefined}
+              onClick={onMovieClick ? () => {
+                trackEvent('curation movie selected', { ...analytics, movie_id: film.id, movie_title: film.title })
+                onMovieClick(film.id)
+              } : undefined}
               style={{
                 display: 'flex', gap: 8, alignItems: 'flex-start', flex: 1, minWidth: 0,
                 cursor: onMovieClick ? 'pointer' : undefined,
@@ -145,7 +165,7 @@ export function AnniversarySection({
   return (
     /* 섹션 리듬은 모바일 32 · PC 48 — 다른 섹션(CurationSectionRow·특별전)과 같은 값.
        예전엔 모바일만 24라 기념일 위에서만 간격이 좁았다. */
-    <div style={{ paddingTop: isDesktop ? 48 : 32 }}>
+    <div ref={sectionRef} style={{ paddingTop: isDesktop ? 48 : 32 }}>
       <div style={{ margin: '0 var(--gutter-sheet)' }}>{header}</div>
       <div style={{
         margin: '0 var(--gutter-sheet)',
@@ -156,7 +176,13 @@ export function AnniversarySection({
         <CurationSectionRow
           title=""
           movies={films} isDesktop={isDesktop}
-          onMovieClick={onMovieClick}
+          onMovieClick={onMovieClick ? (movieId) => {
+            trackEvent('curation movie selected', {
+              ...analytics, movie_id: movieId,
+              movie_title: films.find((f) => f.id === movieId)?.title,
+            })
+            onMovieClick(movieId)
+          } : undefined}
           noHeader
         />
       </div>
