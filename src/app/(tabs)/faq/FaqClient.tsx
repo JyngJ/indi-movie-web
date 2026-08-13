@@ -52,10 +52,10 @@ export function FaqClient({ sections }: { sections: FaqSection[] }) {
         }}
       >
         {sections.map((section) => (
-          <section key={section.title} style={{ marginTop: 24 }}>
+          <section key={section.title} style={{ marginTop: 56 }}>
             <h2
               className="display-h2"
-              style={{ color: 'var(--color-text-primary)', margin: '0 0 4px' }}
+              style={{ color: 'var(--color-text-primary)', margin: '0 0 8px' }}
             >
               {section.title}
             </h2>

@@ -95,8 +95,11 @@ const footerDot: React.CSSProperties = {
 /* ── 설정 메인 ── */
 export function SettingsMainPage({
   onNavigate,
+  onExternalNav,
 }: {
   onNavigate: (page: Page) => void
+  /** FAQ처럼 별도 라우트로 나가는 링크 클릭 시 — 모달 컨텍스트에서는 패널을 닫는다 */
+  onExternalNav?: () => void
 }) {
   const row: React.CSSProperties = {
     display: 'flex', alignItems: 'center', gap: 12,
@@ -109,7 +112,7 @@ export function SettingsMainPage({
     <div style={{ flex: 1, overflowY: 'auto', backgroundColor: 'var(--color-surface-bg)', paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}>
       {/* 카드 2: 자주 묻는 질문 · 버그 리포트 */}
       <div style={{ margin: '12px 16px 0', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
-        <Link href="/faq" style={{ ...row, textDecoration: 'none' }}>
+        <Link href="/faq" style={{ ...row, textDecoration: 'none' }} onClick={onExternalNav}>
           <div style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-sub)" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/><circle cx="12" cy="12" r="10"/></svg>
           </div>
@@ -459,7 +462,7 @@ export function SettingsPanel({
       />
 
       {page === 'main' && (
-        <SettingsMainPage onNavigate={setPage} />
+        <SettingsMainPage onNavigate={setPage} onExternalNav={handleClose} />
       )}
       {page === 'report' && !reportSuccess && (
         <SettingsReportPage
