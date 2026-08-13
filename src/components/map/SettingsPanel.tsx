@@ -5,11 +5,12 @@ import { HeartHandshake } from 'lucide-react'
 import Link from 'next/link'
 import { useLockBodyScroll } from '@/hooks/useLockBodyScroll'
 import { Button, Chip, IconButton, Input } from '@/components/primitives'
+// 분류 목록은 API 화이트리스트(lib/reports/types)가 단일 소스 — UI 로컬 상수와 어긋나면
+// '기타' 외 전부 400으로 거부된다(실제로 발생했던 불일치).
+import { REPORT_CATEGORIES } from '@/lib/reports/types'
 
 export type SettingsPage = 'main' | 'report' | 'attribution' | 'about'
 type Page = SettingsPage
-
-const REPORT_CATEGORIES = ['지도 오류', '상영 정보 오류', '화면 깨짐', '기능 동작', '기타'] as const
 
 /* ── 아이콘 ── */
 const IcoChevronRight = () => (
@@ -94,8 +95,11 @@ const footerDot: React.CSSProperties = {
 /* ── 설정 메인 ── */
 export function SettingsMainPage({
   onNavigate,
+  onExternalNav,
 }: {
   onNavigate: (page: Page) => void
+  /** FAQ처럼 별도 라우트로 나가는 링크 클릭 시 — 모달 컨텍스트에서는 패널을 닫는다 */
+  onExternalNav?: () => void
 }) {
   const row: React.CSSProperties = {
     display: 'flex', alignItems: 'center', gap: 12,
@@ -106,8 +110,18 @@ export function SettingsMainPage({
   }
   return (
     <div style={{ flex: 1, overflowY: 'auto', backgroundColor: 'var(--color-surface-bg)', paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}>
-      {/* 카드 2: 버그 리포트 */}
+      {/* 카드 2: 자주 묻는 질문 · 버그 리포트 */}
       <div style={{ margin: '12px 16px 0', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
+        <Link href="/faq" style={{ ...row, textDecoration: 'none' }} onClick={onExternalNav}>
+          <div style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-sub)" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/><circle cx="12" cy="12" r="10"/></svg>
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>자주 묻는 질문</div>
+            <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4 }}>서비스 소개와 이용 안내</div>
+          </div>
+          <span style={{ color: 'var(--color-text-placeholder)' }}><IcoChevronRight /></span>
+        </Link>
         <button style={{ ...row, borderBottom: 'none' }} onClick={() => onNavigate('report')}>
           <div style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-sub)" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -155,13 +169,17 @@ export function ReportSuccessNotice() {
 
 /* ── 버그 리포트 ── */
 export function SettingsReportPage({
-  selectedMovieId, selectedTheaterName, onSuccess,
+  selectedMovieId, selectedTheaterName, initialCategory, onSuccess,
 }: {
   selectedMovieId?: string | null
   selectedTheaterName?: string
+  /** FAQ 등 외부 진입 시 분류 프리셀렉트 — 화이트리스트에 없는 값은 무시 */
+  initialCategory?: string
   onSuccess: () => void
 }) {
-  const [category, setCategory] = useState('')
+  const [category, setCategory] = useState(
+    initialCategory && (REPORT_CATEGORIES as readonly string[]).includes(initialCategory) ? initialCategory : ''
+  )
   const [detail, setDetail] = useState('')
   const [email, setEmail] = useState('')
   const [consent, setConsent] = useState(false)
@@ -444,7 +462,7 @@ export function SettingsPanel({
       />
 
       {page === 'main' && (
-        <SettingsMainPage onNavigate={setPage} />
+        <SettingsMainPage onNavigate={setPage} onExternalNav={handleClose} />
       )}
       {page === 'report' && !reportSuccess && (
         <SettingsReportPage

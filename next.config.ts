@@ -80,6 +80,9 @@ const nextConfig: NextConfig = {
     return [
       { source: '/theater/:id', destination: '/films/theater/:id', permanent: true },
       { source: '/films', destination: '/', permanent: true },
+      // /about → /faq : 소개 페이지를 따로 두지 않고 FAQ가 그 역할을 겸한다.
+      // 외부에서 관성적으로 /about을 치고 들어오는 트래픽을 받아준다.
+      { source: '/about', destination: '/faq', permanent: true },
       // 지도 딥링크 구제 — '/'가 상영작이 되기 전에 공유된 링크는 '/?theater=…&movie=…' 꼴이다.
       // 지도 파라미터를 읽는 MapView는 '/map'에서만 마운트되므로 루트로 오면 통째로 무시된다.
       // 쿼리스트링은 Next가 목적지로 그대로 넘겨준다. 영구가 아닌 이유는 루트의 의미가
