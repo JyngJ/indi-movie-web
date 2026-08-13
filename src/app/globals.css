@@ -675,6 +675,8 @@ img {
     animation: none !important;
   }
 }
-.modal-backdrop-in { animation: modal-backdrop-in 220ms ease both; }
-.modal-card-in { animation: modal-card-in 220ms cubic-bezier(0.32,0.72,0,1) both; }
-.modal-card-in-mobile { animation: modal-card-in-mobile 220ms cubic-bezier(0.32,0.72,0,1) both; }
+/* fill은 backwards만 — forwards로 잡아두면 종료 후에도 애니메이션 값이 살아서
+   닫힘 transition(인라인 스타일 변경)을 덮어쓴다 */
+.modal-backdrop-in { animation: modal-backdrop-in 220ms ease backwards; }
+.modal-card-in { animation: modal-card-in 220ms cubic-bezier(0.32,0.72,0,1) backwards; }
+.modal-card-in-mobile { animation: modal-card-in-mobile 220ms cubic-bezier(0.32,0.72,0,1) backwards; }

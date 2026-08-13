@@ -416,9 +416,12 @@ export function SettingsPanel({
   const [reportSuccess, setReportSuccess] = useState(false)
 
   // 열림/닫힘 전환 — 진입은 CSS 키프레임(마운트 시 항상 재생), 퇴장은
-  // closing 상태로 transition을 걸고 끝난 뒤 언마운트한다
+  // closing 상태로 transition을 걸고 끝난 뒤 언마운트한다.
+  // 진입 애니메이션이 활성인 동안엔 그 속성들에 transition이 생성되지 않으므로,
+  // 애니메이션이 끝나면(entered) 클래스를 떼서 퇴장 transition 경로를 비워 둔다.
   const [render, setRender] = useState(isOpen)
   const [closing, setClosing] = useState(false)
+  const [entered, setEntered] = useState(false)
   useEffect(() => {
     if (isOpen) {
       setRender(true)
@@ -427,7 +430,7 @@ export function SettingsPanel({
     }
     if (!render) return
     setClosing(true)
-    const timer = setTimeout(() => { setRender(false); setClosing(false) }, 220)
+    const timer = setTimeout(() => { setRender(false); setClosing(false); setEntered(false) }, 220)
     return () => clearTimeout(timer)
   }, [isOpen, render])
 
@@ -458,8 +461,9 @@ export function SettingsPanel({
   const content = (
     <div
       onClick={e => e.stopPropagation()}
-      /* fill-mode both가 살아 있으면 퇴장 transition을 덮어쓰므로 닫힐 땐 클래스 제거 */
-      className={closing ? undefined : isDesktopLayout ? 'modal-card-in' : 'modal-card-in-mobile'}
+      /* 종료 후 클래스 제거는 값 변화가 없어(backwards fill) 안전하다 */
+      className={entered ? undefined : isDesktopLayout ? 'modal-card-in' : 'modal-card-in-mobile'}
+      onAnimationEnd={e => { if (e.animationName.startsWith('modal-card-in')) setEntered(true) }}
       style={{
         width: isDesktopLayout ? 400 : '100%',
         maxWidth: isDesktopLayout ? 'calc(100vw - 48px)' : undefined,
@@ -504,7 +508,7 @@ export function SettingsPanel({
     <div
       role="dialog"
       aria-modal="true"
-      className={closing ? undefined : 'modal-backdrop-in'}
+      className={entered ? undefined : 'modal-backdrop-in'}
       onClick={handleClose}
       style={{
         position: 'fixed', inset: 0, zIndex: 2100,  /* absolute면 스크롤된 컨테이너 기준으로 떠서 이탈 — 뷰포트 고정 */
