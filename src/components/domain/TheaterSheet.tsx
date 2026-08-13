@@ -1158,6 +1158,7 @@ export function TheaterSheet({
           events={gvEvents}
           theaterName={theater.name}
           selectedIsoDate={selectedIsoDate}
+          showTopBorder
           onGvOpen={(id) => { setSelGvId(id); onExpand() }}
         />
       )}
