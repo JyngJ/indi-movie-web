@@ -5,7 +5,6 @@ import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { PosterThumb } from '@/components/domain/PosterThumb'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
-import type { SectionDisplayMode } from '@/lib/curation/filmsTabLists'
 import { withFlag } from '@/lib/nations'
 import type { Movie } from '@/types/api'
 import { GenreChip, SectionHeader, CardContainer, ScrollNavButton } from '@/components/primitives'
@@ -16,7 +15,6 @@ interface CurationSectionRowProps {
   title: string
   emoji?: React.ReactNode
   description?: string
-  displayMode: SectionDisplayMode
   movies: Movie[]
   isDesktop?: boolean
   /** movieId → 남은 일수 (0 = 오늘이 마지막) — 포스터 우상단 D-N 배지 */
@@ -303,7 +301,6 @@ export function CurationSectionRow({
   title,
   emoji,
   description,
-  displayMode,
   movies,
   isDesktop = false,
   posterBadges,
@@ -372,7 +369,7 @@ export function CurationSectionRow({
                   {movie.genre.slice(0, 1).map((g) => (
                     <GenreChip key={g}>{g}</GenreChip>
                   ))}
-                  <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)', fontWeight: 600 }}>{movie.year}</span>
+                  <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', fontWeight: 600 }}>{movie.year}</span>
                 </div>
               </div>
             </div>

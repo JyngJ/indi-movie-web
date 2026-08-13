@@ -4,21 +4,8 @@ import { useRef, useEffect, useState, useCallback } from 'react'
 import type { GvEvent } from '@/data/gv-events'
 import { gvEventTypeColor } from '@/lib/gv/adapter'
 import { scrollRailBy } from '@/lib/ui/railScroll'
+import { ScrollNavButton } from '@/components/primitives'
 
-const navBtn: React.CSSProperties = {
-  position: 'absolute', top: '50%',
-  transform: 'translateY(-50%)',
-  width: 32, height: 32, borderRadius: '50%',
-  border: 'none', cursor: 'pointer',
-  backgroundColor: 'color-mix(in srgb, var(--color-surface-card) 72%, transparent)',
-  backdropFilter: 'blur(8px)',
-  color: 'var(--color-text-body)',
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-  boxShadow: '0 1px 6px rgba(0,0,0,0.12)',
-  zIndex: 2,
-  padding: 0,
-  minHeight: 'auto',
-}
 
 function sortKey(time: string): number {
   const [datePart, timePart = '0:0'] = time.split(' ')
@@ -113,21 +100,19 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
       {/* Horizontal scroll + nav buttons */}
       {open && (
         <div style={{ position: 'relative' }}>
+          {/* 다른 가로 행과 같은 프리미티브 — 예전엔 같은 32px 원형 버튼을 인라인으로
+              다시 그려서 배경(반투명+blur)과 그림자만 미묘하게 달랐다 */}
           {canLeft && (
-            <button
-              style={{ ...navBtn, left: 6 }}
+            <ScrollNavButton
+              direction="left"
               onClick={() => scrollRailBy(scrollRef.current, -CARD_STEP * 2)}
-            >
-              <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-            </button>
+            />
           )}
           {canRight && (
-            <button
-              style={{ ...navBtn, right: 6 }}
+            <ScrollNavButton
+              direction="right"
               onClick={() => scrollRailBy(scrollRef.current, CARD_STEP * 2)}
-            >
-              <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-            </button>
+            />
           )}
           <div
             ref={scrollRef}
