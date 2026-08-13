@@ -387,9 +387,9 @@ export default function ComponentsPage() {
             </div>
           </Entry>
 
-          <Entry id="chip-overlay" name="포스터 오버레이 칩 — D-N / 거리 / 정보"
-            screens="상영작 탭 (종영 임박 D-N) · 큐레이션 시트 (거리 · 상영시각)" inline
-            source="src/components/domain/CurationSectionRow.tsx · CurationSheet.tsx — 정책: --text-meta(12)/700 · 8px 12px · --radius-badge · offset 6px">
+          <Entry id="chip-overlay" name="PosterChip — 포스터 오버레이 칩 (전 톤·전 모서리)"
+            screens="상영작 탭 (D-N · 개봉 주년) · GV 이벤트 · 극장 시트 (매진) · 인스타 추천 (영화제 상태)"
+            source="src/components/primitives/PosterChip.tsx — --text-meta(12)/700 · --comp-poster-chip-pad(8·12) · --radius-badge · offset 6">
             <PosterOverlayChips />
           </Entry>
 

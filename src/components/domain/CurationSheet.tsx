@@ -215,7 +215,7 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
       const rect = cardRef.current?.getBoundingClientRect()
       if (rect) {
         setHovered(true)
-        setPopupPos({ x: rect.right + 8, y: rect.top })
+        setPopupPos({ x: rect.right + posterSize.width * 0.05, y: rect.top })
       }
     }, 180)
   }
@@ -324,7 +324,7 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
       </button>
 
       {popupPos && desktop && item.movie && (
-        <HoverPopup movie={item.movie} x={popupPos.x} y={popupPos.y} />
+        <HoverPopup movie={item.movie} x={popupPos.x} y={popupPos.y} posterWidth={posterSize.width} />
       )}
     </>
   )

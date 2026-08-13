@@ -40,17 +40,23 @@
 
   /* ── Text (라이트 모드)
       역할          토큰           HEX
-      Primary       neutral/900    #1A1714
-      Body          neutral/700    #4A4540
-      Sub           neutral/600    #635D55
-      Caption/Meta  neutral/500    #857F76  (라이트·다크 동일)
-      Placeholder   neutral/400    #A9A39A
+      Primary       neutral/900    #0C0A08
+      Body          neutral/700    #58524B
+      Sub           neutral/600    #726B65
+      Caption/Meta  neutral/500    #8D8781  (라이트·다크 동일)
+      Placeholder   neutral/400    #A7A19A
+
+      주의 — 여기 적힌 HEX는 2.0 램프 실제값이다. 2026-08-14까지 1.0 값
+      (#1A1714 / #4A4540 / #635D55 / #857F76 / #A9A39A)이 그대로 남아 있어서,
+      토큰은 2.0인데 주석만 1.0인 상태로 오래 방치됐다. 피그마 컴포넌트에도 같은
+      1.0 색이 구 컬렉션 변수로 18건 남아 있었고, 어느 2.0 스탑으로 보낼지 판단할 때
+      결국 이 주석이 근거가 됐다 — 그러니 값 바꿀 때 주석도 같이 고칠 것.
   ── */
-  --color-text-primary:     var(--color-neutral-900);   /* #1A1714 */
-  --color-text-body:        var(--color-neutral-700);   /* #4A4540 */
-  --color-text-sub:         var(--color-neutral-600);   /* #635D55 */
-  --color-text-caption:     var(--color-neutral-500);   /* #857F76 */
-  --color-text-placeholder: var(--color-neutral-400);   /* #A9A39A */
+  --color-text-primary:     var(--color-neutral-900);   /* #0C0A08 */
+  --color-text-body:        var(--color-neutral-700);   /* #58524B */
+  --color-text-sub:         var(--color-neutral-600);   /* #726B65 */
+  --color-text-caption:     var(--color-neutral-500);   /* #8D8781 */
+  --color-text-placeholder: var(--color-neutral-400);   /* #A7A19A */
   --color-text-inverse:     #FFFFFF;
 
   /* 솔리드 accent(primary·semantic·브랜드 고정색) 위 텍스트·아이콘 —
@@ -200,6 +206,10 @@
 
   /* 포스터 썸네일 */
   --comp-poster-radius:        var(--radius-poster);   /* 8px — 기존 6px에서 8px로 흡수(의도된 변경) */
+  --comp-poster-chip-pad:      8px 12px;   /* 포스터 오버레이 칩 안쪽 여백 (AGENTS 칩 정책) */
+  --comp-poster-chip-offset:   6px;        /* 포스터 모서리에서 칩까지 */
+  --comp-director-chip-pad:    8px 12px 8px 8px;   /* 감독 칩 — 좌측은 아바타가 채워 8, 우측은 글자라 12 (피그마 2.0/MovieCard) */
+  --comp-director-chip-avatar: 24px;   /* 감독 칩 아바타 지름 */
   --comp-poster-sheet-radius:  var(--radius-poster);   /* 8px */
   --comp-poster-border:        rgba(0, 0, 0, 0.10);
 

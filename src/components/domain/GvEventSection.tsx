@@ -31,9 +31,12 @@ interface GvEventSectionProps {
   theaterName: string
   selectedIsoDate: string
   onGvOpen?: (id: string) => void
+  /** 위쪽 구분선 — 접힌 시트에선 바로 위 액션 버튼과 붙어 보여서 필요하다.
+   *  펼친 상태의 PC 도크(panelMode)는 DateBar가 이미 아래쪽 선을 그어서 겹친다 */
+  showTopBorder?: boolean
 }
 
-export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate, onGvOpen }: GvEventSectionProps) {
+export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate, onGvOpen, showTopBorder = false }: GvEventSectionProps) {
   const year = selectedIsoDate ? Number(selectedIsoDate.split('-')[0]) : new Date().getFullYear()
 
   const events = allEvents
@@ -72,7 +75,11 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
   const CARD_STEP = 148 + 8
 
   return (
-    <div style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-bg)' }}>
+    <div style={{
+      borderTop: showTopBorder ? '1px solid var(--color-border)' : undefined,
+      borderBottom: '1px solid var(--color-border)',
+      backgroundColor: 'var(--color-surface-bg)',
+    }}>
       {/* Header */}
       <button
         onClick={() => setOpen(o => !o)}
