@@ -26,7 +26,7 @@ import { getFilmsTabCurationSections, SECTION_GROUP } from '@/lib/curation/films
 import { mergePopularRanking } from '@/lib/curation/popularRanking'
 import { buildSectionAnalytics, computeRunStartIndexes } from '@/lib/curation/sectionRuns'
 import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
-import { getAnniversaryFilms } from '@/lib/curation/getAnniversaryFilms'
+import { buildAnniversaryAges } from '@/lib/curation/getAnniversaryFilms'
 import { formatAlmostSoldOutCaption, getAlmostSoldOutFilms } from '@/lib/curation/getAlmostSoldOutFilms'
 import { dayOfWeekLabel, formatLateNightCaption, getLateNightFilms } from '@/lib/curation/getLateNightFilms'
 import { formatWeekendCaption, getWeekendFilms } from '@/lib/curation/getWeekendFilms'
@@ -249,17 +249,52 @@ export default function FilmsPage() {
   }
   const userLocation = locCoords
   const [dropdownOpen, setDropdownOpen] = useState(false)
-  const [showScrollTop, setShowScrollTop] = useState(false)
+  const [scrolledPastHeader, setScrolledPastHeader] = useState(false)
+  const [revealedByScrollUp, setRevealedByScrollUp] = useState(false)
   const headerRef = useRef<HTMLElement>(null)
   const chipRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     const el = headerRef.current
     if (!el) return
-    const obs = new IntersectionObserver(([entry]) => setShowScrollTop(!entry.isIntersecting), { threshold: 0 })
+    const obs = new IntersectionObserver(([entry]) => setScrolledPastHeader(!entry.isIntersecting), { threshold: 0 })
     obs.observe(el)
     return () => obs.disconnect()
   }, [])
+
+  /* 모바일: 아래로 읽어 내려갈 땐 버튼을 숨기고, 위로 조금만 올리면 바로 띄운다.
+     "맨 위로"를 찾는 순간은 위로 되돌아갈 때뿐이라, 내려가는 내내 떠 있으면 콘텐츠만 가린다.
+     PC는 포인터로 정확히 피할 수 있고 화면도 넓어 기존대로 계속 띄운다. */
+  useEffect(() => {
+    if (isDesktop) {
+      setRevealedByScrollUp(false)
+      return
+    }
+    let lastY = window.scrollY
+    let upAccum = 0
+    /* setState는 상태가 실제로 바뀔 때만 — 스크롤마다 부르면 리렌더가 쏟아진다 */
+    let shown = false
+    const REVEAL_AFTER_PX = 24   // 스크롤 관성·바운스로 생기는 잔떨림은 무시
+
+    function onScroll() {
+      const y = window.scrollY
+      const dy = y - lastY
+      lastY = y
+      if (dy > 0) {
+        upAccum = 0
+        if (shown) { shown = false; setRevealedByScrollUp(false) }
+      } else if (dy < 0) {
+        upAccum -= dy
+        if (!shown && upAccum >= REVEAL_AFTER_PX) { shown = true; setRevealedByScrollUp(true) }
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [isDesktop])
+
+  /* 헤더가 화면 밖으로 나갔을 때만 후보 — 맨 위에서 바운스로 뜨는 걸 막는다 */
+  const showScrollTop = scrolledPastHeader && (isDesktop || revealedByScrollUp)
 
   useEffect(() => {
     const hash = window.location.hash.slice(1)
@@ -859,15 +894,10 @@ export default function FilmsPage() {
           movies: popularRanked.map((e) => movieById.get(e.movieId)!),
         }] : []
 
-        // 개봉 N주년 — 10의 배수 해를 맞은 활성 상영작, 3편 미만이면 빈 배열로 숨김
-        const releaseAnniversaryFilms = getAnniversaryFilms(movies, activeMovieIdSet, new Date().getFullYear())
-        const rtReleaseAnniversary: AnySection[] = releaseAnniversaryFilms.length > 0 ? [{
-          listId: 'realtime_release_anniversary',
-          nameKo: '개봉 N주년, 다시 스크린에',
-          description: '올해로 딱 떨어지는 주년을 맞아 돌아온 영화들이에요',
-          movieCaptions: new Map(releaseAnniversaryFilms.map((f) => [f.movie.id, `개봉 ${f.age}주년`])),
-          movies: releaseAnniversaryFilms.map((f) => f.movie),
-        }] : []
+        /* 개봉 N주년 — 섹션에서 포스터 칩으로 강등. 한 줄을 통째로 쓸 만한 정보가 아니었고,
+           칩으로 두면 어느 섹션에 나오든 따라붙어 노출 기회가 오히려 늘어난다.
+           3편 게이트도 뗐다 — 섹션은 편수가 모여야 성립하지만 칩은 한 편이어도 된다. */
+        const anniversaryAges = buildAnniversaryAges(movies, activeMovieIdSet, new Date().getFullYear())
 
         // 러닝타임 — 100분 이내 / 3시간 이상, 활성 상영작만, 3편 미만 숨김
         function runtimeSection(
@@ -967,6 +997,7 @@ export default function FilmsPage() {
                 movies={s.movies} isDesktop={isDesktop}
                 posterBadges={s.posterBadges} movieCaptions={s.movieCaptions}
                 showRank={s.showRank}
+                posterAnniversaries={anniversaryAges}
                 customBottomInfos={s.customBottomInfos}
                 analytics={analytics}
                 onMovieClick={(movieId) => {
@@ -1042,7 +1073,6 @@ export default function FilmsPage() {
         const run1: AnySection[] = [...rtLeaveNow, ...rtLastWeek, ...rtAlmostSoldOut]   // 시의성
         const run1b: AnySection[] = [                                      // 지식형 — 특별전 앞
           ...rtShortRuntime,
-          ...rtReleaseAnniversary,
           ...themes,
           ...rtLongRuntime,
         ]

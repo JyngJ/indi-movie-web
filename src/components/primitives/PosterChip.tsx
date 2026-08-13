@@ -1,0 +1,66 @@
+'use client'
+
+import React from 'react'
+
+/**
+ * 포스터 위에 얹는 오버레이 칩.
+ *
+ * 예전엔 같은 칩을 CurationSectionRow·GvEventSection·InstagramRecsSection·TheaterSheet가
+ * 각자 인라인으로 그렸다. 정책은 한 줄인데 구현이 넷이라 fontSize·padding·그림자가
+ * 조금씩 어긋나 있었다. 규격은 AGENTS.md "포스터 오버레이 칩 정책"을 따른다 —
+ * --text-meta(12) / 700 / --comp-poster-chip-pad / --radius-badge / offset 6.
+ *
+ * 모서리 배정 (films 탭 기준):
+ *   좌상단 = 개봉 주년 · 좌하단 = 순위(스크림 별도) · 우상단 = D-N·거리 · 우하단 = 매진·일시
+ */
+
+export type PosterChipCorner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+export type PosterChipTone = 'error' | 'warning' | 'success' | 'primary' | 'gv' | 'neutral' | 'scrim'
+
+const TONE_BG: Record<PosterChipTone, string> = {
+  error:   'var(--color-error)',
+  warning: 'var(--color-warning)',
+  success: 'var(--color-success)',
+  primary: 'var(--color-primary-base)',
+  gv:      'var(--color-gv)',
+  /* 상태가 아닌 중립 정보 — neutral 램프에 대응 스탑이 없어 예외로 둔다 */
+  neutral: '#78716C',
+  scrim:   'rgba(15,12,9,0.72)',
+}
+
+interface PosterChipProps {
+  corner: PosterChipCorner
+  tone: PosterChipTone
+  /** 스크린리더용 전체 문구 (예: "개봉 30주년") — 축약 라벨과 다를 때만 */
+  label?: string
+  children: React.ReactNode
+}
+
+export function PosterChip({ corner, tone, label, children }: PosterChipProps) {
+  const offset = 'var(--comp-poster-chip-offset)'
+  return (
+    <span
+      aria-label={label}
+      style={{
+        position: 'absolute',
+        top: corner.startsWith('top') ? offset : undefined,
+        bottom: corner.startsWith('bottom') ? offset : undefined,
+        left: corner.endsWith('left') ? offset : undefined,
+        right: corner.endsWith('right') ? offset : undefined,
+        padding: 'var(--comp-poster-chip-pad)',
+        borderRadius: 'var(--radius-badge)',
+        fontSize: 'var(--text-meta)',
+        fontWeight: 700,
+        lineHeight: 1,
+        color: 'var(--color-on-accent)',
+        backgroundColor: TONE_BG[tone],
+        /* 밝은 포스터 위에서 칩 경계가 뭉개지지 않게 — 배경 그림을 통제할 수 없다 */
+        boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
+        whiteSpace: 'nowrap',
+        pointerEvents: 'none',
+      }}
+    >
+      {children}
+    </span>
+  )
+}

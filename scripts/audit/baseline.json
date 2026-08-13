@@ -7,12 +7,12 @@
     "REVIEW": 77
   },
   "summary": {
-    "gutter": 51,
-    "color": 26,
+    "gutter": 50,
+    "color": 27,
     "fontSize": 0,
     "asymmetryLR": 6,
     "asymmetryTB": 26,
     "gutterKinds": 6,
-    "primitiveAdoptionPct": 49.5
+    "primitiveAdoptionPct": 48.7
   }
 }

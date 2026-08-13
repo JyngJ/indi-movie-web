@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getAnniversaryFilms, MIN_ANNIVERSARY_FILMS } from './getAnniversaryFilms'
+import { buildAnniversaryAges, getAnniversaryFilms, MIN_ANNIVERSARY_FILMS } from './getAnniversaryFilms'
 import type { Movie } from '@/types/api'
 
 function movie(id: string, year: number): Movie {
@@ -31,5 +31,27 @@ describe('getAnniversaryFilms', () => {
   it(`${MIN_ANNIVERSARY_FILMS}편 미만이면 빈 배열`, () => {
     const movies = [movie('a', 2016)]
     expect(getAnniversaryFilms(movies, active(['a']), 2026)).toEqual([])
+  })
+})
+
+describe('buildAnniversaryAges', () => {
+  it('편수 게이트 없이 전부 담는다 — 칩은 한 편만 있어도 붙는다', () => {
+    const movies = [{ id: 'a', year: 1996 } as Movie]
+    expect(buildAnniversaryAges(movies, active(['a']), 2026)).toEqual(new Map([['a', 30]]))
+  })
+
+  it('10의 배수가 아니면 제외', () => {
+    const movies = [{ id: 'a', year: 1995 } as Movie, { id: 'b', year: 2006 } as Movie]
+    expect(buildAnniversaryAges(movies, active(['a', 'b']), 2026)).toEqual(new Map([['b', 20]]))
+  })
+
+  it('10주년 미만은 제외 — 개봉 직후 작품에 "0주년"이 붙으면 안 된다', () => {
+    const movies = [{ id: 'a', year: 2026 } as Movie, { id: 'b', year: 2016 } as Movie]
+    expect(buildAnniversaryAges(movies, active(['a', 'b']), 2026)).toEqual(new Map([['b', 10]]))
+  })
+
+  it('상영 중이 아니면 제외', () => {
+    const movies = [{ id: 'a', year: 1996 } as Movie]
+    expect(buildAnniversaryAges(movies, active([]), 2026).size).toBe(0)
   })
 })

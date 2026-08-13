@@ -6,77 +6,29 @@
 
 import React from 'react'
 import { PosterThumb } from '@/components/domain'
+import { PosterChip } from '@/components/primitives'
 import { captionStyle } from './gallery-shared'
 
-/* ── 포스터 오버레이 칩 정책: --text-meta(12)/700 · 8px 12px · --radius-badge · offset 6px ── */
-
-const overlayChipBase: React.CSSProperties = {
-  position: 'absolute',
-  padding: '8px 12px',
-  borderRadius: 'var(--radius-badge)',
-  fontSize: 'var(--text-meta)',
-  fontWeight: 700,
-  lineHeight: 1,
-  whiteSpace: 'nowrap',
-  color: 'var(--color-on-accent)',
-}
-
-function DDayChip({ daysLeft }: { daysLeft: number }) {
-  return (
-    <span style={{
-      ...overlayChipBase,
-      top: 6, right: 6,
-      backgroundColor: daysLeft === 0 ? 'var(--color-error)' : daysLeft === 1 ? 'var(--color-warning)' : '#78716C',
-      boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
-    }}>
-      {daysLeft === 0 ? '오늘' : `D-${daysLeft}`}
-    </span>
-  )
-}
-
-function DistanceChip({ label }: { label: string }) {
-  return (
-    <span style={{
-      ...overlayChipBase,
-      top: 6, right: 6,
-      backgroundColor: 'var(--color-primary-base)',
-      boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
-    }}>
-      {label}
-    </span>
-  )
-}
-
-function ScrimBadge({ label }: { label: string }) {
-  return (
-    <span style={{
-      ...overlayChipBase,
-      left: 6, bottom: 6,
-      backgroundColor: 'rgba(20,15,10,0.72)',
-      maxWidth: 'calc(100% - 12px)',
-      overflow: 'hidden',
-      textOverflow: 'ellipsis',
-      display: 'block',
-    }}>
-      {label}
-    </span>
-  )
-}
+/* ── 포스터 오버레이 칩 — PosterChip 프리미티브 (src/components/primitives/PosterChip.tsx)
+   갤러리가 규격을 복사해 두면 프로덕션과 어긋난다. 실제 컴포넌트를 그대로 쓴다. ── */
 
 export function PosterOverlayChips() {
   const posters: { caption: string; chip: React.ReactNode }[] = [
-    { caption: '오늘 (error)',   chip: <DDayChip daysLeft={0} /> },
-    { caption: 'D-1 (warning)',  chip: <DDayChip daysLeft={1} /> },
-    { caption: 'D-5 (#78716C)',  chip: <DDayChip daysLeft={5} /> },
-    { caption: '거리 (primary)', chip: <DistanceChip label="1.2km" /> },
-    { caption: '정보 배지 (scrim)', chip: <ScrimBadge label="오늘 19:30" /> },
+    { caption: '오늘 (error·우상단)', chip: <PosterChip corner="top-right" tone="error">오늘</PosterChip> },
+    { caption: 'D-1 (warning)', chip: <PosterChip corner="top-right" tone="warning">D-1</PosterChip> },
+    { caption: 'D-5 (neutral)', chip: <PosterChip corner="top-right" tone="neutral">D-5</PosterChip> },
+    { caption: '개봉 주년 (primary·좌상단)', chip: <PosterChip corner="top-left" tone="primary" label="개봉 30주년">30주년</PosterChip> },
+    { caption: 'GV 유형 (gv·좌상단)', chip: <PosterChip corner="top-left" tone="gv">GV</PosterChip> },
+    { caption: '매진 (error·우하단)', chip: <PosterChip corner="bottom-right" tone="error">매진</PosterChip> },
+    { caption: '영화제 상태 (success)', chip: <PosterChip corner="bottom-right" tone="success">진행 중</PosterChip> },
+    { caption: '정보 배지 (scrim)', chip: <PosterChip corner="bottom-right" tone="scrim">오늘 19:30</PosterChip> },
   ]
   return (
     <div className="flex gap-4 flex-wrap">
       {posters.map((p) => (
         <div key={p.caption} className="flex flex-col items-center gap-2">
           <div style={{ position: 'relative' }}>
-            <PosterThumb width={90} height={135} alt="파과" />
+            <PosterThumb width={120} height={180} alt="파과" />
             {p.chip}
           </div>
           <span style={{ ...captionStyle, textTransform: 'none' }}>{p.caption}</span>
