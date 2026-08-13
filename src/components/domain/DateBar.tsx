@@ -42,7 +42,7 @@ function getDayTextColor(type: DayType): string {
     case 'saturday': return 'var(--color-primary-500)'  /* 2.0: 토요일 = primary/500 (hover-l은 800으로 어두워져 부적합) */
     case 'sunday':
     case 'holiday':  return 'var(--color-error-mid)'         /* 피그마 error/700 #BD4E4C */
-    default:         return 'var(--color-text-sub)'          /* #635D55 */
+    default:         return 'var(--color-text-sub)'          /* #726B65 */
   }
 }
 
