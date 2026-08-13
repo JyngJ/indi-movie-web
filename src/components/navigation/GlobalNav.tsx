@@ -14,7 +14,7 @@ export const GLOBAL_NAV_MOBILE_HEIGHT = 64
 export const GLOBAL_NAV_DESKTOP_WIDTH = 64
 
 const ACTIVE_COLOR = 'var(--color-primary-base)'
-const INACTIVE_COLOR = 'var(--color-neutral-400, #A9A39A)'
+const INACTIVE_COLOR = 'var(--color-neutral-400, #A7A19A)'   /* fallback도 2.0 값 — 구 #A9A39A는 1.0 잔재 */
 
 function IconMap({ size = 23 }: { size?: number }) {
   return (
