@@ -11,11 +11,6 @@ const nextConfig: NextConfig = {
     VERCEL_PROJECT_PRODUCTION_URL: 'www.xn--hq1bv8o5phw2d7wt.com',
   },
   images: {
-    // ★ 임시 (2026-08-09): Image Transformations 무료 쿼터 5,000/월 100% 소진 —
-    // 옵티마이저가 402를 반환해 프로덕션 포스터가 전부 깨짐. 원본 직접 서빙으로 전환.
-    // 외부 호스트(KMDB 등)가 직접 서빙하므로 Vercel 대역폭 부담도 없음.
-    // 청구주기 리셋 후 이 줄만 제거하는 되돌림 PR 필요 — 아래 잠금·캐시 설정은 유지.
-    unoptimized: true,
     // 전체 개방('**')이면 /_next/image?url=<아무 URL>로 외부인이 변환 쿼터를 소진할 수
     // 있는 열린 프록시가 됨 (2026-08-08 쿼터 4.9k/5k 조사에서 잠금 결정).
     // 목록은 DB 실측 포스터/배너 호스트 — 새 호스트의 포스터가 안 뜨면 여기 추가.
