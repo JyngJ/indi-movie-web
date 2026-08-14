@@ -5,7 +5,8 @@ import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMovies, useActiveMovieIds, useDirectorProfile } from '@/lib/supabase/queries'
 import type { Movie } from '@/types/api'
-import { Toast, IconButton, SortToggle, Button } from '@/components/primitives'
+import { Toast, IconButton, SortToggle } from '@/components/primitives'
+import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 
 function useIsDesktopDetail() {
   return useMediaQuery('(min-width: 1280px)')
@@ -30,13 +31,6 @@ const IcoChevronRight = () => (
 const IcoChevronDown = ({ flipped }: { flipped?: boolean }) => (
   <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ transform: flipped ? 'rotate(180deg)' : undefined, transition: 'transform 200ms' }}>
     <path d="M6 9l6 6 6-6" />
-  </svg>
-)
-const IcoMap = () => (
-  <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
-    <line x1="8" y1="2" x2="8" y2="18" />
-    <line x1="16" y1="6" x2="16" y2="22" />
   </svg>
 )
 
@@ -268,15 +262,9 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
       )}
 
       <div style={{ maxWidth: isDesktop ? 860 : undefined, margin: isDesktop ? '20px auto 0' : undefined, padding: isDesktop ? 0 : '16px var(--gutter) 0' }}>
-        <Button
-          variant="secondary"
-          size="md"
-          fullWidth
-          onClick={() => router.push(`/map?director=${encodeURIComponent(directorName)}`)}
-        >
-          <IcoMap />
+        <MapCtaButton onClick={() => router.push(`/map?director=${encodeURIComponent(directorName)}`)}>
           지도에서 필터로 보기
-        </Button>
+        </MapCtaButton>
       </div>
 
       {/* 작품 목록 */}
