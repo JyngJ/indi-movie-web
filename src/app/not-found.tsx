@@ -13,11 +13,19 @@ export default function NotFound() {
       background: 'var(--color-surface-bg)',
       textAlign: 'center',
     }}>
-      <img
-        src="/illust/404.png"
-        alt=""
-        style={{ width: 240, height: 'auto', opacity: 0.85 }}
-      />
+      <div style={{ position: 'relative', width: 240 }}>
+        <img
+          src="/illust/404.png"
+          alt=""
+          style={{ width: '100%', height: 'auto', opacity: 0.85, display: 'block' }}
+        />
+        {/* 그림 속 "404" 글자 자리에 상영중 영사기 빛을 얹는다 — ShowtimeCell과 같은 게이트 */}
+        <span
+          aria-hidden
+          className="projector-gate"
+          style={{ position: 'absolute', left: '37%', top: '18%', width: '30%', height: '14%' }}
+        />
+      </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <p style={{
           fontSize: 'var(--text-subtitle)',
