@@ -655,10 +655,10 @@ img {
    머리 상단 y325(36%) 위쪽, 스크린 안(하한 48.6%)에 걸치게. */
 .nf404-head-shadow {
   position: absolute;
-  left: 27%;
-  top: 23%;
-  width: 21%;
-  height: 15%;
+  left: 52%;
+  top: 37%;
+  width: 15%;
+  height: 11%;
   background: radial-gradient(ellipse 50% 55% at 50% 65%,
     rgba(46, 38, 26, 0.26) 0%,
     rgba(46, 38, 26, 0.15) 55%,
