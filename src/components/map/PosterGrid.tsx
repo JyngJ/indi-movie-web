@@ -166,7 +166,7 @@ export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, 
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={slots[0].movie.posterUrl}
-                  alt={slots[0].movie.title ?? ''}
+                  alt={slots[0].movie.title ?? '영화 포스터'}
                   style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                 />
               )}
@@ -208,7 +208,7 @@ export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, 
                     <div key={idx} data-movie-id={slot.movie?.id} className="pm-wrap" style={{ position: 'relative', width: posterW, height: posterH }}>
                       <PosterThumb
                         src={slot.movie?.posterUrl}
-                        alt={slot.movie?.title ?? ''}
+                        alt={slot.movie?.title ?? '영화 포스터'}
                         width={posterW}
                         height={posterH}
                         size="sm"

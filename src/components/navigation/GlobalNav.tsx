@@ -230,7 +230,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
       }}
     >
       <Link href="/" aria-label="홈(상영작)" style={{ display: 'block' }}>
-        <Image src="/logo-tile.png" alt="" width={40} height={40} style={{ borderRadius: 4 }} />
+        <Image src="/logo-tile.png" alt="영화볼지도 로고" width={40} height={40} style={{ borderRadius: 4 }} />
       </Link>
 
       {/* 순서: 지도 - 영화 (검색은 지도 상단 검색창으로 진입 — 레일 탭 제거) */}

@@ -31,7 +31,7 @@ export default function NotFound() {
         {/* 스크린에 맺힌 404 — 필름 위빙으로 떨림 */}
         <img
           src="/illust/404-numbers.png"
-          alt=""
+          alt="스크린에 영사된 404 숫자"
           aria-hidden
           className="nf404-numbers"
         />
