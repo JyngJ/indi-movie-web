@@ -80,10 +80,13 @@ export function SettingsHeader({ title, onBack, onClose, submitting }: { title: 
   )
 }
 
-/* 푸터 링크 — button·a·구분점을 같은 높이/정렬로 통일 */
+/* 푸터 링크 — 옆의 Button ghost(size sm)와 높이·좌우 여백·라운드를 맞춘다.
+   background를 인라인으로 주면 안 된다: hover-raise가 background-color로 상태를 만드는데
+   인라인이 클래스를 이겨서 hover가 영원히 안 먹는다(이 링크가 실제로 그 상태였다). */
 const footerLink: React.CSSProperties = {
-  display: 'inline-flex', alignItems: 'center', height: 30, padding: '0 8px',
-  background: 'none', border: 'none', cursor: 'pointer', minHeight: 'unset',
+  display: 'inline-flex', alignItems: 'center',
+  height: 'var(--comp-btn-h-sm)', padding: '0 var(--comp-btn-px-sm)',
+  border: 'none', cursor: 'pointer', minHeight: 'unset',
   fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)',
   fontFamily: 'var(--font-sans)', fontWeight: 500, borderRadius: 'var(--radius-button)',
 }
@@ -147,7 +150,7 @@ export function SettingsMainPage({
         <Button variant="ghost" size="sm" style={{ color: 'var(--color-text-sub)', fontWeight: 500 }} onClick={() => onNavigate('attribution')}>출처 표기 정보</Button>
         <span style={footerDot}>·</span>
         {/* 만든 사람 탭 임시 숨김 */}
-        <Link href="/privacy" className="hover-raise" style={{ ...footerLink, height: 32, textDecoration: 'none' }}>개인정보 처리방침</Link>
+        <Link href="/privacy" className="hover-raise" style={{ ...footerLink, textDecoration: 'none' }}>개인정보 처리방침</Link>
       </div>
       <div style={{ textAlign: 'center', marginTop: 8, fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)' }}>
         영화볼지도 · v0.1.0
