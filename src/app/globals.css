@@ -651,23 +651,15 @@ img {
   60%  { transform: translate(0.25px, 0.55px); }
   80%  { transform: translate(-0.35px, -0.3px); }
 }
-/* 그림자는 머리 위 스크린 면에 진다 — 영사 빔이 확대하므로 실제 머리보다 크고 위에 뜬다.
-   머리 상단 y325(36%) 위쪽, 스크린 안(하한 48.6%)에 걸치게. */
-.nf404-head-shadow {
-  position: absolute;
-  left: 52%;
-  top: 37%;
-  width: 13%;
-  height: 13.5%;
-  /* 머리 실루엣 — 또렷한 원형 그림자. 가장자리만 살짝 풀어준다 */
-  background: rgba(46, 38, 26, 0.42);
-  border-radius: 50%;
-  filter: blur(1.5px);
-  animation: gateFringe 0.83s steps(1, end) infinite;
-  pointer-events: none;
+/* 빛 레이어에서 머리 자리만 뚫는 마스크 — 머리는 빔 앞이라 빛이 안 닿는다.
+   머리 실측(원본 1200×900): 중심 (450, 400), 반경 가로 ~95 / 세로 ~75.
+   좌표는 글로우 사각형(272,72 ~ 980,437) 기준 %로 환산, 여유 포함. */
+.nf404-glow {
+  -webkit-mask-image: radial-gradient(ellipse 16% 26% at 25.1% 90%, transparent 97%, #000 100%);
+  mask-image: radial-gradient(ellipse 16% 26% at 25.1% 90%, transparent 97%, #000 100%);
 }
 @media (prefers-reduced-motion: reduce) {
-  .nf404-numbers, .nf404-head-shadow { animation: none; }
+  .nf404-numbers { animation: none; }
 }
 
 /* 예매 CTA — 외부 사이트가 열리는 동안의 진행 표시 */
