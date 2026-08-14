@@ -13,17 +13,28 @@ export default function NotFound() {
       background: 'var(--color-surface-bg)',
       textAlign: 'center',
     }}>
+      {/* 영사 중인 스크린 연출 — 숫자는 별도 레이어(404-numbers.png)로 분리해 필름처럼 떨고,
+          스크린 전체에 게이트 빛, 머리 위엔 빛을 가린 그림자가 진다. 좌표는 원본 1200×900 픽셀 실측값. */}
       <div style={{ position: 'relative', width: 240 }}>
         <img
-          src="/illust/404.png"
+          src="/illust/404-base.png"
           alt=""
           style={{ width: '100%', height: 'auto', opacity: 0.85, display: 'block' }}
         />
-        {/* 그림 속 "404" 글자 자리에 상영중 영사기 빛을 얹는다 — ShowtimeCell과 같은 게이트 */}
+        {/* 스크린 내부 전체를 덮는 영사기 게이트 빛 (ShowtimeCell과 동일 클래스) */}
         <span
           aria-hidden
           className="projector-gate"
-          style={{ position: 'absolute', left: '37%', top: '18%', width: '30%', height: '14%' }}
+          style={{ position: 'absolute', left: '22.7%', top: '8%', width: '59%', height: '40.6%' }}
+        />
+        {/* 머리가 영사 빔을 가려 스크린에 지는 그림자 */}
+        <span aria-hidden className="nf404-head-shadow" />
+        {/* 스크린에 맺힌 404 — 필름 위빙으로 떨림 */}
+        <img
+          src="/illust/404-numbers.png"
+          alt=""
+          aria-hidden
+          className="nf404-numbers"
         />
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

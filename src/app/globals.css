@@ -631,6 +631,43 @@ img {
   .projector-gate { color: var(--color-success); }
 }
 
+/* ── 404 페이지 스크린 연출 — projector-gate 위에 얹는 전용 레이어 ──
+   숫자(404-numbers.png)는 그림에서 분리한 래스터라 gateWeave의 0.5px 진폭으론
+   240px 렌더 크기에서 안 보인다. 전용 키프레임으로 1px대 진폭을 준다.
+   그림자는 머리가 영사 빔을 가린 것 — 위치는 원본 1200×900 실측(머리 중심 x450, 상단 y325). */
+.nf404-numbers {
+  position: absolute;
+  left: 38.3%;
+  top: 19.4%;
+  width: 29.9%;
+  height: auto;
+  opacity: 0.85;
+  animation: nf404Weave 0.71s steps(1, end) infinite;
+}
+@keyframes nf404Weave {
+  0%   { transform: translate(0, 0); }
+  20%  { transform: translate(0.8px, -1.1px); }
+  40%  { transform: translate(-1px, 0.8px); }
+  60%  { transform: translate(0.6px, 1.2px); }
+  80%  { transform: translate(-0.8px, -0.7px); }
+}
+.nf404-head-shadow {
+  position: absolute;
+  left: 29%;
+  top: 33%;
+  width: 17%;
+  height: 14%;
+  background: radial-gradient(ellipse 50% 50% at 50% 60%,
+    rgba(46, 38, 26, 0.30) 0%,
+    rgba(46, 38, 26, 0.18) 55%,
+    rgba(46, 38, 26, 0) 100%);
+  animation: gateFringe 0.83s steps(1, end) infinite;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nf404-numbers, .nf404-head-shadow { animation: none; }
+}
+
 /* 예매 CTA — 외부 사이트가 열리는 동안의 진행 표시 */
 @keyframes bookingCtaSpin {
   to { transform: rotate(360deg); }
