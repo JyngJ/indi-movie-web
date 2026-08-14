@@ -8,6 +8,8 @@ interface StoredSession {
   landingPath: string
   referrer: string
   utm: Record<string, string>
+  /** /p 리다이렉트 쿠키(vref)에서 읽은 유입 태그. 없으면 undefined. */
+  ref?: string
   milestones: Record<string, number>
   intent?: SessionIntent
   /** 이 세션에서 방문한 탭 표면(방문 순서 유지). v1 세션에는 없을 수 있어 optional. */
@@ -59,6 +61,12 @@ function collectUtm() {
   return Object.fromEntries(keys.map((key) => [key, params.get(key) || '']).filter(([, value]) => value))
 }
 
+function collectRef() {
+  if (typeof document === 'undefined') return undefined
+  const match = document.cookie.match(/(?:^|;\s*)vref=([^;]+)/)
+  return match ? match[1] : undefined
+}
+
 function deviceType() {
   if (typeof window === 'undefined') return 'unknown'
   return window.matchMedia('(min-width: 1280px)').matches ? 'desktop' : 'mobile'
@@ -75,6 +83,7 @@ function getOrCreateSession() {
     landingPath: `${window.location.pathname}${window.location.search}`,
     referrer: document.referrer || '',
     utm: collectUtm(),
+    ref: collectRef(),
     milestones: {},
     surfaces: [surfaceFromPath(window.location.pathname)],
   }
@@ -109,6 +118,7 @@ export function getSessionContext(): AnalyticsProperties {
     time_since_session_start_ms: Date.now() - session.startedAt,
     landing_path: session.landingPath,
     referrer: session.referrer || null,
+    visit_ref: session.ref || null,
     device_type: deviceType(),
     viewport_width: window.innerWidth,
     viewport_height: window.innerHeight,
