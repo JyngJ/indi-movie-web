@@ -334,7 +334,6 @@ function MovieTheatersTab({
   return (
     <div style={{ padding: '20px var(--gutter) 32px' }}>
       <MapCtaButton
-        variant="desktop"
         onClick={() => {
           trackEvent('movie theaters map opened', { movie_id: movieId, theater_count: theaters.length, source: 'desktop_panel' })
           classifySessionIntent('type_a', { source: 'desktop_panel', movie_id: movieId })

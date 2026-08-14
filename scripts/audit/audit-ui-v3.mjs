@@ -108,7 +108,22 @@ const info = []  // 참고 항목
 const asym = []
 const gutters = new Map()
 const adoption = []
-const PRIM = /<(Button|IconButton|SortToggle|FilterPill|Card|CardContainer|Badge|Chip|GenreChip|Input|SearchBar|FAB)[\s/>]/g
+/* 프리미티브 목록은 index.ts에서 뽑는다. 예전엔 여기 손으로 12개를 적어뒀는데
+   index.ts는 26개를 export하고 있었다 — Avatar·ScrollNavButton·FabRound·PosterChip·
+   DirectorChip·SectionHeader·Toast 등 15개가 통째로 안 세졌고, 적혀 있던 'FAB'는
+   실제로 없는 이름이라 아무것도 안 잡았다. 프리미티브가 늘 때마다 벌어지는 격차라
+   손 목록으로는 계속 어긋난다. */
+const PRIM_INDEX = path.join(ROOT, 'src/components/primitives/index.ts')
+const PRIM_NAMES = fs.existsSync(PRIM_INDEX)
+  ? [...new Set(
+      [...fs.readFileSync(PRIM_INDEX, 'utf8').matchAll(/export\s*\{([^}]*)\}/g)]
+        .flatMap(m => m[1].split(','))
+        .map(x => x.trim().split(/\s+as\s+/).pop().trim())
+        .filter(x => /^[A-Z]\w*$/.test(x)),
+    )].sort((a, b) => b.length - a.length)   // 긴 이름 우선 — Chip이 GenreChip을 삼키지 않게
+  : []
+if (!PRIM_NAMES.length) { console.error('✗ primitives/index.ts에서 export를 못 읽었다'); process.exit(1) }
+const PRIM = new RegExp(`<(${PRIM_NAMES.join('|')})[\\s/>]`, 'g')
 const RAW = /<(button|input|textarea|select)[\s/>]/g
 
 const push = (cat, f, line, key, from, to, risk, note = '') =>

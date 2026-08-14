@@ -18,6 +18,7 @@ import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/compo
 import { Skeleton, Chip, Button } from '@/components/primitives'
 import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
 import { ShowtimeCell } from '@/components/domain/ShowtimeCell'
+import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 
 function useIsDesktop() {
   const [v, setV] = useState(false)
@@ -49,13 +50,6 @@ function formatDateTab(dateStr: string): { day: string; date: number; isHoliday:
 const IcoChevronLeft = () => (
   <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
     <path d="M15 18l-6-6 6-6" />
-  </svg>
-)
-const IcoMap = () => (
-  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
-    <line x1="8" y1="2" x2="8" y2="18" />
-    <line x1="16" y1="6" x2="16" y2="22" />
   </svg>
 )
 const IcoNav = () => (
@@ -468,15 +462,13 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
 
         {/* CTA 버튼 */}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <Button
-            variant="primary"
-            size="md"
+          <MapCtaButton
+            fullWidth={false}
             style={{ flex: isDesktop ? undefined : 1 }}
             onClick={() => router.push(mapUrlWithSelection())}
           >
-            <IcoMap />
             지도에서 보기
-          </Button>
+          </MapCtaButton>
           {theater.address && (
             <Button
               variant="secondary"

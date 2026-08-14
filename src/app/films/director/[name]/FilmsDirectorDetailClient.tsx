@@ -10,7 +10,9 @@ import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import type { Movie } from '@/types/api'
 import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWidget'
 import { shareAndTrack } from '@/lib/analytics/shareTracking'
-import { Toast, Avatar, Button, IconButton, SortToggle } from '@/components/primitives'
+import { Toast, Avatar, IconButton, SortToggle } from '@/components/primitives'
+import { Button } from '@/components/primitives'
+import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 
 function useIsDesktop() {
   return useMediaQuery('(min-width: 1280px)')
@@ -20,7 +22,6 @@ function useIsDesktop() {
 const IcoChevronLeft = () => <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
 const IcoChevronRight = () => <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
 const IcoChevronDown = ({ flipped }: { flipped?: boolean }) => <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ transform: flipped ? 'rotate(180deg)' : undefined, transition: 'transform 200ms' }}><path d="M6 9l6 6 6-6" /></svg>
-const IcoMap = () => <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" /><line x1="8" y1="2" x2="8" y2="18" /><line x1="16" y1="6" x2="16" y2="22" /></svg>
 const IcoShare = () => <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>
 
 type SortKey = 'newest' | 'oldest'
@@ -137,9 +138,9 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
 
       {/* CTA 버튼 */}
       <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
-        <Button variant="primary" size="md" onClick={() => router.push(`/map?director=${encodeURIComponent(directorName)}`)}>
-          <IcoMap /> 지도에서 필터로 보기
-        </Button>
+        <MapCtaButton fullWidth={false} onClick={() => router.push(`/map?director=${encodeURIComponent(directorName)}`)}>
+          지도에서 필터로 보기
+        </MapCtaButton>
         <IconButton
           variant="overlay"
           size={44}
@@ -225,13 +226,17 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
                 />
               ))}
               {hiddenCount > 0 && (
-                <button
+                /* 면 색이 Button tertiary와 같다 — 목록 하단에 붙는 형태라 위 구분선만 얹는다 */
+                <Button
+                  variant="tertiary"
+                  size="sm"
+                  fullWidth
                   onClick={() => setExpanded(!expanded)}
-                  style={{ width: '100%', height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, border: 'none', borderTop: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-raised)', color: 'var(--color-text-sub)', fontSize: 13, fontWeight: 500, cursor: 'pointer', minHeight: 'auto' }}
+                  style={{ borderTop: '1px solid var(--color-border)', borderRadius: 0 }}
                 >
                   <IcoChevronDown flipped={expanded} />
                   {expanded ? '접기' : `${hiddenCount}편 더 보기`}
-                </button>
+                </Button>
               )}
             </div>
           )}
