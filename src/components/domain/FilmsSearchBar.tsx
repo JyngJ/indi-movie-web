@@ -196,9 +196,13 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
         ) : (
           <div
             onClick={() => desktopRef.current?.focus()}
+            className="gap-[10px]"
             style={{
-              display: 'flex', alignItems: 'center', gap: 12,
-              height: 'var(--comp-search-height)', paddingLeft: 16, paddingRight: 12,
+              /* SearchBarButton(border 1 + pad 18 + gap 10)과 아이콘 x좌표를 맞춘다 —
+                 border가 0.5px 두꺼워진 만큼 padding에서 빼야 포커스 시 돋보기가 안 민다 */
+              display: 'flex', alignItems: 'center',
+              height: 'var(--comp-search-height)',
+              paddingLeft: 'calc(var(--comp-search-px) - 0.5px)', paddingRight: 12,
               backgroundColor: 'var(--color-surface-card)',
               border: `1.5px solid ${ACCENT}`,
               borderRadius: 'var(--comp-search-radius)',
