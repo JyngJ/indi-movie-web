@@ -10,7 +10,7 @@
     "gutter": 49,
     "color": 26,
     "fontSize": 0,
-    "asymmetryLR": 6,
+    "asymmetryLR": 5,
     "asymmetryTB": 26,
     "gutterKinds": 6,
     "primitiveAdoptionPct": 61.8

@@ -1,5 +1,7 @@
 'use client'
 
+import { useState } from 'react'
+
 interface PosterThumbProps {
   src?: string
   alt?: string
@@ -34,6 +36,11 @@ export function PosterThumb({
   shadow = true,
   onReady,
 }: PosterThumbProps) {
+  // 로드 페이드 — 스트리밍 중 반쯤 그려진 이미지가 뚝 나타나는 것 방지.
+  // 캐시된 이미지는 complete가 참이라 페이드 없이 즉시 보인다(재방문 깜빡임 방지).
+  const [loaded, setLoaded] = useState(false)
+  const markLoaded = () => setLoaded(true)
+
   const radiusVar = radius ?? (size === 'lg'
     ? 'var(--comp-poster-sheet-radius)'   /* 8px */
     : 'var(--comp-poster-radius)')         /* 6px */
@@ -71,11 +78,16 @@ export function PosterThumb({
           <img
             src={src}
             alt={alt}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            style={{
+              width: '100%', height: '100%', objectFit: 'cover', display: 'block',
+              backgroundColor: 'var(--color-surface-raised)',
+              opacity: loaded ? 1 : 0,
+              transition: 'opacity 240ms ease',
+            }}
             /* 캐시된 이미지는 onLoad가 안 뜰 수 있어 complete도 함께 본다 */
-            ref={(node) => { if (node?.complete) onReady?.() }}
-            onLoad={onReady}
-            onError={onReady}
+            ref={(node) => { if (node?.complete && !loaded) { markLoaded(); onReady?.() } }}
+            onLoad={() => { markLoaded(); onReady?.() }}
+            onError={() => { markLoaded(); onReady?.() }}
           />
         ) : (
           <div

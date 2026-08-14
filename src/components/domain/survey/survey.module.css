@@ -139,3 +139,24 @@
 .thanks .ctaCol {
   width: 100%;
 }
+
+/* 퇴장 — 진입의 역재생. 클래스가 animation 프로퍼티를 교체하므로 진입 정의를 덮는다 */
+.overlayOut {
+  animation: surveyFadeOut 0.18s ease both;
+}
+
+@keyframes surveyFadeOut {
+  to { opacity: 0; }
+}
+
+.cardOut {
+  animation: surveyOut 0.18s ease both;
+}
+
+@keyframes surveyOut {
+  to { opacity: 0; transform: translateY(8px) scale(0.98); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay, .card, .overlayOut, .cardOut { animation: none; }
+}

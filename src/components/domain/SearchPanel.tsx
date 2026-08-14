@@ -70,7 +70,9 @@ export function SearchPanel({
   }, [])
 
   return (
-    <div style={{
+    /* slideMode가 아니면(시트 위 오버레이·모바일 전체화면) 마운트 시 페이드+라이즈로 등장 —
+       slideMode는 transform transition을 쓰므로 keyframe과 겹치면 안 된다 */
+    <div className={slideMode ? undefined : 'reveal-rise'} style={{
       position: 'absolute',
       inset: isDesktopLayout ? `0 auto 0 ${leftOffset}px` : 0,
       width: isDesktopLayout ? width : 'auto',

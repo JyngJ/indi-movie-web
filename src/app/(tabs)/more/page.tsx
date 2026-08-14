@@ -11,8 +11,12 @@ import {
   SettingsReportPage,
   type SettingsPage,
 } from '@/components/map/SettingsPanel'
+import { TransitionPanel, slideVariants } from '@/components/motion'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
+
+/* TransitionPanel 자식 순서와 일치해야 한다 */
+const PAGE_INDEX: Record<SettingsPage, number> = { main: 0, report: 1, attribution: 2, about: 3 }
 
 const PAGE_TITLES: Record<SettingsPage, string> = {
   main: '설정',
@@ -50,10 +54,12 @@ function MorePageContent() {
     searchParams.get('page') === 'report' ? 'report' : 'main'
   )
   const [reportSuccess, setReportSuccess] = useState(false)
+  const [direction, setDirection] = useState(1)
 
   if (isDesktop) return <DesktopPlaceholder />
 
-  const handleBack = () => setPage('main')
+  const navigateTo = (p: SettingsPage) => { setDirection(1); setPage(p) }
+  const handleBack = () => { setDirection(-1); setPage('main') }
 
   return (
     <div
@@ -67,15 +73,23 @@ function MorePageContent() {
     >
       <SettingsHeader title={PAGE_TITLES[page]} onBack={page !== 'main' ? handleBack : undefined} />
 
-      {page === 'main' && (
-        <SettingsMainPage onNavigate={setPage} />
-      )}
-      {page === 'report' && !reportSuccess && (
-        <SettingsReportPage initialCategory={initialCategory} onSuccess={() => setReportSuccess(true)} />
-      )}
-      {page === 'report' && reportSuccess && <ReportSuccessNotice />}
-      {page === 'attribution' && <SettingsAttributionPage />}
-      {page === 'about' && <SettingsAboutPage />}
+      {/* 페이지 전환 — 메인→하위는 오른쪽에서, 뒤로가기는 왼쪽에서 들어온다 */}
+      <TransitionPanel
+        className="settings-pages"
+        activeIndex={PAGE_INDEX[page]}
+        direction={direction}
+        variants={slideVariants(360)}
+        style={{ flex: 1, minHeight: 0 }}
+      >
+        <SettingsMainPage onNavigate={navigateTo} />
+        {reportSuccess ? (
+          <ReportSuccessNotice />
+        ) : (
+          <SettingsReportPage initialCategory={initialCategory} onSuccess={() => setReportSuccess(true)} />
+        )}
+        <SettingsAttributionPage />
+        <SettingsAboutPage />
+      </TransitionPanel>
     </div>
   )
 }

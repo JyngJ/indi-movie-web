@@ -223,7 +223,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
 
   if (isLoading) {
     return (
-      <div style={{ position: 'fixed', inset: 0, backgroundColor: 'var(--color-surface-bg)' }}>
+      <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
         <Toast message="데이터 불러오는 중…" visible />
       </div>
     )

@@ -103,7 +103,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
   const hiddenCount = directorMovies.length - COLLAPSED_COUNT
 
   if (isLoading) {
-    return <div style={{ position: 'fixed', inset: 0, backgroundColor: 'var(--color-surface-bg)' }}><Toast message="데이터 불러오는 중…" visible /></div>
+    return <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}><Toast message="데이터 불러오는 중…" visible /></div>
   }
 
   const navBar = (
