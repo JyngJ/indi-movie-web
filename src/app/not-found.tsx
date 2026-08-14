@@ -18,7 +18,7 @@ export default function NotFound() {
       <div style={{ position: 'relative', width: 240 }}>
         <img
           src="/illust/404-base.png"
-          alt=""
+          alt="빈 영화관에서 영사기 스크린을 바라보는 관객 일러스트"
           style={{ width: '100%', height: 'auto', opacity: 0.85, display: 'block' }}
         />
         {/* 스크린 내부 전체를 덮는 영사기 게이트 빛 (ShowtimeCell과 동일 클래스).
