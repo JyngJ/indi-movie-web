@@ -502,7 +502,6 @@ function TheatersTab({ movieId, onMapClick, onGoToTheater, desktop = false, init
     <div style={{ padding: desktop ? '26px 0 64px' : '20px 20px 52px', maxWidth: desktop ? 1040 : undefined, margin: desktop ? '0 auto' : undefined }}>
       {/* 지도에서 보기 버튼 */}
       <MapCtaButton
-        variant="mobile"
         onClick={() => {
           trackEvent('movie theaters map opened', {
             movie_id: movieId,

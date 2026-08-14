@@ -5,13 +5,15 @@ import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { ChevronDown, ChevronLeft, ExternalLink, MapPin, X, ZoomIn } from 'lucide-react'
-import { Button, IconButton, SectionHeader, ScrollNavButton } from '@/components/primitives'
+import { IconButton, SectionHeader, ScrollNavButton } from '@/components/primitives'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { getFestivalDateLabel, getFestivalStatus, type FestivalStatus } from '@/lib/festival/status'
 import { toKstIsoDate } from '@/lib/date'
 import type { FestivalDetail } from '@/types/festival'
 import { scrollRailBy } from '@/lib/ui/railScroll'
+import { Button } from '@/components/primitives'
+import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 
 // http:// 원본(예: jiff.kr — HTTPS 인증서가 깨져있음)을 브라우저가 직접 요청하면 mixed-content
 // 자동 https 승격 때문에 깨진다. Next 이미지 최적화 엔드포인트를 거치면 서버가 대신
@@ -103,7 +105,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
           <IconButton variant="ghost" size={44} aria-label="뒤로가기" onClick={() => router.back()}>
             <ChevronLeft size={22} strokeWidth={1.75} color="currentColor" />
           </IconButton>
-          <button onClick={() => router.push('/')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-caption)', fontSize: 13, minHeight: 'auto', padding: 0, flexShrink: 0 }}>영화</button>
+          <Button variant="text" size="sm" onClick={() => router.push('/')} style={{ padding: 0, flexShrink: 0, minHeight: 'auto', height: 'auto' }}>영화</Button>
           <span style={{ color: 'var(--color-text-caption)', fontSize: 13, flexShrink: 0 }}>&gt;</span>
           <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{festival.name}</span>
         </div>
@@ -162,9 +164,9 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
               </a>
             )}
             {firstLinkedTheaterId && (
-              <Button variant="secondary" size="md" onClick={() => router.push(`/map?theater=${firstLinkedTheaterId}`)} style={{ flex: 1 }}>
-                <MapPin size={16} strokeWidth={1.75} color="currentColor" /> 지도에서 보기
-              </Button>
+              <MapCtaButton fullWidth={false} style={{ flex: 1 }} onClick={() => router.push(`/map?theater=${firstLinkedTheaterId}`)}>
+                지도에서 보기
+              </MapCtaButton>
             )}
           </div>
         )}
@@ -280,19 +282,16 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
               ))}
             </div>
             {festival.movies.length > LINEUP_COLLAPSED_COUNT && (
-              <button
-                type="button"
+              /* 면 색·글자색이 Button tertiary와 같다 — 인라인으로 다시 그릴 이유가 없다 */
+              <Button
+                variant="tertiary"
+                size="sm"
                 onClick={() => setLineupExpanded((v) => !v)}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-                  width: 'calc(100% - 32px)', maxWidth: 360, margin: '4px auto 0', padding: '8px 0',
-                  border: 'none', borderRadius: 'var(--radius-button)', backgroundColor: 'var(--color-surface-raised)',
-                  color: 'var(--color-text-caption)', fontSize: 12, fontWeight: 600, cursor: 'pointer', minHeight: 'auto',
-                }}
+                style={{ width: 'calc(100% - 32px)', maxWidth: 360, margin: '4px auto 0' }}
               >
                 {lineupExpanded ? '접기' : '더보기'}
                 <ChevronDown size={14} strokeWidth={1.75} color="currentColor" style={{ transform: lineupExpanded ? 'rotate(180deg)' : undefined }} />
-              </button>
+              </Button>
             )}
           </>
           )

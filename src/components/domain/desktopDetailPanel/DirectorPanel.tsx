@@ -2,9 +2,10 @@
 
 import { useState, useMemo } from 'react'
 import { useMovies, useActiveMovieIds } from '@/lib/supabase/queries'
-import { Toast, SortToggle, Button } from '@/components/primitives'
+import { Toast, SortToggle } from '@/components/primitives'
 import { PanelShell } from './PanelShell'
-import { IcoMap, IcoChevronRight, IcoChevronDown } from './icons'
+import { IcoChevronRight, IcoChevronDown } from './icons'
+import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 
 /* ── 감독 상세 패널 ── */
 export function DirectorPanel({
@@ -62,15 +63,9 @@ export function DirectorPanel({
       </div>
 
       <div style={{ padding: '16px var(--gutter) 0' }}>
-        <Button
-          variant="secondary"
-          size="md"
-          fullWidth
-          onClick={() => onDirectorFilterOnMap(directorName)}
-        >
-          <IcoMap />
+        <MapCtaButton onClick={() => onDirectorFilterOnMap(directorName)}>
           지도에서 필터로 보기
-        </Button>
+        </MapCtaButton>
       </div>
 
       {/* 정렬 + 목록 */}
