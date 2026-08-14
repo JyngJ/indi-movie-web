@@ -10,4 +10,10 @@ if (typeof window !== 'undefined' && posthogToken) {
     capture_pageview: true,
     capture_pageleave: true,
   })
+
+  // /p 리다이렉트가 심어둔 유입 쿠키 — 있으면 모든 이벤트에 super property로 붙는다.
+  const refMatch = document.cookie.match(/(?:^|;\s*)vref=([^;]+)/)
+  if (refMatch) {
+    posthog.register({ visit_ref: refMatch[1] })
+  }
 }
