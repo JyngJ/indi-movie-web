@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { motion } from 'motion/react'
 import { useEffect, useState } from 'react'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useUIStore } from '@/store/uiStore'
@@ -117,8 +118,9 @@ function MobileTabBar({ pathname, filmsHref }: { pathname: string; filmsHref: st
               textDecoration: 'none',
             }}
           >
-            {/* 데스크톱 레일과 동일한 선택 문법 — 틴트 라운드 박스 */}
+            {/* 데스크톱 레일과 동일한 선택 문법 — 틴트 pill이 활성 탭을 따라 미끄러진다 */}
             <span style={{
+              position: 'relative',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -127,11 +129,21 @@ function MobileTabBar({ pathname, filmsHref }: { pathname: string; filmsHref: st
               minWidth: 52,   /* 아이콘+짧은 라벨도 정사각형에 가깝게 (피그마 51×53) */
               padding: '8px var(--gutter-md)',
               borderRadius: 8,
-              background: active ? 'color-mix(in srgb, var(--color-primary-base) 11%, transparent)' : 'transparent',
               color,
+              transition: 'color 150ms ease',
             }}>
-              <Icon size={23} />
-              <span style={{ fontSize: 'var(--text-badge)', fontWeight: 600, lineHeight: 1 }}>{label}</span>
+              {active && (
+                <motion.span
+                  layoutId="mobile-nav-pill"
+                  transition={{ type: 'spring', duration: 0.4, bounce: 0.2 }}
+                  style={{
+                    position: 'absolute', inset: 0, borderRadius: 8,
+                    background: 'color-mix(in srgb, var(--color-primary-base) 11%, transparent)',
+                  }}
+                />
+              )}
+              <span style={{ position: 'relative', display: 'flex' }}><Icon size={23} /></span>
+              <span style={{ position: 'relative', fontSize: 'var(--text-badge)', fontWeight: 600, lineHeight: 1 }}>{label}</span>
             </span>
           </Link>
         )
@@ -169,6 +181,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
         <div
           className={active ? undefined : 'hover-card'}
           style={{
+            position: 'relative',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -176,12 +189,22 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
             padding: '8px 4px',
             margin: '0 8px',
             borderRadius: 8,
-            background: active ? 'color-mix(in srgb, var(--color-primary-base) 11%, transparent)' : undefined,
             color,
+            transition: 'color 150ms ease',
           }}
         >
-          <Icon size={21} />
-          <span style={{ fontSize: 10, fontWeight: 600 }}>{label}</span>
+          {active && (
+            <motion.span
+              layoutId="rail-nav-pill"
+              transition={{ type: 'spring', duration: 0.4, bounce: 0.2 }}
+              style={{
+                position: 'absolute', inset: 0, borderRadius: 8,
+                background: 'color-mix(in srgb, var(--color-primary-base) 11%, transparent)',
+              }}
+            />
+          )}
+          <span style={{ position: 'relative', display: 'flex' }}><Icon size={21} /></span>
+          <span style={{ position: 'relative', fontSize: 10, fontWeight: 600 }}>{label}</span>
         </div>
       </Link>
     )

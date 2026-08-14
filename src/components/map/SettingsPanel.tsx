@@ -1,16 +1,19 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { HeartHandshake } from 'lucide-react'
 import Link from 'next/link'
 import { useLockBodyScroll } from '@/hooks/useLockBodyScroll'
 import { Button, Chip, IconButton, Input } from '@/components/primitives'
+import { TransitionPanel, slideVariants } from '@/components/motion'
 // 분류 목록은 API 화이트리스트(lib/reports/types)가 단일 소스 — UI 로컬 상수와 어긋나면
 // '기타' 외 전부 400으로 거부된다(실제로 발생했던 불일치).
 import { REPORT_CATEGORIES } from '@/lib/reports/types'
 
 export type SettingsPage = 'main' | 'report' | 'attribution' | 'about'
 type Page = SettingsPage
+
+/* TransitionPanel 자식 순서와 일치해야 한다 */
+const PAGE_INDEX: Record<Page, number> = { main: 0, report: 1, attribution: 2, about: 3 }
 
 /* ── 아이콘 ── */
 const IcoChevronRight = () => (
@@ -160,7 +163,19 @@ export function SettingsMainPage({
 export function ReportSuccessNotice() {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32, backgroundColor: 'var(--color-surface-bg)' }}>
-      <HeartHandshake size={48} strokeWidth={1.5} color="var(--color-text-sub)" />
+      {/* 성공 체크 — 원이 팝인한 뒤 체크가 그려진다 */}
+      <div
+        className="success-check-circle"
+        style={{
+          width: 56, height: 56, borderRadius: '50%',
+          backgroundColor: 'color-mix(in srgb, var(--color-success) 14%, transparent)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}
+      >
+        <svg width={28} height={28} viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+          <path className="success-check-path" d="M5 13l5 5L20 7" />
+        </svg>
+      </div>
       <div style={{ fontSize: 'var(--text-title)', fontWeight: 700, color: 'var(--color-text-primary)' }}>감사합니다!</div>
       <div style={{ fontSize: 13, color: 'var(--color-text-sub)', textAlign: 'center', lineHeight: 1.6 }}>제보해 주셔서 감사합니다.<br/>확인 후 이메일로 답변 드리겠습니다.</div>
     </div>
@@ -413,6 +428,7 @@ export function SettingsPanel({
   initialPage?: Page
 }) {
   const [page, setPage] = useState<Page>('main')
+  const [direction, setDirection] = useState(1)
   const [reportSuccess, setReportSuccess] = useState(false)
 
   // 열림/닫힘 전환 — 진입은 CSS 키프레임(마운트 시 항상 재생), 퇴장은
@@ -447,7 +463,8 @@ export function SettingsPanel({
     setTimeout(() => { setPage('main'); setReportSuccess(false) }, 300)
   }
 
-  const handleBack = () => setPage('main')
+  const navigateTo = (p: Page) => { setDirection(1); setPage(p) }
+  const handleBack = () => { setDirection(-1); setPage('main') }
 
   const pageTitle: Record<Page, string> = {
     main: '설정',
@@ -488,19 +505,27 @@ export function SettingsPanel({
         submitting={false}
       />
 
-      {page === 'main' && (
-        <SettingsMainPage onNavigate={setPage} onExternalNav={handleClose} />
-      )}
-      {page === 'report' && !reportSuccess && (
-        <SettingsReportPage
-          selectedMovieId={selectedMovieId}
-          selectedTheaterName={selectedTheaterName}
-          onSuccess={() => setReportSuccess(true)}
-        />
-      )}
-      {page === 'report' && reportSuccess && <ReportSuccessNotice />}
-      {page === 'attribution' && <SettingsAttributionPage />}
-      {page === 'about' && <SettingsAboutPage />}
+      {/* 페이지 전환 — 메인→하위는 오른쪽에서, 뒤로가기는 왼쪽에서 들어온다 */}
+      <TransitionPanel
+        className="settings-pages"
+        activeIndex={PAGE_INDEX[page]}
+        direction={direction}
+        variants={slideVariants(isDesktopLayout ? 400 : 360)}
+        style={{ flex: 1, minHeight: 0 }}
+      >
+        <SettingsMainPage onNavigate={navigateTo} onExternalNav={handleClose} />
+        {reportSuccess ? (
+          <ReportSuccessNotice />
+        ) : (
+          <SettingsReportPage
+            selectedMovieId={selectedMovieId}
+            selectedTheaterName={selectedTheaterName}
+            onSuccess={() => setReportSuccess(true)}
+          />
+        )}
+        <SettingsAttributionPage />
+        <SettingsAboutPage />
+      </TransitionPanel>
     </div>
   )
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { motion, AnimatePresence } from 'motion/react'
 import { usePendingNavItem } from '@/hooks/usePendingNavItem'
 import { Button, IconButton, SearchBar, SearchBarButton } from '@/components/primitives'
 import { AddRequestModal, AddRequestCtaButton } from '@/components/domain/AddRequestModal'
@@ -250,9 +251,16 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
         )}
 
         {/* ── Dropdown ── */}
+        <AnimatePresence>
         {focused && (
-          <div style={{
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97, y: -6 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.98, y: -4, transition: { duration: 0.12, ease: 'easeIn' } }}
+            transition={{ type: 'spring', duration: 0.28, bounce: 0.15 }}
+            style={{
             position: 'absolute', top: 'calc(100% + 8px)', left: 0, right: 0,
+            transformOrigin: 'top center',
             backgroundColor: 'var(--color-surface-card)',
             border: '1px solid var(--color-border)',
             borderRadius: 'var(--radius-popover)',
@@ -306,8 +314,9 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
                 <div style={{ height: 6 }} />
               </>
             )}
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
       </div>
       <AddRequestModal open={requestOpen} query={requestQuery} onClose={() => setRequestOpen(false)} />
       </>
