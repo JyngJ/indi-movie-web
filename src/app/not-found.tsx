@@ -14,9 +14,9 @@ export default function NotFound() {
       textAlign: 'center',
     }}>
       <img
-        src="/404.svg"
+        src="/illust/404.png"
         alt=""
-        style={{ width: 220, height: 'auto', opacity: 0.85 }}
+        style={{ width: 240, height: 'auto', opacity: 0.85 }}
       />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <p style={{
