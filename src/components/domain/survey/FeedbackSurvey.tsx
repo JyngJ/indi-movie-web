@@ -49,6 +49,14 @@ export function FeedbackSurvey({ onClose, visits }: Props) {
   const [movieMissingText, setMovieMissingText] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
+  const [closing, setClosing] = useState(false)
+
+  /** 퇴장 전환을 재생한 뒤 언마운트 — 즉시 onClose하면 팍 사라진다 */
+  function animateClose(after: () => void) {
+    if (closing) return
+    setClosing(true)
+    setTimeout(after, 180)
+  }
 
   useEffect(() => {
     trackEvent('survey shown', { visits })
@@ -58,7 +66,7 @@ export function FeedbackSurvey({ onClose, visits }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
-      if (done) onClose()
+      if (done) animateClose(onClose)
       else dismiss('close_button')
     }
     window.addEventListener('keydown', onKey)
@@ -89,7 +97,7 @@ export function FeedbackSurvey({ onClose, visits }: Props) {
       visits,
       next_visit: nextMilestone(visits),
     })
-    onClose()
+    animateClose(onClose)
   }
 
   async function submit() {
@@ -121,7 +129,7 @@ export function FeedbackSurvey({ onClose, visits }: Props) {
 
   return (
     <div
-      className={styles.overlay}
+      className={`${styles.overlay} ${closing ? styles.overlayOut : ''}`}
       data-rc="survey-scrim"
       role="dialog"
       aria-modal="true"
@@ -130,17 +138,17 @@ export function FeedbackSurvey({ onClose, visits }: Props) {
          dead click 1위였다. 카드 내부 클릭은 여기까지 올라오지만 target으로 걸러낸다. */
       onClick={(e) => {
         if (e.target !== e.currentTarget) return
-        if (done) onClose()
+        if (done) animateClose(onClose)
         else dismiss('scrim')
       }}
     >
-      <div className={styles.card}>
+      <div className={`${styles.card} ${closing ? styles.cardOut : ''}`}>
         <IconButton
           variant="ghost"
           size={32}
           data-rc="survey-close"
           style={{ position: 'absolute', top: 14, right: 14 }}
-          onClick={done ? onClose : () => dismiss('close_button')}
+          onClick={done ? () => animateClose(onClose) : () => dismiss('close_button')}
           aria-label="닫기"
         >
           <IcoX />
@@ -152,7 +160,7 @@ export function FeedbackSurvey({ onClose, visits }: Props) {
             <p className={`display-h2 ${styles.title}`}>고맙습니다!</p>
             <p className={styles.sub}>남겨주신 의견은 다음 개선에 바로 반영할게요.</p>
             <div className={styles.ctaCol}>
-              <Button type="button" variant="secondary" size="full" onClick={onClose}>
+              <Button type="button" variant="secondary" size="full" onClick={() => animateClose(onClose)}>
                 닫기
               </Button>
             </div>
