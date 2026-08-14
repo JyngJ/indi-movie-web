@@ -646,20 +646,22 @@ img {
 }
 @keyframes nf404Weave {
   0%   { transform: translate(0, 0); }
-  20%  { transform: translate(0.8px, -1.1px); }
-  40%  { transform: translate(-1px, 0.8px); }
-  60%  { transform: translate(0.6px, 1.2px); }
-  80%  { transform: translate(-0.8px, -0.7px); }
+  20%  { transform: translate(0.35px, -0.5px); }
+  40%  { transform: translate(-0.45px, 0.35px); }
+  60%  { transform: translate(0.25px, 0.55px); }
+  80%  { transform: translate(-0.35px, -0.3px); }
 }
+/* 그림자는 머리 위 스크린 면에 진다 — 영사 빔이 확대하므로 실제 머리보다 크고 위에 뜬다.
+   머리 상단 y325(36%) 위쪽, 스크린 안(하한 48.6%)에 걸치게. */
 .nf404-head-shadow {
   position: absolute;
-  left: 29%;
-  top: 33%;
-  width: 17%;
-  height: 14%;
-  background: radial-gradient(ellipse 50% 50% at 50% 60%,
-    rgba(46, 38, 26, 0.30) 0%,
-    rgba(46, 38, 26, 0.18) 55%,
+  left: 27%;
+  top: 23%;
+  width: 21%;
+  height: 15%;
+  background: radial-gradient(ellipse 50% 55% at 50% 65%,
+    rgba(46, 38, 26, 0.26) 0%,
+    rgba(46, 38, 26, 0.15) 55%,
     rgba(46, 38, 26, 0) 100%);
   animation: gateFringe 0.83s steps(1, end) infinite;
   pointer-events: none;
