@@ -408,7 +408,7 @@ export function CurationSectionRow({
         {/* 수상 문양 워터마크 — 종이에 찍힌 도장 (저대비·회전·우측 블리드) */}
         {decoSrc && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={decoSrc} alt="" aria-hidden
+          <img src={decoSrc} alt="영화제 수상 문양" aria-hidden
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
             style={{
               position: 'absolute', right: '-16%', top: '64%',

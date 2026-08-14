@@ -48,7 +48,7 @@ export function AnalyticsScripts() {
               width="1"
               style={{ display: 'none' }}
               src={`https://www.facebook.com/tr?id=${metaPixelId}&ev=PageView&noscript=1`}
-              alt=""
+              alt="Meta Pixel"
             />
           </noscript>
         </>

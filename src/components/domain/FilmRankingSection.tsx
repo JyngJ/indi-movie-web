@@ -181,7 +181,7 @@ function RankingCard({ entry, movie, rank, isDesktop, gapRight, onClick, revealI
             transform: hovered ? 'scale(1.1)' : 'scale(1)',
             transformOrigin: 'center center',
           }}>
-            <PosterThumb src={movie?.posterUrl} alt={movie?.title ?? ''} width={width} height={height} shadow={false} onReady={() => setPosterReady(true)} />
+            <PosterThumb src={movie?.posterUrl} alt={movie?.title ?? '영화 포스터'} width={width} height={height} shadow={false} onReady={() => setPosterReady(true)} />
           </div>
         </div>
 
