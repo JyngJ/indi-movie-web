@@ -4,11 +4,11 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Movie } from '@/types/api'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
-import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { RevealItem } from '@/components/motion'
 import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
 import { trackEvent } from '@/lib/analytics/client'
 import { buildSectionAnalytics } from '@/lib/curation/sectionRuns'
+import { FooterWordmark } from '@/components/domain/FooterWordmark'
 
 type SortKey = 'theaters_desc' | 'theaters_asc' | 'year_desc' | 'year_asc' | 'alpha'
 
@@ -183,8 +183,6 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
   const sorted = sortMovies(movies, sortKey, tcMap)
   const regionText = regionLabel ? `${regionLabel} ` : ''
 
-  const logoSize = isDesktop ? 120 : 90
-  const bottomSafeArea = isDesktop ? 32 : GLOBAL_NAV_MOBILE_HEIGHT + 24
 
   return (
     <>
@@ -355,21 +353,7 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
         </div>
         {hasMore && <div ref={sentinelRef} style={{ height: 1 }} />}
 
-        {/* 푸터 로고 */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          paddingTop: 48,
-          paddingBottom: bottomSafeArea,
-        }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/logo.svg"
-            alt="영화볼지도"
-            width={logoSize}
-            style={{ opacity: 0.6 }}
-          />
-        </div>
+        <FooterWordmark isDesktop={isDesktop} />
       </section>
     </>
   )

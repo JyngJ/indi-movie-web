@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
+import { FooterWordmark } from '@/components/domain/FooterWordmark'
 import type { FaqSection } from './content'
 
 /**
@@ -174,6 +175,8 @@ export function FaqClient({ sections }: { sections: FaqSection[] }) {
           </section>
         ))}
       </main>
+
+      <FooterWordmark isDesktop={isDesktop} />
     </div>
   )
 }
