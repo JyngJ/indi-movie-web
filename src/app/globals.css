@@ -657,12 +657,12 @@ img {
   position: absolute;
   left: 52%;
   top: 37%;
-  width: 15%;
-  height: 11%;
-  background: radial-gradient(ellipse 50% 55% at 50% 65%,
-    rgba(46, 38, 26, 0.26) 0%,
-    rgba(46, 38, 26, 0.15) 55%,
-    rgba(46, 38, 26, 0) 100%);
+  width: 13%;
+  height: 13.5%;
+  /* 머리 실루엣 — 또렷한 원형 그림자. 가장자리만 살짝 풀어준다 */
+  background: rgba(46, 38, 26, 0.42);
+  border-radius: 50%;
+  filter: blur(1.5px);
   animation: gateFringe 0.83s steps(1, end) infinite;
   pointer-events: none;
 }
