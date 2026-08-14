@@ -63,6 +63,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **하드코딩 검사:** `npm run audit:ui` — 결과는 `.audit-out/migration.csv` · `.audit-out/report-v3.md` (git 미추적).
 - **회귀 게이트:** `npm run audit:ui:check` — `scripts/audit/baseline.json` 대비 카테고리별 카운트가 **증가하면 실패** (primitiveAdoptionPct는 감소하면 실패). CI(`.github/workflows/ui-audit.yml`)가 PR마다 실행한다.
 - 수치를 개선했으면(카운트 감소/채택률 증가) `scripts/audit/baseline.json`을 낮춰서 **같이 커밋할 것**. 절대 baseline을 올려서 통과시키지 말 것 — 신규 하드코딩 금지, 토큰을 사용한다.
+- **채택률이 떨어지는데 코드는 좋아진 경우가 있다.** 여러 호출부를 공용 컴포넌트로 묶으면 그 호출부들이 prim에도 raw에도 안 잡혀 분자·분모가 같이 줄고 비율이 내려간다(정규식 카운트라 합성을 못 본다). 이때는 **커밋 메시지에 이유를 적고 baseline을 조정**한다. 관계없는 파일에서 전환거리를 찾아 숫자를 메우지 말 것 — 지표에 코드를 맞추는 순간 지표가 거짓말이 된다.
+- `PRIM` 목록은 `src/components/primitives/index.ts`에서 자동으로 뽑는다. 손으로 적지 말 것 — 예전에 손 목록이 12개에 멈춰 있는 동안 index는 26개로 늘어, 프리미티브 62개 사용이 통째로 안 세졌다.
 - 감사 제외 파일 목록(스크립트에 하드코딩됨)은 그대로 유지: `onboarding/illustrations` / `GvPinSlots` / `GvPin` / `MapPin` / `GvMarkerIcon` / `opengraph-image` / `dev/components` / `src/app/admin` (style) / `subwayUtils`.
 
 ## Crawler Operations
