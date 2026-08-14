@@ -163,7 +163,8 @@ export function SearchPanel({
             {children}
           </div>
         ) : (
-          <div style={{ textAlign: 'center', marginTop: 60 }}>
+          <div style={{ textAlign: 'center', marginTop: 48 }}>
+            <img src="/illust/no-results-closeup.png" alt="" style={{ width: 156, height: 'auto', opacity: 0.8, display: 'block', margin: '0 auto 12px' }} />
             <p style={{ margin: '0 0 16px', fontSize: 14, color: 'var(--color-text-caption)' }}>
               &ldquo;{query}&rdquo;와 일치하는 결과가 없습니다
             </p>

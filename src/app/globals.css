@@ -631,6 +631,37 @@ img {
   .projector-gate { color: var(--color-success); }
 }
 
+/* ── 404 페이지 스크린 연출 — projector-gate 위에 얹는 전용 레이어 ──
+   숫자(404-numbers.png)는 그림에서 분리한 래스터라 gateWeave의 0.5px 진폭으론
+   240px 렌더 크기에서 안 보인다. 전용 키프레임으로 1px대 진폭을 준다.
+   그림자는 머리가 영사 빔을 가린 것 — 위치는 원본 1200×900 실측(머리 중심 x450, 상단 y325). */
+.nf404-numbers {
+  position: absolute;
+  left: 38.3%;
+  top: 19.4%;
+  width: 29.9%;
+  height: auto;
+  opacity: 0.85;
+  animation: nf404Weave 0.71s steps(1, end) infinite;
+}
+@keyframes nf404Weave {
+  0%   { transform: translate(0, 0); }
+  20%  { transform: translate(0.35px, -0.5px); }
+  40%  { transform: translate(-0.45px, 0.35px); }
+  60%  { transform: translate(0.25px, 0.55px); }
+  80%  { transform: translate(-0.35px, -0.3px); }
+}
+/* 빛 레이어에서 머리 자리만 뚫는 마스크 — 머리는 빔 앞이라 빛이 안 닿는다.
+   머리 실측(원본 1200×900): 중심 (450, 400), 반경 가로 ~95 / 세로 ~75.
+   좌표는 글로우 사각형(272,72 ~ 980,437) 기준 %로 환산, 여유 포함. */
+.nf404-glow {
+  -webkit-mask-image: radial-gradient(ellipse 16% 26% at 25.1% 90%, transparent 97%, #000 100%);
+  mask-image: radial-gradient(ellipse 16% 26% at 25.1% 90%, transparent 97%, #000 100%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .nf404-numbers { animation: none; }
+}
+
 /* 예매 CTA — 외부 사이트가 열리는 동안의 진행 표시 */
 @keyframes bookingCtaSpin {
   to { transform: rotate(360deg); }

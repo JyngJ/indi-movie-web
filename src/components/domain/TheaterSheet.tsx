@@ -1250,8 +1250,8 @@ export function TheaterSheet({
                     gap: 8,
                     minWidth: '100%',
                   }}>
-                    <img src="/closed.svg" alt="상영 정보 없음" style={{ width: 72, height: 92, opacity: 0.5 }} />
-                    <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>상영 예정 정보가 없습니다</span>
+                    <img src="/illust/no-showtimes.png" alt="상영 정보 없음" style={{ width: 78, height: 104, opacity: 0.7 }} />
+                    <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>확인된 상영 정보가 없어요</span>
                   </div>
                 )
               : (() => {
@@ -1596,8 +1596,8 @@ export function TheaterSheet({
                         alignItems: 'center', justifyContent: 'center',
                         padding: '8px 0 12px', gap: 8, minWidth: '100%',
                       }}>
-                        <img src="/closed.svg" alt="상영 정보 없음" style={{ width: 72, height: 92, opacity: 0.5 }} />
-                        <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>상영 예정 정보가 없습니다</span>
+                        <img src="/illust/no-showtimes.png" alt="상영 정보 없음" style={{ width: 78, height: 104, opacity: 0.7 }} />
+                        <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>확인된 상영 정보가 없어요</span>
                       </div>
                     )
                   : <>

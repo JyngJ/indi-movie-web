@@ -297,6 +297,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
                 </>
               ) : (
                 <div style={{ padding: '16px 16px 20px', textAlign: 'center' }}>
+                  <img src="/illust/no-results-closeup.png" alt="" style={{ width: 120, height: 'auto', opacity: 0.8, display: 'block', margin: '0 auto 8px' }} />
                   <p style={{ margin: '0 0 12px', fontSize: 13, color: 'var(--color-text-caption)' }}>
                     &ldquo;{query}&rdquo;와 일치하는 결과가 없습니다
                   </p>
@@ -387,7 +388,8 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
                 ))}
               </div>
             ) : (
-              <div style={{ textAlign: 'center', marginTop: 60 }}>
+              <div style={{ textAlign: 'center', marginTop: 48 }}>
+                <img src="/illust/no-results-closeup.png" alt="" style={{ width: 156, height: 'auto', opacity: 0.8, display: 'block', margin: '0 auto 12px' }} />
                 <p style={{ margin: '0 0 16px', fontSize: 14, color: 'var(--color-text-caption)' }}>
                   &ldquo;{mInput}&rdquo;와 일치하는 결과가 없습니다
                 </p>
