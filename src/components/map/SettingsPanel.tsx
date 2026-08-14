@@ -266,15 +266,14 @@ export function SettingsReportPage({
           placeholder="예) 라이카시네마 상영 시간표가 어제 날짜로 표시돼요."
           style={{ ...inputStyle, minHeight: 120 }}
         />
-        <div style={{ textAlign: 'right', fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)', marginTop: 4 }}>{detail.length}/500</div>
-      </div>
-
-      {/* 스크린샷 */}
-      <div>
-        <input ref={fileInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={e => setFiles(Array.from(e.target.files ?? []).slice(0, 3))} />
-        <Button variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()}>
-          <IcoCamera /> 스크린샷 첨부
-        </Button>
+        {/* 첨부 버튼과 글자수 카운터를 한 줄로 — 세로 공간 확보로 전송 버튼이 화면 안에 들어온다 */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 8 }}>
+          <input ref={fileInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={e => setFiles(Array.from(e.target.files ?? []).slice(0, 3))} />
+          <Button variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()}>
+            <IcoCamera /> 스크린샷 첨부
+          </Button>
+          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)', flexShrink: 0 }}>{detail.length}/500</span>
+        </div>
         {files.length > 0 && (
           <div style={{ marginTop: 8, fontSize: 12, color: 'var(--color-text-caption)' }}>
             {files.map(f => f.name).join(', ')}
