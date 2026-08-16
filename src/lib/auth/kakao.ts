@@ -11,8 +11,9 @@ export const KAKAO_AUTHORIZE_URL = 'https://kauth.kakao.com/oauth/authorize'
 export const KAKAO_TOKEN_URL = 'https://kauth.kakao.com/oauth/token'
 export const KAKAO_CALLBACK_PATH = '/auth/kakao/callback'
 
-/** 요청 스코프 — 개발자 콘솔 동의항목과 정확히 일치해야 함 (현재: 닉네임 필수 동의). openid는 OIDC id_token용 */
-export const KAKAO_SCOPES = ['openid', 'profile_nickname'] as const
+/** 요청 스코프 — 개발자 콘솔 동의항목과 정확히 일치해야 함.
+ *  openid: OIDC id_token / profile_nickname: 필수 동의 / talk_message: 선택 동의(카톡 "나에게 보내기" 알림, 거부해도 로그인 됨) */
+export const KAKAO_SCOPES = ['openid', 'profile_nickname', 'talk_message'] as const
 
 export interface KakaoTokenResponse {
   access_token: string
@@ -20,7 +21,17 @@ export interface KakaoTokenResponse {
   id_token: string
   expires_in: number
   refresh_token_expires_in?: number
+  /** 공백 구분. 사용자가 실제 동의한 스코프 (선택 동의 거부 시 빠짐) */
   scope?: string
+  token_type: string
+}
+
+/** refresh 응답 — id_token 없음, refresh_token은 갱신됐을 때만 옴 */
+export interface KakaoRefreshResponse {
+  access_token: string
+  expires_in: number
+  refresh_token?: string
+  refresh_token_expires_in?: number
   token_type: string
 }
 
@@ -103,4 +114,60 @@ export function publicOrigin(request: { url: string; headers: { get(name: string
     request.headers.get('x-forwarded-proto') ??
     (host.startsWith('localhost') || host.startsWith('127.') ? 'http' : 'https')
   return `${proto}://${host}`
+}
+
+/** refresh_token → 새 access token (필요 시 새 refresh_token) */
+export async function refreshKakaoToken(params: {
+  refreshToken: string
+  clientId: string
+  clientSecret?: string
+}): Promise<KakaoRefreshResponse> {
+  const body = new URLSearchParams({
+    grant_type: 'refresh_token',
+    client_id: params.clientId,
+    refresh_token: params.refreshToken,
+  })
+  if (params.clientSecret) body.set('client_secret', params.clientSecret)
+  const res = await fetch(KAKAO_TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8' },
+    body,
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(`kakao token refresh failed: ${res.status} ${text.slice(0, 200)}`)
+  }
+  return (await res.json()) as KakaoRefreshResponse
+}
+
+export const KAKAO_MEMO_SEND_URL = 'https://kapi.kakao.com/v2/api/talk/memo/default/send'
+
+/** 카카오톡 "나에게 보내기" — 텍스트 기본 템플릿. 사용자의 '나와의 채팅'방에 도착한다. */
+export async function sendKakaoMemoText(params: {
+  accessToken: string
+  text: string
+  linkUrl: string
+  buttonTitle?: string
+}): Promise<void> {
+  const template = {
+    object_type: 'text',
+    text: params.text.slice(0, 200),
+    link: { web_url: params.linkUrl, mobile_web_url: params.linkUrl },
+    button_title: params.buttonTitle ?? '자세히 보기',
+  }
+  const body = new URLSearchParams({ template_object: JSON.stringify(template) })
+  const res = await fetch(KAKAO_MEMO_SEND_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${params.accessToken}`,
+      'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+    },
+    body,
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(`kakao memo send failed: ${res.status} ${text.slice(0, 300)}`)
+  }
 }

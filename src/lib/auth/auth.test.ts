@@ -64,7 +64,7 @@ describe('buildKakaoAuthorizeUrl', () => {
     const { buildKakaoAuthorizeUrl } = await import('./kakao')
     const u = new URL(buildKakaoAuthorizeUrl({ clientId: 'cid', redirectUri: 'http://localhost:3000/auth/kakao/callback', state: 's1', nonce: 'n1' }))
     expect(u.origin + u.pathname).toBe('https://kauth.kakao.com/oauth/authorize')
-    expect(u.searchParams.get('scope')).toBe('openid profile_nickname')
+    expect(u.searchParams.get('scope')).toBe('openid profile_nickname talk_message')
     expect(u.searchParams.get('client_id')).toBe('cid')
     expect(u.searchParams.get('state')).toBe('s1')
     expect(u.searchParams.get('nonce')).toBe('n1')

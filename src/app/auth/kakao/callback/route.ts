@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { exchangeKakaoCode, KAKAO_CALLBACK_PATH, kakaoEnv, publicOrigin } from '@/lib/auth/kakao'
 import { sanitizeReturnTo } from '@/lib/auth/types'
 import { createSupabaseAuthServerClient } from '@/lib/supabase/auth-server'
+import { saveKakaoTokens } from '@/lib/auth/kakaoTokenStore'
+import type { KakaoTokenResponse } from '@/lib/auth/kakao'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,32 +38,37 @@ export async function GET(request: NextRequest) {
 
   const { clientId, clientSecret } = kakaoEnv()
 
-  let idToken: string
-  let accessToken: string
+  let tok: KakaoTokenResponse
   try {
-    const tok = await exchangeKakaoCode({
+    tok = await exchangeKakaoCode({
       code,
       clientId,
       clientSecret,
       redirectUri: `${origin}${KAKAO_CALLBACK_PATH}`,
     })
-    idToken = tok.id_token
-    accessToken = tok.access_token
   } catch (e) {
     console.error('[auth/kakao] token exchange', e)
     return fail('kakao_token_exchange')
   }
 
   const supabase = await createSupabaseAuthServerClient()
-  const { error } = await supabase.auth.signInWithIdToken({
+  const { data, error } = await supabase.auth.signInWithIdToken({
     provider: 'kakao',
-    token: idToken,
-    access_token: accessToken,
+    token: tok.id_token,
+    access_token: tok.access_token,
     nonce,
   })
-  if (error) {
+  if (error || !data.user) {
     console.error('[auth/kakao] signInWithIdToken', error)
-    return fail(error.code ?? 'supabase_id_token')
+    return fail(error?.code ?? 'supabase_id_token')
+  }
+
+  // 카카오 토큰 보관 — 카톡 "나에게 보내기" 알림용. 실패해도 로그인은 성공으로 처리(알림만 못 보냄).
+  try {
+    const kakaoUserId = String((data.user.user_metadata as Record<string, unknown> | undefined)?.provider_id ?? '') || null
+    await saveKakaoTokens(data.user.id, kakaoUserId, tok)
+  } catch (e) {
+    console.error('[auth/kakao] saveKakaoTokens', e)
   }
 
   const res = NextResponse.redirect(`${origin}${next}`)
