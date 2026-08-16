@@ -703,7 +703,7 @@ export function MovieDetailClient({ movieId, theaterId, initialData, initialShow
 
       <HeroSection movie={movie} titleRef={titleRef} desktop={isDesktop} />
       {/* 액션 행 — 피그마 G 확정: 히어로 아래 [♡ 관심 등록] (지도 쪽 상세는 공유 없음) */}
-      <FavoriteActionRow type="movie" id={movie.id} style={{ padding: isDesktop ? '0 0 20px' : '0 16px 20px', maxWidth: isDesktop ? 480 : undefined }} />
+      <FavoriteActionRow type="movie" id={movie.id} style={{ paddingLeft: isDesktop ? 0 : 16, paddingRight: isDesktop ? 0 : 16, marginBottom: 20, maxWidth: isDesktop ? 480 : undefined }} />
 
       <TabBar
         active={tab}

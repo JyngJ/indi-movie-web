@@ -43,7 +43,7 @@ export function FavoriteActionButton({
       size="md"
       onClick={() => toggle(type, id, { loginDescription: LOGIN_COPY[type] })}
       aria-pressed={active}
-      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, ...style }}
+      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, ...style }}
     >
       <HeartIcon active={active} />
       {active ? LABEL[type].on : LABEL[type].off}

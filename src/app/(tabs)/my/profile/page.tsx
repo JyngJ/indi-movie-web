@@ -109,7 +109,7 @@ export default function ProfilePage() {
           </MenuCard>
 
           {/* 로그아웃 / 회원탈퇴 — 분리 버튼, 둘 다 확인 다이얼로그 (피그마 C 확정 2026-08-17) */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '8px 16px 0' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingLeft: 16, paddingRight: 16, marginTop: 8 }}>
             <Button variant="tertiary" size="md" onClick={() => setConfirmLogout(true)} disabled={busy}>로그아웃</Button>
             <Button variant="text" size="md" onClick={() => setConfirmDelete(true)} disabled={busy} style={{ color: 'var(--color-error)' }}>회원탈퇴</Button>
           </div>

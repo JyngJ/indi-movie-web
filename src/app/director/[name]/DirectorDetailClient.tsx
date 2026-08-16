@@ -255,7 +255,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
       </div>
 
       <ProfileHero name={directorName} originalName={profile?.originalName} photoUrl={profile?.photoUrl} />
-      <FavoriteActionRow type="director" id={directorName} style={{ padding: '0 16px 16px' }} />
+      <FavoriteActionRow type="director" id={directorName} style={{ paddingLeft: 16, paddingRight: 16, marginBottom: 16 }} />
 
       {/* 약력 */}
       {profile?.bio && (
