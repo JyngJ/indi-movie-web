@@ -28,7 +28,8 @@ export function MyPageShell({
       }}
     >
       <SettingsHeader title={title} onBack={onBack} />
-      <div style={{ flex: 1, overflowY: 'auto', width: '100%', maxWidth: 560, paddingBottom: 24 }}>{children}</div>
+      {/* 데스크톱: 본문 컬럼(560)을 가운데 — 상영작 섹션과 동일 문법. 모바일은 풀폭 */}
+      <div style={{ flex: 1, overflowY: 'auto', width: '100%', maxWidth: 560, margin: isDesktop ? '0 auto' : 0, paddingBottom: 24 }}>{children}</div>
     </div>
   )
 }
