@@ -9,13 +9,13 @@ import { sanitizeReturnTo } from './types'
 export const AUTH_CALLBACK_PATH = '/auth/callback'
 
 /**
- * 제공자별 요청 스코프. Supabase 기본값(카카오: account_email profile_image profile_nickname)을 덮어쓴다.
- * 카카오는 비즈앱이 아니면 이메일 동의항목을 못 켜고, 켜지 않은 항목을 요청하면 KOE205로 거부한다 —
- * 개발자 콘솔 동의항목에서 켠 것과 정확히 일치해야 한다. (현재: 닉네임만 "필수 동의")
+ * 제공자별 추가 스코프. 주의: Supabase(GoTrue)는 이 값을 제공자 기본 스코프에 *덧붙이기만* 하고 빼지 못한다.
+ * 카카오 기본값 = account_email profile_image profile_nickname — 셋 다 개발자 콘솔 동의항목에서 켜져 있어야
+ * KOE205가 안 난다 (account_email은 비즈 앱 전환 필요). 여기선 빈 값으로 두고 콘솔 설정으로 맞춘다.
  */
 const PROVIDER_SCOPES: Record<AuthProvider, string> = {
-  kakao: 'profile_nickname',
-  google: 'openid email profile',
+  kakao: '',
+  google: '',
 }
 
 interface ProfileRow {
@@ -61,7 +61,7 @@ export function createSupabaseAuthRepository(): AuthRepository {
       const redirectTo = `${origin}${AUTH_CALLBACK_PATH}?next=${encodeURIComponent(next)}`
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo, scopes: PROVIDER_SCOPES[provider] },
+        options: { redirectTo, scopes: PROVIDER_SCOPES[provider] || undefined },
       })
       if (error) throw error
     },
