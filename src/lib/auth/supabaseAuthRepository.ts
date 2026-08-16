@@ -8,15 +8,9 @@ import { sanitizeReturnTo } from './types'
 /** OAuth 콜백 라우트. 여기서 code → session 교환 후 returnTo로 보낸다 */
 export const AUTH_CALLBACK_PATH = '/auth/callback'
 
-/**
- * 제공자별 추가 스코프. 주의: Supabase(GoTrue)는 이 값을 제공자 기본 스코프에 *덧붙이기만* 하고 빼지 못한다.
- * 카카오 기본값 = account_email profile_image profile_nickname — 셋 다 개발자 콘솔 동의항목에서 켜져 있어야
- * KOE205가 안 난다 (account_email은 비즈 앱 전환 필요). 여기선 빈 값으로 두고 콘솔 설정으로 맞춘다.
- */
-const PROVIDER_SCOPES: Record<AuthProvider, string> = {
-  kakao: '',
-  google: '',
-}
+/** 카카오는 Supabase 프로바이더가 아니라 우리 route(/auth/kakao/start → callback → signInWithIdToken)로 간다.
+ *  이유는 src/lib/auth/kakao.ts 상단 주석 참고 (GoTrue 하드코딩 스코프 → KOE205). */
+export const KAKAO_START_PATH = '/auth/kakao/start'
 
 interface ProfileRow {
   display_name: string | null
@@ -58,10 +52,16 @@ export function createSupabaseAuthRepository(): AuthRepository {
     async signInWithProvider(provider: AuthProvider, returnTo: string) {
       const origin = window.location.origin
       const next = sanitizeReturnTo(returnTo)
+
+      if (provider === 'kakao') {
+        window.location.assign(`${KAKAO_START_PATH}?next=${encodeURIComponent(next)}`)
+        return
+      }
+
       const redirectTo = `${origin}${AUTH_CALLBACK_PATH}?next=${encodeURIComponent(next)}`
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo, scopes: PROVIDER_SCOPES[provider] || undefined },
+        options: { redirectTo },
       })
       if (error) throw error
     },
