@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toSecureImageUrl } from '@/lib/media/imageUrl'
 
 interface PosterThumbProps {
   src?: string
@@ -23,7 +24,7 @@ interface PosterThumbProps {
 }
 
 export function PosterThumb({
-  src,
+  src: rawSrc,
   alt = '',
   width = 68,
   height = 102,
@@ -40,6 +41,9 @@ export function PosterThumb({
   // 캐시된 이미지는 complete가 참이라 페이드 없이 즉시 보인다(재방문 깜빡임 방지).
   const [loaded, setLoaded] = useState(false)
   const markLoaded = () => setLoaded(true)
+
+  /* http:// 포스터는 https 페이지에서 mixed content로 차단된다 — 마지막 방어선 */
+  const src = toSecureImageUrl(rawSrc)
 
   const radiusVar = radius ?? (size === 'lg'
     ? 'var(--comp-poster-sheet-radius)'   /* 8px */

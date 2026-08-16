@@ -7,6 +7,7 @@ import { useMovies, useActiveMovieIds, useDirectorProfile } from '@/lib/supabase
 import type { Movie } from '@/types/api'
 import { Toast, IconButton, SortToggle } from '@/components/primitives'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
+import { toSecureImageUrl } from '@/lib/media/imageUrl'
 
 function useIsDesktopDetail() {
   return useMediaQuery('(min-width: 1024px)')   /* 레일(1024)과 기준 통일 */
@@ -73,7 +74,7 @@ function ProfileHero({
         boxShadow: '0 8px 24px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10)',
       }}>
         {photoUrl ? (
-          <img src={photoUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
+          <img src={toSecureImageUrl(photoUrl)} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
         ) : (
           <svg width={48} height={48} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
