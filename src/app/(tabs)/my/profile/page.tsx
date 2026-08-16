@@ -102,7 +102,7 @@ export default function ProfilePage() {
             {user.providers.map((p, i) => (
               <div key={p} style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'var(--color-surface-card)', borderBottom: i < user.providers.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
                 <span style={{ fontSize: 'var(--text-body)', fontWeight: 600, color: 'var(--color-text-primary)' }}>{PROVIDER_LABEL[p]}</span>
-                <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>{user.email ?? '이메일 미제공'}</span>
+                {user.email && <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>{user.email}</span>}
               </div>
             ))}
           </MenuCard>

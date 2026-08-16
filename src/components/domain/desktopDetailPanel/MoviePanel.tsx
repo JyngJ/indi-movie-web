@@ -13,6 +13,7 @@ import { Toast, Button } from '@/components/primitives'
 import { MovieInfoTable } from '@/components/domain/movieDetail/MovieInfoTable'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 import { PanelShell } from './PanelShell'
+import { FavoriteToggle } from '@/components/domain/favorites/FavoriteToggle'
 import { IcoUser, IcoChevronRight, IcoPin } from './icons'
 
 /* ── 영화 상세 패널 ── */
@@ -70,7 +71,7 @@ export function MoviePanel({
   }
 
   return (
-    <PanelShell onClose={onClose} onBack={onBack} embedded={embedded} title={movie.title}>
+    <PanelShell onClose={onClose} onBack={onBack} embedded={embedded} title={movie.title} trailing={<FavoriteToggle type="movie" id={movie.id} label={movie.title} size={32} />}>
       {/* 히어로 */}
       <div style={{
         background: 'var(--color-surface-card)',

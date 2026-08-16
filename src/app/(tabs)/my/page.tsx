@@ -52,9 +52,9 @@ function MyPageInner() {
               <span style={{ fontSize: 'var(--text-h2)', fontWeight: 700, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {user.displayName ?? '이름 없음'}
               </span>
-              <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
-                {user.email ?? '이메일 미제공'}
-              </span>
+              {user.email && (
+                <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>{user.email}</span>
+              )}
             </div>
           </div>
 
