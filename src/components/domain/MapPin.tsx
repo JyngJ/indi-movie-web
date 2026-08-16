@@ -86,20 +86,27 @@ export function MapPin({ kind = 'indie', selected = false, favorite = 'none', la
         </div>
       )}
 
-      {/* dot */}
+      {/* dot — 관심 극장이면 원형 빨강 핀 안에 흰 하트 (흰 테두리 / 빨강 / 흰 하트) */}
       <div style={{ position: 'relative', zIndex: 1, width: DOT, height: DOT }}>
         <div style={{
           width: DOT,
           height: DOT,
           borderRadius: '50%',
-          backgroundColor: dot,
+          backgroundColor: favTheater && !dimmed ? 'var(--color-error-mid)' : dot,
           border: selected ? '2.5px solid #fff' : '2px solid var(--color-surface-bg)',
           boxShadow: selected
             ? '0 2px 8px rgba(0,0,0,0.28), 0 0 0 2.5px var(--color-primary-base)'
-            : favTheater && !dimmed
-              ? '0 2px 6px rgba(0,0,0,0.18), 0 0 0 2.5px var(--color-error-mid)'
-              : '0 2px 6px rgba(0,0,0,0.18)',
-        }} />
+            : '0 2px 6px rgba(0,0,0,0.18)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          {favTheater && !dimmed && (
+            <svg width={11} height={11} viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
+              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+            </svg>
+          )}
+        </div>
         {/* 관심 영화 상영 중 — 하트 뱃지 (우상단) */}
         {favMovie && !dimmed && (
           <div style={{

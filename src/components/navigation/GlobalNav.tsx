@@ -7,7 +7,6 @@ import { motion } from 'motion/react'
 import { useEffect, useState } from 'react'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useUIStore } from '@/store/uiStore'
-import { Flag } from 'lucide-react'
 
 /** §5 바텀 탭바 표준 높이(safe-area 포함) — 다른 화면 요소가 이 값만큼 비켜야 함 */
 export const GLOBAL_NAV_MOBILE_HEIGHT = 64
@@ -38,12 +37,12 @@ function IconFilm({ size = 23 }: { size?: number }) {
   )
 }
 
-function IconInstagram({ size = 21 }: { size?: number }) {
+function IconBell({ size = 23 }: { size?: number }) {
+  /* Lucide bell — 소식 탭 */
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="18" height="18" rx="5" />
-      <circle cx="12" cy="12" r="4" />
-      <circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none" />
+      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
     </svg>
   )
 }
@@ -58,15 +57,6 @@ function IconUser({ size = 23 }: { size?: number }) {
   )
 }
 
-function IconSettings({ size = 21 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
-    </svg>
-  )
-}
-
 interface MobileTab {
   key: string
   href: string
@@ -75,21 +65,24 @@ interface MobileTab {
 }
 
 // 홈('/')은 상영작 탭 — 진입점이 상영작으로 바뀌면서 지도는 '/map'으로 내려갔다.
-// 2026-08-16 4탭: 내 계정(/my) 추가 — 계정 관련은 설정 탭이 아니라 여기로 모은다 (IA 통합 보드 47번).
+// 2026-08-17 IA 개정(피그마 IA 통합 보드 47): 지도 / 상영작 / 소식(/feed) / MY(/my).
+// 설정은 탭에서 빠짐 — 모바일은 MY 우상단 ⚙ → /more, 데스크톱은 ⚙ → 설정 패널.
 const MOBILE_TABS: MobileTab[] = [
   { key: 'map', href: '/map', label: '지도', Icon: IconMap },
   { key: 'films', href: '/', label: '상영작', Icon: IconFilm },
-  { key: 'my', href: '/my', label: '내 계정', Icon: IconUser },
-  { key: 'more', href: '/more', label: '설정', Icon: IconSettings },
+  { key: 'feed', href: '/feed', label: '소식', Icon: IconBell },
+  { key: 'my', href: '/my', label: 'MY', Icon: IconUser },
 ]
 
-/** 데스크톱 레일 — 모바일의 '설정' 탭은 제외(레일 하단 설정 버튼이 그 내용을 대신 트리거) */
-const DESKTOP_RAIL_TABS = MOBILE_TABS.filter((tab) => tab.key !== 'more')
+/** 데스크톱 레일 — 위: 지도·상영작 / 아래(디바이더 밑): 소식·MY */
+const DESKTOP_RAIL_TOP = MOBILE_TABS.filter((tab) => tab.key === 'map' || tab.key === 'films')
+const DESKTOP_RAIL_BOTTOM = MOBILE_TABS.filter((tab) => tab.key === 'feed' || tab.key === 'my')
 
 /** 탭 활성 판정은 key 기준 — 상영작 탭은 홈('/')과 구 경로('/films/*') 양쪽을 모두 자기 영역으로 본다 */
 function isTabActive(pathname: string, key: string): boolean {
   if (key === 'map') return pathname === '/map'
   if (key === 'films') return pathname === '/' || pathname === '/films' || pathname.startsWith('/films/')
+  if (key === 'feed') return pathname === '/feed' || pathname.startsWith('/feed/')
   if (key === 'my') return pathname === '/my' || pathname.startsWith('/my/')
   return pathname === '/more' || pathname.startsWith('/more/')
 }
@@ -168,7 +161,6 @@ function MobileTabBar({ pathname, filmsHref }: { pathname: string; filmsHref: st
 function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: string }) {
   const isSearchOpen = useUIStore((s) => s.isSearchOpen)
   const setSearchOpen = useUIStore((s) => s.setSearchOpen)
-  const openSettingsPage = useUIStore((s) => s.openSettingsPage)
   const toggleMapDockCollapsed = useUIStore((s) => s.toggleMapDockCollapsed)
 
   const renderRailTab = ({ key, href, label, Icon }: MobileTab) => {
@@ -246,92 +238,15 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
         <Image src="/logo-tile.png" alt="영화볼지도 로고" width={40} height={40} style={{ borderRadius: 4 }} />
       </Link>
 
-      {/* 순서: 지도 - 영화 (검색은 지도 상단 검색창으로 진입 — 레일 탭 제거) */}
+      {/* 위: 지도 - 상영작 (검색은 지도 상단 검색창으로 진입 — 레일 탭 제거) */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
-        {DESKTOP_RAIL_TABS.map(renderRailTab)}
+        {DESKTOP_RAIL_TOP.map(renderRailTab)}
       </div>
 
-      {/* 하단 그룹: 신고 — 인스타 바로가기 — 구분선 — 설정 */}
+      {/* 아래: 디바이더 - 소식 - MY. 신고·인스타·설정 버튼은 MY ⚙(설정 패널)로 이동 (2026-08-17 IA) */}
       <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, width: '100%' }}>
-        <button
-          type="button"
-          onClick={() => {
-            if (isSearchOpen) setSearchOpen(false)
-            openSettingsPage('report')
-          }}
-          aria-label="신고"
-          className="hover-card"
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 4,
-            padding: '8px 4px',
-            marginLeft: 8,
-            marginRight: 8,
-            width: 'calc(100% - 16px)',
-            borderRadius: 12,
-            border: 'none',
-            color: INACTIVE_COLOR,
-            cursor: 'pointer',
-          }}
-        >
-          <Flag size={21} strokeWidth={1.75} color="currentColor" />
-          <span style={{ fontSize: 10, fontWeight: 600 }}>신고</span>
-        </button>
-
-        <a
-          href="https://www.instagram.com/indi.movie.map/"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="인스타그램 바로가기"
-          className="hover-card"
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 4,
-            padding: '8px 4px',
-            marginLeft: 8,
-            marginRight: 8,
-            width: 'calc(100% - 16px)',
-            borderRadius: 12,
-            color: INACTIVE_COLOR,
-            textDecoration: 'none',
-          }}
-        >
-          <IconInstagram size={21} />
-          <span style={{ fontSize: 10, fontWeight: 600 }}>Insta</span>
-        </a>
-
-        <div style={{ width: 'calc(100% - 32px)', height: 1, background: 'var(--color-border)' }} />
-
-        <button
-          type="button"
-          onClick={() => {
-            if (isSearchOpen) setSearchOpen(false)
-            openSettingsPage('main')
-          }}
-          aria-label="설정"
-          className="hover-card"
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 4,
-            padding: '8px 4px',
-            marginLeft: 8,
-            marginRight: 8,
-            width: 'calc(100% - 16px)',
-            borderRadius: 12,
-            border: 'none',
-            color: INACTIVE_COLOR,
-            cursor: 'pointer',
-          }}
-        >
-          <IconSettings size={21} />
-          <span style={{ fontSize: 10, fontWeight: 600 }}>설정</span>
-        </button>
+        <div style={{ width: 'calc(100% - 16px)', height: 1, background: 'var(--color-neutral-300)' }} />
+        {DESKTOP_RAIL_BOTTOM.map(renderRailTab)}
       </div>
     </nav>
   )
@@ -346,7 +261,7 @@ export function getPrevPathname(): string | null {
   try { return sessionStorage.getItem(PREV_PATH_KEY) } catch { return null }
 }
 
-/** 글로벌 네비게이션 — 모바일: 하단 탭바(지도·상영작·내 계정·설정), 데스크톱: 좌측 아이콘 레일(지도·상영작·내 계정 + 하단 신고/인스타/설정) */
+/** 글로벌 네비게이션 — 모바일: 하단 탭바(지도·상영작·소식·MY), 데스크톱: 좌측 아이콘 레일(지도·상영작 | 소식·MY) */
 export function GlobalNav() {
   const isDesktop = useIsDesktopLayout()
   const pathname = usePathname()

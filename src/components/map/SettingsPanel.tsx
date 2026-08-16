@@ -61,7 +61,7 @@ const IcoGitHub = () => (
 )
 
 /* ── 공통 헤더 ── */
-export function SettingsHeader({ title, onBack, onClose, submitting }: { title: string; onBack?: () => void; onClose?: () => void; submitting?: boolean }) {
+export function SettingsHeader({ title, onBack, onClose, submitting, trailing }: { title: string; onBack?: () => void; onClose?: () => void; submitting?: boolean; trailing?: React.ReactNode }) {
   return (
     <div style={{
       height: 52,
@@ -76,6 +76,7 @@ export function SettingsHeader({ title, onBack, onClose, submitting }: { title: 
       <span className="display-h2" style={{ flex: 1, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {title}
       </span>
+      {trailing}
       {onClose && (
         <IconButton variant="ghost" size={44} aria-label="닫기" onClick={onClose} disabled={submitting}><IcoClose /></IconButton>
       )}

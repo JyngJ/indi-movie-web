@@ -424,7 +424,7 @@ export function FilterBar({
         {/* 관심만 — 비로그인이면 아예 숨긴다 (disabled보다 안 보이는 게 낫다) */}
         {authStatus === 'signed-in' && (
           <FilterChip
-            label="관심만"
+            label="♥ 관심"
             rc="favorites"
             selected={favorites}
             onClick={() => { setFavorites(b => !b); chip({ favorites: !favorites }) }}
