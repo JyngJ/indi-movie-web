@@ -2,12 +2,13 @@
 
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
-import { UserRound } from 'lucide-react'
+import { Heart, UserRound } from 'lucide-react'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { LoginPanel } from '@/components/auth/LoginPanel'
 import { MyPageShell } from '@/components/auth/MyPageShell'
 import { MenuCard, MenuRow } from '@/components/primitives'
 import { Avatar } from '@/components/primitives'
+import { useFavorites } from '@/hooks/useFavorites'
 
 /**
  * 내 계정 탭 홈 (IA 28).
@@ -24,6 +25,9 @@ export default function MyPage() {
 
 function MyPageInner() {
   const { status, user } = useAuth()
+  const { favorites } = useFavorites()
+  const favMovieCount = favorites.filter((f) => f.type === 'movie').length
+  const favTheaterCount = favorites.filter((f) => f.type === 'theater').length
   const params = useSearchParams()
   const authError = params.get('auth_error')
 
@@ -52,6 +56,16 @@ function MyPageInner() {
               </span>
             </div>
           </div>
+
+          <MenuCard>
+            <MenuRow
+              icon={<Heart size={17} strokeWidth={1.75} />}
+              title="관심 목록"
+              description={favMovieCount + favTheaterCount > 0 ? `영화 ${favMovieCount} · 극장 ${favTheaterCount}` : '하트를 눌러 영화·극장을 모아보세요'}
+              href="/my/favorites"
+              last
+            />
+          </MenuCard>
 
           <MenuCard>
             <MenuRow
