@@ -111,6 +111,11 @@
   --color-error-pressed: #722523;  /* Button danger pressed — 두 단계 다크 */
   --color-gv-tint:      #E7DCF9;
 
+  /* ── 소셜 로그인 브랜드 고정색 (카카오 디자인 가이드: 컨테이너 #FEE500, 심볼·라벨 85% 검정) ── */
+  --color-brand-kakao:       #FEE500;
+  --color-brand-kakao-hover: #F2DA00;
+  --color-brand-kakao-text:  rgba(0, 0, 0, 0.85);
+
   /* ── Multiplex (핀 전용, 텍스트 미사용) ── */
   --color-cgv:   #E30613;
   --color-mega:  #6C1E9F;

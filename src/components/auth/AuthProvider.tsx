@@ -13,6 +13,7 @@ interface AuthContextValue {
   /** returnTo 생략 시 현재 경로로 복귀 */
   signIn: (provider: OAuthProvider, returnTo?: string) => Promise<void>
   signOut: () => Promise<void>
+  updateDisplayName: (displayName: string) => Promise<void>
   deleteAccount: () => Promise<void>
 }
 
@@ -57,6 +58,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus('signed-out')
   }, [])
 
+  const updateDisplayName = useCallback(async (displayName: string) => {
+    const next = await getRepo().updateDisplayName(displayName)
+    if (next) setUser(next)
+  }, [])
+
   const deleteAccount = useCallback(async () => {
     await getRepo().deleteAccount()
     setUser(null)
@@ -64,8 +70,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const value = useMemo<AuthContextValue>(
-    () => ({ status, user, signIn, signOut, deleteAccount }),
-    [status, user, signIn, signOut, deleteAccount],
+    () => ({ status, user, signIn, signOut, updateDisplayName, deleteAccount }),
+    [status, user, signIn, signOut, updateDisplayName, deleteAccount],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

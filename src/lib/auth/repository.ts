@@ -10,6 +10,8 @@ export interface AuthRepository {
   /** OAuth 로그인 시작 — 제공자 페이지로 이동한다 (resolve 후 페이지가 떠남) */
   signInWithProvider(provider: AuthProvider, returnTo: string): Promise<void>
   signOut(): Promise<void>
+  /** 표시 이름 수정 (public.users.display_name). 반환: 갱신된 사용자 */
+  updateDisplayName(displayName: string): Promise<AuthUser | null>
   /** 본인 계정 삭제 (auth.users → cascade) */
   deleteAccount(): Promise<void>
   /** 세션 변화 구독. 해제 함수 반환 */

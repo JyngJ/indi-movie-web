@@ -13,6 +13,16 @@ export interface AuthUser {
   providers: AuthProvider[]
 }
 
+export const DISPLAY_NAME_MAX = 30
+
+/** 닉네임 검증 — DB 제약(1~30자)과 동일. 반환: 정규화된 값 또는 에러 메시지 */
+export function validateDisplayName(raw: string): { ok: true; value: string } | { ok: false; message: string } {
+  const value = raw.trim().replace(/\s+/g, ' ')
+  if (value.length === 0) return { ok: false, message: '닉네임을 입력해 주세요.' }
+  if (value.length > DISPLAY_NAME_MAX) return { ok: false, message: `닉네임은 ${DISPLAY_NAME_MAX}자 이하여야 해요.` }
+  return { ok: true, value }
+}
+
 /** 로그인 후 돌아갈 경로. 같은 오리진의 path만 허용 (open redirect 방지) */
 export function sanitizeReturnTo(raw: string | null | undefined, fallback = '/'): string {
   if (!raw) return fallback
