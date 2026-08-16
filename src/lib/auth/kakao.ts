@@ -85,9 +85,15 @@ export function randomToken(bytes = 16): string {
   return Array.from(arr, (b) => b.toString(16).padStart(2, '0')).join('')
 }
 
-/** Vercel 뒤에서는 request.url 호스트가 내부값일 수 있어 x-forwarded-host 우선 */
+/**
+ * 브라우저가 실제로 보고 있는 오리진. request.url은 dev에서 바인드 주소(0.0.0.0)로, Vercel에서는 내부 호스트로
+ * 나올 수 있어 Host / x-forwarded-* 헤더를 우선한다. 카카오 redirect_uri는 콘솔 등록값과 문자열로 일치해야 한다.
+ */
 export function publicOrigin(request: { url: string; headers: { get(name: string): string | null } }): string {
-  const forwardedHost = request.headers.get('x-forwarded-host')
-  if (process.env.NODE_ENV !== 'development' && forwardedHost) return `https://${forwardedHost}`
-  return new URL(request.url).origin
+  const host = request.headers.get('x-forwarded-host') ?? request.headers.get('host')
+  if (!host) return new URL(request.url).origin
+  const proto =
+    request.headers.get('x-forwarded-proto') ??
+    (host.startsWith('localhost') || host.startsWith('127.') ? 'http' : 'https')
+  return `${proto}://${host}`
 }
