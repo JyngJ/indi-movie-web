@@ -7,7 +7,7 @@ import { DateBar, type Day, type DayType } from './DateBar'
 import { ShowtimeCell } from './ShowtimeCell'
 import { Button } from '@/components/primitives/Button'
 import { IconButton } from '@/components/primitives/IconButton'
-import { FavoriteToggle } from '@/components/domain/favorites/FavoriteToggle'
+import { TheaterFavoriteAction } from '@/components/domain/favorites/TheaterFavoriteAction'
 import { FilterPill } from '@/components/primitives/FilterPill'
 import { Chip } from '@/components/primitives/Chip'
 import { DirectorChip } from '@/components/primitives/DirectorChip'
@@ -980,6 +980,7 @@ export function TheaterSheet({
               gap: 8,
               marginTop: 12,
             }}>
+              <TheaterFavoriteAction theaterId={theater.id} style={actionBtn} />
               <button className="hover-raise" style={actionBtn} onClick={openDirections}>
                 <IconRoute size={14} />
                 길찾기
@@ -1003,7 +1004,6 @@ export function TheaterSheet({
             display: 'flex',
             gap: 8,
           }}>
-            <FavoriteToggle type="theater" id={theater.id} label={theater.name} size={32} />
             <IconButton variant="ghost" size={32} aria-label="닫기" onClick={onClose}>
               <IconClose />
             </IconButton>
@@ -1074,12 +1074,9 @@ export function TheaterSheet({
                 </span>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-              <FavoriteToggle type="theater" id={theater.id} label={theater.name} size={32} />
-              <IconButton variant="ghost" size={32} aria-label="닫기" onClick={onClose}>
-                <IconClose />
-              </IconButton>
-            </div>
+            <IconButton variant="ghost" size={32} aria-label="닫기" onClick={onClose}>
+              <IconClose />
+            </IconButton>
           </div>
           <div style={{
             display: 'flex',
@@ -1089,6 +1086,7 @@ export function TheaterSheet({
             marginTop: 4,
             marginLeft: -8,
           }}>
+            <TheaterFavoriteAction theaterId={theater.id} style={actionBtn} />
             <button className="hover-raise" style={actionBtn} onClick={openDirections}>
               <IconRoute size={14} />
               길찾기
@@ -1131,7 +1129,6 @@ export function TheaterSheet({
             {theater.name}
           </span>
           <div style={{ display: 'flex', gap: 8 }}>
-            <FavoriteToggle type="theater" id={theater.id} label={theater.name} size={32} />
             <IconButton variant="ghost" size={32} aria-label="닫기" style={{ marginRight: -8 }} onClick={onClose}>
               <IconClose />
             </IconButton>
@@ -1379,6 +1376,7 @@ export function TheaterSheet({
               <span style={{ minWidth: 0 }}>{theater.address}</span>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 0, marginTop: 4, marginLeft: -8 }}>
+              <TheaterFavoriteAction theaterId={theater.id} style={actionBtn} compact />
               <button className="hover-raise" style={actionBtn} onClick={openDirections}>
                 <IconRoute size={14} />길찾기
               </button>

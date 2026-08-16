@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useMovies, useActiveMovieIds, useDirectorProfile } from '@/lib/supabase/queries'
 import type { Movie } from '@/types/api'
 import { Toast, IconButton, SortToggle } from '@/components/primitives'
-import { FavoriteToggle } from '@/components/domain/favorites/FavoriteToggle'
+import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 
 function useIsDesktopDetail() {
@@ -251,10 +251,11 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
         marginLeft: isDesktop ? -28 : 0,
         marginRight: isDesktop ? -28 : 0,
       }}>
-        <NavBar onBack={() => fromPath ? router.push(fromPath) : router.back()} onClose={() => router.push('/map')} trailing={<FavoriteToggle type="director" id={directorName} label={`${directorName} 감독`} />} />
+        <NavBar onBack={() => fromPath ? router.push(fromPath) : router.back()} onClose={() => router.push('/map')} />
       </div>
 
       <ProfileHero name={directorName} originalName={profile?.originalName} photoUrl={profile?.photoUrl} />
+      <FavoriteActionRow type="director" id={directorName} style={{ padding: '0 16px 16px' }} />
 
       {/* 약력 */}
       {profile?.bio && (

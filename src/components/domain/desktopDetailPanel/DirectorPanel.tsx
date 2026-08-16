@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import { useMovies, useActiveMovieIds } from '@/lib/supabase/queries'
 import { Toast, SortToggle } from '@/components/primitives'
 import { PanelShell } from './PanelShell'
-import { FavoriteToggle } from '@/components/domain/favorites/FavoriteToggle'
+import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
 import { IcoChevronRight, IcoChevronDown } from './icons'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 
@@ -51,7 +51,7 @@ export function DirectorPanel({
   }
 
   return (
-    <PanelShell onClose={onClose} onBack={onBack} embedded={embedded} title={directorName} trailing={<FavoriteToggle type="director" id={directorName} label={`${directorName} 감독`} size={32} />}>
+    <PanelShell onClose={onClose} onBack={onBack} embedded={embedded} title={directorName}>
       {/* 감독 헤더 */}
       <div style={{ padding: '28px var(--gutter) 20px', display: 'flex', alignItems: 'center', gap: 16, borderBottom: '1px solid var(--color-border)' }}>
         <div style={{ width: 64, height: 64, borderRadius: '50%', backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-caption)', flexShrink: 0 }}>
@@ -62,6 +62,7 @@ export function DirectorPanel({
           <div style={{ marginTop: 4, fontSize: 13, color: 'var(--color-text-caption)' }}>작품 {directorMovies.length}편</div>
         </div>
       </div>
+      <FavoriteActionRow type="director" id={directorName} style={{ padding: '16px var(--gutter) 0' }} />
 
       <div style={{ padding: '16px var(--gutter) 0' }}>
         <MapCtaButton onClick={() => onDirectorFilterOnMap(directorName)}>

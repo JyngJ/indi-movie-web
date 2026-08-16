@@ -3,11 +3,11 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
-import { Chip, Avatar, IconButton } from '@/components/primitives'
+import { Chip, Avatar, IconButton, Button } from '@/components/primitives'
 import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
 import { addDaysIso, toKstIsoDate } from '@/lib/date'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
-import { FavoriteToggle } from '@/components/domain/favorites/FavoriteToggle'
+import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
 import { ShowtimeCell } from '@/components/domain/ShowtimeCell'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import Image from 'next/image'
@@ -274,23 +274,28 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
   ].filter(Boolean).join(' · ')
 
   /* ── 공통 섹션들 ──────────────────────────────────────────────── */
-  const shareButton = (
-    <IconButton
-      variant="overlay"
-      shape="round"
-      size={44}
-      aria-label="공유"
-      onClick={() => {
-        void shareAndTrack({
-          payload: { title: movie.title, url: window.location.href },
-          source: 'films_movie_detail',
-          scope: 'page',
-          properties: { movie_id: movie.id, movie_title: movie.title },
-        })
-      }}
-    >
-      <IcoShare />
-    </IconButton>
+  const handleShare = () => {
+    void shareAndTrack({
+      payload: { title: movie.title, url: window.location.href },
+      source: 'films_movie_detail',
+      scope: 'page',
+      properties: { movie_id: movie.id, movie_title: movie.title },
+    })
+  }
+
+  /* 액션 행 — 피그마 G 확정: [♡ 관심 등록 (늘어남)] [공유] 히어로 아래 */
+  const actionRow = (
+    <FavoriteActionRow
+      type="movie"
+      id={movie.id}
+      style={{ padding: isDesktop ? '0 0 24px' : '0 16px 20px', maxWidth: isDesktop ? 480 : undefined }}
+      trailing={
+        <Button variant="tertiary" size="md" onClick={handleShare} aria-label="공유" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <IcoShare />
+          공유
+        </Button>
+      }
+    />
   )
 
   const heroSection = (
@@ -336,7 +341,6 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
               <DirectorChipLoader key={name} name={name} onClick={() => router.push(`/films/director/${encodeURIComponent(name)}`)} />
             ))}
           </div>
-          {shareButton}
         </div>
       </div>
     </div>
@@ -559,10 +563,11 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
   if (isDesktop) {
     return (
       <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
-        <DetailTopBar crumbLabel="영화" crumbHref="/films" title={movie.title} isDesktop trailing={<span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><FavoriteToggle type="movie" id={movie.id} label={movie.title} /><RegionFilterWidget onRegionChange={setRegionId} /></span>} />
+        <DetailTopBar crumbLabel="영화" crumbHref="/films" title={movie.title} isDesktop trailing={<RegionFilterWidget onRegionChange={setRegionId} />} />
         <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 var(--gutter)' }}>
           {/* hero */}
           {heroSection}
+          {actionRow}
 
           {/* 2-column layout */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 32, alignItems: 'flex-start' }}>
@@ -585,8 +590,9 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
 
   return (
     <div className="page-slide-in" style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
-      <DetailTopBar crumbLabel="영화" crumbHref="/films" title={movie.title} isDesktop={false} trailing={<span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><FavoriteToggle type="movie" id={movie.id} label={movie.title} /><RegionFilterWidget onRegionChange={setRegionId} /></span>} />
+      <DetailTopBar crumbLabel="영화" crumbHref="/films" title={movie.title} isDesktop={false} trailing={<RegionFilterWidget onRegionChange={setRegionId} />} />
       {heroSection}
+      {actionRow}
       {synopsisSection}
       {showtimesSection}
       <div style={{ height: 'env(safe-area-inset-bottom)' }} />

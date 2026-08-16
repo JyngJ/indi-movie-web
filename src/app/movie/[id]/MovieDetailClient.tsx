@@ -16,7 +16,7 @@ import { calculateAndFormatDistance, calculateDistanceKm } from '@/lib/map/dista
 import { getRegionFromAddress, getRegionFromCoords } from '@/lib/regions'
 import { formatDateLabel } from '@/lib/date'
 import { Toast, IconButton, Button } from '@/components/primitives'
-import { FavoriteToggle } from '@/components/domain/favorites/FavoriteToggle'
+import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
 import { MovieInfoTable } from '@/components/domain/movieDetail/MovieInfoTable'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 
@@ -698,11 +698,12 @@ export function MovieDetailClient({ movieId, theaterId, initialData, initialShow
           titleVisible={titleInNav}
           onBack={handleBack}
           onClose={handleClose}
-          trailing={<FavoriteToggle type="movie" id={movie.id} label={movie.title} />}
         />
       </div>
 
       <HeroSection movie={movie} titleRef={titleRef} desktop={isDesktop} />
+      {/* 액션 행 — 피그마 G 확정: 히어로 아래 [♡ 관심 등록] (지도 쪽 상세는 공유 없음) */}
+      <FavoriteActionRow type="movie" id={movie.id} style={{ padding: isDesktop ? '0 0 20px' : '0 16px 20px', maxWidth: isDesktop ? 480 : undefined }} />
 
       <TabBar
         active={tab}

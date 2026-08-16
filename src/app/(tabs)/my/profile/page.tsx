@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { MyPageShell } from '@/components/auth/MyPageShell'
-import { MenuCard, MenuRow } from '@/components/primitives'
+import { MenuCard } from '@/components/primitives'
 import { Avatar, Button, ConfirmDialog, Input } from '@/components/primitives'
 import { DISPLAY_NAME_MAX, validateDisplayName, type AuthProvider } from '@/lib/auth/types'
 
@@ -21,6 +21,7 @@ export default function ProfilePage() {
   const [saved, setSaved] = useState(false)
   const [busy, setBusy] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [confirmLogout, setConfirmLogout] = useState(false)
 
   useEffect(() => {
     if (user) setName(user.displayName ?? '')
@@ -50,7 +51,7 @@ export default function ProfilePage() {
 
   const handleSignOut = async () => {
     setBusy(true)
-    try { await signOut() } finally { setBusy(false) }
+    try { await signOut(); setConfirmLogout(false) } finally { setBusy(false) }
   }
 
   const handleDelete = async () => {
@@ -107,10 +108,21 @@ export default function ProfilePage() {
             ))}
           </MenuCard>
 
-          <MenuCard>
-            <MenuRow title="로그아웃" onClick={handleSignOut} disabled={busy} />
-            <MenuRow title="회원탈퇴" description="관심 목록·설정이 모두 삭제되고 되돌릴 수 없어요" onClick={() => setConfirmDelete(true)} disabled={busy} tone="danger" last />
-          </MenuCard>
+          {/* 로그아웃 / 회원탈퇴 — 분리 버튼, 둘 다 확인 다이얼로그 (피그마 C 확정 2026-08-17) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '8px 16px 0' }}>
+            <Button variant="tertiary" size="md" onClick={() => setConfirmLogout(true)} disabled={busy}>로그아웃</Button>
+            <Button variant="text" size="md" onClick={() => setConfirmDelete(true)} disabled={busy} style={{ color: 'var(--color-error)' }}>회원탈퇴</Button>
+          </div>
+
+          <ConfirmDialog
+            open={confirmLogout}
+            title="로그아웃할까요?"
+            description="이 기기에서 로그아웃돼요. 관심 목록은 그대로 남아 있고 다시 로그인하면 이어서 볼 수 있어요."
+            confirmLabel="로그아웃"
+            busy={busy}
+            onConfirm={handleSignOut}
+            onCancel={() => setConfirmLogout(false)}
+          />
 
           <ConfirmDialog
             open={confirmDelete}
