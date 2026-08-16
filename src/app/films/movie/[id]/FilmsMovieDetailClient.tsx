@@ -7,6 +7,7 @@ import { Chip, Avatar, IconButton } from '@/components/primitives'
 import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
 import { addDaysIso, toKstIsoDate } from '@/lib/date'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
+import { FavoriteToggle } from '@/components/domain/favorites/FavoriteToggle'
 import { ShowtimeCell } from '@/components/domain/ShowtimeCell'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import Image from 'next/image'
@@ -558,7 +559,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
   if (isDesktop) {
     return (
       <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
-        <DetailTopBar crumbLabel="영화" crumbHref="/films" title={movie.title} isDesktop trailing={<RegionFilterWidget onRegionChange={setRegionId} />} />
+        <DetailTopBar crumbLabel="영화" crumbHref="/films" title={movie.title} isDesktop trailing={<span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><FavoriteToggle type="movie" id={movie.id} label={movie.title} /><RegionFilterWidget onRegionChange={setRegionId} /></span>} />
         <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 var(--gutter)' }}>
           {/* hero */}
           {heroSection}
@@ -584,7 +585,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
 
   return (
     <div className="page-slide-in" style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
-      <DetailTopBar crumbLabel="영화" crumbHref="/films" title={movie.title} isDesktop={false} trailing={<RegionFilterWidget onRegionChange={setRegionId} />} />
+      <DetailTopBar crumbLabel="영화" crumbHref="/films" title={movie.title} isDesktop={false} trailing={<span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><FavoriteToggle type="movie" id={movie.id} label={movie.title} /><RegionFilterWidget onRegionChange={setRegionId} /></span>} />
       {heroSection}
       {synopsisSection}
       {showtimesSection}

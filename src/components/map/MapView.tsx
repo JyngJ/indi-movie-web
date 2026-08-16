@@ -3672,8 +3672,6 @@ export default function MapView() {
               })
               openDesktopPanel({ type: 'director', name })
             } : undefined}
-            favorited={false}
-            onFavorite={() => { /* Phase 4 */ }}
             mapFilters={{ genres: filters.genres, nations: filters.nations }}
             initialIsoDate={initialSheetDate}
             initialShowtimeId={initialShowtimeId}

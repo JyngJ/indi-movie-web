@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { addDaysIso, toKstIsoDate } from '@/lib/date'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
+import { FavoriteToggle } from '@/components/domain/favorites/FavoriteToggle'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import Image from 'next/image'
 import { useTheaterShowtimes, useTheaterAllMovies } from '@/lib/supabase/queries'
@@ -569,7 +570,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
   if (isDesktop) {
     return (
       <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
-        <DetailTopBar crumbLabel="영화" crumbHref="/films" title={theater.name} isDesktop trailing={<RegionFilterWidget />} />
+        <DetailTopBar crumbLabel="영화" crumbHref="/films" title={theater.name} isDesktop trailing={<span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><FavoriteToggle type="theater" id={theater.id} label={theater.name} /><RegionFilterWidget /></span>} />
         <div style={{ maxWidth: 1000, margin: '0 auto' }}>
           {content}
         </div>
@@ -627,7 +628,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
 
   return (
     <div className="page-slide-in" style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
-      <DetailTopBar crumbLabel="영화" crumbHref="/films" title={theater.name} isDesktop={false} trailing={<RegionFilterWidget />} />
+      <DetailTopBar crumbLabel="영화" crumbHref="/films" title={theater.name} isDesktop={false} trailing={<span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><FavoriteToggle type="theater" id={theater.id} label={theater.name} /><RegionFilterWidget /></span>} />
       {content}
       <div style={{ height: 'env(safe-area-inset-bottom)' }} />
       {selectedShowtimeData && typeof document !== 'undefined' && createPortal(
