@@ -21,6 +21,12 @@ interface PosterThumbProps {
   shadow?: boolean
   /** 이미지가 실제로 그려진 시점 알림 — 등장 모션을 이미지에 맞춰 재생할 때 사용 */
   onReady?: () => void
+  /**
+   * false면 로드 페이드를 끄고 처음부터 불투명하게 그린다.
+   * renderToStaticMarkup으로 뽑아 Leaflet divIcon에 넣는 지도 포스터용 —
+   * 정적 마크업엔 onLoad/ref가 안 붙어 opacity:0이 그대로 굳는다(포스터가 빈칸이 됨).
+   */
+  fade?: boolean
 }
 
 export function PosterThumb({
@@ -36,6 +42,7 @@ export function PosterThumb({
   radius,
   shadow = true,
   onReady,
+  fade = true,
 }: PosterThumbProps) {
   // 로드 페이드 — 스트리밍 중 반쯤 그려진 이미지가 뚝 나타나는 것 방지.
   // 캐시된 이미지는 complete가 참이라 페이드 없이 즉시 보인다(재방문 깜빡임 방지).
@@ -85,8 +92,8 @@ export function PosterThumb({
             style={{
               width: '100%', height: '100%', objectFit: 'cover', display: 'block',
               backgroundColor: 'var(--color-surface-raised)',
-              opacity: loaded ? 1 : 0,
-              transition: 'opacity 240ms ease',
+              opacity: loaded || !fade ? 1 : 0,
+              transition: fade ? 'opacity 240ms ease' : undefined,
             }}
             /* 캐시된 이미지는 onLoad가 안 뜰 수 있어 complete도 함께 본다 */
             ref={(node) => { if (node?.complete && !loaded) { markLoaded(); onReady?.() } }}

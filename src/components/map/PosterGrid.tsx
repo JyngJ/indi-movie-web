@@ -214,6 +214,9 @@ export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, 
                         height={posterH}
                         size="sm"
                         radius={4} /* 지도 포스터 예외 — 최소 라운딩(--radius-badge 값) */
+                        /* 이 트리는 renderToStaticMarkup으로 divIcon HTML이 된다 —
+                           onLoad가 안 붙으니 페이드를 켜면 opacity:0으로 굳는다 */
+                        fade={false}
                         highlighted={filtersActive && !!slot.movie?.matchesFilter}
                       />
                       {slot.movie && (
