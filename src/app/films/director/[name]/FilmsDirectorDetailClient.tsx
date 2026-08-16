@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useRouter } from 'next/navigation'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
+import { FavoriteToggle } from '@/components/domain/favorites/FavoriteToggle'
 import Image from 'next/image'
 import { useMovies, useActiveMovieIds, useDirectorProfile } from '@/lib/supabase/queries'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
@@ -107,7 +108,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
   }
 
   const navBar = (
-    <DetailTopBar crumbLabel="영화" crumbHref="/films" title={`감독 · ${directorName}`} isDesktop={isDesktop} trailing={<RegionFilterWidget />} />
+    <DetailTopBar crumbLabel="영화" crumbHref="/films" title={`감독 · ${directorName}`} isDesktop={isDesktop} trailing={<span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><FavoriteToggle type="director" id={directorName} label={`${directorName} 감독`} /><RegionFilterWidget /></span>} />
   )
 
   const heroSection = (

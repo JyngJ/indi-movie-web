@@ -34,3 +34,20 @@ describe('summarizeFavorites', () => {
     expect(r.theaters[0].screeningMovieCount).toBe(2)
   })
 })
+
+describe('summarizeFavorites — 감독', () => {
+  it('감독 이름으로 영화 수·상영 중 수를 센다', async () => {
+    const { summarizeFavorites } = await import('./summarize')
+    const r = summarizeFavorites(
+      [{ type: 'director', id: '홍상수', createdAt: '2026-08-10' }, { type: 'director', id: '없음', createdAt: '2026-08-11' }],
+      [{ id: 'm1', title: 'A', director: ['홍상수'] }, { id: 'm2', title: 'B', director: ['홍상수', '김민희'] }],
+      [],
+      [{ movieId: 'm2', theaterId: 't1' }],
+    )
+    const h = r.directors.find((d) => d.name === '홍상수')!
+    expect(h.movieCount).toBe(2)
+    expect(h.screeningMovieCount).toBe(1)
+    expect(r.directors[0].name).toBe('홍상수') // 상영 중 우선
+    expect(r.directors[1]).toMatchObject({ name: '없음', movieCount: 0, screeningMovieCount: 0 })
+  })
+})

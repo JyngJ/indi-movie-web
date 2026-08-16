@@ -1,6 +1,7 @@
 /** 관심 도메인 — 프레임워크 무관 */
 
-export type FavoriteItemType = 'movie' | 'theater'
+/** director는 UUID가 없어 id에 감독 이름을 그대로 쓴다 */
+export type FavoriteItemType = 'movie' | 'theater' | 'director'
 
 export interface FavoriteKey {
   type: FavoriteItemType

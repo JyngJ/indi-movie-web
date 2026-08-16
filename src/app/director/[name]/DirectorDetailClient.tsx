@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useMovies, useActiveMovieIds, useDirectorProfile } from '@/lib/supabase/queries'
 import type { Movie } from '@/types/api'
 import { Toast, IconButton, SortToggle } from '@/components/primitives'
+import { FavoriteToggle } from '@/components/domain/favorites/FavoriteToggle'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 
 function useIsDesktopDetail() {
@@ -35,7 +36,7 @@ const IcoChevronDown = ({ flipped }: { flipped?: boolean }) => (
 )
 
 /* ── NavBar ── */
-function NavBar({ onBack, onClose }: { onBack: () => void; onClose: () => void }) {
+function NavBar({ onBack, onClose, trailing }: { onBack: () => void; onClose: () => void; trailing?: React.ReactNode }) {
   return (
     <div style={{
       height: 52, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -46,7 +47,10 @@ function NavBar({ onBack, onClose }: { onBack: () => void; onClose: () => void }
     }}>
       <IconButton variant="ghost" size={44} aria-label="뒤로가기" onClick={onBack}><IcoChevronLeft /></IconButton>
       <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 600, color: 'var(--color-text-primary)' }}>감독 정보</span>
-      <IconButton variant="ghost" size={44} aria-label="닫기" onClick={onClose}><IcoClose /></IconButton>
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        {trailing}
+        <IconButton variant="ghost" size={44} aria-label="닫기" onClick={onClose}><IcoClose /></IconButton>
+      </div>
     </div>
   )
 }
@@ -247,7 +251,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
         marginLeft: isDesktop ? -28 : 0,
         marginRight: isDesktop ? -28 : 0,
       }}>
-        <NavBar onBack={() => fromPath ? router.push(fromPath) : router.back()} onClose={() => router.push('/map')} />
+        <NavBar onBack={() => fromPath ? router.push(fromPath) : router.back()} onClose={() => router.push('/map')} trailing={<FavoriteToggle type="director" id={directorName} label={`${directorName} 감독`} />} />
       </div>
 
       <ProfileHero name={directorName} originalName={profile?.originalName} photoUrl={profile?.photoUrl} />

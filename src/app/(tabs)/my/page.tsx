@@ -28,6 +28,7 @@ function MyPageInner() {
   const { favorites } = useFavorites()
   const favMovieCount = favorites.filter((f) => f.type === 'movie').length
   const favTheaterCount = favorites.filter((f) => f.type === 'theater').length
+  const favDirectorCount = favorites.filter((f) => f.type === 'director').length
   const params = useSearchParams()
   const authError = params.get('auth_error')
 
@@ -61,7 +62,7 @@ function MyPageInner() {
             <MenuRow
               icon={<Heart size={17} strokeWidth={1.75} />}
               title="관심 목록"
-              description={favMovieCount + favTheaterCount > 0 ? `영화 ${favMovieCount} · 극장 ${favTheaterCount}` : '하트를 눌러 영화·극장을 모아보세요'}
+              description={favMovieCount + favTheaterCount + favDirectorCount > 0 ? `영화 ${favMovieCount} · 극장 ${favTheaterCount} · 감독 ${favDirectorCount}` : '하트를 눌러 영화·극장·감독을 모아보세요'}
               href="/my/favorites"
               last
             />

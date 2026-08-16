@@ -7,6 +7,7 @@ import type { FavoriteItemType } from '@/lib/favorites/types'
 const LOGIN_COPY: Record<FavoriteItemType, string> = {
   movie: '관심 영화로 등록하면 새로 상영하는 곳이 생길 때 알려드려요.',
   theater: '관심 극장으로 등록하면 새 상영작 소식을 알려드려요.',
+  director: '관심 감독으로 등록하면 이 감독 영화가 상영될 때 알려드려요.',
 }
 
 /**
