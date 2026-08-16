@@ -78,6 +78,13 @@ export async function exchangeKakaoCode(params: {
   return json
 }
 
+/** sha256 hex — Supabase signInWithIdToken은 우리가 넘긴 nonce를 해시해서 id_token 클레임과 비교한다.
+ *  카카오는 authorize에 준 nonce를 그대로 클레임에 넣으므로, 카카오에는 해시값을 보내고 Supabase에는 원본을 준다. */
+export async function sha256Hex(input: string): Promise<string> {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input))
+  return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, '0')).join('')
+}
+
 /** 랜덤 URL-safe 문자열 (state/nonce) */
 export function randomToken(bytes = 16): string {
   const arr = new Uint8Array(bytes)
