@@ -8,6 +8,16 @@ import { sanitizeReturnTo } from './types'
 /** OAuth 콜백 라우트. 여기서 code → session 교환 후 returnTo로 보낸다 */
 export const AUTH_CALLBACK_PATH = '/auth/callback'
 
+/**
+ * 제공자별 요청 스코프. Supabase 기본값(카카오: account_email profile_image profile_nickname)을 덮어쓴다.
+ * 카카오는 비즈앱이 아니면 이메일 동의항목을 못 켜고, 켜지 않은 항목을 요청하면 KOE205로 거부한다 —
+ * 개발자 콘솔 동의항목에서 켠 것과 정확히 일치해야 한다. (현재: 닉네임만 "필수 동의")
+ */
+const PROVIDER_SCOPES: Record<AuthProvider, string> = {
+  kakao: 'profile_nickname',
+  google: 'openid email profile',
+}
+
 interface ProfileRow {
   display_name: string | null
   avatar_url: string | null
@@ -51,7 +61,7 @@ export function createSupabaseAuthRepository(): AuthRepository {
       const redirectTo = `${origin}${AUTH_CALLBACK_PATH}?next=${encodeURIComponent(next)}`
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo },
+        options: { redirectTo, scopes: PROVIDER_SCOPES[provider] },
       })
       if (error) throw error
     },
