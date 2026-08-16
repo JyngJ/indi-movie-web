@@ -2,6 +2,7 @@ import type { CatalogMovie, CatalogResponse, CatalogShowtime, CatalogTheater } f
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { isAlmostSoldOut } from './seatAvailability'
 import { isLateNightTime } from './lateNight'
+import { toSecureImageUrl } from '@/lib/media/imageUrl'
 
 interface TheaterRow {
   id: string
@@ -148,7 +149,7 @@ function movieFromRow(row: MovieRow): CatalogMovie {
     director: row.director?.filter(Boolean).join(', ') || undefined,
     synopsis: details?.synopsis ?? undefined,
     tags: [...(row.genre ?? []), details?.certification].filter((tag): tag is string => !!tag),
-    posterUrl: row.poster_url ?? undefined,
+    posterUrl: toSecureImageUrl(row.poster_url),
     runtimeMinutes: details?.runtime_minutes ?? undefined,
     certification: details?.certification ?? undefined,
   }

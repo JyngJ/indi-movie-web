@@ -3,6 +3,7 @@
 import { PosterThumb } from '@/components/domain'
 import { BubbleTail } from '@/components/primitives'
 import { finiteNumber } from '@/lib/map/searchUtils'
+import { toSecureImageUrl } from '@/lib/media/imageUrl'
 import { withFlag } from '@/lib/nations'
 import { dayOfWeek } from '@/lib/map/posterLogic'
 import type { TheaterPosterMovie, PosterSlot, ScreeningDay } from '@/lib/map/posterLogic'
@@ -165,7 +166,7 @@ export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, 
               {slots[0].movie?.posterUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={slots[0].movie.posterUrl}
+                  src={toSecureImageUrl(slots[0].movie.posterUrl)}
                   alt={slots[0].movie.title ?? '영화 포스터'}
                   style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                 />
@@ -213,6 +214,9 @@ export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, 
                         height={posterH}
                         size="sm"
                         radius={4} /* 지도 포스터 예외 — 최소 라운딩(--radius-badge 값) */
+                        /* 이 트리는 renderToStaticMarkup으로 divIcon HTML이 된다 —
+                           onLoad가 안 붙으니 페이드를 켜면 opacity:0으로 굳는다 */
+                        fade={false}
                         highlighted={filtersActive && !!slot.movie?.matchesFilter}
                       />
                       {slot.movie && (
