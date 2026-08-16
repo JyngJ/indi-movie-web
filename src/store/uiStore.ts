@@ -1,6 +1,14 @@
 import { create } from 'zustand'
 import type { SettingsPage } from '@/components/map/SettingsPanel'
 
+export interface LoginSheetState {
+  /** 진입 맥락 카피 (예: "관심 영화로 등록하면 새 상영 소식을 알려드려요") */
+  title?: string
+  description?: string
+  /** 로그인 후 돌아갈 경로. 생략 시 현재 경로 */
+  returnTo?: string
+}
+
 interface UIStore {
   isBottomSheetOpen: boolean
   bottomSheetContent: React.ReactNode | null
@@ -15,6 +23,11 @@ interface UIStore {
   /** 설정 패널을 열 때 보여줄 첫 페이지 — 예: 좌측 레일 '신고' 버튼은 바로 'report'로 진입 */
   settingsInitialPage: SettingsPage
   openSettingsPage: (page: SettingsPage) => void
+
+  /** 전역 로그인 시트 — 하트 클릭 등 컨텍스트 진입용. 내 계정 탭 홈은 시트 없이 자체 화면 (IA 42) */
+  loginSheet: LoginSheetState | null
+  openLoginSheet: (opts?: Partial<LoginSheetState>) => void
+  closeLoginSheet: () => void
 
   /** 데스크톱 지도 화면 좌측 도크 접힘 상태 — 도크 토글 버튼과 GlobalNav '지도' 탭 재클릭이 함께 제어 */
   isMapDockCollapsed: boolean
@@ -37,6 +50,10 @@ export const useUIStore = create<UIStore>((set) => ({
   setSettingsOpen: (open) => set({ isSettingsOpen: open }),
   settingsInitialPage: 'main',
   openSettingsPage: (page) => set({ isSettingsOpen: true, settingsInitialPage: page }),
+
+  loginSheet: null,
+  openLoginSheet: (opts) => set({ loginSheet: { ...(opts ?? {}) } }),
+  closeLoginSheet: () => set({ loginSheet: null }),
 
   isMapDockCollapsed: false,
   setMapDockCollapsed: (collapsed) => set({ isMapDockCollapsed: collapsed }),
