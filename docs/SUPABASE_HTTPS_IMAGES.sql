@@ -18,12 +18,16 @@ UPDATE directors
    SET photo_url = 'https://' || substring(photo_url from 8)
  WHERE photo_url LIKE 'http://%';
 
--- 큐레이션/영화제 이미지도 같은 이유로 함께 승격
+-- 큐레이션/영화제 이미지 — 2026-08-16 기준 http 행 0건이지만, 같은 규칙을 걸어 둔다
 UPDATE festivals
    SET banner_url = 'https://' || substring(banner_url from 8)
  WHERE banner_url LIKE 'http://%';
 
-UPDATE instagram_recs
+UPDATE festival_timetables
+   SET image_url = 'https://' || substring(image_url from 8)
+ WHERE image_url LIKE 'http://%';
+
+UPDATE instagram_recommendations
    SET card_image_url = 'https://' || substring(card_image_url from 8)
  WHERE card_image_url LIKE 'http://%';
 
