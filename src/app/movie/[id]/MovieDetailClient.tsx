@@ -20,7 +20,7 @@ import { MovieInfoTable } from '@/components/domain/movieDetail/MovieInfoTable'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 
 function useIsDesktopDetail() {
-  return useMediaQuery('(min-width: 1280px)')
+  return useMediaQuery('(min-width: 1024px)')   /* 레일(1024)과 기준 통일 */
 }
 
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
