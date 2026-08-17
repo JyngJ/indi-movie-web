@@ -28,8 +28,8 @@ function FeedPageInner() {
 
   const trailing = status === 'signed-in' ? (
     <Link href="/my/favorites" style={{ textDecoration: 'none' }}>
-      <Button variant="text" size="sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--color-primary-base)' }}>
-        관심 목록 <ChevronRight size={14} strokeWidth={1.75} />
+      <Button variant="secondary" size="sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+        내 관심 목록 <ChevronRight size={14} strokeWidth={1.75} />
       </Button>
     </Link>
   ) : undefined

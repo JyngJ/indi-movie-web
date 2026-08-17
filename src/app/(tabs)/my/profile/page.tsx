@@ -69,7 +69,7 @@ export default function ProfilePage() {
     <MyPageShell title="프로필 · 계정 관리" onBack={() => router.push('/my')}>
       {status === 'signed-in' && user && (
         <>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: 16, marginTop: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: 'var(--gutter)', marginTop: 8 }}>
             <Avatar name={user.displayName ?? '사용자'} photoUrl={user.avatarUrl} size={72} />
             <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
               프로필 사진은 로그인한 소셜 계정을 따라가요
@@ -94,14 +94,14 @@ export default function ProfilePage() {
           </MenuCard>
 
           <MenuCard>
-            <div style={{ padding: '12px 16px', fontSize: 'var(--text-caption)', fontWeight: 500, letterSpacing: 0.4, textTransform: 'uppercase', color: 'var(--color-text-caption)', backgroundColor: 'var(--color-surface-card)' }}>
+            <div style={{ padding: '12px var(--gutter)', fontSize: 'var(--text-caption)', fontWeight: 500, letterSpacing: 0.4, textTransform: 'uppercase', color: 'var(--color-text-caption)', backgroundColor: 'var(--color-surface-card)' }}>
               연결된 계정
             </div>
             {user.providers.length === 0 && (
-              <div style={{ padding: '12px 16px', fontSize: 'var(--text-body)', color: 'var(--color-text-secondary)', backgroundColor: 'var(--color-surface-card)' }}>—</div>
+              <div style={{ padding: '12px var(--gutter)', fontSize: 'var(--text-body)', color: 'var(--color-text-secondary)', backgroundColor: 'var(--color-surface-card)' }}>—</div>
             )}
             {user.providers.map((p, i) => (
-              <div key={p} style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'var(--color-surface-card)', borderBottom: i < user.providers.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
+              <div key={p} style={{ padding: '12px var(--gutter)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'var(--color-surface-card)', borderBottom: i < user.providers.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
                 <span style={{ fontSize: 'var(--text-body)', fontWeight: 600, color: 'var(--color-text-primary)' }}>{PROVIDER_LABEL[p]}</span>
                 {user.email && <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>{user.email}</span>}
               </div>
@@ -109,7 +109,7 @@ export default function ProfilePage() {
           </MenuCard>
 
           {/* 로그아웃 / 회원탈퇴 — 분리 버튼, 둘 다 확인 다이얼로그 (피그마 C 확정 2026-08-17) */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingLeft: 16, paddingRight: 16, marginTop: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingLeft: 'var(--gutter)', paddingRight: 'var(--gutter)', marginTop: 8 }}>
             <Button variant="tertiary" size="md" onClick={() => setConfirmLogout(true)} disabled={busy}>로그아웃</Button>
             <Button variant="text" size="md" onClick={() => setConfirmDelete(true)} disabled={busy} style={{ color: 'var(--color-error)' }}>회원탈퇴</Button>
           </div>

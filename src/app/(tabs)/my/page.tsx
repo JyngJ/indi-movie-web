@@ -56,11 +56,11 @@ function MyPageInner() {
   return (
     <MyPageShell title="MY" trailing={gear}>
       {status === 'loading' && (
-        <p style={{ margin: '24px 16px', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>확인 중…</p>
+        <p style={{ margin: '24px var(--gutter)', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>확인 중…</p>
       )}
 
       {status === 'signed-out' && (
-        <div style={{ padding: '32px 16px' }}>
+        <div style={{ padding: '32px var(--gutter)' }}>
           <LoginPanel returnTo="/my" errorCode={authError} />
         </div>
       )}
@@ -68,7 +68,7 @@ function MyPageInner() {
       {status === 'signed-in' && user && (
         <>
           {/* 프로필 */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '24px 16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '24px var(--gutter)' }}>
             <Avatar name={user.displayName ?? '사용자'} photoUrl={user.avatarUrl} size={88} />
             <span style={{ fontSize: 'var(--text-h1)', fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {user.displayName ?? '이름 없음'}
@@ -81,7 +81,7 @@ function MyPageInner() {
           <div style={{ height: 8, backgroundColor: 'var(--color-surface-raised)' }} />
 
           {/* 보관함 */}
-          <section style={{ padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <section style={{ padding: '24px var(--gutter)', display: 'flex', flexDirection: 'column', gap: 16 }}>
             <h2 style={{ margin: 0, fontSize: 'var(--text-h2)', fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--color-text-primary)' }}>보관함</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
               <ShelfItem href="/my/favorites" icon={<Heart size={24} strokeWidth={1.75} />} label="관심 목록" caption={favMovie + favTheater + favDirector > 0 ? `${favMovie + favTheater + favDirector}` : undefined} />

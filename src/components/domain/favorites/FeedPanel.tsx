@@ -50,7 +50,7 @@ export function FeedPanel() {
         bottom: 16,
         width: 400,
         maxWidth: 'calc(100vw - 96px)',
-        maxHeight: 'min(640px, calc(100dvh - 32px))',
+        height: 'min(640px, calc(100dvh - 32px))',   /* 세로 여유 — 빈 상태여도 리스트 자리를 미리 확보 */
         zIndex: 1200,
         backgroundColor: 'var(--color-surface-bg)',
         border: '1px solid var(--color-border)',
@@ -66,8 +66,8 @@ export function FeedPanel() {
         onClose={close}
         trailing={status === 'signed-in' ? (
           <Link href="/my/favorites" style={{ textDecoration: 'none' }} onClick={close}>
-            <Button variant="text" size="sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--color-primary-base)' }}>
-              관심 목록 <ChevronRight size={14} strokeWidth={1.75} />
+            <Button variant="secondary" size="sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              내 관심 목록 <ChevronRight size={14} strokeWidth={1.75} />
             </Button>
           </Link>
         ) : undefined}

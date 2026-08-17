@@ -68,7 +68,7 @@ export function LoginSheet() {
         display: 'flex',
         alignItems: isDesktop ? 'center' : 'flex-end',
         justifyContent: 'center',
-        background: visible ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0)',
+        background: visible ? 'var(--color-scrim)' : 'transparent',
         transition: 'background 280ms ease',
       }}
     >

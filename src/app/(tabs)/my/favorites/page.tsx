@@ -35,7 +35,7 @@ export default function FavoritesPage() {
 
   return (
     <MyPageShell title="관심 목록" onBack={() => router.push('/my')}>
-      <div role="tablist" aria-label="관심 종류" style={{ display: 'flex', gap: 8, padding: '12px 16px' }}>
+      <div role="tablist" aria-label="관심 종류" style={{ display: 'flex', gap: 8, padding: '12px var(--gutter)' }}>
         <FilterPill active={tab === 'movie'} onClick={() => setTab('movie')} role="tab" aria-selected={tab === 'movie'}>
           영화 {summary.movies.length > 0 ? summary.movies.length : ''}
         </FilterPill>
@@ -48,7 +48,7 @@ export default function FavoritesPage() {
       </div>
 
       {empty && (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '48px 16px', textAlign: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '48px var(--gutter)', textAlign: 'center' }}>
           <p style={{ margin: 0, fontSize: 'var(--text-body)', lineHeight: 1.6, color: 'var(--color-text-secondary)' }}>
             {tab === 'movie'
               ? '하트를 눌러 관심 영화를 모아보세요.\n새로 상영하는 곳이 생기면 알려드려요.'
@@ -63,7 +63,7 @@ export default function FavoritesPage() {
       )}
 
       {tab === 'movie' && summary.movies.length > 0 && (
-        <ul style={{ listStyle: 'none', margin: 0, padding: '0 16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(104px, 1fr))', gap: 16 }}>
+        <ul style={{ listStyle: 'none', margin: 0, padding: '0 var(--gutter)', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(104px, 1fr))', gap: 16 }}>
           {summary.movies.map((m) => {
             const active = m.screeningTheaterCount > 0
             return (
@@ -85,11 +85,11 @@ export default function FavoritesPage() {
       )}
 
       {tab === 'theater' && summary.theaters.length > 0 && (
-        <ul style={{ listStyle: 'none', margin: '0 16px', padding: 0, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
+        <ul style={{ listStyle: 'none', margin: '0 var(--gutter)', padding: 0, borderRadius: 'var(--radius-control)', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
           {summary.theaters.map((t, i) => {
             const active = t.screeningMovieCount > 0
             return (
-              <li key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', backgroundColor: 'var(--color-surface-card)', borderBottom: i < summary.theaters.length - 1 ? '1px solid var(--color-border)' : 'none', opacity: active ? 1 : 0.6 }}>
+              <li key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px var(--gutter)', backgroundColor: 'var(--color-surface-card)', borderBottom: i < summary.theaters.length - 1 ? '1px solid var(--color-border)' : 'none', opacity: active ? 1 : 0.6 }}>
                 <Link href={`/films/theater/${t.id}`} style={{ flex: 1, minWidth: 0, textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <span style={{ fontSize: 'var(--text-body)', fontWeight: 600, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</span>
                   <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
@@ -104,11 +104,11 @@ export default function FavoritesPage() {
       )}
 
       {tab === 'director' && summary.directors.length > 0 && (
-        <ul style={{ listStyle: 'none', margin: '0 16px', padding: 0, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
+        <ul style={{ listStyle: 'none', margin: '0 var(--gutter)', padding: 0, borderRadius: 'var(--radius-control)', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
           {summary.directors.map((d, i) => {
             const active = d.screeningMovieCount > 0
             return (
-              <li key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', backgroundColor: 'var(--color-surface-card)', borderBottom: i < summary.directors.length - 1 ? '1px solid var(--color-border)' : 'none', opacity: active ? 1 : 0.6 }}>
+              <li key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px var(--gutter)', backgroundColor: 'var(--color-surface-card)', borderBottom: i < summary.directors.length - 1 ? '1px solid var(--color-border)' : 'none', opacity: active ? 1 : 0.6 }}>
                 <Link href={`/films/director/${encodeURIComponent(d.name)}`} style={{ flex: 1, minWidth: 0, textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <span style={{ fontSize: 'var(--text-body)', fontWeight: 600, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</span>
                   <span style={{ fontSize: 'var(--text-meta)', color: active ? 'var(--color-success)' : 'var(--color-text-caption)' }}>
