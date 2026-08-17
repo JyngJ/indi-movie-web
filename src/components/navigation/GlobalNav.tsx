@@ -244,8 +244,9 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
       </div>
 
       {/* 아래: 디바이더 - 소식 - MY. 신고·인스타·설정 버튼은 MY ⚙(설정 패널)로 이동 (2026-08-17 IA) */}
-      <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, width: '100%' }}>
-        <div style={{ width: 'calc(100% - 16px)', height: 1, background: 'var(--color-neutral-300)' }} />
+      <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
+        {/* 위 그룹과 같은 stretch — alignItems: center를 주면 탭이 hug 폭으로 줄어 호버 면이 좁아진다 */}
+        <div style={{ width: 'calc(100% - 16px)', height: 1, margin: '0 auto', background: 'var(--color-neutral-300)' }} />
         {DESKTOP_RAIL_BOTTOM.map(renderRailTab)}
       </div>
     </nav>
