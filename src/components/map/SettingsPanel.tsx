@@ -152,7 +152,10 @@ export function SettingsMainPage({
             <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>인스타그램</div>
             <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4 }}>@indi.movie.map — 상영 소식·큐레이션</div>
           </div>
-          <span style={{ color: 'var(--color-text-placeholder)' }}><IcoChevronRight /></span>
+          {/* 외부 링크 — 꺾쇠 대신 external-link 아이콘 */}
+          <span style={{ color: 'var(--color-text-placeholder)', display: 'flex' }}>
+            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6" /><path d="M10 14 21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></svg>
+          </span>
         </a>
       </div>
 
