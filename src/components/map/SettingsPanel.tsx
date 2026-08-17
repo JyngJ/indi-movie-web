@@ -129,7 +129,7 @@ export function SettingsMainPage({
           </div>
           <span style={{ color: 'var(--color-text-placeholder)' }}><IcoChevronRight /></span>
         </Link>
-        <button style={{ ...row, borderBottom: 'none' }} onClick={() => onNavigate('report')}>
+        <button style={row} onClick={() => onNavigate('report')}>
           <div style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-sub)" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           </div>
@@ -139,6 +139,21 @@ export function SettingsMainPage({
           </div>
           <span style={{ color: 'var(--color-text-placeholder)' }}><IcoChevronRight /></span>
         </button>
+        <a
+          href="https://www.instagram.com/indi.movie.map/"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ ...row, borderBottom: 'none', textDecoration: 'none' }}
+        >
+          <div style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-sub)" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.2" cy="6.8" r="1" fill="var(--color-text-sub)" stroke="none" /></svg>
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>인스타그램</div>
+            <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4 }}>@indi.movie.map — 상영 소식·큐레이션</div>
+          </div>
+          <span style={{ color: 'var(--color-text-placeholder)' }}><IcoChevronRight /></span>
+        </a>
       </div>
 
       {/* 안내 배너 */}

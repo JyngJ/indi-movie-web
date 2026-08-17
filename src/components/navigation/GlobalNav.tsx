@@ -163,9 +163,13 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
   const setSearchOpen = useUIStore((s) => s.setSearchOpen)
   const toggleMapDockCollapsed = useUIStore((s) => s.toggleMapDockCollapsed)
 
+  const isFeedOpen = useUIStore((s) => s.isFeedOpen)
+  const setFeedOpen = useUIStore((s) => s.setFeedOpen)
+
   const renderRailTab = ({ key, href, label, Icon }: MobileTab) => {
     // 검색 패널이 열려있는 동안은 라우트 탭의 활성 표시를 끈다 — 메뉴는 한 번에 하나만 선택 상태
-    const active = !isSearchOpen && isTabActive(pathname, key)
+    // 소식은 데스크톱에서 페이지 대신 패널 — 패널이 열려 있으면 활성
+    const active = key === 'feed' ? isFeedOpen : (!isSearchOpen && !isFeedOpen && isTabActive(pathname, key))
     const resolvedHref = key === 'films' ? filmsHref : href
     const color = active ? ACTIVE_COLOR : INACTIVE_COLOR
     return (
@@ -173,7 +177,14 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
         key={key}
         href={resolvedHref}
         aria-current={active ? 'page' : undefined}
-        onClick={() => {
+        onClick={(e) => {
+          if (key === 'feed') {
+            e.preventDefault()
+            if (isSearchOpen) setSearchOpen(false)
+            setFeedOpen(!isFeedOpen)
+            return
+          }
+          if (isFeedOpen) setFeedOpen(false)
           if (isSearchOpen) {
             setSearchOpen(false)
             return

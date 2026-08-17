@@ -24,6 +24,10 @@ interface UIStore {
   settingsInitialPage: SettingsPage
   openSettingsPage: (page: SettingsPage) => void
 
+  /** 데스크톱 소식 패널 (모바일은 /feed 페이지) */
+  isFeedOpen: boolean
+  setFeedOpen: (open: boolean) => void
+
   /** 전역 로그인 시트 — 하트 클릭 등 컨텍스트 진입용. 내 계정 탭 홈은 시트 없이 자체 화면 (IA 42) */
   loginSheet: LoginSheetState | null
   openLoginSheet: (opts?: Partial<LoginSheetState>) => void
@@ -50,6 +54,9 @@ export const useUIStore = create<UIStore>((set) => ({
   setSettingsOpen: (open) => set({ isSettingsOpen: open }),
   settingsInitialPage: 'main',
   openSettingsPage: (page) => set({ isSettingsOpen: true, settingsInitialPage: page }),
+
+  isFeedOpen: false,
+  setFeedOpen: (open) => set({ isFeedOpen: open }),
 
   loginSheet: null,
   openLoginSheet: (opts) => set({ loginSheet: { ...(opts ?? {}) } }),

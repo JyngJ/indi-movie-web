@@ -9,6 +9,7 @@ import { useUIStore } from '@/store/uiStore'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { OnboardingGate } from '@/components/domain/onboarding/OnboardingGate'
 import { SurveyGate } from '@/components/domain/survey/SurveyGate'
+import { FeedPanel } from '@/components/domain/favorites/FeedPanel'
 
 const MapView = dynamic(() => import('@/components/map/MapView'), { ssr: false })
 
@@ -62,6 +63,9 @@ export default function TabsLayout({ children }: { children: ReactNode }) {
           initialPage={settingsInitialPage}
         />
       )}
+
+      {/* 데스크톱 소식 패널 — 레일 '소식' 클릭 (모바일은 /feed 페이지) */}
+      {isDesktopLayout && <FeedPanel />}
 
       {/* 첫 방문 온보딩 — 플래그(onboarding_seen_v1) 확인 후에만 오버레이. 카탈로그 로딩은 뒤에서 계속 진행 */}
       <OnboardingGate />
