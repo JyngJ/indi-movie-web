@@ -34,8 +34,18 @@ export async function generateMetadata({
 
   if (!movie) return { title: '영화볼지도' }
 
-  const title = `${movie.title} | 영화볼지도`
-  const description = movie.synopsis?.slice(0, 110) ?? `${movie.title} 상영 정보`
+  /* 검색 유입의 대다수가 "영화제목 정보 / 상영시간표 / 예매" 질의인데(Search Console),
+     제목이 "제목 | 영화볼지도"뿐이라 노출 대비 CTR이 바닥이었다(고노출 제목 페이지 0.4%대).
+     제목·설명에 검색 의도 단어(상영시간표·예매·상영관 수)를 실어 스니펫을 질의에 맞춘다.
+     상영 정보는 캐시된 래퍼라 본문 렌더와 쿼리를 공유한다(중복 조회 없음). */
+  const showtimes = await getMovieShowtimesForSsr(id)
+  const theaterCount = new Set(showtimes.map((t) => t.theaterName)).size
+
+  const title = `${movie.title} 상영시간표·예매 | 영화볼지도`
+  const synopsisLead = movie.synopsis?.slice(0, 80)?.trim()
+  const description = theaterCount > 0
+    ? `전국 독립·예술영화관 ${theaterCount}곳 상영 중 · 극장별 상영시간표와 예매 링크를 한눈에.${synopsisLead ? ` ${synopsisLead}` : ''}`
+    : `${movie.title} 상영 극장·상영시간표·예매 정보. 새 상영이 열리면 영화볼지도에서 확인하세요.${synopsisLead ? ` ${synopsisLead}` : ''}`
   const url = `/movie/${id}`
 
   return {
