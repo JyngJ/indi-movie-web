@@ -133,6 +133,8 @@ function isMapProjectionReady(map: LeafletMap) {
 }
 
 // 동일 입력에 대해 renderToStaticMarkup 중복 호출 방지
+/** 핀 마크업 바꾸면 올려라 — 캐시 키에 들어가서 Fast Refresh로 모듈 상태가 남아도 옛 HTML을 안 쓴다 */
+const PIN_ICON_VERSION = 2
 const _pinIconCache = new LRUCache<string, L.DivIcon>(800)
 
 function makePinIcon(
@@ -156,7 +158,7 @@ function makePinIcon(
   const scheduleKey = scheduleData
     ? `${scheduleData.days.map(d => `${d.date}:${d.times.join('-')}`).join(',')}|${scheduleData.nextShow ? `${scheduleData.nextShow.date}${scheduleData.nextShow.time}` : ''}`
     : ''
-  const cacheKey = `${name}|${selected ? 1 : 0}|${zoom}|${moviesKey}|${filtersActive ? 1 : 0}|${Math.round(finiteNumber(posterOffsetX) * 2) / 2}|${loKey}|${isDark ? 1 : 0}|${dimmed ? 1 : 0}|${isDesktop ? 1 : 0}|${singleMovieMode ? 1 : 0}|${scheduleKey}|${favoriteMark}`
+  const cacheKey = `v${PIN_ICON_VERSION}|${name}|${selected ? 1 : 0}|${zoom}|${moviesKey}|${filtersActive ? 1 : 0}|${Math.round(finiteNumber(posterOffsetX) * 2) / 2}|${loKey}|${isDark ? 1 : 0}|${dimmed ? 1 : 0}|${isDesktop ? 1 : 0}|${singleMovieMode ? 1 : 0}|${scheduleKey}|${favoriteMark}`
   const cached = _pinIconCache.get(cacheKey)
   if (cached) return cached
 
