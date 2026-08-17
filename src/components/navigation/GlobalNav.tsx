@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { motion } from 'motion/react'
+import { motion, AnimatePresence } from 'motion/react'
 import { useEffect, useState } from 'react'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useUIStore } from '@/store/uiStore'
@@ -209,16 +209,22 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
             transition: 'color 150ms ease',
           }}
         >
-          {active && (
-            <motion.span
-              layoutId="rail-nav-pill"
-              transition={{ type: 'spring', duration: 0.4, bounce: 0.2 }}
-              style={{
-                position: 'absolute', inset: 0, borderRadius: 8,
-                background: 'color-mix(in srgb, var(--color-primary-base) 11%, transparent)',
-              }}
-            />
-          )}
+          {/* 활성 틴트 — 슬라이드(layoutId) 대신 각자 페이드 인/아웃 (2026-08-17 사용자 결정) */}
+          <AnimatePresence initial={false}>
+            {active && (
+              <motion.span
+                key="rail-pill"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.16, ease: 'easeOut' }}
+                style={{
+                  position: 'absolute', inset: 0, borderRadius: 8,
+                  background: 'color-mix(in srgb, var(--color-primary-base) 11%, transparent)',
+                }}
+              />
+            )}
+          </AnimatePresence>
           <span style={{ position: 'relative', display: 'flex' }}><Icon size={21} /></span>
           <span style={{ position: 'relative', fontSize: 10, fontWeight: 600 }}>{label}</span>
         </div>

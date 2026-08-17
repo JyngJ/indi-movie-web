@@ -65,7 +65,7 @@ export function FeedPanel() {
         title="소식"
         onClose={close}
         trailing={status === 'signed-in' ? (
-          <Link href="/my/favorites" style={{ textDecoration: 'none' }} onClick={close}>
+          <Link href="/my/favorites" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }} onClick={close}>
             <Button variant="secondary" size="sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
               내 관심 목록 <ChevronRight size={14} strokeWidth={1.75} />
             </Button>

@@ -27,7 +27,7 @@ function FeedPageInner() {
   const authError = params.get('auth_error')
 
   const trailing = status === 'signed-in' ? (
-    <Link href="/my/favorites" style={{ textDecoration: 'none' }}>
+    <Link href="/my/favorites" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
       <Button variant="secondary" size="sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
         내 관심 목록 <ChevronRight size={14} strokeWidth={1.75} />
       </Button>

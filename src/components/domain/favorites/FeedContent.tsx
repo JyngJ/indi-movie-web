@@ -33,10 +33,10 @@ export function FeedContent({ authError, onNavigate }: { authError?: string | nu
 
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '48px var(--gutter)', textAlign: 'center' }}>
-      <p style={{ margin: 0, fontSize: 'var(--text-body)', lineHeight: 1.6, color: 'var(--color-text-secondary)' }}>
+      <p style={{ margin: 0, fontSize: 'var(--text-body)', lineHeight: 1.6, color: 'var(--color-text-secondary)', whiteSpace: 'pre-line' }}>
         {favorites.length === 0
-          ? '아직 소식이 없어요.\n하트로 관심 영화·극장·감독을 모아두면 새 상영 소식이 여기에 쌓여요.'
-          : '아직 새 소식이 없어요.\n관심 영화·극장·감독에 새 상영이 생기면 카톡과 함께 여기에 알려드려요.'}
+          ? '아직 소식이 없어요.\n하트로 관심 영화·극장·감독을 모아두면\n새 상영 소식이 여기에 쌓여요.'
+          : '아직 새 소식이 없어요.\n관심 영화·극장·감독에 새 상영이 생기면\n여기에 알려드려요.'}
       </p>
       {favorites.length === 0 && (
         <Link href="/" style={{ textDecoration: 'none' }} onClick={onNavigate}>
