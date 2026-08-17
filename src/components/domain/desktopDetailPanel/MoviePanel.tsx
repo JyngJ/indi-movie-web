@@ -13,6 +13,7 @@ import { Toast, Button } from '@/components/primitives'
 import { MovieInfoTable } from '@/components/domain/movieDetail/MovieInfoTable'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 import { PanelShell } from './PanelShell'
+import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
 import { IcoUser, IcoChevronRight, IcoPin } from './icons'
 
 /* ── 영화 상세 패널 ── */
@@ -115,6 +116,7 @@ export function MoviePanel({
           </div>
         </div>
       </div>
+      <FavoriteActionRow type="movie" id={movie.id} style={{ paddingLeft: 'var(--gutter)', paddingRight: 'var(--gutter)', paddingBottom: 16, background: 'var(--color-surface-card)' }} />
 
       {/* 탭 */}
       <div style={{ display: 'flex', borderBottom: '1px solid var(--color-border)', flexShrink: 0 }}>

@@ -16,6 +16,7 @@ import { calculateAndFormatDistance, calculateDistanceKm } from '@/lib/map/dista
 import { getRegionFromAddress, getRegionFromCoords } from '@/lib/regions'
 import { formatDateLabel } from '@/lib/date'
 import { Toast, IconButton, Button } from '@/components/primitives'
+import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
 import { MovieInfoTable } from '@/components/domain/movieDetail/MovieInfoTable'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 
@@ -58,11 +59,14 @@ function NavBar({
   titleVisible,
   onBack,
   onClose,
+  trailing,
 }: {
   title: string
   titleVisible: boolean
   onBack: () => void
   onClose: () => void
+  /** 닫기 왼쪽 위젯 (하트) */
+  trailing?: React.ReactNode
 }) {
   return (
     <div style={{
@@ -91,6 +95,7 @@ function NavBar({
       }}>
         {title}
       </span>
+      {trailing}
       <IconButton variant="ghost" size={44} aria-label="닫기" onClick={onClose}><IcoClose /></IconButton>
     </div>
   )
@@ -697,6 +702,8 @@ export function MovieDetailClient({ movieId, theaterId, initialData, initialShow
       </div>
 
       <HeroSection movie={movie} titleRef={titleRef} desktop={isDesktop} />
+      {/* 액션 행 — 피그마 G 확정: 히어로 아래 [♡ 관심 등록] (지도 쪽 상세는 공유 없음) */}
+      <FavoriteActionRow type="movie" id={movie.id} style={{ paddingLeft: isDesktop ? 0 : 16, paddingRight: isDesktop ? 0 : 16, marginBottom: 20, maxWidth: isDesktop ? 480 : undefined }} />
 
       <TabBar
         active={tab}

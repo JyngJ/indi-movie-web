@@ -8,6 +8,7 @@ import { GENRES } from '@/lib/genres'
 import { withFlag } from '@/lib/nations'
 import { getStoredRegion, setStoredRegion, subscribeStoredRegion } from '@/lib/regionStorage'
 import { useCurrentLocationRegion } from '@/hooks/useCurrentLocationRegion'
+import { useAuth } from '@/components/auth/AuthProvider'
 import { type DateId, buildDateOptions, fmtFull, fmtMD, isSameDay } from './filterBar/dateHelpers'
 import { CalendarPicker } from './filterBar/CalendarPicker'
 import { DateDropdown } from './filterBar/DateDropdown'
@@ -29,6 +30,8 @@ export interface FilterState {
   bookable: boolean
   indie: boolean
   regionId: string | null
+  /** 관심만 — 관심 극장 + 관심 영화 상영 극장 (로그인 시에만 노출) */
+  favorites: boolean
 }
 
 /* -- FilterBar ---------------------------------------------------- */
@@ -68,6 +71,8 @@ export function FilterBar({
   const [nations, setNations] = useState<string[]>([])
   const [draftNations, setDraftNations] = useState<string[]>([])
   const [bookable, setBookable] = useState(false)
+  const [favorites, setFavorites] = useState(false)
+  const { status: authStatus } = useAuth()
   const [indie, setIndie] = useState(false)
   const [regionId, setRegionId] = useState<string | null>(null)
   // 접속 위치 지역 — 드롭다운 배지·자동 스크롤용 (자동 지정은 훅이 기기당 1회만 수행)
@@ -118,8 +123,8 @@ export function FilterBar({
     })
   }, [nationOptions])
   useEffect(() => {
-    onChange?.({ dateId, customStart, customEnd, genres, nations, bookable, indie, regionId })
-  }, [onChange, dateId, customStart, customEnd, genres, nations, bookable, indie, regionId])
+    onChange?.({ dateId, customStart, customEnd, genres, nations, bookable, indie, regionId, favorites })
+  }, [onChange, dateId, customStart, customEnd, genres, nations, bookable, indie, regionId, favorites])
 
   useEffect(() => {
     // 사용자가 직접 선택한 경우 GPS 값으로 덮어쓰지 않음
@@ -265,7 +270,7 @@ export function FilterBar({
   }, [openPanel, genres, nations])
 
   const chip = (overrides: Partial<FilterState>) =>
-    onChipChange?.({ dateId, customStart, customEnd, genres, nations, bookable, indie, regionId, ...overrides })
+    onChipChange?.({ dateId, customStart, customEnd, genres, nations, bookable, indie, regionId, favorites, ...overrides })
 
   const selectDate = (id: DateId) => { setDateId(id); setOpenPanel(null); chip({ dateId: id }) }
   const clearDate = () => {
@@ -416,6 +421,15 @@ export function FilterBar({
           selected={bookable}
           onClick={() => { setBookable(b => !b); chip({ bookable: !bookable }) }}
         />
+        {/* 관심만 — 비로그인이면 아예 숨긴다 (disabled보다 안 보이는 게 낫다) */}
+        {authStatus === 'signed-in' && (
+          <FilterChip
+            label="♥ 관심"
+            rc="favorites"
+            selected={favorites}
+            onClick={() => { setFavorites(b => !b); chip({ favorites: !favorites }) }}
+          />
+        )}
         {/* 독립영화관 필터 — 미구현, 비활성화
         <FilterChip
           label="독립영화관"

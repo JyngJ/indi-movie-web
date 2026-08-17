@@ -61,7 +61,7 @@ const IcoGitHub = () => (
 )
 
 /* ── 공통 헤더 ── */
-export function SettingsHeader({ title, onBack, onClose, submitting }: { title: string; onBack?: () => void; onClose?: () => void; submitting?: boolean }) {
+export function SettingsHeader({ title, onBack, onClose, submitting, trailing }: { title: string; onBack?: () => void; onClose?: () => void; submitting?: boolean; trailing?: React.ReactNode }) {
   return (
     <div style={{
       height: 52,
@@ -76,6 +76,7 @@ export function SettingsHeader({ title, onBack, onClose, submitting }: { title: 
       <span className="display-h2" style={{ flex: 1, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {title}
       </span>
+      {trailing}
       {onClose && (
         <IconButton variant="ghost" size={44} aria-label="닫기" onClick={onClose} disabled={submitting}><IcoClose /></IconButton>
       )}
@@ -128,7 +129,7 @@ export function SettingsMainPage({
           </div>
           <span style={{ color: 'var(--color-text-placeholder)' }}><IcoChevronRight /></span>
         </Link>
-        <button style={{ ...row, borderBottom: 'none' }} onClick={() => onNavigate('report')}>
+        <button style={row} onClick={() => onNavigate('report')}>
           <div style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-sub)" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           </div>
@@ -138,6 +139,24 @@ export function SettingsMainPage({
           </div>
           <span style={{ color: 'var(--color-text-placeholder)' }}><IcoChevronRight /></span>
         </button>
+        <a
+          href="https://www.instagram.com/indi.movie.map/"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ ...row, borderBottom: 'none', textDecoration: 'none' }}
+        >
+          <div style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-sub)" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.2" cy="6.8" r="1" fill="var(--color-text-sub)" stroke="none" /></svg>
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>인스타그램</div>
+            <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4 }}>@indi.movie.map — 상영 소식·큐레이션</div>
+          </div>
+          {/* 외부 링크 — 꺾쇠 대신 external-link 아이콘 */}
+          <span style={{ color: 'var(--color-text-placeholder)', display: 'flex' }}>
+            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6" /><path d="M10 14 21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></svg>
+          </span>
+        </a>
       </div>
 
       {/* 안내 배너 */}

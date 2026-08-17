@@ -71,7 +71,7 @@ function MorePageContent() {
         backgroundColor: 'var(--color-surface-bg)',
       }}
     >
-      <SettingsHeader title={PAGE_TITLES[page]} onBack={page !== 'main' ? handleBack : undefined} />
+      <SettingsHeader title={PAGE_TITLES[page]} onBack={handleBack} />
 
       {/* 페이지 전환 — 메인→하위는 오른쪽에서, 뒤로가기는 왼쪽에서 들어온다 */}
       <TransitionPanel

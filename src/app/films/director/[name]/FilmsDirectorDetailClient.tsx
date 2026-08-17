@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useRouter } from 'next/navigation'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
+import { FavoriteActionButton } from '@/components/domain/favorites/FavoriteActionRow'
 import Image from 'next/image'
 import { useMovies, useActiveMovieIds, useDirectorProfile } from '@/lib/supabase/queries'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
@@ -137,10 +138,11 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
       </div>
 
       {/* CTA 버튼 */}
-      <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
+      <div style={{ marginTop: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <MapCtaButton fullWidth={false} onClick={() => router.push(`/map?director=${encodeURIComponent(directorName)}`)}>
           지도에서 필터로 보기
         </MapCtaButton>
+        <FavoriteActionButton type="director" id={directorName} />
         <IconButton
           variant="overlay"
           size={44}

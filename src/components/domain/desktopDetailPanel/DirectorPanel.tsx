@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { useMovies, useActiveMovieIds } from '@/lib/supabase/queries'
 import { Toast, SortToggle } from '@/components/primitives'
 import { PanelShell } from './PanelShell'
+import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
 import { IcoChevronRight, IcoChevronDown } from './icons'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 
@@ -61,8 +62,9 @@ export function DirectorPanel({
           <div style={{ marginTop: 4, fontSize: 13, color: 'var(--color-text-caption)' }}>작품 {directorMovies.length}편</div>
         </div>
       </div>
+      <FavoriteActionRow type="director" id={directorName} style={{ paddingLeft: 'var(--gutter)', paddingRight: 'var(--gutter)', marginTop: 16 }} />
 
-      <div style={{ padding: '16px var(--gutter) 0' }}>
+      <div style={{ paddingLeft: 'var(--gutter)', paddingRight: 'var(--gutter)', marginTop: 16 }}>
         <MapCtaButton onClick={() => onDirectorFilterOnMap(directorName)}>
           지도에서 필터로 보기
         </MapCtaButton>

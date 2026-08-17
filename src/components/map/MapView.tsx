@@ -10,9 +10,11 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import type { Map as LeafletMap, Point as LeafletPoint } from 'leaflet'
 import { useLocationPermission } from '@/hooks/useLocationPermission'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
+import { useFavorites } from '@/hooks/useFavorites'
 import { SearchBarButton, FabRound, Toast, Wordmark } from '@/components/primitives'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { THEATER_SHEET_COLLAPSED_H } from '@/components/domain/TheaterSheet'
+import type { PinFavoriteMark } from '@/components/domain/MapPin'
 import { MapPin, TheaterSheet, CurationSheet, CurationSections, FilterBar, LocationPermissionModal, CURATION_PEEK_HEIGHT } from '@/components/domain'
 import type { CurationSnap } from '@/components/domain'
 import { DesktopDetailPanel } from '@/components/domain/DesktopDetailPanel'
@@ -131,6 +133,8 @@ function isMapProjectionReady(map: LeafletMap) {
 }
 
 // 동일 입력에 대해 renderToStaticMarkup 중복 호출 방지
+/** 핀 마크업 바꾸면 올려라 — 캐시 키에 들어가서 Fast Refresh로 모듈 상태가 남아도 옛 HTML을 안 쓴다 */
+const PIN_ICON_VERSION = 2
 const _pinIconCache = new LRUCache<string, L.DivIcon>(800)
 
 function makePinIcon(
@@ -146,6 +150,7 @@ function makePinIcon(
   isDesktop = false,
   singleMovieMode = false,
   scheduleData?: { days: ScreeningDay[]; nextShow?: { date: string; time: string; showtimeId: string } },
+  favoriteMark: PinFavoriteMark = 'none',
 ) {
   // 캐시 키: 모든 입력을 직렬화 — 같은 조합이면 renderToStaticMarkup 재사용
   const moviesKey = posterMovies.map(m => `${m.id}:${m.matchesFilter ? 1 : 0}:${m.showtimeCount}:${m.showtimesToday?.map(s => s.time + (s.soldout ? 'x' : '') + (s.past ? 'p' : '')).join('|') ?? ''}`).join(',')
@@ -153,7 +158,7 @@ function makePinIcon(
   const scheduleKey = scheduleData
     ? `${scheduleData.days.map(d => `${d.date}:${d.times.join('-')}`).join(',')}|${scheduleData.nextShow ? `${scheduleData.nextShow.date}${scheduleData.nextShow.time}` : ''}`
     : ''
-  const cacheKey = `${name}|${selected ? 1 : 0}|${zoom}|${moviesKey}|${filtersActive ? 1 : 0}|${Math.round(finiteNumber(posterOffsetX) * 2) / 2}|${loKey}|${isDark ? 1 : 0}|${dimmed ? 1 : 0}|${isDesktop ? 1 : 0}|${singleMovieMode ? 1 : 0}|${scheduleKey}`
+  const cacheKey = `v${PIN_ICON_VERSION}|${name}|${selected ? 1 : 0}|${zoom}|${moviesKey}|${filtersActive ? 1 : 0}|${Math.round(finiteNumber(posterOffsetX) * 2) / 2}|${loKey}|${isDark ? 1 : 0}|${dimmed ? 1 : 0}|${isDesktop ? 1 : 0}|${singleMovieMode ? 1 : 0}|${scheduleKey}|${favoriteMark}`
   const cached = _pinIconCache.get(cacheKey)
   if (cached) return cached
 
@@ -229,7 +234,7 @@ function makePinIcon(
   })() : ''
 
   const pinHtml = renderToStaticMarkup(
-    <MapPin kind="indie" selected={selected} label={name} labelOffset={labelOffset} dimmed={dimmed} isDark={isDark} />
+    <MapPin kind="indie" selected={selected} favorite={favoriteMark} label={name} labelOffset={labelOffset} dimmed={dimmed} isDark={isDark} />
   )
   const html = `
     <div style="width:140px;display:flex;flex-direction:column;align-items:center;overflow:visible;position:relative;">
@@ -1028,6 +1033,7 @@ export default function MapView() {
   const { state: locPermState, coords, modalSuppressed: locModalSuppressed, request: locRequest, dismiss: locDismiss, refetch } = useLocationPermission()
   const isDark = false  /* 2.0: 다크 폐지 — 배선(핀·타일·지하철)은 넓어 상수 고정, 제거는 지도 리팩토링 때 */
   const isDesktopLayout = useIsDesktopLayout()
+  const { isFavorite, signedIn: favoritesSignedIn } = useFavorites()
   const { data: theaters = EMPTY_THEATERS, isLoading: theatersLoading } = useTheaters()
   const { data: stations = EMPTY_STATIONS } = useStations()
   const { data: movies = EMPTY_MOVIES } = useMovies()
@@ -1039,6 +1045,7 @@ export default function MapView() {
     genres: [],
     nations: [],
     bookable: false,
+    favorites: false,
     indie: false,
     // MapView는 persistent 마운트라 sessionStorage 저장값으로 초기화 (ssr:false라 안전)
     regionId: getStoredRegion(),
@@ -1615,6 +1622,7 @@ export default function MapView() {
     for (const [theaterId, movieMap] of byTheater) {
       for (const movie of movieMap.values()) {
         if (filters.bookable && !movie.hasAvailableSeats) movie.matchesFilter = false
+        if (filters.favorites && !isFavorite('theater', theaterId) && !isFavorite('movie', movie.id)) movie.matchesFilter = false
         const times = todayShowtimes.get(theaterId)?.get(movie.id)
         if (times?.length) movie.showtimesToday = times
       }
@@ -1626,7 +1634,7 @@ export default function MapView() {
       )
     }
     return result
-  }, [directorFilter, filters.bookable, filters.genres, filters.nations, movieFilter, mapShowtimes, mapShowtimeStart])
+  }, [directorFilter, filters.bookable, filters.favorites, isFavorite, filters.genres, filters.nations, movieFilter, mapShowtimes, mapShowtimeStart])
 
   // 단일 영화 필터 시 핀에 노출할 극장별 날짜별 상영시간표 (최대 4일)
   const singleMovieSchedule = useMemo(() => {
@@ -1670,7 +1678,15 @@ export default function MapView() {
     return result
   }, [movieFilter, mapShowtimes, mapShowtimeStart])
 
-  const filtersActive = filters.bookable || filters.genres.length > 0 || filters.nations.length > 0 || !!movieFilter || !!directorFilter
+  // 관심(P2): 관심 극장 / 관심 영화 상영 극장 표시 + "관심만" 필터
+  const favoriteMarkFor = useCallback((theaterId: string, posterMovies: TheaterPosterMovie[]): PinFavoriteMark => {
+    if (!favoritesSignedIn) return 'none'
+    const t = isFavorite('theater', theaterId)
+    const m = posterMovies.some((pm) => isFavorite('movie', pm.id))
+    return t && m ? 'both' : t ? 'theater' : m ? 'movie' : 'none'
+  }, [favoritesSignedIn, isFavorite])
+
+  const filtersActive = filters.bookable || filters.genres.length > 0 || filters.nations.length > 0 || !!movieFilter || !!directorFilter || filters.favorites
   const filterResultCount = useMemo(() => {
     if (!filtersActive) return theaters.length
     let count = 0
@@ -3239,6 +3255,7 @@ export default function MapView() {
                 isDesktopLayout,
                 !!movieFilter,
                 singleMovieSchedule.get(theater.id),
+                favoriteMarkFor(theater.id, posterMovies),
               )}
               eventHandlers={{ click: (e) => {
                 const target = e.originalEvent?.target as HTMLElement | null
@@ -3672,8 +3689,6 @@ export default function MapView() {
               })
               openDesktopPanel({ type: 'director', name })
             } : undefined}
-            favorited={false}
-            onFavorite={() => { /* Phase 4 */ }}
             mapFilters={{ genres: filters.genres, nations: filters.nations }}
             initialIsoDate={initialSheetDate}
             initialShowtimeId={initialShowtimeId}
