@@ -165,11 +165,16 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
 
   const isFeedOpen = useUIStore((s) => s.isFeedOpen)
   const setFeedOpen = useUIStore((s) => s.setFeedOpen)
+  const isMyOpen = useUIStore((s) => s.isMyOpen)
+  const setMyOpen = useUIStore((s) => s.setMyOpen)
 
   const renderRailTab = ({ key, href, label, Icon }: MobileTab) => {
     // 검색 패널이 열려있는 동안은 라우트 탭의 활성 표시를 끈다 — 메뉴는 한 번에 하나만 선택 상태
     // 소식은 데스크톱에서 페이지 대신 패널 — 패널이 열려 있으면 활성
-    const active = key === 'feed' ? isFeedOpen : (!isSearchOpen && !isFeedOpen && isTabActive(pathname, key))
+    // 소식·MY는 데스크톱에서 페이지 대신 팝오버 — 팝오버가 열려 있으면 활성
+    const active = key === 'feed' ? isFeedOpen
+      : key === 'my' ? isMyOpen
+      : (!isSearchOpen && !isFeedOpen && !isMyOpen && isTabActive(pathname, key))
     const resolvedHref = key === 'films' ? filmsHref : href
     const color = active ? ACTIVE_COLOR : INACTIVE_COLOR
     return (
@@ -178,13 +183,15 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
         href={resolvedHref}
         aria-current={active ? 'page' : undefined}
         onClick={(e) => {
-          if (key === 'feed') {
+          if (key === 'feed' || key === 'my') {
             e.preventDefault()
             if (isSearchOpen) setSearchOpen(false)
-            setFeedOpen(!isFeedOpen)
+            if (key === 'feed') setFeedOpen(!isFeedOpen)
+            else setMyOpen(!isMyOpen)
             return
           }
           if (isFeedOpen) setFeedOpen(false)
+          if (isMyOpen) setMyOpen(false)
           if (isSearchOpen) {
             setSearchOpen(false)
             return
