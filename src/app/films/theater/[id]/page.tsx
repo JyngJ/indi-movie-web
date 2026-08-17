@@ -1,6 +1,8 @@
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
+import type { Theater } from '@/types/api'
+import { Toast } from '@/components/primitives'
 import { getTheaterDetail, getTheaterTodayMovieTitles } from '@/lib/catalog/getTheaterDetail'
 import { toTheaterSchema } from '@/lib/seo/toTheaterSchema'
 import { getTheaterScreenings } from '@/lib/seo/getTheaterScreenings'
@@ -25,7 +27,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const [{ id }, query] = await Promise.all([params, searchParams])
   const theater = await getTheaterDetail(id)
-  if (!theater) return { title: '영화볼지도' }
+  if (!theater) notFound()
 
   const title = `${theater.name} | 영화볼지도`
   const todayTitles = await getTheaterTodayMovieTitles(theater.id)
@@ -65,9 +67,20 @@ export default async function FilmsTheaterDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
+  /* loading.tsx를 두면 스트리밍이 200으로 먼저 시작돼 뒤의 notFound()가 상태코드를
+     못 바꾼다 — 죽은 극장이 '200 + noindex'로 남아 크롤러가 계속 재수집했다.
+     존재 확인은 Suspense 밖에서 끝내고(진짜 404), 느린 시간표 조회만 안에서 기다린다. */
   const theater = await getTheaterDetail(id)
   if (!theater) notFound()
 
+  return (
+    <Suspense fallback={<Toast message="데이터 불러오는 중…" visible />}>
+      <TheaterBody id={id} theater={theater} />
+    </Suspense>
+  )
+}
+
+async function TheaterBody({ id, theater }: { id: string; theater: Theater }) {
   const schema = toTheaterSchema(theater, BASE_URL)
   /* 시간표는 클라이언트가 그려 서버 HTML이 비어 있었다 — 크롤러·답변형 AI가 읽을
      같은 내용을 서버에서 렌더한다 (지역 페이지와 같은 방식) */
