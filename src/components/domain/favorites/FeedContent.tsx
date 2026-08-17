@@ -20,7 +20,7 @@ export function FeedContent({ authError, onNavigate }: { authError?: string | nu
 
   if (status === 'signed-out') {
     return (
-      <div style={{ padding: '32px var(--gutter)' }}>
+      <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '32px var(--gutter)' }}>
         <LoginPanel
           title="관심 영화 소식, 카톡으로 받아보세요"
           description="하트로 관심 영화·극장·감독을 모아두면 새 상영 소식이 생길 때 알려드려요."
@@ -32,7 +32,7 @@ export function FeedContent({ authError, onNavigate }: { authError?: string | nu
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '48px var(--gutter)', textAlign: 'center' }}>
+    <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '48px var(--gutter)', textAlign: 'center' }}>
       <p style={{ margin: 0, fontSize: 'var(--text-body)', lineHeight: 1.6, color: 'var(--color-text-secondary)' }}>
         {favorites.length === 0
           ? '아직 소식이 없어요.\n하트로 관심 영화·극장·감독을 모아두면 새 상영 소식이 여기에 쌓여요.'

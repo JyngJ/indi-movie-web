@@ -72,7 +72,7 @@ export function FeedPanel() {
           </Link>
         ) : undefined}
       />
-      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
         <FeedContent onNavigate={close} />
       </div>
     </div>
