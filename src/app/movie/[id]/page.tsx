@@ -1,4 +1,7 @@
+import { Suspense } from 'react'
 import type { Metadata } from 'next'
+import type { MovieDetail } from '@/types/api'
+import { Toast } from '@/components/primitives'
 import { notFound } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getMovieDetail } from '@/lib/catalog/getMovieDetail'
@@ -32,7 +35,7 @@ export async function generateMetadata({
   const { id } = await params
   const movie = await getMovieDetail(id)
 
-  if (!movie) return { title: '영화볼지도' }
+  if (!movie) notFound()
 
   /* 검색 유입의 대다수가 "영화제목 정보 / 상영시간표 / 예매" 질의인데(Search Console),
      제목이 "제목 | 영화볼지도"뿐이라 노출 대비 CTR이 바닥이었다(고노출 제목 페이지 0.4%대).
@@ -80,9 +83,19 @@ export default async function MovieDetailPage({
   const [{ id }, sp] = await Promise.all([params, searchParams])
   const movie = await getMovieDetail(id)
   /* 삭제된 영화 id로 들어오면 지금까지 빈 상세 페이지를 200으로 돌려줬다
-     (Search Console soft 404). 존재하지 않으면 명시적으로 없는 페이지로 처리한다. */
+     (Search Console soft 404). 존재하지 않으면 명시적으로 없는 페이지로 처리한다.
+     loading.tsx를 두면 스트리밍이 200으로 먼저 시작돼 이 notFound()가 상태코드를
+     못 바꾸므로, 존재 확인은 Suspense 밖에서 끝내고 시간표 조회만 안에서 기다린다. */
   if (!movie) notFound()
 
+  return (
+    <Suspense fallback={<Toast message="데이터 불러오는 중…" visible />}>
+      <MovieBody id={id} movie={movie} theaterId={sp.theater} />
+    </Suspense>
+  )
+}
+
+async function MovieBody({ id, movie, theaterId }: { id: string; movie: MovieDetail; theaterId?: string }) {
   const showtimes: MovieTheaterEntry[] = await getMovieShowtimesForSsr(id)
 
   const schema = toMovieSchema(movie, BASE_URL)
@@ -136,7 +149,7 @@ export default async function MovieDetailPage({
       />
       <MovieDetailClient
         movieId={id}
-        theaterId={sp.theater}
+        theaterId={theaterId}
         initialData={movie}
         initialShowtimes={showtimes}
       />
