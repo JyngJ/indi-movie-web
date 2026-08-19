@@ -197,6 +197,50 @@ export const GUIDES: Record<string, ComponentGuide> = {
   FabPill: {
     intro: '지도와 목록처럼 두 모드를 오가는 전환 컨트롤입니다. 레이블 두 개를 한 pill에 담아 현재 위치를 알립니다.',
   },
+
+  BubbleTail: {
+    intro: '말풍선 꼬리입니다. 11×11 정사각을 45도 돌려 붙이며, 붙는 면과 같은 색을 받아 배경과 이어집니다.',
+  },
+
+  CardContainer: {
+    intro: '카드를 세로로 묶는 컨테이너입니다. 카드 사이 간격을 한 곳에서 정해 목록의 리듬을 유지합니다.',
+  },
+
+  DirectorChip: {
+    intro: '감독 이름과 사진을 함께 담는 칩입니다. 누르면 감독 상세로 이동합니다.',
+  },
+
+  GenreChip: {
+    intro: '장르를 표시하는 칩입니다. 선택 상태가 없는 표시 전용이라 누를 수 없습니다.',
+  },
+
+  ScrollNavButton: {
+    intro: '가로 스크롤 레일의 좌우 이동 버튼입니다. 레일 위에 절대 배치로 얹습니다.',
+  },
+
+  SearchBar: {
+    intro: '검색어를 입력받는 바입니다. 높이 44(--comp-search-height), 반경은 control(12)을 사용합니다.',
+  },
+
+  SearchBarButton: {
+    intro: '검색창 모양의 버튼입니다. 입력 대신 검색 화면으로 이동하는 자리에 사용합니다.',
+  },
+
+  Skeleton: {
+    intro: '내용이 오기 전 자리를 잡아 두는 면입니다. 실제 요소와 같은 크기·반경으로 두어 화면이 튀지 않게 합니다.',
+  },
+
+  MovieCardSkeleton: {
+    intro: '영화 카드 자리의 스켈레톤입니다. 포스터와 제목 줄의 배치를 그대로 따릅니다.',
+  },
+
+  TheaterCardSkeleton: {
+    intro: '극장 카드 자리의 스켈레톤입니다. 극장명과 메타 줄의 배치를 그대로 따릅니다.',
+  },
+
+  Wordmark: {
+    intro: '서비스 워드마크입니다. 배경을 통제할 수 없는 자리에서는 테두리 변형으로 글자가 읽히도록 합니다.',
+  },
 }
 
 /** 조작 가능한 State 플레이그라운드를 제공하는 컴포넌트.
