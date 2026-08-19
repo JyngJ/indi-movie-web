@@ -8,7 +8,7 @@ import {
   MovieCardSkeleton, TheaterCardSkeleton,
 } from '@/components/primitives'
 
-/* 제품이 쓰는 컴포넌트를 그대로 import해 렌더한다 — 문서용 사본을 만들지 않는다. */
+/* 제품 컴포넌트를 그대로 import해 렌더한다 — 문서용 사본을 만들지 않는다. */
 
 const IcoPlus = () => (
   <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
@@ -21,7 +21,7 @@ const IcoSearch = () => (
   </svg>
 )
 
-/** 데모 한 칸 — 캡션이 있는 견본. */
+/** 견본 한 칸 — 캡션과 함께 보여 준다. */
 function Case({ label, children, dark = false }: { label: string; children: ReactNode; dark?: boolean }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)' }}>
@@ -157,7 +157,7 @@ const DEMOS: Record<string, ReactNode> = {
   ),
   DirectorChip: <Case label="pending"><DirectorChip name="봉준호" /><DirectorChip name="홍상수" pending /></Case>,
   PosterChip: (
-    <Case label="corner · tone — 좌하단은 순위 전용이라 비운다">
+    <Case label="corner · tone — 좌하단은 순위 표기 자리로 비워 둡니다">
       <PosterStage>
         <PosterChip corner="top-left" tone="gv">GV</PosterChip>
         <PosterChip corner="top-right" tone="error">매진</PosterChip>
@@ -189,9 +189,9 @@ const DEMOS: Record<string, ReactNode> = {
   SearchBar: <Case label="입력형 · 버튼형"><SearchBarDemo /></Case>,
   SearchBarButton: <Case label="검색창 모양 버튼(탭 전환용)"><SearchBarButton onClick={() => {}} /></Case>,
   FabRound: <Case label="원형 FAB"><FabRound><IcoPlus /></FabRound></Case>,
-  FabPill: <Case label="pill FAB — 지도/목록 전환"><FabPill /></Case>,
+  FabPill: <Case label="pill FAB — 지도·목록 전환"><FabPill /></Case>,
   ScrollNavButton: (
-    <Case label="레일 좌우 이동 — 절대배치라 relative 무대 위에 얹는다">
+    <Case label="레일 좌우 이동 — 절대 배치이므로 relative 무대 위에 놓습니다">
       <div style={{ position: 'relative', width: 200, height: 64, background: 'var(--color-surface-raised)', borderRadius: 'var(--radius-control)' }}>
         <ScrollNavButton direction="left" style={{ left: 8 }} />
         <ScrollNavButton direction="right" style={{ right: 8 }} />
@@ -211,20 +211,20 @@ const DEMOS: Record<string, ReactNode> = {
       </Case>
     </Row>
   ),
-  Toast: <Case label="trigger를 올리면 뜬다"><ToastDemo /></Case>,
+  Toast: <Case label="trigger 값을 올리면 표시됩니다"><ToastDemo /></Case>,
   BottomSheet: (
-    <Case label="시트 껍데기 — 핸들 + 상단 라운드">
+    <Case label="시트 면 — 핸들과 상단 라운드">
       <div style={{ width: 320 }}>
         <BottomSheet>
           <div style={{ padding: 'var(--gutter)', fontSize: 'var(--text-body)', color: 'var(--color-text-body)' }}>
-            시트 내용이 들어간다
+            시트 내용이 들어갑니다
           </div>
         </BottomSheet>
       </div>
     </Case>
   ),
   BubbleTail: (
-    <Case label="말풍선 꼬리 — 11×11 정사각 rotate45">
+    <Case label="말풍선 꼬리 — 11×11 정사각 rotate 45">
       <div style={{
         position: 'relative', padding: 'var(--spacing-3) var(--spacing-4)',
         background: 'var(--color-primary-base)', color: 'var(--color-text-inverse)',
@@ -246,21 +246,10 @@ const DEMOS: Record<string, ReactNode> = {
 }
 
 /** 서버 컴포넌트에서 이름만 넘겨 쓰는 진입점.
- *  DEMOS 객체를 직접 export해서 서버에서 읽으면 클라이언트 참조 프록시가 와서 항상 undefined다. */
+ *  DEMOS 객체를 직접 export해 서버에서 읽으면 클라이언트 참조 프록시가 와서 값이 비어 있다. */
 export function Demo({ name }: { name: string }) {
   const demo = DEMOS[name]
-  if (!demo) {
-    return (
-      <div style={{
-        padding: 'var(--spacing-6)', border: '1px dashed var(--color-border)',
-        borderRadius: 'var(--radius-control)', color: 'var(--color-text-caption)',
-        fontSize: 'var(--text-meta)',
-      }}>
-        데모 없음 — <code style={{ fontFamily: 'var(--font-mono)' }}>src/app/design-system/_ui/demos.tsx</code>에 추가하면 여기 뜬다.
-      </div>
-    )
-  }
-  return <>{demo}</>
+  return demo ? <>{demo}</> : null
 }
 
 /** 목록 페이지에서 데모 유무를 표시할 때 쓴다. */

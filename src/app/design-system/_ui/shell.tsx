@@ -165,18 +165,23 @@ export function DefTable({ rows }: { rows: [ReactNode, ReactNode][] }) {
 }
 
 /** 좌 견본 / 우 설명 — 코드잇 Spec 블록. */
-export function SpecRow({ visual, title, desc }: { visual: ReactNode; title: string; desc: ReactNode }) {
+export function SpecRow({ visual, title, desc }: { visual?: ReactNode; title: string; desc: ReactNode }) {
   return (
-    <div style={{
-      display: 'grid', gap: 'var(--spacing-6)', alignItems: 'center',
-      gridTemplateColumns: 'minmax(0, 1fr)', marginBottom: 'var(--spacing-12)',
-    }} className="ds-spec-row">
-      <div style={{
-        background: 'var(--color-surface-bg)', border: '1px solid var(--color-border)',
-        borderRadius: 'var(--radius-popover)', padding: 'var(--spacing-6)',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        gap: 'var(--spacing-3)', minHeight: 160,
-      }}>{visual}</div>
+    <div
+      style={{
+        display: 'grid', gap: 'var(--spacing-6)', alignItems: 'center',
+        gridTemplateColumns: 'minmax(0, 1fr)', marginBottom: 'var(--spacing-12)',
+      }}
+      className={visual ? 'ds-spec-row' : undefined}
+    >
+      {visual && (
+        <div style={{
+          background: 'var(--color-surface-bg)', border: '1px solid var(--color-border)',
+          borderRadius: 'var(--radius-popover)', padding: 'var(--spacing-6)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          gap: 'var(--spacing-3)', minHeight: 160,
+        }}>{visual}</div>
+      )}
       <div>
         <div style={{ fontSize: 'var(--text-title)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{title}</div>
         <p style={{
@@ -190,7 +195,7 @@ export function SpecRow({ visual, title, desc }: { visual: ReactNode; title: str
 
 /** Do / Don't 2단 카드. 하단 액센트 바로 구분한다. */
 export function UsageCards({ items }: {
-  items: { kind: 'do' | 'dont'; visual: ReactNode; rule: string }[]
+  items: { kind: 'do' | 'dont'; visual?: ReactNode; rule: string }[]
 }) {
   return (
     <div style={{
@@ -199,14 +204,16 @@ export function UsageCards({ items }: {
     }}>
       {items.map((it, i) => (
         <div key={i}>
-          <div style={{
-            background: 'var(--color-surface-bg)', borderRadius: 'var(--radius-popover)',
-            border: '1px solid var(--color-border)', borderBottom: 'none',
-            borderBottomLeftRadius: 0, borderBottomRightRadius: 0,
-            padding: 'var(--spacing-6)', minHeight: 150,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexWrap: 'wrap', gap: 'var(--spacing-3)',
-          }}>{it.visual}</div>
+          {it.visual && (
+            <div style={{
+              background: 'var(--color-surface-bg)', borderRadius: 'var(--radius-popover)',
+              border: '1px solid var(--color-border)', borderBottom: 'none',
+              borderBottomLeftRadius: 0, borderBottomRightRadius: 0,
+              padding: 'var(--spacing-6)', minHeight: 150,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexWrap: 'wrap', gap: 'var(--spacing-3)',
+            }}>{it.visual}</div>
+          )}
           <div style={{
             height: 3,
             background: it.kind === 'do' ? 'var(--color-primary-base)' : 'var(--color-neutral-300)',
@@ -259,7 +266,7 @@ export function DocFooter() {
       marginTop: 'var(--spacing-12)', fontSize: 'var(--text-meta)',
       color: 'var(--color-text-placeholder)',
     }}>
-      ©영화볼지도 · 이 문서는 <Code>npm run ds:build</Code>가 생성한다
+      ©영화볼지도 · 이 문서는 <Code>npm run ds:build</Code>로 생성합니다
     </div>
   )
 }

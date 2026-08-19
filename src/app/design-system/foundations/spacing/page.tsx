@@ -23,14 +23,14 @@ export default function SpacingPage() {
     <DocPage
       href="/design-system/foundations/spacing"
       title="Spacing"
-      lead="모든 간격은 4의 배수다. n = px ÷ 4 로 읽는다. 4배수를 벗어난 값이 하나 들어오면 그 옆의 모든 값이 흔들리기 때문에, 감사 스크립트가 이탈을 카운트한다."
+      lead="모든 간격은 4의 배수입니다. n = px ÷ 4 로 읽으며, 스케일을 벗어난 값은 감사 스크립트가 집계해 관리합니다."
       toc={[
         { id: 'scale', label: 'Scale' },
         { id: 'gutter', label: 'Gutter' },
         { id: 'usage', label: 'Usage' },
       ]}
     >
-      <DocSection id="scale" title="Scale" lead="피그마 컬렉션 “영화볼지도 스페이싱 - 2.0”과 같은 단계다.">
+      <DocSection id="scale" title="Scale" lead="피그마 컬렉션 “영화볼지도 스페이싱 - 2.0”과 같은 단계를 사용합니다.">
         <div>
           {spacing.map(t => {
             const px = parseInt(t.resolved, 10)
@@ -57,7 +57,7 @@ export default function SpacingPage() {
       <DocSection
         id="gutter"
         title="Gutter"
-        lead="좌우 여백은 중첩 깊이에 따라 줄인다 — 최상위 16, 그 안 12, 더 안쪽 8."
+        lead="좌우 여백은 중첩 깊이에 따라 줄입니다 — 최상위 16, 그 안쪽 12, 더 안쪽 8입니다."
       >
         <Stage minHeight={200}>
           <div style={{ width: '100%', maxWidth: 320, background: 'var(--color-surface-card)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: 16 }}>
@@ -80,7 +80,7 @@ export default function SpacingPage() {
           items={[
             {
               kind: 'do',
-              rule: '인접한 단계는 최소 한 칸 이상 차이를 둔다. 12와 16을 나란히 쓰면 정렬 실수처럼 보인다.',
+              rule: '인접한 단계는 최소 한 칸 이상 차이를 둡니다. 12와 16을 나란히 쓰면 정렬 오류처럼 보입니다.',
               visual: (
                 <div style={{ display: 'grid', gap: 24, width: 200 }}>
                   <div style={{ height: 28, background: 'var(--color-surface-raised)', borderRadius: 8 }} />
@@ -90,7 +90,7 @@ export default function SpacingPage() {
             },
             {
               kind: 'dont',
-              rule: '4배수가 아닌 값(10 · 14 · 18)을 쓰지 않는다. 감사에서 하드코딩으로 잡힌다.',
+              rule: '4의 배수가 아닌 값(10 · 14 · 18)은 사용하지 않습니다. 감사에서 하드코딩으로 집계됩니다.',
               visual: (
                 <div style={{ display: 'grid', gap: 14, width: 200 }}>
                   <div style={{ height: 26, background: 'var(--color-surface-raised)', borderRadius: 8 }} />

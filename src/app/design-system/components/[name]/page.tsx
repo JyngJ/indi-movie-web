@@ -15,7 +15,7 @@ export default async function ComponentPage({ params }: { params: Promise<{ name
   if (!c) notFound()
 
   const guide = guideFor(name)
-  // 배리언트가 90개인 세트(Button)까지 통째로 그리면 표가 페이지를 삼킨다. 앞쪽만 보이고 총계는 문장으로.
+  // 배리언트가 많은 세트는 앞쪽만 표로 싣고 나머지는 총계로 알린다.
   const VARIANT_LIMIT = 24
   const variants = c.figma?.variants.slice(0, VARIANT_LIMIT) ?? []
   const hiddenVariants = (c.figma?.variants.length ?? 0) - variants.length
@@ -41,7 +41,7 @@ export default async function ComponentPage({ params }: { params: Promise<{ name
       <DocSection
         id="properties"
         title="Properties"
-        lead="TypeScript 타입에서 추출한다. HTML 기본 속성 상속분은 뺐다. 축(axes) 줄은 피그마 컴포넌트 세트에서 온다."
+        lead="TypeScript 타입에서 추출합니다. HTML 기본 속성은 제외했으며, 축(axes) 항목은 피그마 컴포넌트 세트에서 가져옵니다."
       >
         <DefTable
           rows={[
@@ -68,8 +68,8 @@ export default async function ComponentPage({ params }: { params: Promise<{ name
         id="figma"
         title="피그마"
         lead={c.figma
-          ? `${c.figma.name} — 배리언트 ${c.figma.variants.length}개. 아래 수치는 피그마 노드 실측값이라, 코드와 다르면 둘 중 하나가 틀린 것이다.`
-          : '대응하는 피그마 컴포넌트 세트가 없다. 이름만 다르면 build-manifest.mjs의 FIGMA_ALIAS에 적는다.'}
+          ? `${c.figma.name} — 배리언트 ${c.figma.variants.length}개입니다. 아래 수치는 피그마 노드 실측값입니다.`
+          : '대응하는 피그마 컴포넌트 세트가 없습니다.'}
       >
         {c.figma && (
           <div style={{ overflowX: 'auto' }}>
@@ -104,7 +104,7 @@ export default async function ComponentPage({ params }: { params: Promise<{ name
             </table>
             {hiddenVariants > 0 && (
               <p style={{ marginTop: 'var(--spacing-3)', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
-                외 {hiddenVariants}개 — 축 조합이 전부라 표에는 앞의 {VARIANT_LIMIT}개만 싣는다. 전체는 매니페스트에 있다.
+                외 {hiddenVariants}개 — 축 조합 전체 중 앞의 {VARIANT_LIMIT}개를 싣습니다.
               </p>
             )}
           </div>

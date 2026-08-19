@@ -8,10 +8,10 @@ export default function RadiusPage() {
     <DocPage
       href="/design-system/foundations/radius"
       title="Radius"
-      lead="반경은 크기가 아니라 역할로 이름 붙인다. sm/md/lg 같은 이름은 같은 이름에 다른 값이 들어가는 사고를 반복시켜 2.0에서 전부 삭제했다."
+      lead="반경은 크기가 아니라 역할로 이름을 붙입니다. 이름이 쓰임을 설명하므로 같은 이름에 다른 값이 들어가지 않습니다."
       toc={[{ id: 'roles', label: '역할' }, { id: 'usage', label: 'Usage' }]}
     >
-      <DocSection id="roles" title="역할" lead="포스터가 가장 각지고(2), 시트가 가장 둥글다(20). 층이 위로 갈수록 둥글어진다.">
+      <DocSection id="roles" title="역할" lead="포스터가 가장 각지고(2) 시트가 가장 둥급니다(20). 층이 위로 갈수록 둥글어집니다.">
         <div style={{
           display: 'grid', gap: 'var(--spacing-4)',
           gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
@@ -48,7 +48,7 @@ export default function RadiusPage() {
           items={[
             {
               kind: 'do',
-              rule: '같은 층의 요소는 같은 반경을 쓴다. 카드·입력·칩은 control(12), 팝오버는 16.',
+              rule: '같은 층의 요소는 같은 반경을 사용합니다. 카드·입력·칩은 control(12), 팝오버는 16입니다.',
               visual: (
                 <div style={{ display: 'flex', gap: 12 }}>
                   {[0, 1, 2].map(i => (
@@ -59,7 +59,7 @@ export default function RadiusPage() {
             },
             {
               kind: 'dont',
-              rule: '한 화면에서 반경을 섞지 않는다. 포스터(2)와 pill(9999)이 나란히 붙으면 둘 다 실수처럼 보인다.',
+              rule: '한 화면에서 반경을 섞지 않습니다. 포스터(2)와 pill(9999)이 나란히 놓이면 위계가 흐려집니다.',
               visual: (
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                   <div style={{ width: 56, height: 40, borderRadius: 2, background: 'var(--color-surface-raised)' }} />

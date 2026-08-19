@@ -54,16 +54,16 @@ export default function TypographyPage() {
     <DocPage
       href="/design-system/foundations/typography"
       title="Typography"
-      lead="스케일은 10 · 12 · 14 · 16 · 20 · 24 여섯 단계뿐이다. 단계를 늘리는 대신 굵기와 색으로 위계를 만든다 — 크기를 하나 더 만들 때마다 두 화면이 어긋난다."
+      lead="스케일은 10 · 12 · 14 · 16 · 20 · 24 여섯 단계입니다. 단계를 늘리는 대신 굵기와 색으로 위계를 만들어 화면 사이의 일관성을 유지합니다."
       toc={[
         { id: 'typeface', label: 'Typeface' },
         { id: 'scale', label: 'Scale' },
         { id: 'tokens', label: '코드 토큰' },
         { id: 'usage', label: 'Usage' },
-        ...(legacy.length ? [{ id: 'legacy', label: '1.0 잔재' }] : []),
+        ...(legacy.length ? [{ id: 'legacy', label: '이전 버전' }] : []),
       ]}
     >
-      <DocSection id="typeface" title="Typeface" lead="두 벌만 쓴다. 간판은 KIMM, 나머지는 Pretendard.">
+      <DocSection id="typeface" title="Typeface" lead="두 서체를 사용합니다. 제목과 간판은 KIMM, 나머지는 Pretendard입니다.">
         <Stage tone="paper" minHeight={200}>
           <div style={{ display: 'flex', gap: 'var(--spacing-12)', flexWrap: 'wrap', justifyContent: 'center' }}>
             <div style={{ textAlign: 'center' }}>
@@ -79,8 +79,8 @@ export default function TypographyPage() {
         <div style={{ marginTop: 'var(--spacing-6)' }}>
           <DefTable
             rows={[
-              ['1. KIMM Bold', '제목·간판·숫자 강조. 극장 간판 같은 인상을 만드는 자리에만 쓴다. 본문에 쓰면 화면이 시끄러워진다.'],
-              ['2. Pretendard', 'UI 전반과 본문. 400/500/600/700 네 굵기를 쓴다.'],
+              ['1. KIMM Bold', '제목·간판·숫자 강조에 사용합니다. 극장 간판 같은 인상을 만드는 자리에 한정합니다.'],
+              ['2. Pretendard', 'UI 전반과 본문에 사용합니다. 400/500/600/700 네 굵기를 사용합니다.'],
             ]}
           />
         </div>
@@ -89,7 +89,7 @@ export default function TypographyPage() {
       <DocSection
         id="scale"
         title="Scale"
-        lead="피그마 텍스트 스타일이 원본이다. 아래 견본은 그 실측값(폰트·크기·행간)을 그대로 CSS로 옮겨 그린 것이다."
+        lead="피그마 텍스트 스타일이 원본입니다. 아래 견본은 실측값(서체·크기·행간)을 그대로 옮겨 그린 것입니다."
       >
         {styles20.map(st => (
           <div key={st.name} style={{
@@ -116,7 +116,7 @@ export default function TypographyPage() {
         ))}
       </DocSection>
 
-      <DocSection id="tokens" title="코드 토큰" lead="--text-* 는 px만 정한다. 굵기·행간은 컴포넌트가 정한다.">
+      <DocSection id="tokens" title="코드 토큰" lead="--text-* 는 px 크기만 정의합니다. 굵기와 행간은 컴포넌트에서 지정합니다.">
         <DefTable
           rows={manifest.typography.code.map(t => [
             <Code key={t.name}>{t.name}</Code>,
@@ -130,7 +130,7 @@ export default function TypographyPage() {
           items={[
             {
               kind: 'do',
-              rule: '같은 크기 안에서 굵기와 색으로 위계를 만든다. body(14/500)와 body-strong(14/700)이 그 예다.',
+              rule: '같은 크기 안에서 굵기와 색으로 위계를 만듭니다. body(14/500)와 body-strong(14/700)이 그 예입니다.',
               visual: (
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)' }}>오늘 상영하는 특별전</div>
@@ -140,7 +140,7 @@ export default function TypographyPage() {
             },
             {
               kind: 'dont',
-              rule: '스케일에 없는 크기(11 · 13 · 15px)를 새로 만들지 않는다. 시안과 코드가 그 자리에서 갈라진다.',
+              rule: '스케일에 없는 크기(11 · 13 · 15px)를 새로 만들지 않습니다. 시안과 코드가 어긋나는 지점이 됩니다.',
               visual: (
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: 13, color: 'var(--color-text-sub)' }}>13px 임의 크기</div>
@@ -153,7 +153,7 @@ export default function TypographyPage() {
       </DocSection>
 
       {legacy.length > 0 && (
-        <DocSection id="legacy" title="1.0 잔재" lead="2.0 이전 스타일. 새로 쓰지 말 것 — 지우기 전까지 목록에만 남긴다.">
+        <DocSection id="legacy" title="이전 버전 스타일" lead="2.0 이전 스타일입니다. 신규 작업에는 사용하지 않습니다.">
           <DefTable rows={legacy.map(st => [st.name, `${st.font} · ${st.size}px`])} />
         </DocSection>
       )}

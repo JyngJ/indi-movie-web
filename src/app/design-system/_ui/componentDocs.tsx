@@ -11,7 +11,7 @@ import { Anatomy, DocSection, SpecRow, Stage, UsageCards } from './shell'
 import { Playground, type Control, type ControlValues } from './Playground'
 import { Demo, hasDemo } from './demos'
 
-/* 컴포넌트 상세의 시각 자료. 문장은 guides.ts, 값은 매니페스트, 그림은 여기. */
+/* 컴포넌트 상세의 시각 자료. 문장은 guides.ts, 값은 매니페스트, 견본은 이 파일에서 정의한다. */
 
 const IcoPlus = () => (
   <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
@@ -29,7 +29,7 @@ const IcoX = () => (
   </svg>
 )
 
-/** Anatomy 히어로의 번호 콜아웃 — 코드잇의 ①② 지시선 자리. */
+/** Anatomy 히어로의 번호 콜아웃. */
 function Callout({ n, children, side = 'top' }: { n: number; children: ReactNode; side?: 'top' | 'bottom' }) {
   const dot = (
     <span style={{
@@ -370,7 +370,7 @@ const DOCS: Record<string, Doc> = {
         ))}
       </div>,
       <div key="c" style={{ width: 220 }}>
-        <Card clickable onClick={() => {}}>눌러 보세요 — hover · press</Card>
+        <Card clickable onClick={() => {}}>눌러 보세요 · hover와 press 상태</Card>
       </div>,
     ],
     usageVisuals: [
@@ -481,10 +481,12 @@ export function ComponentDoc({ name }: { name: string }) {
 
   return (
     <>
-      <DocSection id="anatomy" title="Anatomy" lead={guide?.anatomy ? '번호는 아래 파트 설명과 짝을 이룬다. 필수(ESSENTIAL)와 선택(OPTIONAL)을 구분해 적는다.' : undefined}>
-        <Stage tone="tint" minHeight={260}>
-          {doc?.hero ?? (hasDemo(name) ? <Demo name={name} /> : <span style={{ color: 'var(--color-text-caption)' }}>견본 없음</span>)}
-        </Stage>
+      <DocSection id="anatomy" title="Anatomy" lead={guide?.anatomy ? '번호는 아래 파트 설명과 짝을 이룹니다. 필수(ESSENTIAL)와 선택(OPTIONAL)을 구분해 표기합니다.' : undefined}>
+        {(doc?.hero || hasDemo(name)) && (
+          <Stage tone="tint" minHeight={260}>
+            {doc?.hero ?? <Demo name={name} />}
+          </Stage>
+        )}
         {guide?.anatomy && (
           <div style={{ marginTop: 'var(--spacing-6)' }}>
             <Anatomy parts={guide.anatomy} />
@@ -493,7 +495,7 @@ export function ComponentDoc({ name }: { name: string }) {
       </DocSection>
 
       {doc?.playground && (
-        <DocSection id="state" title="State" lead="컨트롤을 바꾸면 실제 컴포넌트가 그대로 반응한다. 시안 이미지가 아니라 제품 코드다.">
+        <DocSection id="state" title="State" lead="컨트롤을 바꾸면 실제 컴포넌트가 그대로 반응합니다. 시안 이미지가 아니라 제품에 쓰이는 코드입니다.">
           <Playground {...doc.playground} />
         </DocSection>
       )}
@@ -505,7 +507,7 @@ export function ComponentDoc({ name }: { name: string }) {
               key={spec.title}
               title={spec.title}
               desc={spec.desc}
-              visual={doc?.specVisuals?.[i] ?? <span style={{ color: 'var(--color-text-placeholder)', fontSize: 'var(--text-meta)' }}>견본 없음</span>}
+              visual={doc?.specVisuals?.[i]}
             />
           ))}
         </DocSection>
@@ -517,7 +519,7 @@ export function ComponentDoc({ name }: { name: string }) {
             items={guide.usage.map((u, i) => ({
               kind: u.kind,
               rule: u.rule,
-              visual: doc?.usageVisuals?.[i] ?? <span style={{ color: 'var(--color-text-placeholder)', fontSize: 'var(--text-meta)' }}>견본 없음</span>,
+              visual: doc?.usageVisuals?.[i],
             }))}
           />
         </DocSection>

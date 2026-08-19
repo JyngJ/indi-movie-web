@@ -3,24 +3,24 @@ import { DocPage, DocSection, Code } from '../_ui/shell'
 
 const KIND: Record<string, { title: string; note: string }> = {
   'token-value': {
-    title: '값이 다르다',
-    note: '같은 이름인데 코드와 피그마 값이 어긋난다. 어느 쪽이 맞는지 정하고 즉시 맞출 것 — 이 목록은 0이어야 한다.',
+    title: '값이 다른 항목',
+    note: '같은 이름의 코드 토큰과 피그마 변수가 서로 다른 값을 가리킵니다. 기준을 정해 한쪽으로 맞춥니다.',
   },
   'figma-only': {
-    title: '피그마에만 있다',
-    note: '피그마 변수에는 있는데 코드 토큰이 없다. 아직 안 쓰는 램프 단계면 정상이고, 쓰기 시작하면 tokens.css에 내려야 한다.',
+    title: '피그마에만 정의된 값',
+    note: '피그마 변수로는 정의돼 있으나 코드 토큰이 없는 항목입니다. 사용을 시작할 때 tokens.css에 추가합니다.',
   },
   'type-scale': {
-    title: '타입 스케일 밖',
-    note: '2.0 텍스트 스타일에 없는 크기를 코드가 쓴다. 스타일을 만들거나 스케일 안 값으로 내릴 것.',
+    title: '타입 스케일 밖의 크기',
+    note: '2.0 텍스트 스타일에 없는 크기를 코드가 사용합니다. 스타일을 추가하거나 스케일 안의 값으로 조정합니다.',
   },
   'legacy-figma-style': {
-    title: '1.0 스타일 잔재',
-    note: '2.0 접두사가 없는 피그마 텍스트·이펙트 스타일. 같은 이름이 다른 값을 가리켜 사고가 반복되므로, 쓰는 노드를 2.0으로 옮긴 뒤 삭제한다.',
+    title: '이전 버전 스타일',
+    note: '2.0 접두사가 없는 피그마 텍스트·이펙트 스타일입니다. 사용 중인 노드를 2.0으로 옮긴 뒤 정리합니다.',
   },
   'component-unmapped': {
-    title: '피그마 세트 없음',
-    note: '코드에는 있는데 피그마 컴포넌트 세트가 없다. 시안을 그리든지, 이름만 다르면 FIGMA_ALIAS에 적는다.',
+    title: '피그마 세트 미연결',
+    note: '코드에는 있으나 대응하는 피그마 컴포넌트 세트가 없는 항목입니다.',
   },
 }
 
@@ -31,12 +31,12 @@ export default function DriftPage() {
     <DocPage
       href="/design-system/drift"
       title="코드 ↔ 피그마 차이"
-      lead={<>매니페스트를 만들 때 코드 토큰과 피그마 변수를 이름으로 짝지어 값을 견준다. 이 페이지는 그 결과 그대로다 — 손으로 관리하는 목록이 아니라 <Code>npm run ds:build</Code>의 산출물이다.</>}
+      lead={<>매니페스트를 만들 때 코드 토큰과 피그마 변수를 이름으로 짝지어 값을 대조합니다. 이 페이지는 <Code>npm run ds:build</Code>가 만든 결과를 그대로 보여줍니다.</>}
       toc={kinds.map(k => ({ id: k, label: KIND[k]?.title ?? k }))}
     >
       {manifest.drift.length === 0 && (
         <DocSection title="차이 없음">
-          <div style={{ fontSize: 'var(--text-body)', color: 'var(--color-text-sub)' }}>코드와 피그마가 일치한다.</div>
+          <div style={{ fontSize: 'var(--text-body)', color: 'var(--color-text-sub)' }}>코드와 피그마가 일치합니다.</div>
         </DocSection>
       )}
 
