@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react'
 import {
   Avatar, Badge, BottomSheet, BubbleTail, Button, Card, CardContainer, Chip, DirectorChip,
-  FabPill, FabRound, FilterPill, GenreChip, IconButton, Input, PosterChip, ScrollNavButton,
+  FabRound, FilterPill, GenreChip, IconButton, Input, PosterChip, ScrollNavButton,
   SearchBar, SearchBarButton, SectionHeader, Skeleton, SortToggle, Wordmark,
   MovieCardSkeleton, TheaterCardSkeleton,
 } from '@/components/primitives'
@@ -106,7 +106,6 @@ const THUMBS: Record<string, ReactNode> = {
       <DirectorChip name="봉준호" />
     </div>
   ),
-  FabPill: <FabPill />,
   FabRound: <FabRound><IcoPlus /></FabRound>,
   FilterPill: (
     <div style={{ display: 'flex', gap: 6 }}>

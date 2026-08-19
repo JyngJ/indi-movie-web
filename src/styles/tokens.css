@@ -251,10 +251,6 @@
   --comp-fab-round-icon:    18px;
 
   /* FAB pill */
-  --comp-fab-pill-height: 44px;
-  --comp-fab-pill-pl:     14px;
-  --comp-fab-pill-pr:     16px;
-  --comp-fab-pill-radius: var(--radius-pill);
 
   /* Button 2.0 (2026-08-08 피그마 확정 — sm/md/lg = 32/44/52, pad 16/32/48, 웨이트 400/500/700) */
   --comp-btn-h-sm: 32px;

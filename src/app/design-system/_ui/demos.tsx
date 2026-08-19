@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   Avatar, Badge, BottomSheet, BubbleTail, Button, Card, CardContainer, Chip, DirectorChip,
-  FabPill, FabRound, FilterPill, GenreChip, IconButton, Input, PosterChip, ScrollNavButton,
+  FabRound, FilterPill, GenreChip, IconButton, Input, PosterChip, ScrollNavButton,
   SearchBar, SearchBarButton, SectionHeader, Skeleton, SortToggle, Toast, Wordmark,
   MovieCardSkeleton, TheaterCardSkeleton,
 } from '@/components/primitives'
@@ -161,12 +161,26 @@ function SearchBarButtonDemo() {
 
 function ScrollNavButtonDemo() {
   const rail = useRef<HTMLDivElement>(null)
-  // 실제 배치와 같게 — 포스터 레일 위에 좌우로 얹고, 누르면 레일이 한 칸씩 밀린다.
-  const nudge = (dir: -1 | 1) => rail.current?.scrollBy({ left: dir * 240, behavior: 'smooth' })
+  const [edge, setEdge] = useState({ left: false, right: true })
+
+  // 실제 배치와 같게 — 끝에 닿은 방향의 버튼은 감춘다. 갈 곳이 없는 화살표는 남기지 않는다.
+  const sync = () => {
+    const el = rail.current
+    if (!el) return
+    setEdge({
+      left: el.scrollLeft > 4,
+      right: el.scrollLeft < el.scrollWidth - el.clientWidth - 4,
+    })
+  }
+  useEffect(sync, [])
+
+  const nudge = (dir: -1 | 1) => rail.current?.scrollBy({ left: dir * 200, behavior: 'smooth' })
+
   return (
-    <div style={{ position: 'relative', width: '100%' }}>
+    <div style={{ position: 'relative', width: 420, maxWidth: '100%' }}>
       <div
         ref={rail}
+        onScroll={sync}
         style={{
           display: 'flex', gap: 'var(--spacing-3)', overflowX: 'auto', scrollbarWidth: 'none',
           padding: '0 var(--spacing-2)', width: '100%', minWidth: 0,
@@ -186,8 +200,8 @@ function ScrollNavButtonDemo() {
           </div>
         ))}
       </div>
-      <ScrollNavButton direction="left" onClick={() => nudge(-1)} style={{ top: 68 }} />
-      <ScrollNavButton direction="right" onClick={() => nudge(1)} style={{ top: 68 }} />
+      {edge.left && <ScrollNavButton direction="left" onClick={() => nudge(-1)} style={{ top: 68 }} />}
+      {edge.right && <ScrollNavButton direction="right" onClick={() => nudge(1)} style={{ top: 68 }} />}
     </div>
   )
 }
@@ -332,7 +346,6 @@ const DEMOS: Record<string, ReactNode> = {
     </Case>
   ),
   FabRound: <Case label="원형 FAB"><FabRound><IcoPlus /></FabRound></Case>,
-  FabPill: <Case label="pill FAB — 지도·목록 전환"><FabPill /></Case>,
   ScrollNavButton: (
     <Case wide label="포스터 레일 위 실제 배치 — 눌러서 밀어 보세요">
       <ScrollNavButtonDemo />

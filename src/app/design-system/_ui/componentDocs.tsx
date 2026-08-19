@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react'
 import {
-  Avatar, Badge, BottomSheet, Button, Card, Chip, FabPill, FabRound, FilterPill,
+  Avatar, Badge, BottomSheet, Button, Card, Chip, FabRound, FilterPill,
   IconButton, Input, PosterChip, SectionHeader, SortToggle, Toast,
 } from '@/components/primitives'
 import { useState } from 'react'
@@ -514,7 +514,6 @@ const DOCS: Record<string, Doc> = {
   },
 
   FabRound: { hero: <FabRound><IcoPlus /></FabRound> },
-  FabPill: { hero: <FabPill /> },
 }
 
 /** 상세 페이지 본문 — Anatomy · State · Spec · Usage. 코드잇 구성 그대로. */

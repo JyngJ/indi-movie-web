@@ -194,10 +194,6 @@ export const GUIDES: Record<string, ComponentGuide> = {
     intro: '지도 위에 떠 있는 단일 행동입니다. 44(--comp-fab-round-size) 원형이며, 지도 조작을 가리지 않는 자리에 배치합니다.',
   },
 
-  FabPill: {
-    intro: '지도와 목록처럼 두 모드를 오가는 전환 컨트롤입니다. 레이블 두 개를 한 pill에 담아 현재 위치를 알립니다.',
-  },
-
   BubbleTail: {
     intro: '말풍선 꼬리입니다. 11×11 정사각을 45도 돌려 붙이며, 붙는 면과 같은 색을 받아 배경과 이어집니다.',
   },
