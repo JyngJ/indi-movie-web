@@ -14,6 +14,30 @@ const USE: Record<string, string> = {
   '--spacing-32': '특대 — 엠티 스테이트·랜딩',
 }
 
+/* 간격 견본 — 값을 눈으로만 보여주면 24와 14를 구별할 수 없어 px를 같이 적는다. */
+function GapSample({ gap, token }: { gap: number; token: string }) {
+  const bar = 28
+  return (
+    <div style={{ position: 'relative', width: 220 }}>
+      <div style={{ display: 'grid', gap }}>
+        <div style={{ height: bar, background: 'var(--color-surface-raised)', borderRadius: 8 }} />
+        <div style={{ height: bar, background: 'var(--color-surface-raised)', borderRadius: 8 }} />
+      </div>
+      <div style={{
+        position: 'absolute', left: 0, right: 0, top: bar, height: gap,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <span style={{
+          background: 'var(--color-surface-card)', border: '1px solid var(--color-border)',
+          borderRadius: 'var(--radius-badge)', padding: '0 6px', lineHeight: '16px',
+          fontFamily: 'var(--font-mono)', fontSize: 'var(--text-badge)', color: 'var(--color-text-sub)',
+          whiteSpace: 'nowrap',
+        }}>{gap}px · {token}</span>
+      </div>
+    </div>
+  )
+}
+
 export default function SpacingPage() {
   const all = manifest.tokenGroups.flatMap(g => g.tokens)
   const spacing = all.filter(t => t.name.startsWith('--spacing-'))
@@ -76,22 +100,12 @@ export default function SpacingPage() {
             {
               kind: 'do',
               rule: '인접한 단계는 최소 한 칸 이상 차이를 둡니다. 12와 16을 나란히 쓰면 정렬 오류처럼 보입니다.',
-              visual: (
-                <div style={{ display: 'grid', gap: 24, width: 200 }}>
-                  <div style={{ height: 28, background: 'var(--color-surface-raised)', borderRadius: 8 }} />
-                  <div style={{ height: 28, background: 'var(--color-surface-raised)', borderRadius: 8 }} />
-                </div>
-              ),
+              visual: <GapSample gap={24} token="spacing/6" />,
             },
             {
               kind: 'dont',
               rule: '4의 배수가 아닌 값(10 · 14 · 18)은 사용하지 않습니다. 감사에서 하드코딩으로 집계됩니다.',
-              visual: (
-                <div style={{ display: 'grid', gap: 14, width: 200 }}>
-                  <div style={{ height: 26, background: 'var(--color-surface-raised)', borderRadius: 8 }} />
-                  <div style={{ height: 26, background: 'var(--color-surface-raised)', borderRadius: 8 }} />
-                </div>
-              ),
+              visual: <GapSample gap={14} token="토큰 없음" />,
             },
           ]}
         />

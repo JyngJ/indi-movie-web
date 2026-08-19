@@ -112,7 +112,11 @@ function InputDemo() {
 
 interface Doc {
   hero?: ReactNode
-  playground?: { controls: Control[]; render: (v: ControlValues) => ReactNode; tone?: 'paper' | 'dark' }
+  playground?: {
+    controls: Control[]
+    render: (v: ControlValues, set: (k: string, val: string | boolean) => void) => ReactNode
+    tone?: 'paper' | 'dark'
+  }
   specVisuals?: ReactNode[]
   usageVisuals?: ReactNode[]
 }
@@ -246,8 +250,13 @@ const DOCS: Record<string, Doc> = {
         { kind: 'toggle', name: 'dismiss', label: '해제 버튼' },
         { kind: 'text', name: 'label', label: '레이블', initial: '독립예술' },
       ],
-      render: v => (
-        <Chip selected={b(v, 'selected')} onDismiss={b(v, 'dismiss') ? () => {} : undefined}>
+      // 칩을 직접 눌러도 선택이 토글된다 — 실제 동작과 같고, 컨트롤 패널이 그 결과를 그대로 비춘다.
+      render: (v, set) => (
+        <Chip
+          selected={b(v, 'selected')}
+          onClick={() => set('selected', !b(v, 'selected'))}
+          onDismiss={b(v, 'dismiss') ? () => set('selected', false) : undefined}
+        >
           {s(v, 'label')}
         </Chip>
       ),
@@ -401,8 +410,10 @@ const DOCS: Record<string, Doc> = {
           }} />
         ))}
       </div>,
-      <div key="c" style={{ width: 220 }}>
-        <Card clickable onClick={() => {}}>눌러 보세요 · hover와 press 상태</Card>
+      <div key="c">
+        <Card clickable onClick={() => {}}>
+          <span style={{ whiteSpace: 'nowrap' }}>눌러 보세요 · hover와 press 상태</span>
+        </Card>
       </div>,
     ],
     usageVisuals: [

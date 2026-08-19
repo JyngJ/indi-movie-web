@@ -15,6 +15,11 @@ const IcoPlus = () => (
     <path d="M12 5v14M5 12h14" />
   </svg>
 )
+const IcoClock = () => (
+  <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
+  </svg>
+)
 const IcoSearch = () => (
   <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
@@ -69,7 +74,7 @@ function ToastDemo() {
 function InputDemo() {
   const [v, setV] = useState('')
   return (
-    <div style={{ display: 'grid', gap: 'var(--spacing-4)', width: '100%', maxWidth: 420 }}>
+    <div style={{ display: 'grid', gap: 'var(--spacing-4)', width: 420, maxWidth: '100%' }}>
       <Input label="영화 제목" placeholder="제목을 입력하세요" value={v} onChange={e => setV(e.target.value)} />
       <Input label="이메일" defaultValue="not-an-email" error="이메일 형식이 아닙니다" />
       <Input label="극장" hint="지역을 함께 적으면 더 잘 찾습니다" leftIcon={<IcoSearch />} />
@@ -80,7 +85,7 @@ function InputDemo() {
 function SearchBarDemo() {
   const [v, setV] = useState('')
   return (
-    <div style={{ width: '100%', maxWidth: 560 }}>
+    <div style={{ width: 560, maxWidth: '100%' }}>
       <SearchBar
         value={v}
         onChange={e => setV(e.target.value)}
@@ -91,30 +96,64 @@ function SearchBarDemo() {
   )
 }
 
+const RECENT = ['봉준호', '씨네큐브 광화문', '어떻게 해야 했을까?', '전주국제영화제']
+
 function SearchBarButtonDemo() {
   const [open, setOpen] = useState(false)
   const [v, setV] = useState('')
   const ref = useRef<HTMLInputElement>(null)
+  const wrap = useRef<HTMLDivElement>(null)
+
   // 입력칸이 실제로 붙은 다음에 포커스를 준다 — rAF는 커밋보다 빨라서 놓친다.
   useEffect(() => { if (open) ref.current?.focus() }, [open])
-  // 실제 상영작 탭과 같은 동작 — 버튼을 누르면 그 자리가 입력 가능한 SearchBar로 바뀌고 포커스가 간다.
+
+  // 바깥을 누르면 닫는다. 제품의 검색 오버레이와 같은 규칙이다.
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: PointerEvent) => {
+      if (!wrap.current?.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('pointerdown', onDown)
+    return () => document.removeEventListener('pointerdown', onDown)
+  }, [open])
+
   return (
-    <div style={{ width: '100%', maxWidth: 560 }}>
+    <div ref={wrap} style={{ position: 'relative', width: 560, maxWidth: '100%' }}>
       {open ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)' }}>
-          <div style={{ flex: 1 }}>
-            <SearchBar
-              ref={ref}
-              value={v}
-              onChange={e => setV(e.target.value)}
-              onClear={() => setV('')}
-              inputFontSize={14}
-            />
-          </div>
-          <button type="button" className="ds-demo-btn" onClick={() => { setOpen(false); setV('') }}>닫기</button>
-        </div>
+        <SearchBar
+          ref={ref}
+          value={v}
+          onChange={e => setV(e.target.value)}
+          onClear={() => setV('')}
+          inputFontSize={14}
+          onClick={() => setOpen(false)}
+        />
       ) : (
         <SearchBarButton onClick={() => setOpen(true)} />
+      )}
+
+      {open && (
+        <div style={{
+          position: 'absolute', left: 0, right: 0, top: 'calc(var(--comp-search-height) + var(--spacing-2))',
+          background: 'var(--color-surface-card)', border: '1px solid var(--color-border)',
+          borderRadius: 'var(--radius-control)', boxShadow: 'var(--shadow-md)',
+          padding: 'var(--spacing-3)', zIndex: 2,
+        }}>
+          <div style={{
+            fontSize: 'var(--text-badge)', fontWeight: 700, color: 'var(--color-text-caption)',
+            padding: '0 var(--spacing-2) var(--spacing-2)',
+          }}>최근 검색</div>
+          {RECENT.map(r => (
+            <div key={r} style={{
+              display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)',
+              padding: 'var(--spacing-2)', borderRadius: 'var(--radius-button)',
+              fontSize: 'var(--text-body)', color: 'var(--color-text-body)',
+            }}>
+              <span style={{ color: 'var(--color-text-placeholder)', display: 'flex' }}><IcoClock /></span>
+              {r}
+            </div>
+          ))}
+        </div>
       )}
     </div>
   )
@@ -134,7 +173,7 @@ function ScrollNavButtonDemo() {
         }}
       >
         {['기억의 빛', '중경삼림', '벌새', '헤어질 결심', '괴물', '패스트 라이브즈', '드라이브 마이 카',
-        '가여운 것들', '추락의 해부', '괴물의 아이'].map(t => (
+          '가여운 것들', '추락의 해부', '괴물의 아이'].map(t => (
           <div key={t} style={{ flex: '0 0 auto', width: 96 }}>
             <div style={{
               width: 96, height: 136, borderRadius: 'var(--radius-poster)',
@@ -285,10 +324,10 @@ const DEMOS: Record<string, ReactNode> = {
       </div>
     </Case>
   ),
-  Input: <Case label="label · error · hint · leftIcon" wide><InputDemo /></Case>,
-  SearchBar: <Case label="입력 가능 — 직접 타이핑해 보세요" wide><SearchBarDemo /></Case>,
+  Input: <Case label="label · error · hint · leftIcon"><InputDemo /></Case>,
+  SearchBar: <Case label="입력 가능 — 직접 타이핑해 보세요"><SearchBarDemo /></Case>,
   SearchBarButton: (
-    <Case wide label="눌러 보세요 — 검색 화면으로 넘어가는 대신 그 자리가 SearchBar로 바뀝니다">
+    <Case label="눌러 보세요 — 검색 화면처럼 입력창과 최근 검색이 열립니다">
       <SearchBarButtonDemo />
     </Case>
   ),
@@ -337,12 +376,31 @@ const DEMOS: Record<string, ReactNode> = {
     </Case>
   ),
   Wordmark: (
-    <Row>
-      <Case label="기본"><Wordmark /></Case>
-      <Case label="아웃라인(어두운 면 위)" dark>
-        <Wordmark color="var(--color-text-inverse)" />
-      </Case>
-    </Row>
+    // 밝은 면·어두운 면을 반반으로 채워 두 색이 각자 어디에 놓이는지 한눈에 보이게 한다.
+    <div style={{
+      display: 'grid', gridTemplateColumns: '1fr 1fr', width: '100%',
+      borderRadius: 'var(--radius-control)', overflow: 'hidden',
+      border: '1px solid var(--color-border)',
+    }}>
+      <div style={{
+        background: 'var(--color-surface-card)', padding: 'var(--spacing-8) var(--spacing-6)',
+        display: 'grid', justifyItems: 'center', gap: 'var(--spacing-4)',
+      }}>
+        <Wordmark style={{ height: 30, width: 'auto' }} />
+        <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)', fontFamily: 'var(--font-mono)' }}>
+          기본 · 잉크
+        </span>
+      </div>
+      <div style={{
+        background: 'var(--color-neutral-800)', padding: 'var(--spacing-8) var(--spacing-6)',
+        display: 'grid', justifyItems: 'center', gap: 'var(--spacing-4)',
+      }}>
+        <Wordmark color="var(--color-text-inverse)" style={{ height: 30, width: 'auto' }} />
+        <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-neutral-400)', fontFamily: 'var(--font-mono)' }}>
+          어두운 면 · 역상
+        </span>
+      </div>
+    </div>
   ),
 }
 
