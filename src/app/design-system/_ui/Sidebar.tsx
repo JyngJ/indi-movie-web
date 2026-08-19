@@ -55,7 +55,8 @@ export function Sidebar({ groups }: { groups: Group[] }) {
                 onClick={() => setManual(openGroup === group.title ? null : group.title)}
               >
                 {group.title}
-                <IcoChevron open={open} />
+                {/* 딸린 페이지가 없으면 펼칠 것도 없다 — 꺾쇠를 두지 않는다 */}
+                {group.items.length > 0 && <IcoChevron open={open} />}
               </Link>
             )}
             {/* 0fr → 1fr 그리드로 높이를 애니메이션한다. max-height 추정치가 필요 없다. */}
