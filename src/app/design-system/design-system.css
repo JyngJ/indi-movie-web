@@ -118,7 +118,8 @@
 .ds-nav-link {
   display: flex; align-items: center;
   min-height: 40px;
-  padding: 0 var(--spacing-3);
+  /* 그룹에 딸린 항목은 한 단계 들여 쓴다 — 제목과 같은 축에 서면 위계가 안 보인다 */
+  padding: 0 var(--spacing-3) 0 var(--spacing-6);
   border-radius: var(--radius-button);
   text-decoration: none;
   line-height: 1.6;
@@ -128,7 +129,10 @@
   transition: background var(--transition-fast), color var(--transition-fast);
 }
 .ds-nav-link:hover { background: var(--color-surface-raised); color: var(--color-text-primary); }
-.ds-nav-link[data-top='true'] { min-height: 48px; font-size: var(--text-title); font-weight: 700; color: var(--color-text-primary); }
+.ds-nav-link[data-top='true'] {
+  min-height: 48px; padding-left: var(--spacing-3);
+  font-size: var(--text-title); font-weight: 700; color: var(--color-text-primary);
+}
 .ds-nav-link[data-active='true'],
 .ds-nav-link[data-active='true']:hover {
   background: var(--color-neutral-800);
