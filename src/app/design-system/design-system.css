@@ -43,11 +43,12 @@
   }
   .ds-aside {
     height: 100%; overflow-y: auto;
-    border-bottom: 0; padding: var(--spacing-4) var(--spacing-2) var(--spacing-8);
+    border-bottom: 0; padding: var(--spacing-4) var(--spacing-2) 0;
     /* CTA와 생성 정보는 사이드바 바닥에 붙인다 — 내비가 짧아도 자리가 흔들리지 않게 */
     display: flex; flex-direction: column;
   }
-  .ds-aside__foot { margin-top: auto; padding-top: var(--spacing-8); }
+  /* 바닥 정렬 — CTA 아래를 본문 카드 아래와 같은 선에 둔다. */
+  .ds-aside__foot { margin-top: auto; padding: var(--spacing-8) 0 0; }
   .ds-card {
     border-radius: var(--ds-card-radius);
     /* 좌우를 같은 값으로 둔다 — 목차를 없앤 뒤에도 본문이 카드 가운데 오도록 */
@@ -319,16 +320,17 @@
   justify-content: center;
   gap: var(--spacing-2);
   /* 사이드바 안쪽 폭을 그대로 쓴다 — 내비 항목보다 좁으면 붙임쪽지처럼 보인다. */
-  margin: 0;
-  min-height: var(--comp-btn-h-md);
-  border-radius: var(--radius-button);
+  margin: var(--spacing-4) 0 0;
+  min-height: var(--comp-btn-h-lg);
+  border-radius: var(--radius-control);
   background: var(--color-primary-base);
   color: var(--color-on-accent);
-  font-size: var(--text-meta);
+  font-size: var(--text-body);
   font-weight: 700;
   letter-spacing: -0.01em;
   text-decoration: none;
-  transition: background 0.15s ease, transform 0.1s ease;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
 }
-.ds-cta:hover { background: var(--color-primary-800); }
-.ds-cta:active { transform: translateY(1px); }
+.ds-cta:hover { background: var(--color-primary-800); box-shadow: var(--shadow-md); }
+.ds-cta:active { transform: translateY(1px); box-shadow: var(--shadow-sm); }
