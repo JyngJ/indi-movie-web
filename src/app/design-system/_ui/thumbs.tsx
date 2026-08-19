@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import {
   Avatar, Badge, BottomSheet, BubbleTail, Button, Card, CardContainer, Chip, DirectorChip,
   FabPill, FabRound, FilterPill, GenreChip, IconButton, Input, PosterChip, ScrollNavButton,
-  SearchBarButton, SectionHeader, Skeleton, SortToggle, Wordmark,
+  SearchBar, SearchBarButton, SectionHeader, Skeleton, SortToggle, Wordmark,
   MovieCardSkeleton, TheaterCardSkeleton,
 } from '@/components/primitives'
 
@@ -140,8 +140,8 @@ const THUMBS: Record<string, ReactNode> = {
     </div>
   ),
   SearchBar: (
-    <div style={{ width: 200 }}>
-      <SearchBarButton />
+    <div style={{ width: 210 }}>
+      <SearchBar placeholder="영화, 영화관 검색" readOnly />
     </div>
   ),
   SearchBarButton: (

@@ -73,9 +73,8 @@ function InputDemo() {
 function SearchBarDemo() {
   const [v, setV] = useState('')
   return (
-    <div style={{ display: 'grid', gap: 'var(--spacing-4)', width: '100%', maxWidth: 380 }}>
+    <div style={{ width: '100%', maxWidth: 380 }}>
       <SearchBar value={v} onChange={e => setV(e.target.value)} placeholder="영화, 영화관, 감독을 검색하세요" />
-      <SearchBarButton onClick={() => {}} />
     </div>
   )
 }
@@ -186,7 +185,7 @@ const DEMOS: Record<string, ReactNode> = {
     </Case>
   ),
   Input: <Case label="label · error · hint · leftIcon"><InputDemo /></Case>,
-  SearchBar: <Case label="입력형 · 버튼형"><SearchBarDemo /></Case>,
+  SearchBar: <Case label="입력 가능 — 직접 타이핑해 보세요"><SearchBarDemo /></Case>,
   SearchBarButton: <Case label="검색창 모양 버튼(탭 전환용)"><SearchBarButton onClick={() => {}} /></Case>,
   FabRound: <Case label="원형 FAB"><FabRound><IcoPlus /></FabRound></Case>,
   FabPill: <Case label="pill FAB — 지도·목록 전환"><FabPill /></Case>,

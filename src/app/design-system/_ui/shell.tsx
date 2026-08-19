@@ -211,11 +211,11 @@ export function UsageCards({ items }: {
           }} />
           <div style={{ paddingTop: 'var(--spacing-3)' }}>
             <div style={{
-              fontSize: 'var(--text-subtitle)', fontWeight: 700,
+              fontSize: 22, fontWeight: 700, letterSpacing: '-0.01em',
               color: it.kind === 'do' ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
             }}>{it.kind === 'do' ? 'Do' : "Don't"}</div>
             <p style={{
-              marginTop: 4, fontSize: 'var(--text-meta)', lineHeight: 1.7,
+              marginTop: 'var(--spacing-2)', fontSize: 'var(--text-body)', lineHeight: 1.7,
               color: 'var(--color-text-sub)',
             }}>{it.rule}</p>
           </div>

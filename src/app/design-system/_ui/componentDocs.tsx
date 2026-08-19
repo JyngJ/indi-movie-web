@@ -29,22 +29,47 @@ const IcoX = () => (
   </svg>
 )
 
-/** Anatomy 히어로의 번호 콜아웃. */
-function Callout({ n, children, side = 'top' }: { n: number; children: ReactNode; side?: 'top' | 'bottom' }) {
-  const dot = (
+/** Anatomy 히어로의 번호 콜아웃.
+ *  숫자는 파트가 실제로 있는 자리를 가리켜야 한다 — 컴포넌트를 통째로 감싸면
+ *  어느 부분을 말하는지 알 수 없다. 그래서 지시선을 파트 위치(x 비율)에 놓는다. */
+interface Marker {
+  n: number
+  /** 컴포넌트 폭에서 가리킬 지점(0~1) */
+  at: number
+  side?: 'top' | 'bottom'
+}
+
+function Figure({ markers, children }: { markers: Marker[]; children: ReactNode }) {
+  const dot = (n: number) => (
     <span style={{
       width: 18, height: 18, borderRadius: '50%', background: 'var(--color-neutral-900)',
       color: 'var(--color-text-inverse)', fontSize: 10, fontWeight: 700,
-      display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
     }}>{n}</span>
   )
-  const line = <span style={{ width: 1, height: 18, borderLeft: '1px dashed var(--color-neutral-400)' }} />
+
   return (
-    <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-      {side === 'top' && <>{dot}{line}</>}
+    <div style={{ position: 'relative', display: 'inline-block', padding: '34px 0' }}>
       {children}
-      {side === 'bottom' && <>{line}{dot}</>}
-    </span>
+      {markers.map(m => {
+        const top = m.side === 'bottom'
+        return (
+          <span
+            key={m.n}
+            style={{
+              position: 'absolute', left: `${m.at * 100}%`, transform: 'translateX(-50%)',
+              [top ? 'top' : 'bottom']: '100%',
+              display: 'flex', flexDirection: top ? 'column-reverse' : 'column',
+              alignItems: 'center', gap: 4,
+              marginTop: top ? -34 : undefined, marginBottom: top ? undefined : -34,
+            }}
+          >
+            {dot(m.n)}
+            <span style={{ width: 1, height: 16, borderLeft: '1px dashed var(--color-neutral-400)' }} />
+          </span>
+        )
+      })}
+    </div>
   )
 }
 
@@ -90,11 +115,12 @@ const b = (v: ControlValues, k: string) => Boolean(v[k])
 const DOCS: Record<string, Doc> = {
   Button: {
     hero: (
-      <Callout n={1} side="top">
-        <Callout n={2} side="bottom">
-          <Button>예매하러 가기</Button>
-        </Callout>
-      </Callout>
+      <Figure markers={[{ n: 1, at: 0.62 }, { n: 2, at: 0.24, side: 'bottom' }]}>
+        <Button>
+          <IcoExternal />
+          예매하러 가기
+        </Button>
+      </Figure>
     ),
     playground: {
       controls: [
@@ -148,9 +174,9 @@ const DOCS: Record<string, Doc> = {
 
   IconButton: {
     hero: (
-      <Callout n={1} side="bottom">
+      <Figure markers={[{ n: 1, at: 0.5, side: 'bottom' }]}>
         <IconButton aria-label="추가"><IcoPlus /></IconButton>
-      </Callout>
+      </Figure>
     ),
     playground: {
       controls: [
@@ -202,11 +228,9 @@ const DOCS: Record<string, Doc> = {
 
   Chip: {
     hero: (
-      <Callout n={1} side="top">
-        <Callout n={2} side="bottom">
-          <Chip selected onDismiss={() => {}}>드라마</Chip>
-        </Callout>
-      </Callout>
+      <Figure markers={[{ n: 1, at: 0.34 }, { n: 2, at: 0.82, side: 'bottom' }]}>
+        <Chip selected onDismiss={() => {}}>드라마</Chip>
+      </Figure>
     ),
     playground: {
       controls: [
