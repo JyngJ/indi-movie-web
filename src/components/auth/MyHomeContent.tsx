@@ -14,11 +14,13 @@ import { useFavorites } from '@/hooks/useFavorites'
  * dim된 빈 자리라 "안 되는 게 많은 화면"으로 읽혔다. 실제로 열리는 것만 행으로 둔다.
  * onProfile: 프로필 편집으로 이동(모바일 → /my/profile 라우트, 데스크톱 → 팝오버 내부 페이지).
  */
-export function MyHomeContent({ authError, onProfile, onNotifications, onNavigate }: {
+export function MyHomeContent({ authError, onProfile, onNotifications, onFavorites, onNavigate }: {
   authError?: string | null
   onProfile: () => void
   /** 알림 설정으로 이동 — 데스크톱은 팝오버 내부 전환, 모바일은 라우트 */
   onNotifications?: () => void
+  /** 관심 목록으로 이동 — 데스크톱은 팝오버 내부 전환, 모바일은 라우트 */
+  onFavorites?: () => void
   onNavigate?: () => void
 }) {
   const { status, user } = useAuth()
@@ -52,7 +54,7 @@ export function MyHomeContent({ authError, onProfile, onNotifications, onNavigat
           icon={<Heart size={17} strokeWidth={1.75} />}
           title="내 관심 목록"
           description={favCount > 0 ? `관심 영화, 관심 감독, 관심 영화관 ${favCount}개` : '관심 영화, 관심 감독, 관심 영화관 보기'}
-          href="/my/favorites"
+          {...(onFavorites ? { onClick: onFavorites } : { href: '/my/favorites' })}
         />
         <MenuRow
           icon={<Bell size={17} strokeWidth={1.75} />}

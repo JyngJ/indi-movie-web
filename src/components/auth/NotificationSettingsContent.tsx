@@ -10,24 +10,35 @@ import { REGIONS } from '@/lib/regions'
 /** 24시간 정각 목록 — 조용한 시간 선택용 */
 const HOURS = Array.from({ length: 24 }, (_, h) => `${String(h).padStart(2, '0')}:00`)
 
-function Row({ title, description, children, last }: {
+/**
+ * 설정 한 줄. 기본은 [제목·설명 | 컨트롤] 가로 배치.
+ * stacked면 컨트롤이 설명 아래로 내려간다 — 지역 칩처럼 폭을 다 쓰는 컨트롤용.
+ */
+function Row({ title, description, children, last, stacked }: {
   title: string
   description?: string
   children: React.ReactNode
   last?: boolean
+  stacked?: boolean
 }) {
+  const head = (
+    <div style={{ flex: stacked ? undefined : 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <span style={{ fontSize: 'var(--text-body)', fontWeight: 600, color: 'var(--color-text-primary)' }}>{title}</span>
+      {description && (
+        <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', lineHeight: 1.5 }}>{description}</span>
+      )}
+    </div>
+  )
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', gap: 12,
+      display: 'flex',
+      flexDirection: stacked ? 'column' : 'row',
+      alignItems: stacked ? 'stretch' : 'center',
+      gap: 12,
       padding: '16px var(--gutter)',
       borderBottom: last ? 'none' : '1px solid var(--color-border)',
     }}>
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <span style={{ fontSize: 'var(--text-body)', fontWeight: 600, color: 'var(--color-text-primary)' }}>{title}</span>
-        {description && (
-          <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', lineHeight: 1.5 }}>{description}</span>
-        )}
-      </div>
+      {head}
       {children}
     </div>
   )
@@ -95,6 +106,8 @@ export function NotificationSettingsContent() {
         카카오톡으로 보내는 건 준비 중이에요.
       </p>
 
+      {/* 카드 하나로 — 종류·시간·지역을 나눠 담으면 카드가 셋이 되는데,
+          한 화면에 다 들어가는 분량이라 나눌 이유가 없었다 (2026-08-20) */}
       <MenuCard style={{ marginTop: 16 }}>
         <Row title="새 상영" description="관심 영화·감독 작품이 새 극장에 걸리거나, 관심 극장에 새 작품이 들어올 때">
           <Switch label="새 상영 알림" checked={prefs.newScreening} disabled={saving}
@@ -104,52 +117,36 @@ export function NotificationSettingsContent() {
           <Switch label="막바지 상영 알림" checked={prefs.lastWeek} disabled={saving}
             onChange={(v) => save({ lastWeek: v })} />
         </Row>
-        <Row title="주간 다이제스트" description="한 주에 한 번 모아 보기 (준비 중)" last>
-          <Switch label="주간 다이제스트" checked={prefs.weeklyDigest} disabled
-            onChange={(v) => save({ weeklyDigest: v })} />
-        </Row>
-      </MenuCard>
-
-      <section style={{ padding: '24px var(--gutter) 8px' }}>
-        <h2 style={{ margin: 0, fontSize: 'var(--text-body)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
-          알림 받을 지역
-        </h2>
-        <p style={{ margin: '4px 0 0', fontSize: 'var(--text-meta)', lineHeight: 1.6, color: 'var(--color-text-caption)' }}>
-          {prefs.regionIds.length > 0
-            ? '고른 지역의 상영만 알려드려요.'
-            : hasFavoriteTheater
-              ? '고른 지역이 없어서 관심 극장이 있는 지역으로 알려드리고 있어요.'
-              : '고른 지역이 없어서 전국의 상영을 알려드려요. 한 편이 전국 수십 곳에서 상영하기도 해요.'}
-        </p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
-          {REGIONS.map((r) => (
-            <FilterPill
-              key={r.id}
-              active={prefs.regionIds.includes(r.id)}
-              aria-pressed={prefs.regionIds.includes(r.id)}
-              disabled={saving}
-              onClick={() => toggleRegion(r.id)}
-            >
-              {r.label}
-            </FilterPill>
-          ))}
-        </div>
-      </section>
-
-      <MenuCard style={{ marginTop: 16 }}>
-        <Row title="방해 금지 시간" description="이 시간에는 카톡을 보내지 않아요. 소식 탭에는 그대로 쌓여요." last>
+        <Row title="방해 금지 시간" description="이 시간에는 카톡을 보내지 않아요. 소식 탭에는 그대로 쌓여요.">
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <HourSelect label="방해 금지 시작" value={prefs.quietStart} onChange={(v) => save({ quietStart: v })} />
             <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>~</span>
             <HourSelect label="방해 금지 종료" value={prefs.quietEnd} onChange={(v) => save({ quietEnd: v })} />
           </div>
         </Row>
-      </MenuCard>
-
-      <MenuCard style={{ marginTop: 16 }}>
-        <Row title="카카오톡 알림 받기" description="끄면 소식 탭에만 쌓이고 메시지는 오지 않아요." last>
-          <Switch label="카카오톡 알림" checked={prefs.channel === 'kakao'} disabled={saving}
-            onChange={(v) => save({ channel: v ? 'kakao' : 'none' })} />
+        <Row
+          title="알림 받을 지역"
+          description={prefs.regionIds.length > 0
+            ? '고른 지역의 상영만 알려드려요.'
+            : hasFavoriteTheater
+              ? '고른 지역이 없어서 관심 극장이 있는 지역으로 알려드리고 있어요.'
+              : '고른 지역이 없어서 전국의 상영을 알려드려요. 한 편이 전국 수십 곳에서 상영하기도 해요.'}
+          stacked
+          last
+        >
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {REGIONS.map((r) => (
+              <FilterPill
+                key={r.id}
+                active={prefs.regionIds.includes(r.id)}
+                aria-pressed={prefs.regionIds.includes(r.id)}
+                disabled={saving}
+                onClick={() => toggleRegion(r.id)}
+              >
+                {r.label}
+              </FilterPill>
+            ))}
+          </div>
         </Row>
       </MenuCard>
 

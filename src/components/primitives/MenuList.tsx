@@ -4,10 +4,12 @@ import Link from 'next/link'
 import type { CSSProperties, ReactNode } from 'react'
 import { ChevronRight } from 'lucide-react'
 
-/** 설정 탭과 같은 카드형 메뉴 리스트 컨테이너 */
+/** 설정 탭과 같은 카드형 메뉴 리스트 컨테이너.
+ *  바깥 테두리는 뺀다(2026-08-20) — 행마다 구분선이 있고 흰 면이 회색 배경 위에 떠 있어
+ *  테두리가 한 겹 더 붙으면 상자 안에 상자처럼 보였다. */
 export function MenuCard({ children, style }: { children: ReactNode; style?: CSSProperties }) {
   return (
-    <div style={{ margin: '12px var(--gutter) 0', borderRadius: 'var(--radius-control)', overflow: 'hidden', border: '1px solid var(--color-border)', ...style }}>
+    <div style={{ margin: '12px var(--gutter) 0', borderRadius: 'var(--radius-control)', overflow: 'hidden', ...style }}>
       {children}
     </div>
   )
