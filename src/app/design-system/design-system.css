@@ -27,7 +27,7 @@
 .ds-card {
   background: var(--color-surface-card);
   border-radius: var(--ds-card-radius) var(--ds-card-radius) 0 0;
-  padding: var(--spacing-8) var(--gutter) var(--spacing-16);
+  padding: var(--spacing-12) var(--gutter) var(--spacing-24);
   min-height: 60dvh;
 }
 
@@ -48,7 +48,7 @@
   .ds-card {
     border-radius: var(--ds-card-radius);
     /* 좌우를 같은 값으로 둔다 — 목차를 없앤 뒤에도 본문이 카드 가운데 오도록 */
-    padding: var(--spacing-16) var(--spacing-24) var(--spacing-24);
+    padding: var(--spacing-24) var(--spacing-24) var(--spacing-32);
     height: 100%;
     overflow-y: auto;
     box-shadow: var(--shadow-sm);
@@ -308,3 +308,4 @@
 }
 .ds-demo-btn:hover { background: var(--color-neutral-800); }
 .ds-demo-btn:active { transform: translateY(1px); }
+

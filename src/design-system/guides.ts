@@ -129,9 +129,9 @@ export const GUIDES: Record<string, ComponentGuide> = {
       '목록의 항목 하나를 담는 기본 면입니다. 배경(미색)과 카드(흰색)의 대비로 층을 만들고, ' +
       '그림자는 실제로 떠 있는 요소에만 사용합니다.',
     specs: [
-      { title: '고도', desc: 'sm=E1 카드·버튼 hover / md=E2 FAB·드롭다운 / lg=E3 모달입니다. 그림자는 2겹(direct+ambient)이며 색은 웜 브라운으로 고정합니다.' },
-      { title: '반경', desc: 'radius/control(12)을 사용합니다. 시트는 20, 팝오버는 16으로 층마다 다르게 지정합니다.' },
-      { title: '클릭 가능 상태', desc: 'clickable 카드는 hover에서 한 단계 떠오르고(그림자 sm→md, 1px 상승), 누르는 순간 내려앉으며 면이 눌린 톤으로 바뀝니다. onClick을 전달하면 키보드로도 조작할 수 있습니다(role=button · Enter/Space · 포커스 링).' },
+      { title: 'Elevation', desc: 'sm=E1 카드·버튼 hover / md=E2 FAB·드롭다운 / lg=E3 모달입니다. 그림자는 2겹(direct+ambient)이며 색은 웜 브라운으로 고정합니다.' },
+      { title: 'Radius', desc: 'radius/control(12)을 사용합니다. 시트는 20, 팝오버는 16으로 층마다 다르게 지정합니다.' },
+      { title: 'Clickability', desc: 'clickable 카드는 hover에서 한 단계 떠오르고(그림자 sm→md, 1px 상승), 누르는 순간 내려앉으며 면이 눌린 톤으로 바뀝니다. onClick을 전달하면 키보드로도 조작할 수 있습니다(role=button · Enter/Space · 포커스 링).' },
     ],
     usage: [
       { kind: 'do', rule: '카드 안 요소 간격은 spacing/3(12), 카드 사이는 spacing/4(16) 이상을 확보합니다.' },
@@ -192,10 +192,6 @@ export const GUIDES: Record<string, ComponentGuide> = {
 
   FabRound: {
     intro: '지도 위에 떠 있는 단일 행동입니다. 44(--comp-fab-round-size) 원형이며, 지도 조작을 가리지 않는 자리에 배치합니다.',
-  },
-
-  FabPill: {
-    intro: '지도와 목록처럼 두 모드를 오가는 전환 컨트롤입니다. 레이블 두 개를 한 pill에 담아 현재 위치를 알립니다.',
   },
 
   BubbleTail: {

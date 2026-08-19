@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-08-19T10:20:53.980Z",
-  "figmaDumpAt": "2026-08-19T10:18:56.131Z",
+  "generatedAt": "2026-08-19T11:54:38.328Z",
+  "figmaDumpAt": "2026-08-19T10:40:51.230Z",
   "tokenGroups": [
     {
       "title": "Neutral scale — 2.0 웜그레이 램프 (S가 양끝으로 상승하는 U자 곡선, H 27~40)",
@@ -1498,34 +1498,6 @@
           "value": "18px",
           "comment": "",
           "resolved": "18px",
-          "figma": null
-        },
-        {
-          "name": "--comp-fab-pill-height",
-          "value": "44px",
-          "comment": "",
-          "resolved": "44px",
-          "figma": null
-        },
-        {
-          "name": "--comp-fab-pill-pl",
-          "value": "14px",
-          "comment": "",
-          "resolved": "14px",
-          "figma": null
-        },
-        {
-          "name": "--comp-fab-pill-pr",
-          "value": "16px",
-          "comment": "",
-          "resolved": "16px",
-          "figma": null
-        },
-        {
-          "name": "--comp-fab-pill-radius",
-          "value": "var(--radius-pill)",
-          "comment": "",
-          "resolved": "9999px",
           "figma": null
         },
         {
@@ -5251,73 +5223,6 @@
             "gap": 4,
             "dir": "HORIZONTAL",
             "fill": "primary/100"
-          }
-        ]
-      }
-    },
-    {
-      "name": "FabPill",
-      "file": "src/components/primitives/FAB.tsx",
-      "doc": "",
-      "props": [
-        {
-          "name": "leftLabel",
-          "type": "string | undefined",
-          "optional": true,
-          "default": "'극장 탐색'",
-          "doc": ""
-        },
-        {
-          "name": "rightLabel",
-          "type": "string | undefined",
-          "optional": true,
-          "default": "'영화 탐색'",
-          "doc": ""
-        }
-      ],
-      "figmaSet": "2.0/FAB",
-      "figma": {
-        "name": "2.0/FAB",
-        "axes": {
-          "Type": [
-            "round",
-            "pill"
-          ]
-        },
-        "variants": [
-          {
-            "props": {
-              "Type": "round"
-            },
-            "w": 44,
-            "h": 44,
-            "radius": 22,
-            "pad": [
-              0,
-              0,
-              0,
-              0
-            ],
-            "gap": 0,
-            "dir": "HORIZONTAL",
-            "fill": "VariableID:2:12"
-          },
-          {
-            "props": {
-              "Type": "pill"
-            },
-            "w": 184,
-            "h": 44,
-            "radius": 9999,
-            "pad": [
-              0,
-              16,
-              0,
-              12
-            ],
-            "gap": 8,
-            "dir": "HORIZONTAL",
-            "fill": "VariableID:2:12"
           }
         ]
       }

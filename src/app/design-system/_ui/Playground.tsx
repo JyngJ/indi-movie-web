@@ -107,7 +107,9 @@ function Switch({ on }: { on: boolean }) {
 
 export function Playground({ controls, render, tone = 'paper' }: {
   controls: Control[]
-  render: (v: ControlValues) => ReactNode
+  /* set을 함께 넘긴다 — 무대에서 직접 조작하는 컴포넌트(칩 선택 등)가 컨트롤 값을 되돌려 줄 수 있어야
+     "컨트롤과 무대가 같은 상태를 본다"는 말이 사실이 된다. */
+  render: (v: ControlValues, set: (k: string, v: string | boolean) => void) => ReactNode
   tone?: 'paper' | 'dark'
 }) {
   const [values, setValues] = useState<ControlValues>(() => initialValues(controls))
@@ -120,7 +122,7 @@ export function Playground({ controls, render, tone = 'paper' }: {
         minHeight: 260, display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: 'var(--spacing-8)', overflow: 'hidden',
       }}>
-        {render(values)}
+        {render(values, set)}
       </div>
 
       <div style={{
