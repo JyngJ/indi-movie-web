@@ -1,12 +1,6 @@
+import Image from 'next/image'
 import { manifest } from '@/design-system'
 import { DocPage, DocSection, SubHeading, Code, DefTable, UsageCards } from '../../_ui/shell'
-
-/* 피그마 "Elevation Model" 프레임과 같은 층 구성 — E0 바닥 위로 sm·md·lg 세 층. */
-const MODEL = [
-  { level: 'E1', token: '--shadow-sm', desc: '카드, 버튼 hover. 종이 위에 살짝 얹힌 면입니다.' },
-  { level: 'E2', token: '--shadow-md', desc: 'FAB, 드롭다운, 팝업. 본문 위에 떠 있는 면입니다.' },
-  { level: 'E3', token: '--shadow-lg', desc: '모달, 다이얼로그. 본문을 덮고 흐름을 멈추는 면입니다.' },
-]
 
 const LEVEL: Record<string, string> = {
   '--shadow-sm': 'E1 — 카드, 버튼 hover',
@@ -35,48 +29,18 @@ export default function ElevationPage() {
       <DocSection
         id="model"
         title="Elevation Model"
-        lead="층은 세 단계뿐입니다. 한 단계 올라갈 때마다 그림자가 깊어지고, 같은 층끼리는 같은 그림자를 씁니다."
+        lead="층은 세 단계뿐입니다. 한 단계 올라갈 때마다 그림자가 깊어지고, 같은 층끼리는 같은 그림자를 씁니다. sheet는 방향 없는 앰비언트라 이 계단에 넣지 않습니다."
       >
-        <div className="ds-elev">
-          <div className="ds-elev__scene">
-            <div className="ds-elev__ground" />
-            <div className="ds-elev__ground-tag">E0 · 페이지 — 그림자 없음</div>
-            {MODEL.map((m, i) => {
-              const step = i + 1
-              const left = 24 + step * 26
-              const bottom = 56 + step * 72
-              return (
-                <div key={m.level}>
-                  <div className="ds-elev__riser" style={{ left: left + 12, height: bottom - 88 }} />
-                  <div className="ds-elev__plate" style={{ left, bottom, boxShadow: `var(${m.token})` }}>
-                    {m.level}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-          <div className="ds-elev__legend">
-            {[...MODEL].reverse().map(m => (
-              <div key={m.level} className="ds-elev__row">
-                <span className="ds-elev__level">{m.level}</span>
-                <span className="ds-elev__desc">
-                  <span className="ds-elev__token">{m.token}</span> — {m.desc}
-                </span>
-              </div>
-            ))}
-            <div className="ds-elev__row">
-              <span className="ds-elev__level">E0</span>
-              <span className="ds-elev__desc">페이지 면입니다. 그림자를 쓰지 않습니다.</span>
-            </div>
-            <div className="ds-elev__row">
-              <span className="ds-elev__level">별도</span>
-              <span className="ds-elev__desc">
-                <span className="ds-elev__token">--shadow-sheet</span> — 하단 고정 면입니다.
-                방향 없는 앰비언트라 층 계단에 넣지 않습니다.
-              </span>
-            </div>
-          </div>
-        </div>
+        {/* 피그마 "Elevation Model" 프레임(572×480)을 2x로 내보낸 그림.
+            scripts/figma/export-elevation-20260819.js로 다시 뽑을 수 있다. */}
+        <Image
+          src="/design-system/elevation-model.png"
+          alt="E0 페이지 면 위로 E1(sm) · E2(md) · E3(lg) 세 층이 쌓인 입체 도식"
+          width={572}
+          height={480}
+          style={{ width: '100%', height: 'auto', borderRadius: 'var(--radius-popover)' }}
+          priority
+        />
       </DocSection>
 
       <DocSection id="levels" title="단계">
