@@ -66,7 +66,7 @@ export default function MaintenanceCoverPage() {
     <DocPage
       href="/design-system/maintenance"
       title="Maintenance"
-      lead="한 사람이 기획·디자인·개발을 모두 맡는 프로젝트라, 세 산출물이 어긋나는 순간을 사람이 눈으로 잡아내기 어렵습니다. 그래서 AI를 도구로 써서 기획 → 피그마 → 코드의 정합성을 유지하고, 협업하듯 문서를 주고받습니다. 이 묶음은 그 방법을 다룹니다."
+      lead="한 사람이 기획·디자인·개발을 모두 맡는 프로젝트이므로 세 산출물이 어긋나는 순간을 사람이 눈으로 일일이 잡아내기 어렵습니다. 그래서 AI를 도구로 써서 기획 → 피그마 → 코드의 정합성을 유지하고, 협업하듯 문서를 주고받습니다. 이 섹션은 그 방법을 다룹니다."
     >
       <DocSection id="pages" title="페이지">
         <div className="ds-cover-grid">
@@ -88,7 +88,7 @@ export default function MaintenanceCoverPage() {
       <DocSection
         id="flow"
         title="유지 방법"
-        lead="세 산출물이 서로를 검사하도록 만들어, 어긋남을 사람 기억이 아니라 명령 한 줄로 찾습니다."
+        lead="세 산출물이 서로를 검사하도록 만들어, 어긋남을 사람 기억이 아니라 명령어로 찾습니다."
       >
         <ul style={{
           margin: 0, paddingLeft: '1.1em', listStyle: 'disc',
@@ -101,7 +101,7 @@ export default function MaintenanceCoverPage() {
           </li>
           <li>
             <b style={{ color: 'var(--color-text-primary)' }}>피그마 → 코드</b> · 피그마 상태를 덤프해 <Code>npm run ds:build</Code>로
-            매니페스트를 만들고, 코드 토큰과 이름으로 짝지어 대조합니다. 이 문서의 값은 전부 그 결과물입니다.
+            매니페스트를 만들고, 코드 토큰과 이름으로 짝지어 대조합니다. 이 문서의 값이 그 결과물입니다.
           </li>
           <li>
             <b style={{ color: 'var(--color-text-primary)' }}>코드 → AI</b> · 같은 매니페스트에서 llms.txt 계열 덤프를 만들어,

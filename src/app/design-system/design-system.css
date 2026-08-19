@@ -20,13 +20,14 @@
 .ds-shell { display: block; padding: 0; }
 
 .ds-aside {
-  padding: var(--spacing-6) var(--gutter);
-  border-bottom: 1px solid var(--color-neutral-300);
+  /* 좁은 화면에서는 상단 바·드로어가 대신한다 */
+  display: none;
 }
 
 .ds-card {
   background: var(--color-surface-card);
-  border-radius: var(--ds-card-radius) var(--ds-card-radius) 0 0;
+  /* 모바일에서는 상단 바 바로 아래 붙는 면이라 라운딩을 두지 않는다 — 액자가 아니라 배경이다. */
+  border-radius: 0;
   padding: var(--spacing-12) var(--gutter) var(--spacing-24);
   min-height: 60dvh;
 }
@@ -42,6 +43,7 @@
     height: 100dvh;
   }
   .ds-aside {
+    display: block;
     height: 100%; overflow-y: auto;
     border-bottom: 0; padding: var(--spacing-4) var(--spacing-2) var(--spacing-8);
   }
@@ -309,3 +311,42 @@
 .ds-demo-btn:hover { background: var(--color-neutral-800); }
 .ds-demo-btn:active { transform: translateY(1px); }
 
+
+/* ── 정의 표 ──────────────────────────────────────────────────
+   좁은 화면에서는 두 열이 줄어들 자리가 없어 화면을 밀어냈다 — 세로로 쌓는다. */
+.ds-deftable__row { display: grid; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 720px) {
+  .ds-deftable__row { grid-template-columns: minmax(120px, 200px) minmax(0, 1fr); }
+}
+
+/* ── 모바일 내비 — 상단 바 + 드로어 ────────────────────────────
+   좁은 화면에서 사이드바를 본문 위에 통째로 펼치면 컴포넌트 목록만 스무 줄이라
+   첫 화면에 본문이 하나도 안 보인다. 바로 접고 필요할 때만 연다. */
+.ds-topbar {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: var(--spacing-3);
+  padding: var(--spacing-3) var(--gutter);
+  background: var(--ds-page-bg);
+  border-bottom: 1px solid var(--color-neutral-300);
+}
+.ds-topbar__title {
+  flex: 1; min-width: 0;
+  font-size: var(--text-body); font-weight: 700; color: var(--color-text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ds-topbar__btn {
+  min-height: unset; width: 36px; height: 36px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--color-border); border-radius: var(--radius-button);
+  background: var(--color-surface-card); color: var(--color-text-body);
+}
+.ds-drawer {
+  position: fixed; inset: 0; z-index: 30;
+  display: grid; grid-template-rows: auto 1fr;
+  background: var(--ds-page-bg);
+  overflow-y: auto;
+  padding: var(--spacing-3) var(--gutter) var(--spacing-12);
+}
+@media (min-width: 1024px) {
+  .ds-topbar, .ds-drawer { display: none; }
+}

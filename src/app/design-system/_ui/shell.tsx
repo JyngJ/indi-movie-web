@@ -91,7 +91,9 @@ export function Code({ children }: { children: ReactNode }) {
     <code style={{
       fontFamily: 'var(--font-mono)', fontSize: 'var(--text-meta)',
       background: 'var(--color-surface-raised)', color: 'var(--color-text-body)',
-      padding: '2px 6px', borderRadius: 'var(--radius-badge)', whiteSpace: 'nowrap',
+      padding: '2px 6px', borderRadius: 'var(--radius-badge)',
+      /* 토큰 이름이 길어 좁은 화면을 밀어냈다 — 끊어 쓰되 공백에서 먼저 끊는다. */
+      overflowWrap: 'anywhere', wordBreak: 'break-word',
     }}>{children}</code>
   )
 }
@@ -141,8 +143,7 @@ export function DefTable({ rows }: { rows: [ReactNode, ReactNode][] }) {
   return (
     <div>
       {rows.map(([k, v], i) => (
-        <div key={i} style={{
-          display: 'grid', gridTemplateColumns: 'minmax(120px, 200px) minmax(0, 1fr)',
+        <div key={i} className="ds-deftable__row" style={{
           gap: 'var(--spacing-4)', padding: 'var(--spacing-4) 0',
           borderTop: '1px solid var(--color-border)',
           fontSize: 'var(--text-body)', lineHeight: 1.7,
