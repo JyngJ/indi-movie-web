@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -30,7 +30,11 @@ export function Sidebar({ groups }: { groups: Group[] }) {
     g.title && (pathname === g.href || g.items.some(i => i.href === pathname)),
   )?.title ?? null
 
+  // 손으로 연 그룹은 그 페이지에 머무는 동안만 유지한다. 페이지를 옮기면 다시
+  // "지금 보는 페이지의 그룹"으로 돌아간다 — Prev/Next로 넘어가도 사이드바가 따라온다.
   const [manual, setManual] = useState<string | null | undefined>(undefined)
+  useEffect(() => { setManual(undefined) }, [pathname])
+
   const openGroup = manual === undefined ? activeGroup : manual
 
   return (
