@@ -27,7 +27,8 @@ export const NAV_GROUPS = () => [
     href: '/design-system/components',
     items: componentPages(),
   },
-  { title: 'Maintenance', href: '/design-system/drift', items: [{ href: '/design-system/drift', label: '코드 ↔ 피그마 차이' }] },
+  // 표지가 곧 그 페이지라 하위 항목을 따로 두지 않는다(같은 링크가 두 번 켜져 보였다)
+  { title: 'Maintenance', href: '/design-system/drift', items: [] },
 ]
 
 /** 문서 전체를 한 줄로 편 순서 — Prev/Next는 여기서 계산한다.

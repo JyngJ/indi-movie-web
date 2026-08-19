@@ -231,7 +231,7 @@ export function PrevNext({ href }: { href: string }) {
   const { prev, next } = siblings(href)
   const cell = (dir: '이전' | '다음', page: { href: string; label: string } | null, align: 'left' | 'right') => (
     page ? (
-      <Link href={page.href} style={{ textDecoration: 'none', textAlign: align, display: 'block' }}>
+      <Link href={page.href} className="ds-prevnext" style={{ textAlign: align }}>
         <div style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>{dir}</div>
         <div style={{
           marginTop: 2, fontSize: 'var(--text-title)', fontWeight: 700,
