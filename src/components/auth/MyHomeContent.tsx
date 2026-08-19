@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { BarChart3, Bell, Clapperboard, Heart, MessageSquareText, UserRound } from 'lucide-react'
+import { Bell, Heart, UserRound } from 'lucide-react'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { LoginPanel } from '@/components/auth/LoginPanel'
 import { Avatar, Button, MenuCard, MenuRow } from '@/components/primitives'
@@ -9,7 +9,9 @@ import { useFavorites } from '@/hooks/useFavorites'
 
 /**
  * MY 홈 본문 (IA 48, 왓챠 '나의 왓챠' 참고) — 모바일 /my 페이지와 데스크톱 MyPanel이 공유.
- * 큰 아바타 · 닉네임 · [프로필 수정] → 보관함(관심 목록 / 관람 기록 P4 / 리뷰 P5 / 통계 P7) → 알림 설정 · 프로필·계정 관리.
+ * 큰 아바타 · 닉네임 · [프로필 수정] → 메뉴(내 관심 목록 · 알림 설정 · 프로필·계정 관리).
+ * 보관함 4타일(관람 기록 P4 / 리뷰 P5 / 통계 P7)은 2026-08-20에 걷어냈다 — 네 칸 중 셋이
+ * dim된 빈 자리라 "안 되는 게 많은 화면"으로 읽혔다. 실제로 열리는 것만 행으로 둔다.
  * onProfile: 프로필 편집으로 이동(모바일 → /my/profile 라우트, 데스크톱 → 팝오버 내부 페이지).
  */
 export function MyHomeContent({ authError, onProfile, onNotifications, onNavigate }: {
@@ -45,19 +47,13 @@ export function MyHomeContent({ authError, onProfile, onNotifications, onNavigat
 
       <div style={{ height: 8, backgroundColor: 'var(--color-surface-raised)' }} />
 
-      <section style={{ padding: '24px var(--gutter)', display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <h2 style={{ margin: 0, fontSize: 'var(--text-h2)', fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--color-text-primary)' }}>보관함</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-          <ShelfItem href="/my/favorites" onNavigate={onNavigate} icon={<Heart size={24} strokeWidth={1.75} />} label="관심 목록" caption={favCount > 0 ? String(favCount) : undefined} />
-          <ShelfItem icon={<Clapperboard size={24} strokeWidth={1.75} />} label="관람 기록" disabled />
-          <ShelfItem icon={<MessageSquareText size={24} strokeWidth={1.75} />} label="리뷰" disabled />
-          <ShelfItem icon={<BarChart3 size={24} strokeWidth={1.75} />} label="통계" disabled />
-        </div>
-      </section>
-
-      <div style={{ height: 8, backgroundColor: 'var(--color-surface-raised)' }} />
-
       <MenuCard style={{ marginTop: 16 }}>
+        <MenuRow
+          icon={<Heart size={17} strokeWidth={1.75} />}
+          title="내 관심 목록"
+          description={favCount > 0 ? `관심 영화, 관심 감독, 관심 영화관 ${favCount}개` : '관심 영화, 관심 감독, 관심 영화관 보기'}
+          href="/my/favorites"
+        />
         <MenuRow
           icon={<Bell size={17} strokeWidth={1.75} />}
           title="알림 설정"
@@ -70,19 +66,3 @@ export function MyHomeContent({ authError, onProfile, onNotifications, onNavigat
   )
 }
 
-/** 보관함 원형 아이콘 항목 — 미구현(P4~P7)은 dim + 클릭 없음 */
-function ShelfItem({ href, onNavigate, icon, label, caption, disabled }: { href?: string; onNavigate?: () => void; icon: React.ReactNode; label: string; caption?: string; disabled?: boolean }) {
-  const inner = (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, opacity: disabled ? 0.4 : 1 }}>
-      <div style={{ width: 64, height: 64, borderRadius: '50%', backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-primary)', position: 'relative' }}>
-        {icon}
-        {caption && (
-          <span style={{ position: 'absolute', top: 0, right: 0, minWidth: 18, height: 18, padding: '0 4px', borderRadius: 'var(--radius-pill)', backgroundColor: 'var(--color-primary-base)', color: 'var(--color-on-accent)', fontSize: 'var(--text-badge)', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{caption}</span>
-        )}
-      </div>
-      <span style={{ fontSize: 'var(--text-meta)', fontWeight: 500, color: 'var(--color-text-primary)', textAlign: 'center' }}>{label}{disabled ? ' (예정)' : ''}</span>
-    </div>
-  )
-  if (href && !disabled) return <Link href={href} style={{ textDecoration: 'none' }} onClick={onNavigate}>{inner}</Link>
-  return <div aria-disabled={disabled}>{inner}</div>
-}
