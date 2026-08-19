@@ -255,7 +255,7 @@ export function DocFooter() {
   return (
     <div style={{
       marginTop: 'var(--spacing-12)',
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--spacing-4)',
+      display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)',
     }}>
       <div style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
         Designed, Built by <b style={{ color: 'var(--color-text-body)' }}>정재용</b>
