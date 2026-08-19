@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { manifest } from '@/design-system'
 import './design-system.css'
+import { Wordmark } from '@/components/primitives'
 import { Sidebar } from './_ui/Sidebar'
 import { NAV_GROUPS } from './_ui/nav'
 
@@ -18,19 +19,11 @@ export default function DesignSystemLayout({ children }: { children: ReactNode }
     <div className="ds-root">
       <div className="ds-shell">
         <aside className="ds-aside">
-          <Link href="/design-system" style={{ textDecoration: 'none', display: 'block', marginBottom: 'var(--spacing-6)', padding: '0 var(--spacing-3)' }}>
-            <div style={{
-              width: 32, height: 32, borderRadius: 'var(--radius-button)',
-              background: 'var(--color-primary-base)', color: 'var(--color-text-inverse)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontFamily: 'var(--font-display)', fontSize: 'var(--text-subtitle)', fontWeight: 700,
-              marginBottom: 'var(--spacing-3)',
-            }}>영</div>
-            <div style={{
-              fontFamily: 'var(--font-display)', fontSize: 'var(--text-title)', fontWeight: 700,
-              color: 'var(--color-text-primary)', letterSpacing: '0.02em',
-            }}>영화볼지도</div>
-            <div style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', marginTop: 2 }}>
+          <Link href="/design-system" style={{ textDecoration: 'none', display: 'block', marginBottom: 'var(--spacing-8)', padding: '0 var(--spacing-3)' }}>
+            {/* 제품이 쓰는 그 워드마크(2.0/logo/wordmark)를 그대로 쓴다 — 문서용 약자를 따로 만들면
+                로고가 두 개가 된다. */}
+            <Wordmark style={{ height: 28, width: 'auto', display: 'block' }} />
+            <div style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', marginTop: 'var(--spacing-2)' }}>
               디자인 시스템 2.0
             </div>
           </Link>
