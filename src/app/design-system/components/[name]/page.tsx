@@ -20,6 +20,25 @@ export default async function ComponentPage({ params }: { params: Promise<{ name
   const variants = c.figma?.variants.slice(0, VARIANT_LIMIT) ?? []
   const hiddenVariants = (c.figma?.variants.length ?? 0) - variants.length
 
+  // 축도 props도 없으면 Properties 섹션을 그리지 않는다.
+  const propRows: [React.ReactNode, React.ReactNode][] = [
+    ...Object.entries(c.figma?.axes ?? {}).map(([axis, values]) => [
+      <span key={axis}>{axis} <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)' }}>· 피그마</span></span>,
+      values.join(', '),
+    ] as [React.ReactNode, React.ReactNode]),
+    ...c.props.map(p => [
+      <span key={p.name}>
+        <Code>{p.name}</Code>
+        {!p.optional && <span style={{ color: 'var(--color-error)' }}> *</span>}
+      </span>,
+      <span key="v">
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-meta)' }}>{p.type}</span>
+        {p.default && <> · 기본값 <Code>{p.default}</Code></>}
+        {p.doc && <div style={{ marginTop: 4, color: 'var(--color-text-caption)' }}>{p.doc}</div>}
+      </span>,
+    ] as [React.ReactNode, React.ReactNode]),
+  ]
+
   return (
     <DocPage
       href={`/design-system/components/${name}`}
@@ -28,33 +47,17 @@ export default async function ComponentPage({ params }: { params: Promise<{ name
     >
       <ComponentDoc name={name} />
 
+      {propRows.length > 0 && (
       <DocSection
         id="properties"
         title="Properties"
         lead="TypeScript 타입에서 추출합니다. HTML 기본 속성은 제외했으며, 축(axes) 항목은 피그마 컴포넌트 세트에서 가져옵니다."
       >
-        <DefTable
-          rows={[
-            ...Object.entries(c.figma?.axes ?? {}).map(([axis, values]) => [
-              <span key={axis}>{axis} <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)' }}>· 피그마</span></span>,
-              values.join(', '),
-            ] as [React.ReactNode, React.ReactNode]),
-            ...c.props.map(p => [
-              <span key={p.name}>
-                <Code>{p.name}</Code>
-                {!p.optional && <span style={{ color: 'var(--color-error)' }}> *</span>}
-              </span>,
-              <span key="v">
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-meta)' }}>{p.type}</span>
-                {p.default && <> · 기본값 <Code>{p.default}</Code></>}
-                {p.doc && <div style={{ marginTop: 4, color: 'var(--color-text-caption)' }}>{p.doc}</div>}
-              </span>,
-            ] as [React.ReactNode, React.ReactNode]),
-          ]}
-        />
+        <DefTable rows={propRows} />
       </DocSection>
+      )}
 
-      {c.figma && (
+      {c.figma && c.figma.variants.length > 0 && (
         <DocSection
           id="figma"
           title="피그마"

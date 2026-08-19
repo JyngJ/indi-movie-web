@@ -521,22 +521,26 @@ export function ComponentDoc({ name }: { name: string }) {
   const guide = GUIDES[name]
   const doc = DOCS[name]
 
+  // 전용 히어로 → 데모 갤러리 → 목록 썸네일 순으로 보여 준다.
+  const hasStage = Boolean(doc?.hero || hasDemo(name) || hasThumb(name))
+
   return (
     <>
-      <DocSection id="anatomy" title="Anatomy" lead={guide?.anatomy ? '번호는 아래 파트 설명과 짝을 이룹니다. 필수(ESSENTIAL)와 선택(OPTIONAL)을 구분해 표기합니다.' : undefined}>
-        {/* 전용 히어로 → 데모 갤러리 → 목록 썸네일 순으로 보여 준다. 견본이 아예 없는
-            컴포넌트는 Anatomy가 빈 채로 남지 않게 무대 자체를 그리지 않는다. */}
-        {(doc?.hero || hasDemo(name) || hasThumb(name)) && (
-          <Stage tone="tint" minHeight={260}>
-            {doc?.hero ?? (hasDemo(name) ? <Demo name={name} /> : <ComponentThumb name={name} />)}
-          </Stage>
-        )}
-        {guide?.anatomy && (
-          <div style={{ marginTop: 'var(--spacing-6)' }}>
-            <Anatomy parts={guide.anatomy} />
-          </div>
-        )}
-      </DocSection>
+      {/* 무대도 파트 설명도 없으면 Anatomy 자체를 그리지 않는다 — 제목만 남은 섹션은 정보가 아니다. */}
+      {(hasStage || guide?.anatomy) && (
+        <DocSection id="anatomy" title="Anatomy" lead={guide?.anatomy ? '번호는 아래 파트 설명과 짝을 이룹니다. 필수(ESSENTIAL)와 선택(OPTIONAL)을 구분해 표기합니다.' : undefined}>
+          {hasStage && (
+            <Stage tone="tint" minHeight={260}>
+              {doc?.hero ?? (hasDemo(name) ? <Demo name={name} /> : <ComponentThumb name={name} />)}
+            </Stage>
+          )}
+          {guide?.anatomy && (
+            <div style={{ marginTop: 'var(--spacing-6)' }}>
+              <Anatomy parts={guide.anatomy} />
+            </div>
+          )}
+        </DocSection>
+      )}
 
       {doc?.playground && (
         <DocSection id="state" title="State" lead="컨트롤을 바꾸면 실제 컴포넌트가 반응합니다. 오른쪽 컨트롤 패널을 이용하세요.">
@@ -544,7 +548,7 @@ export function ComponentDoc({ name }: { name: string }) {
         </DocSection>
       )}
 
-      {guide?.specs && (
+      {guide?.specs?.length ? (
         <DocSection id="spec" title="Spec">
           {guide.specs.map((spec, i) => (
             <SpecRow
@@ -555,9 +559,9 @@ export function ComponentDoc({ name }: { name: string }) {
             />
           ))}
         </DocSection>
-      )}
+      ) : null}
 
-      {guide?.usage && (
+      {guide?.usage?.length ? (
         <DocSection id="usage" title="Usage">
           <UsageCards
             items={guide.usage.map((u, i) => ({
@@ -567,7 +571,7 @@ export function ComponentDoc({ name }: { name: string }) {
             }))}
           />
         </DocSection>
-      )}
+      ) : null}
     </>
   )
 }
