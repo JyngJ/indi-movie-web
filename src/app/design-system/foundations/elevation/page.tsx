@@ -1,4 +1,3 @@
-import type { CSSProperties } from 'react'
 import { manifest } from '@/design-system'
 import { DocPage, DocSection, SubHeading, Code, DefTable, UsageCards } from '../../_ui/shell'
 
@@ -42,17 +41,19 @@ export default function ElevationPage() {
           <div className="ds-elev__scene">
             <div className="ds-elev__ground" />
             <div className="ds-elev__ground-tag">E0 · 페이지 — 그림자 없음</div>
-            {MODEL.map((m, i) => (
-              <div key={m.level}>
-                <div className="ds-elev__riser" style={{ '--i': i + 1 } as CSSProperties} />
-                <div
-                  className="ds-elev__plate"
-                  style={{ '--i': i + 1, boxShadow: `var(${m.token})` } as CSSProperties}
-                >
-                  {m.level}
+            {MODEL.map((m, i) => {
+              const step = i + 1
+              const left = 24 + step * 26
+              const bottom = 56 + step * 72
+              return (
+                <div key={m.level}>
+                  <div className="ds-elev__riser" style={{ left: left + 12, height: bottom - 88 }} />
+                  <div className="ds-elev__plate" style={{ left, bottom, boxShadow: `var(${m.token})` }}>
+                    {m.level}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
           <div className="ds-elev__legend">
             {[...MODEL].reverse().map(m => (

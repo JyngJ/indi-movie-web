@@ -337,9 +337,9 @@
   background: var(--color-surface-raised);
 }
 .ds-elev__plate {
+  /* left·bottom·height는 층 번호에서 계산해 TSX가 인라인으로 넣는다 —
+     CSS 변수로 두면 감사기가 미정의 토큰으로 잡는다. */
   position: absolute;
-  left: calc(24px + var(--i) * 26px);
-  bottom: calc(56px + var(--i) * 72px);
   width: 188px; height: 64px;
   border-radius: var(--radius-control);
   background: var(--color-surface-card);
@@ -351,10 +351,8 @@
 /* 각 판에서 바닥으로 내려가는 기둥 — 높이 차이를 눈으로 잡아준다. */
 .ds-elev__riser {
   position: absolute;
-  left: calc(24px + var(--i) * 26px + 12px);
   bottom: 96px;
   width: 1px;
-  height: calc(var(--i) * 72px - 32px);
   background: repeating-linear-gradient(
     to bottom,
     var(--color-neutral-300) 0 3px,
