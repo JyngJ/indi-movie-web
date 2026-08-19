@@ -132,6 +132,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
     specs: [
       { title: '고도', desc: 'sm=E1 카드·버튼 hover / md=E2 FAB·드롭다운 / lg=E3 모달. 그림자는 2겹(direct+ambient)이고 색은 웜 브라운 고정 — 순검정 금지.' },
       { title: '반경', desc: 'radius/control(12). 시트는 20, 팝오버는 16으로 층마다 다르다.' },
+      { title: '클릭 가능 상태', desc: 'clickable 카드는 hover에서 한 단계 뜨고(그림자 sm→md, 1px 상승), 누르는 순간 도로 내려앉으며 면이 눌린 톤으로 바뀐다. onClick을 주면 키보드로도 눌린다(role=button · Enter/Space · 포커스 링).' },
     ],
     usage: [
       { kind: 'do', rule: '카드 안 요소 간격은 spacing/3(12), 카드 사이는 spacing/4(16) 이상.' },

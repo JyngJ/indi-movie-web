@@ -345,6 +345,7 @@ const DOCS: Record<string, Doc> = {
             shadow={s(v, 'shadow') as 'sm'}
             bordered={b(v, 'bordered')}
             clickable={b(v, 'clickable')}
+            onClick={b(v, 'clickable') ? () => {} : undefined}
           >
             <div style={{ fontSize: 'var(--text-title)', fontWeight: 700 }}>씨네큐브 광화문</div>
             <div style={{ marginTop: 4, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
@@ -367,6 +368,9 @@ const DOCS: Record<string, Doc> = {
             border: '1px solid var(--color-primary-300)',
           }} />
         ))}
+      </div>,
+      <div key="c" style={{ width: 220 }}>
+        <Card clickable onClick={() => {}}>눌러 보세요 — hover · press</Card>
       </div>,
     ],
     usageVisuals: [
