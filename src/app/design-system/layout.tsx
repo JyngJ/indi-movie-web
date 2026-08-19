@@ -6,6 +6,7 @@ import './design-system.css'
 import { Wordmark } from '@/components/primitives'
 import { Sidebar } from './_ui/Sidebar'
 import { ScrollFrame } from './_ui/ScrollFrame'
+import { MobileNav } from './_ui/MobileNav'
 import { NAV_GROUPS } from './_ui/nav'
 
 /* 내부 문서 사이트. 포트폴리오로 공개할 때 robots를 열면 된다. */
@@ -18,6 +19,8 @@ export const metadata: Metadata = {
 export default function DesignSystemLayout({ children }: { children: ReactNode }) {
   return (
     <div className="ds-root">
+      {/* 좁은 화면에서는 사이드바 대신 상단 바 + 드로어를 쓴다. */}
+      <MobileNav />
       <div className="ds-shell">
         <aside className="ds-aside">
           <Link href="/design-system" style={{ textDecoration: 'none', display: 'block', marginBottom: 'var(--spacing-8)', padding: '0 var(--spacing-3)' }}>
