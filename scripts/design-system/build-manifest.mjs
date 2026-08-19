@@ -338,6 +338,18 @@ for (const t of textTokens) {
   }
 }
 
+/* 1.0 잔재 — 2.0 접두사가 없는 피그마 스타일. 남아 있으면 다음 사람이 또 집는다. */
+for (const st of dump?.textStyles ?? []) {
+  if (!st.name.startsWith('2.0/')) {
+    addDrift('legacy-figma-style', st.name, null, `${st.font} · ${st.size}px`, '1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것')
+  }
+}
+for (const es of dump?.effectStyles ?? []) {
+  if (!es.name.startsWith('2.0/')) {
+    addDrift('legacy-figma-style', es.name, null, `${es.effects.length}겹`, '1.0 이펙트 스타일 — 2.0/shadow/*로 옮기고 삭제할 것')
+  }
+}
+
 const sets = collectComponentSets(dump)
 const setsByName = new Map(sets.map(s => [s.name, s]))
 const components = extractComponents(setsByName).map(c => {

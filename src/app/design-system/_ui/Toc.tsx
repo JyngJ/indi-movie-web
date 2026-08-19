@@ -28,7 +28,7 @@ export function Toc({ items }: { items: TocItem[] }) {
   }, [items])
 
   return (
-    <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <nav style={{ display: 'flex', flexDirection: 'column' }}>
       {items.map(item => {
         const on = active === item.id
         return (
@@ -36,19 +36,18 @@ export function Toc({ items }: { items: TocItem[] }) {
             key={item.id}
             href={`#${item.id}`}
             style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              padding: '4px 0 4px ' + (item.depth ? '14px' : '0'),
+              display: 'block',
+              padding: '4px 0 4px ' + (item.depth ? '20px' : '10px'),
+              /* 현재 섹션은 왼쪽 세로선으로 표시한다 — 점보다 위치가 또렷하고,
+                 목차 전체가 하나의 축으로 읽힌다. */
+              borderLeft: `2px solid ${on ? 'var(--color-text-primary)' : 'var(--color-neutral-200)'}`,
               fontSize: item.depth ? 'var(--text-meta)' : 'var(--text-body)',
               fontWeight: on ? 700 : 500,
-              color: on ? 'var(--color-primary-base)'
+              color: on ? 'var(--color-text-primary)'
                 : item.depth ? 'var(--color-text-caption)' : 'var(--color-text-sub)',
               textDecoration: 'none', lineHeight: 1.6,
             }}
           >
-            <span style={{
-              width: 4, height: 4, borderRadius: '50%', flexShrink: 0,
-              background: on ? 'var(--color-primary-base)' : 'transparent',
-            }} />
             {item.label}
           </a>
         )

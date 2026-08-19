@@ -14,6 +14,10 @@ const KIND: Record<string, { title: string; note: string }> = {
     title: '타입 스케일 밖',
     note: '2.0 텍스트 스타일에 없는 크기를 코드가 쓴다. 스타일을 만들거나 스케일 안 값으로 내릴 것.',
   },
+  'legacy-figma-style': {
+    title: '1.0 스타일 잔재',
+    note: '2.0 접두사가 없는 피그마 텍스트·이펙트 스타일. 같은 이름이 다른 값을 가리켜 사고가 반복되므로, 쓰는 노드를 2.0으로 옮긴 뒤 삭제한다.',
+  },
   'component-unmapped': {
     title: '피그마 세트 없음',
     note: '코드에는 있는데 피그마 컴포넌트 세트가 없다. 시안을 그리든지, 이름만 다르면 FIGMA_ALIAS에 적는다.',

@@ -50,10 +50,12 @@ export function Sidebar({ groups }: { groups: Group[] }) {
                         padding: '5px var(--spacing-3)', borderRadius: 'var(--radius-button)',
                         fontSize: group.title ? 'var(--text-meta)' : 'var(--text-body)',
                         textDecoration: 'none', lineHeight: 1.7,
-                        color: active ? 'var(--color-primary-900)'
+                        /* 선택 항목은 어두운 그레이 면 + 흰 글씨 — 액센트(인디고)는 제품 쪽 언어라
+                           문서 내비게이션까지 쓰면 강조가 두 곳이 된다. */
+                        color: active ? 'var(--color-text-inverse)'
                           : group.title ? 'var(--color-text-caption)' : 'var(--color-text-primary)',
                         fontWeight: active ? 700 : group.title ? 500 : 700,
-                        background: active ? 'var(--color-primary-100)' : 'transparent',
+                        background: active ? 'var(--color-neutral-800)' : 'transparent',
                       }}
                     >
                       {item.label}

@@ -49,12 +49,9 @@ const COLOR_GROUPS: { label: string; note?: string; swatches: { token: string; r
     ],
   },
   {
-    label: 'gv / multiplex (핀 전용, 텍스트 미사용)',
+    label: 'gv (핀 전용, 텍스트 미사용)',
     swatches: [
       { token: '--color-gv',    role: 'GV·페스티벌 브랜드 보라 — GV 핀 · 이벤트 강조' },
-      { token: '--color-cgv',   role: 'CGV 핀' },
-      { token: '--color-mega',  role: '메가박스 핀' },
-      { token: '--color-lotte', role: '롯데시네마 핀' },
     ],
   },
 ]

@@ -1,5 +1,5 @@
 import { manifest } from '@/design-system'
-import { DocPage, DocSection, Code, DefTable, UsageCards } from '../../_ui/shell'
+import { DocPage, DocSection, SubHeading, Code, DefTable, UsageCards } from '../../_ui/shell'
 
 const LEVEL: Record<string, string> = {
   '--shadow-sm': 'E1 — 카드, 버튼 hover',
@@ -8,12 +8,16 @@ const LEVEL: Record<string, string> = {
   '--shadow-sheet': '하단 고정 면 — 방향 없는 앰비언트 2겹',
   '--shadow-popover': '액센트 면 위 툴팁 — 한류 계열 그림자',
   '--shadow-panel-left': '레일 위에 뜬 본문 카드의 왼쪽 경계',
+  '--shadow-inset': '프로필 이미지 안쪽 링 — 유일한 inset. 뜨는 게 아니라 파인 것',
 }
 
 export default function ElevationPage() {
   const shadows = manifest.tokenGroups
     .flatMap(g => g.tokens)
     .filter(t => t.name.startsWith('--shadow-') && t.resolved.includes(' '))
+
+  const effects20 = manifest.effects.filter(e => e.name.startsWith('2.0/'))
+  const legacyEffects = manifest.effects.filter(e => !e.name.startsWith('2.0/'))
 
   return (
     <DocPage
@@ -44,13 +48,23 @@ export default function ElevationPage() {
         </div>
       </DocSection>
 
-      <DocSection id="effects" title="피그마 이펙트" lead="피그마 이펙트 스타일 목록. 코드 그림자와 이름으로 짝지어 본다.">
-        <DefTable
-          rows={manifest.effects.map(e => [
-            e.name,
-            `${e.effects.length}겹`,
-          ])}
-        />
+      <DocSection
+        id="effects"
+        title="피그마 이펙트"
+        lead="코드 그림자와 이름으로 짝지어 본다. 2.0은 2겹, 1.0은 1겹이라 같은 이름이 다른 값을 가리켰다 — 1.0은 걷어내는 중이다."
+      >
+        <DefTable rows={effects20.map(e => [e.name, `${e.effects.length}겹`])} />
+        {legacyEffects.length > 0 && (
+          <div style={{ marginTop: 'var(--spacing-6)' }}>
+            <SubHeading kicker="정리 대상">1.0 잔재 · {legacyEffects.length}</SubHeading>
+            <DefTable
+              rows={legacyEffects.map(e => [
+                e.name,
+                `${e.effects.length}겹 — scripts/figma/legacy-cleanup-20260819.js로 2.0/shadow/*에 옮기고 삭제한다`,
+              ])}
+            />
+          </div>
+        )}
       </DocSection>
 
       <DocSection id="usage" title="Usage">

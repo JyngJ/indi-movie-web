@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-19T04:57:26.907Z",
+  "generatedAt": "2026-08-19T06:16:07.160Z",
   "figmaDumpAt": "2026-08-17T16:23:43.680Z",
   "tokenGroups": [
     {
@@ -644,47 +644,6 @@
             "name": "status/gv-tint",
             "value": "#E7DCF9",
             "alias": "gv/100",
-            "collection": "영화볼지도 시멘틱 - 2.0"
-          }
-        }
-      ]
-    },
-    {
-      "title": "Multiplex (핀 전용, 텍스트 미사용)",
-      "tokens": [
-        {
-          "name": "--color-cgv",
-          "value": "#E30613",
-          "comment": "",
-          "resolved": "#E30613",
-          "figma": {
-            "name": "brand/cgv",
-            "value": "#E30613",
-            "alias": null,
-            "collection": "영화볼지도 시멘틱 - 2.0"
-          }
-        },
-        {
-          "name": "--color-mega",
-          "value": "#6C1E9F",
-          "comment": "",
-          "resolved": "#6C1E9F",
-          "figma": {
-            "name": "brand/mega",
-            "value": "#6C1E9F",
-            "alias": null,
-            "collection": "영화볼지도 시멘틱 - 2.0"
-          }
-        },
-        {
-          "name": "--color-lotte",
-          "value": "#ED1C24",
-          "comment": "",
-          "resolved": "#ED1C24",
-          "figma": {
-            "name": "brand/lotte",
-            "value": "#ED1C24",
-            "alias": null,
             "collection": "영화볼지도 시멘틱 - 2.0"
           }
         }
@@ -6665,6 +6624,27 @@
       "note": "코드에 대응 토큰이 없다 (영화볼지도 시멘틱 - 2.0)"
     },
     {
+      "kind": "figma-only",
+      "id": "brand/cgv",
+      "code": null,
+      "figma": "#E30613",
+      "note": "코드에 대응 토큰이 없다 (영화볼지도 시멘틱 - 2.0)"
+    },
+    {
+      "kind": "figma-only",
+      "id": "brand/mega",
+      "code": null,
+      "figma": "#6C1E9F",
+      "note": "코드에 대응 토큰이 없다 (영화볼지도 시멘틱 - 2.0)"
+    },
+    {
+      "kind": "figma-only",
+      "id": "brand/lotte",
+      "code": null,
+      "figma": "#ED1C24",
+      "note": "코드에 대응 토큰이 없다 (영화볼지도 시멘틱 - 2.0)"
+    },
+    {
       "kind": "type-scale",
       "id": "--text-bask-title",
       "code": "18px",
@@ -6677,6 +6657,160 @@
       "code": "13px",
       "figma": null,
       "note": "2.0 텍스트 스타일에 13px가 없다 — 스케일 밖이거나 스타일 미신설"
+    },
+    {
+      "kind": "legacy-figma-style",
+      "id": "display/h1",
+      "code": null,
+      "figma": "KIMM_Bold/B · 24px",
+      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
+    },
+    {
+      "kind": "legacy-figma-style",
+      "id": "display/h2",
+      "code": null,
+      "figma": "KIMM_Bold/B · 22px",
+      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
+    },
+    {
+      "kind": "legacy-figma-style",
+      "id": "display/h3",
+      "code": null,
+      "figma": "KIMM_Bold/B · 20px",
+      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
+    },
+    {
+      "kind": "legacy-figma-style",
+      "id": "display/map-label",
+      "code": null,
+      "figma": "KIMM_Bold/B · 11px",
+      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
+    },
+    {
+      "kind": "legacy-figma-style",
+      "id": "ui/title",
+      "code": null,
+      "figma": "Pretendard/Bold · 17px",
+      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
+    },
+    {
+      "kind": "legacy-figma-style",
+      "id": "ui/subtitle",
+      "code": null,
+      "figma": "Pretendard/SemiBold · 15px",
+      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
+    },
+    {
+      "kind": "legacy-figma-style",
+      "id": "ui/body",
+      "code": null,
+      "figma": "Pretendard/Medium · 14px",
+      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
+    },
+    {
+      "kind": "legacy-figma-style",
+      "id": "ui/meta",
+      "code": null,
+      "figma": "Pretendard/Regular · 13px",
+      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
+    },
+    {
+      "kind": "legacy-figma-style",
+      "id": "ui/caption",
+      "code": null,
+      "figma": "Pretendard/Medium · 11px",
+      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
+    },
+    {
+      "kind": "legacy-figma-style",
+      "id": "ui/badge",
+      "code": null,
+      "figma": "Pretendard/Bold · 9px",
+      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
+    },
+    {
+      "kind": "legacy-figma-style",
+      "id": "num/time",
+      "code": null,
+      "figma": "Pretendard/Bold · 17px",
+      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
+    },
+    {
+      "kind": "legacy-figma-style",
+      "id": "num/date",
+      "code": null,
+      "figma": "Pretendard/Bold · 16px",
+      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
+    },
+    {
+      "kind": "legacy-figma-style",
+      "id": "num/seat",
+      "code": null,
+      "figma": "Pretendard/SemiBold · 12px",
+      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
+    },
+    {
+      "kind": "legacy-figma-style",
+      "id": "num/dow",
+      "code": null,
+      "figma": "Pretendard/Medium · 10px",
+      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
+    },
+    {
+      "kind": "legacy-figma-style",
+      "id": "latin/title",
+      "code": null,
+      "figma": "Libre Baskerville/Regular · 18px",
+      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
+    },
+    {
+      "kind": "legacy-figma-style",
+      "id": "latin/meta",
+      "code": null,
+      "figma": "Libre Baskerville/Italic · 13px",
+      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
+    },
+    {
+      "kind": "legacy-figma-style",
+      "id": "shadow/sm",
+      "code": null,
+      "figma": "1겹",
+      "note": "1.0 이펙트 스타일 — 2.0/shadow/*로 옮기고 삭제할 것"
+    },
+    {
+      "kind": "legacy-figma-style",
+      "id": "shadow/md",
+      "code": null,
+      "figma": "1겹",
+      "note": "1.0 이펙트 스타일 — 2.0/shadow/*로 옮기고 삭제할 것"
+    },
+    {
+      "kind": "legacy-figma-style",
+      "id": "shadow/lg",
+      "code": null,
+      "figma": "1겹",
+      "note": "1.0 이펙트 스타일 — 2.0/shadow/*로 옮기고 삭제할 것"
+    },
+    {
+      "kind": "legacy-figma-style",
+      "id": "shadow/sheet",
+      "code": null,
+      "figma": "2겹",
+      "note": "1.0 이펙트 스타일 — 2.0/shadow/*로 옮기고 삭제할 것"
+    },
+    {
+      "kind": "legacy-figma-style",
+      "id": "shadow/popup",
+      "code": null,
+      "figma": "1겹",
+      "note": "1.0 이펙트 스타일 — 2.0/shadow/*로 옮기고 삭제할 것"
+    },
+    {
+      "kind": "legacy-figma-style",
+      "id": "shadow/pin",
+      "code": null,
+      "figma": "1겹",
+      "note": "1.0 이펙트 스타일 — 2.0/shadow/*로 옮기고 삭제할 것"
     },
     {
       "kind": "component-unmapped",

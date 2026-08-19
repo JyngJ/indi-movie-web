@@ -230,7 +230,7 @@ function makePinIcon(
   })() : ''
 
   const pinHtml = renderToStaticMarkup(
-    <MapPin kind="indie" selected={selected} label={name} labelOffset={labelOffset} dimmed={dimmed} isDark={isDark} />
+    <MapPin selected={selected} label={name} labelOffset={labelOffset} dimmed={dimmed} isDark={isDark} />
   )
   const html = `
     <div style="width:140px;display:flex;flex-direction:column;align-items:center;overflow:visible;position:relative;">
