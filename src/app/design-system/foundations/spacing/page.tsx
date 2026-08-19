@@ -55,14 +55,14 @@ export default function SpacingPage() {
             const px = parseInt(t.resolved, 10)
             return (
               <div key={t.name} style={{
-                display: 'grid', gridTemplateColumns: 'minmax(120px, 160px) 64px minmax(0, 1fr)',
+                display: 'grid', gridTemplateColumns: 'minmax(0, 160px) 56px minmax(0, 1fr)',
                 alignItems: 'center', gap: 'var(--spacing-4)',
                 padding: 'var(--spacing-3) 0', borderTop: '1px solid var(--color-border)',
               }}>
                 <Code>{t.name}</Code>
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-meta)', color: 'var(--color-text-body)' }}>{t.resolved}</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)' }}>
-                  <div style={{ height: 14, width: Math.min(px, 260), background: 'var(--color-primary-300)', borderRadius: 2, flexShrink: 0 }} />
+                  <div style={{ height: 14, width: Math.min(px, 260), maxWidth: '100%', background: 'var(--color-primary-300)', borderRadius: 2, flexShrink: 1, minWidth: 4 }} />
                   <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
                     {USE[t.name] ?? t.comment}
                   </span>

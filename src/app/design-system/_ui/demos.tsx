@@ -74,7 +74,7 @@ function ToastDemo() {
 function InputDemo() {
   const [v, setV] = useState('')
   return (
-    <div style={{ display: 'grid', gap: 'var(--spacing-4)', width: 420, maxWidth: '100%' }}>
+    <div style={{ display: 'grid', gap: 'var(--spacing-4)', width: 'min(420px, 100%)' }}>
       <Input label="영화 제목" placeholder="제목을 입력하세요" value={v} onChange={e => setV(e.target.value)} />
       <Input label="이메일" defaultValue="not-an-email" error="이메일 형식이 아닙니다" />
       <Input label="극장" hint="지역을 함께 적으면 더 잘 찾습니다" leftIcon={<IcoSearch />} />
@@ -85,7 +85,7 @@ function InputDemo() {
 function SearchBarDemo() {
   const [v, setV] = useState('')
   return (
-    <div style={{ width: 560, maxWidth: '100%' }}>
+    <div style={{ width: 'min(560px, 100%)' }}>
       <SearchBar
         value={v}
         onChange={e => setV(e.target.value)}
@@ -118,7 +118,7 @@ function SearchBarButtonDemo() {
   }, [open])
 
   return (
-    <div ref={wrap} style={{ position: 'relative', width: 560, maxWidth: '100%' }}>
+    <div ref={wrap} style={{ position: 'relative', width: 'min(560px, 100%)' }}>
       {open ? (
         <SearchBar
           ref={ref}
@@ -177,7 +177,7 @@ function ScrollNavButtonDemo() {
   const nudge = (dir: -1 | 1) => rail.current?.scrollBy({ left: dir * 200, behavior: 'smooth' })
 
   return (
-    <div style={{ position: 'relative', width: 420, maxWidth: '100%' }}>
+    <div style={{ position: 'relative', width: 'min(420px, 100%)' }}>
       <div
         ref={rail}
         onScroll={sync}
