@@ -1,5 +1,13 @@
+import type { CSSProperties } from 'react'
 import { manifest } from '@/design-system'
 import { DocPage, DocSection, SubHeading, Code, DefTable, UsageCards } from '../../_ui/shell'
+
+/* 피그마 "Elevation Model" 프레임과 같은 층 구성 — E0 바닥 위로 sm·md·lg 세 층. */
+const MODEL = [
+  { level: 'E1', token: '--shadow-sm', desc: '카드, 버튼 hover. 종이 위에 살짝 얹힌 면입니다.' },
+  { level: 'E2', token: '--shadow-md', desc: 'FAB, 드롭다운, 팝업. 본문 위에 떠 있는 면입니다.' },
+  { level: 'E3', token: '--shadow-lg', desc: '모달, 다이얼로그. 본문을 덮고 흐름을 멈추는 면입니다.' },
+]
 
 const LEVEL: Record<string, string> = {
   '--shadow-sm': 'E1 — 카드, 버튼 hover',
@@ -25,6 +33,51 @@ export default function ElevationPage() {
       title="Elevation"
       lead="그림자는 2겹(direct + ambient)이며 색은 웜 브라운(#140F0A)으로 고정합니다. 미색 배경 위에서 탁해지지 않고 종이 위의 그림자처럼 보입니다."
     >
+      <DocSection
+        id="model"
+        title="Elevation Model"
+        lead="층은 세 단계뿐입니다. 한 단계 올라갈 때마다 그림자가 깊어지고, 같은 층끼리는 같은 그림자를 씁니다."
+      >
+        <div className="ds-elev">
+          <div className="ds-elev__scene">
+            <div className="ds-elev__ground" />
+            <div className="ds-elev__ground-tag">E0 · 페이지 — 그림자 없음</div>
+            {MODEL.map((m, i) => (
+              <div key={m.level}>
+                <div className="ds-elev__riser" style={{ '--i': i + 1 } as CSSProperties} />
+                <div
+                  className="ds-elev__plate"
+                  style={{ '--i': i + 1, boxShadow: `var(${m.token})` } as CSSProperties}
+                >
+                  {m.level}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="ds-elev__legend">
+            {[...MODEL].reverse().map(m => (
+              <div key={m.level} className="ds-elev__row">
+                <span className="ds-elev__level">{m.level}</span>
+                <span className="ds-elev__desc">
+                  <span className="ds-elev__token">{m.token}</span> — {m.desc}
+                </span>
+              </div>
+            ))}
+            <div className="ds-elev__row">
+              <span className="ds-elev__level">E0</span>
+              <span className="ds-elev__desc">페이지 면입니다. 그림자를 쓰지 않습니다.</span>
+            </div>
+            <div className="ds-elev__row">
+              <span className="ds-elev__level">별도</span>
+              <span className="ds-elev__desc">
+                <span className="ds-elev__token">--shadow-sheet</span> — 하단 고정 면입니다.
+                방향 없는 앰비언트라 층 계단에 넣지 않습니다.
+              </span>
+            </div>
+          </div>
+        </div>
+      </DocSection>
+
       <DocSection id="levels" title="단계">
         <div style={{
           display: 'grid', gap: 'var(--spacing-6)',
