@@ -1,11 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { FavoriteToggle } from '@/components/domain/favorites/FavoriteToggle'
 import { PosterThumb } from '@/components/domain/PosterThumb'
 import { Button, FilterPill } from '@/components/primitives'
 import { useFavorites } from '@/hooks/useFavorites'
+import { favoriteKey, type Favorite } from '@/lib/favorites/types'
 import { summarizeFavorites } from '@/lib/favorites/summarize'
 import { useActiveMovieTheaterPairs, useMovies, useTheaters } from '@/lib/supabase/queries'
 
@@ -15,6 +16,9 @@ type Tab = 'movie' | 'theater' | 'director'
  * 관심 목록 본문 (IA 30) — 영화 / 극장 / 감독 탭. 상영 중이면 배지, 없으면 dim.
  * 모바일 /my/favorites 페이지와 데스크톱 MY 팝오버가 공유한다.
  * onNavigate: 팝오버에서 링크를 눌렀을 때 팝오버를 닫는 훅.
+ *
+ * 하트를 꺼도 카드가 즉시 사라지지 않는다 — 잘못 눌렀을 때 되돌릴 자리가 없어지기 때문.
+ * 빈 하트 상태로 남아 있다가, 화면을 벗어났다 다시 들어오면 그때 목록에서 빠진다.
  */
 export function FavoritesContent({ onNavigate }: { onNavigate?: () => void }) {
   const [tab, setTab] = useState<Tab>('movie')
@@ -24,9 +28,23 @@ export function FavoritesContent({ onNavigate }: { onNavigate?: () => void }) {
   const { data: theaters = [] } = useTheaters()
   const { data: pairs = [] } = useActiveMovieTheaterPairs(null)
 
-  const summary = useMemo(() => summarizeFavorites(favorites, movies, theaters, pairs), [favorites, movies, theaters, pairs])
+  /* 이 화면에 한 번 뜬 항목은 하트를 꺼도 계속 그린다(해제 취소 여지).
+     추가는 즉시 반영, 삭제만 화면을 벗어날 때까지 보류 — 컴포넌트가 언마운트되면 초기화된다. */
+  const [visible, setVisible] = useState<Favorite[]>([])
+  const seenRef = useRef(new Set<string>())
+  useEffect(() => {
+    setVisible((prev) => {
+      const added = favorites.filter((f) => !seenRef.current.has(favoriteKey(f.type, f.id)))
+      if (added.length === 0) return prev
+      for (const f of added) seenRef.current.add(favoriteKey(f.type, f.id))
+      return [...prev, ...added]
+    })
+  }, [favorites])
+
+  const summary = useMemo(() => summarizeFavorites(visible, movies, theaters, pairs), [visible, movies, theaters, pairs])
   const list = tab === 'movie' ? summary.movies : tab === 'theater' ? summary.theaters : summary.directors
-  const empty = !isLoading && list.length === 0
+  // favorites가 이미 있는데 visible이 아직 안 찬 첫 렌더에서 빈 상태가 깜빡이지 않게 한다
+  const empty = !isLoading && favorites.length === 0 && list.length === 0
 
   return (
     <>
