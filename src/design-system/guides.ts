@@ -203,7 +203,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
   },
 
   CardContainer: {
-    intro: '카드를 세로로 묶는 컨테이너입니다. 카드 사이 간격을 한 곳에서 정해 목록의 리듬을 유지합니다.',
+    intro: '섹션 하나를 감싸는 흰 판입니다. 큐레이션 섹션에서 제목과 가로 레일을 한 카드 안에 묶습니다.',
   },
 
   DirectorChip: {
@@ -231,7 +231,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
   },
 
   MovieCardSkeleton: {
-    intro: '영화 카드 자리의 스켈레톤입니다. 포스터와 제목 줄의 배치를 그대로 따릅니다.',
+    intro: '영화 카드 자리의 스켈레톤입니다. 포스터 2:3 비율과 제목·메타 줄을 실제 카드와 같은 배치로 둡니다.',
   },
 
   TheaterCardSkeleton: {

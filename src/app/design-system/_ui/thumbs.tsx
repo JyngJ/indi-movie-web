@@ -4,7 +4,8 @@ import type { ReactNode } from 'react'
 import {
   Avatar, Badge, BottomSheet, BubbleTail, Button, Card, CardContainer, Chip, DirectorChip,
   FabPill, FabRound, FilterPill, GenreChip, IconButton, Input, PosterChip, ScrollNavButton,
-  SearchBarButton, SectionHeader, Skeleton, SortToggle, Wordmark, MovieCardSkeleton,
+  SearchBarButton, SectionHeader, Skeleton, SortToggle, Wordmark,
+  MovieCardSkeleton, TheaterCardSkeleton,
 } from '@/components/primitives'
 
 /* 목록 카드에 올리는 작은 미리보기. 제품 컴포넌트를 그대로 쓰되 한눈에 들어올 만큼만 보여 준다. */
@@ -77,10 +78,17 @@ const THUMBS: Record<string, ReactNode> = {
     </div>
   ),
   CardContainer: (
-    <div style={{ width: 168 }}>
-      <CardContainer>
-        <Card padding="sm">에무시네마</Card>
-        <Card padding="sm">필름포럼</Card>
+    <div style={{ width: 200 }}>
+      <CardContainer padding={12} gap={8}>
+        <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700 }}>이번 주 GV</div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {[0, 1, 2].map(i => (
+            <div key={i} style={{
+              width: 34, height: 48, borderRadius: 'var(--radius-poster)',
+              background: 'var(--color-surface-raised)',
+            }} />
+          ))}
+        </div>
       </CardContainer>
     </div>
   ),
@@ -115,7 +123,7 @@ const THUMBS: Record<string, ReactNode> = {
       <Input label="영화 제목" placeholder="제목을 입력하세요" readOnly />
     </div>
   ),
-  MovieCardSkeleton: <div style={{ transform: 'scale(0.8)' }}><MovieCardSkeleton /></div>,
+  MovieCardSkeleton: <div style={{ width: 92 }}><MovieCardSkeleton /></div>,
   PosterChip: (
     <Poster>
       <PosterChip corner="top-left" tone="gv">GV</PosterChip>
@@ -159,7 +167,14 @@ const THUMBS: Record<string, ReactNode> = {
       <SortToggle>인기순</SortToggle>
     </div>
   ),
-  TheaterCardSkeleton: <div style={{ transform: 'scale(0.8)' }}><MovieCardSkeleton /></div>,
+  TheaterCardSkeleton: (
+    <div style={{
+      width: 216, background: 'var(--color-surface-card)',
+      border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)',
+    }}>
+      <TheaterCardSkeleton />
+    </div>
+  ),
   Toast: (
     <div style={{
       padding: '10px 16px', borderRadius: 'var(--radius-pill)',
