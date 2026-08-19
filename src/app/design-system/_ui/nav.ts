@@ -32,10 +32,9 @@ export const NAV_GROUPS = () => [
     href: '/design-system/components',
     items: componentPages(),
   },
-  // 표지 페이지 없이 항목만 있는 묶음 — 헤더는 접기 토글 역할만 한다
   {
     title: 'Maintenance',
-    href: null,
+    href: '/design-system/maintenance',
     items: [
       { href: '/design-system/drift', label: '코드 ↔ 피그마 차이' },
       { href: '/design-system/ai', label: 'AI Collaboration' },
