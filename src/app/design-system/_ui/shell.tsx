@@ -257,7 +257,7 @@ export function DocFooter() {
       marginTop: 'var(--spacing-12)', fontSize: 'var(--text-meta)',
       color: 'var(--color-text-placeholder)',
     }}>
-      ©영화볼지도 · 이 문서는 <Code>npm run ds:build</Code>로 생성합니다
+      ©영화볼지도
     </div>
   )
 }

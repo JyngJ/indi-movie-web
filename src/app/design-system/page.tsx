@@ -70,6 +70,28 @@ export default function OverviewPage() {
       </DocSection>
 
       <DocSection
+        id="llms"
+        title="AI 도구용"
+        lead="사람이 보는 페이지와 같은 매니페스트에서 텍스트 덤프를 만들어 둡니다. Cursor·Claude Code 같은 도구에 물려 두면 토큰 이름과 컴포넌트 규칙을 지어내지 않습니다."
+      >
+        <DefTable
+          rows={[
+            [<a key="a" href="/design-system/llms.txt" style={{ color: 'var(--color-primary-base)' }}>llms.txt</a>,
+             '색인과 핵심 규칙입니다. 이 파일을 먼저 읽히면 나머지 위치를 찾아갑니다.'],
+            [<a key="b" href="/design-system/llms-tokens.txt" style={{ color: 'var(--color-primary-base)' }}>llms-tokens.txt</a>,
+             '토큰 전수입니다. 값·설명·피그마 변수 대응을 담습니다.'],
+            [<a key="c" href="/design-system/llms-components.txt" style={{ color: 'var(--color-primary-base)' }}>llms-components.txt</a>,
+             '프리미티브의 Props·배리언트 실측·Do/Don\'t를 담습니다.'],
+            [<a key="d" href="/design-system/llms-full.txt" style={{ color: 'var(--color-primary-base)' }}>llms-full.txt</a>,
+             '위 내용을 한 파일로 합친 것입니다. 문맥 창이 넉넉할 때 사용합니다.'],
+          ]}
+        />
+        <p style={{ marginTop: 'var(--spacing-4)', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', lineHeight: 1.7 }}>
+          llms.txt 관례를 따릅니다 — 색인 한 장과 주제별 파일을 함께 두어 문맥 창 크기에 맞게 골라 받게 합니다.
+        </p>
+      </DocSection>
+
+      <DocSection
         id="drift"
         title="차이 요약"
         lead={<>코드 토큰과 피그마 변수를 이름으로 짝지어 대조한 결과입니다. 자세한 목록은 <Link href="/design-system/drift" style={{ color: 'var(--color-primary-base)' }}>코드 ↔ 피그마 차이</Link>에서 확인할 수 있습니다.</>}

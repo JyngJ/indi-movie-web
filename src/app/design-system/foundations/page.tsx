@@ -108,8 +108,9 @@ export default function FoundationsCoverPage() {
 
       <DocSection id="rules" title="공통 규칙" lead="다섯 페이지에 공통으로 적용되는 약속입니다.">
         <ul style={{
-          margin: 0, paddingLeft: '1.2em', fontSize: 'var(--text-body)',
-          lineHeight: 2, color: 'var(--color-text-sub)',
+          margin: 0, paddingLeft: '1.1em', listStyle: 'disc',
+          fontSize: 'var(--text-title)', lineHeight: 1.7, color: 'var(--color-text-sub)',
+          display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)',
         }}>
           <li>값은 <b style={{ color: 'var(--color-text-primary)' }}>tokens.css</b>에서 관리합니다. 컴포넌트가 값을 직접 적으면 감사에서 하드코딩으로 집계됩니다.</li>
           <li>컴포넌트는 역할 토큰(2계층)을 사용합니다. 원시 토큰은 램프 자체를 보여주는 자리에서만 사용합니다.</li>
