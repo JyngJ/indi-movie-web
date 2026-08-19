@@ -11,7 +11,7 @@ import { useEffect, useState } from 'react'
 import {
   Button, IconButton, SortToggle, Card, CardContainer, Chip, Badge, Input, Toast, GenreChip,
   SectionHeader, ScrollNavButton, Skeleton, MovieCardSkeleton, TheaterCardSkeleton,
-  BottomSheet, SearchBar, SearchBarButton, FabRound, FabPill,
+  BottomSheet, SearchBar, SearchBarButton, FabRound,
 } from '@/components/primitives'
 import { MapPin, PosterThumb, ShowtimeCell, DateBar, TheaterSheet } from '@/components/domain'
 import { FilterChip } from '@/components/domain/filterBar/FilterChip'
@@ -64,7 +64,7 @@ const SCREEN_INDEX: { screen: string; source: string; items: { label: string; an
     source: 'src/components/map/MapView.tsx · PosterGrid.tsx',
     items: [
       { label: 'SearchBarButton', anchor: 'form-search' },
-      { label: 'FabRound / FabPill', anchor: 'btn-fab' },
+      { label: 'FabRound', anchor: 'btn-fab' },
       { label: 'MapPin', anchor: 'nav-mappin' },
       { label: 'Chip', anchor: 'chip-chip' },
       { label: 'PosterThumb (radius 4 지도 예외)', anchor: 'media-poster' },
@@ -299,7 +299,7 @@ export default function ComponentsPage() {
             </div>
           </Entry>
 
-          <Entry id="btn-fab" name="FabRound 44×44 · FabPill"
+          <Entry id="btn-fab" name="FabRound 44×44"
             screens="지도 (즐겨찾기 · 줌 · 현위치 · 탭 전환)"
             source="src/components/primitives/FAB.tsx">
             <div className="flex items-center gap-3 flex-wrap">
@@ -307,7 +307,6 @@ export default function ComponentsPage() {
               <FabRound><IcoPlus /></FabRound>
               <FabRound><IcoMinus /></FabRound>
               <FabRound><IcoExpand /></FabRound>
-              <FabPill />
             </div>
           </Entry>
 

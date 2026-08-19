@@ -29,22 +29,23 @@ export default function DesignSystemLayout({ children }: { children: ReactNode }
             </div>
           </Link>
           <Sidebar groups={NAV_GROUPS()} />
-          {/* 문서에서 실제 서비스로 건너가는 유일한 출구 — 프라이머리 한 개만 둔다. */}
-          <Link href="/" className="ds-cta">
-            영화볼지도 서비스 바로가기
-            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <path d="M5 12h14M13 6l6 6-6 6" />
-            </svg>
-          </Link>
-          <div style={{
-            marginTop: 'var(--spacing-6)', paddingTop: 'var(--spacing-4)',
-            borderTop: '1px solid var(--color-neutral-300)',
-            fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)', lineHeight: 1.7,
-            padding: 'var(--spacing-4) var(--spacing-3) 0',
-          }}>
-            생성 {manifest.generatedAt.slice(0, 10)}
-            <br />
-            피그마 덤프 {manifest.figmaDumpAt ? manifest.figmaDumpAt.slice(0, 10) : '없음'}
+          <div className="ds-aside__foot">
+            {/* 문서에서 실제 서비스로 건너가는 유일한 출구 — 프라이머리 한 개만 둔다. */}
+            <Link href="/" className="ds-cta">
+              영화볼지도 서비스 바로가기
+              <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </Link>
+            <div style={{
+              marginTop: 'var(--spacing-6)', borderTop: '1px solid var(--color-neutral-300)',
+              fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)', lineHeight: 1.7,
+              padding: 'var(--spacing-4) var(--spacing-3) 0',
+            }}>
+              생성 {manifest.generatedAt.slice(0, 10)}
+              <br />
+              피그마 덤프 {manifest.figmaDumpAt ? manifest.figmaDumpAt.slice(0, 10) : '없음'}
+            </div>
           </div>
         </aside>
         <ScrollFrame>{children}</ScrollFrame>
