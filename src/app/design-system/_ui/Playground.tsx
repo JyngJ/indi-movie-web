@@ -19,21 +19,76 @@ const initialValues = (controls: Control[]): ControlValues =>
       : c.initial,
   ]))
 
-/* 브라우저 기본 라디오·체크박스는 Tailwind preflight 아래에서 검은 원으로 떨어진다.
-   접근성을 위해 실제 input은 숨겨서 남기고, 보이는 부분만 직접 그린다. */
-function Dot({ on }: { on: boolean }) {
+const isNumeric = (options: string[]) => options.every(o => /^\d+(\.\d+)?$/.test(o))
+
+/** 하나만 고르는 세그먼티드 컨트롤. 선택한 칸이 면으로 채워진다. */
+function Segmented({ options, value, onChange }: {
+  options: string[]
+  value: string
+  onChange: (v: string) => void
+}) {
   return (
-    <span style={{
-      width: 14, height: 14, borderRadius: '50%', flexShrink: 0,
-      border: `1.5px solid ${on ? 'var(--color-primary-base)' : 'var(--color-neutral-400)'}`,
-      background: 'var(--color-surface-card)',
-      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-    }}>
-      {on && <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--color-primary-base)' }} />}
-    </span>
+    <div className="ds-segmented">
+      {options.map(opt => (
+        <button
+          key={opt}
+          type="button"
+          className="ds-segmented__item"
+          data-selected={opt === value}
+          aria-pressed={opt === value}
+          onClick={() => onChange(opt)}
+        >
+          {opt}
+        </button>
+      ))}
+    </div>
   )
 }
 
+/** 단계가 있는 숫자 값을 위한 슬라이더. 인덱스로 움직여 정해진 값만 고르게 한다. */
+function StepSlider({ options, value, onChange }: {
+  options: string[]
+  value: string
+  onChange: (v: string) => void
+}) {
+  const index = Math.max(0, options.indexOf(value))
+  return (
+    <div>
+      <div style={{
+        display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
+        marginBottom: 'var(--spacing-2)',
+      }}>
+        <span style={{
+          fontFamily: 'var(--font-mono)', fontSize: 'var(--text-body)', fontWeight: 700,
+          color: 'var(--color-text-primary)',
+        }}>{value}</span>
+        <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)' }}>
+          {options[0]}–{options[options.length - 1]}
+        </span>
+      </div>
+      <input
+        type="range"
+        className="ds-slider"
+        min={0}
+        max={options.length - 1}
+        step={1}
+        value={index}
+        onChange={e => onChange(options[Number(e.target.value)])}
+      />
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+        {options.map(opt => (
+          <span key={opt} style={{
+            fontSize: 'var(--text-badge)', fontFamily: 'var(--font-mono)',
+            color: opt === value ? 'var(--color-text-body)' : 'var(--color-text-placeholder)',
+          }}>{opt}</span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* 체크박스는 기본 모양이 Tailwind preflight 아래에서 검은 사각으로 떨어진다.
+   접근성을 위해 실제 input은 숨겨 남기고, 보이는 부분만 직접 그린다. */
 function Switch({ on }: { on: boolean }) {
   return (
     <span style={{
@@ -87,29 +142,19 @@ export function Playground({ controls, render, tone = 'paper' }: {
               }}>{c.label}</div>
 
               {c.kind === 'radio' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {c.options.map(opt => {
-                    const on = values[c.name] === opt
-                    return (
-                      <label key={opt} style={{
-                        display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer',
-                        fontSize: 'var(--text-meta)',
-                        color: on ? 'var(--color-text-primary)' : 'var(--color-text-sub)',
-                        fontWeight: on ? 600 : 400,
-                      }}>
-                        <input
-                          type="radio"
-                          name={c.name}
-                          checked={on}
-                          onChange={() => set(c.name, opt)}
-                          style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }}
-                        />
-                        <Dot on={on} />
-                        {opt}
-                      </label>
-                    )
-                  })}
-                </div>
+                isNumeric(c.options)
+                  // 숫자 옵션은 단계가 있는 값이라 슬라이더가 크기 변화를 그대로 보여 준다
+                  ? <StepSlider
+                      options={c.options}
+                      value={String(values[c.name])}
+                      onChange={v => set(c.name, v)}
+                    />
+                  // 나머지는 하나만 고르는 세그먼티드 컨트롤
+                  : <Segmented
+                      options={c.options}
+                      value={String(values[c.name])}
+                      onChange={v => set(c.name, v)}
+                    />
               )}
 
               {c.kind === 'toggle' && (

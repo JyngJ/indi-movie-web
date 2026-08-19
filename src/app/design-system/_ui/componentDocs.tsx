@@ -495,7 +495,7 @@ export function ComponentDoc({ name }: { name: string }) {
       </DocSection>
 
       {doc?.playground && (
-        <DocSection id="state" title="State" lead="컨트롤을 바꾸면 실제 컴포넌트가 그대로 반응합니다. 시안 이미지가 아니라 제품에 쓰이는 코드입니다.">
+        <DocSection id="state" title="State" lead="컨트롤을 바꾸면 실제 컴포넌트가 반응합니다. 오른쪽 컨트롤 패널을 이용하세요.">
           <Playground {...doc.playground} />
         </DocSection>
       )}

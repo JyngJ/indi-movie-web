@@ -74,7 +74,7 @@
 /* 플레이그라운드 — 좁은 화면에선 무대 아래로 컨트롤이 내려간다 */
 .ds-playground { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--spacing-4); }
 @media (min-width: 900px) {
-  .ds-playground { grid-template-columns: minmax(0, 1fr) 208px; }
+  .ds-playground { grid-template-columns: minmax(0, 1fr) 236px; }
   .ds-spec-row { grid-template-columns: minmax(0, 320px) minmax(0, 1fr); }
 }
 
@@ -213,4 +213,53 @@
 .ds-grid-surface[data-tone='dark'] {
   --ds-grid-line: rgba(255, 255, 255, 0.06);
   background-color: var(--color-neutral-800);
+}
+
+/* ── Control 패널 ─────────────────────────────────────────────── */
+.ds-segmented {
+  display: flex; flex-wrap: wrap; gap: 4px;
+}
+.ds-segmented__item {
+  flex: 1 1 auto; min-width: 52px; min-height: 32px;
+  padding: 0 var(--spacing-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-button);
+  background: var(--color-surface-card);
+  color: var(--color-text-sub);
+  font-size: var(--text-meta); font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+.ds-segmented__item:hover { background: var(--color-surface-raised); color: var(--color-text-primary); }
+.ds-segmented__item[data-selected='true'],
+.ds-segmented__item[data-selected='true']:hover {
+  background: var(--color-primary-base);
+  border-color: var(--color-primary-base);
+  color: var(--color-text-inverse);
+  font-weight: 600;
+}
+
+/* 단계 슬라이더 — 트랙과 손잡이를 직접 그린다(기본 모양은 브라우저마다 다르다) */
+.ds-slider {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 4px; margin: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-raised);
+  cursor: pointer;
+}
+.ds-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--color-primary-base);
+  border: 2px solid var(--color-surface-card);
+  box-shadow: var(--shadow-sm);
+}
+.ds-slider::-moz-range-thumb {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--color-primary-base);
+  border: 2px solid var(--color-surface-card);
+}
+.ds-slider:focus-visible {
+  outline: 2px solid var(--color-primary-base);
+  outline-offset: 4px;
 }
