@@ -276,7 +276,9 @@ export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, 
                       {/* 관심 영화·감독 — 포스터 빨간 테두리 (핀 뱃지 대신, 2026-08-17 확정).
                           hover 확대는 .pm-wrap > div:first-child(포스터)를 노리므로 링은 반드시 포스터 뒤에 온다. */}
                       {isFavMovie(slot.movie) && (
-                        <div className="pm-fav-ring" style={{ position: 'absolute', inset: -2, borderRadius: 'calc(var(--radius-badge) + 2px)', boxShadow: '0 0 0 2px var(--color-error-mid)', zIndex: 2, pointerEvents: 'none' }} />
+                        /* 링은 포스터 안쪽에 붙인다 — 바깥(inset -2 + 외곽 그림자)에 두면 포스터와
+                           링 사이에 2px 빈 띠가 생기고, 옆 포스터의 링과도 겹친다 (2026-08-20) */
+                        <div className="pm-fav-ring" style={{ position: 'absolute', inset: 0, borderRadius: 4, boxShadow: 'inset 0 0 0 2px var(--color-error-mid)', zIndex: 2, pointerEvents: 'none' }} />
                       )}
                       {slot.movie && (
                         <div className="pm-tip">

@@ -4,12 +4,14 @@ import Link from 'next/link'
 import { Bell, Heart, UserRound } from 'lucide-react'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { LoginPanel } from '@/components/auth/LoginPanel'
-import { Avatar, Button, MenuCard, MenuRow } from '@/components/primitives'
+import { Avatar, MenuCard, MenuRow } from '@/components/primitives'
 import { useFavorites } from '@/hooks/useFavorites'
 
 /**
  * MY 홈 본문 (IA 48, 왓챠 '나의 왓챠' 참고) — 모바일 /my 페이지와 데스크톱 MyPanel이 공유.
- * 큰 아바타 · 닉네임 · [프로필 수정] → 메뉴(내 관심 목록 · 알림 설정 · 프로필·계정 관리).
+ * 큰 아바타 · 닉네임 → 메뉴(내 관심 목록 · 알림 설정 · 프로필·계정 관리).
+ * [프로필 수정] 버튼은 뺐다(2026-08-20) — 바로 아래 '프로필 · 계정 관리' 행과 같은 곳으로 가는
+ * 중복 입구였다.
  * 보관함 4타일(관람 기록 P4 / 리뷰 P5 / 통계 P7)은 2026-08-20에 걷어냈다 — 네 칸 중 셋이
  * dim된 빈 자리라 "안 되는 게 많은 화면"으로 읽혔다. 실제로 열리는 것만 행으로 둔다.
  * onProfile: 프로필 편집으로 이동(모바일 → /my/profile 라우트, 데스크톱 → 팝오버 내부 페이지).
@@ -44,7 +46,6 @@ export function MyHomeContent({ authError, onProfile, onNotifications, onFavorit
         <span style={{ fontSize: 'var(--text-h1)', fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {user.displayName ?? '이름 없음'}
         </span>
-        <Button variant="tertiary" size="md" fullWidth onClick={onProfile}>프로필 수정</Button>
       </div>
 
       <div style={{ height: 8, backgroundColor: 'var(--color-surface-raised)' }} />
