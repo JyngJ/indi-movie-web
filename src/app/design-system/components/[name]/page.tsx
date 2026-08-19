@@ -53,14 +53,12 @@ export default async function ComponentPage({ params }: { params: Promise<{ name
         />
       </DocSection>
 
-      <DocSection
-        id="figma"
-        title="피그마"
-        lead={c.figma
-          ? `${c.figma.name} — 배리언트 ${c.figma.variants.length}개입니다. 아래 수치는 피그마 노드 실측값입니다.`
-          : '대응하는 피그마 컴포넌트 세트가 없습니다.'}
-      >
-        {c.figma && (
+      {c.figma && (
+        <DocSection
+          id="figma"
+          title="피그마"
+          lead={`${c.figma.name} — 배리언트 ${c.figma.variants.length}개입니다. 아래 수치는 피그마 노드 실측값입니다.`}
+        >
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--text-meta)' }}>
               <thead>
@@ -97,12 +95,14 @@ export default async function ComponentPage({ params }: { params: Promise<{ name
               </p>
             )}
           </div>
-        )}
-      </DocSection>
+        </DocSection>
+      )}
 
-      <DocSection id="source" title="소스">
-        <Code>{c.file}</Code>
-      </DocSection>
+      {/* 소스 경로는 섹션까지 둘 내용은 아니라 각주로 남긴다 */}
+      <p style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
+        소스 <Code>{c.file}</Code>
+      </p>
+
     </DocPage>
   )
 }

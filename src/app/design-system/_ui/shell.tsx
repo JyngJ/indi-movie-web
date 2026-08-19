@@ -14,7 +14,7 @@ export function DocHeader({ title, lead }: { title: string; lead?: ReactNode }) 
       {lead && (
         <p style={{
           marginTop: 'var(--spacing-4)', fontSize: 'var(--text-body)', lineHeight: 1.8,
-          color: 'var(--color-text-sub)', maxWidth: '62ch',
+          color: 'var(--color-text-sub)',
         }}>{lead}</p>
       )}
       <hr style={{
@@ -30,16 +30,15 @@ export function DocSection({ id, title, lead, children }: {
 }) {
   return (
     <section id={id} className="ds-anchor" style={{ marginBottom: 'var(--spacing-32)' }}>
+      {/* 디바이더는 페이지 제목 아래 한 줄만 둔다 — 섹션마다 그으면 문서가 표처럼 끊긴다 */}
       <h2 style={{
         fontFamily: 'var(--font-display)', fontSize: 30, fontWeight: 700, lineHeight: 1.3,
         color: 'var(--color-text-primary)', margin: 0,
-        paddingBottom: 'var(--spacing-3)',
-        borderBottom: '1px solid var(--color-border)',
       }}>{title}</h2>
       {lead && (
         <p style={{
           marginTop: 'var(--spacing-4)', fontSize: 'var(--text-body)', lineHeight: 1.8,
-          color: 'var(--color-text-sub)', maxWidth: '62ch',
+          color: 'var(--color-text-sub)',
         }}>{lead}</p>
       )}
       <div style={{ marginTop: 'var(--spacing-8)' }}>{children}</div>
@@ -129,7 +128,7 @@ export function Anatomy({ parts }: { parts: AnatomyPart[] }) {
           </div>
           <p style={{
             marginTop: 'var(--spacing-2)', fontSize: 'var(--text-body)', lineHeight: 1.8,
-            color: 'var(--color-text-sub)', maxWidth: '62ch',
+            color: 'var(--color-text-sub)',
           }}>{p.desc}</p>
         </div>
       ))}
