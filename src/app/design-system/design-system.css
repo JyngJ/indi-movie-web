@@ -269,3 +269,14 @@
   outline: 2px solid var(--color-primary-base);
   outline-offset: 4px;
 }
+
+
+/* 푸터 링크드인 — 브랜드 색은 외부 규정이라 그대로 쓴다 */
+.ds-linkedin {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--color-text-caption);
+  background: var(--color-surface-raised);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.ds-linkedin:hover { background: #0A66C2; color: var(--color-on-accent); }

@@ -333,6 +333,8 @@ const sizesInFigma = new Set(figmaTextStyles.filter(s => s.name.startsWith('2.0/
 for (const t of textTokens) {
   const px = parseInt(t.value, 10)
   if (Number.isNaN(px)) continue
+  // 폐지 예정으로 표시된 토큰은 스케일 밖이어도 알리지 않는다 — 이미 알고 있는 부채다
+  if (t.comment.includes('폐지')) continue
   if (!sizesInFigma.has(px)) {
     addDrift('type-scale', t.name, t.value, null, `2.0 텍스트 스타일에 ${px}px가 없다 — 스케일 밖이거나 스타일 미신설`)
   }

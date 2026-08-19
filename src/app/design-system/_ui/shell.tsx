@@ -254,10 +254,25 @@ export function PrevNext({ href }: { href: string }) {
 export function DocFooter() {
   return (
     <div style={{
-      marginTop: 'var(--spacing-12)', fontSize: 'var(--text-meta)',
-      color: 'var(--color-text-placeholder)',
+      marginTop: 'var(--spacing-12)', paddingTop: 'var(--spacing-6)',
+      borderTop: '1px solid var(--color-border)',
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--spacing-4)',
     }}>
-      ©영화볼지도
+      <div style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
+        Designed, Built by <b style={{ color: 'var(--color-text-body)' }}>정재용</b>
+      </div>
+      <a
+        href="https://www.linkedin.com/in/jaeyongjung/"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="정재용 링크드인"
+        className="ds-linkedin"
+      >
+        <svg width={16} height={16} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+          <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z" />
+          <circle cx="4" cy="4" r="2" />
+        </svg>
+      </a>
     </div>
   )
 }

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-19T07:49:17.313Z",
+  "generatedAt": "2026-08-19T08:42:57.492Z",
   "figmaDumpAt": "2026-08-17T16:23:43.680Z",
   "tokenGroups": [
     {
@@ -351,6 +351,42 @@
           }
         },
         {
+          "name": "--color-primary-hover",
+          "value": "var(--color-primary-800)",
+          "comment": "",
+          "resolved": "#2F3A65",
+          "figma": {
+            "name": "primary/hover",
+            "value": "#2F3A65",
+            "alias": "primary/800",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-primary-subtle",
+          "value": "var(--color-primary-100)",
+          "comment": "",
+          "resolved": "#ECEFF9",
+          "figma": {
+            "name": "primary/subtle",
+            "value": "#ECEFF9",
+            "alias": "primary/100",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-primary-on-subtle",
+          "value": "var(--color-primary-900)",
+          "comment": "",
+          "resolved": "#1F2747",
+          "figma": {
+            "name": "primary/on-subtle",
+            "value": "#1F2747",
+            "alias": "primary/900",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
           "name": "--color-primary-hover-l",
           "value": "#2F3A65",
           "comment": "primary/800",
@@ -482,11 +518,244 @@
       ]
     },
     {
+      "title": "Status ramps — 피그마 \"영화볼지도 색상 - 2.0\" 컬렉션과 1:1",
+      "tokens": [
+        {
+          "name": "--color-warning-900",
+          "value": "#885907",
+          "comment": "",
+          "resolved": "#885907",
+          "figma": {
+            "name": "warning/900",
+            "value": "#885907",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-warning-700",
+          "value": "#B9800E",
+          "comment": "",
+          "resolved": "#B9800E",
+          "figma": {
+            "name": "warning/700",
+            "value": "#B9800E",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-warning-500",
+          "value": "#E59B1A",
+          "comment": "",
+          "resolved": "#E59B1A",
+          "figma": {
+            "name": "warning/500",
+            "value": "#E59B1A",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-warning-300",
+          "value": "#F5CA75",
+          "comment": "",
+          "resolved": "#F5CA75",
+          "figma": {
+            "name": "warning/300",
+            "value": "#F5CA75",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-warning-100",
+          "value": "#FDF1D8",
+          "comment": "",
+          "resolved": "#FDF1D8",
+          "figma": {
+            "name": "warning/100",
+            "value": "#FDF1D8",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-success-900",
+          "value": "#2B5036",
+          "comment": "",
+          "resolved": "#2B5036",
+          "figma": {
+            "name": "success/900",
+            "value": "#2B5036",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-success-700",
+          "value": "#4A7C59",
+          "comment": "",
+          "resolved": "#4A7C59",
+          "figma": {
+            "name": "success/700",
+            "value": "#4A7C59",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-success-500",
+          "value": "#75A383",
+          "comment": "",
+          "resolved": "#75A383",
+          "figma": {
+            "name": "success/500",
+            "value": "#75A383",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-success-300",
+          "value": "#9FC6AB",
+          "comment": "",
+          "resolved": "#9FC6AB",
+          "figma": {
+            "name": "success/300",
+            "value": "#9FC6AB",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-success-100",
+          "value": "#E4F1E8",
+          "comment": "",
+          "resolved": "#E4F1E8",
+          "figma": {
+            "name": "success/100",
+            "value": "#E4F1E8",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-error-900",
+          "value": "#9B3331",
+          "comment": "",
+          "resolved": "#9B3331",
+          "figma": {
+            "name": "error/900",
+            "value": "#9B3331",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-error-700",
+          "value": "#BD4E4C",
+          "comment": "",
+          "resolved": "#BD4E4C",
+          "figma": {
+            "name": "error/700",
+            "value": "#BD4E4C",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-error-500",
+          "value": "#C98382",
+          "comment": "",
+          "resolved": "#C98382",
+          "figma": {
+            "name": "error/500",
+            "value": "#C98382",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-error-300",
+          "value": "#E0AFAE",
+          "comment": "",
+          "resolved": "#E0AFAE",
+          "figma": {
+            "name": "error/300",
+            "value": "#E0AFAE",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-error-100",
+          "value": "#F5E1E0",
+          "comment": "",
+          "resolved": "#F5E1E0",
+          "figma": {
+            "name": "error/100",
+            "value": "#F5E1E0",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-gv-900",
+          "value": "#3E1782",
+          "comment": "",
+          "resolved": "#3E1782",
+          "figma": {
+            "name": "gv/900",
+            "value": "#3E1782",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-gv-500",
+          "value": "#8C66CC",
+          "comment": "",
+          "resolved": "#8C66CC",
+          "figma": {
+            "name": "gv/500",
+            "value": "#8C66CC",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-gv-100",
+          "value": "#E7DCF9",
+          "comment": "",
+          "resolved": "#E7DCF9",
+          "figma": {
+            "name": "gv/100",
+            "value": "#E7DCF9",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-white",
+          "value": "#FFFFFF",
+          "comment": "",
+          "resolved": "#FFFFFF",
+          "figma": {
+            "name": "white",
+            "value": "#FFFFFF",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        }
+      ]
+    },
+    {
       "title": "Semantic — 2.0 뮤트 계급 통일 (형광 제거)",
       "tokens": [
         {
           "name": "--color-warning",
-          "value": "#B9800E",
+          "value": "var(--color-warning-700)",
           "comment": "오커 700 — 잔여석 적음. 구 #D97706(형광 앰버) 강등",
           "resolved": "#B9800E",
           "figma": {
@@ -498,7 +767,7 @@
         },
         {
           "name": "--color-success",
-          "value": "#4A7C59",
+          "value": "var(--color-success-700)",
           "comment": "700 유지 — 상영중",
           "resolved": "#4A7C59",
           "figma": {
@@ -510,7 +779,7 @@
         },
         {
           "name": "--color-error",
-          "value": "#9B3331",
+          "value": "var(--color-error-900)",
           "comment": "900 — \"매진\" 텍스트+칩 겸직 (L40, 구 #B94A48은 L52 무인지대)",
           "resolved": "#9B3331",
           "figma": {
@@ -529,7 +798,7 @@
         },
         {
           "name": "--color-gv",
-          "value": "#3E1782",
+          "value": "var(--color-gv-900)",
           "comment": "gv/900 — 핀·배지 솔리드+텍스트 3겸직 (구 #7C3AED 형광 강등)",
           "resolved": "#3E1782",
           "figma": {
@@ -541,7 +810,7 @@
         },
         {
           "name": "--color-warning-tint",
-          "value": "#FDF1D8",
+          "value": "var(--color-warning-100)",
           "comment": "",
           "resolved": "#FDF1D8",
           "figma": {
@@ -553,7 +822,7 @@
         },
         {
           "name": "--color-warning-deep",
-          "value": "#885907",
+          "value": "var(--color-warning-900)",
           "comment": "",
           "resolved": "#885907",
           "figma": {
@@ -565,7 +834,7 @@
         },
         {
           "name": "--color-success-tint",
-          "value": "#E4F1E8",
+          "value": "var(--color-success-100)",
           "comment": "",
           "resolved": "#E4F1E8",
           "figma": {
@@ -577,7 +846,7 @@
         },
         {
           "name": "--color-success-deep",
-          "value": "#2B5036",
+          "value": "var(--color-success-900)",
           "comment": "",
           "resolved": "#2B5036",
           "figma": {
@@ -589,7 +858,7 @@
         },
         {
           "name": "--color-error-tint",
-          "value": "#F5E1E0",
+          "value": "var(--color-error-100)",
           "comment": "",
           "resolved": "#F5E1E0",
           "figma": {
@@ -601,7 +870,7 @@
         },
         {
           "name": "--color-error-mid",
-          "value": "#BD4E4C",
+          "value": "var(--color-error-700)",
           "comment": "아이콘·보더·요일(일) 전용",
           "resolved": "#BD4E4C",
           "figma": {
@@ -637,7 +906,7 @@
         },
         {
           "name": "--color-gv-tint",
-          "value": "#E7DCF9",
+          "value": "var(--color-gv-100)",
           "comment": "",
           "resolved": "#E7DCF9",
           "figma": {
@@ -782,25 +1051,30 @@
           "comment": "날짜 / tnum / 700",
           "resolved": "16px",
           "figma": null
-        },
+        }
+      ]
+    },
+    {
+      "title": "Baskerville 잔재 — 2.0에서 --text-meta로 흡수. 폐지 예정, 신규 사용 금지",
+      "tokens": [
         {
           "name": "--text-bask-title",
           "value": "18px",
-          "comment": "영문 원제 / regular",
+          "comment": "폐지 예정 — 영문 원제 / regular",
           "resolved": "18px",
           "figma": null
         },
         {
           "name": "--text-bask-meta",
           "value": "13px",
-          "comment": "감독명/연도 / regular",
+          "comment": "폐지 예정 — 감독명/연도 / regular",
           "resolved": "13px",
           "figma": null
         },
         {
           "name": "--text-bask-xs",
           "value": "10px",
-          "comment": "썸네일 원제 / regular",
+          "comment": "폐지 예정 — 썸네일 원제 / regular",
           "resolved": "10px",
           "figma": null
         }
@@ -1611,17 +1885,17 @@
       {
         "name": "--text-bask-title",
         "value": "18px",
-        "comment": "영문 원제 / regular"
+        "comment": "폐지 예정 — 영문 원제 / regular"
       },
       {
         "name": "--text-bask-meta",
         "value": "13px",
-        "comment": "감독명/연도 / regular"
+        "comment": "폐지 예정 — 감독명/연도 / regular"
       },
       {
         "name": "--text-bask-xs",
         "value": "10px",
-        "comment": "썸네일 원제 / regular"
+        "comment": "폐지 예정 — 썸네일 원제 / regular"
       }
     ],
     "figma": [
@@ -6471,160 +6745,6 @@
   "drift": [
     {
       "kind": "figma-only",
-      "id": "warning/900",
-      "code": null,
-      "figma": "#885907",
-      "note": "코드에 대응 토큰이 없다 (영화볼지도 색상 - 2.0)"
-    },
-    {
-      "kind": "figma-only",
-      "id": "warning/700",
-      "code": null,
-      "figma": "#B9800E",
-      "note": "코드에 대응 토큰이 없다 (영화볼지도 색상 - 2.0)"
-    },
-    {
-      "kind": "figma-only",
-      "id": "warning/500",
-      "code": null,
-      "figma": "#E59B1A",
-      "note": "코드에 대응 토큰이 없다 (영화볼지도 색상 - 2.0)"
-    },
-    {
-      "kind": "figma-only",
-      "id": "warning/300",
-      "code": null,
-      "figma": "#F5CA75",
-      "note": "코드에 대응 토큰이 없다 (영화볼지도 색상 - 2.0)"
-    },
-    {
-      "kind": "figma-only",
-      "id": "warning/100",
-      "code": null,
-      "figma": "#FDF1D8",
-      "note": "코드에 대응 토큰이 없다 (영화볼지도 색상 - 2.0)"
-    },
-    {
-      "kind": "figma-only",
-      "id": "success/900",
-      "code": null,
-      "figma": "#2B5036",
-      "note": "코드에 대응 토큰이 없다 (영화볼지도 색상 - 2.0)"
-    },
-    {
-      "kind": "figma-only",
-      "id": "success/700",
-      "code": null,
-      "figma": "#4A7C59",
-      "note": "코드에 대응 토큰이 없다 (영화볼지도 색상 - 2.0)"
-    },
-    {
-      "kind": "figma-only",
-      "id": "success/500",
-      "code": null,
-      "figma": "#75A383",
-      "note": "코드에 대응 토큰이 없다 (영화볼지도 색상 - 2.0)"
-    },
-    {
-      "kind": "figma-only",
-      "id": "success/300",
-      "code": null,
-      "figma": "#9FC6AB",
-      "note": "코드에 대응 토큰이 없다 (영화볼지도 색상 - 2.0)"
-    },
-    {
-      "kind": "figma-only",
-      "id": "success/100",
-      "code": null,
-      "figma": "#E4F1E8",
-      "note": "코드에 대응 토큰이 없다 (영화볼지도 색상 - 2.0)"
-    },
-    {
-      "kind": "figma-only",
-      "id": "error/900",
-      "code": null,
-      "figma": "#9B3331",
-      "note": "코드에 대응 토큰이 없다 (영화볼지도 색상 - 2.0)"
-    },
-    {
-      "kind": "figma-only",
-      "id": "error/700",
-      "code": null,
-      "figma": "#BD4E4C",
-      "note": "코드에 대응 토큰이 없다 (영화볼지도 색상 - 2.0)"
-    },
-    {
-      "kind": "figma-only",
-      "id": "error/500",
-      "code": null,
-      "figma": "#C98382",
-      "note": "코드에 대응 토큰이 없다 (영화볼지도 색상 - 2.0)"
-    },
-    {
-      "kind": "figma-only",
-      "id": "error/300",
-      "code": null,
-      "figma": "#E0AFAE",
-      "note": "코드에 대응 토큰이 없다 (영화볼지도 색상 - 2.0)"
-    },
-    {
-      "kind": "figma-only",
-      "id": "error/100",
-      "code": null,
-      "figma": "#F5E1E0",
-      "note": "코드에 대응 토큰이 없다 (영화볼지도 색상 - 2.0)"
-    },
-    {
-      "kind": "figma-only",
-      "id": "gv/900",
-      "code": null,
-      "figma": "#3E1782",
-      "note": "코드에 대응 토큰이 없다 (영화볼지도 색상 - 2.0)"
-    },
-    {
-      "kind": "figma-only",
-      "id": "gv/500",
-      "code": null,
-      "figma": "#8C66CC",
-      "note": "코드에 대응 토큰이 없다 (영화볼지도 색상 - 2.0)"
-    },
-    {
-      "kind": "figma-only",
-      "id": "gv/100",
-      "code": null,
-      "figma": "#E7DCF9",
-      "note": "코드에 대응 토큰이 없다 (영화볼지도 색상 - 2.0)"
-    },
-    {
-      "kind": "figma-only",
-      "id": "white",
-      "code": null,
-      "figma": "#FFFFFF",
-      "note": "코드에 대응 토큰이 없다 (영화볼지도 색상 - 2.0)"
-    },
-    {
-      "kind": "figma-only",
-      "id": "primary/hover",
-      "code": null,
-      "figma": "#2F3A65",
-      "note": "코드에 대응 토큰이 없다 (영화볼지도 시멘틱 - 2.0)"
-    },
-    {
-      "kind": "figma-only",
-      "id": "primary/subtle",
-      "code": null,
-      "figma": "#ECEFF9",
-      "note": "코드에 대응 토큰이 없다 (영화볼지도 시멘틱 - 2.0)"
-    },
-    {
-      "kind": "figma-only",
-      "id": "primary/on-subtle",
-      "code": null,
-      "figma": "#1F2747",
-      "note": "코드에 대응 토큰이 없다 (영화볼지도 시멘틱 - 2.0)"
-    },
-    {
-      "kind": "figma-only",
       "id": "brand/cgv",
       "code": null,
       "figma": "#E30613",
@@ -6643,20 +6763,6 @@
       "code": null,
       "figma": "#ED1C24",
       "note": "코드에 대응 토큰이 없다 (영화볼지도 시멘틱 - 2.0)"
-    },
-    {
-      "kind": "type-scale",
-      "id": "--text-bask-title",
-      "code": "18px",
-      "figma": null,
-      "note": "2.0 텍스트 스타일에 18px가 없다 — 스케일 밖이거나 스타일 미신설"
-    },
-    {
-      "kind": "type-scale",
-      "id": "--text-bask-meta",
-      "code": "13px",
-      "figma": null,
-      "note": "2.0 텍스트 스타일에 13px가 없다 — 스케일 밖이거나 스타일 미신설"
     },
     {
       "kind": "legacy-figma-style",

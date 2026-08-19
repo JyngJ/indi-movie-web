@@ -46,19 +46,32 @@ export function Sidebar({ groups }: { groups: Group[] }) {
 
         return (
           <div key={key}>
-            {group.title && group.href && (
-              <Link
-                href={group.href}
-                className="ds-nav-group"
-                data-has-active={openGroup === group.title}
-                data-active={coverActive}
-                onClick={() => setManual(openGroup === group.title ? null : group.title)}
-              >
-                {group.title}
-                {/* 딸린 페이지가 없으면 펼칠 것도 없다 — 꺾쇠를 두지 않는다 */}
-                {group.items.length > 0 && <IcoChevron open={open} />}
-              </Link>
+            {group.title && (
+              group.href ? (
+                <Link
+                  href={group.href}
+                  className="ds-nav-group"
+                  data-has-active={openGroup === group.title}
+                  data-active={coverActive}
+                  onClick={() => setManual(openGroup === group.title ? null : group.title)}
+                >
+                  {group.title}
+                  {group.items.length > 0 && <IcoChevron open={open} />}
+                </Link>
+              ) : (
+                // 표지 페이지가 없는 묶음 — 헤더는 접기 토글로만 쓴다
+                <button
+                  type="button"
+                  className="ds-nav-group"
+                  data-has-active={openGroup === group.title}
+                  onClick={() => setManual(openGroup === group.title ? null : group.title)}
+                >
+                  {group.title}
+                  {group.items.length > 0 && <IcoChevron open={open} />}
+                </button>
+              )
             )}
+
             {/* 0fr → 1fr 그리드로 높이를 애니메이션한다. max-height 추정치가 필요 없다. */}
             <div className="ds-nav-collapse" data-open={open}>
               <div style={{ overflow: 'hidden' }}>
