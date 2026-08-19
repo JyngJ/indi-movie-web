@@ -176,7 +176,34 @@ const DEMOS: Record<string, ReactNode> = {
       <Card clickable>클릭 가능</Card>
     </Case>
   ),
-  CardContainer: <Case label="카드 묶음 컨테이너"><CardContainer><Card>1</Card><Card>2</Card></CardContainer></Case>,
+  CardContainer: (
+    <Case label="큐레이션 섹션 판 — 헤더(구분선) + 목록을 한 판에">
+      <div style={{ width: 300 }}>
+        <CardContainer>
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--color-border)' }}>
+            <SectionHeader title="이번 주 GV" description="감독과의 대화가 열리는 상영" />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '12px 16px' }}>
+            {['기억의 빛', '중경삼림'].map((t, i) => (
+              <div key={t} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <div style={{
+                  width: 54, height: 81, borderRadius: 'var(--radius-poster)', flexShrink: 0,
+                  background: 'linear-gradient(160deg, var(--color-neutral-500), var(--color-neutral-800))',
+                }} />
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 'var(--text-body)', fontWeight: 700, color: 'var(--color-text-body)' }}>{t}</div>
+                  <div style={{ marginTop: 2, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
+                    {i === 0 ? '봉준호' : '왕가위'}
+                  </div>
+                  <div style={{ marginTop: 6 }}><GenreChip>드라마</GenreChip></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContainer>
+      </div>
+    </Case>
+  ),
   SectionHeader: (
     <Case label="emoji · description · trailing">
       <div style={{ width: '100%' }}>
