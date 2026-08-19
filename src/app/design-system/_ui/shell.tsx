@@ -67,30 +67,23 @@ export function SubHeading({ id, children, kicker }: { id?: string; children: Re
 /** 견본을 올리는 무대. 코드잇의 연보라 스테이지 자리 — 우리는 종이 톤으로. */
 export function Stage({ children, tone = 'paper', minHeight = 220, padded = true }: {
   children: ReactNode
-  tone?: 'paper' | 'tint' | 'dark' | 'grid'
+  tone?: 'paper' | 'tint' | 'dark'
   minHeight?: number
   padded?: boolean
 }) {
-  const bg =
-    tone === 'tint' ? 'linear-gradient(150deg, var(--color-primary-100), var(--color-surface-bg))'
-    : tone === 'dark' ? 'var(--color-neutral-800)'
-    : tone === 'grid' ? 'var(--color-surface-bg)'
-    : 'var(--color-surface-bg)'
-
   return (
-    <div style={{
-      background: bg,
-      backgroundImage: tone === 'grid'
-        ? 'linear-gradient(var(--color-neutral-200) 1px, transparent 1px), linear-gradient(90deg, var(--color-neutral-200) 1px, transparent 1px)'
-        : undefined,
-      backgroundSize: tone === 'grid' ? '32px 32px' : undefined,
-      border: '1px solid var(--color-border)',
-      borderRadius: 'var(--radius-popover)',
-      padding: padded ? 'var(--spacing-8)' : 0,
-      minHeight,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      flexWrap: 'wrap', gap: 'var(--spacing-4)',
-    }}>{children}</div>
+    <div
+      className="ds-grid-surface"
+      data-tone={tone}
+      style={{
+        border: '1px solid var(--color-border)',
+        borderRadius: 'var(--radius-popover)',
+        padding: padded ? 'var(--spacing-8)' : 0,
+        minHeight,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexWrap: 'wrap', gap: 'var(--spacing-4)',
+      }}
+    >{children}</div>
   )
 }
 
@@ -174,8 +167,8 @@ export function SpecRow({ visual, title, desc }: { visual?: ReactNode; title: st
       className={visual ? 'ds-spec-row' : undefined}
     >
       {visual && (
-        <div style={{
-          background: 'var(--color-surface-bg)', border: '1px solid var(--color-border)',
+        <div className="ds-grid-surface" style={{
+          border: '1px solid var(--color-border)',
           borderRadius: 'var(--radius-popover)', padding: 'var(--spacing-6)',
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
           gap: 'var(--spacing-3)', minHeight: 160,
@@ -204,8 +197,8 @@ export function UsageCards({ items }: {
       {items.map((it, i) => (
         <div key={i}>
           {it.visual && (
-            <div style={{
-              background: 'var(--color-surface-bg)', borderRadius: 'var(--radius-popover)',
+            <div className="ds-grid-surface" style={{
+              borderRadius: 'var(--radius-popover)',
               border: '1px solid var(--color-border)', borderBottom: 'none',
               borderBottomLeftRadius: 0, borderBottomRightRadius: 0,
               padding: 'var(--spacing-6)', minHeight: 150,

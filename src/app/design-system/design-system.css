@@ -184,3 +184,33 @@
   border-color: var(--color-neutral-300);
 }
 .ds-list-card:active { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+
+
+/* ── 견본 무대의 헤어라인 격자 ──────────────────────────────────
+   컴포넌트를 얹는 면에는 24px 격자를 아주 옅게 깐다. 크기·여백을 눈으로 가늠할 수 있고,
+   면 자체가 "제품 화면이 아니라 견본"임을 알린다. 선은 잉크 4.5%로 배경보다 앞서지 않는다.
+   배경은 인라인 style이 아니라 여기서 정한다 — background 단축 속성이 격자를 덮기 때문이다. */
+.ds-grid-surface {
+  --ds-grid-line: rgba(12, 10, 8, 0.045);
+  --ds-grid-size: 24px;
+  background-color: var(--color-surface-bg);
+  background-image:
+    linear-gradient(var(--ds-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ds-grid-line) 1px, transparent 1px);
+  background-size: var(--ds-grid-size) var(--ds-grid-size);
+  background-position: center center;
+}
+
+.ds-grid-surface[data-tone='tint'] {
+  background-image:
+    linear-gradient(var(--ds-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ds-grid-line) 1px, transparent 1px),
+    linear-gradient(150deg, var(--color-primary-100), var(--color-surface-bg));
+  background-size: var(--ds-grid-size) var(--ds-grid-size), var(--ds-grid-size) var(--ds-grid-size), cover;
+  background-position: center center, center center, center center;
+}
+
+.ds-grid-surface[data-tone='dark'] {
+  --ds-grid-line: rgba(255, 255, 255, 0.06);
+  background-color: var(--color-neutral-800);
+}

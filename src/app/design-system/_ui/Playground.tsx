@@ -60,8 +60,7 @@ export function Playground({ controls, render, tone = 'paper' }: {
 
   return (
     <div className="ds-playground">
-      <div style={{
-        background: tone === 'dark' ? 'var(--color-neutral-800)' : 'var(--color-surface-bg)',
+      <div className="ds-grid-surface" data-tone={tone} style={{
         border: '1px solid var(--color-border)', borderRadius: 'var(--radius-popover)',
         minHeight: 260, display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: 'var(--spacing-8)', overflow: 'hidden',
