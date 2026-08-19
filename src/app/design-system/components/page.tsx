@@ -20,7 +20,8 @@ export default function ComponentsIndexPage() {
 
         return (
           <Link key={name} href={`/design-system/components/${name}`} className="ds-cover-card">
-            <div className="ds-grid-surface" style={{
+            <div className="ds-grid-surface" data-tone="card" style={{
+              position: 'relative',
               height: 168, borderRadius: 'var(--radius-popover)',
               border: '1px solid var(--color-border)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',

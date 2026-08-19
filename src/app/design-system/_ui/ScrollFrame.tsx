@@ -2,32 +2,36 @@
 
 import { useEffect, useRef, type ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
-import { animate } from 'motion'
 
 /** 문서 카드 = 스크롤 프레임.
  *
- *  끝에 닿은 뒤에도 계속 굴리면 내용이 조금 딸려오다가 스프링으로 돌아온다.
- *  브라우저의 rubber band는 최상위 스크롤에만 붙고 내부 컨테이너에는 안 붙어서 직접 만든다.
+ *  끝에 닿은 뒤 더 굴리면 내용이 조금 딸려오다가 제자리로 돌아온다. 브라우저의 rubber band는
+ *  최상위 스크롤에만 붙고 내부 컨테이너에는 없어서 직접 만든다.
  *
- *  당김 곡선은 UIScrollView의 고무줄 공식을 그대로 쓴다(popmotion의 rubberband와 같은 식):
- *    f(x) = (1 − 1 / (x·c/d + 1)) · d
- *  거리가 늘수록 저항이 커져 d에 수렴한다. 선형으로 밀면 고무줄이 아니라 미끄러짐처럼 느껴진다.
- *
- *  d는 컨테이너 높이가 아니라 최대 당김 거리(120px)로 둔다 — 손가락 이동량을 쓰는 터치와 달리
- *  휠 delta는 한 번에 수백씩 들어와서, 높이를 그대로 쓰면 화면 절반이 밀린다.
- *  놓을 때는 스프링으로 되돌린다. */
+ *  모델: 임펄스 + 스프링.
+ *  - 휠은 "밀어주는 힘"으로 받아 속도에 더한다(위치를 직접 누적하지 않는다).
+ *    트랙패드는 손을 뗀 뒤에도 관성 delta를 1초 가까이 보내는데, 위치를 누적하면
+ *    그 관성까지 그대로 쌓여 한참 밀렸다가 뒤늦게 튕긴다 — 예전 구현이 어색했던 이유다.
+ *  - 매 프레임 스프링(당김 -k·x, 감쇠 -c·v)으로 0을 향해 되돌린다. 타이머로 "놓음"을
+ *    판정하지 않으므로 입력이 끊겨도 자연스럽게 수렴한다.
+ *  - 화면에 그릴 때는 UIScrollView의 고무줄 공식으로 눌러 준다:
+ *      f(x) = (1 − 1/(x·c/d + 1))·d,  c = 0.55   (Apple UIScrollView 상수)
+ *    거리가 커질수록 저항이 붙어 MAX_PULL에 수렴한다.
+ */
 
-const MAX_PULL = 120
-const ELASTICITY = 0.25
-const RELEASE_MS = 80
+const APPLE_C = 0.55      // UIScrollView 고무줄 상수
+const MAX_PULL = 96       // 최대 당김(px)
+const IMPULSE = 0.7       // 휠 delta 1 → 속도(px/frame). 휠 한 칸(≈100)에 30px 남짓 딸려온다
+const STIFFNESS = 0.3     // 스프링 당김
+const DAMPING = 0.75      // 프레임당 속도 감쇠 — 튕김 없이 0.5초 안에 붙는다
+const REST = 0.4          // 이 아래는 눈에 안 보이므로 멈춘다(꼬리 끊기)
 
 export function ScrollFrame({ children }: { children: ReactNode }) {
   const frameRef = useRef<HTMLDivElement>(null)
   const innerRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
 
-  // 페이지를 옮기면 맨 위에서 시작한다. 스크롤이 window가 아니라 이 카드에 있어서
-  // Next의 스크롤 복원이 닿지 않는다.
+  // 스크롤이 window가 아니라 이 카드에 있어 Next의 스크롤 복원이 닿지 않는다.
   useEffect(() => {
     frameRef.current?.scrollTo({ top: 0 })
   }, [pathname])
@@ -38,53 +42,65 @@ export function ScrollFrame({ children }: { children: ReactNode }) {
     if (!frame || !inner) return
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
-    let accum = 0
-    let releaseTimer: ReturnType<typeof setTimeout> | undefined
-    let running: { stop: () => void } | undefined
+    let offset = 0        // 스프링이 다루는 값(감쇠 전)
+    let velocity = 0
+    let raf = 0
+    let last = 0
 
-    const rubberband = (distance: number) => {
-      const d = MAX_PULL
-      const x = Math.abs(distance)
-      const pulled = (1 - 1 / ((x * ELASTICITY) / d + 1)) * d
-      return Math.sign(distance) * pulled
+    const rubberband = (x: number) =>
+      Math.sign(x) * (1 - 1 / ((Math.abs(x) * APPLE_C) / MAX_PULL + 1)) * MAX_PULL
+
+    const draw = () => {
+      const y = rubberband(offset)
+      inner.style.transform = y === 0 ? '' : `translate3d(0, ${y}px, 0)`
     }
 
-    const release = () => {
-      accum = 0
-      running = animate(
-        inner,
-        { y: 0 },
-        { type: 'spring', stiffness: 420, damping: 34, mass: 0.9, restDelta: 0.2 },
-      )
+    const tick = (now: number) => {
+      // 60fps 기준으로 정규화 — 120Hz 화면에서 두 배 빨리 돌아가지 않게
+      const dt = last ? Math.min((now - last) / 16.67, 3) : 1
+      last = now
+
+      velocity += -STIFFNESS * offset * dt
+      velocity *= Math.pow(DAMPING, dt)
+      offset += velocity * dt
+      draw()
+
+      if (Math.abs(offset) < REST && Math.abs(velocity) < REST) {
+        offset = 0
+        velocity = 0
+        draw()
+        raf = 0
+        last = 0
+        return
+      }
+      raf = requestAnimationFrame(tick)
+    }
+
+    const start = () => {
+      if (!raf) raf = requestAnimationFrame(tick)
     }
 
     const onWheel = (e: WheelEvent) => {
       const atTop = frame.scrollTop <= 0
       const atBottom = frame.scrollTop + frame.clientHeight >= frame.scrollHeight - 1
       const pulling = (atTop && e.deltaY < 0) || (atBottom && e.deltaY > 0)
-
-      if (!pulling) {
-        if (accum !== 0) release()
-        return
-      }
+      if (!pulling) return
 
       // 더 스크롤할 곳이 없으니 브라우저가 페이지를 밀지 않게 막는다
       e.preventDefault()
-      running?.stop()
-      accum -= e.deltaY
-      inner.style.transform = `translate3d(0, ${rubberband(accum)}px, 0)`
-
-      clearTimeout(releaseTimer)
-      releaseTimer = setTimeout(release, RELEASE_MS)
+      velocity += -e.deltaY * IMPULSE
+      start()
     }
 
-    // 탭을 벗어나면 rAF가 멈춰 스프링이 진행하지 못한다. 당겨진 채로 얼지 않게 즉시 되돌린다.
+    // 탭을 벗어나면 rAF가 멈춘다 — 당겨진 채 얼지 않게 즉시 되돌린다.
     const onHide = () => {
       if (!document.hidden) return
-      clearTimeout(releaseTimer)
-      running?.stop()
-      accum = 0
-      inner.style.transform = ''
+      cancelAnimationFrame(raf)
+      raf = 0
+      last = 0
+      offset = 0
+      velocity = 0
+      draw()
     }
 
     frame.addEventListener('wheel', onWheel, { passive: false })
@@ -92,8 +108,7 @@ export function ScrollFrame({ children }: { children: ReactNode }) {
     return () => {
       frame.removeEventListener('wheel', onWheel)
       document.removeEventListener('visibilitychange', onHide)
-      clearTimeout(releaseTimer)
-      running?.stop()
+      cancelAnimationFrame(raf)
     }
   }, [])
 

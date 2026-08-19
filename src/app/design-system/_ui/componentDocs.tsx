@@ -10,6 +10,7 @@ import { GUIDES } from '@/design-system/guides'
 import { Anatomy, DocSection, SpecRow, Stage, UsageCards } from './shell'
 import { Playground, type Control, type ControlValues } from './Playground'
 import { Demo, hasDemo } from './demos'
+import { ComponentThumb, hasThumb } from './thumbs'
 
 /* 컴포넌트 상세의 시각 자료. 문장은 guides.ts, 값은 매니페스트, 견본은 이 파일에서 정의한다. */
 
@@ -506,9 +507,11 @@ export function ComponentDoc({ name }: { name: string }) {
   return (
     <>
       <DocSection id="anatomy" title="Anatomy" lead={guide?.anatomy ? '번호는 아래 파트 설명과 짝을 이룹니다. 필수(ESSENTIAL)와 선택(OPTIONAL)을 구분해 표기합니다.' : undefined}>
-        {(doc?.hero || hasDemo(name)) && (
+        {/* 전용 히어로 → 데모 갤러리 → 목록 썸네일 순으로 보여 준다. 견본이 아예 없는
+            컴포넌트는 Anatomy가 빈 채로 남지 않게 무대 자체를 그리지 않는다. */}
+        {(doc?.hero || hasDemo(name) || hasThumb(name)) && (
           <Stage tone="tint" minHeight={260}>
-            {doc?.hero ?? <Demo name={name} />}
+            {doc?.hero ?? (hasDemo(name) ? <Demo name={name} /> : <ComponentThumb name={name} />)}
           </Stage>
         )}
         {guide?.anatomy && (

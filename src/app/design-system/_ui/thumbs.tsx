@@ -45,10 +45,13 @@ const THUMBS: Record<string, ReactNode> = {
     </div>
   ),
   BottomSheet: (
-    <div style={{ width: 200, transform: 'translateY(14px)' }}>
+    <div style={{ position: 'absolute', left: 16, right: 16, bottom: 0 }}>
       <BottomSheet>
-        <div style={{ padding: '0 var(--gutter) var(--spacing-2)', fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)' }}>
-          씨네큐브 광화문
+        <div style={{ padding: '0 var(--gutter) var(--spacing-6)' }}>
+          <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700 }}>씨네큐브 광화문</div>
+          <div style={{ marginTop: 2, fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)' }}>
+            오늘 6회 상영
+          </div>
         </div>
       </BottomSheet>
     </div>
@@ -98,7 +101,11 @@ const THUMBS: Record<string, ReactNode> = {
       <Chip>다큐</Chip>
     </div>
   ),
-  DirectorChip: <DirectorChip name="봉준호" />,
+  DirectorChip: (
+    <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+      <DirectorChip name="봉준호" />
+    </div>
+  ),
   FabPill: <FabPill />,
   FabRound: <FabRound><IcoPlus /></FabRound>,
   FilterPill: (
@@ -123,12 +130,14 @@ const THUMBS: Record<string, ReactNode> = {
       <Input label="영화 제목" placeholder="제목을 입력하세요" readOnly />
     </div>
   ),
-  MovieCardSkeleton: <div style={{ width: 92 }}><MovieCardSkeleton /></div>,
+  MovieCardSkeleton: <div style={{ width: 68 }}><MovieCardSkeleton /></div>,
   PosterChip: (
-    <Poster>
-      <PosterChip corner="top-left" tone="gv">GV</PosterChip>
-      <PosterChip corner="top-right" tone="error">매진</PosterChip>
-    </Poster>
+    <div style={{ transform: 'scale(0.62)' }}>
+      <Poster width={150}>
+        <PosterChip corner="top-left" tone="gv">GV</PosterChip>
+        <PosterChip corner="top-right" tone="error">매진</PosterChip>
+      </Poster>
+    </div>
   ),
   ScrollNavButton: (
     <div style={{
@@ -179,6 +188,8 @@ const THUMBS: Record<string, ReactNode> = {
   ),
   Wordmark: <Wordmark style={{ height: 30, width: 'auto' }} />,
 }
+
+export const hasThumb = (name: string) => name in THUMBS
 
 export function ComponentThumb({ name }: { name: string }) {
   const thumb = THUMBS[name]

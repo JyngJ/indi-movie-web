@@ -210,6 +210,8 @@
   background-position: center center, center center, center center;
 }
 
+.ds-grid-surface[data-tone='card'] { background-color: var(--color-surface-card); }
+
 .ds-grid-surface[data-tone='dark'] {
   --ds-grid-line: rgba(255, 255, 255, 0.06);
   background-color: var(--color-neutral-800);

@@ -73,8 +73,13 @@ function InputDemo() {
 function SearchBarDemo() {
   const [v, setV] = useState('')
   return (
-    <div style={{ width: '100%', maxWidth: 380 }}>
-      <SearchBar value={v} onChange={e => setV(e.target.value)} placeholder="영화, 영화관, 감독을 검색하세요" />
+    <div style={{ width: '100%', maxWidth: 520 }}>
+      <SearchBar
+        value={v}
+        onChange={e => setV(e.target.value)}
+        onClear={() => setV('')}
+        placeholder="영화, 영화관, 감독을 검색하세요"
+      />
     </div>
   )
 }
