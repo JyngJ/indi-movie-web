@@ -26,7 +26,8 @@
 
 .ds-card {
   background: var(--color-surface-card);
-  border-radius: var(--ds-card-radius) var(--ds-card-radius) 0 0;
+  /* 모바일에서는 상단 바 바로 아래 붙는 면이라 라운딩을 두지 않는다 — 액자가 아니라 배경이다. */
+  border-radius: 0;
   padding: var(--spacing-12) var(--gutter) var(--spacing-24);
   min-height: 60dvh;
 }
