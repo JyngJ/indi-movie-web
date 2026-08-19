@@ -167,14 +167,7 @@ const THUMBS: Record<string, ReactNode> = {
       <SortToggle>인기순</SortToggle>
     </div>
   ),
-  TheaterCardSkeleton: (
-    <div style={{
-      width: 216, background: 'var(--color-surface-card)',
-      border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)',
-    }}>
-      <TheaterCardSkeleton />
-    </div>
-  ),
+  TheaterCardSkeleton: <div style={{ width: 216 }}><TheaterCardSkeleton /></div>,
   Toast: (
     <div style={{
       padding: '10px 16px', borderRadius: 'var(--radius-pill)',

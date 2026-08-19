@@ -235,7 +235,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
   },
 
   TheaterCardSkeleton: {
-    intro: '극장 카드 자리의 스켈레톤입니다. 극장명과 메타 줄의 배치를 그대로 따릅니다.',
+    intro: '영화 상세의 "상영중인 영화관" 카드 자리를 잡아 두는 스켈레톤입니다. 극장명·주소·상영 시간 칩 줄을 실제 카드와 같은 배치로 둡니다.',
   },
 
   Wordmark: {
