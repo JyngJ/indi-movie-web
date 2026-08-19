@@ -537,19 +537,16 @@ export default function ComponentsPage() {
             </div>
           </Entry>
 
-          <Entry id="nav-mappin" name="MapPin — indie / selected / 멀티플렉스"
+          <Entry id="nav-mappin" name="MapPin — default / selected"
             screens="지도 · 영화제 상세 약도"
             source="src/components/domain/MapPin.tsx (감사 제외 파일)">
             <div className="flex gap-8 flex-wrap items-end p-6 rounded-xl" style={{ backgroundColor: '#d4d0c8' }}>
               {[
-                { kind: 'indie' as const, label: '더숲 아트시네마', sub: 'indie default' },
-                { kind: 'indie' as const, label: '아트나인', selected: true, sub: 'indie selected' },
-                { kind: 'cgv'   as const, label: 'CGV 강변',  sub: 'cgv' },
-                { kind: 'mega'  as const, label: '메가박스',   sub: 'mega' },
-                { kind: 'lotte' as const, label: '롯데시네마', sub: 'lotte' },
+                { label: '더숲 아트시네마', sub: 'default' },
+                { label: '아트나인', selected: true, sub: 'selected' },
               ].map((p) => (
                 <div key={p.sub} className="flex flex-col items-center gap-1">
-                  <MapPin kind={p.kind} label={p.label} selected={p.selected} />
+                  <MapPin label={p.label} selected={p.selected} />
                   <span style={{ ...captionStyle, color: '#555' }}>{p.sub}</span>
                 </div>
               ))}

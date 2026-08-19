@@ -1,4 +1,4 @@
-export type TheaterKind = 'indie' | 'cgv' | 'mega' | 'lotte'
+export type TheaterKind = 'indie'
 
 export interface MockTheater {
   id: string

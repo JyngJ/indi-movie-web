@@ -34,6 +34,10 @@ const EXCLUDE = [
   // src/lib/og: OG 카드 공용 렌더러. satori는 CSS 변수를 못 읽어 토큰을 리터럴로 박아야
   // 한다 — opengraph-image를 제외하는 이유와 같다(렌더러만 모듈로 뺐을 뿐).
   'opengraph-image', 'src/lib/og', 'dev/components', 'src/app/admin', 'subwayUtils',
+  // src/app/design-system: 디자인 시스템 문서 사이트. 제품 UI가 아니라 토큰 자체를 전시하는
+  // 화면이라 값·스와치를 리터럴로 그린다(램프를 보여주는 자리는 1계층을 직접 쓴다는 tokens.css
+  // 규칙과 같은 이유). 문서 레이아웃 폭·간격도 제품 스케일과 별개다.
+  'src/app/design-system',
 ]
 const isExcluded = f => EXCLUDE.some(x => f.includes(x))
 

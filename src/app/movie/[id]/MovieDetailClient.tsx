@@ -5,6 +5,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMovieDetail, useMovieTheaterShowtimes, useActiveMovieIds } from '@/lib/supabase/queries'
+import { TheaterCardSkeleton } from '@/components/primitives'
 import type { MovieDetail, MovieTheaterEntry } from '@/lib/supabase/queries'
 import { withFlagsRaw } from '@/lib/nations'
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
@@ -518,8 +519,11 @@ function TheatersTab({ movieId, onMapClick, onGoToTheater, desktop = false, init
 
       {/* 목록 */}
       {isLoading ? (
-        <div style={{ height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-caption)', fontSize: 13 }}>
-          불러오는 중…
+        /* 목록이 들어올 자리를 카드 문법 그대로 잡아 둔다 — 글자 한 줄만 두면 도착 순간 화면이 튄다 */
+        <div style={{ display: 'grid', gridTemplateColumns: desktop ? 'repeat(2, minmax(0, 1fr))' : '1fr', gap: 12 }}>
+          {Array.from({ length: desktop ? 4 : 3 }).map((_, i) => (
+            <TheaterCardSkeleton key={i} />
+          ))}
         </div>
       ) : theaters.length === 0 ? (
         <div style={{ textAlign: 'center', paddingTop: 40, fontSize: 13, color: 'var(--color-text-caption)' }}>

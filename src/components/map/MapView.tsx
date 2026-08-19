@@ -230,7 +230,7 @@ function makePinIcon(
   })() : ''
 
   const pinHtml = renderToStaticMarkup(
-    <MapPin kind="indie" selected={selected} label={name} labelOffset={labelOffset} dimmed={dimmed} isDark={isDark} />
+    <MapPin selected={selected} label={name} labelOffset={labelOffset} dimmed={dimmed} isDark={isDark} />
   )
   const html = `
     <div style="width:140px;display:flex;flex-direction:column;align-items:center;overflow:visible;position:relative;">
@@ -2734,7 +2734,7 @@ export default function MapView() {
                 {movie.originalTitle && (
                   <div style={{
                     marginTop: 4,
-                                        fontSize: 'var(--text-bask-meta)',
+                    fontSize: 'var(--text-meta)',
                     fontStyle: 'normal',
                     fontWeight: 400,
                     color: 'var(--color-text-caption)',

@@ -49,12 +49,9 @@ const COLOR_GROUPS: { label: string; note?: string; swatches: { token: string; r
     ],
   },
   {
-    label: 'gv / multiplex (핀 전용, 텍스트 미사용)',
+    label: 'gv (핀 전용, 텍스트 미사용)',
     swatches: [
       { token: '--color-gv',    role: 'GV·페스티벌 브랜드 보라 — GV 핀 · 이벤트 강조' },
-      { token: '--color-cgv',   role: 'CGV 핀' },
-      { token: '--color-mega',  role: '메가박스 핀' },
-      { token: '--color-lotte', role: '롯데시네마 핀' },
     ],
   },
 ]
@@ -74,9 +71,6 @@ const TYPE_SCALE: { token: string; px: string; weight: number; font?: string; sa
   { token: '--text-seat',     px: '12px', weight: 600, sample: '62/172석',                  role: '좌석수 (tnum)' },
   { token: '--text-dow',      px: '10px', weight: 500, sample: '월 화 수 목 금 토 일',       role: '요일' },
   { token: '--text-date',     px: '16px', weight: 700, sample: '29 30 1 2',                 role: '날짜 (tnum)' },
-  { token: '--text-bask-title', px: '18px', weight: 400, font: 'var(--font-serif-en)', sample: 'The Light of Memory',   role: '영문 원제' },
-  { token: '--text-bask-meta',  px: '13px', weight: 400, font: 'var(--font-serif-en)', sample: 'dir. Bong Joon-ho, 2003', role: '감독명 / 연도' },
-  { token: '--text-bask-xs',    px: '10px', weight: 400, font: 'var(--font-serif-en)', sample: 'A Bong Joon-ho Film',   role: '썸네일 원제 (xs)' },
 ]
 
 /* ── Radius 역할 토큰 ────────────────────────────────────────────── */

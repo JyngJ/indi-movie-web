@@ -77,6 +77,10 @@
      base=700(버튼·CTA·활성), hover=800(어둡게 — 구 라이트닝 방향에서 반전),
      subtle=100(활성 칩 틴트), text=900(틴트 위 텍스트) */
   --color-primary-base:     #404E81;   /* primary/700 */
+  /* 피그마 시멘틱 이름과 1:1 별칭 — 리뷰에서 같은 이름으로 부르기 위한 것 */
+  --color-primary-hover:     var(--color-primary-800);
+  --color-primary-subtle:    var(--color-primary-100);
+  --color-primary-on-subtle: var(--color-primary-900);
   --color-primary-hover-l:  #2F3A65;   /* primary/800 */
   --color-primary-subtle-l: #ECEFF9;   /* primary/100 */
   --color-primary-text:     #1F2747;   /* primary/900 */
@@ -92,29 +96,49 @@
   --color-primary-200: #C4CCE9;   /* 틴트 보더 */
   --color-primary-100: #ECEFF9;   /* subtle — 활성 칩·틴트 배경 */
 
+  /* ── Status ramps — 피그마 "영화볼지도 색상 - 2.0" 컬렉션과 1:1 ── */
+  --color-warning-900: #885907;
+  --color-warning-700: #B9800E;
+  --color-warning-500: #E59B1A;
+  --color-warning-300: #F5CA75;
+  --color-warning-100: #FDF1D8;
+
+  --color-success-900: #2B5036;
+  --color-success-700: #4A7C59;
+  --color-success-500: #75A383;
+  --color-success-300: #9FC6AB;
+  --color-success-100: #E4F1E8;
+
+  --color-error-900: #9B3331;
+  --color-error-700: #BD4E4C;
+  --color-error-500: #C98382;
+  --color-error-300: #E0AFAE;
+  --color-error-100: #F5E1E0;
+
+  --color-gv-900: #3E1782;
+  --color-gv-500: #8C66CC;
+  --color-gv-100: #E7DCF9;
+
+  --color-white: #FFFFFF;
+
   /* ── Semantic — 2.0 뮤트 계급 통일 (형광 제거) ──
      주 사용 스탑: 밝은 배경 위 텍스트 + 솔리드 칩 배경 겸직 값 */
-  --color-warning: #B9800E;   /* 오커 700 — 잔여석 적음. 구 #D97706(형광 앰버) 강등 */
-  --color-success: #4A7C59;   /* 700 유지 — 상영중 */
-  --color-error:   #9B3331;   /* 900 — "매진" 텍스트+칩 겸직 (L40, 구 #B94A48은 L52 무인지대) */
+  --color-warning: var(--color-warning-700);   /* 오커 700 — 잔여석 적음. 구 #D97706(형광 앰버) 강등 */
+  --color-success: var(--color-success-700);   /* 700 유지 — 상영중 */
+  --color-error:   var(--color-error-900);   /* 900 — "매진" 텍스트+칩 겸직 (L40, 구 #B94A48은 L52 무인지대) */
   --color-info:    #6D7CB0;   /* 폐지 예정 — 임시로 primary/500 (구 #3B82F6 형광 파랑 제거) */
-  --color-gv:      #3E1782;   /* gv/900 — 핀·배지 솔리드+텍스트 3겸직 (구 #7C3AED 형광 강등) */
+  --color-gv:      var(--color-gv-900);   /* gv/900 — 핀·배지 솔리드+텍스트 3겸직 (구 #7C3AED 형광 강등) */
 
   /* 시맨틱 틴트·보조 (2.0 신설 — 배지 배경/틴트 위 텍스트) */
-  --color-warning-tint: #FDF1D8;
-  --color-warning-deep: #885907;
-  --color-success-tint: #E4F1E8;
-  --color-success-deep: #2B5036;
-  --color-error-tint:   #F5E1E0;
-  --color-error-mid:    #BD4E4C;   /* 아이콘·보더·요일(일) 전용 */
+  --color-warning-tint: var(--color-warning-100);
+  --color-warning-deep: var(--color-warning-900);
+  --color-success-tint: var(--color-success-100);
+  --color-success-deep: var(--color-success-900);
+  --color-error-tint:   var(--color-error-100);
+  --color-error-mid:    var(--color-error-700);   /* 아이콘·보더·요일(일) 전용 */
   --color-error-hover:  #872C2A;   /* Button danger hover — 900에서 한 단계 다크 */
   --color-error-pressed: #722523;  /* Button danger pressed — 두 단계 다크 */
-  --color-gv-tint:      #E7DCF9;
-
-  /* ── Multiplex (핀 전용, 텍스트 미사용) ── */
-  --color-cgv:   #E30613;
-  --color-mega:  #6C1E9F;
-  --color-lotte: #ED1C24;
+  --color-gv-tint:      var(--color-gv-100);
 
   /* ── Typography: Families ── */
   /* display(KIMM): 제목·간판 전용. Bold(700)/Light(300) 2종.
@@ -146,9 +170,13 @@
   --text-date:    16px;   /* 날짜 / tnum / 700 */
 
   /* Libre Baskerville 전용 */
-  --text-bask-title: 18px;   /* 영문 원제 / regular */
-  --text-bask-meta:  13px;   /* 감독명/연도 / regular */
-  --text-bask-xs:    10px;   /* 썸네일 원제 / regular */
+
+  /* ── Baskerville 잔재 — 2.0에서 --text-meta로 흡수. 폐지 예정, 신규 사용 금지 ──
+     아직 지우지 못하는 이유: 코드에 13px 리터럴이 84곳 남아 있어 토큰을 먼저 없애면
+     그 값들이 갈 곳을 잃는다. 13 → 12 일괄 전환이 끝나면 이 블록을 지운다. */
+  --text-bask-title: 18px;   /* 폐지 예정 — 영문 원제 / regular */
+  --text-bask-meta:  13px;   /* 폐지 예정 — 감독명/연도 / regular */
+  --text-bask-xs:    10px;   /* 폐지 예정 — 썸네일 원제 / regular */
 
   /* ── Spacing (4배수 전용) ── */
   --spacing-1: 4px;
