@@ -50,13 +50,15 @@
   .ds-card {
     border-radius: var(--ds-card-radius);
     padding: var(--spacing-16) var(--spacing-16) var(--spacing-24);
+    height: 100%;
+    overflow-y: auto;
+    box-shadow: var(--shadow-sm);
+  }
+  .ds-card-inner {
     display: grid;
     grid-template-columns: minmax(0, 1fr) var(--ds-toc-w);
     gap: var(--spacing-12);
     align-items: start;
-    height: 100%;
-    overflow-y: auto;
-    box-shadow: var(--shadow-sm);
   }
   .ds-toc {
     display: block; position: sticky; top: 0;
@@ -69,11 +71,16 @@
   .ds-card { padding-left: var(--spacing-24); padding-right: var(--spacing-16); }
 }
 
-/* 사이드바 스크롤바를 문서 배경에 묻는다 */
-.ds-aside::-webkit-scrollbar, .ds-toc::-webkit-scrollbar { width: 4px; }
-.ds-aside::-webkit-scrollbar-thumb, .ds-toc::-webkit-scrollbar-thumb {
-  background: var(--color-neutral-300); border-radius: 2px;
-}
+/* 스크롤바를 감춘다. 막대가 카드 오른쪽 모서리를 덮어 라운딩이 왼쪽에만 있는 것처럼 보였다.
+   스크롤은 그대로 되고 위치는 우측 목차가 알려준다. */
+.ds-card, .ds-aside, .ds-toc { scrollbar-width: none; -ms-overflow-style: none; }
+.ds-card::-webkit-scrollbar,
+.ds-aside::-webkit-scrollbar,
+.ds-toc::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+/* 고무줄 반동이 카드 밖으로 새지 않게 */
+.ds-card { overscroll-behavior: contain; }
+.ds-card-inner { will-change: transform; }
 
 /* 앵커 이동 시 제목이 카드 상단에 가리지 않게 */
 .ds-anchor { scroll-margin-top: var(--spacing-8); }
@@ -92,11 +99,12 @@
 .ds-nav-group {
   width: 100%;
   /* 높이를 고정하고 수직 중앙 정렬한다 — 패딩만으로 맞추면 한글·라틴 혼용에서
-     글자가 박스 안에서 위로 붙어 보인다(폰트 어센더 차이). */
-  min-height: 40px;
+     글자가 박스 안에서 위로 붙어 보인다(폰트 어센더 차이).
+     주의: 아래에 min-height:unset을 또 적어 이 값이 죽어 있었다(그래서 면이 납작했다). */
+  min-height: 48px;
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 var(--spacing-3);
-  background: transparent; border: 0; cursor: pointer; min-height: unset;
+  background: transparent; border: 0; cursor: pointer;
   font-size: var(--text-title);
   font-weight: 700;
   color: var(--color-text-body);
@@ -121,7 +129,7 @@
 
 .ds-nav-link {
   display: flex; align-items: center;
-  min-height: 36px;
+  min-height: 40px;
   padding: 0 var(--spacing-3);
   border-radius: var(--radius-button);
   text-decoration: none;
@@ -132,7 +140,7 @@
   transition: background var(--transition-fast), color var(--transition-fast);
 }
 .ds-nav-link:hover { background: var(--color-surface-raised); color: var(--color-text-primary); }
-.ds-nav-link[data-top='true'] { min-height: 40px; font-size: var(--text-title); font-weight: 700; color: var(--color-text-primary); }
+.ds-nav-link[data-top='true'] { min-height: 48px; font-size: var(--text-title); font-weight: 700; color: var(--color-text-primary); }
 .ds-nav-link[data-active='true'],
 .ds-nav-link[data-active='true']:hover {
   background: var(--color-neutral-800);
@@ -140,7 +148,7 @@
   font-weight: 700;
 }
 
-.ds-nav-items { display: flex; flex-direction: column; gap: 2px; margin-top: var(--spacing-1); }
+.ds-nav-items { display: flex; flex-direction: column; gap: 2px; margin-top: var(--spacing-2); }
 
 /* ── 섹션 표지 카드 ─────────────────────────────────────────────── */
 .ds-cover-grid {

@@ -5,6 +5,7 @@ import { manifest } from '@/design-system'
 import './design-system.css'
 import { Wordmark } from '@/components/primitives'
 import { Sidebar } from './_ui/Sidebar'
+import { ScrollFrame } from './_ui/ScrollFrame'
 import { NAV_GROUPS } from './_ui/nav'
 
 /* 내부 문서 사이트. 포트폴리오로 공개할 때 robots를 열면 된다. */
@@ -39,7 +40,7 @@ export default function DesignSystemLayout({ children }: { children: ReactNode }
             피그마 덤프 {manifest.figmaDumpAt ? manifest.figmaDumpAt.slice(0, 10) : '없음'}
           </div>
         </aside>
-        <div className="ds-card">{children}</div>
+        <ScrollFrame>{children}</ScrollFrame>
       </div>
     </div>
   )
