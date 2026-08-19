@@ -44,7 +44,7 @@ export default function OverviewPage() {
       <DocSection
         id="layers"
         title="토큰 3계층"
-        lead="컴포넌트는 2계층(역할)을 사용합니다. 역할 이름으로 값을 참조하면 색을 바꿀 때 한 곳만 고치면 됩니다."
+        lead="컴포넌트는 2계층(역할)을 사용합니다. 수정시 한 곳만 수정할 수 있도록 합니다."
       >
         <DefTable
           rows={[
@@ -58,13 +58,13 @@ export default function OverviewPage() {
       <DocSection
         id="pipeline"
         title="생성 방식"
-        lead="피그마 파일 상태는 Scripter 플러그인이 내보낸 덤프에서 읽습니다. 덤프와 코드에서 매니페스트를 만들고, 이 사이트는 매니페스트를 렌더합니다."
+        lead="피그마 파일 상태는 Scripter 플러그인이 내보낸 덤프에서 읽습니다. 덤프와 코드에서 매니페스트를 만들며 이 사이트는 매니페스트를 렌더합니다."
       >
         <DefTable
           rows={[
             ['1 · 덤프', 'Scripter에서 dump-state를 실행하면 변수·텍스트 스타일·컴포넌트 실측이 state.json으로 저장됩니다.'],
             ['2 · 빌드', <Code key="b">npm run ds:build</Code>],
-            ['3 · 렌더', <span key="c">이 사이트가 매니페스트를 읽어 그립니다. 컴포넌트 미리보기는 제품 코드를 그대로 import하므로 문서와 제품이 항상 같은 것을 보여줍니다.</span>],
+            ['3 · 렌더', <span key="c">이 사이트가 매니페스트를 읽어 그립니다. 컴포넌트 미리보기는 제품 코드를 그대로 import하므로 문서와 서비스의 컴포넌트가 항상 같은 것을 보여줍니다.</span>],
           ]}
         />
       </DocSection>
