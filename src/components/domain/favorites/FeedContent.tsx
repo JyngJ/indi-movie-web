@@ -1,20 +1,31 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { LoginPanel } from '@/components/auth/LoginPanel'
 import { Button } from '@/components/primitives'
 import { useFavorites } from '@/hooks/useFavorites'
+import { useNotificationEvents } from '@/hooks/useNotifications'
+import { FeedList } from './FeedList'
 
 /**
  * 소식 본문 — 모바일 /feed 페이지와 데스크톱 FeedPanel이 같이 쓴다.
- * P3: 여기에 FeedList(카피 + 영화 카드, 피그마 B)가 들어온다.
+ * 소식은 배치(scripts/notify-favorites.ts)가 관심 목록 × 상영 사실을 대조해 쌓아둔 것을 읽는다.
+ * 열면 읽음 처리한다 — 안 읽은 건 배경으로 구분되므로 화면을 벗어나기 전까진 그대로 보인다.
  */
 export function FeedContent({ authError, onNavigate }: { authError?: string | null; onNavigate?: () => void }) {
   const { status } = useAuth()
   const { favorites } = useFavorites()
+  const { events, isLoading, markAllRead } = useNotificationEvents()
 
-  if (status === 'loading') {
+  useEffect(() => {
+    if (status !== 'signed-in') return
+    // 목록을 본 시점에 읽음 처리 — 낙관적 업데이트라 배경색은 다음 진입부터 바뀐다
+    void markAllRead()
+  }, [status, markAllRead])
+
+  if (status === 'loading' || (status === 'signed-in' && isLoading)) {
     return <p style={{ margin: '24px var(--gutter)', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>확인 중…</p>
   }
 
@@ -29,6 +40,10 @@ export function FeedContent({ authError, onNavigate }: { authError?: string | nu
         />
       </div>
     )
+  }
+
+  if (events.length > 0) {
+    return <FeedList events={events} />
   }
 
   return (

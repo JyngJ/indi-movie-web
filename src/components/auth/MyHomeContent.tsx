@@ -12,7 +12,13 @@ import { useFavorites } from '@/hooks/useFavorites'
  * 큰 아바타 · 닉네임 · [프로필 수정] → 보관함(관심 목록 / 관람 기록 P4 / 리뷰 P5 / 통계 P7) → 알림 설정 · 프로필·계정 관리.
  * onProfile: 프로필 편집으로 이동(모바일 → /my/profile 라우트, 데스크톱 → 팝오버 내부 페이지).
  */
-export function MyHomeContent({ authError, onProfile, onNavigate }: { authError?: string | null; onProfile: () => void; onNavigate?: () => void }) {
+export function MyHomeContent({ authError, onProfile, onNotifications, onNavigate }: {
+  authError?: string | null
+  onProfile: () => void
+  /** 알림 설정으로 이동 — 데스크톱은 팝오버 내부 전환, 모바일은 라우트 */
+  onNotifications?: () => void
+  onNavigate?: () => void
+}) {
   const { status, user } = useAuth()
   const { favorites } = useFavorites()
   const favCount = favorites.length
@@ -52,7 +58,12 @@ export function MyHomeContent({ authError, onProfile, onNavigate }: { authError?
       <div style={{ height: 8, backgroundColor: 'var(--color-surface-raised)' }} />
 
       <MenuCard style={{ marginTop: 16 }}>
-        <MenuRow icon={<Bell size={17} strokeWidth={1.75} />} title="알림 설정" description="카톡 알림 · 새 상영 / 막바지 / 다이제스트 (준비 중)" disabled />
+        <MenuRow
+          icon={<Bell size={17} strokeWidth={1.75} />}
+          title="알림 설정"
+          description="새 상영 · 막바지 · 방해 금지 시간"
+          {...(onNotifications ? { onClick: onNotifications } : { href: '/my/notifications' })}
+        />
         <MenuRow icon={<UserRound size={17} strokeWidth={1.75} />} title="프로필 · 계정 관리" description="닉네임 수정 · 연결된 계정 · 로그아웃" onClick={onProfile} last />
       </MenuCard>
     </>
