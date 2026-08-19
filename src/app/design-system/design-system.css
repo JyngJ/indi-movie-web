@@ -1,0 +1,18 @@
+/* 디자인 시스템 문서 레이아웃 — 제품(모바일 480 기준)과 다른 폭 규칙을 쓴다. */
+.ds-shell { display: block; }
+.ds-aside {
+  padding: var(--spacing-6) var(--gutter);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-card);
+}
+.ds-main { padding: var(--spacing-8) var(--gutter) var(--spacing-24); }
+
+@media (min-width: 1024px) {
+  .ds-shell { display: grid; grid-template-columns: 248px minmax(0, 1fr); align-items: start; }
+  .ds-aside {
+    position: sticky; top: 0; height: 100dvh; overflow-y: auto;
+    border-bottom: 0; border-right: 1px solid var(--color-border);
+    padding: var(--spacing-8) var(--spacing-4);
+  }
+  .ds-main { padding: var(--spacing-8) var(--spacing-12) var(--spacing-24); }
+}
