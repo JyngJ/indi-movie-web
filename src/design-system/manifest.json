@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-08-19T08:42:57.492Z",
-  "figmaDumpAt": "2026-08-17T16:23:43.680Z",
+  "generatedAt": "2026-08-19T10:20:53.980Z",
+  "figmaDumpAt": "2026-08-19T10:18:56.131Z",
   "tokenGroups": [
     {
       "title": "Neutral scale — 2.0 웜그레이 램프 (S가 양끝으로 상승하는 U자 곡선, H 27~40)",
@@ -1900,100 +1900,10 @@
     ],
     "figma": [
       {
-        "name": "display/h1",
-        "font": "KIMM_Bold/B",
-        "size": 24,
-        "lineHeight": "125%"
-      },
-      {
-        "name": "display/h2",
-        "font": "KIMM_Bold/B",
-        "size": 22,
-        "lineHeight": "130%"
-      },
-      {
-        "name": "display/h3",
-        "font": "KIMM_Bold/B",
-        "size": 20,
-        "lineHeight": "130%"
-      },
-      {
         "name": "display/map-label",
         "font": "KIMM_Bold/B",
         "size": 11,
         "lineHeight": "100%"
-      },
-      {
-        "name": "ui/title",
-        "font": "Pretendard/Bold",
-        "size": 17,
-        "lineHeight": "140%"
-      },
-      {
-        "name": "ui/subtitle",
-        "font": "Pretendard/SemiBold",
-        "size": 15,
-        "lineHeight": "140%"
-      },
-      {
-        "name": "ui/body",
-        "font": "Pretendard/Medium",
-        "size": 14,
-        "lineHeight": "150%"
-      },
-      {
-        "name": "ui/meta",
-        "font": "Pretendard/Regular",
-        "size": 13,
-        "lineHeight": "150%"
-      },
-      {
-        "name": "ui/caption",
-        "font": "Pretendard/Medium",
-        "size": 11,
-        "lineHeight": "140%"
-      },
-      {
-        "name": "ui/badge",
-        "font": "Pretendard/Bold",
-        "size": 9,
-        "lineHeight": "100%"
-      },
-      {
-        "name": "num/time",
-        "font": "Pretendard/Bold",
-        "size": 17,
-        "lineHeight": "100%"
-      },
-      {
-        "name": "num/date",
-        "font": "Pretendard/Bold",
-        "size": 16,
-        "lineHeight": "100%"
-      },
-      {
-        "name": "num/seat",
-        "font": "Pretendard/SemiBold",
-        "size": 12,
-        "lineHeight": "100%"
-      },
-      {
-        "name": "num/dow",
-        "font": "Pretendard/Medium",
-        "size": 10,
-        "lineHeight": "100%"
-      },
-      {
-        "name": "latin/title",
-        "font": "Libre Baskerville/Regular",
-        "size": 18,
-        "lineHeight": "140%"
-      },
-      {
-        "name": "latin/meta",
-        "font": "Libre Baskerville/Italic",
-        "size": 13,
-        "lineHeight": "140%"
       },
       {
         "name": "2.0/title",
@@ -2038,6 +1948,18 @@
         "lineHeight": "155%"
       },
       {
+        "name": "2.0/badge",
+        "font": "Pretendard/Bold",
+        "size": 10,
+        "lineHeight": "100%"
+      },
+      {
+        "name": "2.0/meta-strong",
+        "font": "Pretendard/SemiBold",
+        "size": 12,
+        "lineHeight": "150%"
+      },
+      {
         "name": "2.0/display/h1",
         "font": "KIMM_Bold/B",
         "size": 24,
@@ -2064,148 +1986,6 @@
     ]
   },
   "effects": [
-    {
-      "name": "shadow/sm",
-      "effects": [
-        {
-          "type": "DROP_SHADOW",
-          "radius": 6,
-          "spread": 0,
-          "offset": {
-            "x": 0,
-            "y": 2
-          },
-          "color": {
-            "r": 0.0784313753247261,
-            "g": 0.05882352963089943,
-            "b": 0.03921568766236305,
-            "a": 0.05999999865889549
-          },
-          "visible": true
-        }
-      ]
-    },
-    {
-      "name": "shadow/md",
-      "effects": [
-        {
-          "type": "DROP_SHADOW",
-          "radius": 12,
-          "spread": 0,
-          "offset": {
-            "x": 0,
-            "y": 4
-          },
-          "color": {
-            "r": 0.0784313753247261,
-            "g": 0.05882352963089943,
-            "b": 0.03921568766236305,
-            "a": 0.07999999821186066
-          },
-          "visible": true
-        }
-      ]
-    },
-    {
-      "name": "shadow/lg",
-      "effects": [
-        {
-          "type": "DROP_SHADOW",
-          "radius": 24,
-          "spread": 0,
-          "offset": {
-            "x": 0,
-            "y": 8
-          },
-          "color": {
-            "r": 0.0784313753247261,
-            "g": 0.05882352963089943,
-            "b": 0.03921568766236305,
-            "a": 0.11999999731779099
-          },
-          "visible": true
-        }
-      ]
-    },
-    {
-      "name": "shadow/sheet",
-      "effects": [
-        {
-          "type": "DROP_SHADOW",
-          "radius": 24,
-          "spread": 0,
-          "offset": {
-            "x": 0,
-            "y": -4
-          },
-          "color": {
-            "r": 0.0784313753247261,
-            "g": 0.05882352963089943,
-            "b": 0.03921568766236305,
-            "a": 0.11999999731779099
-          },
-          "visible": true
-        },
-        {
-          "type": "DROP_SHADOW",
-          "radius": 6,
-          "spread": 0,
-          "offset": {
-            "x": 0,
-            "y": -1
-          },
-          "color": {
-            "r": 0.0784313753247261,
-            "g": 0.05882352963089943,
-            "b": 0.03921568766236305,
-            "a": 0.07999999821186066
-          },
-          "visible": true
-        }
-      ]
-    },
-    {
-      "name": "shadow/popup",
-      "effects": [
-        {
-          "type": "DROP_SHADOW",
-          "radius": 24,
-          "spread": 0,
-          "offset": {
-            "x": 0,
-            "y": 8
-          },
-          "color": {
-            "r": 0.0784313753247261,
-            "g": 0.05882352963089943,
-            "b": 0.03921568766236305,
-            "a": 0.18000000715255737
-          },
-          "visible": true
-        }
-      ]
-    },
-    {
-      "name": "shadow/pin",
-      "effects": [
-        {
-          "type": "DROP_SHADOW",
-          "radius": 6,
-          "spread": 0,
-          "offset": {
-            "x": 0,
-            "y": 2
-          },
-          "color": {
-            "r": 0,
-            "g": 0,
-            "b": 0,
-            "a": 0.18000000715255737
-          },
-          "visible": true
-        }
-      ]
-    },
     {
       "name": "2.0/shadow/sm",
       "effects": [
@@ -2902,7 +2682,7 @@
       "modes": [
         "Light"
       ],
-      "count": 35,
+      "count": 32,
       "vars": [
         {
           "name": "surface/bg",
@@ -3179,27 +2959,6 @@
           "scopes": [
             "ALL_SCOPES"
           ]
-        },
-        {
-          "name": "brand/cgv",
-          "value": "#E30613",
-          "scopes": [
-            "ALL_SCOPES"
-          ]
-        },
-        {
-          "name": "brand/mega",
-          "value": "#6C1E9F",
-          "scopes": [
-            "ALL_SCOPES"
-          ]
-        },
-        {
-          "name": "brand/lotte",
-          "value": "#ED1C24",
-          "scopes": [
-            "ALL_SCOPES"
-          ]
         }
       ]
     }
@@ -3335,8 +3094,88 @@
           "doc": ""
         }
       ],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/Badge",
+      "figma": {
+        "name": "2.0/Badge",
+        "axes": {
+          "Variant": [
+            "default",
+            "success",
+            "warning",
+            "error"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "Variant": "default"
+            },
+            "w": 34,
+            "h": 18,
+            "radius": 4,
+            "pad": [
+              4,
+              8,
+              4,
+              8
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#EAE5E1"
+          },
+          {
+            "props": {
+              "Variant": "success"
+            },
+            "w": 42,
+            "h": 18,
+            "radius": 4,
+            "pad": [
+              4,
+              8,
+              4,
+              8
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#E4F1E8"
+          },
+          {
+            "props": {
+              "Variant": "warning"
+            },
+            "w": 51,
+            "h": 18,
+            "radius": 4,
+            "pad": [
+              4,
+              8,
+              4,
+              8
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#FDF1D8"
+          },
+          {
+            "props": {
+              "Variant": "error"
+            },
+            "w": 34,
+            "h": 18,
+            "radius": 4,
+            "pad": [
+              4,
+              8,
+              4,
+              8
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#F5E1E0"
+          }
+        ]
+      }
     },
     {
       "name": "BottomSheet",
@@ -3358,8 +3197,33 @@
           "doc": ""
         }
       ],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/BottomSheet",
+      "figma": {
+        "name": "2.0/BottomSheet",
+        "axes": {},
+        "variants": [
+          {
+            "props": {},
+            "w": 360,
+            "h": 86,
+            "radius": [
+              20,
+              20,
+              0,
+              0
+            ],
+            "pad": [
+              8,
+              24,
+              20,
+              24
+            ],
+            "gap": 12,
+            "dir": "VERTICAL",
+            "fill": "#EAE5E1"
+          }
+        ]
+      }
     },
     {
       "name": "BubbleTail",
@@ -3409,8 +3273,70 @@
           "doc": ""
         }
       ],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/BubbleTail",
+      "figma": {
+        "name": "2.0/BubbleTail",
+        "axes": {
+          "Dir": [
+            "up",
+            "left",
+            "right"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "Dir": "up"
+            },
+            "w": 87,
+            "h": 54,
+            "radius": null,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "VERTICAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "Dir": "left"
+            },
+            "w": 87,
+            "h": 54,
+            "radius": null,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "VERTICAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "Dir": "right"
+            },
+            "w": 87,
+            "h": 54,
+            "radius": null,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "VERTICAL",
+            "fill": null
+          }
+        ]
+      }
     },
     {
       "name": "Button",
@@ -4827,8 +4753,70 @@
           "doc": ""
         }
       ],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/Card",
+      "figma": {
+        "name": "2.0/Card",
+        "axes": {
+          "Padding": [
+            "sm",
+            "md",
+            "lg"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "Padding": "sm"
+            },
+            "w": 156,
+            "h": 63,
+            "radius": 12,
+            "pad": [
+              12,
+              12,
+              12,
+              12
+            ],
+            "gap": 4,
+            "dir": "VERTICAL",
+            "fill": "#FFFFFF"
+          },
+          {
+            "props": {
+              "Padding": "md"
+            },
+            "w": 164,
+            "h": 71,
+            "radius": 12,
+            "pad": [
+              16,
+              16,
+              16,
+              16
+            ],
+            "gap": 4,
+            "dir": "VERTICAL",
+            "fill": "#FFFFFF"
+          },
+          {
+            "props": {
+              "Padding": "lg"
+            },
+            "w": 180,
+            "h": 87,
+            "radius": 12,
+            "pad": [
+              24,
+              24,
+              24,
+              24
+            ],
+            "gap": 4,
+            "dir": "VERTICAL",
+            "fill": "#FFFFFF"
+          }
+        ]
+      }
     },
     {
       "name": "CardContainer",
@@ -4857,8 +4845,28 @@
           "doc": ""
         }
       ],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/CardContainer",
+      "figma": {
+        "name": "2.0/CardContainer",
+        "axes": {},
+        "variants": [
+          {
+            "props": {},
+            "w": 320,
+            "h": 270,
+            "radius": 12,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "VERTICAL",
+            "fill": "#FFFFFF"
+          }
+        ]
+      }
     },
     {
       "name": "Chip",
@@ -5400,7 +5408,13 @@
         "axes": {
           "State": [
             "Default",
-            "Active"
+            "Active",
+            "Default Hover",
+            "Open",
+            "Active Hover",
+            "Favorite",
+            "Favorite Hover",
+            "Active Value"
           ]
         },
         "variants": [
@@ -5408,14 +5422,14 @@
             "props": {
               "State": "Default"
             },
-            "w": 103,
-            "h": 28,
+            "w": 77,
+            "h": 32,
             "radius": 9999,
             "pad": [
               0,
-              12,
+              14,
               0,
-              12
+              14
             ],
             "gap": 4,
             "dir": "HORIZONTAL",
@@ -5425,14 +5439,116 @@
             "props": {
               "State": "Active"
             },
-            "w": 103,
-            "h": 28,
+            "w": 77,
+            "h": 32,
             "radius": 9999,
             "pad": [
               0,
-              12,
+              14,
               0,
-              12
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          },
+          {
+            "props": {
+              "State": "Default Hover"
+            },
+            "w": 77,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/200"
+          },
+          {
+            "props": {
+              "State": "Open"
+            },
+            "w": 51,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          },
+          {
+            "props": {
+              "State": "Active Hover"
+            },
+            "w": 77,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "primary/200"
+          },
+          {
+            "props": {
+              "State": "Favorite"
+            },
+            "w": 51,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "error/100"
+          },
+          {
+            "props": {
+              "State": "Favorite Hover"
+            },
+            "w": 51,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "error/300"
+          },
+          {
+            "props": {
+              "State": "Active Value"
+            },
+            "w": 150,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              6,
+              0,
+              14
             ],
             "gap": 4,
             "dir": "HORIZONTAL",
@@ -6085,16 +6201,116 @@
           "doc": ""
         }
       ],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/Input",
+      "figma": {
+        "name": "2.0/Input",
+        "axes": {
+          "State": [
+            "default",
+            "filled",
+            "error",
+            "disabled"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "State": "default"
+            },
+            "w": 260,
+            "h": 66,
+            "radius": null,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 4,
+            "dir": "VERTICAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "State": "filled"
+            },
+            "w": 260,
+            "h": 66,
+            "radius": null,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 4,
+            "dir": "VERTICAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "State": "error"
+            },
+            "w": 260,
+            "h": 84,
+            "radius": null,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 4,
+            "dir": "VERTICAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "State": "disabled"
+            },
+            "w": 260,
+            "h": 66,
+            "radius": null,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 4,
+            "dir": "VERTICAL",
+            "fill": null
+          }
+        ]
+      }
     },
     {
       "name": "MovieCardSkeleton",
       "file": "src/components/primitives/Skeleton.tsx",
       "doc": "",
       "props": [],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/MovieCardSkeleton",
+      "figma": {
+        "name": "2.0/MovieCardSkeleton",
+        "axes": {},
+        "variants": [
+          {
+            "props": {},
+            "w": 108,
+            "h": 210,
+            "radius": null,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 8,
+            "dir": "VERTICAL",
+            "fill": null
+          }
+        ]
+      }
     },
     {
       "name": "PosterChip",
@@ -6313,8 +6529,52 @@
           "doc": "버튼 지름(px) — 기본 32, 아이콘 크기도 비례해서 커짐"
         }
       ],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/ScrollNavButton",
+      "figma": {
+        "name": "2.0/ScrollNavButton",
+        "axes": {
+          "Direction": [
+            "left",
+            "right"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "Direction": "left"
+            },
+            "w": 32,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#FAF9F8"
+          },
+          {
+            "props": {
+              "Direction": "right"
+            },
+            "w": 32,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#FAF9F8"
+          }
+        ]
+      }
     },
     {
       "name": "SearchBar",
@@ -6343,8 +6603,52 @@
           "doc": "입력/플레이스홀더 폰트 크기 — 기본 16px(iOS 자동 줌인 방지). 줌인 우려 없는 데스크톱 전용 배치에서만 낮출 것"
         }
       ],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/SearchBar",
+      "figma": {
+        "name": "2.0/SearchBar",
+        "axes": {
+          "State": [
+            "default",
+            "filled"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "State": "default"
+            },
+            "w": 320,
+            "h": 44,
+            "radius": 12,
+            "pad": [
+              0,
+              18,
+              0,
+              18
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "#FFFFFF"
+          },
+          {
+            "props": {
+              "State": "filled"
+            },
+            "w": 320,
+            "h": 44,
+            "radius": 12,
+            "pad": [
+              0,
+              18,
+              0,
+              18
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "#FFFFFF"
+          }
+        ]
+      }
     },
     {
       "name": "SearchBarButton",
@@ -6535,8 +6839,28 @@
           "doc": ""
         }
       ],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/Skeleton",
+      "figma": {
+        "name": "2.0/Skeleton",
+        "axes": {},
+        "variants": [
+          {
+            "props": {},
+            "w": 160,
+            "h": 92,
+            "radius": null,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 8,
+            "dir": "VERTICAL",
+            "fill": null
+          }
+        ]
+      }
     },
     {
       "name": "SortToggle",
@@ -6646,8 +6970,28 @@
       "file": "src/components/primitives/Skeleton.tsx",
       "doc": "",
       "props": [],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/TheaterCardSkeleton",
+      "figma": {
+        "name": "2.0/TheaterCardSkeleton",
+        "axes": {},
+        "variants": [
+          {
+            "props": {},
+            "w": 320,
+            "h": 118,
+            "radius": 12,
+            "pad": [
+              16,
+              16,
+              16,
+              16
+            ],
+            "gap": 12,
+            "dir": "VERTICAL",
+            "fill": "#FFFFFF"
+          }
+        ]
+      }
     },
     {
       "name": "Toast",
@@ -6683,8 +7027,28 @@
           "doc": ""
         }
       ],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/Toast",
+      "figma": {
+        "name": "2.0/Toast",
+        "axes": {},
+        "variants": [
+          {
+            "props": {},
+            "w": 132,
+            "h": 34,
+            "radius": 9999,
+            "pad": [
+              10,
+              16,
+              10,
+              16
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#2B2622"
+          }
+        ]
+      }
     },
     {
       "name": "Wordmark",
@@ -6744,263 +7108,11 @@
   ],
   "drift": [
     {
-      "kind": "figma-only",
-      "id": "brand/cgv",
-      "code": null,
-      "figma": "#E30613",
-      "note": "코드에 대응 토큰이 없다 (영화볼지도 시멘틱 - 2.0)"
-    },
-    {
-      "kind": "figma-only",
-      "id": "brand/mega",
-      "code": null,
-      "figma": "#6C1E9F",
-      "note": "코드에 대응 토큰이 없다 (영화볼지도 시멘틱 - 2.0)"
-    },
-    {
-      "kind": "figma-only",
-      "id": "brand/lotte",
-      "code": null,
-      "figma": "#ED1C24",
-      "note": "코드에 대응 토큰이 없다 (영화볼지도 시멘틱 - 2.0)"
-    },
-    {
-      "kind": "legacy-figma-style",
-      "id": "display/h1",
-      "code": null,
-      "figma": "KIMM_Bold/B · 24px",
-      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
-    },
-    {
-      "kind": "legacy-figma-style",
-      "id": "display/h2",
-      "code": null,
-      "figma": "KIMM_Bold/B · 22px",
-      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
-    },
-    {
-      "kind": "legacy-figma-style",
-      "id": "display/h3",
-      "code": null,
-      "figma": "KIMM_Bold/B · 20px",
-      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
-    },
-    {
       "kind": "legacy-figma-style",
       "id": "display/map-label",
       "code": null,
       "figma": "KIMM_Bold/B · 11px",
       "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
-    },
-    {
-      "kind": "legacy-figma-style",
-      "id": "ui/title",
-      "code": null,
-      "figma": "Pretendard/Bold · 17px",
-      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
-    },
-    {
-      "kind": "legacy-figma-style",
-      "id": "ui/subtitle",
-      "code": null,
-      "figma": "Pretendard/SemiBold · 15px",
-      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
-    },
-    {
-      "kind": "legacy-figma-style",
-      "id": "ui/body",
-      "code": null,
-      "figma": "Pretendard/Medium · 14px",
-      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
-    },
-    {
-      "kind": "legacy-figma-style",
-      "id": "ui/meta",
-      "code": null,
-      "figma": "Pretendard/Regular · 13px",
-      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
-    },
-    {
-      "kind": "legacy-figma-style",
-      "id": "ui/caption",
-      "code": null,
-      "figma": "Pretendard/Medium · 11px",
-      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
-    },
-    {
-      "kind": "legacy-figma-style",
-      "id": "ui/badge",
-      "code": null,
-      "figma": "Pretendard/Bold · 9px",
-      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
-    },
-    {
-      "kind": "legacy-figma-style",
-      "id": "num/time",
-      "code": null,
-      "figma": "Pretendard/Bold · 17px",
-      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
-    },
-    {
-      "kind": "legacy-figma-style",
-      "id": "num/date",
-      "code": null,
-      "figma": "Pretendard/Bold · 16px",
-      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
-    },
-    {
-      "kind": "legacy-figma-style",
-      "id": "num/seat",
-      "code": null,
-      "figma": "Pretendard/SemiBold · 12px",
-      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
-    },
-    {
-      "kind": "legacy-figma-style",
-      "id": "num/dow",
-      "code": null,
-      "figma": "Pretendard/Medium · 10px",
-      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
-    },
-    {
-      "kind": "legacy-figma-style",
-      "id": "latin/title",
-      "code": null,
-      "figma": "Libre Baskerville/Regular · 18px",
-      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
-    },
-    {
-      "kind": "legacy-figma-style",
-      "id": "latin/meta",
-      "code": null,
-      "figma": "Libre Baskerville/Italic · 13px",
-      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
-    },
-    {
-      "kind": "legacy-figma-style",
-      "id": "shadow/sm",
-      "code": null,
-      "figma": "1겹",
-      "note": "1.0 이펙트 스타일 — 2.0/shadow/*로 옮기고 삭제할 것"
-    },
-    {
-      "kind": "legacy-figma-style",
-      "id": "shadow/md",
-      "code": null,
-      "figma": "1겹",
-      "note": "1.0 이펙트 스타일 — 2.0/shadow/*로 옮기고 삭제할 것"
-    },
-    {
-      "kind": "legacy-figma-style",
-      "id": "shadow/lg",
-      "code": null,
-      "figma": "1겹",
-      "note": "1.0 이펙트 스타일 — 2.0/shadow/*로 옮기고 삭제할 것"
-    },
-    {
-      "kind": "legacy-figma-style",
-      "id": "shadow/sheet",
-      "code": null,
-      "figma": "2겹",
-      "note": "1.0 이펙트 스타일 — 2.0/shadow/*로 옮기고 삭제할 것"
-    },
-    {
-      "kind": "legacy-figma-style",
-      "id": "shadow/popup",
-      "code": null,
-      "figma": "1겹",
-      "note": "1.0 이펙트 스타일 — 2.0/shadow/*로 옮기고 삭제할 것"
-    },
-    {
-      "kind": "legacy-figma-style",
-      "id": "shadow/pin",
-      "code": null,
-      "figma": "1겹",
-      "note": "1.0 이펙트 스타일 — 2.0/shadow/*로 옮기고 삭제할 것"
-    },
-    {
-      "kind": "component-unmapped",
-      "id": "Badge",
-      "code": "src/components/primitives/Badge.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    },
-    {
-      "kind": "component-unmapped",
-      "id": "BottomSheet",
-      "code": "src/components/primitives/BottomSheet.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    },
-    {
-      "kind": "component-unmapped",
-      "id": "BubbleTail",
-      "code": "src/components/primitives/BubbleTail.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    },
-    {
-      "kind": "component-unmapped",
-      "id": "Card",
-      "code": "src/components/primitives/Card.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    },
-    {
-      "kind": "component-unmapped",
-      "id": "CardContainer",
-      "code": "src/components/primitives/CardContainer.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    },
-    {
-      "kind": "component-unmapped",
-      "id": "Input",
-      "code": "src/components/primitives/Input.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    },
-    {
-      "kind": "component-unmapped",
-      "id": "MovieCardSkeleton",
-      "code": "src/components/primitives/Skeleton.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    },
-    {
-      "kind": "component-unmapped",
-      "id": "ScrollNavButton",
-      "code": "src/components/primitives/ScrollNavButton.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    },
-    {
-      "kind": "component-unmapped",
-      "id": "SearchBar",
-      "code": "src/components/primitives/SearchBar.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    },
-    {
-      "kind": "component-unmapped",
-      "id": "Skeleton",
-      "code": "src/components/primitives/Skeleton.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    },
-    {
-      "kind": "component-unmapped",
-      "id": "TheaterCardSkeleton",
-      "code": "src/components/primitives/Skeleton.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    },
-    {
-      "kind": "component-unmapped",
-      "id": "Toast",
-      "code": "src/components/primitives/Toast.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
     }
   ]
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   Avatar, Badge, BottomSheet, BubbleTail, Button, Card, CardContainer, Chip, DirectorChip,
   FabPill, FabRound, FilterPill, GenreChip, IconButton, Input, PosterChip, ScrollNavButton,
@@ -22,9 +22,10 @@ const IcoSearch = () => (
 )
 
 /** 견본 한 칸 — 캡션과 함께 보여 준다. */
-function Case({ label, children, dark = false }: { label: string; children: ReactNode; dark?: boolean }) {
+function Case({ label, children, dark = false, wide = false }: { label: string; children: ReactNode; dark?: boolean; wide?: boolean }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)' }}>
+    // wide — 입력 계열은 내용 폭으로 줄어들면 플레이스홀더가 잘린다. 무대 폭을 그대로 쓴다.
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)', width: wide ? '100%' : undefined }}>
       <div style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)', fontFamily: 'var(--font-mono)' }}>{label}</div>
       <div style={{
         display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-3)', alignItems: 'center',
@@ -51,18 +52,24 @@ function PosterStage({ children }: { children: ReactNode }) {
 
 function ToastDemo() {
   const [n, setN] = useState(0)
+  // Toast는 position: fixed다. transform이 걸린 조상이 있으면 그 상자가 기준이 되므로
+  // 데모에서는 일부러 상자를 하나 만들어 토스트를 견본 안에 가둔다(뷰포트 바닥으로 도망가지 않게).
   return (
-    <>
-      <Button size="sm" variant="secondary" onClick={() => setN(v => v + 1)}>토스트 띄우기</Button>
+    <div style={{
+      position: 'relative', transform: 'translateZ(0)',
+      width: '100%', height: 180,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <button type="button" className="ds-demo-btn" onClick={() => setN(v => v + 1)}>토스트 띄우기</button>
       <Toast message="관심 영화에 담았어요" trigger={n} />
-    </>
+    </div>
   )
 }
 
 function InputDemo() {
   const [v, setV] = useState('')
   return (
-    <div style={{ display: 'grid', gap: 'var(--spacing-4)', width: '100%', maxWidth: 360 }}>
+    <div style={{ display: 'grid', gap: 'var(--spacing-4)', width: '100%', maxWidth: 420 }}>
       <Input label="영화 제목" placeholder="제목을 입력하세요" value={v} onChange={e => setV(e.target.value)} />
       <Input label="이메일" defaultValue="not-an-email" error="이메일 형식이 아닙니다" />
       <Input label="극장" hint="지역을 함께 적으면 더 잘 찾습니다" leftIcon={<IcoSearch />} />
@@ -73,13 +80,75 @@ function InputDemo() {
 function SearchBarDemo() {
   const [v, setV] = useState('')
   return (
-    <div style={{ width: '100%', maxWidth: 520 }}>
+    <div style={{ width: '100%', maxWidth: 560 }}>
       <SearchBar
         value={v}
         onChange={e => setV(e.target.value)}
         onClear={() => setV('')}
         placeholder="영화, 영화관, 감독을 검색하세요"
       />
+    </div>
+  )
+}
+
+function SearchBarButtonDemo() {
+  const [open, setOpen] = useState(false)
+  const [v, setV] = useState('')
+  const ref = useRef<HTMLInputElement>(null)
+  // 입력칸이 실제로 붙은 다음에 포커스를 준다 — rAF는 커밋보다 빨라서 놓친다.
+  useEffect(() => { if (open) ref.current?.focus() }, [open])
+  // 실제 상영작 탭과 같은 동작 — 버튼을 누르면 그 자리가 입력 가능한 SearchBar로 바뀌고 포커스가 간다.
+  return (
+    <div style={{ width: '100%', maxWidth: 560 }}>
+      {open ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)' }}>
+          <div style={{ flex: 1 }}>
+            <SearchBar
+              ref={ref}
+              value={v}
+              onChange={e => setV(e.target.value)}
+              onClear={() => setV('')}
+              inputFontSize={14}
+            />
+          </div>
+          <button type="button" className="ds-demo-btn" onClick={() => { setOpen(false); setV('') }}>닫기</button>
+        </div>
+      ) : (
+        <SearchBarButton onClick={() => setOpen(true)} />
+      )}
+    </div>
+  )
+}
+
+function ScrollNavButtonDemo() {
+  const rail = useRef<HTMLDivElement>(null)
+  // 실제 배치와 같게 — 포스터 레일 위에 좌우로 얹고, 누르면 레일이 한 칸씩 밀린다.
+  const nudge = (dir: -1 | 1) => rail.current?.scrollBy({ left: dir * 240, behavior: 'smooth' })
+  return (
+    <div style={{ position: 'relative', width: '100%' }}>
+      <div
+        ref={rail}
+        style={{
+          display: 'flex', gap: 'var(--spacing-3)', overflowX: 'auto', scrollbarWidth: 'none',
+          padding: '0 var(--spacing-2)', width: '100%', minWidth: 0,
+        }}
+      >
+        {['기억의 빛', '중경삼림', '벌새', '헤어질 결심', '괴물', '패스트 라이브즈', '드라이브 마이 카',
+        '가여운 것들', '추락의 해부', '괴물의 아이'].map(t => (
+          <div key={t} style={{ flex: '0 0 auto', width: 96 }}>
+            <div style={{
+              width: 96, height: 136, borderRadius: 'var(--radius-poster)',
+              background: 'linear-gradient(160deg, var(--color-neutral-600), var(--color-neutral-900))',
+            }} />
+            <div style={{
+              marginTop: 'var(--spacing-2)', fontSize: 'var(--text-meta)',
+              color: 'var(--color-text-body)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            }}>{t}</div>
+          </div>
+        ))}
+      </div>
+      <ScrollNavButton direction="left" onClick={() => nudge(-1)} style={{ top: 68 }} />
+      <ScrollNavButton direction="right" onClick={() => nudge(1)} style={{ top: 68 }} />
     </div>
   )
 }
@@ -216,17 +285,18 @@ const DEMOS: Record<string, ReactNode> = {
       </div>
     </Case>
   ),
-  Input: <Case label="label · error · hint · leftIcon"><InputDemo /></Case>,
-  SearchBar: <Case label="입력 가능 — 직접 타이핑해 보세요"><SearchBarDemo /></Case>,
-  SearchBarButton: <Case label="검색창 모양 버튼(탭 전환용)"><SearchBarButton onClick={() => {}} /></Case>,
+  Input: <Case label="label · error · hint · leftIcon" wide><InputDemo /></Case>,
+  SearchBar: <Case label="입력 가능 — 직접 타이핑해 보세요" wide><SearchBarDemo /></Case>,
+  SearchBarButton: (
+    <Case wide label="눌러 보세요 — 검색 화면으로 넘어가는 대신 그 자리가 SearchBar로 바뀝니다">
+      <SearchBarButtonDemo />
+    </Case>
+  ),
   FabRound: <Case label="원형 FAB"><FabRound><IcoPlus /></FabRound></Case>,
   FabPill: <Case label="pill FAB — 지도·목록 전환"><FabPill /></Case>,
   ScrollNavButton: (
-    <Case label="레일 좌우 이동 — 절대 배치이므로 relative 무대 위에 놓습니다">
-      <div style={{ position: 'relative', width: 200, height: 64, background: 'var(--color-surface-raised)', borderRadius: 'var(--radius-control)' }}>
-        <ScrollNavButton direction="left" style={{ left: 8 }} />
-        <ScrollNavButton direction="right" style={{ right: 8 }} />
-      </div>
+    <Case wide label="포스터 레일 위 실제 배치 — 눌러서 밀어 보세요">
+      <ScrollNavButtonDemo />
     </Case>
   ),
   Skeleton: (
