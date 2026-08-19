@@ -55,7 +55,7 @@ export default function TabsLayout({ children }: { children: ReactNode }) {
           통째로 비어 h1도 본문도 없는 페이지가 된다(Bing URL 검사에서 확인). */}
       {children}
 
-      {/* 설정 팝업 — 지도 탭 외에서도 열릴 수 있도록 layout 레벨에서 렌더 */}
+      {/* 더보기 팝업 — 지도 탭 외에서도 열릴 수 있도록 layout 레벨에서 렌더 */}
       {!isOnMap && (
         <SettingsPanel
           isOpen={settingsOpen}

@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
-import { Settings } from 'lucide-react'
+import { MoreHorizontal } from 'lucide-react'
 import { MyHomeContent } from '@/components/auth/MyHomeContent'
 import { MyPageShell } from '@/components/auth/MyPageShell'
 import { IconButton } from '@/components/primitives'
@@ -11,7 +11,7 @@ import { useUIStore } from '@/store/uiStore'
 
 /**
  * MY 탭 홈 페이지 (모바일 + 데스크톱 딥링크). 데스크톱 레일 MY 클릭은 MyPanel 팝오버.
- * ⚙: 모바일 → /more, 데스크톱 → 설정 패널.
+ * 우상단 더보기(⋯): 모바일 → /more, 데스크톱 → 더보기 패널. (FAQ·버그 리포트·인스타·출처·개인정보 — 토글이 없어 "설정"이 아니라 "더보기", 2026-08-17)
  */
 export default function MyPage() {
   return (
@@ -39,8 +39,8 @@ function MyPageInner() {
     <MyPageShell
       title="MY"
       trailing={
-        <IconButton variant="ghost" size={44} aria-label="설정" onClick={openSettings}>
-          <Settings size={22} strokeWidth={1.75} />
+        <IconButton variant="ghost" size={44} aria-label="더보기" onClick={openSettings}>
+          <MoreHorizontal size={22} strokeWidth={1.75} />
         </IconButton>
       }
     >

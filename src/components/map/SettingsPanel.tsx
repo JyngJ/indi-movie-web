@@ -488,7 +488,7 @@ export function SettingsPanel({
   const handleBack = () => { setDirection(-1); setPage('main') }
 
   const pageTitle: Record<Page, string> = {
-    main: '설정',
+    main: '더보기',
     report: '버그 리포트',
     attribution: '출처 표기',
     about: '만든 사람',

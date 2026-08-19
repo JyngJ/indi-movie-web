@@ -72,6 +72,28 @@ export function posterSizeForZoom(zoom: number, isDesktop: boolean): { w: number
 
 const EMPTY_SLOTS: PosterSlotSet = { slots: [], overflowCount: 0 }
 
+/**
+ * 포스터 노출 우선순위 (2026-08-17 확정):
+ *   1. 관심 — 관심 영화이거나 관심 감독의 작품
+ *   2. 예매 클릭 랭킹 순 (booking rank, 낮을수록 상위)
+ *   3. 나머지 (기존 순서 유지)
+ * 안정 정렬 — 같은 그룹 안에서는 원래 순서를 지킨다.
+ */
+export function sortPostersByPriority(
+  movies: TheaterPosterMovie[],
+  opts?: { favoriteMovieIds?: ReadonlySet<string>; favoriteDirectors?: ReadonlySet<string>; bookingRank?: ReadonlyMap<string, number> },
+): TheaterPosterMovie[] {
+  if (!opts) return movies
+  const { favoriteMovieIds, favoriteDirectors, bookingRank } = opts
+  if (!favoriteMovieIds?.size && !favoriteDirectors?.size && !bookingRank?.size) return movies
+  const isFav = (m: TheaterPosterMovie) =>
+    (favoriteMovieIds?.has(m.id) ?? false) || (m.director ?? []).some((d) => favoriteDirectors?.has(d))
+  return movies
+    .map((m, i) => ({ m, i, fav: isFav(m), rank: bookingRank?.get(m.id) ?? Number.POSITIVE_INFINITY }))
+    .sort((a, b) => (Number(b.fav) - Number(a.fav)) || (a.rank - b.rank) || (a.i - b.i))
+    .map((x) => x.m)
+}
+
 export function posterSlotsForZoom(
   movies: TheaterPosterMovie[],
   zoom: number,

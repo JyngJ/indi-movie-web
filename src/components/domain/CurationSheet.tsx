@@ -29,7 +29,7 @@ export const CURATION_PEEK_HEIGHT = 120
 const VELOCITY_THRESHOLD = 500   // px/s 이상이면 flick으로 간주
 const SNAP_ORDER: CurationSnap[] = ['expanded', 'peek']
 
-interface CurationItem {
+export interface CurationItem {
   id: string
   title: string
   posterUrl?: string
@@ -41,6 +41,8 @@ interface CurationItem {
   distanceLabel?: string
   /** 데스크톱 호버 팝업(감독/장르/시놉시스)용 원본 영화 데이터 */
   movie?: Movie
+  /** 1-based 순위 — 주면 포스터 좌하단에 스크림 + 큰 숫자 (상영작 탭 랭킹과 동일 문법) */
+  rank?: number
 }
 
 interface CurationSheetProps {
@@ -65,6 +67,10 @@ interface CurationSheetProps {
   getTheaterDistance?: (theaterId: string) => string | null
   /** TheaterSheet가 열려 큐레이션 시트를 숨겨야 할 때 */
   hidden?: boolean
+  signedIn?: boolean
+  favoriteItems?: CurationItem[]
+  rankingItems?: CurationItem[]
+  onShowAllFavorites?: () => void
 }
 
 /** 모바일: 가로 스크롤 행 / 데스크톱(도크): 한 줄 3개 고정 그리드 — 도크 폭 440(거터 16×2, gap 12×2) 기준 칸당 128px = 피그마 PosterItem */
@@ -273,6 +279,32 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
               {item.distanceLabel}
             </div>
           )}
+          {/* 순위 — 상영작 탭 랭킹과 같은 스크림(높이 42%) + KIMM 숫자(포스터 높이의 31%) */}
+          {item.rank != null && (
+            <div
+              aria-hidden
+              style={{
+                position: 'absolute', left: 0, right: 0, bottom: 0,
+                height: Math.round(posterSize.height * 0.42),
+                borderRadius: '0 0 var(--radius-poster) var(--radius-poster)',
+                background: 'linear-gradient(to top, rgba(15,12,9,0.78), rgba(15,12,9,0))',
+                pointerEvents: 'none',
+              }}
+            >
+              <span style={{
+                position: 'absolute', left: 8, bottom: 4,
+                fontFamily: 'var(--font-display)',
+                fontSize: Math.round(posterSize.height * 0.31),
+                fontWeight: 700,
+                lineHeight: 0.85,
+                color: 'var(--color-on-accent)',
+                fontVariantNumeric: 'tabular-nums',
+              }}>
+                {item.rank}
+              </span>
+            </div>
+          )}
+          {item.rank != null && <span className="sr-only">{item.rank}위</span>}
           {item.badge && (
             <span
               style={{
@@ -484,6 +516,14 @@ interface CurationSectionsProps {
   getTheaterDistance?: (theaterId: string) => string | null
   /** 데스크톱 도크에서 호출 시 true — 포스터 행을 가로 스크롤 대신 한 줄 3개 그리드로 표시 */
   desktop?: boolean
+  /** 로그인 여부 — 첫 섹션을 '관심 작품 상영'으로 바꿀지 결정 (2026-08-18) */
+  signedIn?: boolean
+  /** 관심 영화·감독 작품 중 지금 상영 중인 것 (로그인 시 첫 섹션) */
+  favoriteItems?: CurationItem[]
+  /** 예매 클릭 순위 상위 (둘째 섹션) */
+  rankingItems?: CurationItem[]
+  /** 관심 섹션 '모두보기' — 지도 관심 필터를 켠다 */
+  onShowAllFavorites?: () => void
 }
 
 const MAX_CURATION_SECTIONS = 3
@@ -492,7 +532,12 @@ const SECTION_PARTIAL_COUNT = 21
 
 type SectionExpand = 'collapsed' | 'partial'
 
+/** 순위 섹션 노출 개수 — 6위까지 (2026-08-18 확정) */
+const RANKING_COUNT = 6
+
 const SECTION_FILMS_HREF: Record<string, string | null> = {
+  favorites:   '/my/favorites',
+  ranking:     '/films',
   lastWeek:    '/films#realtime_last_week',
   newIndie:    '/films#realtime_new_indie',
   returning:   '/films#realtime_returning',
@@ -523,6 +568,10 @@ export function CurationSections({
   onRecentItemClick,
   getTheaterDistance,
   desktop = false,
+  signedIn = false,
+  favoriteItems,
+  rankingItems,
+  onShowAllFavorites,
 }: CurationSectionsProps) {
   const lastWeekItems: CurationItem[] = lastWeekFilms.map((film) => ({
     id: film.movie.id,
@@ -567,7 +616,7 @@ export function CurationSections({
     movie: film.movie,
   }))
 
-  const candidates = [
+  const legacyCandidates = [
     { key: 'lastWeek', title: '막바지 상영', items: lastWeekItems, emptyText: '' },
     { key: 'soloTheater', title: `${soloRegionLabel ?? '이 지역'}에서 단 한 곳`, items: soloTheaterItems, emptyText: '' },
     { key: 'todayShow', title: '지금 출발하면 볼 수 있는', items: soloRegionLabel ? todayShowItems : [], emptyText: '' },
@@ -575,7 +624,18 @@ export function CurationSections({
     { key: 'returning', title: '오랜만에 상영하는 영화', items: returningItems, emptyText: '' },
   ]
 
-  const sections = candidates.filter((c) => c.items.length > 0).slice(0, MAX_CURATION_SECTIONS)
+  /* 2026-08-18 확정 구성 — 최대 2개 섹션.
+     로그인: [관심 작품 상영] + [예매 많은 영화]  /  비로그인: [이번 주 새롭게 상영] + [예매 많은 영화]
+     관심이 하나도 안 걸렸으면 로그인이어도 '새롭게 상영'으로 대체한다. */
+  const useNewComposition = !!favoriteItems || !!rankingItems
+  const primary = signedIn && (favoriteItems?.length ?? 0) > 0
+    ? { key: 'favorites', title: '관심 작품 상영 중', items: favoriteItems!, emptyText: '' }
+    : { key: 'newIndie', title: '이번 주 새롭게 상영하는 영화', items: newIndieItems, emptyText: '' }
+  const rankingSection = { key: 'ranking', title: '요즘 많이 찾는 영화', items: (rankingItems ?? []).slice(0, RANKING_COUNT), emptyText: '' }
+
+  const sections = (useNewComposition ? [primary, rankingSection] : legacyCandidates)
+    .filter((c) => c.items.length > 0)
+    .slice(0, useNewComposition ? 2 : MAX_CURATION_SECTIONS)
 
   const [expandedSections, setExpandedSections] = useState<Record<string, SectionExpand>>({})
   const setExpand = (key: string, state: SectionExpand) =>
@@ -593,6 +653,8 @@ export function CurationSections({
             }
           : (id: string, title: string) => onMovieSelect?.(id, title, section.key)
         const expandState: SectionExpand = expandedSections[section.key] ?? 'collapsed'
+        // 새 구성(관심·순위·새롭게상영 2섹션)에서는 펼치기 없이 '모두보기'로 통일 (2026-08-18)
+        const isNewSection = useNewComposition
         const hasMore = desktop && section.items.length > SECTION_COLLAPSED_COUNT
         const hasManyMore = desktop && section.items.length > SECTION_PARTIAL_COUNT
         const visibleItems = hasMore && expandState === 'partial'
@@ -611,26 +673,44 @@ export function CurationSections({
             style={{ display: 'flex', flexDirection: 'column', gap: SECTION_GAP }}>
             <Section title={section.title}>
               <PosterRow items={visibleItems} onSelect={handleSelect} emptyText={section.emptyText} desktop={desktop} />
-              {hasMore && expandState === 'collapsed' && (
+              {/* 관심·순위 섹션은 펼치기 없이 '모두보기'로 바로 넘긴다 (2026-08-18).
+                  관심 섹션은 페이지 이동 대신 지도에 관심 필터를 켠다 — 이미 보고 있는 화면에서 바로 좁히는 게 빠르다 */}
+              {isNewSection && desktop && section.key === 'favorites' && onShowAllFavorites && (
+                <div style={{ margin: '0 20px' }}>
+                  <Button type="button" variant="tertiary" size="md" fullWidth onClick={onShowAllFavorites}>
+                    모두보기 →
+                  </Button>
+                </div>
+              )}
+              {isNewSection && desktop && section.key !== 'favorites' && SECTION_FILMS_HREF[section.key] && (
+                <div style={{ margin: '0 20px' }}>
+                  <Button type="button" variant="tertiary" size="md" fullWidth
+                    onClick={() => { window.location.href = SECTION_FILMS_HREF[section.key]! }}>
+                    모두보기 →
+                  </Button>
+                </div>
+              )}
+              {!isNewSection && hasMore && expandState === 'collapsed' && (
                 <div style={{ margin: '0 20px' }}>
                   <Button type="button" variant="tertiary" size="md" fullWidth onClick={() => setExpand(section.key, 'partial')}>
                     더보기 <ChevronDown size={14} strokeWidth={1.75} color="currentColor" />
                   </Button>
                 </div>
               )}
-              {hasMore && expandState === 'partial' && (
+              {!isNewSection && hasMore && expandState === 'partial' && (
                 <div style={{ display: 'flex', gap: 'var(--spacing-2)', margin: '0 20px' }}>
-                  <Button type="button" variant="tertiary" size="md" fullWidth onClick={() => {
-                    setExpand(section.key, 'collapsed')
-                    sectionRefs.current[section.key]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                  }}>
-                    접기 <ChevronDown size={14} strokeWidth={1.75} color="currentColor" style={{ transform: 'rotate(180deg)' }} />
-                  </Button>
+                  {/* 두 버튼 폭 1:1 — Button(fullWidth)은 flex-basis가 100%라 그냥 두면 '접기'가 다 먹는다 */}
+                  <div style={{ flex: '1 1 0', minWidth: 0 }}>
+                    <Button type="button" variant="tertiary" size="md" fullWidth onClick={() => {
+                      setExpand(section.key, 'collapsed')
+                      sectionRefs.current[section.key]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    }}>
+                      접기 <ChevronDown size={14} strokeWidth={1.75} color="currentColor" style={{ transform: 'rotate(180deg)' }} />
+                    </Button>
+                  </div>
                   {hasManyMore && SECTION_FILMS_HREF[section.key] && (
                     <a href={SECTION_FILMS_HREF[section.key]!}
-                      style={{ ...btnStyle, flex: 1, textDecoration: 'none',
-                        background: 'var(--color-primary-subtle-l)',
-                        color: 'var(--filter-chip-value)' }}>
+                      style={{ ...btnStyle, flex: '1 1 0', minWidth: 0, textDecoration: 'none' }}>
                       모두보기 →
                     </a>
                   )}
@@ -673,6 +753,10 @@ export function CurationSheet({
   onRecentItemClick,
   getTheaterDistance,
   hidden = false,
+  signedIn,
+  favoriteItems,
+  rankingItems,
+  onShowAllFavorites,
 }: CurationSheetProps) {
   const containerRef  = useRef<HTMLDivElement>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
@@ -944,6 +1028,10 @@ export function CurationSheet({
           onClearRecentlyViewed={onClearRecentlyViewed}
           onRecentItemClick={onRecentItemClick}
           getTheaterDistance={getTheaterDistance}
+          signedIn={signedIn}
+          favoriteItems={favoriteItems}
+          rankingItems={rankingItems}
+          onShowAllFavorites={onShowAllFavorites}
         />
       </div>
     </div>

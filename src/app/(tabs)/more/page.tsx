@@ -19,7 +19,7 @@ import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 const PAGE_INDEX: Record<SettingsPage, number> = { main: 0, report: 1, attribution: 2, about: 3 }
 
 const PAGE_TITLES: Record<SettingsPage, string> = {
-  main: '설정',
+  main: '더보기',
   report: '버그 리포트',
   attribution: '출처 표기',
   about: '만든 사람',
@@ -39,7 +39,7 @@ function DesktopPlaceholder() {
         fontSize: 14,
       }}
     >
-      설정 탭 — 준비 중
+      더보기 — 준비 중
     </div>
   )
 }

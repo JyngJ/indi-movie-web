@@ -105,7 +105,8 @@
   --color-warning-deep: #885907;
   --color-success-tint: #E4F1E8;
   --color-success-deep: #2B5036;
-  --color-error-tint:   #F5E1E0;
+  --color-error-tint:   #F5E1E0;  /* error/100 */
+  --color-error-300:    #E0AFAE;  /* error/300 — tint 면의 hover 한 단계 (피그마 색상 2.0 스케일) */
   --color-error-mid:    #BD4E4C;   /* 아이콘·보더·요일(일) 전용 */
   --color-error-hover:  #872C2A;   /* Button danger hover — 900에서 한 단계 다크 */
   --color-error-pressed: #722523;  /* Button danger pressed — 두 단계 다크 */
@@ -259,6 +260,32 @@
   --filter-chip-open-text:  #1F2747;           /* 드롭다운 열림 칩 라벨 (primary/900) */
   --filter-chip-open-caret: var(--color-primary-hover-l);   /* 열림 캐럿 */
   --filter-row-label-sel:   #1F2747;           /* 선택된 드롭다운 행 라벨 (primary/900) */
+  /* 칩 상태별 면·보더 — 2.0/FilterPill의 off / hover / on / on-hover.
+     인라인 style로 배경을 넣으면 클래스 :hover가 밀려서 호버가 죽는다. 상태 색을 여기 토큰으로 두고
+     FilterChip은 --chip-bg / --chip-bg-hover 두 변수만 세팅한다 (2026-08-18) */
+  /* 칩이 인라인으로 덮어쓰는 슬롯 — 기본값은 off 상태 */
+  --chip-bg:                   var(--color-surface-bg);
+  --chip-bg-hover:             var(--color-neutral-200);
+  --filter-chip-bg:            var(--color-surface-bg);
+  --filter-chip-bg-hover:      var(--color-neutral-200);      /* 눌린 면 — hover-raise의 raised와 동급 */
+  --filter-chip-bd:            var(--color-neutral-300);
+  --filter-chip-on-bg:         var(--color-primary-subtle-l); /* primary/100 */
+  --filter-chip-on-bg-hover:   var(--color-primary-200);      /* 한 단계 진한 틴트 */
+  --filter-chip-on-bd:         var(--color-primary-base);
+  --filter-chip-open-bg:       var(--color-primary-subtle-l);
+  --filter-chip-open-bg-hover: var(--color-primary-200);
+  --filter-chip-open-bd:       var(--color-primary-hover-l);
+  --filter-chip-fav-bg:        var(--color-error-tint);
+  --filter-chip-fav-bg-hover:  var(--color-error-300);        /* 피그마 error/300 */
+  --filter-chip-fav-bd:        var(--color-error-mid);
+  --filter-chip-fav-text:      var(--color-error);          /* error/900 */
+  /* 라벨 — 피그마 2.0/FilterPill은 off 라벨이 neutral/500(#8D8781)인데 #FAF9F8 위에서 대비 2.9:1로
+     13px 본문 기준(4.5:1) 미달이라 코드는 neutral/700을 쓴다. 피그마 쪽을 올려야 할 항목. */
+  --filter-chip-fg:            var(--color-text-body);       /* neutral/700 */
+  --filter-chip-on-fg:         var(--filter-chip-value);     /* primary/900 */
+  --filter-chip-open-fg:       var(--filter-chip-open-text); /* primary/900 */
+  --filter-chip-label-weight:  600;                          /* 피그마 Pretendard SemiBold */
+
   --filter-dismiss-bg:      rgba(0,0,0,0.08);  /* × 버튼 배경 */
   --filter-indicator-bd:    rgba(0,0,0,0.1);   /* 미선택 인디케이터 테두리 */
 

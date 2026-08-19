@@ -48,6 +48,8 @@ export interface FilterBarProps {
   onDirectorChipClick?: () => void
   desktop?: boolean
   defaultRegionId?: string | null
+  /** 외부(큐레이션 '모두보기' 등)에서 관심 칩을 켜달라는 신호 — 값이 바뀔 때마다 켠다 (2026-08-18) */
+  turnOnFavoritesSignal?: number
 }
 
 export function FilterBar({
@@ -62,6 +64,7 @@ export function FilterBar({
   onDirectorChipClick,
   desktop = false,
   defaultRegionId,
+  turnOnFavoritesSignal,
 }: FilterBarProps) {
   const [dateId, setDateId] = useState<DateId>('this-week')
   const [customStart, setCustomStart] = useState<Date | null>(null)
@@ -272,6 +275,19 @@ export function FilterBar({
   const chip = (overrides: Partial<FilterState>) =>
     onChipChange?.({ dateId, customStart, customEnd, genres, nations, bookable, indie, regionId, favorites, ...overrides })
 
+  /* 큐레이션 '관심 작품 상영 중 → 모두보기'가 보내는 신호 — 칩 상태를 실제로 켜서
+     칩 UI와 지도 필터가 어긋나지 않게 한다 (setFilters 직접 조작이면 칩이 안 켜진다) */
+  const lastFavSignalRef = useRef<number | undefined>(undefined)
+  useEffect(() => {
+    if (turnOnFavoritesSignal === undefined) return
+    if (lastFavSignalRef.current === turnOnFavoritesSignal) return
+    lastFavSignalRef.current = turnOnFavoritesSignal
+    if (favorites) return
+    setFavorites(true)
+    chip({ favorites: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [turnOnFavoritesSignal])
+
   const selectDate = (id: DateId) => { setDateId(id); setOpenPanel(null); chip({ dateId: id }) }
   const clearDate = () => {
     setDateId(null); setCustomStart(null); setCustomEnd(null); setOpenPanel(null)
@@ -424,7 +440,8 @@ export function FilterBar({
         {/* 관심만 — 비로그인이면 아예 숨긴다 (disabled보다 안 보이는 게 낫다) */}
         {authStatus === 'signed-in' && (
           <FilterChip
-            label="♥ 관심"
+            label="관심"
+            tone="favorite"
             rc="favorites"
             selected={favorites}
             onClick={() => { setFavorites(b => !b); chip({ favorites: !favorites }) }}

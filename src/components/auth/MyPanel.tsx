@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Settings } from 'lucide-react'
+import { MoreHorizontal } from 'lucide-react'
 import { MyHomeContent } from '@/components/auth/MyHomeContent'
 import { ProfileContent } from '@/components/auth/ProfileContent'
 import { RailPopover } from '@/components/navigation/RailPopover'
@@ -19,8 +19,8 @@ export function MyPanel() {
 
   const close = () => setOpen(false)
   const gear = (
-    <IconButton variant="ghost" size={44} aria-label="설정" onClick={() => { close(); openSettingsPage('main') }}>
-      <Settings size={22} strokeWidth={1.75} />
+    <IconButton variant="ghost" size={44} aria-label="더보기" onClick={() => { close(); openSettingsPage('main') }}>
+      <MoreHorizontal size={22} strokeWidth={1.75} />
     </IconButton>
   )
 
