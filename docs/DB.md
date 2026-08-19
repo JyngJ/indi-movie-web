@@ -222,24 +222,15 @@ CREATE TABLE subway_lines (
 
 ---
 
-## users (사용자)
+## users (사용자) — 확정 (2026-08-16, 계정 P1)
 
-Supabase Auth 사용 시 `auth.users`와 연결.  
-자체 서버 사용 시 별도 auth 컬럼 추가 필요.
+실제 스키마·트리거·RLS는 **`docs/SUPABASE_AUTH.sql`** 이 정본. 요지:
 
-```sql
-CREATE TABLE users (
-  id             UUID PRIMARY KEY,  -- auth.users(id) 또는 자체 생성
-  email          VARCHAR(255) NOT NULL,
-  display_name   VARCHAR(255),
-  avatar_url     VARCHAR(500),
-  preferred_city VARCHAR(50),
-  created_at     TIMESTAMP    DEFAULT NOW(),
-  updated_at     TIMESTAMP    DEFAULT NOW()
-);
-```
-
-**RLS**: 사용자는 자신의 레코드만 접근 (`WHERE id = auth.uid()`)
+- `id` = `auth.users.id` (ON DELETE CASCADE). Supabase Auth 카카오/구글 OAuth.
+- `email` **nullable** — 카카오는 비즈앱이 아니면 이메일 동의항목을 못 켠다. 알림용 이메일은 P3에서 별도 컬럼으로 받는다.
+- `auth.users` insert 트리거 `handle_new_auth_user()`가 `public.users` 행을 자동 생성 (닉네임·아바타는 raw_user_meta_data에서).
+- RLS: 본인 행만 select/update. 회원탈퇴는 RPC `delete_own_account()`(SECURITY DEFINER)로 `auth.users` 본인 행 삭제 → cascade.
+- 앱 코드: `src/lib/auth/` (도메인 타입·리포지토리 인터페이스·Supabase 어댑터), 세션 리프레시는 `src/proxy.ts`, 콜백 `src/app/auth/callback/route.ts`.
 
 ---
 
