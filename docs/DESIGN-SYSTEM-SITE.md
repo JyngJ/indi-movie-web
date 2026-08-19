@@ -24,12 +24,29 @@ primitives/*.tsx ──────┘        (커밋 대상)
 
 | 경로 | 내용 |
 | --- | --- |
-| `/design-system` | 개요 · 토큰 3계층 · 생성 파이프라인 · 차이 요약 |
-| `/design-system/tokens` | tokens.css 전수 — 색 스와치, 길이 견본, 그림자 견본, 주석 그대로 |
-| `/design-system/typography` | 피그마 텍스트 스타일 실측 견본 + 코드 `--text-*` 대조 |
-| `/design-system/components` | 프리미티브 목록 |
-| `/design-system/components/[name]` | 라이브 렌더 + Props(TS 추출) + 피그마 배리언트 실측 |
+| `/design-system` | 개요 · 원칙 · 토큰 3계층 · 생성 파이프라인 · 차이 요약 |
+| `/design-system/foundations/color` | 이름 규칙 · 원시 램프(피그마 컬렉션) · 시맨틱 표 |
+| `/design-system/foundations/typography` | Typeface · 스케일 견본(피그마 실측) · 코드 토큰 · Usage |
+| `/design-system/foundations/spacing` | 4배수 스케일 · Gutter 중첩 규칙 · Usage |
+| `/design-system/foundations/radius` | 역할 기반 반경 · Usage |
+| `/design-system/foundations/elevation` | 그림자 단계 · 피그마 이펙트 · Usage |
+| `/design-system/components` | 프리미티브 목록(문서화됨 / 목록만) |
+| `/design-system/components/[name]` | Anatomy · State(조작 가능) · Properties · Spec · Usage · 피그마 실측 · 소스 |
 | `/design-system/drift` | 코드 ↔ 피그마 차이 (종류별) |
+
+## 페이지 문법 (코드잇 디자인 시스템 참고)
+
+컴포넌트 상세는 여섯 블록을 순서대로 쌓는다:
+
+1. **Anatomy** — 견본 하나 + 번호 콜아웃, 아래에 ESSENTIAL/OPTIONAL 파트 설명
+2. **State** — 좌 무대 / 우 Control 패널. 실제 컴포넌트가 컨트롤에 반응한다
+3. **Properties** — 피그마 배리언트 축 + TS props
+4. **Spec** — 좌 견본 / 우 설명 (크기·여백·예외 규칙)
+5. **Usage** — Do / Don't 2단 카드
+6. **피그마 · 소스** — 배리언트 실측표(앞 24개)와 파일 경로
+
+앞의 3·6번은 매니페스트에서 생성되고, 1·2·4·5번의 문장은 `src/design-system/guides.ts`,
+그림은 `src/app/design-system/_ui/componentDocs.tsx`에 손으로 적는다.
 
 ## 규칙
 

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { manifest } from '@/design-system'
 import './design-system.css'
 import { Sidebar } from './_ui/Sidebar'
+import { NAV_GROUPS } from './_ui/nav'
 
 /* 내부 문서 사이트. 포트폴리오로 공개할 때 robots를 열면 된다. */
 export const metadata: Metadata = {
@@ -13,16 +14,18 @@ export const metadata: Metadata = {
 }
 
 export default function DesignSystemLayout({ children }: { children: ReactNode }) {
-  const components = manifest.components.map(c => c.name)
-
   return (
-    <div style={{
-      minHeight: '100dvh', background: 'var(--color-surface-bg)',
-      display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)',
-    }}>
+    <div className="ds-root">
       <div className="ds-shell">
         <aside className="ds-aside">
-          <Link href="/design-system" style={{ textDecoration: 'none', display: 'block', marginBottom: 'var(--spacing-6)' }}>
+          <Link href="/design-system" style={{ textDecoration: 'none', display: 'block', marginBottom: 'var(--spacing-6)', padding: '0 var(--spacing-3)' }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: 'var(--radius-button)',
+              background: 'var(--color-primary-base)', color: 'var(--color-text-inverse)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: 'var(--font-display)', fontSize: 'var(--text-subtitle)', fontWeight: 700,
+              marginBottom: 'var(--spacing-3)',
+            }}>영</div>
             <div style={{
               fontFamily: 'var(--font-display)', fontSize: 'var(--text-title)', fontWeight: 700,
               color: 'var(--color-text-primary)', letterSpacing: '0.02em',
@@ -31,18 +34,19 @@ export default function DesignSystemLayout({ children }: { children: ReactNode }
               디자인 시스템 2.0
             </div>
           </Link>
-          <Sidebar components={components} />
+          <Sidebar groups={NAV_GROUPS()} />
           <div style={{
             marginTop: 'var(--spacing-8)', paddingTop: 'var(--spacing-4)',
-            borderTop: '1px solid var(--color-border)',
-            fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)', lineHeight: 1.6,
+            borderTop: '1px solid var(--color-neutral-300)',
+            fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)', lineHeight: 1.7,
+            padding: 'var(--spacing-4) var(--spacing-3) 0',
           }}>
             생성 {manifest.generatedAt.slice(0, 10)}
             <br />
             피그마 덤프 {manifest.figmaDumpAt ? manifest.figmaDumpAt.slice(0, 10) : '없음'}
           </div>
         </aside>
-        <main className="ds-main">{children}</main>
+        <div className="ds-card">{children}</div>
       </div>
     </div>
   )

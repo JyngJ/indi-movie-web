@@ -1,18 +1,75 @@
-/* 디자인 시스템 문서 레이아웃 — 제품(모바일 480 기준)과 다른 폭 규칙을 쓴다. */
-.ds-shell { display: block; }
+/* 디자인 시스템 문서 사이트 — 제품(모바일 480 기준)과 다른 레이아웃 규칙을 쓴다.
+   구조: 틴트 배경 위에 사이드바(카드 밖) + 흰 본문 카드 + 우측 스티키 목차. */
+
+.ds-root {
+  --ds-page-bg: #F2EFEC;          /* neutral/200과 100 사이 — 흰 카드를 띄우기 위한 종이 틴트 */
+  --ds-card-radius: 24px;
+  --ds-sidebar-w: 216px;
+  --ds-toc-w: 180px;
+  min-height: 100dvh;
+  background: var(--ds-page-bg);
+  font-family: var(--font-sans);
+}
+
+.ds-shell { display: block; padding: 0; }
+
 .ds-aside {
   padding: var(--spacing-6) var(--gutter);
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface-card);
+  border-bottom: 1px solid var(--color-neutral-300);
 }
-.ds-main { padding: var(--spacing-8) var(--gutter) var(--spacing-24); }
+
+.ds-card {
+  background: var(--color-surface-card);
+  border-radius: var(--ds-card-radius) var(--ds-card-radius) 0 0;
+  padding: var(--spacing-8) var(--gutter) var(--spacing-16);
+  min-height: 60dvh;
+}
+
+.ds-toc { display: none; }
 
 @media (min-width: 1024px) {
-  .ds-shell { display: grid; grid-template-columns: 248px minmax(0, 1fr); align-items: start; }
-  .ds-aside {
-    position: sticky; top: 0; height: 100dvh; overflow-y: auto;
-    border-bottom: 0; border-right: 1px solid var(--color-border);
-    padding: var(--spacing-8) var(--spacing-4);
+  .ds-shell {
+    display: grid;
+    grid-template-columns: var(--ds-sidebar-w) minmax(0, 1fr);
+    align-items: start;
+    gap: var(--spacing-4);
+    padding: var(--spacing-6) var(--spacing-6) 0 var(--spacing-4);
   }
-  .ds-main { padding: var(--spacing-8) var(--spacing-12) var(--spacing-24); }
+  .ds-aside {
+    position: sticky; top: 0; max-height: 100dvh; overflow-y: auto;
+    border-bottom: 0; padding: var(--spacing-4) var(--spacing-2) var(--spacing-8);
+  }
+  .ds-card {
+    border-radius: var(--ds-card-radius);
+    padding: var(--spacing-16) var(--spacing-16) var(--spacing-24);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--ds-toc-w);
+    gap: var(--spacing-12);
+    align-items: start;
+  }
+  .ds-toc {
+    display: block; position: sticky; top: var(--spacing-16);
+    max-height: calc(100dvh - var(--spacing-24));
+    overflow-y: auto;
+  }
+}
+
+@media (min-width: 1440px) {
+  .ds-card { padding-left: var(--spacing-24); padding-right: var(--spacing-16); }
+}
+
+/* 사이드바 스크롤바를 문서 배경에 묻는다 */
+.ds-aside::-webkit-scrollbar, .ds-toc::-webkit-scrollbar { width: 4px; }
+.ds-aside::-webkit-scrollbar-thumb, .ds-toc::-webkit-scrollbar-thumb {
+  background: var(--color-neutral-300); border-radius: 2px;
+}
+
+/* 앵커 이동 시 제목이 카드 상단에 가리지 않게 */
+.ds-anchor { scroll-margin-top: var(--spacing-8); }
+
+/* 플레이그라운드 — 좁은 화면에선 무대 아래로 컨트롤이 내려간다 */
+.ds-playground { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--spacing-4); }
+@media (min-width: 900px) {
+  .ds-playground { grid-template-columns: minmax(0, 1fr) 208px; }
+  .ds-spec-row { grid-template-columns: minmax(0, 320px) minmax(0, 1fr); }
 }

@@ -1,14 +1,14 @@
 import { manifest } from '@/design-system'
-import { Page, Section, Code, Table } from '../_ui/shell'
+import { DocPage, DocSection, Code } from '../_ui/shell'
 
-const KIND_LABEL: Record<string, { title: string; note: string }> = {
+const KIND: Record<string, { title: string; note: string }> = {
   'token-value': {
     title: '값이 다르다',
     note: '같은 이름인데 코드와 피그마 값이 어긋난다. 어느 쪽이 맞는지 정하고 즉시 맞출 것 — 이 목록은 0이어야 한다.',
   },
   'figma-only': {
     title: '피그마에만 있다',
-    note: '피그마 변수에는 있는데 코드 토큰이 없다. 아직 안 쓰는 램프 단계이면 정상이고, 쓰기 시작하면 tokens.css에 내려야 한다.',
+    note: '피그마 변수에는 있는데 코드 토큰이 없다. 아직 안 쓰는 램프 단계면 정상이고, 쓰기 시작하면 tokens.css에 내려야 한다.',
   },
   'type-scale': {
     title: '타입 스케일 밖',
@@ -24,38 +24,45 @@ export default function DriftPage() {
   const kinds = [...new Set(manifest.drift.map(d => d.kind))]
 
   return (
-    <Page
+    <DocPage
+      href="/design-system/drift"
       title="코드 ↔ 피그마 차이"
-      lead={
-        <>
-          매니페스트를 만들 때 코드 토큰과 피그마 변수를 이름으로 짝지어 값을 견준다.
-          이 페이지는 그 결과를 그대로 보여준다 — 손으로 관리하는 목록이 아니라 <Code>npm run ds:build</Code>의 산출물이다.
-        </>
-      }
+      lead={<>매니페스트를 만들 때 코드 토큰과 피그마 변수를 이름으로 짝지어 값을 견준다. 이 페이지는 그 결과 그대로다 — 손으로 관리하는 목록이 아니라 <Code>npm run ds:build</Code>의 산출물이다.</>}
+      toc={kinds.map(k => ({ id: k, label: KIND[k]?.title ?? k }))}
     >
       {manifest.drift.length === 0 && (
-        <Section title="차이 없음">
+        <DocSection title="차이 없음">
           <div style={{ fontSize: 'var(--text-body)', color: 'var(--color-text-sub)' }}>코드와 피그마가 일치한다.</div>
-        </Section>
+        </DocSection>
       )}
 
       {kinds.map(kind => {
         const rows = manifest.drift.filter(d => d.kind === kind)
-        const meta = KIND_LABEL[kind] ?? { title: kind, note: '' }
+        const meta = KIND[kind] ?? { title: kind, note: '' }
         return (
-          <Section key={kind} title={`${meta.title} · ${rows.length}`} note={meta.note}>
-            <Table
-              head={['대상', '코드', '피그마', '메모']}
-              rows={rows.map(d => [
-                <Code key="i">{d.id}</Code>,
-                d.code ?? '—',
-                d.figma ?? '—',
-                d.note,
-              ])}
-            />
-          </Section>
+          <DocSection key={kind} id={kind} title={`${meta.title} · ${rows.length}`} lead={meta.note}>
+            <div>
+              {rows.map((d, i) => (
+                <div key={i} style={{
+                  display: 'grid', gridTemplateColumns: 'minmax(160px, 240px) minmax(0, 1fr)',
+                  gap: 'var(--spacing-4)', padding: 'var(--spacing-3) 0',
+                  borderTop: '1px solid var(--color-border)', fontSize: 'var(--text-meta)',
+                }}>
+                  <div>
+                    <Code>{d.id}</Code>
+                    {(d.code || d.figma) && (
+                      <div style={{ marginTop: 4, fontFamily: 'var(--font-mono)', fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)' }}>
+                        {d.code ?? '—'} · {d.figma ?? '—'}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ color: 'var(--color-text-sub)', lineHeight: 1.7 }}>{d.note}</div>
+                </div>
+              ))}
+            </div>
+          </DocSection>
         )
       })}
-    </Page>
+    </DocPage>
   )
 }

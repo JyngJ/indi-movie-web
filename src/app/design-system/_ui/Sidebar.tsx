@@ -1,59 +1,70 @@
 'use client'
 
+import { useState } from 'react'
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { NavLink } from './shell'
 
-const NAV: { group: string; items: { href: string; label: string }[] }[] = [
-  {
-    group: '시작',
-    items: [{ href: '/design-system', label: '개요' }],
-  },
-  {
-    group: '파운데이션',
-    items: [
-      { href: '/design-system/tokens', label: '토큰' },
-      { href: '/design-system/typography', label: '타이포그래피' },
-    ],
-  },
-  {
-    group: '컴포넌트',
-    items: [{ href: '/design-system/components', label: '전체 목록' }],
-  },
-  {
-    group: '유지보수',
-    items: [{ href: '/design-system/drift', label: '코드 ↔ 피그마 차이' }],
-  },
-]
+interface Group { title: string | null; items: { href: string; label: string }[] }
 
-export function Sidebar({ components }: { components: string[] }) {
+export function Sidebar({ groups }: { groups: Group[] }) {
   const pathname = usePathname()
+  const [closed, setClosed] = useState<Record<string, boolean>>({})
 
   return (
-    <nav style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-6)' }}>
-      {NAV.map(({ group, items }) => (
-        <div key={group}>
-          <div style={{
-            fontSize: 'var(--text-caption)', textTransform: 'uppercase', letterSpacing: '0.4px',
-            color: 'var(--color-text-caption)', fontWeight: 600, padding: '0 var(--spacing-3)',
-            marginBottom: 'var(--spacing-2)',
-          }}>{group}</div>
-          {items.map(i => (
-            <NavLink key={i.href} href={i.href} label={i.label} active={pathname === i.href} />
-          ))}
-          {group === '컴포넌트' && (
-            <div style={{ marginTop: 'var(--spacing-1)' }}>
-              {components.map(name => (
-                <NavLink
-                  key={name}
-                  href={`/design-system/components/${name}`}
-                  label={name}
-                  active={pathname === `/design-system/components/${name}`}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
+    <nav style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}>
+      {groups.map(group => {
+        const key = group.title ?? '_'
+        const open = !closed[key]
+        const hasActive = group.items.some(i => i.href === pathname)
+
+        return (
+          <div key={key}>
+            {group.title && (
+              <button
+                type="button"
+                onClick={() => setClosed(c => ({ ...c, [key]: open }))}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '6px var(--spacing-3)', background: 'transparent', border: 0,
+                  cursor: 'pointer', minHeight: 'unset',
+                  fontSize: 'var(--text-body)', fontWeight: 700,
+                  color: hasActive ? 'var(--color-text-primary)' : 'var(--color-text-body)',
+                }}
+              >
+                {group.title}
+                <span style={{
+                  fontSize: 10, color: 'var(--color-text-placeholder)',
+                  transform: open ? 'rotate(180deg)' : 'none', transition: 'transform var(--transition-fast)',
+                }}>▾</span>
+              </button>
+            )}
+            {open && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 1, marginTop: group.title ? 2 : 0 }}>
+                {group.items.map(item => {
+                  const active = pathname === item.href
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      style={{
+                        padding: '5px var(--spacing-3)', borderRadius: 'var(--radius-button)',
+                        fontSize: group.title ? 'var(--text-meta)' : 'var(--text-body)',
+                        textDecoration: 'none', lineHeight: 1.7,
+                        color: active ? 'var(--color-primary-900)'
+                          : group.title ? 'var(--color-text-caption)' : 'var(--color-text-primary)',
+                        fontWeight: active ? 700 : group.title ? 500 : 700,
+                        background: active ? 'var(--color-primary-100)' : 'transparent',
+                      }}
+                    >
+                      {item.label}
+                    </Link>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )
+      })}
     </nav>
   )
 }

@@ -1,7 +1,9 @@
 import { notFound } from 'next/navigation'
 import { manifest } from '@/design-system'
-import { Page, Section, Code, Table } from '../../_ui/shell'
-import { Demo } from '../../_ui/demos'
+import { guideFor, hasPlayground } from '@/design-system/guides'
+import { DocPage, DocSection, Code, DefTable } from '../../_ui/shell'
+import { ComponentDoc } from '../../_ui/componentDocs'
+import type { TocItem } from '../../_ui/Toc'
 
 export function generateStaticParams() {
   return manifest.components.map(c => ({ name: c.name }))
@@ -12,76 +14,106 @@ export default async function ComponentPage({ params }: { params: Promise<{ name
   const c = manifest.components.find(x => x.name === name)
   if (!c) notFound()
 
-  const axes = c.figma ? Object.entries(c.figma.axes) : []
+  const guide = guideFor(name)
+  // 배리언트가 90개인 세트(Button)까지 통째로 그리면 표가 페이지를 삼킨다. 앞쪽만 보이고 총계는 문장으로.
+  const VARIANT_LIMIT = 24
+  const variants = c.figma?.variants.slice(0, VARIANT_LIMIT) ?? []
+  const hiddenVariants = (c.figma?.variants.length ?? 0) - variants.length
+  const toc: TocItem[] = [
+    { id: 'anatomy', label: 'Anatomy' },
+    ...(hasPlayground(name) ? [{ id: 'state', label: 'State' } as TocItem] : []),
+    { id: 'properties', label: 'Properties' },
+    ...(guide?.specs ? [{ id: 'spec', label: 'Spec' } as TocItem] : []),
+    ...(guide?.usage ? [{ id: 'usage', label: 'Usage' } as TocItem] : []),
+    { id: 'figma', label: '피그마' },
+    { id: 'source', label: '소스' },
+  ]
 
   return (
-    <Page title={c.name} lead={c.doc || undefined}>
-      <Section title="미리보기" note="제품 코드의 컴포넌트를 그대로 import해 렌더한 것이다. 스크린샷이 아니라 실물이다.">
-        <Demo name={c.name} />
-      </Section>
+    <DocPage
+      href={`/design-system/components/${name}`}
+      title={name}
+      lead={guide?.intro ?? c.doc ?? undefined}
+      toc={toc}
+    >
+      <ComponentDoc name={name} />
 
-      <Section title="Props" note="TypeScript 타입에서 추출한다. HTML 기본 속성 상속분은 뺐다.">
-        {c.props.length ? (
-          <Table
-            head={['이름', '타입', '기본값', '설명']}
-            rows={c.props.map(p => [
-              <span key="n">
-                <Code>{p.name}</Code>{!p.optional && <span style={{ color: 'var(--color-error)' }}> *</span>}
+      <DocSection
+        id="properties"
+        title="Properties"
+        lead="TypeScript 타입에서 추출한다. HTML 기본 속성 상속분은 뺐다. 축(axes) 줄은 피그마 컴포넌트 세트에서 온다."
+      >
+        <DefTable
+          rows={[
+            ...Object.entries(c.figma?.axes ?? {}).map(([axis, values]) => [
+              <span key={axis}>{axis} <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)' }}>· 피그마</span></span>,
+              values.join(', '),
+            ] as [React.ReactNode, React.ReactNode]),
+            ...c.props.map(p => [
+              <span key={p.name}>
+                <Code>{p.name}</Code>
+                {!p.optional && <span style={{ color: 'var(--color-error)' }}> *</span>}
               </span>,
-              <span key="t" style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-badge)' }}>{p.type}</span>,
-              p.default ? <Code key="d">{p.default}</Code> : '—',
-              p.doc || '—',
-            ])}
-          />
-        ) : (
-          <div style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>선언된 props 없음</div>
-        )}
-      </Section>
+              <span key="v">
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-meta)' }}>{p.type}</span>
+                {p.default && <> · 기본값 <Code>{p.default}</Code></>}
+                {p.doc && <div style={{ marginTop: 4, color: 'var(--color-text-caption)' }}>{p.doc}</div>}
+              </span>,
+            ] as [React.ReactNode, React.ReactNode]),
+          ]}
+        />
+      </DocSection>
 
-      <Section
+      <DocSection
+        id="figma"
         title="피그마"
-        note={c.figma
-          ? `${c.figma.name} — 배리언트 ${c.figma.variants.length}개. 크기·패딩·래디우스는 피그마 노드 실측값이다.`
-          : '대응하는 피그마 컴포넌트 세트가 없다. 시안에 없는 컴포넌트이거나, 이름이 다르면 build-manifest.mjs의 FIGMA_ALIAS에 적어야 한다.'}
+        lead={c.figma
+          ? `${c.figma.name} — 배리언트 ${c.figma.variants.length}개. 아래 수치는 피그마 노드 실측값이라, 코드와 다르면 둘 중 하나가 틀린 것이다.`
+          : '대응하는 피그마 컴포넌트 세트가 없다. 이름만 다르면 build-manifest.mjs의 FIGMA_ALIAS에 적는다.'}
       >
         {c.figma && (
-          <>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-4)', marginBottom: 'var(--spacing-4)' }}>
-              {axes.map(([axis, values]) => (
-                <div key={axis}>
-                  <div style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)', marginBottom: 4 }}>{axis}</div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                    {values.map(v => (
-                      <span key={v} style={{
-                        fontSize: 'var(--text-badge)', fontFamily: 'var(--font-mono)',
-                        padding: '4px 8px', borderRadius: 'var(--radius-badge)',
-                        background: 'var(--color-surface-raised)', color: 'var(--color-text-body)',
-                      }}>{v}</span>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <Table
-              head={['배리언트', 'W×H', 'radius', 'padding', 'gap', 'fill']}
-              rows={c.figma.variants.map(v => [
-                <span key="v" style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-badge)' }}>
-                  {Object.entries(v.props).map(([k, val]) => `${k}=${val}`).join(' · ') || '—'}
-                </span>,
-                v.w != null && v.h != null ? `${Math.round(v.w)}×${Math.round(v.h)}` : '—',
-                v.radius != null ? `${v.radius}` : '—',
-                v.pad ? v.pad.join(' ') : '—',
-                v.gap != null ? `${v.gap}` : '—',
-                v.fill ?? '—',
-              ])}
-            />
-          </>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--text-meta)' }}>
+              <thead>
+                <tr>
+                  {['배리언트', 'W×H', 'radius', 'padding', 'gap', 'fill'].map(h => (
+                    <th key={h} style={{
+                      textAlign: 'left', padding: 'var(--spacing-3) var(--spacing-3) var(--spacing-3) 0',
+                      color: 'var(--color-text-caption)', fontWeight: 600, whiteSpace: 'nowrap',
+                      borderBottom: '1px solid var(--color-border)',
+                    }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {variants.map((v, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                    <td style={{ padding: 'var(--spacing-3) var(--spacing-3) var(--spacing-3) 0', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-badge)', color: 'var(--color-text-body)' }}>
+                      {Object.entries(v.props).map(([k, val]) => `${k}=${val}`).join(' · ') || '—'}
+                    </td>
+                    <td style={{ padding: 'var(--spacing-3)', color: 'var(--color-text-sub)' }}>
+                      {v.w != null && v.h != null ? `${Math.round(v.w)}×${Math.round(v.h)}` : '—'}
+                    </td>
+                    <td style={{ padding: 'var(--spacing-3)', color: 'var(--color-text-sub)' }}>{v.radius ?? '—'}</td>
+                    <td style={{ padding: 'var(--spacing-3)', color: 'var(--color-text-sub)' }}>{v.pad ? v.pad.join(' ') : '—'}</td>
+                    <td style={{ padding: 'var(--spacing-3)', color: 'var(--color-text-sub)' }}>{v.gap ?? '—'}</td>
+                    <td style={{ padding: 'var(--spacing-3)', color: 'var(--color-text-sub)' }}>{v.fill ?? '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {hiddenVariants > 0 && (
+              <p style={{ marginTop: 'var(--spacing-3)', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
+                외 {hiddenVariants}개 — 축 조합이 전부라 표에는 앞의 {VARIANT_LIMIT}개만 싣는다. 전체는 매니페스트에 있다.
+              </p>
+            )}
+          </div>
         )}
-      </Section>
+      </DocSection>
 
-      <Section title="소스">
+      <DocSection id="source" title="소스">
         <Code>{c.file}</Code>
-      </Section>
-    </Page>
+      </DocSection>
+    </DocPage>
   )
 }
