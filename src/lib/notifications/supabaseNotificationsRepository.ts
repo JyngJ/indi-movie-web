@@ -29,6 +29,7 @@ interface PrefsRow {
   quiet_start: string
   quiet_end: string
   channel: 'kakao' | 'none'
+  region_ids: string[] | null
 }
 
 /** DB의 TIME은 "21:00:00"으로 오는데 UI·판정은 "21:00"만 쓴다 */
@@ -43,6 +44,7 @@ function rowToPrefs(r: PrefsRow): NotificationPrefs {
     quietStart: hhmm(r.quiet_start),
     quietEnd: hhmm(r.quiet_end),
     channel: r.channel,
+    regionIds: r.region_ids ?? [],
   }
 }
 
@@ -92,7 +94,7 @@ export function createSupabaseNotificationsRepository(): NotificationClientRepos
       const userId = await requireUserId()
       const { data, error } = await supabase
         .from('notification_prefs')
-        .select('user_id, new_screening, last_week, weekly_digest, quiet_start, quiet_end, channel')
+        .select('user_id, new_screening, last_week, weekly_digest, quiet_start, quiet_end, channel, region_ids')
         .eq('user_id', userId)
         .maybeSingle()
       if (error) throw error
@@ -114,9 +116,10 @@ export function createSupabaseNotificationsRepository(): NotificationClientRepos
           quiet_start: next.quietStart,
           quiet_end: next.quietEnd,
           channel: next.channel,
+          region_ids: next.regionIds,
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id' })
-        .select('user_id, new_screening, last_week, weekly_digest, quiet_start, quiet_end, channel')
+        .select('user_id, new_screening, last_week, weekly_digest, quiet_start, quiet_end, channel, region_ids')
         .single()
       if (error) throw error
       return rowToPrefs(data as PrefsRow)

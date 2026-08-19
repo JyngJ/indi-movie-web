@@ -18,8 +18,10 @@ export interface NotificationBatchRepository {
   listScreeningFacts(fromDate: string, toDate: string): Promise<ScreeningFact[]>
   /** 막바지 판정 재료 */
   listLastWeekFacts(): Promise<LastWeekFact[]>
-  /** 이미 만든 dedupeKey — 사용자별 */
+  /** 이미 처리한 dedupeKey — 사용자별. 원장(notification_seen_keys)에서 읽는다 */
   listSeenDedupeKeys(userIds: string[]): Promise<Map<string, Set<string>>>
+  /** 원장에만 키를 남긴다 — 첫 실행 기준선 깔기(시드)용. 소식은 만들지 않는다 */
+  recordSeenKeys(userId: string, keys: string[]): Promise<void>
   /** 이벤트 저장. dedupe 충돌은 무시하고 실제 저장된 것만 돌려준다 */
   insertEvents(events: NotificationEvent[]): Promise<StoredNotificationEvent[]>
   /** 발송 이력 기록 */

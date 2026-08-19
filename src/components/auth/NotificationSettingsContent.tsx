@@ -2,8 +2,10 @@
 
 import { useAuth } from '@/components/auth/AuthProvider'
 import { LoginPanel } from '@/components/auth/LoginPanel'
-import { MenuCard, Switch } from '@/components/primitives'
+import { FilterPill, MenuCard, Switch } from '@/components/primitives'
 import { useNotificationPrefs } from '@/hooks/useNotifications'
+import { useFavorites } from '@/hooks/useFavorites'
+import { REGIONS } from '@/lib/regions'
 
 /** 24시간 정각 목록 — 조용한 시간 선택용 */
 const HOURS = Array.from({ length: 24 }, (_, h) => `${String(h).padStart(2, '0')}:00`)
@@ -61,6 +63,15 @@ function HourSelect({ value, onChange, label }: { value: string; onChange: (v: s
 export function NotificationSettingsContent() {
   const { status } = useAuth()
   const { prefs, isLoading, saving, error, save } = useNotificationPrefs()
+  const { favorites } = useFavorites()
+  const hasFavoriteTheater = favorites.some((f) => f.type === 'theater')
+
+  const toggleRegion = (id: string) => {
+    const next = prefs.regionIds.includes(id)
+      ? prefs.regionIds.filter((r) => r !== id)
+      : [...prefs.regionIds, id]
+    save({ regionIds: next })
+  }
 
   if (status === 'loading' || (status === 'signed-in' && isLoading)) {
     return <p style={{ margin: '24px var(--gutter)', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>확인 중…</p>
@@ -98,6 +109,32 @@ export function NotificationSettingsContent() {
             onChange={(v) => save({ weeklyDigest: v })} />
         </Row>
       </MenuCard>
+
+      <section style={{ padding: '24px var(--gutter) 8px' }}>
+        <h2 style={{ margin: 0, fontSize: 'var(--text-body)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+          알림 받을 지역
+        </h2>
+        <p style={{ margin: '4px 0 0', fontSize: 'var(--text-meta)', lineHeight: 1.6, color: 'var(--color-text-caption)' }}>
+          {prefs.regionIds.length > 0
+            ? '고른 지역의 상영만 알려드려요.'
+            : hasFavoriteTheater
+              ? '고른 지역이 없어서 관심 극장이 있는 지역으로 알려드리고 있어요.'
+              : '고른 지역이 없어서 전국의 상영을 알려드려요. 한 편이 전국 수십 곳에서 상영하기도 해요.'}
+        </p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+          {REGIONS.map((r) => (
+            <FilterPill
+              key={r.id}
+              active={prefs.regionIds.includes(r.id)}
+              aria-pressed={prefs.regionIds.includes(r.id)}
+              disabled={saving}
+              onClick={() => toggleRegion(r.id)}
+            >
+              {r.label}
+            </FilterPill>
+          ))}
+        </div>
+      </section>
 
       <MenuCard style={{ marginTop: 16 }}>
         <Row title="방해 금지 시간" description="이 시간에는 카톡을 보내지 않아요. 소식 탭에는 그대로 쌓여요." last>

@@ -22,6 +22,8 @@ export interface ScreeningFact {
   posterUrl?: string
   theaterId: string
   theaterName: string
+  /** 극장이 속한 지역 id (REGIONS) — 지역 필터 판정용 */
+  regionId: string
   /** 이 영화×극장의 상영일 목록 (ISO yyyy-mm-dd, 오름차순) */
   dates: string[]
 }
@@ -42,6 +44,8 @@ export interface NotificationPrefs {
   quietStart: string
   quietEnd: string
   channel: 'kakao' | 'none'
+  /** 알림 받을 지역(REGIONS의 id). 빈 배열이면 관심 극장 지역으로 자동 추론 → 그것도 없으면 전국 */
+  regionIds: string[]
 }
 
 export const DEFAULT_PREFS: Omit<NotificationPrefs, 'userId'> = {
@@ -51,6 +55,7 @@ export const DEFAULT_PREFS: Omit<NotificationPrefs, 'userId'> = {
   quietStart: '21:00',
   quietEnd: '09:00',
   channel: 'kakao',
+  regionIds: [],
 }
 
 /** 소식 카드 렌더에 필요한 스냅샷 — 원본 영화/극장이 지워져도 소식은 남아야 한다 */
@@ -65,6 +70,10 @@ export interface NotificationPayload {
   daysLeft?: number
   /** 'confirmed'면 확정, 'likely'면 추정 — 카피를 다르게 쓴다 */
   confidence?: 'confirmed' | 'likely'
+  /** 이 소식이 묶은 건수 — 1보다 크면 "12곳에서" / "새 작품 3편"으로 쓴다 */
+  groupedCount?: number
+  /** 무엇을 기준으로 묶었나 — 영화 하트/감독 하트는 'movie', 극장 하트는 'theater' */
+  groupedBy?: 'movie' | 'theater'
 }
 
 export interface NotificationEvent {
@@ -75,11 +84,14 @@ export interface NotificationEvent {
   movieId?: string
   theaterId?: string
   payload: NotificationPayload
+  /** 대표 키 — 이벤트 행에 저장된다 */
   dedupeKey: string
+  /** 이 이벤트가 덮는 모든 키 — 원장(notification_seen_keys)에 함께 기록해 재알림을 막는다 */
+  coveredKeys: string[]
 }
 
-/** 저장된 이벤트 — 소식 탭이 읽는 형태 */
-export interface StoredNotificationEvent extends NotificationEvent {
+/** 저장된 이벤트 — 소식 탭이 읽는 형태. coveredKeys는 생성 시점 관심사라 행에는 안 남는다(원장으로 감) */
+export interface StoredNotificationEvent extends Omit<NotificationEvent, 'coveredKeys'> {
   id: string
   createdAt: string
   readAt: string | null

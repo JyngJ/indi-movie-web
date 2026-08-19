@@ -20,8 +20,15 @@ CREATE TABLE IF NOT EXISTS public.notification_prefs (
   quiet_start    TIME NOT NULL DEFAULT '21:00',
   quiet_end      TIME NOT NULL DEFAULT '09:00',
   channel        TEXT NOT NULL DEFAULT 'kakao' CHECK (channel IN ('kakao', 'none')),
+  -- 알림 받을 지역(REGIONS의 id, 예 '서울'). 비어 있으면 관심 극장의 지역으로 자동 추론하고,
+  -- 그것도 없으면 전국. 관심 영화 하트 하나가 전국 40개 극장 소식을 끌고 오는 걸 막는다.
+  -- 지도의 '검색 지역'은 클라이언트 저장이라 배치가 못 읽어서 계정에 따로 둔다.
+  region_ids     TEXT[] NOT NULL DEFAULT '{}',
   updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- 이미 테이블을 만들었다면 컬럼만 추가된다
+ALTER TABLE public.notification_prefs ADD COLUMN IF NOT EXISTS region_ids TEXT[] NOT NULL DEFAULT '{}';
 
 ALTER TABLE public.notification_prefs ENABLE ROW LEVEL SECURITY;
 
@@ -97,3 +104,20 @@ CREATE INDEX IF NOT EXISTS idx_notification_deliveries_retry
 
 ALTER TABLE public.notification_deliveries ENABLE ROW LEVEL SECURITY;
 -- 사용자 노출 없음 — service role만. (정책 없이 RLS만 켜면 익명·인증 모두 차단된다)
+
+/* ── 4. 중복 방지 원장 (2026-08-20 추가) ───────────────────────── */
+-- 왜 events와 분리했나
+--  a) 소식을 영화 단위로 묶으면(오디세이 @ 12곳 → 소식 1장) 이벤트 1건이 극장 키 여러 개를
+--     덮는다. 이벤트 행 하나에 dedupe_key 하나라는 구조로는 표현이 안 된다.
+--  b) 첫 실행 백로그 — 이미 상영 중이던 조합까지 "새 상영"으로 쏟아진다. 원장만 미리 채우는
+--     시드 실행(`--seed`)으로 기준선을 깔 수 있어야 한다.
+--  c) 오래된 소식을 정리해도 알림이 되살아나지 않는다.
+CREATE TABLE IF NOT EXISTS public.notification_seen_keys (
+  user_id    UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  dedupe_key TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (user_id, dedupe_key)
+);
+
+ALTER TABLE public.notification_seen_keys ENABLE ROW LEVEL SECURITY;
+-- 사용자 노출 없음 — service role 배치 전용.

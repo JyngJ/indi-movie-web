@@ -7,10 +7,22 @@
  * - 막바지(last_week): 관심 작품의 남은 상영일이 임계 이하일 때. 주차 단위로 한 번만.
  * - 크롤 데이터는 회차가 사라졌다 다시 생기는 흔들림이 있어서, 판정 기준을 "처음 본 조합"으로
  *   두고 dedupe를 주차가 아닌 영구 키로 잡는다(같은 영화×극장은 평생 한 번만 새 상영 알림).
+ *
+ * 지역 (2026-08-20) — 관심 '영화·감독'은 전국 어디 상영이든 걸린다. 오디세이 한 편이 전국
+ * 40개 극장을 끌고 오는 식이라, 사용자가 갈 수 있는 지역으로 좁힌다.
+ * 우선순위: prefs.regionIds → (비었으면) 관심 극장들의 지역 → (그것도 없으면) 전국.
+ * 관심 '극장'으로 걸린 건은 이미 그 극장을 고른 것이므로 지역 필터를 적용하지 않는다.
+ *
+ * 묶기 (2026-08-20) — dry-run에서 「오디세이」 한 편이 전국 40여 개 극장에 걸려 소식을 도배했다.
+ * 하트가 영화·감독이면 **영화 단위로** 한 장("오디세이가 12곳에서 상영해요"),
+ * 하트가 극장이면 **극장 단위로** 한 장("아트하우스 모모에 새 작품 3편")으로 묶는다.
+ * 이벤트 1건이 극장 키 여러 개를 덮으므로 dedupeKey는 대표 키 하나, 나머지는 coveredKeys로 넘겨
+ * 원장(notification_seen_keys)에 같이 기록한다.
  */
 
 import type {
-  FavoriteRef, LastWeekFact, NotificationEvent, NotificationPrefs, ScreeningFact,
+  FavoriteRef, LastWeekFact, NotificationEvent, NotificationKind, NotificationPayload,
+  NotificationPrefs, ScreeningFact,
 } from './types'
 
 /** 막바지 알림 임계 — 남은 상영일이 이 이하면 알린다 */
@@ -48,6 +60,25 @@ interface FavoriteIndex {
   theaters: Set<string>
 }
 
+/**
+ * 이 사용자에게 알릴 지역 집합. null이면 제한 없음(전국).
+ * 명시 설정이 없으면 관심 극장이 있는 지역으로 자동 추론한다 — 설정을 안 건드려도
+ * "내가 하트한 극장 동네" 소식만 오는 게 기본 기대에 가깝다.
+ */
+export function resolveRegionFilter(
+  prefs: NotificationPrefs | undefined,
+  favoriteTheaterIds: Set<string>,
+  regionByTheaterId: Map<string, string>,
+): Set<string> | null {
+  if (prefs && prefs.regionIds.length > 0) return new Set(prefs.regionIds)
+  const inferred = new Set<string>()
+  for (const id of favoriteTheaterIds) {
+    const region = regionByTheaterId.get(id)
+    if (region) inferred.add(region)
+  }
+  return inferred.size > 0 ? inferred : null
+}
+
 function indexFavorites(favorites: FavoriteRef[]): Map<string, FavoriteIndex> {
   const byUser = new Map<string, FavoriteIndex>()
   for (const f of favorites) {
@@ -74,17 +105,20 @@ export function buildNewScreeningEvents(input: {
   const byUser = indexFavorites(favorites)
   const out: NotificationEvent[] = []
 
+  // 극장 → 지역. 관심 극장의 지역을 자동 추론할 때 쓴다
+  const regionByTheaterId = new Map<string, string>()
+  for (const s of screenings) regionByTheaterId.set(s.theaterId, s.regionId)
+
   for (const [userId, idx] of byUser) {
     const prefs = prefsByUser.get(userId)
     if (prefs && !prefs.newScreening) continue
     const seen = seenKeysByUser.get(userId) ?? new Set<string>()
-    let made = 0
+    const regionFilter = resolveRegionFilter(prefs, idx.theaters, regionByTheaterId)
 
+    /* 1단계: 새로 본 조합만 남긴다 */
+    interface Hit { fact: ScreeningFact; subjectType: NotificationEvent['subjectType']; subjectId: string; key: string }
+    const hits: Hit[] = []
     for (const s of screenings) {
-      if (made >= MAX_EVENTS_PER_USER_PER_RUN) break
-
-      // 어떤 하트 때문에 걸렸는지 — 영화 > 감독 > 극장 순으로 하나만 고른다.
-      // (셋 다 걸려도 소식은 한 장이면 된다)
       let subjectType: NotificationEvent['subjectType'] | null = null
       let subjectId = ''
       if (idx.movies.has(s.movieId)) { subjectType = 'movie'; subjectId = s.movieId }
@@ -94,27 +128,54 @@ export function buildNewScreeningEvents(input: {
         else if (idx.theaters.has(s.theaterId)) { subjectType = 'theater'; subjectId = s.theaterId }
       }
       if (!subjectType) continue
+      // 관심 극장으로 걸린 건 그 극장을 직접 고른 것 — 지역 필터를 적용하지 않는다
+      if (subjectType !== 'theater' && regionFilter && !regionFilter.has(s.regionId)) continue
 
-      const dedupeKey = newScreeningDedupeKey(s.movieId, s.theaterId)
-      if (seen.has(dedupeKey)) continue
-      seen.add(dedupeKey)
+      const key = newScreeningDedupeKey(s.movieId, s.theaterId)
+      if (seen.has(key)) continue
+      hits.push({ fact: s, subjectType, subjectId, key })
+    }
+
+    /* 2단계: 묶기 — 영화 하트/감독 하트는 영화별로, 극장 하트는 극장별로 한 장 */
+    const groups = new Map<string, Hit[]>()
+    for (const h of hits) {
+      const groupKey = h.subjectType === 'theater' ? `t:${h.fact.theaterId}` : `m:${h.fact.movieId}`
+      const list = groups.get(groupKey) ?? []
+      list.push(h)
+      groups.set(groupKey, list)
+    }
+
+    let made = 0
+    for (const [groupKey, list] of groups) {
+      if (made >= MAX_EVENTS_PER_USER_PER_RUN) break
       made += 1
 
+      // 대표는 상영일이 가장 이른 것 — 카드에 보여줄 극장·날짜가 된다
+      const sorted = [...list].sort((a, b) => (a.fact.dates[0] ?? '').localeCompare(b.fact.dates[0] ?? ''))
+      const head = sorted[0]
+      const coveredKeys = sorted.map((h) => h.key)
+      for (const k of coveredKeys) seen.add(k)
+
+      const byTheater = groupKey.startsWith('t:')
       out.push({
         userId,
         kind: 'new_screening',
-        subjectType,
-        subjectId,
-        movieId: s.movieId,
-        theaterId: s.theaterId,
+        subjectType: head.subjectType,
+        subjectId: head.subjectId,
+        movieId: byTheater ? undefined : head.fact.movieId,
+        theaterId: byTheater ? head.fact.theaterId : (sorted.length === 1 ? head.fact.theaterId : undefined),
         payload: {
-          movieTitle: s.movieTitle,
-          directors: s.directors,
-          posterUrl: s.posterUrl,
-          theaterName: s.theaterName,
-          firstDate: s.dates[0],
+          movieTitle: head.fact.movieTitle,
+          directors: head.fact.directors,
+          posterUrl: head.fact.posterUrl,
+          theaterName: head.fact.theaterName,
+          firstDate: head.fact.dates[0],
+          // 묶인 개수 — 카피가 "12곳에서" / "새 작품 3편"으로 갈린다
+          groupedCount: sorted.length,
+          groupedBy: byTheater ? 'theater' : 'movie',
         },
-        dedupeKey,
+        dedupeKey: head.key,
+        coveredKeys,
       })
     }
     seenKeysByUser.set(userId, seen)
@@ -137,10 +198,16 @@ export function buildLastWeekEvents(input: {
   const { favorites, screenings, lastWeekFacts, prefsByUser, seenKeysByUser, today } = input
   const byUser = indexFavorites(favorites)
   const weekKey = isoWeekKey(today)
+  const regionByTheaterId = new Map<string, string>()
+  for (const s of screenings) regionByTheaterId.set(s.theaterId, s.regionId)
   const factByMovie = new Map(lastWeekFacts.map((f) => [f.movieId, f]))
-  // 영화 정보(제목·극장)는 상영 사실에서 하나만 골라 쓴다
-  const screeningByMovie = new Map<string, ScreeningFact>()
-  for (const s of screenings) if (!screeningByMovie.has(s.movieId)) screeningByMovie.set(s.movieId, s)
+  // 영화별 상영 사실 — 지역 필터를 태워야 하므로 전부 들고 있는다
+  const screeningsByMovie = new Map<string, ScreeningFact[]>()
+  for (const s of screenings) {
+    const list = screeningsByMovie.get(s.movieId) ?? []
+    list.push(s)
+    screeningsByMovie.set(s.movieId, list)
+  }
 
   const out: NotificationEvent[] = []
 
@@ -148,13 +215,16 @@ export function buildLastWeekEvents(input: {
     const prefs = prefsByUser.get(userId)
     if (prefs && !prefs.lastWeek) continue
     const seen = seenKeysByUser.get(userId) ?? new Set<string>()
+    const regionFilter = resolveRegionFilter(prefs, idx.theaters, regionByTheaterId)
     let made = 0
 
     for (const [movieId, fact] of factByMovie) {
       if (made >= MAX_EVENTS_PER_USER_PER_RUN) break
       if (fact.daysLeft > LAST_WEEK_DAYS_THRESHOLD) continue
 
-      const s = screeningByMovie.get(movieId)
+      const candidates = screeningsByMovie.get(movieId) ?? []
+      // 알림 지역 안에서 하는 상영만 — 내가 못 가는 동네 막바지는 소식이 아니다
+      const s = candidates.find((c) => !regionFilter || regionFilter.has(c.regionId))
       if (!s) continue
 
       let subjectType: NotificationEvent['subjectType'] | null = null
@@ -188,6 +258,7 @@ export function buildLastWeekEvents(input: {
           confidence: fact.confidence,
         },
         dedupeKey,
+        coveredKeys: [dedupeKey],
       })
     }
     seenKeysByUser.set(userId, seen)
@@ -206,8 +277,8 @@ export function isQuietHour(nowHhmm: string, quietStart: string, quietEnd: strin
   return nowHhmm >= quietStart || nowHhmm < quietEnd   // 21:00~09:00 처럼 자정 넘김
 }
 
-/** 발송 문구 — 이벤트 묶음 하나를 한 줄 요약으로 */
-export function summarizeForMessage(events: NotificationEvent[]): string {
+/** 발송 문구 — 이벤트 묶음 하나를 한 줄 요약으로. 저장 전/후 어느 쪽이든 받는다 */
+export function summarizeForMessage<T extends { kind: NotificationKind; payload: NotificationPayload }>(events: T[]): string {
   if (events.length === 0) return ''
   const first = events[0].payload.movieTitle
   const rest = events.length - 1

@@ -9,6 +9,13 @@
  * 기록된다. 소식 탭에는 정상적으로 쌓이므로, 며칠 돌려보며 오탐률을 확인한 뒤
  * 카카오 sender를 끼워 발송을 켠다.
  *
+ * 모드
+ *   (기본)      소식 생성 + 발송 이력
+ *   --dry-run   저장 없이 몇 건이 잡히는지만 출력
+ *   --seed      원장(notification_seen_keys)만 채우고 소식은 만들지 않는다.
+ *               도입 시 1회 실행 — 이걸 안 하면 이미 상영 중이던 조합이 전부
+ *               "새 상영"으로 쏟아진다.
+ *
  * 실행 전 docs/SUPABASE_NOTIFICATIONS.sql 적용 필요.
  */
 
@@ -48,13 +55,36 @@ async function main() {
 
   const repo = createSupabaseNotificationBatchRepository()
 
+  if (process.argv.includes('--seed')) {
+    // 지금 잡히는 모든 조합을 '이미 본 것'으로 기록만 한다
+    let total = 0
+    const seedRepo = {
+      ...repo,
+      insertEvents: async (events: Parameters<typeof repo.insertEvents>[0]) => {
+        for (const e of events) {
+          await repo.recordSeenKeys(e.userId, e.coveredKeys)
+          total += e.coveredKeys.length
+        }
+        return []
+      },
+      insertDelivery: async () => {},
+    }
+    await runNotificationDispatch(seedRepo, { today, nowHhmm: hhmm })
+    console.log(`[notify] 시드 완료 — 기준선 ${total}건 기록. 다음 실행부터 진짜 새 상영만 잡힌다.`)
+    return
+  }
+
   if (dryRun) {
     // 저장 없이 몇 건이 만들어질지만 본다 — 판정 튜닝용
     const noWrite = {
       ...repo,
       insertEvents: async (events: Parameters<typeof repo.insertEvents>[0]) => {
         for (const e of events.slice(0, 20)) {
-          console.log(`  ${e.kind} ${e.payload.movieTitle} @ ${e.payload.theaterName} (${e.subjectType} 하트)`)
+          const n = e.payload.groupedCount ?? 1
+          const where = n > 1 && e.payload.groupedBy === 'movie' ? `${e.payload.theaterName} 외 ${n - 1}곳`
+            : n > 1 ? `${e.payload.theaterName} (새 작품 ${n}편)`
+            : e.payload.theaterName
+          console.log(`  ${e.kind} ${e.payload.movieTitle} @ ${where} (${e.subjectType} 하트)`)
         }
         if (events.length > 20) console.log(`  … 외 ${events.length - 20}건`)
         return []

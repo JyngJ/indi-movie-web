@@ -10,10 +10,11 @@ function makeRepo(over: Partial<NotificationBatchRepository> = {}) {
     listPrefs: async (ids) => new Map<string, NotificationPrefs>(ids.map((id) => [id, { userId: id, ...DEFAULT_PREFS }])),
     listScreeningFacts: async () => [{
       movieId: 'm1', movieTitle: '경멸', directors: ['장-뤽 고다르'], posterUrl: 'p.jpg',
-      theaterId: 't1', theaterName: '아트하우스 모모', dates: ['2026-08-21'],
+      theaterId: 't1', theaterName: '아트하우스 모모', regionId: '서울', dates: ['2026-08-21'],
     }],
     listLastWeekFacts: async () => [],
     listSeenDedupeKeys: async (ids) => new Map(ids.map((id) => [id, new Set<string>()])),
+    recordSeenKeys: async () => {},
     insertEvents: async (events) => events.map((e, i) => ({
       ...e, id: `e${i}`, createdAt: '2026-08-20T00:00:00Z', readAt: null,
     }) as StoredNotificationEvent),
@@ -56,8 +57,8 @@ describe('runNotificationDispatch', () => {
         { userId: 'u1', type: 'movie', id: 'm2' },
       ],
       listScreeningFacts: async () => [
-        { movieId: 'm1', movieTitle: '경멸', directors: [], theaterId: 't1', theaterName: 'A', dates: ['2026-08-21'] },
-        { movieId: 'm2', movieTitle: '몽상가들', directors: [], theaterId: 't2', theaterName: 'B', dates: ['2026-08-22'] },
+        { movieId: 'm1', movieTitle: '경멸', directors: [], theaterId: 't1', theaterName: 'A', regionId: '서울', dates: ['2026-08-21'] },
+        { movieId: 'm2', movieTitle: '몽상가들', directors: [], theaterId: 't2', theaterName: 'B', regionId: '서울', dates: ['2026-08-22'] },
       ],
     })
     const sent: Array<{ userId: string; text: string; eventCount: number }> = []

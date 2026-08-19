@@ -7,6 +7,7 @@
 
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import type { LastWeekFilm } from '@/lib/curation/types'
+import { getRegionFromCity } from '@/lib/regions'
 import type { NotificationBatchRepository } from './repository'
 import {
   DEFAULT_PREFS,
@@ -50,7 +51,7 @@ export function createSupabaseNotificationBatchRepository(): NotificationBatchRe
 
       const { data, error } = await supabase
         .from('notification_prefs')
-        .select('user_id, new_screening, last_week, weekly_digest, quiet_start, quiet_end, channel')
+        .select('user_id, new_screening, last_week, weekly_digest, quiet_start, quiet_end, channel, region_ids')
         .in('user_id', userIds)
       if (error) throw error
 
@@ -63,6 +64,7 @@ export function createSupabaseNotificationBatchRepository(): NotificationBatchRe
           quietStart: hhmm(r.quiet_start),
           quietEnd: hhmm(r.quiet_end),
           channel: r.channel,
+          regionIds: r.region_ids ?? [],
         })
       }
       return out
@@ -74,10 +76,10 @@ export function createSupabaseNotificationBatchRepository(): NotificationBatchRe
         theater_id: string
         show_date: string
         movies: { title: string; director: string[] | null; poster_url: string | null } | null
-        theaters: { name: string } | null
+        theaters: { name: string; city: string | null } | null
       }>((from, to) => supabase
         .from('showtimes')
-        .select('movie_id, theater_id, show_date, movies(title, director, poster_url), theaters(name)')
+        .select('movie_id, theater_id, show_date, movies(title, director, poster_url), theaters(name, city)')
         .eq('is_active', true)
         .gte('show_date', fromDate)
         .lte('show_date', toDate)
@@ -98,6 +100,7 @@ export function createSupabaseNotificationBatchRepository(): NotificationBatchRe
             posterUrl: r.movies.poster_url ?? undefined,
             theaterId: r.theater_id,
             theaterName: r.theaters.name,
+            regionId: getRegionFromCity(r.theaters.city ?? ''),
             dates: [],
           }
           byPair.set(key, fact)
@@ -131,9 +134,10 @@ export function createSupabaseNotificationBatchRepository(): NotificationBatchRe
       for (const id of userIds) out.set(id, new Set())
       if (userIds.length === 0) return out
 
+      // 원장에서 읽는다 — 소식 1건이 극장 키 여러 개를 덮으므로 events만 봐선 부족하다
       const rows = await fetchAll<{ user_id: string; dedupe_key: string }>(
         (from, to) => supabase
-          .from('notification_events')
+          .from('notification_seen_keys')
           .select('user_id, dedupe_key')
           .in('user_id', userIds)
           .range(from, to) as never,
@@ -144,6 +148,18 @@ export function createSupabaseNotificationBatchRepository(): NotificationBatchRe
         set.add(r.dedupe_key)
       }
       return out
+    },
+
+    async recordSeenKeys(userId, keys) {
+      if (keys.length === 0) return
+      // 1000개씩 끊어 넣는다 — 첫 시드는 사용자당 수천 건이 될 수 있다
+      for (let i = 0; i < keys.length; i += 1000) {
+        const { error } = await supabase
+          .from('notification_seen_keys')
+          .upsert(keys.slice(i, i + 1000).map((dedupe_key) => ({ user_id: userId, dedupe_key })),
+            { onConflict: 'user_id,dedupe_key', ignoreDuplicates: true })
+        if (error) throw error
+      }
     },
 
     async insertEvents(events) {
@@ -162,6 +178,17 @@ export function createSupabaseNotificationBatchRepository(): NotificationBatchRe
         })), { onConflict: 'user_id,dedupe_key', ignoreDuplicates: true })
         .select('id, user_id, kind, subject_type, subject_id, movie_id, theater_id, payload, dedupe_key, created_at, read_at')
       if (error) throw error
+
+      // 이벤트가 덮은 모든 키를 원장에 남긴다 — 이게 빠지면 묶인 극장들이 다음 실행에 재알림된다
+      const keysByUser = new Map<string, string[]>()
+      for (const e of events) {
+        const list = keysByUser.get(e.userId) ?? []
+        list.push(...e.coveredKeys)
+        keysByUser.set(e.userId, list)
+      }
+      for (const [userId, keys] of keysByUser) {
+        await this.recordSeenKeys(userId, keys)
+      }
 
       return (data ?? []).map<StoredNotificationEvent>((r) => ({
         id: r.id,

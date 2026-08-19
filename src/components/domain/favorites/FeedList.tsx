@@ -36,6 +36,12 @@ function headline(e: StoredNotificationEvent): string {
     const suffix = e.payload.confidence === 'confirmed' ? '' : ' (예정)'
     return `상영 ${d}일 남았어요${suffix}`
   }
+  // 한 편이 여러 극장에 걸리면 극장마다 카드를 내지 않고 한 장으로 묶는다
+  const n = e.payload.groupedCount ?? 1
+  if (n > 1 && e.payload.groupedBy === 'movie') {
+    return `${e.payload.theaterName} 외 ${n - 1}곳에서 상영해요`
+  }
+  if (n > 1) return `${e.payload.theaterName}에 새 작품 ${n}편이 들어왔어요`
   return `${e.payload.theaterName}에서 상영해요`
 }
 
@@ -57,6 +63,8 @@ function FeedItem({ event, now }: { event: StoredNotificationEvent; now: Date })
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
           {event.payload.movieTitle}
+          {(event.payload.groupedCount ?? 1) > 1 && event.payload.groupedBy === 'theater'
+            ? ` 외 ${(event.payload.groupedCount ?? 1) - 1}편` : ''}
         </span>
         <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)' }}>
           {headline(event)}
