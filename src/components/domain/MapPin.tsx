@@ -1,12 +1,9 @@
 'use client'
 
-type PinKind = 'indie' | 'cgv' | 'mega' | 'lotte'
-
 /** 관심 표시 — theater: 관심 극장(dot 테두리 하트색) / movie: 관심 영화가 걸린 극장(하트 뱃지) / both */
 export type PinFavoriteMark = 'none' | 'theater' | 'movie' | 'both'
 
 interface MapPinProps {
-  kind?: PinKind
   selected?: boolean
   favorite?: PinFavoriteMark
   label?: string
@@ -16,12 +13,9 @@ interface MapPinProps {
   isDark?: boolean
 }
 
-const PIN_COLORS: Record<PinKind, { dot: string; aura: string }> = {
-  indie: { dot: 'var(--color-primary-base)', aura: 'rgba(74,99,128,0.25)' },
-  cgv:   { dot: 'var(--color-cgv)',          aura: 'rgba(227,6,19,0.25)' },
-  mega:  { dot: 'var(--color-mega)',         aura: 'rgba(108,30,159,0.25)' },
-  lotte: { dot: 'var(--color-lotte)',        aura: 'rgba(237,28,36,0.25)' },
-}
+/* 이 서비스는 독립·예술영화관만 다룬다. 멀티플렉스 핀(cgv·mega·lotte)은 렌더된 적이 없어
+   2026-08-19에 색 토큰과 함께 지웠다. */
+const PIN_INDIE = { dot: 'var(--color-primary-base)', aura: 'rgba(74,99,128,0.25)' }
 
 const DOT = 22
 /** 관심 극장 핀 하트 — 크기와 광학 보정(px, SVG 좌표라 소수점 유효). Lucide heart 패스는 24 뷰박스 기준 x 2~22 / y 3~21 */
@@ -33,8 +27,8 @@ const AURA = 44
 const DIMMED_DOT_LIGHT = '#6b7280'
 const DIMMED_DOT_DARK = '#71717a'
 
-export function MapPin({ kind = 'indie', selected = false, favorite = 'none', label, labelOffset, onClick, dimmed = false, isDark = false }: MapPinProps) {
-  const { dot: activeDot, aura } = PIN_COLORS[kind]
+export function MapPin({ selected = false, favorite = 'none', label, labelOffset, onClick, dimmed = false, isDark = false }: MapPinProps) {
+  const { dot: activeDot, aura } = PIN_INDIE
   const dot = dimmed ? (isDark ? DIMMED_DOT_DARK : DIMMED_DOT_LIGHT) : activeDot
   const favTheater = favorite === 'theater' || favorite === 'both'
   const favMovie = favorite === 'movie' || favorite === 'both'

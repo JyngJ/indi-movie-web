@@ -5,6 +5,7 @@ import type { Movie } from '@/types/api'
 import { ScrollNavButton } from '@/components/primitives'
 import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
 import { trackEvent } from '@/lib/analytics/client'
+import { toSecureImageUrl } from '@/lib/media/imageUrl'
 import { buildSectionAnalytics } from '@/lib/curation/sectionRuns'
 import { useDirectorProfile } from '@/lib/supabase/queries'
 import { scrollRailBy } from '@/lib/ui/railScroll'
@@ -91,7 +92,7 @@ function DirectorCard({ director, isDesktop, onClick }: { director: DirectorSpot
       >
         {photoUrl ? (
           <img
-            src={photoUrl}
+            src={toSecureImageUrl(photoUrl)}
             alt={director.name}
             style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }}
             loading="lazy"

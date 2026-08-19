@@ -1,0 +1,7023 @@
+{
+  "generatedAt": "2026-08-19T11:54:38.328Z",
+  "figmaDumpAt": "2026-08-19T10:40:51.230Z",
+  "tokenGroups": [
+    {
+      "title": "Neutral scale — 2.0 웜그레이 램프 (S가 양끝으로 상승하는 U자 곡선, H 27~40)",
+      "tokens": [
+        {
+          "name": "--color-neutral-100",
+          "value": "#FAF9F8",
+          "comment": "페이지 배경 (미색 종이) — 피그마 neutral/100 정합 (2026-08-07, 구 50 폐지)",
+          "resolved": "#FAF9F8",
+          "figma": {
+            "name": "neutral/100",
+            "value": "#FAF9F8",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-neutral-200",
+          "value": "#EAE5E1",
+          "comment": "보더·구분선·눌린 면 — 피그마 neutral/200",
+          "resolved": "#EAE5E1",
+          "figma": {
+            "name": "neutral/200",
+            "value": "#EAE5E1",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-neutral-300",
+          "value": "#C6BFB9",
+          "comment": "비활성·보조 구분 (2.0 신설)",
+          "resolved": "#C6BFB9",
+          "figma": {
+            "name": "neutral/300",
+            "value": "#C6BFB9",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-neutral-400",
+          "value": "#A7A19A",
+          "comment": "플레이스홀더",
+          "resolved": "#A7A19A",
+          "figma": {
+            "name": "neutral/400",
+            "value": "#A7A19A",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-neutral-500",
+          "value": "#8D8781",
+          "comment": "캡션·메타 — \"없어도 되는 정보\"만",
+          "resolved": "#8D8781",
+          "figma": {
+            "name": "neutral/500",
+            "value": "#8D8781",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-neutral-600",
+          "value": "#726B65",
+          "comment": "서브 텍스트·본문(짧은 글)",
+          "resolved": "#726B65",
+          "figma": {
+            "name": "neutral/600",
+            "value": "#726B65",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-neutral-700",
+          "value": "#58524B",
+          "comment": "본문 텍스트(긴 글)",
+          "resolved": "#58524B",
+          "figma": {
+            "name": "neutral/700",
+            "value": "#58524B",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-neutral-800",
+          "value": "#2B2622",
+          "comment": "강조 텍스트·인버스 배경(날짜 활성 셀)",
+          "resolved": "#2B2622",
+          "figma": {
+            "name": "neutral/800",
+            "value": "#2B2622",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-neutral-900",
+          "value": "#0C0A08",
+          "comment": "텍스트 프라이머리·제목",
+          "resolved": "#0C0A08",
+          "figma": {
+            "name": "neutral/900",
+            "value": "#0C0A08",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Surface — 2.0: 페이지(미색 종이) 위에 순백 카드가 뜨는 구조",
+      "tokens": [
+        {
+          "name": "--color-surface-bg",
+          "value": "#FAF9F8",
+          "comment": "page (neutral/100)",
+          "resolved": "#FAF9F8",
+          "figma": {
+            "name": "surface/bg",
+            "value": "#FAF9F8",
+            "alias": "neutral/100",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-surface-card",
+          "value": "#FFFFFF",
+          "comment": "카드·시트·시간표 셀 — \"새 종이 한 장\"",
+          "resolved": "#FFFFFF",
+          "figma": {
+            "name": "surface/card",
+            "value": "#FFFFFF",
+            "alias": "white",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-surface-raised",
+          "value": "#EAE5E1",
+          "comment": "눌린 면·비활성 칩 (neutral/200)",
+          "resolved": "#EAE5E1",
+          "figma": {
+            "name": "surface/raised",
+            "value": "#EAE5E1",
+            "alias": "neutral/200",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-border",
+          "value": "#EAE5E1",
+          "comment": "보더·구분선 (neutral/200)",
+          "resolved": "#EAE5E1",
+          "figma": {
+            "name": "surface/border",
+            "value": "#EAE5E1",
+            "alias": "neutral/200",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-surface-overlay",
+          "value": "rgba(0, 0, 0, 0.06)",
+          "comment": "닫기 버튼·장르 칩·배지 등 표면 위 옅은 오버레이 배경",
+          "resolved": "rgba(0, 0, 0, 0.06)",
+          "figma": {
+            "name": "surface/overlay",
+            "value": "rgba(0, 0, 0, 0.06)",
+            "alias": null,
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-scrim",
+          "value": "rgba(0, 0, 0, 0.55)",
+          "comment": "모달·다이얼로그 뒤 배경 딤 (AddRequestModal 기준값) — 라이트·다크 동일",
+          "resolved": "rgba(0, 0, 0, 0.55)",
+          "figma": {
+            "name": "surface/scrim",
+            "value": "rgba(0, 0, 0, 0.55)",
+            "alias": null,
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-surface-overlay-hover",
+          "value": "rgba(0, 0, 0, 0.10)",
+          "comment": "IconButton overlay hover (Material state-layer식)",
+          "resolved": "rgba(0, 0, 0, 0.10)",
+          "figma": {
+            "name": "surface/overlay-hover",
+            "value": "rgba(0, 0, 0, 0.1)",
+            "alias": null,
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-surface-overlay-pressed",
+          "value": "rgba(0, 0, 0, 0.14)",
+          "comment": "IconButton overlay pressed",
+          "resolved": "rgba(0, 0, 0, 0.14)",
+          "figma": {
+            "name": "surface/overlay-pressed",
+            "value": "rgba(0, 0, 0, 0.14)",
+            "alias": null,
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-text-primary",
+          "value": "var(--color-neutral-900)",
+          "comment": "#0C0A08",
+          "resolved": "#0C0A08",
+          "figma": {
+            "name": "text/primary",
+            "value": "#0C0A08",
+            "alias": "neutral/900",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-text-body",
+          "value": "var(--color-neutral-700)",
+          "comment": "#58524B",
+          "resolved": "#58524B",
+          "figma": {
+            "name": "text/body",
+            "value": "#58524B",
+            "alias": "neutral/700",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-text-sub",
+          "value": "var(--color-neutral-600)",
+          "comment": "#726B65",
+          "resolved": "#726B65",
+          "figma": {
+            "name": "text/sub",
+            "value": "#726B65",
+            "alias": "neutral/600",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-text-caption",
+          "value": "var(--color-neutral-500)",
+          "comment": "#8D8781",
+          "resolved": "#8D8781",
+          "figma": {
+            "name": "text/caption",
+            "value": "#8D8781",
+            "alias": "neutral/500",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-text-placeholder",
+          "value": "var(--color-neutral-400)",
+          "comment": "#A7A19A",
+          "resolved": "#A7A19A",
+          "figma": {
+            "name": "text/placeholder",
+            "value": "#A7A19A",
+            "alias": "neutral/400",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-text-inverse",
+          "value": "#FFFFFF",
+          "comment": "",
+          "resolved": "#FFFFFF",
+          "figma": {
+            "name": "text/inverse",
+            "value": "#FFFFFF",
+            "alias": "white",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-on-accent",
+          "value": "#FFFFFF",
+          "comment": "",
+          "resolved": "#FFFFFF",
+          "figma": {
+            "name": "text/on-accent",
+            "value": "#FFFFFF",
+            "alias": "white",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-text-secondary",
+          "value": "var(--color-text-caption)",
+          "comment": "",
+          "resolved": "#8D8781",
+          "figma": null
+        },
+        {
+          "name": "--color-text-disabled",
+          "value": "var(--color-text-placeholder)",
+          "comment": "",
+          "resolved": "#A7A19A",
+          "figma": null
+        },
+        {
+          "name": "--color-surface",
+          "value": "var(--color-surface-card)",
+          "comment": "",
+          "resolved": "#FFFFFF",
+          "figma": null
+        },
+        {
+          "name": "--color-text",
+          "value": "var(--color-text-primary)",
+          "comment": "",
+          "resolved": "#0C0A08",
+          "figma": null
+        },
+        {
+          "name": "--color-primary-light",
+          "value": "var(--color-primary-hover-l)",
+          "comment": "",
+          "resolved": "#2F3A65",
+          "figma": null
+        }
+      ]
+    },
+    {
+      "title": "Primary — 2.0 인디고 (H227, S U자 곡선 9단계)",
+      "tokens": [
+        {
+          "name": "--color-primary-base",
+          "value": "#404E81",
+          "comment": "primary/700",
+          "resolved": "#404E81",
+          "figma": {
+            "name": "primary/base",
+            "value": "#404E81",
+            "alias": "primary/700",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-primary-hover",
+          "value": "var(--color-primary-800)",
+          "comment": "",
+          "resolved": "#2F3A65",
+          "figma": {
+            "name": "primary/hover",
+            "value": "#2F3A65",
+            "alias": "primary/800",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-primary-subtle",
+          "value": "var(--color-primary-100)",
+          "comment": "",
+          "resolved": "#ECEFF9",
+          "figma": {
+            "name": "primary/subtle",
+            "value": "#ECEFF9",
+            "alias": "primary/100",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-primary-on-subtle",
+          "value": "var(--color-primary-900)",
+          "comment": "",
+          "resolved": "#1F2747",
+          "figma": {
+            "name": "primary/on-subtle",
+            "value": "#1F2747",
+            "alias": "primary/900",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-primary-hover-l",
+          "value": "#2F3A65",
+          "comment": "primary/800",
+          "resolved": "#2F3A65",
+          "figma": null
+        },
+        {
+          "name": "--color-primary-subtle-l",
+          "value": "#ECEFF9",
+          "comment": "primary/100",
+          "resolved": "#ECEFF9",
+          "figma": null
+        },
+        {
+          "name": "--color-primary-text",
+          "value": "#1F2747",
+          "comment": "primary/900",
+          "resolved": "#1F2747",
+          "figma": null
+        },
+        {
+          "name": "--color-primary-900",
+          "value": "#1F2747",
+          "comment": "틴트 위 텍스트",
+          "resolved": "#1F2747",
+          "figma": {
+            "name": "primary/900",
+            "value": "#1F2747",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-primary-800",
+          "value": "#2F3A65",
+          "comment": "hover·프레스",
+          "resolved": "#2F3A65",
+          "figma": {
+            "name": "primary/800",
+            "value": "#2F3A65",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-primary-700",
+          "value": "#404E81",
+          "comment": "base — 버튼·CTA·활성",
+          "resolved": "#404E81",
+          "figma": {
+            "name": "primary/700",
+            "value": "#404E81",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-primary-600",
+          "value": "#51629E",
+          "comment": "보조 액센트",
+          "resolved": "#51629E",
+          "figma": {
+            "name": "primary/600",
+            "value": "#51629E",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-primary-500",
+          "value": "#6D7CB0",
+          "comment": "아이콘 액센트 — 텍스트 금지",
+          "resolved": "#6D7CB0",
+          "figma": {
+            "name": "primary/500",
+            "value": "#6D7CB0",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-primary-400",
+          "value": "#8794C5",
+          "comment": "차트·보조",
+          "resolved": "#8794C5",
+          "figma": {
+            "name": "primary/400",
+            "value": "#8794C5",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-primary-300",
+          "value": "#A6B1D9",
+          "comment": "연한 보더",
+          "resolved": "#A6B1D9",
+          "figma": {
+            "name": "primary/300",
+            "value": "#A6B1D9",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-primary-200",
+          "value": "#C4CCE9",
+          "comment": "틴트 보더",
+          "resolved": "#C4CCE9",
+          "figma": {
+            "name": "primary/200",
+            "value": "#C4CCE9",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-primary-100",
+          "value": "#ECEFF9",
+          "comment": "subtle — 활성 칩·틴트 배경",
+          "resolved": "#ECEFF9",
+          "figma": {
+            "name": "primary/100",
+            "value": "#ECEFF9",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Status ramps — 피그마 \"영화볼지도 색상 - 2.0\" 컬렉션과 1:1",
+      "tokens": [
+        {
+          "name": "--color-warning-900",
+          "value": "#885907",
+          "comment": "",
+          "resolved": "#885907",
+          "figma": {
+            "name": "warning/900",
+            "value": "#885907",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-warning-700",
+          "value": "#B9800E",
+          "comment": "",
+          "resolved": "#B9800E",
+          "figma": {
+            "name": "warning/700",
+            "value": "#B9800E",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-warning-500",
+          "value": "#E59B1A",
+          "comment": "",
+          "resolved": "#E59B1A",
+          "figma": {
+            "name": "warning/500",
+            "value": "#E59B1A",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-warning-300",
+          "value": "#F5CA75",
+          "comment": "",
+          "resolved": "#F5CA75",
+          "figma": {
+            "name": "warning/300",
+            "value": "#F5CA75",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-warning-100",
+          "value": "#FDF1D8",
+          "comment": "",
+          "resolved": "#FDF1D8",
+          "figma": {
+            "name": "warning/100",
+            "value": "#FDF1D8",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-success-900",
+          "value": "#2B5036",
+          "comment": "",
+          "resolved": "#2B5036",
+          "figma": {
+            "name": "success/900",
+            "value": "#2B5036",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-success-700",
+          "value": "#4A7C59",
+          "comment": "",
+          "resolved": "#4A7C59",
+          "figma": {
+            "name": "success/700",
+            "value": "#4A7C59",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-success-500",
+          "value": "#75A383",
+          "comment": "",
+          "resolved": "#75A383",
+          "figma": {
+            "name": "success/500",
+            "value": "#75A383",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-success-300",
+          "value": "#9FC6AB",
+          "comment": "",
+          "resolved": "#9FC6AB",
+          "figma": {
+            "name": "success/300",
+            "value": "#9FC6AB",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-success-100",
+          "value": "#E4F1E8",
+          "comment": "",
+          "resolved": "#E4F1E8",
+          "figma": {
+            "name": "success/100",
+            "value": "#E4F1E8",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-error-900",
+          "value": "#9B3331",
+          "comment": "",
+          "resolved": "#9B3331",
+          "figma": {
+            "name": "error/900",
+            "value": "#9B3331",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-error-700",
+          "value": "#BD4E4C",
+          "comment": "",
+          "resolved": "#BD4E4C",
+          "figma": {
+            "name": "error/700",
+            "value": "#BD4E4C",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-error-500",
+          "value": "#C98382",
+          "comment": "",
+          "resolved": "#C98382",
+          "figma": {
+            "name": "error/500",
+            "value": "#C98382",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-error-300",
+          "value": "#E0AFAE",
+          "comment": "",
+          "resolved": "#E0AFAE",
+          "figma": {
+            "name": "error/300",
+            "value": "#E0AFAE",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-error-100",
+          "value": "#F5E1E0",
+          "comment": "",
+          "resolved": "#F5E1E0",
+          "figma": {
+            "name": "error/100",
+            "value": "#F5E1E0",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-gv-900",
+          "value": "#3E1782",
+          "comment": "",
+          "resolved": "#3E1782",
+          "figma": {
+            "name": "gv/900",
+            "value": "#3E1782",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-gv-500",
+          "value": "#8C66CC",
+          "comment": "",
+          "resolved": "#8C66CC",
+          "figma": {
+            "name": "gv/500",
+            "value": "#8C66CC",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-gv-100",
+          "value": "#E7DCF9",
+          "comment": "",
+          "resolved": "#E7DCF9",
+          "figma": {
+            "name": "gv/100",
+            "value": "#E7DCF9",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-white",
+          "value": "#FFFFFF",
+          "comment": "",
+          "resolved": "#FFFFFF",
+          "figma": {
+            "name": "white",
+            "value": "#FFFFFF",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Semantic — 2.0 뮤트 계급 통일 (형광 제거)",
+      "tokens": [
+        {
+          "name": "--color-warning",
+          "value": "var(--color-warning-700)",
+          "comment": "오커 700 — 잔여석 적음. 구 #D97706(형광 앰버) 강등",
+          "resolved": "#B9800E",
+          "figma": {
+            "name": "status/warning",
+            "value": "#B9800E",
+            "alias": "warning/700",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-success",
+          "value": "var(--color-success-700)",
+          "comment": "700 유지 — 상영중",
+          "resolved": "#4A7C59",
+          "figma": {
+            "name": "status/success",
+            "value": "#4A7C59",
+            "alias": "success/700",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-error",
+          "value": "var(--color-error-900)",
+          "comment": "900 — \"매진\" 텍스트+칩 겸직 (L40, 구 #B94A48은 L52 무인지대)",
+          "resolved": "#9B3331",
+          "figma": {
+            "name": "status/error",
+            "value": "#9B3331",
+            "alias": "error/900",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-info",
+          "value": "#6D7CB0",
+          "comment": "폐지 예정 — 임시로 primary/500 (구 #3B82F6 형광 파랑 제거)",
+          "resolved": "#6D7CB0",
+          "figma": null
+        },
+        {
+          "name": "--color-gv",
+          "value": "var(--color-gv-900)",
+          "comment": "gv/900 — 핀·배지 솔리드+텍스트 3겸직 (구 #7C3AED 형광 강등)",
+          "resolved": "#3E1782",
+          "figma": {
+            "name": "status/gv",
+            "value": "#3E1782",
+            "alias": "gv/900",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-warning-tint",
+          "value": "var(--color-warning-100)",
+          "comment": "",
+          "resolved": "#FDF1D8",
+          "figma": {
+            "name": "status/warning-tint",
+            "value": "#FDF1D8",
+            "alias": "warning/100",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-warning-deep",
+          "value": "var(--color-warning-900)",
+          "comment": "",
+          "resolved": "#885907",
+          "figma": {
+            "name": "status/warning-deep",
+            "value": "#885907",
+            "alias": "warning/900",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-success-tint",
+          "value": "var(--color-success-100)",
+          "comment": "",
+          "resolved": "#E4F1E8",
+          "figma": {
+            "name": "status/success-tint",
+            "value": "#E4F1E8",
+            "alias": "success/100",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-success-deep",
+          "value": "var(--color-success-900)",
+          "comment": "",
+          "resolved": "#2B5036",
+          "figma": {
+            "name": "status/success-deep",
+            "value": "#2B5036",
+            "alias": "success/900",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-error-tint",
+          "value": "var(--color-error-100)",
+          "comment": "",
+          "resolved": "#F5E1E0",
+          "figma": {
+            "name": "status/error-tint",
+            "value": "#F5E1E0",
+            "alias": "error/100",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-error-mid",
+          "value": "var(--color-error-700)",
+          "comment": "아이콘·보더·요일(일) 전용",
+          "resolved": "#BD4E4C",
+          "figma": {
+            "name": "status/error-mid",
+            "value": "#BD4E4C",
+            "alias": "error/700",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-error-hover",
+          "value": "#872C2A",
+          "comment": "Button danger hover — 900에서 한 단계 다크",
+          "resolved": "#872C2A",
+          "figma": {
+            "name": "status/error-hover",
+            "value": "#872C2A",
+            "alias": null,
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-error-pressed",
+          "value": "#722523",
+          "comment": "Button danger pressed — 두 단계 다크",
+          "resolved": "#722523",
+          "figma": {
+            "name": "status/error-pressed",
+            "value": "#722523",
+            "alias": null,
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-gv-tint",
+          "value": "var(--color-gv-100)",
+          "comment": "",
+          "resolved": "#E7DCF9",
+          "figma": {
+            "name": "status/gv-tint",
+            "value": "#E7DCF9",
+            "alias": "gv/100",
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Typography: Families",
+      "tokens": [
+        {
+          "name": "--font-display",
+          "value": "'KIMM', 'Pretendard', sans-serif",
+          "comment": "제목·간판 (KIMM Bold)",
+          "resolved": "'KIMM', 'Pretendard', sans-serif",
+          "figma": null
+        },
+        {
+          "name": "--font-sans",
+          "value": "'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+          "comment": "UI 전반·본문",
+          "resolved": "'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+          "figma": null
+        },
+        {
+          "name": "--font-serif",
+          "value": "'KIMM', 'Pretendard', sans-serif",
+          "comment": "폐지(2026-08-07) — 사용처 0, dev 갤러리 호환용으로만 유지",
+          "resolved": "'KIMM', 'Pretendard', sans-serif",
+          "figma": null
+        },
+        {
+          "name": "--font-serif-en",
+          "value": "'Libre Baskerville', Georgia, serif",
+          "comment": "폐지(2026-08-07) — Baskerville은 2.0/meta로 흡수 (Typography 2.0 스펙)",
+          "resolved": "'Libre Baskerville', Georgia, serif",
+          "figma": null
+        },
+        {
+          "name": "--font-mono",
+          "value": "'SF Mono', 'ui-monospace', 'Courier New', monospace",
+          "comment": "",
+          "resolved": "'SF Mono', 'ui-monospace', 'Courier New', monospace",
+          "figma": null
+        }
+      ]
+    },
+    {
+      "title": "Typography: Scale — 2.0 통합 (13종 → 6단계: 10·12·14·16·20·24)",
+      "tokens": [
+        {
+          "name": "--text-h1",
+          "value": "24px",
+          "comment": "영화 대제목 / KIMM / 700 / 자간 5%",
+          "resolved": "24px",
+          "figma": null
+        },
+        {
+          "name": "--text-h2",
+          "value": "20px",
+          "comment": "극장명·섹션 헤더 / KIMM / 700 — 구 22, h3(20)와 통합",
+          "resolved": "20px",
+          "figma": null
+        },
+        {
+          "name": "--text-h3",
+          "value": "20px",
+          "comment": "= h2 (호환 alias — 신규 코드는 h2 사용)",
+          "resolved": "20px",
+          "figma": null
+        },
+        {
+          "name": "--text-title",
+          "value": "16px",
+          "comment": "카드 제목 / 700 — 구 17",
+          "resolved": "16px",
+          "figma": null
+        },
+        {
+          "name": "--text-subtitle",
+          "value": "14px",
+          "comment": "소제목 / 700 — 구 15. body와 같은 크기, weight·색(600)으로 위계",
+          "resolved": "14px",
+          "figma": null
+        },
+        {
+          "name": "--text-body",
+          "value": "14px",
+          "comment": "본문 / 500",
+          "resolved": "14px",
+          "figma": null
+        },
+        {
+          "name": "--text-meta",
+          "value": "12px",
+          "comment": "메타·주소·영문원제 / 400 — 구 13",
+          "resolved": "12px",
+          "figma": null
+        },
+        {
+          "name": "--text-caption",
+          "value": "12px",
+          "comment": "라벨 caps / 500 / uppercase / 자간 0.4 — 구 11",
+          "resolved": "12px",
+          "figma": null
+        },
+        {
+          "name": "--text-badge",
+          "value": "10px",
+          "comment": "배지·최소 라벨 / 700 — 구 9",
+          "resolved": "10px",
+          "figma": null
+        },
+        {
+          "name": "--text-time",
+          "value": "16px",
+          "comment": "시작 시간 / tnum / 700 — 구 17, date와 통합",
+          "resolved": "16px",
+          "figma": null
+        },
+        {
+          "name": "--text-seat",
+          "value": "12px",
+          "comment": "좌석수 / tnum / 600",
+          "resolved": "12px",
+          "figma": null
+        },
+        {
+          "name": "--text-dow",
+          "value": "12px",
+          "comment": "요일 = 2.0/meta (피그마) / 400",
+          "resolved": "12px",
+          "figma": null
+        },
+        {
+          "name": "--text-date",
+          "value": "16px",
+          "comment": "날짜 / tnum / 700",
+          "resolved": "16px",
+          "figma": null
+        }
+      ]
+    },
+    {
+      "title": "Baskerville 잔재 — 2.0에서 --text-meta로 흡수. 폐지 예정, 신규 사용 금지",
+      "tokens": [
+        {
+          "name": "--text-bask-title",
+          "value": "18px",
+          "comment": "폐지 예정 — 영문 원제 / regular",
+          "resolved": "18px",
+          "figma": null
+        },
+        {
+          "name": "--text-bask-meta",
+          "value": "13px",
+          "comment": "폐지 예정 — 감독명/연도 / regular",
+          "resolved": "13px",
+          "figma": null
+        },
+        {
+          "name": "--text-bask-xs",
+          "value": "10px",
+          "comment": "폐지 예정 — 썸네일 원제 / regular",
+          "resolved": "10px",
+          "figma": null
+        }
+      ]
+    },
+    {
+      "title": "Spacing (4배수 전용)",
+      "tokens": [
+        {
+          "name": "--spacing-1",
+          "value": "4px",
+          "comment": "",
+          "resolved": "4px",
+          "figma": {
+            "name": "spacing/1",
+            "value": "4px",
+            "alias": null,
+            "collection": "영화볼지도 스페이싱 - 2.0"
+          }
+        },
+        {
+          "name": "--spacing-2",
+          "value": "8px",
+          "comment": "",
+          "resolved": "8px",
+          "figma": {
+            "name": "spacing/2",
+            "value": "8px",
+            "alias": null,
+            "collection": "영화볼지도 스페이싱 - 2.0"
+          }
+        },
+        {
+          "name": "--spacing-3",
+          "value": "12px",
+          "comment": "",
+          "resolved": "12px",
+          "figma": {
+            "name": "spacing/3",
+            "value": "12px",
+            "alias": null,
+            "collection": "영화볼지도 스페이싱 - 2.0"
+          }
+        },
+        {
+          "name": "--spacing-4",
+          "value": "16px",
+          "comment": "",
+          "resolved": "16px",
+          "figma": {
+            "name": "spacing/4",
+            "value": "16px",
+            "alias": null,
+            "collection": "영화볼지도 스페이싱 - 2.0"
+          }
+        },
+        {
+          "name": "--spacing-5",
+          "value": "20px",
+          "comment": "",
+          "resolved": "20px",
+          "figma": null
+        },
+        {
+          "name": "--spacing-6",
+          "value": "24px",
+          "comment": "",
+          "resolved": "24px",
+          "figma": {
+            "name": "spacing/6",
+            "value": "24px",
+            "alias": null,
+            "collection": "영화볼지도 스페이싱 - 2.0"
+          }
+        },
+        {
+          "name": "--spacing-8",
+          "value": "32px",
+          "comment": "",
+          "resolved": "32px",
+          "figma": {
+            "name": "spacing/8",
+            "value": "32px",
+            "alias": null,
+            "collection": "영화볼지도 스페이싱 - 2.0"
+          }
+        },
+        {
+          "name": "--spacing-10",
+          "value": "40px",
+          "comment": "2.0에서 수렴 예정 (32 또는 48로) — 신규 코드 사용 금지",
+          "resolved": "40px",
+          "figma": null
+        },
+        {
+          "name": "--spacing-12",
+          "value": "48px",
+          "comment": "섹션 사이",
+          "resolved": "48px",
+          "figma": {
+            "name": "spacing/12",
+            "value": "48px",
+            "alias": null,
+            "collection": "영화볼지도 스페이싱 - 2.0"
+          }
+        },
+        {
+          "name": "--spacing-16",
+          "value": "64px",
+          "comment": "큰 섹션·화면 상하",
+          "resolved": "64px",
+          "figma": {
+            "name": "spacing/16",
+            "value": "64px",
+            "alias": null,
+            "collection": "영화볼지도 스페이싱 - 2.0"
+          }
+        },
+        {
+          "name": "--spacing-24",
+          "value": "96px",
+          "comment": "히어로 위아래",
+          "resolved": "96px",
+          "figma": {
+            "name": "spacing/24",
+            "value": "96px",
+            "alias": null,
+            "collection": "영화볼지도 스페이싱 - 2.0"
+          }
+        },
+        {
+          "name": "--spacing-32",
+          "value": "128px",
+          "comment": "특대 — 엠티 스테이트·랜딩",
+          "resolved": "128px",
+          "figma": {
+            "name": "spacing/32",
+            "value": "128px",
+            "alias": null,
+            "collection": "영화볼지도 스페이싱 - 2.0"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Border Radius (4배수 · 역할 기반 이름)",
+      "tokens": [
+        {
+          "name": "--shadow-inset",
+          "value": "inset 0 0 0 1px var(--color-border)",
+          "comment": "",
+          "resolved": "inset 0 0 0 1px var(--color-border)",
+          "figma": null
+        },
+        {
+          "name": "--radius-badge",
+          "value": "4px",
+          "comment": "배지·라벨·인디케이터",
+          "resolved": "4px",
+          "figma": {
+            "name": "radius/badge",
+            "value": "4px",
+            "alias": null,
+            "collection": "영화볼지도 래디우스 - 2.0"
+          }
+        },
+        {
+          "name": "--radius-poster",
+          "value": "2px",
+          "comment": "포스터·썸네일 — 2.0: 인쇄물 모서리 (8→2, 2026-08-03 결정). 날짜 셀·지도 팝업은 control/popover로 이관 예정",
+          "resolved": "2px",
+          "figma": {
+            "name": "radius/poster",
+            "value": "2px",
+            "alias": null,
+            "collection": "영화볼지도 래디우스 - 2.0"
+          }
+        },
+        {
+          "name": "--radius-button",
+          "value": "8px",
+          "comment": "버튼 — control(12)이 버튼엔 과해 분리 (2026-07-28 사용자 결정)",
+          "resolved": "8px",
+          "figma": {
+            "name": "radius/button",
+            "value": "8px",
+            "alias": null,
+            "collection": "영화볼지도 래디우스 - 2.0"
+          }
+        },
+        {
+          "name": "--radius-control",
+          "value": "12px",
+          "comment": "입력·칩·카드·상영시간표 셀",
+          "resolved": "12px",
+          "figma": {
+            "name": "radius/control",
+            "value": "12px",
+            "alias": null,
+            "collection": "영화볼지도 래디우스 - 2.0"
+          }
+        },
+        {
+          "name": "--radius-popover",
+          "value": "16px",
+          "comment": "드롭다운·팝오버·모달",
+          "resolved": "16px",
+          "figma": {
+            "name": "radius/popover",
+            "value": "16px",
+            "alias": null,
+            "collection": "영화볼지도 래디우스 - 2.0"
+          }
+        },
+        {
+          "name": "--radius-sheet",
+          "value": "20px",
+          "comment": "바텀시트 상단",
+          "resolved": "20px",
+          "figma": {
+            "name": "radius/sheet",
+            "value": "20px",
+            "alias": null,
+            "collection": "영화볼지도 래디우스 - 2.0"
+          }
+        },
+        {
+          "name": "--radius-pill",
+          "value": "9999px",
+          "comment": "pill — 검색창·칩·FAB",
+          "resolved": "9999px",
+          "figma": {
+            "name": "radius/pill",
+            "value": "9999px",
+            "alias": null,
+            "collection": "영화볼지도 래디우스 - 2.0"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Component Sizes (디자인 스펙 고정)",
+      "tokens": [
+        {
+          "name": "--comp-search-height",
+          "value": "44px",
+          "comment": "",
+          "resolved": "44px",
+          "figma": null
+        },
+        {
+          "name": "--comp-search-px",
+          "value": "18px",
+          "comment": "",
+          "resolved": "18px",
+          "figma": null
+        },
+        {
+          "name": "--comp-search-radius",
+          "value": "var(--radius-control)",
+          "comment": "2.0: 피그마 search 프레임 r12 — pill 폐기 (2026-08-05)",
+          "resolved": "12px",
+          "figma": null
+        },
+        {
+          "name": "--comp-chip-px",
+          "value": "14px",
+          "comment": "",
+          "resolved": "14px",
+          "figma": null
+        },
+        {
+          "name": "--comp-chip-radius",
+          "value": "var(--radius-pill)",
+          "comment": "",
+          "resolved": "9999px",
+          "figma": null
+        },
+        {
+          "name": "--comp-chip-font-size",
+          "value": "13px",
+          "comment": "",
+          "resolved": "13px",
+          "figma": null
+        },
+        {
+          "name": "--comp-date-cell-pt",
+          "value": "8px",
+          "comment": "2.0: 피그마 DateCell pad",
+          "resolved": "8px",
+          "figma": null
+        },
+        {
+          "name": "--comp-date-cell-pb",
+          "value": "8px",
+          "comment": "",
+          "resolved": "8px",
+          "figma": null
+        },
+        {
+          "name": "--comp-date-cell-radius",
+          "value": "var(--radius-button)",
+          "comment": "8px — 날짜 셀 선택 박스",
+          "resolved": "8px",
+          "figma": null
+        },
+        {
+          "name": "--comp-date-ind-w",
+          "value": "22px",
+          "comment": "상영있음 인디케이터 (피그마 22×3)",
+          "resolved": "22px",
+          "figma": null
+        },
+        {
+          "name": "--comp-date-ind-h",
+          "value": "3px",
+          "comment": "",
+          "resolved": "3px",
+          "figma": null
+        },
+        {
+          "name": "--comp-showtime-p",
+          "value": "16px",
+          "comment": "2.0: 셀 내부 여백 12→16 (피그마 확정)",
+          "resolved": "16px",
+          "figma": null
+        },
+        {
+          "name": "--comp-showtime-radius",
+          "value": "16px",
+          "comment": "피그마 ShowtimeCell r16",
+          "resolved": "16px",
+          "figma": null
+        },
+        {
+          "name": "--comp-showtime-min-width",
+          "value": "104px",
+          "comment": "2.0: 셀 최소폭 — 열 수는 auto-fill이 결정 (390=3열, 320=2열)",
+          "resolved": "104px",
+          "figma": null
+        },
+        {
+          "name": "--comp-poster-radius",
+          "value": "var(--radius-poster)",
+          "comment": "8px — 기존 6px에서 8px로 흡수(의도된 변경)",
+          "resolved": "2px",
+          "figma": null
+        },
+        {
+          "name": "--comp-poster-chip-pad",
+          "value": "8px 12px",
+          "comment": "포스터 오버레이 칩 안쪽 여백 (AGENTS 칩 정책)",
+          "resolved": "8px 12px",
+          "figma": null
+        },
+        {
+          "name": "--comp-poster-chip-offset",
+          "value": "6px",
+          "comment": "포스터 모서리에서 칩까지",
+          "resolved": "6px",
+          "figma": null
+        },
+        {
+          "name": "--comp-director-chip-pad",
+          "value": "8px 12px 8px 8px",
+          "comment": "감독 칩 — 좌측은 아바타가 채워 8, 우측은 글자라 12 (피그마 2.0/MovieCard)",
+          "resolved": "8px 12px 8px 8px",
+          "figma": null
+        },
+        {
+          "name": "--comp-director-chip-avatar",
+          "value": "24px",
+          "comment": "감독 칩 아바타 지름",
+          "resolved": "24px",
+          "figma": null
+        },
+        {
+          "name": "--comp-poster-sheet-radius",
+          "value": "var(--radius-poster)",
+          "comment": "8px",
+          "resolved": "2px",
+          "figma": null
+        },
+        {
+          "name": "--comp-poster-border",
+          "value": "rgba(0, 0, 0, 0.10)",
+          "comment": "",
+          "resolved": "rgba(0, 0, 0, 0.10)",
+          "figma": null
+        },
+        {
+          "name": "--comp-pin-dot-size",
+          "value": "22px",
+          "comment": "",
+          "resolved": "22px",
+          "figma": null
+        },
+        {
+          "name": "--comp-pin-base-size",
+          "value": "28px",
+          "comment": "",
+          "resolved": "28px",
+          "figma": null
+        },
+        {
+          "name": "--comp-pin-selected-size",
+          "value": "44px",
+          "comment": "",
+          "resolved": "44px",
+          "figma": null
+        },
+        {
+          "name": "--comp-fab-round-size",
+          "value": "44px",
+          "comment": "",
+          "resolved": "44px",
+          "figma": null
+        },
+        {
+          "name": "--comp-fab-round-icon",
+          "value": "18px",
+          "comment": "",
+          "resolved": "18px",
+          "figma": null
+        },
+        {
+          "name": "--comp-btn-h-sm",
+          "value": "32px",
+          "comment": "",
+          "resolved": "32px",
+          "figma": null
+        },
+        {
+          "name": "--comp-btn-h-md",
+          "value": "44px",
+          "comment": "",
+          "resolved": "44px",
+          "figma": null
+        },
+        {
+          "name": "--comp-btn-h-lg",
+          "value": "52px",
+          "comment": "",
+          "resolved": "52px",
+          "figma": null
+        },
+        {
+          "name": "--comp-btn-px-sm",
+          "value": "var(--spacing-4)",
+          "comment": "",
+          "resolved": "16px",
+          "figma": null
+        },
+        {
+          "name": "--comp-btn-px-md",
+          "value": "var(--spacing-8)",
+          "comment": "",
+          "resolved": "32px",
+          "figma": null
+        },
+        {
+          "name": "--comp-btn-px-lg",
+          "value": "var(--spacing-12)",
+          "comment": "",
+          "resolved": "48px",
+          "figma": null
+        },
+        {
+          "name": "--comp-btn-gap",
+          "value": "var(--spacing-2)",
+          "comment": "",
+          "resolved": "8px",
+          "figma": null
+        },
+        {
+          "name": "--comp-btn-radius",
+          "value": "var(--radius-button)",
+          "comment": "",
+          "resolved": "8px",
+          "figma": null
+        },
+        {
+          "name": "--comp-sort-h",
+          "value": "28px",
+          "comment": "",
+          "resolved": "28px",
+          "figma": null
+        },
+        {
+          "name": "--comp-sort-px",
+          "value": "var(--spacing-2)",
+          "comment": "",
+          "resolved": "8px",
+          "figma": null
+        },
+        {
+          "name": "--comp-sheet-radius",
+          "value": "var(--radius-sheet) var(--radius-sheet) 0 0",
+          "comment": "",
+          "resolved": "var(--radius-sheet) var(--radius-sheet) 0 0",
+          "figma": null
+        },
+        {
+          "name": "--comp-sheet-handle-width",
+          "value": "36px",
+          "comment": "",
+          "resolved": "36px",
+          "figma": null
+        },
+        {
+          "name": "--comp-sheet-handle-height",
+          "value": "4px",
+          "comment": "",
+          "resolved": "4px",
+          "figma": null
+        },
+        {
+          "name": "--comp-sheet-handle-radius",
+          "value": "2px",
+          "comment": "",
+          "resolved": "2px",
+          "figma": null
+        }
+      ]
+    },
+    {
+      "title": "Filter UI (라이트 모드)",
+      "tokens": [
+        {
+          "name": "--filter-chip-height",
+          "value": "32px",
+          "comment": "피그마 2.0/Chip h32 정합 (2026-08-09, 구 36)",
+          "resolved": "32px",
+          "figma": null
+        },
+        {
+          "name": "--filter-chip-value",
+          "value": "#1F2747",
+          "comment": "칩 선택값 텍스트 (primary/900)",
+          "resolved": "#1F2747",
+          "figma": null
+        },
+        {
+          "name": "--filter-chip-open-text",
+          "value": "#1F2747",
+          "comment": "드롭다운 열림 칩 라벨 (primary/900)",
+          "resolved": "#1F2747",
+          "figma": null
+        },
+        {
+          "name": "--filter-chip-open-caret",
+          "value": "var(--color-primary-hover-l)",
+          "comment": "열림 캐럿",
+          "resolved": "#2F3A65",
+          "figma": null
+        },
+        {
+          "name": "--filter-row-label-sel",
+          "value": "#1F2747",
+          "comment": "선택된 드롭다운 행 라벨 (primary/900)",
+          "resolved": "#1F2747",
+          "figma": null
+        },
+        {
+          "name": "--filter-dismiss-bg",
+          "value": "rgba(0,0,0,0.08)",
+          "comment": "× 버튼 배경",
+          "resolved": "rgba(0,0,0,0.08)",
+          "figma": null
+        },
+        {
+          "name": "--filter-indicator-bd",
+          "value": "rgba(0,0,0,0.1)",
+          "comment": "미선택 인디케이터 테두리",
+          "resolved": "rgba(0,0,0,0.1)",
+          "figma": null
+        }
+      ]
+    },
+    {
+      "title": "Shadows — 2.0: 2겹(direct+ambient), 색은 shadow-base 웜 브라운 고정 (순검정 금지)",
+      "tokens": [
+        {
+          "name": "--shadow-base",
+          "value": "#140F0A",
+          "comment": "",
+          "resolved": "#140F0A",
+          "figma": {
+            "name": "shadow/base",
+            "value": "#140F0A",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--shadow-sm",
+          "value": "0 1px 2px rgba(20, 15, 10, 0.10), 0 2px 8px rgba(20, 15, 10, 0.04)",
+          "comment": "",
+          "resolved": "0 1px 2px rgba(20, 15, 10, 0.10), 0 2px 8px rgba(20, 15, 10, 0.04)",
+          "figma": null
+        },
+        {
+          "name": "--shadow-md",
+          "value": "0 2px 4px rgba(20, 15, 10, 0.10), 0 8px 20px rgba(20, 15, 10, 0.06)",
+          "comment": "",
+          "resolved": "0 2px 4px rgba(20, 15, 10, 0.10), 0 8px 20px rgba(20, 15, 10, 0.06)",
+          "figma": null
+        },
+        {
+          "name": "--shadow-lg",
+          "value": "0 4px 8px rgba(20, 15, 10, 0.10), 0 16px 40px rgba(20, 15, 10, 0.08)",
+          "comment": "",
+          "resolved": "0 4px 8px rgba(20, 15, 10, 0.10), 0 16px 40px rgba(20, 15, 10, 0.08)",
+          "figma": null
+        },
+        {
+          "name": "--shadow-sheet",
+          "value": "0 0 24px rgba(20, 15, 10, 0.14), 0 0 6px rgba(20, 15, 10, 0.08)",
+          "comment": "",
+          "resolved": "0 0 24px rgba(20, 15, 10, 0.14), 0 0 6px rgba(20, 15, 10, 0.08)",
+          "figma": null
+        },
+        {
+          "name": "--shadow-panel-left",
+          "value": "-1px 0 2px rgba(20, 15, 10, 0.10), -2px 0 8px rgba(20, 15, 10, 0.04)",
+          "comment": "",
+          "resolved": "-1px 0 2px rgba(20, 15, 10, 0.10), -2px 0 8px rgba(20, 15, 10, 0.04)",
+          "figma": null
+        },
+        {
+          "name": "--shadow-popover",
+          "value": "0 10px 28px rgba(40, 55, 75, 0.34)",
+          "comment": "",
+          "resolved": "0 10px 28px rgba(40, 55, 75, 0.34)",
+          "figma": null
+        }
+      ]
+    },
+    {
+      "title": "Transitions",
+      "tokens": [
+        {
+          "name": "--transition-fast",
+          "value": "150ms ease",
+          "comment": "",
+          "resolved": "150ms ease",
+          "figma": null
+        },
+        {
+          "name": "--transition-base",
+          "value": "250ms ease",
+          "comment": "",
+          "resolved": "250ms ease",
+          "figma": null
+        }
+      ]
+    },
+    {
+      "title": "Layout",
+      "tokens": [
+        {
+          "name": "--gutter",
+          "value": "16px",
+          "comment": "최상위 좌우 여백. 중첩 시 12 → 8",
+          "resolved": "16px",
+          "figma": null
+        },
+        {
+          "name": "--gutter-sheet",
+          "value": "24px",
+          "comment": "2.0: 시트·패널 전용 거터 — 전역 gutter 개정 전 과도기 토큰",
+          "resolved": "24px",
+          "figma": null
+        },
+        {
+          "name": "--gutter-md",
+          "value": "12px",
+          "comment": "",
+          "resolved": "12px",
+          "figma": null
+        },
+        {
+          "name": "--gutter-sm",
+          "value": "8px",
+          "comment": "",
+          "resolved": "8px",
+          "figma": null
+        },
+        {
+          "name": "--max-width-mobile",
+          "value": "480px",
+          "comment": "",
+          "resolved": "480px",
+          "figma": null
+        },
+        {
+          "name": "--header-height",
+          "value": "52px",
+          "comment": "",
+          "resolved": "52px",
+          "figma": null
+        },
+        {
+          "name": "--touch-target",
+          "value": "44px",
+          "comment": "",
+          "resolved": "44px",
+          "figma": null
+        }
+      ]
+    }
+  ],
+  "typography": {
+    "code": [
+      {
+        "name": "--text-h1",
+        "value": "24px",
+        "comment": "영화 대제목 / KIMM / 700 / 자간 5%"
+      },
+      {
+        "name": "--text-h2",
+        "value": "20px",
+        "comment": "극장명·섹션 헤더 / KIMM / 700 — 구 22, h3(20)와 통합"
+      },
+      {
+        "name": "--text-h3",
+        "value": "20px",
+        "comment": "= h2 (호환 alias — 신규 코드는 h2 사용)"
+      },
+      {
+        "name": "--text-title",
+        "value": "16px",
+        "comment": "카드 제목 / 700 — 구 17"
+      },
+      {
+        "name": "--text-subtitle",
+        "value": "14px",
+        "comment": "소제목 / 700 — 구 15. body와 같은 크기, weight·색(600)으로 위계"
+      },
+      {
+        "name": "--text-body",
+        "value": "14px",
+        "comment": "본문 / 500"
+      },
+      {
+        "name": "--text-meta",
+        "value": "12px",
+        "comment": "메타·주소·영문원제 / 400 — 구 13"
+      },
+      {
+        "name": "--text-caption",
+        "value": "12px",
+        "comment": "라벨 caps / 500 / uppercase / 자간 0.4 — 구 11"
+      },
+      {
+        "name": "--text-badge",
+        "value": "10px",
+        "comment": "배지·최소 라벨 / 700 — 구 9"
+      },
+      {
+        "name": "--text-time",
+        "value": "16px",
+        "comment": "시작 시간 / tnum / 700 — 구 17, date와 통합"
+      },
+      {
+        "name": "--text-seat",
+        "value": "12px",
+        "comment": "좌석수 / tnum / 600"
+      },
+      {
+        "name": "--text-dow",
+        "value": "12px",
+        "comment": "요일 = 2.0/meta (피그마) / 400"
+      },
+      {
+        "name": "--text-date",
+        "value": "16px",
+        "comment": "날짜 / tnum / 700"
+      },
+      {
+        "name": "--text-bask-title",
+        "value": "18px",
+        "comment": "폐지 예정 — 영문 원제 / regular"
+      },
+      {
+        "name": "--text-bask-meta",
+        "value": "13px",
+        "comment": "폐지 예정 — 감독명/연도 / regular"
+      },
+      {
+        "name": "--text-bask-xs",
+        "value": "10px",
+        "comment": "폐지 예정 — 썸네일 원제 / regular"
+      }
+    ],
+    "figma": [
+      {
+        "name": "display/map-label",
+        "font": "KIMM_Bold/B",
+        "size": 11,
+        "lineHeight": "100%"
+      },
+      {
+        "name": "2.0/title",
+        "font": "Pretendard/Bold",
+        "size": 16,
+        "lineHeight": "140%"
+      },
+      {
+        "name": "2.0/body-strong",
+        "font": "Pretendard/Bold",
+        "size": 14,
+        "lineHeight": "150%"
+      },
+      {
+        "name": "2.0/body",
+        "font": "Pretendard/Medium",
+        "size": 14,
+        "lineHeight": "150%"
+      },
+      {
+        "name": "2.0/meta",
+        "font": "Pretendard/Regular",
+        "size": 12,
+        "lineHeight": "150%"
+      },
+      {
+        "name": "2.0/caption",
+        "font": "Pretendard/Medium",
+        "size": 12,
+        "lineHeight": "140%"
+      },
+      {
+        "name": "2.0/label",
+        "font": "Pretendard/Medium",
+        "size": 10,
+        "lineHeight": "140%"
+      },
+      {
+        "name": "2.0/note",
+        "font": "Pretendard/Medium",
+        "size": 12,
+        "lineHeight": "155%"
+      },
+      {
+        "name": "2.0/badge",
+        "font": "Pretendard/Bold",
+        "size": 10,
+        "lineHeight": "100%"
+      },
+      {
+        "name": "2.0/meta-strong",
+        "font": "Pretendard/SemiBold",
+        "size": 12,
+        "lineHeight": "150%"
+      },
+      {
+        "name": "2.0/display/h1",
+        "font": "KIMM_Bold/B",
+        "size": 24,
+        "lineHeight": "125%"
+      },
+      {
+        "name": "2.0/display/h2",
+        "font": "KIMM_Bold/B",
+        "size": 20,
+        "lineHeight": "130%"
+      },
+      {
+        "name": "2.0/num/time",
+        "font": "Pretendard/Bold",
+        "size": 16,
+        "lineHeight": "100%"
+      },
+      {
+        "name": "2.0/num/seat",
+        "font": "Pretendard/SemiBold",
+        "size": 12,
+        "lineHeight": "100%"
+      }
+    ]
+  },
+  "effects": [
+    {
+      "name": "2.0/shadow/sm",
+      "effects": [
+        {
+          "type": "DROP_SHADOW",
+          "radius": 2,
+          "spread": 0,
+          "offset": {
+            "x": 0,
+            "y": 1
+          },
+          "color": {
+            "r": 0.0784313753247261,
+            "g": 0.05882352963089943,
+            "b": 0.03921568766236305,
+            "a": 0.10000000149011612
+          },
+          "visible": true
+        },
+        {
+          "type": "DROP_SHADOW",
+          "radius": 8,
+          "spread": 0,
+          "offset": {
+            "x": 0,
+            "y": 2
+          },
+          "color": {
+            "r": 0.0784313753247261,
+            "g": 0.05882352963089943,
+            "b": 0.03921568766236305,
+            "a": 0.03999999910593033
+          },
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "2.0/shadow/md",
+      "effects": [
+        {
+          "type": "DROP_SHADOW",
+          "radius": 4,
+          "spread": 0,
+          "offset": {
+            "x": 0,
+            "y": 2
+          },
+          "color": {
+            "r": 0.0784313753247261,
+            "g": 0.05882352963089943,
+            "b": 0.03921568766236305,
+            "a": 0.10000000149011612
+          },
+          "visible": true
+        },
+        {
+          "type": "DROP_SHADOW",
+          "radius": 20,
+          "spread": 0,
+          "offset": {
+            "x": 0,
+            "y": 8
+          },
+          "color": {
+            "r": 0.0784313753247261,
+            "g": 0.05882352963089943,
+            "b": 0.03921568766236305,
+            "a": 0.05999999865889549
+          },
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "2.0/shadow/lg",
+      "effects": [
+        {
+          "type": "DROP_SHADOW",
+          "radius": 8,
+          "spread": 0,
+          "offset": {
+            "x": 0,
+            "y": 4
+          },
+          "color": {
+            "r": 0.0784313753247261,
+            "g": 0.05882352963089943,
+            "b": 0.03921568766236305,
+            "a": 0.10000000149011612
+          },
+          "visible": true
+        },
+        {
+          "type": "DROP_SHADOW",
+          "radius": 40,
+          "spread": 0,
+          "offset": {
+            "x": 0,
+            "y": 16
+          },
+          "color": {
+            "r": 0.0784313753247261,
+            "g": 0.05882352963089943,
+            "b": 0.03921568766236305,
+            "a": 0.07999999821186066
+          },
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "2.0/shadow/sheet",
+      "effects": [
+        {
+          "type": "DROP_SHADOW",
+          "radius": 24,
+          "spread": 0,
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "color": {
+            "r": 0.0784313753247261,
+            "g": 0.05882352963089943,
+            "b": 0.03921568766236305,
+            "a": 0.14000000059604645
+          },
+          "visible": true
+        },
+        {
+          "type": "DROP_SHADOW",
+          "radius": 6,
+          "spread": 0,
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "color": {
+            "r": 0.0784313753247261,
+            "g": 0.05882352963089943,
+            "b": 0.03921568766236305,
+            "a": 0.07999999821186066
+          },
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "2.0/shadow/pin",
+      "effects": [
+        {
+          "type": "DROP_SHADOW",
+          "radius": 6,
+          "spread": 0,
+          "offset": {
+            "x": 0,
+            "y": 2
+          },
+          "color": {
+            "r": 0.0784313753247261,
+            "g": 0.05882352963089943,
+            "b": 0.03921568766236305,
+            "a": 0.18000000715255737
+          },
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "2.0/shadow/inset",
+      "effects": [
+        {
+          "type": "INNER_SHADOW",
+          "radius": 2,
+          "spread": 0,
+          "offset": {
+            "x": 0,
+            "y": 1
+          },
+          "color": {
+            "r": 0.0784313753247261,
+            "g": 0.05882352963089943,
+            "b": 0.03921568766236305,
+            "a": 0.10000000149011612
+          },
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "2.0/shadow/popover",
+      "effects": [
+        {
+          "type": "DROP_SHADOW",
+          "radius": 28,
+          "spread": 0,
+          "offset": {
+            "x": 0,
+            "y": 10
+          },
+          "color": {
+            "r": 0.1568627506494522,
+            "g": 0.21568627655506134,
+            "b": 0.29411765933036804,
+            "a": 0.3400000035762787
+          },
+          "visible": true
+        }
+      ]
+    }
+  ],
+  "figmaCollections": [
+    {
+      "name": "영화볼지도 색상 - 2.0",
+      "modes": [
+        "Light"
+      ],
+      "count": 38,
+      "vars": [
+        {
+          "name": "neutral/900",
+          "value": "#0C0A08",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL",
+            "TEXT_FILL"
+          ]
+        },
+        {
+          "name": "neutral/800",
+          "value": "#2B2622",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL",
+            "TEXT_FILL"
+          ]
+        },
+        {
+          "name": "neutral/700",
+          "value": "#58524B",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL",
+            "TEXT_FILL"
+          ]
+        },
+        {
+          "name": "neutral/600",
+          "value": "#726B65",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL",
+            "TEXT_FILL"
+          ]
+        },
+        {
+          "name": "neutral/500",
+          "value": "#8D8781",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL",
+            "TEXT_FILL"
+          ]
+        },
+        {
+          "name": "neutral/400",
+          "value": "#A7A19A",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL",
+            "TEXT_FILL"
+          ]
+        },
+        {
+          "name": "neutral/300",
+          "value": "#C6BFB9",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL",
+            "TEXT_FILL",
+            "STROKE_COLOR"
+          ]
+        },
+        {
+          "name": "neutral/200",
+          "value": "#EAE5E1",
+          "scopes": [
+            "FRAME_FILL",
+            "TEXT_FILL",
+            "STROKE_COLOR"
+          ]
+        },
+        {
+          "name": "neutral/100",
+          "value": "#FAF9F8",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL"
+          ]
+        },
+        {
+          "name": "primary/900",
+          "value": "#1F2747",
+          "scopes": [
+            "TEXT_FILL"
+          ]
+        },
+        {
+          "name": "primary/800",
+          "value": "#2F3A65",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL"
+          ]
+        },
+        {
+          "name": "primary/700",
+          "value": "#404E81",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL",
+            "TEXT_FILL"
+          ]
+        },
+        {
+          "name": "primary/600",
+          "value": "#51629E",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL",
+            "STROKE_COLOR"
+          ]
+        },
+        {
+          "name": "primary/500",
+          "value": "#6D7CB0",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL",
+            "TEXT_FILL"
+          ]
+        },
+        {
+          "name": "primary/400",
+          "value": "#8794C5",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL"
+          ]
+        },
+        {
+          "name": "primary/300",
+          "value": "#A6B1D9",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL",
+            "STROKE_COLOR"
+          ]
+        },
+        {
+          "name": "primary/200",
+          "value": "#C4CCE9",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL",
+            "STROKE_COLOR"
+          ]
+        },
+        {
+          "name": "primary/100",
+          "value": "#ECEFF9",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL",
+            "TEXT_FILL"
+          ]
+        },
+        {
+          "name": "warning/900",
+          "value": "#885907",
+          "scopes": [
+            "TEXT_FILL"
+          ]
+        },
+        {
+          "name": "warning/700",
+          "value": "#B9800E",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL",
+            "TEXT_FILL"
+          ]
+        },
+        {
+          "name": "warning/500",
+          "value": "#E59B1A",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL",
+            "STROKE_COLOR"
+          ]
+        },
+        {
+          "name": "warning/300",
+          "value": "#F5CA75",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL",
+            "STROKE_COLOR"
+          ]
+        },
+        {
+          "name": "warning/100",
+          "value": "#FDF1D8",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL"
+          ]
+        },
+        {
+          "name": "success/900",
+          "value": "#2B5036",
+          "scopes": [
+            "TEXT_FILL"
+          ]
+        },
+        {
+          "name": "success/700",
+          "value": "#4A7C59",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL",
+            "TEXT_FILL"
+          ]
+        },
+        {
+          "name": "success/500",
+          "value": "#75A383",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL",
+            "STROKE_COLOR"
+          ]
+        },
+        {
+          "name": "success/300",
+          "value": "#9FC6AB",
+          "scopes": [
+            "STROKE_COLOR"
+          ]
+        },
+        {
+          "name": "success/100",
+          "value": "#E4F1E8",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL"
+          ]
+        },
+        {
+          "name": "error/900",
+          "value": "#9B3331",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL",
+            "TEXT_FILL"
+          ]
+        },
+        {
+          "name": "error/700",
+          "value": "#BD4E4C",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL",
+            "TEXT_FILL",
+            "STROKE_COLOR"
+          ]
+        },
+        {
+          "name": "error/500",
+          "value": "#C98382",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL"
+          ]
+        },
+        {
+          "name": "error/300",
+          "value": "#E0AFAE",
+          "scopes": [
+            "STROKE_COLOR"
+          ]
+        },
+        {
+          "name": "error/100",
+          "value": "#F5E1E0",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL"
+          ]
+        },
+        {
+          "name": "gv/900",
+          "value": "#3E1782",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL",
+            "TEXT_FILL"
+          ]
+        },
+        {
+          "name": "gv/500",
+          "value": "#8C66CC",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL"
+          ]
+        },
+        {
+          "name": "gv/100",
+          "value": "#E7DCF9",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL"
+          ]
+        },
+        {
+          "name": "white",
+          "value": "#FFFFFF",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL"
+          ]
+        },
+        {
+          "name": "shadow/base",
+          "value": "#140F0A",
+          "scopes": [
+            "EFFECT_COLOR"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "영화볼지도 스페이싱 - 2.0",
+      "modes": [
+        "Value"
+      ],
+      "count": 10,
+      "vars": [
+        {
+          "name": "spacing/1",
+          "value": 4,
+          "scopes": [
+            "WIDTH_HEIGHT",
+            "GAP"
+          ]
+        },
+        {
+          "name": "spacing/2",
+          "value": 8,
+          "scopes": [
+            "WIDTH_HEIGHT",
+            "GAP"
+          ]
+        },
+        {
+          "name": "spacing/3",
+          "value": 12,
+          "scopes": [
+            "WIDTH_HEIGHT",
+            "GAP"
+          ]
+        },
+        {
+          "name": "spacing/4",
+          "value": 16,
+          "scopes": [
+            "WIDTH_HEIGHT",
+            "GAP"
+          ]
+        },
+        {
+          "name": "spacing/6",
+          "value": 24,
+          "scopes": [
+            "WIDTH_HEIGHT",
+            "GAP"
+          ]
+        },
+        {
+          "name": "spacing/8",
+          "value": 32,
+          "scopes": [
+            "WIDTH_HEIGHT",
+            "GAP"
+          ]
+        },
+        {
+          "name": "spacing/12",
+          "value": 48,
+          "scopes": [
+            "WIDTH_HEIGHT",
+            "GAP"
+          ]
+        },
+        {
+          "name": "spacing/16",
+          "value": 64,
+          "scopes": [
+            "WIDTH_HEIGHT",
+            "GAP"
+          ]
+        },
+        {
+          "name": "spacing/24",
+          "value": 96,
+          "scopes": [
+            "WIDTH_HEIGHT",
+            "GAP"
+          ]
+        },
+        {
+          "name": "spacing/32",
+          "value": 128,
+          "scopes": [
+            "WIDTH_HEIGHT",
+            "GAP"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "영화볼지도 래디우스 - 2.0",
+      "modes": [
+        "Value"
+      ],
+      "count": 7,
+      "vars": [
+        {
+          "name": "radius/poster",
+          "value": 2,
+          "scopes": [
+            "CORNER_RADIUS"
+          ]
+        },
+        {
+          "name": "radius/badge",
+          "value": 4,
+          "scopes": [
+            "CORNER_RADIUS"
+          ]
+        },
+        {
+          "name": "radius/button",
+          "value": 8,
+          "scopes": [
+            "CORNER_RADIUS"
+          ]
+        },
+        {
+          "name": "radius/control",
+          "value": 12,
+          "scopes": [
+            "CORNER_RADIUS"
+          ]
+        },
+        {
+          "name": "radius/popover",
+          "value": 16,
+          "scopes": [
+            "CORNER_RADIUS"
+          ]
+        },
+        {
+          "name": "radius/sheet",
+          "value": 20,
+          "scopes": [
+            "CORNER_RADIUS"
+          ]
+        },
+        {
+          "name": "radius/pill",
+          "value": 9999,
+          "scopes": [
+            "CORNER_RADIUS"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "영화볼지도 시멘틱 - 2.0",
+      "modes": [
+        "Light"
+      ],
+      "count": 32,
+      "vars": [
+        {
+          "name": "surface/bg",
+          "value": {
+            "alias": "neutral/100"
+          },
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "surface/card",
+          "value": {
+            "alias": "white"
+          },
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "surface/raised",
+          "value": {
+            "alias": "neutral/200"
+          },
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "surface/border",
+          "value": {
+            "alias": "neutral/200"
+          },
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "surface/overlay",
+          "value": "#000000 @0.05999999865889549",
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "surface/overlay-hover",
+          "value": "#000000 @0.10000000149011612",
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "surface/overlay-pressed",
+          "value": "#000000 @0.14000000059604645",
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "surface/scrim",
+          "value": "#000000 @0.550000011920929",
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "text/primary",
+          "value": {
+            "alias": "neutral/900"
+          },
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "text/body",
+          "value": {
+            "alias": "neutral/700"
+          },
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "text/sub",
+          "value": {
+            "alias": "neutral/600"
+          },
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "text/caption",
+          "value": {
+            "alias": "neutral/500"
+          },
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "text/placeholder",
+          "value": {
+            "alias": "neutral/400"
+          },
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "text/inverse",
+          "value": {
+            "alias": "white"
+          },
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "text/on-accent",
+          "value": {
+            "alias": "white"
+          },
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "primary/base",
+          "value": {
+            "alias": "primary/700"
+          },
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "primary/hover",
+          "value": {
+            "alias": "primary/800"
+          },
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "primary/subtle",
+          "value": {
+            "alias": "primary/100"
+          },
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "primary/on-subtle",
+          "value": {
+            "alias": "primary/900"
+          },
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "status/warning",
+          "value": {
+            "alias": "warning/700"
+          },
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "status/warning-tint",
+          "value": {
+            "alias": "warning/100"
+          },
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "status/warning-deep",
+          "value": {
+            "alias": "warning/900"
+          },
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "status/success",
+          "value": {
+            "alias": "success/700"
+          },
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "status/success-tint",
+          "value": {
+            "alias": "success/100"
+          },
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "status/success-deep",
+          "value": {
+            "alias": "success/900"
+          },
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "status/error",
+          "value": {
+            "alias": "error/900"
+          },
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "status/error-tint",
+          "value": {
+            "alias": "error/100"
+          },
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "status/error-mid",
+          "value": {
+            "alias": "error/700"
+          },
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "status/error-hover",
+          "value": "#872C2A",
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "status/error-pressed",
+          "value": "#722523",
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "status/gv",
+          "value": {
+            "alias": "gv/900"
+          },
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "status/gv-tint",
+          "value": {
+            "alias": "gv/100"
+          },
+          "scopes": [
+            "ALL_SCOPES"
+          ]
+        }
+      ]
+    }
+  ],
+  "components": [
+    {
+      "name": "Avatar",
+      "file": "src/components/primitives/Avatar.tsx",
+      "doc": "감독 원형 아바타 — 피그마 2.0/Avatar (Size=160/100/48/28).\n사진 없으면 이니셜 폴백(bg neutral-100 · 글자 neutral-500 · size×0.36).\n링은 --shadow-inset (피그마 2.0/shadow/inset 대응).",
+      "props": [
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "photoUrl",
+          "type": "string | null | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "size",
+          "type": "number",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        }
+      ],
+      "figmaSet": "2.0/Avatar",
+      "figma": {
+        "name": "2.0/Avatar",
+        "axes": {
+          "Size": [
+            "160",
+            "100",
+            "48",
+            "28"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "Size": "160"
+            },
+            "w": 160,
+            "h": 160,
+            "radius": 80,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "VariableID:2:4"
+          },
+          {
+            "props": {
+              "Size": "100"
+            },
+            "w": 100,
+            "h": 100,
+            "radius": 50,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "VariableID:2:4"
+          },
+          {
+            "props": {
+              "Size": "48"
+            },
+            "w": 48,
+            "h": 48,
+            "radius": 24,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "VariableID:2:4"
+          },
+          {
+            "props": {
+              "Size": "28"
+            },
+            "w": 28,
+            "h": 28,
+            "radius": 14,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "VariableID:2:4"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Badge",
+      "file": "src/components/primitives/Badge.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "variant",
+          "type": "Variant | undefined",
+          "optional": true,
+          "default": "'default'",
+          "doc": ""
+        },
+        {
+          "name": "children",
+          "type": "ReactNode",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        }
+      ],
+      "figmaSet": "2.0/Badge",
+      "figma": {
+        "name": "2.0/Badge",
+        "axes": {
+          "Variant": [
+            "default",
+            "success",
+            "warning",
+            "error"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "Variant": "default"
+            },
+            "w": 34,
+            "h": 18,
+            "radius": 4,
+            "pad": [
+              4,
+              8,
+              4,
+              8
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#EAE5E1"
+          },
+          {
+            "props": {
+              "Variant": "success"
+            },
+            "w": 42,
+            "h": 18,
+            "radius": 4,
+            "pad": [
+              4,
+              8,
+              4,
+              8
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#E4F1E8"
+          },
+          {
+            "props": {
+              "Variant": "warning"
+            },
+            "w": 51,
+            "h": 18,
+            "radius": 4,
+            "pad": [
+              4,
+              8,
+              4,
+              8
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#FDF1D8"
+          },
+          {
+            "props": {
+              "Variant": "error"
+            },
+            "w": 34,
+            "h": 18,
+            "radius": 4,
+            "pad": [
+              4,
+              8,
+              4,
+              8
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#F5E1E0"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BottomSheet",
+      "file": "src/components/primitives/BottomSheet.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "children",
+          "type": "ReactNode",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "className",
+          "type": "string | undefined",
+          "optional": true,
+          "default": "''",
+          "doc": ""
+        }
+      ],
+      "figmaSet": "2.0/BottomSheet",
+      "figma": {
+        "name": "2.0/BottomSheet",
+        "axes": {},
+        "variants": [
+          {
+            "props": {},
+            "w": 360,
+            "h": 86,
+            "radius": [
+              20,
+              20,
+              0,
+              0
+            ],
+            "pad": [
+              8,
+              24,
+              20,
+              24
+            ],
+            "gap": 12,
+            "dir": "VERTICAL",
+            "fill": "#EAE5E1"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BubbleTail",
+      "file": "src/components/primitives/BubbleTail.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "dir",
+          "type": "BubbleTailDir | undefined",
+          "optional": true,
+          "default": "'up'",
+          "doc": ""
+        },
+        {
+          "name": "offset",
+          "type": "string | number | undefined",
+          "optional": true,
+          "default": "'50%'",
+          "doc": "up: 말풍선 좌측 기준 가로 위치(px 또는 '50%')\nleft·right: 말풍선 상단 기준 세로 위치. 기본 '50%'(세로 중앙)"
+        },
+        {
+          "name": "background",
+          "type": "string",
+          "optional": false,
+          "default": null,
+          "doc": "말풍선 면 색"
+        },
+        {
+          "name": "border",
+          "type": "string | undefined",
+          "optional": true,
+          "default": null,
+          "doc": "보더 있는 말풍선일 때만 — 본체와 같은 보더 shorthand"
+        },
+        {
+          "name": "size",
+          "type": "number | undefined",
+          "optional": true,
+          "default": "11",
+          "doc": ""
+        },
+        {
+          "name": "zIndex",
+          "type": "number | undefined",
+          "optional": true,
+          "default": "0",
+          "doc": ""
+        }
+      ],
+      "figmaSet": "2.0/BubbleTail",
+      "figma": {
+        "name": "2.0/BubbleTail",
+        "axes": {
+          "Dir": [
+            "up",
+            "left",
+            "right"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "Dir": "up"
+            },
+            "w": 87,
+            "h": 54,
+            "radius": null,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "VERTICAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "Dir": "left"
+            },
+            "w": 87,
+            "h": 54,
+            "radius": null,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "VERTICAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "Dir": "right"
+            },
+            "w": 87,
+            "h": 54,
+            "radius": null,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "VERTICAL",
+            "fill": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "Button",
+      "file": "src/components/primitives/Button.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "variant",
+          "type": "Variant | undefined",
+          "optional": true,
+          "default": "'primary'",
+          "doc": ""
+        },
+        {
+          "name": "size",
+          "type": "Size | undefined",
+          "optional": true,
+          "default": "'md'",
+          "doc": ""
+        },
+        {
+          "name": "loading",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": "false",
+          "doc": ""
+        },
+        {
+          "name": "fullWidth",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": "false",
+          "doc": ""
+        },
+        {
+          "name": "children",
+          "type": "ReactNode",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        }
+      ],
+      "figmaSet": "2.0/Button",
+      "figma": {
+        "name": "2.0/Button",
+        "axes": {
+          "Variant": [
+            "Primary",
+            "Secondary",
+            "Tertiary",
+            "TextOnly",
+            "Error"
+          ],
+          "Size": [
+            "sm",
+            "md",
+            "lg",
+            "full"
+          ],
+          "Icon": [
+            "none",
+            "left",
+            "right"
+          ],
+          "State": [
+            "default",
+            "hover",
+            "pressed",
+            "disabled"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "Variant": "Primary",
+              "Size": "sm",
+              "Icon": "none",
+              "State": "default"
+            },
+            "w": 74,
+            "h": 32,
+            "radius": 8,
+            "pad": [
+              0,
+              16,
+              0,
+              16
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "primary/700"
+          },
+          {
+            "props": {
+              "Variant": "Primary",
+              "Size": "sm",
+              "Icon": "left",
+              "State": "default"
+            },
+            "w": 96,
+            "h": 32,
+            "radius": 8,
+            "pad": [
+              0,
+              16,
+              0,
+              16
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "primary/700"
+          },
+          {
+            "props": {
+              "Variant": "Primary",
+              "Size": "sm",
+              "Icon": "right",
+              "State": "default"
+            },
+            "w": 96,
+            "h": 32,
+            "radius": 8,
+            "pad": [
+              0,
+              16,
+              0,
+              16
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "primary/700"
+          },
+          {
+            "props": {
+              "Variant": "Primary",
+              "Size": "md",
+              "Icon": "none",
+              "State": "default"
+            },
+            "w": 113,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "primary/700"
+          },
+          {
+            "props": {
+              "Variant": "Primary",
+              "Size": "md",
+              "Icon": "left",
+              "State": "default"
+            },
+            "w": 137,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "primary/700"
+          },
+          {
+            "props": {
+              "Variant": "Primary",
+              "Size": "md",
+              "Icon": "right",
+              "State": "default"
+            },
+            "w": 137,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "primary/700"
+          },
+          {
+            "props": {
+              "Variant": "Primary",
+              "Size": "lg",
+              "Icon": "none",
+              "State": "default"
+            },
+            "w": 152,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              48,
+              0,
+              48
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "primary/700"
+          },
+          {
+            "props": {
+              "Variant": "Primary",
+              "Size": "lg",
+              "Icon": "left",
+              "State": "default"
+            },
+            "w": 178,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              48,
+              0,
+              48
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "primary/700"
+          },
+          {
+            "props": {
+              "Variant": "Primary",
+              "Size": "lg",
+              "Icon": "right",
+              "State": "default"
+            },
+            "w": 178,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              48,
+              0,
+              48
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "primary/700"
+          },
+          {
+            "props": {
+              "Variant": "Primary",
+              "Size": "md",
+              "Icon": "none",
+              "State": "hover"
+            },
+            "w": 113,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "primary/800"
+          },
+          {
+            "props": {
+              "Variant": "Primary",
+              "Size": "md",
+              "Icon": "none",
+              "State": "pressed"
+            },
+            "w": 113,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "primary/900"
+          },
+          {
+            "props": {
+              "Variant": "Primary",
+              "Size": "md",
+              "Icon": "none",
+              "State": "disabled"
+            },
+            "w": 113,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "primary/700"
+          },
+          {
+            "props": {
+              "Variant": "Secondary",
+              "Size": "sm",
+              "Icon": "none",
+              "State": "default"
+            },
+            "w": 98,
+            "h": 32,
+            "radius": 8,
+            "pad": [
+              0,
+              16,
+              0,
+              16
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          },
+          {
+            "props": {
+              "Variant": "Secondary",
+              "Size": "sm",
+              "Icon": "left",
+              "State": "default"
+            },
+            "w": 120,
+            "h": 32,
+            "radius": 8,
+            "pad": [
+              0,
+              16,
+              0,
+              16
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          },
+          {
+            "props": {
+              "Variant": "Secondary",
+              "Size": "sm",
+              "Icon": "right",
+              "State": "default"
+            },
+            "w": 120,
+            "h": 32,
+            "radius": 8,
+            "pad": [
+              0,
+              16,
+              0,
+              16
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          },
+          {
+            "props": {
+              "Variant": "Secondary",
+              "Size": "md",
+              "Icon": "none",
+              "State": "default"
+            },
+            "w": 141,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          },
+          {
+            "props": {
+              "Variant": "Secondary",
+              "Size": "md",
+              "Icon": "left",
+              "State": "default"
+            },
+            "w": 165,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          },
+          {
+            "props": {
+              "Variant": "Secondary",
+              "Size": "md",
+              "Icon": "right",
+              "State": "default"
+            },
+            "w": 165,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          },
+          {
+            "props": {
+              "Variant": "Secondary",
+              "Size": "lg",
+              "Icon": "none",
+              "State": "default"
+            },
+            "w": 183,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              48,
+              0,
+              48
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          },
+          {
+            "props": {
+              "Variant": "Secondary",
+              "Size": "lg",
+              "Icon": "left",
+              "State": "default"
+            },
+            "w": 209,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              48,
+              0,
+              48
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          },
+          {
+            "props": {
+              "Variant": "Secondary",
+              "Size": "lg",
+              "Icon": "right",
+              "State": "default"
+            },
+            "w": 209,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              48,
+              0,
+              48
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          },
+          {
+            "props": {
+              "Variant": "Secondary",
+              "Size": "md",
+              "Icon": "none",
+              "State": "hover"
+            },
+            "w": 141,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "primary/200"
+          },
+          {
+            "props": {
+              "Variant": "Secondary",
+              "Size": "md",
+              "Icon": "none",
+              "State": "pressed"
+            },
+            "w": 141,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "primary/300"
+          },
+          {
+            "props": {
+              "Variant": "Secondary",
+              "Size": "md",
+              "Icon": "none",
+              "State": "disabled"
+            },
+            "w": 141,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          },
+          {
+            "props": {
+              "Variant": "Tertiary",
+              "Size": "sm",
+              "Icon": "none",
+              "State": "default"
+            },
+            "w": 64,
+            "h": 32,
+            "radius": 8,
+            "pad": [
+              0,
+              16,
+              0,
+              16
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/200"
+          },
+          {
+            "props": {
+              "Variant": "Tertiary",
+              "Size": "sm",
+              "Icon": "left",
+              "State": "default"
+            },
+            "w": 86,
+            "h": 32,
+            "radius": 8,
+            "pad": [
+              0,
+              16,
+              0,
+              16
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/200"
+          },
+          {
+            "props": {
+              "Variant": "Tertiary",
+              "Size": "sm",
+              "Icon": "right",
+              "State": "default"
+            },
+            "w": 86,
+            "h": 32,
+            "radius": 8,
+            "pad": [
+              0,
+              16,
+              0,
+              16
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/200"
+          },
+          {
+            "props": {
+              "Variant": "Tertiary",
+              "Size": "md",
+              "Icon": "none",
+              "State": "default"
+            },
+            "w": 101,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/200"
+          },
+          {
+            "props": {
+              "Variant": "Tertiary",
+              "Size": "md",
+              "Icon": "left",
+              "State": "default"
+            },
+            "w": 125,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/200"
+          },
+          {
+            "props": {
+              "Variant": "Tertiary",
+              "Size": "md",
+              "Icon": "right",
+              "State": "default"
+            },
+            "w": 125,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/200"
+          },
+          {
+            "props": {
+              "Variant": "Tertiary",
+              "Size": "lg",
+              "Icon": "none",
+              "State": "default"
+            },
+            "w": 138,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              48,
+              0,
+              48
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/200"
+          },
+          {
+            "props": {
+              "Variant": "Tertiary",
+              "Size": "lg",
+              "Icon": "left",
+              "State": "default"
+            },
+            "w": 164,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              48,
+              0,
+              48
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/200"
+          },
+          {
+            "props": {
+              "Variant": "Tertiary",
+              "Size": "lg",
+              "Icon": "right",
+              "State": "default"
+            },
+            "w": 164,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              48,
+              0,
+              48
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/200"
+          },
+          {
+            "props": {
+              "Variant": "Tertiary",
+              "Size": "md",
+              "Icon": "none",
+              "State": "hover"
+            },
+            "w": 101,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/300"
+          },
+          {
+            "props": {
+              "Variant": "Tertiary",
+              "Size": "md",
+              "Icon": "none",
+              "State": "pressed"
+            },
+            "w": 101,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/400"
+          },
+          {
+            "props": {
+              "Variant": "Tertiary",
+              "Size": "md",
+              "Icon": "none",
+              "State": "disabled"
+            },
+            "w": 101,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/200"
+          },
+          {
+            "props": {
+              "Variant": "TextOnly",
+              "Size": "sm",
+              "Icon": "none",
+              "State": "default"
+            },
+            "w": 74,
+            "h": 32,
+            "radius": 8,
+            "pad": [
+              0,
+              16,
+              0,
+              16
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "Variant": "TextOnly",
+              "Size": "sm",
+              "Icon": "left",
+              "State": "default"
+            },
+            "w": 96,
+            "h": 32,
+            "radius": 8,
+            "pad": [
+              0,
+              16,
+              0,
+              16
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "Variant": "TextOnly",
+              "Size": "sm",
+              "Icon": "right",
+              "State": "default"
+            },
+            "w": 96,
+            "h": 32,
+            "radius": 8,
+            "pad": [
+              0,
+              16,
+              0,
+              16
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "Variant": "TextOnly",
+              "Size": "md",
+              "Icon": "none",
+              "State": "default"
+            },
+            "w": 113,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "Variant": "TextOnly",
+              "Size": "md",
+              "Icon": "left",
+              "State": "default"
+            },
+            "w": 137,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "Variant": "TextOnly",
+              "Size": "md",
+              "Icon": "right",
+              "State": "default"
+            },
+            "w": 137,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "Variant": "TextOnly",
+              "Size": "lg",
+              "Icon": "none",
+              "State": "default"
+            },
+            "w": 152,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              48,
+              0,
+              48
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "Variant": "TextOnly",
+              "Size": "lg",
+              "Icon": "left",
+              "State": "default"
+            },
+            "w": 178,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              48,
+              0,
+              48
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "Variant": "TextOnly",
+              "Size": "lg",
+              "Icon": "right",
+              "State": "default"
+            },
+            "w": 178,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              48,
+              0,
+              48
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "Variant": "TextOnly",
+              "Size": "md",
+              "Icon": "none",
+              "State": "hover"
+            },
+            "w": 113,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "VariableID:2:5"
+          },
+          {
+            "props": {
+              "Variant": "TextOnly",
+              "Size": "md",
+              "Icon": "none",
+              "State": "pressed"
+            },
+            "w": 113,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/300"
+          },
+          {
+            "props": {
+              "Variant": "TextOnly",
+              "Size": "md",
+              "Icon": "none",
+              "State": "disabled"
+            },
+            "w": 113,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "Variant": "Error",
+              "Size": "sm",
+              "Icon": "none",
+              "State": "default"
+            },
+            "w": 64,
+            "h": 32,
+            "radius": 8,
+            "pad": [
+              0,
+              16,
+              0,
+              16
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "error/900"
+          },
+          {
+            "props": {
+              "Variant": "Error",
+              "Size": "sm",
+              "Icon": "left",
+              "State": "default"
+            },
+            "w": 75,
+            "h": 32,
+            "radius": 8,
+            "pad": [
+              0,
+              16,
+              0,
+              16
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "error/900"
+          },
+          {
+            "props": {
+              "Variant": "Error",
+              "Size": "sm",
+              "Icon": "right",
+              "State": "default"
+            },
+            "w": 75,
+            "h": 32,
+            "radius": 8,
+            "pad": [
+              0,
+              16,
+              0,
+              16
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "error/900"
+          },
+          {
+            "props": {
+              "Variant": "Error",
+              "Size": "md",
+              "Icon": "none",
+              "State": "default"
+            },
+            "w": 89,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "error/900"
+          },
+          {
+            "props": {
+              "Variant": "Error",
+              "Size": "md",
+              "Icon": "left",
+              "State": "default"
+            },
+            "w": 113,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "error/900"
+          },
+          {
+            "props": {
+              "Variant": "Error",
+              "Size": "md",
+              "Icon": "right",
+              "State": "default"
+            },
+            "w": 113,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "error/900"
+          },
+          {
+            "props": {
+              "Variant": "Error",
+              "Size": "lg",
+              "Icon": "none",
+              "State": "default"
+            },
+            "w": 124,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              48,
+              0,
+              48
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "error/900"
+          },
+          {
+            "props": {
+              "Variant": "Error",
+              "Size": "lg",
+              "Icon": "left",
+              "State": "default"
+            },
+            "w": 150,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              48,
+              0,
+              48
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "error/900"
+          },
+          {
+            "props": {
+              "Variant": "Error",
+              "Size": "lg",
+              "Icon": "right",
+              "State": "default"
+            },
+            "w": 150,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              48,
+              0,
+              48
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "error/900"
+          },
+          {
+            "props": {
+              "Variant": "Error",
+              "Size": "md",
+              "Icon": "none",
+              "State": "hover"
+            },
+            "w": 64,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "#872C2A"
+          },
+          {
+            "props": {
+              "Variant": "Error",
+              "Size": "md",
+              "Icon": "none",
+              "State": "pressed"
+            },
+            "w": 64,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "#722523"
+          },
+          {
+            "props": {
+              "Variant": "Error",
+              "Size": "md",
+              "Icon": "none",
+              "State": "disabled"
+            },
+            "w": 64,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "error/900"
+          },
+          {
+            "props": {
+              "Variant": "Primary",
+              "Size": "full",
+              "Icon": "none",
+              "State": "default"
+            },
+            "w": 358,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "primary/700"
+          },
+          {
+            "props": {
+              "Variant": "Secondary",
+              "Size": "full",
+              "Icon": "none",
+              "State": "default"
+            },
+            "w": 358,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          },
+          {
+            "props": {
+              "Variant": "Tertiary",
+              "Size": "full",
+              "Icon": "none",
+              "State": "default"
+            },
+            "w": 358,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/200"
+          },
+          {
+            "props": {
+              "Variant": "TextOnly",
+              "Size": "full",
+              "Icon": "none",
+              "State": "default"
+            },
+            "w": 358,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "Variant": "Error",
+              "Size": "full",
+              "Icon": "none",
+              "State": "default"
+            },
+            "w": 358,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "error/900"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Card",
+      "file": "src/components/primitives/Card.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "padding",
+          "type": "Padding | undefined",
+          "optional": true,
+          "default": "'md'",
+          "doc": ""
+        },
+        {
+          "name": "shadow",
+          "type": "Shadow | undefined",
+          "optional": true,
+          "default": "'sm'",
+          "doc": ""
+        },
+        {
+          "name": "bordered",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": "true",
+          "doc": ""
+        },
+        {
+          "name": "clickable",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": "false",
+          "doc": ""
+        },
+        {
+          "name": "children",
+          "type": "ReactNode",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        }
+      ],
+      "figmaSet": "2.0/Card",
+      "figma": {
+        "name": "2.0/Card",
+        "axes": {
+          "Padding": [
+            "sm",
+            "md",
+            "lg"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "Padding": "sm"
+            },
+            "w": 156,
+            "h": 63,
+            "radius": 12,
+            "pad": [
+              12,
+              12,
+              12,
+              12
+            ],
+            "gap": 4,
+            "dir": "VERTICAL",
+            "fill": "#FFFFFF"
+          },
+          {
+            "props": {
+              "Padding": "md"
+            },
+            "w": 164,
+            "h": 71,
+            "radius": 12,
+            "pad": [
+              16,
+              16,
+              16,
+              16
+            ],
+            "gap": 4,
+            "dir": "VERTICAL",
+            "fill": "#FFFFFF"
+          },
+          {
+            "props": {
+              "Padding": "lg"
+            },
+            "w": 180,
+            "h": 87,
+            "radius": 12,
+            "pad": [
+              24,
+              24,
+              24,
+              24
+            ],
+            "gap": 4,
+            "dir": "VERTICAL",
+            "fill": "#FFFFFF"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CardContainer",
+      "file": "src/components/primitives/CardContainer.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "children",
+          "type": "ReactNode",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "padding",
+          "type": "string | number | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "gap",
+          "type": "string | number | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        }
+      ],
+      "figmaSet": "2.0/CardContainer",
+      "figma": {
+        "name": "2.0/CardContainer",
+        "axes": {},
+        "variants": [
+          {
+            "props": {},
+            "w": 320,
+            "h": 270,
+            "radius": 12,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "VERTICAL",
+            "fill": "#FFFFFF"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Chip",
+      "file": "src/components/primitives/Chip.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "selected",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": "false",
+          "doc": ""
+        },
+        {
+          "name": "onDismiss",
+          "type": "(() => void) | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "children",
+          "type": "ReactNode",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        }
+      ],
+      "figmaSet": "2.0/Chip",
+      "figma": {
+        "name": "2.0/Chip",
+        "axes": {
+          "Variant": [
+            "filter",
+            "dropdown"
+          ],
+          "State": [
+            "off",
+            "off-hover",
+            "on",
+            "on-hover"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "Variant": "filter",
+              "State": "off"
+            },
+            "w": 73,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "VariableID:2:5"
+          },
+          {
+            "props": {
+              "Variant": "filter",
+              "State": "off-hover"
+            },
+            "w": 73,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/300"
+          },
+          {
+            "props": {
+              "Variant": "filter",
+              "State": "on"
+            },
+            "w": 73,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          },
+          {
+            "props": {
+              "Variant": "filter",
+              "State": "on-hover"
+            },
+            "w": 73,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          },
+          {
+            "props": {
+              "Variant": "dropdown",
+              "State": "off"
+            },
+            "w": 85,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              10,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "VariableID:2:5"
+          },
+          {
+            "props": {
+              "Variant": "dropdown",
+              "State": "off-hover"
+            },
+            "w": 85,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              10,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/300"
+          },
+          {
+            "props": {
+              "Variant": "dropdown",
+              "State": "on"
+            },
+            "w": 85,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              10,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          },
+          {
+            "props": {
+              "Variant": "dropdown",
+              "State": "on-hover"
+            },
+            "w": 85,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              10,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DirectorChip",
+      "file": "src/components/primitives/DirectorChip.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "photoUrl",
+          "type": "string | null | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "onClick",
+          "type": "(() => void) | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "pending",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": "false",
+          "doc": "진행 중 표시 (라우팅 대기 등)"
+        }
+      ],
+      "figmaSet": "2.0/Chip",
+      "figma": {
+        "name": "2.0/Chip",
+        "axes": {
+          "Variant": [
+            "filter",
+            "dropdown"
+          ],
+          "State": [
+            "off",
+            "off-hover",
+            "on",
+            "on-hover"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "Variant": "filter",
+              "State": "off"
+            },
+            "w": 73,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "VariableID:2:5"
+          },
+          {
+            "props": {
+              "Variant": "filter",
+              "State": "off-hover"
+            },
+            "w": 73,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/300"
+          },
+          {
+            "props": {
+              "Variant": "filter",
+              "State": "on"
+            },
+            "w": 73,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          },
+          {
+            "props": {
+              "Variant": "filter",
+              "State": "on-hover"
+            },
+            "w": 73,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          },
+          {
+            "props": {
+              "Variant": "dropdown",
+              "State": "off"
+            },
+            "w": 85,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              10,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "VariableID:2:5"
+          },
+          {
+            "props": {
+              "Variant": "dropdown",
+              "State": "off-hover"
+            },
+            "w": 85,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              10,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/300"
+          },
+          {
+            "props": {
+              "Variant": "dropdown",
+              "State": "on"
+            },
+            "w": 85,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              10,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          },
+          {
+            "props": {
+              "Variant": "dropdown",
+              "State": "on-hover"
+            },
+            "w": 85,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              10,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FabRound",
+      "file": "src/components/primitives/FAB.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "children",
+          "type": "ReactNode",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        }
+      ],
+      "figmaSet": "2.0/FAB",
+      "figma": {
+        "name": "2.0/FAB",
+        "axes": {
+          "Type": [
+            "round",
+            "pill"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "Type": "round"
+            },
+            "w": 44,
+            "h": 44,
+            "radius": 22,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "VariableID:2:12"
+          },
+          {
+            "props": {
+              "Type": "pill"
+            },
+            "w": 184,
+            "h": 44,
+            "radius": 9999,
+            "pad": [
+              0,
+              16,
+              0,
+              12
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "VariableID:2:12"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FilterPill",
+      "file": "src/components/primitives/FilterPill.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "active",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": "false",
+          "doc": ""
+        },
+        {
+          "name": "children",
+          "type": "ReactNode",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        }
+      ],
+      "figmaSet": "2.0/FilterPill",
+      "figma": {
+        "name": "2.0/FilterPill",
+        "axes": {
+          "State": [
+            "Default",
+            "Active",
+            "Default Hover",
+            "Open",
+            "Active Hover",
+            "Favorite",
+            "Favorite Hover",
+            "Active Value"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "State": "Default"
+            },
+            "w": 77,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "State": "Active"
+            },
+            "w": 77,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          },
+          {
+            "props": {
+              "State": "Default Hover"
+            },
+            "w": 77,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/200"
+          },
+          {
+            "props": {
+              "State": "Open"
+            },
+            "w": 51,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          },
+          {
+            "props": {
+              "State": "Active Hover"
+            },
+            "w": 77,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "primary/200"
+          },
+          {
+            "props": {
+              "State": "Favorite"
+            },
+            "w": 51,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "error/100"
+          },
+          {
+            "props": {
+              "State": "Favorite Hover"
+            },
+            "w": 51,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "error/300"
+          },
+          {
+            "props": {
+              "State": "Active Value"
+            },
+            "w": 150,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              6,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GenreChip",
+      "file": "src/components/primitives/GenreChip.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "children",
+          "type": "ReactNode",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        }
+      ],
+      "figmaSet": "2.0/Chip",
+      "figma": {
+        "name": "2.0/Chip",
+        "axes": {
+          "Variant": [
+            "filter",
+            "dropdown"
+          ],
+          "State": [
+            "off",
+            "off-hover",
+            "on",
+            "on-hover"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "Variant": "filter",
+              "State": "off"
+            },
+            "w": 73,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "VariableID:2:5"
+          },
+          {
+            "props": {
+              "Variant": "filter",
+              "State": "off-hover"
+            },
+            "w": 73,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/300"
+          },
+          {
+            "props": {
+              "Variant": "filter",
+              "State": "on"
+            },
+            "w": 73,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          },
+          {
+            "props": {
+              "Variant": "filter",
+              "State": "on-hover"
+            },
+            "w": 73,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          },
+          {
+            "props": {
+              "Variant": "dropdown",
+              "State": "off"
+            },
+            "w": 85,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              10,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "VariableID:2:5"
+          },
+          {
+            "props": {
+              "Variant": "dropdown",
+              "State": "off-hover"
+            },
+            "w": 85,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              10,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/300"
+          },
+          {
+            "props": {
+              "Variant": "dropdown",
+              "State": "on"
+            },
+            "w": 85,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              10,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          },
+          {
+            "props": {
+              "Variant": "dropdown",
+              "State": "on-hover"
+            },
+            "w": 85,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              10,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          }
+        ]
+      }
+    },
+    {
+      "name": "IconButton",
+      "file": "src/components/primitives/IconButton.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "variant",
+          "type": "\"ghost\" | \"overlay\" | undefined",
+          "optional": true,
+          "default": "'ghost'",
+          "doc": ""
+        },
+        {
+          "name": "shape",
+          "type": "\"square\" | \"round\" | undefined",
+          "optional": true,
+          "default": "'square'",
+          "doc": ""
+        },
+        {
+          "name": "size",
+          "type": "32 | 44 | 52 | undefined",
+          "optional": true,
+          "default": "44",
+          "doc": ""
+        },
+        {
+          "name": "aria-label",
+          "type": "string",
+          "optional": false,
+          "default": null,
+          "doc": "Defines a string value that labels the current element."
+        },
+        {
+          "name": "children",
+          "type": "ReactNode",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        }
+      ],
+      "figmaSet": "2.0/IconButton",
+      "figma": {
+        "name": "2.0/IconButton",
+        "axes": {
+          "Variant": [
+            "ghost",
+            "overlay"
+          ],
+          "Size": [
+            "32",
+            "44"
+          ],
+          "State": [
+            "default",
+            "hover",
+            "pressed"
+          ],
+          "Shape": [
+            "square",
+            "round"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "Variant": "ghost",
+              "Size": "32",
+              "State": "default",
+              "Shape": "square"
+            },
+            "w": 32,
+            "h": 32,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "Variant": "ghost",
+              "Size": "32",
+              "State": "hover",
+              "Shape": "square"
+            },
+            "w": 32,
+            "h": 32,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "VariableID:2:5"
+          },
+          {
+            "props": {
+              "Variant": "ghost",
+              "Size": "32",
+              "State": "pressed",
+              "Shape": "square"
+            },
+            "w": 32,
+            "h": 32,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/300"
+          },
+          {
+            "props": {
+              "Variant": "ghost",
+              "Size": "44",
+              "State": "default",
+              "Shape": "square"
+            },
+            "w": 44,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "Variant": "ghost",
+              "Size": "44",
+              "State": "hover",
+              "Shape": "square"
+            },
+            "w": 44,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "VariableID:2:5"
+          },
+          {
+            "props": {
+              "Variant": "ghost",
+              "Size": "44",
+              "State": "pressed",
+              "Shape": "square"
+            },
+            "w": 44,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/300"
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "Size": "32",
+              "State": "default",
+              "Shape": "round"
+            },
+            "w": 32,
+            "h": 32,
+            "radius": 16,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#000000"
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "Size": "32",
+              "State": "hover",
+              "Shape": "round"
+            },
+            "w": 32,
+            "h": 32,
+            "radius": 16,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#000000"
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "Size": "32",
+              "State": "pressed",
+              "Shape": "round"
+            },
+            "w": 32,
+            "h": 32,
+            "radius": 16,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#000000"
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "Size": "44",
+              "State": "default",
+              "Shape": "round"
+            },
+            "w": 44,
+            "h": 44,
+            "radius": 22,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#000000"
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "Size": "44",
+              "State": "hover",
+              "Shape": "round"
+            },
+            "w": 44,
+            "h": 44,
+            "radius": 22,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#000000"
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "Size": "44",
+              "State": "pressed",
+              "Shape": "round"
+            },
+            "w": 44,
+            "h": 44,
+            "radius": 22,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#000000"
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "Size": "32",
+              "State": "default",
+              "Shape": "square"
+            },
+            "w": 32,
+            "h": 32,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#000000"
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "Size": "32",
+              "State": "hover",
+              "Shape": "square"
+            },
+            "w": 32,
+            "h": 32,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#000000"
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "Size": "32",
+              "State": "pressed",
+              "Shape": "square"
+            },
+            "w": 32,
+            "h": 32,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#000000"
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "Size": "44",
+              "State": "default",
+              "Shape": "square"
+            },
+            "w": 44,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#000000"
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "Size": "44",
+              "State": "hover",
+              "Shape": "square"
+            },
+            "w": 44,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#000000"
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "Size": "44",
+              "State": "pressed",
+              "Shape": "square"
+            },
+            "w": 44,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#000000"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Input",
+      "file": "src/components/primitives/Input.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "label",
+          "type": "string | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "error",
+          "type": "string | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "hint",
+          "type": "string | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "leftIcon",
+          "type": "ReactNode",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "rightIcon",
+          "type": "ReactNode",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        }
+      ],
+      "figmaSet": "2.0/Input",
+      "figma": {
+        "name": "2.0/Input",
+        "axes": {
+          "State": [
+            "default",
+            "filled",
+            "error",
+            "disabled"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "State": "default"
+            },
+            "w": 260,
+            "h": 66,
+            "radius": null,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 4,
+            "dir": "VERTICAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "State": "filled"
+            },
+            "w": 260,
+            "h": 66,
+            "radius": null,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 4,
+            "dir": "VERTICAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "State": "error"
+            },
+            "w": 260,
+            "h": 84,
+            "radius": null,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 4,
+            "dir": "VERTICAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "State": "disabled"
+            },
+            "w": 260,
+            "h": 66,
+            "radius": null,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 4,
+            "dir": "VERTICAL",
+            "fill": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "MovieCardSkeleton",
+      "file": "src/components/primitives/Skeleton.tsx",
+      "doc": "",
+      "props": [],
+      "figmaSet": "2.0/MovieCardSkeleton",
+      "figma": {
+        "name": "2.0/MovieCardSkeleton",
+        "axes": {},
+        "variants": [
+          {
+            "props": {},
+            "w": 108,
+            "h": 210,
+            "radius": null,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 8,
+            "dir": "VERTICAL",
+            "fill": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "PosterChip",
+      "file": "src/components/primitives/PosterChip.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "corner",
+          "type": "PosterChipCorner",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "tone",
+          "type": "PosterChipTone",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "label",
+          "type": "string | undefined",
+          "optional": true,
+          "default": null,
+          "doc": "스크린리더용 전체 문구 (예: \"개봉 30주년\") — 축약 라벨과 다를 때만"
+        },
+        {
+          "name": "children",
+          "type": "ReactNode",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        }
+      ],
+      "figmaSet": "2.0/Chip",
+      "figma": {
+        "name": "2.0/Chip",
+        "axes": {
+          "Variant": [
+            "filter",
+            "dropdown"
+          ],
+          "State": [
+            "off",
+            "off-hover",
+            "on",
+            "on-hover"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "Variant": "filter",
+              "State": "off"
+            },
+            "w": 73,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "VariableID:2:5"
+          },
+          {
+            "props": {
+              "Variant": "filter",
+              "State": "off-hover"
+            },
+            "w": 73,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/300"
+          },
+          {
+            "props": {
+              "Variant": "filter",
+              "State": "on"
+            },
+            "w": 73,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          },
+          {
+            "props": {
+              "Variant": "filter",
+              "State": "on-hover"
+            },
+            "w": 73,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              14,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          },
+          {
+            "props": {
+              "Variant": "dropdown",
+              "State": "off"
+            },
+            "w": 85,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              10,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "VariableID:2:5"
+          },
+          {
+            "props": {
+              "Variant": "dropdown",
+              "State": "off-hover"
+            },
+            "w": 85,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              10,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/300"
+          },
+          {
+            "props": {
+              "Variant": "dropdown",
+              "State": "on"
+            },
+            "w": 85,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              10,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          },
+          {
+            "props": {
+              "Variant": "dropdown",
+              "State": "on-hover"
+            },
+            "w": 85,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              10,
+              0,
+              14
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ScrollNavButton",
+      "file": "src/components/primitives/ScrollNavButton.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "direction",
+          "type": "\"right\" | \"left\"",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "size",
+          "type": "number | undefined",
+          "optional": true,
+          "default": "32",
+          "doc": "버튼 지름(px) — 기본 32, 아이콘 크기도 비례해서 커짐"
+        }
+      ],
+      "figmaSet": "2.0/ScrollNavButton",
+      "figma": {
+        "name": "2.0/ScrollNavButton",
+        "axes": {
+          "Direction": [
+            "left",
+            "right"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "Direction": "left"
+            },
+            "w": 32,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#FAF9F8"
+          },
+          {
+            "props": {
+              "Direction": "right"
+            },
+            "w": 32,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#FAF9F8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SearchBar",
+      "file": "src/components/primitives/SearchBar.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "onClear",
+          "type": "(() => void) | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "onBack",
+          "type": "(() => void) | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "inputFontSize",
+          "type": "number | undefined",
+          "optional": true,
+          "default": "16",
+          "doc": "입력/플레이스홀더 폰트 크기 — 기본 16px(iOS 자동 줌인 방지). 줌인 우려 없는 데스크톱 전용 배치에서만 낮출 것"
+        }
+      ],
+      "figmaSet": "2.0/SearchBar",
+      "figma": {
+        "name": "2.0/SearchBar",
+        "axes": {
+          "State": [
+            "default",
+            "filled"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "State": "default"
+            },
+            "w": 320,
+            "h": 44,
+            "radius": 12,
+            "pad": [
+              0,
+              18,
+              0,
+              18
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "#FFFFFF"
+          },
+          {
+            "props": {
+              "State": "filled"
+            },
+            "w": 320,
+            "h": 44,
+            "radius": 12,
+            "pad": [
+              0,
+              18,
+              0,
+              18
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "#FFFFFF"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SearchBarButton",
+      "file": "src/components/primitives/SearchBar.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "placeholder",
+          "type": "string | undefined",
+          "optional": true,
+          "default": "'영화, 영화관, 감독을 검색하세요'",
+          "doc": ""
+        },
+        {
+          "name": "onClick",
+          "type": "(() => void) | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "className",
+          "type": "string | undefined",
+          "optional": true,
+          "default": "''",
+          "doc": ""
+        }
+      ],
+      "figmaSet": "2.0/FilterButton",
+      "figma": {
+        "name": "2.0/FilterButton",
+        "axes": {
+          "State": [
+            "Default",
+            "Active"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "State": "Default"
+            },
+            "w": 61,
+            "h": 28,
+            "radius": 9999,
+            "pad": [
+              0,
+              12,
+              0,
+              12
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "State": "Active"
+            },
+            "w": 73,
+            "h": 28,
+            "radius": 9999,
+            "pad": [
+              0,
+              12,
+              0,
+              12
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SectionHeader",
+      "file": "src/components/primitives/SectionHeader.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "title",
+          "type": "ReactNode",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "emoji",
+          "type": "ReactNode",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "description",
+          "type": "ReactNode",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "isDesktop",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": "false",
+          "doc": ""
+        },
+        {
+          "name": "trailing",
+          "type": "ReactNode",
+          "optional": true,
+          "default": null,
+          "doc": "trailing이 붙는 위치: 데스크톱에선 제목+설명 블록 세로 중앙, 모바일에선 제목 줄만 (예: 좌우 스크롤 버튼)"
+        }
+      ],
+      "figmaSet": "2.0/SectionHeader",
+      "figma": {
+        "name": "2.0/SectionHeader",
+        "axes": {
+          "Trailing": [
+            "more",
+            "none"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "Trailing": "more"
+            },
+            "w": 392,
+            "h": 32,
+            "radius": null,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "Trailing": "none"
+            },
+            "w": 392,
+            "h": 32,
+            "radius": null,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "Skeleton",
+      "file": "src/components/primitives/Skeleton.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "width",
+          "type": "string | number | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "height",
+          "type": "string | number | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "rounded",
+          "type": "\"sm\" | \"md\" | \"lg\" | \"full\" | undefined",
+          "optional": true,
+          "default": "'md'",
+          "doc": ""
+        }
+      ],
+      "figmaSet": "2.0/Skeleton",
+      "figma": {
+        "name": "2.0/Skeleton",
+        "axes": {},
+        "variants": [
+          {
+            "props": {},
+            "w": 160,
+            "h": 92,
+            "radius": null,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 8,
+            "dir": "VERTICAL",
+            "fill": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "SortToggle",
+      "file": "src/components/primitives/SortToggle.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "active",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": "false",
+          "doc": ""
+        },
+        {
+          "name": "children",
+          "type": "ReactNode",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        }
+      ],
+      "figmaSet": "2.0/SortToggle",
+      "figma": {
+        "name": "2.0/SortToggle",
+        "axes": {
+          "State": [
+            "default",
+            "hover",
+            "active",
+            "active-hover"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "State": "default"
+            },
+            "w": 66,
+            "h": 28,
+            "radius": 9999,
+            "pad": [
+              0,
+              10,
+              0,
+              10
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "State": "hover"
+            },
+            "w": 66,
+            "h": 28,
+            "radius": 9999,
+            "pad": [
+              0,
+              10,
+              0,
+              10
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "VariableID:2:5"
+          },
+          {
+            "props": {
+              "State": "active"
+            },
+            "w": 66,
+            "h": 28,
+            "radius": 9999,
+            "pad": [
+              0,
+              10,
+              0,
+              10
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "State": "active-hover"
+            },
+            "w": 66,
+            "h": 28,
+            "radius": 9999,
+            "pad": [
+              0,
+              10,
+              0,
+              10
+            ],
+            "gap": 4,
+            "dir": "HORIZONTAL",
+            "fill": "VariableID:2:5"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TheaterCardSkeleton",
+      "file": "src/components/primitives/Skeleton.tsx",
+      "doc": "",
+      "props": [],
+      "figmaSet": "2.0/TheaterCardSkeleton",
+      "figma": {
+        "name": "2.0/TheaterCardSkeleton",
+        "axes": {},
+        "variants": [
+          {
+            "props": {},
+            "w": 320,
+            "h": 118,
+            "radius": 12,
+            "pad": [
+              16,
+              16,
+              16,
+              16
+            ],
+            "gap": 12,
+            "dir": "VERTICAL",
+            "fill": "#FFFFFF"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Toast",
+      "file": "src/components/primitives/Toast.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "message",
+          "type": "string",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "trigger",
+          "type": "number | undefined",
+          "optional": true,
+          "default": "0",
+          "doc": "1회성 표시 — 증가시키면 뜨고 duration 후 자동으로 사라짐. persistent 모드(visible)와 동시 사용 불가"
+        },
+        {
+          "name": "visible",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": null,
+          "doc": "지속 표시 모드 — true인 동안 계속 보임, 자동으로 사라지지 않음 (trigger보다 우선)"
+        },
+        {
+          "name": "duration",
+          "type": "number | undefined",
+          "optional": true,
+          "default": "1600",
+          "doc": ""
+        }
+      ],
+      "figmaSet": "2.0/Toast",
+      "figma": {
+        "name": "2.0/Toast",
+        "axes": {},
+        "variants": [
+          {
+            "props": {},
+            "w": 132,
+            "h": 34,
+            "radius": 9999,
+            "pad": [
+              10,
+              16,
+              10,
+              16
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#2B2622"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Wordmark",
+      "file": "src/components/primitives/Wordmark.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "color",
+          "type": "string | undefined",
+          "optional": true,
+          "default": "'var(--color-neutral-900)'",
+          "doc": "글자 색 — 기본 잉크(피그마 Color=잉크)"
+        },
+        {
+          "name": "outlineColor",
+          "type": "string | undefined",
+          "optional": true,
+          "default": null,
+          "doc": "테두리 색. 지정하면 Color=테두리 베리언트로 렌더된다"
+        },
+        {
+          "name": "outlineWidth",
+          "type": "number | undefined",
+          "optional": true,
+          "default": "1.5",
+          "doc": "테두리가 글자 바깥으로 나가는 두께(화면 px). 피그마 141px 폭 기준 2px"
+        },
+        {
+          "name": "className",
+          "type": "string | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "style",
+          "type": "CSSProperties | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "title",
+          "type": "string | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        }
+      ],
+      "figmaSet": "2.0/logo/wordmark",
+      "figma": {
+        "name": "2.0/logo/wordmark",
+        "axes": {},
+        "variants": []
+      }
+    }
+  ],
+  "drift": [
+    {
+      "kind": "legacy-figma-style",
+      "id": "display/map-label",
+      "code": null,
+      "figma": "KIMM_Bold/B · 11px",
+      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
+    }
+  ]
+}

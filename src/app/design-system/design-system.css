@@ -1,0 +1,352 @@
+/* 디자인 시스템 문서 사이트 — 제품(모바일 480 기준)과 다른 레이아웃 규칙을 쓴다.
+   구조: 틴트 배경 위에 사이드바(카드 밖) + 흰 본문 카드 + 우측 스티키 목차. */
+
+.ds-root {
+  --ds-page-bg: #F2EFEC;          /* neutral/200과 100 사이 — 흰 카드를 띄우기 위한 종이 틴트 */
+  --ds-card-radius: 24px;
+  --ds-sidebar-w: 248px;
+  min-height: 100dvh;
+  background: var(--ds-page-bg);
+  font-family: var(--font-sans);
+}
+
+/* 넓은 화면에서는 페이지가 아니라 카드 안쪽만 스크롤한다 — 카드가 화면에 고정된 액자로
+   보여야 네 모서리가 항상 둥글게 남는다. 좁은 화면은 그냥 페이지 스크롤. */
+@media (min-width: 1024px) {
+  html:has(.ds-root), body:has(.ds-root) { overflow: hidden; }
+  .ds-root { height: 100dvh; overflow: hidden; }
+}
+
+.ds-shell { display: block; padding: 0; }
+
+.ds-aside {
+  /* 좁은 화면에서는 상단 바·드로어가 대신한다 */
+  display: none;
+}
+
+.ds-card {
+  background: var(--color-surface-card);
+  /* 모바일에서는 상단 바 바로 아래 붙는 면이라 라운딩을 두지 않는다 — 액자가 아니라 배경이다. */
+  border-radius: 0;
+  padding: var(--spacing-12) var(--gutter) var(--spacing-24);
+  min-height: 60dvh;
+}
+
+
+@media (min-width: 1024px) {
+  .ds-shell {
+    display: grid;
+    grid-template-columns: var(--ds-sidebar-w) minmax(0, 1fr);
+    align-items: start;
+    gap: var(--spacing-4);
+    padding: var(--spacing-6);
+    height: 100dvh;
+  }
+  .ds-aside {
+    display: block;
+    height: 100%; overflow-y: auto;
+    border-bottom: 0; padding: var(--spacing-4) var(--spacing-2) var(--spacing-8);
+  }
+  .ds-card {
+    border-radius: var(--ds-card-radius);
+    /* 좌우를 같은 값으로 둔다 — 목차를 없앤 뒤에도 본문이 카드 가운데 오도록 */
+    padding: var(--spacing-24) var(--spacing-24) var(--spacing-32);
+    height: 100%;
+    overflow-y: auto;
+    box-shadow: var(--shadow-sm);
+  }
+  .ds-card-inner { max-width: 900px; margin: 0 auto; }
+}
+
+
+
+/* 스크롤바를 감춘다. 막대가 카드 오른쪽 모서리를 덮어 라운딩이 왼쪽에만 있는 것처럼 보였다.
+   스크롤은 그대로 되고 위치는 우측 목차가 알려준다. */
+.ds-card, .ds-aside { scrollbar-width: none; -ms-overflow-style: none; }
+.ds-card::-webkit-scrollbar,
+.ds-aside::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+/* 고무줄 반동이 카드 밖으로 새지 않게 */
+.ds-card { overscroll-behavior: contain; }
+.ds-card-inner { will-change: transform; }
+
+/* 앵커 이동 시 제목이 카드 상단에 가리지 않게 */
+.ds-anchor { scroll-margin-top: var(--spacing-8); }
+
+/* 플레이그라운드 — 좁은 화면에선 무대 아래로 컨트롤이 내려간다 */
+.ds-playground { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--spacing-4); }
+@media (min-width: 900px) {
+  .ds-playground { grid-template-columns: minmax(0, 1fr) 236px; }
+  .ds-spec-row { grid-template-columns: minmax(0, 320px) minmax(0, 1fr); }
+}
+
+
+/* ── 사이드바 항목 ───────────────────────────────────────────────
+   인라인 스타일로는 hover를 못 준다. 내비게이션은 "누를 수 있다"가 보여야 해서
+   여기 클래스로 뺐다. */
+.ds-nav-group {
+  width: 100%;
+  /* 높이를 고정하고 수직 중앙 정렬한다 — 패딩만으로 맞추면 한글·라틴 혼용에서
+     글자가 박스 안에서 위로 붙어 보인다(폰트 어센더 차이).
+     주의: 아래에 min-height:unset을 또 적어 이 값이 죽어 있었다(그래서 면이 납작했다). */
+  min-height: 48px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 var(--spacing-3);
+  background: transparent; border: 0; cursor: pointer;
+  font-size: var(--text-title);
+  font-weight: 700;
+  color: var(--color-text-body);
+  border-radius: var(--radius-button);
+}
+.ds-nav-group { text-decoration: none; }
+.ds-nav-group:hover { background: var(--color-surface-raised); }
+.ds-nav-group[data-has-active='true'] { color: var(--color-text-primary); }
+/* 지금 보고 있는 페이지는 그룹 표지든 하위 항목이든 같은 진한 면으로 표시한다.
+   표지와 하위 항목이 동시에 켜지는 경우는 없다(표지 페이지에 있으면 하위는 비활성). */
+.ds-nav-group[data-active='true'],
+.ds-nav-group[data-active='true']:hover {
+  background: var(--color-neutral-800);
+  color: var(--color-text-inverse);
+}
+
+/* 0fr → 1fr. 높이를 몰라도 접힘이 부드럽다. */
+.ds-nav-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 220ms ease;
+}
+.ds-nav-collapse[data-open='true'] { grid-template-rows: 1fr; }
+
+.ds-nav-link {
+  display: flex; align-items: center;
+  min-height: 40px;
+  /* 그룹에 딸린 항목은 한 단계 들여 쓴다 — 제목과 같은 축에 서면 위계가 안 보인다 */
+  padding: 0 var(--spacing-3) 0 var(--spacing-6);
+  border-radius: var(--radius-button);
+  text-decoration: none;
+  line-height: 1.6;
+  font-size: var(--text-body);
+  color: var(--color-text-sub);
+  font-weight: 500;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.ds-nav-link:hover { background: var(--color-surface-raised); color: var(--color-text-primary); }
+.ds-nav-link[data-top='true'] {
+  min-height: 48px; padding-left: var(--spacing-3);
+  font-size: var(--text-title); font-weight: 700; color: var(--color-text-primary);
+}
+.ds-nav-link[data-active='true'],
+.ds-nav-link[data-active='true']:hover {
+  background: var(--color-neutral-800);
+  color: var(--color-text-inverse);
+  font-weight: 700;
+}
+
+.ds-nav-items { display: flex; flex-direction: column; gap: 2px; margin-top: var(--spacing-2); }
+
+/* ── 섹션 표지 카드 ─────────────────────────────────────────────── */
+.ds-cover-grid {
+  display: grid; gap: var(--spacing-6);
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+.ds-cover-card { display: block; text-decoration: none; border-radius: var(--radius-popover); }
+/* 뜨는 건 견본 면 하나뿐이다. 글자까지 같이 움직이면 카드가 흔들려 보인다. */
+.ds-cover-card > div:first-child {
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+.ds-cover-card:hover > div:first-child {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-neutral-300);
+}
+.ds-cover-card:active > div:first-child {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+
+/* Prev/Next도 누를 수 있는 자리 — 면이 잡혀야 클릭 대상으로 읽힌다 */
+.ds-prevnext {
+  display: block; text-decoration: none;
+  padding: var(--spacing-3) var(--spacing-4);
+  border-radius: var(--radius-control);
+  transition: background var(--transition-fast);
+}
+.ds-prevnext:hover { background: var(--color-surface-raised); }
+
+
+/* 목록 카드 — 표지 카드와 같은 반응. hover에서 떠오르고 누르면 내려앉는다 */
+.ds-list-card {
+  display: block; text-decoration: none;
+  padding: var(--spacing-5);
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+.ds-list-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-neutral-300);
+}
+.ds-list-card:active { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+
+
+/* ── 견본 무대의 헤어라인 격자 ──────────────────────────────────
+   컴포넌트를 얹는 면에는 24px 격자를 아주 옅게 깐다. 크기·여백을 눈으로 가늠할 수 있고,
+   면 자체가 "제품 화면이 아니라 견본"임을 알린다. 선은 잉크 4.5%로 배경보다 앞서지 않는다.
+   배경은 인라인 style이 아니라 여기서 정한다 — background 단축 속성이 격자를 덮기 때문이다. */
+.ds-grid-surface {
+  --ds-grid-line: rgba(12, 10, 8, 0.045);
+  --ds-grid-size: 24px;
+  background-color: var(--color-surface-bg);
+  background-image:
+    linear-gradient(var(--ds-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ds-grid-line) 1px, transparent 1px);
+  background-size: var(--ds-grid-size) var(--ds-grid-size);
+  background-position: center center;
+}
+
+.ds-grid-surface[data-tone='tint'] {
+  background-image:
+    linear-gradient(var(--ds-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ds-grid-line) 1px, transparent 1px),
+    linear-gradient(150deg, var(--color-primary-100), var(--color-surface-bg));
+  background-size: var(--ds-grid-size) var(--ds-grid-size), var(--ds-grid-size) var(--ds-grid-size), cover;
+  background-position: center center, center center, center center;
+}
+
+.ds-grid-surface[data-tone='card'] { background-color: var(--color-surface-card); }
+
+.ds-grid-surface[data-tone='dark'] {
+  --ds-grid-line: rgba(255, 255, 255, 0.06);
+  background-color: var(--color-neutral-800);
+}
+
+/* ── Control 패널 ─────────────────────────────────────────────── */
+.ds-segmented {
+  display: flex; flex-wrap: wrap; gap: 4px;
+}
+.ds-segmented__item {
+  flex: 1 1 auto; min-width: 52px; min-height: 32px;
+  padding: 0 var(--spacing-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-button);
+  background: var(--color-surface-card);
+  color: var(--color-text-sub);
+  font-size: var(--text-meta); font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+.ds-segmented__item:hover { background: var(--color-surface-raised); color: var(--color-text-primary); }
+.ds-segmented__item[data-selected='true'],
+.ds-segmented__item[data-selected='true']:hover {
+  background: var(--color-primary-base);
+  border-color: var(--color-primary-base);
+  color: var(--color-text-inverse);
+  font-weight: 600;
+}
+
+/* 단계 슬라이더 — 트랙과 손잡이를 직접 그린다(기본 모양은 브라우저마다 다르다) */
+.ds-slider {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 4px; margin: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-raised);
+  cursor: pointer;
+}
+.ds-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--color-primary-base);
+  border: 2px solid var(--color-surface-card);
+  box-shadow: var(--shadow-sm);
+}
+.ds-slider::-moz-range-thumb {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--color-primary-base);
+  border: 2px solid var(--color-surface-card);
+}
+.ds-slider:focus-visible {
+  outline: 2px solid var(--color-primary-base);
+  outline-offset: 4px;
+}
+
+
+/* 푸터 링크드인 — 평소엔 회색, 손을 올리면 브랜드 색.
+   페이지에서 유일하게 색이 튀는 요소가 되지 않도록 기본은 잉크 계열로 둔다. */
+.ds-linkedin {
+  flex: 0 0 auto;
+  width: 28px; height: 28px; box-sizing: border-box;
+  /* globals.css가 모든 a에 min-height 44를 준다 — 정사각을 유지하려면 여기서 푼다 */
+  min-height: unset;
+  border-radius: var(--radius-button);
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background var(--transition-fast);
+}
+.ds-linkedin__glyph {
+  width: 14px; height: 14px; display: block;
+  background: var(--color-text-caption);
+  -webkit-mask: url('/linkedin.png') center / contain no-repeat;
+  mask: url('/linkedin.png') center / contain no-repeat;
+  transition: background var(--transition-fast);
+}
+.ds-linkedin:hover { background: var(--color-surface-raised); }
+.ds-linkedin:hover .ds-linkedin__glyph { background: #0A66C2; }
+
+/* 데모 트리거 버튼 — 문서용 컨트롤이지 문서 대상이 아니다.
+   Button primary/secondary를 쓰면 견본 위에서 그 색이 컴포넌트 색으로 읽혀서 검은 면으로 뺐다. */
+.ds-demo-btn {
+  min-height: unset;
+  height: 32px;
+  padding: 0 var(--spacing-4);
+  border-radius: var(--radius-button);
+  background: var(--color-neutral-900);
+  color: var(--color-text-inverse);
+  font-size: var(--text-meta);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+.ds-demo-btn:hover { background: var(--color-neutral-800); }
+.ds-demo-btn:active { transform: translateY(1px); }
+
+
+/* ── 정의 표 ──────────────────────────────────────────────────
+   좁은 화면에서는 두 열이 줄어들 자리가 없어 화면을 밀어냈다 — 세로로 쌓는다. */
+.ds-deftable__row { display: grid; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 720px) {
+  .ds-deftable__row { grid-template-columns: minmax(120px, 200px) minmax(0, 1fr); }
+}
+
+/* ── 모바일 내비 — 상단 바 + 드로어 ────────────────────────────
+   좁은 화면에서 사이드바를 본문 위에 통째로 펼치면 컴포넌트 목록만 스무 줄이라
+   첫 화면에 본문이 하나도 안 보인다. 바로 접고 필요할 때만 연다. */
+.ds-topbar {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: var(--spacing-3);
+  padding: var(--spacing-3) var(--gutter);
+  background: var(--ds-page-bg);
+  border-bottom: 1px solid var(--color-neutral-300);
+}
+.ds-topbar__title {
+  flex: 1; min-width: 0;
+  font-size: var(--text-body); font-weight: 700; color: var(--color-text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ds-topbar__btn {
+  min-height: unset; width: 36px; height: 36px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--color-border); border-radius: var(--radius-button);
+  background: var(--color-surface-card); color: var(--color-text-body);
+}
+.ds-drawer {
+  position: fixed; inset: 0; z-index: 30;
+  display: grid; grid-template-rows: auto 1fr;
+  background: var(--ds-page-bg);
+  overflow-y: auto;
+  padding: var(--spacing-3) var(--gutter) var(--spacing-12);
+}
+@media (min-width: 1024px) {
+  .ds-topbar, .ds-drawer { display: none; }
+}

@@ -7,6 +7,7 @@ import { PanelShell } from './PanelShell'
 import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
 import { IcoChevronRight, IcoChevronDown } from './icons'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
+import { toSecureImageUrl } from '@/lib/media/imageUrl'
 
 /* ── 감독 상세 패널 ── */
 export function DirectorPanel({
@@ -126,7 +127,7 @@ export function DirectorPanel({
               >
                 {movie.posterUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={movie.posterUrl} alt={`${movie.title} 포스터`} style={{ width: 36, height: 52, borderRadius: 4, objectFit: 'cover', flexShrink: 0, border: '1px solid var(--color-border)' }} />
+                  <img src={toSecureImageUrl(movie.posterUrl)} alt={`${movie.title} 포스터`} style={{ width: 36, height: 52, borderRadius: 4, objectFit: 'cover', flexShrink: 0, border: '1px solid var(--color-border)' }} />
                 ) : (
                   <div style={{ width: 36, height: 52, borderRadius: 4, backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)', flexShrink: 0 }} />
                 )}

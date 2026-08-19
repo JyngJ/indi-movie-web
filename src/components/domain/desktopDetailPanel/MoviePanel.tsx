@@ -15,6 +15,7 @@ import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 import { PanelShell } from './PanelShell'
 import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
 import { IcoUser, IcoChevronRight, IcoPin } from './icons'
+import { toSecureImageUrl } from '@/lib/media/imageUrl'
 
 /* ── 영화 상세 패널 ── */
 export function MoviePanel({
@@ -83,7 +84,7 @@ export function MoviePanel({
         <div style={{ flexShrink: 0, width: 90, height: 135 }}>
           {movie.posterUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={movie.posterUrl} alt={`${movie.title} 포스터`} style={{ width: 90, height: 135, borderRadius: 0, objectFit: 'cover', display: 'block', boxShadow: 'inset 0 0 0 1px var(--comp-poster-border)' }} />
+            <img src={toSecureImageUrl(movie.posterUrl)} alt={`${movie.title} 포스터`} style={{ width: 90, height: 135, borderRadius: 0, objectFit: 'cover', display: 'block', boxShadow: 'inset 0 0 0 1px var(--comp-poster-border)' }} />
           ) : (
             <div style={{ width: 90, height: 135, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-neutral-800)' }} />
           )}

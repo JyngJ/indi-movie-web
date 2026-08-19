@@ -27,6 +27,7 @@ import { GvEventSection } from './GvEventSection'
 import { GvDetailPanel } from './GvDetailPanel'
 import { BookingCtaButton, ShareScheduleButton } from './booking/BookingActions'
 import type { GvEvent } from '@/data/gv-events'
+import { toSecureImageUrl } from '@/lib/media/imageUrl'
 
 /* ── 상수 ──────────────────────────────────────────────────────── */
 // 접힌 상태에서 보이는 높이 — 피그마 TOBE collapsed: 핸들(24) + 헤더(128) + 포스터스트립(262, 포스터 238 + 상하 12)
@@ -1760,7 +1761,7 @@ export function TheaterSheet({
                   {/* 포스터 — 피그마 84×126, r2 */}
                   <div style={{ flexShrink: 0, width: 84, height: 126, borderRadius: 'var(--radius-poster)', overflow: 'hidden', backgroundColor: 'var(--color-neutral-700)' }}>
                     {movie.posterUrl && (
-                      <img src={movie.posterUrl} alt={movie.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                      <img src={toSecureImageUrl(movie.posterUrl)} alt={movie.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                     )}
                   </div>
                   {/* 영화 정보 */}

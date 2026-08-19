@@ -9,6 +9,7 @@ import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
 import { trackEvent } from '@/lib/analytics/client'
 import { buildSectionAnalytics } from '@/lib/curation/sectionRuns'
 import { FooterWordmark } from '@/components/domain/FooterWordmark'
+import { toSecureImageUrl } from '@/lib/media/imageUrl'
 
 type SortKey = 'theaters_desc' | 'theaters_asc' | 'year_desc' | 'year_asc' | 'alpha'
 
@@ -56,7 +57,7 @@ function GridPoster({ src, alt, interactive, onReady }: { src?: string; alt: str
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={src}
+          src={toSecureImageUrl(src)}
           alt={alt}
           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           loading="lazy"

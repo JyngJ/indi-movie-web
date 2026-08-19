@@ -1,4 +1,5 @@
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { toSecureImageUrl } from '@/lib/media/imageUrl'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,7 +21,7 @@ export async function GET(request: Request) {
   return Response.json({
     name: String(row.name),
     originalName: row.original_name ? String(row.original_name) : undefined,
-    photoUrl: row.photo_url ? String(row.photo_url) : undefined,
+    photoUrl: row.photo_url ? toSecureImageUrl(String(row.photo_url)) : undefined,
     bio: row.bio ? String(row.bio) : undefined,
     source: row.source ? String(row.source) : undefined,
   }, {

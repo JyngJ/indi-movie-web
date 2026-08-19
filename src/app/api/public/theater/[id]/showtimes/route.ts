@@ -1,4 +1,5 @@
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { toSecureImageUrl } from '@/lib/media/imageUrl'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,7 +58,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       title: String(m.title),
       originalTitle: m.original_title ? String(m.original_title) : undefined,
       year: Number(m.year),
-      posterUrl: m.poster_url ? String(m.poster_url) : undefined,
+      posterUrl: m.poster_url ? toSecureImageUrl(String(m.poster_url)) : undefined,
       genre: (m.genre as string[]) ?? [],
       director: (m.director as string[]) ?? [],
       nation: m.nation ? String(m.nation) : undefined,
