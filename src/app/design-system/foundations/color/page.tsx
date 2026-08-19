@@ -113,11 +113,6 @@ export default function ColorPage() {
       href="/design-system/foundations/color"
       title="Color"
       lead="원활한 협업을 위해 HEX 코드 대신 토큰 이름을 사용합니다. 값은 tokens.css에서 관리하며 피그마 변수와 이름으로 짝지어 대조합니다. 라이트 단일 테마로 운영합니다."
-      toc={[
-        { id: 'naming', label: '이름 규칙' },
-        { id: 'primitive', label: 'Primitive' },
-        { id: 'semantic', label: 'Semantic' },
-      ]}
     >
       <DocSection id="naming" title="이름 규칙" lead="원시 토큰은 색 계열(hue)과 톤 단계(tone)를 조합해 정의합니다. UI 맥락이나 의미는 담지 않습니다.">
         <Stage tone="grid" minHeight={200}>

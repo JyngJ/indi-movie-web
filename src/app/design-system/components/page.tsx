@@ -11,11 +11,7 @@ export default function ComponentsIndexPage() {
     const c = manifest.components.find(x => x.name === name)!
     const guide = guideFor(name)
     return (
-      <Link href={`/design-system/components/${name}`} style={{
-        display: 'block', textDecoration: 'none', padding: 'var(--spacing-5)',
-        background: 'var(--color-surface-card)', border: '1px solid var(--color-border)',
-        borderRadius: 'var(--radius-control)',
-      }}>
+      <Link href={`/design-system/components/${name}`} className="ds-list-card">
         <div style={{ fontSize: 'var(--text-title)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{name}</div>
         <div style={{ marginTop: 4, fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)', fontFamily: 'var(--font-mono)' }}>
           props {c.props.length}{c.figmaSet ? ` · ${c.figmaSet}` : ''}
@@ -47,7 +43,6 @@ export default function ComponentsIndexPage() {
       href="/design-system/components"
       title="Components"
       lead="컴포넌트는 정해진 규칙에 따라 재사용하는 UI 요소입니다. 각 페이지는 실제 컴포넌트를 렌더한 Anatomy, 조작 가능한 State, TypeScript에서 추출한 Properties, 피그마 실측 Spec, 사용 규칙(Usage)을 제공합니다."
-      toc={[{ id: 'documented', label: '가이드' }, { id: 'rest', label: '레퍼런스' }]}
     >
       <DocSection id="documented" title={`가이드 · ${documented.length}`} lead="Anatomy · Spec · Usage까지 정리된 컴포넌트입니다.">
         <Grid names={documented.map(c => c.name)} />

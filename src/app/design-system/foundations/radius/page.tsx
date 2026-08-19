@@ -9,7 +9,6 @@ export default function RadiusPage() {
       href="/design-system/foundations/radius"
       title="Radius"
       lead="반경은 크기가 아니라 역할로 이름을 붙입니다. 이름이 쓰임을 설명하므로 같은 이름에 다른 값이 들어가지 않습니다."
-      toc={[{ id: 'roles', label: '역할' }, { id: 'usage', label: 'Usage' }]}
     >
       <DocSection id="roles" title="역할" lead="포스터가 가장 각지고(2) 시트가 가장 둥급니다(20). 층이 위로 갈수록 둥글어집니다.">
         <div style={{

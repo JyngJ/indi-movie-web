@@ -35,7 +35,6 @@ export default function FoundationsCoverPage() {
       href="/design-system/foundations"
       title="Foundations"
       lead="컴포넌트 아래에 놓이는 층입니다. 색·글자·간격·반경·그림자처럼 화면 어디에서나 같은 값을 사용해야 하는 요소를 정의합니다. 값은 tokens.css에서 관리하고, 피그마 변수와 이름으로 짝지어 대조합니다."
-      toc={[{ id: 'pages', label: '페이지' }, { id: 'rules', label: '공통 규칙' }]}
     >
       <DocSection id="pages" title="페이지">
         <div className="ds-cover-grid">

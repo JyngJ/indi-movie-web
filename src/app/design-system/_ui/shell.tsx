@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { siblings } from './nav'
-import { Toc, type TocItem } from './Toc'
 
 /* 문서 사이트 조각들. 제품 컴포넌트가 아니라 문서 전용이므로 여기서만 쓴다. */
 
@@ -271,25 +270,19 @@ export function DocFooter() {
   )
 }
 
-/** 문서 한 장 = 본문 열 + 우측 목차 열. 카드(.ds-card)가 이 둘을 가르는 그리드다. */
-export function DocPage({ href, title, lead, toc, children }: {
+/** 문서 한 장. */
+export function DocPage({ href, title, lead, children }: {
   href: string
   title: string
   lead?: ReactNode
-  toc: TocItem[]
   children: ReactNode
 }) {
   return (
-    <>
-      <div style={{ minWidth: 0 }}>
-        <DocHeader title={title} lead={lead} />
-        {children}
-        <PrevNext href={href} />
-        <DocFooter />
-      </div>
-      <aside className="ds-toc">
-        <Toc items={toc} />
-      </aside>
-    </>
+    <div style={{ minWidth: 0 }}>
+      <DocHeader title={title} lead={lead} />
+      {children}
+      <PrevNext href={href} />
+      <DocFooter />
+    </div>
   )
 }

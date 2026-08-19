@@ -1,9 +1,8 @@
 import { notFound } from 'next/navigation'
 import { manifest } from '@/design-system'
-import { guideFor, hasPlayground } from '@/design-system/guides'
+import { guideFor } from '@/design-system/guides'
 import { DocPage, DocSection, Code, DefTable } from '../../_ui/shell'
 import { ComponentDoc } from '../../_ui/componentDocs'
-import type { TocItem } from '../../_ui/Toc'
 
 export function generateStaticParams() {
   return manifest.components.map(c => ({ name: c.name }))
@@ -19,22 +18,12 @@ export default async function ComponentPage({ params }: { params: Promise<{ name
   const VARIANT_LIMIT = 24
   const variants = c.figma?.variants.slice(0, VARIANT_LIMIT) ?? []
   const hiddenVariants = (c.figma?.variants.length ?? 0) - variants.length
-  const toc: TocItem[] = [
-    { id: 'anatomy', label: 'Anatomy' },
-    ...(hasPlayground(name) ? [{ id: 'state', label: 'State' } as TocItem] : []),
-    { id: 'properties', label: 'Properties' },
-    ...(guide?.specs ? [{ id: 'spec', label: 'Spec' } as TocItem] : []),
-    ...(guide?.usage ? [{ id: 'usage', label: 'Usage' } as TocItem] : []),
-    { id: 'figma', label: '피그마' },
-    { id: 'source', label: '소스' },
-  ]
 
   return (
     <DocPage
       href={`/design-system/components/${name}`}
       title={name}
       lead={guide?.intro ?? c.doc ?? undefined}
-      toc={toc}
     >
       <ComponentDoc name={name} />
 

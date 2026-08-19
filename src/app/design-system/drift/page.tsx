@@ -32,7 +32,6 @@ export default function DriftPage() {
       href="/design-system/drift"
       title="코드 ↔ 피그마 차이"
       lead={<>매니페스트를 만들 때 코드 토큰과 피그마 변수를 이름으로 짝지어 값을 대조합니다. 이 페이지는 <Code>npm run ds:build</Code>가 만든 결과를 그대로 보여줍니다.</>}
-      toc={kinds.map(k => ({ id: k, label: KIND[k]?.title ?? k }))}
     >
       {manifest.drift.length === 0 && (
         <DocSection title="차이 없음">

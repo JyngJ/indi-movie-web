@@ -24,7 +24,6 @@ export default function ElevationPage() {
       href="/design-system/foundations/elevation"
       title="Elevation"
       lead="그림자는 2겹(direct + ambient)이며 색은 웜 브라운(#140F0A)으로 고정합니다. 미색 배경 위에서 탁해지지 않고 종이 위의 그림자처럼 보입니다."
-      toc={[{ id: 'levels', label: '단계' }, { id: 'effects', label: '피그마 이펙트' }, { id: 'usage', label: 'Usage' }]}
     >
       <DocSection id="levels" title="단계">
         <div style={{

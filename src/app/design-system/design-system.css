@@ -5,7 +5,6 @@
   --ds-page-bg: #F2EFEC;          /* neutral/200과 100 사이 — 흰 카드를 띄우기 위한 종이 틴트 */
   --ds-card-radius: 24px;
   --ds-sidebar-w: 248px;
-  --ds-toc-w: 180px;
   min-height: 100dvh;
   background: var(--ds-page-bg);
   font-family: var(--font-sans);
@@ -32,7 +31,6 @@
   min-height: 60dvh;
 }
 
-.ds-toc { display: none; }
 
 @media (min-width: 1024px) {
   .ds-shell {
@@ -49,34 +47,22 @@
   }
   .ds-card {
     border-radius: var(--ds-card-radius);
+    /* 좌우를 같은 값으로 둔다 — 목차를 없앤 뒤에도 본문이 카드 가운데 오도록 */
     padding: var(--spacing-16) var(--spacing-16) var(--spacing-24);
     height: 100%;
     overflow-y: auto;
     box-shadow: var(--shadow-sm);
   }
-  .ds-card-inner {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) var(--ds-toc-w);
-    gap: var(--spacing-12);
-    align-items: start;
-  }
-  .ds-toc {
-    display: block; position: sticky; top: 0;
-    max-height: calc(100dvh - var(--spacing-32));
-    overflow-y: auto;
-  }
+  .ds-card-inner { max-width: 900px; margin: 0 auto; }
 }
 
-@media (min-width: 1440px) {
-  .ds-card { padding-left: var(--spacing-24); padding-right: var(--spacing-16); }
-}
+
 
 /* 스크롤바를 감춘다. 막대가 카드 오른쪽 모서리를 덮어 라운딩이 왼쪽에만 있는 것처럼 보였다.
    스크롤은 그대로 되고 위치는 우측 목차가 알려준다. */
-.ds-card, .ds-aside, .ds-toc { scrollbar-width: none; -ms-overflow-style: none; }
+.ds-card, .ds-aside { scrollbar-width: none; -ms-overflow-style: none; }
 .ds-card::-webkit-scrollbar,
-.ds-aside::-webkit-scrollbar,
-.ds-toc::-webkit-scrollbar { width: 0; height: 0; display: none; }
+.ds-aside::-webkit-scrollbar { width: 0; height: 0; display: none; }
 
 /* 고무줄 반동이 카드 밖으로 새지 않게 */
 .ds-card { overscroll-behavior: contain; }
@@ -157,13 +143,20 @@
   display: grid; gap: var(--spacing-6);
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
 }
-.ds-cover-card {
-  display: block; text-decoration: none;
-  border-radius: var(--radius-popover);
-  transition: transform var(--transition-fast);
+.ds-cover-card { display: block; text-decoration: none; border-radius: var(--radius-popover); }
+/* 뜨는 건 견본 면 하나뿐이다. 글자까지 같이 움직이면 카드가 흔들려 보인다. */
+.ds-cover-card > div:first-child {
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
-.ds-cover-card:hover { transform: translateY(-2px); }
-.ds-cover-card:hover > div:first-child { border-color: var(--color-neutral-300); }
+.ds-cover-card:hover > div:first-child {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-neutral-300);
+}
+.ds-cover-card:active > div:first-child {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
 
 
 /* Prev/Next도 누를 수 있는 자리 — 면이 잡혀야 클릭 대상으로 읽힌다 */
@@ -174,3 +167,20 @@
   transition: background var(--transition-fast);
 }
 .ds-prevnext:hover { background: var(--color-surface-raised); }
+
+
+/* 목록 카드 — 표지 카드와 같은 반응. hover에서 떠오르고 누르면 내려앉는다 */
+.ds-list-card {
+  display: block; text-decoration: none;
+  padding: var(--spacing-5);
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+.ds-list-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-neutral-300);
+}
+.ds-list-card:active { transform: translateY(-1px); box-shadow: var(--shadow-md); }

@@ -55,13 +55,6 @@ export default function TypographyPage() {
       href="/design-system/foundations/typography"
       title="Typography"
       lead="스케일은 10 · 12 · 14 · 16 · 20 · 24 여섯 단계입니다. 단계를 늘리는 대신 굵기와 색으로 위계를 만들어 화면 사이의 일관성을 유지합니다."
-      toc={[
-        { id: 'typeface', label: 'Typeface' },
-        { id: 'scale', label: 'Scale' },
-        { id: 'tokens', label: '코드 토큰' },
-        { id: 'usage', label: 'Usage' },
-        ...(legacy.length ? [{ id: 'legacy', label: '이전 버전' }] : []),
-      ]}
     >
       <DocSection id="typeface" title="Typeface" lead="두 서체를 사용합니다. 제목과 간판은 KIMM, 나머지는 Pretendard입니다.">
         <Stage tone="paper" minHeight={200}>

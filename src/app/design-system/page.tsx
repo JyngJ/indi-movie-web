@@ -30,13 +30,6 @@ export default function OverviewPage() {
       href="/design-system"
       title="영화볼지도 디자인 시스템"
       lead="전국 독립·예술영화관의 상영 정보를 지도에서 안내하는 서비스의 디자인 시스템입니다. 미색 배경 위에 흰 카드를 올리고 인디고 한 가지로 행동을 가리키는 원칙 위에 세워져 있습니다. 이 문서의 값은 코드와 피그마에서 생성됩니다."
-      toc={[
-        { id: 'principles', label: '원칙' },
-        { id: 'stats', label: '현황' },
-        { id: 'layers', label: '토큰 3계층' },
-        { id: 'pipeline', label: '생성 방식' },
-        { id: 'drift', label: '차이 요약' },
-      ]}
     >
       <DocSection id="principles" title="원칙">
         <Stage tone="tint" minHeight={200}>

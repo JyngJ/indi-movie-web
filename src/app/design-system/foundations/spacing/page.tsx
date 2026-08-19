@@ -24,11 +24,6 @@ export default function SpacingPage() {
       href="/design-system/foundations/spacing"
       title="Spacing"
       lead="모든 간격은 4의 배수입니다. n = px ÷ 4 로 읽으며, 스케일을 벗어난 값은 감사 스크립트가 집계해 관리합니다."
-      toc={[
-        { id: 'scale', label: 'Scale' },
-        { id: 'gutter', label: 'Gutter' },
-        { id: 'usage', label: 'Usage' },
-      ]}
     >
       <DocSection id="scale" title="Scale" lead="피그마 컬렉션 “영화볼지도 스페이싱 - 2.0”과 같은 단계를 사용합니다.">
         <div>
