@@ -14,8 +14,9 @@ import { ComponentThumb, hasThumb } from './thumbs'
 
 /* 컴포넌트 상세의 시각 자료. 문장은 guides.ts, 값은 매니페스트, 견본은 이 파일에서 정의한다. */
 
-const IcoPlus = () => (
-  <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
+// 버튼 크기를 바꾸면 글리프도 같이 커져야 한다 — 44 기준 18px, 즉 버튼의 약 0.41배.
+const IcoPlus = ({ size = 18 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
     <path d="M12 5v14M5 12h14" />
   </svg>
 )
@@ -85,18 +86,24 @@ function PosterStage({ children }: { children: ReactNode }) {
 
 function ToastDemo() {
   const [n, setN] = useState(0)
+  // Toast는 position: fixed다. transform이 걸린 조상이 있으면 그 상자가 기준이 되므로
+  // 데모에서는 일부러 상자를 하나 만들어 토스트를 견본 안에 가둔다(뷰포트 바닥으로 도망가지 않게).
   return (
-    <>
-      <Button size="sm" variant="secondary" onClick={() => setN(v => v + 1)}>토스트 띄우기</Button>
+    <div style={{
+      position: 'relative', transform: 'translateZ(0)',
+      width: '100%', height: 180,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <button type="button" className="ds-demo-btn" onClick={() => setN(v => v + 1)}>토스트 띄우기</button>
       <Toast message="관심 영화에 담았어요" trigger={n} />
-    </>
+    </div>
   )
 }
 
 function InputDemo() {
   const [v, setV] = useState('')
   return (
-    <div style={{ display: 'grid', gap: 'var(--spacing-4)', width: '100%', maxWidth: 320 }}>
+    <div style={{ display: 'grid', gap: 'var(--spacing-4)', width: '100%', maxWidth: 420 }}>
       <Input label="영화 제목" placeholder="제목을 입력하세요" value={v} onChange={e => setV(e.target.value)} />
       <Input label="이메일" defaultValue="not-an-email" error="이메일 형식이 아닙니다" />
     </div>
@@ -196,16 +203,16 @@ const DOCS: Record<string, Doc> = {
             shape={s(v, 'shape') as 'square'}
             size={Number(s(v, 'size')) as 44}
           >
-            <IcoPlus />
+            <IcoPlus size={Math.round(Number(s(v, 'size')) * 0.41)} />
           </IconButton>
         </div>
       ),
     },
     specVisuals: [
       <div key="s" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)' }}>
-        <IconButton aria-label="추가" size={32}><IcoPlus /></IconButton>
-        <IconButton aria-label="추가" size={44}><IcoPlus /></IconButton>
-        <IconButton aria-label="추가" size={52}><IcoPlus /></IconButton>
+        <IconButton aria-label="추가" size={32}><IcoPlus size={13} /></IconButton>
+        <IconButton aria-label="추가" size={44}><IcoPlus size={18} /></IconButton>
+        <IconButton aria-label="추가" size={52}><IcoPlus size={21} /></IconButton>
       </div>,
       <div key="o" style={{
         display: 'flex', gap: 'var(--spacing-3)', padding: 'var(--spacing-4)',

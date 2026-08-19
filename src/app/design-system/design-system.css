@@ -291,3 +291,20 @@
 }
 .ds-linkedin:hover { background: var(--color-surface-raised); }
 .ds-linkedin:hover .ds-linkedin__glyph { background: #0A66C2; }
+
+/* 데모 트리거 버튼 — 문서용 컨트롤이지 문서 대상이 아니다.
+   Button primary/secondary를 쓰면 견본 위에서 그 색이 컴포넌트 색으로 읽혀서 검은 면으로 뺐다. */
+.ds-demo-btn {
+  min-height: unset;
+  height: 32px;
+  padding: 0 var(--spacing-4);
+  border-radius: var(--radius-button);
+  background: var(--color-neutral-900);
+  color: var(--color-text-inverse);
+  font-size: var(--text-meta);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+.ds-demo-btn:hover { background: var(--color-neutral-800); }
+.ds-demo-btn:active { transform: translateY(1px); }

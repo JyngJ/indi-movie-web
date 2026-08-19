@@ -176,6 +176,24 @@ function collectComponentSets(dump) {
         axes: Object.fromEntries(Object.entries(axes).map(([k, v]) => [k, [...v]])),
         variants,
       })
+      return
+    }
+    // 배리언트가 없는 단일 COMPONENT도 세트 하나로 취급한다.
+    if (node.type === 'COMPONENT') {
+      sets.push({
+        name: node.name,
+        axes: {},
+        variants: [{
+          props: {},
+          w: node.w, h: node.h,
+          radius: node.radius ?? null,
+          pad: node.layout?.pad ?? null,
+          gap: node.layout?.gap ?? null,
+          dir: node.layout?.dir ?? null,
+          fill: node.fills?.[0]?.var || node.fills?.[0]?.hex || null,
+        }],
+      })
+      return
     }
     for (const k of node.kids || []) walk(k)
   }

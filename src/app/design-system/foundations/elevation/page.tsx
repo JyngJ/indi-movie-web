@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { manifest } from '@/design-system'
 import { DocPage, DocSection, SubHeading, Code, DefTable, UsageCards } from '../../_ui/shell'
 
@@ -25,6 +26,27 @@ export default function ElevationPage() {
       title="Elevation"
       lead="그림자는 2겹(direct + ambient)이며 색은 웜 브라운(#140F0A)으로 고정합니다. 미색 배경 위에서 탁해지지 않고 종이 위의 그림자처럼 보입니다."
     >
+      <DocSection
+        id="model"
+        title="Elevation Model"
+        lead="층은 세 단계뿐입니다. 한 단계 올라갈 때마다 그림자가 깊어지고, 같은 층끼리는 같은 그림자를 씁니다. sheet는 방향 없는 앰비언트라 이 계단에 넣지 않습니다."
+      >
+        {/* 피그마 "Elevation Model" 프레임(572×480)을 2x로 내보낸 그림.
+            scripts/figma/export-elevation-20260819.js로 다시 뽑을 수 있다. */}
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          {/* unoptimized — 옅은 그림자와 얇은 선이라 재인코딩하면 뭉갠다. 2x 원본을 그대로 내보낸다. */}
+          <Image
+            src="/design-system/elevation-model.png"
+            alt="E0 페이지 면 위로 E1(sm) · E2(md) · E3(lg) 세 층이 쌓인 입체 도식"
+            width={1144}
+            height={960}
+            style={{ width: '70%', maxWidth: 572, height: 'auto', borderRadius: 'var(--radius-popover)' }}
+            unoptimized
+            priority
+          />
+        </div>
+      </DocSection>
+
       <DocSection id="levels" title="단계">
         <div style={{
           display: 'grid', gap: 'var(--spacing-6)',
