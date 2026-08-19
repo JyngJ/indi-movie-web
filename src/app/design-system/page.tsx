@@ -29,31 +29,8 @@ export default function OverviewPage() {
     <DocPage
       href="/design-system"
       title="영화볼지도 디자인 시스템"
-      lead="전국 독립·예술영화관의 상영 정보를 지도에서 안내하는 서비스의 디자인 시스템입니다. 미색 배경 위에 흰 카드를 올리고 인디고 한 가지로 행동을 가리키는 원칙 위에 세워져 있습니다. 이 문서의 값은 코드와 피그마에서 생성됩니다."
+      lead="전국 독립·예술영화관의 상영 정보를 지도에서 안내하는 서비스, 영화볼지도의 디자인 시스템입니다. 미색 배경 위에 흰 카드를 올리고 하이라이트 컬러 한 가지로 행동을 가리키는 원칙 위에 세워져 있습니다. 이 문서의 값은 코드와 피그마에서 생성됩니다."
     >
-      <DocSection id="principles" title="원칙">
-        <Stage tone="tint" minHeight={200}>
-          <div style={{
-            display: 'flex', gap: 'var(--spacing-6)', flexWrap: 'wrap', justifyContent: 'center',
-            fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 700, color: 'var(--color-text-primary)',
-          }}>
-            <span>종이</span><span style={{ color: 'var(--color-text-placeholder)' }}>·</span>
-            <span>한 가지 강조</span><span style={{ color: 'var(--color-text-placeholder)' }}>·</span>
-            <span>읽히는 정보</span>
-          </div>
-        </Stage>
-        <div style={{ marginTop: 'var(--spacing-6)' }}>
-          <DefTable
-            rows={[
-              ['종이 위의 정보', '배경은 미색(#FAF9F8), 카드는 흰색입니다. 층은 색 대비로 만들고, 그림자는 실제로 떠 있는 요소에만 사용합니다.'],
-              ['강조는 하나', '한 화면의 인디고 액센트는 한 곳으로 유지하고 나머지는 회색조로 낮춥니다. 채도가 높은 색은 종이 톤 위에서 튀므로 사용하지 않습니다.'],
-              ['작아도 읽혀야 한다', '포스터 위 칩은 12px/700을 사용합니다. 읽히지 않는 정보는 없는 정보와 같습니다.'],
-              ['4의 배수', '간격과 반경은 4의 배수만 사용합니다. 감사 스크립트가 이탈을 집계하고 CI가 증가를 막습니다.'],
-            ]}
-          />
-        </div>
-      </DocSection>
-
       <DocSection id="stats" title="현황">
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-3)' }}>
           <Stat value={tokenCount} label="코드 토큰" />

@@ -1,11 +1,12 @@
 import { notFound } from 'next/navigation'
 import { manifest } from '@/design-system'
 import { guideFor } from '@/design-system/guides'
+import { documentedComponents } from '../../_ui/nav'
 import { DocPage, DocSection, Code, DefTable } from '../../_ui/shell'
 import { ComponentDoc } from '../../_ui/componentDocs'
 
 export function generateStaticParams() {
-  return manifest.components.map(c => ({ name: c.name }))
+  return documentedComponents().map(c => ({ name: c.name }))
 }
 
 export default async function ComponentPage({ params }: { params: Promise<{ name: string }> }) {

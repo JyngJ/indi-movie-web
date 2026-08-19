@@ -14,8 +14,13 @@ export const FOUNDATION_PAGES: DocPageRef[] = [
   { href: '/design-system/foundations/elevation', label: 'Elevation' },
 ]
 
+/** 문서에 싣지 않는 컴포넌트 — 레이아웃 보조라 따로 설명할 것이 없다. */
+const HIDDEN = ['CardContainer']
+
+export const documentedComponents = () => manifest.components.filter(c => !HIDDEN.includes(c.name))
+
 export const componentPages = (): DocPageRef[] =>
-  manifest.components.map(c => ({ href: `/design-system/components/${c.name}`, label: c.name }))
+  documentedComponents().map(c => ({ href: `/design-system/components/${c.name}`, label: c.name }))
 
 /** 그룹 헤더는 그 섹션의 표지 페이지로 간다 — 무엇을 다루는 묶음인지 먼저 보여주고,
  *  딸린 페이지는 카드로 안내한다. */

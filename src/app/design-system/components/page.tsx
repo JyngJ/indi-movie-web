@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { manifest } from '@/design-system'
 import { guideFor } from '@/design-system/guides'
 import { DocPage, DocSection } from '../_ui/shell'
+import { documentedComponents } from '../_ui/nav'
 import { ComponentThumb } from '../_ui/thumbs'
 
 /** 첫 문장만 잘라 카드 설명으로 쓴다 — 목록에서는 무엇인지만 알면 된다. */
@@ -51,8 +52,8 @@ export default function ComponentsIndexPage() {
       title="Components"
       lead="컴포넌트는 정해진 규칙에 따라 재사용하는 UI 요소입니다. 각 페이지는 실제 컴포넌트를 렌더한 Anatomy, 조작 가능한 State, TypeScript에서 추출한 Properties, 피그마 실측 Spec, 사용 규칙(Usage)을 제공합니다."
     >
-      <DocSection id="list" title={`전체 · ${manifest.components.length}`}>
-        <Grid names={manifest.components.map(c => c.name)} />
+      <DocSection id="list" title={`전체 · ${documentedComponents().length}`}>
+        <Grid names={documentedComponents().map(c => c.name)} />
       </DocSection>
     </DocPage>
   )
