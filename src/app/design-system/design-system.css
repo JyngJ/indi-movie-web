@@ -4,7 +4,7 @@
 .ds-root {
   --ds-page-bg: #F2EFEC;          /* neutral/200과 100 사이 — 흰 카드를 띄우기 위한 종이 틴트 */
   --ds-card-radius: 24px;
-  --ds-sidebar-w: 216px;
+  --ds-sidebar-w: 248px;
   --ds-toc-w: 180px;
   min-height: 100dvh;
   background: var(--ds-page-bg);
@@ -73,3 +73,42 @@
   .ds-playground { grid-template-columns: minmax(0, 1fr) 208px; }
   .ds-spec-row { grid-template-columns: minmax(0, 320px) minmax(0, 1fr); }
 }
+
+
+/* ── 사이드바 항목 ───────────────────────────────────────────────
+   인라인 스타일로는 hover를 못 준다. 내비게이션은 "누를 수 있다"가 보여야 해서
+   여기 클래스로 뺐다. */
+.ds-nav-group {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px var(--spacing-3);
+  background: transparent; border: 0; cursor: pointer; min-height: unset;
+  font-size: var(--text-title);
+  font-weight: 700;
+  color: var(--color-text-body);
+  border-radius: var(--radius-button);
+}
+.ds-nav-group:hover { background: var(--color-surface-raised); }
+.ds-nav-group[data-has-active='true'] { color: var(--color-text-primary); }
+
+.ds-nav-link {
+  display: block;
+  padding: 8px var(--spacing-3);
+  border-radius: var(--radius-button);
+  text-decoration: none;
+  line-height: 1.6;
+  font-size: var(--text-body);
+  color: var(--color-text-sub);
+  font-weight: 500;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.ds-nav-link:hover { background: var(--color-surface-raised); color: var(--color-text-primary); }
+.ds-nav-link[data-top='true'] { font-size: var(--text-title); font-weight: 700; color: var(--color-text-primary); }
+.ds-nav-link[data-active='true'],
+.ds-nav-link[data-active='true']:hover {
+  background: var(--color-neutral-800);
+  color: var(--color-text-inverse);
+  font-weight: 700;
+}
+
+.ds-nav-items { display: flex; flex-direction: column; gap: 2px; margin-top: var(--spacing-1); }

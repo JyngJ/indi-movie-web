@@ -7,7 +7,7 @@ import { Toc, type TocItem } from './Toc'
 
 export function DocHeader({ title, lead }: { title: string; lead?: ReactNode }) {
   return (
-    <header style={{ marginBottom: 'var(--spacing-12)' }}>
+    <header style={{ marginBottom: 'var(--spacing-16)' }}>
       <h1 style={{
         fontFamily: 'var(--font-display)', fontSize: 40, lineHeight: 1.2, fontWeight: 700,
         color: 'var(--color-text-primary)', letterSpacing: '0.01em', margin: 0,
@@ -18,6 +18,10 @@ export function DocHeader({ title, lead }: { title: string; lead?: ReactNode }) 
           color: 'var(--color-text-sub)', maxWidth: '62ch',
         }}>{lead}</p>
       )}
+      <hr style={{
+        marginTop: 'var(--spacing-8)', border: 0,
+        borderTop: '1px solid var(--color-border)',
+      }} />
     </header>
   )
 }
@@ -26,18 +30,20 @@ export function DocSection({ id, title, lead, children }: {
   id?: string; title: string; lead?: ReactNode; children: ReactNode
 }) {
   return (
-    <section id={id} className="ds-anchor" style={{ marginBottom: 'var(--spacing-16)' }}>
+    <section id={id} className="ds-anchor" style={{ marginBottom: 'var(--spacing-32)' }}>
       <h2 style={{
-        fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 700, lineHeight: 1.3,
+        fontFamily: 'var(--font-display)', fontSize: 30, fontWeight: 700, lineHeight: 1.3,
         color: 'var(--color-text-primary)', margin: 0,
+        paddingBottom: 'var(--spacing-3)',
+        borderBottom: '1px solid var(--color-border)',
       }}>{title}</h2>
       {lead && (
         <p style={{
-          marginTop: 'var(--spacing-3)', fontSize: 'var(--text-body)', lineHeight: 1.8,
+          marginTop: 'var(--spacing-4)', fontSize: 'var(--text-body)', lineHeight: 1.8,
           color: 'var(--color-text-sub)', maxWidth: '62ch',
         }}>{lead}</p>
       )}
-      <div style={{ marginTop: 'var(--spacing-6)' }}>{children}</div>
+      <div style={{ marginTop: 'var(--spacing-8)' }}>{children}</div>
     </section>
   )
 }
@@ -163,7 +169,7 @@ export function SpecRow({ visual, title, desc }: { visual: ReactNode; title: str
   return (
     <div style={{
       display: 'grid', gap: 'var(--spacing-6)', alignItems: 'center',
-      gridTemplateColumns: 'minmax(0, 1fr)', marginBottom: 'var(--spacing-6)',
+      gridTemplateColumns: 'minmax(0, 1fr)', marginBottom: 'var(--spacing-12)',
     }} className="ds-spec-row">
       <div style={{
         background: 'var(--color-surface-bg)', border: '1px solid var(--color-border)',
@@ -188,7 +194,7 @@ export function UsageCards({ items }: {
 }) {
   return (
     <div style={{
-      display: 'grid', gap: 'var(--spacing-4)',
+      display: 'grid', gap: 'var(--spacing-6)',
       gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
     }}>
       {items.map((it, i) => (
@@ -237,7 +243,7 @@ export function PrevNext({ href }: { href: string }) {
 
   return (
     <nav style={{
-      marginTop: 'var(--spacing-16)', paddingTop: 'var(--spacing-6)',
+      marginTop: 'var(--spacing-8)', paddingTop: 'var(--spacing-8)',
       borderTop: '1px solid var(--color-border)',
       display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-4)',
     }}>
