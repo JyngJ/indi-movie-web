@@ -33,14 +33,18 @@ export default function ElevationPage() {
       >
         {/* 피그마 "Elevation Model" 프레임(572×480)을 2x로 내보낸 그림.
             scripts/figma/export-elevation-20260819.js로 다시 뽑을 수 있다. */}
-        <Image
-          src="/design-system/elevation-model.png"
-          alt="E0 페이지 면 위로 E1(sm) · E2(md) · E3(lg) 세 층이 쌓인 입체 도식"
-          width={572}
-          height={480}
-          style={{ width: '100%', height: 'auto', borderRadius: 'var(--radius-popover)' }}
-          priority
-        />
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          {/* unoptimized — 옅은 그림자와 얇은 선이라 재인코딩하면 뭉갠다. 2x 원본을 그대로 내보낸다. */}
+          <Image
+            src="/design-system/elevation-model.png"
+            alt="E0 페이지 면 위로 E1(sm) · E2(md) · E3(lg) 세 층이 쌓인 입체 도식"
+            width={1144}
+            height={960}
+            style={{ width: '70%', maxWidth: 572, height: 'auto', borderRadius: 'var(--radius-popover)' }}
+            unoptimized
+            priority
+          />
+        </div>
       </DocSection>
 
       <DocSection id="levels" title="단계">
