@@ -537,7 +537,7 @@ const RANKING_COUNT = 6
 
 const SECTION_FILMS_HREF: Record<string, string | null> = {
   favorites:   '/my/favorites',
-  ranking:     '/films',
+  ranking:     '/films#realtime_popular_rank',
   lastWeek:    '/films#realtime_last_week',
   newIndie:    '/films#realtime_new_indie',
   returning:   '/films#realtime_returning',
