@@ -271,12 +271,23 @@
 }
 
 
-/* 푸터 링크드인 — 브랜드 색은 외부 규정이라 그대로 쓴다 */
+/* 푸터 링크드인 — 평소엔 회색, 손을 올리면 브랜드 색.
+   페이지에서 유일하게 색이 튀는 요소가 되지 않도록 기본은 잉크 계열로 둔다. */
 .ds-linkedin {
-  width: 32px; height: 32px; border-radius: 50%;
+  flex: 0 0 auto;
+  width: 28px; height: 28px; box-sizing: border-box;
+  /* globals.css가 모든 a에 min-height 44를 준다 — 정사각을 유지하려면 여기서 푼다 */
+  min-height: unset;
+  border-radius: var(--radius-button);
   display: inline-flex; align-items: center; justify-content: center;
-  color: var(--color-text-caption);
-  background: var(--color-surface-raised);
-  transition: background var(--transition-fast), color var(--transition-fast);
+  transition: background var(--transition-fast);
 }
-.ds-linkedin:hover { background: #0A66C2; color: var(--color-on-accent); }
+.ds-linkedin__glyph {
+  width: 14px; height: 14px; display: block;
+  background: var(--color-text-caption);
+  -webkit-mask: url('/linkedin.png') center / contain no-repeat;
+  mask: url('/linkedin.png') center / contain no-repeat;
+  transition: background var(--transition-fast);
+}
+.ds-linkedin:hover { background: var(--color-surface-raised); }
+.ds-linkedin:hover .ds-linkedin__glyph { background: #0A66C2; }
