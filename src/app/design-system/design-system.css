@@ -318,7 +318,8 @@
   align-items: center;
   justify-content: center;
   gap: var(--spacing-2);
-  margin: 0 var(--spacing-3);
+  /* 사이드바 안쪽 폭을 그대로 쓴다 — 내비 항목보다 좁으면 붙임쪽지처럼 보인다. */
+  margin: 0;
   min-height: var(--comp-btn-h-md);
   border-radius: var(--radius-button);
   background: var(--color-primary-base);
