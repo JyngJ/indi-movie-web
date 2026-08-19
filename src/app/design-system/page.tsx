@@ -6,11 +6,11 @@ function Stat({ value, label }: { value: React.ReactNode; label: string }) {
   return (
     <div style={{
       background: 'var(--color-surface-card)', border: '1px solid var(--color-border)',
-      borderRadius: 'var(--radius-control)', padding: 'var(--spacing-4)', minWidth: 128, flex: '1 1 128px',
+      borderRadius: 'var(--radius-control)', padding: 'var(--spacing-4)', minWidth: 136, flex: '1 1 136px',
     }}>
       <div style={{
         fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 700,
-        color: 'var(--color-text-primary)', lineHeight: 1,
+        color: 'var(--color-text-primary)', lineHeight: 1, whiteSpace: 'nowrap',
       }}>{value}</div>
       <div style={{ marginTop: 'var(--spacing-2)', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>{label}</div>
     </div>
