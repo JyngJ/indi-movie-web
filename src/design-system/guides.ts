@@ -57,7 +57,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
       { title: 'overlay 변형', desc: '배경 위 상태 레이어(--color-surface-overlay → hover → pressed)로 눌림을 표현합니다. 면 색을 알 수 없는 자리에서 사용하는 방식입니다.' },
     ],
     usage: [
-      { kind: 'do', rule: '모바일에서 아이콘 버튼 사이는 최소 12px을 확보합니다. 44 타깃이 겹치면 오탭이 발생합니다.' },
+      { kind: 'do', rule: '모바일에서 아이콘 버튼 사이는 최소 12px을 확보합니다. 44 타깃이 겹치면 오조작이 발생합니다.' },
       { kind: 'dont', rule: '의미가 모호한 아이콘(별·깃발 등)을 레이블 없이 단독으로 사용하지 않습니다.' },
     ],
   },
@@ -72,7 +72,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
     ],
     specs: [
       { title: '반경', desc: 'pill(9999)을 사용합니다. 사각 라운드는 카드·셀의 문법이므로 칩과 섞지 않습니다.' },
-      { title: '선택 상태', desc: '면(primary/100)과 글자색(primary/900)으로 표현합니다. 테두리 굵기로 표현하면 레이아웃이 흔들립니다.' },
+      { title: '선택 상태', desc: '면(primary/100)과 글자색(primary/900)으로 표현합니다. 테두리 굵기로만 구분하지 않습니다.' },
     ],
     usage: [
       { kind: 'do', rule: '가로 스크롤 레일에 담아 한 줄로 유지합니다.' },
@@ -135,14 +135,14 @@ export const GUIDES: Record<string, ComponentGuide> = {
     ],
     usage: [
       { kind: 'do', rule: '카드 안 요소 간격은 spacing/3(12), 카드 사이는 spacing/4(16) 이상을 확보합니다.' },
-      { kind: 'dont', rule: '카드 안에 카드를 넣지 않습니다. 층이 두 번 쌓이면 항목의 경계가 사라집니다.' },
+      { kind: 'dont', rule: '카드 안에 카드를 넣지 않습니다.' },
     ],
   },
 
   Input: {
     intro: '값을 직접 입력받는 자리입니다. 레이블·힌트·오류를 한 덩이로 묶어 입력 중에도 위치가 흔들리지 않도록 합니다.',
     anatomy: [
-      { name: '레이블', desc: '무엇을 입력하는지 알립니다. placeholder로 대신하지 않습니다 — 입력을 시작하면 사라집니다.' },
+      { name: '레이블', desc: '무엇을 입력하는지 알립니다. placeholder만 단독으로 사용하지 않습니다.' },
       { required: false, name: '힌트 / 오류', desc: '같은 자리를 공유하며, 오류가 있으면 오류 문구가 우선합니다.' },
     ],
     usage: [
@@ -186,7 +186,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
   BottomSheet: {
     intro: '화면 아래에서 올라오는 면입니다. 상단 모서리만 20(radius/sheet)으로 두고, 핸들로 끌 수 있음을 알립니다.',
     specs: [
-      { title: '그림자', desc: 'shadow/sheet — offset 0의 앰비언트 2겹입니다. 아래가 화면 끝이라 방향성 그림자를 사용하지 않습니다.' },
+      { title: '그림자', desc: 'shadow/sheet — offset 0의 앰비언트 2겹입니다. 아래가 화면 끝이므로 방향성 그림자를 사용하지 않습니다.' },
     ],
   },
 
