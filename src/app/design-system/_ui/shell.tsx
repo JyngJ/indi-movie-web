@@ -211,61 +211,105 @@ const USAGE_KIND = {
 
 export type UsageKind = keyof typeof USAGE_KIND
 
-export function UsageCards({ items }: {
-  items: { kind: UsageKind; visual?: ReactNode; rule: string; instead?: string }[]
-}) {
+export interface UsageItem {
+  kind: UsageKind
+  visual?: ReactNode
+  rule: string
+  instead?: string
+}
+
+/** 규칙과 대안. 대안은 규칙과 다른 면에 올려 눈으로 먼저 구분한다. */
+function UsageBody({ rule, instead, onTint = false }: { rule: string; instead?: string; onTint?: boolean }) {
   return (
-    <div className="ds-usage-grid">
-      {items.map((it, i) => {
-        const k = USAGE_KIND[it.kind]
-        return (
-        <div key={i}>
-          {it.visual && (
-            <div className="ds-grid-surface" style={{
-              borderRadius: 'var(--radius-popover)',
-              border: '1px solid var(--color-border)', borderBottom: 'none',
-              borderBottomLeftRadius: 0, borderBottomRightRadius: 0,
-              padding: 'var(--spacing-6)', minHeight: 150,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexWrap: 'wrap', gap: 'var(--spacing-3)',
-            }}>{it.visual}</div>
-          )}
-          <div style={{ height: 3, background: k.color }} />
-          <div style={{ paddingTop: 'var(--spacing-3)' }}>
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)',
-              fontSize: 22, fontWeight: 700, letterSpacing: '-0.01em', color: k.color,
-            }}>
-              {/* 색을 못 읽는 자리를 아이콘이 대신한다 */}
-              {k.icon}
-              {k.label}
-            </div>
-            <p style={{
-              marginTop: 'var(--spacing-2)', fontSize: 'var(--text-body)', lineHeight: 1.7,
-              color: 'var(--color-text-sub)',
-            }}>{it.rule}</p>
-            {/* 금지에는 갈 곳을 함께 준다 — "쓰지 마라"만 남으면 읽는 사람이 멈춘다.
-                규칙과 다른 면에 올려 둘을 눈으로 먼저 구분한다. */}
-            {it.instead && (
-              <div style={{
-                marginTop: 'var(--spacing-3)',
-                background: 'var(--color-surface-bg)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--radius-control)',
-                padding: 'var(--spacing-3) var(--spacing-4)',
-              }}>
-                <div style={{
-                  fontSize: 'var(--text-caption)', fontWeight: 700, letterSpacing: '0.4px',
-                  color: 'var(--color-text-caption)',
-                }}>대신</div>
-                <p style={{
-                  marginTop: 'var(--spacing-1)', fontSize: 'var(--text-body)', lineHeight: 1.7,
-                  color: 'var(--color-text-sub)',
-                }}>{it.instead}</p>
-              </div>
-            )}
-          </div>
+    <>
+      <p style={{
+        marginTop: 'var(--spacing-2)', fontSize: 'var(--text-body)', lineHeight: 1.7,
+        color: onTint ? 'inherit' : 'var(--color-text-sub)',
+      }}>{rule}</p>
+      {instead && (
+        <div style={{
+          marginTop: 'var(--spacing-3)',
+          background: onTint ? 'var(--color-surface-card)' : 'var(--color-surface-bg)',
+          border: '1px solid var(--color-border)',
+          borderRadius: 'var(--radius-control)',
+          padding: 'var(--spacing-3) var(--spacing-4)',
+        }}>
+          <div style={{
+            fontSize: 'var(--text-caption)', fontWeight: 700, letterSpacing: '0.4px',
+            color: 'var(--color-text-caption)',
+          }}>대신</div>
+          <p style={{
+            marginTop: 'var(--spacing-1)', fontSize: 'var(--text-body)', lineHeight: 1.7,
+            color: 'var(--color-text-sub)',
+          }}>{instead}</p>
         </div>
+      )}
+    </>
+  )
+}
+
+/** Do / Don't는 짝이라 나란히 두고, Caution·Note는 짝이 없으므로 아래에 띠로 눕힌다.
+ *  셋을 같은 격자에 넣으면 마지막 하나가 옆 칸을 비운 채 서서 판이 어긋난다. */
+export function UsageCards({ items }: { items: UsageItem[] }) {
+  const pairs = items.filter(i => i.kind === 'do' || i.kind === 'dont')
+  const notes = items.filter(i => i.kind === 'caution' || i.kind === 'note')
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-6)' }}>
+      {pairs.length > 0 && (
+        <div className="ds-usage-grid">
+          {pairs.map((it, i) => {
+            const k = USAGE_KIND[it.kind]
+            return (
+              <div key={i}>
+                {it.visual && (
+                  <div className="ds-grid-surface" style={{
+                    borderRadius: 'var(--radius-popover)',
+                    border: '1px solid var(--color-border)', borderBottom: 'none',
+                    borderBottomLeftRadius: 0, borderBottomRightRadius: 0,
+                    padding: 'var(--spacing-6)', minHeight: 150,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexWrap: 'wrap', gap: 'var(--spacing-3)',
+                  }}>{it.visual}</div>
+                )}
+                <div style={{ height: 3, background: k.color }} />
+                <div style={{ paddingTop: 'var(--spacing-3)' }}>
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)',
+                    fontSize: 22, fontWeight: 700, letterSpacing: '-0.01em', color: k.color,
+                  }}>
+                    {/* 색을 못 읽는 자리를 아이콘이 대신한다 */}
+                    {k.icon}
+                    {k.label}
+                  </div>
+                  <UsageBody rule={it.rule} instead={it.instead} />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {notes.map((it, i) => {
+        const k = USAGE_KIND[it.kind]
+        const tint = it.kind === 'caution' ? 'var(--color-warning-tint)' : 'var(--color-primary-100)'
+        const ink = it.kind === 'caution' ? 'var(--color-warning-deep)' : 'var(--color-primary-900)'
+        return (
+          <div key={i} style={{
+            display: 'flex', gap: 'var(--spacing-3)',
+            background: tint, borderLeft: `3px solid ${k.color}`,
+            borderRadius: '0 var(--radius-control) var(--radius-control) 0',
+            padding: 'var(--spacing-4) var(--spacing-5)',
+            color: ink,
+          }}>
+            <span style={{ flexShrink: 0, color: k.color, marginTop: 2 }}>{k.icon}</span>
+            <div style={{ minWidth: 0 }}>
+              <div style={{
+                fontSize: 'var(--text-title)', fontWeight: 700, letterSpacing: '-0.01em', color: k.color,
+              }}>{k.label}</div>
+              <UsageBody rule={it.rule} instead={it.instead} onTint />
+            </div>
+          </div>
         )
       })}
     </div>
