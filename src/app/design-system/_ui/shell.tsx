@@ -215,10 +215,7 @@ export function UsageCards({ items }: {
   items: { kind: UsageKind; visual?: ReactNode; rule: string; instead?: string }[]
 }) {
   return (
-    <div style={{
-      display: 'grid', gap: 'var(--spacing-6)',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-    }}>
+    <div className="ds-usage-grid">
       {items.map((it, i) => {
         const k = USAGE_KIND[it.kind]
         return (

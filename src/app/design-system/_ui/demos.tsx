@@ -85,7 +85,7 @@ function InputDemo() {
 function SearchBarDemo() {
   const [v, setV] = useState('')
   return (
-    <div style={{ width: 'min(560px, 100%)' }}>
+    <div style={{ width: '100%', maxWidth: 560, minWidth: 0 }}>
       <SearchBar
         value={v}
         onChange={e => setV(e.target.value)}
@@ -118,7 +118,7 @@ function SearchBarButtonDemo() {
   }, [open])
 
   return (
-    <div ref={wrap} style={{ position: 'relative', width: 'min(560px, 100%)' }}>
+    <div ref={wrap} style={{ position: 'relative', width: '100%', maxWidth: 560, minWidth: 0 }}>
       {open ? (
         <SearchBar
           ref={ref}
@@ -177,7 +177,7 @@ function ScrollNavButtonDemo() {
   const nudge = (dir: -1 | 1) => rail.current?.scrollBy({ left: dir * 200, behavior: 'smooth' })
 
   return (
-    <div style={{ position: 'relative', width: 'min(420px, 100%)' }}>
+    <div style={{ position: 'relative', width: '100%', maxWidth: 560, minWidth: 0 }}>
       <div
         ref={rail}
         onScroll={sync}
@@ -338,10 +338,10 @@ const DEMOS: Record<string, ReactNode> = {
       </div>
     </Case>
   ),
-  Input: <Case label="label · error · hint · leftIcon"><InputDemo /></Case>,
-  SearchBar: <Case label="입력 가능 — 직접 타이핑해 보세요"><SearchBarDemo /></Case>,
+  Input: <Case wide label="label · error · hint · leftIcon"><InputDemo /></Case>,
+  SearchBar: <Case wide label="입력 가능 — 직접 타이핑해 보세요"><SearchBarDemo /></Case>,
   SearchBarButton: (
-    <Case label="눌러 보세요 — 검색 화면처럼 입력창과 최근 검색이 열립니다">
+    <Case wide label="눌러 보세요 — 검색 화면처럼 입력창과 최근 검색이 열립니다">
       <SearchBarButtonDemo />
     </Case>
   ),

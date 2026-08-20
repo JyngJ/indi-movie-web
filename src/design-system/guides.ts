@@ -62,7 +62,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
     usage: [
       { kind: 'do', rule: 'primary는 가장 오른쪽(또는 마지막)에 배치하고, 취소는 text·tertiary로 낮춥니다.' },
       { kind: 'dont', rule: 'primary를 나란히 두 개 배치하지 않습니다.', instead: '주행동 하나만 primary로 두고 나머지는 secondary·text로 낮춥니다.' },
-      { kind: 'caution', rule: 'danger는 되돌릴 수 없는 행동에만 사용합니다. 경고색이 흔해지면 진짜 위험한 버튼이 묻힙니다.' },
+      { kind: 'caution', rule: 'danger는 되돌릴 수 없는 행동에만 사용합니다.' },
     ],
     a11y: [
       { title: '터치 타깃', desc: 'md(44)는 --touch-target과 같은 값입니다. sm(32)은 밀집한 목록 안에서만 쓰고, 그 안에서도 좌우 간격으로 실제 누르는 면을 확보합니다.' },
