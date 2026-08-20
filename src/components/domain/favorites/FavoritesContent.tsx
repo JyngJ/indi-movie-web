@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { FavoriteToggle } from '@/components/domain/favorites/FavoriteToggle'
 import { PosterThumb } from '@/components/domain/PosterThumb'
 import { Button, FilterPill } from '@/components/primitives'
+import { useDetailLink } from '@/hooks/useDetailLink'
 import { useFavorites } from '@/hooks/useFavorites'
 import { favoriteKey, type Favorite } from '@/lib/favorites/types'
 import { summarizeFavorites } from '@/lib/favorites/summarize'
@@ -22,6 +23,7 @@ type Tab = 'movie' | 'theater' | 'director'
  */
 export function FavoritesContent({ onNavigate }: { onNavigate?: () => void }) {
   const [tab, setTab] = useState<Tab>('movie')
+  const linkProps = useDetailLink(onNavigate)
 
   const { favorites, isLoading } = useFavorites()
   const { data: movies = [] } = useMovies()
@@ -81,7 +83,7 @@ export function FavoritesContent({ onNavigate }: { onNavigate?: () => void }) {
           const active = m.screeningTheaterCount > 0
           return (
             <li key={m.id} style={{ display: 'flex', flexDirection: 'column', gap: 8, position: 'relative', opacity: active ? 1 : 0.55 }}>
-              <Link href={`/films/movie/${m.id}`} onClick={onNavigate} style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <Link {...linkProps({ kind: 'movie', id: m.id })} style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <PosterThumb src={m.posterUrl} alt={`${m.title} 포스터`} width={104} height={156} size="lg" />
                 <span style={{ fontSize: 'var(--text-body)', fontWeight: 600, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.title}</span>
                 <span style={{ fontSize: 'var(--text-meta)', color: active ? 'var(--color-success)' : 'var(--color-text-caption)' }}>
@@ -103,7 +105,7 @@ export function FavoritesContent({ onNavigate }: { onNavigate?: () => void }) {
           const active = t.screeningMovieCount > 0
           return (
             <li key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px var(--gutter)', backgroundColor: 'var(--color-surface-card)', borderBottom: i < summary.theaters.length - 1 ? '1px solid var(--color-border)' : 'none', opacity: active ? 1 : 0.6 }}>
-              <Link href={`/films/theater/${t.id}`} onClick={onNavigate} style={{ flex: 1, minWidth: 0, textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <Link {...linkProps({ kind: 'theater', id: t.id })} style={{ flex: 1, minWidth: 0, textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span style={{ fontSize: 'var(--text-body)', fontWeight: 600, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</span>
                 <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
                   {t.city} · {active ? `상영 중 ${t.screeningMovieCount}편` : '상영 정보 없음'}
@@ -122,7 +124,7 @@ export function FavoritesContent({ onNavigate }: { onNavigate?: () => void }) {
           const active = d.screeningMovieCount > 0
           return (
             <li key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px var(--gutter)', backgroundColor: 'var(--color-surface-card)', borderBottom: i < summary.directors.length - 1 ? '1px solid var(--color-border)' : 'none', opacity: active ? 1 : 0.6 }}>
-              <Link href={`/films/director/${encodeURIComponent(d.name)}`} onClick={onNavigate} style={{ flex: 1, minWidth: 0, textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <Link {...linkProps({ kind: 'director', name: d.name })} style={{ flex: 1, minWidth: 0, textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span style={{ fontSize: 'var(--text-body)', fontWeight: 600, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</span>
                 <span style={{ fontSize: 'var(--text-meta)', color: active ? 'var(--color-success)' : 'var(--color-text-caption)' }}>
                   {active ? `상영 중 ${d.screeningMovieCount}편` : d.movieCount > 0 ? `등록 ${d.movieCount}편 · 상영 없음` : '상영 소식 기다리는 중'}

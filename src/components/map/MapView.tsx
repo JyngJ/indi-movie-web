@@ -2476,6 +2476,24 @@ export default function MapView() {
     }
   }, [selectedId, closeSheet, flyToForTheater, isDesktopLayout, movieFilter, theaters])
 
+  /* 소식·관심 목록 팝오버가 "이걸 열어줘"라고 보낸 요청 처리 — 팝오버는 MapView 밖이라
+     패널 상태를 직접 못 건드린다. 처리 후 즉시 비워 같은 요청이 두 번 열리지 않게 한다. */
+  const mapFocus = useUIStore((s) => s.mapFocus)
+  const clearMapFocus = useUIStore((s) => s.clearMapFocus)
+  useEffect(() => {
+    if (!mapFocus) return
+    if (!isDesktopLayout) { clearMapFocus(); return }
+    if (mapFocus.type === 'theater') {
+      // 열려 있던 상세 패널을 먼저 닫는다 — 극장 시트가 같은 자리라 안 닫으면 가려진다
+      closeDesktopPanel()
+      handlePinClick(mapFocus.id)
+    }
+    else if (mapFocus.type === 'movie') openDesktopPanel({ type: 'movie', id: mapFocus.id })
+    else openDesktopPanel({ type: 'director', name: mapFocus.name })
+    clearMapFocus()
+  }, [mapFocus, clearMapFocus, isDesktopLayout, openDesktopPanel, closeDesktopPanel, handlePinClick])
+
+
   const handleRecentItemClick = useCallback((item: RecentlyViewedEntry) => {
     if (!item.kind) return
     if (item.kind === 'movie') {

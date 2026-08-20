@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { PosterThumb } from '@/components/domain/PosterThumb'
+import { useDetailLink, type DetailTarget } from '@/hooks/useDetailLink'
 import type { StoredNotificationEvent } from '@/lib/notifications/types'
 
 /** "2026-08-21" → "8월 21일" */
@@ -46,22 +47,23 @@ function headline(e: StoredNotificationEvent): string {
 }
 
 /**
- * 카드가 가리키는 곳 — 상영작 탭 상세(/films/*)로 보낸다.
- * 구 /movie/[id]는 전체 화면 단독 페이지라 데스크톱에서 지도·소식 맥락이 통째로 사라졌다.
+ * 카드가 가리키는 대상.
  * 극장 하트로 묶인 소식("이 극장에 새 작품 N편")은 영화가 아니라 극장으로 간다 —
  * 대표 영화 하나로 보내면 나머지 N-1편이 어디 갔는지 알 수 없다.
  */
-function hrefFor(event: StoredNotificationEvent): string | undefined {
-  if (event.payload.groupedBy === 'theater' && event.theaterId) {
-    return `/films/theater/${encodeURIComponent(event.theaterId)}`
-  }
-  if (event.movieId) return `/films/movie/${encodeURIComponent(event.movieId)}`
-  if (event.theaterId) return `/films/theater/${encodeURIComponent(event.theaterId)}`
+function targetFor(event: StoredNotificationEvent): DetailTarget | undefined {
+  if (event.payload.groupedBy === 'theater' && event.theaterId) return { kind: 'theater', id: event.theaterId }
+  if (event.movieId) return { kind: 'movie', id: event.movieId }
+  if (event.theaterId) return { kind: 'theater', id: event.theaterId }
   return undefined
 }
 
-function FeedItem({ event, now, onNavigate }: { event: StoredNotificationEvent; now: Date; onNavigate?: () => void }) {
-  const href = hrefFor(event)
+function FeedItem({ event, now, linkProps }: {
+  event: StoredNotificationEvent
+  now: Date
+  linkProps: ReturnType<typeof useDetailLink>
+}) {
+  const target = targetFor(event)
   const body = (
     <div style={{
       display: 'flex', gap: 12, alignItems: 'flex-start',
@@ -92,9 +94,9 @@ function FeedItem({ event, now, onNavigate }: { event: StoredNotificationEvent; 
     </div>
   )
 
-  if (!href) return body
+  if (!target) return body
   return (
-    <Link href={href} onClick={onNavigate} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+    <Link {...linkProps(target)} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
       {body}
     </Link>
   )
@@ -103,15 +105,16 @@ function FeedItem({ event, now, onNavigate }: { event: StoredNotificationEvent; 
 /** 소식 목록 — 최신순. 안 읽은 건 배경으로 구분한다 */
 export function FeedList({ events, onNavigate }: {
   events: StoredNotificationEvent[]
-  /** 데스크톱 소식 팝오버에서 카드를 누르면 팝오버를 닫는다 */
+  /** 데스크톱 팝오버에서 카드를 누르면 팝오버를 닫는다 */
   onNavigate?: () => void
 }) {
   const now = new Date()
+  const linkProps = useDetailLink(onNavigate)
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       {events.map((e) => (
         <div key={e.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
-          <FeedItem event={e} now={now} onNavigate={onNavigate} />
+          <FeedItem event={e} now={now} linkProps={linkProps} />
         </div>
       ))}
     </div>
