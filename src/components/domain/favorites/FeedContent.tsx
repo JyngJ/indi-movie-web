@@ -43,7 +43,7 @@ export function FeedContent({ authError, onNavigate }: { authError?: string | nu
   }
 
   if (events.length > 0) {
-    return <FeedList events={events} />
+    return <FeedList events={events} onNavigate={onNavigate} />
   }
 
   return (
