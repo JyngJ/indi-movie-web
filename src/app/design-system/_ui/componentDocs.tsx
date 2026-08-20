@@ -567,6 +567,7 @@ export function ComponentDoc({ name }: { name: string }) {
             items={guide.usage.map((u, i) => ({
               kind: u.kind,
               rule: u.rule,
+              instead: u.instead,
               visual: doc?.usageVisuals?.[i],
             }))}
           />

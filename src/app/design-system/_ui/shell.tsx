@@ -187,7 +187,7 @@ export function SpecRow({ visual, title, desc }: { visual?: ReactNode; title: st
 
 /** Do / Don't 2단 카드. 하단 액센트 바로 구분한다. */
 export function UsageCards({ items }: {
-  items: { kind: 'do' | 'dont'; visual?: ReactNode; rule: string }[]
+  items: { kind: 'do' | 'dont'; visual?: ReactNode; rule: string; instead?: string }[]
 }) {
   return (
     <div style={{
@@ -219,6 +219,16 @@ export function UsageCards({ items }: {
               marginTop: 'var(--spacing-2)', fontSize: 'var(--text-body)', lineHeight: 1.7,
               color: 'var(--color-text-sub)',
             }}>{it.rule}</p>
+            {/* 금지에는 갈 곳을 함께 준다 — "쓰지 마라"만 남으면 읽는 사람이 멈춘다. */}
+            {it.instead && (
+              <p style={{
+                marginTop: 'var(--spacing-3)', paddingLeft: 'var(--spacing-3)',
+                borderLeft: '2px solid var(--color-border)',
+                fontSize: 'var(--text-body)', lineHeight: 1.7, color: 'var(--color-text-sub)',
+              }}>
+                <b style={{ color: 'var(--color-text-primary)' }}>대신</b> {it.instead}
+              </p>
+            )}
           </div>
         </div>
       ))}
