@@ -185,16 +185,31 @@ export function SpecRow({ visual, title, desc }: { visual?: ReactNode; title: st
   )
 }
 
-/** Do / Don't 2단 카드. 하단 액센트 바로 구분한다. */
+/** Do / Don't 카드. 견본 아래 액센트 바로 구분한다.
+ *
+ *  등급은 색·아이콘·글자 셋으로 함께 알린다. 예전엔 Do가 primary, Don't가 회색이라
+ *  금지가 "덜 중요한 것"으로 읽혔다 — 색 하나로만 구분하면 색을 구별하지 못하는
+ *  사람에게는 두 카드가 같은 카드다. */
+const USAGE_KIND = {
+  do:      { label: 'Do',      color: 'var(--color-success)', path: 'M4 10.4 8.2 14.5 16 5.5' },
+  dont:    { label: "Don't",   color: 'var(--color-error)',   path: 'M5 5l10 10M15 5L5 15' },
+  caution: { label: 'Caution', color: 'var(--color-warning)', path: 'M10 4v7M10 14.4v.6' },
+  note:    { label: 'Note',    color: 'var(--color-primary-base)', path: 'M10 9v6M10 5.4V6' },
+} as const
+
+export type UsageKind = keyof typeof USAGE_KIND
+
 export function UsageCards({ items }: {
-  items: { kind: 'do' | 'dont'; visual?: ReactNode; rule: string; instead?: string }[]
+  items: { kind: UsageKind; visual?: ReactNode; rule: string; instead?: string }[]
 }) {
   return (
     <div style={{
       display: 'grid', gap: 'var(--spacing-6)',
       gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
     }}>
-      {items.map((it, i) => (
+      {items.map((it, i) => {
+        const k = USAGE_KIND[it.kind]
+        return (
         <div key={i}>
           {it.visual && (
             <div className="ds-grid-surface" style={{
@@ -206,15 +221,22 @@ export function UsageCards({ items }: {
               flexWrap: 'wrap', gap: 'var(--spacing-3)',
             }}>{it.visual}</div>
           )}
-          <div style={{
-            height: 3,
-            background: it.kind === 'do' ? 'var(--color-primary-base)' : 'var(--color-neutral-300)',
-          }} />
+          <div style={{ height: 3, background: k.color }} />
           <div style={{ paddingTop: 'var(--spacing-3)' }}>
             <div style={{
-              fontSize: 22, fontWeight: 700, letterSpacing: '-0.01em',
-              color: it.kind === 'do' ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
-            }}>{it.kind === 'do' ? 'Do' : "Don't"}</div>
+              display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)',
+              fontSize: 22, fontWeight: 700, letterSpacing: '-0.01em', color: k.color,
+            }}>
+              {/* 색을 못 읽는 자리를 아이콘이 대신한다 */}
+              <svg width={20} height={20} viewBox="0 0 20 20" fill="none" stroke="currentColor"
+                strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                {(it.kind === 'caution' || it.kind === 'note') && (
+                  <circle cx="10" cy="10" r="7.4" strokeWidth="1.6" />
+                )}
+                <path d={k.path} />
+              </svg>
+              {k.label}
+            </div>
             <p style={{
               marginTop: 'var(--spacing-2)', fontSize: 'var(--text-body)', lineHeight: 1.7,
               color: 'var(--color-text-sub)',
@@ -231,7 +253,8 @@ export function UsageCards({ items }: {
             )}
           </div>
         </div>
-      ))}
+        )
+      })}
     </div>
   )
 }

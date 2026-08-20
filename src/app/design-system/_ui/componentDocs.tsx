@@ -3,11 +3,12 @@
 import type { ReactNode } from 'react'
 import {
   Avatar, Badge, BottomSheet, Button, Card, Chip, FabRound, FilterPill,
-  IconButton, Input, PosterChip, SectionHeader, SortToggle, Toast,
+  IconButton, Input, MovieCardSkeleton, PosterChip, SectionHeader, Skeleton,
+  SortToggle, TheaterCardSkeleton, Toast,
 } from '@/components/primitives'
 import { useState } from 'react'
 import { GUIDES } from '@/design-system/guides'
-import { Anatomy, DocSection, SpecRow, Stage, UsageCards } from './shell'
+import { Anatomy, DefTable, DocSection, SpecRow, Stage, UsageCards } from './shell'
 import { Playground, type Control, type ControlValues } from './Playground'
 import { Demo, hasDemo } from './demos'
 import { ComponentThumb, hasThumb } from './thumbs'
@@ -481,7 +482,16 @@ const DOCS: Record<string, Doc> = {
 
   Toast: {
     hero: <ToastDemo />,
+    // 견본은 guide.usage와 같은 순서로 놓는다 — 사이에 caution이 끼면 그 자리를 null로 비운다.
     usageVisuals: [
+      <div key="do" style={{
+        padding: '10px 16px', borderRadius: 'var(--radius-popover)',
+        background: 'var(--color-neutral-800)', color: 'var(--color-text-inverse)',
+        fontSize: 'var(--text-meta)',
+      }}>
+        관심 영화에 담았어요
+      </div>,
+      null,
       <div key="dont" style={{
         padding: '10px 16px', borderRadius: 'var(--radius-popover)',
         background: 'var(--color-neutral-800)', color: 'var(--color-text-inverse)',
@@ -514,6 +524,20 @@ const DOCS: Record<string, Doc> = {
   },
 
   FabRound: { hero: <FabRound><IcoPlus /></FabRound> },
+
+  Skeleton: {
+    specVisuals: [
+      <div key="r" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)' }}>
+        <Skeleton width={64} height={32} rounded="sm" />
+        <Skeleton width={64} height={32} rounded="md" />
+        <Skeleton width={64} height={32} rounded="full" />
+      </div>,
+      <Skeleton key="m" width={160} height={16} />,
+      <Skeleton key="c" width={160} height={16} />,
+      <div key="movie" style={{ width: 132 }}><MovieCardSkeleton /></div>,
+      <div key="theater" style={{ width: 260 }}><TheaterCardSkeleton /></div>,
+    ],
+  },
 }
 
 /** 상세 페이지 본문 — Anatomy · State · Spec · Usage. 코드잇 구성 그대로. */
@@ -526,6 +550,25 @@ export function ComponentDoc({ name }: { name: string }) {
 
   return (
     <>
+      {/* 값이 왜 지금 값인지는 바뀐 날에 남는다. 토큰만 고치고 이력을 안 남기면
+          다음 사람이 같은 논쟁을 처음부터 다시 한다. */}
+      {guide?.changes?.length ? (
+        <DocSection
+          id="changes"
+          title="변경"
+          lead="값이 바뀐 날과 이유입니다. 최신이 위에 옵니다."
+        >
+          <DefTable
+            rows={guide.changes.map(c => [
+              <span key={c.date} style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-meta)', whiteSpace: 'nowrap' }}>
+                {c.date}
+              </span>,
+              c.note,
+            ])}
+          />
+        </DocSection>
+      ) : null}
+
       {/* 무대도 파트 설명도 없으면 Anatomy 자체를 그리지 않는다 — 제목만 남은 섹션은 정보가 아니다. */}
       {(hasStage || guide?.anatomy) && (
         <DocSection id="anatomy" title="Anatomy" lead={guide?.anatomy ? '번호는 아래 파트 설명과 짝을 이룹니다. 필수(ESSENTIAL)와 선택(OPTIONAL)을 구분해 표기합니다.' : undefined}>
@@ -571,6 +614,16 @@ export function ComponentDoc({ name }: { name: string }) {
               visual: doc?.usageVisuals?.[i],
             }))}
           />
+        </DocSection>
+      ) : null}
+
+      {guide?.a11y?.length ? (
+        <DocSection
+          id="a11y"
+          title="Accessibility"
+          lead="이 컴포넌트에서 실제로 보장되는 것만 적습니다. 여기에 없는 것은 쓰는 쪽에서 챙겨야 합니다."
+        >
+          <DefTable rows={guide.a11y.map(a => [a.title, a.desc])} />
         </DocSection>
       ) : null}
     </>

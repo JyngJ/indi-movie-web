@@ -90,7 +90,20 @@ export function llmsComponents() {
 
     if (guide?.usage?.length) {
       out.push('\n### Usage')
-      for (const u of guide.usage) out.push(`- ${u.kind === 'do' ? 'DO' : "DON'T"}: ${u.rule}`)
+      // 대안(instead)까지 실어야 금지가 막다른 길이 되지 않는다.
+      for (const u of guide.usage) {
+        out.push(`- ${u.kind.toUpperCase()}: ${u.rule}${u.instead ? ` → 대신: ${u.instead}` : ''}`)
+      }
+    }
+
+    if (guide?.a11y?.length) {
+      out.push('\n### Accessibility')
+      for (const a of guide.a11y) out.push(`- ${a.title}: ${a.desc}`)
+    }
+
+    if (guide?.changes?.length) {
+      out.push('\n### 변경')
+      for (const ch of guide.changes) out.push(`- ${ch.date}: ${ch.note}`)
     }
 
     if (hasPlayground(c.name)) out.push(`\n조작 가능한 예시: ${BASE}/components/${c.name}#state`)

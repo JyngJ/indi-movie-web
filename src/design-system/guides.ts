@@ -12,22 +12,41 @@ export interface GuideSpec {
   desc: string
 }
 
+/** do·dont만으로는 "이 경우엔 조심해서 쓴다"를 적을 자리가 없어 두 등급을 더 뒀다.
+ *  caution — 금지는 아니지만 조건이 붙는 것. note — 규칙의 예외나 배경. */
+export type GuideUsageKind = 'do' | 'dont' | 'caution' | 'note'
+
 export interface GuideUsage {
-  kind: 'do' | 'dont'
+  kind: GuideUsageKind
   rule: string
   /** 금지에는 대안을 붙인다 — "쓰지 마라"만 남으면 읽는 사람이 갈 곳을 잃는다. */
   instead?: string
 }
 
+/** 값이 바뀐 날과 그 이유. 토큰만 고치고 문서를 놔두면 "왜 이 값인가"가 사라져
+ *  다음 사람이 같은 논쟁을 다시 한다. 날짜는 tokens.css 주석의 결정일을 따른다. */
+export interface GuideChange {
+  date: string
+  note: string
+}
+
 export interface ComponentGuide {
   intro: string
+  /** 개요 맨 앞에 놓는 변경 이력 — 최신이 위 */
+  changes?: GuideChange[]
   anatomy?: GuidePart[]
   specs?: GuideSpec[]
   usage?: GuideUsage[]
+  /** 접근성 — 이 컴포넌트에서 실제로 보장되는 것만 적는다 */
+  a11y?: GuideSpec[]
 }
 
 export const GUIDES: Record<string, ComponentGuide> = {
   Button: {
+    changes: [
+      { date: '2026-08-08', note: '크기를 sm/md/lg = 32/44/52, 좌우 여백을 16/32/48로 고정했습니다(피그마 확정). 웨이트는 400/500/700입니다.' },
+      { date: '2026-07-28', note: '--radius-button(8)을 --radius-control(12)에서 분리했습니다. control 반경이 버튼에는 과했습니다.' },
+    ],
     intro:
       '화면에서 가장 강한 행동을 담습니다. 예매·확인처럼 사용자가 끝내야 하는 흐름에 사용하며, ' +
       '한 화면의 primary는 하나로 유지해 주행동이 분명하게 드러나도록 합니다.',
@@ -42,7 +61,12 @@ export const GUIDES: Record<string, ComponentGuide> = {
     ],
     usage: [
       { kind: 'do', rule: 'primary는 가장 오른쪽(또는 마지막)에 배치하고, 취소는 text·tertiary로 낮춥니다.' },
-      { kind: 'dont', rule: 'primary를 나란히 두 개 배치하지 않습니다. 파괴적 행동은 danger, 목록 안 보조 행동은 secondary·text를 사용합니다.' },
+      { kind: 'dont', rule: 'primary를 나란히 두 개 배치하지 않습니다.', instead: '주행동 하나만 primary로 두고 나머지는 secondary·text로 낮춥니다.' },
+      { kind: 'caution', rule: 'danger는 되돌릴 수 없는 행동에만 사용합니다. 경고색이 흔해지면 진짜 위험한 버튼이 묻힙니다.' },
+    ],
+    a11y: [
+      { title: '터치 타깃', desc: 'md(44)는 --touch-target과 같은 값입니다. sm(32)은 밀집한 목록 안에서만 쓰고, 그 안에서도 좌우 간격으로 실제 누르는 면을 확보합니다.' },
+      { title: '중복 제출', desc: 'loading을 켜면 disabled가 함께 걸립니다. 응답을 기다리는 동안 같은 요청이 두 번 가지 않습니다.' },
     ],
   },
 
@@ -62,9 +86,17 @@ export const GUIDES: Record<string, ComponentGuide> = {
       { kind: 'do', rule: '모바일에서 아이콘 버튼 사이는 최소 12px을 확보합니다. 44 타깃이 겹치면 오조작이 발생합니다.' },
       { kind: 'dont', rule: '의미가 모호한 아이콘(별·깃발 등)을 레이블 없이 단독으로 사용하지 않습니다.', instead: '글자가 필요하면 Button을, 목록 안 보조 행동이면 text 변형을 사용합니다.' },
     ],
+    a11y: [
+      { title: 'aria-label', desc: '타입에서 필수(string)로 지정돼 있습니다. 화면에 글자가 없으므로 이것이 이 버튼의 유일한 이름입니다.' },
+      { title: '크기', desc: '기본 44가 터치 타깃 최소치입니다. 32를 쓸 때는 이웃한 버튼과 12px 이상 띄웁니다.' },
+    ],
   },
 
   Chip: {
+    changes: [
+      { date: '2026-08-18', note: '상태 색을 --chip-bg / --chip-bg-hover 토큰으로 옮겼습니다. 인라인 style로 배경을 넣으면 클래스 :hover가 밀려 호버가 죽습니다.' },
+      { date: '2026-08-09', note: '높이를 36에서 32(--filter-chip-height)로 내려 피그마 2.0/Chip과 맞췄습니다.' },
+    ],
     intro:
       '선택 상태를 가진 작은 토글입니다. 장르·태그처럼 여러 항목을 켜고 끄는 자리에 사용합니다. ' +
       '높이는 32(--filter-chip-height)로 고정하고 세로 크기는 padding으로 만듭니다.',
@@ -79,6 +111,10 @@ export const GUIDES: Record<string, ComponentGuide> = {
     usage: [
       { kind: 'do', rule: '가로 스크롤 레일에 담아 한 줄로 유지합니다.' },
       { kind: 'dont', rule: '칩을 행동 버튼으로 사용하지 않습니다. 누르면 화면이 전환되는 요소는 Button입니다.' },
+      { kind: 'note', rule: 'GenreChip과 모양(pill)이 같습니다. 고르는 칩과 읽는 칩을 한 줄에 섞으면 어느 것이 눌리는지 알 수 없으므로 줄을 나눠 배치합니다.' },
+    ],
+    a11y: [
+      { title: '터치 타깃', desc: '높이 32는 44에 미치지 못합니다. 가로 레일에서 칩 사이를 8 이상 띄워 실제 누르는 면을 확보합니다.' },
     ],
   },
 
@@ -96,6 +132,11 @@ export const GUIDES: Record<string, ComponentGuide> = {
   },
 
   PosterChip: {
+    changes: [
+      { date: '2026-08-13', note: '글자를 11px/600에서 12px/700으로, 안쪽 여백을 4 8에서 8 12로 키웠습니다. 문서는 11px인데 코드는 --text-badge(10px)를 써서 값이 셋으로 갈려 있었고, 포스터 위에서 읽히지 않았습니다.' },
+      { date: '2026-08-13', note: 'CurationSectionRow·GvEventSection·InstagramRecsSection·TheaterSheet가 각자 그리던 칩을 이 컴포넌트 하나로 합쳤습니다. 정책은 한 줄인데 구현이 넷이라 크기·여백·그림자가 조금씩 어긋나 있었습니다.' },
+      { date: '2026-08-03', note: '--radius-poster를 8에서 2로 내렸습니다(인쇄물 모서리). 칩의 4px 라운드가 상대적으로 둥글어 보이는 것은 의도한 대비입니다.' },
+    ],
     intro:
       '포스터 이미지 위에 얹는 오버레이 칩입니다. 상영 상태·GV·시간처럼 포스터를 가리지 않고 전달해야 하는 정보에 사용하며, ' +
       '12px/700 · padding 8 12 · offset 6으로 포스터 위에서도 읽히는 크기를 유지합니다.',
@@ -110,6 +151,12 @@ export const GUIDES: Record<string, ComponentGuide> = {
     usage: [
       { kind: 'do', rule: '한 포스터에 칩은 두 개까지 사용합니다.' },
       { kind: 'dont', rule: '좌하단에는 칩을 배치하지 않습니다. 순위 표기 자리입니다.', instead: '상태 정보는 우하단, 시간·거리는 우상단에 둡니다.' },
+      { kind: 'caution', rule: 'neutral 톤(#78716C)은 neutral 램프에 대응 스탑이 없어 하드코딩으로 남아 있는 예외입니다. 새 색이 필요하다고 이 자리에 값을 하나 더 넣지 않습니다.', instead: '램프에 스탑을 만들고 그 토큰을 참조합니다.' },
+    ],
+    a11y: [
+      { title: '축약 풀기', desc: 'label을 넘기면 스크린리더가 그 문구를 읽습니다. 화면의 "30주년"은 label="개봉 30주년"으로 풀어 줍니다 — 눈은 포스터를 함께 보지만 리더는 칩만 읽습니다.' },
+      { title: '초점', desc: 'pointer-events: none이라 초점을 받지 않습니다. 칩이 전하는 사실은 감싸는 카드의 접근성 이름에 포함되어야 합니다.' },
+      { title: '대비', desc: '배경 사진을 통제할 수 없으므로 모든 톤이 불투명 배경 + 흰 글자(--color-on-accent)입니다. 반투명 배경을 쓰지 않습니다.' },
     ],
   },
 
@@ -139,6 +186,9 @@ export const GUIDES: Record<string, ComponentGuide> = {
       { kind: 'do', rule: '카드 안 요소 간격은 spacing/3(12), 카드 사이는 spacing/4(16) 이상을 확보합니다.' },
       { kind: 'dont', rule: '카드 안에 카드를 넣지 않습니다.', instead: '내부를 나눠야 하면 구분선(--color-border)이나 여백으로 층을 만듭니다.' },
     ],
+    a11y: [
+      { title: '키보드', desc: 'onClick을 넘기면 role="button"과 tabIndex 0이 함께 붙습니다. 카드 전체가 하나의 클릭 타깃이므로 안에 또 다른 버튼을 두면 초점이 두 번 멈춥니다.' },
+    ],
   },
 
   Input: {
@@ -150,6 +200,9 @@ export const GUIDES: Record<string, ComponentGuide> = {
     usage: [
       { kind: 'do', rule: '오류 문구에는 무엇을 고쳐야 하는지 적습니다 — "이메일 형식이 아닙니다".' },
       { kind: 'dont', rule: '레이블 없이 placeholder만 두지 않습니다. 입력을 시작하면 무엇을 적는 칸이었는지 사라집니다.', instead: '레이블은 위에 두고, placeholder에는 예시 값을 적습니다.' },
+    ],
+    a11y: [
+      { title: '레이블 연결', desc: 'label을 넘기면 htmlFor로 입력과 묶입니다. label 없이 쓸 때는 id를 직접 지정하고 바깥 레이블과 연결합니다 — 자동 생성되는 id는 레이블 문자열에서 만들어지므로 label이 없으면 id도 없습니다.' },
     ],
   },
 
@@ -197,7 +250,11 @@ export const GUIDES: Record<string, ComponentGuide> = {
     ],
     usage: [
       { kind: 'do', rule: '끝난 일을 알립니다 — "관심 영화에 담았어요". 사용자가 방금 한 행동의 결과만 담습니다.' },
+      { kind: 'caution', rule: '기본 1600ms입니다. 읽는 데 그보다 오래 걸리는 문장은 토스트에 담기지 않습니다 — 한 줄로 줄이거나 다른 자리를 찾습니다.' },
       { kind: 'dont', rule: '토스트에 버튼을 넣지 않습니다. 1600ms 안에 누르지 못하면 사라집니다.', instead: '되돌릴 수 있어야 하면 삭제를 지연 실행하고 목록 안에서 되돌리게 합니다. 확인이 필요하면 시트나 모달을 사용합니다.' },
+    ],
+    a11y: [
+      { title: '읽히는 방식', desc: 'role="status" · aria-live="polite"입니다. 초점을 빼앗지 않으므로 입력 중에도 하던 일을 끊지 않습니다.' },
     ],
   },
 
@@ -301,6 +358,9 @@ export const GUIDES: Record<string, ComponentGuide> = {
   },
 
   SearchBar: {
+    changes: [
+      { date: '2026-08-05', note: '반경을 pill에서 control(12)로 바꿨습니다(피그마 search 프레임 r12). 검색창만 유독 둥글어 다른 입력과 다른 문법으로 보였습니다.' },
+    ],
     intro:
       '검색어를 직접 입력받는 바입니다. 검색 화면에서만 사용하며, 다른 화면에서는 같은 모양의 SearchBarButton이 이 자리를 대신합니다.',
     anatomy: [
@@ -338,37 +398,17 @@ export const GUIDES: Record<string, ComponentGuide> = {
       { title: '반경', desc: 'sm=badge(4) · md·lg=poster(2) · full=pill입니다. 대신할 요소와 같은 반경을 고릅니다 — 포스터 자리에 pill을 두면 로딩 중에 다른 화면처럼 보입니다.' },
       { title: '모션', desc: 'animate-pulse 한 종류만 사용합니다. 속도가 다른 스켈레톤이 한 화면에 섞이면 로딩이 아니라 고장으로 읽힙니다.' },
       { title: '색', desc: '--color-border 한 단계만 사용합니다. 여러 밝기를 섞어 실제 내용처럼 그리지 않습니다.' },
+      { title: '프리셋 · 영화 카드', desc: 'MovieCardSkeleton — 포스터(2:3) + 제목 18 + 메타 14 두 줄입니다. 실제 카드와 줄 수·높이가 같아 목록 높이가 로딩 전후로 변하지 않습니다. 제목 75% · 메타 50%로 두어 글자가 들어찬 것처럼 보이게 합니다.' },
+      { title: '프리셋 · 극장 카드', desc: 'TheaterCardSkeleton — 카드 면(control 12 + 보더) 안에 극장명 16 · 주소 12 · 68×32 시간 칩 세 개입니다. 시간 칩까지 그리는 이유는 이 카드의 높이를 결정하는 것이 칩 줄이기 때문입니다.' },
     ],
     usage: [
       { kind: 'do', rule: '대신할 요소와 같은 크기를 지정합니다. 폭이 다르면 내용이 들어오는 순간 레이아웃이 튑니다.' },
       { kind: 'dont', rule: '1초 안에 끝나는 갱신에는 사용하지 않습니다. 깜빡이고 사라지는 회색 면이 더 어수선합니다.', instead: '짧은 갱신에는 이전 내용을 그대로 두고 값만 교체합니다.' },
+      { kind: 'caution', rule: '목록 전체를 스켈레톤으로 채우지 않습니다. 개수를 모를 때 여러 장을 그리면 도착한 내용보다 많아 보였다가 줄어듭니다.', instead: '첫 화면에 보이는 개수(모바일 4~6장)만 그리고 나머지는 비워 둡니다.' },
     ],
   },
 
-  MovieCardSkeleton: {
-    intro:
-      '영화 카드 자리의 스켈레톤입니다. 포스터 2:3 비율과 제목·메타 줄을 실제 카드와 같은 배치로 둡니다.',
-    specs: [
-      { title: '구성', desc: '포스터(2:3) + 제목 18 + 메타 14 두 줄입니다. 실제 카드의 줄 수·높이와 같으므로 목록 높이가 로딩 전후로 변하지 않습니다.' },
-      { title: '폭', desc: '제목 75% · 메타 50%로 두어 글자가 들어찬 것처럼 보이게 합니다. 전부 100%로 채우면 표처럼 보입니다.' },
-    ],
-    usage: [
-      { kind: 'do', rule: '실제 그리드와 같은 열 수로 배치합니다. 로딩이 끝나도 열이 바뀌지 않아야 합니다.' },
-      { kind: 'dont', rule: '목록 전체를 스켈레톤으로 채우지 않습니다.', instead: '첫 화면에 보이는 개수(모바일 4~6장)만 그리고 나머지는 비워 둡니다.' },
-    ],
-  },
 
-  TheaterCardSkeleton: {
-    intro:
-      '영화 상세의 "상영중인 영화관" 카드 자리를 잡아 두는 스켈레톤입니다. 극장명·주소·상영 시간 칩 줄을 실제 카드와 같은 배치로 둡니다.',
-    specs: [
-      { title: '구성', desc: '카드 면(control 12 + 보더) 안에 극장명 16 · 주소 12 · 68×32 시간 칩 세 개입니다. 시간 칩까지 그리는 이유는 이 카드의 높이를 결정하는 것이 칩 줄이기 때문입니다.' },
-    ],
-    usage: [
-      { kind: 'do', rule: '실제 카드처럼 면과 보더를 그대로 그립니다. 회색 막대만 늘어놓으면 카드 경계가 사라져 몇 개가 오는지 알 수 없습니다.' },
-      { kind: 'dont', rule: '상영관 수를 모르면서 여러 장을 그리지 않습니다.', instead: '개수를 알 수 없을 때는 한두 장만 그리고 도착하는 대로 채웁니다.' },
-    ],
-  },
 
   Wordmark: {
     intro:
