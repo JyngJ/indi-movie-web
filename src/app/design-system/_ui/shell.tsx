@@ -190,11 +190,23 @@ export function SpecRow({ visual, title, desc }: { visual?: ReactNode; title: st
  *  등급은 색·아이콘·글자 셋으로 함께 알린다. 예전엔 Do가 primary, Don't가 회색이라
  *  금지가 "덜 중요한 것"으로 읽혔다 — 색 하나로만 구분하면 색을 구별하지 못하는
  *  사람에게는 두 카드가 같은 카드다. */
+const Glyph = ({ children }: { children: ReactNode }) => (
+  <svg width={20} height={20} viewBox="0 0 20 20" fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>{children}</svg>
+)
+
 const USAGE_KIND = {
-  do:      { label: 'Do',      color: 'var(--color-success)', path: 'M4 10.4 8.2 14.5 16 5.5' },
-  dont:    { label: "Don't",   color: 'var(--color-error)',   path: 'M5 5l10 10M15 5L5 15' },
-  caution: { label: 'Caution', color: 'var(--color-warning)', path: 'M10 4v7M10 14.4v.6' },
-  note:    { label: 'Note',    color: 'var(--color-primary-base)', path: 'M10 9v6M10 5.4V6' },
+  do:   { label: 'Do',    color: 'var(--color-success)', icon: <Glyph><path d="M4 10.4 8.2 14.5 16 5.5" /></Glyph> },
+  dont: { label: "Don't", color: 'var(--color-error)',   icon: <Glyph><path d="M5 5l10 10M15 5L5 15" /></Glyph> },
+  // 경고는 삼각형이 원보다 멀리서 읽힌다 — 원 안의 느낌표는 작은 크기에서 뭉갠다.
+  caution: {
+    label: 'Caution', color: 'var(--color-warning)',
+    icon: <Glyph><path d="M10 3.4 18.2 16.6H1.8z" strokeWidth="1.6" /><path d="M10 8.4v3.4M10 14.2v.2" /></Glyph>,
+  },
+  note: {
+    label: 'Note', color: 'var(--color-primary-base)',
+    icon: <Glyph><circle cx="10" cy="10" r="7.6" strokeWidth="1.6" /><path d="M10 9.4v4.2M10 6.4v.2" /></Glyph>,
+  },
 } as const
 
 export type UsageKind = keyof typeof USAGE_KIND
@@ -228,28 +240,32 @@ export function UsageCards({ items }: {
               fontSize: 22, fontWeight: 700, letterSpacing: '-0.01em', color: k.color,
             }}>
               {/* 색을 못 읽는 자리를 아이콘이 대신한다 */}
-              <svg width={20} height={20} viewBox="0 0 20 20" fill="none" stroke="currentColor"
-                strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                {(it.kind === 'caution' || it.kind === 'note') && (
-                  <circle cx="10" cy="10" r="7.4" strokeWidth="1.6" />
-                )}
-                <path d={k.path} />
-              </svg>
+              {k.icon}
               {k.label}
             </div>
             <p style={{
               marginTop: 'var(--spacing-2)', fontSize: 'var(--text-body)', lineHeight: 1.7,
               color: 'var(--color-text-sub)',
             }}>{it.rule}</p>
-            {/* 금지에는 갈 곳을 함께 준다 — "쓰지 마라"만 남으면 읽는 사람이 멈춘다. */}
+            {/* 금지에는 갈 곳을 함께 준다 — "쓰지 마라"만 남으면 읽는 사람이 멈춘다.
+                규칙과 다른 면에 올려 둘을 눈으로 먼저 구분한다. */}
             {it.instead && (
-              <p style={{
-                marginTop: 'var(--spacing-3)', paddingLeft: 'var(--spacing-3)',
-                borderLeft: '2px solid var(--color-border)',
-                fontSize: 'var(--text-body)', lineHeight: 1.7, color: 'var(--color-text-sub)',
+              <div style={{
+                marginTop: 'var(--spacing-3)',
+                background: 'var(--color-surface-bg)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-control)',
+                padding: 'var(--spacing-3) var(--spacing-4)',
               }}>
-                <b style={{ color: 'var(--color-text-primary)' }}>대신</b> {it.instead}
-              </p>
+                <div style={{
+                  fontSize: 'var(--text-caption)', fontWeight: 700, letterSpacing: '0.4px',
+                  color: 'var(--color-text-caption)',
+                }}>대신</div>
+                <p style={{
+                  marginTop: 'var(--spacing-1)', fontSize: 'var(--text-body)', lineHeight: 1.7,
+                  color: 'var(--color-text-sub)',
+                }}>{it.instead}</p>
+              </div>
             )}
           </div>
         </div>
