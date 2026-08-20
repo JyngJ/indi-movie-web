@@ -1080,6 +1080,9 @@ export default function MapView() {
     setFilters((f) => (f.regionId === id ? f : { ...f, regionId: id }))
   }), [])
   const [movieFilter, setMovieFilter] = useState<{ id: string; title: string } | null>(null)
+  /** 소식·관심 목록에서 들어와 지도 필터가 걸렸을 때 한 번 띄우는 안내 */
+  const [filterToastMessage, setFilterToastMessage] = useState('')
+  const [filterToastTrigger, setFilterToastTrigger] = useState(0)
   const [directorFilter, setDirectorFilter] = useState<{ name: string } | null>(null)
   const [panelStack, setPanelStack] = useState<DesktopPanelState[]>([])
   const desktopPanel = panelStack[panelStack.length - 1] ?? null
@@ -2487,11 +2490,22 @@ export default function MapView() {
       // 열려 있던 상세 패널을 먼저 닫는다 — 극장 시트가 같은 자리라 안 닫으면 가려진다
       closeDesktopPanel()
       handlePinClick(mapFocus.id)
+    } else if (mapFocus.type === 'movie') {
+      /* 패널만 열면 "이 영화 어디서 하지"에 답이 안 된다 — 지도도 그 영화 상영관만 남긴다.
+         autoMovieFilterRef를 세워두면 패널을 닫을 때 필터도 같이 풀린다(수동 지정과 구분). */
+      const title = mapFocus.title ?? movies.find((m) => m.id === mapFocus.id)?.title ?? ''
+      setMovieFilter({ id: mapFocus.id, title })
+      autoMovieFilterRef.current = true
+      openDesktopPanel({ type: 'movie', id: mapFocus.id })
+      if (title) {
+        setFilterToastMessage(`「${title}」 상영 극장만 지도에 표시했어요`)
+        setFilterToastTrigger((n) => n + 1)
+      }
+    } else {
+      openDesktopPanel({ type: 'director', name: mapFocus.name })
     }
-    else if (mapFocus.type === 'movie') openDesktopPanel({ type: 'movie', id: mapFocus.id })
-    else openDesktopPanel({ type: 'director', name: mapFocus.name })
     clearMapFocus()
-  }, [mapFocus, clearMapFocus, isDesktopLayout, openDesktopPanel, closeDesktopPanel, handlePinClick])
+  }, [mapFocus, clearMapFocus, isDesktopLayout, openDesktopPanel, closeDesktopPanel, handlePinClick, movies])
 
 
   const handleRecentItemClick = useCallback((item: RecentlyViewedEntry) => {
@@ -3189,6 +3203,7 @@ export default function MapView() {
     <div style={{ position: 'relative', width: '100%', height: '100dvh', overflow: 'hidden' }}>
       {/* 영화관 데이터 로딩 인디케이터 */}
       <Toast message="영화관 불러오는 중…" visible={theatersLoading} />
+      <Toast message={filterToastMessage} trigger={filterToastTrigger} duration={2600} />
       {/* iOS 키보드 트릭용 hidden dummy input — 항상 DOM에 존재 */}
       <input
         ref={dummyInputRef}

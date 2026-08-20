@@ -7,7 +7,8 @@ import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useUIStore } from '@/store/uiStore'
 
 export type DetailTarget =
-  | { kind: 'movie'; id: string }
+  /** title을 주면 지도 탭에서 영화 필터 칩·토스트에 바로 쓴다 */
+  | { kind: 'movie'; id: string; title?: string }
   | { kind: 'theater'; id: string }
   | { kind: 'director'; name: string }
 
@@ -40,9 +41,9 @@ export function useDetailLink(onNavigate?: () => void) {
       if (isDesktop && onMap) {
         e.preventDefault()
         requestMapFocus(
-          target.kind === 'director'
-            ? { type: 'director', name: target.name }
-            : { type: target.kind, id: target.id },
+          target.kind === 'director' ? { type: 'director', name: target.name }
+            : target.kind === 'movie' ? { type: 'movie', id: target.id, title: target.title }
+            : { type: 'theater', id: target.id },
         )
       }
       onNavigate?.()

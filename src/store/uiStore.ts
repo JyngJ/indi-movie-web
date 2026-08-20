@@ -12,7 +12,8 @@ export interface LoginSheetState {
 /** 지도에 "이걸 열어달라"고 넘기는 요청. 소식·관심 목록 팝오버는 MapView 밖에 있어서
  *  패널 상태(MapView 내부 state)를 직접 못 건드린다 — 이 값을 보고 MapView가 대신 연다. */
 export type MapFocusRequest =
-  | { type: 'movie'; id: string }
+  /** title은 필터 칩·토스트 문구용 — 없으면 MapView가 영화 목록에서 찾는다 */
+  | { type: 'movie'; id: string; title?: string }
   | { type: 'director'; name: string }
   | { type: 'theater'; id: string }
 

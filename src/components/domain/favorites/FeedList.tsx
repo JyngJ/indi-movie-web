@@ -53,7 +53,7 @@ function headline(e: StoredNotificationEvent): string {
  */
 function targetFor(event: StoredNotificationEvent): DetailTarget | undefined {
   if (event.payload.groupedBy === 'theater' && event.theaterId) return { kind: 'theater', id: event.theaterId }
-  if (event.movieId) return { kind: 'movie', id: event.movieId }
+  if (event.movieId) return { kind: 'movie', id: event.movieId, title: event.payload.movieTitle }
   if (event.theaterId) return { kind: 'theater', id: event.theaterId }
   return undefined
 }

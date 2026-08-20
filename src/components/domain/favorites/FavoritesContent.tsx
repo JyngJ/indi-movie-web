@@ -83,7 +83,7 @@ export function FavoritesContent({ onNavigate }: { onNavigate?: () => void }) {
           const active = m.screeningTheaterCount > 0
           return (
             <li key={m.id} style={{ display: 'flex', flexDirection: 'column', gap: 8, position: 'relative', opacity: active ? 1 : 0.55 }}>
-              <Link {...linkProps({ kind: 'movie', id: m.id })} style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <Link {...linkProps({ kind: 'movie', id: m.id, title: m.title })} style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <PosterThumb src={m.posterUrl} alt={`${m.title} 포스터`} width={104} height={156} size="lg" />
                 <span style={{ fontSize: 'var(--text-body)', fontWeight: 600, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.title}</span>
                 <span style={{ fontSize: 'var(--text-meta)', color: active ? 'var(--color-success)' : 'var(--color-text-caption)' }}>
