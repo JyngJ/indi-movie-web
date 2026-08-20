@@ -35,6 +35,7 @@ import type { TheaterEvent } from '@/types/admin'
 import { SEOUL_GU, SEOUL_DONG } from '@/data/seoul-areas'
 import { normalizeGenre } from '@/lib/genres'
 import { getRegionFromCity, getRegionFromCoords, REGION_BOUNDS } from '@/lib/regions'
+import { withJosa } from '@/lib/josa'
 import { getStoredRegion, setStoredRegion, subscribeStoredRegion } from '@/lib/regionStorage'
 import { useUIStore } from '@/store/uiStore'
 import { REPORT_CATEGORIES } from '@/lib/reports/types'
@@ -2497,15 +2498,35 @@ export default function MapView() {
       setMovieFilter({ id: mapFocus.id, title })
       autoMovieFilterRef.current = true
       openDesktopPanel({ type: 'movie', id: mapFocus.id })
+
+      /* 지역 필터가 걸려 있으면 영화 필터와 겹쳐 0곳이 될 수 있다 — 지도만 텅 비고 이유는 안 보인다.
+         그 지역에 상영이 없으면 지역을 풀어 준다(패널을 닫으면 원래 지역으로 되돌아간다). */
+      const region = filters.regionId
+      let clearedRegion = false
+      if (region) {
+        const screensInRegion = theaters.some((t) =>
+          getRegionFromCity(t.city ?? '') === region
+          && (theaterPosterMovies.get(t.id) ?? []).some((pm) => pm.id === mapFocus.id))
+        if (!screensInRegion) {
+          autoRegionRef.current = { applied: '', prev: region }
+          setStoredRegion(null)
+          clearedRegion = true
+        }
+      }
+
       if (title) {
-        setFilterToastMessage(`「${title}」 상영 극장만 지도에 표시했어요`)
+        setFilterToastMessage(
+          clearedRegion ? `${withJosa(`「${title}」`, '은/는')} ${region}에 상영이 없어 지역을 풀고 전국에서 찾았어요`
+            : region ? `${region}에서 「${title}」 상영 극장만 표시했어요`
+            : `「${title}」 상영 극장만 지도에 표시했어요`,
+        )
         setFilterToastTrigger((n) => n + 1)
       }
     } else {
       openDesktopPanel({ type: 'director', name: mapFocus.name })
     }
     clearMapFocus()
-  }, [mapFocus, clearMapFocus, isDesktopLayout, openDesktopPanel, closeDesktopPanel, handlePinClick, movies])
+  }, [mapFocus, clearMapFocus, isDesktopLayout, openDesktopPanel, closeDesktopPanel, handlePinClick, movies, filters.regionId, theaters, theaterPosterMovies])
 
 
   const handleRecentItemClick = useCallback((item: RecentlyViewedEntry) => {
