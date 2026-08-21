@@ -119,6 +119,9 @@ export const GUIDES: Record<string, ComponentGuide> = {
   },
 
   FilterPill: {
+    changes: [
+      { date: '2026-08-18', note: '상태 색을 토큰으로 옮겼습니다. 인라인 style로 배경을 넣으면 클래스 :hover가 밀려 호버가 죽습니다 — 칩 계열이 함께 겪던 문제입니다.' },
+    ],
     intro:
       '켜고 끄는 단일 조건을 담습니다. "예매 가능만 보기"처럼 문장형 레이블이 들어가는 필터에 사용합니다. ' +
       '레이블은 12px/600(--text-meta + SemiBold)이며 피그마 2.0/meta-strong과 같은 조합입니다.',
@@ -128,6 +131,10 @@ export const GUIDES: Record<string, ComponentGuide> = {
     usage: [
       { kind: 'do', rule: '조건이 하나일 때 사용합니다. 선택할 값이 여러 개면 드롭다운형 FilterChip을 사용합니다.' },
       { kind: 'dont', rule: '활성 상태를 테두리만으로 표시하지 않습니다. 지도 위에서는 구분되지 않습니다.', instead: '면(primary/100)과 글자색(primary/900)을 함께 바꿔 표현합니다.' },
+    ],
+    a11y: [
+      { title: '터치 타깃', desc: '높이 28은 터치 타깃 최소치(44)에 못 미칩니다. 필터 줄에서는 위아래 여백으로 실제 누르는 면을 넓힙니다.' },
+      { title: '상태 전달', desc: '활성은 면과 글자색을 함께 바꿔 알립니다. 색 하나만 바뀌면 색을 구별하지 못하는 사람에게 두 상태가 같습니다.' },
     ],
   },
 
@@ -163,17 +170,26 @@ export const GUIDES: Record<string, ComponentGuide> = {
   Badge: {
     intro:
       '텍스트 옆에 붙는 상태 표식입니다. 스스로 행동하지 않으며, 누를 수 있는 요소로 보이지 않도록 합니다. ' +
-      '글자는 10px/700(--text-badge)이고 피그마 대응 스타일은 2.0/badge입니다.',
+      '틴트 면 위에 같은 계열의 딥 스탑 글자를 얹는 "틴트 배경 + 900 텍스트" 문법을 씁니다.',
     specs: [
-      { title: '반경', desc: 'radius/badge(4)를 사용합니다. 칩(pill)과 달리 각을 남겨 누르는 요소가 아님을 알립니다.' },
+      { title: '크기', desc: '높이 20 · 좌우 8 · pill입니다. 칩과 모양이 같으므로 크기와 자리로 구분합니다 — 배지는 글자 옆에 붙고 칩은 줄을 이룹니다.' },
+      { title: '색', desc: 'default는 border 면, 나머지는 시맨틱 틴트(success·warning·error·info) 위에 같은 계열 딥 스탑 글자입니다. 솔리드 면은 쓰지 않습니다 — 그건 포스터 위 칩의 문법입니다.' },
     ],
     usage: [
       { kind: 'do', rule: '상태를 나타내는 한 단어만 담습니다 — 매진, 상영중, GV.' },
       { kind: 'dont', rule: '배지에 클릭 핸들러를 연결하지 않습니다.', instead: '누를 수 있어야 하면 Chip이나 Button을 사용합니다.' },
+      { kind: 'caution', rule: '글자 크기가 11px로 박혀 있습니다. 타입 스케일(10 · 12) 밖의 값이라 감사에서 하드코딩으로 집계됩니다.', instead: '수렴할 때는 --text-badge(10) 또는 --text-meta(12) 중 하나로 옮깁니다.' },
+    ],
+    a11y: [
+      { title: '초점', desc: 'span이라 초점을 받지 않습니다. 상태를 나타내는 표식이지 조작하는 요소가 아닙니다.' },
+      { title: '색만으로 알리지 않기', desc: '면 색과 함께 글자로도 상태를 적습니다 — "매진"이라는 말이 있어야 색을 구별하지 못해도 읽힙니다.' },
     ],
   },
 
   Card: {
+    changes: [
+      { date: '2026-08-04', note: '그림자를 2겹(direct + ambient)으로 바꾸고 색을 웜 브라운(--shadow-base #140F0A)으로 고정했습니다. 순검정 그림자는 미색 종이 위에서 재처럼 보였습니다.' },
+    ],
     intro:
       '목록의 항목 하나를 담는 기본 면입니다. 배경(미색)과 카드(흰색)의 대비로 층을 만들고, ' +
       '그림자는 실제로 떠 있는 요소에만 사용합니다.',
@@ -216,6 +232,10 @@ export const GUIDES: Record<string, ComponentGuide> = {
       { kind: 'do', rule: '현재 정렬 기준을 글자로 보여줍니다 — "최신순 ↓".' },
       { kind: 'dont', rule: '정렬 상태를 아이콘만으로 표시하지 않습니다.', instead: '기준 이름과 방향 화살표를 함께 적습니다.' },
     ],
+    a11y: [
+      { title: '터치 타깃', desc: '높이 28은 터치 타깃 최소치(44)에 못 미칩니다. 섹션 머리 오른쪽에 둘 때는 위아래 여백으로 누르는 면을 넓힙니다.' },
+      { title: '현재 기준', desc: '레이블 자체가 지금 무엇으로 정렬돼 있는지를 말합니다 — "최신순 ↓". 상태를 색으로만 알리지 않습니다.' },
+    ],
   },
 
   Avatar: {
@@ -227,6 +247,9 @@ export const GUIDES: Record<string, ComponentGuide> = {
     usage: [
       { kind: 'do', rule: '사진이 없을 수 있는 자리에는 name을 반드시 함께 넘깁니다. 이니셜이 빈 원을 대신합니다.' },
       { kind: 'dont', rule: '아바타 자체를 클릭 타깃으로 쓰지 않습니다. 24px은 터치 타깃에 미치지 못합니다.', instead: '감독으로 이동해야 하면 DirectorChip을 사용합니다.' },
+    ],
+    a11y: [
+      { title: '대체 텍스트', desc: '사진이 있으면 name이 그대로 img의 alt가 됩니다. name을 비우면 사진에 이름이 없는 채로 남습니다.' },
     ],
   },
 
@@ -240,6 +263,10 @@ export const GUIDES: Record<string, ComponentGuide> = {
     usage: [
       { kind: 'do', rule: '설명은 한 줄로 마무리합니다.' },
       { kind: 'dont', rule: '설명에 두 문장을 넣지 않습니다. 머리가 길어지면 아래 목록이 화면 밖으로 밀립니다.', instead: '더 적을 것이 있으면 섹션 안 첫 카드나 상세 화면으로 내립니다.' },
+    ],
+    a11y: [
+      { title: '제목 층', desc: 'title은 h2로 그려집니다. 화면에 h1이 하나 있어야 제목 층이 h1 → h2로 이어집니다 — 섹션 머리만 늘어놓으면 문서의 시작이 없습니다.' },
+      { title: '이모지', desc: '이모지는 제목 글자 앞에 붙어 함께 읽힙니다. 뜻을 이모지에만 담지 않습니다.' },
     ],
   },
 
@@ -272,6 +299,10 @@ export const GUIDES: Record<string, ComponentGuide> = {
       { kind: 'do', rule: '지금 화면의 맥락을 유지한 채 보조 내용을 보여줄 때 사용합니다 — 극장 상영표, 필터 목록.' },
       { kind: 'dont', rule: '되돌릴 수 없는 확인을 시트로 받지 않습니다. 시트는 바깥을 눌러도 닫힙니다.', instead: '삭제·탈퇴처럼 확인이 필요한 흐름에는 모달을 사용합니다.' },
     ],
+    a11y: [
+      { title: '닫는 방법', desc: '핸들을 끌어 닫는 것 말고도 닫을 길이 있어야 합니다. 끌기는 포인터가 있어야 되는 동작입니다.' },
+      { title: '초점', desc: '시트가 열리면 그 안으로 초점을 옮기고, 닫히면 열었던 자리로 되돌립니다. 뒤에 남은 화면으로 초점이 새면 어디를 조작하는지 알 수 없습니다.' },
+    ],
   },
 
   FabRound: {
@@ -284,6 +315,10 @@ export const GUIDES: Record<string, ComponentGuide> = {
     usage: [
       { kind: 'do', rule: '한 화면에 하나만 둡니다. 지도에서 가장 자주 쓰는 행동 하나를 고릅니다.' },
       { kind: 'dont', rule: 'FAB을 스크롤되는 목록 위에 겹쳐 두지 않습니다. 손가락이 닿는 자리에서 카드를 가립니다.', instead: '목록의 주 행동은 카드 안 버튼이나 하단 고정 CTA로 둡니다.' },
+    ],
+    a11y: [
+      { title: '이름', desc: '아이콘만 있으므로 aria-label이 필요합니다 — "현위치로", "지도 초기화"처럼 무엇이 일어나는지 적습니다.' },
+      { title: '읽는 순서', desc: '화면에는 떠 있지만 DOM에서는 그 화면의 주 행동이 놓일 자리에 둡니다. 시각 위치와 읽는 순서가 어긋나지 않게 합니다.' },
     ],
   },
 
@@ -303,6 +338,9 @@ export const GUIDES: Record<string, ComponentGuide> = {
     usage: [
       { kind: 'do', rule: '본체와 같은 background·border 값을 그대로 넘겨 한 덩이로 보이게 합니다.' },
       { kind: 'dont', rule: '가리킬 대상이 없는 자리에 꼬리를 달지 않습니다.', instead: '떠 있는 안내만 필요하면 꼬리 없이 Card나 Toast를 사용합니다.' },
+    ],
+    a11y: [
+      { title: '읽히지 않는 조각', desc: '꼬리는 글자가 없는 도형이라 스크린리더에 아무것도 남기지 않습니다. 말풍선이 무엇을 가리키는지는 본체 문구가 말해야 합니다 — "이 지역"처럼 화면을 봐야 아는 표현을 쓰지 않습니다.' },
     ],
   },
 
@@ -327,6 +365,10 @@ export const GUIDES: Record<string, ComponentGuide> = {
       { kind: 'do', rule: '카드 안에서는 alignSelf: flex-start로 두어 내용 폭만큼만 차지하게 합니다.' },
       { kind: 'dont', rule: '카드 아래 전체폭 행으로 늘리지 않습니다. 카드가 한 줄 더 길어집니다.', instead: '한 줄을 다 쓰는 감독 표시가 필요하면 SectionHeader를 사용합니다.' },
     ],
+    a11y: [
+      { title: '키보드', desc: 'onClick을 주면 role="button" · tabIndex 0이 붙고 Enter·Space로 열립니다. onClick이 없으면 초점을 받지 않는 표시가 됩니다.' },
+      { title: '카드 안에서', desc: '클릭과 키 입력의 전파를 막습니다. 카드 전체가 눌리는 자리여도 감독 칩은 감독으로만 갑니다.' },
+    ],
   },
 
   GenreChip: {
@@ -341,6 +383,9 @@ export const GUIDES: Record<string, ComponentGuide> = {
       { kind: 'do', rule: '값이 고정된 표시에 사용합니다 — 장르, 등급, 상영 포맷.' },
       { kind: 'dont', rule: 'onClick을 붙이지 않습니다. 누를 수 있는 pill이 섞이면 어느 것이 필터인지 알 수 없습니다.', instead: '고르고 해제하는 자리에는 Chip을, 조건 하나를 켜고 끄는 자리에는 FilterPill을 사용합니다.' },
     ],
+    a11y: [
+      { title: '초점', desc: 'span이라 초점을 받지 않습니다. 읽는 표시이므로 탭 순서에 끼어들지 않는 것이 맞습니다.' },
+    ],
   },
 
   ScrollNavButton: {
@@ -354,6 +399,10 @@ export const GUIDES: Record<string, ComponentGuide> = {
     usage: [
       { kind: 'do', rule: '스와이프로도 넘길 수 있는 레일에만 얹습니다. 이 버튼은 대체 수단이 아니라 보조 수단입니다.' },
       { kind: 'dont', rule: '레일 끝에 도달했는데도 버튼을 그대로 두지 않습니다. 눌러도 아무 일이 없으면 고장으로 읽힙니다.', instead: '더 갈 곳이 없으면 해당 방향 버튼을 감춥니다.' },
+    ],
+    a11y: [
+      { title: '이름', desc: 'aria-label로 "이전" · "다음"이 붙습니다. 화살표 모양만으로는 읽히지 않습니다.' },
+      { title: '유일한 경로가 아니어야', desc: '레일 자체가 키보드와 스와이프로 움직입니다. 이 버튼이 없어도 끝까지 갈 수 있어야 합니다 — 감췄을 때 갈 길이 막히면 안 됩니다.' },
     ],
   },
 
@@ -375,9 +424,16 @@ export const GUIDES: Record<string, ComponentGuide> = {
       { kind: 'do', rule: '검색 화면 최상단에 두고 진입과 동시에 초점을 줍니다.' },
       { kind: 'dont', rule: '목록 화면 상단에 입력 가능한 검색바를 두지 않습니다. 키보드가 올라오며 목록이 접힙니다.', instead: '이동만 필요한 자리에는 SearchBarButton을 사용합니다.' },
     ],
+    a11y: [
+      { title: '이름', desc: '보이는 레이블이 없으므로 aria-label이나 연결된 레이블이 필요합니다. 플레이스홀더는 입력을 시작하면 사라지므로 이름이 될 수 없습니다.' },
+      { title: '글자 크기', desc: '기본 16px입니다. 그보다 작으면 iOS가 초점을 받을 때 화면을 확대합니다 — inputFontSize를 낮추는 것은 데스크톱 전용 배치에서만입니다.' },
+    ],
   },
 
   SearchBarButton: {
+    changes: [
+      { date: '2026-08-05', note: 'SearchBar와 함께 반경을 pill에서 control(12)로 바꿨습니다. 두 상태가 같은 자리에 있는 것처럼 보이려면 값이 함께 움직여야 합니다.' },
+    ],
     intro:
       '검색창처럼 생긴 버튼입니다. 누르면 입력이 아니라 검색 화면으로 이동합니다. ' +
       '목록 화면에서 키보드를 띄우지 않으면서 검색을 안내하는 자리입니다.',
@@ -388,6 +444,9 @@ export const GUIDES: Record<string, ComponentGuide> = {
     usage: [
       { kind: 'do', rule: '상영작·지도처럼 검색이 주 행동이 아닌 화면에서 사용합니다.' },
       { kind: 'dont', rule: '이 버튼 안에서 입력을 받으려 하지 않습니다.', instead: '실제 입력이 필요하면 검색 화면으로 보내고 그곳에서 SearchBar를 사용합니다.' },
+    ],
+    a11y: [
+      { title: '버튼으로 읽힌다', desc: 'button이라 "영화, 영화관, 감독을 검색하세요, 버튼"으로 읽힙니다. 안의 문구는 플레이스홀더가 아니라 이 버튼의 이름입니다 — 입력칸으로 오해되지 않게 문구를 행동처럼 적습니다.' },
     ],
   },
 
@@ -406,6 +465,10 @@ export const GUIDES: Record<string, ComponentGuide> = {
       { kind: 'dont', rule: '1초 안에 끝나는 갱신에는 사용하지 않습니다. 깜빡이고 사라지는 회색 면이 더 어수선합니다.', instead: '짧은 갱신에는 이전 내용을 그대로 두고 값만 교체합니다.' },
       { kind: 'caution', rule: '목록 전체를 스켈레톤으로 채우지 않습니다. 개수를 모를 때 여러 장을 그리면 도착한 내용보다 많아 보였다가 줄어듭니다.', instead: '첫 화면에 보이는 개수(모바일 4~6장)만 그리고 나머지는 비워 둡니다.' },
     ],
+    a11y: [
+      { title: '읽히지 않는다', desc: '글자가 없는 면이라 스크린리더에는 아무것도 남지 않습니다. 기다리는 중이라는 사실은 감싸는 영역에서 알려야 합니다 — 스켈레톤만 두면 화면이 빈 것과 구분되지 않습니다.' },
+      { title: '모션', desc: '동작 최소화를 켠 사용자에게는 깜빡임이 부담이 됩니다. 애니메이션 없이도 자리가 잡혀 있어야 합니다.' },
+    ],
   },
 
 
@@ -422,6 +485,9 @@ export const GUIDES: Record<string, ComponentGuide> = {
     usage: [
       { kind: 'do', rule: '지도처럼 배경이 정해지지 않은 자리에서는 테두리 변형을 사용합니다.' },
       { kind: 'dont', rule: '대비를 그림자로 만들지 않습니다. 밝은 지도 타일 위에서 그림자는 뭉개집니다.', instead: 'outlineColor에 흰색을 넘겨 테두리 변형을 사용합니다.' },
+    ],
+    a11y: [
+      { title: 'title이 곧 이름', desc: 'title을 넘기면 role="img"과 aria-label이 붙어 읽힙니다. 넘기지 않으면 aria-hidden이 되어 조용히 지나갑니다 — 로고가 홈 링크일 때는 title을 주거나 링크 쪽에 이름을 답니다.' },
     ],
   },
 }
