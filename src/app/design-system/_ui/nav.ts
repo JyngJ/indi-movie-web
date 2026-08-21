@@ -14,8 +14,11 @@ export const FOUNDATION_PAGES: DocPageRef[] = [
   { href: '/design-system/foundations/elevation', label: 'Elevation' },
 ]
 
-/** 문서에 싣지 않는 컴포넌트 — 레이아웃 보조라 따로 설명할 것이 없다. */
-const HIDDEN = ['CardContainer']
+/** 문서에 따로 싣지 않는 컴포넌트.
+ *  CardContainer는 레이아웃 보조라 설명할 것이 없고, *CardSkeleton 둘은 Skeleton의
+ *  프리셋이라 Skeleton 페이지 안에서 함께 보여 준다 — 목록에 세 칸을 쓰면
+ *  파생물이 원본과 같은 무게로 보인다. */
+const HIDDEN = ['CardContainer', 'MovieCardSkeleton', 'TheaterCardSkeleton']
 
 export const documentedComponents = () => manifest.components.filter(c => !HIDDEN.includes(c.name))
 

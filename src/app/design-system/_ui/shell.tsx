@@ -185,43 +185,133 @@ export function SpecRow({ visual, title, desc }: { visual?: ReactNode; title: st
   )
 }
 
-/** Do / Don't 2단 카드. 하단 액센트 바로 구분한다. */
-export function UsageCards({ items }: {
-  items: { kind: 'do' | 'dont'; visual?: ReactNode; rule: string }[]
-}) {
+/** Do / Don't 카드. 견본 아래 액센트 바로 구분한다.
+ *
+ *  등급은 색·아이콘·글자 셋으로 함께 알린다. 예전엔 Do가 primary, Don't가 회색이라
+ *  금지가 "덜 중요한 것"으로 읽혔다 — 색 하나로만 구분하면 색을 구별하지 못하는
+ *  사람에게는 두 카드가 같은 카드다. */
+const Glyph = ({ children }: { children: ReactNode }) => (
+  <svg width={20} height={20} viewBox="0 0 20 20" fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>{children}</svg>
+)
+
+const USAGE_KIND = {
+  do:   { label: 'Do',    color: 'var(--color-success)', icon: <Glyph><path d="M4 10.4 8.2 14.5 16 5.5" /></Glyph> },
+  dont: { label: "Don't", color: 'var(--color-error)',   icon: <Glyph><path d="M5 5l10 10M15 5L5 15" /></Glyph> },
+  // 경고는 삼각형이 원보다 멀리서 읽힌다 — 원 안의 느낌표는 작은 크기에서 뭉갠다.
+  caution: {
+    label: 'Caution', color: 'var(--color-warning)',
+    icon: <Glyph><path d="M10 3.4 18.2 16.6H1.8z" strokeWidth="1.6" /><path d="M10 8.4v3.4M10 14.2v.2" /></Glyph>,
+  },
+  note: {
+    label: 'Note', color: 'var(--color-primary-base)',
+    icon: <Glyph><circle cx="10" cy="10" r="7.6" strokeWidth="1.6" /><path d="M10 9.4v4.2M10 6.4v.2" /></Glyph>,
+  },
+} as const
+
+export type UsageKind = keyof typeof USAGE_KIND
+
+export interface UsageItem {
+  kind: UsageKind
+  visual?: ReactNode
+  rule: string
+  instead?: string
+}
+
+/** 규칙과 대안. 대안은 규칙과 다른 면에 올려 눈으로 먼저 구분한다. */
+function UsageBody({ rule, instead, onTint = false }: { rule: string; instead?: string; onTint?: boolean }) {
   return (
-    <div style={{
-      display: 'grid', gap: 'var(--spacing-6)',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-    }}>
-      {items.map((it, i) => (
-        <div key={i}>
-          {it.visual && (
-            <div className="ds-grid-surface" style={{
-              borderRadius: 'var(--radius-popover)',
-              border: '1px solid var(--color-border)', borderBottom: 'none',
-              borderBottomLeftRadius: 0, borderBottomRightRadius: 0,
-              padding: 'var(--spacing-6)', minHeight: 150,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexWrap: 'wrap', gap: 'var(--spacing-3)',
-            }}>{it.visual}</div>
-          )}
+    <>
+      <p style={{
+        marginTop: 'var(--spacing-2)', fontSize: 'var(--text-body)', lineHeight: 1.7,
+        color: onTint ? 'inherit' : 'var(--color-text-sub)',
+      }}>{rule}</p>
+      {instead && (
+        <div style={{
+          marginTop: 'var(--spacing-3)',
+          background: onTint ? 'var(--color-surface-card)' : 'var(--color-surface-bg)',
+          border: '1px solid var(--color-border)',
+          borderRadius: 'var(--radius-control)',
+          padding: 'var(--spacing-3) var(--spacing-4)',
+        }}>
           <div style={{
-            height: 3,
-            background: it.kind === 'do' ? 'var(--color-primary-base)' : 'var(--color-neutral-300)',
-          }} />
-          <div style={{ paddingTop: 'var(--spacing-3)' }}>
-            <div style={{
-              fontSize: 22, fontWeight: 700, letterSpacing: '-0.01em',
-              color: it.kind === 'do' ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
-            }}>{it.kind === 'do' ? 'Do' : "Don't"}</div>
-            <p style={{
-              marginTop: 'var(--spacing-2)', fontSize: 'var(--text-body)', lineHeight: 1.7,
-              color: 'var(--color-text-sub)',
-            }}>{it.rule}</p>
-          </div>
+            fontSize: 'var(--text-caption)', fontWeight: 700, letterSpacing: '0.4px',
+            color: 'var(--color-text-caption)',
+          }}>대신</div>
+          <p style={{
+            marginTop: 'var(--spacing-1)', fontSize: 'var(--text-body)', lineHeight: 1.7,
+            color: 'var(--color-text-sub)',
+          }}>{instead}</p>
         </div>
-      ))}
+      )}
+    </>
+  )
+}
+
+/** Do / Don't는 짝이라 나란히 두고, Caution·Note는 짝이 없으므로 아래에 띠로 눕힌다.
+ *  셋을 같은 격자에 넣으면 마지막 하나가 옆 칸을 비운 채 서서 판이 어긋난다. */
+export function UsageCards({ items }: { items: UsageItem[] }) {
+  const pairs = items.filter(i => i.kind === 'do' || i.kind === 'dont')
+  const notes = items.filter(i => i.kind === 'caution' || i.kind === 'note')
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-6)' }}>
+      {pairs.length > 0 && (
+        <div className="ds-usage-grid">
+          {pairs.map((it, i) => {
+            const k = USAGE_KIND[it.kind]
+            return (
+              <div key={i}>
+                {it.visual && (
+                  <div className="ds-grid-surface" style={{
+                    borderRadius: 'var(--radius-popover)',
+                    border: '1px solid var(--color-border)', borderBottom: 'none',
+                    borderBottomLeftRadius: 0, borderBottomRightRadius: 0,
+                    padding: 'var(--spacing-6)', minHeight: 150,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexWrap: 'wrap', gap: 'var(--spacing-3)',
+                  }}>{it.visual}</div>
+                )}
+                <div style={{ height: 3, background: k.color }} />
+                <div style={{ paddingTop: 'var(--spacing-3)' }}>
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)',
+                    fontSize: 22, fontWeight: 700, letterSpacing: '-0.01em', color: k.color,
+                  }}>
+                    {/* 색을 못 읽는 자리를 아이콘이 대신한다 */}
+                    {k.icon}
+                    {k.label}
+                  </div>
+                  <UsageBody rule={it.rule} instead={it.instead} />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {notes.map((it, i) => {
+        const k = USAGE_KIND[it.kind]
+        const tint = it.kind === 'caution' ? 'var(--color-warning-tint)' : 'var(--color-primary-100)'
+        const ink = it.kind === 'caution' ? 'var(--color-warning-deep)' : 'var(--color-primary-900)'
+        return (
+          <div key={i} style={{
+            display: 'flex', gap: 'var(--spacing-3)',
+            background: tint, borderLeft: `3px solid ${k.color}`,
+            borderRadius: '0 var(--radius-control) var(--radius-control) 0',
+            padding: 'var(--spacing-4) var(--spacing-5)',
+            color: ink,
+          }}>
+            <span style={{ flexShrink: 0, color: k.color, marginTop: 2 }}>{k.icon}</span>
+            <div style={{ minWidth: 0 }}>
+              <div style={{
+                fontSize: 'var(--text-title)', fontWeight: 700, letterSpacing: '-0.01em', color: k.color,
+              }}>{k.label}</div>
+              <UsageBody rule={it.rule} instead={it.instead} onTint />
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }

@@ -14,26 +14,70 @@ const USE: Record<string, string> = {
   '--spacing-32': '특대 — 엠티 스테이트·랜딩',
 }
 
-/* 간격 견본 — 값을 눈으로만 보여주면 24와 14를 구별할 수 없어 px를 같이 적는다. */
+/* 간격 견본 — 도면의 치수선 문법으로 그린다.
+   막대 두 개만 놓으면 24와 14를 눈으로 구별할 수 없어서, 재는 구간을 보조선으로
+   끌어내고 화살표로 양 끝을 찍는다. 간격이 좁으면(18 미만) 화살표가 안쪽에 들어가지
+   못하므로 도면과 같은 방식으로 바깥에서 안쪽을 가리키게 뒤집는다. */
 function GapSample({ gap, token }: { gap: number; token: string }) {
   const bar = 28
+  const barW = 148
+  const dimX = barW + 30        // 치수선이 서는 x
+  const extEnd = dimX + 10      // 보조선이 치수선을 지나 끝나는 지점
+  const top = bar
+  const bottom = bar + gap
+  const tight = gap < 18
+  const line = 'var(--color-neutral-400)'
+
+  const arrow = (y: number, dir: 1 | -1) => (
+    <path
+      d={`M${dimX - 3.5} ${y + dir * 6} L${dimX} ${y} L${dimX + 3.5} ${y + dir * 6}`}
+      fill="none" stroke={line} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"
+    />
+  )
+
   return (
-    <div style={{ position: 'relative', width: 220 }}>
-      <div style={{ display: 'grid', gap }}>
+    <div style={{ position: 'relative', width: 250, height: bar * 2 + gap }}>
+      <div style={{ display: 'grid', gap, width: barW }}>
         <div style={{ height: bar, background: 'var(--color-surface-raised)', borderRadius: 8 }} />
         <div style={{ height: bar, background: 'var(--color-surface-raised)', borderRadius: 8 }} />
       </div>
-      <div style={{
-        position: 'absolute', left: 0, right: 0, top: bar, height: gap,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
+
+      <svg
+        width={250} height={bar * 2 + gap}
+        style={{ position: 'absolute', inset: 0, overflow: 'visible', pointerEvents: 'none' }}
+        aria-hidden
+      >
+        {/* 보조선 — 재는 구간의 위아래를 치수선까지 끌어낸다 */}
+        <line x1={barW + 6} y1={top} x2={extEnd} y2={top} stroke={line} strokeWidth="1" strokeDasharray="3 3" />
+        <line x1={barW + 6} y1={bottom} x2={extEnd} y2={bottom} stroke={line} strokeWidth="1" strokeDasharray="3 3" />
+
+        {/* 치수선 */}
+        {tight ? (
+          <>
+            <line x1={dimX} y1={top - 14} x2={top === bottom ? dimX : dimX} y2={top} stroke={line} strokeWidth="1" />
+            <line x1={dimX} y1={bottom} x2={dimX} y2={bottom + 14} stroke={line} strokeWidth="1" />
+            {arrow(top, -1)}
+            {arrow(bottom, 1)}
+          </>
+        ) : (
+          <>
+            <line x1={dimX} y1={top} x2={dimX} y2={bottom} stroke={line} strokeWidth="1" />
+            {arrow(top, 1)}
+            {arrow(bottom, -1)}
+          </>
+        )}
+      </svg>
+
+      <span style={{
+        position: 'absolute', left: dimX + 12, top: top + gap / 2,
+        transform: 'translateY(-50%)',
+        fontFamily: 'var(--font-mono)', fontSize: 'var(--text-badge)',
+        color: 'var(--color-text-sub)', whiteSpace: 'nowrap', lineHeight: 1.4,
       }}>
-        <span style={{
-          background: 'var(--color-surface-card)', border: '1px solid var(--color-border)',
-          borderRadius: 'var(--radius-badge)', padding: '0 6px', lineHeight: '16px',
-          fontFamily: 'var(--font-mono)', fontSize: 'var(--text-badge)', color: 'var(--color-text-sub)',
-          whiteSpace: 'nowrap',
-        }}>{gap}px · {token}</span>
-      </div>
+        {gap}px
+        <br />
+        <span style={{ color: 'var(--color-text-placeholder)' }}>{token}</span>
+      </span>
     </div>
   )
 }

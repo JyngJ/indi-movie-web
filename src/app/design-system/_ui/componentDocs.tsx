@@ -2,12 +2,14 @@
 
 import type { ReactNode } from 'react'
 import {
-  Avatar, Badge, BottomSheet, Button, Card, Chip, FabRound, FilterPill,
-  IconButton, Input, PosterChip, SectionHeader, SortToggle, Toast,
+  Avatar, Badge, BottomSheet, BubbleTail, Button, Card, Chip, DirectorChip, FabRound,
+  FilterPill, GenreChip, IconButton, Input, MovieCardSkeleton, PosterChip, ScrollNavButton,
+  SearchBar, SearchBarButton, SectionHeader, Skeleton, SortToggle, TheaterCardSkeleton,
+  Toast, Wordmark,
 } from '@/components/primitives'
 import { useState } from 'react'
 import { GUIDES } from '@/design-system/guides'
-import { Anatomy, DocSection, SpecRow, Stage, UsageCards } from './shell'
+import { Anatomy, DefTable, DocSection, SpecRow, Stage, UsageCards } from './shell'
 import { Playground, type Control, type ControlValues } from './Playground'
 import { Demo, hasDemo } from './demos'
 import { ComponentThumb, hasThumb } from './thumbs'
@@ -463,6 +465,20 @@ const DOCS: Record<string, Doc> = {
         <Avatar name="봉준호" size={64} />
       </div>,
     ],
+    usageVisuals: [
+      <div key="do" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-4)' }}>
+        <Avatar name="봉준호" size={44} />
+        <Avatar name="홍상수" size={44} />
+        <Avatar name="정재은" size={44} />
+      </div>,
+      // 44 타깃을 파선으로 그려 24 아바타가 얼마나 모자라는지 보인다
+      <div key="dont" style={{
+        width: 44, height: 44, display: 'grid', placeItems: 'center',
+        border: '1px dashed var(--color-neutral-400)', borderRadius: 'var(--radius-button)',
+      }}>
+        <Avatar name="봉준호" size={24} />
+      </div>,
+    ],
   },
 
   SectionHeader: {
@@ -481,7 +497,16 @@ const DOCS: Record<string, Doc> = {
 
   Toast: {
     hero: <ToastDemo />,
+    // 견본은 guide.usage와 같은 순서로 놓는다 — 사이에 caution이 끼면 그 자리를 null로 비운다.
     usageVisuals: [
+      <div key="do" style={{
+        padding: '10px 16px', borderRadius: 'var(--radius-popover)',
+        background: 'var(--color-neutral-800)', color: 'var(--color-text-inverse)',
+        fontSize: 'var(--text-meta)',
+      }}>
+        관심 영화에 담았어요
+      </div>,
+      null,
       <div key="dont" style={{
         padding: '10px 16px', borderRadius: 'var(--radius-popover)',
         background: 'var(--color-neutral-800)', color: 'var(--color-text-inverse)',
@@ -511,9 +536,267 @@ const DOCS: Record<string, Doc> = {
         background: 'var(--color-surface-card)', boxShadow: 'var(--shadow-sheet)',
       }} />,
     ],
+    usageVisuals: [
+      <div key="do" style={{ width: 240 }}>
+        <BottomSheet>
+          <div style={{ padding: 'var(--gutter-sheet)' }}>
+            <div style={{ fontSize: 'var(--text-title)', fontWeight: 700 }}>씨네큐브 광화문</div>
+            <div style={{ marginTop: 4, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
+              오늘 6회 상영
+            </div>
+          </div>
+        </BottomSheet>
+      </div>,
+      <div key="dont" style={{ width: 240 }}>
+        <BottomSheet>
+          <div style={{ padding: 'var(--gutter-sheet)' }}>
+            <div style={{ fontSize: 'var(--text-title)', fontWeight: 700 }}>계정을 삭제할까요?</div>
+            <div style={{ display: 'flex', gap: 'var(--spacing-2)', marginTop: 'var(--spacing-4)' }}>
+              <Button variant="text" size="sm">취소</Button>
+              <Button variant="danger" size="sm">삭제</Button>
+            </div>
+          </div>
+        </BottomSheet>
+      </div>,
+    ],
   },
 
-  FabRound: { hero: <FabRound><IcoPlus /></FabRound> },
+  FabRound: {
+    hero: <FabRound><IcoPlus /></FabRound>,
+    specVisuals: [
+      // 크기 — 44 원 안의 18 글리프(약 0.41배)
+      <div key="s" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-4)' }}>
+        <FabRound><IcoPlus /></FabRound>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)' }}>
+          44 / 아이콘 18
+        </span>
+      </div>,
+      // 떠 있는 정도 — 지도 타일 위에서 면이 사라지지 않는다
+      <div key="e" style={{
+        display: 'grid', placeItems: 'center', width: 140, height: 88,
+        borderRadius: 'var(--radius-control)',
+        background: 'linear-gradient(140deg, var(--color-neutral-200), var(--color-neutral-300))',
+      }}>
+        <FabRound><IcoPlus /></FabRound>
+      </div>,
+    ],
+    usageVisuals: [
+      // 지도 면 위 — FAB 하나
+      <div key="do" style={{
+        position: 'relative', width: 200, height: 130, borderRadius: 'var(--radius-control)',
+        background: 'linear-gradient(140deg, var(--color-neutral-200), var(--color-neutral-300))',
+      }}>
+        <div style={{ position: 'absolute', right: 10, bottom: 10 }}>
+          <FabRound><IcoPlus /></FabRound>
+        </div>
+      </div>,
+      // 목록 위 — 마지막 줄을 가린다
+      <div key="dont" style={{
+        position: 'relative', width: 200, padding: 'var(--spacing-3)',
+        display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)',
+        borderRadius: 'var(--radius-control)', background: 'var(--color-surface-card)',
+        border: '1px solid var(--color-border)',
+      }}>
+        {['기억의 빛', '중경삼림', '벌새'].map(t => (
+          <div key={t} style={{
+            display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)',
+            fontSize: 'var(--text-meta)', color: 'var(--color-text-body)',
+          }}>
+            <span style={{ width: 24, height: 34, borderRadius: 2, background: 'var(--color-neutral-300)' }} />
+            {t}
+          </div>
+        ))}
+        <div style={{ position: 'absolute', right: 8, bottom: 8 }}>
+          <FabRound><IcoPlus /></FabRound>
+        </div>
+      </div>,
+    ],
+  },
+
+  BubbleTail: {
+    // 꼬리는 up/right/left만 있다 — 말풍선은 대상 아래에 놓고 꼬리가 대상을 올려다본다.
+    usageVisuals: [
+      <div key="do" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <span style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--color-primary-base)' }} />
+        <span style={{ marginTop: 4 }}>
+          <BubbleTail dir="up" background="var(--color-neutral-800)" />
+        </span>
+        <div style={{
+          marginTop: -4, padding: '8px 12px', borderRadius: 'var(--radius-button)',
+          background: 'var(--color-neutral-800)', color: 'var(--color-text-inverse)',
+          fontSize: 'var(--text-meta)', whiteSpace: 'nowrap',
+        }}>서울에서 상영 중</div>
+      </div>,
+      // 위에 가리킬 것이 없다 — 꼬리가 허공을 향한다
+      <div key="dont" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 14 }}>
+        <BubbleTail dir="up" background="var(--color-neutral-800)" />
+        <div style={{
+          marginTop: -4, padding: '8px 12px', borderRadius: 'var(--radius-button)',
+          background: 'var(--color-neutral-800)', color: 'var(--color-text-inverse)',
+          fontSize: 'var(--text-meta)', whiteSpace: 'nowrap',
+        }}>서울에서 상영 중</div>
+      </div>,
+    ],
+  },
+
+  DirectorChip: {
+    usageVisuals: [
+      // 내용 폭만 차지한다
+      <div key="do" style={{
+        width: 220, padding: 'var(--spacing-3)', borderRadius: 'var(--radius-control)',
+        background: 'var(--color-surface-card)', border: '1px solid var(--color-border)',
+        display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)',
+      }}>
+        <div style={{ fontSize: 'var(--text-title)', fontWeight: 700 }}>벌새</div>
+        <DirectorChip name="김보라" onClick={() => {}} />
+      </div>,
+      // 한 줄을 통째로 먹어 카드가 길어진다
+      <div key="dont" style={{
+        width: 220, padding: 'var(--spacing-3)', borderRadius: 'var(--radius-control)',
+        background: 'var(--color-surface-card)', border: '1px solid var(--color-border)',
+        display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)',
+      }}>
+        <div style={{ fontSize: 'var(--text-title)', fontWeight: 700 }}>벌새</div>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)', width: '100%',
+          padding: 'var(--spacing-2)', borderTop: '1px solid var(--color-border)',
+        }}>
+          <Avatar name="김보라" size={24} />
+          <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-body)' }}>김보라</span>
+        </div>
+      </div>,
+    ],
+  },
+
+  GenreChip: {
+    usageVisuals: [
+      <div key="do" style={{ display: 'flex', gap: 'var(--spacing-2)' }}>
+        <GenreChip>드라마</GenreChip><GenreChip>다큐멘터리</GenreChip><GenreChip>15세</GenreChip>
+      </div>,
+      // 고르는 칩과 읽는 칩이 한 줄에 섞였다
+      <div key="dont" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)' }}>
+        <GenreChip>드라마</GenreChip>
+        <Chip selected>드라마</Chip>
+        <GenreChip>15세</GenreChip>
+      </div>,
+    ],
+  },
+
+  ScrollNavButton: {
+    usageVisuals: [
+      // 레일 시작 — 갈 곳이 있는 방향만 남긴다
+      <div key="do" style={{ position: 'relative', width: 200, height: 96 }}>
+        <div style={{ display: 'flex', gap: 'var(--spacing-2)', overflow: 'hidden' }}>
+          {[0, 1, 2].map(i => (
+            <span key={i} style={{
+              flex: '0 0 auto', width: 62, height: 88, borderRadius: 'var(--radius-poster)',
+              background: 'linear-gradient(160deg, var(--color-neutral-600), var(--color-neutral-900))',
+            }} />
+          ))}
+        </div>
+        <ScrollNavButton direction="right" style={{ top: 44 }} />
+      </div>,
+      // 끝에 닿았는데 오른쪽 버튼이 남아 있다
+      <div key="dont" style={{ position: 'relative', width: 200, height: 96 }}>
+        <div style={{ display: 'flex', gap: 'var(--spacing-2)', overflow: 'hidden' }}>
+          {[0, 1, 2].map(i => (
+            <span key={i} style={{
+              flex: '0 0 auto', width: 62, height: 88, borderRadius: 'var(--radius-poster)',
+              background: 'linear-gradient(160deg, var(--color-neutral-600), var(--color-neutral-900))',
+            }} />
+          ))}
+        </div>
+        <ScrollNavButton direction="left" style={{ top: 44 }} />
+        <ScrollNavButton direction="right" style={{ top: 44 }} />
+      </div>,
+    ],
+  },
+
+  SearchBar: {
+    usageVisuals: [
+      <div key="do" style={{ display: 'flex', width: 240 }}>
+        <SearchBar readOnly inputFontSize={14} />
+      </div>,
+      // 목록 화면에 입력칸을 두면 키보드가 올라오며 목록이 접힌다
+      <div key="dont" style={{ width: 240, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)' }}>
+        <div style={{ display: 'flex' }}><SearchBar readOnly inputFontSize={14} /></div>
+        <div style={{ display: 'flex', gap: 'var(--spacing-2)' }}>
+          {[0, 1, 2].map(i => (
+            <span key={i} style={{
+              flex: 1, height: 46, borderRadius: 'var(--radius-poster)',
+              background: 'var(--color-surface-raised)',
+            }} />
+          ))}
+        </div>
+      </div>,
+    ],
+  },
+
+  SearchBarButton: {
+    usageVisuals: [
+      <div key="do" style={{ width: 240 }}>
+        <SearchBarButton />
+      </div>,
+      // 버튼 안에서 입력을 받으려 한 모습 — 커서만 있고 글자는 들어가지 않는다
+      <div key="dont" style={{ width: 240, position: 'relative' }}>
+        <SearchBarButton placeholder="봉준" />
+        <span style={{
+          position: 'absolute', left: 92, top: 12, width: 1, height: 20,
+          background: 'var(--color-text-primary)',
+        }} />
+      </div>,
+    ],
+  },
+
+  Wordmark: {
+    usageVisuals: [
+      // 배경을 모를 때는 테두리 변형
+      <div key="do" style={{
+        display: 'grid', placeItems: 'center', width: 180, height: 96,
+        borderRadius: 'var(--radius-control)',
+        background: 'linear-gradient(140deg, var(--color-neutral-500), var(--color-neutral-900))',
+      }}>
+        <Wordmark outlineColor="#FFFFFF" style={{ height: 28, width: 'auto' }} />
+      </div>,
+      // 그림자는 밝은 타일 위에서 뭉갠다
+      <div key="dont" style={{
+        display: 'grid', placeItems: 'center', width: 180, height: 96,
+        borderRadius: 'var(--radius-control)',
+        background: 'linear-gradient(140deg, var(--color-neutral-500), var(--color-neutral-900))',
+      }}>
+        <Wordmark style={{ height: 28, width: 'auto', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.45))' }} />
+      </div>,
+    ],
+  },
+
+  Skeleton: {
+    // 로딩 전후를 나란히 둔다 — 줄 수와 높이가 같아야 내용이 들어올 때 밀리지 않는다.
+    // Don't(1초 미만 갱신)는 정지 화면으로 보일 수 있는 것이 아니라 자리를 비운다.
+    usageVisuals: [
+      <div key="do" style={{ display: 'flex', gap: 'var(--spacing-4)' }}>
+        <div style={{ width: 120, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)' }}>
+          <Skeleton width="100%" height={16} />
+          <Skeleton width="60%" height={12} />
+        </div>
+        <div style={{ width: 120, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)' }}>
+          <div style={{ height: 16, fontSize: 'var(--text-body)', fontWeight: 700, lineHeight: '16px' }}>벌새</div>
+          <div style={{ height: 12, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', lineHeight: '12px' }}>김보라</div>
+        </div>
+      </div>,
+      null,
+    ],
+    specVisuals: [
+      <div key="r" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)' }}>
+        <Skeleton width={64} height={32} rounded="sm" />
+        <Skeleton width={64} height={32} rounded="md" />
+        <Skeleton width={64} height={32} rounded="full" />
+      </div>,
+      <Skeleton key="m" width={160} height={16} />,
+      <Skeleton key="c" width={160} height={16} />,
+      <div key="movie" style={{ width: 132 }}><MovieCardSkeleton /></div>,
+      <div key="theater" style={{ width: 260 }}><TheaterCardSkeleton /></div>,
+    ],
+  },
 }
 
 /** 상세 페이지 본문 — Anatomy · State · Spec · Usage. 코드잇 구성 그대로. */
@@ -526,6 +809,25 @@ export function ComponentDoc({ name }: { name: string }) {
 
   return (
     <>
+      {/* 값이 왜 지금 값인지는 바뀐 날에 남는다. 토큰만 고치고 이력을 안 남기면
+          다음 사람이 같은 논쟁을 처음부터 다시 한다. */}
+      {guide?.changes?.length ? (
+        <DocSection
+          id="changes"
+          title="변경"
+          lead="값이 바뀐 날과 이유입니다. 최신이 위에 옵니다."
+        >
+          <DefTable
+            rows={guide.changes.map(c => [
+              <span key={c.date} style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-meta)', whiteSpace: 'nowrap' }}>
+                {c.date}
+              </span>,
+              c.note,
+            ])}
+          />
+        </DocSection>
+      ) : null}
+
       {/* 무대도 파트 설명도 없으면 Anatomy 자체를 그리지 않는다 — 제목만 남은 섹션은 정보가 아니다. */}
       {(hasStage || guide?.anatomy) && (
         <DocSection id="anatomy" title="Anatomy" lead={guide?.anatomy ? '번호는 아래 파트 설명과 짝을 이룹니다. 필수(ESSENTIAL)와 선택(OPTIONAL)을 구분해 표기합니다.' : undefined}>
@@ -567,9 +869,20 @@ export function ComponentDoc({ name }: { name: string }) {
             items={guide.usage.map((u, i) => ({
               kind: u.kind,
               rule: u.rule,
+              instead: u.instead,
               visual: doc?.usageVisuals?.[i],
             }))}
           />
+        </DocSection>
+      ) : null}
+
+      {guide?.a11y?.length ? (
+        <DocSection
+          id="a11y"
+          title="Accessibility"
+          lead="이 컴포넌트에서 실제로 보장되는 것만 적습니다. 여기에 없는 것은 쓰는 쪽에서 챙겨야 합니다."
+        >
+          <DefTable rows={guide.a11y.map(a => [a.title, a.desc])} />
         </DocSection>
       ) : null}
     </>

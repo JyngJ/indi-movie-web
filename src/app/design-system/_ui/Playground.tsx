@@ -27,8 +27,10 @@ function Segmented({ options, value, onChange }: {
   value: string
   onChange: (v: string) => void
 }) {
+  // 3 이하는 한 줄, 4는 2/2, 5 이상은 3칸씩 — 5개면 3/2가 된다.
+  const cols = options.length <= 3 ? options.length : options.length === 4 ? 2 : 3
   return (
-    <div className="ds-segmented">
+    <div className="ds-segmented" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
       {options.map(opt => (
         <button
           key={opt}
