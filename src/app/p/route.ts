@@ -11,10 +11,18 @@ import { NextResponse } from 'next/server'
  */
 const TAG_WINDOW_SECONDS = 60 * 30
 
+/** 진입 이벤트 1건을 쏘라는 일회용 신호. 클라이언트가 읽자마자 지운다. */
+const ENTRY_SIGNAL_SECONDS = 60 * 5
+
 export function GET(request: Request) {
   const res = NextResponse.redirect(new URL('/', request.url), 302)
   res.cookies.set('vref', 'pf', {
     maxAge: TAG_WINDOW_SECONDS,
+    path: '/',
+    sameSite: 'lax',
+  })
+  res.cookies.set('vref_entry', '1', {
+    maxAge: ENTRY_SIGNAL_SECONDS,
     path: '/',
     sameSite: 'lax',
   })
