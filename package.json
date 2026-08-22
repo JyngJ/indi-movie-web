@@ -44,7 +44,7 @@
     "next": "16.2.4",
     "openai": "^6.39.0",
     "playwright-chromium": "^1.61.1",
-    "posthog-js": "^1.374.3",
+    "posthog-js": "^1.418.10",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-leaflet": "^5.0.0",
