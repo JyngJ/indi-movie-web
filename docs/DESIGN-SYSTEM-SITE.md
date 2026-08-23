@@ -30,6 +30,7 @@ primitives/*.tsx ──────┘        (커밋 대상)
 | `/design-system/foundations/spacing` | 4배수 스케일 · Gutter 중첩 규칙 · Usage |
 | `/design-system/foundations/radius` | 역할 기반 반경 · Usage |
 | `/design-system/foundations/elevation` | 그림자 단계 · 피그마 이펙트 · Usage |
+| `/design-system/foundations/writing` | 라이팅 규범 — 목소리 · 자리별 톤 · 어미 · 표기 · 자리별 문구 · 용어 (원본 `src/design-system/writing.ts`, 손으로 적는 유일한 Foundations) |
 | `/design-system/components` | 프리미티브 목록(문서화됨 / 목록만) |
 | `/design-system/components/[name]` | Anatomy · State(조작 가능) · Properties · Spec · Usage · 피그마 실측 · 소스 |
 | `/design-system/drift` | 코드 ↔ 피그마 차이 (종류별) |
@@ -47,6 +48,9 @@ primitives/*.tsx ──────┘        (커밋 대상)
 
 앞의 3·6번은 매니페스트에서 생성되고, 1·2·4·5번의 문장은 `src/design-system/guides.ts`,
 그림은 `src/app/design-system/_ui/componentDocs.tsx`에 손으로 적는다.
+
+라이팅 규범은 생성할 수 없는 유일한 층이다 — `src/design-system/writing.ts`가 원본이고
+`/design-system/foundations/writing`과 `/design-system/llms-writing.txt`가 그것을 렌더한다. 규칙을 고칠 땐 파일 하나만 고친다.
 
 ## 규칙
 

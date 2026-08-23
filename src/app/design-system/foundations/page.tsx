@@ -34,7 +34,7 @@ export default function FoundationsCoverPage() {
     <DocPage
       href="/design-system/foundations"
       title="Foundations"
-      lead="컴포넌트 아래에 놓이는 층입니다. 색·글자·간격·반경·그림자처럼 화면 어디에서나 같은 값을 사용해야 하는 요소를 정의합니다. 값은 tokens.css에서 관리하고, 피그마 변수와 이름으로 짝지어 대조합니다."
+      lead="컴포넌트 아래에 놓이는 층입니다. 색·글자·간격·반경·그림자·문장처럼 화면 어디에서나 같은 값을 사용해야 하는 요소를 정의합니다. 값은 tokens.css에서 관리하고, 피그마 변수와 이름으로 짝지어 대조합니다."
     >
       <DocSection id="pages" title="페이지">
         <div className="ds-cover-grid">
@@ -103,10 +103,21 @@ export default function FoundationsCoverPage() {
               </div>
             }
           />
+          <CoverCard
+            href="/design-system/foundations/writing"
+            title="Writing"
+            desc="화면 문장은 해요체 하나로 말합니다. 한 줄에 한 가지, 마침표는 두 문장부터, 나열은 가운뎃점."
+            visual={
+              <div style={{ textAlign: 'center', padding: '0 16px' }}>
+                <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.4 }}>영화를 고르면,<br />극장이 보여요</div>
+                <div style={{ fontSize: 13, color: 'var(--color-text-caption)', marginTop: 8, textDecoration: 'line-through' }}>영화를 선택하시면 극장이 표시됩니다.</div>
+              </div>
+            }
+          />
         </div>
       </DocSection>
 
-      <DocSection id="rules" title="공통 규칙" lead="다섯 페이지에 공통으로 적용되는 약속입니다.">
+      <DocSection id="rules" title="공통 규칙" lead="여섯 페이지에 공통으로 적용되는 약속입니다.">
         <ul style={{
           margin: 0, paddingLeft: '1.1em', listStyle: 'disc',
           fontSize: 'var(--text-title)', lineHeight: 1.7, color: 'var(--color-text-sub)',

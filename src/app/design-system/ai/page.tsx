@@ -23,6 +23,12 @@ const FILES = [
     size: '약 18KB',
   },
   {
+    href: '/design-system/llms-writing.txt',
+    name: 'llms-writing.txt',
+    desc: '화면 문구 규칙입니다. 어미·표기·자리별 문구·용어를 예문과 함께 담습니다.',
+    size: '약 9KB',
+  },
+  {
     href: '/design-system/llms-full.txt',
     name: 'llms-full.txt',
     desc: '위 내용을 한 파일로 합친 것입니다. 문맥 창이 넉넉할 때 사용합니다.',
@@ -60,7 +66,7 @@ export default function AiPage() {
           rows={[
             ['Claude Code · Cursor', <span key="a">프로젝트 규칙 파일(<Code>CLAUDE.md</Code> · <Code>.cursorrules</Code>)에 <Code>llms.txt</Code> 주소를 적어 두면 작업을 시작할 때 함께 읽습니다.</span>],
             ['한 번만 물릴 때', <span key="b">대화 첫머리에 <Code>llms-full.txt</Code> 내용을 붙여 넣습니다.</span>],
-            ['문맥이 빠듯할 때', <span key="c">고칠 대상에 맞춰 <Code>llms-tokens.txt</Code> 또는 <Code>llms-components.txt</Code>만 넣습니다.</span>],
+            ['문맥이 빠듯할 때', <span key="c">고칠 대상에 맞춰 <Code>llms-tokens.txt</Code> <Code>llms-components.txt</Code> 또는 <Code>llms-writing.txt</Code>만 넣습니다.</span>],
           ]}
         />
       </DocSection>
