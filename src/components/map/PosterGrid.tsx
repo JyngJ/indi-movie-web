@@ -113,7 +113,7 @@ export function ScheduleRows({ days, showTimes = true }: {
   )
 }
 
-export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, matchCount, filtersActive = false, selected = false, posterW = 44, posterH = 66, allMovies, schedule, scheduleShowTimes = true, occurrenceCount, hideMatchChip = false, favoriteMovieIds, favoriteDirectors, favoriteCount = 0, hideOverflowChip = false }: {
+export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, matchCount, filtersActive = false, selected = false, posterW = 44, posterH = 66, allMovies, schedule, scheduleShowTimes = true, occurrenceCount, hideMatchChip = false, favoriteMovieIds, favoriteDirectors, favoriteCount = 0, hideOverflowChip = false, hideMatchRing = false }: {
   slots: PosterSlot[]
   /** 슬롯에 못 담은 편수 — 우상단 "+N" 칩 */
   overflowCount?: number
@@ -135,6 +135,9 @@ export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, 
   favoriteDirectors?: ReadonlySet<string>
   /** 이 극장에서 상영 중인 관심 작품 수 — 카드 우상단 하트 캡슐 */
   favoriteCount?: number
+  /** 관심 필터 모드 — 관심 극장에선 모든 영화가 matchesFilter라 파란 일치 링이 오탐된다.
+   *  관심 표시는 빨간 링 하나여야 하므로 일치 링을 끈다 (일치 칩을 끄는 것과 같은 이유) */
+  hideMatchRing?: boolean
   /** 관심 필터 모드 — '+N' 칩을 숨기고 하트 수만 (2026-08-18) */
   hideOverflowChip?: boolean
 }) {
@@ -271,7 +274,7 @@ export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, 
                            onLoad가 안 붙으니 페이드를 켜면 opacity:0으로 굳는다 */
                         fade={false}
                         /* 관심 빨간 링이 붙으면 필터 하이라이트(파란 테두리)는 뺀다 — 테두리 두 겹 방지 (2026-08-18) */
-                        highlighted={filtersActive && !!slot.movie?.matchesFilter && !isFavMovie(slot.movie)}
+                        highlighted={!hideMatchRing && filtersActive && !!slot.movie?.matchesFilter && !isFavMovie(slot.movie)}
                       />
                       {/* 관심 영화·감독 — 포스터 빨간 테두리 (핀 뱃지 대신, 2026-08-17 확정).
                           hover 확대는 .pm-wrap > div:first-child(포스터)를 노리므로 링은 반드시 포스터 뒤에 온다. */}

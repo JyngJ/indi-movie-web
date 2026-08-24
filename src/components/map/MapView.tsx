@@ -213,6 +213,7 @@ function makePinIcon(
         favoriteDirectors={fav?.directors}
         favoriteCount={favCount}
         hideOverflowChip={favoriteOnlyMode}
+        hideMatchRing={favoriteOnlyMode}
       />
     )
     if (usePosterLeft) {
