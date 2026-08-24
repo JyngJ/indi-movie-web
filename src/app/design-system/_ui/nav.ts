@@ -12,6 +12,7 @@ export const FOUNDATION_PAGES: DocPageRef[] = [
   { href: '/design-system/foundations/spacing', label: 'Spacing' },
   { href: '/design-system/foundations/radius', label: 'Radius' },
   { href: '/design-system/foundations/elevation', label: 'Elevation' },
+  { href: '/design-system/foundations/writing', label: 'Writing' },
 ]
 
 /** 문서에 따로 싣지 않는 컴포넌트.

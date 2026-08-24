@@ -12,6 +12,7 @@ export const revalidate = 21600
 export const metadata: Metadata = {
   title: '독립영화관 지도 — 내 주변 상영관 찾기 | 영화볼지도',
   description:
+    // writing-audit-ignore — SEO 메타·스키마 문구는 문어체 유지
     '전국 독립·예술영화관을 지도에서 찾아보세요. 내 주변 영화관의 오늘 상영작과 시간표를 지도에서 바로 확인할 수 있습니다.',
   alternates: { canonical: '/map' },
   openGraph: {
@@ -37,6 +38,7 @@ export default async function MapPage() {
   return (
     <ScreeningIndexSeoContent
       heading="독립영화관 지도 — 내 주변 상영관 찾기"
+      // writing-audit-ignore — SEO 메타·스키마 문구는 문어체 유지
       intro="전국 독립·예술영화관을 지도에서 찾을 수 있습니다. 극장 위치와 오늘 상영작, 상영 시간표를 지도 한 장에서 확인하세요. 지하철역, 감독, 영화 제목으로도 검색할 수 있습니다."
       data={data}
     />

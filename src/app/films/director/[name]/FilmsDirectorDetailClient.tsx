@@ -103,7 +103,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
   const hiddenCount = directorMovies.length - COLLAPSED_COUNT
 
   if (isLoading) {
-    return <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}><Toast message="데이터 불러오는 중…" visible /></div>
+    return <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}><Toast message="불러오는 중…" visible /></div>
   }
 
   const navBar = (
@@ -212,7 +212,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
           </div>
 
           {directorMovies.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '48px 0', fontSize: 13, color: 'var(--color-text-caption)' }}>작품 정보가 없습니다</div>
+            <div style={{ textAlign: 'center', padding: '48px 0', fontSize: 13, color: 'var(--color-text-caption)' }}>작품 정보가 없어요</div>
           ) : (
             <div style={{ backgroundColor: 'var(--color-surface-card)' }}>
               {visibleMovies.map((m, i) => (

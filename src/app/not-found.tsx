@@ -42,10 +42,10 @@ export default function NotFound() {
           fontWeight: 600,
           color: 'var(--color-text-primary)',
         }}>
-          페이지를 찾을 수 없습니다
+          페이지를 찾을 수 없어요
         </p>
         <p style={{ fontSize: 13, color: 'var(--color-text-caption)' }}>
-          요청하신 페이지가 존재하지 않거나 이동되었습니다.
+          주소가 바뀌었거나 없는 페이지예요
         </p>
       </div>
       <Link href="/" style={{

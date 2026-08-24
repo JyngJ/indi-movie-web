@@ -5,6 +5,7 @@
  *  사람이 읽는 페이지와 같은 매니페스트에서 만들기 때문에 값이 어긋날 수 없다. */
 import { manifest } from './index'
 import { GUIDES, hasPlayground } from './guides'
+import { WRITING_RULES_SHORT, VOICE, SECTIONS } from './writing'
 
 const BASE = '/design-system'
 
@@ -26,9 +27,10 @@ export function llmsIndex() {
   const lines = [
     header('영화볼지도 디자인 시스템', '전국 독립·예술영화관 상영 정보 서비스의 디자인 시스템. 토큰·컴포넌트 값은 코드(tokens.css)와 피그마 덤프에서 생성한다.'),
     '\n## 파일',
-    `- [전체](${BASE}/llms-full.txt): 토큰 · 타이포그래피 · 컴포넌트 · 규칙 전부`,
+    `- [전체](${BASE}/llms-full.txt): 토큰 · 타이포그래피 · 컴포넌트 · 라이팅 · 규칙 전부`,
     `- [토큰](${BASE}/llms-tokens.txt): 색 · 타이포 · 간격 · 반경 · 그림자`,
     `- [컴포넌트](${BASE}/llms-components.txt): 프리미티브 ${manifest.components.length}종의 Props · 배리언트 · 사용 규칙`,
+    `- [라이팅](${BASE}/llms-writing.txt): 화면 문구 규칙 — 어미 · 표기 · 자리별 문구 · 용어`,
     '\n## 규칙',
     ...RULES.map(r => `- ${r}`),
     `\n## 사람이 보는 문서\n- ${BASE}`,
@@ -111,12 +113,32 @@ export function llmsComponents() {
   return out.join('\n') + '\n'
 }
 
+export function llmsWriting() {
+  const out = [header('영화볼지도 라이팅 규칙', '화면에 적히는 한국어 문구의 약속. 제품 화면은 해요체 하나, 한 줄에 한 가지.')]
+  out.push('\n## 한 줄 규칙\n', ...WRITING_RULES_SHORT.map(r => `- ${r}`))
+  out.push('\n## 원칙\n', ...VOICE.map(v => `- ${v.title}: ${v.desc} (예: "${v.sample}")`))
+  for (const sec of SECTIONS) {
+    out.push(`\n## ${sec.title}\n\n> ${sec.lead}\n`)
+    for (const r of sec.rules) {
+      out.push(`### ${r.title}\n${r.rule}`)
+      if (r.why) out.push(`왜: ${r.why}`)
+      for (const [k, v] of r.table ?? []) out.push(`- ${k}: ${v}`)
+      // 예문은 good/bad 쌍으로 — 금지만 적으면 갈 곳을 잃는다.
+      for (const ex of r.examples ?? []) out.push(`- O ${ex.good}${ex.bad ? `  /  X ${ex.bad}` : ''}`)
+      out.push('')
+    }
+  }
+  out.push(`사람이 보는 문서: ${BASE}/foundations/writing`)
+  return out.join('\n') + '\n'
+}
+
 export function llmsFull() {
   return [
-    header('영화볼지도 디자인 시스템 — 전체', '토큰 · 타이포그래피 · 컴포넌트 · 규칙을 한 파일에 담았다.'),
+    header('영화볼지도 디자인 시스템 — 전체', '토큰 · 타이포그래피 · 컴포넌트 · 라이팅 · 규칙을 한 파일에 담았다.'),
     '\n## 규칙\n',
     ...RULES.map(r => `- ${r}`),
     '\n' + llmsTokens().split('\n').slice(4).join('\n'),
     '\n' + llmsComponents().split('\n').slice(4).join('\n'),
+    '\n' + llmsWriting().split('\n').slice(4).join('\n'),
   ].join('\n')
 }

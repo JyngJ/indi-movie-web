@@ -89,7 +89,7 @@ export default async function MovieDetailPage({
   if (!movie) notFound()
 
   return (
-    <Suspense fallback={<Toast message="데이터 불러오는 중…" visible />}>
+    <Suspense fallback={<Toast message="불러오는 중…" visible />}>
       <MovieBody id={id} movie={movie} theaterId={sp.theater} />
     </Suspense>
   )
@@ -111,14 +111,16 @@ async function MovieBody({ id, movie, theaterId }: { id: string; movie: MovieDet
     {
       question: `${movie.title}는 어디서 볼 수 있나요?`,
       answer: theaterNames.length > 0
+        // writing-audit-ignore — SEO 메타·스키마 문구는 문어체 유지
         ? `전국 독립·예술영화관 ${theaterNames.length}곳에서 상영 중입니다: ${theaterNames.slice(0, 15).join(', ')}${theaterNames.length > 15 ? ' 등' : ''}. 극장별 상영 시간과 예매 링크는 영화볼지도에서 확인할 수 있습니다.`
-        : `현재 전국 독립·예술영화관에 잡힌 상영 일정이 없습니다. 영화볼지도는 상영 시간표를 매일 갱신하므로 새 상영이 열리면 확인할 수 있습니다.`,
+        : `지금은 전국 독립·예술영화관에 잡힌 상영 일정이 없어요. 상영 시간표는 매일 갱신되니 새 상영이 열리면 여기서 확인할 수 있어요.`,
     },
     {
       question: `${movie.title}의 가장 빠른 상영은 언제인가요?`,
       answer: nearestDate
+        // writing-audit-ignore — SEO 메타·스키마 문구는 문어체 유지
         ? `${nearestDate}에 상영이 있습니다. 회차별 시간은 영화볼지도의 극장 페이지에서 확인하세요.`
-        : `예정된 상영이 없습니다.`,
+        : `예정된 상영이 없어요`,
     },
   ])
   const breadcrumbSchema = toBreadcrumbSchema([
