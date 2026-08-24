@@ -148,8 +148,8 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
       {/* 아바타 */}
       <Avatar name={directorName} photoUrl={profile?.photoUrl} size={isDesktop ? 160 : 100} />
 
-      {/* 텍스트 */}
-      <div style={{ flex: 1, minWidth: 0, paddingTop: 4 }}>
+      {/* 텍스트 — PC에서는 컬럼을 아바타 높이에 맞추고 액션 행을 바닥에 붙인다 (2026-08-24) */}
+      <div style={{ flex: 1, minWidth: 0, paddingTop: 4, ...(isDesktop ? { display: 'flex', flexDirection: 'column', minHeight: 160 } : {}) }}>
       <h1 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)' }}>
         {directorName}
       </h1>
@@ -164,9 +164,9 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
         )}
       </div>
 
-      {/* PC — 액션 행이 히어로 텍스트 컬럼 안 (2026-08-24, 영화 상세와 동일) */}
+      {/* PC — 액션 행은 히어로 텍스트 컬럼의 바닥(아바타 하단 라인)에 맞춘다 (2026-08-24) */}
       {isDesktop && (
-        <div style={{ marginTop: 20, maxWidth: 480 }}>
+        <div style={{ marginTop: 'auto', paddingTop: 16, maxWidth: 480 }}>
           {actionRow}
         </div>
       )}
