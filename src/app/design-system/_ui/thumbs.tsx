@@ -3,8 +3,9 @@
 import type { ReactNode } from 'react'
 import {
   Avatar, Badge, BottomSheet, BubbleTail, Button, Card, CardContainer, Chip, DirectorChip,
-  Divider, EmptyState, FabRound, FilterPill, GenreChip, Icon, IconButton, Input,
-  ListRow, PosterChip, ScrollNavButton, Switch, Tabs,
+  Divider, EmptyState, FabRound, FavoriteButton, FilterPill, GenreChip,
+  Icon, IconButton, Input, KakaoLoginButton, ListRow, MenuCard, MenuRow, PosterChip,
+  ScrollNavButton, Switch, Tabs,
   SearchBar, SearchBarButton, SectionHeader, Skeleton, SortToggle, Wordmark,
   MovieCardSkeleton, TheaterCardSkeleton,
 } from '@/components/primitives'
@@ -33,6 +34,54 @@ function Poster({ children, width = 84 }: { children?: ReactNode; width?: number
 }
 
 const THUMBS: Record<string, ReactNode> = {
+  /* 다이얼로그는 포털로 화면 전체에 뜬다 — 목록 카드에 실물을 띄우면 문서를 덮는다.
+     그래서 여기서만 겉모습을 흉내 낸 정지 화면을 쓴다(다른 썸네일은 전부 제품 컴포넌트다). */
+  ConfirmDialog: (
+    <div style={{
+      width: 208, padding: 'var(--spacing-4)', borderRadius: 'var(--radius-popover)',
+      background: 'var(--color-surface-card)', border: '1px solid var(--color-border)',
+      boxShadow: 'var(--elevation-2, 0 8px 24px rgba(0,0,0,0.12))',
+      display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)',
+    }}>
+      <span style={{ fontSize: 'var(--text-body)', fontWeight: 700, color: 'var(--color-text-primary)' }}>로그아웃할까요?</span>
+      <div style={{ display: 'flex', gap: 'var(--spacing-2)', justifyContent: 'flex-end' }}>
+        <Button variant="secondary" size="sm">취소</Button>
+        <Button size="sm">로그아웃</Button>
+      </div>
+    </div>
+  ),
+  FavoriteButton: (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <FavoriteButton active={false} onToggle={() => {}} size={32} label="견본" />
+      <FavoriteButton active onToggle={() => {}} size={44} label="견본" />
+    </div>
+  ),
+  KakaoLoginButton: (
+    <div style={{ width: 200 }}>
+      <KakaoLoginButton />
+    </div>
+  ),
+  MenuCard: (
+    <div style={{ width: 208 }}>
+      <MenuCard style={{ margin: 0 }}>
+        <MenuRow icon={<Icon name="heart" size="lg" />} title="관심" />
+        <MenuRow icon={<Icon name="bell" size="lg" />} title="알림 설정" last />
+      </MenuCard>
+    </div>
+  ),
+  MenuRow: (
+    <div style={{ width: 208, background: 'var(--color-surface-card)', borderRadius: 'var(--radius-control)', overflow: 'hidden' }}>
+      <MenuRow icon={<Icon name="bell" size="lg" />} title="알림 설정" description="새 상영 소식" />
+      <MenuRow icon={<Icon name="close" size="lg" />} title="로그아웃" tone="danger" last />
+    </div>
+  ),
+  Switch: (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <Switch checked onChange={() => {}} label="켜짐 견본" />
+      <Switch checked={false} onChange={() => {}} label="꺼짐 견본" />
+      <Switch checked disabled onChange={() => {}} label="비활성 견본" />
+    </div>
+  ),
   Icon: (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--color-text-primary)' }}>
       <Icon name="map-pin" size="lg" />
