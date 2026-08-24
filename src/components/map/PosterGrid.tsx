@@ -192,10 +192,11 @@ export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, 
                 )}
               </span>
             )}
-            {/* 관심 수 — 항상 표시. +N 아래에 고정해 +N 위치가 흔들리지 않게 (2026-08-18).
+            {/* 관심 수 — 평소엔 +N 아래 고정(+N 위치가 흔들리지 않게, 2026-08-18).
+                관심 필터 모드에선 order:-1로 맨 위 — 반투명 +N보다 하트가 먼저 읽혀야 한다 (2026-08-24).
                 호버 시 어떤 작품이 관심 대상인지 목록으로 보여준다 (+N 칩과 같은 문법) */}
             {favoriteCount > 0 && (
-              <span className="po-wrap" style={{ display: 'inline-flex' }}>
+              <span className="po-wrap" style={{ display: 'inline-flex', order: dimOverflowChip ? -1 : 0 }}>
               <span className="pm-heart-cap">
                 <svg width={8} height={8} viewBox="0 0 24 24" fill="currentColor" style={{ display: 'block' }} aria-hidden="true">
                   <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />

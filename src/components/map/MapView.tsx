@@ -137,7 +137,7 @@ function isMapProjectionReady(map: LeafletMap) {
 
 // 동일 입력에 대해 renderToStaticMarkup 중복 호출 방지
 /** 핀 마크업 바꾸면 올려라 — 캐시 키에 들어가서 Fast Refresh로 모듈 상태가 남아도 옛 HTML을 안 쓴다 */
-const PIN_ICON_VERSION = 8 /* 관심 링 → 하트 뱃지, 관심 필터 dim 슬롯 (2026-08-24) */
+const PIN_ICON_VERSION = 9 /* 관심 링 → 하트 뱃지, 관심 필터 dim 슬롯 (2026-08-24) */
 const _pinIconCache = new LRUCache<string, L.DivIcon>(800)
 
 function makePinIcon(
