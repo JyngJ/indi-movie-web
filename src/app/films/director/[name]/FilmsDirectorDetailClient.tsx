@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useRouter } from 'next/navigation'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
-import { FavoriteActionButton } from '@/components/domain/favorites/FavoriteActionRow'
+import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
 import Image from 'next/image'
 import { useMovies, useActiveMovieIds, useDirectorProfile } from '@/lib/supabase/queries'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
@@ -137,16 +137,20 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
         )}
       </div>
 
-      {/* CTA 버튼 */}
-      <div style={{ marginTop: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <MapCtaButton fullWidth={false} onClick={() => router.push(`/map?director=${encodeURIComponent(directorName)}`)}>
-          지도에서 필터로 보기
-        </MapCtaButton>
-        <FavoriteActionButton type="director" id={directorName} />
-        <IconButton
-          variant="overlay"
-          size={44}
-          aria-label="공유"
+      </div>
+    </div>
+  )
+
+  /* 액션 행 — 영화 상세와 같은 문법: [♡ 관심 감독 등록(늘어남)][공유] (2026-08-24).
+     지도 CTA는 현재 상영작 헤더 행으로 이동 — 지도 필터는 상영작이 있을 때만 의미가 있다. */
+  const actionRow = (
+    <FavoriteActionRow
+      type="director"
+      id={directorName}
+      style={{ padding: isDesktop ? '0 0 8px' : '0 var(--gutter)', marginBottom: isDesktop ? 16 : 12, maxWidth: isDesktop ? 480 : undefined }}
+      trailing={
+        <Button
+          variant="tertiary" size="md" aria-label="공유"
           onClick={() => {
             void shareAndTrack({
               payload: { title: directorName, url: window.location.href },
@@ -155,12 +159,13 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
               properties: { director_name: directorName },
             })
           }}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
         >
           <IcoShare />
-        </IconButton>
-      </div>
-      </div>
-    </div>
+          공유
+        </Button>
+      }
+    />
   )
 
   return (
@@ -169,6 +174,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
 
       <div style={{ maxWidth: isDesktop ? 1000 : undefined, margin: isDesktop ? '0 auto' : undefined }}>
         {heroSection}
+        {actionRow}
 
         {/* 소개 */}
         {profile?.bio && (
@@ -181,9 +187,14 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
         {/* 현재 상영작 */}
         {nowPlaying.length > 0 && (
           <div style={{ padding: '20px var(--gutter) 0' }}>
-            <p style={{ margin: '0 0 16px', fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-              현재 상영작 <span style={{ fontSize: 16, color: 'var(--color-primary-base)' }}>{nowPlaying.length}편</span>
-            </p>
+            <div style={{ margin: '0 0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                현재 상영작 <span style={{ fontSize: 16, color: 'var(--color-primary-base)' }}>{nowPlaying.length}편</span>
+              </p>
+              <MapCtaButton fullWidth={false} size="sm" onClick={() => router.push(`/map?director=${encodeURIComponent(directorName)}`)}>
+                지도에서 필터로 보기
+              </MapCtaButton>
+            </div>
             <div className="no-scrollbar" style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 4 }}>
               {nowPlaying.map((m) => (
                 <NowPlayingPoster

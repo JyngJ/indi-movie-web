@@ -8,7 +8,12 @@ import type { Movie } from '@/types/api'
 import { Toast, IconButton, SortToggle } from '@/components/primitives'
 import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
+import { DetailTopBar } from '@/components/navigation/DetailTopBar'
+import { Button } from '@/components/primitives'
+import { shareAndTrack } from '@/lib/analytics/shareTracking'
 import { toSecureImageUrl } from '@/lib/media/imageUrl'
+
+const IcoShare = () => <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>
 
 function useIsDesktopDetail() {
   return useMediaQuery('(min-width: 1024px)')   /* 레일(1024)과 기준 통일 */
@@ -36,44 +41,25 @@ const IcoChevronDown = ({ flipped }: { flipped?: boolean }) => (
   </svg>
 )
 
-/* ── NavBar ── */
-function NavBar({ onBack, onClose, trailing }: { onBack: () => void; onClose: () => void; trailing?: React.ReactNode }) {
-  return (
-    <div style={{
-      height: 52, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      paddingLeft: 4, paddingRight: 4,
-      borderBottom: '1px solid var(--color-border)',
-      backgroundColor: 'var(--color-primary-subtle-l)',
-      flexShrink: 0,
-    }}>
-      <IconButton variant="ghost" size={44} aria-label="뒤로가기" onClick={onBack}><IcoChevronLeft /></IconButton>
-      <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 600, color: 'var(--color-text-primary)' }}>감독 정보</span>
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        {trailing}
-        <IconButton variant="ghost" size={44} aria-label="닫기" onClick={onClose}><IcoClose /></IconButton>
-      </div>
-    </div>
-  )
-}
-
 /* ── ProfileHero ── */
 function ProfileHero({
-  name, originalName, photoUrl,
+  name, originalName, photoUrl, nowPlayingCount = 0,
 }: {
-  name: string; originalName?: string; photoUrl?: string
+  name: string; originalName?: string; photoUrl?: string; nowPlayingCount?: number
 }) {
   return (
+    /* 2026-08-24: 중앙 정렬 → 좌 아바타 + 우 텍스트 (m4 /films/director 히어로 문법으로 통일) */
     <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      padding: '32px var(--gutter) 24px',
+      display: 'flex', gap: 16, alignItems: 'flex-start',
+      padding: '24px var(--gutter) 20px',
       background: 'var(--color-surface-bg)',
     }}>
       <div style={{
-        width: 112, height: 112, borderRadius: '50%',
+        width: 100, height: 100, borderRadius: '50%',
         backgroundColor: 'var(--color-surface-raised)',
         border: '1px solid var(--color-border)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        marginBottom: 20, flexShrink: 0, overflow: 'hidden',
+        flexShrink: 0, overflow: 'hidden',
         color: 'var(--color-text-caption)',
         boxShadow: '0 8px 24px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10)',
       }}>
@@ -86,14 +72,21 @@ function ProfileHero({
           </svg>
         )}
       </div>
-      <h1 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)', textAlign: 'center' }}>
-        {name}
-      </h1>
-      {originalName && (
-        <div style={{ marginTop: 4, fontSize: 14, color: 'var(--color-text-sub)', textAlign: 'center' }}>
-          {originalName}
-        </div>
-      )}
+      <div style={{ flex: 1, minWidth: 0, paddingTop: 4 }}>
+        <h1 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)' }}>
+          {name}
+        </h1>
+        {originalName && (
+          <div style={{ marginTop: 4, fontSize: 14, color: 'var(--color-text-sub)' }}>
+            {originalName}
+          </div>
+        )}
+        {nowPlayingCount > 0 && (
+          <div style={{ marginTop: 12, fontSize: 13, color: 'var(--color-primary-base)', fontWeight: 600 }}>
+            상영중 {nowPlayingCount}편
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -223,6 +216,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
     )
   }, [movies, directorName, sort])
 
+  const nowPlaying = useMemo(() => directorMovies.filter((m) => activeIdSet.has(m.id)), [directorMovies, activeIdSet])
   const visibleMovies = expanded ? directorMovies : directorMovies.slice(0, COLLAPSED_COUNT)
   const hiddenCount = directorMovies.length - COLLAPSED_COUNT
 
@@ -245,18 +239,38 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
         paddingBottom: isDesktop ? 40 : 0,
       }}
     >
-      <div style={{
-        position: 'sticky', top: 0, zIndex: 50,
-        paddingTop: 'env(safe-area-inset-top)',
-        backgroundColor: 'var(--color-surface-bg)',
-        marginLeft: isDesktop ? -28 : 0,
-        marginRight: isDesktop ? -28 : 0,
-      }}>
-        <NavBar onBack={() => fromPath ? router.push(fromPath) : router.back()} onClose={() => router.push('/map')} />
+      {/* 상단 바 — breadcrumb, /films/director와 통일 (2026-08-24). 뒤로가기 규칙(fromPath)은 유지 */}
+      <div style={{ marginLeft: isDesktop ? -28 : 0, marginRight: isDesktop ? -28 : 0 }}>
+        <DetailTopBar
+          crumbLabel="영화" crumbHref="/films" title={`감독 · ${directorName}`} isDesktop={isDesktop}
+          onBack={() => fromPath ? router.push(fromPath) : router.back()}
+        />
       </div>
 
-      <ProfileHero name={directorName} originalName={profile?.originalName} photoUrl={profile?.photoUrl} />
-      <FavoriteActionRow type="director" id={directorName} style={{ paddingLeft: 16, paddingRight: 16, marginBottom: 16 }} />
+      <ProfileHero name={directorName} originalName={profile?.originalName} photoUrl={profile?.photoUrl} nowPlayingCount={nowPlaying.length} />
+      {/* 액션 행 — [♡ 관심 감독 등록(늘어남)][공유] (2026-08-24 통일) */}
+      <FavoriteActionRow
+        type="director"
+        id={directorName}
+        style={{ paddingLeft: 16, paddingRight: 16, marginBottom: 16, maxWidth: isDesktop ? 480 : undefined }}
+        trailing={
+          <Button
+            variant="tertiary" size="md" aria-label="공유"
+            onClick={() => {
+              void shareAndTrack({
+                payload: { title: directorName, url: window.location.href },
+                source: 'director_detail',
+                scope: 'page',
+                properties: { director_name: directorName },
+              })
+            }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
+          >
+            <IcoShare />
+            공유
+          </Button>
+        }
+      />
 
       {/* 약력 */}
       {profile?.bio && (
@@ -267,11 +281,36 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
         </div>
       )}
 
-      <div style={{ maxWidth: isDesktop ? 860 : undefined, margin: isDesktop ? '20px auto 0' : undefined, padding: isDesktop ? 0 : '16px var(--gutter) 0' }}>
-        <MapCtaButton onClick={() => router.push(`/map?director=${encodeURIComponent(directorName)}`)}>
-          지도에서 필터로 보기
-        </MapCtaButton>
-      </div>
+      {/* 현재 상영작 — 헤더 우측에 작은 지도 CTA (2026-08-24, 전폭 버튼에서 이동) */}
+      {nowPlaying.length > 0 && (
+        <div style={{ maxWidth: isDesktop ? 860 : undefined, margin: isDesktop ? '20px auto 0' : undefined, padding: isDesktop ? 0 : '16px var(--gutter) 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 12 }}>
+            <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+              현재 상영작 <span style={{ color: 'var(--color-primary-base)' }}>{nowPlaying.length}편</span>
+            </span>
+            <MapCtaButton fullWidth={false} size="sm" onClick={() => router.push(`/map?director=${encodeURIComponent(directorName)}`)}>
+              지도에서 필터로 보기
+            </MapCtaButton>
+          </div>
+          <div className="no-scrollbar" style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 4 }}>
+            {nowPlaying.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => router.push(`/movie/${m.id}`)}
+                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', minHeight: 'auto', flexShrink: 0, width: 96 }}
+              >
+                <div style={{ width: 96, height: 144, borderRadius: 'var(--radius-poster)', overflow: 'hidden', backgroundColor: 'var(--color-surface-raised)' }}>
+                  {m.posterUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={toSecureImageUrl(m.posterUrl)} alt={m.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  )}
+                </div>
+                <div style={{ marginTop: 6, fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.title}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 작품 목록 */}
       <div style={{
