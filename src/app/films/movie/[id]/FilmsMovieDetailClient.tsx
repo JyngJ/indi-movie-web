@@ -413,7 +413,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
           style={{ width: '100%', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, padding: '16px 16px 12px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', minHeight: 'auto', borderBottom: '1px solid var(--color-border)' }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>
-            <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 6, lineHeight: 1.3 }}>
+            <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 8, lineHeight: 1.3 }}>
               {entry.theaterName}
               {isFavorite('theater', entry.theaterId) && (
                 <svg width={14} height={14} viewBox="0 0 24 24" fill="var(--color-error-mid)" aria-label="관심 극장" style={{ flexShrink: 0 }}>
