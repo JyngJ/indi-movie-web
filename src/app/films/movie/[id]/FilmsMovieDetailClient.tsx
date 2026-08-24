@@ -483,7 +483,8 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
         <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
           상영 영화관 및 일정
         </span>
-        <MapCtaButton fullWidth={false} onClick={() => router.push(mapUrlWithSelection())}>
+        {/* 섹션 헤더 보조 CTA는 sm — 감독 상세와 동일 문법 (2026-08-24) */}
+        <MapCtaButton fullWidth={false} size="sm" onClick={() => router.push(mapUrlWithSelection())}>
           지도에서 필터로 보기
         </MapCtaButton>
       </div>
