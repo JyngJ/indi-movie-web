@@ -523,7 +523,8 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
       <div style={{ padding: isDesktop ? '20px 28px 0' : '16px 16px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 16 }}>
           <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-            현재 상영중{' '}
+            {/* 미래 날짜에 "현재 상영중"은 거짓말 — 오늘만 현재고, 나머지는 그 날의 목록이다 (2026-08-24) */}
+            {selectedDate === dates[0] ? '현재 상영중' : '이 날의 상영작'}{' '}
             <span style={{ fontSize: 16, color: 'var(--color-primary-base)' }}>{movieShowtimeGroups.length}편</span>
           </span>
         </div>

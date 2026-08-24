@@ -73,9 +73,12 @@ const EMPTY_MAP_SHOWTIMES: MapShowtime[] = []
 const EMPTY_THEATER_EVENTS: TheaterEvent[] = []
 const MAP_MIN_ZOOM = 7
 const MAP_MAX_ZOOM = 19
+/* 경계에 여유를 둔다 (2026-08-24) — 최소 줌에서 bounds 폭(8도)이 PC 지도 폭보다
+   좁으면 viscosity 때문에 팬이 통째로 잠겨 서쪽(서울)이 잘린 채 "왼쪽이 멈춘" 것처럼
+   보였다. 여백을 줘서 최소 줌에서도 전국이 도크에 안 가리고 들어온다. */
 const KOREA_MAP_BOUNDS: L.LatLngBoundsExpression = [
-  [32.8, 124.2],
-  [39.8, 132.2],
+  [31.8, 121.8],
+  [40.6, 134.6],
 ]
 
 /** 데스크톱 좌측 상시 도크 폭 — 검색 패널과 같은 폭(440 * 0.8) */
