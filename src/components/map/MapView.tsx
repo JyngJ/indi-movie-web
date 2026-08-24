@@ -137,7 +137,7 @@ function isMapProjectionReady(map: LeafletMap) {
 
 // 동일 입력에 대해 renderToStaticMarkup 중복 호출 방지
 /** 핀 마크업 바꾸면 올려라 — 캐시 키에 들어가서 Fast Refresh로 모듈 상태가 남아도 옛 HTML을 안 쓴다 */
-const PIN_ICON_VERSION = 7
+const PIN_ICON_VERSION = 8 /* 관심 링 → 하트 뱃지, 관심 필터 dim 슬롯 (2026-08-24) */
 const _pinIconCache = new LRUCache<string, L.DivIcon>(800)
 
 function makePinIcon(
@@ -174,7 +174,7 @@ function makePinIcon(
   const safePosterOffsetX = selected ? 0 : finiteNumber(posterOffsetX)
   const forceMinOne = filtersActive && posterMovies.some(m => m.matchesFilter)
   const orderedMovies = sortPostersByPriority(posterMovies, fav ? { favoriteMovieIds: fav.movieIds, favoriteDirectors: fav.directors, bookingRank: fav.bookingRank } : undefined)
-  const { slots, overflowCount } = posterSlotsForZoom(orderedMovies, zoom, filtersActive, forceMinOne)
+  const { slots, overflowCount } = posterSlotsForZoom(orderedMovies, zoom, filtersActive, forceMinOne, !!favOnly)
   // 관심 필터만 켜진 상태에선 '일치'·'+N' 칩을 숨기고 하트 수만 보여준다 (2026-08-18)
   const favoriteOnlyMode = !!favOnly
   const matchCount = filtersActive && !favoriteOnlyMode ? posterMovies.filter(m => m.matchesFilter).length : undefined
@@ -212,7 +212,7 @@ function makePinIcon(
         favoriteMovieIds={favoriteMovieIds}
         favoriteDirectors={fav?.directors}
         favoriteCount={favCount}
-        hideOverflowChip={favoriteOnlyMode}
+        dimOverflowChip={favoriteOnlyMode}
         hideMatchRing={favoriteOnlyMode}
       />
     )
