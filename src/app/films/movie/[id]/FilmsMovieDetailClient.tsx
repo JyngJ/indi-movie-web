@@ -607,7 +607,10 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
       <DetailTopBar crumbLabel="영화" crumbHref="/films" title={movie.title} isDesktop={false} trailing={<RegionFilterWidget onRegionChange={setRegionId} />} />
       {heroSection}
       {actionRow}
+      {/* 섹션 디바이더 — 8px raised 밴드 (피그마 상세 통일 시안, 2026-08-24) */}
+      <div aria-hidden style={{ height: 8, backgroundColor: 'var(--color-surface-raised)' }} />
       {synopsisSection}
+      <div aria-hidden style={{ height: 8, backgroundColor: 'var(--color-surface-raised)' }} />
       {showtimesSection}
       <div style={{ height: 'env(safe-area-inset-bottom)' }} />
       {selectedShowtimeData && typeof document !== 'undefined' && createPortal(

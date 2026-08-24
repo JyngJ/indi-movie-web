@@ -679,6 +679,8 @@ export function MovieDetailClient({ movieId, theaterId, initialData, initialShow
         }
       />
 
+      {/* 섹션 디바이더 — 8px raised 밴드 (피그마 상세 통일 시안, 2026-08-24) */}
+      {!isDesktop && <div aria-hidden style={{ height: 8, backgroundColor: 'var(--color-surface-raised)' }} />}
       <InfoTab movie={movie} onDirectorClick={handleDirectorClick} desktop={isDesktop} />
 
       {/* 상영 영화관 — 탭 대신 스크롤 섹션 (2026-08-24) */}

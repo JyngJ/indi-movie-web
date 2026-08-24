@@ -175,6 +175,8 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
       <div style={{ maxWidth: isDesktop ? 1000 : undefined, margin: isDesktop ? '0 auto' : undefined }}>
         {heroSection}
         {actionRow}
+        {/* 섹션 디바이더 — 8px raised 밴드 (피그마 상세 통일 시안, 2026-08-24) */}
+        {!isDesktop && <div aria-hidden style={{ height: 8, backgroundColor: 'var(--color-surface-raised)' }} />}
 
         {/* 소개 */}
         {profile?.bio && (
@@ -208,6 +210,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
           </div>
         )}
 
+        {!isDesktop && <div aria-hidden style={{ height: 8, backgroundColor: 'var(--color-surface-raised)', marginTop: 20 }} />}
         {/* 작품 목록 */}
         <div style={{ padding: isDesktop ? '20px 0 64px' : '20px 0 52px' }}>
           {/* 헤더 */}

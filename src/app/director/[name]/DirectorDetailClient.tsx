@@ -281,6 +281,8 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
         </div>
       )}
 
+      {/* 섹션 디바이더 — 8px raised 밴드 (피그마 상세 통일 시안, 2026-08-24) */}
+      {!isDesktop && <div aria-hidden style={{ height: 8, backgroundColor: 'var(--color-surface-raised)' }} />}
       {/* 현재 상영작 — 헤더 우측에 작은 지도 CTA (2026-08-24, 전폭 버튼에서 이동) */}
       {nowPlaying.length > 0 && (
         <div style={{ maxWidth: isDesktop ? 860 : undefined, margin: isDesktop ? '20px auto 0' : undefined, padding: isDesktop ? 0 : '16px var(--gutter) 0' }}>
@@ -312,6 +314,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
         </div>
       )}
 
+      {!isDesktop && <div aria-hidden style={{ height: 8, backgroundColor: 'var(--color-surface-raised)', marginTop: 20 }} />}
       {/* 작품 목록 */}
       <div style={{
         maxWidth: isDesktop ? 860 : undefined,
