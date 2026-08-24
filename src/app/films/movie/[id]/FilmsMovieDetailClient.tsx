@@ -8,6 +8,7 @@ import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
 import { addDaysIso, toKstIsoDate } from '@/lib/date'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
 import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
+import { ExpandableSynopsis } from '@/components/domain/movieDetail/ExpandableSynopsis'
 import { ShowtimeCell } from '@/components/domain/ShowtimeCell'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import Image from 'next/image'
@@ -364,9 +365,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
   const synopsisSection = movie.synopsis ? (
     <div style={{ padding: isDesktop ? '0 0 20px' : '0 16px 16px', borderBottom: '1px solid var(--color-border)' }}>
       <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>시놉시스</p>
-      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.8, color: 'var(--color-text-body)', wordBreak: 'keep-all' }}>
-        {movie.synopsis}
-      </p>
+      <ExpandableSynopsis text={movie.synopsis} />
     </div>
   ) : null
 

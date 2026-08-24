@@ -21,11 +21,13 @@ interface DetailTopBarProps {
   /** 우측 위젯 (지역 칩 등) */
   trailing?: ReactNode
   isDesktop: boolean
+  /** 뒤로가기 커스텀 — 지도 흐름(/movie)처럼 crumbHref 규칙이 안 맞는 라우트용 */
+  onBack?: () => void
 }
 
 /** 상세 화면 공통 상단 바 — 뒤로가기 + [카테고리 > 현재명] breadcrumb + 우측 위젯.
  *  DetailShell(본문 1000 컬럼) 안에서 sticky — 화면별 자체 NavBar 대신 이걸 쓸 것. */
-export function DetailTopBar({ crumbLabel, crumbHref, title, trailing, isDesktop }: DetailTopBarProps) {
+export function DetailTopBar({ crumbLabel, crumbHref, title, trailing, isDesktop, onBack }: DetailTopBarProps) {
   const router = useRouter()
   return (
     <div style={{ position: 'sticky', top: 0, zIndex: 50, paddingTop: 'env(safe-area-inset-top)', backgroundColor: 'var(--color-surface-bg)', borderBottom: '1px solid var(--color-border)' }}>
@@ -35,6 +37,7 @@ export function DetailTopBar({ crumbLabel, crumbHref, title, trailing, isDesktop
             variant="ghost"
             size={44}
             onClick={() => {
+              if (onBack) { onBack(); return }
               // 직전이 상영작 흐름(/films*)이면 히스토리 back, 아니면(지도 등 다른 탭 경유)
               // 상영작 탭으로 — "직전 페이지"가 아니라 "이 흐름의 이전"으로 가는 규칙
               const prev = getPrevPathname()

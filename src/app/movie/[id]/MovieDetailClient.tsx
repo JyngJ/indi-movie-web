@@ -18,6 +18,9 @@ import { getRegionFromAddress, getRegionFromCoords } from '@/lib/regions'
 import { formatDateLabel } from '@/lib/date'
 import { Toast, IconButton, Button } from '@/components/primitives'
 import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
+import { ExpandableSynopsis } from '@/components/domain/movieDetail/ExpandableSynopsis'
+import { DetailTopBar } from '@/components/navigation/DetailTopBar'
+import { shareAndTrack } from '@/lib/analytics/shareTracking'
 import { MovieInfoTable } from '@/components/domain/movieDetail/MovieInfoTable'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 
@@ -29,6 +32,12 @@ function useIsDesktopDetail() {
 const IcoChevronLeft = () => (
   <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
     <path d="M15 18l-6-6 6-6" />
+  </svg>
+)
+const IcoShare = () => (
+  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
   </svg>
 )
 const IcoClose = () => (
@@ -183,47 +192,6 @@ function HeroSection({ movie, titleRef, desktop = false }: { movie: MovieDetail;
   )
 }
 
-/* ── TabBar ── */
-function TabBar({ active, onChange, desktop = false }: { active: 'info' | 'theaters'; onChange: (t: 'info' | 'theaters') => void; desktop?: boolean }) {
-  const tabs: Array<{ key: 'info' | 'theaters'; label: string }> = [
-    { key: 'info', label: '영화 정보' },
-    { key: 'theaters', label: '상영 영화관' },
-  ]
-  return (
-    <div style={{
-      position: 'sticky',
-      top: 'calc(env(safe-area-inset-top) + 52px)',
-      zIndex: 40,
-      display: 'flex',
-      maxWidth: desktop ? 1120 : undefined,
-      margin: desktop ? '18px auto 0' : undefined,
-      border: desktop ? '1px solid var(--color-border)' : undefined,
-      borderRadius: desktop ? 14 : 0,
-      overflow: desktop ? 'hidden' : undefined,
-      borderBottom: '1px solid var(--color-border)',
-      backgroundColor: 'var(--color-surface-bg)',
-    }}>
-      {tabs.map((t) => (
-        <button
-          key={t.key}
-          onClick={() => onChange(t.key)}
-          style={{
-            flex: 1, height: 44,
-            border: 'none', background: 'none', cursor: 'pointer',
-            fontSize: 14,
-            fontWeight: active === t.key ? 600 : 400,
-            color: active === t.key ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
-            borderBottom: active === t.key ? '2px solid var(--color-primary-base)' : '2px solid transparent',
-            transition: 'color 150ms, border-color 150ms',
-          }}
-        >
-          {t.label}
-        </button>
-      ))}
-    </div>
-  )
-}
-
 /* ── InfoTab ── */
 function InfoTab({ movie, onDirectorClick, desktop = false }: { movie: MovieDetail; onDirectorClick: (name: string) => void; desktop?: boolean }) {
   const sectionLabel: React.CSSProperties = {
@@ -237,9 +205,7 @@ function InfoTab({ movie, onDirectorClick, desktop = false }: { movie: MovieDeta
       {movie.synopsis && (
         <div style={{ padding: desktop ? '34px 0 28px' : '24px var(--gutter)' }}>
           <p style={sectionLabel}>시놉시스</p>
-          <p style={{ margin: 0, fontSize: 14, lineHeight: 1.8, color: 'var(--color-text-body)', wordBreak: 'keep-all' }}>
-            {movie.synopsis}
-          </p>
+          <ExpandableSynopsis text={movie.synopsis} />
         </div>
       )}
 
@@ -605,11 +571,10 @@ export function MovieDetailClient({ movieId, theaterId, initialData, initialShow
   const router = useRouter()
   const searchParams = useSearchParams()
   const isDesktop = useIsDesktopDetail()
-  const [tab, setTab] = useState<'info' | 'theaters'>(() =>
-    searchParams.get('tab') === 'theaters' ? 'theaters' : 'info'
-  )
+  /* 2026-08-24: 가로 탭(영화 정보/상영 영화관) 폐지 — /films/movie와 같은 단일 스크롤.
+     구 공유 링크(?tab=theaters)는 상영 영화관 섹션으로 스크롤해 준다. */
+  const wantTheaters = searchParams.get('tab') === 'theaters'
   // const [starred, setStarred] = useState(false) // 즐겨찾기 — 계정 기능 구현 전 비활성화
-  const [titleInNav, setTitleInNav] = useState(false)
   const titleRef = useRef<HTMLHeadingElement>(null)
 
   const { data: movie, isLoading } = useMovieDetail(movieId, initialData)
@@ -623,7 +588,6 @@ export function MovieDetailClient({ movieId, theaterId, initialData, initialShow
       movie_title: movie.title,
       source: theaterId ? 'theater_sheet' : 'direct',
       theater_id: theaterId,
-      initial_tab: tab,
     })
     classifySessionIntent('type_a', {
       source: theaterId ? 'theater_sheet' : 'direct',
@@ -637,18 +601,14 @@ export function MovieDetailClient({ movieId, theaterId, initialData, initialShow
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [movie?.id])
 
-  // 제목이 sticky NavBar 아래로 스크롤되면 NavBar에 영화 제목 표시
+  // ?tab=theaters 구 링크 — 마운트 후 상영 영화관 섹션으로 스크롤
   useEffect(() => {
-    if (!movie) return
-    const el = titleRef.current
-    if (!el) return
-    const onScroll = () => {
-      setTitleInNav(el.getBoundingClientRect().bottom < 60)
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    onScroll()
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [movie])
+    if (!movie || !wantTheaters) return
+    setTimeout(() => {
+      document.getElementById('theaters-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 150)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [movie?.id])
 
   const fromCuration = searchParams.get('from') === 'curation'
   const handleBack = () => fromCuration ? router.push('/map') : router.back()
@@ -689,50 +649,54 @@ export function MovieDetailClient({ movieId, theaterId, initialData, initialShow
         paddingBottom: isDesktop ? 40 : 0,
       }}
     >
-      {/* Sticky 상단 바: safe-area + NavBar */}
-      <div style={{
-        position: 'sticky', top: 0, zIndex: 50,
-        paddingTop: 'env(safe-area-inset-top)',
-        backgroundColor: 'var(--color-surface-bg)',
-        marginLeft: isDesktop ? -28 : 0,
-        marginRight: isDesktop ? -28 : 0,
-      }}>
-        <NavBar
-          title={movie.title}
-          titleVisible={titleInNav}
-          onBack={handleBack}
-          onClose={handleClose}
-        />
+      {/* 상단 바 — /films/movie와 같은 breadcrumb (2026-08-24, 두 상세 통일) */}
+      <div style={{ marginLeft: isDesktop ? -28 : 0, marginRight: isDesktop ? -28 : 0 }}>
+        <DetailTopBar crumbLabel="영화" crumbHref="/films" title={movie.title} isDesktop={isDesktop} onBack={handleBack} />
       </div>
 
       <HeroSection movie={movie} titleRef={titleRef} desktop={isDesktop} />
-      {/* 액션 행 — 피그마 G 확정: 히어로 아래 [♡ 관심 등록] (지도 쪽 상세는 공유 없음) */}
-      <FavoriteActionRow type="movie" id={movie.id} style={{ paddingLeft: isDesktop ? 0 : 16, paddingRight: isDesktop ? 0 : 16, marginBottom: 20, maxWidth: isDesktop ? 480 : undefined }} />
-
-      <TabBar
-        active={tab}
-        onChange={(nextTab) => {
-          trackEvent('movie detail tab changed', {
-            movie_id: movie.id,
-            movie_title: movie.title,
-            from_tab: tab,
-            to_tab: nextTab,
-          })
-          setTab(nextTab)
-        }}
-        desktop={isDesktop}
+      {/* 액션 행 — [♡ 관심 영화 등록][공유], /films/movie와 동일 (2026-08-24 통일) */}
+      <FavoriteActionRow
+        type="movie"
+        id={movie.id}
+        style={{ paddingLeft: isDesktop ? 0 : 16, paddingRight: isDesktop ? 0 : 16, marginBottom: 20, maxWidth: isDesktop ? 480 : undefined }}
+        trailing={
+          <Button
+            variant="tertiary" size="md" aria-label="공유"
+            onClick={() => {
+              void shareAndTrack({
+                payload: { title: movie.title, url: window.location.href },
+                source: 'movie_detail',
+                scope: 'page',
+                properties: { movie_id: movie.id, movie_title: movie.title },
+              })
+            }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
+          >
+            <IcoShare />
+            공유
+          </Button>
+        }
       />
 
-      {tab === 'info'
-        ? <InfoTab movie={movie} onDirectorClick={handleDirectorClick} desktop={isDesktop} />
-        : <TheatersTab
-            movieId={movieId}
-            onMapClick={handleMapClick}
-            onGoToTheater={(tid, date) => router.push(`/map?theater=${tid}&movie=${movieId}&date=${date}&fromMovie=${movieId}`)}
-            desktop={isDesktop}
-            initialShowtimes={initialShowtimes}
-          />
-      }
+      <InfoTab movie={movie} onDirectorClick={handleDirectorClick} desktop={isDesktop} />
+
+      {/* 상영 영화관 — 탭 대신 스크롤 섹션 (2026-08-24) */}
+      <div id="theaters-section" style={{ borderTop: '8px solid var(--color-surface-raised)' }}>
+        <p style={{
+          margin: 0, padding: isDesktop ? '28px 0 0' : '24px var(--gutter) 0',
+          maxWidth: isDesktop ? 860 : undefined, marginLeft: isDesktop ? 'auto' : undefined, marginRight: isDesktop ? 'auto' : undefined,
+          fontSize: 'var(--text-badge)', fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase',
+          color: 'var(--color-text-caption)',
+        }}>상영 영화관</p>
+        <TheatersTab
+          movieId={movieId}
+          onMapClick={handleMapClick}
+          onGoToTheater={(tid, date) => router.push(`/map?theater=${tid}&movie=${movieId}&date=${date}&fromMovie=${movieId}`)}
+          desktop={isDesktop}
+          initialShowtimes={initialShowtimes}
+        />
+      </div>
 
       {initialShowtimes && <SeoShowtimesSection movie={movie} entries={initialShowtimes} />}
 
