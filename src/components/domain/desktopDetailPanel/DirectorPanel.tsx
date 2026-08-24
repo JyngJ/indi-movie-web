@@ -44,7 +44,7 @@ export function DirectorPanel({
     return (
       <PanelShell onClose={onClose} onBack={onBack} embedded={embedded}>
         <div style={{ height: 200 }}>
-          <Toast message="데이터 불러오는 중…" visible />
+          <Toast message="불러오는 중…" visible />
         </div>
       </PanelShell>
     )
@@ -102,7 +102,7 @@ export function DirectorPanel({
               fontWeight: 700, 
               verticalAlign: 'text-bottom',
               margin: '0 4px'
-            }}>상영중</span> 태그가 표시됩니다.
+            }}>상영중</span> 태그가 붙어요
           </div>
         </div>
 

@@ -30,7 +30,7 @@ primitives/*.tsx ──────┘        (커밋 대상)
 | `/design-system/foundations/spacing` | 4배수 스케일 · Gutter 중첩 규칙 · Usage |
 | `/design-system/foundations/radius` | 역할 기반 반경 · Usage |
 | `/design-system/foundations/elevation` | 그림자 단계 · 피그마 이펙트 · Usage |
-| `/design-system/foundations/writing` | 라이팅 규범 — 목소리 · 자리별 톤 · 어미 · 표기 · 자리별 문구 · 용어 (원본 `src/design-system/writing.ts`, 손으로 적는 유일한 Foundations) |
+| `/design-system/foundations/writing` | 라이팅 규범 — 원칙 · 자리별 톤 · 어미 · 표기 · 자리별 문구 · 용어 (원본 `src/design-system/writing.ts`, 손으로 적는 유일한 Foundations) |
 | `/design-system/components` | 프리미티브 목록(문서화됨 / 목록만) |
 | `/design-system/components/[name]` | Anatomy · State(조작 가능) · Properties · Spec · Usage · 피그마 실측 · 소스 |
 | `/design-system/drift` | 코드 ↔ 피그마 차이 (종류별) |

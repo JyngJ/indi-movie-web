@@ -81,7 +81,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **배지:** 막바지 배지는 사실 등급대로 — 오늘 "오늘이 마지막", confirmed "D-n 종영", likely "D-n 막바지 상영". 완화·격상 금지.
 - **용어:** 극장·회차·상영 시간표·예매·잔여석·관심 영화·GV. 상영관·타임·스케줄·예약·북마크·"데이터"·"서버"는 화면에 쓰지 않는다.
 - **톤 범위:** 문학적 한 줄은 큐레이션 부제에만. 버튼·에러·빈 상태엔 쓰지 않는다. 사과("죄송합니다")·감탄으로 시작하지 않는다.
-- **2026-08-23 기준 어긋난 곳(고칠 때 같이 정리):** 빈 상태·에러·토스트의 합니다체(`없습니다`/`복사되었습니다`/`보내지 못했습니다.`), `입력해주세요`, `데이터 불러오는 중…`, FAQ 답변 합니다체. 새 PR에서 손대는 파일의 문구는 규범에 맞춘다.
+- **회귀 게이트:** `npm run audit:writing:check` — 합니다체·붙여 쓴 보조 용언·"데이터" 로딩·마침표 세 개·되어요 카운트가 `scripts/audit/writing-baseline.json`(현재 전부 0) 대비 증가하면 실패. CI(ui-audit.yml)가 PR마다 실행한다. baseline을 올려서 통과시키지 말 것. SEO 메타·스키마·법적 문구처럼 문어체가 맞는 줄은 `// writing-audit-ignore` 주석으로 제외한다.
 
 ## Crawler Operations
 

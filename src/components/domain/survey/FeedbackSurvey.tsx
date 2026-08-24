@@ -157,7 +157,7 @@ export function FeedbackSurvey({ onClose, visits }: Props) {
         {done ? (
           <div className={styles.thanks}>
             <div className={styles.thanksEmoji} aria-hidden>🎬</div>
-            <p className={`display-h2 ${styles.title}`}>고맙습니다!</p>
+            <p className={`display-h2 ${styles.title}`}>고마워요!</p>
             <p className={styles.sub}>남겨주신 의견은 다음 개선에 바로 반영할게요.</p>
             <div className={styles.ctaCol}>
               <Button type="button" variant="secondary" size="full" onClick={() => animateClose(onClose)}>

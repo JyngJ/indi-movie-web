@@ -59,11 +59,13 @@ export default async function FilmsDirectorDetailPage({ params }: { params: Prom
     {
       question: `${directorName} 감독 영화는 어디서 볼 수 있나요?`,
       answer: nowShowing.length > 0
+        // writing-audit-ignore — SEO 메타·스키마 문구는 문어체 유지
         ? `${theaterNames.join(', ')}에서 상영합니다. 각 극장의 상영 시간과 예매 링크는 영화볼지도 극장 페이지에서 확인할 수 있습니다.`
-        : `현재 전국 독립·예술영화관에 잡힌 ${directorName} 감독 작품의 상영 일정은 없습니다. 영화볼지도는 상영 시간표를 매일 갱신하므로 새 상영이 열리면 확인할 수 있습니다.`,
+        : `현재 전국 독립·예술영화관에 잡힌 ${directorName} 감독 작품의 상영 일정이 없어요. 상영 시간표는 매일 갱신되니 새 상영이 열리면 여기서 확인할 수 있어요.`,
     },
     {
       question: `${directorName} 감독의 작품은 몇 편인가요?`,
+      // writing-audit-ignore — SEO 메타·스키마 문구는 문어체 유지
       answer: `영화볼지도에 등록된 ${directorName} 감독의 작품은 ${seoData.films.length}편입니다.`,
     },
   ])
@@ -79,7 +81,7 @@ export default async function FilmsDirectorDetailPage({ params }: { params: Prom
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <DirectorSeoContent directorName={directorName} data={seoData} />
-      <Suspense fallback={<Toast message="데이터 불러오는 중…" visible />}>
+      <Suspense fallback={<Toast message="불러오는 중…" visible />}>
         <FilmsDirectorDetailClient directorName={directorName} />
       </Suspense>
     </>

@@ -80,22 +80,19 @@ export default function WritingPage() {
       lead="화면에 적히는 한국어 문장의 약속입니다. 제품 화면은 해요체 하나로 말하고, 한 줄에 한 가지만 담습니다. 이 페이지의 규칙은 2026-08 기준 코드에 실제로 있던 문구를 전수 조사해서 정했습니다 — 이미 일관된 것은 그대로 굳히고, 갈라져 있던 것은 한쪽으로 모았습니다."
     >
       <DocSection
-        id="voice"
-        title="목소리"
-        lead="문장 하나하나보다 먼저 오는 태도입니다. 어떤 자리의 문구든 이 넷에서 벗어나지 않습니다."
+        id="principles"
+        title="원칙"
+        lead="규칙보다 먼저 오는 넷입니다. 규칙에 없는 상황이면 이 넷으로 판단합니다."
       >
-        <div className="ds-cover-grid">
+        <div style={{ display: 'grid', gap: 'var(--spacing-6)', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', maxWidth: 880 }}>
           {VOICE.map(v => (
             <div key={v.title} style={{
               background: 'var(--color-surface-card)', border: '1px solid var(--color-border)',
               borderRadius: 'var(--radius-popover)', padding: 'var(--spacing-5)',
               display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)',
             }}>
-              <div style={{
-                fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, lineHeight: 1.4,
-                color: 'var(--color-text-primary)',
-              }}>“{v.sample}”</div>
-              <div style={{ fontSize: 'var(--text-title)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{v.title}</div>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, lineHeight: 1.4, color: 'var(--color-text-primary)' }}>{v.title}</div>
+              <div style={{ fontSize: 'var(--text-body)', lineHeight: 1.5, color: 'var(--color-text-sub)' }}>“{v.sample}”</div>
               <p style={{ margin: 0, fontSize: 'var(--text-meta)', lineHeight: 1.7, color: 'var(--color-text-sub)' }}>{v.desc}</p>
             </div>
           ))}
@@ -110,7 +107,7 @@ export default function WritingPage() {
         <Stage tone="paper" minHeight={160}>
           <div style={{
             display: 'grid', gap: 'var(--spacing-3)', width: '100%',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', maxWidth: 880,
           }}>
             {[
               ['큐레이션 부제', '문학적 · 한 줄 · 마침표 없음', '잠 안 오는 새벽, 조용히 곁에 두는 영화들'],
@@ -146,7 +143,7 @@ export default function WritingPage() {
           margin: 0, paddingLeft: '1.1em', listStyle: 'disc',
           fontSize: 'var(--text-body)', lineHeight: 1.8, color: 'var(--color-text-sub)',
         }}>
-          <li><Code>src/design-system/writing.ts</Code> — 목소리 · 규칙 · 예문</li>
+          <li><Code>src/design-system/writing.ts</Code> — 원칙 · 규칙 · 예문</li>
           <li><Code>/design-system/llms-writing.txt</Code> — AI 코딩 도구용 한 줄 규칙</li>
           <li><Code>AGENTS.md</Code> “UI Writing” — 세션이 따르는 요약</li>
         </ul>

@@ -114,7 +114,7 @@ export function LocationPermissionModal({ state, onRequest, onDismiss }: Props) 
         {isDenied ? (
           <>
             <p style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.4, margin: '0 0 16px' }}>
-              브라우저의 위치 접근을<br />허용해주세요
+              브라우저의 위치 접근을<br />허용해 주세요
             </p>
             {/* 안내 박스 */}
             <div style={{
@@ -143,7 +143,7 @@ export function LocationPermissionModal({ state, onRequest, onDismiss }: Props) 
               내 주변 독립영화관 찾기
             </p>
             <p style={{ fontSize: 14, color: 'var(--color-text-caption)', lineHeight: 1.65, margin: 0 }}>
-              가까운 영화관과 오늘의 상영 정보를 바로 보려면<br />위치 접근을 허용해주세요.
+              가까운 영화관과 오늘의 상영 정보를 바로 보려면<br />위치 접근을 허용해 주세요.
             </p>
           </>
         )}

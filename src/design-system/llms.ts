@@ -116,7 +116,7 @@ export function llmsComponents() {
 export function llmsWriting() {
   const out = [header('영화볼지도 라이팅 규칙', '화면에 적히는 한국어 문구의 약속. 제품 화면은 해요체 하나, 한 줄에 한 가지.')]
   out.push('\n## 한 줄 규칙\n', ...WRITING_RULES_SHORT.map(r => `- ${r}`))
-  out.push('\n## 목소리\n', ...VOICE.map(v => `- ${v.title}: ${v.desc} (예: "${v.sample}")`))
+  out.push('\n## 원칙\n', ...VOICE.map(v => `- ${v.title}: ${v.desc} (예: "${v.sample}")`))
   for (const sec of SECTIONS) {
     out.push(`\n## ${sec.title}\n\n> ${sec.lead}\n`)
     for (const r of sec.rules) {
