@@ -457,10 +457,8 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
   const content = (
     <div style={{ paddingBottom: isDesktop ? (selectedShowtimeData ? 220 : 64) : (selectedShowtimeData ? 148 : 80) }}>
       {/* 헤더 */}
-      <div style={{
-        background: 'linear-gradient(to bottom, var(--color-primary-subtle-l) 0%, var(--color-surface-bg) 100%)',
-        padding: isDesktop ? '28px 28px 24px' : '20px 16px 20px',
-      }}>
+      {/* 그라데이션 밴드는 뺐다 (2026-08-24) — 다른 상세(영화·감독)는 민 배경이라 혼자 튀었다 */}
+      <div style={{ padding: isDesktop ? '28px 28px 24px' : '20px 16px 20px' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', padding: '4px 12px', borderRadius: 9999, border: '1px solid color-mix(in srgb, var(--color-primary-base) 55%, transparent)', backgroundColor: 'var(--color-primary-subtle-l)', marginBottom: 12 }}>
           <span style={{ fontSize: 'var(--text-badge)', fontWeight: 600, lineHeight: 1, color: 'var(--color-primary-base)' }}>독립·예술영화관</span>
         </div>
@@ -484,8 +482,9 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
 
         {/* 액션 2행 (2026-08-24 확정): [관심 극장 등록(회색)][공유(회색)] / [지도에서 보기(파랑 전폭)].
             md 버튼 셋은 한 줄에 안 들어가고(실측 391 > 343), 길찾기는 극장 시트와 중복이라 뺐다. */}
-        <div style={{ display: 'flex', flexDirection: isDesktop ? 'row' : 'column', gap: 8, alignItems: isDesktop ? 'center' : undefined }}>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        {/* PC 순서: 지도 → 공유 → 관심 (2026-08-24 확정). 모바일은 [관심][공유] / [지도 전폭] 2행 유지 */}
+        <div style={{ display: 'flex', flexDirection: isDesktop ? 'row-reverse' : 'column', gap: 8, alignItems: isDesktop ? 'center' : undefined, justifyContent: isDesktop ? 'flex-end' : undefined }}>
+          <div style={{ display: 'flex', flexDirection: isDesktop ? 'row-reverse' : 'row', gap: 8, alignItems: 'center' }}>
             <FavoriteActionButton type="theater" id={theater.id} style={{ flex: isDesktop ? undefined : 1, whiteSpace: 'nowrap' }} />
             <Button
               variant="tertiary"
@@ -517,7 +516,10 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
         backgroundColor: 'var(--color-surface-bg)',
         borderBottom: '1px solid var(--color-border)',
       }}>
-        <DetailDateTabs dates={dates} selectedDate={selectedDate} activeDates={activeDates} onSelect={setSelectedDate} />
+        {/* PC — 탭 묶음을 가운데로 (왼쪽에 붙어 보이던 것, 2026-08-24) */}
+        <div style={{ display: 'flex', justifyContent: isDesktop ? 'center' : 'flex-start' }}>
+          <DetailDateTabs dates={dates} selectedDate={selectedDate} activeDates={activeDates} onSelect={setSelectedDate} />
+        </div>
       </div>
 
       {/* 현재 상영중 */}
