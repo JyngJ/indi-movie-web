@@ -63,6 +63,7 @@ export function LoginSheet() {
   return createPortal(
     <div
       onClick={close}
+      data-overlay-root=""
       style={{
         position: 'fixed', inset: 0, zIndex: 9100,   /* 위치권한 모달(9000) 위 */
         display: 'flex',
