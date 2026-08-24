@@ -16,7 +16,7 @@ import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWi
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { shareAndTrack } from '@/lib/analytics/shareTracking'
 import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/components/domain/booking/BookingActions'
-import { Skeleton, Button } from '@/components/primitives'
+import { Skeleton, Button, Icon } from '@/components/primitives'
 import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
 import { ShowtimeCell } from '@/components/domain/ShowtimeCell'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
@@ -48,28 +48,6 @@ function formatDateTab(dateStr: string): { day: string; date: number; isHoliday:
 }
 
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
-const IcoChevronLeft = () => (
-  <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M15 18l-6-6 6-6" />
-  </svg>
-)
-const IcoShare = () => (
-  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
-    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-  </svg>
-)
-const IcoCopy = () => (
-  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-  </svg>
-)
-const IcoChevronRight = () => (
-  <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M9 18l6-6-6-6" />
-  </svg>
-)
 
 /* ── 상영시간 포맷 ─────────────────────────────────────────────── */
 function formatLabel(st: Showtime): string {
@@ -196,7 +174,7 @@ function MovieShowtimeCard({
           )}
         </div>
 
-        <IcoChevronRight />
+        <Icon name="chevron-right" size={15} />
       </button>
 
       {/* 상영시간 — 2.0 ShowtimeCell 3열, 눌린 트레이 위 흰 셀 반전 (피그마 ShowtimeGroupCard) */}
@@ -470,12 +448,10 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
           onClick={copyAddress}
           style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--color-text-sub)', fontSize: 13, marginBottom: 20, minHeight: 'auto' }}
         >
-          <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" />
-          </svg>
+          <Icon name="map-pin" size={12} />
           <span>{theater.address}</span>
           <span style={{ marginLeft: 4, display: 'flex', alignItems: 'center', gap: 4, color: copied ? 'var(--color-primary-base)' : 'var(--color-text-caption)', fontSize: 'var(--text-badge)', fontWeight: 500 }}>
-            <IcoCopy />
+            <Icon name="copy" size={14} />
             {copied ? '복사됨' : '복사'}
           </span>
         </button>
@@ -500,7 +476,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
               }}
               style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
             >
-              <IcoShare />
+              <Icon name="share" size={16} />
               공유
             </Button>
           </div>

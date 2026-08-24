@@ -14,7 +14,7 @@ import { MovieInfoTable } from '@/components/domain/movieDetail/MovieInfoTable'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 import { PanelShell } from './PanelShell'
 import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
-import { IcoUser, IcoChevronRight, IcoPin } from './icons'
+import { Icon } from '@/components/primitives'
 import { toSecureImageUrl } from '@/lib/media/imageUrl'
 
 /* ── 영화 상세 패널 ── */
@@ -193,13 +193,13 @@ function MovieInfoTab({ movie, onDirectorClick }: { movie: NonNullable<ReturnTyp
                 }}
               >
                 <div style={{ width: 44, height: 44, borderRadius: '50%', backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: 'var(--color-text-caption)' }}>
-                  <IcoUser />
+                  <Icon name="user" size="xl" strokeWidth={1.5} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{name}</div>
                   <div style={{ marginTop: 4, fontSize: 'var(--text-badge)', color: 'var(--color-primary-base)', fontWeight: 500, textDecoration: 'underline' }}>감독 페이지 보기</div>
                 </div>
-                <IcoChevronRight />
+                <Icon name="chevron-right" size={14} />
               </button>
             ))}
           </div>
@@ -255,7 +255,7 @@ function MovieTheatersTab({
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)' }}>{entry.theaterName}</div>
           <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 4, color: 'var(--color-text-sub)', fontSize: 'var(--text-badge)' }}>
-            <IcoPin />{entry.theaterAddress}
+            <Icon name="map-pin" size={11} />{entry.theaterAddress}
           </div>
         </div>
         {(() => {

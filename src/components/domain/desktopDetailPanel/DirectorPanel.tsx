@@ -5,7 +5,7 @@ import { useMovies, useActiveMovieIds } from '@/lib/supabase/queries'
 import { Toast, SortToggle } from '@/components/primitives'
 import { PanelShell } from './PanelShell'
 import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
-import { IcoChevronRight, IcoChevronDown } from './icons'
+import { Icon } from '@/components/primitives'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 import { toSecureImageUrl } from '@/lib/media/imageUrl'
 
@@ -142,7 +142,7 @@ export function DirectorPanel({
                     {[movie.year, movie.genre[0]].filter(Boolean).join(' · ')}
                   </div>
                 </div>
-                <IcoChevronRight />
+                <Icon name="chevron-right" size={14} />
               </button>
             )
           })}
@@ -162,7 +162,7 @@ export function DirectorPanel({
                 cursor: 'pointer', borderRadius: '0 0 12px 12px', minHeight: 'auto',
               }}
             >
-              <IcoChevronDown flipped={expanded} />
+              <Icon name="chevron-down" size={14} style={{ transform: expanded ? 'rotate(180deg)' : undefined, transition: 'transform 200ms' }} />
               {expanded ? '접기' : `${hiddenCount}편 더 보기`}
             </button>
           )}

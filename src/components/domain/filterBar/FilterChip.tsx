@@ -1,4 +1,4 @@
-import { IcoClose, IcoChevron } from './icons'
+import { Icon } from '@/components/primitives'
 
 /* -- FilterChip --------------------------------------------------- */
 interface FilterChipProps {
@@ -92,14 +92,14 @@ export function FilterChip({ label, value, open, selected, hasDropdown, onClick,
             cursor: 'pointer', marginLeft: 4, flexShrink: 0,
           }}
         >
-          <IcoClose />
+          <Icon name="close" size={10} color="var(--color-text-sub)" />
         </span>
       ) : hasDropdown ? (
         <span style={{
           display: 'inline-flex', alignItems: 'center', marginLeft: 4, flexShrink: 0,
           color: open ? 'var(--filter-chip-open-caret)' : 'var(--color-text-caption)',
         }}>
-          <IcoChevron open={!!open} />
+          <Icon name="chevron-down" size={11} style={{ transform: open ? 'rotate(180deg)' : undefined, transition: 'transform 180ms ease' }} />
         </span>
       ) : null}
     </button>

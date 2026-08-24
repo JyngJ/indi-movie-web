@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useLockBodyScroll } from '@/hooks/useLockBodyScroll'
-import { Button, Chip, IconButton, Input } from '@/components/primitives'
+import { Button, Chip, Icon, IconButton, Input } from '@/components/primitives'
 import { TransitionPanel, slideVariants } from '@/components/motion'
 // 분류 목록은 API 화이트리스트(lib/reports/types)가 단일 소스 — UI 로컬 상수와 어긋나면
 // '기타' 외 전부 400으로 거부된다(실제로 발생했던 불일치).
@@ -16,49 +16,7 @@ type Page = SettingsPage
 const PAGE_INDEX: Record<Page, number> = { main: 0, report: 1, attribution: 2, about: 3 }
 
 /* ── 아이콘 ── */
-const IcoChevronRight = () => (
-  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-    <path d="M9 18l6-6-6-6" />
-  </svg>
-)
-const IcoChevronLeft = () => (
-  <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-    <path d="M15 18l-6-6 6-6" />
-  </svg>
-)
-const IcoClose = () => (
-  <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round">
-    <path d="M18 6L6 18M6 6l12 12" />
-  </svg>
-)
-const IcoCamera = () => (
-  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-    <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
-    <circle cx="12" cy="13" r="4"/>
-  </svg>
-)
-const IcoSend = () => (
-  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-    <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-  </svg>
-)
-const IcoExternalLink = () => (
-  <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
-  </svg>
-)
-const IcoLinkedIn = () => (
-  <svg width={16} height={16} viewBox="0 0 24 24" fill="currentColor">
-    <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/>
-    <circle cx="4" cy="4" r="2"/>
-  </svg>
-)
 
-const IcoGitHub = () => (
-  <svg width={16} height={16} viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-  </svg>
-)
 
 /* ── 공통 헤더 ── */
 export function SettingsHeader({ title, onBack, onClose, submitting, trailing }: { title: string; onBack?: () => void; onClose?: () => void; submitting?: boolean; trailing?: React.ReactNode }) {
@@ -71,14 +29,14 @@ export function SettingsHeader({ title, onBack, onClose, submitting, trailing }:
       gap: 4, flexShrink: 0, backgroundColor: 'var(--color-surface-card)',
     }}>
       {onBack && (
-        <IconButton variant="ghost" size={44} aria-label="뒤로가기" onClick={onBack} disabled={submitting}><IcoChevronLeft /></IconButton>
+        <IconButton variant="ghost" size={44} aria-label="뒤로가기" onClick={onBack} disabled={submitting}><Icon name="chevron-left" size={18} /></IconButton>
       )}
       <span className="display-h2" style={{ flex: 1, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {title}
       </span>
       {trailing}
       {onClose && (
-        <IconButton variant="ghost" size={44} aria-label="닫기" onClick={onClose} disabled={submitting}><IcoClose /></IconButton>
+        <IconButton variant="ghost" size={44} aria-label="닫기" onClick={onClose} disabled={submitting}><Icon name="close" size={18} /></IconButton>
       )}
     </div>
   )
@@ -121,23 +79,23 @@ export function SettingsMainPage({
       <div style={{ margin: '12px 16px 0', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
         <Link href="/faq" style={{ ...row, textDecoration: 'none' }} onClick={onExternalNav}>
           <div style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-sub)" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/><circle cx="12" cy="12" r="10"/></svg>
+            <Icon name="help" size={17} color="var(--color-text-sub)" />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>자주 묻는 질문</div>
             <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4 }}>서비스 소개와 이용 안내</div>
           </div>
-          <span style={{ color: 'var(--color-text-placeholder)' }}><IcoChevronRight /></span>
+          <span style={{ color: 'var(--color-text-placeholder)' }}><Icon name="chevron-right" size={16} /></span>
         </Link>
         <button style={row} onClick={() => onNavigate('report')}>
           <div style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-sub)" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <Icon name="alert" size={17} color="var(--color-text-sub)" />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>버그 리포트</div>
             <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4 }}>오류·깨짐을 알려주세요</div>
           </div>
-          <span style={{ color: 'var(--color-text-placeholder)' }}><IcoChevronRight /></span>
+          <span style={{ color: 'var(--color-text-placeholder)' }}><Icon name="chevron-right" size={16} /></span>
         </button>
         <a
           href="https://www.instagram.com/indi.movie.map/"
@@ -146,7 +104,7 @@ export function SettingsMainPage({
           style={{ ...row, borderBottom: 'none', textDecoration: 'none' }}
         >
           <div style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-sub)" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.2" cy="6.8" r="1" fill="var(--color-text-sub)" stroke="none" /></svg>
+            <Icon name="instagram" size={17} color="var(--color-text-sub)" />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>인스타그램</div>
@@ -154,14 +112,14 @@ export function SettingsMainPage({
           </div>
           {/* 외부 링크 — 꺾쇠 대신 external-link 아이콘 */}
           <span style={{ color: 'var(--color-text-placeholder)', display: 'flex' }}>
-            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6" /><path d="M10 14 21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></svg>
+            <Icon name="external-link" size={16} />
           </span>
         </a>
       </div>
 
       {/* 안내 배너 */}
       <div style={{ margin: '12px 16px 0', backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, var(--color-surface-bg))', border: '1px solid color-mix(in srgb, var(--color-warning) 25%, transparent)', borderRadius: 12, padding: '12px 16px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-        <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="var(--color-warning)" strokeWidth={1.75} strokeLinecap="round" style={{ flexShrink: 0, marginTop: 4 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <Icon name="alert" size={16} color="var(--color-warning)" style={{ flexShrink: 0, marginTop: 4 }} />
         <p className="text-note" style={{ margin: 0, color: 'var(--color-text-sub)' }}>
           상영 정보는 실시간으로 불러오지 않으므로 실제 좌석 현황과 다를 수 있습니다.
         </p>
@@ -194,9 +152,7 @@ export function ReportSuccessNotice() {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}
       >
-        <svg width={28} height={28} viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-          <path className="success-check-path" d="M5 13l5 5L20 7" />
-        </svg>
+        <Icon name="check" size={28} color="var(--color-success)" strokeWidth={2.5} className="success-check" />
       </div>
       <div style={{ fontSize: 'var(--text-title)', fontWeight: 700, color: 'var(--color-text-primary)' }}>감사합니다!</div>
       <div style={{ fontSize: 13, color: 'var(--color-text-sub)', textAlign: 'center', lineHeight: 1.6 }}>제보해 주셔서 감사합니다.<br/>확인 후 이메일로 답변 드리겠습니다.</div>
@@ -292,7 +248,7 @@ export function SettingsReportPage({
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 8 }}>
           <input ref={fileInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={e => setFiles(Array.from(e.target.files ?? []).slice(0, 3))} />
           <Button variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()}>
-            <IcoCamera /> 스크린샷 첨부
+            <Icon name="camera" size={14} /> 스크린샷 첨부
           </Button>
           <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)', flexShrink: 0 }}>{detail.length}/500</span>
         </div>
@@ -321,7 +277,7 @@ export function SettingsReportPage({
 
       {/* 전송 버튼 */}
       <Button fullWidth onClick={handleSubmit} disabled={!canSubmit} loading={submitting}>
-        {!submitting && <IcoSend />} {submitting ? '전송 중…' : '리포트 보내기'}
+        {!submitting && <Icon name="send" size={14} />} {submitting ? '전송 중…' : '리포트 보내기'}
       </Button>
     </div>
   )
@@ -353,7 +309,7 @@ export function SettingsAttributionPage() {
       <div style={{ ...card, marginTop: 16 }}>
         <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid var(--color-border)' }}>
           <div style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-sub)" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+            <Icon name="map" size={18} color="var(--color-text-sub)" />
           </div>
           <div>
             <div style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)', letterSpacing: '0.4px', textTransform: 'uppercase', fontWeight: 600 }}>지도 데이터</div>
@@ -362,7 +318,7 @@ export function SettingsAttributionPage() {
         </div>
         <div style={valueBox}>© OpenStreetMap contributors</div>
         <button onClick={() => window.open('https://www.openstreetmap.org/copyright', '_blank', 'noopener')} style={{ ...linkRow as React.CSSProperties, background: 'none', border: 'none' }}>
-          www.openstreetmap.org/copyright <IcoExternalLink />
+          www.openstreetmap.org/copyright <Icon name="external-link" size={12} />
         </button>
       </div>
 
@@ -377,7 +333,7 @@ export function SettingsAttributionPage() {
         </div>
         <div style={valueBox}>출처 – 한국기계연구원, kimm.re.kr</div>
         <button onClick={() => window.open('https://www.kimm.re.kr', '_blank', 'noopener')} style={{ ...linkRow as React.CSSProperties, background: 'none', border: 'none' }}>
-          www.kimm.re.kr <IcoExternalLink />
+          www.kimm.re.kr <Icon name="external-link" size={12} />
         </button>
       </div>
     </div>
@@ -412,12 +368,12 @@ export function SettingsAboutPage() {
             </div>
             {member.linkedin && (
               <IconButton size={32} aria-label={`${member.name} 링크드인`} onClick={() => window.open(member.linkedin!, '_blank', 'noopener')} style={{ backgroundColor: '#0A66C2', color: 'var(--color-on-accent)' }}>
-                <IcoLinkedIn />
+                <Icon name="linkedin" size={16} />
               </IconButton>
             )}
             {member.github && (
               <IconButton size={32} aria-label={`${member.name} 깃허브`} onClick={() => window.open(member.github!, '_blank', 'noopener')} style={{ backgroundColor: '#24292e', color: 'var(--color-on-accent)' }}>
-                <IcoGitHub />
+                <Icon name="github" size={16} />
               </IconButton>
             )}
           </div>

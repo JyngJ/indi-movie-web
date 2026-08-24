@@ -11,7 +11,7 @@ import type { Map as LeafletMap, Point as LeafletPoint } from 'leaflet'
 import { useLocationPermission } from '@/hooks/useLocationPermission'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useFavorites } from '@/hooks/useFavorites'
-import { SearchBarButton, FabRound, Toast, Wordmark } from '@/components/primitives'
+import { SearchBarButton, FabRound, Icon, Toast, Wordmark } from '@/components/primitives'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { THEATER_SHEET_COLLAPSED_H } from '@/components/domain/TheaterSheet'
 import type { PinFavoriteMark } from '@/components/domain/MapPin'
@@ -56,7 +56,7 @@ import type { RecentlyViewedEntry, RecentlyViewedKind } from '@/lib/curation/typ
 import { useCurationData } from '@/hooks/useCurationData'
 import { springFlyTo, springFlyToBounds, springActive, setSpringSettledCallback, cancelSpringAnimation } from '@/lib/mapSpring'
 import { PosterGrid } from './PosterGrid'
-import { ViewportTracker, ZoomSlider, OffScreenTracker, MapRefSetter, MapInteractionTracker, IcoPlus, IcoMinus, IcoLocate, IcoSun, IcoMoon } from './MapControls'
+import { ViewportTracker, ZoomSlider, OffScreenTracker, MapRefSetter, MapInteractionTracker } from './MapControls'
 import { SettingsPanel } from './SettingsPanel'
 import { toSecureImageUrl } from '@/lib/media/imageUrl'
 
@@ -255,6 +255,7 @@ function makePinIcon(
         ? `<div style="position:absolute;top:-9px;right:-20px;z-index:2;display:inline-flex;align-items:center;gap:2px;` +
           `background:var(--color-error-mid);color:var(--color-on-accent);border:1.5px solid var(--color-surface-card);` +
           `border-radius:var(--radius-pill);padding-top:4px;padding-bottom:4px;padding-left:8px;padding-right:8px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,0.25);">` +
+          /* Leaflet DivIcon은 HTML 문자열이라 React 컴포넌트를 못 쓴다 — 유일하게 남은 인라인 svg */
           `<svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" style="display:block"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>` +
           `<span style="font-size:var(--text-badge);font-weight:700;line-height:1;">${favCount}</span></div>`
         : '') +
@@ -2671,11 +2672,7 @@ export default function MapView() {
                 backgroundColor: 'var(--color-gv)',
                 color: 'var(--color-on-accent)',
               }}>
-                <svg width={20} height={20} viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="4" width="18" height="17" rx="2" />
-                  <path d="M3 9h18M8 2v4M16 2v4" />
-                </svg>
+                <Icon name="calendar" size={20} />
               </span>
               <span style={{ minWidth: 0, flex: 1 }}>
                 <span style={{
@@ -2755,11 +2752,7 @@ export default function MapView() {
                 border: '1px solid var(--color-border)',
                 color: 'var(--color-text-sub)',
               }}>
-                <svg width={17} height={17} viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 21s7-5.2 7-11a7 7 0 10-14 0c0 5.8 7 11 7 11z" />
-                  <circle cx="12" cy="10" r="2.5" />
-                </svg>
+                <Icon name="map-pin" size={17} />
               </span>
               <span style={{ minWidth: 0, flex: 1 }}>
                 <span style={{
@@ -3164,13 +3157,7 @@ export default function MapView() {
                   backgroundColor: 'var(--color-surface-card)', border: '1px solid var(--color-border)',
                   color: 'var(--color-text-sub)',
                 }}>
-                  <svg width={16} height={16} viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="8" height="8" rx="1.5" />
-                    <rect x="13" y="3" width="8" height="8" rx="1.5" />
-                    <rect x="3" y="13" width="8" height="8" rx="1.5" />
-                    <rect x="13" y="13" width="8" height="8" rx="1.5" />
-                  </svg>
+                  <Icon name="grid" size={16} />
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700 }}>{area.name}</div>
@@ -3206,12 +3193,7 @@ export default function MapView() {
                         color: 'var(--color-text-body)', textAlign: 'left', cursor: 'pointer',
                       }}
                     >
-                      <svg width={12} height={12} viewBox="0 0 24 24" fill="none"
-                        stroke="var(--color-text-caption)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                        style={{ flexShrink: 0 }}>
-                        <path d="M12 21s7-5.2 7-11a7 7 0 10-14 0c0 5.8 7 11 7 11z" />
-                        <circle cx="12" cy="10" r="2.5" />
-                      </svg>
+                      <Icon name="map-pin" size={12} color="var(--color-text-caption)" style={{ flexShrink: 0 }} />
                       <span style={{ fontSize: 13 }}>{t.name}</span>
                     </button>
                   ))}
@@ -3723,13 +3705,7 @@ export default function MapView() {
             transition: 'left 220ms cubic-bezier(0.32, 0.72, 0, 1)',
           }}
         >
-          <svg
-            width={14} height={14} viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"
-            style={{ transform: dockCollapsed ? 'rotate(180deg)' : undefined, transition: 'transform 220ms' }}
-          >
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
+          <Icon name="chevron-left" size={14} style={{ transform: dockCollapsed ? 'rotate(180deg)' : undefined, transition: 'transform 220ms' }} />
         </button>
       )}
 
@@ -3746,12 +3722,12 @@ export default function MapView() {
           <ZoomSlider zoom={zoom} mapRef={mapRef} />
         ) : (
           <>
-            <FabRound onClick={() => { collapseCurationOnMapInteraction(); mapRef.current?.zoomIn() }}><IcoPlus /></FabRound>
-            <FabRound onClick={() => { collapseCurationOnMapInteraction(); mapRef.current?.zoomOut() }}><IcoMinus /></FabRound>
+            <FabRound onClick={() => { collapseCurationOnMapInteraction(); mapRef.current?.zoomIn() }}><Icon name="plus" size={18} /></FabRound>
+            <FabRound onClick={() => { collapseCurationOnMapInteraction(); mapRef.current?.zoomOut() }}><Icon name="minus" size={18} /></FabRound>
           </>
         )}
         <div style={{ height: isDesktopLayout ? 0 : 8 }} />
-        <FabRound onClick={handleLocate}><IcoLocate /></FabRound>
+        <FabRound onClick={handleLocate}><Icon name="locate" size={20} /></FabRound>
       </div>
 
 
@@ -3795,11 +3771,7 @@ export default function MapView() {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0,
             }}>
-              <svg width={14} height={14} viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" strokeWidth="1.75"
-                strokeLinecap="round" strokeLinejoin="round">
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
+              <Icon name="chevron-left" size={14} />
             </div>
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               &ldquo;{selectedTheater.name}&rdquo;으로 돌아가기

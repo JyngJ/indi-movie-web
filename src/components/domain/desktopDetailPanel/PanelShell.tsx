@@ -1,5 +1,5 @@
 import { IconButton } from '@/components/primitives'
-import { IcoClose, IcoChevronLeft } from './icons'
+import { Icon } from '@/components/primitives'
 
 /* ── 공통 패널 래퍼 ── */
 export function PanelShell({
@@ -40,7 +40,7 @@ export function PanelShell({
         gap: 4,
       }}>
         {onBack && (
-          <IconButton variant="ghost" size={32} aria-label="뒤로가기" onClick={onBack}><IcoChevronLeft /></IconButton>
+          <IconButton variant="ghost" size={32} aria-label="뒤로가기" onClick={onBack}><Icon name="chevron-left" size="lg" /></IconButton>
         )}
         <span style={{
           flex: 1,
@@ -55,7 +55,7 @@ export function PanelShell({
           {title}
         </span>
         {trailing}
-        <IconButton variant="ghost" size={32} aria-label="닫기" onClick={onClose}><IcoClose /></IconButton>
+        <IconButton variant="ghost" size={32} aria-label="닫기" onClick={onClose}><Icon name="close" size={18} /></IconButton>
       </div>
 
       {/* 내용 */}

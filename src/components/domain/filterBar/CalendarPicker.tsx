@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Button, IconButton } from '@/components/primitives'
 import { DOW, today, fmtMD, isSameDay } from './dateHelpers'
-import { IcoNavPrev, IcoNavNext } from './icons'
+import { Icon } from '@/components/primitives'
 
 /* -- CalendarPicker (범위 선택) ----------------------------------- */
 export function CalendarPicker({ startDate, endDate, onApply, onCancel, style }: {
@@ -62,13 +62,13 @@ export function CalendarPicker({ startDate, endDate, onApply, onCancel, style }:
       <div style={{ padding: '16px 16px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
           <IconButton variant="ghost" size={32} aria-label="이전 달" onClick={() => setViewMonth(new Date(year, month - 1, 1))}>
-            <IcoNavPrev />
+            <Icon name="chevron-left" size="md" />
           </IconButton>
           <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 600, color: 'var(--color-text-primary)' }}>
             {year}년 {month + 1}월
           </span>
           <IconButton variant="ghost" size={32} aria-label="다음 달" onClick={() => setViewMonth(new Date(year, month + 1, 1))}>
-            <IcoNavNext />
+            <Icon name="chevron-right" size="md" />
           </IconButton>
         </div>
         <div style={{
