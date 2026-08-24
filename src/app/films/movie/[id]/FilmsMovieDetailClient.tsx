@@ -405,9 +405,35 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
     </div>
   ) : null
 
+  /* PC 2칼럼 masonry — 카드 높이(회차 줄 수) 추정치로 짧은 칼럼에 순서대로 얹는다.
+     CSS columns는 세로 우선으로 순서가 깨져서(관심·미종료 정렬 무력화) 직접 나눈다 (2026-08-24) */
+  function splitTwoColumns(entries: typeof dayTheaters) {
+    const cols: [typeof dayTheaters, typeof dayTheaters] = [[], []]
+    const heights = [0, 0]
+    for (const e of entries) {
+      const rows = Math.max(1, Math.ceil(e.showtimes.length / 3))
+      const h = 96 + rows * 118
+      const i = heights[0] <= heights[1] ? 0 : 1
+      cols[i].push(e)
+      heights[i] += h + 16
+    }
+    return cols
+  }
+
+  function renderColumns(entries: typeof dayTheaters) {
+    if (!isDesktop) return entries.map(renderTheaterCard)
+    const [a, b] = splitTwoColumns(entries)
+    return (
+      <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>{a.map(renderTheaterCard)}</div>
+        <div style={{ flex: 1, minWidth: 0 }}>{b.map(renderTheaterCard)}</div>
+      </div>
+    )
+  }
+
   function renderTheaterCard(entry: (typeof dayTheaters)[number]) {
     return (
-      <div key={entry.theaterId} style={{ borderRadius: 16, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', overflow: 'hidden', ...(isDesktop ? { breakInside: 'avoid' as const, marginBottom: 16 } : { marginBottom: 12 }) }}>
+      <div key={entry.theaterId} style={{ borderRadius: 16, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', overflow: 'hidden', marginBottom: isDesktop ? 16 : 12 }}>
         <button
           onClick={() => router.push(`/films/theater/${entry.theaterId}`)}
           style={{ width: '100%', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, padding: '16px 16px 12px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', minHeight: 'auto', borderBottom: '1px solid var(--color-border)' }}
@@ -537,7 +563,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
             )}
           </>
         ) : (
-          <div style={isDesktop ? { columns: 2, columnGap: 16 } : undefined}>{dayTheaters.map(renderTheaterCard)}</div>
+          <>{renderColumns(dayTheaters)}</>
         )}
       </div>
     </div>

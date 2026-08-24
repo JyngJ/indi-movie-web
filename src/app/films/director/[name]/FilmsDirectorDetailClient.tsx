@@ -8,6 +8,7 @@ import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionR
 import Image from 'next/image'
 import { useMovies, useActiveMovieIds, useDirectorProfile } from '@/lib/supabase/queries'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
+import { toSecureImageUrl } from '@/lib/media/imageUrl'
 import type { Movie } from '@/types/api'
 import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWidget'
 import { shareAndTrack } from '@/lib/analytics/shareTracking'
@@ -26,14 +27,6 @@ const IcoShare = () => <svg width={16} height={16} viewBox="0 0 24 24" fill="non
 
 type SortKey = 'newest' | 'oldest'
 
-/* ── MiniPoster ─────────────────────────────────────────────────── */
-function MiniPoster({ src, title }: { src?: string; title?: string }) {
-  return (
-    <div style={{ width: 52, height: 76, borderRadius: 8, overflow: 'hidden', flexShrink: 0, backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)' }}>
-      {src ? <img src={src} alt={title ? `${title} 포스터` : ''} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> : <div style={{ width: '100%', height: '100%', background: 'var(--color-neutral-800)' }} />}
-    </div>
-  )
-}
 
 /* ── NowPlayingPoster ────────────────────────────────────────────── */
 function NowPlayingPoster({ movie, isDesktop, onClick }: { movie: Movie; isDesktop: boolean; onClick: () => void }) {
@@ -56,27 +49,30 @@ function NowPlayingPoster({ movie, isDesktop, onClick }: { movie: Movie; isDeskt
 }
 
 /* ── FilmographyRow ──────────────────────────────────────────────── */
-function FilmographyRow({ movie, isActive, onClick, isDesktop }: { movie: Movie; isActive: boolean; onClick: () => void; isDesktop: boolean }) {
-  /* 흰 통판 리스트 → 개별 카드 (2026-08-24) — PC 2열 그리드에 얹는다 */
+function FilmographyCell({ movie, isActive, onClick, isDesktop }: { movie: Movie; isActive: boolean; onClick: () => void; isDesktop: boolean }) {
+  /* 상영작 탭 전체 그리드(AllMoviesGrid)와 같은 문법 — 포스터 쫙 + 아래 제목·메타 (2026-08-24) */
   return (
     <button
       onClick={onClick}
-      className="chip-lift"
-      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: isDesktop ? '16px 18px' : '12px 16px', backgroundColor: 'var(--color-surface-card)', border: '1px solid var(--color-border)', borderRadius: 16, width: '100%', cursor: 'pointer', textAlign: 'left', minHeight: 'auto' }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 8, background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', minHeight: 'auto' }}
     >
-      <MiniPoster src={movie.posterUrl} title={movie.title} />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: isActive ? 'var(--color-primary-base)' : 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: isDesktop ? 360 : 180 }}>
+      <div className="hover-lift" style={{ width: '100%', aspectRatio: '2/3', overflow: 'hidden', position: 'relative', background: 'var(--color-neutral-800)' }}>
+        {movie.posterUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={toSecureImageUrl(movie.posterUrl)} alt={movie.title} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        )}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: isDesktop ? 'var(--text-title)' : 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {normalizeTitle(movie.title)}
           </span>
           {isActive && <span style={{ height: 18, padding: '0 8px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', fontSize: 'var(--text-badge)', fontWeight: 700, color: 'var(--color-on-accent)', backgroundColor: 'var(--color-primary-base)', flexShrink: 0 }}>상영중</span>}
-        </div>
-        <div style={{ marginTop: 4, fontSize: 12, color: 'var(--color-text-caption)' }}>
+        </span>
+        <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>
           {[movie.year, movie.genre[0]].filter(Boolean).join(' · ')}
-        </div>
+        </span>
       </div>
-      <IcoChevronRight />
     </button>
   )
 }
@@ -194,7 +190,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
 
         {/* 현재 상영작 */}
         {nowPlaying.length > 0 && (
-          <div style={{ padding: isDesktop ? '56px var(--gutter) 0' : '24px var(--gutter) 0' }}>
+          <div style={{ padding: isDesktop ? '56px 0 0' : '24px var(--gutter) 0' }}>
             <div style={{ margin: '0 0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
               <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
                 현재 상영작 <span style={{ fontSize: 16, color: 'var(--color-primary-base)' }}>{nowPlaying.length}편</span>
@@ -220,7 +216,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
         {/* 작품 목록 */}
         <div style={{ padding: isDesktop ? '64px 0 64px' : '24px 0 52px' }}>
           {/* 헤더 */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 var(--gutter) 12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isDesktop ? '0 0 12px' : '0 var(--gutter) 12px' }}>
             <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)' }}>
               작품 목록 <span style={{ fontSize: 16, color: 'var(--color-text-caption)', fontWeight: 400 }}>{directorMovies.length}편</span>
             </span>
@@ -236,9 +232,9 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
           {directorMovies.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '48px 0', fontSize: 13, color: 'var(--color-text-caption)' }}>작품 정보가 없습니다</div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? '1fr 1fr' : '1fr', gap: isDesktop ? 16 : 12, padding: isDesktop ? '16px 0 0' : '12px var(--gutter) 0' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)', gap: isDesktop ? 20 : 12, padding: isDesktop ? '16px 0 0' : '12px var(--gutter) 0' }}>
               {visibleMovies.map((m) => (
-                <FilmographyRow
+                <FilmographyCell
                   key={m.id}
                   movie={m}
                   isActive={activeIdSet.has(m.id)}
