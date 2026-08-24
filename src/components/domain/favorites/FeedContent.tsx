@@ -37,7 +37,6 @@ export function FeedContent({ authError, onNavigate }: { authError?: string | nu
           title="관심 영화 소식을 모아서 보여드릴게요"
           description="하트로 관심 영화·극장·감독을 모아두면 새 상영 소식이 생길 때 알려드려요."
           returnTo="/feed"
-          illustration={false}
           errorCode={authError}
         />
       </div>

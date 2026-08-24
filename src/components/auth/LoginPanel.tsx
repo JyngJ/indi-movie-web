@@ -15,8 +15,6 @@ interface Props {
   description?: string
   /** 로그인 후 돌아갈 경로. 생략 시 현재 경로 */
   returnTo?: string
-  /** 일러스트 표시 여부 — 시트에서는 끄고 탭 홈에서는 켠다 */
-  illustration?: boolean
   /** 콜백 실패 코드 (?auth_error=) */
   errorCode?: string | null
 }
@@ -25,7 +23,6 @@ export function LoginPanel({
   title = '내 영화 취향을 기억할게요',
   description = '로그인하면 관심 영화·극장을 저장하고, 새로 상영 소식이 생기면 알려드려요.',
   returnTo,
-  illustration = true,
   errorCode,
 }: Props) {
   const { signIn } = useAuth()
@@ -42,14 +39,6 @@ export function LoginPanel({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, textAlign: 'center' }}>
-      {illustration && (
-        <img
-          src="/illust/seated-back.png"
-          alt="영화관 좌석에 앉아 스크린을 바라보는 관객 뒷모습 일러스트"
-          style={{ width: 160, height: 'auto', display: 'block', opacity: 0.9 }}
-        />
-      )}
-
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <h2 style={{ margin: 0, fontSize: 'var(--text-h2)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
           {title}
