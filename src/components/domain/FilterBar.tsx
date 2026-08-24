@@ -277,7 +277,9 @@ export function FilterBar({
 
   /* 큐레이션 '관심 작품 상영 중 → 모두보기'가 보내는 신호 — 칩 상태를 실제로 켜서
      칩 UI와 지도 필터가 어긋나지 않게 한다 (setFilters 직접 조작이면 칩이 안 켜진다) */
-  const lastFavSignalRef = useRef<number | undefined>(undefined)
+  /* 초기값을 그대로 기억해 마운트 시점의 값(0)을 신호로 오해하지 않게 한다 —
+     이 버그로 지도 진입만 해도 관심 필터가 켜진 채 시작했다 (2026-08-24) */
+  const lastFavSignalRef = useRef<number | undefined>(turnOnFavoritesSignal)
   useEffect(() => {
     if (turnOnFavoritesSignal === undefined) return
     if (lastFavSignalRef.current === turnOnFavoritesSignal) return
