@@ -1,7 +1,7 @@
 'use client'
 
 import { PosterThumb } from '@/components/domain'
-import { BubbleTail, Icon } from '@/components/primitives'
+import { BubbleTail, Icon, Divider } from '@/components/primitives'
 import { finiteNumber } from '@/lib/map/searchUtils'
 import { toSecureImageUrl } from '@/lib/media/imageUrl'
 import { withFlag } from '@/lib/nations'
@@ -251,7 +251,7 @@ export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, 
               )}
             </div>
             {/* 실선 디바이더 — 점선에서 변경 (피그마 확정) */}
-            <div style={{ width: 1, alignSelf: 'stretch', backgroundColor: 'var(--color-border)', flexShrink: 0 }} />
+            <Divider orientation="vertical" />
             <div style={{ display: 'flex', flexDirection: 'column', gap: SLOT_GAP }}>
               <div style={{
                 fontSize: 'var(--text-badge)', fontWeight: 500, textAlign: 'center', whiteSpace: 'nowrap',

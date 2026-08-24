@@ -6,7 +6,7 @@ import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { FooterWordmark } from '@/components/domain/FooterWordmark'
 import type { FaqSection } from './content'
-import { Icon } from '@/components/primitives'
+import { Icon, Divider } from '@/components/primitives'
 
 /**
  * FAQ 본문 — 상영작 탭과 같은 프레임을 쓴다.
@@ -130,7 +130,7 @@ export function FaqClient({ sections }: { sections: FaqSection[] }) {
         <p style={{ margin: '4px 0 0', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
           영화볼지도 서비스 소개와 이용 안내
         </p>
-        <div style={{ marginTop: 16, height: 1, background: 'var(--color-border)' }} />
+        <Divider style={{ marginTop: 16 }} />
       </header>
 
       {/* 본문 — PC 최대폭 컬럼 중앙 정렬 (상영작 탭과 동일한 폭) */}

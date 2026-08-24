@@ -8,6 +8,8 @@ import { ShowtimeCell } from './ShowtimeCell'
 import { Button } from '@/components/primitives/Button'
 import { IconButton } from '@/components/primitives/IconButton'
 import { Icon } from '@/components/primitives/Icon'
+import { Divider } from '@/components/primitives/Divider'
+import { EmptyState } from '@/components/primitives/EmptyState'
 import { TheaterFavoriteAction } from '@/components/domain/favorites/TheaterFavoriteAction'
 import { FilterPill } from '@/components/primitives/FilterPill'
 import { Chip } from '@/components/primitives/Chip'
@@ -1155,19 +1157,12 @@ export function TheaterSheet({
               ))
             : allMovieEntries.length === 0
               ? (
-                  <div style={{
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '8px 0 12px',
-                    gap: 8,
-                    minWidth: '100%',
-                  }}>
-                    <img src="/illust/no-showtimes.png" alt="상영 정보 없음" style={{ width: 78, height: 104, opacity: 0.7 }} />
-                    <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>확인된 상영 정보가 없어요</span>
-                  </div>
+                  <EmptyState
+                    illustration={{ src: '/illust/no-showtimes.png', alt: '상영 정보 없음', width: 78, height: 104 }}
+                    message="확인된 상영 정보가 없어요"
+                    paddingY={8}
+                    style={{ flex: 1, minWidth: '100%', paddingBottom: 12 }}
+                  />
                 )
               : (() => {
                   return sortedAllEntries.map((entry) => {
@@ -1507,14 +1502,12 @@ export function TheaterSheet({
                   ))
                 : allMovieEntries.length === 0
                   ? (
-                      <div style={{
-                        flex: 1, display: 'flex', flexDirection: 'column',
-                        alignItems: 'center', justifyContent: 'center',
-                        padding: '8px 0 12px', gap: 8, minWidth: '100%',
-                      }}>
-                        <img src="/illust/no-showtimes.png" alt="상영 정보 없음" style={{ width: 78, height: 104, opacity: 0.7 }} />
-                        <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>확인된 상영 정보가 없어요</span>
-                      </div>
+                      <EmptyState
+                        illustration={{ src: '/illust/no-showtimes.png', alt: '상영 정보 없음', width: 78, height: 104 }}
+                        message="확인된 상영 정보가 없어요"
+                        paddingY={8}
+                        style={{ flex: 1, minWidth: '100%', paddingBottom: 12 }}
+                      />
                     )
                   : <>
                       {/* 조건 일치 영화 */}
@@ -1749,7 +1742,7 @@ export function TheaterSheet({
                                         <Icon name="clapperboard" size={14} style={{ flexShrink: 0 }} />
                     영화 상세 정보
                   </button>
-                  <div style={{ width: 1, backgroundColor: 'var(--color-border)' }} />
+                  <Divider orientation="vertical" />
                   <button
                     className="hover-raise"
                     onClick={() => { onMovieSearch?.(movie.id, movie.title); onClose() }}

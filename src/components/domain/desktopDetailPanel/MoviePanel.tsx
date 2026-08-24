@@ -9,7 +9,7 @@ import { locationAdapter } from '@/lib/adapters/location'
 import { calculateAndFormatDistance, calculateDistanceKm } from '@/lib/map/distanceUtils'
 import { getRegionFromAddress } from '@/lib/regions'
 import { formatDateLabel } from '@/lib/date'
-import { Toast, Button } from '@/components/primitives'
+import { Toast, Button, Divider } from '@/components/primitives'
 import { MovieInfoTable } from '@/components/domain/movieDetail/MovieInfoTable'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 import { PanelShell } from './PanelShell'
@@ -328,9 +328,9 @@ function MovieTheatersTab({
 
   const sectionDivider = (label: string) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '32px 0 12px' }}>
-      <div style={{ flex: 1, height: 1, backgroundColor: 'var(--color-border)' }} />
+      <Divider flex />
       <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-sub)', whiteSpace: 'nowrap' }}>{label}</span>
-      <div style={{ flex: 1, height: 1, backgroundColor: 'var(--color-border)' }} />
+      <Divider flex />
     </div>
   )
 

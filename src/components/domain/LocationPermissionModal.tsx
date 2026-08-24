@@ -6,7 +6,7 @@ import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useLockBodyScroll } from '@/hooks/useLockBodyScroll'
 import type { LocationPermState } from '@/hooks/useLocationPermission'
 import { Lock } from 'lucide-react'
-import { Button, Icon } from '@/components/primitives'
+import { Button, Icon, Divider } from '@/components/primitives'
 
 interface Props {
   state: Extract<LocationPermState, 'prompt' | 'requesting' | 'denied'>
@@ -81,7 +81,7 @@ export function LocationPermissionModal({ state, onRequest, onDismiss }: Props) 
           maskPosition: 'center',
         }} />
       </div>
-      <div style={{ height: 1, background: 'var(--color-border)' }} />
+      <Divider />
 
       {/* 본문 */}
       <div style={{ padding: '28px var(--gutter) 0', textAlign: 'center' }}>

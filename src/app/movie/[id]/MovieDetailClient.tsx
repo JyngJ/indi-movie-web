@@ -5,7 +5,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMovieDetail, useMovieTheaterShowtimes, useActiveMovieIds } from '@/lib/supabase/queries'
-import { TheaterCardSkeleton } from '@/components/primitives'
+import { TheaterCardSkeleton, Divider, EmptyState } from '@/components/primitives'
 import type { MovieDetail, MovieTheaterEntry } from '@/lib/supabase/queries'
 import { withFlagsRaw } from '@/lib/nations'
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
@@ -423,11 +423,11 @@ function TheatersTab({ movieId, onMapClick, onGoToTheater, desktop = false, init
 
   const sectionDivider = (label: string) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '40px 0 16px' }}>
-      <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
+      <Divider flex />
       <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-sub)', whiteSpace: 'nowrap' }}>
         {label}
       </span>
-      <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
+      <Divider flex />
     </div>
   )
 
@@ -464,18 +464,14 @@ function TheatersTab({ movieId, onMapClick, onGoToTheater, desktop = false, init
           ))}
         </div>
       ) : theaters.length === 0 ? (
-        <div style={{ textAlign: 'center', paddingTop: 40, fontSize: 13, color: 'var(--color-text-caption)' }}>
-          상영 중인 영화관이 없습니다
-        </div>
+        <EmptyState message="상영 중인 영화관이 없습니다" paddingY={40} style={{ paddingBottom: 0 }} />
       ) : regionId ? (
         <>
           {/* 선택 지역 섹션 */}
           {inRegion.length > 0
             ? grid(inRegion)
             : (
-              <div style={{ textAlign: 'center', padding: '28px 0 4px', fontSize: 13, color: 'var(--color-text-caption)' }}>
-                {regionId} 지역 상영 정보가 없습니다
-              </div>
+              <EmptyState message={`${regionId} 지역 상영 정보가 없습니다`} paddingY={28} />
             )
           }
 
@@ -597,10 +593,11 @@ export function MovieDetailClient({ movieId, theaterId, initialData, initialShow
         <div style={{ position: 'sticky', top: 0, zIndex: 50, paddingTop: 'env(safe-area-inset-top)', backgroundColor: 'var(--color-surface-bg)' }}>
           <NavBar title="영화 정보" titleVisible onBack={handleBack} onClose={handleClose} />
         </div>
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}>
-          <span style={{ fontSize: 14, color: 'var(--color-text-caption)' }}>영화를 찾을 수 없습니다</span>
-          <button onClick={handleBack} style={{ fontSize: 13, color: 'var(--color-primary-base)', border: 'none', background: 'none', cursor: 'pointer' }}>돌아가기</button>
-        </div>
+        <EmptyState
+          message="영화를 찾을 수 없습니다"
+          action={<button onClick={handleBack} style={{ fontSize: 13, color: 'var(--color-primary-base)', border: 'none', background: 'none', cursor: 'pointer' }}>돌아가기</button>}
+          style={{ flex: 1, gap: 12 }}
+        />
       </div>
     )
   }

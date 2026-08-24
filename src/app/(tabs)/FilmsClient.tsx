@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { SectionHeader, MovieCardSkeleton, FabRound, Icon } from '@/components/primitives'
+import { SectionHeader, MovieCardSkeleton, FabRound, Icon, Divider } from '@/components/primitives'
 import { AllMoviesGrid } from '@/components/domain/AllMoviesGrid'
 import { RouteProgressBar, navStart } from '@/components/domain/RouteProgressBar'
 import { AnniversarySection } from '@/components/domain/AnniversarySection'
@@ -761,7 +761,7 @@ export default function FilmsPage() {
         )}
 
         {/* 구분선 */}
-        <div style={{ marginTop: 16, height: 1, background: 'var(--color-border)' }} />
+        <Divider style={{ marginTop: 16 }} />
       </header>
 
       <RouteProgressBar isDesktop={isDesktop} />

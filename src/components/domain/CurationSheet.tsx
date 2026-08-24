@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { usePendingNavItem } from '@/hooks/usePendingNavItem'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
-import { Button, Icon } from '@/components/primitives'
+import { Button, Icon, Divider, EmptyState } from '@/components/primitives'
 import { PosterThumb } from './PosterThumb'
 import { HoverPopup } from './CurationSectionRow'
 import { ChevronDown } from 'lucide-react'
@@ -392,18 +392,6 @@ function Section({ title, icon, action, style, children }: {
   )
 }
 
-/** 섹션 간 구분 — 종이 카탈로그풍 1px 헤어라인 (풀블리드, 그림자 없음)
- *  상하 간격은 부모 flex의 SECTION_GAP(16px)이 그대로 담당 — divider 자체 margin 없음 */
-function SectionDivider() {
-  return (
-    <div aria-hidden style={{
-      height: 1,
-      width: '100%',
-      flexShrink: 0,
-      backgroundColor: 'var(--color-border)',
-    }} />
-  )
-}
 
 const KIND_LABEL: Record<RecentlyViewedKind, string> = {
   movie: '영화',
@@ -437,9 +425,7 @@ function RecentList({
 
   if (items.length === 0) {
     return (
-      <p style={{ margin: 0, paddingLeft: 'var(--gutter)', paddingRight: 'var(--gutter)', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
-        최근 찾아본 영화·극장·감독이 아직 없어요
-      </p>
+<EmptyState message="최근 찾아본 영화·극장·감독이 아직 없어요" paddingY={0} />
     )
   }
   return (
@@ -641,7 +627,7 @@ export function CurationSections({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: SECTION_GAP }}>
-      <SectionDivider />
+      <Divider />
       {sections.map((section) => {
         const handleSelect = section.key === 'todayShow' || section.key === 'soloTheater'
           ? (id: string, title: string) => {
@@ -714,7 +700,7 @@ export function CurationSections({
                 </div>
               )}
             </Section>
-            <SectionDivider />
+            <Divider />
           </div>
         )
       })}

@@ -12,7 +12,7 @@ import { toSecureImageUrl } from '@/lib/media/imageUrl'
 import type { Movie } from '@/types/api'
 import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWidget'
 import { shareAndTrack } from '@/lib/analytics/shareTracking'
-import { Toast, Avatar, IconButton, SortToggle, Icon } from '@/components/primitives'
+import { Toast, Avatar, IconButton, SortToggle, Icon, EmptyState } from '@/components/primitives'
 import { Button } from '@/components/primitives'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 
@@ -226,7 +226,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
           </div>
 
           {directorMovies.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '48px 0', fontSize: 13, color: 'var(--color-text-caption)' }}>작품 정보가 없습니다</div>
+            <EmptyState message="작품 정보가 없습니다" paddingY={48} />
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)', gap: isDesktop ? 20 : 12, padding: isDesktop ? '16px 0 0' : '12px var(--gutter) 0' }}>
               {visibleMovies.map((m) => (

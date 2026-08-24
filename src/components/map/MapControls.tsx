@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import type { Map as LeafletMap } from 'leaflet'
-import { IconButton } from '@/components/primitives'
+import { IconButton, Divider } from '@/components/primitives'
 
 /* ── 줌 이벤트 트래커 ───────────────────────────────────────────── */
 export function ZoomTracker({ onZoom }: { onZoom: (z: number) => void }) {
@@ -180,7 +180,7 @@ export function ZoomSlider({
       userSelect: 'none',
     }}>
       <IconButton variant="ghost" size={32} aria-label="지도 확대" style={{ fontSize: 20, fontWeight: 300, lineHeight: 1 }} onClick={() => stepStep(1)}>+</IconButton>
-      <div style={{ width: 20, height: 1, backgroundColor: 'var(--color-border)', flexShrink: 0 }} />
+      <Divider style={{ width: 20 }} />
       <div
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
@@ -229,7 +229,7 @@ export function ZoomSlider({
           }} />
         </div>
       </div>
-      <div style={{ width: 20, height: 1, backgroundColor: 'var(--color-border)', flexShrink: 0 }} />
+      <Divider style={{ width: 20 }} />
       <IconButton variant="ghost" size={32} aria-label="지도 축소" style={{ fontSize: 20, fontWeight: 300, lineHeight: 1 }} onClick={() => stepStep(-1)}>−</IconButton>
     </div>
   )

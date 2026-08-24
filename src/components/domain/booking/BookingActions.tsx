@@ -1,9 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ExternalLink, Loader2, Share2, X } from 'lucide-react'
 
-import { IconButton } from '@/components/primitives'
+import { IconButton, Icon } from '@/components/primitives'
 import { trackEvent } from '@/lib/analytics/client'
 
 /**
@@ -117,8 +116,8 @@ export function BookingCtaButton({
       >
         {label}
         {phase === 'opening'
-          ? <Loader2 size={s.extIcon} strokeWidth={2} className="booking-cta-spin" />
-          : <ExternalLink size={s.extIcon} strokeWidth={1.75} />}
+          ? <Icon name="loading" size={s.extIcon} strokeWidth={2} className="booking-cta-spin" />
+          : <Icon name="external-link" size={s.extIcon} strokeWidth={1.75} />}
       </a>
     )
   }
@@ -140,7 +139,7 @@ export function ShareScheduleButton({ variant, onClick }: { variant: Variant; on
   const s = SPEC[variant]
   return (
     <IconButton variant="overlay" size={s.actionBtn} onClick={onClick} aria-label="상영 시간표 공유" title="상영 시간표 공유">
-      <Share2 size={s.shareIcon} strokeWidth={1.75} />
+      <Icon name="share" size={s.shareIcon} strokeWidth={1.75} />
     </IconButton>
   )
 }
@@ -149,7 +148,7 @@ export function CloseRoundButton({ variant, onClick, label = '선택 해제' }: 
   const s = SPEC[variant]
   return (
     <IconButton variant="overlay" size={32} onClick={onClick} aria-label={label}>
-      <X size={s.closeIcon} strokeWidth={1.75} />
+      <Icon name="close" size={s.closeIcon} strokeWidth={1.75} />
     </IconButton>
   )
 }

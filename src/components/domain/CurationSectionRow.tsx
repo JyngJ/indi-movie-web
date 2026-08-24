@@ -7,7 +7,7 @@ import { PosterThumb } from '@/components/domain/PosterThumb'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { withFlag } from '@/lib/nations'
 import type { Movie } from '@/types/api'
-import { BubbleTail, bubbleTailReach, GenreChip, PosterChip, SectionHeader, CardContainer, ScrollNavButton } from '@/components/primitives'
+import { BubbleTail, bubbleTailReach, GenreChip, PosterChip, SectionHeader, CardContainer, ScrollNavButton, Divider } from '@/components/primitives'
 import type { SectionAnalytics } from '@/lib/curation/sectionRuns'
 import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
 import { Carousel, CarouselContent, CarouselItem, useCarousel, RevealItem, RevealGroup } from '@/components/motion'
@@ -216,7 +216,7 @@ export function HoverPopup({ movie, x, y, posterWidth = 0 }: {
 
       {synopsis && (
         <>
-          <div style={{ height: 1, background: 'var(--color-border)' }} />
+          <Divider />
           <span
             style={{
               fontSize: 12,

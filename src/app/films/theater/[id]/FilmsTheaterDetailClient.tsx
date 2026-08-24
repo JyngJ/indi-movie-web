@@ -16,7 +16,7 @@ import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWi
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { shareAndTrack } from '@/lib/analytics/shareTracking'
 import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/components/domain/booking/BookingActions'
-import { Skeleton, Button, Icon } from '@/components/primitives'
+import { Skeleton, Button, Icon, EmptyState } from '@/components/primitives'
 import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
 import { ShowtimeCell } from '@/components/domain/ShowtimeCell'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
@@ -510,9 +510,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
             {[0, 1, 2].map((i) => <MovieShowtimeCardSkeleton key={i} isDesktop={isDesktop} />)}
           </div>
         ) : movieShowtimeGroups.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px 0', fontSize: 13, color: 'var(--color-text-caption)' }}>
-            이 날 상영 정보가 없습니다
-          </div>
+          <EmptyState message="이 날 상영 정보가 없습니다" paddingY={40} />
         ) : (
           <div className="reveal-rise" style={isDesktop ? { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 0, columnGap: 16 } : {}}>
             {movieShowtimeGroups.map(({ movie, showtimes }) => (

@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
-import { Chip, Avatar, IconButton, Button, Icon } from '@/components/primitives'
+import { Chip, Avatar, IconButton, Button, Icon, Divider, EmptyState } from '@/components/primitives'
 import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
 import { addDaysIso, toKstIsoDate } from '@/lib/date'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
@@ -534,11 +534,11 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
         {isLoading ? (
           <div style={{ height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-caption)', fontSize: 13 }}>불러오는 중…</div>
         ) : dayTheaters.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px 0', fontSize: 13, color: 'var(--color-text-caption)' }}>이 날 상영 정보가 없습니다</div>
+          <EmptyState message="이 날 상영 정보가 없습니다" paddingY={40} />
         ) : regionId ? (
           <>
             {inRegionEntries.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '16px 0', fontSize: 13, color: 'var(--color-text-caption)' }}>{regionId} 지역 상영 정보가 없습니다</div>
+              <EmptyState message={`${regionId} 지역 상영 정보가 없습니다`} paddingY={16} />
             ) : (
               renderColumns(inRegionEntries)
             )}
@@ -546,9 +546,9 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
               <>
                 {/* 지역 구분선 — 안 보인다는 피드백으로 여백·글자 키움 (2026-08-24). 그리드 전체 폭 차지 */}
                 <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 12, margin: isDesktop ? '40px 0 16px' : '24px 0 8px' }}>
-                  <div style={{ flex: 1, height: 1, backgroundColor: 'var(--color-border)' }} />
+                  <Divider flex />
                   <span style={{ fontSize: 14, color: 'var(--color-text-sub)', fontWeight: 700, whiteSpace: 'nowrap' }}>{regionId} 외 지역 영화관</span>
-                  <div style={{ flex: 1, height: 1, backgroundColor: 'var(--color-border)' }} />
+                  <Divider flex />
                 </div>
                 {renderColumns(otherRegionEntries)}
               </>

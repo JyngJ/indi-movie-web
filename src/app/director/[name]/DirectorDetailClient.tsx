@@ -5,7 +5,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMovies, useActiveMovieIds, useDirectorProfile } from '@/lib/supabase/queries'
 import type { Movie } from '@/types/api'
-import { Toast, IconButton, SortToggle, Icon } from '@/components/primitives'
+import { Toast, IconButton, SortToggle, Icon, EmptyState } from '@/components/primitives'
 import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
@@ -344,9 +344,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
 
           {/* 리스트 */}
           {directorMovies.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: isDesktop ? '56px 0' : '40px 0 0', fontSize: 13, color: 'var(--color-text-caption)' }}>
-              작품 정보가 없습니다
-            </div>
+            <EmptyState message="작품 정보가 없습니다" paddingY={isDesktop ? 56 : 40} style={isDesktop ? undefined : { paddingBottom: 0 }} />
           ) : (
             <div style={{
               borderRadius: isDesktop ? 0 : 12,

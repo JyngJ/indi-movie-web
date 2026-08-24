@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { usePendingNavItem } from '@/hooks/usePendingNavItem'
-import { Button, IconButton, SearchBar, SearchBarButton, Icon } from '@/components/primitives'
+import { Button, IconButton, SearchBar, SearchBarButton, Icon, Divider } from '@/components/primitives'
 import { AddRequestModal, AddRequestCtaButton } from '@/components/domain/AddRequestModal'
 // 지도 탭과 검색 기록을 공유 — 같은 localStorage 키를 쓰는 지도 쪽 유틸을 그대로 재사용한다.
 // 지도에서 검색한 극장/영화가 상영작 탭 "최근 검색"에도 보이고, 그 반대도 마찬가지.
@@ -299,7 +299,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
                 <p style={{ padding: '12px 16px 8px', margin: 0, fontSize: 12, color: 'var(--color-text-caption)', letterSpacing: '-0.1px' }}>
                   영화관, 영화, 감독을 모두 검색할 수 있어요.
                 </p>
-                <div style={{ height: 1, backgroundColor: 'var(--color-border)', margin: '0 12px 4px' }} />
+                <Divider inset={12} style={{ marginBottom: 4 }} />
                 {HINTS.map(({ cat, ex }) => (
                   <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 16px' }}>
                     <span style={{ fontSize: 12, color: 'var(--color-text-caption)', width: 38, flexShrink: 0 }}>{cat}</span>
