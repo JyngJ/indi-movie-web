@@ -359,9 +359,10 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
             ))}
           </div>
         </div>
-        {/* PC — 액션 행은 히어로 텍스트 컬럼의 바닥(포스터 하단 라인)에 맞춘다 (2026-08-24) */}
+        {/* PC — 액션 행은 히어로 텍스트 컬럼의 바닥(포스터 하단 라인)에 붙이고,
+            오른쪽 끝은 본문 컬럼의 우측 세로선(사이드바 320 + gap 32 앞)에 정렬한다 (2026-08-24) */}
         {isDesktop && (
-          <div style={{ marginTop: 'auto', paddingTop: 20, maxWidth: 480 }}>
+          <div style={{ marginTop: 'auto', paddingTop: 20, marginRight: 352 }}>
             {actionRow}
           </div>
         )}

@@ -22,7 +22,6 @@ function useIsDesktop() {
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
 const IcoChevronLeft = () => <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
 const IcoChevronRight = () => <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
-const IcoChevronDown = ({ flipped }: { flipped?: boolean }) => <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ transform: flipped ? 'rotate(180deg)' : undefined, transition: 'transform 200ms' }}><path d="M6 9l6 6 6-6" /></svg>
 const IcoShare = () => <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>
 
 type SortKey = 'newest' | 'oldest'
@@ -85,8 +84,6 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
   const router = useRouter()
   const isDesktop = useIsDesktop()
   const [sort, setSort] = useState<SortKey>('newest')
-  const [expanded, setExpanded] = useState(false)
-  const COLLAPSED_COUNT = 5
 
   const { data: movies = [], isLoading } = useMovies()
   const { data: activeIds = [] } = useActiveMovieIds()
@@ -100,8 +97,8 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
   }, [movies, directorName, sort])
 
   const nowPlaying = useMemo(() => directorMovies.filter((m) => activeIdSet.has(m.id)), [directorMovies, activeIdSet])
-  const visibleMovies = expanded ? directorMovies : directorMovies.slice(0, COLLAPSED_COUNT)
-  const hiddenCount = directorMovies.length - COLLAPSED_COUNT
+  /* 접기(N편 더 보기)는 뺐다 (2026-08-24) — 필모 십수 편을 굳이 접을 이유가 없다 */
+  const visibleMovies = directorMovies
 
   if (isLoading) {
     return <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}><Toast message="데이터 불러오는 중…" visible /></div>
@@ -195,7 +192,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
 
         {/* 현재 상영작 */}
         {nowPlaying.length > 0 && (
-          <div style={{ padding: '20px var(--gutter) 0' }}>
+          <div style={{ padding: isDesktop ? '56px var(--gutter) 0' : '24px var(--gutter) 0' }}>
             <div style={{ margin: '0 0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
               <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
                 현재 상영작 <span style={{ fontSize: 16, color: 'var(--color-primary-base)' }}>{nowPlaying.length}편</span>
@@ -219,7 +216,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
 
         {!isDesktop && <div aria-hidden style={{ height: 8, backgroundColor: 'var(--color-surface-raised)', marginTop: 20 }} />}
         {/* 작품 목록 */}
-        <div style={{ padding: isDesktop ? '20px 0 64px' : '20px 0 52px' }}>
+        <div style={{ padding: isDesktop ? '64px 0 64px' : '24px 0 52px' }}>
           {/* 헤더 */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 var(--gutter) 12px', borderBottom: '1px solid var(--color-border)' }}>
             <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)' }}>
@@ -242,25 +239,12 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
                 <FilmographyRow
                   key={m.id}
                   movie={m}
-                  isLast={i === visibleMovies.length - 1 && (expanded || hiddenCount <= 0)}
+                  isLast={i === visibleMovies.length - 1}
                   isActive={activeIdSet.has(m.id)}
                   onClick={() => router.push(`/films/movie/${m.id}`)}
                   isDesktop={isDesktop}
                 />
               ))}
-              {hiddenCount > 0 && (
-                /* 면 색이 Button tertiary와 같다 — 목록 하단에 붙는 형태라 위 구분선만 얹는다 */
-                <Button
-                  variant="tertiary"
-                  size="sm"
-                  fullWidth
-                  onClick={() => setExpanded(!expanded)}
-                  style={{ borderTop: '1px solid var(--color-border)', borderRadius: 0 }}
-                >
-                  <IcoChevronDown flipped={expanded} />
-                  {expanded ? '접기' : `${hiddenCount}편 더 보기`}
-                </Button>
-              )}
             </div>
           )}
         </div>
