@@ -48,7 +48,7 @@ export function ExpandableSynopsis({ text }: { text: string }) {
         <button
           onClick={() => setExpanded(true)}
           style={{
-            background: 'none', border: 'none', padding: '6px 0 0', minHeight: 'auto', cursor: 'pointer',
+            background: 'none', border: 'none', paddingTop: 8, paddingBottom: 8, paddingLeft: 0, paddingRight: 0, minHeight: 'auto', cursor: 'pointer',
             fontSize: 14, lineHeight: 1.4, color: 'var(--color-text-caption)',
           }}
         >

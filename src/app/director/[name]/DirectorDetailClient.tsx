@@ -307,7 +307,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
                     <img src={toSecureImageUrl(m.posterUrl)} alt={m.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                   )}
                 </div>
-                <div style={{ marginTop: 6, fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.title}</div>
+                <div style={{ marginTop: 8, fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.title}</div>
               </button>
             ))}
           </div>
