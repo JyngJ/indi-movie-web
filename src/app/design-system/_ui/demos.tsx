@@ -252,8 +252,7 @@ const DEMOS: Record<string, ReactNode> = {
         <span style={{ color: 'var(--color-error)' }}><Icon name="heart" size="lg" fill="currentColor" strokeWidth={0} /></span>
         <span style={{ color: 'var(--color-text-caption)' }}><Icon name="heart" size="lg" /></span>
       </Case>
-      <Case label="브랜드 마크 — lucide에 없어 직접 그린 것">
-        <Icon name="kakao" size="lg" />
+      <Case label="브랜드 마크 — lucide에 없어 직접 그린 것(링크·출처 표시용)">
         <Icon name="instagram" size="lg" />
         <Icon name="github" size="lg" />
         <Icon name="linkedin" size="lg" />

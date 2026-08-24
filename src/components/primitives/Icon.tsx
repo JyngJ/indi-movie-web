@@ -43,14 +43,13 @@ function strokeFor(px: number) {
 const DEFAULT_STROKE = 1.75
 
 /* -- 커스텀 글리프 ------------------------------------------------ */
-/* lucide에 없는 것만 손으로 그린다(브랜드 마크). 나머지는 절대 새로 그리지 않는다. */
-
-const KakaoGlyph = ({ size = 24, ...rest }: LucideProps) => (
-  // 면으로 된 브랜드 마크 — 호출부가 fill을 지정해도 채움을 유지한다
-  <svg {...rest} width={size} height={size} viewBox="0 0 24 24" fill="currentColor" stroke="none">
-    <path d="M12 3C6.48 3 2 6.58 2 11c0 2.83 1.86 5.32 4.66 6.74l-.95 3.53c-.08.31.25.56.52.38l4.2-2.79c.51.05 1.03.08 1.57.08 5.52 0 10-3.58 10-8S17.52 3 12 3z" />
-  </svg>
-)
+/*
+ * lucide에 없는 것만 손으로 그린다. 나머지는 절대 새로 그리지 않는다.
+ *
+ * 여기 있는 마크는 링크·출처 표시용이다. 브랜드가 규격을 못박아 둔 것(카카오 로그인
+ * 버튼처럼 색·비율·문구까지 정해진 것)은 레지스트리에 두지 않는다 — 이 파일의 획·크기
+ * 규칙이 그 규격을 덮어쓸 수 있기 때문이다. 그런 마크는 해당 컴포넌트가 직접 갖는다.
+ */
 
 const InstagramGlyph = ({ size = 24, strokeWidth = DEFAULT_STROKE, ...rest }: LucideProps) => (
   <svg
@@ -147,7 +146,6 @@ const REGISTRY = {
   'external-link': ExternalLink,
   send: Send,
   instagram: InstagramGlyph,
-  kakao: KakaoGlyph,
   github: GithubGlyph,
   linkedin: LinkedInGlyph,
 } satisfies Record<string, ComponentType<LucideProps>>
