@@ -33,9 +33,11 @@ export function FeedContent({ authError, onNavigate }: { authError?: string | nu
     return (
       <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '32px var(--gutter)' }}>
         <LoginPanel
-          title="관심 영화 소식, 카톡으로 받아보세요"
+          /* 카톡 알림은 아직 안 나갔다 — 실제 되는 것만 말한다 (2026-08-24) */
+          title="관심 영화 소식을 모아서 보여드릴게요"
           description="하트로 관심 영화·극장·감독을 모아두면 새 상영 소식이 생길 때 알려드려요."
           returnTo="/feed"
+          illustration={false}
           errorCode={authError}
         />
       </div>
