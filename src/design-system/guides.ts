@@ -152,7 +152,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
   },
 
   Icon: {
-    intro: '서비스의 유일한 아이콘 진입점입니다. lucide를 소스로 쓰고, lucide에 없는 브랜드 마크(kakao·instagram·github·linkedin)만 직접 그립니다. 새 글리프가 필요하면 호출부에서 svg를 그리지 말고 레지스트리에 이름을 추가합니다.',
+    intro: '서비스의 유일한 아이콘 진입점입니다. lucide를 소스로 쓰고, lucide v1이 뺀 브랜드 마크(instagram·github·linkedin)만 직접 그립니다. 카카오 로그인처럼 규격이 정해진 마크는 레지스트리에 두지 않고 그 컴포넌트가 직접 갖습니다. 새 글리프가 필요하면 호출부에서 svg를 그리지 말고 레지스트리에 이름을 추가합니다.',
     specs: [
       { title: '크기', desc: 'xs 12 · sm 14 · md 16(기본) · lg 20 · xl 24. px를 직접 넘길 수 있지만 기본은 토큰입니다.' },
       { title: '획 굵기', desc: '크기에서 파생합니다 — 12 이하 2.5, 16 이하 2, 그 위 1.75. 24 뷰박스를 12px로 줄이면 1.75 획은 0.9px가 되어 사라지기 때문입니다.' },

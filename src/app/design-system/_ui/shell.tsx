@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
+import { Icon } from '@/components/primitives'
 import { siblings } from './nav'
 
 /* 문서 사이트 조각들. 제품 컴포넌트가 아니라 문서 전용이므로 여기서만 쓴다. */
@@ -185,7 +186,14 @@ export function SpecRow({ visual, title, desc }: { visual?: ReactNode; title: st
   )
 }
 
-/** Do / Don't 2단 카드. 하단 액센트 바로 구분한다. */
+/**
+ * Do / Don't 2단 카드. 상단 액센트 바로 구분한다.
+ *
+ * 색은 시맨틱 토큰을 쓴다 — Do는 --color-success, Don't는 --color-error.
+ * 예전에는 Do가 primary(파랑), Don't가 neutral(회색)이었는데, 파랑은 이 문서 안에서
+ * 링크·선택 상태에도 쓰는 색이라 "권장"이라는 뜻을 갖지 못했고, 회색 Don't는 비활성으로
+ * 읽혀 금지가 아니라 "안 중요한 것"처럼 보였다. 옳고 그름은 초록/빨강이 맡는다.
+ */
 export function UsageCards({ items }: {
   items: { kind: 'do' | 'dont'; visual?: ReactNode; rule: string }[]
 }) {
@@ -208,13 +216,18 @@ export function UsageCards({ items }: {
           )}
           <div style={{
             height: 3,
-            background: it.kind === 'do' ? 'var(--color-primary-base)' : 'var(--color-neutral-300)',
+            background: it.kind === 'do' ? 'var(--color-success)' : 'var(--color-error)',
           }} />
           <div style={{ paddingTop: 'var(--spacing-3)' }}>
+            {/* 색만으로 옳고 그름을 말하면 색각 이상에서 두 카드가 같아진다 — 표시를 함께 둔다 */}
             <div style={{
+              display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)',
               fontSize: 22, fontWeight: 700, letterSpacing: '-0.01em',
-              color: it.kind === 'do' ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
-            }}>{it.kind === 'do' ? 'Do' : "Don't"}</div>
+              color: it.kind === 'do' ? 'var(--color-success)' : 'var(--color-error)',
+            }}>
+              <Icon name={it.kind === 'do' ? 'success' : 'error'} size="lg" />
+              {it.kind === 'do' ? 'Do' : "Don't"}
+            </div>
             <p style={{
               marginTop: 'var(--spacing-2)', fontSize: 'var(--text-body)', lineHeight: 1.7,
               color: 'var(--color-text-sub)',
