@@ -314,6 +314,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
     />
   )
 
+  /* PC에서는 액션 행이 히어로 텍스트 컬럼 안(감독 칩 아래)에 붙는다 (2026-08-24 확정) */
   const heroSection = (
     <div style={{
       background: 'var(--color-surface-bg)',
@@ -358,6 +359,12 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
             ))}
           </div>
         </div>
+        {/* PC — 액션 행이 히어로 텍스트 컬럼 안, 감독 칩 아래 (2026-08-24 확정) */}
+        {isDesktop && (
+          <div style={{ marginTop: 20, maxWidth: 480 }}>
+            {actionRow}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -581,7 +588,6 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
         <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 var(--gutter)' }}>
           {/* hero */}
           {heroSection}
-          {actionRow}
 
           {/* 2-column layout */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 32, alignItems: 'flex-start' }}>

@@ -111,36 +111,6 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
     <DetailTopBar crumbLabel="영화" crumbHref="/films" title={`감독 · ${directorName}`} isDesktop={isDesktop} trailing={<RegionFilterWidget />} />
   )
 
-  const heroSection = (
-    /* 영화 상세 히어로 문법: 왼쪽 이미지(아바타) + 오른쪽 텍스트/CTA 좌측 정렬 */
-    <div style={{
-      background: 'var(--color-surface-bg)',
-      padding: isDesktop ? '32px 0 28px' : '24px var(--gutter) 20px',
-      display: 'flex', gap: isDesktop ? 32 : 16, alignItems: 'flex-start',
-    }}>
-      {/* 아바타 */}
-      <Avatar name={directorName} photoUrl={profile?.photoUrl} size={isDesktop ? 160 : 100} />
-
-      {/* 텍스트 */}
-      <div style={{ flex: 1, minWidth: 0, paddingTop: 4 }}>
-      <h1 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)' }}>
-        {directorName}
-      </h1>
-      {profile?.originalName && (
-        <div style={{ marginTop: 4, fontSize: isDesktop ? 14 : 12, color: 'var(--color-text-sub)' }}>{profile.originalName}</div>
-      )}
-
-      {/* 메타 정보 */}
-      <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--color-text-caption)' }}>
-        {nowPlaying.length > 0 && (
-          <span style={{ color: 'var(--color-primary-base)', fontWeight: 600 }}>상영중 {nowPlaying.length}편</span>
-        )}
-      </div>
-
-      </div>
-    </div>
-  )
-
   /* 액션 행 — 영화 상세와 같은 문법: [♡ 관심 감독 등록(늘어남)][공유] (2026-08-24).
      지도 CTA는 현재 상영작 헤더 행으로 이동 — 지도 필터는 상영작이 있을 때만 의미가 있다. */
   const actionRow = (
@@ -168,13 +138,50 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
     />
   )
 
+  const heroSection = (
+    /* 영화 상세 히어로 문법: 왼쪽 이미지(아바타) + 오른쪽 텍스트/CTA 좌측 정렬 */
+    <div style={{
+      background: 'var(--color-surface-bg)',
+      padding: isDesktop ? '32px 0 28px' : '24px var(--gutter) 20px',
+      display: 'flex', gap: isDesktop ? 32 : 16, alignItems: 'flex-start',
+    }}>
+      {/* 아바타 */}
+      <Avatar name={directorName} photoUrl={profile?.photoUrl} size={isDesktop ? 160 : 100} />
+
+      {/* 텍스트 */}
+      <div style={{ flex: 1, minWidth: 0, paddingTop: 4 }}>
+      <h1 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)' }}>
+        {directorName}
+      </h1>
+      {profile?.originalName && (
+        <div style={{ marginTop: 4, fontSize: isDesktop ? 14 : 12, color: 'var(--color-text-sub)' }}>{profile.originalName}</div>
+      )}
+
+      {/* 메타 정보 */}
+      <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--color-text-caption)' }}>
+        {nowPlaying.length > 0 && (
+          <span style={{ color: 'var(--color-primary-base)', fontWeight: 600 }}>상영중 {nowPlaying.length}편</span>
+        )}
+      </div>
+
+      {/* PC — 액션 행이 히어로 텍스트 컬럼 안 (2026-08-24, 영화 상세와 동일) */}
+      {isDesktop && (
+        <div style={{ marginTop: 20, maxWidth: 480 }}>
+          {!isDesktop && actionRow}
+        </div>
+      )}
+      </div>
+    </div>
+  )
+
+
   return (
     <div className="page-slide-in" style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
       {navBar}
 
       <div style={{ maxWidth: isDesktop ? 1000 : undefined, margin: isDesktop ? '0 auto' : undefined }}>
         {heroSection}
-        {actionRow}
+        {!isDesktop && actionRow}
         {/* 섹션 디바이더 — 8px raised 밴드 (피그마 상세 통일 시안, 2026-08-24) */}
         {!isDesktop && <div aria-hidden style={{ height: 8, backgroundColor: 'var(--color-surface-raised)' }} />}
 

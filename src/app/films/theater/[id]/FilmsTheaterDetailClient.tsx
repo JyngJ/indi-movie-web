@@ -484,9 +484,9 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
 
         {/* 액션 2행 (2026-08-24 확정): [관심 극장 등록(회색)][공유(회색)] / [지도에서 보기(파랑 전폭)].
             md 버튼 셋은 한 줄에 안 들어가고(실측 391 > 343), 길찾기는 극장 시트와 중복이라 뺐다. */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: isDesktop ? 480 : undefined }}>
+        <div style={{ display: 'flex', flexDirection: isDesktop ? 'row' : 'column', gap: 8, alignItems: isDesktop ? 'center' : undefined }}>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <FavoriteActionButton type="theater" id={theater.id} style={{ flex: 1, whiteSpace: 'nowrap' }} />
+            <FavoriteActionButton type="theater" id={theater.id} style={{ flex: isDesktop ? undefined : 1, whiteSpace: 'nowrap' }} />
             <Button
               variant="tertiary"
               size="md"
@@ -505,7 +505,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
               공유
             </Button>
           </div>
-          <MapCtaButton onClick={() => router.push(mapUrlWithSelection())}>
+          <MapCtaButton fullWidth={!isDesktop} style={isDesktop ? { whiteSpace: 'nowrap' } : undefined} onClick={() => router.push(mapUrlWithSelection())}>
             지도에서 보기
           </MapCtaButton>
         </div>
