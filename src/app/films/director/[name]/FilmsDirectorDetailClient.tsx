@@ -117,7 +117,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
     <FavoriteActionRow
       type="director"
       id={directorName}
-      style={{ padding: isDesktop ? '0 0 8px' : '0 var(--gutter)', marginBottom: isDesktop ? 16 : 12, maxWidth: isDesktop ? 480 : undefined }}
+      style={{ padding: isDesktop ? '0' : '0 var(--gutter)', marginBottom: isDesktop ? 0 : 12, maxWidth: isDesktop ? 480 : undefined }}
       trailing={
         <Button
           variant="tertiary" size="md" aria-label="공유"

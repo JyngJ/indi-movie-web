@@ -304,7 +304,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
     <FavoriteActionRow
       type="movie"
       id={movie.id}
-      style={{ paddingLeft: isDesktop ? 0 : 16, paddingRight: isDesktop ? 0 : 16, marginBottom: isDesktop ? 24 : 20, maxWidth: isDesktop ? 480 : undefined }}
+      style={{ paddingLeft: isDesktop ? 0 : 16, paddingRight: isDesktop ? 0 : 16, marginBottom: isDesktop ? 0 : 20, maxWidth: isDesktop ? 480 : undefined }}
       trailing={
         <Button variant="tertiary" size="md" onClick={handleShare} aria-label="공유" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
           <IcoShare />
