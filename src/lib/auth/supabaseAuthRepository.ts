@@ -67,8 +67,14 @@ export function createSupabaseAuthRepository(): AuthRepository {
     },
 
     async signOut() {
+      /* 전역 로그아웃은 리프레시 토큰이 이미 만료·회수됐으면 403으로 실패한다
+         (session_not_found — 재로그인 후 옛 토큰 등). 그 경우에도 이 기기의
+         세션은 지워져야 하므로 local로 폴백한다 (2026-08-24) */
       const { error } = await supabase.auth.signOut()
-      if (error) throw error
+      if (error) {
+        const { error: localError } = await supabase.auth.signOut({ scope: 'local' })
+        if (localError) throw localError
+      }
     },
 
     async updateDisplayName(displayName: string) {
