@@ -34,7 +34,10 @@ export function MyPageShell({
     >
       <SettingsHeader title={title} onBack={onBack} trailing={trailing} />
       {/* 데스크톱: 본문 컬럼(560)을 가운데 — 상영작 섹션과 동일 문법. 모바일은 풀폭 */}
-      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', width: '100%', maxWidth: 560, margin: isDesktop ? '0 auto' : 0, paddingBottom: 24, display: 'flex', flexDirection: 'column' }}>{children}</div>
+      {/* 스크롤 컨테이너는 block이어야 한다 — flex column이면 자식들이 flex-shrink로
+          찌그러져 스크롤 대신 행이 잘린다 (2026-08-24). 세로 채움이 필요한 자식은
+          minHeight:'100%'를 스스로 쓴다. */}
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', width: '100%', maxWidth: 560, margin: isDesktop ? '0 auto' : 0, paddingBottom: 24 }}>{children}</div>
     </div>
   )
 }
