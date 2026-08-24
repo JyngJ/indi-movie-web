@@ -1,5 +1,6 @@
 import { shareAdapter, type ISharePayload } from '@/lib/adapters/share'
 import { trackEvent } from './client'
+import { showGlobalToast } from '@/lib/ui/globalToast'
 import type { AnalyticsProperties } from './types'
 
 /**
@@ -26,20 +27,6 @@ type ShareArgs = {
   onCopied?: () => void
 }
 
-/** 데스크톱 복사 피드백 — 호출부마다 토스트를 배선하지 않도록 여기서 띄운다 (규범: "~했어요" 한 줄) */
-function showCopiedToast() {
-  const el = document.createElement('div')
-  el.textContent = '링크를 복사했어요'
-  el.style.cssText = [
-    'position:fixed', 'left:50%', 'bottom:48px', 'transform:translateX(-50%)',
-    'background:var(--color-neutral-900, #1A1611)', 'color:#fff',
-    'padding:10px 16px', 'border-radius:9999px', 'font-size:13px', 'font-weight:500',
-    'z-index:9999', 'pointer-events:none', 'opacity:0', 'transition:opacity 160ms ease',
-  ].join(';')
-  document.body.appendChild(el)
-  requestAnimationFrame(() => { el.style.opacity = '1' })
-  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 200) }, 1600)
-}
 
 /** 데스크톱(정밀 포인터) 판정 — 네이티브 공유 시트가 화면 한가운데 이상한 위치에 앵커되는
  *  macOS 브라우저 문제로, 데스크톱에서는 시트 대신 링크 복사가 낫다 (2026-08-24) */
@@ -52,7 +39,7 @@ export async function shareAndTrack({ payload, source, scope, properties = {}, o
 
   if (isDesktopPointer()) {
     const copied = await shareAdapter.copyToClipboardAsync(payload.url).catch(() => false)
-    if (copied) { (onCopied ?? showCopiedToast)() }
+    if (copied) { (onCopied ?? (() => showGlobalToast('링크를 복사했어요')))() }
     trackEvent('share completed', { ...base, result: copied ? 'copied' : 'error', method: 'clipboard_desktop' })
     return
   }

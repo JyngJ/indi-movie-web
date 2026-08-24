@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { AuthRepository } from '@/lib/auth/repository'
 import type { AuthProvider as OAuthProvider, AuthUser } from '@/lib/auth/types'
+import { showGlobalToast } from '@/lib/ui/globalToast'
 import { createSupabaseAuthRepository } from '@/lib/auth/supabaseAuthRepository'
 
 export type AuthStatus = 'loading' | 'signed-out' | 'signed-in'
@@ -58,6 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try { await getRepo().signOut() } finally {
       setUser(null)
       setStatus('signed-out')
+      showGlobalToast('로그아웃했어요')
     }
   }, [])
 
