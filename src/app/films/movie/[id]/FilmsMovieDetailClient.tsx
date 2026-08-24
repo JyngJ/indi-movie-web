@@ -209,7 +209,19 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
       .map((entry) => ({
         ...entry,
         showtimes: (entry.dateGroups.find((g) => g.date === selectedDate)?.showtimes ?? [])
-          .filter((st) => !bookableOnly || st.seatAvailable > 0),
+          /* 예매 가능 = 좌석이 남았고 아직 안 끝난 회차 — 상영 완료를 남기면 필터 이름이 거짓말이 된다 (2026-08-24) */
+          .filter((st) => {
+            if (!bookableOnly) return true
+            if (st.seatAvailable <= 0) return false
+            if (selectedDate !== dates[0]) return true
+            const now = new Date()
+            const nowMinutes = now.getHours() * 60 + now.getMinutes()
+            const [sh, sm] = st.showTime.split(':').map(Number)
+            const endMin = st.endTime
+              ? (() => { const [eh, em] = st.endTime!.split(':').map(Number); return eh * 60 + em })()
+              : sh * 60 + sm + 120
+            return endMin > nowMinutes
+          }),
       }))
       .filter((entry) => entry.showtimes.length > 0)
       /* 오늘 회차가 전부 끝난 극장은 뒤로 — 지금 갈 수 있는 극장이 먼저.
@@ -505,34 +517,6 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
     </div>
   )
 
-  const detailInfoSection = (
-    <div>
-      <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>상세 정보</p>
-      <div style={{ borderRadius: 12, border: '1px solid var(--color-border)', overflow: 'hidden' }}>
-        {[
-          { key: '국가', value: movie.nation ? withFlagsRaw(movie.nation) : undefined },
-          { key: '개봉', value: movie.year ? String(movie.year) : undefined },
-          { key: '상영 시간', value: movie.runtimeMinutes ? `${movie.runtimeMinutes}분` : undefined },
-          { key: '장르', value: movie.genre.join(', ') || undefined },
-        ].filter((r) => r.value).map((row, i, arr) => (
-          <div key={row.key} style={{ display: 'flex', alignItems: 'center', padding: '12px 16px', borderBottom: i < arr.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
-            <span style={{ width: 72, flexShrink: 0, fontSize: 12, color: 'var(--color-text-sub)', fontWeight: 500 }}>{row.key}</span>
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)' }}>{row.value}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-
-  const directorSideCard = movie.director.length > 0 ? (
-    <div>
-      <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>감독</p>
-      {movie.director.map((name) => (
-        <DirectorSideCard key={name} name={name} onClick={() => router.push(`/films/director/${encodeURIComponent(name)}`)} />
-      ))}
-    </div>
-  ) : null
-
   const desktopBookingCard = selectedShowtimeData ? (
     <div style={{ borderRadius: 16, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', boxShadow: '0 6px 24px color-mix(in srgb, var(--color-primary-base) 55%, transparent)', overflow: 'hidden' }}>
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -590,21 +574,17 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
           {/* hero */}
           {heroSection}
 
-          {/* 2-column layout */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 32, alignItems: 'flex-start' }}>
-            {/* main */}
-            <div>
-              {synopsisSection}
-              {showtimesSection}
-            </div>
-            {/* sidebar */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 20, paddingTop: 8, position: 'sticky', top: 68 }}>
-              {desktopBookingCard}
-              {directorSideCard}
-              {detailInfoSection}
-            </div>
-          </div>
+          {/* 사이드바 폐지 (2026-08-24) — 감독 카드·상세 정보는 히어로(감독 칩·메타·장르)와
+              전부 중복이었다. 회차 선택 카드만 우하단 플로팅으로 남긴다. */}
+          {synopsisSection}
+          {showtimesSection}
         </div>
+        {selectedShowtimeData && typeof document !== 'undefined' && createPortal(
+          <div style={{ position: 'fixed', right: 40, bottom: 40, width: 320, zIndex: 100 }}>
+            {desktopBookingCard}
+          </div>,
+          document.body
+        )}
       </div>
     )
   }
@@ -665,19 +645,3 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
 }
 
 /* ── 감독 사이드카드 ──────────────────────────────────────────────── */
-function DirectorSideCard({ name, onClick }: { name: string; onClick: () => void }) {
-  const { data: profile } = useDirectorProfile(name)
-  return (
-    <button
-      onClick={onClick}
-      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 12, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', cursor: 'pointer', textAlign: 'left', minHeight: 'auto', marginBottom: 8 }}
-    >
-      <Avatar name={name} photoUrl={profile?.photoUrl} size={48} />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{name}</div>
-        <div style={{ marginTop: 4, fontSize: 'var(--text-badge)', color: 'var(--color-primary-base)', fontWeight: 500 }}>감독 페이지 보기 →</div>
-      </div>
-      <IcoChevronRight />
-    </button>
-  )
-}
