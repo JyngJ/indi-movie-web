@@ -67,11 +67,18 @@ export function createSupabaseAuthRepository(): AuthRepository {
     },
 
     async signOut() {
-      /* 전역 로그아웃은 리프레시 토큰이 이미 만료·회수됐으면 403으로 실패한다
-         (session_not_found — 재로그인 후 옛 토큰 등). 그 경우에도 이 기기의
-         세션은 지워져야 하므로 local로 폴백한다 (2026-08-24) */
-      const { error } = await supabase.auth.signOut()
-      if (error) {
+      /* 전역 로그아웃은 서버 호출이라 두 가지로 죽는다 — 만료·회수된 토큰이면 403
+         (session_not_found), 네트워크가 매달리면 영영 안 돌아온다. 어느 쪽이든
+         이 기기의 세션은 지워져야 하므로, 4초 안에 못 끝내면 local(네트워크 없음,
+         스토리지만 정리)로 폴백한다 (2026-08-24) */
+      const globalSignOut = supabase.auth.signOut().then(({ error }) => {
+        if (error) throw error
+      })
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('signOut timeout')), 4000))
+      try {
+        await Promise.race([globalSignOut, timeout])
+      } catch {
         const { error: localError } = await supabase.auth.signOut({ scope: 'local' })
         if (localError) throw localError
       }

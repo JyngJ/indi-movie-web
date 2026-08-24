@@ -53,9 +53,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signOut = useCallback(async () => {
-    await getRepo().signOut()
-    setUser(null)
-    setStatus('signed-out')
+    /* repo가 폴백까지 실패해도 화면은 로그아웃돼야 한다 — 스토리지 정리 실패는
+       다음 세션 검증에서 걸러진다 */
+    try { await getRepo().signOut() } finally {
+      setUser(null)
+      setStatus('signed-out')
+    }
   }, [])
 
   const updateDisplayName = useCallback(async (displayName: string) => {
