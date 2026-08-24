@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-08-19T11:54:38.328Z",
-  "figmaDumpAt": "2026-08-19T10:40:51.230Z",
+  "generatedAt": "2026-08-24T06:48:18.872Z",
+  "figmaDumpAt": "2026-08-24T06:47:24.967Z",
   "tokenGroups": [
     {
       "title": "Neutral scale — 2.0 웜그레이 램프 (S가 양끝으로 상승하는 U자 곡선, H 27~40)",
@@ -1871,12 +1871,6 @@
       }
     ],
     "figma": [
-      {
-        "name": "display/map-label",
-        "font": "KIMM_Bold/B",
-        "size": 11,
-        "lineHeight": "100%"
-      },
       {
         "name": "2.0/title",
         "font": "Pretendard/Bold",
@@ -7011,13 +7005,5 @@
       }
     }
   ],
-  "drift": [
-    {
-      "kind": "legacy-figma-style",
-      "id": "display/map-label",
-      "code": null,
-      "figma": "KIMM_Bold/B · 11px",
-      "note": "1.0 텍스트 스타일 — 2.0으로 옮기고 삭제할 것"
-    }
-  ]
+  "drift": []
 }
