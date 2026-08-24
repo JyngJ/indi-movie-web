@@ -548,7 +548,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
             {inRegionEntries.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '16px 0', fontSize: 13, color: 'var(--color-text-caption)' }}>{regionId} 지역 상영 정보가 없습니다</div>
             ) : (
-              inRegionEntries.map(renderTheaterCard)
+              renderColumns(inRegionEntries)
             )}
             {otherRegionEntries.length > 0 && (
               <>
@@ -558,7 +558,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
                   <span style={{ fontSize: 14, color: 'var(--color-text-sub)', fontWeight: 700, whiteSpace: 'nowrap' }}>{regionId} 외 지역 영화관</span>
                   <div style={{ flex: 1, height: 1, backgroundColor: 'var(--color-border)' }} />
                 </div>
-                {otherRegionEntries.map(renderTheaterCard)}
+                {renderColumns(otherRegionEntries)}
               </>
             )}
           </>
