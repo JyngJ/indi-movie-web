@@ -53,11 +53,6 @@ const IcoChevronLeft = () => (
     <path d="M15 18l-6-6 6-6" />
   </svg>
 )
-const IcoNav = () => (
-  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="3 11 22 2 13 21 11 13 3 11" />
-  </svg>
-)
 const IcoShare = () => (
   <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
@@ -478,29 +473,15 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
           </span>
         </button>
 
-        {/* CTA 버튼 */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <MapCtaButton
-            fullWidth={false}
-            style={{ flex: isDesktop ? undefined : 1 }}
-            onClick={() => router.push(mapUrlWithSelection())}
-          >
-            지도에서 보기
-          </MapCtaButton>
-          <FavoriteActionButton type="theater" id={theater.id} />
-          {theater.address && (
-            <Button
-              variant="secondary"
-              size="md"
-              onClick={() => window.open(`https://map.naver.com/p/search/${encodeURIComponent(theater.address)}`, '_blank')}
-            >
-              <IcoNav />
-              길찾기
-            </Button>
-          )}
+        {/* 액션 행 — [♡ 관심 극장 등록(늘어남)][공유], 영화·감독 상세와 같은 문법 (2026-08-24).
+            길찾기 삭제(지도 → 극장 시트에 길찾기가 있어 중복), 지도에서 보기는 "현재 상영중"
+            헤더 우측 sm으로 — md 버튼 3개는 좌우 여백 32 고정(디자인 시스템) 때문에 375px에 안 들어간다. */}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', maxWidth: isDesktop ? 480 : undefined }}>
+          <FavoriteActionButton type="theater" id={theater.id} style={{ flex: 1, whiteSpace: 'nowrap' }} />
           <Button
-            variant="secondary"
+            variant="tertiary"
             size="md"
+            aria-label="공유"
             onClick={() => {
               void shareAndTrack({
                 payload: { title: theater.name, url: window.location.href },
@@ -509,6 +490,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
                 properties: { theater_id: theater.id, theater_name: theater.name },
               })
             }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
           >
             <IcoShare />
             공유
@@ -534,11 +516,15 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
 
       {/* 현재 상영중 */}
       <div style={{ padding: isDesktop ? '20px 28px 0' : '16px 16px 0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 16 }}>
           <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
             현재 상영중{' '}
             <span style={{ fontSize: 16, color: 'var(--color-primary-base)' }}>{movieShowtimeGroups.length}편</span>
           </span>
+          {/* 지도 CTA — 감독 상세와 같은 자리(섹션 헤더 우측 sm) */}
+          <MapCtaButton fullWidth={false} size="sm" onClick={() => router.push(mapUrlWithSelection())}>
+            지도에서 보기
+          </MapCtaButton>
         </div>
 
         {isLoading ? (
