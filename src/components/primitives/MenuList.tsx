@@ -31,12 +31,15 @@ const rowStyle: CSSProperties = {
   fontFamily: 'inherit',
 }
 
-/** 메뉴 행 — href면 Link, onClick이면 button. last=true면 하단 보더 제거 */
+/** 메뉴 행 — href면 Link, onClick이면 button, external이면 새 탭 앵커(꺾쇠 대신 ↗).
+ *  꺾쇠는 이동하는 행이면 기본으로 그린다 — onClick 행도 대부분 화면 전환이라 href와
+ *  구분할 이유가 없었다(2026-08-24). danger 톤(로그아웃류)만 기본에서 뺀다. */
 export function MenuRow({
   icon,
   title,
   description,
   href,
+  external,
   onClick,
   last,
   disabled,
@@ -44,14 +47,17 @@ export function MenuRow({
 }: {
   icon?: ReactNode
   title: string
-  description?: string
+  description?: ReactNode
   href?: string
+  /** 서비스 밖으로 나가는 링크 — 새 탭으로 열고 트레일링을 external-link 아이콘으로 */
+  external?: boolean
   onClick?: () => void
   last?: boolean
   disabled?: boolean
   tone?: 'default' | 'danger'
 }) {
   const titleColor = tone === 'danger' ? 'var(--color-error)' : 'var(--color-text-primary)'
+  const showChevron = !external && !disabled && tone === 'default' && (!!href || !!onClick)
   const inner = (
     <>
       {icon && (
@@ -63,12 +69,20 @@ export function MenuRow({
         <div style={{ fontSize: 'var(--text-body)', fontWeight: 600, color: titleColor }}>{title}</div>
         {description && <div style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', marginTop: 4 }}>{description}</div>}
       </div>
-      {href && <ChevronRight size={18} strokeWidth={1.75} style={{ color: 'var(--color-text-placeholder)', flexShrink: 0 }} />}
+      {showChevron && <ChevronRight size={18} strokeWidth={1.75} style={{ color: 'var(--color-text-placeholder)', flexShrink: 0 }} />}
+      {external && (
+        <span style={{ color: 'var(--color-text-placeholder)', display: 'flex', flexShrink: 0 }}>
+          <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6" /><path d="M10 14 21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></svg>
+        </span>
+      )}
     </>
   )
   const style = { ...rowStyle, borderBottom: last ? 'none' : rowStyle.borderBottom, opacity: disabled ? 0.4 : 1, cursor: disabled ? 'default' : 'pointer' }
+  if (href && external && !disabled) {
+    return <a href={href} target="_blank" rel="noopener noreferrer" style={style} onClick={onClick}>{inner}</a>
+  }
   if (href && !disabled) {
-    return <Link href={href} style={style}>{inner}</Link>
+    return <Link href={href} style={style} onClick={onClick}>{inner}</Link>
   }
   return (
     <button type="button" style={style} onClick={onClick} disabled={disabled}>
