@@ -38,8 +38,9 @@ export function FavoriteActionButton({
   const { isFavorite, toggle } = useFavorites()
   const active = isFavorite(type, id)
   return (
+    /* 회색(tertiary) — 액션 행에서 파란색은 지도 CTA 하나만 남긴다 (2026-08-24 확정) */
     <Button
-      variant="secondary"
+      variant="tertiary"
       size="md"
       onClick={() => toggle(type, id, { loginDescription: LOGIN_COPY[type] })}
       aria-pressed={active}
