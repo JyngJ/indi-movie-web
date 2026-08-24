@@ -135,7 +135,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
     ],
     usage: [
       { kind: 'do', rule: '카드 안 요소 간격은 spacing/3(12), 카드 사이는 spacing/4(16) 이상을 확보합니다.' },
-      { kind: 'dont', rule: '카드 안에 카드를 넣지 않습니다.' },
+      { kind: 'dont', rule: '카드 안에 카드를 넣지 않습니다 — 같은 높이의 흰 면이 겹치면 위계가 무너집니다. 하위 묶음이 필요하면 눌린 트레이(neutral-100 음각 면)를 깔고 그 위에 올립니다. 상영 시간표(ShowtimeGroupCard)의 흰 셀이 그 예외 문법입니다: 카드 → 음각 트레이 → 셀로 한 번 꺼졌다 올라오므로 카드 중첩이 아닙니다.' },
     ],
   },
 
