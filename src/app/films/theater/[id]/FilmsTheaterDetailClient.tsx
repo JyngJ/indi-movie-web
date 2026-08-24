@@ -485,23 +485,11 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
         {/* 액션 행 — [♡ 관심 극장 등록(늘어남)][공유], 영화·감독 상세와 같은 문법 (2026-08-24).
             길찾기 삭제(지도 → 극장 시트에 길찾기가 있어 중복), 지도에서 보기는 "현재 상영중"
             헤더 우측 sm으로 — md 버튼 3개는 좌우 여백 32 고정(디자인 시스템) 때문에 375px에 안 들어간다. */}
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', maxWidth: isDesktop ? 480 : undefined }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', maxWidth: isDesktop ? 560 : undefined }}>
           <FavoriteActionButton type="theater" id={theater.id} style={{ flex: 1, whiteSpace: 'nowrap' }} />
-          <IconButton
-            variant="overlay"
-            size={44}
-            aria-label="공유"
-            onClick={() => {
-              void shareAndTrack({
-                payload: { title: theater.name, url: window.location.href },
-                source: 'films_theater_detail',
-                scope: 'page',
-                properties: { theater_id: theater.id, theater_name: theater.name },
-              })
-            }}
-          >
-            <IcoShare />
-          </IconButton>
+          <MapCtaButton fullWidth={false} style={{ whiteSpace: 'nowrap', flexShrink: 0 }} onClick={() => router.push(mapUrlWithSelection())}>
+            지도에서 보기
+          </MapCtaButton>
         </div>
       </div>
 
@@ -521,10 +509,6 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
             현재 상영중{' '}
             <span style={{ fontSize: 16, color: 'var(--color-primary-base)' }}>{movieShowtimeGroups.length}편</span>
           </span>
-          {/* 지도 CTA — 감독 상세와 같은 자리(섹션 헤더 우측 sm) */}
-          <MapCtaButton fullWidth={false} size="sm" variant="tertiary" onClick={() => router.push(mapUrlWithSelection())}>
-            지도에서 보기
-          </MapCtaButton>
         </div>
 
         {isLoading ? (
@@ -574,7 +558,24 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
   if (isDesktop) {
     return (
       <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
-        <DetailTopBar crumbLabel="영화" crumbHref="/films" title={theater.name} isDesktop trailing={<RegionFilterWidget />} />
+        <DetailTopBar crumbLabel="영화" crumbHref="/films" title={theater.name} isDesktop trailing={<div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <IconButton
+              variant="ghost"
+              size={44}
+              aria-label="공유"
+              onClick={() => {
+                void shareAndTrack({
+                  payload: { title: theater.name, url: window.location.href },
+                  source: 'films_theater_detail',
+                  scope: 'page',
+                  properties: { theater_id: theater.id, theater_name: theater.name },
+                })
+              }}
+            >
+              <IcoShare />
+            </IconButton>
+            <RegionFilterWidget />
+          </div>} />
         <div style={{ maxWidth: 1000, margin: '0 auto' }}>
           {content}
         </div>
@@ -632,7 +633,24 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
 
   return (
     <div className="page-slide-in" style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
-      <DetailTopBar crumbLabel="영화" crumbHref="/films" title={theater.name} isDesktop={false} trailing={<RegionFilterWidget />} />
+      <DetailTopBar crumbLabel="영화" crumbHref="/films" title={theater.name} isDesktop={false} trailing={<div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <IconButton
+              variant="ghost"
+              size={44}
+              aria-label="공유"
+              onClick={() => {
+                void shareAndTrack({
+                  payload: { title: theater.name, url: window.location.href },
+                  source: 'films_theater_detail',
+                  scope: 'page',
+                  properties: { theater_id: theater.id, theater_name: theater.name },
+                })
+              }}
+            >
+              <IcoShare />
+            </IconButton>
+            <RegionFilterWidget />
+          </div>} />
       {content}
       <div style={{ height: 'env(safe-area-inset-bottom)' }} />
       {selectedShowtimeData && typeof document !== 'undefined' && createPortal(
