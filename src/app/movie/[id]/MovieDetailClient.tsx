@@ -455,9 +455,9 @@ function TheatersTab({ movieId, onMapClick, onGoToTheater, desktop = false, init
   )
 
   const sectionDivider = (label: string) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '24px 0 16px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '40px 0 16px' }}>
       <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
-      <span style={{ fontSize: 'var(--text-badge)', fontWeight: 600, color: 'var(--color-text-caption)', whiteSpace: 'nowrap', letterSpacing: '0.3px' }}>
+      <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-sub)', whiteSpace: 'nowrap' }}>
         {label}
       </span>
       <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />

@@ -13,6 +13,7 @@ import { ShowtimeCell } from '@/components/domain/ShowtimeCell'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import Image from 'next/image'
 import { useMovieTheaterShowtimes, useDirectorProfile } from '@/lib/supabase/queries'
+import { useFavorites } from '@/hooks/useFavorites'
 import type { MovieDetail } from '@/lib/supabase/queries'
 import { withFlagsRaw } from '@/lib/nations'
 import type { Showtime } from '@/types/api'
@@ -90,7 +91,15 @@ function ShowtimeChip({ st, selected, onClick }: { st: Showtime; selected?: bool
 /* ── DirectorChip (inline in hero) ────────────────────────────── */
 function DirectorChip({ name, photoUrl, onClick }: { name: string; photoUrl?: string; onClick: () => void }) {
   return (
-    <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px 8px 8px', borderRadius: 9999, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', cursor: 'pointer', minHeight: 'auto' }}>
+    <button
+      onClick={onClick}
+      className="chip-lift"
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px 8px 8px',
+        borderRadius: 9999, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)',
+        cursor: 'pointer', minHeight: 'auto',
+      }}
+    >
       <Avatar name={name} photoUrl={photoUrl} size={28} />
       <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)' }}>{name}</span>
       <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-primary-base)', fontWeight: 500 }}>감독 →</span>
@@ -123,6 +132,8 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
   const suppressResetOnDateChangeRef = useRef(false)
 
   const { data: theaterEntries = [], isLoading } = useMovieTheaterShowtimes(movie.id)
+  /* 관심 극장 — 이름 옆 하트(표시 전용, 해제는 극장 상세에서) + 목록 앞 정렬 (2026-08-24) */
+  const { isFavorite } = useFavorites()
 
   /* ── analytics: films 플로우 진입 시에도 지도 플로우(MovieDetailClient)와 동일하게 기록 ── */
   useEffect(() => {
@@ -227,7 +238,8 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
       /* 오늘 회차가 전부 끝난 극장은 뒤로 — 지금 갈 수 있는 극장이 먼저.
          종료 판정은 ShowtimeCell kind('ended')와 같은 기준. 나머지 순서는 유지(stable sort). */
       .sort((a, b) => {
-        if (selectedDate !== dates[0]) return 0
+        const favDiff = (isFavorite('theater', a.theaterId) ? 0 : 1) - (isFavorite('theater', b.theaterId) ? 0 : 1)
+        if (selectedDate !== dates[0]) return favDiff
         const now = new Date()
         const nowMinutes = now.getHours() * 60 + now.getMinutes()
         const ended = (sts: typeof a.showtimes) => sts.every((st) => {
@@ -237,9 +249,13 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
             : sh * 60 + sm + 120
           return endMin <= nowMinutes
         })
-        return (ended(a.showtimes) ? 1 : 0) - (ended(b.showtimes) ? 1 : 0)
+        const d = (ended(a.showtimes) ? 1 : 0) - (ended(b.showtimes) ? 1 : 0)
+        if (d !== 0) return d
+        /* 같은 등급 안에서는 관심 극장 먼저 (2026-08-24) */
+        return (isFavorite('theater', a.theaterId) ? 0 : 1) - (isFavorite('theater', b.theaterId) ? 0 : 1)
       })
-  }, [theaterEntries, selectedDate, bookableOnly, dates])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [theaterEntries, selectedDate, bookableOnly, dates, isFavorite])
 
   const totalTheaterCount = theaterEntries.length
   const { inRegion: inRegionEntries, otherRegion: otherRegionEntries } = useMemo(() => {
@@ -397,7 +413,14 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
           style={{ width: '100%', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, padding: '16px 16px 12px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', minHeight: 'auto', borderBottom: '1px solid var(--color-border)' }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>
-            <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)', display: 'block', lineHeight: 1.3 }}>{entry.theaterName}</span>
+            <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 6, lineHeight: 1.3 }}>
+              {entry.theaterName}
+              {isFavorite('theater', entry.theaterId) && (
+                <svg width={14} height={14} viewBox="0 0 24 24" fill="var(--color-error-mid)" aria-label="관심 극장" style={{ flexShrink: 0 }}>
+                  <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                </svg>
+              )}
+            </span>
             <div style={{ marginTop: 4, display: 'flex', alignItems: 'flex-start', gap: 4, color: 'var(--color-text-sub)', fontSize: 12 }}>
               <IcoPin /><span style={{ wordBreak: 'keep-all', lineHeight: 1.45 }}>{entry.theaterAddress}</span>
             </div>
@@ -487,7 +510,8 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
       </div>
 
       {/* 극장별 목록 */}
-      <div style={{ padding: isDesktop ? '16px 0 64px' : `12px 16px ${selectedShowtimeData ? 148 : 52}px`, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {/* PC는 극장 카드 2칼럼 — 극장 상세의 현재 상영중 그리드와 같은 문법 (2026-08-24) */}
+      <div style={{ padding: isDesktop ? '16px 0 64px' : `12px 16px ${selectedShowtimeData ? 148 : 52}px`, display: 'grid', gridTemplateColumns: isDesktop ? '1fr 1fr' : '1fr', gap: isDesktop ? 16 : 12, alignItems: 'start' }}>
         {isLoading ? (
           <div style={{ height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-caption)', fontSize: 13 }}>불러오는 중…</div>
         ) : dayTheaters.length === 0 ? (
@@ -501,9 +525,10 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
             )}
             {otherRegionEntries.length > 0 && (
               <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0' }}>
+                {/* 지역 구분선 — 안 보인다는 피드백으로 여백·글자 키움 (2026-08-24). 그리드 전체 폭 차지 */}
+                <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 12, margin: isDesktop ? '40px 0 16px' : '24px 0 8px' }}>
                   <div style={{ flex: 1, height: 1, backgroundColor: 'var(--color-border)' }} />
-                  <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)', fontWeight: 500, whiteSpace: 'nowrap' }}>{regionId} 외 지역 영화관</span>
+                  <span style={{ fontSize: 14, color: 'var(--color-text-sub)', fontWeight: 700, whiteSpace: 'nowrap' }}>{regionId} 외 지역 영화관</span>
                   <div style={{ flex: 1, height: 1, backgroundColor: 'var(--color-border)' }} />
                 </div>
                 {otherRegionEntries.map(renderTheaterCard)}

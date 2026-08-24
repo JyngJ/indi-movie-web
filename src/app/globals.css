@@ -229,6 +229,12 @@ img {
   .filter-chip:hover { background: var(--chip-bg-hover); }
 }
 
+/* 흰 필 칩(감독 칩 등) — 배경을 채우면 회색 버튼처럼 보여서, 카드류 hover 규칙(그림자 승격)로 뜬다 */
+.chip-lift { transition: box-shadow 150ms ease, transform 150ms ease; }
+@media (hover: hover) {
+  .chip-lift:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+}
+
 @media (hover: hover) {
   /* 눌림 피드백 — 레일 화살표처럼 자체 배경을 가진 원형 버튼에도 반응이 보이게 */
   .chip-raise:active { background-color: var(--color-neutral-300); }
