@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Bell, CircleAlert, CircleHelp, Heart, UserRound } from 'lucide-react'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { LoginPanel } from '@/components/auth/LoginPanel'
-import { Avatar, MenuCard, MenuRow } from '@/components/primitives'
+import { Avatar, Button, MenuCard, MenuRow } from '@/components/primitives'
 import { useFavorites } from '@/hooks/useFavorites'
 import { useUIStore } from '@/store/uiStore'
 
@@ -127,19 +127,14 @@ export function MyHomeContent({ authError, onProfile, onNotifications, onFavorit
 
       {/* 푸터 — 미트볼(⋯) 삭제로 더보기 화면에 있던 출처·개인정보·버전이 여기로 (2026-08-24) */}
       <div style={{ marginTop: 32, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, flexWrap: 'wrap', padding: '0 var(--gutter)' }}>
-        <button
-          type="button"
-          onClick={openAttribution}
-          className="hover-raise"
-          style={{ background: 'none', border: 'none', padding: '4px 8px', minHeight: 'unset', cursor: 'pointer', fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)', borderRadius: 'var(--radius-control)' }}
-        >
+        <Button variant="ghost" size="sm" onClick={openAttribution} style={{ color: 'var(--color-text-sub)', fontWeight: 500 }}>
           출처 표기 정보
-        </button>
+        </Button>
         <span style={{ color: 'var(--color-text-placeholder)' }}>·</span>
         <Link
           href="/privacy"
           className="hover-raise"
-          style={{ padding: '4px 8px', fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)', textDecoration: 'none', borderRadius: 'var(--radius-control)' }}
+          style={{ display: 'inline-flex', alignItems: 'center', height: 'var(--comp-btn-h-sm)', padding: '0 var(--comp-btn-px-sm)', fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)', textDecoration: 'none', borderRadius: 'var(--radius-control)' }}
         >
           개인정보 처리방침
         </Link>
