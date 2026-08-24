@@ -5,7 +5,7 @@ import { gvEventTypeColor } from '@/lib/gv/adapter'
 import { trackEvent } from '@/lib/analytics/client'
 import { shareAndTrack } from '@/lib/analytics/shareTracking'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
-import { IconButton, Icon } from '@/components/primitives'
+import { IconButton, Icon, ListRow } from '@/components/primitives'
 import { BookingCtaButton, ShareScheduleButton } from './booking/BookingActions'
 
 interface GvDetailPanelProps {
@@ -184,19 +184,14 @@ export function GvDetailPanel({ ev, onClose, onCloseAll, panelMode }: GvDetailPa
 
 function InfoRow({ label, value, last }: { label: string; value: string; last?: boolean }) {
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center',
-      padding: '12px var(--gutter)',
-      borderBottom: last ? 'none' : '1px solid var(--color-border)',
-      gap: 12,
-    }}>
+    <ListRow density="compact" last={last}>
       <span style={{ fontSize: 'var(--text-badge)', fontWeight: 600, color: 'var(--color-text-caption)', width: 28, flexShrink: 0 }}>
         {label}
       </span>
-      <span style={{ fontSize: 13, color: 'var(--color-text-body)', flex: 1 }}>
+      <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-body)', flex: 1 }}>
         {value}
       </span>
-    </div>
+    </ListRow>
   )
 }
 

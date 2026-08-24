@@ -9,7 +9,7 @@ import { locationAdapter } from '@/lib/adapters/location'
 import { calculateAndFormatDistance, calculateDistanceKm } from '@/lib/map/distanceUtils'
 import { getRegionFromAddress } from '@/lib/regions'
 import { formatDateLabel } from '@/lib/date'
-import { Toast, Button, Divider } from '@/components/primitives'
+import { Toast, Button, Divider, Tabs } from '@/components/primitives'
 import { MovieInfoTable } from '@/components/domain/movieDetail/MovieInfoTable'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 import { PanelShell } from './PanelShell'
@@ -120,33 +120,24 @@ export function MoviePanel({
       <FavoriteActionRow type="movie" id={movie.id} style={{ paddingLeft: 'var(--gutter)', paddingRight: 'var(--gutter)', paddingBottom: 16, background: 'var(--color-surface-card)' }} />
 
       {/* 탭 */}
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--color-border)', flexShrink: 0 }}>
-        {(['info', 'theaters'] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => {
-              trackEvent('movie detail tab changed', {
-                movie_id: movie.id,
-                movie_title: movie.title,
-                from_tab: tab,
-                to_tab: t,
-                source: 'desktop_panel',
-              })
-              setTab(t)
-            }}
-            style={{
-              flex: 1, height: 42, border: 'none', background: 'none', cursor: 'pointer',
-              fontSize: 13, fontWeight: tab === t ? 600 : 400,
-              color: tab === t ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
-              borderBottomWidth: 2,
-              borderBottomStyle: 'solid',
-              borderBottomColor: tab === t ? 'var(--color-primary-base)' : 'transparent',
-            }}
-          >
-            {t === 'info' ? '영화 정보' : '상영 영화관'}
-          </button>
-        ))}
-      </div>
+      <Tabs
+        label="영화 상세"
+        value={tab}
+        onChange={(next) => {
+          trackEvent('movie detail tab changed', {
+            movie_id: movie.id,
+            movie_title: movie.title,
+            from_tab: tab,
+            to_tab: next,
+            source: 'desktop_panel',
+          })
+          setTab(next)
+        }}
+        items={[
+          { value: 'info', label: '영화 정보' },
+          { value: 'theaters', label: '상영 영화관' },
+        ] as const}
+      />
 
       {/* 탭 내용 */}
       {tab === 'info' ? (

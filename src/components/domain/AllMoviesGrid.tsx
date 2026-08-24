@@ -9,7 +9,7 @@ import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
 import { trackEvent } from '@/lib/analytics/client'
 import { buildSectionAnalytics } from '@/lib/curation/sectionRuns'
 import { FooterWordmark } from '@/components/domain/FooterWordmark'
-import { toSecureImageUrl } from '@/lib/media/imageUrl'
+import { PosterThumb } from './PosterThumb'
 
 type SortKey = 'theaters_desc' | 'theaters_asc' | 'year_desc' | 'year_asc' | 'alpha'
 
@@ -43,49 +43,17 @@ function sortMovies(
 
 function GridPoster({ src, alt, interactive, onReady }: { src?: string; alt: string; interactive?: boolean; onReady?: () => void }) {
   return (
-    <div
+    <PosterThumb
+      fluid
+      lazy
+      src={src}
+      alt={alt}
+      radius={0}
+      shadow={false}
+      fade={false}
+      onReady={onReady}
       className={interactive ? 'hover-lift' : undefined}
-      style={{
-        width: '100%',
-        aspectRatio: '2/3',
-        borderRadius: 0,
-        overflow: 'hidden',
-        position: 'relative',
-        background: 'var(--color-neutral-800)',
-      }}
-    >
-      {src ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={toSecureImageUrl(src)}
-          alt={alt}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-          loading="lazy"
-          /* 캐시된 이미지는 onLoad가 안 뜰 수 있어 complete도 함께 본다 */
-          ref={(node) => { if (node?.complete) onReady?.() }}
-          onLoad={onReady}
-          onError={onReady}
-        />
-      ) : (
-        <div
-          style={{
-            width: '100%', height: '100%',
-            background: 'var(--color-neutral-800)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px',
-          }}
-        >
-          <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 14, fontWeight: 800, textAlign: 'center', lineHeight: 1.3, wordBreak: 'keep-all' }}>
-            {alt}
-          </span>
-        </div>
-      )}
-      <div
-        style={{
-          position: 'absolute', inset: 0, borderRadius: 0, pointerEvents: 'none',
-          boxShadow: 'inset 0 0 0 1px var(--comp-poster-border)',
-        }}
-      />
-    </div>
+    />
   )
 }
 

@@ -165,6 +165,55 @@ export const GUIDES: Record<string, ComponentGuide> = {
     ],
   },
 
+  Divider: {
+    intro: '형제 요소 사이에 홀로 서는 1px 선입니다. 컨테이너의 테두리(borderTop/Bottom)는 면의 경계라서 이 컴포넌트가 아닙니다.',
+    specs: [
+      { title: '방향', desc: 'horizontal이 기본이고, vertical은 부모 높이를 따라 늘어납니다(alignSelf: stretch).' },
+      { title: 'inset · gap', desc: 'inset은 선 양끝 여백, gap은 선의 위아래 여백입니다. 둘 다 4배수로 넣습니다.' },
+    ],
+    usage: [
+      { kind: 'do', rule: '"구분선 + 글자 + 구분선" 조합에서는 flex를 켜 남는 폭을 나눠 갖게 합니다.' },
+      { kind: 'dont', rule: '카드나 시트의 바깥 경계를 그리는 데 쓰지 않습니다 — 그건 컨테이너의 border입니다.' },
+    ],
+  },
+
+  EmptyState: {
+    intro: '보여줄 것이 없을 때의 자리입니다. 문구는 화면마다 달라도 배치는 하나여야 합니다.',
+    specs: [
+      { title: 'inline', desc: '목록 안 한 줄짜리 안내. --text-meta, caption 색.' },
+      { title: 'block', desc: '탭 전체가 비었을 때. --text-body, secondary 색. 일러스트와 행동 버튼을 같이 세웁니다.' },
+    ],
+    usage: [
+      { kind: 'do', rule: '왜 비었는지와 다음에 할 일을 함께 적습니다 — "하트로 모아두면 여기에 쌓여요".' },
+      { kind: 'dont', rule: '"데이터 없음" 같은 시스템 말투를 쓰지 않습니다.' },
+    ],
+  },
+
+  Tabs: {
+    intro: '같은 자리에서 내용을 갈아 끼우는 탭 줄입니다. underline(패널·시트 안)과 pill(목록 위 필터형) 두 모습만 있습니다.',
+    specs: [
+      { title: 'underline', desc: '높이 42, 탭들이 폭을 균등하게 나눠 갖고 선택된 탭 아래 2px 밑줄이 붙습니다.' },
+      { title: 'pill', desc: 'FilterPill을 그대로 씁니다(높이 28). 개수 배지를 라벨에 붙일 수 있습니다.' },
+    ],
+    usage: [
+      { kind: 'do', rule: 'label을 반드시 줍니다 — 스크린리더가 무슨 탭 묶음인지 읽습니다.' },
+      { kind: 'dont', rule: '날짜 선택에 쓰지 않습니다. 요일 색·좌우 이동·오늘 표시는 DateBar와 DetailDateTabs가 맡습니다.' },
+    ],
+  },
+
+  ListRow: {
+    intro: '설정·정보 목록의 한 줄입니다. 왼쪽 글, 오른쪽 조작, 아래 1px 경계라는 프레임만 맡습니다.',
+    specs: [
+      { title: '밀도', desc: 'default 16px / compact 12px 세로 여백. 한 화면 안에서는 하나로 통일합니다.' },
+      { title: 'last', desc: '마지막 줄은 아래 경계를 지웁니다 — 카드 바닥에 선이 두 겹으로 겹치지 않게.' },
+      { title: 'stacked', desc: '오른쪽 슬롯이 넓어 한 줄에 안 들어갈 때 위아래로 쌓습니다.' },
+    ],
+    usage: [
+      { kind: 'do', rule: '제목은 무엇을 바꾸는지, 설명은 바꾸면 무슨 일이 생기는지 적습니다.' },
+      { kind: 'dont', rule: '선택지를 고르는 줄(라디오·체크박스)에는 쓰지 않습니다 — 그건 DropdownRow입니다.' },
+    ],
+  },
+
   Switch: {
     intro: '켜짐/꺼짐을 즉시 바꾸는 토글입니다. 누르는 순간 저장까지 끝나는 설정(알림 켜기 등)에만 쓰고, 저장 버튼이 따로 있는 폼에서는 쓰지 않습니다.',
     specs: [
