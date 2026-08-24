@@ -407,7 +407,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
 
   function renderTheaterCard(entry: (typeof dayTheaters)[number]) {
     return (
-      <div key={entry.theaterId} style={{ borderRadius: 16, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', overflow: 'hidden' }}>
+      <div key={entry.theaterId} style={{ borderRadius: 16, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', overflow: 'hidden', ...(isDesktop ? { breakInside: 'avoid' as const, marginBottom: 16 } : { marginBottom: 12 }) }}>
         <button
           onClick={() => router.push(`/films/theater/${entry.theaterId}`)}
           style={{ width: '100%', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, padding: '16px 16px 12px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', minHeight: 'auto', borderBottom: '1px solid var(--color-border)' }}
@@ -510,8 +510,8 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
       </div>
 
       {/* 극장별 목록 */}
-      {/* PC는 극장 카드 2칼럼 — 극장 상세의 현재 상영중 그리드와 같은 문법 (2026-08-24) */}
-      <div style={{ padding: isDesktop ? '16px 0 64px' : `12px 16px ${selectedShowtimeData ? 148 : 52}px`, display: 'grid', gridTemplateColumns: isDesktop ? '1fr 1fr' : '1fr', gap: isDesktop ? 16 : 12, alignItems: 'start' }}>
+      {/* PC는 극장 카드 2칼럼 masonry(columns) — 그리드로 하면 카드 높이 차만큼 빈 공간이 남는다 (2026-08-24) */}
+      <div style={{ padding: isDesktop ? '16px 0 64px' : `12px 16px ${selectedShowtimeData ? 148 : 52}px` }}>
         {isLoading ? (
           <div style={{ height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-caption)', fontSize: 13 }}>불러오는 중…</div>
         ) : dayTheaters.length === 0 ? (
@@ -536,7 +536,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
             )}
           </>
         ) : (
-          dayTheaters.map(renderTheaterCard)
+          <div style={isDesktop ? { columns: 2, columnGap: 16 } : undefined}>{dayTheaters.map(renderTheaterCard)}</div>
         )}
       </div>
     </div>

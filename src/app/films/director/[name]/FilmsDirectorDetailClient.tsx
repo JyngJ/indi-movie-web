@@ -56,11 +56,13 @@ function NowPlayingPoster({ movie, isDesktop, onClick }: { movie: Movie; isDeskt
 }
 
 /* ── FilmographyRow ──────────────────────────────────────────────── */
-function FilmographyRow({ movie, isLast, isActive, onClick, isDesktop }: { movie: Movie; isLast: boolean; isActive: boolean; onClick: () => void; isDesktop: boolean }) {
+function FilmographyRow({ movie, isActive, onClick, isDesktop }: { movie: Movie; isActive: boolean; onClick: () => void; isDesktop: boolean }) {
+  /* 흰 통판 리스트 → 개별 카드 (2026-08-24) — PC 2열 그리드에 얹는다 */
   return (
     <button
       onClick={onClick}
-      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: isDesktop ? '14px 18px' : '12px 16px', background: 'transparent', border: 'none', borderBottom: isLast ? 'none' : '1px solid var(--color-border)', width: '100%', cursor: 'pointer', textAlign: 'left', minHeight: 'auto' }}
+      className="chip-lift"
+      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: isDesktop ? '16px 18px' : '12px 16px', backgroundColor: 'var(--color-surface-card)', border: '1px solid var(--color-border)', borderRadius: 16, width: '100%', cursor: 'pointer', textAlign: 'left', minHeight: 'auto' }}
     >
       <MiniPoster src={movie.posterUrl} title={movie.title} />
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -218,7 +220,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
         {/* 작품 목록 */}
         <div style={{ padding: isDesktop ? '64px 0 64px' : '24px 0 52px' }}>
           {/* 헤더 */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 var(--gutter) 12px', borderBottom: '1px solid var(--color-border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 var(--gutter) 12px' }}>
             <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)' }}>
               작품 목록 <span style={{ fontSize: 16, color: 'var(--color-text-caption)', fontWeight: 400 }}>{directorMovies.length}편</span>
             </span>
@@ -234,12 +236,11 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
           {directorMovies.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '48px 0', fontSize: 13, color: 'var(--color-text-caption)' }}>작품 정보가 없습니다</div>
           ) : (
-            <div style={{ backgroundColor: 'var(--color-surface-card)' }}>
-              {visibleMovies.map((m, i) => (
+            <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? '1fr 1fr' : '1fr', gap: isDesktop ? 16 : 12, padding: isDesktop ? '16px 0 0' : '12px var(--gutter) 0' }}>
+              {visibleMovies.map((m) => (
                 <FilmographyRow
                   key={m.id}
                   movie={m}
-                  isLast={i === visibleMovies.length - 1}
                   isActive={activeIdSet.has(m.id)}
                   onClick={() => router.push(`/films/movie/${m.id}`)}
                   isDesktop={isDesktop}
