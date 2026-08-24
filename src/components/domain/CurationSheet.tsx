@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { usePendingNavItem } from '@/hooks/usePendingNavItem'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
-import { Button } from '@/components/primitives'
+import { Button, Icon } from '@/components/primitives'
 import { PosterThumb } from './PosterThumb'
 import { HoverPopup } from './CurationSectionRow'
 import { ChevronDown } from 'lucide-react'
@@ -546,10 +546,7 @@ const SECTION_FILMS_HREF: Record<string, string | null> = {
 }
 
 const IconChevronDown = ({ open }: { open: boolean }) => (
-  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"
-    style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 180ms ease' }}>
-    <path d="M6 9l6 6 6-6" />
-  </svg>
+  <Icon name="chevron-down" size={14} />
 )
 
 /** 큐레이션 섹션(우선순위 상위 3개 + 최근 찾아본) — 모바일 시트·데스크톱 도크가 공유하는 본문 */

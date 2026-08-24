@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { toSecureImageUrl } from '@/lib/media/imageUrl'
+import { Icon } from '@/components/primitives'
 
 interface PosterThumbProps {
   src?: string
@@ -173,13 +174,7 @@ export function PosterThumb({
             zIndex: 1,
           }}
         >
-          <svg
-            width={10} height={10} viewBox="0 0 24 24"
-            fill="none" stroke="white" strokeWidth="3.5"
-            strokeLinecap="round" strokeLinejoin="round"
-          >
-            <path d="M5 12.5 10 17.5 19 7" />
-          </svg>
+          <Icon name="check" size={10} />
         </div>
       )}
     </div>

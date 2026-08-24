@@ -11,14 +11,14 @@
  */
 
 import {
-  ArrowLeft, ArrowRight, ArrowUp, Bell, Building2, Calendar, Camera, Check, ChevronDown,
-  ChevronLeft, ChevronRight, ChevronUp, CircleAlert, CircleCheck, CircleQuestionMark, CircleX,
-  Map as MapGlyph,
-  Clapperboard, Clock, Copy, Ellipsis,
-  ExternalLink, Eye, Film, Heart, House, Image as ImageIcon, Info, LoaderCircle,
-  LayoutGrid, LocateFixed, Lock, MapPin, Maximize2, Menu, Minus, Moon, Navigation, Plus, Scale,
-  Funnel, MapPinned, Search, Send, Share2, SlidersHorizontal, Sparkles, Star, Sun, Theater, Ticket,
-  TrendingDown, TrendingUp, TriangleAlert, User, UserRound, Video, X,
+  ArrowLeft, ArrowRight, ArrowRightLeft, ArrowUp, Bell, Building2, Calendar, Camera,
+  Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, CircleAlert, CircleCheck,
+  CircleQuestionMark, CircleX, Clapperboard, Clock, Copy, Ellipsis, ExternalLink, Eye,
+  Film, Funnel, Heart, House, Image as ImageIcon, Info, LayoutGrid, LoaderCircle,
+  LocateFixed, Lock, Map as MapGlyph, MapPin, MapPinned, Maximize2, Menu, Minus, Moon,
+  Navigation, Plus, Scale, Search, Send, Share2, SlidersHorizontal, Smartphone, Sparkles,
+  Star, Sun, Theater, Ticket, TrendingDown, TrendingUp, TriangleAlert, User, UserRound,
+  Video, X,
 } from 'lucide-react'
 import type { LucideProps } from 'lucide-react'
 import type { CSSProperties, ComponentType } from 'react'
@@ -87,6 +87,7 @@ const REGISTRY = {
   'arrow-left': ArrowLeft,
   'arrow-right': ArrowRight,
   'arrow-up': ArrowUp,
+  swap: ArrowRightLeft,
   /* 조작 */
   close: X,
   plus: Plus,
@@ -120,6 +121,7 @@ const REGISTRY = {
   ticket: Ticket,
   poster: ImageIcon,
   camera: Camera,
+  phone: Smartphone,
   user: User,
   'user-round': UserRound,
   building: Building2,

@@ -1,14 +1,10 @@
 import type { CSSProperties, ReactNode } from 'react'
-import { Button } from '@/components/primitives'
+import { Button, Icon } from '@/components/primitives'
 
 /** 지도 CTA 전용 아이콘. 예전엔 이 path가 6개 파일에 복사돼 있었고 크기만 15·16·17로
  *  제각각이었다 — 같은 버튼인데 화면마다 아이콘이 미묘하게 달랐다. */
 const IcoMap = () => (
-  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
-    <line x1="8" y1="2" x2="8" y2="18" />
-    <line x1="16" y1="6" x2="16" y2="22" />
-  </svg>
+  <Icon name="funnel" size={16} />
 )
 
 /**

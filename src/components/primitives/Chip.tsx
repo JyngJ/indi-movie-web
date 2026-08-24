@@ -1,6 +1,7 @@
 'use client'
 
 import { ButtonHTMLAttributes, MouseEvent, ReactNode } from 'react'
+import { Icon } from '@/components/primitives'
 
 interface ChipProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   selected?: boolean
@@ -54,10 +55,7 @@ export function Chip({ selected = false, onDismiss, children, className = '', on
             flexShrink: 0,
           }}
         >
-          <svg width={8} height={8} viewBox="0 0 10 10" fill="none"
-            stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-            <path d="M2 2l6 6M8 2l-6 6" />
-          </svg>
+          <Icon name="close" size={8} />
         </span>
       )}
       {children}

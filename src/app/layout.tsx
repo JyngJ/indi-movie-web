@@ -3,6 +3,7 @@ import { ReactNode } from 'react'
 import './globals.css'
 import { Providers } from './providers'
 import { AnalyticsScripts } from '@/components/analytics/AnalyticsScripts'
+import { Icon } from '@/components/primitives'
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'),
@@ -65,10 +66,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         </Providers>
         {/* 모바일 가로 회전 차단 오버레이 */}
         <div className="rotate-overlay" aria-hidden="true">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="4" y="2" width="16" height="20" rx="2" />
-            <path d="M9 22h6" />
-          </svg>
+          <Icon name="phone" size={48} strokeWidth={1.5} />
           <p>화면을 세로로 돌려주세요</p>
         </div>
         <AnalyticsScripts />

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, type ReactNode, type RefObject } from 'react'
-import { Button, IconButton, SearchBar } from '@/components/primitives'
+import { Button, IconButton, SearchBar, Icon } from '@/components/primitives'
 import { AddRequestModal, AddRequestCtaButton } from '@/components/domain/AddRequestModal'
 
 const SEARCH_GUIDE_EXAMPLES = [
@@ -125,9 +125,7 @@ export function SearchPanel({
                       key={q}
                       style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--color-border)' }}
                     >
-                      <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="var(--color-text-caption)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                        <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
-                      </svg>
+                      <Icon name="search" size={14} />
                       <button
                         onClick={() => onRecentSelect(q)}
                         style={{ flex: 1, background: 'none', border: 0, cursor: 'pointer', textAlign: 'left', padding: 0, fontSize: 14, color: 'var(--color-text-body)' }}
@@ -135,9 +133,7 @@ export function SearchPanel({
                         {q}
                       </button>
                       <IconButton variant="ghost" size={32} aria-label="삭제" onClick={() => onRecentRemove(q)}>
-                        <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                          <path d="M6 6l12 12M18 6 6 18" />
-                        </svg>
+                        <Icon name="close" size={12} />
                       </IconButton>
                     </div>
                   ))}
