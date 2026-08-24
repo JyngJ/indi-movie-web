@@ -144,7 +144,7 @@ export function SettingsMainPage({
       <div style={{ margin: '12px 16px 0', backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, var(--color-surface-bg))', border: '1px solid color-mix(in srgb, var(--color-warning) 25%, transparent)', borderRadius: 12, padding: '12px 16px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
         <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="var(--color-warning)" strokeWidth={1.75} strokeLinecap="round" style={{ flexShrink: 0, marginTop: 4 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         <p className="text-note" style={{ margin: 0, color: 'var(--color-text-sub)' }}>
-          상영 정보는 실시간으로 불러오지 않으므로 실제 좌석 현황과 다를 수 있습니다.
+          좌석 정보는 실시간이 아니라서 실제 현황과 다를 수 있어요
         </p>
       </div>
 
@@ -179,8 +179,8 @@ export function ReportSuccessNotice() {
           <path className="success-check-path" d="M5 13l5 5L20 7" />
         </svg>
       </div>
-      <div style={{ fontSize: 'var(--text-title)', fontWeight: 700, color: 'var(--color-text-primary)' }}>감사합니다!</div>
-      <div style={{ fontSize: 13, color: 'var(--color-text-sub)', textAlign: 'center', lineHeight: 1.6 }}>제보해 주셔서 감사합니다.<br/>확인 후 이메일로 답변 드리겠습니다.</div>
+      <div style={{ fontSize: 'var(--text-title)', fontWeight: 700, color: 'var(--color-text-primary)' }}>감사해요!</div>
+      <div style={{ fontSize: 13, color: 'var(--color-text-sub)', textAlign: 'center', lineHeight: 1.6 }}>제보해 주셔서 감사해요.<br/>확인하고 이메일로 답변드릴게요.</div>
     </div>
   )
 }
@@ -294,6 +294,7 @@ export function SettingsReportPage({
       <label style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer' }}>
         <input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} style={{ marginTop: 4, width: 16, height: 16, accentColor: 'var(--color-primary-base)', flexShrink: 0 }} />
         <span style={{ fontSize: 12, color: 'var(--color-text-sub)', lineHeight: 1.5 }}>
+          {/* writing-audit-ignore — 법적 동의 문구는 합니다체 */}
           제출하는 내용과 스크린샷이 서비스 개선 목적으로 사용될 수 있음에 동의합니다.
         </span>
       </label>

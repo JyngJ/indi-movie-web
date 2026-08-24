@@ -72,13 +72,14 @@ export default async function FilmsAreaPage({
   const faqSchema = toFaqSchema([
     {
       question: `${region}에서 독립영화는 어디서 볼 수 있나요?`,
+      // writing-audit-ignore — SEO 메타·스키마 문구는 문어체 유지
       answer: `${region} 지역 독립·예술영화관 ${data.theaters.length}곳에서 볼 수 있습니다: ${data.theaters.map((t) => t.name).join(', ')}.`,
     },
     {
       question: `${region}에서 오늘 상영하는 독립영화는 무엇인가요?`,
       answer: data.movies.length > 0
         ? `오늘 ${data.movies.length}편이 상영합니다: ${data.movies.map((m) => m.title).slice(0, 20).join(', ')}${data.movies.length > 20 ? ' 등' : ''}.`
-        : `오늘 ${region}에 등록된 독립·예술영화 상영이 없습니다.`,
+        : `오늘 ${region}에 등록된 독립·예술영화 상영이 없어요`,
     },
   ])
 

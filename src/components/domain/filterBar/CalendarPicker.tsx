@@ -83,7 +83,7 @@ export function CalendarPicker({ startDate, endDate, onApply, onCancel, style }:
           {DOW.map((d, i) => (
             <div key={d} style={{
               textAlign: 'center', fontSize: 'var(--text-badge)', fontWeight: 600,
-              color: i === 0 ? '#E30613' : i === 6 ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
+              color: i === 0 ? 'var(--color-error-mid)' : i === 6 ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
               padding: '4px 0',
             }}>
               {d}
@@ -114,7 +114,7 @@ export function CalendarPicker({ startDate, endDate, onApply, onCancel, style }:
 
             let textColor = 'var(--color-text-body)'
             if (isPast) textColor = 'var(--color-text-placeholder)'
-            else if (isSun) textColor = '#E30613'
+            else if (isSun) textColor = 'var(--color-error-mid)'
             else if (isSat) textColor = 'var(--color-primary-base)'
             if (isDot) textColor = '#fff'
 

@@ -9,6 +9,7 @@ import type {
   CrawledShowtimeCandidate,
   CrawlRun,
 } from '@/types/admin'
+import { toSecureImageUrl } from '@/lib/media/imageUrl'
 
 export interface CrawlSourceRow {
   id: string
@@ -310,7 +311,7 @@ export function movieFromRow(row: MovieRow): AdminMovie {
     nation: row.nation ?? undefined,
     kmdbId: row.kmdb_id ?? undefined,
     kmdbMovieSeq: row.kmdb_movie_seq ?? undefined,
-    posterUrl: row.poster_url ?? undefined,
+    posterUrl: toSecureImageUrl(row.poster_url),
     synopsis: row.synopsis ?? undefined,
     runtimeMinutes: row.runtime_minutes ?? undefined,
     certification: row.certification ?? undefined,

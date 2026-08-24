@@ -23,7 +23,8 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
     (_, i) => `${BASE_URL}/movie/sitemap/${i}.xml`,
   )
 
-  const disallow = ['/admin', '/api/', '/dev/']
+  // /design-system은 내부 문서라 색인 대상이 아니다(각 페이지 metadata에도 noindex).
+  const disallow = ['/admin', '/api/', '/dev/', '/design-system']
 
   return {
     rules: [

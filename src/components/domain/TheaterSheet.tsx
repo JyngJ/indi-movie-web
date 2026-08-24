@@ -26,6 +26,7 @@ import { GvEventSection } from './GvEventSection'
 import { GvDetailPanel } from './GvDetailPanel'
 import { BookingCtaButton, ShareScheduleButton } from './booking/BookingActions'
 import type { GvEvent } from '@/data/gv-events'
+import { toSecureImageUrl } from '@/lib/media/imageUrl'
 
 /* ── 상수 ──────────────────────────────────────────────────────── */
 // 접힌 상태에서 보이는 높이 — 피그마 TOBE collapsed: 핸들(24) + 헤더(128) + 포스터스트립(262, 포스터 238 + 상하 12)
@@ -878,7 +879,7 @@ export function TheaterSheet({
 
   return (
     <>
-    <Toast message="복사되었습니다" trigger={copyCount} />
+    <Toast message="복사했어요" trigger={copyCount} />
     <div
       ref={containerRef}
       onPointerDown={handlePointerDown}
@@ -1775,7 +1776,7 @@ export function TheaterSheet({
                   {/* 포스터 — 피그마 84×126, r2 */}
                   <div style={{ flexShrink: 0, width: 84, height: 126, borderRadius: 'var(--radius-poster)', overflow: 'hidden', backgroundColor: 'var(--color-neutral-700)' }}>
                     {movie.posterUrl && (
-                      <img src={movie.posterUrl} alt={movie.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                      <img src={toSecureImageUrl(movie.posterUrl)} alt={movie.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                     )}
                   </div>
                   {/* 영화 정보 */}
@@ -1874,7 +1875,7 @@ export function TheaterSheet({
                 color: 'var(--color-text-caption)',
                 fontSize: 13,
               }}>
-                선택한 날짜에 상영 정보가 없습니다.
+                선택한 날짜에 상영 정보가 없어요
               </div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(var(--comp-showtime-min-width), 1fr))', gap: 12 }}>
@@ -1921,7 +1922,7 @@ export function TheaterSheet({
                 textAlign: 'center',
                 lineHeight: 1.5,
               }}>
-                상영 정보는 실시간으로 불러오지 않으므로<br />실제 좌석 현황과 다를 수 있습니다.
+                좌석 정보는 실시간이 아니라서<br />실제 현황과 다를 수 있어요
               </div>
             )}
           </div>

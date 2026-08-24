@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { getMovieDetail } from '@/lib/catalog/getMovieDetail'
 import { FilmsMovieDetailClient } from './FilmsMovieDetailClient'
 import { ogImageUrl } from '@/lib/og/cards'
+import { Toast } from '@/components/primitives'
 
 // NOTE: ISR(정적 셸)로 두면 클라이언트 하이드레이션이 멈추는 문제(포스터 로딩 정지·
 // 회차 무한 로딩·effects 미실행)가 있어 동적 렌더로 강제. 원인 규명 후 ISR 복원 검토.
@@ -14,7 +15,7 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const [{ id }, query] = await Promise.all([params, searchParams])
   const movie = await getMovieDetail(id)
-  if (!movie) return { title: '영화볼지도' }
+  if (!movie) notFound()
 
   const title = `${movie.title} | 영화볼지도`
   const description = movie.synopsis?.slice(0, 110) ?? `${movie.title} 상영 정보`
@@ -33,11 +34,13 @@ export async function generateMetadata(
 
 export default async function FilmsMovieDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  /* loading.tsx를 두면 스트리밍이 200으로 먼저 시작돼 뒤의 notFound()가 상태코드를
+     못 바꾼다(삭제된 영화가 '200 + noindex'로 남음). 존재 확인은 Suspense 밖에서. */
   const movie = await getMovieDetail(id)
   if (!movie) notFound()
 
   return (
-    <Suspense>
+    <Suspense fallback={<Toast message="불러오는 중…" visible />}>
       <FilmsMovieDetailClient movie={movie} />
     </Suspense>
   )
