@@ -151,6 +151,17 @@ export const GUIDES: Record<string, ComponentGuide> = {
     ],
   },
 
+  Switch: {
+    intro: '켜짐/꺼짐을 즉시 바꾸는 토글입니다. 누르는 순간 저장까지 끝나는 설정(알림 켜기 등)에만 쓰고, 저장 버튼이 따로 있는 폼에서는 쓰지 않습니다.',
+    specs: [
+      { title: '크기', desc: '트랙 44×26, 노브 20. 켜짐 면은 primary/base, 꺼짐 면은 neutral/300입니다.' },
+    ],
+    usage: [
+      { kind: 'do', rule: '레이블은 항상 왼쪽 행(제목·설명)이 갖고, 토글은 상태만 표현합니다.' },
+      { kind: 'dont', rule: '탐색·이동에 쓰지 않습니다 — 토글은 설정값 변경 전용입니다. 화면 전환은 MenuRow, 상태 필터는 Chip이 맡습니다.' },
+    ],
+  },
+
   SortToggle: {
     intro: '목록 정렬 기준을 바꾸는 텍스트 pill입니다. 높이는 28(--comp-sort-h)로 칩보다 한 단계 작습니다.',
     usage: [

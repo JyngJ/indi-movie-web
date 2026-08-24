@@ -2,10 +2,8 @@
 
 import { useAuth } from '@/components/auth/AuthProvider'
 import { LoginPanel } from '@/components/auth/LoginPanel'
-import { FilterPill, MenuCard, Switch } from '@/components/primitives'
+import { MenuCard, Switch } from '@/components/primitives'
 import { useNotificationPrefs } from '@/hooks/useNotifications'
-import { useFavorites } from '@/hooks/useFavorites'
-import { REGIONS } from '@/lib/regions'
 
 /** 24시간 정각 목록 — 조용한 시간 선택용 */
 const HOURS = Array.from({ length: 24 }, (_, h) => `${String(h).padStart(2, '0')}:00`)
@@ -44,25 +42,6 @@ function Row({ title, description, children, last, stacked }: {
   )
 }
 
-function HourSelect({ value, onChange, label }: { value: string; onChange: (v: string) => void; label: string }) {
-  return (
-    <select
-      aria-label={label}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      style={{
-        height: 36, paddingLeft: 12, paddingRight: 12,
-        borderRadius: 'var(--radius-control)',
-        border: '1px solid var(--color-neutral-300)',
-        background: 'var(--color-surface-bg)',
-        color: 'var(--color-text-body)',
-        fontSize: 'var(--text-meta)', fontWeight: 600,
-      }}
-    >
-      {HOURS.map((h) => <option key={h} value={h}>{h}</option>)}
-    </select>
-  )
-}
 
 /**
  * 알림 설정 — 모바일 /my/notifications 페이지와 데스크톱 MY 팝오버가 공유.
@@ -74,15 +53,7 @@ function HourSelect({ value, onChange, label }: { value: string; onChange: (v: s
 export function NotificationSettingsContent() {
   const { status } = useAuth()
   const { prefs, isLoading, saving, error, save } = useNotificationPrefs()
-  const { favorites } = useFavorites()
-  const hasFavoriteTheater = favorites.some((f) => f.type === 'theater')
 
-  const toggleRegion = (id: string) => {
-    const next = prefs.regionIds.includes(id)
-      ? prefs.regionIds.filter((r) => r !== id)
-      : [...prefs.regionIds, id]
-    save({ regionIds: next })
-  }
 
   if (status === 'loading' || (status === 'signed-in' && isLoading)) {
     return <p style={{ margin: '24px var(--gutter)', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>확인 중…</p>
@@ -113,40 +84,10 @@ export function NotificationSettingsContent() {
           <Switch label="새 상영 알림" checked={prefs.newScreening} disabled={saving}
             onChange={(v) => save({ newScreening: v })} />
         </Row>
-        <Row title="막바지 상영" description="관심 작품의 상영이 곧 끝날 때 (5일 이내)">
+        {/* 방해 금지·지역은 뺐다 (2026-08-24) — 카톡 발송 전이라 아직 필요 없다. 발송 붙일 때 복원 */}
+        <Row title="막바지 상영" description="관심 작품의 상영이 곧 끝날 때 (5일 이내)" last>
           <Switch label="막바지 상영 알림" checked={prefs.lastWeek} disabled={saving}
             onChange={(v) => save({ lastWeek: v })} />
-        </Row>
-        <Row title="방해 금지 시간" description="이 시간에는 카톡을 보내지 않아요. 소식 탭에는 그대로 쌓여요.">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <HourSelect label="방해 금지 시작" value={prefs.quietStart} onChange={(v) => save({ quietStart: v })} />
-            <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>~</span>
-            <HourSelect label="방해 금지 종료" value={prefs.quietEnd} onChange={(v) => save({ quietEnd: v })} />
-          </div>
-        </Row>
-        <Row
-          title="알림 받을 지역"
-          description={prefs.regionIds.length > 0
-            ? '고른 지역의 상영만 알려드려요.'
-            : hasFavoriteTheater
-              ? '고른 지역이 없어서 관심 극장이 있는 지역으로 알려드리고 있어요.'
-              : '고른 지역이 없어서 전국의 상영을 알려드려요. 한 편이 전국 수십 곳에서 상영하기도 해요.'}
-          stacked
-          last
-        >
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {REGIONS.map((r) => (
-              <FilterPill
-                key={r.id}
-                active={prefs.regionIds.includes(r.id)}
-                aria-pressed={prefs.regionIds.includes(r.id)}
-                disabled={saving}
-                onClick={() => toggleRegion(r.id)}
-              >
-                {r.label}
-              </FilterPill>
-            ))}
-          </div>
         </Row>
       </MenuCard>
 
