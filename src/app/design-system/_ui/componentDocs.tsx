@@ -127,6 +127,24 @@ interface Doc {
 const s = (v: ControlValues, k: string) => String(v[k])
 const b = (v: ControlValues, k: string) => Boolean(v[k])
 
+
+/** 타깃이 겹치는지는 아이콘만 봐서는 안 보인다 — 44 영역을 점선으로 드러낸다. */
+function TargetPair({ gap, caption, bad }: { gap: number; caption: string; bad?: boolean }) {
+  const ring = bad ? 'var(--color-error)' : 'var(--color-success)'
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-3)' }}>
+      <div style={{ display: 'flex', gap }}>
+        {[<IcoX key="x" />, <IcoPlus key="p" />].map((glyph, i) => (
+          <div key={i} style={{ outline: `1px dashed ${ring}`, outlineOffset: -1, borderRadius: 'var(--radius-button)' }}>
+            <IconButton aria-label={i === 0 ? '닫기' : '추가'}>{glyph}</IconButton>
+          </div>
+        ))}
+      </div>
+      <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)' }}>{caption}</span>
+    </div>
+  )
+}
+
 const DOCS: Record<string, Doc> = {
   Button: {
     hero: (
@@ -230,13 +248,17 @@ const DOCS: Record<string, Doc> = {
       </div>,
     ],
     usageVisuals: [
-      <div key="do" style={{ display: 'flex', gap: 12 }}>
-        <IconButton aria-label="닫기"><IcoX /></IconButton>
-        <IconButton aria-label="추가"><IcoPlus /></IconButton>
-      </div>,
-      <div key="dont" style={{ display: 'flex', gap: 0 }}>
-        <IconButton aria-label="닫기"><IcoX /></IconButton>
-        <IconButton aria-label="추가"><IcoPlus /></IconButton>
+      <TargetPair key="do" gap={12} caption="간격 12 — 두 타깃이 떨어져 있다" />,
+      <TargetPair key="dont-gap" gap={0} caption="간격 0 — 44 타깃이 서로 닿는다" bad />,
+      <div key="dont-glyph" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-6)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-2)' }}>
+          <IconButton aria-label="별"><Icon name="star" size={18} /></IconButton>
+          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)' }}>즐겨찾기? 평점?</span>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-2)' }}>
+          <IconButton aria-label="반짝임"><Icon name="sparkles" size={18} /></IconButton>
+          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)' }}>추천? 새로고침?</span>
+        </div>
       </div>,
     ],
   },
