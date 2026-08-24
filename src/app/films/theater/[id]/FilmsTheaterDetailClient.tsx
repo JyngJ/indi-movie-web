@@ -376,13 +376,30 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
       if (!map.has(st.movieId)) map.set(st.movieId, [])
       map.get(st.movieId)!.push(st)
     }
+    /* 오늘 탭에서 회차가 전부 끝난 영화는 목록 뒤로 — 지금 볼 수 있는 영화가 먼저 온다.
+       종료 판정은 ShowtimeCell kind('ended')와 같은 기준(endTime, 없으면 시작+120분). */
+    const now = new Date()
+    const nowMinutes = now.getHours() * 60 + now.getMinutes()
+    const isToday = selectedDate === toKstIsoDate(now)
+    const allEnded = (sts: Showtime[]) => isToday && sts.every((st) => {
+      const [sh, sm] = st.showTime.split(':').map(Number)
+      const endMin = st.endTime
+        ? (() => { const [eh, em] = st.endTime!.split(':').map(Number); return eh * 60 + em })()
+        : sh * 60 + sm + 120
+      return endMin <= nowMinutes
+    })
     return dayMovies.map((m) => ({ movie: m, showtimes: map.get(m.id) ?? [] }))
       .map((g) => bookableOnly
         ? { ...g, showtimes: g.showtimes.filter((st) => st.seatAvailable > 0) }
         : g)
       .filter((g) => g.showtimes.length > 0)
-      .sort((a, b) => (a.showtimes[0]?.showTime ?? '') < (b.showtimes[0]?.showTime ?? '') ? -1 : 1)
-  }, [dayMovies, dayShowtimes, bookableOnly])
+      .sort((a, b) => {
+        const aEnded = allEnded(a.showtimes) ? 1 : 0
+        const bEnded = allEnded(b.showtimes) ? 1 : 0
+        if (aEnded !== bEnded) return aEnded - bEnded
+        return (a.showtimes[0]?.showTime ?? '') < (b.showtimes[0]?.showTime ?? '') ? -1 : 1
+      })
+  }, [dayMovies, dayShowtimes, bookableOnly, selectedDate])
 
   const selectedShowtimeData = useMemo(() => {
     if (!selectedShowtimeId || !selectedMovieTitle) return null

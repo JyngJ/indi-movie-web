@@ -211,7 +211,22 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
           .filter((st) => !bookableOnly || st.seatAvailable > 0),
       }))
       .filter((entry) => entry.showtimes.length > 0)
-  }, [theaterEntries, selectedDate, bookableOnly])
+      /* 오늘 회차가 전부 끝난 극장은 뒤로 — 지금 갈 수 있는 극장이 먼저.
+         종료 판정은 ShowtimeCell kind('ended')와 같은 기준. 나머지 순서는 유지(stable sort). */
+      .sort((a, b) => {
+        if (selectedDate !== dates[0]) return 0
+        const now = new Date()
+        const nowMinutes = now.getHours() * 60 + now.getMinutes()
+        const ended = (sts: typeof a.showtimes) => sts.every((st) => {
+          const [sh, sm] = st.showTime.split(':').map(Number)
+          const endMin = st.endTime
+            ? (() => { const [eh, em] = st.endTime!.split(':').map(Number); return eh * 60 + em })()
+            : sh * 60 + sm + 120
+          return endMin <= nowMinutes
+        })
+        return (ended(a.showtimes) ? 1 : 0) - (ended(b.showtimes) ? 1 : 0)
+      })
+  }, [theaterEntries, selectedDate, bookableOnly, dates])
 
   const totalTheaterCount = theaterEntries.length
   const { inRegion: inRegionEntries, otherRegion: otherRegionEntries } = useMemo(() => {
