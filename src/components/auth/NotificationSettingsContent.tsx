@@ -16,9 +16,9 @@ const HOURS = Array.from({ length: 24 }, (_, h) => `${String(h).padStart(2, '0')
 /**
  * 알림 설정 — 모바일 /my/notifications 페이지와 데스크톱 MY 팝오버가 공유.
  *
- * 지금은 소식 탭에만 쌓이고 카톡 발송은 꺼져 있다(판정 정확도를 먼저 본다).
- * 그래서 화면에도 "카톡 발송은 준비 중"이라고 적어둔다 — 켜져 있다고 오해하면
- * 안 오는 알림을 기다리게 된다.
+ * 지금 알림은 소식 탭에만 쌓인다. 바깥으로 내보내는 발송은 아직 없다(판정 정확도를
+ * 먼저 본다). 화면에는 어디에 쌓이는지만 적는다 — 어떤 채널로 보낼지는 정해지면
+ * 그때 말한다. 오지 않을 알림을 미리 약속하면 기다리게 된다.
  */
 export function NotificationSettingsContent() {
   const { status } = useAuth()
@@ -44,7 +44,6 @@ export function NotificationSettingsContent() {
         background: 'var(--color-surface-raised)',
       }}>
         관심 영화·감독·극장에 새 상영이 생기면 소식 탭에 쌓아둬요.
-        카카오톡으로 보내는 건 준비 중이에요.
       </p>
 
       {/* 카드 하나로 — 종류·시간·지역을 나눠 담으면 카드가 셋이 되는데,
@@ -54,7 +53,7 @@ export function NotificationSettingsContent() {
           <Switch label="새 상영 알림" checked={prefs.newScreening} disabled={saving}
             onChange={(v) => save({ newScreening: v })} />
         </ListRow>
-        {/* 방해 금지·지역은 뺐다 (2026-08-24) — 카톡 발송 전이라 아직 필요 없다. 발송 붙일 때 복원 */}
+        {/* 방해 금지·지역은 뺐다 (2026-08-24) — 바깥 발송이 없어 아직 필요 없다. 발송 붙일 때 복원 */}
         <ListRow title="막바지 상영" description="관심 작품의 상영이 곧 끝날 때 (5일 이내)" last>
           <Switch label="막바지 상영 알림" checked={prefs.lastWeek} disabled={saving}
             onChange={(v) => save({ lastWeek: v })} />

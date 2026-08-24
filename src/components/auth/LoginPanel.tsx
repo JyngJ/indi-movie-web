@@ -7,30 +7,17 @@ import { KakaoLoginButton } from '@/components/primitives'
 
 /**
  * 로그인 패널 — 내 계정 탭 홈(비로그인)과 전역 로그인 시트가 같이 쓴다.
+ *
+ * 일러스트는 두지 않는다. 로그인은 할 일이 하나뿐인 화면이라 그림이 들어가면
+ * 시선이 먼저 그림에 가고 버튼이 아래로 밀린다.
  * 카피는 진입 맥락에 따라 바꿀 수 있다 (예: 하트 클릭 → "관심 영화로 등록하면 새 상영 소식을 알려드려요").
  * 구글은 Supabase 프로바이더 켜지면 버튼만 추가 (M0에서 카카오만 먼저).
  */
-const ILLUST = {
-  flyer: {
-    src: '/illust/no-showtimes.png',
-    alt: '전단을 읽고 있는 관객 일러스트',
-  },
-  seated: {
-    src: '/illust/seated-back.png',
-    alt: '영화관 좌석에 앉아 스크린을 바라보는 관객 뒷모습 일러스트',
-  },
-} as const
-
 interface Props {
   title?: string
   description?: string
   /** 로그인 후 돌아갈 경로. 생략 시 현재 경로 */
   returnTo?: string
-  /**
-   * 일러스트 종류. 화면마다 인물이 하는 일이 다르다 —
-   * 'flyer'는 소식을 읽는 사람, 'seated'는 상영을 기다리는 사람. false면 그리지 않는다.
-   */
-  illustration?: 'flyer' | 'seated' | false
   /** 콜백 실패 코드 (?auth_error=) */
   errorCode?: string | null
 }
@@ -39,7 +26,6 @@ export function LoginPanel({
   title = '내 영화 취향을 기억할게요',
   description = '로그인하면 관심 영화·극장을 저장하고, 새로 상영 소식이 생기면 알려드려요.',
   returnTo,
-  illustration = 'seated',
   errorCode,
 }: Props) {
   const { signIn } = useAuth()
@@ -56,14 +42,6 @@ export function LoginPanel({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, textAlign: 'center' }}>
-      {illustration && (
-        <img
-          src={ILLUST[illustration].src}
-          alt={ILLUST[illustration].alt}
-          style={{ width: 160, height: 'auto', display: 'block', opacity: 0.9 }}
-        />
-      )}
-
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <h2 style={{ margin: 0, fontSize: 'var(--text-h2)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
           {title}

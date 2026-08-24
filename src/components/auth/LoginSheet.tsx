@@ -100,7 +100,6 @@ export function LoginSheet() {
           title={state?.title}
           description={state?.description}
           returnTo={state?.returnTo}
-          illustration={false}
         />
       </div>
     </div>,
