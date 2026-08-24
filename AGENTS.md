@@ -11,9 +11,10 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - If you need to run Next.js directly, pass `--webpack` explicitly.
 - Before changing Next.js CLI flags or bundler behavior, read `node_modules/next/dist/docs/01-app/03-api-reference/06-cli/next.md` and update this section plus `README.md`.
 
-## Design 2.0 Refactor (feature/design-refactor)
+## Design 2.0 · 피그마 동기화
 
-- 디자인 2.0 작업을 이어받는 세션은 반드시 `docs/HANDOFF-design-refactor.md`를 먼저 읽을 것 — 피그마 Scripter 파이프라인, 확정 문법, 미결 목록, 함정이 정리돼 있다.
+- 디자인 시스템·피그마 작업을 이어받는 세션은 `docs/HANDOFF-figma-design-system.md`(2026-08-10)를 먼저 읽을 것 — 피그마 Scripter 파이프라인, 확정 문법, 함정이 정리돼 있다.
+- 구 `feature/design-refactor` 브랜치는 2026-08-12 salvage PR(#271)로 main에 필요한 것만 반영 완료 — 그 브랜치에서 새 작업을 잇지 말 것. `docs/HANDOFF-design-refactor.md`는 당시 히스토리 문서다.
 
 ## Branching Rules
 
@@ -65,7 +66,18 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - 수치를 개선했으면(카운트 감소/채택률 증가) `scripts/audit/baseline.json`을 낮춰서 **같이 커밋할 것**. 절대 baseline을 올려서 통과시키지 말 것 — 신규 하드코딩 금지, 토큰을 사용한다.
 - **채택률이 떨어지는데 코드는 좋아진 경우가 있다.** 여러 호출부를 공용 컴포넌트로 묶으면 그 호출부들이 prim에도 raw에도 안 잡혀 분자·분모가 같이 줄고 비율이 내려간다(정규식 카운트라 합성을 못 본다). 이때는 **커밋 메시지에 이유를 적고 baseline을 조정**한다. 관계없는 파일에서 전환거리를 찾아 숫자를 메우지 말 것 — 지표에 코드를 맞추는 순간 지표가 거짓말이 된다.
 - `PRIM` 목록은 `src/components/primitives/index.ts`에서 자동으로 뽑는다. 손으로 적지 말 것 — 예전에 손 목록이 12개에 멈춰 있는 동안 index는 26개로 늘어, 프리미티브 62개 사용이 통째로 안 세졌다.
-- 감사 제외 파일 목록(스크립트에 하드코딩됨)은 그대로 유지: `onboarding/illustrations` / `GvPinSlots` / `GvPin` / `MapPin` / `GvMarkerIcon` / `opengraph-image` / `dev/components` / `src/app/admin` (style) / `subwayUtils`.
+- 감사 제외 파일 목록(스크립트에 하드코딩됨)은 그대로 유지: `onboarding/illustrations` / `GvPinSlots` / `GvPin` / `MapPin` / `GvMarkerIcon` / `opengraph-image` / `src/lib/og` / `dev/components` / `src/app/admin` (style) / `subwayUtils`.
+
+## 이미지 alt 정책 (SEO·접근성)
+
+2026-08 네이버 서치어드바이저 "Alt 속성 누락" 진단이 전 페이지에 걸린 사고의 재발 방지 규칙 (PR #293).
+
+- **모든 `<img>`/`<Image>`에 설명 alt 필수. 빈 `alt=""` 금지.** 네이버는 alt 부재뿐 아니라 **빈 값도 '설명 없음'으로 진단**하고, 빙은 속성 부재를 플래그한다. 구글은 빈 alt를 허용하지만 설명을 권장.
+- **장식·중복 이미지**(워터마크, 트래킹 픽셀, 일러스트 오버레이 레이어 등)도 짧은 설명 alt를 넣고 **`aria-hidden`을 병행**한다 — 크롤러에는 텍스트를 주고 스크린리더 중복 낭독은 막는다. 장식이라는 이유로 `alt=""`를 쓰지 말 것.
+- **nullable 값 폴백을 빈 문자열로 두지 말 것.** `alt={title ?? ''}`가 아니라 `alt={title ?? '영화 포스터'}`처럼 의미 있는 폴백을 쓴다.
+- 예외(검사 불필요): OG 이미지 렌더러(`src/lib/og` — HTML 페이지가 아님), `dev/` 페이지(크롤 대상 아님).
+- 회귀 검사: `grep -rn 'alt=""' src --include="*.tsx"`가 위 예외 밖에서 잡히면 안 된다.
+- 배포 후 진단이 이미 잡혀 있으면: 서치어드바이저 수집 요청(핵심 URL) + `npm run seo:indexnow`(빙·네이버 IndexNow, 구글은 미지원이라 Search Console 수동). `crawl:showtimes` 파이프라인이 하루 3번 자동 통보하므로 수동 실행은 배포 직후 1회면 충분.
 
 ## UI Writing (화면 문구 규범)
 
