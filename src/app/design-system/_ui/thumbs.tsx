@@ -3,7 +3,8 @@
 import type { ReactNode } from 'react'
 import {
   Avatar, Badge, BottomSheet, BubbleTail, Button, Card, CardContainer, Chip, DirectorChip,
-  FabRound, FilterPill, GenreChip, IconButton, Input, PosterChip, ScrollNavButton,
+  Divider, EmptyState, FabRound, FilterPill, GenreChip, Icon, IconButton, Input,
+  ListRow, PosterChip, ScrollNavButton, Switch, Tabs,
   SearchBar, SearchBarButton, SectionHeader, Skeleton, SortToggle, Wordmark,
   MovieCardSkeleton, TheaterCardSkeleton,
 } from '@/components/primitives'
@@ -32,6 +33,36 @@ function Poster({ children, width = 84 }: { children?: ReactNode; width?: number
 }
 
 const THUMBS: Record<string, ReactNode> = {
+  Icon: (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--color-text-primary)' }}>
+      <Icon name="map-pin" size="lg" />
+      <Icon name="heart" size="lg" />
+      <Icon name="calendar" size="lg" />
+      <Icon name="search" size="lg" />
+    </div>
+  ),
+  Divider: (
+    <div style={{ width: 132, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>씨네큐브 광화문</span>
+      <Divider />
+      <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>아트나인</span>
+    </div>
+  ),
+  EmptyState: (
+    <div style={{ width: 168 }}>
+      <EmptyState message="이 날 상영 정보가 없습니다" paddingY={12} />
+    </div>
+  ),
+  Tabs: (
+    <div style={{ width: 168 }}>
+      <TabsThumb />
+    </div>
+  ),
+  ListRow: (
+    <div style={{ width: 200 }}>
+      <ListRow title="새 상영 알림" description="관심작에 상영이 열리면" trailing={<Switch checked onChange={() => {}} label="새 상영 알림" />} last density="compact" />
+    </div>
+  ),
   Avatar: (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
       <Avatar name="봉준호" size={28} />
@@ -186,6 +217,17 @@ const THUMBS: Record<string, ReactNode> = {
     </div>
   ),
   Wordmark: <Wordmark style={{ height: 30, width: 'auto' }} />,
+}
+
+function TabsThumb() {
+  return (
+    <Tabs
+      label="미리보기"
+      value="info"
+      onChange={() => {}}
+      items={[{ value: 'info', label: '영화 정보' }, { value: 'theaters', label: '상영관' }] as const}
+    />
+  )
 }
 
 export const hasThumb = (name: string) => name in THUMBS
