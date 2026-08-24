@@ -41,7 +41,6 @@ import { getStoredRegion, setStoredRegion, subscribeStoredRegion } from '@/lib/r
 import { getFestivalDateLabel, getFestivalStatus, type FestivalStatus } from '@/lib/festival/status'
 import type { Theater } from '@/types/api'
 import type { Festival } from '@/types/festival'
-import { ArrowUp, ChevronRight } from 'lucide-react'
 
 /* ── 지역 설정 힌트 말풍선 — 지도 FilterBar의 안내와 동일한 문구/닫기 동작(yh_region_tip) ── */
 function RegionHintBubble({ onDismiss }: { onDismiss: () => void }) {
@@ -175,7 +174,7 @@ function FestivalBannerCard({ festival, today, isDesktop, onClick }: { festival:
       <SectionHeader
         title="주목할 영화제"
         isDesktop={isDesktop}
-        trailing={<ChevronRight size={18} strokeWidth={1.75} color="var(--color-text-caption)" />}
+        trailing={<Icon name="chevron-right" size={18} strokeWidth={1.75} color="var(--color-text-caption)" />}
       />
 
       {/* 배너 이미지 — banner_url 있을 때만. 전체 폭 띠에 surface-raised 배경을 깔고
@@ -1204,7 +1203,7 @@ export default function FilmsPage() {
             zIndex: 100,
           }}
         >
-          <ArrowUp size={20} strokeWidth={1.75} color="currentColor" />
+          <Icon name="arrow-up" size={20} strokeWidth={1.75} color="currentColor" />
         </FabRound>
       )}
     </div>

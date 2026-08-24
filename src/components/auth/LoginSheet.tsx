@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { X } from 'lucide-react'
 import { IconButton } from '@/components/primitives'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useLockBodyScroll } from '@/hooks/useLockBodyScroll'
 import { useUIStore } from '@/store/uiStore'
 import { useAuth } from './AuthProvider'
 import { LoginPanel } from './LoginPanel'
+import { Icon } from '@/components/primitives'
 
 /**
  * 전역 로그인 시트 (IA 42). 어디서든 useUIStore().openLoginSheet({ title, description, returnTo })로 연다.
@@ -93,7 +93,7 @@ export function LoginSheet() {
       >
         <div style={{ display: 'flex', justifyContent: isDesktop ? 'flex-end' : 'center', alignItems: 'center', minHeight: 24, marginBottom: 8 }}>
           {isDesktop
-            ? <IconButton variant="ghost" size={32} aria-label="닫기" onClick={close}><X size={18} strokeWidth={1.75} /></IconButton>
+            ? <IconButton variant="ghost" size={32} aria-label="닫기" onClick={close}><Icon name="close" size={18} strokeWidth={1.75} /></IconButton>
             : <div style={{ width: 36, height: 4, borderRadius: 'var(--radius-pill)', background: 'var(--color-border)' }} />}
         </div>
         <LoginPanel

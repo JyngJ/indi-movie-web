@@ -143,6 +143,16 @@
 }
 
 .ds-nav-items { display: flex; flex-direction: column; gap: 2px; margin-top: var(--spacing-2); }
+.ds-nav-section {
+  margin: var(--spacing-3) 0 2px;
+  padding-left: var(--spacing-4);
+  font-size: var(--text-badge);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-placeholder);
+}
+.ds-nav-items > .ds-nav-section:first-child { margin-top: 0; }
 
 /* ── 섹션 표지 카드 ─────────────────────────────────────────────── */
 .ds-cover-grid {

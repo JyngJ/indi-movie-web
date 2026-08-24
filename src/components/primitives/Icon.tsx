@@ -1,7 +1,9 @@
-'use client'
-
 /**
  * Icon — 서비스의 유일한 아이콘 진입점.
+ *
+ * 'use client'를 붙이지 않는다. 훅도 핸들러도 없는 순수 표시 컴포넌트이고, 클라이언트
+ * 모듈로 만들면 ICON_SIZE·ICON_NAMES를 서버 컴포넌트에서 읽을 때 값이 아니라 참조
+ * 프록시가 와서 Object.keys가 빈 배열이 된다(파운데이션 문서가 실제로 그렇게 비었다).
  *
  * 왜 이름(name)으로 부르나: 인라인 <svg>가 171개까지 늘어난 이유는 "어디에 뭐가 있는지"를
  * 알 방법이 없어서였다. 문자열 이름이면 grep으로 세지고, 디자인 시스템 사이트에서
@@ -11,14 +13,12 @@
  */
 
 import {
-  ArrowLeft, ArrowRight, ArrowRightLeft, ArrowUp, Bell, Building2, Calendar, Camera,
-  Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, CircleAlert, CircleCheck,
-  CircleQuestionMark, CircleX, Clapperboard, Clock, Copy, Ellipsis, ExternalLink, Eye,
-  Film, Funnel, Heart, House, Image as ImageIcon, Info, LayoutGrid, LoaderCircle,
-  LocateFixed, Lock, Map as MapGlyph, MapPin, MapPinned, Maximize2, Menu, Minus, Moon,
-  Navigation, Plus, Scale, Search, Send, Share2, SlidersHorizontal, Smartphone, Sparkles,
-  Star, Sun, Theater, Ticket, TrendingDown, TrendingUp, TriangleAlert, User, UserRound,
-  Video, X,
+  ArrowRightLeft, ArrowUp, Bell, Building2, Calendar, Camera, Check, ChevronDown,
+  ChevronLeft, ChevronRight, CircleAlert, CircleCheck, CircleQuestionMark, CircleX,
+  Clapperboard, Clock, Copy, Ellipsis, ExternalLink, Eye, Film, Funnel, Heart, Info,
+  LayoutGrid, LoaderCircle, LocateFixed, Lock, Map as MapGlyph, MapPin, MapPinned, Minus,
+  Moon, Plus, Scale, Search, Send, Share2, Smartphone, Theater, TrendingDown, TrendingUp,
+  User, UserRound, X, ZoomIn,
 } from 'lucide-react'
 import type { LucideProps } from 'lucide-react'
 import type { CSSProperties, ComponentType } from 'react'
@@ -82,9 +82,6 @@ const REGISTRY = {
   'chevron-left': ChevronLeft,
   'chevron-right': ChevronRight,
   'chevron-down': ChevronDown,
-  'chevron-up': ChevronUp,
-  'arrow-left': ArrowLeft,
-  'arrow-right': ArrowRight,
   'arrow-up': ArrowUp,
   swap: ArrowRightLeft,
   /* 조작 */
@@ -92,19 +89,16 @@ const REGISTRY = {
   plus: Plus,
   minus: Minus,
   check: Check,
-  menu: Menu,
   grid: LayoutGrid,
   search: Search,
   copy: Copy,
-  filter: SlidersHorizontal,
   funnel: Funnel,
-  expand: Maximize2,
+  'zoom-in': ZoomIn,
   more: Ellipsis,
-  /* 상태 */
+  /* 상태 — success·error는 문서 사이트의 Do/Don't가 쓴다 */
   info: Info,
   help: CircleQuestionMark,
   alert: CircleAlert,
-  warning: TriangleAlert,
   success: CircleCheck,
   error: CircleX,
   loading: LoaderCircle,
@@ -112,13 +106,9 @@ const REGISTRY = {
   'trending-down': TrendingDown,
   /* 도메인 */
   heart: Heart,
-  star: Star,
   film: Film,
   clapperboard: Clapperboard,
-  video: Video,
   theater: Theater,
-  ticket: Ticket,
-  poster: ImageIcon,
   camera: Camera,
   phone: Smartphone,
   user: User,
@@ -129,18 +119,14 @@ const REGISTRY = {
   bell: Bell,
   eye: Eye,
   scale: Scale,
-  sparkles: Sparkles,
-  home: House,
   lock: Lock,
   /* 지도 */
   'map-pin': MapPin,
   map: MapGlyph,
   locate: LocateFixed,
   route: MapPinned,
-  navigation: Navigation,
   /* 테마 */
   moon: Moon,
-  sun: Sun,
   /* 외부 */
   share: Share2,
   'external-link': ExternalLink,

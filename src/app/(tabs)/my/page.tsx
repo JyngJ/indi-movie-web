@@ -2,12 +2,12 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
-import { MoreHorizontal } from 'lucide-react'
 import { MyHomeContent } from '@/components/auth/MyHomeContent'
 import { MyPageShell } from '@/components/auth/MyPageShell'
 import { IconButton } from '@/components/primitives'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useUIStore } from '@/store/uiStore'
+import { Icon } from '@/components/primitives'
 
 /**
  * MY 탭 홈 페이지 (모바일 + 데스크톱 딥링크). 데스크톱 레일 MY 클릭은 MyPanel 팝오버.
@@ -40,7 +40,7 @@ function MyPageInner() {
       title="MY"
       trailing={
         <IconButton variant="ghost" size={44} aria-label="더보기" onClick={openSettings}>
-          <MoreHorizontal size={22} strokeWidth={1.75} />
+          <Icon name="more" size={22} strokeWidth={1.75} />
         </IconButton>
       }
     >

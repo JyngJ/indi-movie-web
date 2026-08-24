@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
-import { ExternalLink } from 'lucide-react'
 import { SectionHeader, ScrollNavButton, IconButton } from '@/components/primitives'
 import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
 import { buildSectionAnalytics } from '@/lib/curation/sectionRuns'
@@ -12,6 +11,7 @@ import { isInstagramRecActiveNow, sortInstagramRecommendations } from '@/lib/cur
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import type { InstagramRecommendation } from '@/types/instagramRecommendation'
 import { scrollRailBy } from '@/lib/ui/railScroll'
+import { Icon } from '@/components/primitives'
 
 interface Props {
   recommendations: InstagramRecommendation[]
@@ -348,7 +348,7 @@ export function InstagramRecsSection({
             onClick={() => window.open(INSTAGRAM_PROFILE_URL, '_blank', 'noopener,noreferrer')}
             aria-label="인스타그램에서 더 보기"
           >
-            <ExternalLink size={16} strokeWidth={1.75} color="currentColor" />
+            <Icon name="external-link" size={16} strokeWidth={1.75} color="currentColor" />
           </IconButton>
         }
       />

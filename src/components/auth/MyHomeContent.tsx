@@ -1,11 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { Bell, Heart, UserRound } from 'lucide-react'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { LoginPanel } from '@/components/auth/LoginPanel'
 import { Avatar, MenuCard, MenuRow } from '@/components/primitives'
 import { useFavorites } from '@/hooks/useFavorites'
+import { Icon } from '@/components/primitives'
 
 /**
  * MY 홈 본문 (IA 48, 왓챠 '나의 왓챠' 참고) — 모바일 /my 페이지와 데스크톱 MyPanel이 공유.
@@ -52,18 +52,18 @@ export function MyHomeContent({ authError, onProfile, onNotifications, onFavorit
 
       <MenuCard style={{ marginTop: 16 }}>
         <MenuRow
-          icon={<Heart size={17} strokeWidth={1.75} />}
+          icon={<Icon name="heart" size={17} strokeWidth={1.75} />}
           title="내 관심 목록"
           description={favCount > 0 ? `관심 영화, 관심 감독, 관심 영화관 ${favCount}개` : '관심 영화, 관심 감독, 관심 영화관 보기'}
           {...(onFavorites ? { onClick: onFavorites } : { href: '/my/favorites' })}
         />
         <MenuRow
-          icon={<Bell size={17} strokeWidth={1.75} />}
+          icon={<Icon name="bell" size={17} strokeWidth={1.75} />}
           title="알림 설정"
           description="새 상영 · 막바지 · 방해 금지 시간"
           {...(onNotifications ? { onClick: onNotifications } : { href: '/my/notifications' })}
         />
-        <MenuRow icon={<UserRound size={17} strokeWidth={1.75} />} title="프로필 · 계정 관리" description="닉네임 수정 · 연결된 계정 · 로그아웃" onClick={onProfile} last />
+        <MenuRow icon={<Icon name="user-round" size={17} strokeWidth={1.75} />} title="프로필 · 계정 관리" description="닉네임 수정 · 연결된 계정 · 로그아웃" onClick={onProfile} last />
       </MenuCard>
     </>
   )

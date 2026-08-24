@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { manifest } from '@/design-system'
+import { Icon } from '@/components/primitives'
 import { DocPage, DocSection } from '../_ui/shell'
 
 /** 섹션 표지 — 무엇을 다루는 묶음인지 먼저 말하고, 딸린 페이지를 카드로 안내한다. */
@@ -103,10 +104,22 @@ export default function FoundationsCoverPage() {
               </div>
             }
           />
+          <CoverCard
+            href="/design-system/foundations/iconography"
+            title="Iconography"
+            desc="lucide 하나만 씁니다. 실제로 쓰는 것만 이름을 붙여 두고, 크기·획 굵기는 레지스트리가 정합니다."
+            visual={
+              <div style={{ display: 'flex', gap: 14, color: 'var(--color-text-primary)' }}>
+                <Icon name="map-pin" size={28} />
+                <Icon name="heart" size={28} />
+                <Icon name="calendar" size={28} />
+              </div>
+            }
+          />
         </div>
       </DocSection>
 
-      <DocSection id="rules" title="공통 규칙" lead="다섯 페이지에 공통으로 적용되는 약속입니다.">
+      <DocSection id="rules" title="공통 규칙" lead="여섯 페이지에 공통으로 적용되는 약속입니다.">
         <ul style={{
           margin: 0, paddingLeft: '1.1em', listStyle: 'disc',
           fontSize: 'var(--text-title)', lineHeight: 1.7, color: 'var(--color-text-sub)',

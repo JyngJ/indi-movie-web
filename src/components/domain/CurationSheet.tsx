@@ -6,7 +6,6 @@ import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { Button, Icon, Divider, EmptyState } from '@/components/primitives'
 import { PosterThumb } from './PosterThumb'
 import { HoverPopup } from './CurationSectionRow'
-import { ChevronDown } from 'lucide-react'
 import type {
   LastWeekFilm,
   NewIndieFilm,
@@ -676,7 +675,7 @@ export function CurationSections({
               {!isNewSection && hasMore && expandState === 'collapsed' && (
                 <div style={{ margin: '0 20px' }}>
                   <Button type="button" variant="tertiary" size="md" fullWidth onClick={() => setExpand(section.key, 'partial')}>
-                    더보기 <ChevronDown size={14} strokeWidth={1.75} color="currentColor" />
+                    더보기 <Icon name="chevron-down" size={14} strokeWidth={1.75} color="currentColor" />
                   </Button>
                 </div>
               )}
@@ -688,7 +687,7 @@ export function CurationSections({
                       setExpand(section.key, 'collapsed')
                       sectionRefs.current[section.key]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                     }}>
-                      접기 <ChevronDown size={14} strokeWidth={1.75} color="currentColor" style={{ transform: 'rotate(180deg)' }} />
+                      접기 <Icon name="chevron-down" size={14} strokeWidth={1.75} color="currentColor" style={{ transform: 'rotate(180deg)' }} />
                     </Button>
                   </div>
                   {hasManyMore && SECTION_FILMS_HREF[section.key] && (

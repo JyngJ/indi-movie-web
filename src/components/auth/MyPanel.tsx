@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { MoreHorizontal } from 'lucide-react'
 import { MyHomeContent } from '@/components/auth/MyHomeContent'
 import { FavoritesContent } from '@/components/domain/favorites/FavoritesContent'
 import { NotificationSettingsContent } from '@/components/auth/NotificationSettingsContent'
@@ -9,6 +8,7 @@ import { ProfileContent } from '@/components/auth/ProfileContent'
 import { RailPopover } from '@/components/navigation/RailPopover'
 import { IconButton } from '@/components/primitives'
 import { useUIStore } from '@/store/uiStore'
+import { Icon } from '@/components/primitives'
 
 /** 데스크톱 MY 팝오버 — 레일 'MY' 옆. 홈 ↔ 관심 목록 ↔ 알림 설정 ↔ 프로필·계정 관리 내부 전환.
  *  데스크톱에서는 별도 페이지로 나가지 않는다 — 지도를 보면서 관심 목록을 확인하는 흐름이 끊긴다.
@@ -24,7 +24,7 @@ export function MyPanel() {
   const close = () => setOpen(false)
   const gear = (
     <IconButton variant="ghost" size={44} aria-label="더보기" onClick={() => { close(); openSettingsPage('main') }}>
-      <MoreHorizontal size={22} strokeWidth={1.75} />
+      <Icon name="more" size={22} strokeWidth={1.75} />
     </IconButton>
   )
 

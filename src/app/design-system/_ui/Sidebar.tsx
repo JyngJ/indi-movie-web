@@ -1,13 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 interface Group {
   title: string | null
   href: string | null
-  items: { href: string; label: string }[]
+  items: { href: string; label: string; section?: string }[]
 }
 
 /** 서비스에서 쓰는 접힘 표시와 같은 꺾쇠. 열리면 뒤집힌다. */
@@ -76,16 +76,21 @@ export function Sidebar({ groups }: { groups: Group[] }) {
             <div className="ds-nav-collapse" data-open={open}>
               <div style={{ overflow: 'hidden' }}>
                 <div className="ds-nav-items">
-                  {group.items.map(item => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className="ds-nav-link"
-                      data-active={pathname === item.href}
-                      data-top={!group.title}
-                    >
-                      {item.label}
-                    </Link>
+                  {group.items.map((item, i) => (
+                    <Fragment key={item.href}>
+                      {/* 묶음이 바뀌는 자리에만 소제목을 둔다 — 항목마다 붙이면 목록이 두 배로 길어진다 */}
+                      {item.section && item.section !== group.items[i - 1]?.section && (
+                        <span className="ds-nav-section">{item.section}</span>
+                      )}
+                      <Link
+                        href={item.href}
+                        className="ds-nav-link"
+                        data-active={pathname === item.href}
+                        data-top={!group.title}
+                      >
+                        {item.label}
+                      </Link>
+                    </Fragment>
                   ))}
                 </div>
               </div>

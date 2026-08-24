@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react'
 import {
   Avatar, Badge, BottomSheet, Button, Card, Chip, FabRound, FilterPill,
-  Icon, ICON_SIZE, IconButton, Input, PosterChip, SectionHeader, SortToggle, Toast,
+  IconButton, Input, PosterChip, SectionHeader, SortToggle, Toast,
 } from '@/components/primitives'
 import { useState } from 'react'
 import { GUIDES } from '@/design-system/guides'
@@ -11,7 +11,6 @@ import { Anatomy, DocSection, SpecRow, Stage, UsageCards } from './shell'
 import { Playground, type Control, type ControlValues } from './Playground'
 import { Demo, hasDemo } from './demos'
 import { ComponentThumb, hasThumb } from './thumbs'
-import { IconGallery } from './IconGallery'
 
 /* 컴포넌트 상세의 시각 자료. 문장은 guides.ts, 값은 매니페스트, 견본은 이 파일에서 정의한다. */
 
@@ -113,8 +112,6 @@ function InputDemo() {
 
 interface Doc {
   hero?: ReactNode
-  /** Anatomy 다음에 끼워 넣는 컴포넌트 전용 섹션(예: 아이콘 전체 목록). */
-  extra?: { id: string; title: string; lead?: string; node: ReactNode }
   playground?: {
     controls: Control[]
     render: (v: ControlValues, set: (k: string, val: string | boolean) => void) => ReactNode
@@ -127,6 +124,24 @@ interface Doc {
 const s = (v: ControlValues, k: string) => String(v[k])
 const b = (v: ControlValues, k: string) => Boolean(v[k])
 
+
+/**
+ * 반례 전용 글리프 — 레지스트리에 넣지 않는다.
+ * "쓰지 말라"고 보여주는 아이콘을 레지스트리에 등록하면 다음 사람이 그걸 쓸 수 있게 된다.
+ * 문서 안에서만 쓰이므로 여기서 직접 그린다.
+ */
+function AmbiguousGlyph({ shape }: { shape: 'star' | 'sparkles' }) {
+  return (
+    <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+      {shape === 'star'
+        ? <path d="M11.5 3.2 14 8.3l5.6.8-4 3.9 1 5.6-5.1-2.7-5 2.7 1-5.6-4-3.9 5.6-.8z" />
+        : <>
+            <path d="M9 3.5 10.3 7 13.8 8.3 10.3 9.6 9 13.1 7.7 9.6 4.2 8.3 7.7 7z" />
+            <path d="M17.5 12.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z" />
+          </>}
+    </svg>
+  )
+}
 
 /** 타깃이 겹치는지는 아이콘만 봐서는 안 보인다 — 44 영역을 점선으로 드러낸다. */
 function TargetPair({ gap, caption, bad }: { gap: number; caption: string; bad?: boolean }) {
@@ -252,11 +267,11 @@ const DOCS: Record<string, Doc> = {
       <TargetPair key="dont-gap" gap={0} caption="간격 0 — 44 타깃이 서로 닿는다" bad />,
       <div key="dont-glyph" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-6)' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-2)' }}>
-          <IconButton aria-label="별"><Icon name="star" size={18} /></IconButton>
+          <IconButton aria-label="별"><AmbiguousGlyph shape="star" /></IconButton>
           <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)' }}>즐겨찾기? 평점?</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-2)' }}>
-          <IconButton aria-label="반짝임"><Icon name="sparkles" size={18} /></IconButton>
+          <IconButton aria-label="반짝임"><AmbiguousGlyph shape="sparkles" /></IconButton>
           <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)' }}>추천? 새로고침?</span>
         </div>
       </div>,
@@ -540,24 +555,6 @@ const DOCS: Record<string, Doc> = {
 
   FabRound: { hero: <FabRound><IcoPlus /></FabRound> },
 
-  Icon: {
-    hero: (
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--spacing-6)', color: 'var(--color-text-primary)' }}>
-        {(['xs', 'sm', 'md', 'lg', 'xl'] as const).map((size) => (
-          <div key={size} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-2)' }}>
-            <Icon name="map-pin" size={size} />
-            <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)' }}>{size} · {ICON_SIZE[size]}</span>
-          </div>
-        ))}
-      </div>
-    ),
-    extra: {
-      id: 'catalog',
-      title: 'Catalog',
-      lead: '레지스트리에 있는 전체 목록입니다. 칸을 누르면 호출 코드가 복사됩니다. 여기 없는 글리프가 필요하면 호출부에서 svg를 그리지 말고 레지스트리에 이름을 추가하세요.',
-      node: <IconGallery />,
-    },
-  },
 }
 
 /** 상세 페이지 본문 — Anatomy · State · Spec · Usage. 코드잇 구성 그대로. */
@@ -583,12 +580,6 @@ export function ComponentDoc({ name }: { name: string }) {
               <Anatomy parts={guide.anatomy} />
             </div>
           )}
-        </DocSection>
-      )}
-
-      {doc?.extra && (
-        <DocSection id={doc.extra.id} title={doc.extra.title} lead={doc.extra.lead}>
-          {doc.extra.node}
         </DocSection>
       )}
 

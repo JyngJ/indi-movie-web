@@ -5,7 +5,6 @@ import { createPortal } from 'react-dom'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useLockBodyScroll } from '@/hooks/useLockBodyScroll'
 import type { LocationPermState } from '@/hooks/useLocationPermission'
-import { Lock } from 'lucide-react'
 import { Button, Icon, Divider } from '@/components/primitives'
 
 interface Props {
@@ -112,7 +111,7 @@ export function LocationPermissionModal({ state, onRequest, onDismiss }: Props) 
             }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                 <span style={{ flexShrink: 0, marginTop: 4, color: 'var(--color-text-body)' }}>
-                  <Lock size={18} strokeWidth={1.75} color="currentColor" />
+                  <Icon name="lock" size={18} strokeWidth={1.75} color="currentColor" />
                 </span>
                 <div style={{ fontSize: 13, color: 'var(--color-text-body)', lineHeight: 1.65 }}>
                   주소창 왼쪽 <strong>자물쇠 아이콘</strong> 클릭<br />

@@ -4,6 +4,8 @@ import { manifest } from '@/design-system'
 export interface DocPageRef {
   href: string
   label: string
+  /** 사이드바에서 이 항목이 속한 묶음. 값이 바뀌는 자리에 소제목을 그린다. */
+  section?: string
 }
 
 export const FOUNDATION_PAGES: DocPageRef[] = [
@@ -12,15 +14,68 @@ export const FOUNDATION_PAGES: DocPageRef[] = [
   { href: '/design-system/foundations/spacing', label: 'Spacing' },
   { href: '/design-system/foundations/radius', label: 'Radius' },
   { href: '/design-system/foundations/elevation', label: 'Elevation' },
+  { href: '/design-system/foundations/iconography', label: 'Iconography' },
 ]
 
-/** 문서에 싣지 않는 컴포넌트 — 레이아웃 보조라 따로 설명할 것이 없다. */
-const HIDDEN = ['CardContainer']
+/**
+ * 문서에 싣지 않는 컴포넌트.
+ * CardContainer는 레이아웃 보조라 따로 설명할 것이 없고, Icon은 컴포넌트가 아니라
+ * 파운데이션(Iconography)으로 다룬다 — 색·타이포처럼 다른 컴포넌트가 그 위에 선다.
+ */
+const HIDDEN = ['CardContainer', 'Icon']
 
 export const documentedComponents = () => manifest.components.filter(c => !HIDDEN.includes(c.name))
 
+/**
+ * 컴포넌트를 하는 일로 묶는다. 35개를 한 줄로 세우면 목록이 아니라 사전이 된다 —
+ * 무엇을 찾는지 알 때만 쓸 수 있고, 무엇이 있는지 훑을 때는 쓸모가 없다.
+ */
+export const COMPONENT_GROUPS: { title: string; desc: string; names: string[] }[] = [
+  {
+    title: 'Action',
+    desc: '누르면 무언가 일어나는 것.',
+    names: ['Button', 'IconButton', 'FabRound', 'ScrollNavButton', 'FavoriteButton', 'SortToggle', 'KakaoLoginButton'],
+  },
+  {
+    title: 'Selection',
+    desc: '켜고 끄거나 여럿 중 하나를 고르는 것.',
+    names: ['Chip', 'FilterPill', 'GenreChip', 'DirectorChip', 'PosterChip', 'Switch', 'Tabs'],
+  },
+  {
+    title: 'Input',
+    desc: '사용자가 글자를 넣는 자리.',
+    names: ['Input', 'SearchBar', 'SearchBarButton'],
+  },
+  {
+    title: 'Display',
+    desc: '정보를 담아 보여 주는 면과 줄.',
+    names: ['Card', 'Avatar', 'Badge', 'SectionHeader', 'ListRow', 'MenuCard', 'MenuRow', 'Divider', 'Wordmark'],
+  },
+  {
+    title: 'Feedback',
+    desc: '기다림·비어 있음·알림처럼 상태를 알리는 것.',
+    names: ['Toast', 'EmptyState', 'Skeleton', 'MovieCardSkeleton', 'TheaterCardSkeleton'],
+  },
+  {
+    title: 'Overlay',
+    desc: '기존 화면 위에 얹히는 면.',
+    names: ['BottomSheet', 'ConfirmDialog', 'BubbleTail'],
+  },
+]
+
+/** 그룹에 넣는 걸 잊은 컴포넌트가 목록에서 사라지면 안 된다 — 남은 것은 기타로 모은다. */
+export const groupedComponents = () => {
+  const documented = documentedComponents().map(c => c.name)
+  const placed = new Set(COMPONENT_GROUPS.flatMap(g => g.names))
+  const rest = documented.filter(n => !placed.has(n))
+  const groups = COMPONENT_GROUPS.map(g => ({ ...g, names: g.names.filter(n => documented.includes(n)) }))
+  return rest.length ? [...groups, { title: '기타', desc: '아직 분류하지 않은 것.', names: rest }] : groups
+}
+
 export const componentPages = (): DocPageRef[] =>
-  documentedComponents().map(c => ({ href: `/design-system/components/${c.name}`, label: c.name }))
+  groupedComponents().flatMap(g =>
+    g.names.map(name => ({ href: `/design-system/components/${name}`, label: name, section: g.title })),
+  )
 
 /** 그룹 헤더는 그 섹션의 표지 페이지로 간다 — 무엇을 다루는 묶음인지 먼저 보여주고,
  *  딸린 페이지는 카드로 안내한다. */
