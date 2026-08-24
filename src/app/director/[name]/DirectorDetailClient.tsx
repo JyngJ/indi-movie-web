@@ -290,7 +290,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
             <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text-primary)' }}>
               현재 상영작 <span style={{ color: 'var(--color-primary-base)' }}>{nowPlaying.length}편</span>
             </span>
-            <MapCtaButton fullWidth={false} size="sm" onClick={() => router.push(`/map?director=${encodeURIComponent(directorName)}`)}>
+            <MapCtaButton fullWidth={false} size="sm" variant="tertiary" onClick={() => router.push(`/map?director=${encodeURIComponent(directorName)}`)}>
               지도에서 필터로 보기
             </MapCtaButton>
           </div>

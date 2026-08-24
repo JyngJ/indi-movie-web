@@ -16,7 +16,7 @@ import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWi
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { shareAndTrack } from '@/lib/analytics/shareTracking'
 import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/components/domain/booking/BookingActions'
-import { Skeleton, Chip, Button } from '@/components/primitives'
+import { Skeleton, IconButton } from '@/components/primitives'
 import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
 import { ShowtimeCell } from '@/components/domain/ShowtimeCell'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
@@ -272,7 +272,6 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
   const [copied, setCopied] = useState(false)
   const [selectedShowtimeId, setSelectedShowtimeId] = useState<string | null>(null)
   const [selectedMovieTitle, setSelectedMovieTitle] = useState<string | null>(null)
-  const [bookableOnly, setBookableOnly] = useState(false)
   // 공유 링크(?date=&showtime=)로 들어왔을 때, 날짜 변경 시 선택 초기화하는
   // 아래 effect가 복원 직후 곧바로 리셋해버리지 않도록 1회 억제한다.
   const suppressResetOnDateChangeRef = useRef(false)
@@ -383,18 +382,28 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
         : sh * 60 + sm + 120
       return endMin <= nowMinutes
     })
+    /* 정렬 등급: 0 지금 볼 수 있는 회차 있음 → 1 남은 회차가 전부 매진 → 2 전부 상영 완료 */
+    const rank = (sts: Showtime[]) => {
+      if (allEnded(sts)) return 2
+      const notEnded = sts.filter((st) => {
+        if (!isToday) return true
+        const [sh, sm] = st.showTime.split(':').map(Number)
+        const endMin = st.endTime
+          ? (() => { const [eh, em] = st.endTime!.split(':').map(Number); return eh * 60 + em })()
+          : sh * 60 + sm + 120
+        return endMin > nowMinutes
+      })
+      if (notEnded.length > 0 && notEnded.every((st) => st.seatAvailable === 0)) return 1
+      return 0
+    }
     return dayMovies.map((m) => ({ movie: m, showtimes: map.get(m.id) ?? [] }))
-      .map((g) => bookableOnly
-        ? { ...g, showtimes: g.showtimes.filter((st) => st.seatAvailable > 0) }
-        : g)
       .filter((g) => g.showtimes.length > 0)
       .sort((a, b) => {
-        const aEnded = allEnded(a.showtimes) ? 1 : 0
-        const bEnded = allEnded(b.showtimes) ? 1 : 0
-        if (aEnded !== bEnded) return aEnded - bEnded
+        const d = rank(a.showtimes) - rank(b.showtimes)
+        if (d !== 0) return d
         return (a.showtimes[0]?.showTime ?? '') < (b.showtimes[0]?.showTime ?? '') ? -1 : 1
       })
-  }, [dayMovies, dayShowtimes, bookableOnly, selectedDate])
+  }, [dayMovies, dayShowtimes, selectedDate])
 
   const selectedShowtimeData = useMemo(() => {
     if (!selectedShowtimeId || !selectedMovieTitle) return null
@@ -478,9 +487,9 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
             헤더 우측 sm으로 — md 버튼 3개는 좌우 여백 32 고정(디자인 시스템) 때문에 375px에 안 들어간다. */}
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', maxWidth: isDesktop ? 480 : undefined }}>
           <FavoriteActionButton type="theater" id={theater.id} style={{ flex: 1, whiteSpace: 'nowrap' }} />
-          <Button
-            variant="tertiary"
-            size="md"
+          <IconButton
+            variant="overlay"
+            size={44}
             aria-label="공유"
             onClick={() => {
               void shareAndTrack({
@@ -490,11 +499,9 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
                 properties: { theater_id: theater.id, theater_name: theater.name },
               })
             }}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
           >
             <IcoShare />
-            공유
-          </Button>
+          </IconButton>
         </div>
       </div>
 
@@ -507,13 +514,6 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
         <DetailDateTabs dates={dates} selectedDate={selectedDate} activeDates={activeDates} onSelect={setSelectedDate} />
       </div>
 
-      {/* 예매 가능만 보기 — 날짜탭 바로 아래 오른쪽 (TheaterSheet 퀵 토글과 동일 문법) */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: isDesktop ? 'var(--spacing-3) 28px 0' : 'var(--spacing-3) var(--gutter) 0' }}>
-        <Chip selected={bookableOnly} onClick={() => setBookableOnly((v) => !v)} style={{ minHeight: 'auto', whiteSpace: 'nowrap' }}>
-          예매 가능만 보기
-        </Chip>
-      </div>
-
       {/* 현재 상영중 */}
       <div style={{ padding: isDesktop ? '20px 28px 0' : '16px 16px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 16 }}>
@@ -522,7 +522,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
             <span style={{ fontSize: 16, color: 'var(--color-primary-base)' }}>{movieShowtimeGroups.length}편</span>
           </span>
           {/* 지도 CTA — 감독 상세와 같은 자리(섹션 헤더 우측 sm) */}
-          <MapCtaButton fullWidth={false} size="sm" onClick={() => router.push(mapUrlWithSelection())}>
+          <MapCtaButton fullWidth={false} size="sm" variant="tertiary" onClick={() => router.push(mapUrlWithSelection())}>
             지도에서 보기
           </MapCtaButton>
         </div>

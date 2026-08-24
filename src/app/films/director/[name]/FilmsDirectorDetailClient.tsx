@@ -193,7 +193,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
               <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
                 현재 상영작 <span style={{ fontSize: 16, color: 'var(--color-primary-base)' }}>{nowPlaying.length}편</span>
               </p>
-              <MapCtaButton fullWidth={false} size="sm" onClick={() => router.push(`/map?director=${encodeURIComponent(directorName)}`)}>
+              <MapCtaButton fullWidth={false} size="sm" variant="tertiary" onClick={() => router.push(`/map?director=${encodeURIComponent(directorName)}`)}>
                 지도에서 필터로 보기
               </MapCtaButton>
             </div>

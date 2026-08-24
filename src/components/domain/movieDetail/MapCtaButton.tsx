@@ -25,6 +25,7 @@ const IcoMap = () => (
 export function MapCtaButton({
   fullWidth = true,
   size = 'md',
+  variant = 'secondary',
   style,
   onClick,
   children,
@@ -33,12 +34,14 @@ export function MapCtaButton({
   fullWidth?: boolean
   /** 섹션 헤더 우측처럼 좁은 자리는 sm (감독 상세 현재 상영작 행, 2026-08-24) */
   size?: 'sm' | 'md'
+  /** 섹션 헤더 보조 자리는 tertiary(회색) — 본문 CTA는 secondary 유지 (2026-08-24) */
+  variant?: 'secondary' | 'tertiary'
   style?: CSSProperties
   onClick: () => void
   children: ReactNode
 }) {
   return (
-    <Button variant="secondary" size={size} fullWidth={fullWidth} style={style} onClick={onClick}>
+    <Button variant={variant} size={size} fullWidth={fullWidth} style={style} onClick={onClick}>
       <IcoMap />
       {children}
     </Button>
