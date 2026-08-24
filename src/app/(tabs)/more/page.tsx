@@ -50,8 +50,9 @@ function MorePageContent() {
   const isDesktop = useIsDesktopLayout()
   const searchParams = useSearchParams()
   const initialCategory = searchParams.get('category') ?? undefined
+  const pageParam = searchParams.get('page')
   const [page, setPage] = useState<SettingsPage>(
-    searchParams.get('page') === 'report' ? 'report' : 'main'
+    pageParam === 'report' ? 'report' : pageParam === 'attribution' ? 'attribution' : 'main'
   )
   const [reportSuccess, setReportSuccess] = useState(false)
   const [direction, setDirection] = useState(1)

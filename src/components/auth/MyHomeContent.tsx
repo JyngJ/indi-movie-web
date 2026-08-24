@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Bell, CircleAlert, CircleHelp, Heart, UserRound } from 'lucide-react'
 import { useAuth } from '@/components/auth/AuthProvider'
@@ -34,6 +35,16 @@ export function MyHomeContent({ authError, onProfile, onNotifications, onFavorit
   const openSettingsPage = useUIStore((s) => s.openSettingsPage)
 
   const countOf = (type: 'movie' | 'director' | 'theater') => favorites.filter((f) => f.type === type).length
+
+  const openAttribution = () => {
+    const desktopNow = typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches
+    if (desktopNow) {
+      onNavigate?.()
+      openSettingsPage('attribution')
+    } else {
+      router.push('/more?page=attribution')
+    }
+  }
 
   const openBugReport = () => {
     // 클릭 시점 실제 뷰포트로 판단 — hydration 지연 중 서버 스냅샷 오판 방지 (my/page.tsx와 같은 이유)
@@ -113,6 +124,29 @@ export function MyHomeContent({ authError, onProfile, onNotifications, onFavorit
           last
         />
       </MenuCard>
+
+      {/* 푸터 — 미트볼(⋯) 삭제로 더보기 화면에 있던 출처·개인정보·버전이 여기로 (2026-08-24) */}
+      <div style={{ marginTop: 32, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, flexWrap: 'wrap', padding: '0 var(--gutter)' }}>
+        <button
+          type="button"
+          onClick={openAttribution}
+          className="hover-raise"
+          style={{ background: 'none', border: 'none', padding: '4px 8px', minHeight: 'unset', cursor: 'pointer', fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)', borderRadius: 'var(--radius-control)' }}
+        >
+          출처 표기 정보
+        </button>
+        <span style={{ color: 'var(--color-text-placeholder)' }}>·</span>
+        <Link
+          href="/privacy"
+          className="hover-raise"
+          style={{ padding: '4px 8px', fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)', textDecoration: 'none', borderRadius: 'var(--radius-control)' }}
+        >
+          개인정보 처리방침
+        </Link>
+      </div>
+      <div style={{ textAlign: 'center', marginTop: 8, fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)' }}>
+        영화볼지도 · v0.1.0
+      </div>
     </>
   )
 }
