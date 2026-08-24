@@ -167,7 +167,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
       {/* PC — 액션 행이 히어로 텍스트 컬럼 안 (2026-08-24, 영화 상세와 동일) */}
       {isDesktop && (
         <div style={{ marginTop: 20, maxWidth: 480 }}>
-          {!isDesktop && actionRow}
+          {actionRow}
         </div>
       )}
       </div>
