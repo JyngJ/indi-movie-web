@@ -59,9 +59,25 @@ export default function IconographyPage() {
           }
         />
         <SpecRow
+          title="이름은 용도가 아니라 형태를 따른다"
+          desc={'lucide 글리프 이름을 kebab-case로 그대로 씁니다 — circle-x이지 error가 아닙니다. 같은 그림이 자리마다 다른 뜻을 갖기 때문입니다. 동그라미 친 x는 어디선 "실패"고 어디선 "지우기"인데, 이름을 뜻으로 붙이면 지우기 버튼에 error를 쓰거나 같은 그림이 두 이름으로 등록됩니다. 뜻은 색과 라벨이 맡고, 이름은 그림만 가리킵니다.'}
+          visual={
+            <div style={{ display: 'flex', gap: 'var(--spacing-6)', alignItems: 'center' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                <Icon name="circle-x" size="lg" color="var(--color-error)" />
+                <Code>circle-x</Code>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                <Icon name="circle-x" size="lg" color="var(--color-text-caption)" />
+                <Code>circle-x</Code>
+              </div>
+            </div>
+          }
+        />
+        <SpecRow
           title="레지스트리에 없으면 추가한다"
           desc={`지금 ${ICON_NAMES.length}개입니다. 필요한 글리프가 없으면 호출부에서 svg를 그리지 말고 Icon.tsx에 이름을 추가합니다. 쓰지 않게 된 이름은 지웁니다 — 목록이 곧 "우리가 쓰는 아이콘"이어야 합니다.`}
-          visual={<Code>{'<Icon name="map-pin" size="lg" />'}</Code>}
+          visual={<Code>{'<Icon name="map-pinned" size="lg" />'}</Code>}
         />
         <SpecRow
           title="규격이 걸린 브랜드 마크는 예외"
@@ -90,6 +106,7 @@ export default function IconographyPage() {
             { kind: 'do', rule: '뜻이 하나로 읽히는 아이콘만 글자 없이 씁니다. 그 외에는 라벨을 함께 둡니다.' },
             { kind: 'dont', rule: '호출부에서 <svg>를 직접 그리지 않습니다 — 같은 글리프가 굵기만 다른 채 여러 벌 생깁니다.' },
             { kind: 'dont', rule: '쓰지도 않을 이름을 미리 등록하지 않습니다. 목록이 실제 사용과 어긋나면 그 목록을 아무도 믿지 않습니다.' },
+            { kind: 'dont', rule: '용도로 이름 붙이지 않습니다 — success·error·filter가 아니라 circle-check·circle-x·funnel입니다.' },
           ]}
         />
       </DocSection>

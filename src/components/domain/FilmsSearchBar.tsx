@@ -238,7 +238,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
               aria-label="검색어 지우기"
               onMouseDown={e => { e.preventDefault(); setQuery(''); desktopRef.current?.focus() }}
             >
-              <Icon name="close" size={14} />
+              <Icon name="x" size={14} />
             </IconButton>
           )}
         </div>
@@ -399,7 +399,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
                       <span style={{ flexShrink: 0, display: 'flex', color: 'var(--color-text-caption)' }}><Icon name="search" size={14} /></span>
                       <button onClick={() => setMInput(q)} style={{ flex: 1, background: 'none', border: 0, cursor: 'pointer', textAlign: 'left', padding: 0, fontSize: 14, color: 'var(--color-text-body)' }}>{q}</button>
                       <IconButton variant="ghost" size={32} aria-label="삭제" onClick={() => setHistory(prev => prev.filter(h => h !== q))}>
-                        <Icon name="close" size={12} />
+                        <Icon name="x" size={12} />
                       </IconButton>
                     </div>
                   ))}

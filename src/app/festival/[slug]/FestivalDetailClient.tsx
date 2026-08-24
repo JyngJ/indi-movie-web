@@ -366,7 +366,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
               color: 'var(--color-on-accent)',
             }}
           >
-            <Icon name="close" size={18} strokeWidth={1.75} className="text-current" />
+            <Icon name="x" size={18} strokeWidth={1.75} className="text-current" />
           </button>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

@@ -55,7 +55,7 @@ export function PanelShell({
           {title}
         </span>
         {trailing}
-        <IconButton variant="ghost" size={32} aria-label="닫기" onClick={onClose}><Icon name="close" size={18} /></IconButton>
+        <IconButton variant="ghost" size={32} aria-label="닫기" onClick={onClose}><Icon name="x" size={18} /></IconButton>
       </div>
 
       {/* 내용 */}

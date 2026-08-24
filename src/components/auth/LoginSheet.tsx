@@ -93,7 +93,7 @@ export function LoginSheet() {
       >
         <div style={{ display: 'flex', justifyContent: isDesktop ? 'flex-end' : 'center', alignItems: 'center', minHeight: 24, marginBottom: 8 }}>
           {isDesktop
-            ? <IconButton variant="ghost" size={32} aria-label="닫기" onClick={close}><Icon name="close" size={18} strokeWidth={1.75} /></IconButton>
+            ? <IconButton variant="ghost" size={32} aria-label="닫기" onClick={close}><Icon name="x" size={18} strokeWidth={1.75} /></IconButton>
             : <div style={{ width: 36, height: 4, borderRadius: 'var(--radius-pill)', background: 'var(--color-border)' }} />}
         </div>
         <LoginPanel

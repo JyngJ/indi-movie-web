@@ -72,7 +72,7 @@ const THUMBS: Record<string, ReactNode> = {
   MenuRow: (
     <div style={{ width: 208, background: 'var(--color-surface-card)', borderRadius: 'var(--radius-control)', overflow: 'hidden' }}>
       <MenuRow icon={<Icon name="bell" size="lg" />} title="알림 설정" description="새 상영 소식" />
-      <MenuRow icon={<Icon name="close" size="lg" />} title="로그아웃" tone="danger" last />
+      <MenuRow icon={<Icon name="x" size="lg" />} title="로그아웃" tone="danger" last />
     </div>
   ),
   Switch: (

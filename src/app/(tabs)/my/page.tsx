@@ -40,7 +40,7 @@ function MyPageInner() {
       title="MY"
       trailing={
         <IconButton variant="ghost" size={44} aria-label="더보기" onClick={openSettings}>
-          <Icon name="more" size={22} strokeWidth={1.75} />
+          <Icon name="ellipsis" size={22} strokeWidth={1.75} />
         </IconButton>
       }
     >

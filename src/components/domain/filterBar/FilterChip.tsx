@@ -90,7 +90,7 @@ export function FilterChip({ label, value, open, selected, hasDropdown, onClick,
             cursor: 'pointer', marginLeft: 4, flexShrink: 0,
           }}
         >
-          <Icon name="close" size={10} color="var(--color-text-sub)" />
+          <Icon name="x" size={10} color="var(--color-text-sub)" />
         </span>
       ) : hasDropdown ? (
         <span style={{

@@ -36,7 +36,7 @@ export function SettingsHeader({ title, onBack, onClose, submitting, trailing }:
       </span>
       {trailing}
       {onClose && (
-        <IconButton variant="ghost" size={44} aria-label="닫기" onClick={onClose} disabled={submitting}><Icon name="close" size={18} /></IconButton>
+        <IconButton variant="ghost" size={44} aria-label="닫기" onClick={onClose} disabled={submitting}><Icon name="x" size={18} /></IconButton>
       )}
     </div>
   )
@@ -79,7 +79,7 @@ export function SettingsMainPage({
       <div style={{ margin: '12px 16px 0', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
         <Link href="/faq" style={{ ...row, textDecoration: 'none' }} onClick={onExternalNav}>
           <div style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Icon name="help" size={17} color="var(--color-text-sub)" />
+            <Icon name="circle-question-mark" size={17} color="var(--color-text-sub)" />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>자주 묻는 질문</div>
@@ -89,7 +89,7 @@ export function SettingsMainPage({
         </Link>
         <button style={row} onClick={() => onNavigate('report')}>
           <div style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Icon name="alert" size={17} color="var(--color-text-sub)" />
+            <Icon name="circle-alert" size={17} color="var(--color-text-sub)" />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>버그 리포트</div>
@@ -119,7 +119,7 @@ export function SettingsMainPage({
 
       {/* 안내 배너 */}
       <div style={{ margin: '12px 16px 0', backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, var(--color-surface-bg))', border: '1px solid color-mix(in srgb, var(--color-warning) 25%, transparent)', borderRadius: 12, padding: '12px 16px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-        <Icon name="alert" size={16} color="var(--color-warning)" style={{ flexShrink: 0, marginTop: 4 }} />
+        <Icon name="circle-alert" size={16} color="var(--color-warning)" style={{ flexShrink: 0, marginTop: 4 }} />
         <p className="text-note" style={{ margin: 0, color: 'var(--color-text-sub)' }}>
           상영 정보는 실시간으로 불러오지 않으므로 실제 좌석 현황과 다를 수 있습니다.
         </p>

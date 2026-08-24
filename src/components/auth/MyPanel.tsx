@@ -24,7 +24,7 @@ export function MyPanel() {
   const close = () => setOpen(false)
   const gear = (
     <IconButton variant="ghost" size={44} aria-label="더보기" onClick={() => { close(); openSettingsPage('main') }}>
-      <Icon name="more" size={22} strokeWidth={1.75} />
+      <Icon name="ellipsis" size={22} strokeWidth={1.75} />
     </IconButton>
   )
 

@@ -10,6 +10,12 @@
  * 목록을 그대로 렌더할 수 있고, 나중에 아이콘 소스를 갈아끼워도 호출부가 안 바뀐다.
  *
  * 굵기·크기는 여기서만 정한다. 예전에는 같은 셰브론이 1.5 / 1.75 / 2 / 2.5로 제각각이었다.
+ *
+ * 이름은 용도가 아니라 형태를 따른다. lucide 글리프 이름을 kebab-case로 그대로 쓴다.
+ * 같은 그림이 자리마다 다른 뜻을 갖기 때문이다 — 동그라미 친 x는 어디선 "실패"고 어디선
+ * "지우기"인데, 이름을 success/error로 붙이면 지우기 버튼에 error를 쓰는 꼴이 되거나
+ * 같은 그림이 두 이름으로 중복 등록된다. circle-x라고 부르면 그런 일이 생기지 않는다.
+ * 뜻은 색(--color-error 등)과 라벨이 맡고, 이름은 그림만 가리킨다.
  */
 
 import {
@@ -83,25 +89,25 @@ const REGISTRY = {
   'chevron-right': ChevronRight,
   'chevron-down': ChevronDown,
   'arrow-up': ArrowUp,
-  swap: ArrowRightLeft,
+  'arrow-right-left': ArrowRightLeft,
   /* 조작 */
-  close: X,
+  x: X,
   plus: Plus,
   minus: Minus,
   check: Check,
-  grid: LayoutGrid,
+  'layout-grid': LayoutGrid,
   search: Search,
   copy: Copy,
   funnel: Funnel,
   'zoom-in': ZoomIn,
-  more: Ellipsis,
+  ellipsis: Ellipsis,
   /* 상태 — success·error는 문서 사이트의 Do/Don't가 쓴다 */
   info: Info,
-  help: CircleQuestionMark,
-  alert: CircleAlert,
-  success: CircleCheck,
-  error: CircleX,
-  loading: LoaderCircle,
+  'circle-question-mark': CircleQuestionMark,
+  'circle-alert': CircleAlert,
+  'circle-check': CircleCheck,
+  'circle-x': CircleX,
+  'loader-circle': LoaderCircle,
   'trending-up': TrendingUp,
   'trending-down': TrendingDown,
   /* 도메인 */
@@ -110,10 +116,10 @@ const REGISTRY = {
   clapperboard: Clapperboard,
   theater: Theater,
   camera: Camera,
-  phone: Smartphone,
+  smartphone: Smartphone,
   user: User,
   'user-round': UserRound,
-  building: Building2,
+  'building-2': Building2,
   calendar: Calendar,
   clock: Clock,
   bell: Bell,
@@ -123,12 +129,12 @@ const REGISTRY = {
   /* 지도 */
   'map-pin': MapPin,
   map: MapGlyph,
-  locate: LocateFixed,
-  route: MapPinned,
+  'locate-fixed': LocateFixed,
+  'map-pinned': MapPinned,
   /* 테마 */
   moon: Moon,
   /* 외부 */
-  share: Share2,
+  'share-2': Share2,
   'external-link': ExternalLink,
   send: Send,
   instagram: InstagramGlyph,

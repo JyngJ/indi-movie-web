@@ -73,7 +73,7 @@ function NavBar({
         {title}
       </span>
       {trailing}
-      <IconButton variant="ghost" size={44} aria-label="닫기" onClick={onClose}><Icon name="close" size={20} /></IconButton>
+      <IconButton variant="ghost" size={44} aria-label="닫기" onClick={onClose}><Icon name="x" size={20} /></IconButton>
     </div>
   )
 }
@@ -637,7 +637,7 @@ export function MovieDetailClient({ movieId, theaterId, initialData, initialShow
             }}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
           >
-            <Icon name="share" size={16} />
+            <Icon name="share-2" size={16} />
             공유
           </Button>
         }

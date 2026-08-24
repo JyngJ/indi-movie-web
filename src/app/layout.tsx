@@ -66,7 +66,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         </Providers>
         {/* 모바일 가로 회전 차단 오버레이 */}
         <div className="rotate-overlay" aria-hidden="true">
-          <Icon name="phone" size={48} strokeWidth={1.5} />
+          <Icon name="smartphone" size={48} strokeWidth={1.5} />
           <p>화면을 세로로 돌려주세요</p>
         </div>
         <AnalyticsScripts />

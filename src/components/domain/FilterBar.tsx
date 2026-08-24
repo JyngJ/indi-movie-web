@@ -518,7 +518,7 @@ export function FilterBar({
                   padding: 0,
                 }}
               >
-                <Icon name="close" size={8} />
+                <Icon name="x" size={8} />
               </button>
             </div>
           </div>

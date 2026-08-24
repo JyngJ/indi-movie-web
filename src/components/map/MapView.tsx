@@ -3157,7 +3157,7 @@ export default function MapView() {
                   backgroundColor: 'var(--color-surface-card)', border: '1px solid var(--color-border)',
                   color: 'var(--color-text-sub)',
                 }}>
-                  <Icon name="grid" size={16} />
+                  <Icon name="layout-grid" size={16} />
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700 }}>{area.name}</div>
@@ -3727,7 +3727,7 @@ export default function MapView() {
           </>
         )}
         <div style={{ height: isDesktopLayout ? 0 : 8 }} />
-        <FabRound onClick={handleLocate}><Icon name="locate" size={20} /></FabRound>
+        <FabRound onClick={handleLocate}><Icon name="locate-fixed" size={20} /></FabRound>
       </div>
 
 

@@ -74,7 +74,7 @@ export function GvDetailPanel({ ev, onClose, onCloseAll, panelMode }: GvDetailPa
         {/* 닫기 — 시트 전체 닫기 */}
         {onCloseAll && (
           <IconButton variant="ghost" size={32} onClick={onCloseAll} aria-label="닫기">
-            <Icon name="close" size={14} />
+            <Icon name="x" size={14} />
           </IconButton>
         )}
       </div>

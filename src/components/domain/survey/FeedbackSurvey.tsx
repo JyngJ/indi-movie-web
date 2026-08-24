@@ -35,7 +35,7 @@ function analyticsSessionId() {
 }
 
 const IcoX = () => (
-  <Icon name="close" size={16} />
+  <Icon name="x" size={16} />
 )
 
 /** 재방문 설문 v2 (2026-08-09 피그마 TOBE 확정) — 잘 쓰고 계세요? → 좋은 점 | 아쉬운 점 → 감사.

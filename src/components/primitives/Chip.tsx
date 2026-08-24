@@ -55,7 +55,7 @@ export function Chip({ selected = false, onDismiss, children, className = '', on
             flexShrink: 0,
           }}
         >
-          <Icon name="close" size={8} />
+          <Icon name="x" size={8} />
         </span>
       )}
       {children}

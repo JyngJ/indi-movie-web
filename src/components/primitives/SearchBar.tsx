@@ -8,7 +8,7 @@ const IconSearch = () => (
 )
 
 const IconClose = () => (
-  <Icon name="close" size={14} />
+  <Icon name="x" size={14} />
 )
 
 /* ── 버튼 모드 — 검색 페이지로 이동하는 트리거 ── */

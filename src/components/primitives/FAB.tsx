@@ -4,7 +4,7 @@ import { ButtonHTMLAttributes, ReactNode } from 'react'
 import { Icon } from '@/components/primitives'
 
 const IconSwap = () => (
-  <Icon name="swap" size={12} />
+  <Icon name="arrow-right-left" size={12} />
 )
 
 // ─── Round FAB ────────────────────────────────────────────────────────

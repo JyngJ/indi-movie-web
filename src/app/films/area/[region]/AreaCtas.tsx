@@ -6,7 +6,7 @@ import { setStoredRegion } from '@/lib/regionStorage'
 
 /* Lucide map-pinned / clapperboard — stroke 1.75 (아이콘 규칙) */
 const IcoMapPinned = () => (
-  <Icon name="route" size={18} />
+  <Icon name="map-pinned" size={18} />
 )
 const IcoClapperboard = () => (
   <Icon name="clapperboard" size={18} />

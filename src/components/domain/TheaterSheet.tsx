@@ -915,11 +915,11 @@ export function TheaterSheet({
             }}>
               <TheaterFavoriteAction theaterId={theater.id} style={actionBtn} />
               <button className="hover-raise" style={actionBtn} onClick={openDirections}>
-                <Icon name="route" size={14} />
+                <Icon name="map-pinned" size={14} />
                 길찾기
               </button>
               <button className="hover-raise" style={actionBtn} onClick={shareTheater}>
-                <Icon name="share" size={14} />
+                <Icon name="share-2" size={14} />
                 공유하기
               </button>
               {hasInstagram && (
@@ -938,7 +938,7 @@ export function TheaterSheet({
             gap: 8,
           }}>
             <IconButton variant="ghost" size={32} aria-label="닫기" onClick={onClose}>
-              <Icon name="close" size={20} />
+              <Icon name="x" size={20} />
             </IconButton>
           </div>
           {onBack && (
@@ -1008,7 +1008,7 @@ export function TheaterSheet({
               </div>
             </div>
             <IconButton variant="ghost" size={32} aria-label="닫기" onClick={onClose}>
-              <Icon name="close" size={20} />
+              <Icon name="x" size={20} />
             </IconButton>
           </div>
           <div style={{
@@ -1021,11 +1021,11 @@ export function TheaterSheet({
           }}>
             <TheaterFavoriteAction theaterId={theater.id} style={actionBtn} />
             <button className="hover-raise" style={actionBtn} onClick={openDirections}>
-              <Icon name="route" size={14} />
+              <Icon name="map-pinned" size={14} />
               길찾기
             </button>
             <button className="hover-raise" style={actionBtn} onClick={shareTheater}>
-              <Icon name="share" size={14} />
+              <Icon name="share-2" size={14} />
               공유하기
             </button>
             {hasInstagram && (
@@ -1063,7 +1063,7 @@ export function TheaterSheet({
           </span>
           <div style={{ display: 'flex', gap: 8 }}>
             <IconButton variant="ghost" size={32} aria-label="닫기" style={{ marginRight: -8 }} onClick={onClose}>
-              <Icon name="close" size={20} />
+              <Icon name="x" size={20} />
             </IconButton>
           </div>
         </div>
@@ -1304,10 +1304,10 @@ export function TheaterSheet({
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 0, marginTop: 4, marginLeft: -8 }}>
               <TheaterFavoriteAction theaterId={theater.id} style={actionBtn} compact />
               <button className="hover-raise" style={actionBtn} onClick={openDirections}>
-                <Icon name="route" size={14} />길찾기
+                <Icon name="map-pinned" size={14} />길찾기
               </button>
               <button className="hover-raise" style={actionBtn} onClick={shareTheater}>
-                <Icon name="share" size={14} />공유하기
+                <Icon name="share-2" size={14} />공유하기
               </button>
               {hasInstagram && (
                 <button className="hover-raise" style={actionBtn} onClick={openInstagram}>
@@ -1401,7 +1401,7 @@ export function TheaterSheet({
                       onClick={() => applySheetFilters({ ...sheetFilters, genres: sheetFilters.genres.filter(x => x !== g) })}
                     >
                       {g}
-                      <Icon name="close" size={9} />
+                      <Icon name="x" size={9} />
                     </FilterPill>
                   ))}
                   {sheetFilters.nations.map(n => (
@@ -1411,7 +1411,7 @@ export function TheaterSheet({
                       onClick={() => applySheetFilters({ ...sheetFilters, nations: sheetFilters.nations.filter(x => x !== n) })}
                     >
                       {withFlag(n)}
-                      <Icon name="close" size={9} />
+                      <Icon name="x" size={9} />
                     </FilterPill>
                   ))}
                 </div>

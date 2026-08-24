@@ -314,7 +314,7 @@ export function DialogClose({
         ...style,
       }}
     >
-      {children ?? <Icon name="close" size={18} />}
+      {children ?? <Icon name="x" size={18} />}
     </motion.button>
   )
 }

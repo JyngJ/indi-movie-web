@@ -225,7 +225,7 @@ export function UsageCards({ items }: {
               fontSize: 22, fontWeight: 700, letterSpacing: '-0.01em',
               color: it.kind === 'do' ? 'var(--color-success)' : 'var(--color-error)',
             }}>
-              <Icon name={it.kind === 'do' ? 'success' : 'error'} size="lg" />
+              <Icon name={it.kind === 'do' ? 'circle-check' : 'circle-x'} size="lg" />
               {it.kind === 'do' ? 'Do' : "Don't"}
             </div>
             <p style={{

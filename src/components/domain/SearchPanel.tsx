@@ -133,7 +133,7 @@ export function SearchPanel({
                         {q}
                       </button>
                       <IconButton variant="ghost" size={32} aria-label="삭제" onClick={() => onRecentRemove(q)}>
-                        <Icon name="close" size={12} />
+                        <Icon name="x" size={12} />
                       </IconButton>
                     </div>
                   ))}
