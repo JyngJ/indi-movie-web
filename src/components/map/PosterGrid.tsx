@@ -211,11 +211,12 @@ export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, 
           </div>
         )}
         {scheduleMode ? (
-          <div data-movie-id={slots[0].movie?.id} style={{ display: 'flex', alignItems: 'stretch', gap: SLOT_GAP, position: 'relative', zIndex: 1 }}>
-            {/* 포스터가 카드 세로를 꽉 채운다 — 폭은 2:3 비율에서 나온다 (피그마 2.0/PosterPinSchedule) */}
+          <div data-movie-id={slots[0].movie?.id} style={{ display: 'flex', alignItems: 'flex-start', gap: SLOT_GAP, position: 'relative', zIndex: 1 }}>
+            {/* 포스터는 줌 기반 고정 크기 — stretch로 일정 높이를 따라가게 하면 일주일치
+                스케줄에서 포스터가 300px 넘게 부풀어 카드가 깨져 보인다 (2026-08-24) */}
             <div style={{
               position: 'relative', flexShrink: 0,
-              aspectRatio: '2 / 3', minHeight: posterH,
+              width: Math.round(posterH * 2 / 3), height: posterH,
               borderRadius: 4, overflow: 'hidden',
               backgroundColor: 'var(--color-neutral-800)',
               boxShadow: 'inset 0 0 0 1px var(--comp-poster-border)',
