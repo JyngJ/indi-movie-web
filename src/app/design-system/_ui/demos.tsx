@@ -178,7 +178,9 @@ function ScrollNavButtonDemo() {
   const nudge = (dir: -1 | 1) => rail.current?.scrollBy({ left: dir * 200, behavior: 'smooth' })
 
   return (
-    <div style={{ position: 'relative', width: 'min(420px, 100%)' }}>
+    // 레일은 무대 폭을 다 쓴다 — 폭을 좁혀 두면 오른쪽이 비어, 버튼이 "레일 끝"에
+    // 붙는다는 사실이 안 보인다(문서에서 실제로 그렇게 보였다).
+    <div style={{ position: 'relative', width: '100%' }}>
       <div
         ref={rail}
         onScroll={sync}

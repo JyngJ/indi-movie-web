@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-24T17:12:46.875Z",
+  "generatedAt": "2026-08-24T17:20:34.171Z",
   "figmaDumpAt": "2026-08-24T09:24:07.211Z",
   "tokenGroups": [
     {
@@ -6023,7 +6023,7 @@
       "props": [
         {
           "name": "name",
-          "type": "\"success\" | \"error\" | \"info\" | \"scale\" | \"chevron-left\" | \"chevron-right\" | \"chevron-down\" | \"arrow-up\" | \"swap\" | \"close\" | \"plus\" | \"minus\" | \"check\" | \"grid\" | \"search\" | \"copy\" | ... 32 more ... | \"linkedin\"",
+          "type": "\"info\" | \"scale\" | \"x\" | \"chevron-left\" | \"chevron-right\" | \"chevron-down\" | \"arrow-up\" | \"arrow-right-left\" | \"plus\" | \"minus\" | \"check\" | \"layout-grid\" | \"search\" | \"copy\" | ... 34 more ... | \"linkedin\"",
           "optional": false,
           "default": null,
           "doc": ""

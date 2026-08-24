@@ -54,7 +54,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
     ],
     specs: [
       { title: '크기', desc: '32 · 44 · 52입니다. hover 영역을 포함한 값이며, 아이콘 자체는 그보다 작게 그려집니다.' },
-      { title: 'overlay 변형', desc: '배경 위 상태 레이어(--color-surface-overlay → hover → pressed)로 눌림을 표현합니다. 면 색을 알 수 없는 자리에서 사용하는 방식입니다.' },
+      { title: 'overlay 변형', desc: '포스터나 지도처럼 뒤에 무엇이 올지 모르는 자리에서 씁니다. ghost는 배경의 밝은 부분에 닿으면 사라지지만, overlay는 자기 면(--color-surface-overlay)을 깔고 그 위에 상태 레이어(hover → pressed)를 얹어 어느 배경에서도 읽힙니다.' },
     ],
     usage: [
       { kind: 'do', rule: '모바일에서 아이콘 버튼 사이는 최소 12px을 확보합니다. 44 타깃이 겹치면 오조작이 발생합니다.' },

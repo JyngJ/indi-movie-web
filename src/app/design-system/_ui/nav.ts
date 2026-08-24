@@ -33,32 +33,32 @@ export const documentedComponents = () => manifest.components.filter(c => !HIDDE
 export const COMPONENT_GROUPS: { title: string; desc: string; names: string[] }[] = [
   {
     title: 'Action',
-    desc: '누르면 무언가 일어나는 것.',
+    desc: '누르면 무언가가 일어나는 것',
     names: ['Button', 'IconButton', 'FabRound', 'ScrollNavButton', 'FavoriteButton', 'SortToggle', 'KakaoLoginButton'],
   },
   {
     title: 'Selection',
-    desc: '켜고 끄거나 여럿 중 하나를 고르는 것.',
+    desc: '하나를 고르는 것',
     names: ['Chip', 'FilterPill', 'GenreChip', 'DirectorChip', 'PosterChip', 'Switch', 'Tabs'],
   },
   {
     title: 'Input',
-    desc: '사용자가 글자를 넣는 자리.',
+    desc: '사용자가 입력하는 자리',
     names: ['Input', 'SearchBar', 'SearchBarButton'],
   },
   {
     title: 'Display',
-    desc: '정보를 담아 보여 주는 면과 줄.',
+    desc: '정보를 보여주는 것',
     names: ['Card', 'Avatar', 'Badge', 'SectionHeader', 'ListRow', 'MenuCard', 'MenuRow', 'Divider', 'Wordmark'],
   },
   {
     title: 'Feedback',
-    desc: '기다림·비어 있음·알림처럼 상태를 알리는 것.',
+    desc: '상태를 알리는 것',
     names: ['Toast', 'EmptyState', 'Skeleton', 'MovieCardSkeleton', 'TheaterCardSkeleton'],
   },
   {
     title: 'Overlay',
-    desc: '기존 화면 위에 얹히는 면.',
+    desc: '화면 위에 얹히는 면',
     names: ['BottomSheet', 'ConfirmDialog', 'BubbleTail'],
   },
 ]
@@ -69,7 +69,7 @@ export const groupedComponents = () => {
   const placed = new Set(COMPONENT_GROUPS.flatMap(g => g.names))
   const rest = documented.filter(n => !placed.has(n))
   const groups = COMPONENT_GROUPS.map(g => ({ ...g, names: g.names.filter(n => documented.includes(n)) }))
-  return rest.length ? [...groups, { title: '기타', desc: '아직 분류하지 않은 것.', names: rest }] : groups
+  return rest.length ? [...groups, { title: '기타', desc: '아직 분류되지 않은 것', names: rest }] : groups
 }
 
 export const componentPages = (): DocPageRef[] =>

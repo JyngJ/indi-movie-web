@@ -254,12 +254,30 @@ const DOCS: Record<string, Doc> = {
         <IconButton aria-label="추가" size={44}><IcoPlus size={18} /></IconButton>
         <IconButton aria-label="추가" size={52}><IcoPlus size={21} /></IconButton>
       </div>,
-      <div key="o" style={{
-        display: 'flex', gap: 'var(--spacing-3)', padding: 'var(--spacing-4)',
-        background: 'var(--color-neutral-800)', borderRadius: 'var(--radius-control)',
-      }}>
-        <IconButton aria-label="닫기" variant="overlay"><IcoX /></IconButton>
-        <IconButton aria-label="추가" variant="overlay" shape="round"><IcoPlus /></IconButton>
+      // overlay가 무엇을 푸는지는 어두운 사각형 위에 버튼을 얹어서는 안 보인다.
+      // 밝은 데서 어두운 데로 넘어가는 포스터를 깔고 ghost와 나란히 놓아야
+      // "면 색을 알 수 없는 자리"라는 말이 그림이 된다.
+      <div key="o" style={{ display: 'flex', gap: 'var(--spacing-5)' }}>
+        {([
+          { variant: 'ghost', caption: 'ghost — 밝은 쪽에서 사라진다' },
+          { variant: 'overlay', caption: 'overlay — 어느 쪽이든 읽힌다' },
+        ] as const).map(({ variant, caption }) => (
+          <div key={variant} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-2)' }}>
+            <div style={{
+              position: 'relative', width: 116, height: 164,
+              borderRadius: 'var(--radius-poster)', overflow: 'hidden',
+              background: 'linear-gradient(150deg, #F3E7C9 0%, #E8CFA0 42%, #3A2E22 100%)',
+            }}>
+              <div style={{ position: 'absolute', top: 8, left: 8 }}>
+                <IconButton aria-label="닫기" size={32} variant={variant}><IcoX /></IconButton>
+              </div>
+              <div style={{ position: 'absolute', bottom: 8, right: 8 }}>
+                <IconButton aria-label="추가" size={32} variant={variant} shape="round"><IcoPlus /></IconButton>
+              </div>
+            </div>
+            <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)' }}>{caption}</span>
+          </div>
+        ))}
       </div>,
     ],
     usageVisuals: [
