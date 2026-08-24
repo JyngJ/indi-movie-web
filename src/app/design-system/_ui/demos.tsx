@@ -86,7 +86,7 @@ function InputDemo() {
 function SearchBarDemo() {
   const [v, setV] = useState('')
   return (
-    <div style={{ width: 'min(560px, 100%)' }}>
+    <div style={{ flex: '1 1 100%', maxWidth: 560, minWidth: 0 }}>
       <SearchBar
         value={v}
         onChange={e => setV(e.target.value)}
@@ -119,7 +119,9 @@ function SearchBarButtonDemo() {
   }, [open])
 
   return (
-    <div ref={wrap} style={{ position: 'relative', width: 'min(560px, 100%)' }}>
+    // flex-basis를 100%로 고정한다 — auto면 입력칸(내용 폭)과 버튼(글자 폭)의 기준이 달라
+    // 눌러 여는 순간 폭이 튄다.
+    <div ref={wrap} style={{ position: 'relative', flex: '1 1 100%', maxWidth: 560, minWidth: 0 }}>
       {open ? (
         <SearchBar
           ref={ref}
@@ -461,9 +463,9 @@ const DEMOS: Record<string, ReactNode> = {
     </Case>
   ),
   Input: <Case label="label · error · hint · leftIcon"><InputDemo /></Case>,
-  SearchBar: <Case label="입력 가능 — 직접 타이핑해 보세요"><SearchBarDemo /></Case>,
+  SearchBar: <Case wide label="입력 가능 — 직접 타이핑해 보세요"><SearchBarDemo /></Case>,
   SearchBarButton: (
-    <Case label="눌러 보세요 — 검색 화면처럼 입력창과 최근 검색이 열립니다">
+    <Case wide label="눌러 보세요 — 검색 화면처럼 입력창과 최근 검색이 열립니다">
       <SearchBarButtonDemo />
     </Case>
   ),
