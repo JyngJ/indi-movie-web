@@ -516,10 +516,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
         backgroundColor: 'var(--color-surface-bg)',
         borderBottom: '1px solid var(--color-border)',
       }}>
-        {/* PC — 탭 묶음을 가운데로 (왼쪽에 붙어 보이던 것, 2026-08-24) */}
-        <div style={{ display: 'flex', justifyContent: isDesktop ? 'center' : 'flex-start' }}>
-          <DetailDateTabs dates={dates} selectedDate={selectedDate} activeDates={activeDates} onSelect={setSelectedDate} />
-        </div>
+        <DetailDateTabs dates={dates} selectedDate={selectedDate} activeDates={activeDates} onSelect={setSelectedDate} />
       </div>
 
       {/* 현재 상영중 */}
