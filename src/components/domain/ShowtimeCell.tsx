@@ -1,5 +1,6 @@
-import { Icon } from '@/components/primitives'
 'use client'
+
+import { Icon } from '@/components/primitives'
 
 export type ShowtimeKind = 'normal' | 'low' | 'soldout' | 'late' | 'nowplaying' | 'ended'
 

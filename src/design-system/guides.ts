@@ -151,6 +151,20 @@ export const GUIDES: Record<string, ComponentGuide> = {
     ],
   },
 
+  Icon: {
+    intro: '서비스의 유일한 아이콘 진입점입니다. lucide를 소스로 쓰고, lucide에 없는 브랜드 마크(kakao·instagram·github·linkedin)만 직접 그립니다. 새 글리프가 필요하면 호출부에서 svg를 그리지 말고 레지스트리에 이름을 추가합니다.',
+    specs: [
+      { title: '크기', desc: 'xs 12 · sm 14 · md 16(기본) · lg 20 · xl 24. px를 직접 넘길 수 있지만 기본은 토큰입니다.' },
+      { title: '획 굵기', desc: '크기에서 파생합니다 — 12 이하 2.5, 16 이하 2, 그 위 1.75. 24 뷰박스를 12px로 줄이면 1.75 획은 0.9px가 되어 사라지기 때문입니다.' },
+      { title: '접근성', desc: 'label을 주면 role="img"과 aria-label이 붙고, 없으면 aria-hidden 처리됩니다. 아이콘 옆에 글자가 있으면 label을 비웁니다.' },
+    ],
+    usage: [
+      { kind: 'do', rule: '색은 color prop이나 부모의 currentColor로 상속받습니다.' },
+      { kind: 'dont', rule: '호출부에서 <svg>를 직접 그리지 않습니다 — 같은 글리프가 굵기만 다른 채 여러 벌 생깁니다.' },
+      { kind: 'dont', rule: 'strokeWidth를 손으로 지정하지 않습니다. 크기만 정하면 굵기는 따라옵니다.' },
+    ],
+  },
+
   Switch: {
     intro: '켜짐/꺼짐을 즉시 바꾸는 토글입니다. 누르는 순간 저장까지 끝나는 설정(알림 켜기 등)에만 쓰고, 저장 버튼이 따로 있는 폼에서는 쓰지 않습니다.',
     specs: [
