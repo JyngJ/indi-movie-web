@@ -52,6 +52,12 @@ export type AnalyticsEventName =
   | 'survey good selected'
   | 'survey submitted'
   | 'survey dismissed'
+  /** 계정 — 콜백이 신규/기존을 구분해 auth_login 파라미터로 알려준다 */
+  | 'signed up'
+  | 'logged in'
+  /** 관심 등록/해제 — fav_type: movie|director|theater, fav_label: 사람이 읽는 이름 */
+  | 'favorite added'
+  | 'favorite removed'
   | 'dead click'
   /** 활성 상태인데 눌러도 화면이 전혀 안 변한 클릭 — disabled만 보던 'dead click'의 사각지대.
    *  온보딩/캐러셀처럼 "핸들러는 있는데 조용히 아무 일도 안 하는" 무반응을 잡는다. */

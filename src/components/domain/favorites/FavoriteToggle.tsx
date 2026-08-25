@@ -31,7 +31,7 @@ export function FavoriteToggle({
   return (
     <FavoriteButton
       active={isFavorite(type, id)}
-      onToggle={() => toggle(type, id, { loginDescription: LOGIN_COPY[type] })}
+      onToggle={() => toggle(type, id, { loginDescription: LOGIN_COPY[type], label })}
       variant={variant}
       size={size}
       label={label}

@@ -71,7 +71,12 @@ export async function GET(request: NextRequest) {
     console.error('[auth/kakao] saveKakaoTokens', e)
   }
 
-  const res = NextResponse.redirect(`${origin}${next}`)
+  // 신규 가입 판별 — auth.users.created_at이 방금이면 첫 로그인. 클라이언트가
+  // auth_login 파라미터를 읽어 'signed up'/'logged in' 이벤트를 찍고 지운다.
+  const createdAt = data.user.created_at ? Date.parse(data.user.created_at) : 0
+  const isNew = createdAt > 0 && Date.now() - createdAt < 60_000
+  const sep = next.includes('?') ? '&' : '?'
+  const res = NextResponse.redirect(`${origin}${next}${sep}auth_login=${isNew ? 'new' : 'ok'}`)
   clearOauthCookies(res)
   return res
 }

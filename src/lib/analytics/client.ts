@@ -41,6 +41,18 @@ export function classifySessionIntent(intent: SessionIntent, properties: Analyti
   trackEvent('session intent classified', { intent, ...properties })
 }
 
+/** 로그인 사용자를 PostHog 인물로 연결 — 가입자·활성 사용자를 기기 아닌 사람 단위로 센다 */
+export function identifyUser(userId: string) {
+  if (typeof window === 'undefined') return
+  if (process.env.NEXT_PUBLIC_POSTHOG_TOKEN) posthog.identify(userId)
+}
+
+/** 로그아웃 시 인물 연결 해제 — 다음 사용자와 섞이지 않게 */
+export function resetAnalyticsUser() {
+  if (typeof window === 'undefined') return
+  if (process.env.NEXT_PUBLIC_POSTHOG_TOKEN) posthog.reset()
+}
+
 export function trackEvent(name: AnalyticsEventName, properties: AnalyticsProperties = {}) {
   if (typeof window === 'undefined') return
 
