@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { FavoriteToggle } from '@/components/domain/favorites/FavoriteToggle'
 import { PosterThumb } from '@/components/domain/PosterThumb'
-import { Button, FilterPill } from '@/components/primitives'
+import { Button, Tabs } from '@/components/primitives'
 import { useDetailLink } from '@/hooks/useDetailLink'
 import { useFavorites } from '@/hooks/useFavorites'
 import { favoriteKey, type Favorite } from '@/lib/favorites/types'
@@ -50,17 +50,17 @@ export function FavoritesContent({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <>
-    <div role="tablist" aria-label="관심 종류" style={{ display: 'flex', gap: 8, padding: '12px var(--gutter)' }}>
-      <FilterPill active={tab === 'movie'} onClick={() => setTab('movie')} role="tab" aria-selected={tab === 'movie'}>
-        영화 {summary.movies.length > 0 ? summary.movies.length : ''}
-      </FilterPill>
-      <FilterPill active={tab === 'theater'} onClick={() => setTab('theater')} role="tab" aria-selected={tab === 'theater'}>
-        극장 {summary.theaters.length > 0 ? summary.theaters.length : ''}
-      </FilterPill>
-      <FilterPill active={tab === 'director'} onClick={() => setTab('director')} role="tab" aria-selected={tab === 'director'}>
-        감독 {summary.directors.length > 0 ? summary.directors.length : ''}
-      </FilterPill>
-    </div>
+    <Tabs
+      label="관심 종류"
+      variant="pill"
+      value={tab}
+      onChange={setTab}
+      items={[
+        { value: 'movie', label: `영화 ${summary.movies.length > 0 ? summary.movies.length : ''}`.trim() },
+        { value: 'theater', label: `극장 ${summary.theaters.length > 0 ? summary.theaters.length : ''}`.trim() },
+        { value: 'director', label: `감독 ${summary.directors.length > 0 ? summary.directors.length : ''}`.trim() },
+      ] as const}
+    />
 
     {empty && (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '48px var(--gutter)', textAlign: 'center' }}>

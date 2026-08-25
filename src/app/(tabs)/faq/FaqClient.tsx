@@ -6,6 +6,7 @@ import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { FooterWordmark } from '@/components/domain/FooterWordmark'
 import type { FaqSection } from './content'
+import { Icon, Divider } from '@/components/primitives'
 
 /**
  * FAQ 본문 — 상영작 탭과 같은 프레임을 쓴다.
@@ -53,23 +54,7 @@ function FaqCard({
       >
         <span style={{ color: 'var(--color-text-caption)', fontWeight: 700, flexShrink: 0 }}>Q.</span>
         <span style={{ flex: 1 }}>{item.question}</span>
-        <svg
-          width={16}
-          height={16}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="var(--color-text-placeholder)"
-          strokeWidth={1.75}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          style={{
-            flexShrink: 0,
-            transform: open ? 'rotate(180deg)' : 'none',
-            transition: 'transform 200ms cubic-bezier(0.32,0.72,0,1)',
-          }}
-        >
-          <path d="M6 9l6 6 6-6" />
-        </svg>
+        <Icon name="chevron-down" size={16} />
       </button>
 
       {/* grid-rows 높이 전환 — 답변은 항상 DOM에 존재 */}
@@ -145,7 +130,7 @@ export function FaqClient({ sections }: { sections: FaqSection[] }) {
         <p style={{ margin: '4px 0 0', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
           영화볼지도 서비스 소개와 이용 안내
         </p>
-        <div style={{ marginTop: 16, height: 1, background: 'var(--color-border)' }} />
+        <Divider style={{ marginTop: 16 }} />
       </header>
 
       {/* 본문 — PC 최대폭 컬럼 중앙 정렬 (상영작 탭과 동일한 폭) */}

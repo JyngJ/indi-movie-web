@@ -7,6 +7,9 @@ import { DateBar, type Day, type DayType } from './DateBar'
 import { ShowtimeCell } from './ShowtimeCell'
 import { Button } from '@/components/primitives/Button'
 import { IconButton } from '@/components/primitives/IconButton'
+import { Icon } from '@/components/primitives/Icon'
+import { Divider } from '@/components/primitives/Divider'
+import { EmptyState } from '@/components/primitives/EmptyState'
 import { TheaterFavoriteAction } from '@/components/domain/favorites/TheaterFavoriteAction'
 import { FilterPill } from '@/components/primitives/FilterPill'
 import { Chip } from '@/components/primitives/Chip'
@@ -44,87 +47,16 @@ function calcPosterItemW(w: number): number {
 }
 
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
-const IconClose = () => (
-  <svg width={20} height={20} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
-    <path d="M6 6l12 12M18 6 6 18" />
-  </svg>
-)
 
-const IconChevronLeft = () => (
-  <svg width={20} height={20} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M15 18l-6-6 6-6" />
-  </svg>
-)
 
-const IconExternal = ({ size = 16 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
-    <polyline points="15 3 21 3 21 9" />
-    <line x1="10" y1="14" x2="21" y2="3" />
-  </svg>
-)
 
-const IconCopy = ({ size = 14 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-  </svg>
-)
 
 /* Lucide map-pinned */
-const IconRoute = ({ size = 15 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M18 8c0 3.613-3.869 7.429-5.393 8.795a1 1 0 0 1-1.214 0C9.87 15.429 6 11.613 6 8a6 6 0 0 1 12 0" />
-    <circle cx="12" cy="8" r="2" />
-    <path d="M8.714 14h-3.71a1 1 0 0 0-.948.683l-2.004 6A1 1 0 0 0 3 22h18a1 1 0 0 0 .948-1.316l-2-6a1 1 0 0 0-.949-.684h-3.712" />
-  </svg>
-)
 
-const IconShare = ({ size = 15 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="18" cy="5" r="3" />
-    <circle cx="6" cy="12" r="3" />
-    <circle cx="18" cy="19" r="3" />
-    <path d="M8.6 10.6l6.8-4.2M8.6 13.4l6.8 4.2" />
-  </svg>
-)
 
-const IconInstagram = ({ size = 15 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="3" width="18" height="18" rx="5" />
-    <circle cx="12" cy="12" r="4" />
-    <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
-  </svg>
-)
 
-const IconSearch = ({ size = 14 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="11" cy="11" r="8" />
-    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-  </svg>
-)
 
-const IconChevronRight = ({ size = 13 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M9 18l6-6-6-6" />
-  </svg>
-)
 
-const IconFilter = ({ size = 13 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-  </svg>
-)
 
 /* ── 시놉시스 카드 ──────────────────────────────────────────────── */
 interface SynopsisCardProps {
@@ -960,7 +892,7 @@ export function TheaterSheet({
               <span style={{ minWidth: 0 }}>{theater.name}</span>
               {theater.website && (
                 <button style={inlineIconBtn} onClick={openWebsite} aria-label="사이트 보기">
-                  <IconExternal size={10} />
+                  <Icon name="external-link" size={10} />
                 </button>
               )}
             </div>
@@ -983,16 +915,16 @@ export function TheaterSheet({
             }}>
               <TheaterFavoriteAction theaterId={theater.id} style={actionBtn} />
               <button className="hover-raise" style={actionBtn} onClick={openDirections}>
-                <IconRoute size={14} />
+                <Icon name="map-pinned" size={14} />
                 길찾기
               </button>
               <button className="hover-raise" style={actionBtn} onClick={shareTheater}>
-                <IconShare size={14} />
+                <Icon name="share-2" size={14} />
                 공유하기
               </button>
               {hasInstagram && (
                 <button className="hover-raise" style={actionBtn} onClick={openInstagram}>
-                  <IconInstagram size={14} />
+                  <Icon name="instagram" size={14} />
                   인스타그램
                 </button>
               )}
@@ -1006,13 +938,13 @@ export function TheaterSheet({
             gap: 8,
           }}>
             <IconButton variant="ghost" size={32} aria-label="닫기" onClick={onClose}>
-              <IconClose />
+              <Icon name="x" size={20} />
             </IconButton>
           </div>
           {onBack && (
             <div style={{ position: 'absolute', top: -2, left: 'var(--gutter-sheet)' }}>
               <IconButton variant="ghost" size={32} aria-label="이전으로" onClick={onBack}>
-                <IconChevronLeft />
+                <Icon name="chevron-left" size={20} />
               </IconButton>
             </div>
           )}
@@ -1033,7 +965,7 @@ export function TheaterSheet({
           }}>
             {onBack && (
               <IconButton variant="ghost" size={32} aria-label="이전으로" onClick={onBack}>
-                <IconChevronLeft />
+                <Icon name="chevron-left" size={20} />
               </IconButton>
             )}
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -1050,7 +982,7 @@ export function TheaterSheet({
                 </h2>
                 {theater.website && (
                   <button style={inlineIconBtn} onClick={openWebsite} aria-label="사이트 보기">
-                    <IconExternal size={11} />
+                    <Icon name="external-link" size={11} />
                   </button>
                 )}
               </div>
@@ -1076,7 +1008,7 @@ export function TheaterSheet({
               </div>
             </div>
             <IconButton variant="ghost" size={32} aria-label="닫기" onClick={onClose}>
-              <IconClose />
+              <Icon name="x" size={20} />
             </IconButton>
           </div>
           <div style={{
@@ -1089,16 +1021,16 @@ export function TheaterSheet({
           }}>
             <TheaterFavoriteAction theaterId={theater.id} style={actionBtn} />
             <button className="hover-raise" style={actionBtn} onClick={openDirections}>
-              <IconRoute size={14} />
+              <Icon name="map-pinned" size={14} />
               길찾기
             </button>
             <button className="hover-raise" style={actionBtn} onClick={shareTheater}>
-              <IconShare size={14} />
+              <Icon name="share-2" size={14} />
               공유하기
             </button>
             {hasInstagram && (
               <button className="hover-raise" style={actionBtn} onClick={openInstagram}>
-                <IconInstagram size={14} />
+                <Icon name="instagram" size={14} />
                 인스타그램
               </button>
             )}
@@ -1116,7 +1048,7 @@ export function TheaterSheet({
           justifyContent: 'space-between',
         }}>
           <IconButton variant="ghost" size={32} aria-label="뒤로" style={{ marginLeft: -8 }} onClick={onBack ?? onCollapse}>
-            <IconChevronLeft />
+            <Icon name="chevron-left" size={20} />
           </IconButton>
           <span style={{
             flex: 1, textAlign: 'center',
@@ -1131,7 +1063,7 @@ export function TheaterSheet({
           </span>
           <div style={{ display: 'flex', gap: 8 }}>
             <IconButton variant="ghost" size={32} aria-label="닫기" style={{ marginRight: -8 }} onClick={onClose}>
-              <IconClose />
+              <Icon name="x" size={20} />
             </IconButton>
           </div>
         </div>
@@ -1176,7 +1108,7 @@ export function TheaterSheet({
             }}
             onClick={() => scrollByPage(-1, posterItemW + POSTER_GAP)}
           >
-            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            <Icon name="chevron-left" size={14} />
           </button>
         )}
         {posterCanScrollRight && (
@@ -1195,7 +1127,7 @@ export function TheaterSheet({
             }}
             onClick={() => scrollByPage(1, posterItemW + POSTER_GAP)}
           >
-            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+            <Icon name="chevron-right" size={14} />
           </button>
         )}
         <div
@@ -1225,19 +1157,12 @@ export function TheaterSheet({
               ))
             : allMovieEntries.length === 0
               ? (
-                  <div style={{
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '8px 0 12px',
-                    gap: 8,
-                    minWidth: '100%',
-                  }}>
-                    <img src="/illust/no-showtimes.png" alt="상영 정보 없음" style={{ width: 78, height: 104, opacity: 0.7 }} />
-                    <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>확인된 상영 정보가 없어요</span>
-                  </div>
+                  <EmptyState
+                    illustration={{ src: '/illust/no-showtimes.png', alt: '상영 정보 없음', width: 78, height: 104 }}
+                    message="확인된 상영 정보가 없어요"
+                    paddingY={8}
+                    style={{ flex: 1, minWidth: '100%', paddingBottom: 12 }}
+                  />
                 )
               : (() => {
                   return sortedAllEntries.map((entry) => {
@@ -1365,7 +1290,7 @@ export function TheaterSheet({
               </div>
               {theater.website && (
                 <button style={inlineIconBtn} onClick={openWebsite} aria-label="사이트 보기">
-                  <IconExternal size={10} />
+                  <Icon name="external-link" size={10} />
                 </button>
               )}
             </div>
@@ -1379,14 +1304,14 @@ export function TheaterSheet({
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 0, marginTop: 4, marginLeft: -8 }}>
               <TheaterFavoriteAction theaterId={theater.id} style={actionBtn} compact />
               <button className="hover-raise" style={actionBtn} onClick={openDirections}>
-                <IconRoute size={14} />길찾기
+                <Icon name="map-pinned" size={14} />길찾기
               </button>
               <button className="hover-raise" style={actionBtn} onClick={shareTheater}>
-                <IconShare size={14} />공유하기
+                <Icon name="share-2" size={14} />공유하기
               </button>
               {hasInstagram && (
                 <button className="hover-raise" style={actionBtn} onClick={openInstagram}>
-                  <IconInstagram size={14} />인스타그램
+                  <Icon name="instagram" size={14} />인스타그램
                 </button>
               )}
             </div>
@@ -1476,7 +1401,7 @@ export function TheaterSheet({
                       onClick={() => applySheetFilters({ ...sheetFilters, genres: sheetFilters.genres.filter(x => x !== g) })}
                     >
                       {g}
-                      <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+                      <Icon name="x" size={9} />
                     </FilterPill>
                   ))}
                   {sheetFilters.nations.map(n => (
@@ -1486,7 +1411,7 @@ export function TheaterSheet({
                       onClick={() => applySheetFilters({ ...sheetFilters, nations: sheetFilters.nations.filter(x => x !== n) })}
                     >
                       {withFlag(n)}
-                      <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+                      <Icon name="x" size={9} />
                     </FilterPill>
                   ))}
                 </div>
@@ -1499,7 +1424,7 @@ export function TheaterSheet({
                     setFilterSheetOpen(true)
                   }}
                 >
-                  <IconFilter size={12} />
+                  <Icon name="funnel" size={12} />
                   필터{activeCount > 0 ? ` ${activeCount}` : ''}
                 </FilterPill>
               </div>
@@ -1538,12 +1463,12 @@ export function TheaterSheet({
                   <>
                     {posterCanScrollLeft && (
                       <button style={{ ...btnStyle, left: 6 }} onClick={() => scrollBy(-1)}>
-                        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                        <Icon name="chevron-left" size={14} />
                       </button>
                     )}
                     {posterCanScrollRight && (
                       <button style={{ ...btnStyle, right: 6 }} onClick={() => scrollBy(1)}>
-                        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                        <Icon name="chevron-right" size={14} />
                       </button>
                     )}
                   </>
@@ -1577,14 +1502,12 @@ export function TheaterSheet({
                   ))
                 : allMovieEntries.length === 0
                   ? (
-                      <div style={{
-                        flex: 1, display: 'flex', flexDirection: 'column',
-                        alignItems: 'center', justifyContent: 'center',
-                        padding: '8px 0 12px', gap: 8, minWidth: '100%',
-                      }}>
-                        <img src="/illust/no-showtimes.png" alt="상영 정보 없음" style={{ width: 78, height: 104, opacity: 0.7 }} />
-                        <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>확인된 상영 정보가 없어요</span>
-                      </div>
+                      <EmptyState
+                        illustration={{ src: '/illust/no-showtimes.png', alt: '상영 정보 없음', width: 78, height: 104 }}
+                        message="확인된 상영 정보가 없어요"
+                        paddingY={8}
+                        style={{ flex: 1, minWidth: '100%', paddingBottom: 12 }}
+                      />
                     )
                   : <>
                       {/* 조건 일치 영화 */}
@@ -1816,15 +1739,10 @@ export function TheaterSheet({
                       opacity: movieNavPendingId === movie.id ? 0.5 : 1,
                     }}
                   >
-                    <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                      <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z" />
-                      <path d="m6.2 5.3 3.1 3.9" />
-                      <path d="m12.4 3.4 3.1 4" />
-                      <path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
-                    </svg>
+                                        <Icon name="clapperboard" size={14} style={{ flexShrink: 0 }} />
                     영화 상세 정보
                   </button>
-                  <div style={{ width: 1, backgroundColor: 'var(--color-border)' }} />
+                  <Divider orientation="vertical" />
                   <button
                     className="hover-raise"
                     onClick={() => { onMovieSearch?.(movie.id, movie.title); onClose() }}
@@ -1837,7 +1755,7 @@ export function TheaterSheet({
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
                     }}
                   >
-                    <IconSearch size={14} />
+                    <Icon name="search" size={14} />
                     지도에서 이 영화 검색
                   </button>
                 </div>

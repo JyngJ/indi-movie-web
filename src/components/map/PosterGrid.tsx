@@ -1,7 +1,7 @@
 'use client'
 
 import { PosterThumb } from '@/components/domain'
-import { BubbleTail } from '@/components/primitives'
+import { BubbleTail, Icon, Divider } from '@/components/primitives'
 import { finiteNumber } from '@/lib/map/searchUtils'
 import { toSecureImageUrl } from '@/lib/media/imageUrl'
 import { withFlag } from '@/lib/nations'
@@ -22,9 +22,7 @@ function dayLabelColor(day: ScreeningDay): string {
 /** 관심 표시 하트 — 목록에서 이름 앞에 붙는다 */
 function HeartGlyph() {
   return (
-    <svg width={8} height={8} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style={{ flexShrink: 0 }}>
-      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-    </svg>
+    <Icon name="heart" size={8} fill="currentColor" color="currentColor" strokeWidth={0} style={{ flexShrink: 0 }} />
   )
 }
 
@@ -198,9 +196,7 @@ export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, 
             {favoriteCount > 0 && (
               <span className="po-wrap" style={{ display: 'inline-flex', order: dimOverflowChip ? -1 : 0 }}>
               <span className="pm-heart-cap">
-                <svg width={8} height={8} viewBox="0 0 24 24" fill="currentColor" style={{ display: 'block' }} aria-hidden="true">
-                  <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                </svg>
+                <Icon name="heart" size={8} fill="currentColor" color="currentColor" strokeWidth={0} style={{ flexShrink: 0 }} />
                 <span style={{ fontSize: 'var(--text-badge)', fontWeight: 700, lineHeight: 1 }}>{favoriteCount}</span>
               </span>
               {favoriteMovies.length > 0 && (
@@ -230,9 +226,7 @@ export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, 
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   boxShadow: '0 1px 4px rgba(0,0,0,0.3)', zIndex: 2, pointerEvents: 'none',
                 }}>
-                  <svg width={8} height={8} viewBox="0 0 24 24" fill="var(--color-on-accent)" aria-hidden="true" style={{ display: 'block' }}>
-                    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                  </svg>
+                  <Icon name="heart" size={8} fill="var(--color-on-accent)" color="var(--color-on-accent)" strokeWidth={0} style={{ flexShrink: 0 }} />
                 </span>
               )}
               {slots[0].movie?.posterUrl && (
@@ -257,7 +251,7 @@ export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, 
               )}
             </div>
             {/* 실선 디바이더 — 점선에서 변경 (피그마 확정) */}
-            <div style={{ width: 1, alignSelf: 'stretch', backgroundColor: 'var(--color-border)', flexShrink: 0 }} />
+            <Divider orientation="vertical" />
             <div style={{ display: 'flex', flexDirection: 'column', gap: SLOT_GAP }}>
               <div style={{
                 fontSize: 'var(--text-badge)', fontWeight: 500, textAlign: 'center', whiteSpace: 'nowrap',
@@ -302,9 +296,7 @@ export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, 
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           boxShadow: '0 1px 4px rgba(0,0,0,0.3)', zIndex: 2, pointerEvents: 'none',
                         }}>
-                          <svg width={8} height={8} viewBox="0 0 24 24" fill="var(--color-on-accent)" aria-hidden="true" style={{ display: 'block' }}>
-                            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                          </svg>
+                          <Icon name="heart" size={8} fill="var(--color-on-accent)" color="var(--color-on-accent)" strokeWidth={0} style={{ flexShrink: 0 }} />
                         </span>
                       )}
                       {slot.movie && (

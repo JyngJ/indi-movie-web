@@ -15,6 +15,7 @@ import { DateDropdown } from './filterBar/DateDropdown'
 import { MultiSelectDropdown } from './filterBar/MultiSelectDropdown'
 import { RegionDropdown } from './filterBar/RegionDropdown'
 import { FilterChip } from './filterBar/FilterChip'
+import { Icon } from '@/components/primitives'
 
 type OpenPanel = 'date' | 'genre' | 'nation' | 'region' | 'calendar' | null
 
@@ -493,10 +494,7 @@ export function FilterBar({
               color: 'var(--color-on-accent)',
             }}>
               {/* 핀 아이콘 */}
-              <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 4 }}>
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
+              <Icon name="map-pin" size={15} />
               {/* 문구 */}
               <span className="text-note" style={{ flex: 1, color: 'var(--color-on-accent)' }}>
                 지역을 설정해서 내 주변 영화관의 상영 정보를 조회하세요
@@ -520,9 +518,7 @@ export function FilterBar({
                   padding: 0,
                 }}
               >
-                <svg width={8} height={8} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
-                  <path d="M18 6L6 18M6 6l12 12" />
-                </svg>
+                <Icon name="x" size={8} />
               </button>
             </div>
           </div>

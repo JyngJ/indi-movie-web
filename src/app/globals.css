@@ -808,11 +808,13 @@ img {
 .success-check-circle {
   animation: check-pop 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-.success-check-path {
+/* Icon 컴포넌트가 path를 직접 그리므로 루트 클래스에서 자식 path를 잡는다 */
+.success-check path, .success-check-path {
   stroke-dasharray: 24;
   stroke-dashoffset: 24;
   animation: check-draw 260ms ease-out 240ms both;
 }
 @media (prefers-reduced-motion: reduce) {
-  .success-check-circle, .success-check-path { animation: none; stroke-dashoffset: 0; }
+  .success-check-circle, /* Icon 컴포넌트가 path를 직접 그리므로 루트 클래스에서 자식 path를 잡는다 */
+.success-check path, .success-check-path { animation: none; stroke-dashoffset: 0; }
 }

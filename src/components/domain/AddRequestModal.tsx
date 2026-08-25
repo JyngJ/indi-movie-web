@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Film, Building2, User, MoreHorizontal, Check } from 'lucide-react'
 import { Button, Input } from '@/components/primitives'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useLockBodyScroll } from '@/hooks/useLockBodyScroll'
 import { trackEvent } from '@/lib/analytics/client'
 import type { UserRequestKind } from '@/lib/userRequests/types'
+import { Icon, type IconName } from '@/components/primitives'
 
 interface Props {
   open: boolean
@@ -15,11 +15,11 @@ interface Props {
   onClose: () => void
 }
 
-const KIND_OPTIONS: { kind: UserRequestKind; label: string; icon: typeof Film }[] = [
-  { kind: 'movie', label: '영화', icon: Film },
-  { kind: 'theater', label: '영화관', icon: Building2 },
-  { kind: 'director', label: '감독', icon: User },
-  { kind: 'etc', label: '기타', icon: MoreHorizontal },
+const KIND_OPTIONS: { kind: UserRequestKind; label: string; icon: IconName }[] = [
+  { kind: 'movie', label: '영화', icon: 'film' },
+  { kind: 'theater', label: '영화관', icon: 'building-2' },
+  { kind: 'director', label: '감독', icon: 'user' },
+  { kind: 'etc', label: '기타', icon: 'ellipsis' },
 ]
 
 const NAME_FIELD: Record<UserRequestKind, { label: string; placeholder: string }> = {
@@ -138,7 +138,7 @@ export function AddRequestModal({ open, query, onClose }: Props) {
             margin: '0 auto 20px',
             color: 'var(--color-primary-base)',
           }}>
-            <Check size={30} strokeWidth={1.75} color="currentColor" />
+            <Icon name="check" size={30} strokeWidth={1.75} color="currentColor" />
           </div>
           <p style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text-primary)', margin: '0 0 8px' }}>
             요청이 접수되었어요
@@ -160,7 +160,7 @@ export function AddRequestModal({ open, query, onClose }: Props) {
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 20 }}>
-            {KIND_OPTIONS.map(({ kind: k, label, icon: Icon }) => {
+            {KIND_OPTIONS.map(({ kind: k, label, icon }) => {
               const selected = kind === k
               return (
                 <button
@@ -174,7 +174,7 @@ export function AddRequestModal({ open, query, onClose }: Props) {
                     color: selected ? 'var(--color-primary-text)' : 'var(--color-text-body)',
                   }}
                 >
-                  <Icon size={20} strokeWidth={1.75} color="currentColor" />
+                  <Icon name={icon} size={20} strokeWidth={1.75} color="currentColor" />
                   <span style={{ fontSize: 12, fontWeight: 600 }}>{label}</span>
                 </button>
               )

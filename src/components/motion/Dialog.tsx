@@ -13,7 +13,7 @@ import {
 } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence, type Transition } from 'motion/react'
-import { X } from 'lucide-react'
+import { Icon } from '@/components/primitives'
 
 /**
  * 트리거 카드가 그대로 커져서 다이얼로그가 되는 모핑 다이얼로그.
@@ -314,7 +314,7 @@ export function DialogClose({
         ...style,
       }}
     >
-      {children ?? <X size={18} />}
+      {children ?? <Icon name="x" size={18} />}
     </motion.button>
   )
 }

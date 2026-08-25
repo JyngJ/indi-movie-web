@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { toSecureImageUrl } from '@/lib/media/imageUrl'
+import { Icon } from '@/components/primitives'
 
 interface PosterThumbProps {
   src?: string
@@ -27,6 +28,16 @@ interface PosterThumbProps {
    * 정적 마크업엔 onLoad/ref가 안 붙어 opacity:0이 그대로 굳는다(포스터가 빈칸이 됨).
    */
   fade?: boolean
+  /**
+   * 부모 폭을 채우고 2:3 비율로 높이를 잡는다(그리드용). width/height는 무시되고
+   * 대신 없는 포스터의 대체 글자 크기 계산에 fallbackTextBase가 쓰인다.
+   */
+  fluid?: boolean
+  /** fluid일 때 대체 글자 크기 기준 폭(px). 기본 120. */
+  fluidTextBase?: number
+  /** 화면 밖 포스터를 늦게 받는다. 긴 그리드에서 켠다. */
+  lazy?: boolean
+  className?: string
 }
 
 export function PosterThumb({
@@ -43,6 +54,10 @@ export function PosterThumb({
   shadow = true,
   onReady,
   fade = true,
+  fluid = false,
+  fluidTextBase = 120,
+  lazy = false,
+  className,
 }: PosterThumbProps) {
   // 로드 페이드 — 스트리밍 중 반쯤 그려진 이미지가 뚝 나타나는 것 방지.
   // 캐시된 이미지는 complete가 참이라 페이드 없이 즉시 보인다(재방문 깜빡임 방지).
@@ -60,10 +75,11 @@ export function PosterThumb({
   return (
     /* 컨테이너는 항상 고정 크기 — 선택 링이 레이아웃에 영향 없도록 box-shadow 사용 */
     <div
-      className="relative flex-shrink-0 overflow-visible"
+      className={`relative overflow-visible${fluid ? '' : ' flex-shrink-0'}${className ? ` ${className}` : ''}`}
       style={{
-        width,
-        height,
+        ...(fluid
+          ? { width: '100%', aspectRatio: '2/3' }
+          : { width, height }),
         borderRadius: radiusVar,
         /* 선택 링: box-shadow는 레이아웃에 영향을 주지 않음 */
         boxShadow: selected || highlighted
@@ -95,6 +111,7 @@ export function PosterThumb({
               opacity: loaded || !fade ? 1 : 0,
               transition: fade ? 'opacity 240ms ease' : undefined,
             }}
+            loading={lazy ? 'lazy' : undefined}
             /* 캐시된 이미지는 onLoad가 안 뜰 수 있어 complete도 함께 본다 */
             ref={(node) => { if (node?.complete && !loaded) { markLoaded(); onReady?.() } }}
             onLoad={() => { markLoaded(); onReady?.() }}
@@ -115,7 +132,7 @@ export function PosterThumb({
             {alt && (
               <span style={{
                 color: 'rgba(255,255,255,0.9)',
-                fontSize: Math.max(11, Math.min(20, Math.round(width * 0.15))),
+                fontSize: Math.max(11, Math.min(20, Math.round((fluid ? fluidTextBase : width) * 0.15))),
                 fontWeight: 800,
                 textAlign: 'center',
                 lineHeight: 1.3,
@@ -173,13 +190,7 @@ export function PosterThumb({
             zIndex: 1,
           }}
         >
-          <svg
-            width={10} height={10} viewBox="0 0 24 24"
-            fill="none" stroke="white" strokeWidth="3.5"
-            strokeLinecap="round" strokeLinejoin="round"
-          >
-            <path d="M5 12.5 10 17.5 19 7" />
-          </svg>
+          <Icon name="check" size={10} />
         </div>
       )}
     </div>

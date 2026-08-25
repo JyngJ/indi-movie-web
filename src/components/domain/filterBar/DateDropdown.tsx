@@ -1,6 +1,6 @@
 import { buildDateOptions, type DateId } from './dateHelpers'
 import { DropdownRow } from './DropdownRow'
-import { IcoCalendar, IcoArrowRight } from './icons'
+import { Icon } from '@/components/primitives'
 
 /* -- DateDropdown ------------------------------------------------- */
 export function DateDropdown({ selectedId, onSelect, onPickCustom, style }: {
@@ -42,11 +42,11 @@ export function DateDropdown({ selectedId, onSelect, onPickCustom, style }: {
           color: 'var(--color-text-body)',
         }}
       >
-        <IcoCalendar />
+        <Icon name="calendar" size="sm" />
         <span style={{ flex: 1, fontSize: 13, fontWeight: 500, textAlign: 'left' }}>
           날짜 직접 선택
         </span>
-        <IcoArrowRight />
+        <Icon name="chevron-right" size={13} />
       </button>
     </div>
   )

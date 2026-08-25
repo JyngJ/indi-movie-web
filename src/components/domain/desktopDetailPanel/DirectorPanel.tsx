@@ -5,7 +5,7 @@ import { useMovies, useActiveMovieIds } from '@/lib/supabase/queries'
 import { Toast, SortToggle } from '@/components/primitives'
 import { PanelShell } from './PanelShell'
 import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
-import { IcoChevronRight, IcoChevronDown } from './icons'
+import { Icon } from '@/components/primitives'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 import { toSecureImageUrl } from '@/lib/media/imageUrl'
 
@@ -56,7 +56,7 @@ export function DirectorPanel({
       {/* 감독 헤더 */}
       <div style={{ padding: '28px var(--gutter) 20px', display: 'flex', alignItems: 'center', gap: 16, borderBottom: '1px solid var(--color-border)' }}>
         <div style={{ width: 64, height: 64, borderRadius: '50%', backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-caption)', flexShrink: 0 }}>
-          <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+          <Icon name="user" size={32} strokeWidth={1.5} />
         </div>
         <div>
           <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-h2)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{directorName}</div>
@@ -142,7 +142,7 @@ export function DirectorPanel({
                     {[movie.year, movie.genre[0]].filter(Boolean).join(' · ')}
                   </div>
                 </div>
-                <IcoChevronRight />
+                <Icon name="chevron-right" size={14} />
               </button>
             )
           })}
@@ -162,7 +162,7 @@ export function DirectorPanel({
                 cursor: 'pointer', borderRadius: '0 0 12px 12px', minHeight: 'auto',
               }}
             >
-              <IcoChevronDown flipped={expanded} />
+              <Icon name="chevron-down" size={14} style={{ transform: expanded ? 'rotate(180deg)' : undefined, transition: 'transform 200ms' }} />
               {expanded ? '접기' : `${hiddenCount}편 더 보기`}
             </button>
           )}

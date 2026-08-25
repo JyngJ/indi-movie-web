@@ -5,8 +5,7 @@ import { createPortal } from 'react-dom'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useLockBodyScroll } from '@/hooks/useLockBodyScroll'
 import type { LocationPermState } from '@/hooks/useLocationPermission'
-import { Lock } from 'lucide-react'
-import { Button } from '@/components/primitives'
+import { Button, Icon, Divider } from '@/components/primitives'
 
 interface Props {
   state: Extract<LocationPermState, 'prompt' | 'requesting' | 'denied'>
@@ -14,21 +13,7 @@ interface Props {
   onDismiss: () => void
 }
 
-const IcoLocation = () => (
-  <svg width={30} height={30} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
-    <circle cx="12" cy="9" r="2.5" />
-  </svg>
-)
 
-const IcoLock = () => (
-  <svg width={28} height={28} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-  </svg>
-)
 
 export function LocationPermissionModal({ state, onRequest, onDismiss }: Props) {
   const isDesktop = useIsDesktopLayout()
@@ -95,7 +80,7 @@ export function LocationPermissionModal({ state, onRequest, onDismiss }: Props) 
           maskPosition: 'center',
         }} />
       </div>
-      <div style={{ height: 1, background: 'var(--color-border)' }} />
+      <Divider />
 
       {/* 본문 */}
       <div style={{ padding: '28px var(--gutter) 0', textAlign: 'center' }}>
@@ -108,7 +93,7 @@ export function LocationPermissionModal({ state, onRequest, onDismiss }: Props) 
           margin: '0 auto 20px',
           color: isDenied ? 'var(--color-text-caption)' : 'var(--color-primary-base)',
         }}>
-          {isDenied ? <IcoLock /> : <IcoLocation />}
+          {isDenied ? <Icon name="lock" size={28} /> : <Icon name="map-pin" size={30} />}
         </div>
 
         {isDenied ? (
@@ -126,7 +111,7 @@ export function LocationPermissionModal({ state, onRequest, onDismiss }: Props) 
             }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                 <span style={{ flexShrink: 0, marginTop: 4, color: 'var(--color-text-body)' }}>
-                  <Lock size={18} strokeWidth={1.75} color="currentColor" />
+                  <Icon name="lock" size={18} strokeWidth={1.75} color="currentColor" />
                 </span>
                 <div style={{ fontSize: 13, color: 'var(--color-text-body)', lineHeight: 1.65 }}>
                   주소창 왼쪽 <strong>자물쇠 아이콘</strong> 클릭<br />
@@ -158,7 +143,7 @@ export function LocationPermissionModal({ state, onRequest, onDismiss }: Props) 
             <span>설정했어요</span>
           ) : (
             <>
-              <IcoLocation />
+              <Icon name="map-pin" size={30} />
               <span>위치 허용하기</span>
             </>
           )}

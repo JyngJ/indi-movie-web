@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { SectionHeader, MovieCardSkeleton, FabRound } from '@/components/primitives'
+import { SectionHeader, MovieCardSkeleton, FabRound, Icon, Divider } from '@/components/primitives'
 import { AllMoviesGrid } from '@/components/domain/AllMoviesGrid'
 import { RouteProgressBar, navStart } from '@/components/domain/RouteProgressBar'
 import { AnniversarySection } from '@/components/domain/AnniversarySection'
@@ -41,7 +41,6 @@ import { getStoredRegion, setStoredRegion, subscribeStoredRegion } from '@/lib/r
 import { getFestivalDateLabel, getFestivalStatus, type FestivalStatus } from '@/lib/festival/status'
 import type { Theater } from '@/types/api'
 import type { Festival } from '@/types/festival'
-import { ArrowUp, ChevronRight } from 'lucide-react'
 
 /* ── 지역 설정 힌트 말풍선 — 지도 FilterBar의 안내와 동일한 문구/닫기 동작(yh_region_tip) ── */
 function RegionHintBubble({ onDismiss }: { onDismiss: () => void }) {
@@ -78,10 +77,7 @@ function RegionHintBubble({ onDismiss }: { onDismiss: () => void }) {
         gap: 12,
         color: 'var(--color-on-accent)',
       }}>
-        <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 4 }}>
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-          <circle cx="12" cy="10" r="3" />
-        </svg>
+        <Icon name="map-pin" size={15} />
         <span className="text-note" style={{ flex: 1, color: 'var(--color-on-accent)' }}>
           지역을 설정해서 내 주변 영화관의 상영 정보를 조회하세요
         </span>
@@ -100,9 +96,7 @@ function RegionHintBubble({ onDismiss }: { onDismiss: () => void }) {
             padding: 0,
           }}
         >
-          <svg width={8} height={8} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
+          <Icon name="x" size={8} />
         </button>
       </div>
     </div>
@@ -180,7 +174,7 @@ function FestivalBannerCard({ festival, today, isDesktop, onClick }: { festival:
       <SectionHeader
         title="주목할 영화제"
         isDesktop={isDesktop}
-        trailing={<ChevronRight size={18} strokeWidth={1.75} color="var(--color-text-caption)" />}
+        trailing={<Icon name="chevron-right" size={18} strokeWidth={1.75} color="var(--color-text-caption)" />}
       />
 
       {/* 배너 이미지 — banner_url 있을 때만. 전체 폭 띠에 surface-raised 배경을 깔고
@@ -766,7 +760,7 @@ export default function FilmsPage() {
         )}
 
         {/* 구분선 */}
-        <div style={{ marginTop: 16, height: 1, background: 'var(--color-border)' }} />
+        <Divider style={{ marginTop: 16 }} />
       </header>
 
       <RouteProgressBar isDesktop={isDesktop} />
@@ -1209,7 +1203,7 @@ export default function FilmsPage() {
             zIndex: 100,
           }}
         >
-          <ArrowUp size={20} strokeWidth={1.75} color="currentColor" />
+          <Icon name="arrow-up" size={20} strokeWidth={1.75} color="currentColor" />
         </FabRound>
       )}
     </div>

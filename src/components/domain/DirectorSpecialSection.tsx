@@ -1,13 +1,13 @@
 'use client'
 
 import { useRef } from 'react'
-import { Theater as TheaterIcon } from 'lucide-react'
 import type { Movie, Theater } from '@/types/api'
 import { Button } from '@/components/primitives'
 import { CurationSectionRow } from '@/components/domain/CurationSectionRow'
 import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
 import { trackEvent } from '@/lib/analytics/client'
 import { buildSectionAnalytics } from '@/lib/curation/sectionRuns'
+import { Icon } from '@/components/primitives'
 
 interface Props {
   directorName: string
@@ -71,7 +71,7 @@ export function DirectorSpecialSection({
           backgroundColor: isDesktop ? 'var(--color-primary-subtle-l)' : 'transparent',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <TheaterIcon size={21} strokeWidth={1.75} color="var(--color-primary-base)" />
+          <Icon name="theater" size={21} strokeWidth={1.75} color="var(--color-primary-base)" />
         </span>
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
           <span style={{ fontSize: isDesktop ? 'var(--text-title)' : 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

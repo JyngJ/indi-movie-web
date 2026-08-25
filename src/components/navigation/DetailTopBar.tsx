@@ -2,13 +2,11 @@
 
 import { useRouter } from 'next/navigation'
 import type { ReactNode } from 'react'
-import { IconButton } from '@/components/primitives'
+import { IconButton, Icon } from '@/components/primitives'
 import { getPrevPathname } from '@/components/navigation/GlobalNav'
 
 const IcoChevronLeft = () => (
-  <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M15 18l-6-6 6-6" />
-  </svg>
+  <Icon name="chevron-left" size={22} />
 )
 
 interface DetailTopBarProps {

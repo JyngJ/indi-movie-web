@@ -1,5 +1,7 @@
 'use client'
 
+import { Icon } from '@/components/primitives'
+
 /** 관심 표시 — theater: 관심 극장(dot 테두리 하트색) / movie: 관심 영화가 걸린 극장(하트 뱃지) / both */
 export type PinFavoriteMark = 'none' | 'theater' | 'movie' | 'both'
 
@@ -124,9 +126,7 @@ export function MapPin({ selected = false, favorite = 'none', label, labelOffset
             alignItems: 'center',
             justifyContent: 'center',
           }}>
-            <svg width={9} height={9} viewBox="0 0 24 24" fill="var(--color-error-mid)" aria-hidden="true">
-              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-            </svg>
+            <Icon name="heart" size={9} fill="var(--color-error-mid)" color="var(--color-error-mid)" strokeWidth={0} />
           </div>
         )}
       </div>

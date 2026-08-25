@@ -1,4 +1,4 @@
-import { IcoCheck } from './icons'
+import { Icon } from '@/components/primitives'
 
 /* -- DropdownRow -------------------------------------------------- */
 interface DropdownRowProps {
@@ -43,7 +43,7 @@ export function DropdownRow({ kind, label, sub, selected, onClick, isLast, badge
         marginTop: sub ? 1 : 0,
         transition: 'background 150ms',
       }}>
-        {selected && <IcoCheck />}
+        {selected && <Icon name="check" size={11} color="var(--color-on-accent)" />}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{

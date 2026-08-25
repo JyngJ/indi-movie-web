@@ -80,11 +80,12 @@ export const GUIDES: Record<string, ComponentGuide> = {
     ],
     specs: [
       { title: '크기', desc: '32 · 44 · 52입니다. hover 영역을 포함한 값이며, 아이콘 자체는 그보다 작게 그려집니다.' },
-      { title: 'overlay 변형', desc: '배경 위 상태 레이어(--color-surface-overlay → hover → pressed)로 눌림을 표현합니다. 면 색을 알 수 없는 자리에서 사용하는 방식입니다.' },
+      { title: 'overlay 변형', desc: '포스터나 지도처럼 뒤에 무엇이 올지 모르는 자리에서 씁니다. ghost는 배경의 밝은 부분에 닿으면 사라지지만, overlay는 자기 면(--color-surface-overlay)을 깔고 그 위에 상태 레이어(hover → pressed)를 얹어 어느 배경에서도 읽힙니다.' },
     ],
     usage: [
       { kind: 'do', rule: '모바일에서 아이콘 버튼 사이는 최소 12px을 확보합니다. 44 타깃이 겹치면 오조작이 발생합니다.' },
-      { kind: 'dont', rule: '의미가 모호한 아이콘(별·깃발 등)을 레이블 없이 단독으로 사용하지 않습니다.', instead: '글자가 필요하면 Button을, 목록 안 보조 행동이면 text 변형을 사용합니다.' },
+      { kind: 'dont', rule: '버튼을 맞붙이지 않습니다. 아이콘 사이가 떨어져 보여도 손가락이 닿는 44 영역은 이미 겹쳐 있습니다.' },
+      { kind: 'dont', rule: '뜻이 하나로 읽히지 않는 아이콘(별·반짝임 등)을 글자 없이 단독으로 쓰지 않습니다.', instead: '글자가 필요하면 Button을, 목록 안 보조 행동이면 text 변형을 사용합니다.' },
     ],
     a11y: [
       { title: 'aria-label', desc: '타입에서 필수(string)로 지정돼 있습니다. 화면에 글자가 없으므로 이것이 이 버튼의 유일한 이름입니다.' },
@@ -219,6 +220,83 @@ export const GUIDES: Record<string, ComponentGuide> = {
     ],
     a11y: [
       { title: '레이블 연결', desc: 'label을 넘기면 htmlFor로 입력과 묶입니다. label 없이 쓸 때는 id를 직접 지정하고 바깥 레이블과 연결합니다 — 자동 생성되는 id는 레이블 문자열에서 만들어지므로 label이 없으면 id도 없습니다.' },
+    ],
+  },
+
+  Icon: {
+    intro: '서비스의 유일한 아이콘 진입점입니다. lucide를 소스로 쓰고, lucide v1이 뺀 브랜드 마크(instagram·github·linkedin)만 직접 그립니다. 카카오 로그인처럼 규격이 정해진 마크는 레지스트리에 두지 않고 그 컴포넌트가 직접 갖습니다. 새 글리프가 필요하면 호출부에서 svg를 그리지 말고 레지스트리에 이름을 추가합니다.',
+    specs: [
+      { title: '크기', desc: 'xs 12 · sm 14 · md 16(기본) · lg 20 · xl 24. px를 직접 넘길 수 있지만 기본은 토큰입니다.' },
+      { title: '획 굵기', desc: '크기에서 파생합니다 — 12 이하 2.5, 16 이하 2, 그 위 1.75. 24 뷰박스를 12px로 줄이면 1.75 획은 0.9px가 되어 사라지기 때문입니다.' },
+      { title: '접근성', desc: 'label을 주면 role="img"과 aria-label이 붙고, 없으면 aria-hidden 처리됩니다. 아이콘 옆에 글자가 있으면 label을 비웁니다.' },
+    ],
+    usage: [
+      { kind: 'do', rule: '색은 color prop이나 부모의 currentColor로 상속받습니다.' },
+      { kind: 'dont', rule: '호출부에서 <svg>를 직접 그리지 않습니다 — 같은 글리프가 굵기만 다른 채 여러 벌 생깁니다.' },
+      { kind: 'dont', rule: 'strokeWidth를 손으로 지정하지 않습니다. 크기만 정하면 굵기는 따라옵니다.' },
+    ],
+  },
+
+  Divider: {
+    intro: '형제 요소 사이에 홀로 서는 1px 선입니다. 컨테이너의 테두리(borderTop/Bottom)는 면의 경계라서 이 컴포넌트가 아닙니다.',
+    specs: [
+      { title: '방향', desc: 'horizontal이 기본이고, vertical은 부모 높이를 따라 늘어납니다(alignSelf: stretch).' },
+      { title: 'inset · gap', desc: 'inset은 선 양끝 여백, gap은 선의 위아래 여백입니다. 둘 다 4배수로 넣습니다.' },
+    ],
+    usage: [
+      { kind: 'do', rule: '"구분선 + 글자 + 구분선" 조합에서는 flex를 켜 남는 폭을 나눠 갖게 합니다.' },
+      { kind: 'dont', rule: '카드나 시트의 바깥 경계를 그리는 데 쓰지 않습니다 — 그건 컨테이너의 border입니다.' },
+    ],
+  },
+
+  EmptyState: {
+    intro: '보여줄 것이 없을 때의 자리입니다. 문구는 화면마다 달라도 배치는 하나여야 합니다.',
+    specs: [
+      { title: 'inline', desc: '목록 안 한 줄짜리 안내. --text-meta, caption 색.' },
+      { title: 'block', desc: '탭 전체가 비었을 때. --text-body, secondary 색. 일러스트와 행동 버튼을 같이 세웁니다.' },
+    ],
+    usage: [
+      { kind: 'do', rule: '왜 비었는지와 다음에 할 일을 함께 적습니다 — "하트로 모아두면 여기에 쌓여요".' },
+      { kind: 'dont', rule: '"데이터 없음" 같은 시스템 말투를 쓰지 않습니다.' },
+    ],
+  },
+
+  Tabs: {
+    intro: '같은 자리에서 내용을 갈아 끼우는 탭 줄입니다. underline(패널·시트 안)과 pill(목록 위 필터형) 두 모습만 있습니다.',
+    specs: [
+      { title: 'underline', desc: '높이 42, 탭들이 폭을 균등하게 나눠 갖고 선택된 탭 아래 2px 밑줄이 붙습니다.' },
+      { title: 'pill', desc: 'FilterPill을 그대로 씁니다(높이 28). 개수 배지를 라벨에 붙일 수 있습니다.' },
+    ],
+    usage: [
+      { kind: 'do', rule: 'label을 반드시 줍니다 — 스크린리더가 무슨 탭 묶음인지 읽습니다.' },
+      { kind: 'dont', rule: '날짜 선택에 쓰지 않습니다. 요일 색·좌우 이동·오늘 표시는 DateBar와 DetailDateTabs가 맡습니다.' },
+    ],
+  },
+
+  ListRow: {
+    intro: '설정·정보 목록의 한 줄입니다. 왼쪽 글, 오른쪽 조작, 아래 1px 경계라는 프레임만 맡습니다.',
+    specs: [
+      { title: '밀도', desc: 'default 16px / compact 12px 세로 여백. 한 화면 안에서는 하나로 통일합니다.' },
+      { title: 'last', desc: '마지막 줄은 아래 경계를 지웁니다 — 카드 바닥에 선이 두 겹으로 겹치지 않게.' },
+      { title: 'stacked', desc: '오른쪽 슬롯이 넓어 한 줄에 안 들어갈 때 위아래로 쌓습니다.' },
+    ],
+    usage: [
+      { kind: 'do', rule: '제목은 무엇을 바꾸는지, 설명은 바꾸면 무슨 일이 생기는지 적습니다.' },
+      { kind: 'dont', rule: '선택지를 고르는 줄(라디오·체크박스)에는 쓰지 않습니다 — 그건 DropdownRow입니다.' },
+    ],
+  },
+
+  KakaoLoginButton: {
+    intro: '카카오 로그인 진입 버튼입니다. 우리 컴포넌트가 아니라 카카오가 정한 규격을 그대로 옮긴 것이라, 색·심볼·문구·반경을 우리 판단으로 바꾸지 않습니다.',
+    specs: [
+      { title: '카카오가 정한 값', desc: '컨테이너 #FEE500, 심볼 순검정(#000), 라벨 검정 85%, 반경 12px, 문구는 "카카오 로그인"(좁으면 축약형 "로그인"). 심볼은 모양·비율·색을 바꿀 수 없고, 빼도 규정 위반입니다.' },
+      { title: '우리가 정하는 값', desc: '높이는 Button lg(52)와 맞추고, 로딩 중 문구는 "이동 중…"입니다. 폭은 좌우 대칭으로만 늘립니다.' },
+      { title: '심볼의 출처', desc: 'Icon 레지스트리를 쓰지 않고 버튼이 직접 갖습니다. 레지스트리는 획 굵기·크기를 우리 톤에 맞춰 손대는 곳이라, 그 손질이 남의 브랜드 규정을 조용히 어길 수 있습니다.' },
+    ],
+    usage: [
+      { kind: 'do', rule: '버튼 반경은 12px로 둡니다 — 다른 버튼과 달라 보여도 규정이 우선입니다.' },
+      { kind: 'dont', rule: '심볼을 다른 아이콘으로 갈아 끼우거나 색을 맞추지 않습니다.' },
+      { kind: 'dont', rule: '"카카오로 시작하기" 같은 임의 문구를 쓰지 않습니다.' },
     ],
   },
 

@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   Avatar, Badge, BottomSheet, BubbleTail, Button, Card, CardContainer, Chip, DirectorChip,
-  FabRound, FilterPill, GenreChip, IconButton, Input, PosterChip, ScrollNavButton,
+  Divider, EmptyState, FabRound, FilterPill, GenreChip, Icon, IconButton, Input,
+  ListRow, PosterChip, ScrollNavButton, Switch, Tabs,
   SearchBar, SearchBarButton, SectionHeader, Skeleton, SortToggle, Toast, Wordmark,
   MovieCardSkeleton, TheaterCardSkeleton,
 } from '@/components/primitives'
@@ -86,7 +87,7 @@ function InputDemo() {
 function SearchBarDemo() {
   const [v, setV] = useState('')
   return (
-    <div style={{ width: '100%', maxWidth: 560, minWidth: 0 }}>
+    <div style={{ flex: '1 1 100%', maxWidth: 560, minWidth: 0 }}>
       <SearchBar
         value={v}
         onChange={e => setV(e.target.value)}
@@ -119,7 +120,9 @@ function SearchBarButtonDemo() {
   }, [open])
 
   return (
-    <div ref={wrap} style={{ position: 'relative', width: '100%', maxWidth: 560, minWidth: 0 }}>
+    // flex-basis를 100%로 고정한다 — auto면 입력칸(내용 폭)과 버튼(글자 폭)의 기준이 달라
+    // 눌러 여는 순간 폭이 튄다.
+    <div ref={wrap} style={{ position: 'relative', flex: '1 1 100%', maxWidth: 560, minWidth: 0 }}>
       {open ? (
         <SearchBar
           ref={ref}
@@ -208,7 +211,126 @@ function ScrollNavButtonDemo() {
 }
 
 /** 컴포넌트 이름 → 데모. 없는 이름은 "데모 없음"으로 표시된다. */
+
+/** Tabs는 상태를 갖는다 — 문서에서도 실제로 눌러 볼 수 있어야 의미가 있다. */
+function TabsDemo({ variant }: { variant: 'underline' | 'pill' }) {
+  const [tab, setTab] = useState('info')
+  return (
+    <Tabs
+      label="견본"
+      variant={variant}
+      value={tab}
+      onChange={setTab}
+      items={[
+        { value: 'info', label: '영화 정보' },
+        { value: 'theaters', label: '상영 영화관' },
+        { value: 'gv', label: 'GV' },
+      ] as const}
+    />
+  )
+}
+
+function ListRowDemo() {
+  const [on, setOn] = useState(true)
+  return (
+    <div style={{ width: '100%', background: 'var(--color-surface-card)', borderRadius: 'var(--radius-control)' }}>
+      <ListRow
+        title="새 상영 알림"
+        description="관심 영화·극장·감독에 상영이 열리면 알려드려요"
+        trailing={<Switch checked={on} onChange={setOn} label="새 상영 알림" />}
+      />
+      <ListRow title="주간 요약" description="매주 월요일 한 번" trailing={<Icon name="chevron-right" size="sm" />} last />
+    </div>
+  )
+}
+
 const DEMOS: Record<string, ReactNode> = {
+  Icon: (
+    <>
+      <Case label="크기 — xs 12 · sm 14 · md 16 · lg 20 · xl 24">
+        {(['xs', 'sm', 'md', 'lg', 'xl'] as const).map((size) => <Icon key={size} name="calendar" size={size} />)}
+      </Case>
+      <Case label="색은 currentColor를 따른다">
+        <span style={{ color: 'var(--color-primary-base)' }}><Icon name="heart" size="lg" /></span>
+        <span style={{ color: 'var(--color-error)' }}><Icon name="heart" size="lg" fill="currentColor" strokeWidth={0} /></span>
+        <span style={{ color: 'var(--color-text-caption)' }}><Icon name="heart" size="lg" /></span>
+      </Case>
+      <Case label="브랜드 마크 — lucide에 없어 직접 그린 것(링크·출처 표시용)">
+        <Icon name="instagram" size="lg" />
+        <Icon name="github" size="lg" />
+        <Icon name="linkedin" size="lg" />
+      </Case>
+    </>
+  ),
+
+  Divider: (
+    <>
+      <Case label="가로 — 형제 사이" wide>
+        <div style={{ width: '100%' }}>
+          <span style={{ fontSize: 'var(--text-meta)' }}>씨네큐브 광화문</span>
+          <Divider gap={12} />
+          <span style={{ fontSize: 'var(--text-meta)' }}>아트나인</span>
+        </div>
+      </Case>
+      <Case label="inset — 카드 안에서 좌우를 띄운다" wide>
+        <div style={{ width: '100%' }}>
+          <span style={{ fontSize: 'var(--text-meta)' }}>오늘 4회</span>
+          <Divider gap={12} inset={24} />
+          <span style={{ fontSize: 'var(--text-meta)' }}>내일 2회</span>
+        </div>
+      </Case>
+      <Case label="flex — 구분선 + 글자 + 구분선" wide>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%' }}>
+          <Divider flex />
+          <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>다른 지역</span>
+          <Divider flex />
+        </div>
+      </Case>
+      <Case label="세로 — 부모 높이를 따라간다">
+        <div style={{ display: 'flex', alignItems: 'stretch', gap: 12, height: 40 }}>
+          <span style={{ fontSize: 'var(--text-meta)', alignSelf: 'center' }}>영화 상세</span>
+          <Divider orientation="vertical" />
+          <span style={{ fontSize: 'var(--text-meta)', alignSelf: 'center' }}>지도에서 보기</span>
+        </div>
+      </Case>
+    </>
+  ),
+
+  EmptyState: (
+    <>
+      <Case label="inline — 목록 안 한 줄" wide>
+        <div style={{ width: '100%' }}><EmptyState message="이 날 상영 정보가 없어요" paddingY={24} /></div>
+      </Case>
+      <Case label="block — 탭 전체가 비었을 때" wide>
+        <div style={{ width: '100%' }}>
+          <EmptyState
+            variant="block"
+            message={'아직 소식이 없어요.\n하트로 관심 영화·극장·감독을 모아두면\n새 상영 소식이 여기에 쌓여요.'}
+            action={<Button variant="secondary" size="md">상영작 둘러보기</Button>}
+            paddingY={24}
+          />
+        </div>
+      </Case>
+    </>
+  ),
+
+  Tabs: (
+    <>
+      <Case label="underline — 패널·시트 안" wide>
+        <div style={{ width: '100%' }}><TabsDemo variant="underline" /></div>
+      </Case>
+      <Case label="pill — 목록 위 필터형" wide>
+        <div style={{ width: '100%' }}><TabsDemo variant="pill" /></div>
+      </Case>
+    </>
+  ),
+
+  ListRow: (
+    <Case label="제목 · 설명 · 오른쪽 슬롯, 마지막 줄은 경계 없음" wide>
+      <ListRowDemo />
+    </Case>
+  ),
+
   Button: (
     <Row>
       <Case label="variant">
