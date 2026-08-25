@@ -117,7 +117,7 @@ export function MoviePanel({
           </div>
         </div>
       </div>
-      <FavoriteActionRow type="movie" id={movie.id} style={{ paddingLeft: 'var(--gutter)', paddingRight: 'var(--gutter)', paddingBottom: 16, background: 'var(--color-surface-card)' }} />
+      <FavoriteActionRow type="movie" id={movie.id} label={movie.title} style={{ paddingLeft: 'var(--gutter)', paddingRight: 'var(--gutter)', paddingBottom: 16, background: 'var(--color-surface-card)' }} />
 
       {/* 탭 */}
       <div style={{ display: 'flex', borderBottom: '1px solid var(--color-border)', flexShrink: 0 }}>

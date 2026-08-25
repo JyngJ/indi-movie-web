@@ -7,6 +7,7 @@ import { useRequireAuth } from '@/components/auth/useRequireAuth'
 import type { FavoritesRepository } from '@/lib/favorites/repository'
 import { createSupabaseFavoritesRepository } from '@/lib/favorites/supabaseFavoritesRepository'
 import { favoriteKey, toFavoriteSet, type Favorite, type FavoriteItemType } from '@/lib/favorites/types'
+import { trackEvent } from '@/lib/analytics/client'
 
 const favoritesQueryKey = (userId: string | null) => ['favorites', userId] as const
 
@@ -62,9 +63,11 @@ export function useFavorites() {
    * @returns 실제로 토글이 실행됐는지
    */
   const toggle = useCallback(
-    (type: FavoriteItemType, id: string, opts?: { loginDescription?: string }): boolean => {
+    (type: FavoriteItemType, id: string, opts?: { loginDescription?: string; label?: string }): boolean => {
       if (!requireAuth({ description: opts?.loginDescription })) return false
-      mutation.mutate({ type, id, next: !isFavorite(type, id) })
+      const next = !isFavorite(type, id)
+      mutation.mutate({ type, id, next })
+      trackEvent(next ? 'favorite added' : 'favorite removed', { fav_type: type, fav_id: id, fav_label: opts?.label ?? (type === 'director' ? id : undefined) })
       return true
     },
     [requireAuth, mutation, isFavorite],

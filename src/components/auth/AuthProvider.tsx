@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { AuthRepository } from '@/lib/auth/repository'
 import type { AuthProvider as OAuthProvider, AuthUser } from '@/lib/auth/types'
 import { showGlobalToast } from '@/lib/ui/globalToast'
+import { identifyUser, resetAnalyticsUser, trackEvent } from '@/lib/analytics/client'
 import { createSupabaseAuthRepository } from '@/lib/auth/supabaseAuthRepository'
 
 export type AuthStatus = 'loading' | 'signed-out' | 'signed-in'
@@ -35,12 +36,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (cancelled) return
       setUser(u)
       setStatus(u ? 'signed-in' : 'signed-out')
+      if (u) identifyUser(u.id)
     })
 
     const unsubscribe = repo.onAuthStateChange((u) => {
       setUser(u)
       setStatus(u ? 'signed-in' : 'signed-out')
+      if (u) identifyUser(u.id)
     })
+
+    // 카카오 콜백이 붙여준 auth_login 파라미터 — 이벤트 한 번 찍고 주소에서 지운다
+    const params = new URLSearchParams(window.location.search)
+    const authLogin = params.get('auth_login')
+    if (authLogin === 'new' || authLogin === 'ok') {
+      trackEvent(authLogin === 'new' ? 'signed up' : 'logged in', { method: 'kakao' })
+      params.delete('auth_login')
+      const qs = params.toString()
+      window.history.replaceState(null, '', `${window.location.pathname}${qs ? `?${qs}` : ''}`)
+    }
 
     return () => {
       cancelled = true
@@ -59,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try { await getRepo().signOut() } finally {
       setUser(null)
       setStatus('signed-out')
+      resetAnalyticsUser()
       showGlobalToast('로그아웃했어요')
     }
   }, [])

@@ -485,7 +485,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
         {/* PC 순서: 지도 → 공유 → 관심 (2026-08-24 확정). 모바일은 [관심][공유] / [지도 전폭] 2행 유지 */}
         <div style={{ display: 'flex', flexDirection: isDesktop ? 'row-reverse' : 'column', gap: 8, alignItems: isDesktop ? 'center' : undefined, justifyContent: isDesktop ? 'flex-end' : undefined }}>
           <div style={{ display: 'flex', flexDirection: isDesktop ? 'row-reverse' : 'row', gap: 8, alignItems: 'center' }}>
-            <FavoriteActionButton type="theater" id={theater.id} style={{ flex: isDesktop ? undefined : 1, whiteSpace: 'nowrap' }} />
+            <FavoriteActionButton type="theater" id={theater.id} label={theater.name} style={{ flex: isDesktop ? undefined : 1, whiteSpace: 'nowrap' }} />
             <Button
               variant="tertiary"
               size="md"

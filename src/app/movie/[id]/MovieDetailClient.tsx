@@ -659,6 +659,7 @@ export function MovieDetailClient({ movieId, theaterId, initialData, initialShow
       <FavoriteActionRow
         type="movie"
         id={movie.id}
+        label={movie.title}
         style={{ paddingLeft: isDesktop ? 0 : 16, paddingRight: isDesktop ? 0 : 16, marginBottom: 20, maxWidth: isDesktop ? 480 : undefined }}
         trailing={
           <Button

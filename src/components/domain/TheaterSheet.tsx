@@ -981,7 +981,7 @@ export function TheaterSheet({
               gap: 8,
               marginTop: 12,
             }}>
-              <TheaterFavoriteAction theaterId={theater.id} style={actionBtn} />
+              <TheaterFavoriteAction theaterId={theater.id} theaterName={theater.name} style={actionBtn} />
               <button className="hover-raise" style={actionBtn} onClick={openDirections}>
                 <IconRoute size={14} />
                 길찾기
@@ -1087,7 +1087,7 @@ export function TheaterSheet({
             marginTop: 4,
             marginLeft: -8,
           }}>
-            <TheaterFavoriteAction theaterId={theater.id} style={actionBtn} />
+            <TheaterFavoriteAction theaterId={theater.id} theaterName={theater.name} style={actionBtn} />
             <button className="hover-raise" style={actionBtn} onClick={openDirections}>
               <IconRoute size={14} />
               길찾기
@@ -1377,7 +1377,7 @@ export function TheaterSheet({
               <span style={{ minWidth: 0 }}>{theater.address}</span>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 0, marginTop: 4, marginLeft: -8 }}>
-              <TheaterFavoriteAction theaterId={theater.id} style={actionBtn} compact />
+              <TheaterFavoriteAction theaterId={theater.id} theaterName={theater.name} style={actionBtn} compact />
               <button className="hover-raise" style={actionBtn} onClick={openDirections}>
                 <IconRoute size={14} />길찾기
               </button>

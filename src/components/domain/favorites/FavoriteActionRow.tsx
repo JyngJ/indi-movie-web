@@ -29,10 +29,13 @@ function HeartIcon({ active }: { active: boolean }) {
 export function FavoriteActionButton({
   type,
   id,
+  label,
   style,
 }: {
   type: FavoriteItemType
   id: string
+  /** 분석 이벤트용 사람이 읽는 이름 (영화 제목·극장 이름) */
+  label?: string
   style?: React.CSSProperties
 }) {
   const { isFavorite, toggle } = useFavorites()
@@ -42,7 +45,7 @@ export function FavoriteActionButton({
     <Button
       variant="tertiary"
       size="md"
-      onClick={() => toggle(type, id, { loginDescription: LOGIN_COPY[type] })}
+      onClick={() => toggle(type, id, { loginDescription: LOGIN_COPY[type], label })}
       aria-pressed={active}
       style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, ...style }}
     >
@@ -59,18 +62,21 @@ export function FavoriteActionButton({
 export function FavoriteActionRow({
   type,
   id,
+  label,
   trailing,
   style,
 }: {
   type: FavoriteItemType
   id: string
+  /** 분석 이벤트용 사람이 읽는 이름 */
+  label?: string
   /** 오른쪽 보조 버튼(공유 등) */
   trailing?: ReactNode
   style?: React.CSSProperties
 }) {
   return (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center', ...style }}>
-      <FavoriteActionButton type={type} id={id} style={{ flex: 1 }} />
+      <FavoriteActionButton type={type} id={id} label={label} style={{ flex: 1 }} />
       {trailing}
     </div>
   )
