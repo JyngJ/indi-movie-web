@@ -3,14 +3,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
-import { PosterThumb } from '@/components/domain/PosterThumb'
+import { PosterThumb } from '@/components/primitives/PosterThumb'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { withFlag } from '@/lib/nations'
 import type { Movie } from '@/types/api'
 import { BubbleTail, bubbleTailReach, GenreChip, PosterChip, SectionHeader, CardContainer, ScrollNavButton, Divider } from '@/components/primitives'
 import type { SectionAnalytics } from '@/lib/curation/sectionRuns'
 import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
-import { Carousel, CarouselContent, CarouselItem, useCarousel, RevealItem, RevealGroup } from '@/components/motion'
+import { RevealItem, RevealGroup } from '@/components/motion'
+import { Carousel, CarouselContent, CarouselItem, useCarousel } from '@/components/primitives'
 
 interface CurationSectionRowProps {
   title: string

@@ -5,13 +5,8 @@
 'use client'
 
 import { useState } from 'react'
-import {
-  AnimatedGroup, type AnimatedGroupPreset,
-  Dialog, DialogTrigger, DialogContainer, DialogContent,
-  DialogTitle, DialogSubtitle, DialogDescription, DialogClose,
-  Carousel, CarouselContent, CarouselItem, CarouselNavigation, CarouselIndicator,
-  TransitionPanel, slideVariants,
-} from '@/components/motion'
+import { AnimatedGroup, type AnimatedGroupPreset, Dialog, DialogTrigger, DialogContainer, DialogContent, DialogTitle, DialogSubtitle, DialogDescription, DialogClose, TransitionPanel, slideVariants } from '@/components/motion'
+import { Carousel, CarouselContent, CarouselItem, CarouselNavigation, CarouselIndicator } from '@/components/primitives'
 import { Button } from '@/components/primitives'
 import { PosterThumb } from '@/components/domain'
 import { Section, Entry, captionStyle } from './gallery-shared'

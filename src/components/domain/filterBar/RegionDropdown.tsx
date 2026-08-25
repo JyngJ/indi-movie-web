@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { REGIONS } from '@/lib/regions'
-import { DropdownRow } from './DropdownRow'
+import { DropdownRow } from '@/components/primitives/DropdownRow'
 
 /* -- RegionDropdown ----------------------------------------------- */
 export function RegionDropdown({ selectedId, currentLocationId, onSelect, style }: {

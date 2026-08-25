@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { FavoriteToggle } from '@/components/domain/favorites/FavoriteToggle'
-import { PosterThumb } from '@/components/domain/PosterThumb'
+import { PosterThumb } from '@/components/primitives/PosterThumb'
 import { Button, Tabs } from '@/components/primitives'
 import { useDetailLink } from '@/hooks/useDetailLink'
 import { useFavorites } from '@/hooks/useFavorites'

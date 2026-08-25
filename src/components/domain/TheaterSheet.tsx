@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useMemo } from 'react'
 import { usePendingNavItem } from '@/hooks/usePendingNavItem'
-import { PosterThumb } from './PosterThumb'
+import { PosterThumb } from '@/components/primitives/PosterThumb'
 import { DateBar, type Day, type DayType } from './DateBar'
 import { ShowtimeCell } from './ShowtimeCell'
 import { Button } from '@/components/primitives/Button'

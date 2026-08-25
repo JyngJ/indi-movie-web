@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-25T04:14:23.155Z",
+  "generatedAt": "2026-08-25T04:19:01.338Z",
   "figmaDumpAt": "2026-08-25T03:43:33.446Z",
   "tokenGroups": [
     {
@@ -4994,6 +4994,163 @@
       }
     },
     {
+      "name": "Carousel",
+      "file": "src/components/primitives/Carousel.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "children",
+          "type": "ReactNode",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "className",
+          "type": "string | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "options",
+          "type": "Partial<OptionsType> | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "onIndexChange",
+          "type": "((index: number) => void) | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        }
+      ],
+      "figmaSet": null,
+      "figma": null
+    },
+    {
+      "name": "CarouselContent",
+      "file": "src/components/primitives/Carousel.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "children",
+          "type": "ReactNode",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "className",
+          "type": "string | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "style",
+          "type": "CSSProperties | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "viewportClassName",
+          "type": "string | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "viewportStyle",
+          "type": "CSSProperties | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        }
+      ],
+      "figmaSet": null,
+      "figma": null
+    },
+    {
+      "name": "CarouselIndicator",
+      "file": "src/components/primitives/Carousel.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "className",
+          "type": "string | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        }
+      ],
+      "figmaSet": null,
+      "figma": null
+    },
+    {
+      "name": "CarouselItem",
+      "file": "src/components/primitives/Carousel.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "children",
+          "type": "ReactNode",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "className",
+          "type": "string | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "style",
+          "type": "CSSProperties | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        }
+      ],
+      "figmaSet": null,
+      "figma": null
+    },
+    {
+      "name": "CarouselNavigation",
+      "file": "src/components/primitives/Carousel.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "className",
+          "type": "string | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "classNameButton",
+          "type": "string | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "alwaysShow",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": "false",
+          "doc": ""
+        }
+      ],
+      "figmaSet": null,
+      "figma": null
+    },
+    {
       "name": "Chip",
       "file": "src/components/primitives/Chip.tsx",
       "doc": "",
@@ -5587,6 +5744,115 @@
             "gap": 12,
             "dir": "HORIZONTAL",
             "fill": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "DropdownRow",
+      "file": "src/components/primitives/DropdownRow.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "kind",
+          "type": "\"radio\" | \"checkbox\"",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "sub",
+          "type": "string | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "selected",
+          "type": "boolean",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "onClick",
+          "type": "() => void",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "isLast",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "badge",
+          "type": "string | undefined",
+          "optional": true,
+          "default": null,
+          "doc": "라벨 오른쪽 배지 (예: \"현재 위치\")"
+        },
+        {
+          "name": "rowRef",
+          "type": "Ref<HTMLButtonElement> | undefined",
+          "optional": true,
+          "default": null,
+          "doc": "스크롤 타겟팅용 — 드롭다운이 열릴 때 이 행으로 이동할 수 있게"
+        }
+      ],
+      "figmaSet": "2.0/DropdownRow",
+      "figma": {
+        "name": "2.0/DropdownRow",
+        "axes": {
+          "State": [
+            "default",
+            "selected"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "State": "default"
+            },
+            "w": 220,
+            "h": 44,
+            "radius": null,
+            "pad": [
+              0,
+              16,
+              0,
+              16
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "State": "selected"
+            },
+            "w": 220,
+            "h": 44,
+            "radius": null,
+            "pad": [
+              0,
+              16,
+              0,
+              16
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "primary/100"
           }
         ]
       }
@@ -7365,6 +7631,57 @@
       }
     },
     {
+      "name": "PanelShell",
+      "file": "src/components/primitives/PanelShell.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "onClose",
+          "type": "() => void",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "onBack",
+          "type": "(() => void) | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "title",
+          "type": "string | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "trailing",
+          "type": "ReactNode",
+          "optional": true,
+          "default": null,
+          "doc": "닫기 왼쪽 위젯 (하트 등)"
+        },
+        {
+          "name": "embedded",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": null,
+          "doc": "좌측 도크에 내장될 때 true — 카드 모서리/배경 없이 도크에 꽉 채워 표시"
+        },
+        {
+          "name": "children",
+          "type": "ReactNode",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        }
+      ],
+      "figmaSet": null,
+      "figma": null
+    },
+    {
       "name": "PosterChip",
       "file": "src/components/primitives/PosterChip.tsx",
       "doc": "",
@@ -7560,6 +7877,134 @@
           }
         ]
       }
+    },
+    {
+      "name": "PosterThumb",
+      "file": "src/components/primitives/PosterThumb.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "src",
+          "type": "string | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "alt",
+          "type": "string | undefined",
+          "optional": true,
+          "default": "''",
+          "doc": ""
+        },
+        {
+          "name": "width",
+          "type": "number | undefined",
+          "optional": true,
+          "default": "68",
+          "doc": ""
+        },
+        {
+          "name": "height",
+          "type": "number | undefined",
+          "optional": true,
+          "default": "102",
+          "doc": ""
+        },
+        {
+          "name": "size",
+          "type": "\"sm\" | \"lg\" | undefined",
+          "optional": true,
+          "default": "'sm'",
+          "doc": "'sm' = radius 6px (기본), 'lg' = radius 8px (바텀시트용)"
+        },
+        {
+          "name": "selected",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": "false",
+          "doc": ""
+        },
+        {
+          "name": "highlighted",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": "false",
+          "doc": "selected와 동일한 링·inset 테두리지만 체크 배지 없음 (필터 매칭 강조)"
+        },
+        {
+          "name": "overflow",
+          "type": "string | number | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "onClick",
+          "type": "(() => void) | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "radius",
+          "type": "string | number | undefined",
+          "optional": true,
+          "default": null,
+          "doc": "지정하면 size 기반 라운드값 대신 이 값을 그대로 사용 (예: 0으로 각진 포스터)"
+        },
+        {
+          "name": "shadow",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": "true",
+          "doc": "false면 드롭섀도우를 뺀다(선택 링은 유지) — 기본 true"
+        },
+        {
+          "name": "onReady",
+          "type": "(() => void) | undefined",
+          "optional": true,
+          "default": null,
+          "doc": "이미지가 실제로 그려진 시점 알림 — 등장 모션을 이미지에 맞춰 재생할 때 사용"
+        },
+        {
+          "name": "fade",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": "true",
+          "doc": "false면 로드 페이드를 끄고 처음부터 불투명하게 그린다.\nrenderToStaticMarkup으로 뽑아 Leaflet divIcon에 넣는 지도 포스터용 —\n정적 마크업엔 onLoad/ref가 안 붙어 opacity:0이 그대로 굳는다(포스터가 빈칸이 됨)."
+        },
+        {
+          "name": "fluid",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": "false",
+          "doc": "부모 폭을 채우고 2:3 비율로 높이를 잡는다(그리드용). width/height는 무시되고\n대신 없는 포스터의 대체 글자 크기 계산에 fallbackTextBase가 쓰인다."
+        },
+        {
+          "name": "fluidTextBase",
+          "type": "number | undefined",
+          "optional": true,
+          "default": "120",
+          "doc": "fluid일 때 대체 글자 크기 기준 폭(px). 기본 120."
+        },
+        {
+          "name": "lazy",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": "false",
+          "doc": "화면 밖 포스터를 늦게 받는다. 긴 그리드에서 켠다."
+        },
+        {
+          "name": "className",
+          "type": "string | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        }
+      ],
+      "figmaSet": null,
+      "figma": null
     },
     {
       "name": "ScrollNavButton",
@@ -8356,5 +8801,55 @@
       }
     }
   ],
-  "drift": []
+  "drift": [
+    {
+      "kind": "component-unmapped",
+      "id": "Carousel",
+      "code": "src/components/primitives/Carousel.tsx",
+      "figma": null,
+      "note": "대응하는 피그마 컴포넌트 세트가 없다"
+    },
+    {
+      "kind": "component-unmapped",
+      "id": "CarouselContent",
+      "code": "src/components/primitives/Carousel.tsx",
+      "figma": null,
+      "note": "대응하는 피그마 컴포넌트 세트가 없다"
+    },
+    {
+      "kind": "component-unmapped",
+      "id": "CarouselIndicator",
+      "code": "src/components/primitives/Carousel.tsx",
+      "figma": null,
+      "note": "대응하는 피그마 컴포넌트 세트가 없다"
+    },
+    {
+      "kind": "component-unmapped",
+      "id": "CarouselItem",
+      "code": "src/components/primitives/Carousel.tsx",
+      "figma": null,
+      "note": "대응하는 피그마 컴포넌트 세트가 없다"
+    },
+    {
+      "kind": "component-unmapped",
+      "id": "CarouselNavigation",
+      "code": "src/components/primitives/Carousel.tsx",
+      "figma": null,
+      "note": "대응하는 피그마 컴포넌트 세트가 없다"
+    },
+    {
+      "kind": "component-unmapped",
+      "id": "PanelShell",
+      "code": "src/components/primitives/PanelShell.tsx",
+      "figma": null,
+      "note": "대응하는 피그마 컴포넌트 세트가 없다"
+    },
+    {
+      "kind": "component-unmapped",
+      "id": "PosterThumb",
+      "code": "src/components/primitives/PosterThumb.tsx",
+      "figma": null,
+      "note": "대응하는 피그마 컴포넌트 세트가 없다"
+    }
+  ]
 }

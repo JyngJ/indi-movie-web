@@ -1,5 +1,5 @@
 export { MapPin } from './MapPin'
-export { PosterThumb } from './PosterThumb'
+export { PosterThumb } from '@/components/primitives/PosterThumb'
 export { ShowtimeCell } from './ShowtimeCell'
 export type { ShowtimeKind } from './ShowtimeCell'
 export { DateBar } from './DateBar'

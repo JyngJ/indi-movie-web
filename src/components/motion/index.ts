@@ -14,11 +14,3 @@ export {
   DialogClose,
 } from './Dialog'
 export { TransitionPanel, useMeasuredHeight, slideVariants } from './TransitionPanel'
-export {
-  useCarousel,
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNavigation,
-  CarouselIndicator,
-} from './Carousel'

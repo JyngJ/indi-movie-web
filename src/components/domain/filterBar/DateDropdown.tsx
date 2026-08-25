@@ -1,5 +1,5 @@
 import { buildDateOptions, type DateId } from './dateHelpers'
-import { DropdownRow } from './DropdownRow'
+import { DropdownRow } from '@/components/primitives/DropdownRow'
 import { Icon } from '@/components/primitives'
 
 /* -- DateDropdown ------------------------------------------------- */

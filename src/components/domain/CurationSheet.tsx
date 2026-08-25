@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { usePendingNavItem } from '@/hooks/usePendingNavItem'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { Button, Icon, Divider, EmptyState } from '@/components/primitives'
-import { PosterThumb } from './PosterThumb'
+import { PosterThumb } from '@/components/primitives/PosterThumb'
 import { HoverPopup } from './CurationSectionRow'
 import type {
   LastWeekFilm,

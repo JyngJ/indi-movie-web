@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { useMovies, useActiveMovieIds } from '@/lib/supabase/queries'
 import { Toast, SortToggle } from '@/components/primitives'
-import { PanelShell } from './PanelShell'
+import { PanelShell } from '@/components/primitives/PanelShell'
 import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
 import { Icon } from '@/components/primitives'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'

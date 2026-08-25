@@ -1,5 +1,5 @@
 import { Button } from '@/components/primitives'
-import { DropdownRow } from './DropdownRow'
+import { DropdownRow } from '@/components/primitives/DropdownRow'
 
 /* -- MultiSelectDropdown ----------------------------------------- */
 export function MultiSelectDropdown({ options, selectedValues, setSelectedValues, style }: {
