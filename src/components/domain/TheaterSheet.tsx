@@ -7,6 +7,7 @@ import { DateBar, type Day, type DayType } from './DateBar'
 import { ShowtimeCell } from './ShowtimeCell'
 import { Button } from '@/components/primitives/Button'
 import { IconButton } from '@/components/primitives/IconButton'
+import { TheaterFavoriteAction } from '@/components/domain/favorites/TheaterFavoriteAction'
 import { FilterPill } from '@/components/primitives/FilterPill'
 import { Chip } from '@/components/primitives/Chip'
 import { DirectorChip } from '@/components/primitives/DirectorChip'
@@ -43,16 +44,6 @@ function calcPosterItemW(w: number): number {
 }
 
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
-const IconStar = ({ filled = false }: { filled?: boolean }) => (
-  <svg width={22} height={22} viewBox="0 0 24 24"
-    fill={filled ? 'var(--color-primary-base)' : 'none'}
-    stroke={filled ? 'var(--color-primary-base)' : 'currentColor'}
-    strokeWidth="1.75" strokeLinejoin="round"
-  >
-    <path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.9 6.8 19.6l1-5.8L3.5 9.7l5.9-.8z" />
-  </svg>
-)
-
 const IconClose = () => (
   <svg width={20} height={20} viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
@@ -253,8 +244,6 @@ interface TheaterSheetProps {
   onMovieSearch?: (movieId: string, movieTitle: string) => void
   onMovieDetailOpen?: (movieId: string) => void
   onDirectorOpen?: (name: string) => void
-  favorited?: boolean
-  onFavorite?: () => void
   mapFilters?: { genres: string[]; nations: string[] }
   initialIsoDate?: string
   initialShowtimeId?: string
@@ -277,8 +266,6 @@ export function TheaterSheet({
   onMovieSearch,
   onMovieDetailOpen,
   onDirectorOpen,
-  favorited = false,
-  onFavorite,
   mapFilters,
   initialIsoDate,
   initialShowtimeId,
@@ -994,6 +981,7 @@ export function TheaterSheet({
               gap: 8,
               marginTop: 12,
             }}>
+              <TheaterFavoriteAction theaterId={theater.id} style={actionBtn} />
               <button className="hover-raise" style={actionBtn} onClick={openDirections}>
                 <IconRoute size={14} />
                 길찾기
@@ -1099,6 +1087,7 @@ export function TheaterSheet({
             marginTop: 4,
             marginLeft: -8,
           }}>
+            <TheaterFavoriteAction theaterId={theater.id} style={actionBtn} />
             <button className="hover-raise" style={actionBtn} onClick={openDirections}>
               <IconRoute size={14} />
               길찾기
@@ -1141,11 +1130,6 @@ export function TheaterSheet({
             {theater.name}
           </span>
           <div style={{ display: 'flex', gap: 8 }}>
-            {/* 즐겨찾기 — 계정 기능 구현 전 비활성화
-            <IconButton variant="ghost" size={32} aria-label="즐겨찾기" onClick={onFavorite}>
-              <IconStar filled={favorited} />
-            </IconButton>
-            */}
             <IconButton variant="ghost" size={32} aria-label="닫기" style={{ marginRight: -8 }} onClick={onClose}>
               <IconClose />
             </IconButton>
@@ -1393,6 +1377,7 @@ export function TheaterSheet({
               <span style={{ minWidth: 0 }}>{theater.address}</span>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 0, marginTop: 4, marginLeft: -8 }}>
+              <TheaterFavoriteAction theaterId={theater.id} style={actionBtn} compact />
               <button className="hover-raise" style={actionBtn} onClick={openDirections}>
                 <IconRoute size={14} />길찾기
               </button>

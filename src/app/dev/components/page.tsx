@@ -200,7 +200,6 @@ export default function ComponentsPage() {
   const [searchValue, setSearchValue]           = useState('')
   const [selectedMovie, setSelectedMovie]       = useState('1')
   const [selectedShowtime, setSelectedShowtime] = useState<string | null>('normal-0')
-  const [favorited, setFavorited]               = useState(false)
   const [chipOn, setChipOn]                     = useState(true)
   const [toastCount, setToastCount]             = useState(0)
   const [popupOn, setPopupOn]                   = useState(false)
@@ -630,12 +629,10 @@ export default function ComponentsPage() {
                 theater={{ id: 'dev', name: '더숲 아트시네마', address: '서울특별시 노원구 화랑로 123', lat: 37.6, lng: 127.0, city: '서울', createdAt: '', updatedAt: '' }}
                 expanded={false}
                 selectedMovieId={selectedMovie}
-                favorited={favorited}
                 onMovieSelect={setSelectedMovie}
                 onExpand={() => {}}
                 onCollapse={() => {}}
                 onClose={() => {}}
-                onFavorite={() => setFavorited(!favorited)}
               />
             </div>
           </Entry>

@@ -9,6 +9,8 @@ import { useUIStore } from '@/store/uiStore'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { OnboardingGate } from '@/components/domain/onboarding/OnboardingGate'
 import { SurveyGate } from '@/components/domain/survey/SurveyGate'
+import { FeedPanel } from '@/components/domain/favorites/FeedPanel'
+import { MyPanel } from '@/components/auth/MyPanel'
 
 const MapView = dynamic(() => import('@/components/map/MapView'), { ssr: false })
 
@@ -53,7 +55,7 @@ export default function TabsLayout({ children }: { children: ReactNode }) {
           통째로 비어 h1도 본문도 없는 페이지가 된다(Bing URL 검사에서 확인). */}
       {children}
 
-      {/* 설정 팝업 — 지도 탭 외에서도 열릴 수 있도록 layout 레벨에서 렌더 */}
+      {/* 더보기 팝업 — 지도 탭 외에서도 열릴 수 있도록 layout 레벨에서 렌더 */}
       {!isOnMap && (
         <SettingsPanel
           isOpen={settingsOpen}
@@ -62,6 +64,10 @@ export default function TabsLayout({ children }: { children: ReactNode }) {
           initialPage={settingsInitialPage}
         />
       )}
+
+      {/* 데스크톱 소식 패널 — 레일 '소식' 클릭 (모바일은 /feed 페이지) */}
+      {isDesktopLayout && <FeedPanel />}
+      {isDesktopLayout && <MyPanel />}
 
       {/* 첫 방문 온보딩 — 플래그(onboarding_seen_v1) 확인 후에만 오버레이. 카탈로그 로딩은 뒤에서 계속 진행 */}
       <OnboardingGate />

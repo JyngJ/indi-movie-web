@@ -7,7 +7,7 @@ import { ChevronRight } from 'lucide-react'
 /** 설정 탭과 같은 카드형 메뉴 리스트 컨테이너 */
 export function MenuCard({ children, style }: { children: ReactNode; style?: CSSProperties }) {
   return (
-    <div style={{ margin: '12px 16px 0', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--color-border)', ...style }}>
+    <div style={{ margin: '12px var(--gutter) 0', borderRadius: 'var(--radius-control)', overflow: 'hidden', border: '1px solid var(--color-border)', ...style }}>
       {children}
     </div>
   )
@@ -17,7 +17,7 @@ const rowStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: 12,
-  padding: 16,
+  padding: 'var(--gutter)',
   backgroundColor: 'var(--color-surface-card)',
   border: 'none',
   width: '100%',
@@ -53,7 +53,7 @@ export function MenuRow({
   const inner = (
     <>
       {icon && (
-        <div style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: 'var(--color-text-sub)' }}>
+        <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-control)', backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: 'var(--color-text-sub)' }}>
           {icon}
         </div>
       )}

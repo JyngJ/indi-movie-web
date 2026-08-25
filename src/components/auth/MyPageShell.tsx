@@ -9,10 +9,13 @@ import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 export function MyPageShell({
   title,
   onBack,
+  trailing,
   children,
 }: {
   title: string
   onBack?: () => void
+  /** 헤더 우측 위젯 (⚙ 설정, "관심 목록 ›" 등) */
+  trailing?: ReactNode
   children: ReactNode
 }) {
   const isDesktop = useIsDesktopLayout()
@@ -27,8 +30,9 @@ export function MyPageShell({
         backgroundColor: 'var(--color-surface-bg)',
       }}
     >
-      <SettingsHeader title={title} onBack={onBack} />
-      <div style={{ flex: 1, overflowY: 'auto', width: '100%', maxWidth: 560, paddingBottom: 24 }}>{children}</div>
+      <SettingsHeader title={title} onBack={onBack} trailing={trailing} />
+      {/* 데스크톱: 본문 컬럼(560)을 가운데 — 상영작 섹션과 동일 문법. 모바일은 풀폭 */}
+      <div style={{ flex: 1, overflowY: 'auto', width: '100%', maxWidth: 560, margin: isDesktop ? '0 auto' : 0, paddingBottom: 24, display: 'flex', flexDirection: 'column' }}>{children}</div>
     </div>
   )
 }

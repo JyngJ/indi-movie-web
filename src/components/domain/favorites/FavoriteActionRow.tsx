@@ -1,0 +1,76 @@
+'use client'
+
+import { Button } from '@/components/primitives'
+import { useFavorites } from '@/hooks/useFavorites'
+import type { FavoriteItemType } from '@/lib/favorites/types'
+import type { ReactNode } from 'react'
+
+const LOGIN_COPY: Record<FavoriteItemType, string> = {
+  movie: '관심 영화로 등록하면 새로 상영하는 곳이 생길 때 알려드려요.',
+  theater: '관심 극장으로 등록하면 새 상영작 소식을 알려드려요.',
+  director: '관심 감독으로 등록하면 이 감독 영화가 상영될 때 알려드려요.',
+}
+
+const LABEL: Record<FavoriteItemType, { off: string; on: string }> = {
+  movie: { off: '관심 영화 등록', on: '관심 영화' },
+  theater: { off: '관심 극장 등록', on: '관심 극장' },
+  director: { off: '관심 감독 등록', on: '관심 감독' },
+}
+
+function HeartIcon({ active }: { active: boolean }) {
+  return (
+    <svg width={16} height={16} viewBox="0 0 24 24" fill={active ? 'var(--color-error-mid)' : 'none'} stroke={active ? 'var(--color-error-mid)' : 'currentColor'} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+    </svg>
+  )
+}
+
+/** 단독 버튼 — 이미 있는 CTA 행(극장 상세 등)에 끼워 넣을 때 */
+export function FavoriteActionButton({
+  type,
+  id,
+  style,
+}: {
+  type: FavoriteItemType
+  id: string
+  style?: React.CSSProperties
+}) {
+  const { isFavorite, toggle } = useFavorites()
+  const active = isFavorite(type, id)
+  return (
+    <Button
+      variant="secondary"
+      size="md"
+      onClick={() => toggle(type, id, { loginDescription: LOGIN_COPY[type] })}
+      aria-pressed={active}
+      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, ...style }}
+    >
+      <HeartIcon active={active} />
+      {active ? LABEL[type].on : LABEL[type].off}
+    </Button>
+  )
+}
+
+/**
+ * 상세 화면 액션 행 (피그마 G 확정, 2026-08-17): [♡ 관심 등록 — 늘어남] [공유 등 보조 버튼].
+ * 상단바 하트 대신 히어로 아래에 둔다. 영화·극장·감독 상세 공통.
+ */
+export function FavoriteActionRow({
+  type,
+  id,
+  trailing,
+  style,
+}: {
+  type: FavoriteItemType
+  id: string
+  /** 오른쪽 보조 버튼(공유 등) */
+  trailing?: ReactNode
+  style?: React.CSSProperties
+}) {
+  return (
+    <div style={{ display: 'flex', gap: 8, alignItems: 'center', ...style }}>
+      <FavoriteActionButton type={type} id={id} style={{ flex: 1 }} />
+      {trailing}
+    </div>
+  )
+}

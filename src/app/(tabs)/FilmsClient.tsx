@@ -8,6 +8,7 @@ import { AllMoviesGrid } from '@/components/domain/AllMoviesGrid'
 import { RouteProgressBar, navStart } from '@/components/domain/RouteProgressBar'
 import { AnniversarySection } from '@/components/domain/AnniversarySection'
 import { CurationSectionRow } from '@/components/domain/CurationSectionRow'
+import { FavoriteMoviesSection } from '@/components/domain/favorites/FavoriteMoviesSection'
 import { DirectorSpecialSection } from '@/components/domain/DirectorSpecialSection'
 import { DirectorSpotlightSection } from '@/components/domain/DirectorSpotlightSection'
 import { FilmRankingSection } from '@/components/domain/FilmRankingSection'
@@ -1121,6 +1122,14 @@ export default function FilmsPage() {
             {/* 0. 인기 랭킹 — 순번 체계의 첫 자리. 상단 고정 섹션(개인화·기념일·특별전·인스타)과
                 달리 renderRun을 그대로 타므로 dwell/클릭 계측이 다른 큐레이션 행과 동일하다 */}
             {renderRun(runTop, 'top', startTop)}
+
+            {/* 0.5 내 관심 영화 상영 소식 — 로그인 + 관심 영화가 상영 중일 때만 (P2) */}
+            <FavoriteMoviesSection
+              movies={movies}
+              activeMovieIds={activeMovieIds}
+              isDesktop={isDesktop}
+              onMovieClick={handleMovieClick}
+            />
 
             {/* 1. 개인화 — 최근 본 영화 기반, 이력 없으면 미노출 */}
             <PersonalizedSection

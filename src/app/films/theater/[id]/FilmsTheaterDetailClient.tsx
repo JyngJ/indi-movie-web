@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { addDaysIso, toKstIsoDate } from '@/lib/date'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
+import { FavoriteActionButton } from '@/components/domain/favorites/FavoriteActionRow'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import Image from 'next/image'
 import { useTheaterShowtimes, useTheaterAllMovies } from '@/lib/supabase/queries'
@@ -469,6 +470,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
           >
             지도에서 보기
           </MapCtaButton>
+          <FavoriteActionButton type="theater" id={theater.id} />
           {theater.address && (
             <Button
               variant="secondary"

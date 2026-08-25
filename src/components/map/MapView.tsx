@@ -10,10 +10,13 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import type { Map as LeafletMap, Point as LeafletPoint } from 'leaflet'
 import { useLocationPermission } from '@/hooks/useLocationPermission'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
+import { useFavorites } from '@/hooks/useFavorites'
 import { SearchBarButton, FabRound, Toast, Wordmark } from '@/components/primitives'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { THEATER_SHEET_COLLAPSED_H } from '@/components/domain/TheaterSheet'
+import type { PinFavoriteMark } from '@/components/domain/MapPin'
 import { MapPin, TheaterSheet, CurationSheet, CurationSections, FilterBar, LocationPermissionModal, CURATION_PEEK_HEIGHT } from '@/components/domain'
+import type { CurationItem } from '@/components/domain/CurationSheet'
 import type { CurationSnap } from '@/components/domain'
 import { DesktopDetailPanel } from '@/components/domain/DesktopDetailPanel'
 import { SearchPanel } from '@/components/domain/SearchPanel'
@@ -24,7 +27,7 @@ import { isFestivalGroup } from '@/data/gv-events'
 import { theaterEventToGvEvent, isFestivalTitle } from '@/lib/gv/adapter'
 import type { DesktopPanelState } from '@/components/domain/DesktopDetailPanel'
 import type { FilterState } from '@/components/domain'
-import { useActiveMovieIds, useMapShowtimes, useMovies, useStations, useTheaters, useTheaterEvents } from '@/lib/supabase/queries'
+import { useActiveMovieIds, useClickRankings, useMapShowtimes, useMovies, useStations, useTheaters, useTheaterEvents } from '@/lib/supabase/queries'
 import type { MapShowtime } from '@/lib/supabase/queries'
 import { LRUCache } from '@/lib/lruCache'
 import type { Movie, Station, Theater } from '@/types/api'
@@ -42,7 +45,7 @@ import {
 import { SubwayLayer } from './SubwayLayer'
 import { finiteNumber, formatDateParam, startOfLocalDay, addDays, endOfMonth, loadRecentSearches, addToRecent, removeFromRecent, clearRecentSearches } from '@/lib/map/searchUtils'
 import { stationSearchScore, movieSearchScore, directorSearchScore, theaterSearchScore, areaSearchScore } from '@/lib/map/searchScoring'
-import { posterCountForZoom, posterSizeForZoom, posterSlotsForZoom, dayLabel, showtimeZoomThresholds } from '@/lib/map/posterLogic'
+import { posterCountForZoom, posterSizeForZoom, posterSlotsForZoom, sortPostersByPriority, dayLabel, showtimeZoomThresholds } from '@/lib/map/posterLogic'
 import { calculateAndFormatDistance } from '@/lib/map/distanceUtils'
 import type { TheaterPosterMovie, ScreeningDay } from '@/lib/map/posterLogic'
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
@@ -132,6 +135,8 @@ function isMapProjectionReady(map: LeafletMap) {
 }
 
 // 동일 입력에 대해 renderToStaticMarkup 중복 호출 방지
+/** 핀 마크업 바꾸면 올려라 — 캐시 키에 들어가서 Fast Refresh로 모듈 상태가 남아도 옛 HTML을 안 쓴다 */
+const PIN_ICON_VERSION = 7
 const _pinIconCache = new LRUCache<string, L.DivIcon>(800)
 
 function makePinIcon(
@@ -147,22 +152,31 @@ function makePinIcon(
   isDesktop = false,
   singleMovieMode = false,
   scheduleData?: { days: ScreeningDay[]; nextShow?: { date: string; time: string; showtimeId: string } },
+  favoriteMark: PinFavoriteMark = 'none',
+  fav?: { movieIds?: ReadonlySet<string>; directors?: ReadonlySet<string>; bookingRank?: ReadonlyMap<string, number>; favoriteFilterOn?: boolean },
 ) {
+  const favoriteMovieIds = fav?.movieIds
+  const favOnly = fav?.favoriteFilterOn
+  /** 관심 영화 + 관심 감독 작품 수 — 포스터 카드/카운트 태그 우상단 하트 캡슐 */
+  const favCount = posterMovies.filter((m) => favoriteMovieIds?.has(m.id) || (m.director ?? []).some((d) => fav?.directors?.has(d))).length
   // 캐시 키: 모든 입력을 직렬화 — 같은 조합이면 renderToStaticMarkup 재사용
   const moviesKey = posterMovies.map(m => `${m.id}:${m.matchesFilter ? 1 : 0}:${m.showtimeCount}:${m.showtimesToday?.map(s => s.time + (s.soldout ? 'x' : '') + (s.past ? 'p' : '')).join('|') ?? ''}`).join(',')
   const loKey = `${Math.round(labelOffset?.x ?? 0)},${Math.round(labelOffset?.y ?? 0)}`
   const scheduleKey = scheduleData
     ? `${scheduleData.days.map(d => `${d.date}:${d.times.join('-')}`).join(',')}|${scheduleData.nextShow ? `${scheduleData.nextShow.date}${scheduleData.nextShow.time}` : ''}`
     : ''
-  const cacheKey = `${name}|${selected ? 1 : 0}|${zoom}|${moviesKey}|${filtersActive ? 1 : 0}|${Math.round(finiteNumber(posterOffsetX) * 2) / 2}|${loKey}|${isDark ? 1 : 0}|${dimmed ? 1 : 0}|${isDesktop ? 1 : 0}|${singleMovieMode ? 1 : 0}|${scheduleKey}`
+  const cacheKey = `v${PIN_ICON_VERSION}|${name}|${selected ? 1 : 0}|${zoom}|${moviesKey}|${filtersActive ? 1 : 0}|${Math.round(finiteNumber(posterOffsetX) * 2) / 2}|${loKey}|${isDark ? 1 : 0}|${dimmed ? 1 : 0}|${isDesktop ? 1 : 0}|${singleMovieMode ? 1 : 0}|${scheduleKey}|${favoriteMark}|${favCount}|${favOnly ? 1 : 0}|${favoriteMovieIds ? posterMovies.filter(m => favoriteMovieIds.has(m.id)).map(m => m.id).join('.') : ''}`
   const cached = _pinIconCache.get(cacheKey)
   if (cached) return cached
 
   // 선택된 극장은 충돌 감지 무시 — 항상 중앙
   const safePosterOffsetX = selected ? 0 : finiteNumber(posterOffsetX)
   const forceMinOne = filtersActive && posterMovies.some(m => m.matchesFilter)
-  const { slots, overflowCount } = posterSlotsForZoom(posterMovies, zoom, filtersActive, forceMinOne)
-  const matchCount = filtersActive ? posterMovies.filter(m => m.matchesFilter).length : undefined
+  const orderedMovies = sortPostersByPriority(posterMovies, fav ? { favoriteMovieIds: fav.movieIds, favoriteDirectors: fav.directors, bookingRank: fav.bookingRank } : undefined)
+  const { slots, overflowCount } = posterSlotsForZoom(orderedMovies, zoom, filtersActive, forceMinOne)
+  // 관심 필터만 켜진 상태에선 '일치'·'+N' 칩을 숨기고 하트 수만 보여준다 (2026-08-18)
+  const favoriteOnlyMode = !!favOnly
+  const matchCount = filtersActive && !favoriteOnlyMode ? posterMovies.filter(m => m.matchesFilter).length : undefined
   const { dates: showtimeDatesThreshold, full: showtimeFullThreshold } = showtimeZoomThresholds(isDesktop)
   const showSchedule = singleMovieMode && zoom >= showtimeDatesThreshold && slots.length === 1 && !!scheduleData?.days.length
   const scheduleShowTimes = zoom >= showtimeFullThreshold
@@ -194,6 +208,10 @@ function makePinIcon(
         scheduleShowTimes={scheduleShowTimes}
         occurrenceCount={occurrenceCount}
         hideMatchChip={singleMovieMode}
+        favoriteMovieIds={favoriteMovieIds}
+        favoriteDirectors={fav?.directors}
+        favoriteCount={favCount}
+        hideOverflowChip={favoriteOnlyMode}
       />
     )
     if (usePosterLeft) {
@@ -226,11 +244,21 @@ function makePinIcon(
       `border:1.5px solid var(--color-border);border-radius:10px;` +
       `padding:3px 8px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.13);z-index:1;">` +
       `<span style="font-size:11px;font-weight:700;color:var(--color-primary-base);">${cnt}편</span>` +
-      `</div></div>`
+      `</div>` +
+      // 관심 영화 수 — 우상단 작은 캡슐 (포스터가 안 보이는 줌에서 관심 표시, 2026-08-17 확정)
+      (favCount > 0
+        ? `<div style="position:absolute;top:-9px;right:-20px;z-index:2;display:inline-flex;align-items:center;gap:2px;` +
+          `background:var(--color-error-mid);color:var(--color-on-accent);border:1.5px solid var(--color-surface-card);` +
+          `border-radius:var(--radius-pill);padding-top:4px;padding-bottom:4px;padding-left:8px;padding-right:8px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,0.25);">` +
+          `<svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" style="display:block"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>` +
+          `<span style="font-size:var(--text-badge);font-weight:700;line-height:1;">${favCount}</span></div>`
+        : '') +
+      `</div>`
   })() : ''
 
   const pinHtml = renderToStaticMarkup(
-    <MapPin selected={selected} label={name} labelOffset={labelOffset} dimmed={dimmed} isDark={isDark} />
+    /* 관심 영화 표시는 포스터 빨간 테두리·카운트 캡슐이 담당 — 핀은 관심 '극장'만 표시 */
+    <MapPin selected={selected} favorite={favoriteMark === 'movie' ? 'none' : favoriteMark === 'both' ? 'theater' : favoriteMark} label={name} labelOffset={labelOffset} dimmed={dimmed} isDark={isDark} />
   )
   const html = `
     <div style="width:140px;display:flex;flex-direction:column;align-items:center;overflow:visible;position:relative;">
@@ -1029,6 +1057,7 @@ export default function MapView() {
   const { state: locPermState, coords, modalSuppressed: locModalSuppressed, request: locRequest, dismiss: locDismiss, refetch } = useLocationPermission()
   const isDark = false  /* 2.0: 다크 폐지 — 배선(핀·타일·지하철)은 넓어 상수 고정, 제거는 지도 리팩토링 때 */
   const isDesktopLayout = useIsDesktopLayout()
+  const { isFavorite, favorites, signedIn: favoritesSignedIn } = useFavorites()
   const { data: theaters = EMPTY_THEATERS, isLoading: theatersLoading } = useTheaters()
   const { data: stations = EMPTY_STATIONS } = useStations()
   const { data: movies = EMPTY_MOVIES } = useMovies()
@@ -1040,6 +1069,7 @@ export default function MapView() {
     genres: [],
     nations: [],
     bookable: false,
+    favorites: false,
     indie: false,
     // MapView는 persistent 마운트라 sessionStorage 저장값으로 초기화 (ssr:false라 안전)
     regionId: getStoredRegion(),
@@ -1616,6 +1646,7 @@ export default function MapView() {
     for (const [theaterId, movieMap] of byTheater) {
       for (const movie of movieMap.values()) {
         if (filters.bookable && !movie.hasAvailableSeats) movie.matchesFilter = false
+        if (filters.favorites && !isFavorite('theater', theaterId) && !isFavorite('movie', movie.id)) movie.matchesFilter = false
         const times = todayShowtimes.get(theaterId)?.get(movie.id)
         if (times?.length) movie.showtimesToday = times
       }
@@ -1627,7 +1658,7 @@ export default function MapView() {
       )
     }
     return result
-  }, [directorFilter, filters.bookable, filters.genres, filters.nations, movieFilter, mapShowtimes, mapShowtimeStart])
+  }, [directorFilter, filters.bookable, filters.favorites, isFavorite, filters.genres, filters.nations, movieFilter, mapShowtimes, mapShowtimeStart])
 
   // 단일 영화 필터 시 핀에 노출할 극장별 날짜별 상영시간표 (최대 4일)
   const singleMovieSchedule = useMemo(() => {
@@ -1671,7 +1702,98 @@ export default function MapView() {
     return result
   }, [movieFilter, mapShowtimes, mapShowtimeStart])
 
-  const filtersActive = filters.bookable || filters.genres.length > 0 || filters.nations.length > 0 || !!movieFilter || !!directorFilter
+  // 관심(P2): 관심 극장 / 관심 영화 상영 극장 표시 + "관심만" 필터
+  const favoriteMarkFor = useCallback((theaterId: string, posterMovies: TheaterPosterMovie[]): PinFavoriteMark => {
+    if (!favoritesSignedIn) return 'none'
+    const t = isFavorite('theater', theaterId)
+    const m = posterMovies.some((pm) => isFavorite('movie', pm.id))
+    return t && m ? 'both' : t ? 'theater' : m ? 'movie' : 'none'
+  }, [favoritesSignedIn, isFavorite])
+
+  /** 포스터 정렬·강조 컨텍스트: 관심 영화·감독 + 예매 클릭 랭킹 (2026-08-17 확정 순서) */
+  const { data: clickRankings } = useClickRankings()
+  const favContext = useMemo(() => {
+    const bookingRank = new Map<string, number>()
+    ;(clickRankings?.booking ?? []).forEach((e, i) => bookingRank.set(e.movieId, i))
+    if (!favoritesSignedIn) return bookingRank.size ? { bookingRank, favoriteFilterOn: false } : undefined
+    return {
+      movieIds: new Set(favorites.filter((f) => f.type === 'movie').map((f) => f.id)),
+      directors: new Set(favorites.filter((f) => f.type === 'director').map((f) => f.id)),
+      bookingRank,
+      favoriteFilterOn: filters.favorites,
+    }
+  }, [favoritesSignedIn, favorites, clickRankings, filters.favorites])
+
+  /* 큐레이션 도크 1·2 섹션 (2026-08-18 확정)
+     1) 로그인 + 관심 있음 → 관심 영화·감독 작품 중 지금 상영 중인 것, 상영 극장 요약
+     2) 예매 클릭 순위 상위 — 현재 지역에서 상영 중인 것만
+     지금은 지역(filters.regionId) 기준. TODO: 보이는 지도 영역 기준으로 요약 */
+  const movieById = useMemo(() => new Map(movies.map((m) => [m.id, m])), [movies])
+
+  const favoriteCurationItems = useMemo<CurationItem[]>(() => {
+    if (!favoritesSignedIn) return []
+    const favMovieIds = new Set(favorites.filter((f) => f.type === 'movie').map((f) => f.id))
+    const favDirectors = new Set(favorites.filter((f) => f.type === 'director').map((f) => f.id))
+    if (favMovieIds.size === 0 && favDirectors.size === 0) return []
+
+    // 상영 중인 관심작 → 어느 극장에서 하는지 모아둔다
+    const theaterNamesByMovie = new Map<string, string[]>()
+    for (const theater of theaters) {
+      for (const pm of theaterPosterMovies.get(theater.id) ?? []) {
+        const hit = favMovieIds.has(pm.id) || (pm.director ?? []).some((d) => favDirectors.has(d))
+        if (!hit) continue
+        const names = theaterNamesByMovie.get(pm.id) ?? []
+        if (!names.includes(theater.name)) names.push(theater.name)
+        theaterNamesByMovie.set(pm.id, names)
+      }
+    }
+
+    return [...theaterNamesByMovie.entries()]
+      .map(([movieId, names]) => {
+        const movie = movieById.get(movieId)
+        if (!movie) return null
+        return {
+          id: movieId,
+          title: movie.title,
+          posterUrl: movie.posterUrl,
+          badge: favMovieIds.has(movieId) ? '관심 영화' : '관심 감독',
+          subtitle: names.length > 1 ? `${names[0]} 외 ${names.length - 1}곳` : names[0],
+          movie,
+        } as CurationItem
+      })
+      .filter((i): i is CurationItem => !!i)
+  }, [favoritesSignedIn, favorites, theaters, theaterPosterMovies, movieById])
+
+  /** 관심 섹션 '모두보기' — 지도 관심 필터를 켠다 (페이지 이동 없이 현재 지도에서 좁히기) */
+  const [favoritesFilterSignal, setFavoritesFilterSignal] = useState(0)
+  const handleShowAllFavorites = useCallback(() => {
+    setFavoritesFilterSignal((n) => n + 1)
+  }, [])
+
+  const rankingCurationItems = useMemo<CurationItem[]>(() => {
+    const screening = new Set<string>()
+    for (const theater of theaters) {
+      for (const pm of theaterPosterMovies.get(theater.id) ?? []) screening.add(pm.id)
+    }
+    const items: CurationItem[] = []
+    for (const entry of clickRankings?.booking ?? []) {
+      if (!screening.has(entry.movieId)) continue
+      const movie = movieById.get(entry.movieId)
+      if (!movie) continue
+      items.push({
+        id: movie.id,
+        title: movie.title,
+        posterUrl: movie.posterUrl,
+        rank: items.length + 1,
+        subtitle: movie.director.length > 0 ? movie.director[0] : undefined,
+        movie,
+      })
+      if (items.length >= 6) break
+    }
+    return items
+  }, [clickRankings, theaters, theaterPosterMovies, movieById])
+
+  const filtersActive = filters.bookable || filters.genres.length > 0 || filters.nations.length > 0 || !!movieFilter || !!directorFilter || filters.favorites
   const filterResultCount = useMemo(() => {
     if (!filtersActive) return theaters.length
     let count = 0
@@ -3223,6 +3345,8 @@ export default function MapView() {
               opacity={dimmed ? 0.7 : 1}
               zIndexOffset={
                 selectedId === theater.id ? 1000 :
+                // 관심 극장 / 관심 영화가 걸린 극장은 다른 핀 위로 (2026-08-17)
+                (!dimmed && favoriteMarkFor(theater.id, posterMovies) !== 'none') ? 700 :
                 (filtersActive && !dimmed) ? 500 :
                 dimmed ? -500 :
                 0
@@ -3240,6 +3364,8 @@ export default function MapView() {
                 isDesktopLayout,
                 !!movieFilter,
                 singleMovieSchedule.get(theater.id),
+                favoriteMarkFor(theater.id, posterMovies),
+                favContext,
               )}
               eventHandlers={{ click: (e) => {
                 const target = e.originalEvent?.target as HTMLElement | null
@@ -3293,6 +3419,7 @@ export default function MapView() {
             desktop={isDesktopLayout}
             onChange={setFilters}
             onChipChange={flyToFilter}
+            turnOnFavoritesSignal={favoritesFilterSignal}
             defaultRegionId={coords ? getRegionFromCoords(coords.lat, coords.lng) : null}
             nationOptions={nationOptions}
             movieFilter={movieFilter}
@@ -3415,6 +3542,10 @@ export default function MapView() {
           onRemoveRecentlyViewed={handleRemoveRecentlyViewed}
           onClearRecentlyViewed={handleClearRecentlyViewed}
           onRecentItemClick={handleRecentItemClick}
+          signedIn={favoritesSignedIn}
+          favoriteItems={favoriteCurationItems}
+          rankingItems={rankingCurationItems}
+          onShowAllFavorites={handleShowAllFavorites}
         />
       )}
 
@@ -3494,6 +3625,10 @@ export default function MapView() {
                 onRemoveRecentlyViewed={handleRemoveRecentlyViewed}
                 onClearRecentlyViewed={handleClearRecentlyViewed}
                 onRecentItemClick={handleRecentItemClick}
+                signedIn={favoritesSignedIn}
+                favoriteItems={favoriteCurationItems}
+                rankingItems={rankingCurationItems}
+                onShowAllFavorites={handleShowAllFavorites}
                 desktop
               />
             </div>
@@ -3673,8 +3808,6 @@ export default function MapView() {
               })
               openDesktopPanel({ type: 'director', name })
             } : undefined}
-            favorited={false}
-            onFavorite={() => { /* Phase 4 */ }}
             mapFilters={{ genres: filters.genres, nations: filters.nations }}
             initialIsoDate={initialSheetDate}
             initialShowtimeId={initialShowtimeId}

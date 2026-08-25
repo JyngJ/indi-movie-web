@@ -5,6 +5,7 @@ import { IcoClose, IcoChevronLeft } from './icons'
 export function PanelShell({
   onClose,
   onBack,
+  trailing,
   title,
   embedded,
   children,
@@ -12,6 +13,8 @@ export function PanelShell({
   onClose: () => void
   onBack?: () => void
   title?: string
+  /** 닫기 왼쪽 위젯 (하트 등) */
+  trailing?: React.ReactNode
   /** 좌측 도크에 내장될 때 true — 카드 모서리/배경 없이 도크에 꽉 채워 표시 */
   embedded?: boolean
   children: React.ReactNode
@@ -51,6 +54,7 @@ export function PanelShell({
         }}>
           {title}
         </span>
+        {trailing}
         <IconButton variant="ghost" size={32} aria-label="닫기" onClick={onClose}><IcoClose /></IconButton>
       </div>
 
