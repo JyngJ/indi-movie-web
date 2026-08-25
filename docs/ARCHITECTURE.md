@@ -155,9 +155,8 @@ export const storageAdapter: IStorageAdapter = webStorageAdapter
 /theater/[id]       극장 상세
 /movie/[id]         영화 상세
 /search?q=...       검색 결과
-/my                 마이 페이지 (즐겨찾기, 알림)
-/auth/login         로그인
-/auth/signup        회원가입
+/my                 내 계정 탭 (P1: 로그인/프로필 · P2: 관심 · P3: 알림 설정)
+/auth/callback      OAuth 콜백 route handler (UI 없음). 로그인 화면은 별도 라우트 없이 /my + 전역 로그인 시트
 ```
 
 **원칙**:

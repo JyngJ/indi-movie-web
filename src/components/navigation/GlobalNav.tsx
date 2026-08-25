@@ -48,6 +48,16 @@ function IconInstagram({ size = 21 }: { size?: number }) {
   )
 }
 
+function IconUser({ size = 23 }: { size?: number }) {
+  /* Lucide user-round — 내 계정 탭 */
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="5" />
+      <path d="M20 21a8 8 0 0 0-16 0" />
+    </svg>
+  )
+}
+
 function IconSettings({ size = 21 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
@@ -65,9 +75,11 @@ interface MobileTab {
 }
 
 // 홈('/')은 상영작 탭 — 진입점이 상영작으로 바뀌면서 지도는 '/map'으로 내려갔다.
+// 2026-08-16 4탭: 내 계정(/my) 추가 — 계정 관련은 설정 탭이 아니라 여기로 모은다 (IA 통합 보드 47번).
 const MOBILE_TABS: MobileTab[] = [
   { key: 'map', href: '/map', label: '지도', Icon: IconMap },
   { key: 'films', href: '/', label: '상영작', Icon: IconFilm },
+  { key: 'my', href: '/my', label: '내 계정', Icon: IconUser },
   { key: 'more', href: '/more', label: '설정', Icon: IconSettings },
 ]
 
@@ -78,6 +90,7 @@ const DESKTOP_RAIL_TABS = MOBILE_TABS.filter((tab) => tab.key !== 'more')
 function isTabActive(pathname: string, key: string): boolean {
   if (key === 'map') return pathname === '/map'
   if (key === 'films') return pathname === '/' || pathname === '/films' || pathname.startsWith('/films/')
+  if (key === 'my') return pathname === '/my' || pathname.startsWith('/my/')
   return pathname === '/more' || pathname.startsWith('/more/')
 }
 
@@ -93,7 +106,7 @@ function MobileTabBar({ pathname, filmsHref }: { pathname: string; filmsHref: st
         bottom: 0,
         height: `calc(${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`,
         paddingBottom: 'env(safe-area-inset-bottom)',
-        paddingLeft: 'var(--spacing-12)', paddingRight: 'var(--spacing-12)',   /* 48 — 탭 3개 중앙으로 (피그마 tabbar pad) */
+        paddingLeft: 'var(--spacing-8)', paddingRight: 'var(--spacing-8)',   /* 32 — 4탭 (구 3탭은 48) */
         display: 'flex',
         alignItems: 'center',
         background: 'var(--color-surface-card)',
@@ -333,7 +346,7 @@ export function getPrevPathname(): string | null {
   try { return sessionStorage.getItem(PREV_PATH_KEY) } catch { return null }
 }
 
-/** 글로벌 네비게이션 — 모바일: 하단 탭바(지도·영화·설정), 데스크톱: 좌측 아이콘 레일 */
+/** 글로벌 네비게이션 — 모바일: 하단 탭바(지도·상영작·내 계정·설정), 데스크톱: 좌측 아이콘 레일(지도·상영작·내 계정 + 하단 신고/인스타/설정) */
 export function GlobalNav() {
   const isDesktop = useIsDesktopLayout()
   const pathname = usePathname()
