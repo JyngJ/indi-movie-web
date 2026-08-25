@@ -16,7 +16,7 @@ import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWi
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { shareAndTrack } from '@/lib/analytics/shareTracking'
 import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/components/domain/booking/BookingActions'
-import { Skeleton, Chip, Button } from '@/components/primitives'
+import { Skeleton, Button } from '@/components/primitives'
 import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
 import { ShowtimeCell } from '@/components/domain/ShowtimeCell'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
@@ -51,11 +51,6 @@ function formatDateTab(dateStr: string): { day: string; date: number; isHoliday:
 const IcoChevronLeft = () => (
   <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
     <path d="M15 18l-6-6 6-6" />
-  </svg>
-)
-const IcoNav = () => (
-  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="3 11 22 2 13 21 11 13 3 11" />
   </svg>
 )
 const IcoShare = () => (
@@ -277,7 +272,6 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
   const [copied, setCopied] = useState(false)
   const [selectedShowtimeId, setSelectedShowtimeId] = useState<string | null>(null)
   const [selectedMovieTitle, setSelectedMovieTitle] = useState<string | null>(null)
-  const [bookableOnly, setBookableOnly] = useState(false)
   // 공유 링크(?date=&showtime=)로 들어왔을 때, 날짜 변경 시 선택 초기화하는
   // 아래 effect가 복원 직후 곧바로 리셋해버리지 않도록 1회 억제한다.
   const suppressResetOnDateChangeRef = useRef(false)
@@ -376,13 +370,40 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
       if (!map.has(st.movieId)) map.set(st.movieId, [])
       map.get(st.movieId)!.push(st)
     }
+    /* 오늘 탭에서 회차가 전부 끝난 영화는 목록 뒤로 — 지금 볼 수 있는 영화가 먼저 온다.
+       종료 판정은 ShowtimeCell kind('ended')와 같은 기준(endTime, 없으면 시작+120분). */
+    const now = new Date()
+    const nowMinutes = now.getHours() * 60 + now.getMinutes()
+    const isToday = selectedDate === toKstIsoDate(now)
+    const allEnded = (sts: Showtime[]) => isToday && sts.every((st) => {
+      const [sh, sm] = st.showTime.split(':').map(Number)
+      const endMin = st.endTime
+        ? (() => { const [eh, em] = st.endTime!.split(':').map(Number); return eh * 60 + em })()
+        : sh * 60 + sm + 120
+      return endMin <= nowMinutes
+    })
+    /* 정렬 등급: 0 지금 볼 수 있는 회차 있음 → 1 남은 회차가 전부 매진 → 2 전부 상영 완료 */
+    const rank = (sts: Showtime[]) => {
+      if (allEnded(sts)) return 2
+      const notEnded = sts.filter((st) => {
+        if (!isToday) return true
+        const [sh, sm] = st.showTime.split(':').map(Number)
+        const endMin = st.endTime
+          ? (() => { const [eh, em] = st.endTime!.split(':').map(Number); return eh * 60 + em })()
+          : sh * 60 + sm + 120
+        return endMin > nowMinutes
+      })
+      if (notEnded.length > 0 && notEnded.every((st) => st.seatAvailable === 0)) return 1
+      return 0
+    }
     return dayMovies.map((m) => ({ movie: m, showtimes: map.get(m.id) ?? [] }))
-      .map((g) => bookableOnly
-        ? { ...g, showtimes: g.showtimes.filter((st) => st.seatAvailable > 0) }
-        : g)
       .filter((g) => g.showtimes.length > 0)
-      .sort((a, b) => (a.showtimes[0]?.showTime ?? '') < (b.showtimes[0]?.showTime ?? '') ? -1 : 1)
-  }, [dayMovies, dayShowtimes, bookableOnly])
+      .sort((a, b) => {
+        const d = rank(a.showtimes) - rank(b.showtimes)
+        if (d !== 0) return d
+        return (a.showtimes[0]?.showTime ?? '') < (b.showtimes[0]?.showTime ?? '') ? -1 : 1
+      })
+  }, [dayMovies, dayShowtimes, selectedDate])
 
   const selectedShowtimeData = useMemo(() => {
     if (!selectedShowtimeId || !selectedMovieTitle) return null
@@ -436,10 +457,8 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
   const content = (
     <div style={{ paddingBottom: isDesktop ? (selectedShowtimeData ? 220 : 64) : (selectedShowtimeData ? 148 : 80) }}>
       {/* 헤더 */}
-      <div style={{
-        background: 'linear-gradient(to bottom, var(--color-primary-subtle-l) 0%, var(--color-surface-bg) 100%)',
-        padding: isDesktop ? '28px 28px 24px' : '20px 16px 20px',
-      }}>
+      {/* 그라데이션 밴드는 뺐다 (2026-08-24) — 다른 상세(영화·감독)는 민 배경이라 혼자 튀었다 */}
+      <div style={{ padding: isDesktop ? '28px 28px 24px' : '20px 16px 20px' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', padding: '4px 12px', borderRadius: 9999, border: '1px solid color-mix(in srgb, var(--color-primary-base) 55%, transparent)', backgroundColor: 'var(--color-primary-subtle-l)', marginBottom: 12 }}>
           <span style={{ fontSize: 'var(--text-badge)', fontWeight: 600, lineHeight: 1, color: 'var(--color-primary-base)' }}>독립·예술영화관</span>
         </div>
@@ -461,41 +480,33 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
           </span>
         </button>
 
-        {/* CTA 버튼 */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <MapCtaButton
-            fullWidth={false}
-            style={{ flex: isDesktop ? undefined : 1 }}
-            onClick={() => router.push(mapUrlWithSelection())}
-          >
+        {/* 액션 2행 (2026-08-24 확정): [관심 극장 등록(회색)][공유(회색)] / [지도에서 보기(파랑 전폭)].
+            md 버튼 셋은 한 줄에 안 들어가고(실측 391 > 343), 길찾기는 극장 시트와 중복이라 뺐다. */}
+        {/* PC 순서: 지도 → 공유 → 관심 (2026-08-24 확정). 모바일은 [관심][공유] / [지도 전폭] 2행 유지 */}
+        <div style={{ display: 'flex', flexDirection: isDesktop ? 'row-reverse' : 'column', gap: 8, alignItems: isDesktop ? 'center' : undefined, justifyContent: isDesktop ? 'flex-end' : undefined }}>
+          <div style={{ display: 'flex', flexDirection: isDesktop ? 'row-reverse' : 'row', gap: 8, alignItems: 'center' }}>
+            <FavoriteActionButton type="theater" id={theater.id} style={{ flex: isDesktop ? undefined : 1, whiteSpace: 'nowrap' }} />
+            <Button
+              variant="tertiary"
+              size="md"
+              aria-label="공유"
+              onClick={() => {
+                void shareAndTrack({
+                  payload: { title: theater.name, url: window.location.href },
+                  source: 'films_theater_detail',
+                  scope: 'page',
+                  properties: { theater_id: theater.id, theater_name: theater.name },
+                })
+              }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
+            >
+              <IcoShare />
+              공유
+            </Button>
+          </div>
+          <MapCtaButton fullWidth={!isDesktop} style={isDesktop ? { whiteSpace: 'nowrap' } : undefined} onClick={() => router.push(mapUrlWithSelection())}>
             지도에서 보기
           </MapCtaButton>
-          <FavoriteActionButton type="theater" id={theater.id} />
-          {theater.address && (
-            <Button
-              variant="secondary"
-              size="md"
-              onClick={() => window.open(`https://map.naver.com/p/search/${encodeURIComponent(theater.address)}`, '_blank')}
-            >
-              <IcoNav />
-              길찾기
-            </Button>
-          )}
-          <Button
-            variant="secondary"
-            size="md"
-            onClick={() => {
-              void shareAndTrack({
-                payload: { title: theater.name, url: window.location.href },
-                source: 'films_theater_detail',
-                scope: 'page',
-                properties: { theater_id: theater.id, theater_name: theater.name },
-              })
-            }}
-          >
-            <IcoShare />
-            공유
-          </Button>
         </div>
       </div>
 
@@ -508,18 +519,12 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
         <DetailDateTabs dates={dates} selectedDate={selectedDate} activeDates={activeDates} onSelect={setSelectedDate} />
       </div>
 
-      {/* 예매 가능만 보기 — 날짜탭 바로 아래 오른쪽 (TheaterSheet 퀵 토글과 동일 문법) */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: isDesktop ? 'var(--spacing-3) 28px 0' : 'var(--spacing-3) var(--gutter) 0' }}>
-        <Chip selected={bookableOnly} onClick={() => setBookableOnly((v) => !v)} style={{ minHeight: 'auto', whiteSpace: 'nowrap' }}>
-          예매 가능만 보기
-        </Chip>
-      </div>
-
       {/* 현재 상영중 */}
       <div style={{ padding: isDesktop ? '20px 28px 0' : '16px 16px 0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 16 }}>
           <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-            현재 상영중{' '}
+            {/* 미래 날짜에 "현재 상영중"은 거짓말 — 오늘만 현재고, 나머지는 그 날의 목록이다 (2026-08-24) */}
+            {selectedDate === dates[0] ? '현재 상영중' : '이 날의 상영작'}{' '}
             <span style={{ fontSize: 16, color: 'var(--color-primary-base)' }}>{movieShowtimeGroups.length}편</span>
           </span>
         </div>

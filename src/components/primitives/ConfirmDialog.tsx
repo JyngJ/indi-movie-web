@@ -65,6 +65,7 @@ export function ConfirmDialog({
   return createPortal(
     <div
       onClick={() => { if (!busy) onCancel() }}
+      data-overlay-root=""
       style={{
         position: 'fixed', inset: 0, zIndex: 9000,
         display: 'flex',

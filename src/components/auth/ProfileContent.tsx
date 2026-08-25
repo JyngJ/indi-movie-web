@@ -48,7 +48,15 @@ export function ProfileContent({ onDone }: { onDone: () => void }) {
 
   const handleSignOut = async () => {
     setBusy(true)
-    try { await signOut(); setConfirmLogout(false) } finally { setBusy(false) }
+    try {
+      await signOut()
+      setConfirmLogout(false)
+      onDone()
+    } catch {
+      /* 폴백까지 실패한 예외 케이스 — 다이얼로그를 닫고 상태는 그대로 둔다.
+         조용히 삼키면 "버튼이 안 먹는" 것처럼 보인다 */
+      setConfirmLogout(false)
+    } finally { setBusy(false) }
   }
 
   const handleDelete = async () => {

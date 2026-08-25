@@ -113,7 +113,7 @@ export function ScheduleRows({ days, showTimes = true }: {
   )
 }
 
-export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, matchCount, filtersActive = false, selected = false, posterW = 44, posterH = 66, allMovies, schedule, scheduleShowTimes = true, occurrenceCount, hideMatchChip = false, favoriteMovieIds, favoriteDirectors, favoriteCount = 0, hideOverflowChip = false }: {
+export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, matchCount, filtersActive = false, selected = false, posterW = 44, posterH = 66, allMovies, schedule, scheduleShowTimes = true, occurrenceCount, hideMatchChip = false, favoriteMovieIds, favoriteDirectors, favoriteCount = 0, hideOverflowChip = false, hideMatchRing = false, dimOverflowChip = false }: {
   slots: PosterSlot[]
   /** 슬롯에 못 담은 편수 — 우상단 "+N" 칩 */
   overflowCount?: number
@@ -135,6 +135,11 @@ export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, 
   favoriteDirectors?: ReadonlySet<string>
   /** 이 극장에서 상영 중인 관심 작품 수 — 카드 우상단 하트 캡슐 */
   favoriteCount?: number
+  /** 관심 필터 모드 — 관심 극장에선 모든 영화가 matchesFilter라 파란 일치 링이 오탐된다.
+   *  관심 표시는 빨간 링 하나여야 하므로 일치 링을 끈다 (일치 칩을 끄는 것과 같은 이유) */
+  hideMatchRing?: boolean
+  /** 관심 필터 모드 — +N 칩을 숨기는 대신 반투명으로 남긴다 */
+  dimOverflowChip?: boolean
   /** 관심 필터 모드 — '+N' 칩을 숨기고 하트 수만 (2026-08-18) */
   hideOverflowChip?: boolean
 }) {
@@ -180,17 +185,18 @@ export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, 
           <div className="pm-chip-stack">
             {showMatchChip && <CornerChip>{matchCount}편 일치</CornerChip>}
             {overflowCount > 0 && !hideOverflowChip && (
-              <span className="po-wrap" style={{ display: 'inline-flex' }}>
+              <span className="po-wrap" style={{ display: 'inline-flex', opacity: dimOverflowChip ? 0.45 : 1 }}>
                 <CornerChip>+{overflowCount}</CornerChip>
                 {allMovies && allMovies.length > 0 && (
                   <MovieListCard movies={allMovies} favoriteMovieIds={favoriteMovieIds} favoriteDirectors={favoriteDirectors} />
                 )}
               </span>
             )}
-            {/* 관심 수 — 항상 표시. +N 아래에 고정해 +N 위치가 흔들리지 않게 (2026-08-18).
+            {/* 관심 수 — 평소엔 +N 아래 고정(+N 위치가 흔들리지 않게, 2026-08-18).
+                관심 필터 모드에선 order:-1로 맨 위 — 반투명 +N보다 하트가 먼저 읽혀야 한다 (2026-08-24).
                 호버 시 어떤 작품이 관심 대상인지 목록으로 보여준다 (+N 칩과 같은 문법) */}
             {favoriteCount > 0 && (
-              <span className="po-wrap" style={{ display: 'inline-flex' }}>
+              <span className="po-wrap" style={{ display: 'inline-flex', order: dimOverflowChip ? -1 : 0 }}>
               <span className="pm-heart-cap">
                 <svg width={8} height={8} viewBox="0 0 24 24" fill="currentColor" style={{ display: 'block' }} aria-hidden="true">
                   <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
@@ -205,17 +211,30 @@ export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, 
           </div>
         )}
         {scheduleMode ? (
-          <div data-movie-id={slots[0].movie?.id} style={{ display: 'flex', alignItems: 'stretch', gap: SLOT_GAP, position: 'relative', zIndex: 1 }}>
-            {/* 포스터가 카드 세로를 꽉 채운다 — 폭은 2:3 비율에서 나온다 (피그마 2.0/PosterPinSchedule) */}
+          <div data-movie-id={slots[0].movie?.id} style={{ display: 'flex', alignItems: 'flex-start', gap: SLOT_GAP, position: 'relative', zIndex: 1 }}>
+            {/* 포스터는 줌 기반 고정 크기 — stretch로 일정 높이를 따라가게 하면 일주일치
+                스케줄에서 포스터가 300px 넘게 부풀어 카드가 깨져 보인다 (2026-08-24) */}
             <div style={{
               position: 'relative', flexShrink: 0,
-              aspectRatio: '2 / 3', minHeight: posterH,
+              width: Math.round(posterH * 2 / 3), height: posterH,
               borderRadius: 4, overflow: 'hidden',
               backgroundColor: 'var(--color-neutral-800)',
-              boxShadow: isFavMovie(slots[0].movie)
-                ? 'inset 0 0 0 2px var(--color-error-mid)'
-                : 'inset 0 0 0 1px var(--comp-poster-border)',
+              boxShadow: 'inset 0 0 0 1px var(--comp-poster-border)',
             }}>
+              {/* 관심 — 우상단 하트 뱃지 (그리드와 동일 문법, overflow hidden이라 안쪽 코너) */}
+              {isFavMovie(slots[0].movie) && (
+                <span style={{
+                  position: 'absolute', top: 3, right: 3, width: 16, height: 16,
+                  borderRadius: 9999, backgroundColor: 'var(--color-error-mid)',
+                  border: '1.5px solid var(--color-surface-bg)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.3)', zIndex: 2, pointerEvents: 'none',
+                }}>
+                  <svg width={8} height={8} viewBox="0 0 24 24" fill="var(--color-on-accent)" aria-hidden="true" style={{ display: 'block' }}>
+                    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                  </svg>
+                </span>
+              )}
               {slots[0].movie?.posterUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -259,7 +278,7 @@ export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, 
                 const slot = slots[idx]
                 if (!slot) return null
                 return (
-                    <div key={idx} data-movie-id={slot.movie?.id} className="pm-wrap" style={{ position: 'relative', width: posterW, height: posterH }}>
+                    <div key={idx} data-movie-id={slot.movie?.id} className="pm-wrap" style={{ position: 'relative', width: posterW, height: posterH, opacity: slot.dimmed ? 0.4 : 1 }}>
                       <PosterThumb
                         src={slot.movie?.posterUrl}
                         alt={slot.movie?.title ?? '영화 포스터'}
@@ -271,12 +290,22 @@ export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, 
                            onLoad가 안 붙으니 페이드를 켜면 opacity:0으로 굳는다 */
                         fade={false}
                         /* 관심 빨간 링이 붙으면 필터 하이라이트(파란 테두리)는 뺀다 — 테두리 두 겹 방지 (2026-08-18) */
-                        highlighted={filtersActive && !!slot.movie?.matchesFilter && !isFavMovie(slot.movie)}
+                        highlighted={!hideMatchRing && filtersActive && !!slot.movie?.matchesFilter && !isFavMovie(slot.movie)}
                       />
-                      {/* 관심 영화·감독 — 포스터 빨간 테두리 (핀 뱃지 대신, 2026-08-17 확정).
-                          hover 확대는 .pm-wrap > div:first-child(포스터)를 노리므로 링은 반드시 포스터 뒤에 온다. */}
+                      {/* 관심 영화·감독 — 포스터 우상단 하트 뱃지 (구 빨간 링, 2026-08-24 개정 —
+                          우상단 하트 통일. 뱃지는 하트 캡슐(pm-heart-cap)과 같은 문법) */}
                       {isFavMovie(slot.movie) && (
-                        <div className="pm-fav-ring" style={{ position: 'absolute', inset: -2, borderRadius: 'calc(var(--radius-badge) + 2px)', boxShadow: '0 0 0 2px var(--color-error-mid)', zIndex: 2, pointerEvents: 'none' }} />
+                        <span className="pm-fav-badge" style={{
+                          position: 'absolute', top: -5, right: -5, width: 16, height: 16,
+                          borderRadius: 9999, backgroundColor: 'var(--color-error-mid)',
+                          border: '1.5px solid var(--color-surface-bg)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          boxShadow: '0 1px 4px rgba(0,0,0,0.3)', zIndex: 2, pointerEvents: 'none',
+                        }}>
+                          <svg width={8} height={8} viewBox="0 0 24 24" fill="var(--color-on-accent)" aria-hidden="true" style={{ display: 'block' }}>
+                            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                          </svg>
+                        </span>
                       )}
                       {slot.movie && (
                         <div className="pm-tip">

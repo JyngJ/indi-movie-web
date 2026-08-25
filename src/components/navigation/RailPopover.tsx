@@ -38,6 +38,10 @@ export function RailPopover({
       const t = e.target as HTMLElement
       if (ref.current?.contains(t)) return
       if (t.closest?.(`a[href="${anchorHref}"]`)) return
+      /* 확인 다이얼로그 등 portal 오버레이는 DOM상 팝오버 밖이지만 "바깥 클릭"이
+         아니다 — 여기서 닫아버리면 다이얼로그가 통째로 언마운트돼 로그아웃이
+         실행조차 안 됐다 (2026-08-24) */
+      if (t.closest?.('[data-overlay-root]')) return
       onClose()
     }
     window.addEventListener('keydown', onKey)

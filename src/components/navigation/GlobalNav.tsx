@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'motion/react'
 import { useEffect, useState } from 'react'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useUIStore } from '@/store/uiStore'
+import { useNotificationEvents } from '@/hooks/useNotifications'
 
 /** §5 바텀 탭바 표준 높이(safe-area 포함) — 다른 화면 요소가 이 값만큼 비켜야 함 */
 export const GLOBAL_NAV_MOBILE_HEIGHT = 64
@@ -57,6 +58,21 @@ function IconUser({ size = 23 }: { size?: number }) {
   )
 }
 
+/** 안 읽은 소식 배지 — 아이콘 우상단 작은 점. 숫자는 넣지 않는다(레일 폭 21px 아이콘에 안 들어간다) */
+function UnreadDot() {
+  return (
+    <span
+      aria-hidden
+      style={{
+        position: 'absolute', top: -2, right: -3,
+        width: 8, height: 8, borderRadius: '50%',
+        background: 'var(--color-error-mid)',
+        border: '1.5px solid var(--color-surface-card)',
+      }}
+    />
+  )
+}
+
 interface MobileTab {
   key: string
   href: string
@@ -89,6 +105,7 @@ function isTabActive(pathname: string, key: string): boolean {
 
 function MobileTabBar({ pathname, filmsHref }: { pathname: string; filmsHref: string }) {
   const tabs = MOBILE_TABS.map((t) => (t.key === 'films' ? { ...t, href: filmsHref } : t))
+  const { unreadCount } = useNotificationEvents()
   return (
     <nav
       aria-label="주요 메뉴"
@@ -148,7 +165,10 @@ function MobileTabBar({ pathname, filmsHref }: { pathname: string; filmsHref: st
                   }}
                 />
               )}
-              <span style={{ position: 'relative', display: 'flex' }}><Icon size={23} /></span>
+              <span style={{ position: 'relative', display: 'flex' }}>
+                <Icon size={23} />
+                {key === 'feed' && unreadCount > 0 && <UnreadDot />}
+              </span>
               <span style={{ position: 'relative', fontSize: 'var(--text-badge)', fontWeight: 600, lineHeight: 1 }}>{label}</span>
             </span>
           </Link>
@@ -159,6 +179,7 @@ function MobileTabBar({ pathname, filmsHref }: { pathname: string; filmsHref: st
 }
 
 function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: string }) {
+  const { unreadCount } = useNotificationEvents()
   const isSearchOpen = useUIStore((s) => s.isSearchOpen)
   const setSearchOpen = useUIStore((s) => s.setSearchOpen)
   const toggleMapDockCollapsed = useUIStore((s) => s.toggleMapDockCollapsed)
@@ -232,7 +253,10 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
               />
             )}
           </AnimatePresence>
-          <span style={{ position: 'relative', display: 'flex' }}><Icon size={21} /></span>
+          <span style={{ position: 'relative', display: 'flex' }}>
+            <Icon size={21} />
+            {key === 'feed' && unreadCount > 0 && <UnreadDot />}
+          </span>
           <span style={{ position: 'relative', fontSize: 10, fontWeight: 600 }}>{label}</span>
         </div>
       </Link>

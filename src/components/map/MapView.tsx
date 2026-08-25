@@ -35,6 +35,7 @@ import type { TheaterEvent } from '@/types/admin'
 import { SEOUL_GU, SEOUL_DONG } from '@/data/seoul-areas'
 import { normalizeGenre } from '@/lib/genres'
 import { getRegionFromCity, getRegionFromCoords, REGION_BOUNDS } from '@/lib/regions'
+import { withJosa } from '@/lib/josa'
 import { getStoredRegion, setStoredRegion, subscribeStoredRegion } from '@/lib/regionStorage'
 import { useUIStore } from '@/store/uiStore'
 import { REPORT_CATEGORIES } from '@/lib/reports/types'
@@ -72,9 +73,12 @@ const EMPTY_MAP_SHOWTIMES: MapShowtime[] = []
 const EMPTY_THEATER_EVENTS: TheaterEvent[] = []
 const MAP_MIN_ZOOM = 7
 const MAP_MAX_ZOOM = 19
+/* 경계에 여유를 둔다 (2026-08-24) — 최소 줌에서 bounds 폭(8도)이 PC 지도 폭보다
+   좁으면 viscosity 때문에 팬이 통째로 잠겨 서쪽(서울)이 잘린 채 "왼쪽이 멈춘" 것처럼
+   보였다. 여백을 줘서 최소 줌에서도 전국이 도크에 안 가리고 들어온다. */
 const KOREA_MAP_BOUNDS: L.LatLngBoundsExpression = [
-  [32.8, 124.2],
-  [39.8, 132.2],
+  [31.8, 121.8],
+  [40.6, 134.6],
 ]
 
 /** 데스크톱 좌측 상시 도크 폭 — 검색 패널과 같은 폭(440 * 0.8) */
@@ -136,7 +140,7 @@ function isMapProjectionReady(map: LeafletMap) {
 
 // 동일 입력에 대해 renderToStaticMarkup 중복 호출 방지
 /** 핀 마크업 바꾸면 올려라 — 캐시 키에 들어가서 Fast Refresh로 모듈 상태가 남아도 옛 HTML을 안 쓴다 */
-const PIN_ICON_VERSION = 7
+const PIN_ICON_VERSION = 10 /* 관심 링 → 하트 뱃지, 관심 필터 dim 슬롯 (2026-08-24) */
 const _pinIconCache = new LRUCache<string, L.DivIcon>(800)
 
 function makePinIcon(
@@ -173,7 +177,7 @@ function makePinIcon(
   const safePosterOffsetX = selected ? 0 : finiteNumber(posterOffsetX)
   const forceMinOne = filtersActive && posterMovies.some(m => m.matchesFilter)
   const orderedMovies = sortPostersByPriority(posterMovies, fav ? { favoriteMovieIds: fav.movieIds, favoriteDirectors: fav.directors, bookingRank: fav.bookingRank } : undefined)
-  const { slots, overflowCount } = posterSlotsForZoom(orderedMovies, zoom, filtersActive, forceMinOne)
+  const { slots, overflowCount } = posterSlotsForZoom(orderedMovies, zoom, filtersActive, forceMinOne, !!favOnly)
   // 관심 필터만 켜진 상태에선 '일치'·'+N' 칩을 숨기고 하트 수만 보여준다 (2026-08-18)
   const favoriteOnlyMode = !!favOnly
   const matchCount = filtersActive && !favoriteOnlyMode ? posterMovies.filter(m => m.matchesFilter).length : undefined
@@ -211,7 +215,8 @@ function makePinIcon(
         favoriteMovieIds={favoriteMovieIds}
         favoriteDirectors={fav?.directors}
         favoriteCount={favCount}
-        hideOverflowChip={favoriteOnlyMode}
+        dimOverflowChip={favoriteOnlyMode}
+        hideMatchRing={favoriteOnlyMode}
       />
     )
     if (usePosterLeft) {
@@ -1080,6 +1085,9 @@ export default function MapView() {
     setFilters((f) => (f.regionId === id ? f : { ...f, regionId: id }))
   }), [])
   const [movieFilter, setMovieFilter] = useState<{ id: string; title: string } | null>(null)
+  /** 소식·관심 목록에서 들어와 지도 필터가 걸렸을 때 한 번 띄우는 안내 */
+  const [filterToastMessage, setFilterToastMessage] = useState('')
+  const [filterToastTrigger, setFilterToastTrigger] = useState(0)
   const [directorFilter, setDirectorFilter] = useState<{ name: string } | null>(null)
   const [panelStack, setPanelStack] = useState<DesktopPanelState[]>([])
   const desktopPanel = panelStack[panelStack.length - 1] ?? null
@@ -2476,6 +2484,55 @@ export default function MapView() {
     }
   }, [selectedId, closeSheet, flyToForTheater, isDesktopLayout, movieFilter, theaters])
 
+  /* 소식·관심 목록 팝오버가 "이걸 열어줘"라고 보낸 요청 처리 — 팝오버는 MapView 밖이라
+     패널 상태를 직접 못 건드린다. 처리 후 즉시 비워 같은 요청이 두 번 열리지 않게 한다. */
+  const mapFocus = useUIStore((s) => s.mapFocus)
+  const clearMapFocus = useUIStore((s) => s.clearMapFocus)
+  useEffect(() => {
+    if (!mapFocus) return
+    if (!isDesktopLayout) { clearMapFocus(); return }
+    if (mapFocus.type === 'theater') {
+      // 열려 있던 상세 패널을 먼저 닫는다 — 극장 시트가 같은 자리라 안 닫으면 가려진다
+      closeDesktopPanel()
+      handlePinClick(mapFocus.id)
+    } else if (mapFocus.type === 'movie') {
+      /* 패널만 열면 "이 영화 어디서 하지"에 답이 안 된다 — 지도도 그 영화 상영관만 남긴다.
+         autoMovieFilterRef를 세워두면 패널을 닫을 때 필터도 같이 풀린다(수동 지정과 구분). */
+      const title = mapFocus.title ?? movies.find((m) => m.id === mapFocus.id)?.title ?? ''
+      setMovieFilter({ id: mapFocus.id, title })
+      autoMovieFilterRef.current = true
+      openDesktopPanel({ type: 'movie', id: mapFocus.id })
+
+      /* 지역 필터가 걸려 있으면 영화 필터와 겹쳐 0곳이 될 수 있다 — 지도만 텅 비고 이유는 안 보인다.
+         그 지역에 상영이 없으면 지역을 풀어 준다(패널을 닫으면 원래 지역으로 되돌아간다). */
+      const region = filters.regionId
+      let clearedRegion = false
+      if (region) {
+        const screensInRegion = theaters.some((t) =>
+          getRegionFromCity(t.city ?? '') === region
+          && (theaterPosterMovies.get(t.id) ?? []).some((pm) => pm.id === mapFocus.id))
+        if (!screensInRegion) {
+          autoRegionRef.current = { applied: '', prev: region }
+          setStoredRegion(null)
+          clearedRegion = true
+        }
+      }
+
+      if (title) {
+        setFilterToastMessage(
+          clearedRegion ? `${withJosa(`「${title}」`, '은/는')} ${region}에 상영이 없어 지역을 풀고 전국에서 찾았어요`
+            : region ? `${region}에서 「${title}」 상영 극장만 표시했어요`
+            : `「${title}」 상영 극장만 지도에 표시했어요`,
+        )
+        setFilterToastTrigger((n) => n + 1)
+      }
+    } else {
+      openDesktopPanel({ type: 'director', name: mapFocus.name })
+    }
+    clearMapFocus()
+  }, [mapFocus, clearMapFocus, isDesktopLayout, openDesktopPanel, closeDesktopPanel, handlePinClick, movies, filters.regionId, theaters, theaterPosterMovies])
+
+
   const handleRecentItemClick = useCallback((item: RecentlyViewedEntry) => {
     if (!item.kind) return
     if (item.kind === 'movie') {
@@ -3171,6 +3228,7 @@ export default function MapView() {
     <div style={{ position: 'relative', width: '100%', height: '100dvh', overflow: 'hidden' }}>
       {/* 영화관 데이터 로딩 인디케이터 */}
       <Toast message="영화관 불러오는 중…" visible={theatersLoading} />
+      <Toast message={filterToastMessage} trigger={filterToastTrigger} duration={2600} />
       {/* iOS 키보드 트릭용 hidden dummy input — 항상 DOM에 존재 */}
       <input
         ref={dummyInputRef}

@@ -227,6 +227,15 @@ img {
 }
 @media (hover: hover) {
   .filter-chip:hover { background: var(--chip-bg-hover); }
+}
+
+/* 흰 필 칩(감독 칩 등) — 배경을 채우면 회색 버튼처럼 보여서, 카드류 hover 규칙(그림자 승격)로 뜬다 */
+.chip-lift { transition: box-shadow 150ms ease, transform 150ms ease; }
+@media (hover: hover) {
+  .chip-lift:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+}
+
+@media (hover: hover) {
   /* 눌림 피드백 — 레일 화살표처럼 자체 배경을 가진 원형 버튼에도 반응이 보이게 */
   .chip-raise:active { background-color: var(--color-neutral-300); }
 }
@@ -367,11 +376,11 @@ img {
 .pm-wrap > div:first-child {
   transition: transform 0.12s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 0.12s ease;
 }
-.pm-fav-ring {
-  /* 관심 테두리 — 포스터와 같은 확대 곡선으로 따라간다 (포스터만 커지면 테두리가 떨어져 보임) */
+.pm-fav-badge {
+  /* 관심 하트 뱃지 — 포스터와 같은 확대 곡선으로 따라간다 */
   transition: transform 0.12s cubic-bezier(0.34, 1.4, 0.64, 1);
 }
-.pm-wrap:hover .pm-fav-ring { transform: scale(1.08); }
+.pm-wrap:hover .pm-fav-badge { transform: scale(1.08); }
 .pm-wrap:hover > div:first-child {
   transform: scale(1.08);
   box-shadow: 0 0 0 2.5px var(--color-primary-base), 0 4px 12px rgba(0,0,0,0.28);
@@ -512,7 +521,7 @@ img {
   .pm-wrap > div:first-child { transition: none !important; }
   .pm-wrap:hover .pm-tip { display: none !important; }
   .pm-wrap:hover > div:first-child { transform: none !important; box-shadow: none !important; }
-  .pm-wrap:hover .pm-fav-ring { transform: none !important; }
+  .pm-wrap:hover .pm-fav-badge { transform: none !important; }
   .po-wrap:hover .po-list { display: none !important; }
   .leaflet-marker-icon:has(.pm-wrap:hover),
   .leaflet-marker-icon:has(.po-wrap:hover) { z-index: auto !important; }

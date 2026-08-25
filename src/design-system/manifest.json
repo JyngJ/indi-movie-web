@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-08-24T06:48:18.872Z",
-  "figmaDumpAt": "2026-08-24T06:47:24.967Z",
+  "generatedAt": "2026-08-24T11:43:38.542Z",
+  "figmaDumpAt": "2026-08-24T09:24:07.211Z",
   "tokenGroups": [
     {
       "title": "Neutral scale — 2.0 웜그레이 램프 (S가 양끝으로 상승하는 U자 곡선, H 27~40)",
@@ -919,6 +919,32 @@
       ]
     },
     {
+      "title": "소셜 로그인 브랜드 고정색 (카카오 디자인 가이드: 컨테이너 #FEE500, 심볼·라벨 85% 검정)",
+      "tokens": [
+        {
+          "name": "--color-brand-kakao",
+          "value": "#FEE500",
+          "comment": "",
+          "resolved": "#FEE500",
+          "figma": null
+        },
+        {
+          "name": "--color-brand-kakao-hover",
+          "value": "#F2DA00",
+          "comment": "",
+          "resolved": "#F2DA00",
+          "figma": null
+        },
+        {
+          "name": "--color-brand-kakao-text",
+          "value": "rgba(0, 0, 0, 0.85)",
+          "comment": "",
+          "resolved": "rgba(0, 0, 0, 0.85)",
+          "figma": null
+        }
+      ]
+    },
+    {
       "title": "Typography: Families",
       "tokens": [
         {
@@ -1636,6 +1662,139 @@
           "value": "#1F2747",
           "comment": "선택된 드롭다운 행 라벨 (primary/900)",
           "resolved": "#1F2747",
+          "figma": null
+        },
+        {
+          "name": "--chip-bg",
+          "value": "var(--color-surface-bg)",
+          "comment": "",
+          "resolved": "#FAF9F8",
+          "figma": null
+        },
+        {
+          "name": "--chip-bg-hover",
+          "value": "var(--color-neutral-200)",
+          "comment": "",
+          "resolved": "#EAE5E1",
+          "figma": null
+        },
+        {
+          "name": "--filter-chip-bg",
+          "value": "var(--color-surface-bg)",
+          "comment": "",
+          "resolved": "#FAF9F8",
+          "figma": null
+        },
+        {
+          "name": "--filter-chip-bg-hover",
+          "value": "var(--color-neutral-200)",
+          "comment": "눌린 면 — hover-raise의 raised와 동급",
+          "resolved": "#EAE5E1",
+          "figma": null
+        },
+        {
+          "name": "--filter-chip-bd",
+          "value": "var(--color-neutral-300)",
+          "comment": "",
+          "resolved": "#C6BFB9",
+          "figma": null
+        },
+        {
+          "name": "--filter-chip-on-bg",
+          "value": "var(--color-primary-subtle-l)",
+          "comment": "primary/100",
+          "resolved": "#ECEFF9",
+          "figma": null
+        },
+        {
+          "name": "--filter-chip-on-bg-hover",
+          "value": "var(--color-primary-200)",
+          "comment": "한 단계 진한 틴트",
+          "resolved": "#C4CCE9",
+          "figma": null
+        },
+        {
+          "name": "--filter-chip-on-bd",
+          "value": "var(--color-primary-base)",
+          "comment": "",
+          "resolved": "#404E81",
+          "figma": null
+        },
+        {
+          "name": "--filter-chip-open-bg",
+          "value": "var(--color-primary-subtle-l)",
+          "comment": "",
+          "resolved": "#ECEFF9",
+          "figma": null
+        },
+        {
+          "name": "--filter-chip-open-bg-hover",
+          "value": "var(--color-primary-200)",
+          "comment": "",
+          "resolved": "#C4CCE9",
+          "figma": null
+        },
+        {
+          "name": "--filter-chip-open-bd",
+          "value": "var(--color-primary-hover-l)",
+          "comment": "",
+          "resolved": "#2F3A65",
+          "figma": null
+        },
+        {
+          "name": "--filter-chip-fav-bg",
+          "value": "var(--color-error-tint)",
+          "comment": "",
+          "resolved": "#F5E1E0",
+          "figma": null
+        },
+        {
+          "name": "--filter-chip-fav-bg-hover",
+          "value": "var(--color-error-300)",
+          "comment": "피그마 error/300",
+          "resolved": "#E0AFAE",
+          "figma": null
+        },
+        {
+          "name": "--filter-chip-fav-bd",
+          "value": "var(--color-error-mid)",
+          "comment": "",
+          "resolved": "#BD4E4C",
+          "figma": null
+        },
+        {
+          "name": "--filter-chip-fav-text",
+          "value": "var(--color-error)",
+          "comment": "error/900",
+          "resolved": "#9B3331",
+          "figma": null
+        },
+        {
+          "name": "--filter-chip-fg",
+          "value": "var(--color-text-body)",
+          "comment": "neutral/700",
+          "resolved": "#58524B",
+          "figma": null
+        },
+        {
+          "name": "--filter-chip-on-fg",
+          "value": "var(--filter-chip-value)",
+          "comment": "primary/900",
+          "resolved": "#1F2747",
+          "figma": null
+        },
+        {
+          "name": "--filter-chip-open-fg",
+          "value": "var(--filter-chip-open-text)",
+          "comment": "primary/900",
+          "resolved": "#1F2747",
+          "figma": null
+        },
+        {
+          "name": "--filter-chip-label-weight",
+          "value": "600",
+          "comment": "피그마 Pretendard SemiBold",
+          "resolved": "600",
           "figma": null
         },
         {
@@ -5025,6 +5184,78 @@
       }
     },
     {
+      "name": "ConfirmDialog",
+      "file": "src/components/primitives/ConfirmDialog.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "open",
+          "type": "boolean",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "description",
+          "type": "ReactNode",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "confirmLabel",
+          "type": "string | undefined",
+          "optional": true,
+          "default": "'확인'",
+          "doc": ""
+        },
+        {
+          "name": "cancelLabel",
+          "type": "string | undefined",
+          "optional": true,
+          "default": "'취소'",
+          "doc": ""
+        },
+        {
+          "name": "danger",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": "false",
+          "doc": ""
+        },
+        {
+          "name": "busy",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": "false",
+          "doc": ""
+        },
+        {
+          "name": "onConfirm",
+          "type": "() => void",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "onCancel",
+          "type": "() => void",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        }
+      ],
+      "figmaSet": null,
+      "figma": null
+    },
+    {
       "name": "DirectorChip",
       "file": "src/components/primitives/DirectorChip.tsx",
       "doc": "",
@@ -5280,6 +5511,50 @@
           }
         ]
       }
+    },
+    {
+      "name": "FavoriteButton",
+      "file": "src/components/primitives/FavoriteButton.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "active",
+          "type": "boolean",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "onToggle",
+          "type": "() => void",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "variant",
+          "type": "\"ghost\" | \"overlay\" | undefined",
+          "optional": true,
+          "default": "'ghost'",
+          "doc": ""
+        },
+        {
+          "name": "size",
+          "type": "32 | 44 | 52 | undefined",
+          "optional": true,
+          "default": "44",
+          "doc": ""
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "optional": false,
+          "default": null,
+          "doc": "접근성 라벨 대상 (예: 영화 제목)"
+        }
+      ],
+      "figmaSet": null,
+      "figma": null
     },
     {
       "name": "FilterPill",
@@ -6184,6 +6459,117 @@
       }
     },
     {
+      "name": "KakaoLoginButton",
+      "file": "src/components/primitives/KakaoLoginButton.tsx",
+      "doc": "",
+      "props": [
+        {
+          "name": "loading",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": "false",
+          "doc": ""
+        },
+        {
+          "name": "label",
+          "type": "string | undefined",
+          "optional": true,
+          "default": "'카카오 로그인'",
+          "doc": ""
+        }
+      ],
+      "figmaSet": null,
+      "figma": null
+    },
+    {
+      "name": "MenuCard",
+      "file": "src/components/primitives/MenuList.tsx",
+      "doc": "설정 탭과 같은 카드형 메뉴 리스트 컨테이너.\n바깥 테두리는 뺀다(2026-08-20) — 행마다 구분선이 있고 흰 면이 회색 배경 위에 떠 있어\n테두리가 한 겹 더 붙으면 상자 안에 상자처럼 보였다.",
+      "props": [
+        {
+          "name": "children",
+          "type": "ReactNode",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "style",
+          "type": "CSSProperties | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        }
+      ],
+      "figmaSet": null,
+      "figma": null
+    },
+    {
+      "name": "MenuRow",
+      "file": "src/components/primitives/MenuList.tsx",
+      "doc": "메뉴 행 — href면 Link, onClick이면 button. last=true면 하단 보더 제거",
+      "props": [
+        {
+          "name": "icon",
+          "type": "ReactNode",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "description",
+          "type": "string | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "href",
+          "type": "string | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "onClick",
+          "type": "(() => void) | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "last",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "disabled",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "tone",
+          "type": "\"default\" | \"danger\" | undefined",
+          "optional": true,
+          "default": "'default'",
+          "doc": ""
+        }
+      ],
+      "figmaSet": null,
+      "figma": null
+    },
+    {
       "name": "MovieCardSkeleton",
       "file": "src/components/primitives/Skeleton.tsx",
       "doc": "",
@@ -6865,6 +7251,43 @@
       }
     },
     {
+      "name": "Switch",
+      "file": "src/components/primitives/Switch.tsx",
+      "doc": "온/오프 스위치 — 알림 설정 등 즉시 반영되는 토글.\n색·크기는 토큰만 쓴다. 체크박스를 시각적으로 감춰서 키보드·스크린리더 동작을 그대로 얻는다.",
+      "props": [
+        {
+          "name": "checked",
+          "type": "boolean",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "onChange",
+          "type": "(next: boolean) => void",
+          "optional": false,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "disabled",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": null,
+          "doc": ""
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "optional": false,
+          "default": null,
+          "doc": "스크린리더용 — 시각 라벨은 호출부(MenuRow 등)가 그린다"
+        }
+      ],
+      "figmaSet": null,
+      "figma": null
+    },
+    {
       "name": "TheaterCardSkeleton",
       "file": "src/components/primitives/Skeleton.tsx",
       "doc": "",
@@ -7005,5 +7428,48 @@
       }
     }
   ],
-  "drift": []
+  "drift": [
+    {
+      "kind": "component-unmapped",
+      "id": "ConfirmDialog",
+      "code": "src/components/primitives/ConfirmDialog.tsx",
+      "figma": null,
+      "note": "대응하는 피그마 컴포넌트 세트가 없다"
+    },
+    {
+      "kind": "component-unmapped",
+      "id": "FavoriteButton",
+      "code": "src/components/primitives/FavoriteButton.tsx",
+      "figma": null,
+      "note": "대응하는 피그마 컴포넌트 세트가 없다"
+    },
+    {
+      "kind": "component-unmapped",
+      "id": "KakaoLoginButton",
+      "code": "src/components/primitives/KakaoLoginButton.tsx",
+      "figma": null,
+      "note": "대응하는 피그마 컴포넌트 세트가 없다"
+    },
+    {
+      "kind": "component-unmapped",
+      "id": "MenuCard",
+      "code": "src/components/primitives/MenuList.tsx",
+      "figma": null,
+      "note": "대응하는 피그마 컴포넌트 세트가 없다"
+    },
+    {
+      "kind": "component-unmapped",
+      "id": "MenuRow",
+      "code": "src/components/primitives/MenuList.tsx",
+      "figma": null,
+      "note": "대응하는 피그마 컴포넌트 세트가 없다"
+    },
+    {
+      "kind": "component-unmapped",
+      "id": "Switch",
+      "code": "src/components/primitives/Switch.tsx",
+      "figma": null,
+      "note": "대응하는 피그마 컴포넌트 세트가 없다"
+    }
+  ]
 }

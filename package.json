@@ -28,7 +28,8 @@
     "audit:ui:check": "node scripts/audit/check-regression.mjs",
     "audit:writing": "node scripts/audit/audit-writing.mjs",
     "audit:writing:check": "node scripts/audit/check-writing.mjs",
-    "check:image-hosts": "node scripts/check-image-hosts.mjs"
+    "check:image-hosts": "node scripts/check-image-hosts.mjs",
+    "notify:favorites": "tsx --env-file=.env.local scripts/notify-favorites.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0",

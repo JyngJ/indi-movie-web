@@ -8,10 +8,12 @@ import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
 import { addDaysIso, toKstIsoDate } from '@/lib/date'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
 import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
+import { ExpandableSynopsis } from '@/components/domain/movieDetail/ExpandableSynopsis'
 import { ShowtimeCell } from '@/components/domain/ShowtimeCell'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import Image from 'next/image'
 import { useMovieTheaterShowtimes, useDirectorProfile } from '@/lib/supabase/queries'
+import { useFavorites } from '@/hooks/useFavorites'
 import type { MovieDetail } from '@/lib/supabase/queries'
 import { withFlagsRaw } from '@/lib/nations'
 import type { Showtime } from '@/types/api'
@@ -89,7 +91,15 @@ function ShowtimeChip({ st, selected, onClick }: { st: Showtime; selected?: bool
 /* ── DirectorChip (inline in hero) ────────────────────────────── */
 function DirectorChip({ name, photoUrl, onClick }: { name: string; photoUrl?: string; onClick: () => void }) {
   return (
-    <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px 8px 8px', borderRadius: 9999, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', cursor: 'pointer', minHeight: 'auto' }}>
+    <button
+      onClick={onClick}
+      className="chip-lift"
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px 8px 8px',
+        borderRadius: 9999, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)',
+        cursor: 'pointer', minHeight: 'auto',
+      }}
+    >
       <Avatar name={name} photoUrl={photoUrl} size={28} />
       <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)' }}>{name}</span>
       <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-primary-base)', fontWeight: 500 }}>감독 →</span>
@@ -122,6 +132,8 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
   const suppressResetOnDateChangeRef = useRef(false)
 
   const { data: theaterEntries = [], isLoading } = useMovieTheaterShowtimes(movie.id)
+  /* 관심 극장 — 이름 옆 하트(표시 전용, 해제는 극장 상세에서) + 목록 앞 정렬 (2026-08-24) */
+  const { isFavorite } = useFavorites()
 
   /* ── analytics: films 플로우 진입 시에도 지도 플로우(MovieDetailClient)와 동일하게 기록 ── */
   useEffect(() => {
@@ -208,10 +220,42 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
       .map((entry) => ({
         ...entry,
         showtimes: (entry.dateGroups.find((g) => g.date === selectedDate)?.showtimes ?? [])
-          .filter((st) => !bookableOnly || st.seatAvailable > 0),
+          /* 예매 가능 = 좌석이 남았고 아직 안 끝난 회차 — 상영 완료를 남기면 필터 이름이 거짓말이 된다 (2026-08-24) */
+          .filter((st) => {
+            if (!bookableOnly) return true
+            if (st.seatAvailable <= 0) return false
+            if (selectedDate !== dates[0]) return true
+            const now = new Date()
+            const nowMinutes = now.getHours() * 60 + now.getMinutes()
+            const [sh, sm] = st.showTime.split(':').map(Number)
+            const endMin = st.endTime
+              ? (() => { const [eh, em] = st.endTime!.split(':').map(Number); return eh * 60 + em })()
+              : sh * 60 + sm + 120
+            return endMin > nowMinutes
+          }),
       }))
       .filter((entry) => entry.showtimes.length > 0)
-  }, [theaterEntries, selectedDate, bookableOnly])
+      /* 오늘 회차가 전부 끝난 극장은 뒤로 — 지금 갈 수 있는 극장이 먼저.
+         종료 판정은 ShowtimeCell kind('ended')와 같은 기준. 나머지 순서는 유지(stable sort). */
+      .sort((a, b) => {
+        const favDiff = (isFavorite('theater', a.theaterId) ? 0 : 1) - (isFavorite('theater', b.theaterId) ? 0 : 1)
+        if (selectedDate !== dates[0]) return favDiff
+        const now = new Date()
+        const nowMinutes = now.getHours() * 60 + now.getMinutes()
+        const ended = (sts: typeof a.showtimes) => sts.every((st) => {
+          const [sh, sm] = st.showTime.split(':').map(Number)
+          const endMin = st.endTime
+            ? (() => { const [eh, em] = st.endTime!.split(':').map(Number); return eh * 60 + em })()
+            : sh * 60 + sm + 120
+          return endMin <= nowMinutes
+        })
+        const d = (ended(a.showtimes) ? 1 : 0) - (ended(b.showtimes) ? 1 : 0)
+        if (d !== 0) return d
+        /* 같은 등급 안에서는 관심 극장 먼저 (2026-08-24) */
+        return (isFavorite('theater', a.theaterId) ? 0 : 1) - (isFavorite('theater', b.theaterId) ? 0 : 1)
+      })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [theaterEntries, selectedDate, bookableOnly, dates, isFavorite])
 
   const totalTheaterCount = theaterEntries.length
   const { inRegion: inRegionEntries, otherRegion: otherRegionEntries } = useMemo(() => {
@@ -288,7 +332,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
     <FavoriteActionRow
       type="movie"
       id={movie.id}
-      style={{ paddingLeft: isDesktop ? 0 : 16, paddingRight: isDesktop ? 0 : 16, marginBottom: isDesktop ? 24 : 20, maxWidth: isDesktop ? 480 : undefined }}
+      style={{ paddingLeft: isDesktop ? 0 : 16, paddingRight: isDesktop ? 0 : 16, marginBottom: isDesktop ? 0 : 20, maxWidth: isDesktop ? 480 : undefined }}
       trailing={
         <Button variant="tertiary" size="md" onClick={handleShare} aria-label="공유" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
           <IcoShare />
@@ -298,6 +342,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
     />
   )
 
+  /* PC에서는 액션 행이 히어로 텍스트 컬럼 안(감독 칩 아래)에 붙는다 (2026-08-24 확정) */
   const heroSection = (
     <div style={{
       background: 'var(--color-surface-bg)',
@@ -313,8 +358,8 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
         )}
       </div>
 
-      {/* 텍스트 */}
-      <div style={{ flex: 1, minWidth: 0, paddingTop: 4 }}>
+      {/* 텍스트 — PC에서는 컬럼을 포스터 높이에 맞추고 액션 행을 바닥에 붙인다 (2026-08-24) */}
+      <div style={{ flex: 1, minWidth: 0, paddingTop: 4, ...(isDesktop ? { display: 'flex', flexDirection: 'column', minHeight: 300 } : {}) }}>
         <h1 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)', wordBreak: 'keep-all' }}>
           {movie.title}
         </h1>
@@ -342,6 +387,13 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
             ))}
           </div>
         </div>
+        {/* PC — 액션 행은 히어로 텍스트 컬럼의 바닥(포스터 하단 라인)에 붙이고,
+            오른쪽 끝은 본문 컬럼의 우측 세로선(사이드바 320 + gap 32 앞)에 정렬한다 (2026-08-24) */}
+        {isDesktop && (
+          <div style={{ marginTop: 'auto', paddingTop: 20, marginRight: 352 }}>
+            {actionRow}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -349,21 +401,52 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
   const synopsisSection = movie.synopsis ? (
     <div style={{ padding: isDesktop ? '0 0 20px' : '0 16px 16px', borderBottom: '1px solid var(--color-border)' }}>
       <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>시놉시스</p>
-      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.8, color: 'var(--color-text-body)', wordBreak: 'keep-all' }}>
-        {movie.synopsis}
-      </p>
+      <ExpandableSynopsis text={movie.synopsis} />
     </div>
   ) : null
 
+  /* PC 2칼럼 masonry — 카드 높이(회차 줄 수) 추정치로 짧은 칼럼에 순서대로 얹는다.
+     CSS columns는 세로 우선으로 순서가 깨져서(관심·미종료 정렬 무력화) 직접 나눈다 (2026-08-24) */
+  function splitTwoColumns(entries: typeof dayTheaters) {
+    const cols: [typeof dayTheaters, typeof dayTheaters] = [[], []]
+    const heights = [0, 0]
+    for (const e of entries) {
+      const rows = Math.max(1, Math.ceil(e.showtimes.length / 3))
+      const h = 96 + rows * 118
+      const i = heights[0] <= heights[1] ? 0 : 1
+      cols[i].push(e)
+      heights[i] += h + 16
+    }
+    return cols
+  }
+
+  function renderColumns(entries: typeof dayTheaters) {
+    if (!isDesktop) return entries.map(renderTheaterCard)
+    const [a, b] = splitTwoColumns(entries)
+    return (
+      <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>{a.map(renderTheaterCard)}</div>
+        <div style={{ flex: 1, minWidth: 0 }}>{b.map(renderTheaterCard)}</div>
+      </div>
+    )
+  }
+
   function renderTheaterCard(entry: (typeof dayTheaters)[number]) {
     return (
-      <div key={entry.theaterId} style={{ borderRadius: 16, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', overflow: 'hidden' }}>
+      <div key={entry.theaterId} style={{ borderRadius: 16, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', overflow: 'hidden', marginBottom: isDesktop ? 16 : 12 }}>
         <button
           onClick={() => router.push(`/films/theater/${entry.theaterId}`)}
           style={{ width: '100%', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, padding: '16px 16px 12px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', minHeight: 'auto', borderBottom: '1px solid var(--color-border)' }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>
-            <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)', display: 'block', lineHeight: 1.3 }}>{entry.theaterName}</span>
+            <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 8, lineHeight: 1.3 }}>
+              {entry.theaterName}
+              {isFavorite('theater', entry.theaterId) && (
+                <svg width={14} height={14} viewBox="0 0 24 24" fill="var(--color-error-mid)" aria-label="관심 극장" style={{ flexShrink: 0 }}>
+                  <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                </svg>
+              )}
+            </span>
             <div style={{ marginTop: 4, display: 'flex', alignItems: 'flex-start', gap: 4, color: 'var(--color-text-sub)', fontSize: 12 }}>
               <IcoPin /><span style={{ wordBreak: 'keep-all', lineHeight: 1.45 }}>{entry.theaterAddress}</span>
             </div>
@@ -426,7 +509,8 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
         <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
           상영 영화관 및 일정
         </span>
-        <MapCtaButton fullWidth={false} onClick={() => router.push(mapUrlWithSelection())}>
+        {/* 섹션 헤더 보조 CTA는 sm — 감독 상세와 동일 문법 (2026-08-24) */}
+        <MapCtaButton fullWidth={false} size="sm" onClick={() => router.push(mapUrlWithSelection())}>
           지도에서 필터로 보기
         </MapCtaButton>
       </div>
@@ -453,7 +537,8 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
       </div>
 
       {/* 극장별 목록 */}
-      <div style={{ padding: isDesktop ? '16px 0 64px' : `12px 16px ${selectedShowtimeData ? 148 : 52}px`, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {/* PC는 극장 카드 2칼럼 masonry(columns) — 그리드로 하면 카드 높이 차만큼 빈 공간이 남는다 (2026-08-24) */}
+      <div style={{ padding: isDesktop ? '16px 0 64px' : `12px 16px ${selectedShowtimeData ? 148 : 52}px` }}>
         {isLoading ? (
           <div style={{ height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-caption)', fontSize: 13 }}>불러오는 중…</div>
         ) : dayTheaters.length === 0 ? (
@@ -463,53 +548,26 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
             {inRegionEntries.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '16px 0', fontSize: 13, color: 'var(--color-text-caption)' }}>{regionId} 지역 상영 정보가 없어요</div>
             ) : (
-              inRegionEntries.map(renderTheaterCard)
+              renderColumns(inRegionEntries)
             )}
             {otherRegionEntries.length > 0 && (
               <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0' }}>
+                {/* 지역 구분선 — 안 보인다는 피드백으로 여백·글자 키움 (2026-08-24). 그리드 전체 폭 차지 */}
+                <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 12, margin: isDesktop ? '40px 0 16px' : '24px 0 8px' }}>
                   <div style={{ flex: 1, height: 1, backgroundColor: 'var(--color-border)' }} />
-                  <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)', fontWeight: 500, whiteSpace: 'nowrap' }}>{regionId} 외 지역 영화관</span>
+                  <span style={{ fontSize: 14, color: 'var(--color-text-sub)', fontWeight: 700, whiteSpace: 'nowrap' }}>{regionId} 외 지역 영화관</span>
                   <div style={{ flex: 1, height: 1, backgroundColor: 'var(--color-border)' }} />
                 </div>
-                {otherRegionEntries.map(renderTheaterCard)}
+                {renderColumns(otherRegionEntries)}
               </>
             )}
           </>
         ) : (
-          dayTheaters.map(renderTheaterCard)
+          <>{renderColumns(dayTheaters)}</>
         )}
       </div>
     </div>
   )
-
-  const detailInfoSection = (
-    <div>
-      <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>상세 정보</p>
-      <div style={{ borderRadius: 12, border: '1px solid var(--color-border)', overflow: 'hidden' }}>
-        {[
-          { key: '국가', value: movie.nation ? withFlagsRaw(movie.nation) : undefined },
-          { key: '개봉', value: movie.year ? String(movie.year) : undefined },
-          { key: '상영 시간', value: movie.runtimeMinutes ? `${movie.runtimeMinutes}분` : undefined },
-          { key: '장르', value: movie.genre.join(', ') || undefined },
-        ].filter((r) => r.value).map((row, i, arr) => (
-          <div key={row.key} style={{ display: 'flex', alignItems: 'center', padding: '12px 16px', borderBottom: i < arr.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
-            <span style={{ width: 72, flexShrink: 0, fontSize: 12, color: 'var(--color-text-sub)', fontWeight: 500 }}>{row.key}</span>
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)' }}>{row.value}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-
-  const directorSideCard = movie.director.length > 0 ? (
-    <div>
-      <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>감독</p>
-      {movie.director.map((name) => (
-        <DirectorSideCard key={name} name={name} onClick={() => router.push(`/films/director/${encodeURIComponent(name)}`)} />
-      ))}
-    </div>
-  ) : null
 
   const desktopBookingCard = selectedShowtimeData ? (
     <div style={{ borderRadius: 16, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', boxShadow: '0 6px 24px color-mix(in srgb, var(--color-primary-base) 55%, transparent)', overflow: 'hidden' }}>
@@ -567,23 +625,18 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
         <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 var(--gutter)' }}>
           {/* hero */}
           {heroSection}
-          {actionRow}
 
-          {/* 2-column layout */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 32, alignItems: 'flex-start' }}>
-            {/* main */}
-            <div>
-              {synopsisSection}
-              {showtimesSection}
-            </div>
-            {/* sidebar */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 20, paddingTop: 8, position: 'sticky', top: 68 }}>
-              {desktopBookingCard}
-              {directorSideCard}
-              {detailInfoSection}
-            </div>
-          </div>
+          {/* 사이드바 폐지 (2026-08-24) — 감독 카드·상세 정보는 히어로(감독 칩·메타·장르)와
+              전부 중복이었다. 회차 선택 카드만 우하단 플로팅으로 남긴다. */}
+          {synopsisSection}
+          {showtimesSection}
         </div>
+        {selectedShowtimeData && typeof document !== 'undefined' && createPortal(
+          <div style={{ position: 'fixed', right: 40, bottom: 40, width: 320, zIndex: 100 }}>
+            {desktopBookingCard}
+          </div>,
+          document.body
+        )}
       </div>
     )
   }
@@ -593,7 +646,10 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
       <DetailTopBar crumbLabel="영화" crumbHref="/films" title={movie.title} isDesktop={false} trailing={<RegionFilterWidget onRegionChange={setRegionId} />} />
       {heroSection}
       {actionRow}
+      {/* 섹션 디바이더 — 8px raised 밴드 (피그마 상세 통일 시안, 2026-08-24) */}
+      <div aria-hidden style={{ height: 8, backgroundColor: 'var(--color-surface-raised)' }} />
       {synopsisSection}
+      <div aria-hidden style={{ height: 8, backgroundColor: 'var(--color-surface-raised)' }} />
       {showtimesSection}
       <div style={{ height: 'env(safe-area-inset-bottom)' }} />
       {selectedShowtimeData && typeof document !== 'undefined' && createPortal(
@@ -641,19 +697,3 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
 }
 
 /* ── 감독 사이드카드 ──────────────────────────────────────────────── */
-function DirectorSideCard({ name, onClick }: { name: string; onClick: () => void }) {
-  const { data: profile } = useDirectorProfile(name)
-  return (
-    <button
-      onClick={onClick}
-      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 12, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', cursor: 'pointer', textAlign: 'left', minHeight: 'auto', marginBottom: 8 }}
-    >
-      <Avatar name={name} photoUrl={profile?.photoUrl} size={48} />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{name}</div>
-        <div style={{ marginTop: 4, fontSize: 'var(--text-badge)', color: 'var(--color-primary-base)', fontWeight: 500 }}>감독 페이지 보기 →</div>
-      </div>
-      <IcoChevronRight />
-    </button>
-  )
-}

@@ -145,11 +145,6 @@
   --color-brand-kakao-hover: #F2DA00;
   --color-brand-kakao-text:  rgba(0, 0, 0, 0.85);
 
-  /* ── Multiplex (핀 전용, 텍스트 미사용) ── */
-  --color-cgv:   #E30613;
-  --color-mega:  #6C1E9F;
-  --color-lotte: #ED1C24;
-
   /* ── Typography: Families ── */
   /* display(KIMM): 제목·간판 전용. Bold(700)/Light(300) 2종.
      본문 금지. 큰 제목·극장명·영화명·지도 라벨 등 "간판처럼 보여야 하는" 곳에만 Bold 사용.

@@ -200,7 +200,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
     ],
     usage: [
       { kind: 'do', rule: '카드 안 요소 간격은 spacing/3(12), 카드 사이는 spacing/4(16) 이상을 확보합니다.' },
-      { kind: 'dont', rule: '카드 안에 카드를 넣지 않습니다.', instead: '내부를 나눠야 하면 구분선(--color-border)이나 여백으로 층을 만듭니다.' },
+      { kind: 'dont', rule: '카드 안에 카드를 넣지 않습니다 — 같은 높이의 흰 면이 겹치면 위계가 무너집니다. 하위 묶음이 필요하면 눌린 트레이(neutral-100 음각 면)를 깔고 그 위에 올립니다. 상영 시간표(ShowtimeGroupCard)의 흰 셀이 그 예외 문법입니다: 카드 → 음각 트레이 → 셀로 한 번 꺼졌다 올라오므로 카드 중첩이 아닙니다.' },
     ],
     a11y: [
       { title: '키보드', desc: 'onClick을 넘기면 role="button"과 tabIndex 0이 함께 붙습니다. 카드 전체가 하나의 클릭 타깃이므로 안에 또 다른 버튼을 두면 초점이 두 번 멈춥니다.' },
@@ -219,6 +219,17 @@ export const GUIDES: Record<string, ComponentGuide> = {
     ],
     a11y: [
       { title: '레이블 연결', desc: 'label을 넘기면 htmlFor로 입력과 묶입니다. label 없이 쓸 때는 id를 직접 지정하고 바깥 레이블과 연결합니다 — 자동 생성되는 id는 레이블 문자열에서 만들어지므로 label이 없으면 id도 없습니다.' },
+    ],
+  },
+
+  Switch: {
+    intro: '켜짐/꺼짐을 즉시 바꾸는 토글입니다. 누르는 순간 저장까지 끝나는 설정(알림 켜기 등)에만 쓰고, 저장 버튼이 따로 있는 폼에서는 쓰지 않습니다.',
+    specs: [
+      { title: '크기', desc: '트랙 44×26, 노브 20. 켜짐 면은 primary/base, 꺼짐 면은 neutral/300입니다.' },
+    ],
+    usage: [
+      { kind: 'do', rule: '레이블은 항상 왼쪽 행(제목·설명)이 갖고, 토글은 상태만 표현합니다.' },
+      { kind: 'dont', rule: '탐색·이동에 쓰지 않습니다 — 토글은 설정값 변경 전용입니다. 화면 전환은 MenuRow, 상태 필터는 Chip이 맡습니다.' },
     ],
   },
 

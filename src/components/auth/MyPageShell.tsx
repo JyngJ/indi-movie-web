@@ -24,7 +24,9 @@ export function MyPageShell({
       style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100dvh',
+        /* height 고정 + 내부 스크롤 — minHeight면 문서가 스크롤돼 헤더가 같이 올라간다 (2026-08-24) */
+        height: '100dvh',
+        overflow: 'hidden',
         paddingLeft: isDesktop ? GLOBAL_NAV_DESKTOP_WIDTH : 0,
         paddingBottom: isDesktop ? 0 : `calc(${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`,
         backgroundColor: 'var(--color-surface-bg)',
@@ -32,7 +34,10 @@ export function MyPageShell({
     >
       <SettingsHeader title={title} onBack={onBack} trailing={trailing} />
       {/* 데스크톱: 본문 컬럼(560)을 가운데 — 상영작 섹션과 동일 문법. 모바일은 풀폭 */}
-      <div style={{ flex: 1, overflowY: 'auto', width: '100%', maxWidth: 560, margin: isDesktop ? '0 auto' : 0, paddingBottom: 24, display: 'flex', flexDirection: 'column' }}>{children}</div>
+      {/* 스크롤 컨테이너는 block이어야 한다 — flex column이면 자식들이 flex-shrink로
+          찌그러져 스크롤 대신 행이 잘린다 (2026-08-24). 세로 채움이 필요한 자식은
+          minHeight:'100%'를 스스로 쓴다. */}
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', width: '100%', maxWidth: 560, margin: isDesktop ? '0 auto' : 0, paddingBottom: 24 }}>{children}</div>
     </div>
   )
 }

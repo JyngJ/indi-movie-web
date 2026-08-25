@@ -327,9 +327,9 @@ function MovieTheatersTab({
   )
 
   const sectionDivider = (label: string) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '32px 0 12px' }}>
       <div style={{ flex: 1, height: 1, backgroundColor: 'var(--color-border)' }} />
-      <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)', fontWeight: 500, whiteSpace: 'nowrap' }}>{label}</span>
+      <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-sub)', whiteSpace: 'nowrap' }}>{label}</span>
       <div style={{ flex: 1, height: 1, backgroundColor: 'var(--color-border)' }} />
     </div>
   )

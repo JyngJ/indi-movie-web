@@ -17,8 +17,11 @@ export function Chip({ selected = false, onDismiss, children, className = '', on
   return (
     <button
       type="button"
-      className={`inline-flex items-center border transition-colors duration-150 ${className}`}
+      className={`inline-flex items-center border transition-colors duration-150 filter-chip ${className}`}
       style={{
+        /* 호버는 filter-chip 클래스(--chip-bg/-hover)가 그린다 — 인라인 bg로 박으면 hover가 못 이긴다 */
+        ['--chip-bg' as string]: selected ? 'var(--color-primary-subtle-l)' : 'var(--color-surface-bg)',
+        ['--chip-bg-hover' as string]: selected ? 'var(--color-primary-subtle-l)' : 'var(--color-surface-raised)',
         /* height 대신 padding으로 세로 크기 제어 — 전역 button min-height(44) 무력화 필수 */
         minHeight: 'unset',
         paddingTop: 4,
@@ -30,7 +33,6 @@ export function Chip({ selected = false, onDismiss, children, className = '', on
         fontWeight: 500,
         lineHeight: 1.2,
         gap: 4,
-        backgroundColor: selected ? 'var(--color-primary-subtle-l)' : 'var(--color-surface-bg)',
         color: selected ? 'var(--color-primary-text)' : 'var(--color-text-body)',
         borderColor: selected ? 'var(--color-primary-base)' : 'var(--color-neutral-300)',
         ...externalStyle,

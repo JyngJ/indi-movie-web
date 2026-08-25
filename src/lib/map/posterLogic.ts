@@ -13,6 +13,8 @@ export interface TheaterPosterMovie {
 
 export interface PosterSlot {
   movie?: TheaterPosterMovie
+  /** 필터 불일치지만 자리에 남긴 포스터 — 반투명으로 그린다 (관심 필터 모드) */
+  dimmed?: boolean
 }
 
 /** 줌 용량만큼 보여줄 포스터와, 자리에 못 들어간 나머지 편수 */
@@ -99,17 +101,25 @@ export function posterSlotsForZoom(
   zoom: number,
   filtersActive = false,
   forceMinOne = false,
+  /** true면 불일치 영화를 제외하지 않고 뒤로 보내 dimmed로 남긴다 (관심 필터: 지우는 대신 반투명) */
+  keepNonMatching = false,
 ): PosterSlotSet {
   const rawCapacity = posterCountForZoom(zoom)
   const capacity = forceMinOne && rawCapacity === 0 ? 1 : rawCapacity
   if (capacity === 0 || movies.length === 0) return EMPTY_SLOTS
 
-  // 필터 활성 시엔 매칭되는 영화만 — 안 맞는 영화는 dim 처리해서 같이 보여주지 않고 아예 제외한다
-  const sorted = filtersActive ? movies.filter((m) => m.matchesFilter) : movies
+  // 필터 활성 시엔 매칭되는 영화만 — 관심 필터(keepNonMatching)에서는 제외 대신
+  // 일치를 앞으로 보내고 나머지를 dimmed로 남긴다 (2026-08-24)
+  const sorted = !filtersActive
+    ? movies
+    : keepNonMatching
+      ? [...movies.filter((m) => m.matchesFilter), ...movies.filter((m) => !m.matchesFilter)]
+      : movies.filter((m) => m.matchesFilter)
   if (sorted.length === 0) return EMPTY_SLOTS
 
   // 마지막 칸을 어둡게 덮던 오버플로우 슬롯 폐지 (2026-08-10) — 용량만큼 온전히 보여주고
   // 남는 편수는 카드 우상단 칩으로 뺀다. 포스터를 가리지 않아 같은 자리에서 한 편 더 보인다.
   const visible = sorted.slice(0, capacity)
-  return { slots: visible.map((m) => ({ movie: m })), overflowCount: sorted.length - visible.length }
+  const dim = (m: TheaterPosterMovie) => filtersActive && keepNonMatching && !m.matchesFilter
+  return { slots: visible.map((m) => ({ movie: m, ...(dim(m) ? { dimmed: true } : {}) })), overflowCount: sorted.length - visible.length }
 }

@@ -4,10 +4,11 @@ import { useState, useEffect, useMemo } from 'react'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useRouter } from 'next/navigation'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
-import { FavoriteActionButton } from '@/components/domain/favorites/FavoriteActionRow'
+import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
 import Image from 'next/image'
 import { useMovies, useActiveMovieIds, useDirectorProfile } from '@/lib/supabase/queries'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
+import { toSecureImageUrl } from '@/lib/media/imageUrl'
 import type { Movie } from '@/types/api'
 import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWidget'
 import { shareAndTrack } from '@/lib/analytics/shareTracking'
@@ -22,19 +23,10 @@ function useIsDesktop() {
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
 const IcoChevronLeft = () => <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
 const IcoChevronRight = () => <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
-const IcoChevronDown = ({ flipped }: { flipped?: boolean }) => <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ transform: flipped ? 'rotate(180deg)' : undefined, transition: 'transform 200ms' }}><path d="M6 9l6 6 6-6" /></svg>
 const IcoShare = () => <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>
 
 type SortKey = 'newest' | 'oldest'
 
-/* ── MiniPoster ─────────────────────────────────────────────────── */
-function MiniPoster({ src, title }: { src?: string; title?: string }) {
-  return (
-    <div style={{ width: 52, height: 76, borderRadius: 8, overflow: 'hidden', flexShrink: 0, backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)' }}>
-      {src ? <img src={src} alt={title ? `${title} 포스터` : ''} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> : <div style={{ width: '100%', height: '100%', background: 'var(--color-neutral-800)' }} />}
-    </div>
-  )
-}
 
 /* ── NowPlayingPoster ────────────────────────────────────────────── */
 function NowPlayingPoster({ movie, isDesktop, onClick }: { movie: Movie; isDesktop: boolean; onClick: () => void }) {
@@ -57,25 +49,30 @@ function NowPlayingPoster({ movie, isDesktop, onClick }: { movie: Movie; isDeskt
 }
 
 /* ── FilmographyRow ──────────────────────────────────────────────── */
-function FilmographyRow({ movie, isLast, isActive, onClick, isDesktop }: { movie: Movie; isLast: boolean; isActive: boolean; onClick: () => void; isDesktop: boolean }) {
+function FilmographyCell({ movie, isActive, onClick, isDesktop }: { movie: Movie; isActive: boolean; onClick: () => void; isDesktop: boolean }) {
+  /* 상영작 탭 전체 그리드(AllMoviesGrid)와 같은 문법 — 포스터 쫙 + 아래 제목·메타 (2026-08-24) */
   return (
     <button
       onClick={onClick}
-      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: isDesktop ? '14px 18px' : '12px 16px', background: 'transparent', border: 'none', borderBottom: isLast ? 'none' : '1px solid var(--color-border)', width: '100%', cursor: 'pointer', textAlign: 'left', minHeight: 'auto' }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 8, background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', minHeight: 'auto' }}
     >
-      <MiniPoster src={movie.posterUrl} title={movie.title} />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: isActive ? 'var(--color-primary-base)' : 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: isDesktop ? 360 : 180 }}>
+      <div className="hover-lift" style={{ width: '100%', aspectRatio: '2/3', overflow: 'hidden', position: 'relative', background: 'var(--color-neutral-800)' }}>
+        {movie.posterUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={toSecureImageUrl(movie.posterUrl)} alt={movie.title} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        )}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: isDesktop ? 'var(--text-title)' : 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {normalizeTitle(movie.title)}
           </span>
           {isActive && <span style={{ height: 18, padding: '0 8px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', fontSize: 'var(--text-badge)', fontWeight: 700, color: 'var(--color-on-accent)', backgroundColor: 'var(--color-primary-base)', flexShrink: 0 }}>상영중</span>}
-        </div>
-        <div style={{ marginTop: 4, fontSize: 12, color: 'var(--color-text-caption)' }}>
+        </span>
+        <span style={{ fontSize: 12, color: 'var(--color-text-caption)' }}>
           {[movie.year, movie.genre[0]].filter(Boolean).join(' · ')}
-        </div>
+        </span>
       </div>
-      <IcoChevronRight />
     </button>
   )
 }
@@ -85,8 +82,6 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
   const router = useRouter()
   const isDesktop = useIsDesktop()
   const [sort, setSort] = useState<SortKey>('newest')
-  const [expanded, setExpanded] = useState(false)
-  const COLLAPSED_COUNT = 5
 
   const { data: movies = [], isLoading } = useMovies()
   const { data: activeIds = [] } = useActiveMovieIds()
@@ -100,8 +95,8 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
   }, [movies, directorName, sort])
 
   const nowPlaying = useMemo(() => directorMovies.filter((m) => activeIdSet.has(m.id)), [directorMovies, activeIdSet])
-  const visibleMovies = expanded ? directorMovies : directorMovies.slice(0, COLLAPSED_COUNT)
-  const hiddenCount = directorMovies.length - COLLAPSED_COUNT
+  /* 접기(N편 더 보기)는 뺐다 (2026-08-24) — 필모 십수 편을 굳이 접을 이유가 없다 */
+  const visibleMovies = directorMovies
 
   if (isLoading) {
     return <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}><Toast message="불러오는 중…" visible /></div>
@@ -109,6 +104,33 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
 
   const navBar = (
     <DetailTopBar crumbLabel="영화" crumbHref="/films" title={`감독 · ${directorName}`} isDesktop={isDesktop} trailing={<RegionFilterWidget />} />
+  )
+
+  /* 액션 행 — 영화 상세와 같은 문법: [♡ 관심 감독 등록(늘어남)][공유] (2026-08-24).
+     지도 CTA는 현재 상영작 헤더 행으로 이동 — 지도 필터는 상영작이 있을 때만 의미가 있다. */
+  const actionRow = (
+    <FavoriteActionRow
+      type="director"
+      id={directorName}
+      style={{ padding: isDesktop ? '0' : '0 var(--gutter)', marginBottom: isDesktop ? 0 : 12, maxWidth: isDesktop ? 480 : undefined }}
+      trailing={
+        <Button
+          variant="tertiary" size="md" aria-label="공유"
+          onClick={() => {
+            void shareAndTrack({
+              payload: { title: directorName, url: window.location.href },
+              source: 'films_director_detail',
+              scope: 'page',
+              properties: { director_name: directorName },
+            })
+          }}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
+        >
+          <IcoShare />
+          공유
+        </Button>
+      }
+    />
   )
 
   const heroSection = (
@@ -121,8 +143,8 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
       {/* 아바타 */}
       <Avatar name={directorName} photoUrl={profile?.photoUrl} size={isDesktop ? 160 : 100} />
 
-      {/* 텍스트 */}
-      <div style={{ flex: 1, minWidth: 0, paddingTop: 4 }}>
+      {/* 텍스트 — PC에서는 컬럼을 아바타 높이에 맞추고 액션 행을 바닥에 붙인다 (2026-08-24) */}
+      <div style={{ flex: 1, minWidth: 0, paddingTop: 4, ...(isDesktop ? { display: 'flex', flexDirection: 'column', minHeight: 160 } : {}) }}>
       <h1 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)' }}>
         {directorName}
       </h1>
@@ -137,31 +159,16 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
         )}
       </div>
 
-      {/* CTA 버튼 */}
-      <div style={{ marginTop: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <MapCtaButton fullWidth={false} onClick={() => router.push(`/map?director=${encodeURIComponent(directorName)}`)}>
-          지도에서 필터로 보기
-        </MapCtaButton>
-        <FavoriteActionButton type="director" id={directorName} />
-        <IconButton
-          variant="overlay"
-          size={44}
-          aria-label="공유"
-          onClick={() => {
-            void shareAndTrack({
-              payload: { title: directorName, url: window.location.href },
-              source: 'films_director_detail',
-              scope: 'page',
-              properties: { director_name: directorName },
-            })
-          }}
-        >
-          <IcoShare />
-        </IconButton>
-      </div>
+      {/* PC — 액션 행은 히어로 텍스트 컬럼의 바닥(아바타 하단 라인)에 맞춘다 (2026-08-24) */}
+      {isDesktop && (
+        <div style={{ marginTop: 'auto', paddingTop: 16, maxWidth: 480 }}>
+          {actionRow}
+        </div>
+      )}
       </div>
     </div>
   )
+
 
   return (
     <div className="page-slide-in" style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
@@ -169,6 +176,9 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
 
       <div style={{ maxWidth: isDesktop ? 1000 : undefined, margin: isDesktop ? '0 auto' : undefined }}>
         {heroSection}
+        {!isDesktop && actionRow}
+        {/* 섹션 디바이더 — 8px raised 밴드 (피그마 상세 통일 시안, 2026-08-24) */}
+        {!isDesktop && <div aria-hidden style={{ height: 8, backgroundColor: 'var(--color-surface-raised)' }} />}
 
         {/* 소개 */}
         {profile?.bio && (
@@ -180,10 +190,15 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
 
         {/* 현재 상영작 */}
         {nowPlaying.length > 0 && (
-          <div style={{ padding: '20px var(--gutter) 0' }}>
-            <p style={{ margin: '0 0 16px', fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-              현재 상영작 <span style={{ fontSize: 16, color: 'var(--color-primary-base)' }}>{nowPlaying.length}편</span>
-            </p>
+          <div style={{ padding: isDesktop ? '56px 0 0' : '24px var(--gutter) 0' }}>
+            <div style={{ margin: '0 0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                현재 상영작 <span style={{ fontSize: 16, color: 'var(--color-primary-base)' }}>{nowPlaying.length}편</span>
+              </p>
+              <MapCtaButton fullWidth={false} size="sm" onClick={() => router.push(`/map?director=${encodeURIComponent(directorName)}`)}>
+                지도에서 필터로 보기
+              </MapCtaButton>
+            </div>
             <div className="no-scrollbar" style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 4 }}>
               {nowPlaying.map((m) => (
                 <NowPlayingPoster
@@ -197,10 +212,11 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
           </div>
         )}
 
+        {!isDesktop && <div aria-hidden style={{ height: 8, backgroundColor: 'var(--color-surface-raised)', marginTop: 20 }} />}
         {/* 작품 목록 */}
-        <div style={{ padding: isDesktop ? '20px 0 64px' : '20px 0 52px' }}>
+        <div style={{ padding: isDesktop ? '64px 0 64px' : '24px 0 52px' }}>
           {/* 헤더 */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 var(--gutter) 12px', borderBottom: '1px solid var(--color-border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isDesktop ? '0 0 12px' : '0 var(--gutter) 12px' }}>
             <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)' }}>
               작품 목록 <span style={{ fontSize: 16, color: 'var(--color-text-caption)', fontWeight: 400 }}>{directorMovies.length}편</span>
             </span>
@@ -216,30 +232,16 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
           {directorMovies.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '48px 0', fontSize: 13, color: 'var(--color-text-caption)' }}>작품 정보가 없어요</div>
           ) : (
-            <div style={{ backgroundColor: 'var(--color-surface-card)' }}>
-              {visibleMovies.map((m, i) => (
-                <FilmographyRow
+            <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)', gap: isDesktop ? 20 : 12, padding: isDesktop ? '16px 0 0' : '12px var(--gutter) 0' }}>
+              {visibleMovies.map((m) => (
+                <FilmographyCell
                   key={m.id}
                   movie={m}
-                  isLast={i === visibleMovies.length - 1 && (expanded || hiddenCount <= 0)}
                   isActive={activeIdSet.has(m.id)}
                   onClick={() => router.push(`/films/movie/${m.id}`)}
                   isDesktop={isDesktop}
                 />
               ))}
-              {hiddenCount > 0 && (
-                /* 면 색이 Button tertiary와 같다 — 목록 하단에 붙는 형태라 위 구분선만 얹는다 */
-                <Button
-                  variant="tertiary"
-                  size="sm"
-                  fullWidth
-                  onClick={() => setExpanded(!expanded)}
-                  style={{ borderTop: '1px solid var(--color-border)', borderRadius: 0 }}
-                >
-                  <IcoChevronDown flipped={expanded} />
-                  {expanded ? '접기' : `${hiddenCount}편 더 보기`}
-                </Button>
-              )}
             </div>
           )}
         </div>
