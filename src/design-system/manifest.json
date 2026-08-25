@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-08-24T17:20:34.171Z",
-  "figmaDumpAt": "2026-08-24T09:24:07.211Z",
+  "generatedAt": "2026-08-25T03:45:48.610Z",
+  "figmaDumpAt": "2026-08-25T03:43:33.446Z",
   "tokenGroups": [
     {
       "title": "Neutral scale — 2.0 웜그레이 램프 (S가 양끝으로 상승하는 U자 곡선, H 27~40)",
@@ -5252,8 +5252,52 @@
           "doc": ""
         }
       ],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/ConfirmDialog",
+      "figma": {
+        "name": "2.0/ConfirmDialog",
+        "axes": {
+          "Tone": [
+            "default",
+            "danger"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "Tone": "default"
+            },
+            "w": 380,
+            "h": 216,
+            "radius": 16,
+            "pad": [
+              24,
+              24,
+              24,
+              24
+            ],
+            "gap": 8,
+            "dir": "VERTICAL",
+            "fill": "#FFFFFF"
+          },
+          {
+            "props": {
+              "Tone": "danger"
+            },
+            "w": 380,
+            "h": 216,
+            "radius": 16,
+            "pad": [
+              24,
+              24,
+              24,
+              24
+            ],
+            "gap": 8,
+            "dir": "VERTICAL",
+            "fill": "#FFFFFF"
+          }
+        ]
+      }
     },
     {
       "name": "DirectorChip",
@@ -5500,8 +5544,52 @@
           "doc": ""
         }
       ],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/Divider",
+      "figma": {
+        "name": "2.0/Divider",
+        "axes": {
+          "Orientation": [
+            "horizontal",
+            "vertical"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "Orientation": "horizontal"
+            },
+            "w": 240,
+            "h": 57,
+            "radius": null,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 12,
+            "dir": "VERTICAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "Orientation": "vertical"
+            },
+            "w": 145,
+            "h": 20,
+            "radius": null,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 12,
+            "dir": "HORIZONTAL",
+            "fill": null
+          }
+        ]
+      }
     },
     {
       "name": "EmptyState",
@@ -5558,8 +5646,52 @@
           "doc": ""
         }
       ],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/EmptyState",
+      "figma": {
+        "name": "2.0/EmptyState",
+        "axes": {
+          "Variant": [
+            "inline",
+            "block"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "Variant": "inline"
+            },
+            "w": 360,
+            "h": 94,
+            "radius": null,
+            "pad": [
+              40,
+              16,
+              40,
+              16
+            ],
+            "gap": 8,
+            "dir": "VERTICAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "Variant": "block"
+            },
+            "w": 360,
+            "h": 212,
+            "radius": null,
+            "pad": [
+              48,
+              16,
+              48,
+              16
+            ],
+            "gap": 12,
+            "dir": "VERTICAL",
+            "fill": null
+          }
+        ]
+      }
     },
     {
       "name": "FabRound",
@@ -5662,8 +5794,74 @@
           "doc": "접근성 라벨 대상 (예: 영화 제목)"
         }
       ],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/FavoriteButton",
+      "figma": {
+        "name": "2.0/FavoriteButton",
+        "axes": {
+          "Variant": [
+            "ghost",
+            "overlay"
+          ],
+          "State": [
+            "on",
+            "off"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "Variant": "ghost",
+              "State": "on"
+            },
+            "w": 44,
+            "h": 44,
+            "radius": 9999,
+            "pad": null,
+            "gap": null,
+            "dir": null,
+            "fill": null
+          },
+          {
+            "props": {
+              "Variant": "ghost",
+              "State": "off"
+            },
+            "w": 44,
+            "h": 44,
+            "radius": 9999,
+            "pad": null,
+            "gap": null,
+            "dir": null,
+            "fill": null
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "State": "on"
+            },
+            "w": 44,
+            "h": 44,
+            "radius": 9999,
+            "pad": null,
+            "gap": null,
+            "dir": null,
+            "fill": "#000000"
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "State": "off"
+            },
+            "w": 44,
+            "h": 44,
+            "radius": 9999,
+            "pad": null,
+            "gap": null,
+            "dir": null,
+            "fill": "#000000"
+          }
+        ]
+      }
     },
     {
       "name": "FilterPill",
@@ -6078,8 +6276,81 @@
           "doc": "의미를 가진 아이콘이면 라벨을 준다. 없으면 aria-hidden 처리된다."
         }
       ],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/Icon",
+      "figma": {
+        "name": "2.0/Icon",
+        "axes": {
+          "Size": [
+            "xs",
+            "sm",
+            "md",
+            "lg",
+            "xl"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "Size": "xs"
+            },
+            "w": 12,
+            "h": 12,
+            "radius": null,
+            "pad": null,
+            "gap": null,
+            "dir": null,
+            "fill": null
+          },
+          {
+            "props": {
+              "Size": "sm"
+            },
+            "w": 14,
+            "h": 14,
+            "radius": null,
+            "pad": null,
+            "gap": null,
+            "dir": null,
+            "fill": null
+          },
+          {
+            "props": {
+              "Size": "md"
+            },
+            "w": 16,
+            "h": 16,
+            "radius": null,
+            "pad": null,
+            "gap": null,
+            "dir": null,
+            "fill": null
+          },
+          {
+            "props": {
+              "Size": "lg"
+            },
+            "w": 20,
+            "h": 20,
+            "radius": null,
+            "pad": null,
+            "gap": null,
+            "dir": null,
+            "fill": null
+          },
+          {
+            "props": {
+              "Size": "xl"
+            },
+            "w": 24,
+            "h": 24,
+            "radius": null,
+            "pad": null,
+            "gap": null,
+            "dir": null,
+            "fill": null
+          }
+        ]
+      }
     },
     {
       "name": "IconButton",
@@ -6652,8 +6923,52 @@
           "doc": ""
         }
       ],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/KakaoLoginButton",
+      "figma": {
+        "name": "2.0/KakaoLoginButton",
+        "axes": {
+          "State": [
+            "default",
+            "loading"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "State": "default"
+            },
+            "w": 360,
+            "h": 52,
+            "radius": 12,
+            "pad": [
+              0,
+              16,
+              0,
+              16
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "#FEE500"
+          },
+          {
+            "props": {
+              "State": "loading"
+            },
+            "w": 360,
+            "h": 52,
+            "radius": 12,
+            "pad": [
+              0,
+              16,
+              0,
+              16
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "#FEE500"
+          }
+        ]
+      }
     },
     {
       "name": "ListRow",
@@ -6731,8 +7046,94 @@
           "doc": ""
         }
       ],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/ListRow",
+      "figma": {
+        "name": "2.0/ListRow",
+        "axes": {
+          "Density": [
+            "default",
+            "compact"
+          ],
+          "Last": [
+            "false",
+            "true"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "Density": "default",
+              "Last": "false"
+            },
+            "w": 360,
+            "h": 68,
+            "radius": null,
+            "pad": [
+              16,
+              16,
+              16,
+              16
+            ],
+            "gap": 12,
+            "dir": "HORIZONTAL",
+            "fill": "#FFFFFF"
+          },
+          {
+            "props": {
+              "Density": "default",
+              "Last": "true"
+            },
+            "w": 360,
+            "h": 67,
+            "radius": null,
+            "pad": [
+              16,
+              16,
+              16,
+              16
+            ],
+            "gap": 12,
+            "dir": "HORIZONTAL",
+            "fill": "#FFFFFF"
+          },
+          {
+            "props": {
+              "Density": "compact",
+              "Last": "false"
+            },
+            "w": 360,
+            "h": 60,
+            "radius": null,
+            "pad": [
+              12,
+              16,
+              12,
+              16
+            ],
+            "gap": 12,
+            "dir": "HORIZONTAL",
+            "fill": "#FFFFFF"
+          },
+          {
+            "props": {
+              "Density": "compact",
+              "Last": "true"
+            },
+            "w": 360,
+            "h": 59,
+            "radius": null,
+            "pad": [
+              12,
+              16,
+              12,
+              16
+            ],
+            "gap": 12,
+            "dir": "HORIZONTAL",
+            "fill": "#FFFFFF"
+          }
+        ]
+      }
     },
     {
       "name": "MenuCard",
@@ -6754,8 +7155,28 @@
           "doc": ""
         }
       ],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/MenuCard",
+      "figma": {
+        "name": "2.0/MenuCard",
+        "axes": {},
+        "variants": [
+          {
+            "props": {},
+            "w": 360,
+            "h": 135,
+            "radius": 12,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "VERTICAL",
+            "fill": "#FFFFFF"
+          }
+        ]
+      }
     },
     {
       "name": "MenuRow",
@@ -6819,8 +7240,94 @@
           "doc": ""
         }
       ],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/MenuRow",
+      "figma": {
+        "name": "2.0/MenuRow",
+        "axes": {
+          "Tone": [
+            "default",
+            "danger"
+          ],
+          "Last": [
+            "false",
+            "true"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "Tone": "default",
+              "Last": "false"
+            },
+            "w": 360,
+            "h": 68,
+            "radius": null,
+            "pad": [
+              16,
+              16,
+              16,
+              16
+            ],
+            "gap": 12,
+            "dir": "HORIZONTAL",
+            "fill": "#FFFFFF"
+          },
+          {
+            "props": {
+              "Tone": "default",
+              "Last": "true"
+            },
+            "w": 360,
+            "h": 67,
+            "radius": null,
+            "pad": [
+              16,
+              16,
+              16,
+              16
+            ],
+            "gap": 12,
+            "dir": "HORIZONTAL",
+            "fill": "#FFFFFF"
+          },
+          {
+            "props": {
+              "Tone": "danger",
+              "Last": "false"
+            },
+            "w": 360,
+            "h": 53,
+            "radius": null,
+            "pad": [
+              16,
+              16,
+              16,
+              16
+            ],
+            "gap": 12,
+            "dir": "HORIZONTAL",
+            "fill": "#FFFFFF"
+          },
+          {
+            "props": {
+              "Tone": "danger",
+              "Last": "true"
+            },
+            "w": 360,
+            "h": 52,
+            "radius": null,
+            "pad": [
+              16,
+              16,
+              16,
+              16
+            ],
+            "gap": 12,
+            "dir": "HORIZONTAL",
+            "fill": "#FFFFFF"
+          }
+        ]
+      }
     },
     {
       "name": "MovieCardSkeleton",
@@ -7537,8 +8044,74 @@
           "doc": "스크린리더용 — 시각 라벨은 호출부(MenuRow 등)가 그린다"
         }
       ],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/Switch",
+      "figma": {
+        "name": "2.0/Switch",
+        "axes": {
+          "State": [
+            "on",
+            "off"
+          ],
+          "Disabled": [
+            "false",
+            "true"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "State": "on",
+              "Disabled": "false"
+            },
+            "w": 44,
+            "h": 24,
+            "radius": 9999,
+            "pad": null,
+            "gap": null,
+            "dir": null,
+            "fill": "#404E81"
+          },
+          {
+            "props": {
+              "State": "on",
+              "Disabled": "true"
+            },
+            "w": 44,
+            "h": 24,
+            "radius": 9999,
+            "pad": null,
+            "gap": null,
+            "dir": null,
+            "fill": "#404E81"
+          },
+          {
+            "props": {
+              "State": "off",
+              "Disabled": "false"
+            },
+            "w": 44,
+            "h": 24,
+            "radius": 9999,
+            "pad": null,
+            "gap": null,
+            "dir": null,
+            "fill": "#C6BFB9"
+          },
+          {
+            "props": {
+              "State": "off",
+              "Disabled": "true"
+            },
+            "w": 44,
+            "h": 24,
+            "radius": 9999,
+            "pad": null,
+            "gap": null,
+            "dir": null,
+            "fill": "#C6BFB9"
+          }
+        ]
+      }
     },
     {
       "name": "Tabs",
@@ -7588,8 +8161,52 @@
           "doc": ""
         }
       ],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/Tabs",
+      "figma": {
+        "name": "2.0/Tabs",
+        "axes": {
+          "Variant": [
+            "underline",
+            "pill"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "Variant": "underline"
+            },
+            "w": 320,
+            "h": 43,
+            "radius": null,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "Variant": "pill"
+            },
+            "w": 252,
+            "h": 54,
+            "radius": null,
+            "pad": [
+              12,
+              16,
+              12,
+              16
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": null
+          }
+        ]
+      }
     },
     {
       "name": "TheaterCardSkeleton",
@@ -7732,83 +8349,5 @@
       }
     }
   ],
-  "drift": [
-    {
-      "kind": "component-unmapped",
-      "id": "ConfirmDialog",
-      "code": "src/components/primitives/ConfirmDialog.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    },
-    {
-      "kind": "component-unmapped",
-      "id": "Divider",
-      "code": "src/components/primitives/Divider.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    },
-    {
-      "kind": "component-unmapped",
-      "id": "EmptyState",
-      "code": "src/components/primitives/EmptyState.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    },
-    {
-      "kind": "component-unmapped",
-      "id": "FavoriteButton",
-      "code": "src/components/primitives/FavoriteButton.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    },
-    {
-      "kind": "component-unmapped",
-      "id": "Icon",
-      "code": "src/components/primitives/Icon.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    },
-    {
-      "kind": "component-unmapped",
-      "id": "KakaoLoginButton",
-      "code": "src/components/primitives/KakaoLoginButton.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    },
-    {
-      "kind": "component-unmapped",
-      "id": "ListRow",
-      "code": "src/components/primitives/ListRow.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    },
-    {
-      "kind": "component-unmapped",
-      "id": "MenuCard",
-      "code": "src/components/primitives/MenuList.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    },
-    {
-      "kind": "component-unmapped",
-      "id": "MenuRow",
-      "code": "src/components/primitives/MenuList.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    },
-    {
-      "kind": "component-unmapped",
-      "id": "Switch",
-      "code": "src/components/primitives/Switch.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    },
-    {
-      "kind": "component-unmapped",
-      "id": "Tabs",
-      "code": "src/components/primitives/Tabs.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    }
-  ]
+  "drift": []
 }
