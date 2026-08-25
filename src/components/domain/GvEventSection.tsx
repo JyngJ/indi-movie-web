@@ -5,6 +5,7 @@ import type { GvEvent } from '@/data/gv-events'
 import { gvEventTypeColor } from '@/lib/gv/adapter'
 import { scrollRailBy } from '@/lib/ui/railScroll'
 import { ScrollNavButton } from '@/components/primitives'
+import { toSecureImageUrl } from '@/lib/media/imageUrl'
 
 
 function sortKey(time: string): number {
@@ -163,7 +164,7 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
                     {ev.posterUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={ev.posterUrl}
+                        src={toSecureImageUrl(ev.posterUrl)}
                         alt={ev.movie}
                         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
                       />

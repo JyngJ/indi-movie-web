@@ -457,11 +457,11 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
         {isLoading ? (
           <div style={{ height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-caption)', fontSize: 13 }}>불러오는 중…</div>
         ) : dayTheaters.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px 0', fontSize: 13, color: 'var(--color-text-caption)' }}>이 날 상영 정보가 없습니다</div>
+          <div style={{ textAlign: 'center', padding: '40px 0', fontSize: 13, color: 'var(--color-text-caption)' }}>이 날 상영 정보가 없어요</div>
         ) : regionId ? (
           <>
             {inRegionEntries.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '16px 0', fontSize: 13, color: 'var(--color-text-caption)' }}>{regionId} 지역 상영 정보가 없습니다</div>
+              <div style={{ textAlign: 'center', padding: '16px 0', fontSize: 13, color: 'var(--color-text-caption)' }}>{regionId} 지역 상영 정보가 없어요</div>
             ) : (
               inRegionEntries.map(renderTheaterCard)
             )}

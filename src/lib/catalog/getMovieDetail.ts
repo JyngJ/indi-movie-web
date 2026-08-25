@@ -1,6 +1,7 @@
 import { unstable_cache } from 'next/cache'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import type { MovieDetail } from '@/types/api'
+import { toSecureImageUrl } from '@/lib/media/imageUrl'
 
 /**
  * 영화 상세 조회 — 단일 진입점.
@@ -32,7 +33,7 @@ function mapRow(data: unknown): MovieDetail {
     title: String(row.title),
     originalTitle: row.original_title ? String(row.original_title) : undefined,
     year: Number(row.year),
-    posterUrl: row.poster_url ? String(row.poster_url) : undefined,
+    posterUrl: row.poster_url ? toSecureImageUrl(String(row.poster_url)) : undefined,
     genre: (row.genre as string[] | null) ?? [],
     director: (row.director as string[] | null) ?? [],
     nation: row.nation ? String(row.nation) : undefined,

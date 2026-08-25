@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { ITEM_VARIANTS, type AnimatedGroupPreset } from './presets'
 import { useRevealGroup } from './RevealGroup'
+import { registerRevealRescue } from './revealRescue'
 
 interface RevealItemProps {
   children: ReactNode
@@ -82,12 +83,25 @@ export function RevealItem({
     const io = new IntersectionObserver(
       ([e]) => {
         /* 위로 이미 지나간 것(top < 0)도 노출로 친다 */
-        if (e.isIntersecting || e.boundingClientRect.top < 0) { setSelfInView(true); io.disconnect() }
+        if (e.boundingClientRect.top < 0) { setSelfInView(true); io.disconnect(); return }
+        /* 항목이 루트보다 크면 도달 가능한 최대 비율이 1보다 작다. 그 상한을 기준으로
+           임계를 낮춰 잡는다 — 안 그러면 낮은 창에서 영영 재생되지 않는다. */
+        const rootH = e.rootBounds ? e.rootBounds.height : 0
+        const h = e.boundingClientRect.height
+        const cap = h > 0 && rootH > 0 ? Math.min(1, rootH / h) : 1
+        const need = Math.min(threshold, cap * 0.6)
+        if (e.isIntersecting && e.intersectionRatio >= need) { setSelfInView(true); io.disconnect() }
       },
-      { threshold, rootMargin },
+      /* threshold에 0을 반드시 함께 넣는다. IO는 "임계 교차" 때만 콜백을 주는데, 항목이
+         (rootMargin 적용된) 루트보다 크면 비율이 threshold에 영영 못 닿아 콜백 자체가 오지
+         않는다 — 창 높이가 낮은 비율에서 행이 통째로 opacity 0으로 남던 원인.
+         0을 넣으면 한 픽셀이라도 걸치는 순간 콜백이 오고, 아래 판정이 처리한다. */
+      { threshold: [0, threshold], rootMargin },
     )
     io.observe(el)
-    return () => io.disconnect()
+    /* IO 콜백이 아예 안 오는 경우(한 프레임에 지나침·문서 hidden) 대비 */
+    const unregister = registerRevealRescue(el, () => setSelfInView(true))
+    return () => { io.disconnect(); unregister() }
   }, [grouped, selfInView, rootMargin, threshold])
 
   const [timedOut, setTimedOut] = useState(false)

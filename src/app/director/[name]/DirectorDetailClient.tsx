@@ -8,9 +8,10 @@ import type { Movie } from '@/types/api'
 import { Toast, IconButton, SortToggle } from '@/components/primitives'
 import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
+import { toSecureImageUrl } from '@/lib/media/imageUrl'
 
 function useIsDesktopDetail() {
-  return useMediaQuery('(min-width: 1280px)')
+  return useMediaQuery('(min-width: 1024px)')   /* 레일(1024)과 기준 통일 */
 }
 
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
@@ -77,7 +78,7 @@ function ProfileHero({
         boxShadow: '0 8px 24px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10)',
       }}>
         {photoUrl ? (
-          <img src={photoUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
+          <img src={toSecureImageUrl(photoUrl)} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
         ) : (
           <svg width={48} height={48} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
@@ -228,7 +229,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
   if (isLoading) {
     return (
       <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
-        <Toast message="데이터 불러오는 중…" visible />
+        <Toast message="불러오는 중…" visible />
       </div>
     )
   }
@@ -320,14 +321,14 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
                 fontWeight: 700, 
                 verticalAlign: 'text-bottom',
                 margin: '0 4px'
-              }}>상영중</span> 태그가 표시됩니다.
+              }}>상영중</span> 태그가 붙어요
             </div>
           </div>
 
           {/* 리스트 */}
           {directorMovies.length === 0 ? (
             <div style={{ textAlign: 'center', padding: isDesktop ? '56px 0' : '40px 0 0', fontSize: 13, color: 'var(--color-text-caption)' }}>
-              작품 정보가 없습니다
+              작품 정보가 없어요
             </div>
           ) : (
             <div style={{

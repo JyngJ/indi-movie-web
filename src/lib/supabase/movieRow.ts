@@ -1,4 +1,5 @@
 import type { Movie } from '@/types/api'
+import { toSecureImageUrl } from '@/lib/media/imageUrl'
 
 /**
  * Supabase `movies` row → Movie 변환 모음.
@@ -17,7 +18,7 @@ export function movieRowToMovie(row: Record<string, unknown>): Movie {
     title: String(row.title),
     originalTitle: row.original_title ? String(row.original_title) : undefined,
     year: Number(row.year),
-    posterUrl: row.poster_url ? String(row.poster_url) : undefined,
+    posterUrl: row.poster_url ? toSecureImageUrl(String(row.poster_url)) : undefined,
     genre: (row.genre as string[] | null) ?? [],
     director: (row.director as string[] | null) ?? [],
     nation: row.nation ? String(row.nation) : undefined,
@@ -35,7 +36,7 @@ export function rowToMovie(movieRaw: Record<string, unknown>): Movie {
     title: String(movieRaw.title),
     originalTitle: movieRaw.original_title != null ? String(movieRaw.original_title) : undefined,
     year: Number(movieRaw.year ?? 2000),
-    posterUrl: movieRaw.poster_url != null ? String(movieRaw.poster_url) : undefined,
+    posterUrl: movieRaw.poster_url != null ? toSecureImageUrl(String(movieRaw.poster_url)) : undefined,
     genre: (movieRaw.genre as string[]) ?? [],
     director: (movieRaw.director as string[]) ?? [],
     nation: movieRaw.nation != null ? String(movieRaw.nation) : undefined,

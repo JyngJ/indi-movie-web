@@ -530,7 +530,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
           </div>
         ) : movieShowtimeGroups.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px 0', fontSize: 13, color: 'var(--color-text-caption)' }}>
-            이 날 상영 정보가 없습니다
+            이 날 상영 정보가 없어요
           </div>
         ) : (
           <div className="reveal-rise" style={isDesktop ? { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 0, columnGap: 16 } : {}}>

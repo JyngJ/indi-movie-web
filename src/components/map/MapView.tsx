@@ -57,6 +57,7 @@ import { springFlyTo, springFlyToBounds, springActive, setSpringSettledCallback,
 import { PosterGrid } from './PosterGrid'
 import { ViewportTracker, ZoomSlider, OffScreenTracker, MapRefSetter, MapInteractionTracker, IcoPlus, IcoMinus, IcoLocate, IcoSun, IcoMoon } from './MapControls'
 import { SettingsPanel } from './SettingsPanel'
+import { toSecureImageUrl } from '@/lib/media/imageUrl'
 
 const SEARCH_CROSS_RESULT_LIMIT = 5
 const STATION_BOUNDS_PADDING = 0.25
@@ -2808,7 +2809,7 @@ export default function MapView() {
                 {movie.posterUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={movie.posterUrl}
+                    src={toSecureImageUrl(movie.posterUrl)}
                     alt={`${movie.title} 포스터`}
                     style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                   />
@@ -2855,7 +2856,7 @@ export default function MapView() {
                 {movie.originalTitle && (
                   <div style={{
                     marginTop: 4,
-                                        fontSize: 'var(--text-bask-meta)',
+                    fontSize: 'var(--text-meta)',
                     fontStyle: 'normal',
                     fontWeight: 400,
                     color: 'var(--color-text-caption)',

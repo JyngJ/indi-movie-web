@@ -227,6 +227,8 @@ img {
 }
 @media (hover: hover) {
   .filter-chip:hover { background: var(--chip-bg-hover); }
+  /* 눌림 피드백 — 레일 화살표처럼 자체 배경을 가진 원형 버튼에도 반응이 보이게 */
+  .chip-raise:active { background-color: var(--color-neutral-300); }
 }
 
 /* 이미 눌린 면(레일 등) 위에서는 raised가 배경과 동색 — 흰 카드로 떠오르게 */

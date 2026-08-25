@@ -1,5 +1,7 @@
 # HANDOFF — 디자인 2.0 리팩터 (feature/design-refactor)
 
+> **[스테일] 2026-08-12 salvage PR #271로 이 브랜치의 유효분은 main에 반영 완료.** 이 문서는 히스토리 보존용 — 새 작업은 `docs/HANDOFF-figma-design-system.md`를 읽을 것.
+
 > 세션 인수인계 문서. 새 세션은 이 파일 + `docs/DESIGN.md`(2.0 전면 개정본) + `AGENTS.md`부터 읽을 것.
 > 마지막 갱신: 2026-08-05 (커밋 `1877a5b`)
 

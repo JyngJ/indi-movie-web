@@ -7,6 +7,7 @@ import { getDirectorScreenings } from '@/lib/seo/getDirectorScreenings'
 import { toFaqSchema } from '@/lib/seo/toFaqSchema'
 import { toBreadcrumbSchema } from '@/lib/seo/toBreadcrumbSchema'
 import { ogImageUrl } from '@/lib/og/cards'
+import { Toast } from '@/components/primitives'
 
 export const revalidate = 3600
 
@@ -18,6 +19,7 @@ export async function generateMetadata({ params }: { params: Promise<{ name: str
   const title = `${directorName} 감독 영화 상영시간표 | 영화볼지도`
   /* 상영 편수를 문장에 넣는다 — 답변형 AI는 구체적 수치가 든 문장을 인용한다 */
   const data = await getDirectorScreenings(directorName)
+  if (data.films.length === 0) notFound()
   const nowShowing = new Set(data.screenings.map((s) => s.movieId)).size
   const description = nowShowing > 0
     ? `${directorName} 감독 작품 ${data.films.length}편 중 ${nowShowing}편이 전국 독립·예술영화관에서 상영 중입니다. 극장별 상영 시간과 예매 정보를 확인하세요.`
@@ -40,7 +42,9 @@ export default async function FilmsDirectorDetailPage({ params }: { params: Prom
   const seoData = await getDirectorScreenings(directorName)
   /* 감독명은 URL에서 그대로 오므로 아무 문자열이나 페이지가 생긴다.
      작품이 하나도 없으면 존재하지 않는 감독이다 — 빈 페이지를 색인 대상으로
-     남기면 임의 문자열마다 thin page가 무한히 생성된다. */
+     남기면 임의 문자열마다 thin page가 무한히 생성된다.
+     loading.tsx는 두지 않는다 — 있으면 스트리밍이 200으로 먼저 시작돼 이 notFound()가
+     상태코드를 못 바꾸고 '200 + noindex'로 남는다. */
   if (seoData.films.length === 0) notFound()
 
   const breadcrumbSchema = toBreadcrumbSchema([
@@ -55,11 +59,13 @@ export default async function FilmsDirectorDetailPage({ params }: { params: Prom
     {
       question: `${directorName} 감독 영화는 어디서 볼 수 있나요?`,
       answer: nowShowing.length > 0
+        // writing-audit-ignore — SEO 메타·스키마 문구는 문어체 유지
         ? `${theaterNames.join(', ')}에서 상영합니다. 각 극장의 상영 시간과 예매 링크는 영화볼지도 극장 페이지에서 확인할 수 있습니다.`
-        : `현재 전국 독립·예술영화관에 잡힌 ${directorName} 감독 작품의 상영 일정은 없습니다. 영화볼지도는 상영 시간표를 매일 갱신하므로 새 상영이 열리면 확인할 수 있습니다.`,
+        : `현재 전국 독립·예술영화관에 잡힌 ${directorName} 감독 작품의 상영 일정이 없어요. 상영 시간표는 매일 갱신되니 새 상영이 열리면 여기서 확인할 수 있어요.`,
     },
     {
       question: `${directorName} 감독의 작품은 몇 편인가요?`,
+      // writing-audit-ignore — SEO 메타·스키마 문구는 문어체 유지
       answer: `영화볼지도에 등록된 ${directorName} 감독의 작품은 ${seoData.films.length}편입니다.`,
     },
   ])
@@ -75,7 +81,7 @@ export default async function FilmsDirectorDetailPage({ params }: { params: Prom
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <DirectorSeoContent directorName={directorName} data={seoData} />
-      <Suspense>
+      <Suspense fallback={<Toast message="불러오는 중…" visible />}>
         <FilmsDirectorDetailClient directorName={directorName} />
       </Suspense>
     </>

@@ -53,15 +53,17 @@ export function MovieCardSkeleton() {
   )
 }
 
-// 극장 카드용 프리셋
+// 극장 카드용 프리셋 — 영화 상세의 "상영중인 영화관" 카드와 같은 문법:
+// 카드 면(r12 + 보더) 안에 극장명 · 주소 · 상영 시간 칩 줄
 export function TheaterCardSkeleton() {
   return (
-    <div className="flex gap-3 p-4">
-      <Skeleton width={48} height={48} rounded="lg" />
-      <div className="flex-1 flex flex-col gap-2">
-        <Skeleton width="60%" height={16} />
-        <Skeleton width="80%" height={13} />
-        <Skeleton width="40%" height={13} />
+    <div className="rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface-card)] p-4 flex flex-col gap-3">
+      <Skeleton width="55%" height={16} />
+      <Skeleton width="35%" height={12} />
+      <div className="flex gap-2">
+        <Skeleton width={68} height={32} rounded="sm" />
+        <Skeleton width={68} height={32} rounded="sm" />
+        <Skeleton width={68} height={32} rounded="sm" />
       </div>
     </div>
   )

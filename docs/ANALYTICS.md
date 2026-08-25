@@ -142,3 +142,12 @@ Type C, theater fan:
   - PostHog Live Events: `theater sheet opened`, `movie detail viewed`, `booking clicked` 포함 `map pin clicked`, `search result selected`, `session intent classified`, `map filter changed`, `curation movie selected`, Autocapture, Pageview 등 실시간 수신 확인. `posthog.init()`은 `instrumentation-client.ts`(Next.js 16 전용 파일, 클라이언트 시작 시 자동 실행)에 있음 — `src/` grep만으로는 안 보임.
   - GA4 Realtime: `map_pin_clicked`, `theater_sheet_opened`, `session_intent_classified`, `first_visit`, `map_filter_changed`, `map_viewed` 등 이벤트명·화면 조회수 수신 확인 (이벤트명은 `gaEventName()`이 공백을 `_`로 치환).
   - 퍼널 핵심 3종(`theater sheet opened` → `movie detail viewed` → `booking clicked`) 전부 PostHog·GA4 양쪽에서 확인됨.
+
+## 포폴 유입 (/p) · 내부 트래픽 제외 (2026-08-22)
+
+- `/p`는 쿠키 두 개를 심고 홈으로 보낸다: `vref=pf`(30분, 태깅 창)와 `vref_entry=1`(5분, 진입 이벤트 1회 신호).
+- 유입 **수**는 `portfolio entry` 이벤트로 센다. `visit_ref`는 "그 방문에 뭘 봤나"를 보는 태그일 뿐 카운트용이 아니다.
+- `visit_ref`는 `register_for_session`으로 **세션 한정** 등록한다. 예전에는 `register()`(localStorage 영구)를 써서, `/p`를 한 번 누른 브라우저의 이후 모든 방문이 pf로 태깅됐다 — 90일치 pf 이벤트 386건이 전부 개발자 본인이었다. 부팅 때 `unregister('visit_ref')`로 이미 박힌 영구 등록분을 걷어낸다.
+- **내 트래픽 빼는 법: 브라우저마다 `?internal=1`로 한 번 접속.** person 속성 `$internal_or_test_user=true`가 영구 저장되고, PostHog 프로젝트의 `Internal / Test users` 코호트가 이걸 보고 거른다. 인사이트에서 "내부/테스트 사용자 제외"만 켜면 빠진다. 해제는 `?internal=0`.
+- IP 기반 제외는 쓰지 말 것 — 3주에 IP가 7개(집 2 + 모바일 IPv6 4+) 나와서 계속 샌다.
+- person 속성은 이벤트 적재 시점 값으로 굳는다(person-on-events). 그래서 `?internal=1`은 **앞으로의** 이벤트에만 적용되고 과거는 안 바뀐다.

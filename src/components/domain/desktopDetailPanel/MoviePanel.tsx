@@ -15,6 +15,7 @@ import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 import { PanelShell } from './PanelShell'
 import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
 import { IcoUser, IcoChevronRight, IcoPin } from './icons'
+import { toSecureImageUrl } from '@/lib/media/imageUrl'
 
 /* ── 영화 상세 패널 ── */
 export function MoviePanel({
@@ -55,7 +56,7 @@ export function MoviePanel({
     return (
       <PanelShell onClose={onClose} onBack={onBack} embedded={embedded}>
         <div style={{ height: 200 }}>
-          <Toast message="데이터 불러오는 중…" visible />
+          <Toast message="불러오는 중…" visible />
         </div>
       </PanelShell>
     )
@@ -64,7 +65,7 @@ export function MoviePanel({
     return (
       <PanelShell onClose={onClose} onBack={onBack} embedded={embedded} title="영화 정보">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200, fontSize: 13, color: 'var(--color-text-caption)' }}>
-          영화를 찾을 수 없습니다
+          영화를 찾을 수 없어요
         </div>
       </PanelShell>
     )
@@ -83,7 +84,7 @@ export function MoviePanel({
         <div style={{ flexShrink: 0, width: 90, height: 135 }}>
           {movie.posterUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={movie.posterUrl} alt={`${movie.title} 포스터`} style={{ width: 90, height: 135, borderRadius: 0, objectFit: 'cover', display: 'block', boxShadow: 'inset 0 0 0 1px var(--comp-poster-border)' }} />
+            <img src={toSecureImageUrl(movie.posterUrl)} alt={`${movie.title} 포스터`} style={{ width: 90, height: 135, borderRadius: 0, objectFit: 'cover', display: 'block', boxShadow: 'inset 0 0 0 1px var(--comp-poster-border)' }} />
           ) : (
             <div style={{ width: 90, height: 135, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-neutral-800)' }} />
           )}
@@ -356,12 +357,12 @@ function MovieTheatersTab({
       {isLoading ? (
         <div style={{ height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: 'var(--color-text-caption)' }}>불러오는 중…</div>
       ) : theaters.length === 0 ? (
-        <div style={{ textAlign: 'center', paddingTop: 32, fontSize: 13, color: 'var(--color-text-caption)' }}>상영 중인 영화관이 없습니다</div>
+        <div style={{ textAlign: 'center', paddingTop: 32, fontSize: 13, color: 'var(--color-text-caption)' }}>상영 중인 극장이 없어요</div>
       ) : regionId ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {inRegion.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '16px 0', fontSize: 13, color: 'var(--color-text-caption)' }}>
-              {regionId} 지역 상영 정보가 없습니다
+              {regionId} 지역 상영 정보가 없어요
             </div>
           ) : (
             inRegion.map(renderTheaterCard)

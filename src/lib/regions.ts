@@ -106,3 +106,18 @@ export function getRegionFromCity(city: string): string {
   }
   return mapping[city] ?? '기타'
 }
+
+/**
+ * 극장의 지역 ID — city를 먼저 보고, 못 찾으면 주소에서 판별한다.
+ *
+ * theaters.city가 빈 문자열인 극장이 9곳 있다(목포아트시네마·단양작은영화관·
+ * 태백작은영화관 등). getRegionFromCity만 쓰면 이들이 전부 '기타'가 되는데,
+ * '기타'는 REGIONS에 없는 값이라 breadcrumb이 존재하지 않는 /films/area/기타를
+ * 가리켰다. 주소는 멀쩡하므로("전라남도 목포시…") 주소 파서로 보완한다.
+ * 근본 해결은 DB의 city 백필이다 — 이 함수는 그때까지의 안전망.
+ */
+export function resolveTheaterRegion(city: string | null | undefined, address: string | null | undefined): string {
+  const fromCity = getRegionFromCity(city ?? '')
+  if (fromCity !== '기타') return fromCity
+  return getRegionFromAddress(address ?? '')
+}
