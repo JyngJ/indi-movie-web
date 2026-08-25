@@ -258,7 +258,7 @@ function makePinIcon(
 
   const pinHtml = renderToStaticMarkup(
     /* 관심 영화 표시는 포스터 빨간 테두리·카운트 캡슐이 담당 — 핀은 관심 '극장'만 표시 */
-    <MapPin kind="indie" selected={selected} favorite={favoriteMark === 'movie' ? 'none' : favoriteMark === 'both' ? 'theater' : favoriteMark} label={name} labelOffset={labelOffset} dimmed={dimmed} isDark={isDark} />
+    <MapPin selected={selected} favorite={favoriteMark === 'movie' ? 'none' : favoriteMark === 'both' ? 'theater' : favoriteMark} label={name} labelOffset={labelOffset} dimmed={dimmed} isDark={isDark} />
   )
   const html = `
     <div style="width:140px;display:flex;flex-direction:column;align-items:center;overflow:visible;position:relative;">

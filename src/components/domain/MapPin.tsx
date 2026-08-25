@@ -1,7 +1,5 @@
 'use client'
 
-type PinKind = 'indie' | 'cgv' | 'mega' | 'lotte'
-
 /** 관심 표시 — theater: 관심 극장(dot 테두리 하트색) / movie: 관심 영화가 걸린 극장(하트 뱃지) / both */
 export type PinFavoriteMark = 'none' | 'theater' | 'movie' | 'both'
 
@@ -29,8 +27,8 @@ const AURA = 44
 const DIMMED_DOT_LIGHT = '#6b7280'
 const DIMMED_DOT_DARK = '#71717a'
 
-export function MapPin({ kind = 'indie', selected = false, favorite = 'none', label, labelOffset, onClick, dimmed = false, isDark = false }: MapPinProps) {
-  const { dot: activeDot, aura } = PIN_COLORS[kind]
+export function MapPin({ selected = false, favorite = 'none', label, labelOffset, onClick, dimmed = false, isDark = false }: MapPinProps) {
+  const { dot: activeDot, aura } = PIN_INDIE
   const dot = dimmed ? (isDark ? DIMMED_DOT_DARK : DIMMED_DOT_LIGHT) : activeDot
   const favTheater = favorite === 'theater' || favorite === 'both'
   const favMovie = favorite === 'movie' || favorite === 'both'
