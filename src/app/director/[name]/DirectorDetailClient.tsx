@@ -5,7 +5,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMovies, useActiveMovieIds, useDirectorProfile } from '@/lib/supabase/queries'
 import type { Movie } from '@/types/api'
-import { Toast, IconButton, SortToggle } from '@/components/primitives'
+import { Toast, IconButton, SortToggle, Icon, EmptyState } from '@/components/primitives'
 import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
@@ -13,33 +13,11 @@ import { Button } from '@/components/primitives'
 import { shareAndTrack } from '@/lib/analytics/shareTracking'
 import { toSecureImageUrl } from '@/lib/media/imageUrl'
 
-const IcoShare = () => <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>
-
 function useIsDesktopDetail() {
   return useMediaQuery('(min-width: 1024px)')   /* 레일(1024)과 기준 통일 */
 }
 
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
-const IcoChevronLeft = () => (
-  <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M15 18l-6-6 6-6" />
-  </svg>
-)
-const IcoClose = () => (
-  <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
-    <path d="M18 6L6 18M6 6l12 12" />
-  </svg>
-)
-const IcoChevronRight = () => (
-  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M9 18l6-6-6-6" />
-  </svg>
-)
-const IcoChevronDown = ({ flipped }: { flipped?: boolean }) => (
-  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ transform: flipped ? 'rotate(180deg)' : undefined, transition: 'transform 200ms' }}>
-    <path d="M6 9l6 6 6-6" />
-  </svg>
-)
 
 /* ── ProfileHero ── */
 function ProfileHero({
@@ -66,10 +44,7 @@ function ProfileHero({
         {photoUrl ? (
           <img src={toSecureImageUrl(photoUrl)} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
         ) : (
-          <svg width={48} height={48} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-            <circle cx="12" cy="7" r="4" />
-          </svg>
+          <Icon name="user" size={48} strokeWidth={1.2} />
         )}
       </div>
       <div style={{ flex: 1, minWidth: 0, paddingTop: 4 }}>
@@ -188,7 +163,7 @@ function FilmographyRow({
           {[movie.year, movie.genre[0]].filter(Boolean).join(' · ')}
         </div>
       </div>
-      {isActive && <IcoChevronRight />}
+      {isActive && <Icon name="chevron-right" size={16} />}
     </button>
   )
 }
@@ -266,7 +241,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
             }}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
           >
-            <IcoShare />
+            <Icon name="share-2" size={16} />
             공유
           </Button>
         }
@@ -369,9 +344,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
 
           {/* 리스트 */}
           {directorMovies.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: isDesktop ? '56px 0' : '40px 0 0', fontSize: 13, color: 'var(--color-text-caption)' }}>
-              작품 정보가 없어요
-            </div>
+            <EmptyState message="작품 정보가 없어요" paddingY={isDesktop ? 56 : 40} style={isDesktop ? undefined : { paddingBottom: 0 }} />
           ) : (
             <div style={{
               borderRadius: isDesktop ? 0 : 12,
@@ -412,7 +385,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
                     minHeight: 'auto',
                   }}
                 >
-                  <IcoChevronDown flipped={expanded} />
+                  <Icon name="chevron-down" size={16} style={{ transform: expanded ? 'rotate(180deg)' : undefined, transition: 'transform 200ms' }} />
                   {expanded ? '접기' : `${hiddenCount}편 더 보기`}
                 </button>
               )}

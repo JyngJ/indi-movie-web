@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
-import { Chip, Avatar, IconButton, Button } from '@/components/primitives'
+import { Chip, Avatar, IconButton, Button, Icon, Divider, EmptyState } from '@/components/primitives'
 import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
 import { addDaysIso, toKstIsoDate } from '@/lib/date'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
@@ -51,12 +51,6 @@ function formatDateTab(dateStr: string) {
 }
 
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
-const IcoChevronLeft = () => <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
-const IcoChevronRight = () => <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
-const IcoShare = () => <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>
-const IcoPin = () => <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" /></svg>
-const IcoUser = () => <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-
 /* ── ShowtimeChip ──────────────────────────────────────────────── */
 function ShowtimeChip({ st, selected, onClick }: { st: Showtime; selected?: boolean; onClick?: () => void }) {
   const soldout = st.seatAvailable === 0
@@ -336,7 +330,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
       style={{ paddingLeft: isDesktop ? 0 : 16, paddingRight: isDesktop ? 0 : 16, marginBottom: isDesktop ? 0 : 20, maxWidth: isDesktop ? 480 : undefined }}
       trailing={
         <Button variant="tertiary" size="md" onClick={handleShare} aria-label="공유" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-          <IcoShare />
+          <Icon name="share-2" size={16} />
           공유
         </Button>
       }
@@ -443,16 +437,14 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
             <span style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 8, lineHeight: 1.3 }}>
               {entry.theaterName}
               {isFavorite('theater', entry.theaterId) && (
-                <svg width={14} height={14} viewBox="0 0 24 24" fill="var(--color-error-mid)" aria-label="관심 극장" style={{ flexShrink: 0 }}>
-                  <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                </svg>
+                <Icon name="heart" size={14} fill="var(--color-error-mid)" color="var(--color-error-mid)" label="관심 극장" style={{ flexShrink: 0 }} />
               )}
             </span>
             <div style={{ marginTop: 4, display: 'flex', alignItems: 'flex-start', gap: 4, color: 'var(--color-text-sub)', fontSize: 12 }}>
-              <IcoPin /><span style={{ wordBreak: 'keep-all', lineHeight: 1.45 }}>{entry.theaterAddress}</span>
+              <Icon name="map-pin" size={12} /><span style={{ wordBreak: 'keep-all', lineHeight: 1.45 }}>{entry.theaterAddress}</span>
             </div>
           </div>
-          <IcoChevronRight />
+          <Icon name="chevron-right" size={15} />
         </button>
         <div style={{ padding: '12px 16px 16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, backgroundColor: 'var(--color-neutral-100)' }}>
           {entry.showtimes.map((st) => {
@@ -543,11 +535,11 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
         {isLoading ? (
           <div style={{ height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-caption)', fontSize: 13 }}>불러오는 중…</div>
         ) : dayTheaters.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px 0', fontSize: 13, color: 'var(--color-text-caption)' }}>이 날 상영 정보가 없어요</div>
+          <EmptyState message="이 날 상영 정보가 없어요" paddingY={40} />
         ) : regionId ? (
           <>
             {inRegionEntries.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '16px 0', fontSize: 13, color: 'var(--color-text-caption)' }}>{regionId} 지역 상영 정보가 없어요</div>
+              <EmptyState message={`${regionId} 지역 상영 정보가 없어요`} paddingY={16} />
             ) : (
               renderColumns(inRegionEntries)
             )}
@@ -555,9 +547,9 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
               <>
                 {/* 지역 구분선 — 안 보인다는 피드백으로 여백·글자 키움 (2026-08-24). 그리드 전체 폭 차지 */}
                 <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 12, margin: isDesktop ? '40px 0 16px' : '24px 0 8px' }}>
-                  <div style={{ flex: 1, height: 1, backgroundColor: 'var(--color-border)' }} />
+                  <Divider flex />
                   <span style={{ fontSize: 14, color: 'var(--color-text-sub)', fontWeight: 700, whiteSpace: 'nowrap' }}>{regionId} 외 지역 영화관</span>
-                  <div style={{ flex: 1, height: 1, backgroundColor: 'var(--color-border)' }} />
+                  <Divider flex />
                 </div>
                 {renderColumns(otherRegionEntries)}
               </>

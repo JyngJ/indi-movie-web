@@ -4,7 +4,7 @@ import { useRef, useEffect, useState, useCallback } from 'react'
 import type { GvEvent } from '@/data/gv-events'
 import { gvEventTypeColor } from '@/lib/gv/adapter'
 import { scrollRailBy } from '@/lib/ui/railScroll'
-import { ScrollNavButton } from '@/components/primitives'
+import { ScrollNavButton, Icon } from '@/components/primitives'
 import { toSecureImageUrl } from '@/lib/media/imageUrl'
 
 
@@ -96,13 +96,7 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
         <span style={{ fontSize: 'var(--text-caption)', fontWeight: 600, color: 'var(--color-text-caption)', marginRight: 4 }}>
           {events.length}개
         </span>
-        <svg
-          width={14} height={14} viewBox="0 0 24 24" fill="none"
-          stroke="var(--color-text-caption)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"
-          style={{ flexShrink: 0, transition: 'transform 0.2s', transform: open ? 'rotate(0deg)' : 'rotate(-90deg)' }}
-        >
-          <path d="M6 9l6 6 6-6" />
-        </svg>
+        <Icon name="chevron-down" size={14} />
       </button>
 
       {/* Horizontal scroll + nav buttons */}

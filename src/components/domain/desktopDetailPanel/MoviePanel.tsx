@@ -9,12 +9,12 @@ import { locationAdapter } from '@/lib/adapters/location'
 import { calculateAndFormatDistance, calculateDistanceKm } from '@/lib/map/distanceUtils'
 import { getRegionFromAddress } from '@/lib/regions'
 import { formatDateLabel } from '@/lib/date'
-import { Toast, Button } from '@/components/primitives'
+import { Toast, Button, Divider, Tabs } from '@/components/primitives'
 import { MovieInfoTable } from '@/components/domain/movieDetail/MovieInfoTable'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 import { PanelShell } from './PanelShell'
 import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
-import { IcoUser, IcoChevronRight, IcoPin } from './icons'
+import { Icon } from '@/components/primitives'
 import { toSecureImageUrl } from '@/lib/media/imageUrl'
 
 /* ── 영화 상세 패널 ── */
@@ -120,33 +120,24 @@ export function MoviePanel({
       <FavoriteActionRow type="movie" id={movie.id} label={movie.title} style={{ paddingLeft: 'var(--gutter)', paddingRight: 'var(--gutter)', paddingBottom: 16, background: 'var(--color-surface-card)' }} />
 
       {/* 탭 */}
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--color-border)', flexShrink: 0 }}>
-        {(['info', 'theaters'] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => {
-              trackEvent('movie detail tab changed', {
-                movie_id: movie.id,
-                movie_title: movie.title,
-                from_tab: tab,
-                to_tab: t,
-                source: 'desktop_panel',
-              })
-              setTab(t)
-            }}
-            style={{
-              flex: 1, height: 42, border: 'none', background: 'none', cursor: 'pointer',
-              fontSize: 13, fontWeight: tab === t ? 600 : 400,
-              color: tab === t ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
-              borderBottomWidth: 2,
-              borderBottomStyle: 'solid',
-              borderBottomColor: tab === t ? 'var(--color-primary-base)' : 'transparent',
-            }}
-          >
-            {t === 'info' ? '영화 정보' : '상영 영화관'}
-          </button>
-        ))}
-      </div>
+      <Tabs
+        label="영화 상세"
+        value={tab}
+        onChange={(next) => {
+          trackEvent('movie detail tab changed', {
+            movie_id: movie.id,
+            movie_title: movie.title,
+            from_tab: tab,
+            to_tab: next,
+            source: 'desktop_panel',
+          })
+          setTab(next)
+        }}
+        items={[
+          { value: 'info', label: '영화 정보' },
+          { value: 'theaters', label: '상영 영화관' },
+        ] as const}
+      />
 
       {/* 탭 내용 */}
       {tab === 'info' ? (
@@ -193,13 +184,13 @@ function MovieInfoTab({ movie, onDirectorClick }: { movie: NonNullable<ReturnTyp
                 }}
               >
                 <div style={{ width: 44, height: 44, borderRadius: '50%', backgroundColor: 'var(--color-surface-raised)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: 'var(--color-text-caption)' }}>
-                  <IcoUser />
+                  <Icon name="user" size="xl" strokeWidth={1.5} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{name}</div>
                   <div style={{ marginTop: 4, fontSize: 'var(--text-badge)', color: 'var(--color-primary-base)', fontWeight: 500, textDecoration: 'underline' }}>감독 페이지 보기</div>
                 </div>
-                <IcoChevronRight />
+                <Icon name="chevron-right" size={14} />
               </button>
             ))}
           </div>
@@ -255,7 +246,7 @@ function MovieTheatersTab({
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)' }}>{entry.theaterName}</div>
           <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 4, color: 'var(--color-text-sub)', fontSize: 'var(--text-badge)' }}>
-            <IcoPin />{entry.theaterAddress}
+            <Icon name="map-pin" size={11} />{entry.theaterAddress}
           </div>
         </div>
         {(() => {
@@ -328,9 +319,9 @@ function MovieTheatersTab({
 
   const sectionDivider = (label: string) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '32px 0 12px' }}>
-      <div style={{ flex: 1, height: 1, backgroundColor: 'var(--color-border)' }} />
+      <Divider flex />
       <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-sub)', whiteSpace: 'nowrap' }}>{label}</span>
-      <div style={{ flex: 1, height: 1, backgroundColor: 'var(--color-border)' }} />
+      <Divider flex />
     </div>
   )
 

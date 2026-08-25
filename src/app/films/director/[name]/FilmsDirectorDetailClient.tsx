@@ -12,7 +12,7 @@ import { toSecureImageUrl } from '@/lib/media/imageUrl'
 import type { Movie } from '@/types/api'
 import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWidget'
 import { shareAndTrack } from '@/lib/analytics/shareTracking'
-import { Toast, Avatar, IconButton, SortToggle } from '@/components/primitives'
+import { Toast, Avatar, IconButton, SortToggle, Icon, EmptyState } from '@/components/primitives'
 import { Button } from '@/components/primitives'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 
@@ -21,10 +21,6 @@ function useIsDesktop() {
 }
 
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
-const IcoChevronLeft = () => <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
-const IcoChevronRight = () => <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
-const IcoShare = () => <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>
-
 type SortKey = 'newest' | 'oldest'
 
 
@@ -126,7 +122,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
           }}
           style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
         >
-          <IcoShare />
+          <Icon name="share-2" size={16} />
           공유
         </Button>
       }
@@ -230,7 +226,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
           </div>
 
           {directorMovies.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '48px 0', fontSize: 13, color: 'var(--color-text-caption)' }}>작품 정보가 없어요</div>
+            <EmptyState message="작품 정보가 없어요" paddingY={48} />
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)', gap: isDesktop ? 20 : 12, padding: isDesktop ? '16px 0 0' : '12px var(--gutter) 0' }}>
               {visibleMovies.map((m) => (

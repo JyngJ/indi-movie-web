@@ -126,6 +126,42 @@ interface Doc {
 const s = (v: ControlValues, k: string) => String(v[k])
 const b = (v: ControlValues, k: string) => Boolean(v[k])
 
+
+/**
+ * 반례 전용 글리프 — 레지스트리에 넣지 않는다.
+ * "쓰지 말라"고 보여주는 아이콘을 레지스트리에 등록하면 다음 사람이 그걸 쓸 수 있게 된다.
+ * 문서 안에서만 쓰이므로 여기서 직접 그린다.
+ */
+function AmbiguousGlyph({ shape }: { shape: 'star' | 'sparkles' }) {
+  return (
+    <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+      {shape === 'star'
+        ? <path d="M11.5 3.2 14 8.3l5.6.8-4 3.9 1 5.6-5.1-2.7-5 2.7 1-5.6-4-3.9 5.6-.8z" />
+        : <>
+            <path d="M9 3.5 10.3 7 13.8 8.3 10.3 9.6 9 13.1 7.7 9.6 4.2 8.3 7.7 7z" />
+            <path d="M17.5 12.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z" />
+          </>}
+    </svg>
+  )
+}
+
+/** 타깃이 겹치는지는 아이콘만 봐서는 안 보인다 — 44 영역을 점선으로 드러낸다. */
+function TargetPair({ gap, caption, bad }: { gap: number; caption: string; bad?: boolean }) {
+  const ring = bad ? 'var(--color-error)' : 'var(--color-success)'
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-3)' }}>
+      <div style={{ display: 'flex', gap }}>
+        {[<IcoX key="x" />, <IcoPlus key="p" />].map((glyph, i) => (
+          <div key={i} style={{ outline: `1px dashed ${ring}`, outlineOffset: -1, borderRadius: 'var(--radius-button)' }}>
+            <IconButton aria-label={i === 0 ? '닫기' : '추가'}>{glyph}</IconButton>
+          </div>
+        ))}
+      </div>
+      <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)' }}>{caption}</span>
+    </div>
+  )
+}
+
 const DOCS: Record<string, Doc> = {
   Button: {
     hero: (
@@ -220,22 +256,44 @@ const DOCS: Record<string, Doc> = {
         <IconButton aria-label="추가" size={44}><IcoPlus size={18} /></IconButton>
         <IconButton aria-label="추가" size={52}><IcoPlus size={21} /></IconButton>
       </div>,
-      <div key="o" style={{
-        display: 'flex', gap: 'var(--spacing-3)', padding: 'var(--spacing-4)',
-        background: 'var(--color-neutral-800)', borderRadius: 'var(--radius-control)',
-      }}>
-        <IconButton aria-label="닫기" variant="overlay"><IcoX /></IconButton>
-        <IconButton aria-label="추가" variant="overlay" shape="round"><IcoPlus /></IconButton>
+      // overlay가 무엇을 푸는지는 어두운 사각형 위에 버튼을 얹어서는 안 보인다.
+      // 밝은 데서 어두운 데로 넘어가는 포스터를 깔고 ghost와 나란히 놓아야
+      // "면 색을 알 수 없는 자리"라는 말이 그림이 된다.
+      <div key="o" style={{ display: 'flex', gap: 'var(--spacing-5)' }}>
+        {([
+          { variant: 'ghost', caption: 'ghost — 밝은 쪽에서 사라진다' },
+          { variant: 'overlay', caption: 'overlay — 어느 쪽이든 읽힌다' },
+        ] as const).map(({ variant, caption }) => (
+          <div key={variant} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-2)' }}>
+            <div style={{
+              position: 'relative', width: 116, height: 164,
+              borderRadius: 'var(--radius-poster)', overflow: 'hidden',
+              background: 'linear-gradient(150deg, #F3E7C9 0%, #E8CFA0 42%, #3A2E22 100%)',
+            }}>
+              <div style={{ position: 'absolute', top: 8, left: 8 }}>
+                <IconButton aria-label="닫기" size={32} variant={variant}><IcoX /></IconButton>
+              </div>
+              <div style={{ position: 'absolute', bottom: 8, right: 8 }}>
+                <IconButton aria-label="추가" size={32} variant={variant} shape="round"><IcoPlus /></IconButton>
+              </div>
+            </div>
+            <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)' }}>{caption}</span>
+          </div>
+        ))}
       </div>,
     ],
     usageVisuals: [
-      <div key="do" style={{ display: 'flex', gap: 12 }}>
-        <IconButton aria-label="닫기"><IcoX /></IconButton>
-        <IconButton aria-label="추가"><IcoPlus /></IconButton>
-      </div>,
-      <div key="dont" style={{ display: 'flex', gap: 0 }}>
-        <IconButton aria-label="닫기"><IcoX /></IconButton>
-        <IconButton aria-label="추가"><IcoPlus /></IconButton>
+      <TargetPair key="do" gap={12} caption="간격 12 — 두 타깃이 떨어져 있다" />,
+      <TargetPair key="dont-gap" gap={0} caption="간격 0 — 44 타깃이 서로 닿는다" bad />,
+      <div key="dont-glyph" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-6)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-2)' }}>
+          <IconButton aria-label="별"><AmbiguousGlyph shape="star" /></IconButton>
+          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)' }}>즐겨찾기? 평점?</span>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-2)' }}>
+          <IconButton aria-label="반짝임"><AmbiguousGlyph shape="sparkles" /></IconButton>
+          <span style={{ fontSize: 'var(--text-badge)', color: 'var(--color-text-caption)' }}>추천? 새로고침?</span>
+        </div>
       </div>,
     ],
   },

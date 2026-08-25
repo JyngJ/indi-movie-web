@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { IconButton } from '@/components/primitives'
+import { IconButton, Icon } from '@/components/primitives'
 
 export type DayType = 'weekday' | 'saturday' | 'sunday' | 'holiday' | 'today'
 
@@ -74,9 +74,7 @@ function DateNavButton({ direction, onClick, enabled, label }: { direction: 'pre
       }}
       aria-label={label}
     >
-      <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-        <path d={direction === 'prev' ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6'} />
-      </svg>
+      <Icon name={direction === 'prev' ? 'chevron-left' : 'chevron-right'} size={14} />
     </IconButton>
   )
 }

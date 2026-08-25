@@ -3,10 +3,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { usePendingNavItem } from '@/hooks/usePendingNavItem'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
-import { Button } from '@/components/primitives'
+import { Button, Icon, Divider, EmptyState } from '@/components/primitives'
 import { PosterThumb } from './PosterThumb'
 import { HoverPopup } from './CurationSectionRow'
-import { ChevronDown } from 'lucide-react'
 import type {
   LastWeekFilm,
   NewIndieFilm,
@@ -392,18 +391,6 @@ function Section({ title, icon, action, style, children }: {
   )
 }
 
-/** 섹션 간 구분 — 종이 카탈로그풍 1px 헤어라인 (풀블리드, 그림자 없음)
- *  상하 간격은 부모 flex의 SECTION_GAP(16px)이 그대로 담당 — divider 자체 margin 없음 */
-function SectionDivider() {
-  return (
-    <div aria-hidden style={{
-      height: 1,
-      width: '100%',
-      flexShrink: 0,
-      backgroundColor: 'var(--color-border)',
-    }} />
-  )
-}
 
 const KIND_LABEL: Record<RecentlyViewedKind, string> = {
   movie: '영화',
@@ -437,9 +424,7 @@ function RecentList({
 
   if (items.length === 0) {
     return (
-      <p style={{ margin: 0, paddingLeft: 'var(--gutter)', paddingRight: 'var(--gutter)', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
-        최근 찾아본 영화·극장·감독이 아직 없어요
-      </p>
+<EmptyState message="최근 찾아본 영화·극장·감독이 아직 없어요" paddingY={0} />
     )
   }
   return (
@@ -546,10 +531,7 @@ const SECTION_FILMS_HREF: Record<string, string | null> = {
 }
 
 const IconChevronDown = ({ open }: { open: boolean }) => (
-  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"
-    style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 180ms ease' }}>
-    <path d="M6 9l6 6 6-6" />
-  </svg>
+  <Icon name="chevron-down" size={14} />
 )
 
 /** 큐레이션 섹션(우선순위 상위 3개 + 최근 찾아본) — 모바일 시트·데스크톱 도크가 공유하는 본문 */
@@ -644,7 +626,7 @@ export function CurationSections({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: SECTION_GAP }}>
-      <SectionDivider />
+      <Divider />
       {sections.map((section) => {
         const handleSelect = section.key === 'todayShow' || section.key === 'soloTheater'
           ? (id: string, title: string) => {
@@ -693,7 +675,7 @@ export function CurationSections({
               {!isNewSection && hasMore && expandState === 'collapsed' && (
                 <div style={{ margin: '0 20px' }}>
                   <Button type="button" variant="tertiary" size="md" fullWidth onClick={() => setExpand(section.key, 'partial')}>
-                    더보기 <ChevronDown size={14} strokeWidth={1.75} color="currentColor" />
+                    더보기 <Icon name="chevron-down" size={14} strokeWidth={1.75} color="currentColor" />
                   </Button>
                 </div>
               )}
@@ -705,7 +687,7 @@ export function CurationSections({
                       setExpand(section.key, 'collapsed')
                       sectionRefs.current[section.key]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                     }}>
-                      접기 <ChevronDown size={14} strokeWidth={1.75} color="currentColor" style={{ transform: 'rotate(180deg)' }} />
+                      접기 <Icon name="chevron-down" size={14} strokeWidth={1.75} color="currentColor" style={{ transform: 'rotate(180deg)' }} />
                     </Button>
                   </div>
                   {hasManyMore && SECTION_FILMS_HREF[section.key] && (
@@ -717,7 +699,7 @@ export function CurationSections({
                 </div>
               )}
             </Section>
-            <SectionDivider />
+            <Divider />
           </div>
         )
       })}

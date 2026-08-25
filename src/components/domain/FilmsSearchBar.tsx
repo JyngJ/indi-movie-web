@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { usePendingNavItem } from '@/hooks/usePendingNavItem'
-import { Button, IconButton, SearchBar, SearchBarButton } from '@/components/primitives'
+import { Button, IconButton, SearchBar, SearchBarButton, Icon, Divider } from '@/components/primitives'
 import { AddRequestModal, AddRequestCtaButton } from '@/components/domain/AddRequestModal'
 // 지도 탭과 검색 기록을 공유 — 같은 localStorage 키를 쓰는 지도 쪽 유틸을 그대로 재사용한다.
 // 지도에서 검색한 극장/영화가 상영작 탭 "최근 검색"에도 보이고, 그 반대도 마찬가지.
@@ -102,16 +102,6 @@ function HighlightMatch({ text, query }: { text: string; query: string }) {
   )
 }
 
-const SearchIcon = ({ size = 16 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
-  </svg>
-)
-const CloseIcon = ({ size = 14 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
-    <path d="M6 6l12 12M18 6 6 18" />
-  </svg>
-)
 
 export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props) {
   const { pendingId: navPendingId, navigate } = usePendingNavItem()
@@ -210,7 +200,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
             }}
           >
           <span style={{ flexShrink: 0, display: 'flex', color: focused ? ACCENT : 'var(--color-text-body)' }}>
-            <SearchIcon size={16} />
+            <Icon name="search" size={16} />
           </span>
           <input
             ref={desktopRef}
@@ -248,7 +238,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
               aria-label="검색어 지우기"
               onMouseDown={e => { e.preventDefault(); setQuery(''); desktopRef.current?.focus() }}
             >
-              <CloseIcon size={14} />
+              <Icon name="x" size={14} />
             </IconButton>
           )}
         </div>
@@ -283,7 +273,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
                       style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '8px 16px', background: (arrowIdx === i || hoveredIdx === i) ? 'var(--color-surface-raised)' : 'none', border: 'none', cursor: 'pointer', textAlign: 'left', minHeight: 'unset', opacity: navPendingId === s.label ? 0.5 : 1 }}
                     >
                       <span style={{ flexShrink: 0, display: 'flex', color: 'var(--color-text-caption)' }}>
-                        <SearchIcon size={14} />
+                        <Icon name="search" size={14} />
                       </span>
                       <span style={{ flex: 1, fontSize: 14, color: 'var(--color-text-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         <HighlightMatch text={s.label} query={query} />
@@ -309,7 +299,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
                 <p style={{ padding: '12px 16px 8px', margin: 0, fontSize: 12, color: 'var(--color-text-caption)', letterSpacing: '-0.1px' }}>
                   영화관, 영화, 감독을 모두 검색할 수 있어요.
                 </p>
-                <div style={{ height: 1, backgroundColor: 'var(--color-border)', margin: '0 12px 4px' }} />
+                <Divider inset={12} style={{ marginBottom: 4 }} />
                 {HINTS.map(({ cat, ex }) => (
                   <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 16px' }}>
                     <span style={{ fontSize: 12, color: 'var(--color-text-caption)', width: 38, flexShrink: 0 }}>{cat}</span>
@@ -379,7 +369,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
                     onClick={() => mobileNavigate(s)}
                     style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', background: 'none', border: 'none', borderBottom: '1px solid var(--color-border)', cursor: 'pointer', textAlign: 'left', minHeight: 'unset', opacity: navPendingId === s.label ? 0.5 : 1 }}
                   >
-                    <span style={{ flexShrink: 0, display: 'flex', color: 'var(--color-text-caption)' }}><SearchIcon size={14} /></span>
+                    <span style={{ flexShrink: 0, display: 'flex', color: 'var(--color-text-caption)' }}><Icon name="search" size={14} /></span>
                     <span style={{ flex: 1, fontSize: 14, color: 'var(--color-text-body)' }}>
                       <HighlightMatch text={s.label} query={mInput} />
                     </span>
@@ -406,10 +396,10 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
                   </div>
                   {history.map(q => (
                     <div key={q} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--color-border)' }}>
-                      <span style={{ flexShrink: 0, display: 'flex', color: 'var(--color-text-caption)' }}><SearchIcon size={14} /></span>
+                      <span style={{ flexShrink: 0, display: 'flex', color: 'var(--color-text-caption)' }}><Icon name="search" size={14} /></span>
                       <button onClick={() => setMInput(q)} style={{ flex: 1, background: 'none', border: 0, cursor: 'pointer', textAlign: 'left', padding: 0, fontSize: 14, color: 'var(--color-text-body)' }}>{q}</button>
                       <IconButton variant="ghost" size={32} aria-label="삭제" onClick={() => setHistory(prev => prev.filter(h => h !== q))}>
-                        <CloseIcon size={12} />
+                        <Icon name="x" size={12} />
                       </IconButton>
                     </div>
                   ))}

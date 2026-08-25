@@ -1,13 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 interface Group {
   title: string | null
   href: string | null
-  items: { href: string; label: string }[]
+  items: { href: string; label: string; section?: string }[]
 }
 
 /** 서비스에서 쓰는 접힘 표시와 같은 꺾쇠. 열리면 뒤집힌다. */
@@ -36,6 +36,18 @@ export function Sidebar({ groups }: { groups: Group[] }) {
   useEffect(() => { setManual(undefined) }, [pathname])
 
   const openGroup = manual === undefined ? activeGroup : manual
+
+  /* 그룹 안의 섹션(ACTION·SELECTION…)도 접는다. 컴포넌트 34개를 한 번에 펼치면
+     사이드바가 목록이 아니라 스크롤 통이 된다. 기본은 지금 보는 페이지의 섹션만 열림. */
+  const activeSection = groups
+    .flatMap(g => g.items)
+    .find(i => i.href === pathname)?.section ?? null
+  const [openSections, setOpenSections] = useState<Record<string, boolean> | null>(null)
+  useEffect(() => { setOpenSections(null) }, [pathname])
+  const sectionOpen = (name: string) =>
+    openSections?.[name] ?? name === activeSection
+  const toggleSection = (name: string) =>
+    setOpenSections(prev => ({ ...(prev ?? {}), [name]: !sectionOpen(name) }))
 
   return (
     <nav style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' }}>
@@ -76,17 +88,37 @@ export function Sidebar({ groups }: { groups: Group[] }) {
             <div className="ds-nav-collapse" data-open={open}>
               <div style={{ overflow: 'hidden' }}>
                 <div className="ds-nav-items">
-                  {group.items.map(item => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className="ds-nav-link"
-                      data-active={pathname === item.href}
-                      data-top={!group.title}
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
+                  {group.items.map((item, i) => {
+                    const startsSection = !!item.section && item.section !== group.items[i - 1]?.section
+                    const hidden = !!item.section && !sectionOpen(item.section) && pathname !== item.href
+                    return (
+                      <Fragment key={item.href}>
+                        {/* 묶음이 바뀌는 자리에만 소제목을 둔다 — 항목마다 붙이면 목록이 두 배로 길어진다 */}
+                        {startsSection && item.section && (
+                          <button
+                            type="button"
+                            className="ds-nav-section"
+                            data-open={sectionOpen(item.section)}
+                            onClick={() => toggleSection(item.section!)}
+                          >
+                            {item.section}
+                            <IcoChevron open={sectionOpen(item.section)} />
+                          </button>
+                        )}
+                        {/* 접힌 섹션이라도 지금 보는 페이지는 남긴다 — 내가 어디 있는지가 사라지면 안 된다 */}
+                        {!hidden && (
+                          <Link
+                            href={item.href}
+                            className="ds-nav-link"
+                            data-active={pathname === item.href}
+                            data-top={!group.title}
+                          >
+                            {item.label}
+                          </Link>
+                        )}
+                      </Fragment>
+                    )
+                  })}
                 </div>
               </div>
             </div>

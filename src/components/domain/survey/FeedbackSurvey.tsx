@@ -10,7 +10,7 @@ import {
 } from '@/lib/survey/types'
 import { markSurvey, nextMilestone } from '@/lib/survey/gate'
 import { trackEvent } from '@/lib/analytics/client'
-import { Button, IconButton, Input } from '@/components/primitives'
+import { Button, IconButton, Input, Icon } from '@/components/primitives'
 import styles from './survey.module.css'
 
 interface Props {
@@ -35,9 +35,7 @@ function analyticsSessionId() {
 }
 
 const IcoX = () => (
-  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
-    <path d="M18 6L6 18M6 6l12 12" />
-  </svg>
+  <Icon name="x" size={16} />
 )
 
 /** 재방문 설문 v2 (2026-08-09 피그마 TOBE 확정) — 잘 쓰고 계세요? → 좋은 점 | 아쉬운 점 → 감사.

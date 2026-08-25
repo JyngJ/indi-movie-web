@@ -11,8 +11,8 @@ import {
 } from 'react'
 import useEmblaCarousel, { type UseEmblaCarouselType } from 'embla-carousel-react'
 import type { EmblaOptionsType } from 'embla-carousel'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { IconButton } from '@/components/primitives'
+import { Icon } from '@/components/primitives'
 
 type EmblaApi = UseEmblaCarouselType[1]
 
@@ -175,7 +175,7 @@ export function CarouselNavigation({
         className={`pointer-events-auto ${classNameButton ?? ''}`}
         style={stateStyle(canScrollPrev)}
       >
-        <ChevronLeft size={18} />
+        <Icon name="chevron-left" size={18} />
       </IconButton>
       <IconButton
         aria-label="다음"
@@ -186,7 +186,7 @@ export function CarouselNavigation({
         className={`pointer-events-auto ${classNameButton ?? ''}`}
         style={stateStyle(canScrollNext)}
       >
-        <ChevronRight size={18} />
+        <Icon name="chevron-right" size={18} />
       </IconButton>
     </div>
   )

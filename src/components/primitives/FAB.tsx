@@ -1,11 +1,10 @@
 'use client'
 
 import { ButtonHTMLAttributes, ReactNode } from 'react'
+import { Icon } from '@/components/primitives'
 
 const IconSwap = () => (
-  <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 8h14l-3-3M20 16H6l3 3" />
-  </svg>
+  <Icon name="arrow-right-left" size={12} />
 )
 
 // ─── Round FAB ────────────────────────────────────────────────────────

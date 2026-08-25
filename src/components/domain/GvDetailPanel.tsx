@@ -5,7 +5,7 @@ import { gvEventTypeColor } from '@/lib/gv/adapter'
 import { trackEvent } from '@/lib/analytics/client'
 import { shareAndTrack } from '@/lib/analytics/shareTracking'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
-import { IconButton } from '@/components/primitives'
+import { IconButton, Icon, ListRow } from '@/components/primitives'
 import { BookingCtaButton, ShareScheduleButton } from './booking/BookingActions'
 
 interface GvDetailPanelProps {
@@ -52,9 +52,7 @@ export function GvDetailPanel({ ev, onClose, onCloseAll, panelMode }: GvDetailPa
       }}>
         {/* 뒤로 — 영화관 상세로 */}
         <IconButton variant="ghost" size={32} onClick={onClose} aria-label="뒤로가기">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <Icon name="chevron-left" size={16} />
         </IconButton>
 
         {/* 브레드크럼 */}
@@ -76,9 +74,7 @@ export function GvDetailPanel({ ev, onClose, onCloseAll, panelMode }: GvDetailPa
         {/* 닫기 — 시트 전체 닫기 */}
         {onCloseAll && (
           <IconButton variant="ghost" size={32} onClick={onCloseAll} aria-label="닫기">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M2 2l10 10M12 2 2 12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-            </svg>
+            <Icon name="x" size={14} />
           </IconButton>
         )}
       </div>
@@ -188,19 +184,14 @@ export function GvDetailPanel({ ev, onClose, onCloseAll, panelMode }: GvDetailPa
 
 function InfoRow({ label, value, last }: { label: string; value: string; last?: boolean }) {
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center',
-      padding: '12px var(--gutter)',
-      borderBottom: last ? 'none' : '1px solid var(--color-border)',
-      gap: 12,
-    }}>
+    <ListRow density="compact" last={last}>
       <span style={{ fontSize: 'var(--text-badge)', fontWeight: 600, color: 'var(--color-text-caption)', width: 28, flexShrink: 0 }}>
         {label}
       </span>
-      <span style={{ fontSize: 13, color: 'var(--color-text-body)', flex: 1 }}>
+      <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-body)', flex: 1 }}>
         {value}
       </span>
-    </div>
+    </ListRow>
   )
 }
 

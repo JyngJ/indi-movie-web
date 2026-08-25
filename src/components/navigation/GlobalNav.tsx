@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'motion/react'
 import { useEffect, useState } from 'react'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useUIStore } from '@/store/uiStore'
+import { Icon, type IconName } from '@/components/primitives'
 import { useNotificationEvents } from '@/hooks/useNotifications'
 
 /** §5 바텀 탭바 표준 높이(safe-area 포함) — 다른 화면 요소가 이 값만큼 비켜야 함 */
@@ -17,46 +18,9 @@ export const GLOBAL_NAV_DESKTOP_WIDTH = 64
 const ACTIVE_COLOR = 'var(--color-primary-base)'
 const INACTIVE_COLOR = 'var(--color-neutral-400, #A7A19A)'   /* fallback도 2.0 값 — 구 #A9A39A는 1.0 잔재 */
 
-function IconMap({ size = 23 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9 4 4 6v14l5-2 6 2 5-2V4l-5 2-6-2Z" />
-      <path d="M9 4v14M15 6v14" />
-    </svg>
-  )
-}
 
-function IconFilm({ size = 23 }: { size?: number }) {
-  /* 2.0: 필름 스트립 → 클래퍼보드 — "영화를 본다"는 행위에 더 직관적 (Lucide clapperboard) */
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z" />
-      <path d="m6.2 5.3 3.1 3.9" />
-      <path d="m12.4 3.4 3.1 4" />
-      <path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
-    </svg>
-  )
-}
 
-function IconBell({ size = 23 }: { size?: number }) {
-  /* Lucide bell — 소식 탭 */
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-    </svg>
-  )
-}
 
-function IconUser({ size = 23 }: { size?: number }) {
-  /* Lucide user-round — 내 계정 탭 */
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="8" r="5" />
-      <path d="M20 21a8 8 0 0 0-16 0" />
-    </svg>
-  )
-}
 
 /** 안 읽은 소식 배지 — 아이콘 우상단 작은 점. 숫자는 넣지 않는다(레일 폭 21px 아이콘에 안 들어간다) */
 function UnreadDot() {
@@ -77,17 +41,17 @@ interface MobileTab {
   key: string
   href: string
   label: string
-  Icon: (props: { size?: number }) => React.JSX.Element
+  icon: IconName
 }
 
 // 홈('/')은 상영작 탭 — 진입점이 상영작으로 바뀌면서 지도는 '/map'으로 내려갔다.
 // 2026-08-17 IA 개정(피그마 IA 통합 보드 47): 지도 / 상영작 / 소식(/feed) / MY(/my).
 // 설정은 탭에서 빠짐 — 모바일은 MY 우상단 ⚙ → /more, 데스크톱은 ⚙ → 설정 패널.
 const MOBILE_TABS: MobileTab[] = [
-  { key: 'map', href: '/map', label: '지도', Icon: IconMap },
-  { key: 'films', href: '/', label: '상영작', Icon: IconFilm },
-  { key: 'feed', href: '/feed', label: '소식', Icon: IconBell },
-  { key: 'my', href: '/my', label: 'MY', Icon: IconUser },
+  { key: 'map', href: '/map', label: '지도', icon: 'map' },
+  { key: 'films', href: '/', label: '상영작', icon: 'clapperboard' },
+  { key: 'feed', href: '/feed', label: '소식', icon: 'bell' },
+  { key: 'my', href: '/my', label: 'MY', icon: 'user-round' },
 ]
 
 /** 데스크톱 레일 — 위: 지도·상영작 / 아래(디바이더 밑): 소식·MY */
@@ -125,7 +89,7 @@ function MobileTabBar({ pathname, filmsHref }: { pathname: string; filmsHref: st
         zIndex: 1150,
       }}
     >
-      {tabs.map(({ key, href, label, Icon }) => {
+      {tabs.map(({ key, href, label, icon }) => {
         const active = isTabActive(pathname, key)
         const color = active ? ACTIVE_COLOR : INACTIVE_COLOR
         return (
@@ -166,7 +130,7 @@ function MobileTabBar({ pathname, filmsHref }: { pathname: string; filmsHref: st
                 />
               )}
               <span style={{ position: 'relative', display: 'flex' }}>
-                <Icon size={23} />
+                <Icon name={icon} size={23} />
                 {key === 'feed' && unreadCount > 0 && <UnreadDot />}
               </span>
               <span style={{ position: 'relative', fontSize: 'var(--text-badge)', fontWeight: 600, lineHeight: 1 }}>{label}</span>
@@ -189,7 +153,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
   const isMyOpen = useUIStore((s) => s.isMyOpen)
   const setMyOpen = useUIStore((s) => s.setMyOpen)
 
-  const renderRailTab = ({ key, href, label, Icon }: MobileTab) => {
+  const renderRailTab = ({ key, href, label, icon }: MobileTab) => {
     // 검색 패널이 열려있는 동안은 라우트 탭의 활성 표시를 끈다 — 메뉴는 한 번에 하나만 선택 상태
     // 소식은 데스크톱에서 페이지 대신 패널 — 패널이 열려 있으면 활성
     // 소식·MY는 데스크톱에서 페이지 대신 팝오버 — 팝오버가 열려 있으면 활성
@@ -254,7 +218,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
             )}
           </AnimatePresence>
           <span style={{ position: 'relative', display: 'flex' }}>
-            <Icon size={21} />
+            <Icon name={icon} size={21} />
             {key === 'feed' && unreadCount > 0 && <UnreadDot />}
           </span>
           <span style={{ position: 'relative', fontSize: 10, fontWeight: 600 }}>{label}</span>

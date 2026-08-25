@@ -5,7 +5,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMovieDetail, useMovieTheaterShowtimes, useActiveMovieIds } from '@/lib/supabase/queries'
-import { TheaterCardSkeleton } from '@/components/primitives'
+import { TheaterCardSkeleton, Divider, EmptyState } from '@/components/primitives'
 import type { MovieDetail, MovieTheaterEntry } from '@/lib/supabase/queries'
 import { withFlagsRaw } from '@/lib/nations'
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
@@ -16,7 +16,7 @@ import { locationAdapter } from '@/lib/adapters/location'
 import { calculateAndFormatDistance, calculateDistanceKm } from '@/lib/map/distanceUtils'
 import { getRegionFromAddress, getRegionFromCoords } from '@/lib/regions'
 import { formatDateLabel } from '@/lib/date'
-import { Toast, IconButton, Button } from '@/components/primitives'
+import { Toast, IconButton, Button, Icon } from '@/components/primitives'
 import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
 import { ExpandableSynopsis } from '@/components/domain/movieDetail/ExpandableSynopsis'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
@@ -29,39 +29,6 @@ function useIsDesktopDetail() {
 }
 
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
-const IcoChevronLeft = () => (
-  <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M15 18l-6-6 6-6" />
-  </svg>
-)
-const IcoShare = () => (
-  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
-    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-  </svg>
-)
-const IcoClose = () => (
-  <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
-    <path d="M18 6L6 18M6 6l12 12" />
-  </svg>
-)
-const IcoChevronRight = () => (
-  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M9 18l6-6-6-6" />
-  </svg>
-)
-const IcoPin = () => (
-  <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-    <circle cx="12" cy="10" r="3" />
-  </svg>
-)
-const IcoUser = () => (
-  <svg width={26} height={26} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-    <circle cx="12" cy="7" r="4" />
-  </svg>
-)
 
 /* ── NavBar ── */
 function NavBar({
@@ -89,7 +56,7 @@ function NavBar({
       borderBottom: '1px solid var(--color-border)',
       backgroundColor: 'var(--color-primary-subtle-l)',
     }}>
-      <IconButton variant="ghost" size={44} aria-label="뒤로가기" onClick={onBack}><IcoChevronLeft /></IconButton>
+      <IconButton variant="ghost" size={44} aria-label="뒤로가기" onClick={onBack}><Icon name="chevron-left" size={22} /></IconButton>
       <span style={{
         flex: 1,
         textAlign: 'center',
@@ -106,7 +73,7 @@ function NavBar({
         {title}
       </span>
       {trailing}
-      <IconButton variant="ghost" size={44} aria-label="닫기" onClick={onClose}><IcoClose /></IconButton>
+      <IconButton variant="ghost" size={44} aria-label="닫기" onClick={onClose}><Icon name="x" size={20} /></IconButton>
     </div>
   )
 }
@@ -233,13 +200,13 @@ function InfoTab({ movie, onDirectorClick, desktop = false }: { movie: MovieDeta
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   flexShrink: 0, color: 'var(--color-text-caption)',
                 }}>
-                  <IcoUser />
+                  <Icon name="user" size={26} strokeWidth={1.5} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 'var(--text-title)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{name}</div>
                   <div style={{ marginTop: 4, fontSize: 'var(--text-badge)', color: 'var(--color-primary-base)', fontWeight: 500, textDecoration: 'underline' }}>감독 페이지 보기</div>
                 </div>
-                <IcoChevronRight />
+                <Icon name="chevron-right" size={16} />
               </button>
             ))}
           </div>
@@ -283,7 +250,7 @@ function TheaterShowtimeChips({
             {entry.theaterName}
           </div>
           <div style={{ marginTop: 4, display: 'flex', alignItems: 'flex-start', gap: 4, color: 'var(--color-text-sub)', fontSize: 12, lineHeight: 1.45 }}>
-            <IcoPin />
+            <Icon name="map-pin" size={12} />
             <span style={{ minWidth: 0, wordBreak: 'keep-all' }}>{entry.theaterAddress}</span>
           </div>
         </div>
@@ -456,11 +423,11 @@ function TheatersTab({ movieId, onMapClick, onGoToTheater, desktop = false, init
 
   const sectionDivider = (label: string) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '40px 0 16px' }}>
-      <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
+      <Divider flex />
       <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-sub)', whiteSpace: 'nowrap' }}>
         {label}
       </span>
-      <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
+      <Divider flex />
     </div>
   )
 
@@ -497,18 +464,14 @@ function TheatersTab({ movieId, onMapClick, onGoToTheater, desktop = false, init
           ))}
         </div>
       ) : theaters.length === 0 ? (
-        <div style={{ textAlign: 'center', paddingTop: 40, fontSize: 13, color: 'var(--color-text-caption)' }}>
-          상영 중인 극장이 없어요
-        </div>
+        <EmptyState message="상영 중인 극장이 없어요" paddingY={40} style={{ paddingBottom: 0 }} />
       ) : regionId ? (
         <>
           {/* 선택 지역 섹션 */}
           {inRegion.length > 0
             ? grid(inRegion)
             : (
-              <div style={{ textAlign: 'center', padding: '28px 0 4px', fontSize: 13, color: 'var(--color-text-caption)' }}>
-                {regionId} 지역 상영 정보가 없어요
-              </div>
+              <EmptyState message={`${regionId} 지역 상영 정보가 없어요`} paddingY={28} />
             )
           }
 
@@ -630,10 +593,11 @@ export function MovieDetailClient({ movieId, theaterId, initialData, initialShow
         <div style={{ position: 'sticky', top: 0, zIndex: 50, paddingTop: 'env(safe-area-inset-top)', backgroundColor: 'var(--color-surface-bg)' }}>
           <NavBar title="영화 정보" titleVisible onBack={handleBack} onClose={handleClose} />
         </div>
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}>
-          <span style={{ fontSize: 14, color: 'var(--color-text-caption)' }}>영화를 찾을 수 없어요</span>
-          <button onClick={handleBack} style={{ fontSize: 13, color: 'var(--color-primary-base)', border: 'none', background: 'none', cursor: 'pointer' }}>돌아가기</button>
-        </div>
+        <EmptyState
+          message="영화를 찾을 수 없어요"
+          action={<button onClick={handleBack} style={{ fontSize: 13, color: 'var(--color-primary-base)', border: 'none', background: 'none', cursor: 'pointer' }}>돌아가기</button>}
+          style={{ flex: 1, gap: 12 }}
+        />
       </div>
     )
   }
@@ -674,7 +638,7 @@ export function MovieDetailClient({ movieId, theaterId, initialData, initialShow
             }}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
           >
-            <IcoShare />
+            <Icon name="share-2" size={16} />
             공유
           </Button>
         }

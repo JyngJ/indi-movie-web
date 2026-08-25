@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { ChevronDown, ChevronLeft, ExternalLink, MapPin, X, ZoomIn } from 'lucide-react'
 import { IconButton, SectionHeader, ScrollNavButton } from '@/components/primitives'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
@@ -14,6 +13,7 @@ import type { FestivalDetail } from '@/types/festival'
 import { scrollRailBy } from '@/lib/ui/railScroll'
 import { Button } from '@/components/primitives'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
+import { Icon } from '@/components/primitives'
 
 // http:// 원본(예: jiff.kr — HTTPS 인증서가 깨져있음)을 브라우저가 직접 요청하면 mixed-content
 // 자동 https 승격 때문에 깨진다. Next 이미지 최적화 엔드포인트를 거치면 서버가 대신
@@ -103,7 +103,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
       <div style={{ position: 'sticky', top: 0, zIndex: 50, paddingTop: 'env(safe-area-inset-top)', backgroundColor: 'var(--color-surface-bg)', borderBottom: '1px solid var(--color-border)' }}>
         <div style={{ height: 52, display: 'flex', alignItems: 'center', gap: 4, paddingLeft: 4, paddingRight: 12, maxWidth: isDesktop ? 1200 : undefined, margin: isDesktop ? '0 auto' : undefined }}>
           <IconButton variant="ghost" size={44} aria-label="뒤로가기" onClick={() => router.back()}>
-            <ChevronLeft size={22} strokeWidth={1.75} color="currentColor" />
+            <Icon name="chevron-left" size={22} strokeWidth={1.75} color="currentColor" />
           </IconButton>
           <Button variant="text" size="sm" onClick={() => router.push('/')} style={{ padding: 0, flexShrink: 0, minHeight: 'auto', height: 'auto' }}>영화</Button>
           <span style={{ color: 'var(--color-text-caption)', fontSize: 13, flexShrink: 0 }}>&gt;</span>
@@ -141,7 +141,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
           {festival.name}
         </h1>
         <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--color-text-caption)' }}>
-          <MapPin size={14} strokeWidth={1.75} color="currentColor" />
+          <Icon name="map-pin" size={14} strokeWidth={1.75} color="currentColor" />
           {festival.region} · {festival.city}
           {festival.venueText ? ` · ${festival.venueText}` : ''}
         </div>
@@ -160,7 +160,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
                   fontSize: 14, fontWeight: 700, textDecoration: 'none',
                 }}
               >
-                공식 사이트 <ExternalLink size={16} strokeWidth={1.75} color="currentColor" />
+                공식 사이트 <Icon name="external-link" size={16} strokeWidth={1.75} color="currentColor" />
               </a>
             )}
             {firstLinkedTheaterId && (
@@ -205,7 +205,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
                   backgroundColor: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                   color: 'var(--color-on-accent)',
                 }}>
-                  <ZoomIn size={16} strokeWidth={1.75} className="text-current" />
+                  <Icon name="zoom-in" size={16} strokeWidth={1.75} className="text-current" />
                 </div>
               </div>
               {timetables.length > 1 && (
@@ -290,7 +290,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
                 style={{ width: 'calc(100% - 32px)', maxWidth: 360, margin: '4px auto 0' }}
               >
                 {lineupExpanded ? '접기' : '더보기'}
-                <ChevronDown size={14} strokeWidth={1.75} color="currentColor" style={{ transform: lineupExpanded ? 'rotate(180deg)' : undefined }} />
+                <Icon name="chevron-down" size={14} strokeWidth={1.75} color="currentColor" style={{ transform: lineupExpanded ? 'rotate(180deg)' : undefined }} />
               </Button>
             )}
           </>
@@ -313,7 +313,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
                   cursor: 'pointer', textAlign: 'left', minHeight: 'auto',
                 }}
               >
-                <MapPin size={16} strokeWidth={1.75} color="var(--color-primary-base)" style={{ marginTop: 4, flexShrink: 0 }} />
+                <Icon name="map-pin" size={16} strokeWidth={1.75} color="var(--color-primary-base)" style={{ marginTop: 4, flexShrink: 0 }} />
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)' }}>{link.theater.name}</div>
                   <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4 }}>{link.theater.address}</div>
@@ -327,7 +327,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
                   borderRadius: 12, border: '1px dashed var(--color-border)',
                 }}
               >
-                <MapPin size={16} strokeWidth={1.75} color="var(--color-text-caption)" style={{ marginTop: 4, flexShrink: 0 }} />
+                <Icon name="map-pin" size={16} strokeWidth={1.75} color="var(--color-text-caption)" style={{ marginTop: 4, flexShrink: 0 }} />
                 <div style={{ fontSize: 14, color: 'var(--color-text-body)' }}>{link.venueText ?? '임시 상영장'}</div>
               </div>
             )
@@ -366,7 +366,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
               color: 'var(--color-on-accent)',
             }}
           >
-            <X size={18} strokeWidth={1.75} className="text-current" />
+            <Icon name="x" size={18} strokeWidth={1.75} className="text-current" />
           </button>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

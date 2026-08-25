@@ -1,5 +1,7 @@
 'use client'
 
+import { Icon } from '@/components/primitives'
+
 export type ShowtimeKind = 'normal' | 'low' | 'soldout' | 'late' | 'nowplaying' | 'ended'
 
 interface ShowtimeCellProps {
@@ -70,9 +72,7 @@ export function ShowtimeCell({
         </span>
         {/* 2.0: 심야 = 시간 줄 인라인 달 — 배지(라벨+배경)는 정보 중복이라 강등 */}
         {isLate && !isPast && (
-          <svg width={14} height={14} viewBox="0 0 24 24" fill="var(--color-primary-base)" style={{ flexShrink: 0 }} aria-label="심야 상영">
-            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
-          </svg>
+          <Icon name="moon" size={14} />
         )}
       </div>
       {/* 종료시간 — 별도 줄 (피그마) */}

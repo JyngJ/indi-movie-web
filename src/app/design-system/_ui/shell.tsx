@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
+import { Icon } from '@/components/primitives'
 import { siblings } from './nav'
 
 /* 문서 사이트 조각들. 제품 컴포넌트가 아니라 문서 전용이므로 여기서만 쓴다. */

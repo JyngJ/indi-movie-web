@@ -1,4 +1,4 @@
-import { IcoClose, IcoChevron } from './icons'
+import { Icon } from '@/components/primitives'
 
 /* -- FilterChip --------------------------------------------------- */
 interface FilterChipProps {
@@ -73,9 +73,7 @@ export function FilterChip({ label, value, open, selected, hasDropdown, onClick,
           display: 'inline-flex', alignItems: 'center', gap: 4,
         }}>
           {tone === 'favorite' && (
-            <svg width={12} height={12} viewBox="0 0 24 24" fill={selected ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }} aria-hidden="true">
-              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-            </svg>
+            <Icon name="heart" size={12} fill="currentColor" color="currentColor" strokeWidth={0} />
           )}
           {label}
         </span>
@@ -92,14 +90,14 @@ export function FilterChip({ label, value, open, selected, hasDropdown, onClick,
             cursor: 'pointer', marginLeft: 4, flexShrink: 0,
           }}
         >
-          <IcoClose />
+          <Icon name="x" size={10} color="var(--color-text-sub)" />
         </span>
       ) : hasDropdown ? (
         <span style={{
           display: 'inline-flex', alignItems: 'center', marginLeft: 4, flexShrink: 0,
           color: open ? 'var(--filter-chip-open-caret)' : 'var(--color-text-caption)',
         }}>
-          <IcoChevron open={!!open} />
+          <Icon name="chevron-down" size={11} style={{ transform: open ? 'rotate(180deg)' : undefined, transition: 'transform 180ms ease' }} />
         </span>
       ) : null}
     </button>

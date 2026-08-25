@@ -8,10 +8,10 @@ import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { withFlag } from '@/lib/nations'
 import { Button, ScrollNavButton } from '@/components/primitives'
 import { HoverPopup } from '@/components/domain/CurationSectionRow'
-import { MapPin, Film, Eye, Scale, Clock, Info, TrendingUp, TrendingDown } from 'lucide-react'
 import type { FilmRankingEntry } from '@/lib/supabase/queries'
 import type { Movie } from '@/types/api'
 import { scrollRailBy } from '@/lib/ui/railScroll'
+import { Icon } from '@/components/primitives'
 
 interface FilmRankingSectionProps {
   weekStart: string
@@ -44,14 +44,14 @@ function RankBadge({ rank, prevRank }: { rank: number; prevRank: number | null }
   if (diff > 0) {
     return (
       <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-success)', display: 'flex', alignItems: 'center' }}>
-        <TrendingUp size={12} strokeWidth={2.5} color="currentColor" /> {diff}
+        <Icon name="trending-up" size={12} strokeWidth={2.5} color="currentColor" /> {diff}
       </span>
     )
   }
   if (diff < 0) {
     return (
       <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-error)', display: 'flex', alignItems: 'center' }}>
-        <TrendingDown size={12} strokeWidth={2.5} color="currentColor" /> {Math.abs(diff)}
+        <Icon name="trending-down" size={12} strokeWidth={2.5} color="currentColor" /> {Math.abs(diff)}
       </span>
     )
   }
@@ -60,9 +60,9 @@ function RankBadge({ rank, prevRank }: { rank: number; prevRank: number | null }
 
 // ── 랭킹 설명 호버 툴팁 ──────────────────────────────────────────
 const METRICS = [
-  { icon: MapPin, label: '상영관 수',      pct: 45, color: 'var(--color-primary-400)' /* 2.0: info 폐지 — 차트·보조 스탑 */, desc: '전국 독립·예술영화 전용관 중 상영 중인 극장 수' },
-  { icon: Film, label: '상영 회차',      pct: 30, color: '#10B981', desc: '집계 기간 동안 편성된 총 상영 회차' },
-  { icon: Eye, label: '영화볼지도 조회', pct: 25, color: '#8B5CF6', desc: '앱에서 이 영화·상영관을 찾아본 횟수' },
+  { icon: 'map-pin' as const, label: '상영관 수',      pct: 45, color: 'var(--color-primary-400)' /* 2.0: info 폐지 — 차트·보조 스탑 */, desc: '전국 독립·예술영화 전용관 중 상영 중인 극장 수' },
+  { icon: 'film' as const, label: '상영 회차',      pct: 30, color: '#10B981', desc: '집계 기간 동안 편성된 총 상영 회차' },
+  { icon: 'eye' as const, label: '영화볼지도 조회', pct: 25, color: '#8B5CF6', desc: '앱에서 이 영화·상영관을 찾아본 횟수' },
 ] as const
 
 function InfoTooltip({ weekStart }: { weekStart: string }) {
@@ -97,17 +97,17 @@ function InfoTooltip({ weekStart }: { weekStart: string }) {
         boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
       }}>
         <span style={{ fontSize: 'var(--text-meta)', fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Scale size={16} strokeWidth={1.75} color="currentColor" /> 랭킹은 이렇게 매겨요
+          <Icon name="scale" size={16} strokeWidth={1.75} color="currentColor" /> 랭킹은 이렇게 매겨요
         </span>
         <p style={{ margin: 0, fontSize: 'var(--text-caption)', color: 'var(--color-text-caption)', lineHeight: 1.6 }}>
           지난 7일 · <strong>{periodLabel}</strong> 세 지표 가중 합산
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)' }}>
-          {METRICS.map(({ icon: Icon, label: l, pct, color, desc }) => (
+          {METRICS.map(({ icon, label: l, pct, color, desc }) => (
             <div key={l} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: 'var(--text-caption)', color: 'var(--color-text-body)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <Icon size={14} strokeWidth={1.75} color="currentColor" /> {l}
+                  <Icon name={icon} size={14} strokeWidth={1.75} color="currentColor" /> {l}
                 </span>
                 <span style={{ fontSize: 'var(--text-caption)', fontWeight: 700, color }}>{pct}%</span>
               </div>
@@ -119,7 +119,7 @@ function InfoTooltip({ weekStart }: { weekStart: string }) {
           ))}
         </div>
         <span style={{ fontSize: 10, color: 'var(--color-text-caption)', borderTop: '1px solid var(--color-border)', paddingTop: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
-          <Clock size={12} strokeWidth={1.75} color="currentColor" /> 매주 월요일 오전 6시 자동 갱신 · {label} 기준
+          <Icon name="clock" size={12} strokeWidth={1.75} color="currentColor" /> 매주 월요일 오전 6시 자동 갱신 · {label} 기준
         </span>
       </div>
       </div>
@@ -258,7 +258,7 @@ export function FilmRankingSection({ weekStart, rankings, movies, isDesktop, onM
               onMouseLeave={() => setInfoHover(false)}
             >
               <Button variant="text" size="sm" aria-label="랭킹 기준 보기">
-                <Info size={16} strokeWidth={1.75} color="currentColor" />
+                <Icon name="info" size={16} strokeWidth={1.75} color="currentColor" />
               </Button>
               {infoHover && <InfoTooltip weekStart={weekStart} />}
             </div>
