@@ -60,7 +60,7 @@ export default function IconographyPage() {
         />
         <SpecRow
           title="이름은 용도가 아니라 형태를 따른다"
-          desc={'lucide 글리프 이름을 kebab-case로 그대로 씁니다 — circle-x이지 error가 아닙니다. 같은 그림이 자리마다 다른 뜻을 갖기 때문입니다. 동그라미 친 x는 어디선 "실패"고 어디선 "지우기"인데, 이름을 뜻으로 붙이면 지우기 버튼에 error를 쓰거나 같은 그림이 두 이름으로 등록됩니다. 뜻은 색과 라벨이 맡고, 이름은 그림만 가리킵니다.'}
+          desc={'lucide 글리프 이름을 kebab-case로 씁니다 — circle-x이지 error가 아닙니다. 같은 그림이 자리마다 다른 뜻을 갖기 때문입니다. 동그라미 친 x는 어디선 "실패"고 어디선 "지우기"인데, 이름을 뜻으로 붙이면 지우기 버튼에 error를 쓰거나 같은 그림이 두 이름으로 등록됩니다. 뜻은 색과 라벨이 맡고, 이름은 그림만 가리킵니다. 다만 lucide가 붙인 숫자(Building2 · Share2)는 형태가 아니라 lucide 안의 일련번호라 그대로 쓰지 않습니다 — building · share-nodes로 적습니다.'}
           visual={
             <div style={{ display: 'flex', gap: 'var(--spacing-6)', alignItems: 'center' }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>

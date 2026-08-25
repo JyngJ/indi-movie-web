@@ -329,7 +329,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
       style={{ paddingLeft: isDesktop ? 0 : 16, paddingRight: isDesktop ? 0 : 16, marginBottom: isDesktop ? 0 : 20, maxWidth: isDesktop ? 480 : undefined }}
       trailing={
         <Button variant="tertiary" size="md" onClick={handleShare} aria-label="공유" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-          <Icon name="share-2" size={16} />
+          <Icon name="share-nodes" size={16} />
           공유
         </Button>
       }

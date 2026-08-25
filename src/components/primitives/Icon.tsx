@@ -16,6 +16,10 @@
  * "지우기"인데, 이름을 success/error로 붙이면 지우기 버튼에 error를 쓰는 꼴이 되거나
  * 같은 그림이 두 이름으로 중복 등록된다. circle-x라고 부르면 그런 일이 생기지 않는다.
  * 뜻은 색(--color-error 등)과 라벨이 맡고, 이름은 그림만 가리킨다.
+ *
+ * 다만 lucide가 붙인 숫자(Building2 · Share2)는 형태가 아니라 lucide 안에서 같은 이름을
+ * 구분하려고 붙인 일련번호다. 그대로 옮기면 building-2가 되는데, 그 2는 이 그림에 대해
+ * 아무것도 말해 주지 않는다. 숫자 대신 형태를 적는다 — building · share-nodes.
  */
 
 import {
@@ -119,7 +123,7 @@ const REGISTRY = {
   smartphone: Smartphone,
   user: User,
   'user-round': UserRound,
-  'building-2': Building2,
+  building: Building2,
   calendar: Calendar,
   clock: Clock,
   bell: Bell,
@@ -134,7 +138,7 @@ const REGISTRY = {
   /* 테마 */
   moon: Moon,
   /* 외부 */
-  'share-2': Share2,
+  'share-nodes': Share2,
   'external-link': ExternalLink,
   send: Send,
   instagram: InstagramGlyph,

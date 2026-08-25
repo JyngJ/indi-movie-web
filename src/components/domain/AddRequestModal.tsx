@@ -17,7 +17,7 @@ interface Props {
 
 const KIND_OPTIONS: { kind: UserRequestKind; label: string; icon: IconName }[] = [
   { kind: 'movie', label: '영화', icon: 'film' },
-  { kind: 'theater', label: '영화관', icon: 'building-2' },
+  { kind: 'theater', label: '영화관', icon: 'building' },
   { kind: 'director', label: '감독', icon: 'user' },
   { kind: 'etc', label: '기타', icon: 'ellipsis' },
 ]

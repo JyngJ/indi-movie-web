@@ -919,7 +919,7 @@ export function TheaterSheet({
                 길찾기
               </button>
               <button className="hover-raise" style={actionBtn} onClick={shareTheater}>
-                <Icon name="share-2" size={14} />
+                <Icon name="share-nodes" size={14} />
                 공유하기
               </button>
               {hasInstagram && (
@@ -1025,7 +1025,7 @@ export function TheaterSheet({
               길찾기
             </button>
             <button className="hover-raise" style={actionBtn} onClick={shareTheater}>
-              <Icon name="share-2" size={14} />
+              <Icon name="share-nodes" size={14} />
               공유하기
             </button>
             {hasInstagram && (
@@ -1307,7 +1307,7 @@ export function TheaterSheet({
                 <Icon name="map-pinned" size={14} />길찾기
               </button>
               <button className="hover-raise" style={actionBtn} onClick={shareTheater}>
-                <Icon name="share-2" size={14} />공유하기
+                <Icon name="share-nodes" size={14} />공유하기
               </button>
               {hasInstagram && (
                 <button className="hover-raise" style={actionBtn} onClick={openInstagram}>

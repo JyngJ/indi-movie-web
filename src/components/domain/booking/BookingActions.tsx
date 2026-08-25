@@ -139,7 +139,7 @@ export function ShareScheduleButton({ variant, onClick }: { variant: Variant; on
   const s = SPEC[variant]
   return (
     <IconButton variant="overlay" size={s.actionBtn} onClick={onClick} aria-label="상영 시간표 공유" title="상영 시간표 공유">
-      <Icon name="share-2" size={s.shareIcon} strokeWidth={1.75} />
+      <Icon name="share-nodes" size={s.shareIcon} strokeWidth={1.75} />
     </IconButton>
   )
 }

@@ -122,7 +122,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
           }}
           style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
         >
-          <Icon name="share-2" size={16} />
+          <Icon name="share-nodes" size={16} />
           공유
         </Button>
       }
