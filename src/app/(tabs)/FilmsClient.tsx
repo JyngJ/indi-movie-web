@@ -1,16 +1,16 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { SectionHeader, MovieCardSkeleton, FabRound, Icon, Divider } from '@/components/primitives'
-import { AllMoviesGrid } from '@/components/domain/AllMoviesGrid'
+import { AllMoviesGrid, ALL_MOVIES_GRID_ANCHOR_ID } from '@/components/domain/AllMoviesGrid'
 import { RouteProgressBar, navStart } from '@/components/domain/RouteProgressBar'
 import { AnniversarySection } from '@/components/domain/AnniversarySection'
 import { CurationSectionRow } from '@/components/domain/CurationSectionRow'
 import { FavoriteMoviesSection } from '@/components/domain/favorites/FavoriteMoviesSection'
 import { DirectorSpecialSection } from '@/components/domain/DirectorSpecialSection'
-import { DirectorSpotlightSection } from '@/components/domain/DirectorSpotlightSection'
+import { AllMoviesCtaBand } from '@/components/domain/AllMoviesCtaBand'
 import { FilmRankingSection } from '@/components/domain/FilmRankingSection'
 import { LocationPermissionModal } from '@/components/domain/LocationPermissionModal'
 import { PersonalizedSection } from '@/components/domain/PersonalizedSection'
@@ -29,7 +29,7 @@ import { buildSectionAnalytics, computeRunStartIndexes } from '@/lib/curation/se
 import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
 import { buildAnniversaryAges } from '@/lib/curation/getAnniversaryFilms'
 import { formatAlmostSoldOutCaption, getAlmostSoldOutFilms } from '@/lib/curation/getAlmostSoldOutFilms'
-import { dayOfWeekLabel, formatLateNightCaption, getLateNightFilms } from '@/lib/curation/getLateNightFilms'
+import { dayOfWeekLabel } from '@/lib/curation/getLateNightFilms'
 import { formatWeekendCaption, getWeekendFilms } from '@/lib/curation/getWeekendFilms'
 import { getTodayAnniversaries } from '@/lib/curation/directorAnniversaries'
 import { trackEvent } from '@/lib/analytics/client'
@@ -126,20 +126,33 @@ function GhostSectionRow({ isDesktop }: { isDesktop: boolean }) {
   )
 }
 
+/** forceShow — 뷰포트에 안 들어왔어도 즉시 실물을 렌더한다. CTA 밴드가 그리드로 스크롤할 때
+ *  필요하다: 자리표시(GhostSectionRow) 높이 기준으로 착지한 뒤 실물이 마운트되면 문서 높이가
+ *  튀어서 엉뚱한 위치에 선다. 먼저 채우고, 채워진 다음 프레임에 스크롤해야 맞는다. */
+/* 전체 상영작 CTA를 누르면 남은 LazyBlock을 한꺼번에 채운다. 그리드 하나만 채우고 뛰면
+   착지한 뒤에 주변 섹션들이 자리표시에서 실물로 바뀌면서 위쪽 높이가 변해 목적지가 밀린다
+   (실측 340px 어긋났다). 콘텍스트로 두는 이유는 LazyBlock 호출부가 여덟 군데라 prop을
+   일일이 꿰면 하나 빠뜨렸을 때 조용히 다시 어긋나기 때문이다. */
+const ExpandAllContext = createContext(false)
+
 function LazyBlock({ isDesktop, children }: { isDesktop: boolean; children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null)
   const [shown, setShown] = useState(false)
+  /* 파생값으로 읽는다. effect에서 setShown을 부르면 렌더 → effect → 재렌더로 커밋이 한 박자
+     늦어, 호출부가 rAF 뒤에 재도 그리드가 아직 없다. */
+  const expandAll = useContext(ExpandAllContext)
+  const visible = shown || expandAll
   useEffect(() => {
     const el = ref.current
-    if (!el || shown) return
+    if (!el || visible) return
     if (typeof IntersectionObserver === 'undefined') { setShown(true); return }
     const io = new IntersectionObserver(([e]) => {
       if (e.isIntersecting) { setShown(true); io.disconnect() }
     }, { rootMargin: '900px 0px' })   // 4~5섹션 분량 미리 — 도달 전에 채워짐
     io.observe(el)
     return () => io.disconnect()
-  }, [shown])
-  return <div ref={ref}>{shown ? children : <GhostSectionRow isDesktop={isDesktop} />}</div>
+  }, [visible])
+  return <div ref={ref}>{visible ? children : <GhostSectionRow isDesktop={isDesktop} />}</div>
 }
 
 /* ── 주목할 영화제 배너 — 카드 아님. 제목줄은 다른 섹션과 같은 SectionHeader(왼쪽 고정,
@@ -224,7 +237,6 @@ export default function FilmsPage() {
   }, [])
 
   const handleMovieClick = (id: string) => { navStart(); router.push(`/films/movie/${id}`) }
-  const handleDirectorClick = (name: string) => { navStart(); router.push(`/films/director/${encodeURIComponent(name)}`) }
 
   const { state: locState, coords: locCoords, modalSuppressed: locModalSuppressed, request: requestLoc, dismiss: dismissLoc } = useLocationPermission()
   // 접속 위치 지역 — 드롭다운 배지·자동 스크롤 + (미설정 사용자에 한해) 최초 1회 자동 지정
@@ -247,6 +259,36 @@ export default function FilmsPage() {
   const [scrolledPastHeader, setScrolledPastHeader] = useState(false)
   const [revealedByScrollUp, setRevealedByScrollUp] = useState(false)
   const headerRef = useRef<HTMLElement>(null)
+
+  /* 전체 상영작 CTA — 그리드는 같은 페이지 맨 아래에 있으므로 이동이 아니라 스크롤이다.
+     PC는 헤더가 sticky라 그만큼 빼지 않으면 그리드 제목줄이 헤더 밑에 깔린다. */
+  const [gridForced, setGridForced] = useState(false)
+  const pendingGridScroll = useRef(false)
+
+  function scrollToGrid() {
+    const el = document.getElementById(ALL_MOVIES_GRID_ANCHOR_ID)
+    if (!el) return
+    const headerH = headerRef.current?.getBoundingClientRect().height ?? 0
+    /* 즉시 이동이다. 여기서 그리드까지는 수천 px이라 smooth로 날아가는 동안 지나치는
+       섹션들이 실물로 바뀌며 목적지가 밀린다. 한 번에 뛰면 그 사이 레이아웃 변화가 없다. */
+    window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - headerH - 8 })
+  }
+
+  const handleGridCtaClick = () => {
+    if (gridForced) { scrollToGrid(); return }   // 이미 펼친 뒤 두 번째 클릭
+    pendingGridScroll.current = true
+    setGridForced(true)
+  }
+
+  /* 위치는 펼침이 커밋된 뒤에 재야 한다. rAF 안에서 재던 판이 실제로 1732px 짧게 떨어졌다 —
+     그 시점엔 아직 자리표시 높이였다. useLayoutEffect는 DOM 반영 뒤·페인트 전에 돌아
+     사용자에게 중간 위치가 보이지 않는다. */
+  useLayoutEffect(() => {
+    if (!gridForced || !pendingGridScroll.current) return
+    pendingGridScroll.current = false
+    scrollToGrid()
+  }, [gridForced])
+
   const chipRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -409,40 +451,11 @@ export default function FilmsPage() {
      — 다섯 개 다 trackEvent + handleMovieClick뿐이라 기본 경로와 하는 일이 같았다. */
 
 
-  // 심야 상영 — 오늘~D+7 회차 기준, 심야 시각 판정은 순수 함수에 위임
+  /* 심야 상영 섹션은 2026-08-26에 뗐다 — 30일간 175명에게 노출되고 클릭이 0이었다.
+     아래 lnToday/lnNowTime은 주말 상영 섹션이 그대로 쓴다. */
   const lnNow = new Date()
   const lnToday = formatLocalDate(lnNow)
-  const lnEnd = formatLocalDate(new Date(lnNow.getTime() + 7 * 24 * 60 * 60 * 1000))
   const lnNowTime = formatLocalTimeHHMM(lnNow)
-  const lateNightFilms = getLateNightFilms(
-    selectedRegion
-      ? lateNightCandidates.filter((c) => getRegionFromCity(c.theaterCity) === selectedRegion)
-      : lateNightCandidates,
-    lnToday,
-    lnEnd,
-    lnNowTime,
-  )
-  const lateNightCaptions = new Map(
-    lateNightFilms.map((f) => [f.movie.id, formatLateNightCaption(f, lnToday)]),
-  )
-
-  const lateNightCustomInfos = new Map<string, React.ReactNode>(
-    lateNightFilms.map((f) => {
-      const first = f.showings[0]
-      const dayLabel = first?.showDate === lnToday ? '오늘' : '내일'
-      const rest = f.showings.length - 1
-      const dateText = first ? `${dayLabel} ${first.showTime}${rest > 0 ? ` · 외 ${rest}회` : ''}` : ''
-      const theaterName = first?.theaterName ?? ''
-
-      const theaterId = first?.theaterId ?? ''
-      return [
-        f.movie.id,
-        theaterCaption(f.movie.id, theaterId, dateText, theaterName,
-          first ? { date: first.showDate, time: first.showTime } : undefined),
-      ]
-    })
-  )
-
 
   // 이번 주말 상영 — 심야와 같은 오늘~D+7 candidates 재사용, 판정만 별도 순수 함수에 위임
   const weekendFilms = getWeekendFilms(
@@ -534,6 +547,10 @@ export default function FilmsPage() {
   const activeMovieIdSet = new Set(activeMovieIds)
   const movieById = new Map(movies.map((m) => [m.id, m]))
 
+  /* 전체 상영작 그리드에 들어갈 목록 — CTA 밴드의 편수 표기와 그리드가 같은 배열을 봐야
+     "128편"이라고 써 놓고 다른 수가 뜨는 일이 없다 */
+  const gridMovies = movies.filter((m) => activeMovieIdSet.has(m.id))
+
   // 영화별 상영관 수 (AllMoviesGrid 정렬용)
   const theaterCountByMovie = new Map<string, number>()
   for (const { movieId } of movieTheaterPairs) {
@@ -591,6 +608,7 @@ export default function FilmsPage() {
     : `지금 만날 수 있는 영화 ${activeMovieIds.length}편`
 
   return (
+    <ExpandAllContext.Provider value={gridForced}>
     <div
       style={{
         minHeight: '100dvh',
@@ -833,16 +851,6 @@ export default function FilmsPage() {
           movies: almostSoldOutFilms.map((f) => f.movie),
         }] : []
 
-        // 심야 상영 — 3편 미만이면 getLateNightFilms가 빈 배열을 반환해 섹션 자체가 숨겨짐
-        const rtLateNight: AnySection[] = lateNightFilms.length > 0 ? [{
-          listId: 'realtime_late_night',
-          nameKo: '심야 상영',
-          description: '하루의 끝, 밤 깊은 시간에 시작하는 회차들이에요',
-          movieCaptions: lateNightCaptions,
-          customBottomInfos: lateNightCustomInfos,
-          movies: lateNightFilms.map((f) => f.movie),
-        }] : []
-
         // 이번 주말 상영 — 3편 미만이면 getWeekendFilms가 빈 배열을 반환해 섹션 자체가 숨겨짐
         const rtWeekend: AnySection[] = weekendFilms.length > 0 ? [{
           listId: 'realtime_weekend',
@@ -1059,24 +1067,36 @@ export default function FilmsPage() {
           return <>{nodes}</>
         }
 
-        // 특별전 앞뒤 경계를 기준으로 두 개의 run 구성 — 30일 CTR 기준 재배치:
-        // 시의성(막바지·매진임박)을 최상단으로, 저CTR 시기별(seasonal)은 명당에서 강등
-        /* run을 넷으로 나눈다. sparse(≤2편) 페어링이 run 안에서만 일어나므로, run 경계가
+        /* 2026-08-26 재배치 — 30일 CTR(노출=dwell 유니크 대비 클릭 유니크) 기준.
+           읽는 법: 노출로 정규화해도 위치 편향이 남으므로 신뢰할 신호는 두 종류다 —
+           깊은 위치인데 CTR이 높으면 승격, 명당인데 CTR이 낮으면 강등.
+
+           승격: critic_lee_dong_jin 12.1%(평균 위치 12.2) · critic_park 7.1%(11.2)
+                 · decade_90s 8.1%(8.9) · decade_00s 7.2%(10.0) · solo_theater 9.9%(3.7)
+                 이동진은 12번째 줄까지 내려간 사람만 봤는데도 2위권이었다.
+           강등: almost_soldout 6.0%인데 평균 위치 1.2 — 명당 값을 못 했다.
+
+           run을 넷으로 나눈다. sparse(≤2편) 페어링이 run 안에서만 일어나므로, run 경계가
            곧 "이것들끼리는 한 줄에 묶지 말라"는 선언이다. 시의성(run1)과 지식형(run1b)을
            한 배열에 넣으면 PC에서 "매진 임박" 옆에 "비 오는 날 보는 영화"가 붙는다. */
-        const runTop: AnySection[] = [...rtPopularRank]                    // 최상단 — 인기 랭킹 단독
-        const run1: AnySection[] = [...rtLeaveNow, ...rtLastWeek, ...rtAlmostSoldOut]   // 시의성
+        const runTop: AnySection[] = [...rtPopularRank]                    // 16.9% — 최상단 유지
+        const run1: AnySection[] = [                                       // 시의성
+          ...rtLastWeek,                                                   // 13.8%
+          ...rtSolo,                                                       // 9.9% — run2에서 승격
+          ...rtLeaveNow,                                                   // 9.0%
+        ]
         const run1b: AnySection[] = [                                      // 지식형 — 특별전 앞
-          ...rtShortRuntime,
-          ...themes,
+          ...critics,                                                      // 12.1 / 7.1% — run2 꼬리에서 승격
+          ...themes,                                                       // healing 17.9%가 여기 들어 있다
+          ...rtShortRuntime,                                               // 9.0%
           ...rtLongRuntime,
         ]
         const run2: AnySection[] = [                                       // 나머지 — 특별전 뒤
-          ...rtWeekend, ...rtNew, ...rtLateNight,
-          ...rtSolo,
-          ...awards,
-          ...seasonal,
-          ...decades, ...critics, ...movements,
+          ...decades,                                                      // 8.1 / 7.2% — 승격
+          ...awards,                                                       // cannes 7.8 · masters_debut 7.5%
+          ...rtAlmostSoldOut,                                              // 6.0% — run1 최상단에서 강등
+          ...rtNew, ...rtWeekend,                                          // 5.5 / 5.1%
+          ...seasonal, ...movements,
         ]
 
         /* startIndex는 "그날 실제로 그려진 섹션 수"로 이어붙인다. 예전엔 run1.length(게이트
@@ -1161,20 +1181,24 @@ export default function FilmsPage() {
             {/* 4. 특별전 #1 (interleaved) */}
             {special1 && <LazyBlock isDesktop={isDesktop}>{renderSpecial(special1, 1)}</LazyBlock>}
 
-            {/* 5~10. 주말·신작·심야·단독 · 거장/수상 · 시기별 · 연도별 · 평론가 · 무브먼트 */}
-            {renderRun(run2, 'run2', startRun2)}
+            {/* 5. 전체 상영작 진입점 — 여기가 롱테일의 입구다. 그리드는 30일 CTR 55%로 전
+                섹션 1위인데 도달이 꼴찌라, 페이지 맨 아래까지 안 가도 들어갈 수 있게 한다.
+                그리드 바로 위가 아니라 롱테일 시작점에 두는 게 요점 — 바로 위면 아무 의미 없다.
+                감독 스포트라이트(2.3%, 44명)를 이 자리에서 걷어내고 대신 넣었다. */}
+            <AllMoviesCtaBand
+              movieCount={gridMovies.length}
+              regionLabel={selectedRegion ?? undefined}
+              isDesktop={isDesktop}
+              position={startRun2}
+              onClick={handleGridCtaClick} />
 
-            {/* 11. 감독 스포트라이트 */}
-            <LazyBlock isDesktop={isDesktop}>
-              <DirectorSpotlightSection
-                movies={movies} activeMovieIds={activeMovieIdSet}
-                isDesktop={isDesktop} onDirectorClick={handleDirectorClick} />
-            </LazyBlock>
+            {/* 6~10. 연도별 · 거장/수상 · 매진 임박 · 신작·주말 · 시기별 · 무브먼트 */}
+            {renderRun(run2, 'run2', startRun2 + 1)}
 
-            {/* 12. 전체 상영작 그리드 */}
+            {/* 11. 전체 상영작 그리드 */}
             <LazyBlock isDesktop={isDesktop}>
             <AllMoviesGrid
-              movies={movies.filter((m) => activeMovieIdSet.has(m.id))}
+              movies={gridMovies}
               isDesktop={isDesktop}
               regionLabel={selectedRegion ?? undefined}
               theaterCountByMovie={theaterCountByMovie}
@@ -1207,5 +1231,6 @@ export default function FilmsPage() {
         </FabRound>
       )}
     </div>
+    </ExpandAllContext.Provider>
   )
 }

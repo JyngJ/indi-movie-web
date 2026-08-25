@@ -119,12 +119,33 @@ export const SECTION_GROUP: Record<string, number> = {
   theme_based_on_novel:     6,
 }
 
+/**
+ * 렌더에서 뺀 리스트 — 2026-08-26, 30일 CTR 근거.
+ *
+ * DB의 curation_list 행은 남겨 둔다. 지우면 member_ids(손으로 고른 정적 목록)까지 날아가고,
+ * 되돌리려면 다시 큐레이션해야 한다. 여기서 거르면 판단 근거와 함께 리뷰에 남고 한 줄로 복구된다.
+ *
+ * 노출 20명 이상인데 최저권:
+ *   theme_black_white 3.9%(77명) · festival_academy_picture 2.4%(82명) · theme_summer_night 2.2%(46명)
+ * 노출도 클릭도 없는 것 — min_n에 걸려 거의 안 뜨는데 뜰 때도 안 눌린다:
+ *   theme_visual_feast 0%(13명) · theme_based_on_novel 0%(13명) · movement_nouvelle_vague 0%(9명)
+ */
+export const RETIRED_LIST_IDS: ReadonlySet<string> = new Set([
+  'theme_black_white',
+  'festival_academy_picture',
+  'theme_summer_night',
+  'theme_visual_feast',
+  'theme_based_on_novel',
+  'movement_nouvelle_vague',
+])
+
 export function getFilmsTabCurationSections(
   movies: Movie[],
   activeMovieIds: ReadonlySet<string>,
   lists: CurationListRow[],
 ): CurationSectionData[] {
   return lists
+    .filter((list) => !RETIRED_LIST_IDS.has(list.listId))
     .filter((list) => isInSeason(list.seasonTrigger))
     .flatMap((list) => {
       const config = SECTION_CONFIG[list.listId] ?? { emoji: <Clapperboard size={24} strokeWidth={1.75} color="var(--color-primary-base)" /> }
