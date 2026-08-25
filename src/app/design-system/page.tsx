@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { manifest } from '@/design-system'
+import { documentedComponents } from './_ui/nav'
 import { DocPage, DocSection, Code, DefTable, Stage } from './_ui/shell'
 
 function Stat({ value, label }: { value: React.ReactNode; label: string }) {
@@ -19,7 +20,9 @@ function Stat({ value, label }: { value: React.ReactNode; label: string }) {
 
 export default function OverviewPage() {
   const tokenCount = manifest.tokenGroups.reduce((n, g) => n + g.tokens.length, 0)
-  const mapped = manifest.components.filter(c => c.figmaSet).length
+  // 사이드바에 실은 것만 센다 — 숨긴 컴포넌트까지 세면 현황과 목록의 숫자가 어긋난다.
+  const documented = documentedComponents()
+  const mapped = documented.filter(c => c.figmaSet).length
   const kinds = manifest.drift.reduce<Record<string, number>>((a, d) => {
     a[d.kind] = (a[d.kind] ?? 0) + 1
     return a
@@ -35,8 +38,8 @@ export default function OverviewPage() {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-3)' }}>
           <Stat value={tokenCount} label="코드 토큰" />
           <Stat value={manifest.typography.figma.length} label="텍스트 스타일" />
-          <Stat value={manifest.components.length} label="프리미티브" />
-          <Stat value={`${mapped}/${manifest.components.length}`} label="피그마 연결" />
+          <Stat value={documented.length} label="프리미티브" />
+          <Stat value={`${mapped}/${documented.length}`} label="피그마 연결" />
           <Stat value={manifest.drift.length} label="코드↔피그마 차이" />
         </div>
       </DocSection>

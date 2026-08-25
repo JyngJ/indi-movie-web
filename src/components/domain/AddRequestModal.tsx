@@ -26,7 +26,7 @@ const NAME_FIELD: Record<UserRequestKind, { label: string; placeholder: string }
   movie: { label: '영화 이름', placeholder: '예: 패터슨' },
   theater: { label: '영화관 이름', placeholder: '예: 서울아트시네마' },
   director: { label: '감독 이름', placeholder: '예: 홍상수' },
-  etc: { label: '요청 내용', placeholder: '요청하실 내용을 입력해주세요' },
+  etc: { label: '요청 내용', placeholder: '요청할 내용을 입력해 주세요' },
 }
 
 const NOTE_HINT: Record<UserRequestKind, string> = {
@@ -90,12 +90,12 @@ export function AddRequestModal({ open, query, onClose }: Props) {
       })
       if (!res.ok) {
         const body = await res.json().catch(() => null)
-        throw new Error(body?.error?.message ?? '요청을 보내지 못했습니다.')
+        throw new Error(body?.error?.message ?? '요청을 보내지 못했어요. 잠시 후 다시 시도해 주세요.')
       }
       trackEvent('add request submitted', { kind, query, source: 'films_search_empty' })
       setStep('success')
     } catch (e) {
-      setError(e instanceof Error ? e.message : '요청을 보내지 못했습니다.')
+      setError(e instanceof Error ? e.message : '요청을 보내지 못했어요. 잠시 후 다시 시도해 주세요.')
     } finally {
       setSubmitting(false)
     }

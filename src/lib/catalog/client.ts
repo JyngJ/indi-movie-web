@@ -19,7 +19,7 @@ export function useCatalog() {
 async function fetchCatalog(): Promise<CatalogResponse> {
   const response = await fetch('/api/catalog', { cache: 'no-store' })
   if (!response.ok) {
-    throw new Error('상영 카탈로그를 불러오지 못했습니다.')
+    throw new Error('상영 정보를 불러오지 못했어요')
   }
   return response.json() as Promise<CatalogResponse>
 }

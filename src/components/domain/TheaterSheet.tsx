@@ -866,7 +866,7 @@ export function TheaterSheet({
 
   return (
     <>
-    <Toast message="복사되었습니다" trigger={copyCount} />
+    <Toast message="복사했어요" trigger={copyCount} />
     <div
       ref={containerRef}
       onPointerDown={handlePointerDown}
@@ -1860,7 +1860,7 @@ export function TheaterSheet({
                 color: 'var(--color-text-caption)',
                 fontSize: 13,
               }}>
-                선택한 날짜에 상영 정보가 없습니다.
+                선택한 날짜에 상영 정보가 없어요
               </div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(var(--comp-showtime-min-width), 1fr))', gap: 12 }}>
@@ -1907,7 +1907,7 @@ export function TheaterSheet({
                 textAlign: 'center',
                 lineHeight: 1.5,
               }}>
-                상영 정보는 실시간으로 불러오지 않으므로<br />실제 좌석 현황과 다를 수 있습니다.
+                좌석 정보는 실시간이 아니라서<br />실제 현황과 다를 수 있어요
               </div>
             )}
           </div>

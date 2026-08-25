@@ -99,7 +99,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
   const visibleMovies = directorMovies
 
   if (isLoading) {
-    return <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}><Toast message="데이터 불러오는 중…" visible /></div>
+    return <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}><Toast message="불러오는 중…" visible /></div>
   }
 
   const navBar = (
@@ -230,7 +230,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
           </div>
 
           {directorMovies.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '48px 0', fontSize: 13, color: 'var(--color-text-caption)' }}>작품 정보가 없습니다</div>
+            <div style={{ textAlign: 'center', padding: '48px 0', fontSize: 13, color: 'var(--color-text-caption)' }}>작품 정보가 없어요</div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)', gap: isDesktop ? 20 : 12, padding: isDesktop ? '16px 0 0' : '12px var(--gutter) 0' }}>
               {visibleMovies.map((m) => (

@@ -44,7 +44,9 @@ export async function generateMetadata({
   const todayTitles = await getTheaterTodayMovieTitles(theater.id)
   const where = regionLabel ? `${regionLabel} 독립·예술영화관` : '독립·예술영화관'
   const description = todayTitles.length > 0
+    // writing-audit-ignore — SEO 메타·스키마 문구는 문어체 유지
     ? `${theater.name}(${where}) 이번 주 상영작: ${todayTitles.join(', ')}. 회차별 상영 시간과 예매 링크, 극장 위치·길찾기를 영화볼지도에서 확인하세요. 시간표는 매일 갱신됩니다.`
+    // writing-audit-ignore — SEO 메타·스키마 문구는 문어체 유지
     : `${theater.name}(${where}) 상영시간표와 극장 정보. 주소는 ${theater.address}입니다. 지금은 등록된 상영이 없지만 영화볼지도는 전국 독립영화관 시간표를 매일 갱신하므로, 새 상영이 열리면 회차와 예매 링크를 바로 확인할 수 있습니다.`
   const url = `${BASE_URL}/films/theater/${id}`
   /* 회차까지 골라서 공유한 링크(?showtime=)면 카드에 그 회차를 싣는다 */
@@ -86,7 +88,7 @@ export default async function FilmsTheaterDetailPage({
   if (!theater) notFound()
 
   return (
-    <Suspense fallback={<Toast message="데이터 불러오는 중…" visible />}>
+    <Suspense fallback={<Toast message="불러오는 중…" visible />}>
       <TheaterBody id={id} theater={theater} />
     </Suspense>
   )
@@ -113,11 +115,13 @@ async function TheaterBody({ id, theater }: { id: string; theater: Theater }) {
     {
       question: `${theater.name}에서 오늘 무슨 영화를 상영하나요?`,
       answer: todayMovies.length > 0
+        // writing-audit-ignore — SEO 메타·스키마 문구는 문어체 유지
         ? `${todayMovies.map((m) => `${m.movieTitle} (${m.times.join(', ')})`).join(', ')}을 상영합니다.`
-        : `오늘은 등록된 상영이 없습니다. 영화볼지도는 상영 시간표를 매일 갱신합니다.`,
+        : `오늘은 등록된 상영이 없어요. 상영 시간표는 매일 갱신돼요.`,
     },
     {
       question: `${theater.name}은 어디에 있나요?`,
+      // writing-audit-ignore — SEO 메타·스키마 문구는 문어체 유지
       answer: `${theater.address}에 있습니다.`,
     },
   ])

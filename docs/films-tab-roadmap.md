@@ -1,5 +1,7 @@
 # 영화 탭 남은 작업
 
+> **[스테일 주의 — 2026-08-14 검토]** 2026-06-17 로드맵 — 1번 감독 상세(`/director/[name]`, `/films/director/[name]`, photo_url 포함)는 구현 완료. 잔여 항목은 현행 코드와 대조 후 착수할 것.
+
 ## 1. 감독 상세 페이지 `/director/[name]`
 
 - 감독 프로필 사진 (Wikipedia API — `scripts/fetch-director-photos.ts` 준비됨, `directors` 테이블 `photo_url` 컬럼 추가 필요)

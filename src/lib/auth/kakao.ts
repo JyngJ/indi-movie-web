@@ -38,6 +38,7 @@ export interface KakaoRefreshResponse {
 export function kakaoEnv() {
   const clientId = process.env.KAKAO_REST_API_KEY
   const clientSecret = process.env.KAKAO_CLIENT_SECRET
+  // writing-audit-ignore — 개발자용 오류 메시지 (화면 문구 아님)
   if (!clientId) throw new Error('KAKAO_REST_API_KEY 환경 변수가 없습니다.')
   return { clientId, clientSecret }
 }

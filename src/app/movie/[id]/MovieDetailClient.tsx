@@ -498,7 +498,7 @@ function TheatersTab({ movieId, onMapClick, onGoToTheater, desktop = false, init
         </div>
       ) : theaters.length === 0 ? (
         <div style={{ textAlign: 'center', paddingTop: 40, fontSize: 13, color: 'var(--color-text-caption)' }}>
-          상영 중인 영화관이 없습니다
+          상영 중인 극장이 없어요
         </div>
       ) : regionId ? (
         <>
@@ -507,7 +507,7 @@ function TheatersTab({ movieId, onMapClick, onGoToTheater, desktop = false, init
             ? grid(inRegion)
             : (
               <div style={{ textAlign: 'center', padding: '28px 0 4px', fontSize: 13, color: 'var(--color-text-caption)' }}>
-                {regionId} 지역 상영 정보가 없습니다
+                {regionId} 지역 상영 정보가 없어요
               </div>
             )
           }
@@ -619,7 +619,7 @@ export function MovieDetailClient({ movieId, theaterId, initialData, initialShow
   if (isLoading) {
     return (
       <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
-        <Toast message="데이터 불러오는 중…" visible />
+        <Toast message="불러오는 중…" visible />
       </div>
     )
   }
@@ -631,7 +631,7 @@ export function MovieDetailClient({ movieId, theaterId, initialData, initialShow
           <NavBar title="영화 정보" titleVisible onBack={handleBack} onClose={handleClose} />
         </div>
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}>
-          <span style={{ fontSize: 14, color: 'var(--color-text-caption)' }}>영화를 찾을 수 없습니다</span>
+          <span style={{ fontSize: 14, color: 'var(--color-text-caption)' }}>영화를 찾을 수 없어요</span>
           <button onClick={handleBack} style={{ fontSize: 13, color: 'var(--color-primary-base)', border: 'none', background: 'none', cursor: 'pointer' }}>돌아가기</button>
         </div>
       </div>

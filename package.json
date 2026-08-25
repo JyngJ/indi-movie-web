@@ -26,6 +26,8 @@
     "ds:build": "node scripts/design-system/build-manifest.mjs",
     "audit:ui": "node scripts/audit/audit-ui-v3.mjs . --out .audit-out",
     "audit:ui:check": "node scripts/audit/check-regression.mjs",
+    "audit:writing": "node scripts/audit/audit-writing.mjs",
+    "audit:writing:check": "node scripts/audit/check-writing.mjs",
     "check:image-hosts": "node scripts/check-image-hosts.mjs",
     "notify:favorites": "tsx --env-file=.env.local scripts/notify-favorites.ts"
   },
@@ -46,7 +48,7 @@
     "next": "16.2.4",
     "openai": "^6.39.0",
     "playwright-chromium": "^1.61.1",
-    "posthog-js": "^1.374.3",
+    "posthog-js": "^1.418.10",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-leaflet": "^5.0.0",

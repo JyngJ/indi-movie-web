@@ -2,24 +2,15 @@
 
 > Phase별 개발 진행 가이드 & 브랜치 전략
 
+> **[스테일 주의 — 2026-08-14 검토]** 초기 개발(Phase 1~4) 가이드 히스토리. 아래 Phase 체크리스트는 대부분 완료된 과거 기록이다. **브랜치 전략은 이 문서가 아니라 `AGENTS.md`의 Branching Rules가 유일한 기준** — `develop` 브랜치는 실제로 쓰지 않았고, main에서 타입별 브랜치(`feature/`·`fix/`·`docs/`…)를 따서 PR로만 머지한다.
+
 ---
 
-## 브랜치 전략
-
-```
-main         ← 프로덕션 (안정)
-  └─ develop ← 개발 통합 브랜치
-       ├─ feature/phase-1-init
-       ├─ feature/phase-2-map
-       ├─ feature/phase-3-movie
-       ├─ feature/phase-4-auth
-       └─ docs/xxx
-```
+## 브랜치 전략 (구버전 — AGENTS.md가 기준)
 
 ### 규칙
 
 - `main` 직접 push 금지 — PR + 리뷰 후 머지
-- feature 브랜치 → `develop` 머지 → QA → `main` 머지
 - 브랜치 네이밍: `feature/기능명`, `fix/버그명`, `docs/문서명`
 - 커밋 컨벤션 (Conventional Commits)
   - `feat:` 새 기능

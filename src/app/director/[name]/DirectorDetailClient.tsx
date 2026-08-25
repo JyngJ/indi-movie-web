@@ -223,7 +223,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
   if (isLoading) {
     return (
       <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
-        <Toast message="데이터 불러오는 중…" visible />
+        <Toast message="불러오는 중…" visible />
       </div>
     )
   }
@@ -363,14 +363,14 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
                 fontWeight: 700, 
                 verticalAlign: 'text-bottom',
                 margin: '0 4px'
-              }}>상영중</span> 태그가 표시됩니다.
+              }}>상영중</span> 태그가 붙어요
             </div>
           </div>
 
           {/* 리스트 */}
           {directorMovies.length === 0 ? (
             <div style={{ textAlign: 'center', padding: isDesktop ? '56px 0' : '40px 0 0', fontSize: 13, color: 'var(--color-text-caption)' }}>
-              작품 정보가 없습니다
+              작품 정보가 없어요
             </div>
           ) : (
             <div style={{

@@ -1,5 +1,7 @@
 # SEO 개선 계획
 
+> **[스테일 주의 — 2026-08-14 검토]** 2026-06-09 감사 계획 문서 — 핵심 항목 대부분 구현 완료: movie JSON-LD(`src/lib/seo/toMovieSchema.ts` + `movie/[id]/page.tsx`), movie sitemap(`src/app/movie/sitemap.ts`), IndexNow(`src/lib/seo/indexNow.ts`, crawl:showtimes가 하루 3번 자동 통보). 이미지 alt 정책은 `AGENTS.md`의 "이미지 alt 정책" 섹션이 최신.
+
 감사일: 2026-06-09  
 브랜치: `feat/global-nav` 기준 분석
 

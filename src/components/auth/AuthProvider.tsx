@@ -84,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext)
+  // writing-audit-ignore — 개발자용 오류 메시지 (화면 문구 아님)
   if (!ctx) throw new Error('useAuth는 AuthProvider 안에서만 사용할 수 있습니다.')
   return ctx
 }

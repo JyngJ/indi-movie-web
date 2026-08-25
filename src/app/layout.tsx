@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'),
   title: '독립영화 상영시간표·독립영화관 정보 | 영화볼지도',
   description:
+    // writing-audit-ignore — SEO 메타·스키마 문구는 문어체 유지
     '전국 독립·예술영화관 상영시간표를 지도에서 한눈에. 오늘 어디서 무슨 독립영화를 하는지, 내 주변 독립영화관은 어디인지 바로 확인하세요. 극장별 회차 시간표와 예매 링크, 영화·감독 검색, GV·특별전 큐레이션까지 매일 갱신합니다.',
   keywords: [
     '독립영화',
