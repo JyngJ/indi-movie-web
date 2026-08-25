@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { PosterThumb } from '@/components/domain/PosterThumb'
+import { PosterThumb } from '@/components/primitives/PosterThumb'
 import { useDetailLink, type DetailTarget } from '@/hooks/useDetailLink'
 import type { StoredNotificationEvent } from '@/lib/notifications/types'
 

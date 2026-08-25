@@ -11,8 +11,8 @@ import {
 } from 'react'
 import useEmblaCarousel, { type UseEmblaCarouselType } from 'embla-carousel-react'
 import type { EmblaOptionsType } from 'embla-carousel'
-import { IconButton } from '@/components/primitives'
-import { Icon } from '@/components/primitives'
+import { IconButton } from './IconButton'
+import { Icon } from './Icon'
 
 type EmblaApi = UseEmblaCarouselType[1]
 

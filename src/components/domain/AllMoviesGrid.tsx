@@ -9,7 +9,7 @@ import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
 import { trackEvent } from '@/lib/analytics/client'
 import { buildSectionAnalytics } from '@/lib/curation/sectionRuns'
 import { FooterWordmark } from '@/components/domain/FooterWordmark'
-import { PosterThumb } from './PosterThumb'
+import { PosterThumb } from '@/components/primitives/PosterThumb'
 
 type SortKey = 'theaters_desc' | 'theaters_asc' | 'year_desc' | 'year_asc' | 'alpha'
 

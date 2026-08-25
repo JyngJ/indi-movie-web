@@ -24,7 +24,11 @@ export const FOUNDATION_PAGES: DocPageRef[] = [
  *  파생물이 원본과 같은 무게로 보인다.
  *  Icon은 컴포넌트가 아니라 파운데이션(Iconography)으로 다룬다 — 색·타이포처럼
  *  다른 컴포넌트가 그 위에 선다. */
-const HIDDEN = ['CardContainer', 'MovieCardSkeleton', 'TheaterCardSkeleton', 'Icon']
+const HIDDEN = [
+  'CardContainer', 'MovieCardSkeleton', 'TheaterCardSkeleton', 'Icon',
+  // Carousel의 조각들 — 혼자 서지 못하고 Carousel 안에서만 쓰인다
+  'CarouselContent', 'CarouselItem', 'CarouselNavigation', 'CarouselIndicator', 'useCarousel',
+]
 
 export const documentedComponents = () => manifest.components.filter(c => !HIDDEN.includes(c.name))
 
@@ -41,7 +45,7 @@ export const COMPONENT_GROUPS: { title: string; desc: string; names: string[] }[
   {
     title: 'Selection',
     desc: '하나를 고르는 것',
-    names: ['Chip', 'FilterPill', 'GenreChip', 'DirectorChip', 'PosterChip', 'Switch', 'Tabs'],
+    names: ['Chip', 'FilterPill', 'GenreChip', 'DirectorChip', 'PosterChip', 'Switch', 'Tabs', 'DropdownRow'],
   },
   {
     title: 'Input',
@@ -61,7 +65,7 @@ export const COMPONENT_GROUPS: { title: string; desc: string; names: string[] }[
   {
     title: 'Overlay',
     desc: '화면 위에 얹히는 면',
-    names: ['BottomSheet', 'ConfirmDialog', 'BubbleTail'],
+    names: ['BottomSheet', 'ConfirmDialog', 'PanelShell', 'BubbleTail'],
   },
 ]
 

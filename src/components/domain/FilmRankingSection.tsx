@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { PosterThumb } from '@/components/domain/PosterThumb'
+import { PosterThumb } from '@/components/primitives/PosterThumb'
 import { RevealItem, RevealGroup } from '@/components/motion'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { withFlag } from '@/lib/nations'

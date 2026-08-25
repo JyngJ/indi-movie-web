@@ -1,4 +1,4 @@
-import { Icon } from '@/components/primitives'
+import { Icon } from './Icon'
 
 /* -- DropdownRow -------------------------------------------------- */
 interface DropdownRowProps {

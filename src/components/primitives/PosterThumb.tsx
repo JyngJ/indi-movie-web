@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { toSecureImageUrl } from '@/lib/media/imageUrl'
-import { Icon } from '@/components/primitives'
+import { Icon } from './Icon'
 
 interface PosterThumbProps {
   src?: string

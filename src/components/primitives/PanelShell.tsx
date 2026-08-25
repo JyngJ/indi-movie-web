@@ -1,5 +1,5 @@
-import { IconButton } from '@/components/primitives'
-import { Icon } from '@/components/primitives'
+import { IconButton } from './IconButton'
+import { Icon } from './Icon'
 
 /* ── 공통 패널 래퍼 ── */
 export function PanelShell({
