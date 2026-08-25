@@ -11,6 +11,9 @@ import { buildSectionAnalytics } from '@/lib/curation/sectionRuns'
 import { FooterWordmark } from '@/components/domain/FooterWordmark'
 import { PosterThumb } from './PosterThumb'
 
+/** CTA 밴드가 스크롤 목적지로 쓰는 앵커 id — 호출부가 문자열을 재입력하지 않게 내보낸다 */
+export const ALL_MOVIES_GRID_ANCHOR_ID = 'all-movies-grid'
+
 type SortKey = 'theaters_desc' | 'theaters_asc' | 'year_desc' | 'year_asc' | 'alpha'
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
@@ -155,8 +158,10 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
 
   return (
     <>
-      {/* 구분선 — 특별전 상영작 배경색과 통일 */}
-      <div style={{
+      {/* 구분선 — 특별전 상영작 배경색과 통일.
+          id는 상단 CTA 밴드(AllMoviesCtaBand)가 스크롤로 찾아오는 앵커다. 섹션이 아니라
+          구분선에 거는 이유: 여기 걸어야 그리드 제목줄이 화면 맨 위에 딱 붙지 않는다. */}
+      <div id={ALL_MOVIES_GRID_ANCHOR_ID} style={{
         height: 8,
         width: '100%',
         backgroundColor: 'var(--color-surface-raised)',

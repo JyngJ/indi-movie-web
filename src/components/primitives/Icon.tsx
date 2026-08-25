@@ -19,7 +19,7 @@
  */
 
 import {
-  ArrowRightLeft, ArrowUp, Bell, Building2, Calendar, Camera, Check, ChevronDown,
+  ArrowDown, ArrowRightLeft, ArrowUp, Bell, Building2, Calendar, Camera, Check, ChevronDown,
   ChevronLeft, ChevronRight, CircleAlert, CircleCheck, CircleQuestionMark, CircleX,
   Clapperboard, Clock, Copy, Ellipsis, ExternalLink, Eye, Film, Funnel, Heart, Info,
   LayoutGrid, LoaderCircle, LocateFixed, Lock, Map as MapGlyph, MapPin, MapPinned, Minus,
@@ -89,6 +89,7 @@ const REGISTRY = {
   'chevron-right': ChevronRight,
   'chevron-down': ChevronDown,
   'arrow-up': ArrowUp,
+  'arrow-down': ArrowDown,
   'arrow-right-left': ArrowRightLeft,
   /* 조작 */
   x: X,

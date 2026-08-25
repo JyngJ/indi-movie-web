@@ -25,6 +25,7 @@ export type SectionLayout =
   | 'banner'   // 영화제 배너
   | 'hero'     // 인스타 히어로 카드
   | 'avatar'   // 감독 아바타 행
+  | 'band'     // 전면 폭 CTA 밴드
 
 export interface SectionAnalytics {
   source: 'films_tab'

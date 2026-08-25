@@ -37,6 +37,8 @@ export type AnalyticsEventName =
   /** 섹션 안에서 영화가 아닌 대상을 누른 경우 — 특별전의 극장, 스포트라이트의 감독 */
   | 'curation theater selected'
   | 'curation director selected'
+  /** 전체 상영작 CTA 밴드 → 그리드로 내려감. 그리드 자체의 클릭은 'curation movie selected' */
+  | 'curation grid entered'
   | 'personalized section viewed'
   | 'personalized movie clicked'
   | 'director theaters map opened'
