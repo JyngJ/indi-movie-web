@@ -40,3 +40,18 @@ export function toWebSiteSchema(baseUrl: string) {
     url: `${baseUrl}/`,
   }
 }
+
+/**
+ * 브랜드 엔티티 선언 — WebSite만으로는 AI 엔진·구글이 "운영 주체가 누구인지"를
+ * 못 잡는다(E-E-A-T). 로고·SNS(sameAs)로 엔티티 그래프를 연결한다.
+ */
+export function toOrganizationSchema(baseUrl: string) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: '영화볼지도',
+    url: `${baseUrl}/`,
+    logo: `${baseUrl}/logo-tile.png`,
+    sameAs: ['https://www.instagram.com/indi.movie.map/'],
+  }
+}

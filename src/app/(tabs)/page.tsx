@@ -1,5 +1,5 @@
 import { getScreeningIndex } from '@/lib/seo/getScreeningIndex'
-import { toScreeningListSchema, toWebSiteSchema } from '@/lib/seo/toScreeningListSchema'
+import { toOrganizationSchema, toScreeningListSchema, toWebSiteSchema } from '@/lib/seo/toScreeningListSchema'
 import { ScreeningIndexSeoContent } from '@/components/seo/ScreeningIndexSeoContent'
 import FilmsClient from './FilmsClient'
 
@@ -17,6 +17,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지�
 export default async function Home() {
   const data = await getScreeningIndex()
   const websiteSchema = toWebSiteSchema(BASE_URL)
+  const organizationSchema = toOrganizationSchema(BASE_URL)
   const listSchema = toScreeningListSchema(
     data,
     BASE_URL,
@@ -28,6 +29,10 @@ export default async function Home() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
       />
       <script
         type="application/ld+json"
