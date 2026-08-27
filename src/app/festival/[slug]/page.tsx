@@ -3,12 +3,17 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { safeUrl } from '@/lib/seo/safeUrl'
+import { truncateSnippet } from '@/lib/seo/truncateSnippet'
+import { toFestivalSchema } from '@/lib/seo/toFestivalSchema'
+import { FestivalSeoContent } from '@/components/seo/FestivalSeoContent'
 import { movieRowToMovie } from '@/lib/supabase/movieRow'
 import { festivalRowToFestival } from '@/lib/supabase/festivalRow'
 import type { FestivalDetail } from '@/types/festival'
 import { FestivalDetailClient } from './FestivalDetailClient'
 
 export const revalidate = 3600
+
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'
 
 const FESTIVAL_SELECT = `
   id, name, slug, start_date, end_date, region, city, venue_text, banner_url, link_url, description, is_active,
@@ -117,9 +122,8 @@ export async function generateMetadata({
   if (!festival) return { title: '영화볼지도' }
 
   const title = `${festival.name} | 영화볼지도`
-  const description = festival.description
-    ? festival.description.slice(0, 110)
-    : `${festival.city}에서 열리는 ${festival.name}. 상영작·상영관 정보`
+  const description = truncateSnippet(festival.description, 110)
+    ?? `${festival.city}에서 열리는 ${festival.name}. 상영작·상영관 정보`
 
   return {
     title,
@@ -140,9 +144,18 @@ export default async function FestivalDetailPage({
   const festival = await fetchFestival(slug)
   if (!festival) notFound()
 
+  const festivalSchema = toFestivalSchema(festival, BASE_URL)
+
   return (
-    <Suspense>
-      <FestivalDetailClient festival={festival} />
-    </Suspense>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(festivalSchema) }}
+      />
+      <FestivalSeoContent festival={festival} />
+      <Suspense>
+        <FestivalDetailClient festival={festival} />
+      </Suspense>
+    </>
   )
 }

@@ -45,7 +45,14 @@ export async function generateMetadata({
     title,
     description,
     alternates: { canonical: `/films/area/${encodeURIComponent(region)}` },
-    openGraph: { title, description, type: 'website' },
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      url: `/films/area/${encodeURIComponent(region)}`,
+      images: ['/og-image.png'],
+    },
+    twitter: { card: 'summary_large_image', title, description, images: ['/og-image.png'] },
   }
 }
 

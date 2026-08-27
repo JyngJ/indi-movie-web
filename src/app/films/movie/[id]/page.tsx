@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { getMovieDetail } from '@/lib/catalog/getMovieDetail'
 import { FilmsMovieDetailClient } from './FilmsMovieDetailClient'
 import { ogImageUrl } from '@/lib/og/cards'
+import { truncateSnippet } from '@/lib/seo/truncateSnippet'
 import { Toast } from '@/components/primitives'
 
 // NOTE: ISR(정적 셸)로 두면 클라이언트 하이드레이션이 멈추는 문제(포스터 로딩 정지·
@@ -18,7 +19,7 @@ export async function generateMetadata(
   if (!movie) notFound()
 
   const title = `${movie.title} | 영화볼지도`
-  const description = movie.synopsis?.slice(0, 110) ?? `${movie.title} 상영 정보`
+  const description = truncateSnippet(movie.synopsis, 110) ?? `${movie.title} 상영 정보`
   /* 회차까지 골라서 공유한 링크(?showtime=)면 카드에 그 회차를 싣는다 */
   const showtime = typeof query.showtime === 'string' ? query.showtime : undefined
   const images = [ogImageUrl({ type: 'movie', id, showtime })]

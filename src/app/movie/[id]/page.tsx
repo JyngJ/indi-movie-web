@@ -9,6 +9,7 @@ import { toMovieSchema } from '@/lib/seo/toMovieSchema'
 import { toScreeningEventSchema } from '@/lib/seo/toScreeningEventSchema'
 import { toFaqSchema } from '@/lib/seo/toFaqSchema'
 import { toBreadcrumbSchema } from '@/lib/seo/toBreadcrumbSchema'
+import { truncateSnippet } from '@/lib/seo/truncateSnippet'
 import { getMovieShowtimesForSsr } from '@/lib/catalog/getMovieShowtimesCached'
 import { MovieDetailClient } from './MovieDetailClient'
 import { ogImageUrl } from '@/lib/og/cards'
@@ -45,7 +46,7 @@ export async function generateMetadata({
   const theaterCount = new Set(showtimes.map((t) => t.theaterName)).size
 
   const title = `${movie.title} 상영시간표·예매 | 영화볼지도`
-  const synopsisLead = movie.synopsis?.slice(0, 80)?.trim()
+  const synopsisLead = truncateSnippet(movie.synopsis, 80)
   const description = theaterCount > 0
     ? `전국 독립·예술영화관 ${theaterCount}곳 상영 중 · 극장별 상영시간표와 예매 링크를 한눈에.${synopsisLead ? ` ${synopsisLead}` : ''}`
     : `${movie.title} 상영 극장·상영시간표·예매 정보. 새 상영이 열리면 영화볼지도에서 확인하세요.${synopsisLead ? ` ${synopsisLead}` : ''}`
