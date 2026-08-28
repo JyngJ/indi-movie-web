@@ -6,6 +6,7 @@
 
 import type { ReactNode } from 'react'
 import s from './onboarding.module.css'
+import { cartoTileUrl } from '@/lib/map/basemap'
 
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
 
@@ -145,7 +146,7 @@ const TILE_CX = 13968 // 홍대입구 중심 타일 (z14)
 const TILE_CY = 6345
 const TILE_OFFSETS = [-1, 0, 1]
 const tileUrl = (x: number, y: number, dark: boolean) =>
-  `https://a.basemaps.cartocdn.com/${dark ? 'dark_all' : 'rastertiles/voyager'}/${TILE_Z}/${x}/${y}.png`
+  cartoTileUrl(dark ? 'dark' : 'light', TILE_Z, x, y)
 
 /** 온보딩이 쓰는 모든 외부 이미지(지도 타일 + 포스터) — 첫 렌더 전에 프리로드해 다음 페이지 전환 시 재요청 없게 함 */
 export const ILLO_IMAGE_URLS: string[] = [
