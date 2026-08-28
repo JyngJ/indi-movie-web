@@ -57,8 +57,9 @@
 | 프레임워크 | Next.js 16 App Router | SSR + React Query 조합, 향후 서버 액션 확장 |
 | 언어 | TypeScript (strict) | 타입이 문서 역할, 소규모 팀에서 인터페이스 계약 역할 |
 | 서버 상태 | TanStack React Query v5 | 캐시·재검증 전략을 선언적으로 관리 |
-| 스타일 | Tailwind CSS v4 + CSS Variables | 디자인 토큰 기반, 라이트/다크 모드 |
+| 스타일 | Tailwind CSS v4 + CSS Variables | 디자인 토큰 기반, 라이트 단일 테마 (다크 2026-08-04 폐지) |
 | 지도 | Leaflet + react-leaflet v5 | 커스텀 DivIcon으로 포스터 핀 렌더링 |
+| 베이스맵 | CARTO 래스터 타일 (voyager) | 국내 지도 3사는 자체 SDK만 허용해 Leaflet에 못 얹는다 |
 | DB | Supabase PostgreSQL | RLS, 실시간, 인증을 한 곳에서 |
 | 클라이언트 상태 | Zustand v5 | 테마, 지도 UI 상태 |
 
@@ -71,6 +72,12 @@
 1. **와이어프레임 정의**: 기획·UX 흐름을 와이어프레임으로 직접 설계
 2. **디자인 시스템 수립**: Claude 디자인 도구로 컴포넌트 시트 및 토큰 체계를 `docs/DESIGN.md`로 정리 — 색상·타이포그래피·간격 토큰, 라이트/다크 모드, 컴포넌트 계층 정의
 3. **컴포넌트 구현**: `DESIGN.md` + `CLAUDE.md`(아키텍처 규칙)를 기반으로 Claude Code와 페어 프로그래밍해 컴포넌트·화면 구성
+
+디자인 시스템은 **`/design-system`에서 실제 화면으로 볼 수 있습니다.** 파운데이션(색·타이포그래피·간격·radius·엘리베이션·아이콘·문구 규범), 프리미티브 컴포넌트 카탈로그, 그리고 코드 토큰과 피그마 변수를 이름으로 짝지어 값을 대조하는 **코드 ↔ 피그마 차이** 페이지로 구성됩니다. 값의 원본은 `src/styles/tokens.css`, 역할·규칙 설명은 `docs/DESIGN.md`이고, 이 사이트는 그 둘을 브라우저에서 확인하는 자리입니다. `npm run ds:build`가 만든 결과를 그대로 렌더합니다.
+
+AI 에이전트용으로는 같은 내용을 텍스트로 내려주는 `/design-system/llms.txt`(전체는 `llms-full.txt`, 부분은 `llms-tokens.txt`·`llms-components.txt`·`llms-writing.txt`)가 있습니다.
+
+> `/design-system`은 내부 문서라 `robots.txt` 차단 + 페이지별 `noindex` 처리되어 검색에는 노출되지 않습니다.
 
 ### AI 도구 실무 통합
 
@@ -165,8 +172,10 @@ src/
 | 4 | 제보하기, Discord 운영 봇, 수도권 극장 확대 | ✅ 완료 |
 | 5 | 지역 필터, 거리 표시, 감독 필터, 스프링 애니메이션 | ✅ 완료 |
 | 6 | 큐레이션 섹션, Discord 컨펌 파이프라인 | ✅ 완료 |
-| 7 | 사용자 인증, 즐겨찾기 | 예정 |
-| 8 | 네이티브 앱(Capacitor) 확장 | 예정 |
+| 7 | 계정 — 카카오·구글 로그인, 4탭 개편, 프로필 | ✅ 완료 |
+| 8 | 관심 — 영화·감독·극장 등록, 지도 하이라이트, 관심 목록 | ✅ 완료 |
+| 9 | 소식 — 관심 대상 새 상영 알림, 알림 설정 | ✅ 완료 |
+| 10 | 네이티브 앱(Capacitor) 확장 | 예정 |
 
 ---
 
@@ -177,8 +186,12 @@ npm install
 npm run dev   # → http://localhost:3000
 ```
 
-> Node 18+, `.env.local` 환경 변수 필요 (Supabase URL·키).  
+> Node 18+, `.env.local` 환경 변수 필요 (Supabase URL·키, 지도 타일 키 등 — 전체 목록은 [`docs/INFRA.md`](docs/INFRA.md#환경-변수)).  
 > 이 프로젝트는 Turbopack을 사용하지 않습니다 (`--webpack` 강제).
+
+지도 타일은 `NEXT_PUBLIC_CARTO_API_KEY`가 없으면 CARTO가 타일 이미지에 "API KEY REQUIRED"
+워터마크를 구워서 내보냅니다. HTTP 200으로 응답하므로 요청 실패로는 잡히지 않습니다.
+키는 무료이고 [carto.com/basemaps/apikey](https://carto.com/basemaps/apikey/)에서 발급합니다.
 
 분석 도구 설정과 이벤트/대시보드 정의는 [`docs/ANALYTICS.md`](docs/ANALYTICS.md)에 정리되어 있습니다.
 
