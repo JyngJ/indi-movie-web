@@ -148,11 +148,12 @@ const TILE_OFFSETS = [-1, 0, 1]
 const tileUrl = (x: number, y: number, dark: boolean) =>
   cartoTileUrl(dark ? 'dark' : 'light', TILE_Z, x, y)
 
-/** 온보딩이 쓰는 모든 외부 이미지(지도 타일 + 포스터) — 첫 렌더 전에 프리로드해 다음 페이지 전환 시 재요청 없게 함 */
+/**
+ * 온보딩이 쓰는 모든 외부 이미지(지도 타일 + 포스터) — 첫 렌더 전에 프리로드해 다음 페이지 전환 시 재요청 없게 함.
+ * 다크 폐지(2026-08-04) 후 Onboarding의 isDark가 false로 고정이라 라이트 타일만 받는다.
+ */
 export const ILLO_IMAGE_URLS: string[] = [
-  ...[true, false].flatMap((dark) =>
-    TILE_OFFSETS.flatMap((dy) => TILE_OFFSETS.map((dx) => tileUrl(TILE_CX + dx, TILE_CY + dy, dark))),
-  ),
+  ...TILE_OFFSETS.flatMap((dy) => TILE_OFFSETS.map((dx) => tileUrl(TILE_CX + dx, TILE_CY + dy, false))),
   ...POSTER_LIST,
 ]
 
