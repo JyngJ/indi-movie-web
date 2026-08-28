@@ -268,9 +268,9 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
               backgroundColor: 'var(--color-primary-base)',
               color: 'var(--color-on-accent)',
               borderRadius: 'var(--radius-badge)',
-              padding: '4px 8px',
-              fontSize: 'var(--text-badge)',
-              fontWeight: 600,
+              padding: '8px 12px',
+              fontSize: 'var(--text-meta)',
+              fontWeight: 700,
               lineHeight: 1,
               whiteSpace: 'nowrap',
               boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
@@ -304,23 +304,25 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
             </div>
           )}
           {item.rank != null && <span className="sr-only">{item.rank}위</span>}
+          {/* 좌상단 — 좌하단은 순위 전용이라 비워 둔다 (AGENTS.md 포스터 오버레이 칩 정책) */}
           {item.badge && (
             <span
               style={{
                 position: 'absolute',
                 left: 6,
-                bottom: 6,
+                top: 6,
                 backgroundColor: 'rgba(20,15,10,0.72)',
                 color: 'var(--color-on-accent)',
                 borderRadius: 'var(--radius-badge)',
-                padding: '4px 8px',
-                fontSize: 'var(--text-badge)',
-                fontWeight: 600,
-                lineHeight: 1,
+                padding: '8px 12px',
+                fontSize: 'var(--text-meta)',
+                fontWeight: 700,
+                lineHeight: 1.2,
                 maxWidth: 'calc(100% - 12px)',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
+                /* 92px 포스터에서 "오늘이 마지막"·"D-n 막바지 상영"은 한 줄에 못 들어간다.
+                   막바지 카피는 완화·생략 금지라(AGENTS.md) 자르는 대신 어절 단위로 접는다 */
+                whiteSpace: 'normal',
+                wordBreak: 'keep-all',
                 display: 'block',
               }}
             >
