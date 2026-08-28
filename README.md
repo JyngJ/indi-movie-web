@@ -57,8 +57,9 @@
 | 프레임워크 | Next.js 16 App Router | SSR + React Query 조합, 향후 서버 액션 확장 |
 | 언어 | TypeScript (strict) | 타입이 문서 역할, 소규모 팀에서 인터페이스 계약 역할 |
 | 서버 상태 | TanStack React Query v5 | 캐시·재검증 전략을 선언적으로 관리 |
-| 스타일 | Tailwind CSS v4 + CSS Variables | 디자인 토큰 기반, 라이트/다크 모드 |
+| 스타일 | Tailwind CSS v4 + CSS Variables | 디자인 토큰 기반, 라이트 단일 테마 (다크 2026-08-04 폐지) |
 | 지도 | Leaflet + react-leaflet v5 | 커스텀 DivIcon으로 포스터 핀 렌더링 |
+| 베이스맵 | CARTO 래스터 타일 (voyager) | 국내 지도 3사는 자체 SDK만 허용해 Leaflet에 못 얹는다 |
 | DB | Supabase PostgreSQL | RLS, 실시간, 인증을 한 곳에서 |
 | 클라이언트 상태 | Zustand v5 | 테마, 지도 UI 상태 |
 
@@ -177,8 +178,12 @@ npm install
 npm run dev   # → http://localhost:3000
 ```
 
-> Node 18+, `.env.local` 환경 변수 필요 (Supabase URL·키).  
+> Node 18+, `.env.local` 환경 변수 필요 (Supabase URL·키, 지도 타일 키 등 — 전체 목록은 [`docs/INFRA.md`](docs/INFRA.md#환경-변수)).  
 > 이 프로젝트는 Turbopack을 사용하지 않습니다 (`--webpack` 강제).
+
+지도 타일은 `NEXT_PUBLIC_CARTO_API_KEY`가 없으면 CARTO가 타일 이미지에 "API KEY REQUIRED"
+워터마크를 구워서 내보냅니다. HTTP 200으로 응답하므로 요청 실패로는 잡히지 않습니다.
+키는 무료이고 [carto.com/basemaps/apikey](https://carto.com/basemaps/apikey/)에서 발급합니다.
 
 분석 도구 설정과 이벤트/대시보드 정의는 [`docs/ANALYTICS.md`](docs/ANALYTICS.md)에 정리되어 있습니다.
 

@@ -95,6 +95,14 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **톤 범위:** 문학적 한 줄은 큐레이션 부제에만. 버튼·에러·빈 상태엔 쓰지 않는다. 사과("죄송합니다")·감탄으로 시작하지 않는다.
 - **회귀 게이트:** `npm run audit:writing:check` — 합니다체·붙여 쓴 보조 용언·"데이터" 로딩·마침표 세 개·되어요 카운트가 `scripts/audit/writing-baseline.json`(현재 전부 0) 대비 증가하면 실패. CI(ui-audit.yml)가 PR마다 실행한다. baseline을 올려서 통과시키지 말 것. SEO 메타·스키마·법적 문구처럼 문어체가 맞는 줄은 `// writing-audit-ignore` 주석으로 제외한다.
 
+## 지도 베이스맵 (CARTO)
+
+- **타일 주소는 `src/lib/map/basemap.ts`에만 둔다.** `MapView`·온보딩 일러스트가 여기서 가져다 쓴다. 컴포넌트에 URL을 직접 적지 말 것 — 예전에 두 곳에 복붙돼 있어서 키를 붙일 때 두 군데를 따로 고쳐야 했다.
+- **`NEXT_PUBLIC_CARTO_API_KEY` 없으면 워터마크가 찍힌다.** CARTO가 2026-08부터 키 없는 요청에 `API KEY REQUIRED`를 타일 이미지에 구워서 내보낸다. **HTTP 200이라 요청 실패로 안 잡힌다** — 지도가 이상하면 타일 PNG를 직접 열어서 확인할 것. 무료 한도는 월 500만 요청(지도 1회 로드 24~30장).
+- **출처 표기를 지우지 말 것.** 무료 티어 조건이 CARTO·OpenStreetMap 노출이다. 지도는 `attributionControl={false}`라 라이플릿 기본 표기가 안 뜨고, `SettingsAttributionPage`의 출처 표기 페이지가 그 역할을 대신한다.
+- **카카오·네이버·구글로 갈아탈 수 없다.** 셋 다 자체 SDK로만 지도를 띄우게 하고 타일 주소를 다른 라이브러리에 꽂는 걸 약관으로 금지한다. 교체 후보와 근거는 `docs/INFRA.md`의 "지도 베이스맵" 절에 있다.
+- 타일 요청 수가 곧 비용이다. 화면에 안 그려지는 타일을 프리로드하지 말 것 — 다크 폐지 후에도 온보딩이 `dark_all` 9장을 매번 받고 있었다.
+
 ## Crawler Operations
 
 The crawler runs on a Raspberry Pi (`ssh pi@100.76.84.97`, Tailscale). Full runbook: `docs/RUNBOOK-crawler.md`.
