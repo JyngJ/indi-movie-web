@@ -285,6 +285,21 @@ export function SettingsReportPage({
 }
 
 /* ── 출처 표기 ── */
+const attributionLinkRow: React.CSSProperties = {
+  padding: '8px 16px 12px',
+  display: 'flex', alignItems: 'center', gap: 4,
+  fontSize: 13, fontWeight: 500, color: 'var(--color-primary-base)', cursor: 'pointer',
+  background: 'none', border: 'none',
+}
+
+function AttributionLink({ href, label }: { href: string; label: string }) {
+  return (
+    <button onClick={() => window.open(href, '_blank', 'noopener')} style={attributionLinkRow}>
+      {label} <Icon name="external-link" size={12} />
+    </button>
+  )
+}
+
 export function SettingsAttributionPage() {
   const card: React.CSSProperties = {
     margin: '12px 16px 0', borderRadius: 12, overflow: 'hidden',
@@ -299,11 +314,6 @@ export function SettingsAttributionPage() {
     backgroundColor: 'var(--color-surface-bg)',
     fontSize: 12, color: 'var(--color-text-sub)', fontFamily: 'var(--font-mono)',
   }
-  const linkRow: React.CSSProperties = {
-    padding: '8px 16px 12px',
-    display: 'flex', alignItems: 'center', gap: 4,
-    fontSize: 13, fontWeight: 500, color: 'var(--color-primary-base)', cursor: 'pointer',
-  }
   return (
     <div style={{ flex: 1, overflowY: 'auto', backgroundColor: 'var(--color-surface-bg)', paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}>
       {/* 지도 데이터 */}
@@ -317,10 +327,9 @@ export function SettingsAttributionPage() {
             <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)' }}>OpenStreetMap</div>
           </div>
         </div>
-        <div style={valueBox}>© OpenStreetMap contributors</div>
-        <button onClick={() => window.open('https://www.openstreetmap.org/copyright', '_blank', 'noopener')} style={{ ...linkRow as React.CSSProperties, background: 'none', border: 'none' }}>
-          www.openstreetmap.org/copyright <Icon name="external-link" size={12} />
-        </button>
+        <div style={valueBox}>© OpenStreetMap contributors · © CARTO</div>
+        <AttributionLink href="https://www.openstreetmap.org/copyright" label="www.openstreetmap.org/copyright" />
+        <AttributionLink href="https://carto.com/attributions" label="carto.com/attributions" />
       </div>
 
       {/* 서체 */}
@@ -333,9 +342,7 @@ export function SettingsAttributionPage() {
           </div>
         </div>
         <div style={valueBox}>출처 – 한국기계연구원, kimm.re.kr</div>
-        <button onClick={() => window.open('https://www.kimm.re.kr', '_blank', 'noopener')} style={{ ...linkRow as React.CSSProperties, background: 'none', border: 'none' }}>
-          www.kimm.re.kr <Icon name="external-link" size={12} />
-        </button>
+        <AttributionLink href="https://www.kimm.re.kr" label="www.kimm.re.kr" />
       </div>
     </div>
   )

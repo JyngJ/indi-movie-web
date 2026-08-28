@@ -25,6 +25,7 @@ import { computeGvSlotH, computeGvSlotW, GV_MARKER_STEM_H, GV_MARKER_DOT_D } fro
 import type { GvEvent } from '@/data/gv-events'
 import { isFestivalGroup } from '@/data/gv-events'
 import { theaterEventToGvEvent, isFestivalTitle } from '@/lib/gv/adapter'
+import { cartoTileTemplate, CARTO_ATTRIBUTION } from '@/lib/map/basemap'
 import type { DesktopPanelState } from '@/components/domain/DesktopDetailPanel'
 import type { FilterState } from '@/components/domain'
 import { useActiveMovieIds, useClickRankings, useMapShowtimes, useMovies, useStations, useTheaters, useTheaterEvents } from '@/lib/supabase/queries'
@@ -3238,11 +3239,8 @@ export default function MapView() {
         style={{ width: '100%', height: '100%' }}
       >
         <TileLayer
-          url={isDark
-            ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-            : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
-          }
-          attribution="&copy; OpenStreetMap contributors &copy; CARTO"
+          url={cartoTileTemplate(isDark ? 'dark' : 'light')}
+          attribution={CARTO_ATTRIBUTION}
           minZoom={MAP_MIN_ZOOM}
           maxZoom={MAP_MAX_ZOOM}
           bounds={KOREA_MAP_BOUNDS}
