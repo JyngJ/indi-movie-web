@@ -679,9 +679,9 @@ export const theatersToAdd = [
   {
     name: '시네마엠엠',
     city: '전남',
-    address: '전남 목포시 수강로 4번길 19 2층',
-    lat: 34.8097,
-    lng: 126.3930,
+    address: '전남 목포시 백년대로 394, 2층',
+    lat: 34.8079,
+    lng: 126.4296,
     phone: '061-243-1650',
     website: 'https://cinemamm.petitecine.com',
     instagramUrl: 'https://www.instagram.com/cinemamm.official',
