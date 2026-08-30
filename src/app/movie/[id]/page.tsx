@@ -9,7 +9,7 @@ import { toMovieSchema } from '@/lib/seo/toMovieSchema'
 import { toScreeningEventSchema } from '@/lib/seo/toScreeningEventSchema'
 import { toFaqSchema } from '@/lib/seo/toFaqSchema'
 import { toBreadcrumbSchema } from '@/lib/seo/toBreadcrumbSchema'
-import { truncateSnippet } from '@/lib/seo/truncateSnippet'
+import { toMovieDescription } from '@/lib/seo/toMovieDescription'
 import { getMovieShowtimesForSsr } from '@/lib/catalog/getMovieShowtimesCached'
 import { MovieDetailClient } from './MovieDetailClient'
 import { ogImageUrl } from '@/lib/og/cards'
@@ -43,13 +43,21 @@ export async function generateMetadata({
      제목·설명에 검색 의도 단어(상영시간표·예매·상영관 수)를 실어 스니펫을 질의에 맞춘다.
      상영 정보는 캐시된 래퍼라 본문 렌더와 쿼리를 공유한다(중복 조회 없음). */
   const showtimes = await getMovieShowtimesForSsr(id)
-  const theaterCount = new Set(showtimes.map((t) => t.theaterName)).size
+  const theaterNames = [...new Set(showtimes.map((t) => t.theaterName))]
 
   const title = `${movie.title} 상영시간표·예매 | 영화볼지도`
-  const synopsisLead = truncateSnippet(movie.synopsis, 80)
-  const description = theaterCount > 0
-    ? `전국 독립·예술영화관 ${theaterCount}곳 상영 중 · 극장별 상영시간표와 예매 링크를 한눈에.${synopsisLead ? ` ${synopsisLead}` : ''}`
-    : `${movie.title} 상영 극장·상영시간표·예매 정보. 새 상영이 열리면 영화볼지도에서 확인하세요.${synopsisLead ? ` ${synopsisLead}` : ''}`
+  /* 설명은 감독·연도·국가·장르로 먼저 편을 특정한다 — 시놉시스가 없는 11%가
+     예전엔 서로 똑같은 문장이 돼 네이버 "동일 설명문" 진단에 걸렸다. */
+  const description = toMovieDescription({
+    title: movie.title,
+    year: movie.year,
+    director: movie.director,
+    nation: movie.nation,
+    genre: movie.genre,
+    runtimeMinutes: movie.runtimeMinutes,
+    synopsis: movie.synopsis,
+    theaterNames,
+  })
   const url = `/movie/${id}`
 
   return {
