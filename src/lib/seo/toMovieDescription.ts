@@ -79,7 +79,7 @@ function buildScreening(theaterNames: string[] | null): string {
 
   if (theaterNames.length === 0) {
     // writing-audit-ignore — SEO 메타는 문어체를 허용한다
-    return '현재 잡힌 상영 일정은 없습니다. 영화볼지도는 전국 독립·예술영화관 시간표를 매일 갱신합니다.'
+    return '현재 예정된 상영 일정은 없습니다. 영화볼지도는 전국 독립·예술영화관 시간표를 매일 갱신합니다.'
   }
 
   const named = theaterNames.slice(0, MAX_THEATER_NAMES).join(', ')

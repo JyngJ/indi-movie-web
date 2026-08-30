@@ -122,7 +122,7 @@ async function MovieBody({ id, movie, theaterId }: { id: string; movie: MovieDet
       answer: theaterNames.length > 0
         // writing-audit-ignore — SEO 메타·스키마 문구는 문어체 유지
         ? `전국 독립·예술영화관 ${theaterNames.length}곳에서 상영 중입니다: ${theaterNames.slice(0, 15).join(', ')}${theaterNames.length > 15 ? ' 등' : ''}. 극장별 상영 시간과 예매 링크는 영화볼지도에서 확인할 수 있습니다.`
-        : `지금은 전국 독립·예술영화관에 잡힌 상영 일정이 없어요. 상영 시간표는 매일 갱신되니 새 상영이 열리면 여기서 확인할 수 있어요.`,
+        : `지금은 전국 독립·예술영화관에 예정된 상영 일정이 없어요. 상영 시간표는 매일 갱신되니 새 상영이 열리면 여기서 확인할 수 있어요.`,
     },
     {
       question: `${movie.title}의 가장 빠른 상영은 언제인가요?`,

@@ -84,6 +84,12 @@ const CHECKS = [
     label: '되어요',
     re: /되어요/g,
   },
+  {
+    key: 'booked',
+    label: '"잡힌 상영" (→ "예정된 상영")',
+    // "붙잡힌"(시놉시스 등 인용문)은 제외한다
+    re: /(?<!붙)잡힌\s/g,
+  },
 ]
 
 function* walk(dir) {
