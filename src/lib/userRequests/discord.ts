@@ -32,7 +32,8 @@ export async function sendUserRequestToDiscord(request: UserRequestRecord) {
 async function sendByBot(token: string, channelId: string, request: UserRequestRecord) {
   const res = await fetch(`${DISCORD_API}/channels/${channelId}/messages`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    // Authorization 없으면 Discord가 401 — 예전에 이게 빠져서 요청하기 알림이 통째로 유실됐다.
+    headers: { 'content-type': 'application/json', Authorization: `Bot ${token}` },
     body: JSON.stringify({
       embeds: formatDiscordUserRequestEmbeds(request),
       components: userRequestActionComponents(request.id),
