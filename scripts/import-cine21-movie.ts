@@ -4,6 +4,7 @@
  *        npx tsx --env-file=.env.local scripts/import-cine21-movie.ts --id 62951
  */
 import { createClient } from '@supabase/supabase-js'
+import { normalizeSynopsis } from '../src/lib/text/normalizeSynopsis'
 
 const sb = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -63,7 +64,7 @@ async function importCine21Movie(movieId: string) {
 
   // 시놉시스
   const synMatch = html.match(/시놉시스[\s\S]{0,200}?<p[^>]*>([\s\S]{50,1000}?)<\/p>/)
-  const synopsis = synMatch ? cleanText(synMatch[1]).slice(0, 600) : undefined
+  const synopsis = synMatch ? normalizeSynopsis(cleanText(synMatch[1])).slice(0, 600) : undefined
 
   console.log('파싱 결과:')
   console.log('  제목:', title)

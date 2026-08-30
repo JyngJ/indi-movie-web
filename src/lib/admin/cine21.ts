@@ -1,4 +1,5 @@
 import type { AdminExternalMovie } from '@/types/admin'
+import { normalizeSynopsis } from '@/lib/text/normalizeSynopsis'
 
 const CINE21_BASE = 'https://cine21.com'
 
@@ -102,7 +103,7 @@ async function parseCine21Detail(movieId: string): Promise<AdminExternalMovie | 
 
   // 시놉시스: <p class="synopsis"> 등
   const synMatch = html.match(/(?:시놉시스|synopsis)[\s\S]{0,200}?<p[^>]*>([\s\S]{20,1000}?)<\/p>/i)
-  const synopsis = synMatch ? cleanText(synMatch[1]).slice(0, 600) : undefined
+  const synopsis = synMatch ? normalizeSynopsis(cleanText(synMatch[1])).slice(0, 600) : undefined
 
   return {
     provider: 'cine21',
