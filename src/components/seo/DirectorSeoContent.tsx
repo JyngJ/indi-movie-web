@@ -20,7 +20,7 @@ export function DirectorSeoContent({
 
   const intro = nowShowing.length > 0
     ? `${directorName} 감독의 작품 ${data.films.length}편 중 ${nowShowing.length}편이 앞으로 2주간 전국 독립·예술영화관 ${theaterNames.length}곳에서 상영됩니다. ${nowShowing.map((s) => s.movieTitle).slice(0, 5).join(', ')} 등을 ${theaterNames.slice(0, 3).join(', ')}에서 볼 수 있습니다.`
-    : `${directorName} 감독의 작품 ${data.films.length}편을 모았습니다. 현재 전국 독립·예술영화관에 잡힌 상영 일정은 없습니다. 새 상영이 열리면 영화볼지도에서 확인할 수 있습니다.`
+    : `${directorName} 감독의 작품 ${data.films.length}편을 모았습니다. 현재 전국 독립·예술영화관에 예정된 상영 일정은 없습니다. 새 상영이 열리면 영화볼지도에서 확인할 수 있습니다.`
 
   return (
     <section style={srOnly} data-seo-content>
