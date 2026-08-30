@@ -1,4 +1,5 @@
 import type { AdminExternalMovie } from '@/types/admin'
+import { normalizeSynopsis } from '@/lib/text/normalizeSynopsis'
 
 interface KmdbSearchResponse {
   Data?: Array<{
@@ -172,7 +173,9 @@ function movieFromItem(item: KmdbMovieItem): AdminExternalMovie {
 function extractSynopsis(item: KmdbMovieItem) {
   const plotList = item.plots?.plot ?? []
   const koPlot = plotList.find((plot) => cleanText(plot.plotLang) === '한국어') ?? plotList[0]
-  return cleanText(koPlot?.plotText) || cleanText(item.plot) || undefined
+  // KMDB는 줄바꿈을 공백 없이 지운 채 내려준다 — 문장 경계를 복원해서 넘긴다.
+  const plotText = cleanText(koPlot?.plotText) || cleanText(item.plot)
+  return normalizeSynopsis(plotText) || undefined
 }
 
 function extractResults(payload: KmdbSearchResponse) {

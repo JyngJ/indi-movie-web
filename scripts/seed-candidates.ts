@@ -3,6 +3,7 @@
  * 실행: npx tsx --env-file=.env.local scripts/seed-candidates.ts
  */
 import { createClient } from '@supabase/supabase-js'
+import { normalizeSynopsis } from '../src/lib/text/normalizeSynopsis'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -140,7 +141,8 @@ async function importFromKmdb(movieId: string, movieSeq: string): Promise<Movie 
   const nation = clean(item.nation) || null
   const plotList = item.plots?.plot ?? []
   const koPlot = plotList.find(p => clean(p.plotLang) === '한국어') ?? plotList[0]
-  const synopsis = clean(koPlot?.plotText) || clean(item.plot) || null
+  // KMDB는 원본 줄바꿈을 공백 없이 지운 채 내려준다 — 문장 경계를 복원한다.
+  const synopsis = normalizeSynopsis(clean(koPlot?.plotText) || clean(item.plot)) || null
   const runtimeMinutes = parseInt(item.runtime ?? '') || null
   const certification = clean(item.rating) || null
 

@@ -7,6 +7,7 @@
  * - 429/네트워크 에러 시 재시도 1회
  */
 import { createClient } from '@supabase/supabase-js'
+import { normalizeSynopsis } from '../src/lib/text/normalizeSynopsis'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,7 +17,8 @@ const supabase = createClient(
 const KMDB_KEY = process.env.KMDB_SERVICE_KEY!
 
 function clean(v?: string) {
-  return (v ?? '').replace(/<!HS>|<!HE>|!HS|!HE/g, '').replace(/\s+/g, ' ').trim()
+  // KMDB는 원본 줄바꿈을 공백 없이 지운 채 내려준다 — 문장 경계를 복원한다.
+  return normalizeSynopsis((v ?? '').replace(/<!HS>|<!HE>|!HS|!HE/g, ''))
 }
 
 type KmdbPlots = { plot?: Array<{ plotLang?: string; plotText?: string }> }

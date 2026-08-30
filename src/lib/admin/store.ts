@@ -19,6 +19,7 @@ import type {
 } from '@/types/admin'
 import { searchKmdbMovies } from '@/lib/admin/kmdb'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { normalizeSynopsis } from '@/lib/text/normalizeSynopsis'
 import { notifyAmbiguousMovieMatches, titleHash } from '@/lib/admin/matchReviewDiscord'
 import {
   candidateFromRow,
@@ -430,7 +431,7 @@ export async function updateAdminMovie(input: AdminMovieInput) {
   if (hasDetails) {
     await supabase.from('movie_details').upsert({
       movie_id: input.id,
-      synopsis: input.synopsis?.trim() || null,
+      synopsis: normalizeSynopsis(input.synopsis) || null,
       runtime_minutes: input.runtimeMinutes ?? null,
       certification: input.certification?.trim() || null,
     }, { onConflict: 'movie_id' })
@@ -854,7 +855,7 @@ export async function createAdminMovie(input: AdminMovieInput) {
   if (hasDetails) {
     await supabase.from('movie_details').upsert({
       movie_id: movie.id,
-      synopsis: input.synopsis?.trim() || null,
+      synopsis: normalizeSynopsis(input.synopsis) || null,
       runtime_minutes: input.runtimeMinutes ?? null,
       certification: input.certification?.trim() || null,
     }, { onConflict: 'movie_id' })
@@ -921,7 +922,7 @@ export async function importAdminExternalMovie(input: AdminExternalMovie) {
     } = {
       movie_id: movie.id,
     }
-    if (input.synopsis) detailsRow.synopsis = input.synopsis
+    if (input.synopsis) detailsRow.synopsis = normalizeSynopsis(input.synopsis)
     if (input.runtimeMinutes) detailsRow.runtime_minutes = input.runtimeMinutes
     if (input.certification) detailsRow.certification = input.certification
     await supabase.from('movie_details').upsert(detailsRow, { onConflict: 'movie_id' })
