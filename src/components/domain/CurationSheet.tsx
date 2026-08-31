@@ -6,6 +6,7 @@ import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { Button, Icon, Divider, EmptyState } from '@/components/primitives'
 import { PosterThumb } from './PosterThumb'
 import { HoverPopup } from './CurationSectionRow'
+import { FavoriteToggle } from './favorites/FavoriteToggle'
 import type {
   LastWeekFilm,
   NewIndieFilm,
@@ -42,6 +43,13 @@ export interface CurationItem {
   movie?: Movie
   /** 1-based 순위 — 주면 포스터 좌하단에 스크림 + 큰 숫자 (상영작 탭 랭킹과 동일 문법) */
   rank?: number
+  /**
+   * 관심 표시 — 주면 포스터 우상단에 오버레이 하트 토글 (관심 목록 그리드와 같은 문법, 2026-09-01 통일).
+   * 구 "관심 영화"/"관심 감독" 텍스트 칩을 대체한다. 표식이 아니라 토글이라 여기서 바로 해제할 수 있다.
+   * distanceLabel과 자리가 겹치므로 둘을 함께 주지 않는다.
+   * director 항목의 대상은 영화가 아니라 그 감독이다 — 해제하면 관심 감독에서 빠진다.
+   */
+  favorite?: { type: 'movie' | 'director'; id: string; label: string }
 }
 
 interface CurationSheetProps {
@@ -232,129 +240,148 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
 
   return (
     <>
-      <button
-        ref={cardRef}
-        type="button"
-        onClick={() => onSelect?.(item.id, item.title)}
-        onMouseEnter={desktop ? onMouseEnter : undefined}
-        onMouseLeave={desktop ? onMouseLeave : undefined}
-        style={{
-          flexShrink: desktop ? undefined : 0,
-          width: desktop ? '100%' : posterSize.width,
-          minWidth: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 8,
-          border: 'none',
-          background: 'none',
-          padding: 0,
-          textAlign: 'left',
-          cursor: onSelect ? 'pointer' : 'default',
-          minHeight: 'unset',
-        }}
-      >
-        <div style={{
-          position: 'relative',
-          transition: 'transform 130ms ease',
-          transform: hovered ? 'scale(1.1)' : 'scale(1)',
-          transformOrigin: 'center center',
-        }}>
-          <PosterThumb src={item.posterUrl} alt={item.title} width={posterSize.width} height={posterSize.height} size="lg" shadow={false} />
-          {item.distanceLabel && (
-            <div style={{
-              position: 'absolute',
-              top: 6,
-              right: 6,
-              backgroundColor: 'var(--color-primary-base)',
-              color: 'var(--color-on-accent)',
-              borderRadius: 'var(--radius-badge)',
-              padding: '8px 12px',
-              fontSize: 'var(--text-meta)',
-              fontWeight: 700,
-              lineHeight: 1,
-              whiteSpace: 'nowrap',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
-            }}>
-              {item.distanceLabel}
-            </div>
-          )}
-          {/* 순위 — 상영작 탭 랭킹과 같은 스크림(높이 42%) + KIMM 숫자(포스터 높이의 31%) */}
-          {item.rank != null && (
-            <div
-              aria-hidden
-              style={{
-                position: 'absolute', left: 0, right: 0, bottom: 0,
-                height: Math.round(posterSize.height * 0.42),
-                borderRadius: '0 0 var(--radius-poster) var(--radius-poster)',
-                background: 'linear-gradient(to top, rgba(15,12,9,0.78), rgba(15,12,9,0))',
-                pointerEvents: 'none',
-              }}
-            >
-              <span style={{
-                position: 'absolute', left: 8, bottom: 4,
-                fontFamily: 'var(--font-display)',
-                fontSize: Math.round(posterSize.height * 0.31),
-                fontWeight: 700,
-                lineHeight: 0.85,
-                color: 'var(--color-on-accent)',
-                fontVariantNumeric: 'tabular-nums',
-              }}>
-                {item.rank}
-              </span>
-            </div>
-          )}
-          {item.rank != null && <span className="sr-only">{item.rank}위</span>}
-          {/* 좌상단 — 좌하단은 순위 전용이라 비워 둔다 (AGENTS.md 포스터 오버레이 칩 정책) */}
-          {item.badge && (
-            <span
-              style={{
+      {/* 하트 토글은 카드 버튼 안에 못 넣는다(버튼 중첩) — 감싼 div에 형제로 얹는다 */}
+      <div style={{
+        position: 'relative',
+        flexShrink: desktop ? undefined : 0,
+        width: desktop ? '100%' : posterSize.width,
+        minWidth: 0,
+      }}>
+        <button
+          ref={cardRef}
+          type="button"
+          onClick={() => onSelect?.(item.id, item.title)}
+          onMouseEnter={desktop ? onMouseEnter : undefined}
+          onMouseLeave={desktop ? onMouseLeave : undefined}
+          style={{
+            width: '100%',
+            minWidth: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+            border: 'none',
+            background: 'none',
+            padding: 0,
+            textAlign: 'left',
+            cursor: onSelect ? 'pointer' : 'default',
+            minHeight: 'unset',
+          }}
+        >
+          <div style={{
+            position: 'relative',
+            transition: 'transform 130ms ease',
+            transform: hovered ? 'scale(1.1)' : 'scale(1)',
+            transformOrigin: 'center center',
+          }}>
+            <PosterThumb src={item.posterUrl} alt={item.title} width={posterSize.width} height={posterSize.height} size="lg" shadow={false} />
+            {item.distanceLabel && (
+              <div style={{
                 position: 'absolute',
-                left: 6,
                 top: 6,
-                backgroundColor: 'rgba(20,15,10,0.72)',
+                right: 6,
+                backgroundColor: 'var(--color-primary-base)',
                 color: 'var(--color-on-accent)',
                 borderRadius: 'var(--radius-badge)',
                 padding: '8px 12px',
                 fontSize: 'var(--text-meta)',
                 fontWeight: 700,
-                lineHeight: 1.2,
-                maxWidth: 'calc(100% - 12px)',
-                /* 92px 포스터에서 "오늘이 마지막"·"D-n 막바지 상영"은 한 줄에 못 들어간다.
-                   막바지 카피는 완화·생략 금지라(AGENTS.md) 자르는 대신 어절 단위로 접는다 */
-                whiteSpace: 'normal',
-                wordBreak: 'keep-all',
-                display: 'block',
-              }}
-            >
-              {item.badge}
+                lineHeight: 1,
+                whiteSpace: 'nowrap',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+              }}>
+                {item.distanceLabel}
+              </div>
+            )}
+            {/* 순위 — 상영작 탭 랭킹과 같은 스크림(높이 42%) + KIMM 숫자(포스터 높이의 31%) */}
+            {item.rank != null && (
+              <div
+                aria-hidden
+                style={{
+                  position: 'absolute', left: 0, right: 0, bottom: 0,
+                  height: Math.round(posterSize.height * 0.42),
+                  borderRadius: '0 0 var(--radius-poster) var(--radius-poster)',
+                  background: 'linear-gradient(to top, rgba(15,12,9,0.78), rgba(15,12,9,0))',
+                  pointerEvents: 'none',
+                }}
+              >
+                <span style={{
+                  position: 'absolute', left: 8, bottom: 4,
+                  fontFamily: 'var(--font-display)',
+                  fontSize: Math.round(posterSize.height * 0.31),
+                  fontWeight: 700,
+                  lineHeight: 0.85,
+                  color: 'var(--color-on-accent)',
+                  fontVariantNumeric: 'tabular-nums',
+                }}>
+                  {item.rank}
+                </span>
+              </div>
+            )}
+            {item.rank != null && <span className="sr-only">{item.rank}위</span>}
+            {/* 좌상단 — 좌하단은 순위 전용이라 비워 둔다 (AGENTS.md 포스터 오버레이 칩 정책) */}
+            {item.badge && (
+              <span
+                style={{
+                  position: 'absolute',
+                  left: 6,
+                  top: 6,
+                  backgroundColor: 'rgba(20,15,10,0.72)',
+                  color: 'var(--color-on-accent)',
+                  borderRadius: 'var(--radius-badge)',
+                  padding: '8px 12px',
+                  fontSize: 'var(--text-meta)',
+                  fontWeight: 700,
+                  lineHeight: 1.2,
+                  maxWidth: 'calc(100% - 12px)',
+                  /* 92px 포스터에서 "오늘이 마지막"·"D-n 막바지 상영"은 한 줄에 못 들어간다.
+                     막바지 카피는 완화·생략 금지라(AGENTS.md) 자르는 대신 어절 단위로 접는다 */
+                  whiteSpace: 'normal',
+                  wordBreak: 'keep-all',
+                  display: 'block',
+                }}
+              >
+                {item.badge}
+              </span>
+            )}
+          </div>
+          <span style={{
+            fontSize: 'var(--text-meta)',
+            fontWeight: 700,
+            fontFamily: 'var(--font-display)',
+            color: 'var(--color-text-primary)',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+            lineHeight: 1.3,
+          }}>
+            {item.title}
+          </span>
+          {item.subtitle && (
+            <span style={{
+              fontSize: 'var(--text-caption)',
+              color: 'var(--color-text-caption)',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}>
+              {item.subtitle}
             </span>
           )}
-        </div>
-        <span style={{
-          fontSize: 'var(--text-meta)',
-          fontWeight: 700,
-          fontFamily: 'var(--font-display)',
-          color: 'var(--color-text-primary)',
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden',
-          lineHeight: 1.3,
-        }}>
-          {item.title}
-        </span>
-        {item.subtitle && (
-          <span style={{
-            fontSize: 'var(--text-caption)',
-            color: 'var(--color-text-caption)',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}>
-            {item.subtitle}
-          </span>
+        </button>
+        {/* 관심 하트 — 관심 목록 그리드와 같은 오버레이 토글(32). 여기서 바로 해제할 수 있다 */}
+        {item.favorite && (
+          <div style={{ position: 'absolute', top: 4, right: 4 }}>
+            <FavoriteToggle
+              type={item.favorite.type}
+              id={item.favorite.id}
+              label={item.favorite.label}
+              variant="overlay"
+              size={32}
+            />
+          </div>
         )}
-      </button>
+      </div>
 
       {popupPos && desktop && item.movie && (
         <HoverPopup movie={item.movie} x={popupPos.x} y={popupPos.y} posterWidth={posterSize.width} />
