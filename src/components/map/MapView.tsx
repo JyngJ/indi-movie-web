@@ -1766,7 +1766,13 @@ export default function MapView() {
           id: movieId,
           title: movie.title,
           posterUrl: movie.posterUrl,
-          badge: favMovieIds.has(movieId) ? '관심 영화' : '관심 감독',
+          /* 관심 하트 대상 — 영화가 관심이면 영화, 감독 때문에 뜬 항목이면 그 감독 (해제하면 감독이 빠진다) */
+          favorite: favMovieIds.has(movieId)
+            ? { type: 'movie' as const, id: movieId, label: movie.title }
+            : (() => {
+                const dir = (movie.director ?? []).find((d) => favDirectors.has(d))
+                return dir ? { type: 'director' as const, id: dir, label: dir } : undefined
+              })(),
           subtitle: names.length > 1 ? `${names[0]} 외 ${names.length - 1}곳` : names[0],
           movie,
         } as CurationItem
