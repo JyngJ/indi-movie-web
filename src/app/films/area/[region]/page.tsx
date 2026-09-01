@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { REGIONS } from '@/lib/regions'
 import { getScreeningIndex } from '@/lib/seo/getScreeningIndex'
+import { getAreaScreenings } from '@/lib/seo/getAreaScreenings'
+import { AreaSeoContent } from '@/components/seo/AreaSeoContent'
 import { toScreeningListSchema } from '@/lib/seo/toScreeningListSchema'
 import { toFaqSchema } from '@/lib/seo/toFaqSchema'
 import { toBreadcrumbSchema } from '@/lib/seo/toBreadcrumbSchema'
@@ -38,8 +40,23 @@ export async function generateMetadata({
   const region = decodeURIComponent(raw)
   if (!isValidRegion(region)) return {}
 
-  const title = `${region} 독립영화관 상영시간표 | 영화볼지도`
-  const description = `${region} 지역 독립·예술영화관에서 오늘 상영하는 독립영화 시간표와 극장 정보. ${region}에서 독립영화 볼 곳을 한눈에.`
+  /* 극장 수·상영 편수를 타이틀에 넣는다 — 극장 하나짜리 공식 홈페이지가 낼 수 없는
+     숫자라 "N곳을 모아 보여준다"는 이 페이지의 값어치가 SERP에서 바로 드러난다.
+     매일 바뀌므로 신선도 신호도 된다. */
+  const [index, today] = await Promise.all([
+    getScreeningIndex(region),
+    getAreaScreenings(region),
+  ])
+  /* 극장 수는 이 지역에서 우리가 다루는 전체(23곳), 편수는 오늘치.
+     "서울 독립영화관" 쿼리가 묻는 건 오늘 문 연 곳이 아니라 이 지역 극장 전체다. */
+  const scale = today.theaters.length > 0
+    ? `${index.theaters.length}곳 오늘 상영시간표 ${today.movieCount}편`
+    : '상영시간표'
+  const title = `${region} 독립영화관 ${scale} | 영화볼지도`
+  const description = today.theaters.length > 0
+    // writing-audit-ignore — SEO 메타·스키마 문구는 문어체 유지
+    ? `오늘 ${region} 독립·예술영화관 ${today.theaters.length}곳에서 ${today.movieCount}편이 ${today.showtimeCount}회 상영합니다. 극장별 회차 시간과 예매 링크를 한눈에 확인하세요.`
+    : `${region} 지역 독립·예술영화관에서 오늘 상영하는 독립영화 시간표와 극장 정보. ${region}에서 독립영화 볼 곳을 한눈에.`
 
   return {
     title,
@@ -66,6 +83,9 @@ export default async function FilmsAreaPage({
   if (!isValidRegion(region)) notFound()
 
   const data = await getScreeningIndex(region)
+  /* 회차 시각은 여기서만 온다 — getScreeningIndex는 movie_id·theater_id만 뽑아
+     "어디서 무엇을"까지만 답할 수 있다. 타이틀이 약속한 "시간표"를 본문이 지키게 한다. */
+  const todayScreenings = await getAreaScreenings(region)
   // 극장 자체가 없는 지역은 존재하지 않는 것으로 취급 (Search Console 404 누적 방지 —
   // 죽은 극장 sitemap 이슈와 같은 재발 패턴)
   if (data.theaters.length === 0) notFound()
@@ -84,8 +104,16 @@ export default async function FilmsAreaPage({
     },
     {
       question: `${region}에서 오늘 상영하는 독립영화는 무엇인가요?`,
-      answer: data.movies.length > 0
-        ? `오늘 ${data.movies.length}편이 상영합니다: ${data.movies.map((m) => m.title).slice(0, 20).join(', ')}${data.movies.length > 20 ? ' 등' : ''}.`
+      /* data.movies는 오늘 이후 상영 예정 전체라 "오늘"의 답이 아니다 —
+         오늘치만 담은 todayScreenings로 답하고 회차 시각까지 함께 준다. */
+      /* 답변이 길면 리치 결과에서 통째로 버려진다 — 극장 8곳까지만 담고 나머지는
+         본문(AreaSeoContent)이 받는다. */
+      answer: todayScreenings.theaters.length > 0
+        // writing-audit-ignore — SEO 메타·스키마 문구는 문어체 유지
+        ? `오늘 ${todayScreenings.movieCount}편이 상영합니다: ${todayScreenings.theaters
+            .slice(0, 8)
+            .map((t) => `${t.name} — ${t.movies.map((m) => `${m.title} (${m.times.join(', ')})`).join(', ')}`)
+            .join(' / ')}${todayScreenings.theaters.length > 8 ? ' 등' : ''}.`
         : `오늘 ${region}에 등록된 독립·예술영화 상영이 없어요`,
     },
   ])
@@ -114,6 +142,8 @@ export default async function FilmsAreaPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
+
+      <AreaSeoContent region={region} data={todayScreenings} />
 
       {/* 백드롭 — 이 지역 지도 캡처 블러 (scripts 캡처 산출물), 없으면 상영작 포스터 폴백 */}
       <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', display: 'flex' }}>
@@ -163,7 +193,8 @@ export default async function FilmsAreaPage({
               멀티플렉스엔 걸리지 않는 독립·예술영화를 {region}에서 어디서 볼 수 있는지 확인하세요.
             </p>
             <p style={{ margin: 'var(--spacing-6) 0 var(--spacing-6)', fontSize: 'var(--text-meta)', fontWeight: 600, color: 'var(--color-text-caption)' }}>
-              영화관 {data.theaters.length}곳 · 오늘 상영작 {data.movies.length}편
+              {/* data.movies는 오늘 이후 예정 전체라 "오늘"로 쓰면 과장된다 */}
+              영화관 {data.theaters.length}곳 · 오늘 상영작 {todayScreenings.movieCount}편
             </p>
             <div style={{ flex: 1, minHeight: 'var(--spacing-4)' }} />
             <AreaCtas region={region} />
