@@ -31,13 +31,19 @@ const TONE_BG: Record<PosterChipTone, string> = {
 interface PosterChipProps {
   corner: PosterChipCorner
   tone: PosterChipTone
+  /**
+   * compact — 포스터가 아닌 소형 썸네일(GV 카드의 56px 색 띠 등)에서만.
+   * 기본 규격(12/700 · 8 12)은 높이 30px이라 56px 띠의 절반을 덮는다.
+   */
+  size?: 'default' | 'compact'
   /** 스크린리더용 전체 문구 (예: "개봉 30주년") — 축약 라벨과 다를 때만 */
   label?: string
   children: React.ReactNode
 }
 
-export function PosterChip({ corner, tone, label, children }: PosterChipProps) {
+export function PosterChip({ corner, tone, size = 'default', label, children }: PosterChipProps) {
   const offset = 'var(--comp-poster-chip-offset)'
+  const compact = size === 'compact'
   return (
     <span
       aria-label={label}
@@ -47,16 +53,21 @@ export function PosterChip({ corner, tone, label, children }: PosterChipProps) {
         bottom: corner.startsWith('bottom') ? offset : undefined,
         left: corner.endsWith('left') ? offset : undefined,
         right: corner.endsWith('right') ? offset : undefined,
-        padding: 'var(--comp-poster-chip-pad)',
+        padding: compact ? '4px 8px' : 'var(--comp-poster-chip-pad)',
         borderRadius: 'var(--radius-badge)',
-        fontSize: 'var(--text-meta)',
-        fontWeight: 700,
-        lineHeight: 1,
+        fontSize: compact ? 'var(--text-badge)' : 'var(--text-meta)',
+        fontWeight: compact ? 600 : 700,
+        lineHeight: 1.2,
         color: 'var(--color-on-accent)',
         backgroundColor: TONE_BG[tone],
         /* 밝은 포스터 위에서 칩 경계가 뭉개지지 않게 — 배경 그림을 통제할 수 없다 */
         boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
-        whiteSpace: 'nowrap',
+        /* 긴 카피는 자르지 않고 접는다 — 92px 포스터에서 "오늘이 마지막"·"D-n 막바지 상영"은
+           한 줄에 안 들어가는데, 막바지 카피는 완화·생략이 금지라 말줄임이 곧 규칙 위반이 된다.
+           lineHeight는 접힐 때만 의미가 있어 1(한 줄)이 아니라 1.2를 쓴다 */
+        whiteSpace: 'normal',
+        wordBreak: 'keep-all',
+        maxWidth: `calc(100% - 2 * ${offset})`,
         pointerEvents: 'none',
       }}
     >

@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { usePendingNavItem } from '@/hooks/usePendingNavItem'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { Button, Icon, Divider, EmptyState } from '@/components/primitives'
+import { PosterChip } from '@/components/primitives'
 import { PosterThumb } from './PosterThumb'
 import { HoverPopup } from './CurationSectionRow'
 import { FavoriteToggle } from './favorites/FavoriteToggle'
@@ -275,22 +276,7 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
           }}>
             <PosterThumb src={item.posterUrl} alt={item.title} width={posterSize.width} height={posterSize.height} size="lg" shadow={false} />
             {item.distanceLabel && (
-              <div style={{
-                position: 'absolute',
-                top: 6,
-                right: 6,
-                backgroundColor: 'var(--color-primary-base)',
-                color: 'var(--color-on-accent)',
-                borderRadius: 'var(--radius-badge)',
-                padding: '8px 12px',
-                fontSize: 'var(--text-meta)',
-                fontWeight: 700,
-                lineHeight: 1,
-                whiteSpace: 'nowrap',
-                boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
-              }}>
-                {item.distanceLabel}
-              </div>
+              <PosterChip corner="top-right" tone="primary">{item.distanceLabel}</PosterChip>
             )}
             {/* 순위 — 상영작 탭 랭킹과 같은 스크림(높이 42%) + KIMM 숫자(포스터 높이의 31%) */}
             {item.rank != null && (
@@ -320,28 +306,7 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
             {item.rank != null && <span className="sr-only">{item.rank}위</span>}
             {/* 좌상단 — 좌하단은 순위 전용이라 비워 둔다 (AGENTS.md 포스터 오버레이 칩 정책) */}
             {item.badge && (
-              <span
-                style={{
-                  position: 'absolute',
-                  left: 6,
-                  top: 6,
-                  backgroundColor: 'rgba(20,15,10,0.72)',
-                  color: 'var(--color-on-accent)',
-                  borderRadius: 'var(--radius-badge)',
-                  padding: '8px 12px',
-                  fontSize: 'var(--text-meta)',
-                  fontWeight: 700,
-                  lineHeight: 1.2,
-                  maxWidth: 'calc(100% - 12px)',
-                  /* 92px 포스터에서 "오늘이 마지막"·"D-n 막바지 상영"은 한 줄에 못 들어간다.
-                     막바지 카피는 완화·생략 금지라(AGENTS.md) 자르는 대신 어절 단위로 접는다 */
-                  whiteSpace: 'normal',
-                  wordBreak: 'keep-all',
-                  display: 'block',
-                }}
-              >
-                {item.badge}
-              </span>
+              <PosterChip corner="top-left" tone="scrim">{item.badge}</PosterChip>
             )}
           </div>
           <span style={{

@@ -195,6 +195,8 @@ elevation은 **컴포넌트 종류**가 결정 — 선택 등 상태 표현에 �
 - **좌하단은 순위 전용.** 랭킹 섹션이 스크림(높이 42% · 투명 → `rgba(15,12,9,0.78)`) + KIMM 숫자(포스터 높이의 31%)를 얹는다. 다른 칩은 좌상단, 거리 칩은 우상단
 - 긴 카피는 자르지 말고 접는다 — `white-space: normal` + `word-break: keep-all`, lineHeight 1.2. 92px 포스터 기준 "오늘이 마지막"·"D-n 막바지 상영"은 한 줄에 안 들어가는데, 막바지 카피는 완화·생략이 금지라 말줄임이 곧 규칙 위반이 된다
 - D-day: 오늘=error, D-1=warning, D-2+=`#78716C`, 그림자 0 1px 4px rgba(0,0,0,0.35)
+- `size="compact"`(10/600 · `4px 8px` · 높이 20)는 포스터가 아닌 소형 썸네일 전용 — GV 카드의 56px 색 띠에서 기본 규격(높이 30)이 절반을 덮어서 둔 예외다. 88px 이상 포스터엔 쓰지 않는다
+- 구현은 `PosterChip` 하나다. GvEventSection·InstagramRecsSection·TheaterSheet·CurationSheet의 인라인 칩은 2026-09-01에 모두 옮겼다 — 8/13에 통합했다고 적혀 있었지만 실제로 옮겨간 건 CurationSectionRow뿐이었다
 
 ### 관심 하트 (FavoriteButton)
 - 포스터 위에서는 `variant="overlay"` · size 32 · **우상단 offset 4**. 좌하단은 순위, 좌상단은 오버레이 칩 자리라 하트는 우상단 고정

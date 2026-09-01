@@ -142,7 +142,9 @@ export const GUIDES: Record<string, ComponentGuide> = {
   PosterChip: {
     changes: [
       { date: '2026-08-13', note: '글자를 11px/600에서 12px/700으로, 안쪽 여백을 4 8에서 8 12로 키웠습니다. 문서는 11px인데 코드는 --text-badge(10px)를 써서 값이 셋으로 갈려 있었고, 포스터 위에서 읽히지 않았습니다.' },
-      { date: '2026-08-13', note: 'CurationSectionRow·GvEventSection·InstagramRecsSection·TheaterSheet가 각자 그리던 칩을 이 컴포넌트 하나로 합쳤습니다. 정책은 한 줄인데 구현이 넷이라 크기·여백·그림자가 조금씩 어긋나 있었습니다.' },
+      { date: '2026-09-01', note: '긴 카피를 자르지 않고 접도록 바꿨습니다(white-space: normal · word-break: keep-all · lineHeight 1.2 · maxWidth). 문서에는 접기가 규칙으로 적혀 있었는데 컴포넌트는 nowrap이라, 규칙을 지킨 곳은 정작 이 컴포넌트를 쓰지 않는 화면뿐이었습니다.' },
+      { date: '2026-09-01', note: 'GvEventSection·InstagramRecsSection·TheaterSheet·CurationSheet의 인라인 칩을 실제로 이 컴포넌트로 옮겼습니다. 8/13에 합쳤다고 적었지만 옮겨간 건 CurationSectionRow 하나뿐이었고, 나머지는 구 스펙(10px/600·padding 4 8)으로 2주 넘게 남아 있었습니다.' },
+      { date: '2026-08-13', note: 'CurationSectionRow의 인라인 칩을 이 컴포넌트로 옮겼습니다. 정책은 한 줄인데 구현이 다섯이라 크기·여백·그림자가 조금씩 어긋나 있었습니다.' },
       { date: '2026-08-03', note: '--radius-poster를 8에서 2로 내렸습니다(인쇄물 모서리). 칩의 4px 라운드가 상대적으로 둥글어 보이는 것은 의도한 대비입니다.' },
     ],
     intro:
@@ -151,10 +153,13 @@ export const GUIDES: Record<string, ComponentGuide> = {
     anatomy: [
       { name: 'corner', desc: '네 모서리 중 하나를 지정합니다. 좌하단은 순위 표기 전용으로 비워 둡니다.' },
       { name: 'tone', desc: '의미색을 지정합니다. error(매진) · warning(잔여 적음) · success(상영중) · gv · scrim(중립 정보).' },
+      { name: 'size', desc: 'default(12/700 · 8 12) / compact(10/600 · 4 8). compact는 포스터가 아닌 소형 썸네일 전용입니다.' },
     ],
     specs: [
       { title: '여백', desc: '포스터 모서리에서 6px(--comp-poster-chip-offset), 칩 내부는 8/12(--comp-poster-chip-pad)입니다.' },
       { title: '좌하단 규칙', desc: '랭킹 섹션이 스크림과 KIMM 숫자를 좌하단에 배치합니다. 이 자리는 순위 표기로 비워 둡니다.' },
+      { title: 'compact', desc: '기본 규격은 높이 30px이라 GV 카드의 56px 색 띠에서는 절반을 덮습니다. 그런 소형 썸네일에서만 compact(높이 20px)를 쓰고, 88px 이상 포스터에는 쓰지 않습니다.' },
+      { title: '접기', desc: '긴 카피는 말줄임 대신 어절 단위로 접습니다. 막바지 카피("오늘이 마지막"·"D-n 막바지 상영")는 완화·생략이 금지라 92px 포스터에서 자르면 곧 규칙 위반이 됩니다. 폭은 포스터에서 좌우 offset을 뺀 만큼입니다.' },
     ],
     usage: [
       { kind: 'do', rule: '한 포스터에 칩은 두 개까지 사용합니다.' },
