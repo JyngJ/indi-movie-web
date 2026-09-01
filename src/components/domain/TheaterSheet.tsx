@@ -9,6 +9,7 @@ import { Button } from '@/components/primitives/Button'
 import { IconButton } from '@/components/primitives/IconButton'
 import { Icon } from '@/components/primitives/Icon'
 import { PosterChip } from '@/components/primitives/PosterChip'
+import { ScrollNavButton } from '@/components/primitives/ScrollNavButton'
 import { Divider } from '@/components/primitives/Divider'
 import { EmptyState } from '@/components/primitives/EmptyState'
 import { TheaterFavoriteAction } from '@/components/domain/favorites/TheaterFavoriteAction'
@@ -762,24 +763,39 @@ export function TheaterSheet({
 
   /* 2.0: 고스트 유틸리티 — 이 화면의 주 행동은 포스터·시간표라 액션은 침묵.
      시각은 텍스트+아이콘만, 히트박스는 44 유지(시각 크기 ≠ 터치 크기) */
+  /* 액션 행(관심·길찾기·공유·인스타) — 면·크기·상태는 Button(text·md)이 갖는다.
+     좌우 여백만 좁힌다: Button md의 32px은 이 행에 4개가 들어가면 모바일에서 넘친다 */
   const actionBtn: React.CSSProperties = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
     gap: 4,
-    minHeight: 44,
     padding: '0 8px',
-    border: 'none',
-    borderRadius: 'var(--radius-button)',
-    /* 배경은 hover-raise가 관리 — 인라인으로 두면 클래스의 :hover를 이겨서 호버가 죽는다 */
-    color: 'var(--color-text-sub)',
-    fontSize: 'var(--text-body)',
-    fontWeight: 500,
-    lineHeight: 1,
     whiteSpace: 'nowrap',
-    cursor: 'pointer',
   }
 
+  /* 영화 카드 하단 액션 2칸 — 면·상태는 Button(text)이 갖고, 칸 나눔과 높이만 여기서 */
+  const cardActionBtn: React.CSSProperties = {
+    flex: 1,
+    height: 56,
+    minHeight: 56,
+    padding: 0,
+    gap: 4,
+    color: 'var(--color-text-body)',
+    borderRadius: 0,
+  }
+
+  /* 포스터 스트립 좌우 버튼 — ScrollNavButton의 기본은 컨테이너 세로 중앙(top 50%)인데
+     여기는 캡션을 뺀 포스터 이미지 중앙에 놓아야 한다. 면도 카드 반투명 + 블러다 */
+  const posterNavStyle: React.CSSProperties = {
+    top: 12 + posterItemH / 2,
+    width: 32, height: 32,
+    border: 'none',
+    backgroundColor: 'color-mix(in srgb, var(--color-surface-card) 72%, transparent)',
+    backdropFilter: 'blur(8px)',
+    color: 'var(--color-text-body)',
+    boxShadow: '0 1px 6px rgba(0,0,0,0.12)',
+  }
+
+  /* 주소 줄 안에 박히는 16px 아이콘 — IconButton의 최소 규격이 32라 여기는 원시 button으로 둔다.
+     글줄 높이를 밀지 않는 게 이 자리의 요구 조건이다 */
   const inlineIconBtn: React.CSSProperties = {
     flex: '0 0 16px',
     width: 16,
@@ -915,19 +931,19 @@ export function TheaterSheet({
               marginTop: 12,
             }}>
               <TheaterFavoriteAction theaterId={theater.id} theaterName={theater.name} style={actionBtn} />
-              <button className="hover-raise" style={actionBtn} onClick={openDirections}>
+              <Button type="button" variant="text" size="md" style={actionBtn} onClick={openDirections}>
                 <Icon name="map-pinned" size={14} />
                 길찾기
-              </button>
-              <button className="hover-raise" style={actionBtn} onClick={shareTheater}>
+              </Button>
+              <Button type="button" variant="text" size="md" style={actionBtn} onClick={shareTheater}>
                 <Icon name="share-2" size={14} />
                 공유하기
-              </button>
+              </Button>
               {hasInstagram && (
-                <button className="hover-raise" style={actionBtn} onClick={openInstagram}>
+                <Button type="button" variant="text" size="md" style={actionBtn} onClick={openInstagram}>
                   <Icon name="instagram" size={14} />
                   인스타그램
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -1021,19 +1037,19 @@ export function TheaterSheet({
             marginLeft: -8,
           }}>
             <TheaterFavoriteAction theaterId={theater.id} theaterName={theater.name} style={actionBtn} />
-            <button className="hover-raise" style={actionBtn} onClick={openDirections}>
+            <Button type="button" variant="text" size="md" style={actionBtn} onClick={openDirections}>
               <Icon name="map-pinned" size={14} />
               길찾기
-            </button>
-            <button className="hover-raise" style={actionBtn} onClick={shareTheater}>
+            </Button>
+            <Button type="button" variant="text" size="md" style={actionBtn} onClick={shareTheater}>
               <Icon name="share-2" size={14} />
               공유하기
-            </button>
+            </Button>
             {hasInstagram && (
-              <button className="hover-raise" style={actionBtn} onClick={openInstagram}>
+              <Button type="button" variant="text" size="md" style={actionBtn} onClick={openInstagram}>
                 <Icon name="instagram" size={14} />
                 인스타그램
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -1094,42 +1110,18 @@ export function TheaterSheet({
       }}>
         {/* 모바일 포스터 좌우 스크롤 버튼 */}
         {posterCanScrollLeft && (
-          <button
-            style={{
-              position: 'absolute', top: 12 + posterItemH / 2, left: 6,   /* 포스터 이미지 세로 중앙 (캡션 제외) */
-              transform: 'translateY(-50%)',
-              width: 32, height: 32, borderRadius: '50%', zIndex: 3,
-              border: 'none', cursor: 'pointer',
-              backgroundColor: 'color-mix(in srgb, var(--color-surface-card) 72%, transparent)',
-              backdropFilter: 'blur(8px)',
-              color: 'var(--color-text-body)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 1px 6px rgba(0,0,0,0.12)',
-              minHeight: 'auto',
-            }}
+          <ScrollNavButton
+            direction="left"
+            style={posterNavStyle}
             onClick={() => scrollByPage(-1, posterItemW + POSTER_GAP)}
-          >
-            <Icon name="chevron-left" size={14} />
-          </button>
+          />
         )}
         {posterCanScrollRight && (
-          <button
-            style={{
-              position: 'absolute', top: 12 + posterItemH / 2, right: 6,
-              transform: 'translateY(-50%)',
-              width: 32, height: 32, borderRadius: '50%', zIndex: 3,
-              border: 'none', cursor: 'pointer',
-              backgroundColor: 'color-mix(in srgb, var(--color-surface-card) 72%, transparent)',
-              backdropFilter: 'blur(8px)',
-              color: 'var(--color-text-body)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 1px 6px rgba(0,0,0,0.12)',
-              minHeight: 'auto',
-            }}
+          <ScrollNavButton
+            direction="right"
+            style={posterNavStyle}
             onClick={() => scrollByPage(1, posterItemW + POSTER_GAP)}
-          >
-            <Icon name="chevron-right" size={14} />
-          </button>
+          />
         )}
         <div
           ref={posterScrollRef}
@@ -1286,16 +1278,16 @@ export function TheaterSheet({
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 0, marginTop: 4, marginLeft: -8 }}>
               <TheaterFavoriteAction theaterId={theater.id} theaterName={theater.name} style={actionBtn} compact />
-              <button className="hover-raise" style={actionBtn} onClick={openDirections}>
+              <Button type="button" variant="text" size="md" style={actionBtn} onClick={openDirections}>
                 <Icon name="map-pinned" size={14} />길찾기
-              </button>
-              <button className="hover-raise" style={actionBtn} onClick={shareTheater}>
+              </Button>
+              <Button type="button" variant="text" size="md" style={actionBtn} onClick={shareTheater}>
                 <Icon name="share-2" size={14} />공유하기
-              </button>
+              </Button>
               {hasInstagram && (
-                <button className="hover-raise" style={actionBtn} onClick={openInstagram}>
+                <Button type="button" variant="text" size="md" style={actionBtn} onClick={openInstagram}>
                   <Icon name="instagram" size={14} />인스타그램
-                </button>
+                </Button>
               )}
             </div>
           </div>}
@@ -1430,29 +1422,20 @@ export function TheaterSheet({
               {/* 포스터 좌우 스크롤 버튼 — expanded 전체(모바일/PC 패널) */}
               {(() => {
                 const scrollBy = (dir: 1 | -1) => scrollByPage(dir, posterItemW + POSTER_GAP)
+                /* 도크(panelMode)에서는 면을 더 묽게 — 패널 배경이 이미 흐리다 */
                 const btnStyle: React.CSSProperties = {
-                  /* 포스터 이미지 세로 중앙 — 스트립 padTop 12 + 이미지 절반 (캡션 높이 제외) */
-                  position: 'absolute', top: 12 + posterItemH / 2, transform: 'translateY(-50%)',
-                  width: 32, height: 32, borderRadius: '50%', zIndex: panelMode ? 2 : 3,
-                  border: 'none', cursor: 'pointer',
+                  ...posterNavStyle,
+                  zIndex: panelMode ? 2 : 3,
                   backgroundColor: `color-mix(in srgb, var(--color-surface-card) ${panelMode ? 55 : 72}%, transparent)`,
-                  backdropFilter: 'blur(8px)',
-                  color: 'var(--color-text-body)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
                   boxShadow: panelMode ? '0 1px 6px rgba(0,0,0,0.10)' : '0 1px 6px rgba(0,0,0,0.12)',
-                  minHeight: 'auto',
                 }
                 return (
                   <>
                     {posterCanScrollLeft && (
-                      <button style={{ ...btnStyle, left: 6 }} onClick={() => scrollBy(-1)}>
-                        <Icon name="chevron-left" size={14} />
-                      </button>
+                      <ScrollNavButton direction="left" style={btnStyle} onClick={() => scrollBy(-1)} />
                     )}
                     {posterCanScrollRight && (
-                      <button style={{ ...btnStyle, right: 6 }} onClick={() => scrollBy(1)}>
-                        <Icon name="chevron-right" size={14} />
-                      </button>
+                      <ScrollNavButton direction="right" style={btnStyle} onClick={() => scrollBy(1)} />
                     )}
                   </>
                 )
@@ -1702,38 +1685,27 @@ export function TheaterSheet({
                 </div>
                 {/* 액션 버튼 */}
                 <div style={{ borderTop: '1px solid var(--color-border)', display: 'flex' }}>
-                  <button
-                    className="hover-raise"
+                  <Button
+                    type="button"
+                    variant="text"
+                    size="md"
                     onClick={() => onMovieDetailOpen ? onMovieDetailOpen(movie.id) : navigateMovie(movie.id, `/movie/${movie.id}?theater=${theater.id}`)}
-                    style={{
-                      flex: 1, minHeight: 56, padding: 0,
-                      fontSize: 'var(--text-body)', fontWeight: 500,
-                      color: 'var(--color-text-body)',
-                      border: 'none',
-                      cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-                      opacity: movieNavPendingId === movie.id ? 0.5 : 1,
-                    }}
+                    style={{ ...cardActionBtn, opacity: movieNavPendingId === movie.id ? 0.5 : 1 }}
                   >
-                                        <Icon name="clapperboard" size={14} style={{ flexShrink: 0 }} />
+                    <Icon name="clapperboard" size={14} style={{ flexShrink: 0 }} />
                     영화 상세 정보
-                  </button>
+                  </Button>
                   <Divider orientation="vertical" />
-                  <button
-                    className="hover-raise"
+                  <Button
+                    type="button"
+                    variant="text"
+                    size="md"
                     onClick={() => { onMovieSearch?.(movie.id, movie.title); onClose() }}
-                    style={{
-                      flex: 1, minHeight: 56, padding: 0,
-                      fontSize: 'var(--text-body)', fontWeight: 500,
-                      color: 'var(--color-text-body)',
-                      border: 'none',
-                      cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-                    }}
+                    style={cardActionBtn}
                   >
                     <Icon name="search" size={14} />
                     지도에서 이 영화 검색
-                  </button>
+                  </Button>
                 </div>
               </div>
             )
