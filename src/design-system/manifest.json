@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-08-25T04:14:23.155Z",
-  "figmaDumpAt": "2026-08-25T03:43:33.446Z",
+  "generatedAt": "2026-09-01T07:30:12.244Z",
+  "figmaDumpAt": "2026-09-01T07:28:05.395Z",
   "tokenGroups": [
     {
       "title": "Neutral scale — 2.0 웜그레이 램프 (S가 양끝으로 상승하는 U자 곡선, H 27~40)",
@@ -3143,7 +3143,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "VariableID:2:4"
+            "fill": "#F0EDE6"
           },
           {
             "props": {
@@ -3160,7 +3160,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "VariableID:2:4"
+            "fill": "#F0EDE6"
           },
           {
             "props": {
@@ -3177,7 +3177,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "VariableID:2:4"
+            "fill": "#F0EDE6"
           },
           {
             "props": {
@@ -3194,7 +3194,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "VariableID:2:4"
+            "fill": "#F0EDE6"
           }
         ]
       }
@@ -4452,7 +4452,7 @@
             ],
             "gap": 8,
             "dir": "HORIZONTAL",
-            "fill": "VariableID:2:5"
+            "fill": "#DDD9CF"
           },
           {
             "props": {
@@ -5052,7 +5052,7 @@
             ],
             "gap": 4,
             "dir": "HORIZONTAL",
-            "fill": "VariableID:2:5"
+            "fill": "#DDD9CF"
           },
           {
             "props": {
@@ -5124,7 +5124,7 @@
             ],
             "gap": 4,
             "dir": "HORIZONTAL",
-            "fill": "VariableID:2:5"
+            "fill": "#DDD9CF"
           },
           {
             "props": {
@@ -5333,165 +5333,49 @@
           "doc": "진행 중 표시 (라우팅 대기 등)"
         }
       ],
-      "figmaSet": "2.0/Chip",
+      "figmaSet": "2.0/DirectorChip",
       "figma": {
-        "name": "2.0/Chip",
+        "name": "2.0/DirectorChip",
         "axes": {
-          "Variant": [
-            "filter",
-            "dropdown"
-          ],
           "State": [
             "off",
-            "off-hover",
-            "on",
-            "on-hover"
+            "on"
           ]
         },
         "variants": [
           {
             "props": {
-              "Variant": "filter",
               "State": "off"
             },
-            "w": 73,
+            "w": 78,
             "h": 32,
             "radius": 9999,
             "pad": [
-              0,
-              14,
-              0,
-              14
+              4,
+              12,
+              4,
+              4
             ],
-            "gap": 4,
+            "gap": 6,
             "dir": "HORIZONTAL",
-            "fill": "VariableID:2:5"
+            "fill": "#EAE5E1"
           },
           {
             "props": {
-              "Variant": "filter",
-              "State": "off-hover"
-            },
-            "w": 73,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              14,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "neutral/300"
-          },
-          {
-            "props": {
-              "Variant": "filter",
               "State": "on"
             },
-            "w": 73,
+            "w": 78,
             "h": 32,
             "radius": 9999,
             "pad": [
-              0,
-              14,
-              0,
-              14
+              4,
+              12,
+              4,
+              4
             ],
-            "gap": 4,
+            "gap": 6,
             "dir": "HORIZONTAL",
-            "fill": "primary/100"
-          },
-          {
-            "props": {
-              "Variant": "filter",
-              "State": "on-hover"
-            },
-            "w": 73,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              14,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "primary/100"
-          },
-          {
-            "props": {
-              "Variant": "dropdown",
-              "State": "off"
-            },
-            "w": 85,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              10,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "VariableID:2:5"
-          },
-          {
-            "props": {
-              "Variant": "dropdown",
-              "State": "off-hover"
-            },
-            "w": 85,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              10,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "neutral/300"
-          },
-          {
-            "props": {
-              "Variant": "dropdown",
-              "State": "on"
-            },
-            "w": 85,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              10,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "primary/100"
-          },
-          {
-            "props": {
-              "Variant": "dropdown",
-              "State": "on-hover"
-            },
-            "w": 85,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              10,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "primary/100"
+            "fill": "#ECEFF9"
           }
         ]
       }
@@ -5731,7 +5615,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "VariableID:2:12"
+            "fill": "#FFFFFF"
           },
           {
             "props": {
@@ -5748,7 +5632,7 @@
             ],
             "gap": 8,
             "dir": "HORIZONTAL",
-            "fill": "VariableID:2:12"
+            "fill": "#FFFFFF"
           }
         ]
       }
@@ -5781,10 +5665,10 @@
         },
         {
           "name": "size",
-          "type": "32 | 44 | 52 | undefined",
+          "type": "32 | 44 | undefined",
           "optional": true,
           "default": "44",
-          "doc": ""
+          "doc": "52는 쓰는 자리가 없어 뺐다 — 하트는 포스터 위 32, 그 밖은 44다"
         },
         {
           "name": "label",
@@ -5805,13 +5689,18 @@
           "State": [
             "on",
             "off"
+          ],
+          "Size": [
+            "44",
+            "32"
           ]
         },
         "variants": [
           {
             "props": {
               "Variant": "ghost",
-              "State": "on"
+              "State": "on",
+              "Size": "44"
             },
             "w": 44,
             "h": 44,
@@ -5824,7 +5713,8 @@
           {
             "props": {
               "Variant": "ghost",
-              "State": "off"
+              "State": "off",
+              "Size": "44"
             },
             "w": 44,
             "h": 44,
@@ -5837,7 +5727,8 @@
           {
             "props": {
               "Variant": "overlay",
-              "State": "on"
+              "State": "on",
+              "Size": "44"
             },
             "w": 44,
             "h": 44,
@@ -5845,12 +5736,13 @@
             "pad": null,
             "gap": null,
             "dir": null,
-            "fill": "#000000"
+            "fill": "#000000 @0.06"
           },
           {
             "props": {
               "Variant": "overlay",
-              "State": "off"
+              "State": "off",
+              "Size": "44"
             },
             "w": 44,
             "h": 44,
@@ -5858,7 +5750,63 @@
             "pad": null,
             "gap": null,
             "dir": null,
-            "fill": "#000000"
+            "fill": "#000000 @0.06"
+          },
+          {
+            "props": {
+              "Variant": "ghost",
+              "State": "on",
+              "Size": "32"
+            },
+            "w": 32,
+            "h": 32,
+            "radius": 9999,
+            "pad": null,
+            "gap": null,
+            "dir": null,
+            "fill": null
+          },
+          {
+            "props": {
+              "Variant": "ghost",
+              "State": "off",
+              "Size": "32"
+            },
+            "w": 32,
+            "h": 32,
+            "radius": 9999,
+            "pad": null,
+            "gap": null,
+            "dir": null,
+            "fill": null
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "State": "on",
+              "Size": "32"
+            },
+            "w": 32,
+            "h": 32,
+            "radius": 9999,
+            "pad": null,
+            "gap": null,
+            "dir": null,
+            "fill": "#000000 @0.06"
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "State": "off",
+              "Size": "32"
+            },
+            "w": 32,
+            "h": 32,
+            "radius": 9999,
+            "pad": null,
+            "gap": null,
+            "dir": null,
+            "fill": "#000000 @0.06"
           }
         ]
       }
@@ -6051,165 +5999,49 @@
           "doc": ""
         }
       ],
-      "figmaSet": "2.0/Chip",
+      "figmaSet": "2.0/GenreChip",
       "figma": {
-        "name": "2.0/Chip",
+        "name": "2.0/GenreChip",
         "axes": {
-          "Variant": [
-            "filter",
-            "dropdown"
-          ],
           "State": [
             "off",
-            "off-hover",
-            "on",
-            "on-hover"
+            "on"
           ]
         },
         "variants": [
           {
             "props": {
-              "Variant": "filter",
               "State": "off"
             },
-            "w": 73,
-            "h": 32,
+            "w": 56,
+            "h": 30,
             "radius": 9999,
             "pad": [
-              0,
-              14,
-              0,
-              14
+              8,
+              12,
+              8,
+              12
             ],
-            "gap": 4,
+            "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "VariableID:2:5"
+            "fill": "#EAE5E1"
           },
           {
             "props": {
-              "Variant": "filter",
-              "State": "off-hover"
-            },
-            "w": 73,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              14,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "neutral/300"
-          },
-          {
-            "props": {
-              "Variant": "filter",
               "State": "on"
             },
-            "w": 73,
-            "h": 32,
+            "w": 56,
+            "h": 30,
             "radius": 9999,
             "pad": [
-              0,
-              14,
-              0,
-              14
+              8,
+              12,
+              8,
+              12
             ],
-            "gap": 4,
+            "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "primary/100"
-          },
-          {
-            "props": {
-              "Variant": "filter",
-              "State": "on-hover"
-            },
-            "w": 73,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              14,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "primary/100"
-          },
-          {
-            "props": {
-              "Variant": "dropdown",
-              "State": "off"
-            },
-            "w": 85,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              10,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "VariableID:2:5"
-          },
-          {
-            "props": {
-              "Variant": "dropdown",
-              "State": "off-hover"
-            },
-            "w": 85,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              10,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "neutral/300"
-          },
-          {
-            "props": {
-              "Variant": "dropdown",
-              "State": "on"
-            },
-            "w": 85,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              10,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "primary/100"
-          },
-          {
-            "props": {
-              "Variant": "dropdown",
-              "State": "on-hover"
-            },
-            "w": 85,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              10,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "primary/100"
+            "fill": "#ECEFF9"
           }
         ]
       }
@@ -6221,7 +6053,7 @@
       "props": [
         {
           "name": "name",
-          "type": "\"info\" | \"scale\" | \"x\" | \"chevron-left\" | \"chevron-right\" | \"chevron-down\" | \"arrow-up\" | \"arrow-right-left\" | \"plus\" | \"minus\" | \"check\" | \"layout-grid\" | \"search\" | \"copy\" | ... 34 more ... | \"linkedin\"",
+          "type": "\"info\" | \"scale\" | \"x\" | \"chevron-left\" | \"chevron-right\" | \"chevron-down\" | \"arrow-up\" | \"arrow-down\" | \"arrow-right-left\" | \"plus\" | \"minus\" | \"check\" | \"layout-grid\" | \"search\" | ... 35 more ... | \"linkedin\"",
           "optional": false,
           "default": null,
           "doc": ""
@@ -6403,7 +6235,8 @@
           ],
           "Size": [
             "32",
-            "44"
+            "44",
+            "52"
           ],
           "State": [
             "default",
@@ -6454,7 +6287,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "VariableID:2:5"
+            "fill": "#DDD9CF"
           },
           {
             "props": {
@@ -6514,7 +6347,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "VariableID:2:5"
+            "fill": "#DDD9CF"
           },
           {
             "props": {
@@ -6554,7 +6387,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000"
+            "fill": "#000000 @0.06"
           },
           {
             "props": {
@@ -6574,7 +6407,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000"
+            "fill": "#000000 @0.1"
           },
           {
             "props": {
@@ -6594,7 +6427,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000"
+            "fill": "#000000 @0.14"
           },
           {
             "props": {
@@ -6614,7 +6447,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000"
+            "fill": "#000000 @0.06"
           },
           {
             "props": {
@@ -6634,7 +6467,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000"
+            "fill": "#000000 @0.1"
           },
           {
             "props": {
@@ -6654,7 +6487,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000"
+            "fill": "#000000 @0.14"
           },
           {
             "props": {
@@ -6674,7 +6507,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000"
+            "fill": "#000000 @0.06"
           },
           {
             "props": {
@@ -6694,7 +6527,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000"
+            "fill": "#000000 @0.1"
           },
           {
             "props": {
@@ -6714,7 +6547,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000"
+            "fill": "#000000 @0.14"
           },
           {
             "props": {
@@ -6734,7 +6567,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000"
+            "fill": "#000000 @0.06"
           },
           {
             "props": {
@@ -6754,7 +6587,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000"
+            "fill": "#000000 @0.1"
           },
           {
             "props": {
@@ -6774,7 +6607,187 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000"
+            "fill": "#000000 @0.14"
+          },
+          {
+            "props": {
+              "Variant": "ghost",
+              "Size": "52",
+              "State": "default",
+              "Shape": "square"
+            },
+            "w": 52,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "Variant": "ghost",
+              "Size": "52",
+              "State": "hover",
+              "Shape": "square"
+            },
+            "w": 52,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#DDD9CF"
+          },
+          {
+            "props": {
+              "Variant": "ghost",
+              "Size": "52",
+              "State": "pressed",
+              "Shape": "square"
+            },
+            "w": 52,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/300"
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "Size": "52",
+              "State": "default",
+              "Shape": "round"
+            },
+            "w": 52,
+            "h": 52,
+            "radius": 26,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#000000 @0.06"
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "Size": "52",
+              "State": "hover",
+              "Shape": "round"
+            },
+            "w": 52,
+            "h": 52,
+            "radius": 26,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#000000 @0.1"
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "Size": "52",
+              "State": "pressed",
+              "Shape": "round"
+            },
+            "w": 52,
+            "h": 52,
+            "radius": 26,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#000000 @0.14"
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "Size": "52",
+              "State": "default",
+              "Shape": "square"
+            },
+            "w": 52,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#000000 @0.06"
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "Size": "52",
+              "State": "hover",
+              "Shape": "square"
+            },
+            "w": 52,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#000000 @0.1"
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "Size": "52",
+              "State": "pressed",
+              "Shape": "square"
+            },
+            "w": 52,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#000000 @0.14"
           }
         ]
       }
@@ -7384,6 +7397,13 @@
           "doc": ""
         },
         {
+          "name": "size",
+          "type": "\"default\" | \"compact\" | undefined",
+          "optional": true,
+          "default": "'default'",
+          "doc": "compact — 포스터가 아닌 소형 썸네일(GV 카드의 56px 색 띠 등)에서만.\n기본 규격(12/700 · 8 12)은 높이 30px이라 56px 띠의 절반을 덮는다."
+        },
+        {
           "name": "label",
           "type": "string | undefined",
           "optional": true,
@@ -7398,165 +7418,276 @@
           "doc": ""
         }
       ],
-      "figmaSet": "2.0/Chip",
+      "figmaSet": "2.0/PosterChip",
       "figma": {
-        "name": "2.0/Chip",
+        "name": "2.0/PosterChip",
         "axes": {
-          "Variant": [
-            "filter",
-            "dropdown"
+          "Tone": [
+            "error",
+            "warning",
+            "success",
+            "primary",
+            "gv",
+            "neutral",
+            "scrim"
           ],
-          "State": [
-            "off",
-            "off-hover",
-            "on",
-            "on-hover"
+          "Size": [
+            "default",
+            "compact"
           ]
         },
         "variants": [
           {
             "props": {
-              "Variant": "filter",
-              "State": "off"
+              "Tone": "error",
+              "Size": "default"
             },
-            "w": 73,
-            "h": 32,
-            "radius": 9999,
+            "w": 45,
+            "h": 30,
+            "radius": 4,
             "pad": [
-              0,
-              14,
-              0,
-              14
+              8,
+              12,
+              8,
+              12
             ],
-            "gap": 4,
+            "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "VariableID:2:5"
+            "fill": "#9B3331"
           },
           {
             "props": {
-              "Variant": "filter",
-              "State": "off-hover"
+              "Tone": "error",
+              "Size": "compact"
             },
-            "w": 73,
-            "h": 32,
-            "radius": 9999,
+            "w": 34,
+            "h": 20,
+            "radius": 4,
             "pad": [
-              0,
-              14,
-              0,
-              14
+              4,
+              8,
+              4,
+              8
             ],
-            "gap": 4,
+            "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "neutral/300"
+            "fill": "#9B3331"
           },
           {
             "props": {
-              "Variant": "filter",
-              "State": "on"
+              "Tone": "warning",
+              "Size": "default"
             },
-            "w": 73,
-            "h": 32,
-            "radius": 9999,
+            "w": 66,
+            "h": 30,
+            "radius": 4,
             "pad": [
-              0,
-              14,
-              0,
-              14
+              8,
+              12,
+              8,
+              12
             ],
-            "gap": 4,
+            "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "primary/100"
+            "fill": "#B9800E"
           },
           {
             "props": {
-              "Variant": "filter",
-              "State": "on-hover"
+              "Tone": "warning",
+              "Size": "compact"
             },
-            "w": 73,
-            "h": 32,
-            "radius": 9999,
+            "w": 51,
+            "h": 20,
+            "radius": 4,
             "pad": [
-              0,
-              14,
-              0,
-              14
+              4,
+              8,
+              4,
+              8
             ],
-            "gap": 4,
+            "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "primary/100"
+            "fill": "#B9800E"
           },
           {
             "props": {
-              "Variant": "dropdown",
-              "State": "off"
+              "Tone": "success",
+              "Size": "default"
             },
-            "w": 85,
-            "h": 32,
-            "radius": 9999,
+            "w": 56,
+            "h": 30,
+            "radius": 4,
             "pad": [
-              0,
-              10,
-              0,
-              14
+              8,
+              12,
+              8,
+              12
             ],
-            "gap": 4,
+            "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "VariableID:2:5"
+            "fill": "#4A7C59"
           },
           {
             "props": {
-              "Variant": "dropdown",
-              "State": "off-hover"
+              "Tone": "success",
+              "Size": "compact"
             },
-            "w": 85,
-            "h": 32,
-            "radius": 9999,
+            "w": 42,
+            "h": 20,
+            "radius": 4,
             "pad": [
-              0,
-              10,
-              0,
-              14
+              4,
+              8,
+              4,
+              8
             ],
-            "gap": 4,
+            "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "neutral/300"
+            "fill": "#4A7C59"
           },
           {
             "props": {
-              "Variant": "dropdown",
-              "State": "on"
+              "Tone": "primary",
+              "Size": "default"
             },
-            "w": 85,
-            "h": 32,
-            "radius": 9999,
+            "w": 58,
+            "h": 30,
+            "radius": 4,
             "pad": [
-              0,
-              10,
-              0,
-              14
+              8,
+              12,
+              8,
+              12
             ],
-            "gap": 4,
+            "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "primary/100"
+            "fill": "#404E81"
           },
           {
             "props": {
-              "Variant": "dropdown",
-              "State": "on-hover"
+              "Tone": "primary",
+              "Size": "compact"
             },
-            "w": 85,
-            "h": 32,
-            "radius": 9999,
+            "w": 44,
+            "h": 20,
+            "radius": 4,
             "pad": [
-              0,
-              10,
-              0,
-              14
+              4,
+              8,
+              4,
+              8
             ],
-            "gap": 4,
+            "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "primary/100"
+            "fill": "#404E81"
+          },
+          {
+            "props": {
+              "Tone": "gv",
+              "Size": "default"
+            },
+            "w": 42,
+            "h": 30,
+            "radius": 4,
+            "pad": [
+              8,
+              12,
+              8,
+              12
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#6B5B95"
+          },
+          {
+            "props": {
+              "Tone": "gv",
+              "Size": "compact"
+            },
+            "w": 30,
+            "h": 20,
+            "radius": 4,
+            "pad": [
+              4,
+              8,
+              4,
+              8
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#6B5B95"
+          },
+          {
+            "props": {
+              "Tone": "neutral",
+              "Size": "default"
+            },
+            "w": 46,
+            "h": 30,
+            "radius": 4,
+            "pad": [
+              8,
+              12,
+              8,
+              12
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#78716C"
+          },
+          {
+            "props": {
+              "Tone": "neutral",
+              "Size": "compact"
+            },
+            "w": 34,
+            "h": 20,
+            "radius": 4,
+            "pad": [
+              4,
+              8,
+              4,
+              8
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#78716C"
+          },
+          {
+            "props": {
+              "Tone": "scrim",
+              "Size": "default"
+            },
+            "w": 80,
+            "h": 30,
+            "radius": 4,
+            "pad": [
+              8,
+              12,
+              8,
+              12
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#0F0C09 @0.72"
+          },
+          {
+            "props": {
+              "Tone": "scrim",
+              "Size": "compact"
+            },
+            "w": 63,
+            "h": 20,
+            "radius": 4,
+            "pad": [
+              4,
+              8,
+              4,
+              8
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#0F0C09 @0.72"
           }
         ]
       }
@@ -7978,7 +8109,7 @@
             ],
             "gap": 4,
             "dir": "HORIZONTAL",
-            "fill": "VariableID:2:5"
+            "fill": "#DDD9CF"
           },
           {
             "props": {
@@ -8012,7 +8143,7 @@
             ],
             "gap": 4,
             "dir": "HORIZONTAL",
-            "fill": "VariableID:2:5"
+            "fill": "#DDD9CF"
           }
         ]
       }
@@ -8089,7 +8220,7 @@
             "pad": null,
             "gap": null,
             "dir": null,
-            "fill": "#404E81"
+            "fill": "#404E81 @0.5"
           },
           {
             "props": {
@@ -8115,7 +8246,7 @@
             "pad": null,
             "gap": null,
             "dir": null,
-            "fill": "#C6BFB9"
+            "fill": "#C6BFB9 @0.5"
           }
         ]
       }

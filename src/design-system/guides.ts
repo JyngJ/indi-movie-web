@@ -141,8 +141,10 @@ export const GUIDES: Record<string, ComponentGuide> = {
 
   PosterChip: {
     changes: [
+      { date: '2026-09-01', note: '긴 카피를 자르지 않고 접도록 바꿨습니다(white-space: normal · word-break: keep-all · lineHeight 1.2 · maxWidth). 문서에는 접기가 규칙으로 적혀 있었는데 컴포넌트는 nowrap이라, 규칙을 지킨 곳은 정작 이 컴포넌트를 쓰지 않는 화면뿐이었습니다.' },
+      { date: '2026-09-01', note: 'GvEventSection·InstagramRecsSection·TheaterSheet·CurationSheet의 인라인 칩을 실제로 이 컴포넌트로 옮겼습니다. 8/13에 합쳤다고 적었지만 옮겨간 건 CurationSectionRow 하나뿐이었고, 나머지는 구 스펙(10px/600·padding 4 8)으로 2주 넘게 남아 있었습니다.' },
       { date: '2026-08-13', note: '글자를 11px/600에서 12px/700으로, 안쪽 여백을 4 8에서 8 12로 키웠습니다. 문서는 11px인데 코드는 --text-badge(10px)를 써서 값이 셋으로 갈려 있었고, 포스터 위에서 읽히지 않았습니다.' },
-      { date: '2026-08-13', note: 'CurationSectionRow·GvEventSection·InstagramRecsSection·TheaterSheet가 각자 그리던 칩을 이 컴포넌트 하나로 합쳤습니다. 정책은 한 줄인데 구현이 넷이라 크기·여백·그림자가 조금씩 어긋나 있었습니다.' },
+      { date: '2026-08-13', note: 'CurationSectionRow의 인라인 칩을 이 컴포넌트로 옮겼습니다. 정책은 한 줄인데 구현이 다섯이라 크기·여백·그림자가 조금씩 어긋나 있었습니다.' },
       { date: '2026-08-03', note: '--radius-poster를 8에서 2로 내렸습니다(인쇄물 모서리). 칩의 4px 라운드가 상대적으로 둥글어 보이는 것은 의도한 대비입니다.' },
     ],
     intro:
@@ -151,14 +153,18 @@ export const GUIDES: Record<string, ComponentGuide> = {
     anatomy: [
       { name: 'corner', desc: '네 모서리 중 하나를 지정합니다. 좌하단은 순위 표기 전용으로 비워 둡니다.' },
       { name: 'tone', desc: '의미색을 고릅니다. error(매진) · warning(잔여 적음) · success(상영중) · gv · scrim(중립 정보).' },
+      { name: 'size', desc: 'default(12/700 · 8 12)와 compact(10/600 · 4 8) 둘 중 하나. compact는 포스터가 아닌 소형 썸네일에만 씁니다.' },
     ],
     specs: [
       { title: '여백', desc: '포스터 모서리에서 6px(--comp-poster-chip-offset), 칩 내부는 8/12(--comp-poster-chip-pad)입니다.' },
       { title: '좌하단 규칙', desc: '랭킹 섹션이 스크림과 KIMM 숫자를 좌하단에 배치합니다. 이 자리는 순위 표기로 비워 둡니다.' },
+      { title: 'compact', desc: '기본 규격은 높이 30px이라 GV 카드의 56px 색 띠에서는 절반을 덮습니다. 그런 소형 썸네일에서만 compact(높이 20px)를 쓰고, 88px 이상 포스터에는 쓰지 않습니다.' },
+      { title: '접기', desc: '긴 카피는 말줄임 대신 어절 단위로 접습니다. 막바지 카피("오늘이 마지막"·"D-n 막바지 상영")는 완화·생략이 금지라 92px 포스터에서 자르면 곧 규칙 위반이 됩니다. 폭은 포스터에서 좌우 offset을 뺀 만큼입니다.' },
     ],
     usage: [
       { kind: 'do', rule: '한 포스터에 칩은 두 개까지입니다.' },
       { kind: 'dont', rule: '좌하단에는 칩을 배치하지 않습니다. 순위 표기 자리입니다.', instead: '상태 정보는 우하단, 시간·거리는 우상단에 둡니다.' },
+      { kind: 'caution', rule: '우상단은 관심 하트(FavoriteButton overlay)와 같은 자리입니다.', instead: '한 포스터에 하트와 우상단 칩을 함께 얹지 않습니다 — 관심 섹션에는 하트를, 거리·시간 정보에는 칩을 둡니다.' },
       { kind: 'caution', rule: 'neutral 톤(#78716C)은 neutral 램프에 대응 스탑이 없어 하드코딩으로 남아 있는 예외입니다. 새 색이 필요하다고 이 자리에 값을 하나 더 넣지 않습니다.', instead: '램프에 스탑을 만들고 그 토큰을 참조합니다.' },
     ],
     a11y: [
@@ -288,6 +294,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
 
   FavoriteButton: {
     changes: [
+      { date: '2026-09-01', note: '모양을 원형으로 고정했습니다(IconButton shape=round). 하트는 지도 핀·핀 캡슐·관심 목록까지 전부 원형인데 이 버튼만 사각 8px이었고, 피그마 2.0/FavoriteButton도 원형이었습니다. size 유니온에서 52도 뺐습니다 — 쓰는 자리가 없었습니다.' },
       { date: '2026-09-01', note: '지도 큐레이션 "관심 작품 상영 중"의 "관심 영화"/"관심 감독" 텍스트 칩을 이 버튼(overlay 32)으로 바꿨습니다. 같은 관심을 화면마다 텍스트 칩·빨간 링·하트로 달리 그리고 있었고, 관심 전용 섹션인데 정작 거기서 해제할 수가 없었습니다.' },
     ],
     intro:
@@ -295,10 +302,11 @@ export const GUIDES: Record<string, ComponentGuide> = {
       '상태·로그인 게이트는 호출부(useFavorites)가 맡고 버튼은 모양만 담당합니다.',
     anatomy: [
       { name: 'variant', desc: 'ghost — 상단바·헤더·행 우측. overlay — 포스터 이미지 위.' },
-      { name: 'size', desc: '32(포스터 오버레이·목록 그리드) / 44(기본) / 52(상세 액션 행).' },
+      { name: 'size', desc: '32(포스터 오버레이·목록 그리드) / 44(기본). 52는 쓰는 자리가 없어 뺐습니다.' },
     ],
     specs: [
       { title: '색', desc: '채워진 하트는 --color-error-mid, 빈 하트는 currentColor 선입니다. 관심의 빨강은 에러 빨강과 같은 스탑을 쓰지만 의미가 다르므로 경고 문구와 같은 화면에 나란히 놓지 않습니다.' },
+      { title: '모양', desc: '항상 원형입니다. IconButton의 기본은 사각(radius 8)이라 shape="round"를 넘깁니다.' },
       { title: '포스터 위 자리', desc: '포스터 우상단, 모서리에서 4px입니다. 좌하단은 순위, 좌상단은 오버레이 칩 자리라 하트는 우상단으로 고정합니다.' },
       { title: '거리 칩과의 관계', desc: '거리 칩도 우상단이라 한 포스터에 하트와 거리 칩을 함께 얹지 않습니다. 관심 섹션에는 하트를, 거리 섹션에는 칩을 둡니다.' },
       { title: '모션', desc: '켜고 끌 때 스프링으로 살짝 튑니다(stiffness 500 · damping 18). prefers-reduced-motion에서는 크기 변화 없이 상태만 바뀝니다.' },
@@ -312,7 +320,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
     a11y: [
       { title: '이름', desc: 'label에 대상 이름을 넘기면 "오디세이 관심 등록" / "오디세이 관심 해제"로 읽힙니다. 하트만 있는 버튼이 화면에 여럿이라 대상 이름 없이는 구분되지 않습니다.' },
       { title: '상태', desc: 'aria-pressed로 등록 여부를 알립니다. 색(빨강/회색)만으로 상태를 구분하지 않습니다.' },
-      { title: '탭 크기', desc: 'overlay 32는 시각 크기이고 IconButton이 최소 탭 영역을 보장합니다. 포스터를 가리지 않으려고 32보다 더 줄이지 않습니다.' },
+      { title: '탭 크기', desc: 'size가 곧 탭 영역입니다 — IconButton은 width·height를 그 값으로 고정할 뿐 별도 여백을 두지 않습니다. 포스터 오버레이의 32는 권장 44보다 작은 의도된 예외이므로, 좁다고 그보다 더 줄이지 않습니다.' },
     ],
   },
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
-import { SectionHeader, ScrollNavButton, IconButton } from '@/components/primitives'
+import { SectionHeader, ScrollNavButton, IconButton, PosterChip } from '@/components/primitives'
 import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
 import { buildSectionAnalytics } from '@/lib/curation/sectionRuns'
 import { trackEvent } from '@/lib/analytics/client'
@@ -244,16 +244,7 @@ function InstagramRecCard({
 
       {/* 상태 뱃지 — 영화제 진행 상태만 (영화 카드엔 칩 없음) */}
       {badge && (
-        <div
-          style={{
-            position: 'absolute', bottom: 6, right: 6, padding: '4px 8px', borderRadius: 'var(--radius-badge)',
-            fontSize: 'var(--text-badge)', fontWeight: 600, lineHeight: 1, display: 'inline-flex', alignItems: 'center',
-            backgroundColor: 'var(--color-success)',
-            color: 'var(--color-on-accent)',
-          }}
-        >
-          {badge.text}
-        </div>
+        <PosterChip corner="bottom-right" tone="success">{badge.text}</PosterChip>
       )}
     </div>
   )
