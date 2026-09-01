@@ -54,6 +54,17 @@ const THUMBS: Record<string, ReactNode> = {
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
       <FavoriteButton active={false} onToggle={() => {}} size={32} label="견본" />
       <FavoriteButton active onToggle={() => {}} size={44} label="견본" />
+      {/* overlay는 포스터 위에서만 뜻이 통한다 — 어두운 면을 깔고 흰 테두리를 보여 준다 */}
+      <div style={{ position: 'relative', width: 56, height: 84, borderRadius: 'var(--radius-poster)', background: 'linear-gradient(160deg, #6B5B95, #9B3331)' }}>
+        <div style={{ position: 'absolute', top: 4, right: 4 }}>
+          <FavoriteButton active={false} onToggle={() => {}} variant="overlay" size={32} label="견본" />
+        </div>
+      </div>
+      <div style={{ position: 'relative', width: 56, height: 84, borderRadius: 'var(--radius-poster)', background: 'linear-gradient(160deg, #EAE5E1, #C6BFB9)' }}>
+        <div style={{ position: 'absolute', top: 4, right: 4 }}>
+          <FavoriteButton active onToggle={() => {}} variant="overlay" size={32} label="견본" />
+        </div>
+      </div>
     </div>
   ),
   KakaoLoginButton: (

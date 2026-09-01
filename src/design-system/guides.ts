@@ -294,6 +294,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
 
   FavoriteButton: {
     changes: [
+      { date: '2026-09-01', note: '포스터 위(overlay) 하트에 흰 테두리와 얇은 그림자를 넣었습니다. 배경 그림을 통제할 수 없어 빈 하트의 회색 선은 어두운 포스터에, 채운 빨강은 붉은 포스터에 묻혔습니다.' },
       { date: '2026-09-01', note: '모양을 원형으로 고정했습니다(IconButton shape=round). 하트는 지도 핀·핀 캡슐·관심 목록까지 전부 원형인데 이 버튼만 사각 8px이었고, 피그마 2.0/FavoriteButton도 원형이었습니다. size 유니온에서 52도 뺐습니다 — 쓰는 자리가 없었습니다.' },
       { date: '2026-09-01', note: '지도 큐레이션 "관심 작품 상영 중"의 "관심 영화"/"관심 감독" 텍스트 칩을 이 버튼(overlay 32)으로 바꿨습니다. 같은 관심을 화면마다 텍스트 칩·빨간 링·하트로 달리 그리고 있었고, 관심 전용 섹션인데 정작 거기서 해제할 수가 없었습니다.' },
     ],
@@ -306,7 +307,8 @@ export const GUIDES: Record<string, ComponentGuide> = {
     ],
     specs: [
       { title: '색', desc: '채워진 하트는 --color-error-mid, 빈 하트는 currentColor 선입니다. 관심의 빨강은 에러 빨강과 같은 스탑을 쓰지만 의미가 다르므로 경고 문구와 같은 화면에 나란히 놓지 않습니다.' },
-      { title: '모양', desc: '항상 원형입니다. IconButton의 기본은 사각(radius 8)이라 shape="round"를 넘깁니다.' },
+      { title: '포스터 위 색', desc: 'overlay에서는 선을 흰색(--color-on-accent)으로 바꾸고 얇은 그림자(0 1px 2px · 45%)를 답니다. 채운 하트도 빨간 면에 흰 테두리가 남습니다. 포스터 그림을 통제할 수 없어 회색 선도 빨간 면도 그대로는 묻힙니다 — 모든 톤에 흰 글자를 쓰는 PosterChip과 같은 이유입니다.' },
+      { title: '모양', desc: '항상 원형입니다. IconButton의 기본은 사각(radius 8)이라 shape="round"를 넘깁니다. 포스터 위에서는 이 원형 면(검정 6%)이 탭 영역을 알려주는 유일한 단서입니다.' },
       { title: '포스터 위 자리', desc: '포스터 우상단, 모서리에서 4px입니다. 좌하단은 순위, 좌상단은 오버레이 칩 자리라 하트는 우상단으로 고정합니다.' },
       { title: '거리 칩과의 관계', desc: '거리 칩도 우상단이라 한 포스터에 하트와 거리 칩을 함께 얹지 않습니다. 관심 섹션에는 하트를, 거리 섹션에는 칩을 둡니다.' },
       { title: '모션', desc: '켜고 끌 때 스프링으로 살짝 튑니다(stiffness 500 · damping 18). prefers-reduced-motion에서는 크기 변화 없이 상태만 바뀝니다.' },
