@@ -294,6 +294,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
 
   FavoriteButton: {
     changes: [
+      { date: '2026-09-01', note: '모양을 원형으로 고정했습니다(IconButton shape=round). 하트는 지도 핀·핀 캡슐·관심 목록까지 전부 원형인데 이 버튼만 사각 8px이었고, 피그마 2.0/FavoriteButton도 원형이었습니다. size 유니온에서 52도 뺐습니다 — 쓰는 자리가 없었습니다.' },
       { date: '2026-09-01', note: '지도 큐레이션 "관심 작품 상영 중"의 "관심 영화"/"관심 감독" 텍스트 칩을 이 버튼(overlay 32)으로 바꿨습니다. 같은 관심을 화면마다 텍스트 칩·빨간 링·하트로 달리 그리고 있었고, 관심 전용 섹션인데 정작 거기서 해제할 수가 없었습니다.' },
     ],
     intro:
@@ -301,10 +302,11 @@ export const GUIDES: Record<string, ComponentGuide> = {
       '상태·로그인 게이트는 호출부(useFavorites)가 맡고 버튼은 모양만 담당합니다.',
     anatomy: [
       { name: 'variant', desc: 'ghost — 상단바·헤더·행 우측. overlay — 포스터 이미지 위.' },
-      { name: 'size', desc: '32(포스터 오버레이·목록 그리드) / 44(기본) / 52(상세 액션 행).' },
+      { name: 'size', desc: '32(포스터 오버레이·목록 그리드) / 44(기본). 52는 쓰는 자리가 없어 뺐습니다.' },
     ],
     specs: [
       { title: '색', desc: '채워진 하트는 --color-error-mid, 빈 하트는 currentColor 선입니다. 관심의 빨강은 에러 빨강과 같은 스탑을 쓰지만 의미가 다르므로 경고 문구와 같은 화면에 나란히 놓지 않습니다.' },
+      { title: '모양', desc: '항상 원형입니다. IconButton의 기본은 사각(radius 8)이라 shape="round"를 넘깁니다.' },
       { title: '포스터 위 자리', desc: '포스터 우상단, 모서리에서 4px입니다. 좌하단은 순위, 좌상단은 오버레이 칩 자리라 하트는 우상단으로 고정합니다.' },
       { title: '거리 칩과의 관계', desc: '거리 칩도 우상단이라 한 포스터에 하트와 거리 칩을 함께 얹지 않습니다. 관심 섹션에는 하트를, 거리 섹션에는 칩을 둡니다.' },
       { title: '모션', desc: '켜고 끌 때 스프링으로 살짝 튑니다(stiffness 500 · damping 18). prefers-reduced-motion에서는 크기 변화 없이 상태만 바뀝니다.' },
