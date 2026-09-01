@@ -25,7 +25,7 @@ export function FavoriteToggle({
   id: string
   label: string
   variant?: 'ghost' | 'overlay'
-  size?: 32 | 44 | 52
+  size?: 32 | 44
 }) {
   const { isFavorite, toggle } = useFavorites()
   return (

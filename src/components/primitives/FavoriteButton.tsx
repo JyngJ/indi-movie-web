@@ -7,13 +7,15 @@ import { IconButton } from './IconButton'
 /**
  * 관심(하트) 토글 버튼 — 표시 전용 프리미티브. 상태·로그인 게이트는 호출부(useFavorites)가 담당.
  * 채워진 하트 = --color-error-mid (아이콘용 레드), 빈 하트 = currentColor.
- * variant: ghost(상단바·헤더) / overlay(포스터 위).
+ * variant: ghost(상단바·헤더) / overlay(포스터 위). 모양은 항상 원형 — 하트는 지도 핀·캡슐도
+ * 전부 원형이라 사각 8px만 튀었다 (2026-09-01, 피그마 2.0/FavoriteButton과 일치).
  */
 interface Props extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onClick' | 'children'> {
   active: boolean
   onToggle: () => void
   variant?: 'ghost' | 'overlay'
-  size?: 32 | 44 | 52
+  /** 52는 쓰는 자리가 없어 뺐다 — 하트는 포스터 위 32, 그 밖은 44다 */
+  size?: 32 | 44
   /** 접근성 라벨 대상 (예: 영화 제목) */
   label: string
 }
@@ -24,6 +26,7 @@ export function FavoriteButton({ active, onToggle, variant = 'ghost', size = 44,
   return (
     <IconButton
       variant={variant}
+      shape="round"
       size={size}
       aria-label={active ? `${label} 관심 해제` : `${label} 관심 등록`}
       aria-pressed={active}

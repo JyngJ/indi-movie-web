@@ -146,6 +146,17 @@ function norm(v) {
   return s
 }
 
+/** 배리언트 채움 표기 — 알파를 버리면 6% 흑(rgba(0,0,0,0.06))이 #000000으로 보여
+ *  코드와 다른 값처럼 읽힌다. 변수 바인딩이 있으면 변수 이름을 우선한다. */
+function fillLabel(fills) {
+  const f = fills?.[0]
+  if (!f) return null
+  if (f.var && !f.var.startsWith('VariableID:')) return f.var
+  if (!f.hex) return f.var || null
+  const a = f.a == null ? 1 : Math.round(f.a * 100) / 100
+  return a === 1 ? f.hex : `${f.hex} @${a}`
+}
+
 /* ═══ 3. 컴포넌트 배리언트 (덤프 노드 트리) ═════════════════════════════ */
 function collectComponentSets(dump) {
   const sets = []
@@ -168,7 +179,7 @@ function collectComponentSets(dump) {
           pad: k.layout?.pad ?? null,
           gap: k.layout?.gap ?? null,
           dir: k.layout?.dir ?? null,
-          fill: k.fills?.[0]?.var || k.fills?.[0]?.hex || null,
+          fill: fillLabel(k.fills),
         }
       })
       sets.push({
@@ -190,7 +201,7 @@ function collectComponentSets(dump) {
           pad: node.layout?.pad ?? null,
           gap: node.layout?.gap ?? null,
           dir: node.layout?.dir ?? null,
-          fill: node.fills?.[0]?.var || node.fills?.[0]?.hex || null,
+          fill: fillLabel(node.fills),
         }],
       })
       return
