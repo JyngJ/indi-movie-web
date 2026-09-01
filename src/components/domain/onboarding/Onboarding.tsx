@@ -31,6 +31,7 @@ import {
   IlloMapDetail,
   type IconProps,
 } from './illustrations'
+import { Button } from '@/components/primitives'
 import { TransitionPanel, slideVariants } from '@/components/motion'
 import s from './onboarding.module.css'
 
@@ -301,9 +302,9 @@ export function Onboarding({ onClose }: Props) {
     return (
       <div className={`${s.root} ${s.desktopRoot}`} role="dialog" aria-modal="true" aria-label="영화볼지도 소개">
         <div className={s.modal}>
-          <button type="button" data-rc="onboarding-skip" className={s.mSkip} onClick={handleSkip}>
+          <Button type="button" variant="text" size="md" data-rc="onboarding-skip" className={s.mSkip} onClick={handleSkip}>
             건너뛰기
-          </button>
+          </Button>
           {/* 일러스트·본문 모두 이동 방향을 따라 슬라이드 (좌: 420px 폭, 우: 본문 폭) */}
           <TransitionPanel
             className={s.mIllo}
@@ -332,23 +333,23 @@ export function Onboarding({ onClose }: Props) {
             {p.footnote && <div className={`${s.footnote} ${s.mFootnote}`}>{p.footnote}</div>}
             <div className={s.mFooter}>
               {page > 0 && (
-                <button type="button" data-rc="onboarding-prev" className={s.mPrevBtn} onClick={() => goTo(page - 1)}>
+                <Button type="button" variant="tertiary" size="lg" data-rc="onboarding-prev" className={s.mPrevBtn} onClick={() => goTo(page - 1)}>
                   <IcArrow size={16} /> 이전
-                </button>
+                </Button>
               )}
               {isLast ? (
                 <div className={s.mCtaCol}>
-                  <button type="button" data-rc="onboarding-cta-browse" className={s.ctaGhost} onClick={handleBrowseCta}>
+                  <Button type="button" variant="text" size="md" data-rc="onboarding-cta-browse" onClick={handleBrowseCta}>
                     위치 없이 둘러보기
-                  </button>
-                  <button type="button" data-rc="onboarding-cta-location" className={s.nextBtn} onClick={handleLocationCta}>
+                  </Button>
+                  <Button type="button" variant="primary" size="lg" fullWidth data-rc="onboarding-cta-location" className={s.nextBtn} onClick={handleLocationCta}>
                     위치 켜고 시작하기
-                  </button>
+                  </Button>
                 </div>
               ) : (
-                <button type="button" data-rc="onboarding-next" className={s.nextBtn} onClick={() => goTo(page + 1)}>
+                <Button type="button" variant="primary" size="lg" data-rc="onboarding-next" className={s.nextBtn} onClick={() => goTo(page + 1)}>
                   다음 <IcArrow size={17} />
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -362,9 +363,9 @@ export function Onboarding({ onClose }: Props) {
   /* ── 모바일: 풀스크린 스와이프 ── */
   return (
     <div className={`${s.root} ${s.mobileRoot}`} role="dialog" aria-modal="true" aria-label="영화볼지도 소개">
-      <button type="button" data-rc="onboarding-skip" className={s.skip} onClick={handleSkip}>
+      <Button type="button" variant="text" size="md" data-rc="onboarding-skip" className={s.skip} onClick={handleSkip}>
         건너뛰기
-      </button>
+      </Button>
       <div className={s.swipe} ref={swipeRef} onScroll={handleScroll}>
         {pages.map((p, i) => (
           <div className={s.slide} key={i}>
@@ -386,32 +387,34 @@ export function Onboarding({ onClose }: Props) {
               {dots}
               {p.cta ? (
                 <div className={s.ctablock}>
-                  <button type="button" data-rc="onboarding-cta-location" className={s.cta} onClick={handleLocationCta}>
+                  <Button type="button" variant="primary" size="full" data-rc="onboarding-cta-location" className={s.cta} onClick={handleLocationCta}>
                     위치 켜고 시작하기
-                  </button>
+                  </Button>
                   <div className={s.mobNavRow}>
-                    <button type="button" data-rc="onboarding-prev" className={s.mobNavPrev} onClick={() => goTo(i - 1)}>
+                    <Button type="button" variant="text" size="md" data-rc="onboarding-prev" className={s.mobNavPrev} onClick={() => goTo(i - 1)}>
                       <IcArrow size={15} /> 이전
-                    </button>
-                    <button type="button" data-rc="onboarding-cta-browse" className={s.ctaSub} onClick={handleBrowseCta}>
+                    </Button>
+                    <Button type="button" variant="text" size="md" data-rc="onboarding-cta-browse" className={s.ctaSub} onClick={handleBrowseCta}>
                       위치 없이 둘러보기
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ) : (
                 <div className={s.mobNavRow}>
-                  <button
+                  <Button
                     type="button"
+                    variant="text"
+                    size="md"
                     className={s.mobNavPrev}
                     data-rc="onboarding-prev"
                     onClick={() => goTo(i - 1)}
                     style={{ visibility: i === 0 ? 'hidden' : 'visible' }}
                   >
                     <IcArrow size={15} /> 이전
-                  </button>
-                  <button type="button" data-rc="onboarding-next" className={s.mobNavNext} onClick={() => goTo(i + 1)}>
+                  </Button>
+                  <Button type="button" variant="text" size="md" data-rc="onboarding-next" className={s.mobNavNext} style={{ color: 'var(--color-primary-base)' }} onClick={() => goTo(i + 1)}>
                     다음 <IcArrow size={15} />
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
