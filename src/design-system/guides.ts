@@ -159,6 +159,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
     usage: [
       { kind: 'do', rule: '한 포스터에 칩은 두 개까지입니다.' },
       { kind: 'dont', rule: '좌하단에는 칩을 배치하지 않습니다. 순위 표기 자리입니다.', instead: '상태 정보는 우하단, 시간·거리는 우상단에 둡니다.' },
+      { kind: 'caution', rule: '우상단은 관심 하트(FavoriteButton overlay)와 같은 자리입니다.', instead: '한 포스터에 하트와 우상단 칩을 함께 얹지 않습니다 — 관심 섹션에는 하트를, 거리·시간 정보에는 칩을 둡니다.' },
       { kind: 'caution', rule: 'neutral 톤(#78716C)은 neutral 램프에 대응 스탑이 없어 하드코딩으로 남아 있는 예외입니다. 새 색이 필요하다고 이 자리에 값을 하나 더 넣지 않습니다.', instead: '램프에 스탑을 만들고 그 토큰을 참조합니다.' },
     ],
     a11y: [
@@ -312,7 +313,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
     a11y: [
       { title: '이름', desc: 'label에 대상 이름을 넘기면 "오디세이 관심 등록" / "오디세이 관심 해제"로 읽힙니다. 하트만 있는 버튼이 화면에 여럿이라 대상 이름 없이는 구분되지 않습니다.' },
       { title: '상태', desc: 'aria-pressed로 등록 여부를 알립니다. 색(빨강/회색)만으로 상태를 구분하지 않습니다.' },
-      { title: '탭 크기', desc: 'overlay 32는 시각 크기이고 IconButton이 최소 탭 영역을 보장합니다. 포스터를 가리지 않으려고 32보다 더 줄이지 않습니다.' },
+      { title: '탭 크기', desc: 'size가 곧 탭 영역입니다 — IconButton은 width·height를 그 값으로 고정할 뿐 별도 여백을 두지 않습니다. 포스터 오버레이의 32는 권장 44보다 작은 의도된 예외이므로, 좁다고 그보다 더 줄이지 않습니다.' },
     ],
   },
 
