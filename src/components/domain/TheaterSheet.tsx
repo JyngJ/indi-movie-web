@@ -8,6 +8,7 @@ import { ShowtimeCell } from './ShowtimeCell'
 import { Button } from '@/components/primitives/Button'
 import { IconButton } from '@/components/primitives/IconButton'
 import { Icon } from '@/components/primitives/Icon'
+import { PosterChip } from '@/components/primitives/PosterChip'
 import { Divider } from '@/components/primitives/Divider'
 import { EmptyState } from '@/components/primitives/EmptyState'
 import { TheaterFavoriteAction } from '@/components/domain/favorites/TheaterFavoriteAction'
@@ -1196,25 +1197,7 @@ export function TheaterSheet({
                             />
                             {/* 매진 배지 */}
                             {soldout && (
-                              <div style={{
-                                position: 'absolute',
-                                bottom: 6,
-                                right: 6,
-                                padding: '4px 8px',
-                                borderRadius: 'var(--radius-badge)',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                fontSize: 'var(--text-badge)',
-                                fontWeight: 600,
-                                lineHeight: 1,
-                                color: 'var(--color-on-accent)',
-                                backgroundColor: 'var(--color-error)',
-                                border: '1px solid color-mix(in srgb, var(--color-error) 60%, transparent)',
-                                pointerEvents: 'none',
-                                zIndex: 2,
-                              }}>
-                                매진
-                              </div>
+                              <PosterChip corner="bottom-right" tone="error">매진</PosterChip>
                             )}
                             {/* 이 날 상영 없는 영화 — 반투명 오버레이 */}
                             {unavailable && (
@@ -1530,14 +1513,7 @@ export function TheaterSheet({
                                   onClick={unavailable ? undefined : () => { handleMovieSelect(movie.id, 'poster_strip') }}
                                 />
                                 {soldout && (
-                                  <div style={{
-                                    position: 'absolute', bottom: 6, right: 6,
-                                    padding: '4px 8px', borderRadius: 'var(--radius-badge)',
-                                    display: 'inline-flex', alignItems: 'center', lineHeight: 1,
-                                    fontSize: 'var(--text-badge)', fontWeight: 600, color: 'var(--color-on-accent)',
-                                    backgroundColor: 'var(--color-error)',
-                                    pointerEvents: 'none', zIndex: 2,
-                                  }}>매진</div>
+                                  <PosterChip corner="bottom-right" tone="error">매진</PosterChip>
                                 )}
                                 {unavailable && (() => {
                                   const allDates = [...entry.availableDates].sort()

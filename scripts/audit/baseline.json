@@ -4,15 +4,15 @@
     "LOSSLESS": 0,
     "LOW": 0,
     "MED": 0,
-    "REVIEW": 70
+    "REVIEW": 61
   },
   "summary": {
-    "gutter": 45,
-    "color": 25,
+    "gutter": 38,
+    "color": 23,
     "fontSize": 0,
     "asymmetryLR": 5,
     "asymmetryTB": 23,
     "gutterKinds": 6,
-    "primitiveAdoptionPct": 80.5
+    "primitiveAdoptionPct": 80.7
   }
 }
