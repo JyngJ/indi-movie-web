@@ -53,3 +53,6 @@ KIMM_bold.ttf
 
 # UI 감사 산출물 (audit:ui)
 .audit-out/
+
+# humanize-korean 윤문 산출물
+_workspace/

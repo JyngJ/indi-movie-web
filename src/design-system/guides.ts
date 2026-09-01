@@ -52,17 +52,17 @@ export const GUIDES: Record<string, ComponentGuide> = {
       '한 화면의 primary는 하나로 유지해 주행동이 분명하게 드러나도록 합니다.',
     anatomy: [
       { name: '레이블', desc: '행동을 동사로 적습니다. "확인"보다 "예매하기"처럼 결과가 보이는 표현을 사용합니다. 아이콘만 필요한 자리에는 IconButton을 사용합니다.' },
-      { required: false, name: '아이콘', desc: '레이블만으로 의미가 전달되면 생략합니다. 외부 예매처로 이동하는 경우처럼 화면이 전환된다는 신호가 필요할 때 사용합니다.' },
+      { required: false, name: '아이콘', desc: '레이블만으로 의미가 전달되면 생략합니다. 외부 예매처로 이동하는 경우처럼 화면이 전환된다는 신호가 필요할 때만 붙입니다.' },
     ],
     specs: [
-      { title: '높이', desc: 'sm 32 · md 44 · lg 52입니다. 기본은 md(44)이며 터치 타깃 최소치(--touch-target)와 같습니다. sm은 밀집한 목록 안에서 사용합니다.' },
+      { title: '높이', desc: 'sm 32 · md 44 · lg 52입니다. 기본은 md(44)이며 터치 타깃 최소치(--touch-target)와 같습니다. sm은 밀집한 목록 안에서 씁니다.' },
       { title: '좌우 패딩', desc: '16 · 32 · 48로 spacing 4배수 스케일을 따릅니다. 레이블 길이에 따라 너비는 늘어나되 패딩은 고정합니다.' },
-      { title: 'fullWidth', desc: '모바일 하단 고정 CTA에서 사용합니다. 넓은 화면에서는 가로로 늘어난 버튼이 초점을 흐리므로 권장하지 않습니다.' },
+      { title: 'fullWidth', desc: '모바일 하단 고정 CTA 자리입니다. 넓은 화면에서는 가로로 늘어난 버튼이 초점을 흐리므로 권장하지 않습니다.' },
     ],
     usage: [
       { kind: 'do', rule: 'primary는 가장 오른쪽(또는 마지막)에 배치하고, 취소는 text·tertiary로 낮춥니다.' },
       { kind: 'dont', rule: 'primary를 나란히 두 개 배치하지 않습니다.', instead: '주행동 하나만 primary로 두고 나머지는 secondary·text로 낮춥니다.' },
-      { kind: 'caution', rule: 'danger는 되돌릴 수 없는 행동에만 사용합니다.' },
+      { kind: 'caution', rule: 'danger는 되돌릴 수 없는 행동에만 붙입니다.' },
     ],
     a11y: [
       { title: '터치 타깃', desc: 'md(44)는 --touch-target과 같은 값입니다. sm(32)은 밀집한 목록 안에서만 쓰고, 그 안에서도 좌우 간격으로 실제 누르는 면을 확보합니다.' },
@@ -72,10 +72,10 @@ export const GUIDES: Record<string, ComponentGuide> = {
 
   IconButton: {
     intro:
-      '아이콘만으로 의미가 전달되는 행동에 사용합니다. 닫기·확대·현위치처럼 설명이 필요 없는 행동이 대상이며, ' +
+      '아이콘만으로 의미가 통하는 행동에 사용합니다. 닫기·확대·현위치처럼 설명이 필요 없는 행동이 대상이며, ' +
       '포스터나 지도처럼 배경을 예측할 수 없는 면 위에서는 overlay 변형으로 대비를 확보합니다.',
     anatomy: [
-      { name: '아이콘', desc: 'Lucide 기준, stroke 1.75를 사용합니다. 의미가 보편적인 아이콘만 단독으로 사용합니다.' },
+      { name: '아이콘', desc: 'Lucide 기준, stroke 1.75입니다. 의미가 보편적인 아이콘만 단독으로 씁니다.' },
       { required: false, name: 'aria-label', desc: '화면에 글자가 없으므로 접근성 이름이 필요합니다. 타입에서도 필수로 지정되어 있습니다.' },
     ],
     specs: [
@@ -85,7 +85,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
     usage: [
       { kind: 'do', rule: '모바일에서 아이콘 버튼 사이는 최소 12px을 확보합니다. 44 타깃이 겹치면 오조작이 발생합니다.' },
       { kind: 'dont', rule: '버튼을 맞붙이지 않습니다. 아이콘 사이가 떨어져 보여도 손가락이 닿는 44 영역은 이미 겹쳐 있습니다.' },
-      { kind: 'dont', rule: '뜻이 하나로 읽히지 않는 아이콘(별·반짝임 등)을 글자 없이 단독으로 쓰지 않습니다.', instead: '글자가 필요하면 Button을, 목록 안 보조 행동이면 text 변형을 사용합니다.' },
+      { kind: 'dont', rule: '뜻이 하나로 읽히지 않는 아이콘(별·반짝임 등)을 글자 없이 단독으로 쓰지 않습니다.', instead: '글자가 필요하면 Button을, 목록 안 보조 행동이면 text 변형을 고릅니다.' },
     ],
     a11y: [
       { title: 'aria-label', desc: '타입에서 필수(string)로 지정돼 있습니다. 화면에 글자가 없으므로 이것이 이 버튼의 유일한 이름입니다.' },
@@ -99,14 +99,14 @@ export const GUIDES: Record<string, ComponentGuide> = {
       { date: '2026-08-09', note: '높이를 36에서 32(--filter-chip-height)로 내려 피그마 2.0/Chip과 맞췄습니다.' },
     ],
     intro:
-      '선택 상태를 가진 작은 토글입니다. 장르·태그처럼 여러 항목을 켜고 끄는 자리에 사용합니다. ' +
+      '선택 상태가 있는 작은 토글입니다. 장르·태그처럼 여러 항목을 켜고 끄는 자리에 사용합니다. ' +
       '높이는 32(--filter-chip-height)로 고정하고 세로 크기는 padding으로 만듭니다.',
     anatomy: [
       { name: '레이블', desc: '한 단어로 적습니다. 문장이 들어가는 자리에는 Button을 사용합니다.' },
-      { required: false, name: '해제 버튼', desc: 'onDismiss를 전달하면 × 가 붙습니다. 이미 적용된 필터를 해제하는 자리에 사용합니다.' },
+      { required: false, name: '해제 버튼', desc: 'onDismiss를 전달하면 × 가 붙습니다. 이미 적용된 필터를 해제하는 자리입니다.' },
     ],
     specs: [
-      { title: '반경', desc: 'pill(9999)을 사용합니다. 사각 라운드는 카드·셀의 문법이므로 칩과 섞지 않습니다.' },
+      { title: '반경', desc: 'pill(9999)을 씁니다. 사각 라운드는 카드·셀의 문법이므로 칩과 섞지 않습니다.' },
       { title: '선택 상태', desc: '면(primary/100)과 글자색(primary/900)으로 표현합니다. 테두리 굵기로만 구분하지 않습니다.' },
     ],
     usage: [
@@ -127,7 +127,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
       '켜고 끄는 단일 조건을 담습니다. "예매 가능만 보기"처럼 문장형 레이블이 들어가는 필터에 사용합니다. ' +
       '레이블은 12px/600(--text-meta + SemiBold)이며 피그마 2.0/meta-strong과 같은 조합입니다.',
     specs: [
-      { title: '활성 표현', desc: '면 색과 글자색으로 표현합니다. 상태 레이어는 토큰화된 색을 사용해 어떤 배경 위에서도 같은 대비를 유지합니다.' },
+      { title: '활성 표현', desc: '면 색과 글자색으로 표현합니다. 상태 레이어는 토큰화된 색이라 어떤 배경 위에서도 대비가 같습니다.' },
     ],
     usage: [
       { kind: 'do', rule: '조건이 하나일 때 사용합니다. 선택할 값이 여러 개면 드롭다운형 FilterChip을 사용합니다.' },
@@ -150,14 +150,14 @@ export const GUIDES: Record<string, ComponentGuide> = {
       '12px/700 · padding 8 12 · offset 6으로 포스터 위에서도 읽히는 크기를 유지합니다.',
     anatomy: [
       { name: 'corner', desc: '네 모서리 중 하나를 지정합니다. 좌하단은 순위 표기 전용으로 비워 둡니다.' },
-      { name: 'tone', desc: '의미색을 지정합니다. error(매진) · warning(잔여 적음) · success(상영중) · gv · scrim(중립 정보).' },
+      { name: 'tone', desc: '의미색을 고릅니다. error(매진) · warning(잔여 적음) · success(상영중) · gv · scrim(중립 정보).' },
     ],
     specs: [
       { title: '여백', desc: '포스터 모서리에서 6px(--comp-poster-chip-offset), 칩 내부는 8/12(--comp-poster-chip-pad)입니다.' },
       { title: '좌하단 규칙', desc: '랭킹 섹션이 스크림과 KIMM 숫자를 좌하단에 배치합니다. 이 자리는 순위 표기로 비워 둡니다.' },
     ],
     usage: [
-      { kind: 'do', rule: '한 포스터에 칩은 두 개까지 사용합니다.' },
+      { kind: 'do', rule: '한 포스터에 칩은 두 개까지입니다.' },
       { kind: 'dont', rule: '좌하단에는 칩을 배치하지 않습니다. 순위 표기 자리입니다.', instead: '상태 정보는 우하단, 시간·거리는 우상단에 둡니다.' },
       { kind: 'caution', rule: 'neutral 톤(#78716C)은 neutral 램프에 대응 스탑이 없어 하드코딩으로 남아 있는 예외입니다. 새 색이 필요하다고 이 자리에 값을 하나 더 넣지 않습니다.', instead: '램프에 스탑을 만들고 그 토큰을 참조합니다.' },
     ],
@@ -178,7 +178,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
     ],
     usage: [
       { kind: 'do', rule: '상태를 나타내는 한 단어만 담습니다 — 매진, 상영중, GV.' },
-      { kind: 'dont', rule: '배지에 클릭 핸들러를 연결하지 않습니다.', instead: '누를 수 있어야 하면 Chip이나 Button을 사용합니다.' },
+      { kind: 'dont', rule: '배지에 클릭 핸들러를 연결하지 않습니다.', instead: '누를 수 있어야 하면 Chip이나 Button을 대신 둡니다.' },
       { kind: 'caution', rule: '글자 크기가 11px로 박혀 있습니다. 타입 스케일(10 · 12) 밖의 값이라 감사에서 하드코딩으로 집계됩니다.', instead: '수렴할 때는 --text-badge(10) 또는 --text-meta(12) 중 하나로 옮깁니다.' },
     ],
     a11y: [
@@ -196,11 +196,11 @@ export const GUIDES: Record<string, ComponentGuide> = {
       '그림자는 실제로 떠 있는 요소에만 사용합니다.',
     specs: [
       { title: 'Elevation', desc: 'sm=E1 카드·버튼 hover / md=E2 FAB·드롭다운 / lg=E3 모달입니다. 그림자는 2겹(direct+ambient)이며 색은 웜 브라운으로 고정합니다.' },
-      { title: 'Radius', desc: 'radius/control(12)을 사용합니다. 시트는 20, 팝오버는 16으로 층마다 다르게 지정합니다.' },
+      { title: 'Radius', desc: 'radius/control(12)을 씁니다. 시트는 20, 팝오버는 16으로 층마다 다릅니다.' },
       { title: 'Clickability', desc: 'clickable 카드는 hover에서 한 단계 떠오르고(그림자 sm→md, 1px 상승), 누르는 순간 내려앉으며 면이 눌린 톤으로 바뀝니다. onClick을 전달하면 키보드로도 조작할 수 있습니다(role=button · Enter/Space · 포커스 링).' },
     ],
     usage: [
-      { kind: 'do', rule: '카드 안 요소 간격은 spacing/3(12), 카드 사이는 spacing/4(16) 이상을 확보합니다.' },
+      { kind: 'do', rule: '카드 안 요소 간격은 spacing/3(12), 카드 사이는 spacing/4(16) 이상 띄웁니다.' },
       { kind: 'dont', rule: '카드 안에 카드를 넣지 않습니다 — 같은 높이의 흰 면이 겹치면 위계가 무너집니다. 하위 묶음이 필요하면 눌린 트레이(neutral-100 음각 면)를 깔고 그 위에 올립니다. 상영 시간표(ShowtimeGroupCard)의 흰 셀이 그 예외 문법입니다: 카드 → 음각 트레이 → 셀로 한 번 꺼졌다 올라오므로 카드 중첩이 아닙니다.' },
     ],
     a11y: [
@@ -211,7 +211,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
   Input: {
     intro: '값을 직접 입력받는 자리입니다. 레이블·힌트·오류를 한 덩이로 묶어 입력 중에도 위치가 흔들리지 않도록 합니다.',
     anatomy: [
-      { name: '레이블', desc: '무엇을 입력하는지 알립니다. placeholder만 단독으로 사용하지 않습니다.' },
+      { name: '레이블', desc: '무엇을 입력하는지 알립니다. placeholder만 단독으로 두지 않습니다.' },
       { required: false, name: '힌트 / 오류', desc: '같은 자리를 공유하며, 오류가 있으면 오류 문구가 우선합니다.' },
     ],
     usage: [
@@ -358,14 +358,14 @@ export const GUIDES: Record<string, ComponentGuide> = {
   },
 
   Avatar: {
-    intro: '감독 사진을 표시합니다. 사진이 없으면 이름 첫 글자로 대체해 빈 원이 남지 않도록 합니다.',
+    intro: '감독 사진을 표시합니다. 사진이 없으면 이름 첫 글자로 대체해 빈 원이 남지 않게 합니다.',
     specs: [
       { title: '이니셜', desc: '글자 크기는 지름의 36%입니다. 크기를 바꿔도 비율이 유지됩니다.' },
-      { title: '크기', desc: '24는 감독 칩 안, 44는 목록, 64는 상세 머리에 사용합니다. 그 사이 값은 만들지 않습니다.' },
+      { title: '크기', desc: '24는 감독 칩 안, 44는 목록, 64는 상세 머리입니다. 그 사이 값은 만들지 않습니다.' },
     ],
     usage: [
       { kind: 'do', rule: '사진이 없을 수 있는 자리에는 name을 반드시 함께 넘깁니다. 이니셜이 빈 원을 대신합니다.' },
-      { kind: 'dont', rule: '아바타 자체를 클릭 타깃으로 쓰지 않습니다. 24px은 터치 타깃에 미치지 못합니다.', instead: '감독으로 이동해야 하면 DirectorChip을 사용합니다.' },
+      { kind: 'dont', rule: '아바타 자체를 클릭 타깃으로 쓰지 않습니다. 24px은 터치 타깃에 미치지 못합니다.', instead: '감독으로 이동해야 하면 DirectorChip을 씁니다.' },
     ],
     a11y: [
       { title: '대체 텍스트', desc: '사진이 있으면 name이 그대로 img의 alt가 됩니다. name을 비우면 사진에 이름이 없는 채로 남습니다.' },
@@ -408,10 +408,10 @@ export const GUIDES: Record<string, ComponentGuide> = {
     intro: '화면 아래에서 올라오는 면입니다. 상단 모서리만 20(radius/sheet)으로 두고, 핸들로 끌 수 있음을 알립니다.',
     anatomy: [
       { name: '핸들', desc: '36×4(--comp-sheet-handle-*)입니다. 끌어서 닫을 수 있다는 유일한 신호이므로 생략하지 않습니다.' },
-      { name: '내용', desc: '거터는 24(--gutter-sheet)를 사용합니다. 본문 화면(16)보다 넓게 두어 떠 있는 면임을 알립니다.' },
+      { name: '내용', desc: '거터는 24(--gutter-sheet)입니다. 본문 화면(16)보다 넓게 두어 떠 있는 면임을 알립니다.' },
     ],
     specs: [
-      { title: '그림자', desc: 'shadow/sheet — offset 0의 앰비언트 2겹입니다. 아래가 화면 끝이므로 방향성 그림자를 사용하지 않습니다.' },
+      { title: '그림자', desc: 'shadow/sheet — offset 0의 앰비언트 2겹입니다. 아래가 화면 끝이므로 방향성 그림자를 두지 않습니다.' },
       { title: '반경', desc: '상단만 20(radius/sheet)입니다. 하단은 화면 끝에 닿으므로 각을 남깁니다.' },
     ],
     usage: [
@@ -429,7 +429,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
       '지도 위에 떠 있는 단일 행동입니다. 44(--comp-fab-round-size) 원형이며, 지도 조작을 가리지 않는 자리에 배치합니다.',
     specs: [
       { title: '크기', desc: '지름 44 · 아이콘 18(--comp-fab-round-icon)로 지름의 약 0.41배입니다. 버튼을 키우면 글리프도 같은 비율로 키웁니다.' },
-      { title: '떠 있는 정도', desc: 'E2를 사용합니다. 지도 타일 위에서 면이 사라지지 않도록 카드(E1)보다 한 단계 높입니다.' },
+      { title: '떠 있는 정도', desc: 'E2입니다. 지도 타일 위에서 면이 사라지지 않도록 카드(E1)보다 한 단계 높입니다.' },
     ],
     usage: [
       { kind: 'do', rule: '한 화면에 하나만 둡니다. 지도에서 가장 자주 쓰는 행동 하나를 고릅니다.' },
@@ -448,7 +448,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
     anatomy: [
       { name: 'dir', desc: 'up · right · left 중 팁이 향할 방향입니다. 회전한 정사각형의 어느 꼭짓점이 밖으로 나갈지를 정합니다.' },
       { name: 'background', desc: '말풍선 본체와 같은 색을 넘깁니다. 색이 어긋나면 꼬리가 덧붙인 조각으로 보입니다.' },
-      { required: false, name: 'border', desc: '보더 있는 말풍선에서만 사용합니다. 팁에서 만나는 두 변에만 같은 보더를 그려 본체 선과 이어 붙입니다.' },
+      { required: false, name: 'border', desc: '보더 있는 말풍선 전용입니다. 팁에서 만나는 두 변에만 같은 보더를 그려 본체 선과 이어 붙입니다.' },
     ],
     specs: [
       { title: '튀어나오는 깊이', desc: '팁이 본체 밖으로 나가는 거리는 bubbleTailReach()로 계산합니다. 말풍선을 대상에 닿게 놓으려면 이 값만큼 띄웁니다 — 눈대중으로 맞추면 크기를 바꿀 때마다 다시 어긋납니다.' },
@@ -456,7 +456,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
     ],
     usage: [
       { kind: 'do', rule: '본체와 같은 background·border 값을 그대로 넘겨 한 덩이로 보이게 합니다.' },
-      { kind: 'dont', rule: '가리킬 대상이 없는 자리에 꼬리를 달지 않습니다.', instead: '떠 있는 안내만 필요하면 꼬리 없이 Card나 Toast를 사용합니다.' },
+      { kind: 'dont', rule: '가리킬 대상이 없는 자리에 꼬리를 달지 않습니다.', instead: '떠 있는 안내만 필요하면 꼬리 없이 Card나 Toast를 씁니다.' },
     ],
     a11y: [
       { title: '읽히지 않는 조각', desc: '꼬리는 글자가 없는 도형이라 스크린리더에 아무것도 남기지 않습니다. 말풍선이 무엇을 가리키는지는 본체 문구가 말해야 합니다 — "이 지역"처럼 화면을 봐야 아는 표현을 쓰지 않습니다.' },
@@ -500,7 +500,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
     ],
     usage: [
       { kind: 'do', rule: '값이 고정된 표시에 사용합니다 — 장르, 등급, 상영 포맷.' },
-      { kind: 'dont', rule: 'onClick을 붙이지 않습니다. 누를 수 있는 pill이 섞이면 어느 것이 필터인지 알 수 없습니다.', instead: '고르고 해제하는 자리에는 Chip을, 조건 하나를 켜고 끄는 자리에는 FilterPill을 사용합니다.' },
+      { kind: 'dont', rule: 'onClick을 붙이지 않습니다. 누를 수 있는 pill이 섞이면 어느 것이 필터인지 알 수 없습니다.', instead: '고르고 해제하는 자리에는 Chip을, 조건 하나를 켜고 끄는 자리에는 FilterPill을 둡니다.' },
     ],
     a11y: [
       { title: '초점', desc: 'span이라 초점을 받지 않습니다. 읽는 표시이므로 탭 순서에 끼어들지 않는 것이 맞습니다.' },
@@ -541,7 +541,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
     ],
     usage: [
       { kind: 'do', rule: '검색 화면 최상단에 두고 진입과 동시에 초점을 줍니다.' },
-      { kind: 'dont', rule: '목록 화면 상단에 입력 가능한 검색바를 두지 않습니다. 키보드가 올라오며 목록이 접힙니다.', instead: '이동만 필요한 자리에는 SearchBarButton을 사용합니다.' },
+      { kind: 'dont', rule: '목록 화면 상단에 입력 가능한 검색바를 두지 않습니다. 키보드가 올라오며 목록이 접힙니다.', instead: '이동만 필요한 자리에는 SearchBarButton을 둡니다.' },
     ],
     a11y: [
       { title: '이름', desc: '보이는 레이블이 없으므로 aria-label이나 연결된 레이블이 필요합니다. 플레이스홀더는 입력을 시작하면 사라지므로 이름이 될 수 없습니다.' },
@@ -557,11 +557,11 @@ export const GUIDES: Record<string, ComponentGuide> = {
       '검색창처럼 생긴 버튼입니다. 누르면 입력이 아니라 검색 화면으로 이동합니다. ' +
       '목록 화면에서 키보드를 띄우지 않으면서 검색을 안내하는 자리입니다.',
     specs: [
-      { title: '같은 규격', desc: 'SearchBar와 높이·좌우 여백·반경이 같습니다. 화면이 바뀌어도 같은 자리에 같은 것이 있는 것처럼 보이게 하기 위한 것이므로 따로 조정하지 않습니다.' },
-      { title: '글자색', desc: '플레이스홀더 색(--color-text-placeholder)을 사용합니다. 입력된 값이 아니라 안내 문구임을 색으로 알립니다.' },
+      { title: '같은 규격', desc: 'SearchBar와 높이·좌우 여백·반경이 같습니다. 화면이 바뀌어도 같은 자리에 같은 것이 있는 것처럼 보이려고 맞춘 값이므로 따로 조정하지 않습니다.' },
+      { title: '글자색', desc: '플레이스홀더 색(--color-text-placeholder)입니다. 입력된 값이 아니라 안내 문구임을 색으로 알립니다.' },
     ],
     usage: [
-      { kind: 'do', rule: '상영작·지도처럼 검색이 주 행동이 아닌 화면에서 사용합니다.' },
+      { kind: 'do', rule: '상영작·지도처럼 검색이 주 행동이 아닌 화면에 둡니다.' },
       { kind: 'dont', rule: '이 버튼 안에서 입력을 받으려 하지 않습니다.', instead: '실제 입력이 필요하면 검색 화면으로 보내고 그곳에서 SearchBar를 사용합니다.' },
     ],
     a11y: [
@@ -574,14 +574,14 @@ export const GUIDES: Record<string, ComponentGuide> = {
       '내용이 오기 전 자리를 잡아 두는 면입니다. 실제 요소와 같은 크기·반경으로 두어 내용이 들어올 때 화면이 밀리지 않게 합니다.',
     specs: [
       { title: '반경', desc: 'sm=badge(4) · md·lg=poster(2) · full=pill입니다. 대신할 요소와 같은 반경을 고릅니다 — 포스터 자리에 pill을 두면 로딩 중에 다른 화면처럼 보입니다.' },
-      { title: '모션', desc: 'animate-pulse 한 종류만 사용합니다. 속도가 다른 스켈레톤이 한 화면에 섞이면 로딩이 아니라 고장으로 읽힙니다.' },
-      { title: '색', desc: '--color-border 한 단계만 사용합니다. 여러 밝기를 섞어 실제 내용처럼 그리지 않습니다.' },
+      { title: '모션', desc: 'animate-pulse 한 종류뿐입니다. 속도가 다른 스켈레톤이 한 화면에 섞이면 로딩이 아니라 고장으로 읽힙니다.' },
+      { title: '색', desc: '--color-border 한 단계만 씁니다. 여러 밝기를 섞어 실제 내용처럼 그리지 않습니다.' },
       { title: '프리셋 · 영화 카드', desc: 'MovieCardSkeleton — 포스터(2:3) + 제목 18 + 메타 14 두 줄입니다. 실제 카드와 줄 수·높이가 같아 목록 높이가 로딩 전후로 변하지 않습니다. 제목 75% · 메타 50%로 두어 글자가 들어찬 것처럼 보이게 합니다.' },
       { title: '프리셋 · 극장 카드', desc: 'TheaterCardSkeleton — 카드 면(control 12 + 보더) 안에 극장명 16 · 주소 12 · 68×32 시간 칩 세 개입니다. 시간 칩까지 그리는 이유는 이 카드의 높이를 결정하는 것이 칩 줄이기 때문입니다.' },
     ],
     usage: [
-      { kind: 'do', rule: '대신할 요소와 같은 크기를 지정합니다. 폭이 다르면 내용이 들어오는 순간 레이아웃이 튑니다.' },
-      { kind: 'dont', rule: '1초 안에 끝나는 갱신에는 사용하지 않습니다. 깜빡이고 사라지는 회색 면이 더 어수선합니다.', instead: '짧은 갱신에는 이전 내용을 그대로 두고 값만 교체합니다.' },
+      { kind: 'do', rule: '대신할 요소와 같은 크기로 맞춥니다. 폭이 다르면 내용이 들어오는 순간 레이아웃이 튑니다.' },
+      { kind: 'dont', rule: '1초 안에 끝나는 갱신에는 쓰지 않습니다. 깜빡이고 사라지는 회색 면이 더 어수선합니다.', instead: '짧은 갱신에는 이전 내용을 그대로 두고 값만 교체합니다.' },
       { kind: 'caution', rule: '목록 전체를 스켈레톤으로 채우지 않습니다. 개수를 모를 때 여러 장을 그리면 도착한 내용보다 많아 보였다가 줄어듭니다.', instead: '첫 화면에 보이는 개수(모바일 4~6장)만 그리고 나머지는 비워 둡니다.' },
     ],
     a11y: [
@@ -602,8 +602,8 @@ export const GUIDES: Record<string, ComponentGuide> = {
       { title: '획 순서', desc: 'paintOrder를 stroke로 두어 테두리가 글자 바깥으로만 나갑니다. 안쪽으로 파고들면 글자가 얇아 보입니다.' },
     ],
     usage: [
-      { kind: 'do', rule: '지도처럼 배경이 정해지지 않은 자리에서는 테두리 변형을 사용합니다.' },
-      { kind: 'dont', rule: '대비를 그림자로 만들지 않습니다. 밝은 지도 타일 위에서 그림자는 뭉개집니다.', instead: 'outlineColor에 흰색을 넘겨 테두리 변형을 사용합니다.' },
+      { kind: 'do', rule: '지도처럼 배경이 정해지지 않은 자리에서는 테두리 변형을 씁니다.' },
+      { kind: 'dont', rule: '대비를 그림자로 만들지 않습니다. 밝은 지도 타일 위에서 그림자는 뭉개집니다.', instead: 'outlineColor에 흰색을 넘깁니다.' },
     ],
     a11y: [
       { title: 'title이 곧 이름', desc: 'title을 넘기면 role="img"과 aria-label이 붙어 읽힙니다. 넘기지 않으면 aria-hidden이 되어 조용히 지나갑니다 — 로고가 홈 링크일 때는 title을 주거나 링크 쪽에 이름을 답니다.' },
