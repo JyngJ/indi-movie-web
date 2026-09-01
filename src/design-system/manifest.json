@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-01T05:55:39.535Z",
-  "figmaDumpAt": "2026-09-01T05:44:27.110Z",
+  "generatedAt": "2026-09-01T07:30:12.244Z",
+  "figmaDumpAt": "2026-09-01T07:28:05.395Z",
   "tokenGroups": [
     {
       "title": "Neutral scale — 2.0 웜그레이 램프 (S가 양끝으로 상승하는 U자 곡선, H 27~40)",
@@ -5333,8 +5333,52 @@
           "doc": "진행 중 표시 (라우팅 대기 등)"
         }
       ],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/DirectorChip",
+      "figma": {
+        "name": "2.0/DirectorChip",
+        "axes": {
+          "State": [
+            "off",
+            "on"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "State": "off"
+            },
+            "w": 78,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              4,
+              12,
+              4,
+              4
+            ],
+            "gap": 6,
+            "dir": "HORIZONTAL",
+            "fill": "#EAE5E1"
+          },
+          {
+            "props": {
+              "State": "on"
+            },
+            "w": 78,
+            "h": 32,
+            "radius": 9999,
+            "pad": [
+              4,
+              12,
+              4,
+              4
+            ],
+            "gap": 6,
+            "dir": "HORIZONTAL",
+            "fill": "#ECEFF9"
+          }
+        ]
+      }
     },
     {
       "name": "Divider",
@@ -5645,13 +5689,18 @@
           "State": [
             "on",
             "off"
+          ],
+          "Size": [
+            "44",
+            "32"
           ]
         },
         "variants": [
           {
             "props": {
               "Variant": "ghost",
-              "State": "on"
+              "State": "on",
+              "Size": "44"
             },
             "w": 44,
             "h": 44,
@@ -5664,7 +5713,8 @@
           {
             "props": {
               "Variant": "ghost",
-              "State": "off"
+              "State": "off",
+              "Size": "44"
             },
             "w": 44,
             "h": 44,
@@ -5677,7 +5727,8 @@
           {
             "props": {
               "Variant": "overlay",
-              "State": "on"
+              "State": "on",
+              "Size": "44"
             },
             "w": 44,
             "h": 44,
@@ -5690,10 +5741,67 @@
           {
             "props": {
               "Variant": "overlay",
-              "State": "off"
+              "State": "off",
+              "Size": "44"
             },
             "w": 44,
             "h": 44,
+            "radius": 9999,
+            "pad": null,
+            "gap": null,
+            "dir": null,
+            "fill": "#000000 @0.06"
+          },
+          {
+            "props": {
+              "Variant": "ghost",
+              "State": "on",
+              "Size": "32"
+            },
+            "w": 32,
+            "h": 32,
+            "radius": 9999,
+            "pad": null,
+            "gap": null,
+            "dir": null,
+            "fill": null
+          },
+          {
+            "props": {
+              "Variant": "ghost",
+              "State": "off",
+              "Size": "32"
+            },
+            "w": 32,
+            "h": 32,
+            "radius": 9999,
+            "pad": null,
+            "gap": null,
+            "dir": null,
+            "fill": null
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "State": "on",
+              "Size": "32"
+            },
+            "w": 32,
+            "h": 32,
+            "radius": 9999,
+            "pad": null,
+            "gap": null,
+            "dir": null,
+            "fill": "#000000 @0.06"
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "State": "off",
+              "Size": "32"
+            },
+            "w": 32,
+            "h": 32,
             "radius": 9999,
             "pad": null,
             "gap": null,
@@ -5891,8 +5999,52 @@
           "doc": ""
         }
       ],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/GenreChip",
+      "figma": {
+        "name": "2.0/GenreChip",
+        "axes": {
+          "State": [
+            "off",
+            "on"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "State": "off"
+            },
+            "w": 56,
+            "h": 30,
+            "radius": 9999,
+            "pad": [
+              8,
+              12,
+              8,
+              12
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#EAE5E1"
+          },
+          {
+            "props": {
+              "State": "on"
+            },
+            "w": 56,
+            "h": 30,
+            "radius": 9999,
+            "pad": [
+              8,
+              12,
+              8,
+              12
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#ECEFF9"
+          }
+        ]
+      }
     },
     {
       "name": "Icon",
@@ -6083,7 +6235,8 @@
           ],
           "Size": [
             "32",
-            "44"
+            "44",
+            "52"
           ],
           "State": [
             "default",
@@ -6445,6 +6598,186 @@
             },
             "w": 44,
             "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#000000 @0.14"
+          },
+          {
+            "props": {
+              "Variant": "ghost",
+              "Size": "52",
+              "State": "default",
+              "Shape": "square"
+            },
+            "w": 52,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": null
+          },
+          {
+            "props": {
+              "Variant": "ghost",
+              "Size": "52",
+              "State": "hover",
+              "Shape": "square"
+            },
+            "w": 52,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#DDD9CF"
+          },
+          {
+            "props": {
+              "Variant": "ghost",
+              "Size": "52",
+              "State": "pressed",
+              "Shape": "square"
+            },
+            "w": 52,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/300"
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "Size": "52",
+              "State": "default",
+              "Shape": "round"
+            },
+            "w": 52,
+            "h": 52,
+            "radius": 26,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#000000 @0.06"
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "Size": "52",
+              "State": "hover",
+              "Shape": "round"
+            },
+            "w": 52,
+            "h": 52,
+            "radius": 26,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#000000 @0.1"
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "Size": "52",
+              "State": "pressed",
+              "Shape": "round"
+            },
+            "w": 52,
+            "h": 52,
+            "radius": 26,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#000000 @0.14"
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "Size": "52",
+              "State": "default",
+              "Shape": "square"
+            },
+            "w": 52,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#000000 @0.06"
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "Size": "52",
+              "State": "hover",
+              "Shape": "square"
+            },
+            "w": 52,
+            "h": 52,
+            "radius": 8,
+            "pad": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#000000 @0.1"
+          },
+          {
+            "props": {
+              "Variant": "overlay",
+              "Size": "52",
+              "State": "pressed",
+              "Shape": "square"
+            },
+            "w": 52,
+            "h": 52,
             "radius": 8,
             "pad": [
               0,
@@ -7085,8 +7418,279 @@
           "doc": ""
         }
       ],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/PosterChip",
+      "figma": {
+        "name": "2.0/PosterChip",
+        "axes": {
+          "Tone": [
+            "error",
+            "warning",
+            "success",
+            "primary",
+            "gv",
+            "neutral",
+            "scrim"
+          ],
+          "Size": [
+            "default",
+            "compact"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "Tone": "error",
+              "Size": "default"
+            },
+            "w": 45,
+            "h": 30,
+            "radius": 4,
+            "pad": [
+              8,
+              12,
+              8,
+              12
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#9B3331"
+          },
+          {
+            "props": {
+              "Tone": "error",
+              "Size": "compact"
+            },
+            "w": 34,
+            "h": 20,
+            "radius": 4,
+            "pad": [
+              4,
+              8,
+              4,
+              8
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#9B3331"
+          },
+          {
+            "props": {
+              "Tone": "warning",
+              "Size": "default"
+            },
+            "w": 66,
+            "h": 30,
+            "radius": 4,
+            "pad": [
+              8,
+              12,
+              8,
+              12
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#B9800E"
+          },
+          {
+            "props": {
+              "Tone": "warning",
+              "Size": "compact"
+            },
+            "w": 51,
+            "h": 20,
+            "radius": 4,
+            "pad": [
+              4,
+              8,
+              4,
+              8
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#B9800E"
+          },
+          {
+            "props": {
+              "Tone": "success",
+              "Size": "default"
+            },
+            "w": 56,
+            "h": 30,
+            "radius": 4,
+            "pad": [
+              8,
+              12,
+              8,
+              12
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#4A7C59"
+          },
+          {
+            "props": {
+              "Tone": "success",
+              "Size": "compact"
+            },
+            "w": 42,
+            "h": 20,
+            "radius": 4,
+            "pad": [
+              4,
+              8,
+              4,
+              8
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#4A7C59"
+          },
+          {
+            "props": {
+              "Tone": "primary",
+              "Size": "default"
+            },
+            "w": 58,
+            "h": 30,
+            "radius": 4,
+            "pad": [
+              8,
+              12,
+              8,
+              12
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#404E81"
+          },
+          {
+            "props": {
+              "Tone": "primary",
+              "Size": "compact"
+            },
+            "w": 44,
+            "h": 20,
+            "radius": 4,
+            "pad": [
+              4,
+              8,
+              4,
+              8
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#404E81"
+          },
+          {
+            "props": {
+              "Tone": "gv",
+              "Size": "default"
+            },
+            "w": 42,
+            "h": 30,
+            "radius": 4,
+            "pad": [
+              8,
+              12,
+              8,
+              12
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#6B5B95"
+          },
+          {
+            "props": {
+              "Tone": "gv",
+              "Size": "compact"
+            },
+            "w": 30,
+            "h": 20,
+            "radius": 4,
+            "pad": [
+              4,
+              8,
+              4,
+              8
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#6B5B95"
+          },
+          {
+            "props": {
+              "Tone": "neutral",
+              "Size": "default"
+            },
+            "w": 46,
+            "h": 30,
+            "radius": 4,
+            "pad": [
+              8,
+              12,
+              8,
+              12
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#78716C"
+          },
+          {
+            "props": {
+              "Tone": "neutral",
+              "Size": "compact"
+            },
+            "w": 34,
+            "h": 20,
+            "radius": 4,
+            "pad": [
+              4,
+              8,
+              4,
+              8
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#78716C"
+          },
+          {
+            "props": {
+              "Tone": "scrim",
+              "Size": "default"
+            },
+            "w": 80,
+            "h": 30,
+            "radius": 4,
+            "pad": [
+              8,
+              12,
+              8,
+              12
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#0F0C09 @0.72"
+          },
+          {
+            "props": {
+              "Tone": "scrim",
+              "Size": "compact"
+            },
+            "w": 63,
+            "h": 20,
+            "radius": 4,
+            "pad": [
+              4,
+              8,
+              4,
+              8
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#0F0C09 @0.72"
+          }
+        ]
+      }
     },
     {
       "name": "ScrollNavButton",
@@ -7883,41 +8487,5 @@
       }
     }
   ],
-  "drift": [
-    {
-      "kind": "component-unmapped",
-      "id": "DirectorChip",
-      "code": "src/components/primitives/DirectorChip.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    },
-    {
-      "kind": "axis-missing",
-      "id": "FavoriteButton.size",
-      "code": "32 · 44",
-      "figma": null,
-      "note": "피그마 2.0/FavoriteButton에 size 축이 없다"
-    },
-    {
-      "kind": "component-unmapped",
-      "id": "GenreChip",
-      "code": "src/components/primitives/GenreChip.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    },
-    {
-      "kind": "variant-missing",
-      "id": "IconButton.size",
-      "code": "32 · 44 · 52",
-      "figma": "32 · 44",
-      "note": "피그마 2.0/IconButton에 52 배리언트가 없다"
-    },
-    {
-      "kind": "component-unmapped",
-      "id": "PosterChip",
-      "code": "src/components/primitives/PosterChip.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    }
-  ]
+  "drift": []
 }
