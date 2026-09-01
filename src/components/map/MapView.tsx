@@ -50,6 +50,8 @@ import { stationSearchScore, movieSearchScore, directorSearchScore, theaterSearc
 import { posterCountForZoom, posterSizeForZoom, posterSlotsForZoom, sortPostersByPriority, dayLabel, showtimeZoomThresholds } from '@/lib/map/posterLogic'
 import { calculateAndFormatDistance } from '@/lib/map/distanceUtils'
 import type { TheaterPosterMovie, ScreeningDay } from '@/lib/map/posterLogic'
+import { collectFavoriteScreenings, theaterSummary } from '@/lib/curation/favoriteScreenings'
+import type { FavoriteTarget } from '@/lib/curation/favoriteScreenings'
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { recordRecentlyViewed, removeRecentlyViewed, clearRecentlyViewed } from '@/lib/curation/recentlyViewed'
 import { cookieStorageAdapter } from '@/lib/adapters/cookieStorage'
@@ -1740,51 +1742,65 @@ export default function MapView() {
      지금은 지역(filters.regionId) 기준. TODO: 보이는 지도 영역 기준으로 요약 */
   const movieById = useMemo(() => new Map(movies.map((m) => [m.id, m])), [movies])
 
+  /**
+   * 이 화면에 머무는 동안 섹션이 붙잡고 있는 항목 — 규칙은 collectFavoriteScreenings에 있다.
+   * 관심을 해제해도 자리를 지켜서 잘못 눌렀을 때 같은 자리에서 되돌릴 수 있게 한다.
+   */
+  const stickyFavoritesRef = useRef<Map<string, FavoriteTarget>>(new Map())
+
   const favoriteCurationItems = useMemo<CurationItem[]>(() => {
-    if (!favoritesSignedIn) return []
-    const favMovieIds = new Set(favorites.filter((f) => f.type === 'movie').map((f) => f.id))
-    const favDirectors = new Set(favorites.filter((f) => f.type === 'director').map((f) => f.id))
-    if (favMovieIds.size === 0 && favDirectors.size === 0) return []
-
-    // 상영 중인 관심작 → 어느 극장에서 하는지 모아둔다
-    const theaterNamesByMovie = new Map<string, string[]>()
-    for (const theater of theaters) {
-      for (const pm of theaterPosterMovies.get(theater.id) ?? []) {
-        const hit = favMovieIds.has(pm.id) || (pm.director ?? []).some((d) => favDirectors.has(d))
-        if (!hit) continue
-        const names = theaterNamesByMovie.get(pm.id) ?? []
-        if (!names.includes(theater.name)) names.push(theater.name)
-        theaterNamesByMovie.set(pm.id, names)
-      }
+    if (!favoritesSignedIn) {
+      stickyFavoritesRef.current = new Map()
+      return []
     }
+    const { items, sticky } = collectFavoriteScreenings({
+      favorites,
+      theaters,
+      postersByTheater: theaterPosterMovies,
+      sticky: stickyFavoritesRef.current,
+    })
+    stickyFavoritesRef.current = sticky
 
-    return [...theaterNamesByMovie.entries()]
-      .map(([movieId, names]) => {
+    return items
+      .map(({ movieId, target, theaterNames }) => {
         const movie = movieById.get(movieId)
         if (!movie) return null
         return {
           id: movieId,
           title: movie.title,
           posterUrl: movie.posterUrl,
-          /* 관심 하트 대상 — 영화가 관심이면 영화, 감독 때문에 뜬 항목이면 그 감독 (해제하면 감독이 빠진다) */
-          favorite: favMovieIds.has(movieId)
-            ? { type: 'movie' as const, id: movieId, label: movie.title }
-            : (() => {
-                const dir = (movie.director ?? []).find((d) => favDirectors.has(d))
-                return dir ? { type: 'director' as const, id: dir, label: dir } : undefined
-              })(),
-          subtitle: names.length > 1 ? `${names[0]} 외 ${names.length - 1}곳` : names[0],
+          favorite: target,
+          subtitle: theaterSummary(theaterNames),
           movie,
         } as CurationItem
       })
       .filter((i): i is CurationItem => !!i)
   }, [favoritesSignedIn, favorites, theaters, theaterPosterMovies, movieById])
 
-  /** 관심 섹션 '모두보기' — 지도 관심 필터를 켠다 (페이지 이동 없이 현재 지도에서 좁히기) */
+  /** 관심 필터를 켰을 때 지도에 남는 극장 수 — 토스트로 결과를 먼저 알려준다 */
+  const favoriteTheaterCount = useMemo(() => {
+    if (!favoritesSignedIn) return 0
+    let count = 0
+    for (const theater of theaters) {
+      const hit = isFavorite('theater', theater.id)
+        || (theaterPosterMovies.get(theater.id) ?? []).some((pm) => isFavorite('movie', pm.id))
+      if (hit) count++
+    }
+    return count
+  }, [favoritesSignedIn, theaters, theaterPosterMovies, isFavorite])
+
+  /** 관심 섹션 '모두보기' — 지도 관심 필터를 켠다 (페이지 이동 없이 현재 지도에서 좁히기).
+   *  필터가 켜지면 지도만 조용히 좁아져서 무엇이 일어났는지 안 보인다 — 결과를 토스트로 말해 준다 */
   const [favoritesFilterSignal, setFavoritesFilterSignal] = useState(0)
   const handleShowAllFavorites = useCallback(() => {
     setFavoritesFilterSignal((n) => n + 1)
-  }, [])
+    setFilterToastMessage(
+      favoriteTheaterCount > 0
+        ? `관심 극장·영화가 있는 극장 ${favoriteTheaterCount}곳만 보여드려요`
+        : '지금 상영 중인 관심 극장·영화가 없어요',
+    )
+    setFilterToastTrigger((n) => n + 1)
+  }, [favoriteTheaterCount])
 
   const rankingCurationItems = useMemo<CurationItem[]>(() => {
     const screening = new Set<string>()
@@ -3589,7 +3605,7 @@ export default function MapView() {
           signedIn={favoritesSignedIn}
           favoriteItems={favoriteCurationItems}
           rankingItems={rankingCurationItems}
-          onShowAllFavorites={handleShowAllFavorites}
+          onShowAllFavorites={filters.favorites ? undefined : handleShowAllFavorites}
         />
       )}
 
@@ -3672,7 +3688,7 @@ export default function MapView() {
                 signedIn={favoritesSignedIn}
                 favoriteItems={favoriteCurationItems}
                 rankingItems={rankingCurationItems}
-                onShowAllFavorites={handleShowAllFavorites}
+                onShowAllFavorites={filters.favorites ? undefined : handleShowAllFavorites}
                 desktop
               />
             </div>
