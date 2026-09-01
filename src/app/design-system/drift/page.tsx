@@ -22,14 +22,22 @@ const KIND: Record<string, { title: string; note: string }> = {
     title: '피그마 세트 미연결',
     note: '코드에는 있으나 대응하는 피그마 컴포넌트 세트가 없는 항목입니다.',
   },
+  'axis-missing': {
+    title: '배리언트 축 없음',
+    note: '코드가 가진 배리언트 축(variant·size·tone 등)이 피그마 세트에는 통째로 없습니다. 세트를 그리거나, 코드가 그 축을 실제로 쓰는지 다시 봅니다.',
+  },
+  'variant-missing': {
+    title: '빠진 배리언트',
+    note: '축은 있으나 코드가 쓰는 값 일부가 피그마에 그려져 있지 않습니다.',
+  },
 }
 
-const CHECK_ORDER = ['token-value', 'figma-only', 'type-scale', 'legacy-figma-style', 'component-unmapped']
+const CHECK_ORDER = ['token-value', 'figma-only', 'type-scale', 'legacy-figma-style', 'component-unmapped', 'axis-missing', 'variant-missing']
 
 /* 차이가 없을 때 빈 화면을 그냥 두지 않는다 — 무엇을 검사해서 0이 나왔는지가 결과의 절반이다. */
 function AllClear({ counts }: { counts: Record<string, number> }) {
   return (
-    <DocSection id="clear" title="차이 없음" lead="다섯 가지 검사를 모두 통과했습니다. 아래는 이번 대조에서 실제로 확인한 항목입니다.">
+    <DocSection id="clear" title="차이 없음" lead="모든 검사를 통과했습니다. 아래는 이번 대조에서 실제로 확인한 항목입니다.">
       <div style={{ display: 'grid', gap: 'var(--spacing-1)' }}>
         {CHECK_ORDER.map(kind => {
           const meta = KIND[kind]

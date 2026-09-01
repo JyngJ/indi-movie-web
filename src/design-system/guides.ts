@@ -141,9 +141,9 @@ export const GUIDES: Record<string, ComponentGuide> = {
 
   PosterChip: {
     changes: [
-      { date: '2026-08-13', note: '글자를 11px/600에서 12px/700으로, 안쪽 여백을 4 8에서 8 12로 키웠습니다. 문서는 11px인데 코드는 --text-badge(10px)를 써서 값이 셋으로 갈려 있었고, 포스터 위에서 읽히지 않았습니다.' },
       { date: '2026-09-01', note: '긴 카피를 자르지 않고 접도록 바꿨습니다(white-space: normal · word-break: keep-all · lineHeight 1.2 · maxWidth). 문서에는 접기가 규칙으로 적혀 있었는데 컴포넌트는 nowrap이라, 규칙을 지킨 곳은 정작 이 컴포넌트를 쓰지 않는 화면뿐이었습니다.' },
       { date: '2026-09-01', note: 'GvEventSection·InstagramRecsSection·TheaterSheet·CurationSheet의 인라인 칩을 실제로 이 컴포넌트로 옮겼습니다. 8/13에 합쳤다고 적었지만 옮겨간 건 CurationSectionRow 하나뿐이었고, 나머지는 구 스펙(10px/600·padding 4 8)으로 2주 넘게 남아 있었습니다.' },
+      { date: '2026-08-13', note: '글자를 11px/600에서 12px/700으로, 안쪽 여백을 4 8에서 8 12로 키웠습니다. 문서는 11px인데 코드는 --text-badge(10px)를 써서 값이 셋으로 갈려 있었고, 포스터 위에서 읽히지 않았습니다.' },
       { date: '2026-08-13', note: 'CurationSectionRow의 인라인 칩을 이 컴포넌트로 옮겼습니다. 정책은 한 줄인데 구현이 다섯이라 크기·여백·그림자가 조금씩 어긋나 있었습니다.' },
       { date: '2026-08-03', note: '--radius-poster를 8에서 2로 내렸습니다(인쇄물 모서리). 칩의 4px 라운드가 상대적으로 둥글어 보이는 것은 의도한 대비입니다.' },
     ],
