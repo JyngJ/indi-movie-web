@@ -209,11 +209,14 @@ function collectComponentSets(dump) {
 
 /* ═══ 4. Props (TypeScript 컴파일러 API) ═══════════════════════════════ */
 /** 코드 컴포넌트 → 피그마 세트 이름. 이름이 다른 것만 손으로 적는다. */
+/* 이름만 다르고 같은 컴포넌트인 것들. 피그마에 따로 없는 컴포넌트를 비슷한 세트에
+   억지로 붙이지 말 것 — 사이트가 그 세트의 수치를 "이 컴포넌트의 실측값"으로 싣는다.
+   2026-09-01: PosterChip·GenreChip·DirectorChip이 2.0/Chip을 가리키고 있어서,
+   포스터 칩 문서에 필터 칩(73×32 · radius 9999)의 수치가 실려 있었다. */
 const FIGMA_ALIAS = {
   FabRound: '2.0/FAB', FabPill: '2.0/FAB',
   SearchBarButton: '2.0/FilterButton',
   Wordmark: '2.0/logo/wordmark',
-  GenreChip: '2.0/Chip', PosterChip: '2.0/Chip', DirectorChip: '2.0/Chip',
 }
 
 function extractComponents(setsByName) {
@@ -372,9 +375,47 @@ for (const es of dump?.effectStyles ?? []) {
 
 const sets = collectComponentSets(dump)
 const setsByName = new Map(sets.map(s => [s.name, s]))
+/** 배리언트로 그려져야 하는 prop 이름 — 이것만 축 누락을 따진다. */
+const VARIANT_PROPS = new Set(['variant', 'size', 'tone', 'shape', 'state'])
+
+/** 코드 prop의 리터럴 유니온("32 | 44 | 52", "\"ghost\" | \"overlay\"")에서 값만 뽑는다. */
+function unionValues(type) {
+  if (!type || !type.includes('|')) return null
+  /* 'number' · 'string' 같은 원시 타입은 배리언트가 아니다 — Icon의 size가 number를 겸한다 */
+  const vals = type.split('|').map(v => v.trim().replace(/^["']|["']$/g, ''))
+    .filter(v => v && !['undefined', 'null', 'number', 'string', 'boolean'].includes(v))
+  return vals.length > 1 ? vals : null
+}
+
+/* 코드가 가진 배리언트를 피그마 세트가 갖고 있는지 — 축 이름이 같은 것만 본다.
+   값 대조(radius·크기)는 아직 안 한다. 코드 쪽 기하가 토큰·조건부라 기계로 못 읽는다. */
+function checkVariantCoverage(c, set) {
+  for (const prop of c.props) {
+    const codeVals = unionValues(prop.type)
+    if (!codeVals) continue
+    const axisKey = Object.keys(set.axes || {}).find(k => k.toLowerCase() === prop.name.toLowerCase())
+    if (!axisKey) {
+      /* 코드엔 배리언트 축이 있는데 피그마 세트엔 그 축이 통째로 없는 경우.
+         FavoriteButton이 그랬다 — 코드 size 32·44·52인데 피그마는 44 하나로만 그려져 있다. */
+      if (VARIANT_PROPS.has(prop.name)) {
+        addDrift('axis-missing', `${c.name}.${prop.name}`, codeVals.join(' · '), null,
+          `피그마 ${set.name}에 ${prop.name} 축이 없다`)
+      }
+      continue
+    }
+    const figmaVals = (set.axes[axisKey] || []).map(String)
+    const missing = codeVals.filter(v => !figmaVals.includes(v))
+    if (missing.length) {
+      addDrift('variant-missing', `${c.name}.${prop.name}`, codeVals.join(' · '), figmaVals.join(' · '),
+        `피그마 ${set.name}에 ${missing.join('·')} 배리언트가 없다`)
+    }
+  }
+}
+
 const components = extractComponents(setsByName).map(c => {
   const set = c.figmaSet ? setsByName.get(c.figmaSet) : null
   if (!c.figmaSet) addDrift('component-unmapped', c.name, c.file, null, '대응하는 피그마 컴포넌트 세트가 없다')
+  if (set) checkVariantCoverage(c, set)
   return { ...c, figma: set ? { name: set.name, axes: set.axes, variants: set.variants } : null }
 })
 

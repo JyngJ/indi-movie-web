@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-08-25T04:14:23.155Z",
-  "figmaDumpAt": "2026-08-25T03:43:33.446Z",
+  "generatedAt": "2026-09-01T05:47:03.835Z",
+  "figmaDumpAt": "2026-09-01T05:44:27.110Z",
   "tokenGroups": [
     {
       "title": "Neutral scale — 2.0 웜그레이 램프 (S가 양끝으로 상승하는 U자 곡선, H 27~40)",
@@ -5333,168 +5333,8 @@
           "doc": "진행 중 표시 (라우팅 대기 등)"
         }
       ],
-      "figmaSet": "2.0/Chip",
-      "figma": {
-        "name": "2.0/Chip",
-        "axes": {
-          "Variant": [
-            "filter",
-            "dropdown"
-          ],
-          "State": [
-            "off",
-            "off-hover",
-            "on",
-            "on-hover"
-          ]
-        },
-        "variants": [
-          {
-            "props": {
-              "Variant": "filter",
-              "State": "off"
-            },
-            "w": 73,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              14,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "VariableID:2:5"
-          },
-          {
-            "props": {
-              "Variant": "filter",
-              "State": "off-hover"
-            },
-            "w": 73,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              14,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "neutral/300"
-          },
-          {
-            "props": {
-              "Variant": "filter",
-              "State": "on"
-            },
-            "w": 73,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              14,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "primary/100"
-          },
-          {
-            "props": {
-              "Variant": "filter",
-              "State": "on-hover"
-            },
-            "w": 73,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              14,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "primary/100"
-          },
-          {
-            "props": {
-              "Variant": "dropdown",
-              "State": "off"
-            },
-            "w": 85,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              10,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "VariableID:2:5"
-          },
-          {
-            "props": {
-              "Variant": "dropdown",
-              "State": "off-hover"
-            },
-            "w": 85,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              10,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "neutral/300"
-          },
-          {
-            "props": {
-              "Variant": "dropdown",
-              "State": "on"
-            },
-            "w": 85,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              10,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "primary/100"
-          },
-          {
-            "props": {
-              "Variant": "dropdown",
-              "State": "on-hover"
-            },
-            "w": 85,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              10,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "primary/100"
-          }
-        ]
-      }
+      "figmaSet": null,
+      "figma": null
     },
     {
       "name": "Divider",
@@ -6051,168 +5891,8 @@
           "doc": ""
         }
       ],
-      "figmaSet": "2.0/Chip",
-      "figma": {
-        "name": "2.0/Chip",
-        "axes": {
-          "Variant": [
-            "filter",
-            "dropdown"
-          ],
-          "State": [
-            "off",
-            "off-hover",
-            "on",
-            "on-hover"
-          ]
-        },
-        "variants": [
-          {
-            "props": {
-              "Variant": "filter",
-              "State": "off"
-            },
-            "w": 73,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              14,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "VariableID:2:5"
-          },
-          {
-            "props": {
-              "Variant": "filter",
-              "State": "off-hover"
-            },
-            "w": 73,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              14,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "neutral/300"
-          },
-          {
-            "props": {
-              "Variant": "filter",
-              "State": "on"
-            },
-            "w": 73,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              14,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "primary/100"
-          },
-          {
-            "props": {
-              "Variant": "filter",
-              "State": "on-hover"
-            },
-            "w": 73,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              14,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "primary/100"
-          },
-          {
-            "props": {
-              "Variant": "dropdown",
-              "State": "off"
-            },
-            "w": 85,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              10,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "VariableID:2:5"
-          },
-          {
-            "props": {
-              "Variant": "dropdown",
-              "State": "off-hover"
-            },
-            "w": 85,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              10,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "neutral/300"
-          },
-          {
-            "props": {
-              "Variant": "dropdown",
-              "State": "on"
-            },
-            "w": 85,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              10,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "primary/100"
-          },
-          {
-            "props": {
-              "Variant": "dropdown",
-              "State": "on-hover"
-            },
-            "w": 85,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              10,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "primary/100"
-          }
-        ]
-      }
+      "figmaSet": null,
+      "figma": null
     },
     {
       "name": "Icon",
@@ -6221,7 +5901,7 @@
       "props": [
         {
           "name": "name",
-          "type": "\"info\" | \"scale\" | \"x\" | \"chevron-left\" | \"chevron-right\" | \"chevron-down\" | \"arrow-up\" | \"arrow-right-left\" | \"plus\" | \"minus\" | \"check\" | \"layout-grid\" | \"search\" | \"copy\" | ... 34 more ... | \"linkedin\"",
+          "type": "\"info\" | \"scale\" | \"x\" | \"chevron-left\" | \"chevron-right\" | \"chevron-down\" | \"arrow-up\" | \"arrow-down\" | \"arrow-right-left\" | \"plus\" | \"minus\" | \"check\" | \"layout-grid\" | \"search\" | ... 35 more ... | \"linkedin\"",
           "optional": false,
           "default": null,
           "doc": ""
@@ -7384,6 +7064,13 @@
           "doc": ""
         },
         {
+          "name": "size",
+          "type": "\"default\" | \"compact\" | undefined",
+          "optional": true,
+          "default": "'default'",
+          "doc": "compact — 포스터가 아닌 소형 썸네일(GV 카드의 56px 색 띠 등)에서만.\n기본 규격(12/700 · 8 12)은 높이 30px이라 56px 띠의 절반을 덮는다."
+        },
+        {
           "name": "label",
           "type": "string | undefined",
           "optional": true,
@@ -7398,168 +7085,8 @@
           "doc": ""
         }
       ],
-      "figmaSet": "2.0/Chip",
-      "figma": {
-        "name": "2.0/Chip",
-        "axes": {
-          "Variant": [
-            "filter",
-            "dropdown"
-          ],
-          "State": [
-            "off",
-            "off-hover",
-            "on",
-            "on-hover"
-          ]
-        },
-        "variants": [
-          {
-            "props": {
-              "Variant": "filter",
-              "State": "off"
-            },
-            "w": 73,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              14,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "VariableID:2:5"
-          },
-          {
-            "props": {
-              "Variant": "filter",
-              "State": "off-hover"
-            },
-            "w": 73,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              14,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "neutral/300"
-          },
-          {
-            "props": {
-              "Variant": "filter",
-              "State": "on"
-            },
-            "w": 73,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              14,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "primary/100"
-          },
-          {
-            "props": {
-              "Variant": "filter",
-              "State": "on-hover"
-            },
-            "w": 73,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              14,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "primary/100"
-          },
-          {
-            "props": {
-              "Variant": "dropdown",
-              "State": "off"
-            },
-            "w": 85,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              10,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "VariableID:2:5"
-          },
-          {
-            "props": {
-              "Variant": "dropdown",
-              "State": "off-hover"
-            },
-            "w": 85,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              10,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "neutral/300"
-          },
-          {
-            "props": {
-              "Variant": "dropdown",
-              "State": "on"
-            },
-            "w": 85,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              10,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "primary/100"
-          },
-          {
-            "props": {
-              "Variant": "dropdown",
-              "State": "on-hover"
-            },
-            "w": 85,
-            "h": 32,
-            "radius": 9999,
-            "pad": [
-              0,
-              10,
-              0,
-              14
-            ],
-            "gap": 4,
-            "dir": "HORIZONTAL",
-            "fill": "primary/100"
-          }
-        ]
-      }
+      "figmaSet": null,
+      "figma": null
     },
     {
       "name": "ScrollNavButton",
@@ -8356,5 +7883,41 @@
       }
     }
   ],
-  "drift": []
+  "drift": [
+    {
+      "kind": "component-unmapped",
+      "id": "DirectorChip",
+      "code": "src/components/primitives/DirectorChip.tsx",
+      "figma": null,
+      "note": "대응하는 피그마 컴포넌트 세트가 없다"
+    },
+    {
+      "kind": "axis-missing",
+      "id": "FavoriteButton.size",
+      "code": "32 · 44 · 52",
+      "figma": null,
+      "note": "피그마 2.0/FavoriteButton에 size 축이 없다"
+    },
+    {
+      "kind": "component-unmapped",
+      "id": "GenreChip",
+      "code": "src/components/primitives/GenreChip.tsx",
+      "figma": null,
+      "note": "대응하는 피그마 컴포넌트 세트가 없다"
+    },
+    {
+      "kind": "variant-missing",
+      "id": "IconButton.size",
+      "code": "32 · 44 · 52",
+      "figma": "32 · 44",
+      "note": "피그마 2.0/IconButton에 52 배리언트가 없다"
+    },
+    {
+      "kind": "component-unmapped",
+      "id": "PosterChip",
+      "code": "src/components/primitives/PosterChip.tsx",
+      "figma": null,
+      "note": "대응하는 피그마 컴포넌트 세트가 없다"
+    }
+  ]
 }
