@@ -12,7 +12,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useTheaters } from '@/lib/supabase/queries'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useLocationPermission } from '@/hooks/useLocationPermission'
-import { markOnboardingSeen } from '@/lib/onboarding'
+import { markOnboardingSeen, shouldPersistOnDismiss } from '@/lib/onboarding'
 import { storageAdapter } from '@/lib/adapters/storage'
 import { trackEvent } from '@/lib/analytics/client'
 import {
@@ -96,6 +96,23 @@ export function Onboarding({ onClose }: Props) {
     suppressLocationModal()
     onClose()
   }, [onClose, suppressLocationModal])
+
+  /* ── 닫기 버튼을 안 거친 이탈(뒤로가기·탭 닫기)에도 플래그를 남긴다 ──
+     지도에서 온보딩을 만나고 뒤로가기로 빠져나가면 기록이 없어 /map에 올 때마다 다시 떴다.
+     여기선 suppressLocationModal()을 부르지 않는다 — 위치를 물어본 적이 없으니 지도가 다시 물어야 맞다. */
+  useEffect(() => {
+    const shownAt = Date.now()
+    const persist = () => {
+      if (!shouldPersistOnDismiss(shownAt, Date.now(), closedRef.current)) return
+      closedRef.current = true
+      void markOnboardingSeen(storageAdapter)
+    }
+    window.addEventListener('pagehide', persist)
+    return () => {
+      window.removeEventListener('pagehide', persist)
+      persist()
+    }
+  }, [])
 
   // 온보딩을 상세/지도에서 닫았을 때만 홈(상영작)으로 보낸다 — 이미 홈이면 이동하지 않는다
   const goToLanding = useCallback(() => {

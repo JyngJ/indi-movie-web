@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { IStorageAdapter } from '@/lib/adapters/storage'
-import { ONBOARDING_SEEN_KEY, markOnboardingSeen, shouldShowOnboarding } from './onboarding'
+import {
+  ONBOARDING_MIN_VIEW_MS,
+  ONBOARDING_SEEN_KEY,
+  markOnboardingSeen,
+  shouldPersistOnDismiss,
+  shouldShowOnboarding,
+} from './onboarding'
 
 function memoryAdapter(initial: Record<string, string> = {}) {
   const store = new Map<string, string>(Object.entries(initial))
@@ -33,6 +39,22 @@ describe('shouldShowOnboarding', () => {
   it('빈 문자열 값도 "본 것"으로 취급한다', async () => {
     const { adapter } = memoryAdapter({ [ONBOARDING_SEEN_KEY]: '' })
     expect(await shouldShowOnboarding(adapter)).toBe(false)
+  })
+})
+
+describe('shouldPersistOnDismiss', () => {
+  const shownAt = 1_000_000
+
+  it('뒤로가기로 나가도 기록한다 — 이래야 /map 재진입에 다시 뜨지 않는다', () => {
+    expect(shouldPersistOnDismiss(shownAt, shownAt + ONBOARDING_MIN_VIEW_MS, false)).toBe(true)
+  })
+
+  it('이미 닫기 경로에서 기록했으면 다시 쓰지 않는다', () => {
+    expect(shouldPersistOnDismiss(shownAt, shownAt + 10_000, true)).toBe(false)
+  })
+
+  it('노출 직후 언마운트(StrictMode 이중 마운트)는 기록하지 않는다', () => {
+    expect(shouldPersistOnDismiss(shownAt, shownAt + 10, false)).toBe(false)
   })
 })
 

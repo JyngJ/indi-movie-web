@@ -45,6 +45,25 @@ export function didOnboardThisSession(): boolean {
   }
 }
 
+/**
+ * 온보딩을 "봤다"고 인정할 최소 노출 시간(ms).
+ * React StrictMode(개발)는 마운트 직후 한 번 언마운트했다가 다시 붙이는데,
+ * 이 가드가 없으면 그 즉시 언마운트가 "봤다"로 기록돼 개발 중엔 온보딩을 두 번 다시 못 본다.
+ */
+export const ONBOARDING_MIN_VIEW_MS = 1000
+
+/**
+ * 닫기 버튼을 거치지 않은 이탈(뒤로가기·탭 닫기·라우트 이동)에도 플래그를 남길지 판단한다.
+ *
+ * 예전엔 건너뛰기·ESC·CTA 4경로에서만 기록해서, 지도에서 온보딩을 만난 뒤 뒤로가기로 빠져나가면
+ * 아무것도 안 남았다. 그 사용자는 /map에 들어올 때마다 온보딩을 다시 만났고,
+ * 실제로 이걸 에러 화면으로 오해해 뒤로가기-재진입을 3번 반복하고 이탈한 세션이 있었다 (2026-09-02).
+ */
+export function shouldPersistOnDismiss(shownAtMs: number, nowMs: number, alreadyClosed: boolean): boolean {
+  if (alreadyClosed) return false
+  return nowMs - shownAtMs >= ONBOARDING_MIN_VIEW_MS
+}
+
 /** 온보딩을 보여줘야 하는가 — 플래그가 없을 때만 true */
 export async function shouldShowOnboarding(storage: IStorageAdapter): Promise<boolean> {
   if (sessionSeenOnWriteFailure) return false
