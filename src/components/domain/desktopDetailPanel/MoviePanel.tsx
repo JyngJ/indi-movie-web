@@ -243,7 +243,8 @@ function MovieTheatersTab({
     <div key={entry.theaterId} style={{ borderRadius: 12, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', overflow: 'hidden' }}>
       {/* 극장 헤더 */}
       <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'flex-start' }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
+        {/* 이름 칸 최소 폭 — 자동번역으로 버튼 문구가 길어져도 이름이 세로로 눌리지 않게 (MovieDetailClient와 같은 이유) */}
+        <div style={{ flex: 1, minWidth: 120 }}>
           <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)' }}>{entry.theaterName}</div>
           <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 4, color: 'var(--color-text-sub)', fontSize: 'var(--text-badge)' }}>
             <Icon name="map-pin" size={11} />{entry.theaterAddress}
@@ -271,7 +272,7 @@ function MovieTheatersTab({
             trackEvent('movie theater selected', { movie_id: movieId, theater_id: entry.theaterId, theater_name: entry.theaterName, source: 'desktop_panel' })
             onTheaterOpen(entry.theaterId, entry.dateGroups[0]?.date ?? '')
           }}
-          style={{ flexShrink: 0, alignSelf: 'center' }}
+          style={{ flexShrink: 1, minWidth: 0, alignSelf: 'center' }}
         >
           영화관 보기
         </Button>

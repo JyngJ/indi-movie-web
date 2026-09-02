@@ -245,7 +245,9 @@ function TheaterShowtimeChips({
     <div>
       {/* 극장 헤더 */}
       <div style={{ padding: '16px 16px 12px', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
+        {/* 극장 이름 칸은 최소 폭을 보장한다 — 브라우저 자동번역으로 오른쪽 버튼 문구가 길어지면
+            이 칸이 한 글자 폭까지 눌려 이름이 세로로 한 자씩 쌓였다 (2026-09-02, 말레이어 번역 세션) */}
+        <div style={{ flex: 1, minWidth: 120 }}>
           <div style={{ fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.3 }}>
             {entry.theaterName}
           </div>
@@ -254,7 +256,7 @@ function TheaterShowtimeChips({
             <span style={{ minWidth: 0, wordBreak: 'keep-all' }}>{entry.theaterAddress}</span>
           </div>
         </div>
-        <div style={{ flexShrink: 0, alignSelf: 'center', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ flexShrink: 1, minWidth: 0, alignSelf: 'center', display: 'flex', alignItems: 'center', gap: 8 }}>
           {distance && (
             <span style={{
               minWidth: 58,
@@ -290,7 +292,7 @@ function TheaterShowtimeChips({
               })
               onGoTo(date)
             }}
-            style={{ flexShrink: 0 }}
+            style={{ flexShrink: 1, minWidth: 0 }}
           >
             영화관 보기
           </Button>

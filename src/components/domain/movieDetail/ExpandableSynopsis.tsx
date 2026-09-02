@@ -42,7 +42,9 @@ export function ExpandableSynopsis({ text }: { text: string }) {
               }),
         }}
       >
-        {text}
+        {/* 텍스트 노드를 span으로 감싼다 — 브라우저 자동번역기는 맨 텍스트 노드를 <font>로 갈아치우는데,
+            그러면 React가 잡고 있던 노드가 문서에서 떨어져 나가 펼치기 후에도 본문이 갱신되지 않는다 */}
+        <span>{text}</span>
       </p>
       {!expanded && clamped && (
         <button
@@ -52,7 +54,7 @@ export function ExpandableSynopsis({ text }: { text: string }) {
             fontSize: 14, lineHeight: 1.4, color: 'var(--color-text-caption)',
           }}
         >
-          더보기
+          <span>더보기</span>
         </button>
       )}
     </div>
