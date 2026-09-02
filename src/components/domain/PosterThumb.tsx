@@ -190,7 +190,8 @@ export function PosterThumb({
             zIndex: 1,
           }}
         >
-          <Icon name="check" size={10} />
+          {/* 액센트 배지 위 체크는 흰색 — currentColor면 본문 글자색(먹)이 그대로 내려온다 */}
+          <Icon name="check" size={10} color="var(--color-on-accent)" />
         </div>
       )}
     </div>

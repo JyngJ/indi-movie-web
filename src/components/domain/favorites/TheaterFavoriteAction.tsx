@@ -21,7 +21,9 @@ export function TheaterFavoriteAction({ theaterId, theaterName, style }: { theat
       onClick={() => toggle('theater', theaterId, { loginDescription: '관심 극장으로 등록하면 새 상영작 소식을 알려드려요.', label: theaterName })}
     >
       <Icon name="heart" size={14} fill="currentColor" color="currentColor" strokeWidth={0} />
-      {active ? '관심 극장' : '관심'}
+      {/* 라벨은 상태와 무관하게 고정 — 등록/해제로 글자 수가 바뀌면 옆 버튼(길찾기·공유하기)이
+          같이 밀린다. 상태는 빨간 하트가 말한다. */}
+      관심 극장
     </Button>
   )
 }
