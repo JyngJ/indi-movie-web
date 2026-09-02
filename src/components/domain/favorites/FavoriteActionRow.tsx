@@ -17,9 +17,11 @@ const LABEL: Record<FavoriteItemType, { off: string; on: string }> = {
   director: { off: '관심 감독 등록', on: '관심 감독' },
 }
 
+/** 등록되면 하트만 빨강 — 라벨은 회색 버튼 글자색 그대로 둔다 (포스터 하트·극장 시트와 같은 색) */
 function HeartIcon({ active }: { active: boolean }) {
+  const color = active ? 'var(--color-error-mid)' : 'currentColor'
   return (
-    <Icon name="heart" size={16} fill="currentColor" color="currentColor" strokeWidth={0} />
+    <Icon name="heart" size={16} fill={color} color={color} strokeWidth={0} />
   )
 }
 
