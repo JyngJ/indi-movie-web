@@ -1,4 +1,5 @@
 import posthog from 'posthog-js'
+import { parseVisitRef } from '@/lib/analytics/visitRef'
 
 const posthogToken = process.env.NEXT_PUBLIC_POSTHOG_TOKEN
 const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com'
@@ -37,11 +38,17 @@ if (typeof window !== 'undefined' && posthogToken) {
   // /p를 한 번 누른 브라우저는 쿠키가 만료된 뒤에도 모든 이벤트에 visit_ref=pf가
   // 계속 붙었고, 그래서 포폴 유입 지표가 개발자 본인의 이후 방문으로 가득 찼다.
   // 세션 한정 등록으로 바꾸고, 이미 박혀버린 영구 등록분은 unregister로 걷어낸다.
+  //
+  // 쿠키 값의 발급 시각까지 검사한다. Max-Age를 90일에서 30분으로 줄여도(#311)
+  // 그 전에 심긴 90일 쿠키는 그대로 남아, 수정 뒤에도 본인 방문이 계속 pf로
+  // 집계됐다. 시각이 없는 옛 값은 만료로 보고 쿠키까지 걷어낸다.
   posthog.unregister('visit_ref')
-  const visitRef = readCookie('vref')
+  const rawVisitRef = readCookie('vref')
+  const visitRef = parseVisitRef(rawVisitRef, Date.now())
   if (visitRef) {
     posthog.register_for_session({ visit_ref: visitRef })
   } else {
+    if (rawVisitRef) expireCookie('vref')
     posthog.unregister_for_session('visit_ref')
   }
 
