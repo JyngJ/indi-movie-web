@@ -145,7 +145,8 @@ Type C, theater fan:
 
 ## 포폴 유입 (/p) · 내부 트래픽 제외 (2026-08-22)
 
-- `/p`는 쿠키 두 개를 심고 홈으로 보낸다: `vref=pf`(30분, 태깅 창)와 `vref_entry=1`(5분, 진입 이벤트 1회 신호).
+- `/p`는 쿠키 두 개를 심고 홈으로 보낸다: `vref=pf.<발급시각ms>`(30분, 태깅 창)와 `vref_entry=1`(5분, 진입 이벤트 1회 신호).
+- **값에 발급 시각을 싣고 클라이언트가 다시 검사한다**(`src/lib/analytics/visitRef.ts`). Max-Age만 믿으면 안 된다 — 90일에서 30분으로 줄여도 그 전에 심긴 90일 쿠키는 브라우저에 그대로 남아, 8/22 수정 뒤에도 9/2까지 본인 방문이 pf로 집계됐다. 시각이 없는 옛 값(`vref=pf`)은 만료로 보고 쿠키까지 걷어내므로, `/p` 재방문 없이도 스스로 풀린다.
 - 유입 **수**는 `portfolio entry` 이벤트로 센다. `visit_ref`는 "그 방문에 뭘 봤나"를 보는 태그일 뿐 카운트용이 아니다.
 - `visit_ref`는 `register_for_session`으로 **세션 한정** 등록한다. 예전에는 `register()`(localStorage 영구)를 써서, `/p`를 한 번 누른 브라우저의 이후 모든 방문이 pf로 태깅됐다 — 90일치 pf 이벤트 386건이 전부 개발자 본인이었다. 부팅 때 `unregister('visit_ref')`로 이미 박힌 영구 등록분을 걷어낸다.
 - **내 트래픽 빼는 법: 브라우저마다 `?internal=1`로 한 번 접속.** person 속성 `$internal_or_test_user=true`가 영구 저장되고, PostHog 프로젝트의 `Internal / Test users` 코호트가 이걸 보고 거른다. 인사이트에서 "내부/테스트 사용자 제외"만 켜면 빠진다. 해제는 `?internal=0`.

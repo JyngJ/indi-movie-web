@@ -1,4 +1,5 @@
 import type { AnalyticsProperties, AnalyticsSurface, SessionIntent } from './types'
+import { parseVisitRef } from './visitRef'
 
 const SESSION_KEY = 'movie:analytics-session:v1'
 
@@ -62,6 +63,9 @@ function collectUtm() {
 /**
  * /p 리다이렉트가 심는 유입 쿠키를 **이벤트 시점에** 읽는다.
  *
+ * 값에 실린 발급 시각으로 신선도를 다시 검사한다 — 쿠키 Max-Age만 믿으면
+ * 옛 90일 쿠키가 남은 브라우저에서 태그가 계속 붙는다.
+ *
  * 세션 생성 때 한 번 읽어 저장하면 안 된다 — 쿠키(30분)가 만료된 뒤에도 탭이
  * 살아있는 내내 스냅샷이 따라붙어, posthog super property 쪽은 태그가 빠졌는데
  * 커스텀 이벤트만 pf로 남는 어긋남이 생긴다.
@@ -69,7 +73,7 @@ function collectUtm() {
 function collectRef() {
   if (typeof document === 'undefined') return undefined
   const match = document.cookie.match(/(?:^|;\s*)vref=([^;]+)/)
-  return match ? match[1] : undefined
+  return parseVisitRef(match?.[1], Date.now()) ?? undefined
 }
 
 function deviceType() {
