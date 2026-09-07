@@ -114,6 +114,16 @@ async function getAccessToken(): Promise<string> {
   return body.access_token
 }
 
+/**
+ * GSC는 URL을 퍼센트인코딩된 형태로 보관한다 — `/films/area/서울`로 필터를 걸면
+ * 0건이 나오고 `/films/area/%EC%84%9C%EC%9A%B8`로 걸어야 잡힌다. 사람이 한글 경로를
+ * 그대로 쓸 수 있게 여기서 인코딩한다. 이미 인코딩된 값은 그대로 둔다.
+ */
+function encodePagePath(path: string): string {
+  if (/%[0-9A-Fa-f]{2}/.test(path)) return path
+  return path.replace(/[^\x00-\x7F]+/g, (chunk) => encodeURIComponent(chunk))
+}
+
 export interface QueryOptions {
   /** YYYY-MM-DD */
   startDate: string
@@ -135,7 +145,9 @@ export async function querySearchAnalytics(options: QueryOptions): Promise<Searc
 
   const filters: { dimension: string; operator: string; expression: string }[] = []
   if (options.query) filters.push({ dimension: 'query', operator: 'contains', expression: options.query })
-  if (options.page) filters.push({ dimension: 'page', operator: 'contains', expression: options.page })
+  if (options.page) {
+    filters.push({ dimension: 'page', operator: 'contains', expression: encodePagePath(options.page) })
+  }
 
   const res = await fetch(
     `${API_BASE}/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`,
