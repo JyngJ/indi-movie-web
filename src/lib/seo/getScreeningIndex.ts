@@ -35,6 +35,8 @@ export interface ScreeningTheater {
   city: string
   address: string
   region: string
+  /** 0이거나 미입력이면 null — 지역 페이지 극장 소개에서 "상영관 N개"를 낼지 가른다 */
+  screenCount: number | null
 }
 
 export interface ScreeningIndex {
@@ -81,7 +83,7 @@ const getNationalIndex = unstable_cache(
     const theaterRows = await withRetry('theaters', async () => {
       const { data, error } = await supabase
         .from('theaters')
-        .select('id,name,city,address')
+        .select('id,name,city,address,screen_count')
         .order('name')
       if (error) throw new Error(`theaters 조회 실패: ${error.message}`)
       return data ?? []
@@ -93,6 +95,7 @@ const getNationalIndex = unstable_cache(
       city: String(t.city ?? ''),
       address: String(t.address ?? ''),
       region: getRegionFromCity(String(t.city ?? '')),
+      screenCount: Number(t.screen_count) > 0 ? Number(t.screen_count) : null,
     }))
 
     const showtimeRows = await withRetry('showtimes', async () => {
