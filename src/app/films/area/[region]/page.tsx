@@ -7,6 +7,8 @@ import { REGIONS } from '@/lib/regions'
 import { getScreeningIndex } from '@/lib/seo/getScreeningIndex'
 import { getAreaScreenings } from '@/lib/seo/getAreaScreenings'
 import { AreaSeoContent } from '@/components/seo/AreaSeoContent'
+import { AreaTheaterDirectory } from '@/components/seo/AreaTheaterDirectory'
+import { toTheaterProfiles, parseDistrict } from '@/lib/seo/theaterDirectory'
 import { toScreeningListSchema } from '@/lib/seo/toScreeningListSchema'
 import { toFaqSchema } from '@/lib/seo/toFaqSchema'
 import { toBreadcrumbSchema } from '@/lib/seo/toBreadcrumbSchema'
@@ -26,6 +28,16 @@ export const dynamic = 'force-dynamic'
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'
 
 const REGION_IDS = new Set(REGIONS.map((r) => r.id))
+
+/**
+ * 극장 목록(AreaTheaterDirectory)을 펼쳐 보이는 지역.
+ *
+ * 서울에만 먼저 넣는다 — 나머지 16개 지역이 대조군이 되어, 이 변경의 효과를
+ * 앞선 회차 추가(#334)와 분리해서 읽을 수 있다. 같은 기간·같은 템플릿이라
+ * 서울만 오르면 목록 작업 효과고, 전 지역이 같이 오르면 다른 요인이다.
+ * 효과가 확인되면 지역을 늘린다.
+ */
+const DIRECTORY_REGIONS = new Set(['서울'])
 
 function isValidRegion(id: string): boolean {
   return REGION_IDS.has(id)
@@ -53,7 +65,18 @@ export async function generateMetadata({
     ? `${index.theaters.length}곳 오늘 상영시간표 ${today.movieCount}편`
     : '상영시간표'
   const title = `${region} 독립영화관 ${scale} | 영화볼지도`
-  const description = today.theaters.length > 0
+
+  /* 목록 지역은 설명에 자치구를 넣는다 — 이 쿼리의 SERP는 "독립영화관 9선" 같은
+     목록 글이 채우고 있어, 스니펫이 목록처럼 읽혀야 클릭 경쟁이 된다.
+     하위 쿼리("종로 독립영화관")에도 같이 걸린다. */
+  const districts = DIRECTORY_REGIONS.has(region)
+    ? [...new Set(index.theaters.map((t) => parseDistrict(t.address)).filter((d): d is string => !!d))]
+    : []
+
+  const description = districts.length > 0
+    // writing-audit-ignore — SEO 메타·스키마 문구는 문어체 유지
+    ? `${region} 독립·예술영화관 ${index.theaters.length}곳을 ${districts.slice(0, 5).join('·')} 등 지역별로 정리했습니다. 오늘 ${today.theaters.length}곳에서 ${today.movieCount}편 상영 — 극장별 회차와 예매 링크까지 매일 갱신합니다.`
+    : today.theaters.length > 0
     // writing-audit-ignore — SEO 메타·스키마 문구는 문어체 유지
     ? `오늘 ${region} 독립·예술영화관 ${today.theaters.length}곳에서 ${today.movieCount}편이 ${today.showtimeCount}회 상영합니다. 극장별 회차 시간과 예매 링크를 한눈에 확인하세요.`
     : `${region} 지역 독립·예술영화관에서 오늘 상영하는 독립영화 시간표와 극장 정보. ${region}에서 독립영화 볼 곳을 한눈에.`
@@ -86,6 +109,16 @@ export default async function FilmsAreaPage({
   /* 회차 시각은 여기서만 온다 — getScreeningIndex는 movie_id·theater_id만 뽑아
      "어디서 무엇을"까지만 답할 수 있다. 타이틀이 약속한 "시간표"를 본문이 지키게 한다. */
   const todayScreenings = await getAreaScreenings(region)
+
+  const showDirectory = DIRECTORY_REGIONS.has(region)
+  /* 오늘 상영이 없는 극장도 목록엔 남는다 — 목록의 값어치는 완결성이라
+     "이 지역에 어떤 극장이 있나"에 빠짐없이 답해야 한다. */
+  const theaterProfiles = showDirectory
+    ? toTheaterProfiles(
+        data.theaters,
+        new Map(todayScreenings.theaters.map((t) => [t.theaterId, t.movies.length])),
+      )
+    : []
   // 극장 자체가 없는 지역은 존재하지 않는 것으로 취급 (Search Console 404 누적 방지 —
   // 죽은 극장 sitemap 이슈와 같은 재발 패턴)
   if (data.theaters.length === 0) notFound()
@@ -201,7 +234,11 @@ export default async function FilmsAreaPage({
           </div>
         </div>
 
-        {/* 목록 — 검색엔진 콘텐츠. 시각적으론 접어두고(details) DOM엔 항상 존재 */}
+        {showDirectory ? (
+          /* 목록 의도 쿼리("서울 독립영화관")를 받는 본론 — 접지 않고 펼쳐 둔다 */
+          <AreaTheaterDirectory region={region} theaters={theaterProfiles} />
+        ) : (
+        /* 목록 — 검색엔진 콘텐츠. 시각적으론 접어두고(details) DOM엔 항상 존재 */
         <details style={{
           marginTop: 'var(--spacing-24)',
           backgroundColor: 'color-mix(in srgb, var(--color-surface-bg) 42%, transparent)',
@@ -245,6 +282,7 @@ export default async function FilmsAreaPage({
             </section>
           )}
         </details>
+        )}
       </div>
     </main>
   )
