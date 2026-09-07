@@ -235,3 +235,45 @@ SVG를 OG 이미지로 사용 → Facebook, Kakao 미지원. PNG 버전 필요 (
 | next/image 전환 | 낮음 | remotePatterns 선행 필수 |
 | opengraph-image.tsx | 낮음 | 신규 파일 |
 | sitemap 분리 | 낮음 | 기존 sitemap.ts 보존 가능 |
+
+---
+
+## Search Console 실적 조회 (`npm run seo:gsc`)
+
+GSC 화면을 열지 않고 터미널에서 검색 실적을 읽는다. SEO 작업의 성패는 "노출이 0에서
+벗어났는가"를 몇 주에 걸쳐 반복 확인해야 알 수 있는데, 그때마다 화면을 캡처해 옮기는 건
+사람 손이 너무 많이 든다.
+
+### 준비 (1회)
+
+1. **GCP 서비스 계정 만들기** — console.cloud.google.com > IAM 및 관리자 > 서비스 계정
+   > 만들기. 역할은 지정하지 않아도 된다(GSC 권한은 3번에서 따로 준다).
+2. **키 발급** — 만든 계정 > 키 > 키 추가 > JSON. 받은 파일을 리포 밖 안전한 곳에 둔다
+   (예: `~/.config/gsc-service-account.json`). **리포에 커밋하지 말 것.**
+3. **Search Console에 읽기 권한 부여** — GSC > 설정 > 사용자 및 권한 > 사용자 추가.
+   서비스 계정 이메일(`...@....iam.gserviceaccount.com`)을 **제한된** 권한으로 추가한다.
+4. **API 사용 설정** — GCP 콘솔에서 "Google Search Console API"를 사용 설정한다.
+5. **`.env.local`에 경로 추가**
+
+```
+GSC_SERVICE_ACCOUNT_FILE=/Users/<계정>/.config/gsc-service-account.json
+# 속성이 도메인 속성이 아니면 함께 지정 (기본값: sc-domain:xn--hq1bv8o5phw2d7wt.com)
+# GSC_SITE_URL=https://www.xn--hq1bv8o5phw2d7wt.com/
+```
+
+3번을 빠뜨리면 HTTP 403이 난다 — 스크립트가 그 경우를 짚어 준다.
+
+### 사용
+
+```bash
+npm run seo:gsc -- --query 독립영화관 --days 28      # 검색어별
+npm run seo:gsc -- --page /films/area/ --by query   # 지역 페이지에 붙은 쿼리
+npm run seo:gsc -- --query 서울 --by date --days 14 # 날짜별 추이
+```
+
+`--by`는 `query` · `page` · `date`. 필터는 부분 일치다. GSC 데이터는 2~3일 지연되므로
+조회 구간 끝을 자동으로 앞당긴다(`DATA_LAG_DAYS`) — 안 그러면 마지막 이틀이 0으로 보여
+"떨어졌다"는 착시를 준다.
+
+어댑터는 `src/lib/seo/searchConsole.ts`. `googleapis` 패키지는 이 한 엔드포인트를 쓰자고
+받기엔 커서 서비스 계정 JWT를 Node 내장 crypto로 직접 서명한다(의존성 0).

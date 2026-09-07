@@ -13,6 +13,7 @@
     "crawl:showtimes": "tsx --env-file=.env.local scripts/crawl-showtimes.ts && npm run curate:resolve-pending",
     "crawl:seats": "tsx --env-file=.env.local scripts/crawl-seats.ts",
     "seo:indexnow": "tsx --env-file=.env.local scripts/submit-indexnow.ts",
+    "seo:gsc": "tsx --env-file=.env.local scripts/gsc-report.ts",
     "crawl:events": "tsx --env-file=.env.local scripts/crawl-events.ts",
     "seed:theaters": "tsx src/scripts/seed-theaters.ts",
     "seed:sources": "tsx src/scripts/seed-crawl-sources.ts",
