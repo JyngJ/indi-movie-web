@@ -13,6 +13,8 @@ import type { FestivalDetail } from '@/types/festival'
 import { scrollRailBy } from '@/lib/ui/railScroll'
 import { Button } from '@/components/primitives'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
+import { FestivalTimetable } from './FestivalTimetable'
+import { isMultiplexVenue, multiplexNotice } from '@/lib/festival/venue'
 import { Icon } from '@/components/primitives'
 
 // http:// 원본(예: jiff.kr — HTTPS 인증서가 깨져있음)을 브라우저가 직접 요청하면 mixed-content
@@ -172,8 +174,9 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
         )}
       </div>
 
-      {/* 상영 시간표 캐러셀 — 0장이면 섹션 자체 숨김 */}
-      {timetables.length > 0 && currentTimetable && (
+      {/* 상영 시간표 — 구조화된 회차가 있으면 표로, 없으면 영화제가 배포한 이미지로,
+          둘 다 없으면 "공개 전" 자리로. 섹션을 통째로 감추지는 않는다. */}
+      {festival.screenings.length === 0 && timetables.length > 0 && currentTimetable ? (
         <section style={sectionStyle}>
           <SectionHeader
             title="상영 시간표"
@@ -227,6 +230,15 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
             </div>
           </div>
         </section>
+      ) : (
+        <FestivalTimetable
+          screenings={festival.screenings}
+          startDate={festival.startDate}
+          endDate={festival.endDate}
+          today={today}
+          isDesktop={isDesktop}
+          officialUrl={festival.linkUrl}
+        />
       )}
 
       {/* 상영작 라인업 */}
@@ -317,6 +329,13 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)' }}>{link.theater.name}</div>
                   <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4 }}>{link.theater.address}</div>
+                  {/* 멀티플렉스는 우리가 회차를 모으지 않는다 — 극장 상세로 들어가면 빈 시간표를 보게 되므로
+                      들어가기 전에 어디서 확인해야 하는지 알린다 */}
+                  {isMultiplexVenue(link.theater.name) && (
+                    <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4, wordBreak: 'keep-all' }}>
+                      {multiplexNotice(link.theater.name)}
+                    </div>
+                  )}
                 </div>
               </button>
             ) : (
@@ -328,7 +347,14 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
                 }}
               >
                 <Icon name="map-pin" size={16} strokeWidth={1.75} color="var(--color-text-caption)" style={{ marginTop: 4, flexShrink: 0 }} />
-                <div style={{ fontSize: 14, color: 'var(--color-text-body)' }}>{link.venueText ?? '임시 상영장'}</div>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 14, color: 'var(--color-text-body)' }}>{link.venueText ?? '임시 상영장'}</div>
+                  {link.venueText && isMultiplexVenue(link.venueText) && (
+                    <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4, wordBreak: 'keep-all' }}>
+                      {multiplexNotice(link.venueText)}
+                    </div>
+                  )}
+                </div>
               </div>
             )
           ))}
