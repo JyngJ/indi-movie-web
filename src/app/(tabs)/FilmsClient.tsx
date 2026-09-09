@@ -1128,8 +1128,11 @@ export default function FilmsPage() {
               </div>
             )}
 
-            {/* 주목할 영화제 — 지역 필터 무관 전국 대상, festivals 0개면 미노출 */}
-            {festivals.length > 0 && (
+            {/* 주목할 영화제 — 지역 필터 무관 전국 대상, festivals 0개면 미노출.
+                배너 이미지가 이 섹션의 본문 전부라, banner_url이 없으면 섹션 헤더만 덩그러니
+                남는다(부산국제영화제처럼 배너를 안 받은 영화제에서 바로 걸렸다) — 그땐 통째로
+                감춘다. 영화제로 가는 길은 필터 줄 아래 바로가기 칩이 대신 연다. */}
+            {festivals.length > 0 && festivals[0].bannerUrl && (
               <div style={{ paddingTop: isDesktop ? 24 : 16 }}>
                 <FestivalBannerCard
                   festival={festivals[0]}

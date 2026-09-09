@@ -48,18 +48,32 @@ export function normalizeTime(time: string): string {
 }
 
 /**
- * 상영 시간대 표기 — "19:30 ~ 21:05". runtime이 없으면 시작 시각만.
+ * 종료 시각 "HH:MM" — runtime을 모르면 null.
  * 자정을 넘기는 심야 상영(미드나잇 패션)은 다음 날 시각으로 그대로 넘어간다.
  */
+export function screeningEndTime(startTime: string, runtimeMin: number | null): string | null {
+  if (!runtimeMin || runtimeMin <= 0) return null
+  const [h, m] = normalizeTime(startTime).split(':').map(Number)
+  if (Number.isNaN(h) || Number.isNaN(m)) return null
+  const total = (h * 60 + m + runtimeMin) % 1440
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`
+}
+
+/** 상영 시간대 표기 — "19:30 ~ 21:05". runtime이 없으면 시작 시각만. 표의 시간 열에 쓴다. */
 export function formatScreeningTime(startTime: string, runtimeMin: number | null): string {
   const start = normalizeTime(startTime)
-  if (!runtimeMin || runtimeMin <= 0) return start
-  const [h, m] = start.split(':').map(Number)
-  if (Number.isNaN(h) || Number.isNaN(m)) return start
-  const total = (h * 60 + m + runtimeMin) % 1440
-  const endH = String(Math.floor(total / 60)).padStart(2, '0')
-  const endM = String(total % 60).padStart(2, '0')
-  return `${start} ~ ${endH}:${endM}`
+  const end = screeningEndTime(startTime, runtimeMin)
+  return end ? `${start} ~ ${end}` : start
+}
+
+/**
+ * 시작 시각을 이미 크게 보여주는 자리(모바일 카드)의 보조 줄 — "95분 · 21:05 종료".
+ * 시작 시각을 한 번 더 쓰지 않는다.
+ */
+export function formatScreeningTail(startTime: string, runtimeMin: number | null): string | null {
+  const end = screeningEndTime(startTime, runtimeMin)
+  if (!end) return null
+  return `${runtimeMin}분 · ${end} 종료`
 }
 
 /** 표 안에서 극장·관을 한 줄로 — "영화의전당 중극장" */
