@@ -8,7 +8,7 @@ import { toFestivalSchema } from '@/lib/seo/toFestivalSchema'
 import { FestivalSeoContent } from '@/components/seo/FestivalSeoContent'
 import { movieRowToMovie } from '@/lib/supabase/movieRow'
 import { festivalRowToFestival } from '@/lib/supabase/festivalRow'
-import type { FestivalDetail } from '@/types/festival'
+import type { FestivalDetail, FestivalScreening } from '@/types/festival'
 import { FestivalDetailClient } from './FestivalDetailClient'
 
 export const revalidate = 3600
@@ -27,6 +27,51 @@ const FESTIVAL_SELECT = `
   ),
   festival_timetables(id, image_url, day_date, label, sort_order)
 `
+
+// 회차는 본 쿼리에 조인하지 않고 따로 읽는다. festival_screenings는 나중에 추가된 테이블이라
+// (docs/SUPABASE_FESTIVAL_SCREENINGS.sql) 마이그레이션 전에 배포되면 조인이 통째로 실패해
+// 영화제 상세가 404가 된다. 따로 읽으면 그 경우 회차만 비고 페이지는 그대로 뜬다.
+const SCREENING_SELECT = `
+  id, screening_date, start_time, runtime_min, festival_theater_id,
+  venue_label, screen_label, movie_id, movie_title_snapshot,
+  section, screening_code, has_gv, booking_url
+`
+
+interface ScreeningRow {
+  id: string; screening_date: string; start_time: string; runtime_min: number | null
+  festival_theater_id: string | null; venue_label: string; screen_label: string | null
+  movie_id: string | null; movie_title_snapshot: string
+  section: string | null; screening_code: string | null; has_gv: boolean; booking_url: string | null
+}
+
+async function fetchScreenings(
+  supabase: ReturnType<typeof createSupabaseServerClient>,
+  festivalId: string,
+): Promise<FestivalScreening[]> {
+  const { data, error } = await supabase
+    .from('festival_screenings')
+    .select(SCREENING_SELECT)
+    .eq('festival_id', festivalId)
+
+  if (error || !data) return []
+
+  return (data as unknown as ScreeningRow[]).map((sc) => ({
+    id: sc.id,
+    festivalId,
+    screeningDate: sc.screening_date,
+    startTime: sc.start_time,
+    runtimeMin: sc.runtime_min,
+    festivalTheaterId: sc.festival_theater_id,
+    venueLabel: sc.venue_label,
+    screenLabel: sc.screen_label,
+    movieId: sc.movie_id,
+    movieTitleSnapshot: sc.movie_title_snapshot,
+    section: sc.section,
+    screeningCode: sc.screening_code,
+    hasGv: sc.has_gv,
+    bookingUrl: safeUrl(sc.booking_url ?? undefined) ?? null,
+  }))
+}
 
 async function fetchFestival(slug: string): Promise<FestivalDetail | null> {
   const supabase = createSupabaseServerClient()
@@ -109,6 +154,8 @@ async function fetchFestival(slug: string): Promise<FestivalDetail | null> {
         label: tt.label,
         sortOrder: tt.sort_order,
       })),
+    // 정렬은 화면에서 날짜·상영관을 고른 뒤에 한다(selectDayScreenings) — 여기선 읽은 순서 그대로
+    screenings: await fetchScreenings(supabase, row.id),
   }
 }
 
