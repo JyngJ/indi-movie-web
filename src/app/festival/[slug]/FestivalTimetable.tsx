@@ -10,6 +10,7 @@ import {
   defaultFestivalDay,
   festivalDayLabel,
   festivalDayShortLabel,
+  formatScreeningTail,
   formatScreeningTime,
   listScreeningVenues,
   selectDayScreenings,
@@ -215,9 +216,11 @@ function ScreeningList({ rows }: { rows: FestivalScreening[] }) {
               {venueDisplayName(row)}
               {row.section ? ` · ${row.section}` : ''}
             </div>
-            <div style={{ marginTop: 4, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', fontFeatureSettings: '"tnum"' }}>
-              {formatScreeningTime(row.startTime, row.runtimeMin)}
-            </div>
+            {formatScreeningTail(row.startTime, row.runtimeMin) && (
+              <div style={{ marginTop: 4, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', fontFeatureSettings: '"tnum"' }}>
+                {formatScreeningTail(row.startTime, row.runtimeMin)}
+              </div>
+            )}
           </div>
         </div>
       ))}

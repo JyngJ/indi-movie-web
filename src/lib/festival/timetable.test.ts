@@ -5,9 +5,11 @@ import {
   defaultFestivalDay,
   festivalDayLabel,
   festivalDayShortLabel,
+  formatScreeningTail,
   formatScreeningTime,
   listScreeningVenues,
   normalizeTime,
+  screeningEndTime,
   selectDayScreenings,
   venueDisplayName,
 } from './timetable'
@@ -63,6 +65,21 @@ describe('formatScreeningTime', () => {
   })
   it('runtime이 0이면 시작 시각만', () => {
     expect(formatScreeningTime('10:00', 0)).toBe('10:00')
+  })
+})
+
+describe('screeningEndTime / formatScreeningTail', () => {
+  it('종료 시각을 낸다', () => {
+    expect(screeningEndTime('19:30:00', 95)).toBe('21:05')
+  })
+  it('runtime이 없으면 null', () => {
+    expect(screeningEndTime('19:30', null)).toBeNull()
+  })
+  it('보조 줄은 시작 시각을 다시 쓰지 않는다', () => {
+    expect(formatScreeningTail('19:30:00', 95)).toBe('95분 · 21:05 종료')
+  })
+  it('runtime이 없으면 보조 줄도 없다', () => {
+    expect(formatScreeningTail('19:30', null)).toBeNull()
   })
 })
 
