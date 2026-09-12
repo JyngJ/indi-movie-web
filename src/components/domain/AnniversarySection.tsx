@@ -29,14 +29,13 @@ interface Props {
   onMovieClick?: (id: string) => void
 }
 
+/* 액센트는 토큰만 — 하드코딩 헥사(#C8901A·#8A5F00·#2E4A65)를 쓰던 자리다.
+   탄생일은 warning 램프(오커), 기일은 primary 램프. "틴트 배경 + deep 텍스트" 문법. */
 function accentColors(eventType: AnniversaryEventType) {
   const isBirthday = eventType === 'birthday'
   return {
-    bg: isBirthday
-      ? 'color-mix(in srgb, #C8901A 12%, var(--color-surface-card))'
-      : 'color-mix(in srgb, var(--color-primary-base) 14%, var(--color-surface-card))',
-    border: isBirthday ? '#C8901A' : 'var(--color-primary-base)',
-    text: isBirthday ? '#8A5F00' : '#2E4A65',
+    tint: isBirthday ? 'var(--color-warning-tint)' : 'var(--color-primary-subtle)',
+    text: isBirthday ? 'var(--color-warning-deep)' : 'var(--color-primary-text)',
   }
 }
 
@@ -61,51 +60,43 @@ export function AnniversarySection({
 
   if (films.length === 0) return null
 
-  const { bg, border, text } = accentColors(eventType)
+  const { tint, text } = accentColors(eventType)
   const years = deathYear ? `${birthYear} – ${deathYear}` : `b. ${birthYear}`
   const dateLabel = `${month}월 ${day}일`
 
+  /* 2.0 섹션 문법 — 맨 종이 위 플랫 헤더(특별전·큐레이션 행과 동일).
+     예전엔 액센트 테두리를 두른 틴트 상자라 이 섹션만 다른 시스템처럼 보였다.
+     기념일 성격은 날짜 칩의 틴트 하나로만 드러낸다. */
   const header = (
     <div style={{
-      padding: compact ? '12px 14px' : '14px 16px',
-      borderRadius: '10px 10px 0 0',
-      background: bg,
-      borderTop: `3px solid ${border}`,
-      borderLeft: `1px solid color-mix(in srgb, ${border} 30%, transparent)`,
-      borderRight: `1px solid color-mix(in srgb, ${border} 30%, transparent)`,
-      display: 'flex', flexDirection: 'column', gap: 4,
+      padding: compact ? '0' : '0 var(--gutter-sheet)',
+      display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1)',
+      marginBottom: 'var(--spacing-3)',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)', flexWrap: 'wrap' }}>
-        <span style={{
-          fontSize: compact ? 'var(--text-body)' : (isDesktop ? 18 : 16),
-          fontWeight: 700, fontFamily: 'var(--font-display)', color: text,
+        <h2 className="display-h2" style={{
+          margin: 0, minWidth: 0, color: 'var(--color-text-primary)',
+          fontSize: compact ? 'var(--text-title)' : undefined,
         }}>
           {sectionTitle}
-        </span>
+        </h2>
         <span style={{
           fontSize: 'var(--text-caption)', fontWeight: 700, color: text,
-          background: `color-mix(in srgb, ${border} 18%, transparent)`,
-          border: `1px solid color-mix(in srgb, ${border} 35%, transparent)`,
-          borderRadius: 'var(--radius-pill)', padding: '4px 8px',
+          background: tint,
+          borderRadius: 'var(--radius-pill)', padding: 'var(--spacing-1) var(--spacing-2)',
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
           whiteSpace: 'nowrap',
         }}>
           {dateLabel}
         </span>
-        <span style={{
-          fontSize: 'var(--text-caption)', color: text, opacity: 0.7,
-          
-        }}>
-          {nameEn} · {years}
-        </span>
       </div>
-      <p style={{ margin: 0, fontSize: compact ? 12 : 'var(--text-meta)', color: text, opacity: 0.85, lineHeight: 1.5 }}>
-        {sectionDesc}
+      <p style={{
+        margin: 0, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', lineHeight: 1.5,
+      }}>
+        {sectionDesc} · {nameEn} · {years}
       </p>
     </div>
   )
-
-  const filmBorder = `1px solid color-mix(in srgb, ${border} 25%, transparent)`
 
   if (compact) {
     // 1~2편 — 포스터 + 정보 inline (스크롤 없음)
@@ -113,12 +104,7 @@ export function AnniversarySection({
       <div ref={sectionRef} style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
         {header}
         <div style={{
-          display: 'flex', gap: 12, alignItems: 'flex-start',
-          padding: '12px 16px',
-          border: filmBorder, borderTop: 'none',
-          borderRadius: '0 0 10px 10px',
-          background: 'var(--color-surface-card)',
-          flex: 1,
+          display: 'flex', gap: 'var(--spacing-4)', alignItems: 'flex-start', flexWrap: 'wrap',
         }}>
           {films.slice(0, 2).map((film, i) => (
             <RevealItem
@@ -130,21 +116,21 @@ export function AnniversarySection({
                 onMovieClick(film.id)
               } : undefined}
               style={{
-                display: 'flex', gap: 8, alignItems: 'flex-start', flex: 1, minWidth: 0,
+                display: 'flex', gap: 'var(--spacing-3)', alignItems: 'flex-start', minWidth: 0,
                 cursor: onMovieClick ? 'pointer' : undefined,
               }}
             >
               <div style={{ flexShrink: 0 }}>
-                <PosterThumb src={film.posterUrl} alt={film.title} width={90} height={135} shadow={false} />
+                <PosterThumb src={film.posterUrl} alt={film.title} width={120} height={180} />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, justifyContent: 'center' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1)', minWidth: 0, justifyContent: 'flex-start' }}>
                 <span style={{
-                  fontSize: 14, fontWeight: 700, color: 'var(--color-text-body)',
+                  fontSize: 'var(--text-body)', fontWeight: 700, color: 'var(--color-text-body)',
                   display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3,
                 }}>
                   {normalizeTitle(film.title)}
                 </span>
-                <span style={{ fontSize: 12, color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {film.director[0] ?? '감독 미상'}
                 </span>
                 <div style={{ display: 'flex', gap: 'var(--spacing-1)', alignItems: 'center' }}>
@@ -165,27 +151,20 @@ export function AnniversarySection({
   return (
     /* 섹션 리듬은 모바일 32 · PC 48 — 다른 섹션(CurationSectionRow·특별전)과 같은 값.
        예전엔 모바일만 24라 기념일 위에서만 간격이 좁았다. */
-    <div ref={sectionRef} style={{ paddingTop: isDesktop ? 48 : 32 }}>
-      <div style={{ margin: '0 var(--gutter-sheet)' }}>{header}</div>
-      <div style={{
-        margin: '0 var(--gutter-sheet)',
-        borderRadius: '0 0 10px 10px',
-        border: filmBorder, borderTop: 'none',
-        overflow: 'hidden',
-      }}>
-        <CurationSectionRow
-          title=""
-          movies={films} isDesktop={isDesktop}
-          onMovieClick={onMovieClick ? (movieId) => {
-            trackEvent('curation movie selected', {
-              ...analytics, movie_id: movieId,
-              movie_title: films.find((f) => f.id === movieId)?.title,
-            })
-            onMovieClick(movieId)
-          } : undefined}
-          noHeader
-        />
-      </div>
+    <div ref={sectionRef} style={{ paddingTop: isDesktop ? 'var(--spacing-12)' : 'var(--spacing-8)' }}>
+      {header}
+      <CurationSectionRow
+        title=""
+        movies={films} isDesktop={isDesktop}
+        onMovieClick={onMovieClick ? (movieId) => {
+          trackEvent('curation movie selected', {
+            ...analytics, movie_id: movieId,
+            movie_title: films.find((f) => f.id === movieId)?.title,
+          })
+          onMovieClick(movieId)
+        } : undefined}
+        noHeader
+      />
     </div>
   )
 }
