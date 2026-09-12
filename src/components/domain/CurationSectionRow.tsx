@@ -114,6 +114,9 @@ function MovieCardInfo({ movie, isDesktop, caption, customBottomInfo }: { movie:
  *  가리키는지 헷갈리지 않는다(카드가 포스터보다 짧아 50%면 중앙이 어긋난다) */
 const TAIL_TOP = 28
 
+/** 포스터 확대·팝업까지 기다리는 시간. 400ms는 스쳐 지나갈 때 안 뜨는 대신 의도한 호버에도 느렸다 */
+const HOVER_DELAY_MS = 200
+
 export function HoverPopup({ movie, x, y, posterWidth = 0 }: {
   movie: Movie
   /** 포스터의 시각적 오른쪽 끝 (hover scale 반영) */
@@ -275,7 +278,7 @@ function MovieCard({
         setHovered(true)
         setPopupPos({ x: rect.right + width * 0.05, y: rect.top })
       }
-    }, 400)
+    }, HOVER_DELAY_MS)
   }
 
   function onMouseLeave() {
