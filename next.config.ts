@@ -90,6 +90,32 @@ const nextConfig: NextConfig = {
       })),
     ]
   },
+  // 동적 상세 페이지의 HTML을 CDN에 캐시한다.
+  //
+  // 이 페이지들은 hydration 스톨·한글 헤더 500을 피하려고 force-dynamic으로 두는데,
+  // Next가 동적 라우트에 `no-store`를 박아서 방문 한 번이 함수 실행 한 번이 된다.
+  // 2026-09 Fluid Active CPU가 무료 한도(4시간/월)를 넘긴 주된 이유다.
+  //
+  // 세 페이지 모두 서버에서 쿠키·세션·유저 상태를 읽지 않아 응답 HTML이 전 사용자
+  // 동일하다 — 그래서 공개 캐시에 올려도 안전하다. 잔여석·회차 같은 변하는 값은
+  // 클라이언트가 /api/public/*로 따로 가져오므로 HTML 캐시 수명과 무관하다.
+  //
+  // force-dynamic은 그대로 둔다. 목적이 "정적 셸을 만들지 않는 것"이지
+  // "캐시하지 않는 것"이 아니기 때문이다.
+  async headers() {
+    // 상영 시간표는 크롤러가 하루 세 번(01·07·13시) 갱신하므로 5분 캐시로도
+    // 체감 신선도가 떨어지지 않는다. stale-while-revalidate로 만료 직후 요청도
+    // 함수를 기다리지 않고 캐시를 받는다.
+    const detail = 'public, s-maxage=300, stale-while-revalidate=3600'
+    // 지역 페이지는 극장 목록이 본문이라 훨씬 느리게 변한다.
+    const area = 'public, s-maxage=1800, stale-while-revalidate=86400'
+    return [
+      { source: '/films/movie/:id', headers: [{ key: 'Cache-Control', value: detail }] },
+      { source: '/films/theater/:id', headers: [{ key: 'Cache-Control', value: detail }] },
+      { source: '/films/area/:region', headers: [{ key: 'Cache-Control', value: area }] },
+    ]
+  },
 };
+
 
 export default nextConfig;

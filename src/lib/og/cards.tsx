@@ -72,9 +72,14 @@ function ogResponse(node: React.ReactElement, fontBold: Buffer) {
     ...OG_SIZE,
     fonts: [{ name: 'KIMM', data: fontBold, weight: 700, style: 'normal' }],
     /* 미리보기 봇은 같은 링크를 여러 번 긁어간다 — CDN에 세워 Supabase 재조회를 막는다.
-     * 파일 규약(opengraph-image.tsx)의 revalidate=3600을 대신하는 자리다. */
+     * 파일 규약(opengraph-image.tsx)의 revalidate=3600을 대신하는 자리다.
+     *
+     * 수명을 1시간에서 7일로 늘렸다. satori 렌더는 카드 한 장에 수백 ms의 CPU를 쓰는데,
+     * 카드에 들어가는 포스터·제목·극장명은 사실상 바뀌지 않는다. 1시간마다 같은 그림을
+     * 다시 굽는 것이 2026-09 Fluid Active CPU 한도 초과에 한몫했다. 어드민에서 포스터를
+     * 교체하면 최대 7일 늦게 반영된다 — 공유 미리보기라 그 지연을 감수한다. */
     headers: {
-      'Cache-Control': 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400',
+      'Cache-Control': 'public, max-age=604800, s-maxage=604800, stale-while-revalidate=2592000',
     },
   })
 }
