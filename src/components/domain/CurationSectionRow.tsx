@@ -11,6 +11,7 @@ import { BubbleTail, bubbleTailReach, GenreChip, PosterChip, SectionHeader, Card
 import type { SectionAnalytics } from '@/lib/curation/sectionRuns'
 import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
 import { Carousel, CarouselContent, CarouselItem, useCarousel, RevealItem, RevealGroup } from '@/components/motion'
+import { usePosterHover } from '@/components/domain/usePosterHover'
 
 interface CurationSectionRowProps {
   title: string
@@ -113,9 +114,6 @@ function MovieCardInfo({ movie, isDesktop, caption, customBottomInfo }: { movie:
 /** 꼬리 세로 위치 — 카드 상단에서 이만큼. 포스터 상단 근처를 가리켜야 어느 포스터를
  *  가리키는지 헷갈리지 않는다(카드가 포스터보다 짧아 50%면 중앙이 어긋난다) */
 const TAIL_TOP = 28
-
-/** 포스터 확대·팝업까지 기다리는 시간. 400ms는 스쳐 지나갈 때 안 뜨는 대신 의도한 호버에도 느렸다 */
-const HOVER_DELAY_MS = 200
 
 export function HoverPopup({ movie, x, y, posterWidth = 0 }: {
   movie: Movie
@@ -265,32 +263,12 @@ function MovieCard({
   /** 행 안에서의 순번 — 등장 모션 계단 간격용 */
   revealIndex: number
 }) {
-  const cardRef = useRef<HTMLDivElement>(null)
   const [posterReady, setPosterReady] = useState(!movie.posterUrl)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [hovered, setHovered] = useState(false)
-  const [popupPos, setPopupPos] = useState<{ x: number; y: number } | null>(null)
-
-  function onMouseEnter() {
-    timerRef.current = setTimeout(() => {
-      const rect = cardRef.current?.getBoundingClientRect()
-      if (rect) {
-        setHovered(true)
-        setPopupPos({ x: rect.right + width * 0.05, y: rect.top })
-      }
-    }, HOVER_DELAY_MS)
-  }
-
-  function onMouseLeave() {
-    if (timerRef.current) clearTimeout(timerRef.current)
-    setHovered(false)
-    setPopupPos(null)
-  }
+  const { anchorRef, popupPos, hoverProps, posterStyle } = usePosterHover(isDesktop)
 
   return (
     <>
       <RevealItem
-        ref={cardRef}
         preset="slide"
         ready={posterReady}
         staggerIndex={revealIndex}
@@ -300,15 +278,9 @@ function MovieCard({
         {/* 포스터: scale은 있으나 layout size 유지 → 부모 padding 안에서 visual overflow.
             호버 확대는 포스터 위에서만 — 캡션 호버로 커지면 오작동처럼 느껴짐 */}
         <div
-          onMouseEnter={isDesktop ? onMouseEnter : undefined}
-          onMouseLeave={isDesktop ? onMouseLeave : undefined}
-          style={{
-            transition: 'transform 130ms ease',
-            transform: hovered ? 'scale(1.1)' : 'scale(1)',
-            transformOrigin: 'center center',
-            borderRadius: 'var(--radius-poster)',
-            position: 'relative',
-          }}
+          ref={anchorRef}
+          {...hoverProps}
+          style={{ ...posterStyle, borderRadius: 'var(--radius-poster)' }}
         >
           <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} shadow={false} onReady={() => setPosterReady(true)} />
 
@@ -363,8 +335,8 @@ function MovieCard({
         <MovieCardInfo movie={movie} isDesktop={isDesktop} caption={caption} customBottomInfo={customBottomInfo} />
       </RevealItem>
 
-      {popupPos && isDesktop && (
-        <HoverPopup movie={movie} x={popupPos.x} y={popupPos.y} posterWidth={width} />
+      {popupPos && (
+        <HoverPopup movie={movie} x={popupPos.x} y={popupPos.y} posterWidth={popupPos.width} />
       )}
     </>
   )
