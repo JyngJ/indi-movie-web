@@ -4,6 +4,7 @@ import { useRef } from 'react'
 import type { Movie } from '@/types/api'
 import type { AnniversaryEventType } from '@/lib/curation/directorAnniversaries'
 import { CurationSectionRow } from '@/components/domain/CurationSectionRow'
+import { usePosterHover } from '@/components/domain/usePosterHover'
 import { PosterThumb } from '@/components/domain/PosterThumb'
 import { RevealItem } from '@/components/motion'
 import { trackEvent } from '@/lib/analytics/client'
@@ -37,6 +38,51 @@ function accentColors(eventType: AnniversaryEventType) {
     tint: isBirthday ? 'var(--color-warning-tint)' : 'var(--color-primary-subtle)',
     text: isBirthday ? 'var(--color-warning-deep)' : 'var(--color-primary-text)',
   }
+}
+
+/* compact(1~2편) 카드 — 포스터 + 정보 inline. 예전엔 이 경로에만 호버가 없었다.
+   확대만 쓰고 말풍선은 띄우지 않는다 — 제목·감독·연도가 이미 포스터 오른쪽에 펼쳐져
+   있어서, 같은 자리에 뜨는 말풍선이 그 정보를 덮기만 한다. */
+function CompactFilmCard({ film, isDesktop, revealIndex, onClick }: {
+  film: Movie
+  isDesktop: boolean
+  revealIndex: number
+  onClick?: () => void
+}) {
+  const { anchorRef, hoverProps, posterStyle } = usePosterHover(isDesktop)
+
+  return (
+    <RevealItem
+      preset="slide"
+      staggerIndex={revealIndex}
+      onClick={onClick}
+      style={{
+        display: 'flex', gap: 'var(--spacing-3)', alignItems: 'flex-start', minWidth: 0,
+        cursor: onClick ? 'pointer' : undefined,
+      }}
+    >
+      <div ref={anchorRef} {...hoverProps} style={{ ...posterStyle, flexShrink: 0 }}>
+        <PosterThumb src={film.posterUrl} alt={film.title} width={120} height={180} />
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1)', minWidth: 0, justifyContent: 'flex-start' }}>
+        <span style={{
+          fontSize: 'var(--text-body)', fontWeight: 700, color: 'var(--color-text-body)',
+          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3,
+        }}>
+          {normalizeTitle(film.title)}
+        </span>
+        <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {film.director[0] ?? '감독 미상'}
+        </span>
+        <div style={{ display: 'flex', gap: 'var(--spacing-1)', alignItems: 'center' }}>
+          {film.genre.slice(0, 1).map((g) => (
+            <GenreChip key={g}>{g}</GenreChip>
+          ))}
+          <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', fontWeight: 600 }}>{film.year}</span>
+        </div>
+      </div>
+    </RevealItem>
+  )
 }
 
 export function AnniversarySection({
@@ -107,40 +153,16 @@ export function AnniversarySection({
           display: 'flex', gap: 'var(--spacing-4)', alignItems: 'flex-start', flexWrap: 'wrap',
         }}>
           {films.slice(0, 2).map((film, i) => (
-            <RevealItem
+            <CompactFilmCard
               key={film.id}
-              preset="slide"
-              staggerIndex={i}
+              film={film}
+              isDesktop={isDesktop}
+              revealIndex={i}
               onClick={onMovieClick ? () => {
                 trackEvent('curation movie selected', { ...analytics, movie_id: film.id, movie_title: film.title })
                 onMovieClick(film.id)
               } : undefined}
-              style={{
-                display: 'flex', gap: 'var(--spacing-3)', alignItems: 'flex-start', minWidth: 0,
-                cursor: onMovieClick ? 'pointer' : undefined,
-              }}
-            >
-              <div style={{ flexShrink: 0 }}>
-                <PosterThumb src={film.posterUrl} alt={film.title} width={120} height={180} />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1)', minWidth: 0, justifyContent: 'flex-start' }}>
-                <span style={{
-                  fontSize: 'var(--text-body)', fontWeight: 700, color: 'var(--color-text-body)',
-                  display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3,
-                }}>
-                  {normalizeTitle(film.title)}
-                </span>
-                <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {film.director[0] ?? '감독 미상'}
-                </span>
-                <div style={{ display: 'flex', gap: 'var(--spacing-1)', alignItems: 'center' }}>
-                  {film.genre.slice(0, 1).map((g) => (
-                    <GenreChip key={g}>{g}</GenreChip>
-                  ))}
-                  <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', fontWeight: 600 }}>{film.year}</span>
-                </div>
-              </div>
-            </RevealItem>
+            />
           ))}
         </div>
       </div>

@@ -8,6 +8,7 @@ import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { withFlag } from '@/lib/nations'
 import { Button, ScrollNavButton } from '@/components/primitives'
 import { HoverPopup } from '@/components/domain/CurationSectionRow'
+import { usePosterHover } from '@/components/domain/usePosterHover'
 import type { FilmRankingEntry } from '@/lib/supabase/queries'
 import type { Movie } from '@/types/api'
 import { scrollRailBy } from '@/lib/ui/railScroll'
@@ -130,37 +131,18 @@ function InfoTooltip({ weekStart }: { weekStart: string }) {
 // ── 랭킹 카드 ─────────────────────────────────────────────────────
 function RankingCard({ entry, movie, rank, isDesktop, gapRight, onClick, revealIndex }: { entry: FilmRankingEntry; movie?: Movie; rank: number; isDesktop: boolean; gapRight: number; onClick?: () => void; revealIndex: number }) {
   const { width, height } = POSTER
-  const cardRef = useRef<HTMLDivElement>(null)
   const [posterReady, setPosterReady] = useState(!movie?.posterUrl)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [hovered, setHovered] = useState(false)
-  const [popupPos, setPopupPos] = useState<{ x: number; y: number } | null>(null)
-
-  function onMouseEnter() {
-    timerRef.current = setTimeout(() => {
-      const rect = cardRef.current?.getBoundingClientRect()
-      if (rect) { setHovered(true); setPopupPos({ x: rect.right + width * 0.05, y: rect.top }) }
-    }, 180)
-  }
-  function onMouseLeave() {
-    if (timerRef.current) clearTimeout(timerRef.current)
-    setHovered(false); setPopupPos(null)
-  }
+  const { anchorRef, popupPos, hoverProps, posterStyle } = usePosterHover(isDesktop)
 
   return (
     <>
       <RevealItem
-        ref={cardRef}
         preset="slide"
         ready={posterReady}
         staggerIndex={revealIndex}
         onClick={onClick}
         style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)', width, flexShrink: 0, cursor: onClick ? 'pointer' : undefined, marginRight: gapRight }}
       >
-        <div
-          onMouseEnter={isDesktop ? onMouseEnter : undefined}
-          onMouseLeave={isDesktop ? onMouseLeave : undefined}
-        >
         <div style={{ position: 'relative', overflow: 'visible' }}>
           {/* 순위 — 포스터 왼쪽 뒤에, 반투명 테두리만 */}
           <span style={{
@@ -174,13 +156,12 @@ function RankingCard({ entry, movie, rank, isDesktop, gapRight, onClick, revealI
           }}>
             {rank}
           </span>
-          {/* 포스터 — 숫자 위에, 호버시만 확대 */}
-          <div style={{
-            position: 'relative', zIndex: 1, overflow: 'hidden',
-            transition: 'transform 130ms ease',
-            transform: hovered ? 'scale(1.1)' : 'scale(1)',
-            transformOrigin: 'center center',
-          }}>
+          {/* 포스터 — 숫자 위에, 호버시만 확대. 캡션 호버로 커지면 오작동처럼 느껴져 포스터 위에서만 */}
+          <div
+            ref={anchorRef}
+            {...hoverProps}
+            style={{ ...posterStyle, overflow: 'hidden', zIndex: posterStyle.zIndex ?? 1 }}
+          >
             <PosterThumb src={movie?.posterUrl} alt={movie?.title ?? '영화 포스터'} width={width} height={height} shadow={false} onReady={() => setPosterReady(true)} />
           </div>
         </div>
@@ -194,11 +175,10 @@ function RankingCard({ entry, movie, rank, isDesktop, gapRight, onClick, revealI
           </span>
           <RankBadge rank={entry.rank} prevRank={entry.prev_rank} />
         </div>
-        </div>
       </RevealItem>
 
-      {popupPos && isDesktop && movie && (
-        <HoverPopup movie={movie} x={popupPos.x} y={popupPos.y} posterWidth={width} />
+      {popupPos && movie && (
+        <HoverPopup movie={movie} x={popupPos.x} y={popupPos.y} posterWidth={popupPos.width} />
       )}
     </>
   )

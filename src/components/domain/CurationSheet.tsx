@@ -7,6 +7,7 @@ import { Button, Icon, Divider, EmptyState } from '@/components/primitives'
 import { PosterChip } from '@/components/primitives'
 import { PosterThumb } from './PosterThumb'
 import { HoverPopup } from './CurationSectionRow'
+import { usePosterHover } from './usePosterHover'
 import { FavoriteToggle } from './favorites/FavoriteToggle'
 import type {
   LastWeekFilm,
@@ -219,25 +220,7 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
   desktop: boolean
   onSelect?: (id: string, title: string) => void
 }) {
-  const cardRef = useRef<HTMLButtonElement>(null)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [hovered, setHovered] = useState(false)
-  const [popupPos, setPopupPos] = useState<{ x: number; y: number } | null>(null)
-
-  function onMouseEnter() {
-    timerRef.current = setTimeout(() => {
-      const rect = cardRef.current?.getBoundingClientRect()
-      if (rect) {
-        setHovered(true)
-        setPopupPos({ x: rect.right + posterSize.width * 0.05, y: rect.top })
-      }
-    }, 180)
-  }
-  function onMouseLeave() {
-    if (timerRef.current) clearTimeout(timerRef.current)
-    setHovered(false)
-    setPopupPos(null)
-  }
+  const { anchorRef, popupPos, hoverProps, posterStyle } = usePosterHover(desktop)
 
   return (
     <>
@@ -249,11 +232,8 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
         minWidth: 0,
       }}>
         <button
-          ref={cardRef}
           type="button"
           onClick={() => onSelect?.(item.id, item.title)}
-          onMouseEnter={desktop ? onMouseEnter : undefined}
-          onMouseLeave={desktop ? onMouseLeave : undefined}
           style={{
             width: '100%',
             minWidth: 0,
@@ -268,12 +248,8 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
             minHeight: 'unset',
           }}
         >
-          <div style={{
-            position: 'relative',
-            transition: 'transform 130ms ease',
-            transform: hovered ? 'scale(1.1)' : 'scale(1)',
-            transformOrigin: 'center center',
-          }}>
+          {/* 호버 확대는 포스터 위에서만 — 캡션 호버로 커지면 오작동처럼 느껴진다 */}
+          <div ref={anchorRef} {...hoverProps} style={posterStyle}>
             <PosterThumb src={item.posterUrl} alt={item.title} width={posterSize.width} height={posterSize.height} size="lg" shadow={false} />
             {item.distanceLabel && (
               <PosterChip corner="top-right" tone="primary">{item.distanceLabel}</PosterChip>
@@ -348,8 +324,8 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
         )}
       </div>
 
-      {popupPos && desktop && item.movie && (
-        <HoverPopup movie={item.movie} x={popupPos.x} y={popupPos.y} posterWidth={posterSize.width} />
+      {popupPos && item.movie && (
+        <HoverPopup movie={item.movie} x={popupPos.x} y={popupPos.y} posterWidth={popupPos.width} />
       )}
     </>
   )

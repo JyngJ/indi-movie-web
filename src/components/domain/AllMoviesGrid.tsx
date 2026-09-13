@@ -10,6 +10,8 @@ import { trackEvent } from '@/lib/analytics/client'
 import { buildSectionAnalytics } from '@/lib/curation/sectionRuns'
 import { FooterWordmark } from '@/components/domain/FooterWordmark'
 import { PosterThumb } from './PosterThumb'
+import { HoverPopup } from './CurationSectionRow'
+import { usePosterHover } from './usePosterHover'
 
 /** CTA 밴드가 스크롤 목적지로 쓰는 앵커 id — 호출부가 문자열을 재입력하지 않게 내보낸다 */
 export const ALL_MOVIES_GRID_ANCHOR_ID = 'all-movies-grid'
@@ -44,7 +46,7 @@ function sortMovies(
   }
 }
 
-function GridPoster({ src, alt, interactive, onReady }: { src?: string; alt: string; interactive?: boolean; onReady?: () => void }) {
+function GridPoster({ src, alt, onReady }: { src?: string; alt: string; onReady?: () => void }) {
   return (
     <PosterThumb
       fluid
@@ -55,7 +57,6 @@ function GridPoster({ src, alt, interactive, onReady }: { src?: string; alt: str
       shadow={false}
       fade={false}
       onReady={onReady}
-      className={interactive ? 'hover-lift' : undefined}
     />
   )
 }
@@ -67,19 +68,23 @@ function GridPoster({ src, alt, interactive, onReady }: { src?: string; alt: str
 function GridCard({
   movie,
   staggerIndex,
-  interactive,
+  isDesktop,
   onClick,
   children,
 }: {
   movie: Movie
   staggerIndex: number
-  interactive: boolean
+  isDesktop: boolean
   onClick?: () => void
   children: React.ReactNode
 }) {
   const [ready, setReady] = useState(!movie.posterUrl)
+  /* 행·랭킹 포스터와 같은 호버(확대 + 상세 팝업). 예전엔 여기만 hover-lift(1.03)라
+     같은 포스터인데 그리드에서만 다르게 반응했다 */
+  const { anchorRef, hovered, popupPos, hoverProps, posterStyle } = usePosterHover(isDesktop)
 
   return (
+    <>
     <RevealItem
       preset="slide"
       ready={ready}
@@ -95,17 +100,27 @@ function GridCard({
         flexDirection: 'column',
         gap: 8,
         cursor: onClick ? 'pointer' : undefined,
+        /* RevealItem이 transform으로 자체 쌓임 맥락을 만들어, 포스터 안쪽 zIndex로는
+           뒤에 오는 카드 밑으로 깔린다 — 확대분을 카드 단위로 올린다 */
+        position: 'relative',
+        zIndex: hovered ? 2 : undefined,
       }}
       onClick={onClick}
     >
-      <GridPoster
-        src={movie.posterUrl}
-        alt={movie.title}
-        interactive={interactive}
-        onReady={() => setReady(true)}
-      />
+      <div ref={anchorRef} {...hoverProps} style={posterStyle}>
+        <GridPoster
+          src={movie.posterUrl}
+          alt={movie.title}
+          onReady={() => setReady(true)}
+        />
+      </div>
       {children}
     </RevealItem>
+
+    {popupPos && (
+      <HoverPopup movie={movie} x={popupPos.x} y={popupPos.y} posterWidth={popupPos.width} />
+    )}
+    </>
   )
 }
 
@@ -245,7 +260,7 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
               movie={movie}
               /* 한 행 안에서만 계단식 — 아래 행은 스크롤해 들어올 때 각자 재생된다 */
               staggerIndex={i % (isDesktop ? 4 : 3)}
-              interactive={!!onMovieClick}
+              isDesktop={isDesktop}
               onClick={onMovieClick ? () => {
                 trackEvent('curation movie selected', {
                   ...analytics, movie_id: movie.id, movie_title: movie.title,
