@@ -1846,29 +1846,34 @@ export default function MapView() {
   const movieRegionSplit = useMemo(() => {
     if (!movieFilter) return null
     let inRegion = 0
+    let inRegionShowtimes = 0
     const outByRegion = new Map<string, number>()
     for (const theater of theaters) {
-      const matched = (theaterPosterMovies.get(theater.id) ?? []).some((m) => m.matchesFilter)
-      if (!matched) continue
+      const matches = (theaterPosterMovies.get(theater.id) ?? []).filter((m) => m.matchesFilter)
+      if (matches.length === 0) continue
       const region = getRegionFromCity(theater.city ?? '')
       if (!filters.regionId || region === filters.regionId) {
         inRegion += 1
+        for (const m of matches) inRegionShowtimes += m.showtimeCount
       } else {
         outByRegion.set(region, (outByRegion.get(region) ?? 0) + 1)
       }
     }
     let outRegion = 0
     for (const n of outByRegion.values()) outRegion += n
-    return { inRegion, outRegion, regionCount: outByRegion.size }
+    return { inRegion, inRegionShowtimes, outRegion, regionCount: outByRegion.size }
   }, [movieFilter, theaters, theaterPosterMovies, filters.regionId])
 
-  /* 안내 카드에 실제로 띄울 내용. 지역 필터가 없으면(전국) 가릴 게 없으니 아무것도 안 띄운다. */
+  /* 안내 카드에 실제로 띄울 내용. 지역 필터가 없으면(전국) 가릴 게 없으니 아무것도 안 띄운다.
+     상영이 있으면 결과 요약만 띄운다 — 화면에 결과가 멀쩡히 있는데 다른 지역 숫자를
+     들이미는 건 지금 필요한 정보가 아니다. 지역 밖 이야기는 이 지역이 비었을 때만 한다.
+     숫자는 현재 지역 기준 — 지도에 실제로 보이는 것과 같아야 한다. */
   const regionNotice = useMemo(() => {
     if (!movieFilter || !filters.regionId || !movieRegionSplit) return null
-    const { inRegion, outRegion, regionCount } = movieRegionSplit
-    if (outRegion === 0) return null
+    const { inRegion, inRegionShowtimes, outRegion, regionCount } = movieRegionSplit
     const key = `${movieFilter.id}:${filters.regionId}`
     if (inRegion === 0) {
+      if (outRegion === 0) return null
       return {
         key,
         message: `${filters.regionId}에서 ${withJosa(`「${movieFilter.title}」`, '을/를')} 상영하는 극장이 없어요. 다른 ${regionCount}개 지역에서 상영 중이에요`,
@@ -1877,8 +1882,7 @@ export default function MapView() {
     }
     return {
       key,
-      message: `다른 ${regionCount}개 지역 극장 ${outRegion}곳에서도 상영 중이에요`,
-      actionLabel: '전국에서 보기',
+      message: `극장 ${inRegion}곳에서 상영 ${inRegionShowtimes}회를 찾았어요`,
     }
   }, [movieFilter, filters.regionId, movieRegionSplit])
 
