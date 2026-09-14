@@ -13,11 +13,17 @@
  * 실행 (dry-run):  npx tsx --env-file=.env.local scripts/fill-directors.ts
  * 실행 (적용):     npx tsx --env-file=.env.local scripts/fill-directors.ts --apply
  * 재수집 포함:     npx tsx --env-file=.env.local scripts/fill-directors.ts --apply --force
+ * 한 명만:        npx tsx --env-file=.env.local scripts/fill-directors.ts --apply --only=장준환
  */
 import { createClient } from '@supabase/supabase-js'
 
 const apply = process.argv.includes('--apply')
 const force = process.argv.includes('--force')
+/* 특정 감독 한 명만 처리한다. 사용자 추가 요청으로 영화 한 편이 들어오면 그 감독
+ * 프로필만 채우면 되는데, 필터가 없으면 아직 안 받아온 수십 명이 같이 딸려 들어간다.
+ * 동명이인을 잘못 긁는 경우가 있어(배우와 감독이 같은 이름) 한 명씩 확인하며 넣는 게 안전하다. */
+const onlyArg = process.argv.find((a) => a.startsWith('--only='))
+const only = onlyArg ? onlyArg.slice('--only='.length).trim() : ''
 
 const sb = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -47,6 +53,9 @@ function parseOriginalName(extract: string): string | undefined {
   return candidate
 }
 
+/* 동음이의 문서에서 감독 문서로 넘어갈 때 시도하는 괄호 표제어 (많이 쓰이는 순서). */
+const DISAMBIGUATION_SUFFIXES = ['영화 감독', '영화감독', '감독', '영화 연출가']
+
 const FILM_KEYWORDS = [
   '영화 감독', '감독', '영화인', '영화배우', '시나리오', '각본', '다큐멘터리',
   'director', 'filmmaker', 'film', 'cinema',
@@ -67,8 +76,18 @@ async function fetchWikipedia(name: string): Promise<WikiResult> {
       description?: string
     }
 
-    // disambiguation 페이지면 스킵
-    if (json.type === 'disambiguation') return {}
+    /* 동음이의 문서면 감독 문서를 따로 찾는다.
+     * ko.wikipedia는 이름이 겹치면 바른 이름을 동음이의로 내준다 — 예: '장준환'은
+     * 영화감독과 야구선수를 함께 담은 목록이라 요약문을 그대로 쓰면 엉뚱한 사람의
+     * 약력이 들어간다. 괄호 표제어를 순서대로 두드려 감독 문서를 집는다. */
+    if (json.type === 'disambiguation') {
+      for (const suffix of DISAMBIGUATION_SUFFIXES) {
+        const resolved = await fetchWikipedia(`${name} (${suffix})`)
+        if (resolved.bio || resolved.photoUrl) return resolved
+        await new Promise((r) => setTimeout(r, 200))
+      }
+      return {}
+    }
 
     const extract = json.extract ?? ''
     const description = json.description ?? ''
@@ -150,8 +169,16 @@ async function main() {
     console.log(`이미 수집됨: ${skipNames.size}명 (스킵 — --force로 재수집 가능)`)
   }
 
-  const targets = [...allNames].filter(n => !skipNames.has(n))
-  console.log(`수집 대상: ${targets.length}명`)
+  let targets = [...allNames].filter(n => !skipNames.has(n))
+  if (only) {
+    if (!allNames.has(only)) {
+      console.error(`--only=${only}: movies.director에 없는 이름이다. 영화부터 넣어야 한다.`)
+      process.exit(1)
+    }
+    targets = targets.filter(n => n === only)
+    if (targets.length === 0) console.log(`--only=${only}: 이미 수집됨 — --force로 재수집 가능`)
+  }
+  console.log(`수집 대상: ${targets.length}명${only ? ` (--only=${only})` : ''}`)
   console.log(`모드: ${apply ? '실제 적용 (--apply)' : 'dry-run'}`)
   console.log('')
 
@@ -193,11 +220,20 @@ async function main() {
 
       if (!apply) continue
 
+      /* 이번에 못 받아온 값으로 이미 있는 값을 지우지 않는다. --force 재수집에서
+       * 썸네일 없는 문서를 만나면 예전에 다른 경로(wikidata·naver·KMDB)로 받아둔
+       * 사진이 null로 덮여 사라진다. 빈 값은 비워두는 게 아니라 두고 간다. */
+      const { data: prev } = await sb
+        .from('directors')
+        .select('photo_url, bio, original_name')
+        .eq('name', name)
+        .maybeSingle()
+
       const { error: upsertErr } = await sb.from('directors').upsert({
         name,
-        original_name: wiki.originalName ?? null,
-        photo_url: photoUrl ?? null,
-        bio: bio ?? null,
+        original_name: wiki.originalName ?? prev?.original_name ?? null,
+        photo_url: photoUrl ?? prev?.photo_url ?? null,
+        bio: bio ?? prev?.bio ?? null,
         source,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'name' })
