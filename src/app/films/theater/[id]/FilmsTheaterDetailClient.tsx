@@ -16,7 +16,7 @@ import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWi
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { shareAndTrack } from '@/lib/analytics/shareTracking'
 import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/components/domain/booking/BookingActions'
-import { Skeleton, Button, Icon, EmptyState } from '@/components/primitives'
+import { Skeleton, ShowtimeCellSkeleton, Button, Icon, EmptyState } from '@/components/primitives'
 import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
 import { ShowtimeCell } from '@/components/domain/ShowtimeCell'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
@@ -130,7 +130,7 @@ function MovieShowtimeCard({
 
   return (
     <div style={{
-      borderRadius: 16, border: '1px solid var(--color-border)',
+      borderRadius: 'var(--radius-popover)', border: '1px solid var(--color-border)',
       backgroundColor: 'var(--color-surface-card)',
       overflow: 'hidden',
       marginBottom: 12,
@@ -225,16 +225,19 @@ function MovieShowtimeCardSkeleton({ isDesktop }: { isDesktop: boolean }) {
       marginBottom: 12,
     }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, padding: '16px' }}>
-        <Skeleton width={posterW} height={posterH} rounded="md" />
+        <Skeleton width={posterW} height={posterH} style={{ borderRadius: 8 }} />
         <div style={{ flex: 1, minWidth: 0, paddingTop: 4, display: 'flex', flexDirection: 'column', gap: 8 }}>
           <Skeleton width="70%" height={18} />
           <Skeleton width="45%" height={13} />
           <Skeleton width={90} height={18} rounded="full" />
         </div>
       </div>
-      <div style={{ padding: '0 16px 16px', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-        <Skeleton width={110} height={60} rounded="md" />
-        <Skeleton width={110} height={60} rounded="md" />
+      {/* 실제 카드와 같은 3열 그리드 — 예전에는 flex-wrap에 110×60 두 장이라
+          열 수도 높이도 실제와 달랐다 */}
+      <div style={{ padding: '0 16px 16px', display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
+        <ShowtimeCellSkeleton />
+        <ShowtimeCellSkeleton />
+        <ShowtimeCellSkeleton />
       </div>
     </div>
   )
