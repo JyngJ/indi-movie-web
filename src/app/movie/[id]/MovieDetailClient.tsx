@@ -79,14 +79,16 @@ function NavBar({
   )
 }
 
+/** 데스크톱 본문 컬럼 폭 — /films/movie 상세와 동일 */
+const DETAIL_CONTENT_WIDTH = 1000
+
 /* ── HeroSection ── */
 function HeroSection({ movie, titleRef, desktop = false }: { movie: MovieDetail; titleRef: React.Ref<HTMLHeadingElement>; desktop?: boolean }) {
   const posterW = desktop ? 220 : 96
   const posterH = desktop ? 330 : 144
   return (
     <div style={{
-      maxWidth: desktop ? 1120 : undefined,
-      margin: desktop ? '28px auto 0' : undefined,
+      marginTop: desktop ? 28 : undefined,
       border: desktop ? '1px solid var(--color-border)' : undefined,
       borderRadius: desktop ? 20 : 0,
       overflow: desktop ? 'hidden' : undefined,
@@ -118,7 +120,7 @@ function HeroSection({ movie, titleRef, desktop = false }: { movie: MovieDetail;
       </div>
 
       {/* 텍스트 */}
-      <div style={{ flex: 1, minWidth: 0, paddingTop: desktop ? 8 : 4, maxWidth: desktop ? 720 : undefined }}>
+      <div style={{ flex: 1, minWidth: 0, paddingTop: desktop ? 8 : 4 }}>
         <h1
           ref={titleRef}
           className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)', wordBreak: 'keep-all' }}
@@ -166,10 +168,11 @@ function InfoTab({ movie, onDirectorClick, desktop = false }: { movie: MovieDeta
     fontSize: 'var(--text-badge)', fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase',
     color: 'var(--color-text-caption)', marginBottom: 12,
   }
-  const divider: React.CSSProperties = { borderTop: '1px solid var(--color-border)', margin: '0 var(--gutter)' }
+  const divider: React.CSSProperties = { borderTop: '1px solid var(--color-border)', margin: desktop ? 0 : '0 var(--gutter)' }
+  const sectionPadding = desktop ? '20px 0' : '20px var(--gutter)'
 
   return (
-    <div style={{ paddingBottom: 52, maxWidth: desktop ? 860 : undefined, margin: desktop ? '0 auto' : undefined }}>
+    <div style={{ paddingBottom: 52 }}>
       {movie.synopsis && (
         <div style={{ padding: desktop ? '34px 0 28px' : '24px var(--gutter)' }}>
           <p style={sectionLabel}>시놉시스</p>
@@ -180,7 +183,7 @@ function InfoTab({ movie, onDirectorClick, desktop = false }: { movie: MovieDeta
       {movie.director.length > 0 && (
         <>
           <div style={divider} />
-          <div style={{ padding: '20px var(--gutter)' }}>
+          <div style={{ padding: sectionPadding }}>
             <p style={sectionLabel}>감독</p>
             {movie.director.map((name) => (
               <button
@@ -218,7 +221,7 @@ function InfoTab({ movie, onDirectorClick, desktop = false }: { movie: MovieDeta
       )}
 
       <div style={divider} />
-      <div style={{ padding: '20px var(--gutter)' }}>
+      <div style={{ padding: sectionPadding }}>
         <p style={sectionLabel}>상세 정보</p>
         <MovieInfoTable movie={movie} />
       </div>
@@ -444,7 +447,7 @@ function TheatersTab({ movieId, onMapClick, onGoToTheater, desktop = false, init
   )
 
   return (
-    <div style={{ padding: desktop ? '26px 0 64px' : '20px 20px 52px', maxWidth: desktop ? 1040 : undefined, margin: desktop ? '0 auto' : undefined }}>
+    <div style={{ padding: desktop ? '26px 0 64px' : '20px 20px 52px' }}>
       {/* 지도에서 보기 버튼 */}
       <MapCtaButton
         onClick={() => {
@@ -624,6 +627,10 @@ export function MovieDetailClient({ movieId, theaterId, initialData, initialShow
         <DetailTopBar crumbLabel="영화" crumbHref="/films" title={movie.title} isDesktop={isDesktop} onBack={handleBack} />
       </div>
 
+      {/* 본문 컬럼 — 상세 전체가 같은 폭·같은 좌우선을 쓴다 (/films/movie와 동일한 1000 래퍼).
+          예전엔 히어로 1120 · 본문 860 · 극장 목록 1040으로 섹션마다 폭이 달라
+          데스크톱에서 카드 가장자리가 서로 어긋나 보였다. */}
+      <div style={{ maxWidth: isDesktop ? DETAIL_CONTENT_WIDTH : undefined, margin: isDesktop ? '0 auto' : undefined }}>
       <HeroSection movie={movie} titleRef={titleRef} desktop={isDesktop} />
       {/* 액션 행 — [♡ 관심 영화 등록][공유], /films/movie와 동일 (2026-08-24 통일) */}
       <FavoriteActionRow
@@ -655,10 +662,9 @@ export function MovieDetailClient({ movieId, theaterId, initialData, initialShow
       <InfoTab movie={movie} onDirectorClick={handleDirectorClick} desktop={isDesktop} />
 
       {/* 상영 영화관 — 탭 대신 스크롤 섹션 (2026-08-24) */}
-      <div id="theaters-section" style={{ borderTop: '8px solid var(--color-surface-raised)' }}>
+      <div id="theaters-section" style={{ borderTop: isDesktop ? '1px solid var(--color-border)' : '8px solid var(--color-surface-raised)' }}>
         <p style={{
           margin: 0, padding: isDesktop ? '28px 0 0' : '24px var(--gutter) 0',
-          maxWidth: isDesktop ? 860 : undefined, marginLeft: isDesktop ? 'auto' : undefined, marginRight: isDesktop ? 'auto' : undefined,
           fontSize: 'var(--text-badge)', fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase',
           color: 'var(--color-text-caption)',
         }}>상영 영화관</p>
@@ -672,6 +678,7 @@ export function MovieDetailClient({ movieId, theaterId, initialData, initialShow
       </div>
 
       {initialShowtimes && <SeoShowtimesSection movie={movie} entries={initialShowtimes} />}
+      </div>
 
       <div style={{ height: 'env(safe-area-inset-bottom)' }} />
     </div>
