@@ -9,7 +9,7 @@ import { locationAdapter } from '@/lib/adapters/location'
 import { calculateAndFormatDistance, calculateDistanceKm } from '@/lib/map/distanceUtils'
 import { getRegionFromAddress } from '@/lib/regions'
 import { formatDateLabel } from '@/lib/date'
-import { Toast, Button, Divider, Tabs } from '@/components/primitives'
+import { Toast, Button, Divider, Tabs, TheaterCardSkeleton } from '@/components/primitives'
 import { MovieInfoTable } from '@/components/domain/movieDetail/MovieInfoTable'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 import { PanelShell } from './PanelShell'
@@ -244,12 +244,12 @@ function MovieTheatersTab({
   }, [sortedTheaters, regionId])
 
   const renderTheaterCard = (entry: typeof sortedTheaters[0]) => (
-    <div key={entry.theaterId} style={{ borderRadius: 12, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', overflow: 'hidden' }}>
+    <div key={entry.theaterId} style={{ borderRadius: 'var(--radius-control)', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', overflow: 'hidden' }}>
       {/* 극장 헤더 */}
       <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'flex-start' }}>
         {/* 이름 칸 최소 폭 — 자동번역으로 버튼 문구가 길어져도 이름이 세로로 눌리지 않게 (MovieDetailClient와 같은 이유) */}
         <div style={{ flex: 1, minWidth: 120 }}>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)' }}>{entry.theaterName}</div>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{entry.theaterName}</div>
           <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 4, color: 'var(--color-text-sub)', fontSize: 'var(--text-badge)' }}>
             <Icon name="map-pin" size={11} />{entry.theaterAddress}
           </div>
@@ -342,22 +342,30 @@ function MovieTheatersTab({
         지도에서 필터로 보기
       </MapCtaButton>
 
-      <p style={{ margin: '8px 0 12px', fontSize: 12, color: 'var(--color-text-caption)', lineHeight: 1.5 }}>
-        {regionId && (
-          <><b style={{ color: 'var(--color-primary-base)' }}>{regionId}</b>{' 지역 '}
-          <b style={{ color: 'var(--color-primary-base)' }}>{inRegion.length}</b>{'개 영화관 상영중, '}</>
-        )}
-        {'전국 '}<b style={{ color: 'var(--color-primary-base)' }}>{theaters.length}</b>{'개 영화관 상영중'}
-      </p>
+      {/* 로딩 중에는 숨긴다 — theaters가 빈 배열인 동안 "전국 0개 영화관 상영중"이라는
+          틀린 사실을 단정하게 된다. 모바일 쪽(MovieDetailClient)은 이미 같은 가드를 쓴다. */}
+      {!isLoading && (
+        <p style={{ margin: '8px 0 12px', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', lineHeight: 1.5 }}>
+          {regionId && (
+            <><b style={{ color: 'var(--color-primary-base)' }}>{regionId}</b>{' 지역 '}
+            <b style={{ color: 'var(--color-primary-base)' }}>{inRegion.length}</b>{'개 영화관 상영중, '}</>
+          )}
+          {'전국 '}<b style={{ color: 'var(--color-primary-base)' }}>{theaters.length}</b>{'개 영화관 상영중'}
+        </p>
+      )}
 
       {isLoading ? (
-        <div style={{ height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: 'var(--color-text-caption)' }}>불러오는 중…</div>
+        /* 이 자리에 들어올 건 극장 카드 목록이다 — 한 줄짜리 문구를 띄우면 카드가
+           들어오는 순간 화면이 튄다. 같은 목록을 그리는 극장 상세도 스켈레톤을 쓴다. */
+        <div role="status" aria-label="상영 극장 불러오는 중" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {[0, 1, 2].map((i) => <TheaterCardSkeleton key={i} />)}
+        </div>
       ) : theaters.length === 0 ? (
-        <div style={{ textAlign: 'center', paddingTop: 32, fontSize: 13, color: 'var(--color-text-caption)' }}>상영 중인 극장이 없어요</div>
+        <div style={{ textAlign: 'center', paddingTop: 32, fontSize: 'var(--text-body)', color: 'var(--color-text-caption)' }}>상영 중인 극장이 없어요</div>
       ) : regionId ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {inRegion.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '16px 0', fontSize: 13, color: 'var(--color-text-caption)' }}>
+            <div style={{ textAlign: 'center', padding: '16px 0', fontSize: 'var(--text-body)', color: 'var(--color-text-caption)' }}>
               {regionId} 지역 상영 정보가 없어요
             </div>
           ) : (
