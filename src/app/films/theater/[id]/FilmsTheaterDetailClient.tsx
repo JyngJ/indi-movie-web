@@ -523,7 +523,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
                 showtimes={showtimes}
                 isDesktop={isDesktop}
                 isTodaySelected={selectedDate === dates[0]}
-                onMovieClick={(id) => router.push(`/films/movie/${id}`)}
+                onMovieClick={(id) => router.push(`/movie/${id}`)}
                 onChipClick={(st, movieTitle) => {
                   trackEvent('showtime selected', {
                     theater_id: theater.id,

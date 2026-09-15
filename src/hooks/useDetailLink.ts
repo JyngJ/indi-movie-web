@@ -13,7 +13,7 @@ export type DetailTarget =
   | { kind: 'director'; name: string }
 
 export function detailHref(t: DetailTarget): string {
-  if (t.kind === 'movie') return `/films/movie/${encodeURIComponent(t.id)}`
+  if (t.kind === 'movie') return `/movie/${encodeURIComponent(t.id)}`
   if (t.kind === 'theater') return `/films/theater/${encodeURIComponent(t.id)}`
   return `/films/director/${encodeURIComponent(t.name)}`
 }

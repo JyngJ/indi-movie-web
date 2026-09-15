@@ -64,7 +64,7 @@ function buildSuggestions(iv: string, movies: Movie[], theaters: Theater[], fest
   for (const m of movies) {
     if (koMatch(iv, m.title) && !seen.has(m.title)) {
       seen.add(m.title)
-      out.push({ type: 'movie', label: m.title, navigateTo: `/films/movie/${m.id}` })
+      out.push({ type: 'movie', label: m.title, navigateTo: `/movie/${m.id}` })
       if (out.length >= 4) break
     }
   }
