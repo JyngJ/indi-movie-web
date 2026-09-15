@@ -50,7 +50,7 @@ function FilmographyCell({ movie, isActive, onClick, isDesktop }: { movie: Movie
   return (
     <button
       onClick={onClick}
-      style={{ display: 'flex', flexDirection: 'column', gap: 8, background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', minHeight: 'auto' }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 8, background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', minHeight: 'auto', minWidth: 0 }}
     >
       <div className="hover-lift" style={{ width: '100%', aspectRatio: '2/3', overflow: 'hidden', position: 'relative', background: 'var(--color-neutral-800)' }}>
         {movie.posterUrl && (
@@ -228,7 +228,13 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
           {directorMovies.length === 0 ? (
             <EmptyState message="작품 정보가 없어요" paddingY={48} />
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)', gap: isDesktop ? 20 : 12, padding: isDesktop ? '16px 0 0' : '12px var(--gutter) 0' }}>
+            /* minmax(0, …)이 필요하다 — 맨 1fr은 minmax(auto, 1fr)이라 트랙의 최소가
+               셀 콘텐츠의 min-content가 된다. 아래 제목은 whiteSpace: nowrap이라
+               min-content가 제목 전체 너비여서, 긴 제목 하나가 트랙을 밀어내고
+               나머지 칸이 찌그러진다(권혁만 감독 페이지에서 첫 칸 454px, 포스터가
+               정상의 두 배로 나왔다). 0을 최소로 줘야 칸이 균등해지고 제목이
+               말줄임으로 접힌다. */
+            <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'repeat(4, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))', gap: isDesktop ? 20 : 12, padding: isDesktop ? '16px 0 0' : '12px var(--gutter) 0' }}>
               {visibleMovies.map((m) => (
                 <FilmographyCell
                   key={m.id}
