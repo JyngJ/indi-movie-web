@@ -1069,8 +1069,11 @@ export default function MapView() {
   const isDesktopLayout = useIsDesktopLayout()
   const { isFavorite, favorites, signedIn: favoritesSignedIn } = useFavorites()
   const { data: theaters = EMPTY_THEATERS, isLoading: theatersLoading } = useTheaters()
-  const { data: stations = EMPTY_STATIONS } = useStations()
-  const { data: movies = EMPTY_MOVIES } = useMovies()
+  const { data: stations = EMPTY_STATIONS, isLoading: stationsLoading } = useStations()
+  const { data: movies = EMPTY_MOVIES, isLoading: moviesLoading } = useMovies()
+  /* 검색은 위 목록을 클라이언트에서 거르는 구조라, 아직 안 받아왔으면 결과가 0건이다.
+     그 0건을 "없음"과 구분하지 못하면 있는 영화를 없다고 말하게 된다. */
+  const searchDataLoading = theatersLoading || stationsLoading || moviesLoading
   const { data: activeMovieIds = EMPTY_ACTIVE_MOVIE_IDS } = useActiveMovieIds()
   const [filters, setFilters] = useState<FilterState>(() => ({
     dateId: 'this-week',
@@ -2648,6 +2651,9 @@ export default function MapView() {
   useEffect(() => {
     const query = searchQuery.trim()
     if (!searchOpen || query.length === 0) return
+    /* 아직 받아오는 중이면 0건이 "콘텐츠 갭"이 아니라 그냥 로딩이다 — 이때 쏘면
+       search no results 집계가 오탐으로 오염된다(이 지표로 보강할 영화를 고른다). */
+    if (searchDataLoading) return
 
     const signature = JSON.stringify({
       query,
@@ -2680,7 +2686,7 @@ export default function MapView() {
     }, 700)
 
     return () => clearTimeout(timer)
-  }, [areaResults.length, movieResults.length, relatedDirectorResults.length, searchOpen, searchQuery, stationResults.length, theaterResults.length])
+  }, [areaResults.length, movieResults.length, relatedDirectorResults.length, searchDataLoading, searchOpen, searchQuery, stationResults.length, theaterResults.length])
 
   const renderFestivalSearchSection = () => {
     if (festivalResults.length === 0) return null
@@ -3630,6 +3636,7 @@ export default function MapView() {
           inputRef={searchInputRef}
           recentSearches={recentSearches}
           hasResults={hasSearchResults}
+          loading={searchDataLoading}
           onQueryChange={setSearchQuery}
           onClose={closeSearch}
           onRecentSelect={setSearchQuery}
