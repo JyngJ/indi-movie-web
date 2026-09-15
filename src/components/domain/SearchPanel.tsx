@@ -34,6 +34,8 @@ interface SearchPanelProps {
   inputRef: RefObject<HTMLInputElement | null>
   recentSearches: string[]
   hasResults: boolean
+  /** 검색 대상 데이터를 아직 받아오는 중 — 0건을 "없음"으로 단정하면 안 된다 */
+  loading?: boolean
   onQueryChange: (value: string) => void
   onClose: () => void
   onRecentSelect: (query: string) => void
@@ -52,6 +54,7 @@ export function SearchPanel({
   inputRef,
   recentSearches,
   hasResults,
+  loading = false,
   onQueryChange,
   onClose,
   onRecentSelect,
@@ -157,6 +160,17 @@ export function SearchPanel({
         ) : hasResults ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
             {children}
+          </div>
+        ) : loading ? (
+          /* 아직 받아오는 중이면 0건은 "없음"이 아니다. 검색은 이미 받아온 영화·극장을
+             클라이언트에서 거르는 구조라, 데이터가 안 왔을 때도 결과가 0건이 된다.
+             여기서 무결과 화면을 띄우면 있는 영화를 없다고 말하고 추가 요청까지 권하게 된다. */
+          <div
+            role="status"
+            aria-live="polite"
+            style={{ textAlign: 'center', marginTop: 48, fontSize: 'var(--text-body)', color: 'var(--color-text-caption)' }}
+          >
+            불러오는 중…
           </div>
         ) : (
           <div style={{ textAlign: 'center', marginTop: 48 }}>
