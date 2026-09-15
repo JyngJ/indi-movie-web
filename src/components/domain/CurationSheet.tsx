@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { usePendingNavItem } from '@/hooks/usePendingNavItem'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
-import { Button, Icon, Divider, EmptyState } from '@/components/primitives'
+import { Button, Icon, Divider, EmptyState, Skeleton, MovieCardSkeleton } from '@/components/primitives'
 import { PosterChip } from '@/components/primitives'
 import { PosterThumb } from './PosterThumb'
 import { HoverPopup } from './CurationSectionRow'
@@ -80,6 +80,8 @@ interface CurationSheetProps {
   favoriteItems?: CurationItem[]
   rankingItems?: CurationItem[]
   onShowAllFavorites?: () => void
+  /** 큐레이션 스냅샷 로딩 중 — CurationSections로 그대로 내린다 */
+  loading?: boolean
 }
 
 /** 모바일: 가로 스크롤 행 / 데스크톱(도크): 한 줄 3개 고정 그리드 — 도크 폭 440(거터 16×2, gap 12×2) 기준 칸당 128px = 피그마 PosterItem */
@@ -479,6 +481,8 @@ interface CurationSectionsProps {
   rankingItems?: CurationItem[]
   /** 관심 섹션 '모두보기' — 지도 관심 필터를 켠다 */
   onShowAllFavorites?: () => void
+  /** 큐레이션 스냅샷을 아직 받아오는 중 — 빈 섹션을 "없음"으로 그리면 안 된다 */
+  loading?: boolean
 }
 
 const MAX_CURATION_SECTIONS = 3
@@ -524,6 +528,7 @@ export function CurationSections({
   favoriteItems,
   rankingItems,
   onShowAllFavorites,
+  loading = false,
 }: CurationSectionsProps) {
   const lastWeekItems: CurationItem[] = lastWeekFilms.map((film) => ({
     id: film.movie.id,
@@ -589,6 +594,11 @@ export function CurationSections({
     .filter((c) => c.items.length > 0)
     .slice(0, useNewComposition ? 2 : MAX_CURATION_SECTIONS)
 
+  /* 섹션은 items.length > 0인 것만 남기므로, 받아오는 중에는 하나도 안 남아 시트가
+     통째로 빈다. 그러면 "아직 안 왔다"가 "볼 게 없다"로 읽힌다 — 상영작 탭이
+     같은 상황을 스켈레톤으로 처리하는 것과 맞춘다. */
+  const showSkeleton = loading && sections.length === 0
+
   const [expandedSections, setExpandedSections] = useState<Record<string, SectionExpand>>({})
   const setExpand = (key: string, state: SectionExpand) =>
     setExpandedSections((prev) => ({ ...prev, [key]: state }))
@@ -597,6 +607,29 @@ export function CurationSections({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: SECTION_GAP }}>
       <Divider />
+      {showSkeleton && (
+        <div role="status" aria-label="큐레이션 불러오는 중" style={{ display: 'flex', flexDirection: 'column', gap: SECTION_GAP }}>
+          {[0, 1].map((row) => (
+            <div key={row} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' }}>
+              <Skeleton width={140} height={20} style={{ marginLeft: 'var(--gutter)' }} />
+              <div style={{
+                display: desktop ? 'grid' : 'flex',
+                gridTemplateColumns: desktop ? 'repeat(3, minmax(0, 1fr))' : undefined,
+                gap: 'var(--spacing-3)',
+                paddingLeft: 'var(--gutter)',
+                paddingRight: 'var(--gutter)',
+                overflow: 'hidden',
+              }}>
+                {[0, 1, 2].map((i) => (
+                  <div key={i} style={{ width: desktop ? undefined : POSTER_SIZE.width, flexShrink: 0 }}>
+                    <MovieCardSkeleton />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
       {sections.map((section) => {
         const handleSelect = section.key === 'todayShow' || section.key === 'soloTheater'
           ? (id: string, title: string) => {
@@ -709,6 +742,7 @@ export function CurationSheet({
   favoriteItems,
   rankingItems,
   onShowAllFavorites,
+  loading = false,
 }: CurationSheetProps) {
   const containerRef  = useRef<HTMLDivElement>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
@@ -984,6 +1018,7 @@ export function CurationSheet({
           favoriteItems={favoriteItems}
           rankingItems={rankingItems}
           onShowAllFavorites={onShowAllFavorites}
+          loading={loading}
         />
       </div>
     </div>
