@@ -201,7 +201,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
                   key={m.id}
                   movie={m}
                   isDesktop={isDesktop}
-                  onClick={() => router.push(`/films/movie/${m.id}`)}
+                  onClick={() => router.push(`/movie/${m.id}`)}
                 />
               ))}
             </div>
@@ -240,7 +240,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
                   key={m.id}
                   movie={m}
                   isActive={activeIdSet.has(m.id)}
-                  onClick={() => router.push(`/films/movie/${m.id}`)}
+                  onClick={() => router.push(`/movie/${m.id}`)}
                   isDesktop={isDesktop}
                 />
               ))}

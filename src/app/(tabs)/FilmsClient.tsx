@@ -236,7 +236,7 @@ export default function FilmsPage() {
     if (sessionStorage.getItem('yh_region_tip') === 'closed') setRegionHintDismissed(true)
   }, [])
 
-  const handleMovieClick = (id: string) => { navStart(); router.push(`/films/movie/${id}`) }
+  const handleMovieClick = (id: string) => { navStart(); router.push(`/movie/${id}`) }
 
   const { state: locState, coords: locCoords, modalSuppressed: locModalSuppressed, request: requestLoc, dismiss: dismissLoc } = useLocationPermission()
   // 접속 위치 지역 — 드롭다운 배지·자동 스크롤 + (미설정 사용자에 한해) 최초 1회 자동 지정

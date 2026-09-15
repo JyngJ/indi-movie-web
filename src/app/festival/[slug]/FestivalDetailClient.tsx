@@ -249,7 +249,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
                 {festival.movies.map((link) => (
                   <div
                     key={link.id}
-                    onClick={link.movie ? () => router.push(`/films/movie/${link.movie!.id}`) : undefined}
+                    onClick={link.movie ? () => router.push(`/movie/${link.movie!.id}`) : undefined}
                     style={{ display: 'flex', flexDirection: 'column', gap: 8, width: 140, flexShrink: 0, cursor: link.movie ? 'pointer' : 'default' }}
                   >
                     <LineupPoster src={link.movie?.posterUrl} alt={normalizeTitle(link.movie?.title ?? link.movieTitleSnapshot)} />
@@ -271,7 +271,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
               {(lineupExpanded ? festival.movies : festival.movies.slice(0, LINEUP_COLLAPSED_COUNT)).map((link) => (
                 <div
                   key={link.id}
-                  onClick={link.movie ? () => router.push(`/films/movie/${link.movie!.id}`) : undefined}
+                  onClick={link.movie ? () => router.push(`/movie/${link.movie!.id}`) : undefined}
                   style={{ display: 'flex', flexDirection: 'column', gap: 8, cursor: link.movie ? 'pointer' : 'default' }}
                 >
                   <LineupPoster src={link.movie?.posterUrl} alt={normalizeTitle(link.movie?.title ?? link.movieTitleSnapshot)} />
