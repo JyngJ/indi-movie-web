@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
-import { Chip, Avatar, IconButton, Button, Icon, Divider, EmptyState } from '@/components/primitives'
+import { Chip, Avatar, IconButton, Button, Icon, Divider, EmptyState, Skeleton, ShowtimeCellSkeleton } from '@/components/primitives'
 import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
 import { addDaysIso, toKstIsoDate } from '@/lib/date'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
@@ -417,6 +417,24 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
     return cols
   }
 
+  /* 로딩 자리에 들어올 카드와 같은 문법 — 극장 헤더 + 눌린 트레이 위 3열 회차.
+     예전에는 "불러오는 중…" 한 줄이라 카드가 들어오는 순간 화면이 튀었다. */
+  function TheaterShowtimeCardSkeleton() {
+    return (
+      <div style={{ borderRadius: 'var(--radius-popover)', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', overflow: 'hidden', marginBottom: isDesktop ? 16 : 12 }}>
+        <div style={{ padding: '16px', borderBottom: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <Skeleton width="55%" height={18} />
+          <Skeleton width="70%" height={14} />
+        </div>
+        <div style={{ padding: '16px', display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, backgroundColor: 'var(--color-neutral-100)' }}>
+          <ShowtimeCellSkeleton />
+          <ShowtimeCellSkeleton />
+          <ShowtimeCellSkeleton />
+        </div>
+      </div>
+    )
+  }
+
   function renderColumns(entries: typeof dayTheaters) {
     if (!isDesktop) return entries.map(renderTheaterCard)
     const [a, b] = splitTwoColumns(entries)
@@ -430,7 +448,7 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
 
   function renderTheaterCard(entry: (typeof dayTheaters)[number]) {
     return (
-      <div key={entry.theaterId} style={{ borderRadius: 16, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', overflow: 'hidden', marginBottom: isDesktop ? 16 : 12 }}>
+      <div key={entry.theaterId} style={{ borderRadius: 'var(--radius-popover)', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', overflow: 'hidden', marginBottom: isDesktop ? 16 : 12 }}>
         <button
           onClick={() => router.push(`/films/theater/${entry.theaterId}`)}
           style={{ width: '100%', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, padding: '16px 16px 12px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', minHeight: 'auto', borderBottom: '1px solid var(--color-border)' }}
@@ -535,7 +553,9 @@ export function FilmsMovieDetailClient({ movie }: { movie: MovieDetail }) {
       {/* PC는 극장 카드 2칼럼 masonry(columns) — 그리드로 하면 카드 높이 차만큼 빈 공간이 남는다 (2026-08-24) */}
       <div style={{ padding: isDesktop ? '16px 0 64px' : `12px 16px ${selectedShowtimeData ? 148 : 52}px` }}>
         {isLoading ? (
-          <div style={{ height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-caption)', fontSize: 13 }}>불러오는 중…</div>
+          <div role="status" aria-label="상영 극장 불러오는 중">
+            {[0, 1].map((i) => <TheaterShowtimeCardSkeleton key={i} />)}
+          </div>
         ) : dayTheaters.length === 0 ? (
           <EmptyState message="이 날 상영 정보가 없어요" paddingY={40} />
         ) : regionId ? (

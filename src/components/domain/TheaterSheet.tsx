@@ -20,7 +20,7 @@ import { Toast } from '@/components/primitives/Toast'
 import { useTheaterShowtimes, useTheaterAllMovies } from '@/lib/supabase/queries'
 import type { TheaterMovieEntry } from '@/lib/supabase/queries'
 import type { Theater, Showtime } from '@/types/api'
-import { Skeleton } from '@/components/primitives/Skeleton'
+import { ShowtimeCellSkeleton } from '@/components/primitives/Skeleton'
 import { GENRES, normalizeGenre } from '@/lib/genres'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { withFlag } from '@/lib/nations'
@@ -1716,7 +1716,7 @@ export function TheaterSheet({
             {showtimesLoading ? (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(var(--comp-showtime-min-width), 1fr))', gap: 12 }}>
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <Skeleton key={i} height={60} style={{ borderRadius: 8 }} />
+                  <ShowtimeCellSkeleton key={i} />
                 ))}
               </div>
             ) : filteredShowtimes.length === 0 ? (

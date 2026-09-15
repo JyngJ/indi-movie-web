@@ -68,3 +68,16 @@ export function TheaterCardSkeleton() {
     </div>
   )
 }
+
+/* 상영 회차 셀용 프리셋 — 실제 ShowtimeCell과 규격을 맞춘다.
+   높이는 실측값(102~105px)이다: 내부 여백 16×2 + 시간(16) + 종료시간(12+4) + 잔여석(12+4) + 보더 2.
+   예전에는 호출부마다 height 60 / borderRadius 8 같은 리터럴을 따로 적어서 실제 셀보다
+   40px 넘게 짧았고, 로딩이 끝나는 순간 시간표가 통째로 아래로 밀렸다. */
+export function ShowtimeCellSkeleton() {
+  return (
+    <Skeleton
+      height={102}
+      style={{ borderRadius: 'var(--comp-showtime-radius)' }}
+    />
+  )
+}
