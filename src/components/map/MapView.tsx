@@ -3586,6 +3586,7 @@ export default function MapView() {
       {!isDesktopLayout && !searchOpen && (
         // 극장 시트가 위에 뜬 동안은 마운트는 유지 — hidden prop으로 슬라이드 애니메이션 제어
         <CurationSheet
+          loading={curationData.isLoading}
           snap={curationSnap}
           onSnapChange={handleCurationSnapChange}
           hidden={!!selectedTheater}
@@ -3672,6 +3673,7 @@ export default function MapView() {
             </div>
             <div className="themed-scrollbar" style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingBottom: 24 }}>
               <CurationSections
+                loading={curationData.isLoading}
                 lastWeekFilms={curationData.lastWeekFilms}
                 soloTheaterFilms={curationData.soloTheaterFilms}
                 soloRegionLabel={filters.regionId ?? undefined}

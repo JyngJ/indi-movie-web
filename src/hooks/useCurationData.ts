@@ -26,6 +26,8 @@ interface CurationData {
   soloTheaterFilms: SoloTheaterFilm[]
   todayShowFilms: TodayShowFilm[]
   recentlyViewed: RecentlyViewedEntry[]
+  /** 스냅샷·오늘 회차를 아직 받아오는 중 — 빈 섹션을 "없음"으로 그리면 안 된다 */
+  isLoading: boolean
 }
 
 const EMPTY_CACHE: Pick<CurationData, 'returningFilms' | 'newIndieFilms' | 'lastWeekFilms'> & { soloTheaterFilmsByRegion: SoloTheaterFilmsByRegion } = {
@@ -56,6 +58,11 @@ export function useCurationData(open: boolean, regionId: string | null, refreshK
   const [cacheData, setCacheData] = useState(EMPTY_CACHE)
   const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewedEntry[]>([])
   const [todayShowtimes, setTodayShowtimes] = useState<RawTodayShowtime[]>([])
+  /* 섹션이 비었을 때 "아직 안 왔다"와 "진짜 없다"를 구분하려면 상태가 필요하다.
+     실패해도 로딩은 끝난 것으로 본다 — 무한 스켈레톤보다 빈 상태가 낫다.
+     최근 찾아본은 쿠키라 즉시 읽히므로 세지 않는다. */
+  const [cacheLoaded, setCacheLoaded] = useState(false)
+  const [showtimesLoaded, setShowtimesLoaded] = useState(false)
 
   // curation_cache 스냅샷 — open 첫 진입 시 1회
   // /api/public/curation-cache 서버 라우트 경유 — CDN 캐시로 Supabase egress 절감
@@ -65,14 +72,16 @@ export function useCurationData(open: boolean, regionId: string | null, refreshK
     fetch('/api/public/curation-cache')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (cancelled || !data) return
+        if (cancelled) return
+        setCacheLoaded(true)
+        if (!data) return
         setCacheData({
           returningFilms: (data.returningFilms as ReturningFilm[]) ?? [],
           newIndieFilms: (data.newIndieFilms as NewIndieFilm[]) ?? [],
           lastWeekFilms: (data.lastWeekFilms as LastWeekFilm[]) ?? [],
           soloTheaterFilmsByRegion: (data.soloTheaterFilmsByRegion as SoloTheaterFilmsByRegion) ?? {},
         })
-      }, () => {})
+      }, () => { if (!cancelled) setCacheLoaded(true) })
     return () => { cancelled = true }
   }, [open])
 
@@ -86,6 +95,7 @@ export function useCurationData(open: boolean, regionId: string | null, refreshK
       .then((res) => (res.ok ? res.json() : []))
       .then((rows: Array<{ movieId: string; showTime: string; theaterId: string; theater: RawTodayShowtime['theater']; movie: Movie | null }>) => {
         if (cancelled) return
+        setShowtimesLoaded(true)
         setTodayShowtimes(rows.map((r) => ({
           movieId: r.movieId,
           showTime: r.showTime,
@@ -93,7 +103,7 @@ export function useCurationData(open: boolean, regionId: string | null, refreshK
           theater: r.theater,
           movie: r.movie,
         })))
-      }, () => {})
+      }, () => { if (!cancelled) setShowtimesLoaded(true) })
     return () => { cancelled = true }
   }, [open])
 
@@ -182,5 +192,6 @@ export function useCurationData(open: boolean, regionId: string | null, refreshK
     soloTheaterFilms,
     todayShowFilms,
     recentlyViewed,
+    isLoading: open && !(cacheLoaded && showtimesLoaded),
   }
 }
