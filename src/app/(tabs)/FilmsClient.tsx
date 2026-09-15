@@ -16,6 +16,7 @@ import { LocationPermissionModal } from '@/components/domain/LocationPermissionM
 import { PersonalizedSection } from '@/components/domain/PersonalizedSection'
 import { InstagramRecsSection } from '@/components/domain/InstagramRecsSection'
 import { FilterChip } from '@/components/domain/filterBar/FilterChip'
+import { FestivalShortcutRow } from '@/components/domain/FestivalShortcutRow'
 import { FilmsSearchBar } from '@/components/domain/FilmsSearchBar'
 import { RegionDropdown } from '@/components/domain/filterBar/RegionDropdown'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
@@ -785,6 +786,12 @@ export default function FilmsPage() {
 
       {/* 2.0: PC 콘텐츠 최대폭 컬럼 (내부 gutter 포함 시각 ≈1000) — 프레임은 풀블리드 유지 */}
       <div style={isDesktop ? { maxWidth: 1048, margin: '0 auto' } : undefined}>
+      {/* 영화제 바로가기 — 회기 중이거나 개막이 가까울 때만. 지역 필터와 무관한 전국 대상 */}
+      <FestivalShortcutRow
+        festivals={festivals}
+        today={toKstIsoDate(new Date())}
+        onSelect={(slug) => router.push(`/festival/${slug}`)}
+      />
       {!locModalSuppressed && (locState === 'prompt' || locState === 'denied' || locState === 'requesting') && (
         <LocationPermissionModal
           state={locState}
@@ -1121,8 +1128,11 @@ export default function FilmsPage() {
               </div>
             )}
 
-            {/* 주목할 영화제 — 지역 필터 무관 전국 대상, festivals 0개면 미노출 */}
-            {festivals.length > 0 && (
+            {/* 주목할 영화제 — 지역 필터 무관 전국 대상, festivals 0개면 미노출.
+                배너 이미지가 이 섹션의 본문 전부라, banner_url이 없으면 섹션 헤더만 덩그러니
+                남는다(부산국제영화제처럼 배너를 안 받은 영화제에서 바로 걸렸다) — 그땐 통째로
+                감춘다. 영화제로 가는 길은 필터 줄 아래 바로가기 칩이 대신 연다. */}
+            {festivals.length > 0 && festivals[0].bannerUrl && (
               <div style={{ paddingTop: isDesktop ? 24 : 16 }}>
                 <FestivalBannerCard
                   festival={festivals[0]}

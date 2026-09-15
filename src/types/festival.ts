@@ -56,8 +56,33 @@ export interface FestivalTimetable {
   sortOrder: number
 }
 
+export interface FestivalScreening {
+  id: string
+  festivalId: string
+  /** ISO date "YYYY-MM-DD" */
+  screeningDate: string
+  /** "HH:MM" — 초는 버린다 */
+  startTime: string
+  runtimeMin: number | null
+  /** festival_theaters 링크 — 끊겨도(SET NULL) venueLabel은 남는다 */
+  festivalTheaterId: string | null
+  /** 극장 이름 표기 스냅샷 */
+  venueLabel: string
+  /** 관 이름 — 멀티스크린 극장에서만 */
+  screenLabel: string | null
+  movieId: string | null
+  movieTitleSnapshot: string
+  section: string | null
+  /** 영화제 상영코드 — 관객이 이 코드로 회차를 지칭한다 */
+  screeningCode: string | null
+  hasGv: boolean
+  bookingUrl: string | null
+}
+
 export interface FestivalDetail extends Festival {
   theaters: FestivalTheaterLink[]
   movies: FestivalMovieLink[]
   timetables: FestivalTimetable[]
+  /** 구조화된 회차 — 0개면 상세 페이지가 timetables(이미지)로 폴백한다 */
+  screenings: FestivalScreening[]
 }
