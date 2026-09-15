@@ -36,6 +36,7 @@ import type { TheaterEvent } from '@/types/admin'
 import { SEOUL_GU, SEOUL_DONG } from '@/data/seoul-areas'
 import { normalizeGenre } from '@/lib/genres'
 import { getRegionFromCity, getRegionFromCoords, REGION_BOUNDS } from '@/lib/regions'
+import { RegionScreeningNotice } from './RegionScreeningNotice'
 import { withJosa } from '@/lib/josa'
 import { getStoredRegion, setStoredRegion, subscribeStoredRegion } from '@/lib/regionStorage'
 import { useUIStore } from '@/store/uiStore'
@@ -1092,6 +1093,9 @@ export default function MapView() {
   /** 소식·관심 목록에서 들어와 지도 필터가 걸렸을 때 한 번 띄우는 안내 */
   const [filterToastMessage, setFilterToastMessage] = useState('')
   const [filterToastTrigger, setFilterToastTrigger] = useState(0)
+  /* 지역 안내 카드를 닫은 조합(영화×지역). 조합이 바뀌면 다시 보여준다 —
+     닫은 건 "이 조합에 대한 안내"지 기능 자체가 아니다. */
+  const [dismissedRegionNotice, setDismissedRegionNotice] = useState<string | null>(null)
   const [directorFilter, setDirectorFilter] = useState<{ name: string } | null>(null)
   const [panelStack, setPanelStack] = useState<DesktopPanelState[]>([])
   const desktopPanel = panelStack[panelStack.length - 1] ?? null
@@ -1835,6 +1839,53 @@ export default function MapView() {
     return count
   }, [filtersActive, theaterPosterMovies, theaters])
 
+  /* 영화 필터가 걸렸을 때, 그 영화 상영관이 현재 지역 안/밖에 각각 몇 곳인지.
+     지도는 지역 bounds 안에 머무르므로 지역 밖 상영관은 화면에 안 들어온다 — 숫자로 알린다.
+     matchesFilter를 쓰는 이유: 장르·예매가능 같은 다른 필터까지 반영된, 지도가 실제로
+     보여주는 기준과 같은 집합이어야 안내와 화면이 어긋나지 않는다. */
+  const movieRegionSplit = useMemo(() => {
+    if (!movieFilter) return null
+    let inRegion = 0
+    let inRegionShowtimes = 0
+    const outByRegion = new Map<string, number>()
+    for (const theater of theaters) {
+      const matches = (theaterPosterMovies.get(theater.id) ?? []).filter((m) => m.matchesFilter)
+      if (matches.length === 0) continue
+      const region = getRegionFromCity(theater.city ?? '')
+      if (!filters.regionId || region === filters.regionId) {
+        inRegion += 1
+        for (const m of matches) inRegionShowtimes += m.showtimeCount
+      } else {
+        outByRegion.set(region, (outByRegion.get(region) ?? 0) + 1)
+      }
+    }
+    let outRegion = 0
+    for (const n of outByRegion.values()) outRegion += n
+    return { inRegion, inRegionShowtimes, outRegion, regionCount: outByRegion.size }
+  }, [movieFilter, theaters, theaterPosterMovies, filters.regionId])
+
+  /* 안내 카드에 실제로 띄울 내용. 지역 필터가 없으면(전국) 가릴 게 없으니 아무것도 안 띄운다.
+     상영이 있으면 결과 요약만 띄운다 — 화면에 결과가 멀쩡히 있는데 다른 지역 숫자를
+     들이미는 건 지금 필요한 정보가 아니다. 지역 밖 이야기는 이 지역이 비었을 때만 한다.
+     숫자는 현재 지역 기준 — 지도에 실제로 보이는 것과 같아야 한다. */
+  const regionNotice = useMemo(() => {
+    if (!movieFilter || !filters.regionId || !movieRegionSplit) return null
+    const { inRegion, inRegionShowtimes, outRegion, regionCount } = movieRegionSplit
+    const key = `${movieFilter.id}:${filters.regionId}`
+    if (inRegion === 0) {
+      if (outRegion === 0) return null
+      return {
+        key,
+        message: `${filters.regionId}에서 ${withJosa(`「${movieFilter.title}」`, '을/를')} 상영하는 극장이 없어요. 다른 ${regionCount}개 지역에서 상영 중이에요`,
+        actionLabel: '전국에서 보기',
+      }
+    }
+    return {
+      key,
+      message: `극장 ${inRegion}곳에서 상영 ${inRegionShowtimes}회를 찾았어요`,
+    }
+  }, [movieFilter, filters.regionId, movieRegionSplit])
+
   useEffect(() => {
     const signature = JSON.stringify({
       dateId: filters.dateId,
@@ -1868,8 +1919,15 @@ export default function MapView() {
       director_filter_name: directorFilter?.name,
       filter_result_count: filterResultCount,
       is_zero_result: filterResultCount === 0,
+      /* 지역 분해 — "그 영화가 내 지역엔 없고 다른 지역엔 있다"를 집계로 분리하려면
+         region_id가 있어야 한다. 예전엔 없어서 zero-result의 원인이 지역인지 아닌지
+         구분할 수 없었다. deps에도 regionId를 넣어 지역만 바뀌어도 다시 쏜다. */
+      region_id: filters.regionId,
+      in_region_count: movieRegionSplit?.inRegion ?? null,
+      out_region_count: movieRegionSplit?.outRegion ?? null,
+      hidden_by_region: !!filters.regionId && (movieRegionSplit?.outRegion ?? 0) > 0,
     })
-  }, [directorFilter, filterResultCount, filters.bookable, filters.customEnd, filters.customStart, filters.dateId, filters.genres, filters.nations, movieFilter])
+  }, [directorFilter, filterResultCount, filters.bookable, filters.customEnd, filters.customStart, filters.dateId, filters.genres, filters.nations, filters.regionId, movieFilter, movieRegionSplit])
 
   // 상영일정·예매가능 제외한 검색 필터가 활성화 됐을 때 — 해당 극장은 클러스터링 제외
   const searchMatchedTheaterIds = useMemo(() => {
@@ -2527,25 +2585,14 @@ export default function MapView() {
       autoMovieFilterRef.current = true
       openDesktopPanel({ type: 'movie', id: mapFocus.id })
 
-      /* 지역 필터가 걸려 있으면 영화 필터와 겹쳐 0곳이 될 수 있다 — 지도만 텅 비고 이유는 안 보인다.
-         그 지역에 상영이 없으면 지역을 풀어 준다(패널을 닫으면 원래 지역으로 되돌아간다). */
+      /* 지역은 건드리지 않는다. 예전엔 그 지역에 상영이 없으면 지역을 자동으로 풀고
+         토스트로 알렸는데, 고른 지역이 말없이 바뀌는 데다 토스트라 금방 사라졌다.
+         이제 지역을 그대로 두고 RegionScreeningNotice 카드가 "이 지역엔 없고 다른 N개
+         지역에 있다"를 계속 띄운다 — 지역을 푸는 판단은 사용자가 카드에서 한다. */
       const region = filters.regionId
-      let clearedRegion = false
-      if (region) {
-        const screensInRegion = theaters.some((t) =>
-          getRegionFromCity(t.city ?? '') === region
-          && (theaterPosterMovies.get(t.id) ?? []).some((pm) => pm.id === mapFocus.id))
-        if (!screensInRegion) {
-          autoRegionRef.current = { applied: '', prev: region }
-          setStoredRegion(null)
-          clearedRegion = true
-        }
-      }
-
       if (title) {
         setFilterToastMessage(
-          clearedRegion ? `${withJosa(`「${title}」`, '은/는')} ${region}에 상영이 없어 지역을 풀고 전국에서 찾았어요`
-            : region ? `${region}에서 「${title}」 상영 극장만 표시했어요`
+          region ? `${region}에서 「${title}」 상영 극장만 표시했어요`
             : `「${title}」 상영 극장만 지도에 표시했어요`,
         )
         setFilterToastTrigger((n) => n + 1)
@@ -2554,7 +2601,7 @@ export default function MapView() {
       openDesktopPanel({ type: 'director', name: mapFocus.name })
     }
     clearMapFocus()
-  }, [mapFocus, clearMapFocus, isDesktopLayout, openDesktopPanel, closeDesktopPanel, handlePinClick, movies, filters.regionId, theaters, theaterPosterMovies])
+  }, [mapFocus, clearMapFocus, isDesktopLayout, openDesktopPanel, closeDesktopPanel, handlePinClick, movies, filters.regionId])
 
 
   const handleRecentItemClick = useCallback((item: RecentlyViewedEntry) => {
@@ -3511,6 +3558,33 @@ export default function MapView() {
             }}
           />
         </div>
+        {regionNotice && dismissedRegionNotice !== regionNotice.key && (
+          <div style={{ pointerEvents: 'auto', maxWidth: 520 }}>
+            <RegionScreeningNotice
+              message={regionNotice.message}
+              actionLabel={regionNotice.actionLabel}
+              onAction={() => {
+                trackEvent('map region notice acted', {
+                  movie_filter_id: movieFilter?.id,
+                  movie_filter_title: movieFilter?.title,
+                  region_id: filters.regionId,
+                  in_region_count: movieRegionSplit?.inRegion ?? 0,
+                  out_region_count: movieRegionSplit?.outRegion ?? 0,
+                })
+                setStoredRegion(null)
+              }}
+              onDismiss={() => {
+                trackEvent('map region notice dismissed', {
+                  movie_filter_id: movieFilter?.id,
+                  region_id: filters.regionId,
+                  in_region_count: movieRegionSplit?.inRegion ?? 0,
+                  out_region_count: movieRegionSplit?.outRegion ?? 0,
+                })
+                setDismissedRegionNotice(regionNotice.key)
+              }}
+            />
+          </div>
+        )}
       </div>
 
       {/* PC 줌 슬라이더 — 테마 토글 아래 우측 */}
