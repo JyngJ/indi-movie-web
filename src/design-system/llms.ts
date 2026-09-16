@@ -3,6 +3,7 @@
  *  llms.txt 관례(llmstxt.org)를 따른다 — 루트에 색인을 두고, 문맥 창 크기에 맞춰
  *  나눠 받을 수 있게 주제별 파일을 함께 제공한다(Chakra UI·Mintlify와 같은 방식).
  *  사람이 읽는 페이지와 같은 매니페스트에서 만들기 때문에 값이 어긋날 수 없다. */
+import { INTERACTION_RULES } from './interactionRules'
 import { manifest } from './index'
 import { GUIDES, hasPlayground } from './guides'
 import { WRITING_RULES_SHORT, VOICE, SECTIONS } from './writing'
@@ -13,6 +14,7 @@ const header = (title: string, summary: string) =>
   `# ${title}\n\n> ${summary}\n\n생성: ${manifest.generatedAt.slice(0, 10)} · 피그마 덤프: ${manifest.figmaDumpAt?.slice(0, 10) ?? '없음'}\n`
 
 const RULES = [
+  ...INTERACTION_RULES.flatMap(section => section.rules),
   '값은 tokens.css에서 관리한다. 컴포넌트에 값을 직접 적으면 UI 감사에서 하드코딩으로 집계된다.',
   '컴포넌트는 역할 토큰(2계층: --color-text-primary)을 쓴다. 원시 토큰(--color-neutral-900)은 램프를 전시하는 자리에서만 쓴다.',
   '간격·반경은 4의 배수만 쓴다. 좌우 여백은 중첩 깊이에 따라 --gutter(16) → --gutter-md(12) → --gutter-sm(8).',
@@ -21,7 +23,7 @@ const RULES = [
   '그림자는 2겹(direct + ambient)이고 색은 웜 브라운(#140F0A)이다. 순검정·1겹 그림자를 새로 만들지 않는다.',
   '라이트 단일 테마다. 다크 모드 대응 코드를 넣지 않는다.',
   '포스터 좌하단은 순위 표기 전용이다. 오버레이 칩을 그 자리에 두지 않는다.',
-  '관심(하트)은 포스터 우상단 오버레이 토글 하나로 표시한다. 텍스트 칩·빨간 테두리로 대신 표시하지 않는다.',
+  '포스터의 관심(하트)은 우상단 FavoriteButton으로 표시하고, 상세의 문구 있는 토글은 FavoriteToggle로 표시한다. 텍스트 칩·빨간 테두리로 대신 표시하지 않는다.',
 ]
 
 export function llmsIndex() {

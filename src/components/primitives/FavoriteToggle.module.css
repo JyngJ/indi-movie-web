@@ -1,0 +1,20 @@
+.control {
+  transition: background-color var(--comp-favorite-duration) ease, transform var(--comp-favorite-duration) ease;
+}
+.control[aria-pressed="true"] { background-color: var(--comp-favorite-bg-active); }
+.control[aria-pressed="true"]:hover { background-color: var(--comp-favorite-bg-hover); }
+.control:active { transform: scale(var(--comp-favorite-press-scale)); }
+.heart { display: inline-flex; }
+.label { display: grid; }
+.reserve, .visible { grid-area: 1 / 1; white-space: nowrap; }
+.reserve { visibility: hidden; }
+.control[aria-pressed="true"] .heart { animation: heart-pop var(--comp-favorite-pop-duration) ease-out; }
+@keyframes heart-pop {
+  0%, 100% { transform: scale(1); }
+  45% { transform: scale(var(--comp-favorite-pop-scale)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .control { transition: none; }
+  .control:active { transform: none; }
+  .control[aria-pressed="true"] .heart { animation: none; }
+}

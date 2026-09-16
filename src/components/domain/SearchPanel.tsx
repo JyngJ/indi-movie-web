@@ -80,7 +80,7 @@ export function SearchPanel({
       inset: isDesktopLayout ? `0 auto 0 ${leftOffset}px` : 0,
       width: isDesktopLayout ? width : 'auto',
       maxWidth: isDesktopLayout ? `calc(100vw - ${leftOffset}px)` : undefined,
-      backgroundColor: 'var(--color-surface-bg)',
+      backgroundColor: 'var(--comp-panel-bg)',
       display: 'flex',
       flexDirection: 'column',
       // 슬라이드 모드일 땐 도크와 같은 슬롯에서 겹치므로 도크보다 살짝 위, 글로벌 내비 레일보단 아래(레일이 항상 최상단)

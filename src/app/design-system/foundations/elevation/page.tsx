@@ -1,3 +1,4 @@
+import { INTERACTION_RULES } from '@/design-system/interactionRules'
 import Image from 'next/image'
 import { manifest } from '@/design-system'
 import { DocPage, DocSection, SubHeading, Code, DefTable, UsageCards } from '../../_ui/shell'
@@ -45,6 +46,16 @@ export default function ElevationPage() {
             priority
           />
         </div>
+      </DocSection>
+
+      <DocSection id="stacking" title="겹침 순서와 화면 동작">
+        <DefTable rows={manifest.tokenGroups.flatMap(group => group.tokens).filter(token => token.name.startsWith('--z-')).map(token => [token.name, `${token.resolved} — ${token.comment || '지도 마커 내부'}`])} />
+        {INTERACTION_RULES.map(section => (
+          <div key={section.title} style={{ marginTop: 'var(--spacing-6)' }}>
+            <SubHeading>{section.title}</SubHeading>
+            <UsageCards items={section.rules.map(rule => ({ kind: 'do' as const, rule }))} />
+          </div>
+        ))}
       </DocSection>
 
       <DocSection id="levels" title="단계">

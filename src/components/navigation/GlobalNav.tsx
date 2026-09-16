@@ -1,5 +1,7 @@
 'use client'
 
+import { isFilmsPath } from '@/lib/navigation/filmsPath'
+
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -61,7 +63,7 @@ const DESKTOP_RAIL_BOTTOM = MOBILE_TABS.filter((tab) => tab.key === 'feed' || ta
 /** 탭 활성 판정은 key 기준 — 상영작 탭은 홈('/')과 구 경로('/films/*') 양쪽을 모두 자기 영역으로 본다 */
 function isTabActive(pathname: string, key: string): boolean {
   if (key === 'map') return pathname === '/map'
-  if (key === 'films') return pathname === '/' || pathname === '/films' || pathname.startsWith('/films/')
+  if (key === 'films') return isFilmsPath(pathname)
   if (key === 'feed') return pathname === '/feed' || pathname.startsWith('/feed/')
   if (key === 'my') return pathname === '/my' || pathname.startsWith('/my/')
   return pathname === '/more' || pathname.startsWith('/more/')
@@ -86,7 +88,7 @@ function MobileTabBar({ pathname, filmsHref }: { pathname: string; filmsHref: st
         background: 'var(--color-surface-card)',
         borderTop: '1px solid var(--color-border)',
         boxShadow: 'var(--shadow-sm)',   /* PC 패널과 동일 스타일로 통일 */
-        zIndex: 1150,
+        zIndex: 'var(--z-navigation)',
       }}
     >
       {tabs.map(({ key, href, label, icon }) => {
@@ -159,7 +161,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
     // 소식·MY는 데스크톱에서 페이지 대신 팝오버 — 팝오버가 열려 있으면 활성
     const active = key === 'feed' ? isFeedOpen
       : key === 'my' ? isMyOpen
-      : (!isSearchOpen && !isFeedOpen && !isMyOpen && isTabActive(pathname, key))
+      : (!(pathname === '/map' && isSearchOpen) && !isFeedOpen && !isMyOpen && isTabActive(pathname, key))
     const resolvedHref = key === 'films' ? filmsHref : href
     const color = active ? ACTIVE_COLOR : INACTIVE_COLOR
     return (
@@ -243,7 +245,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
         paddingTop: 16,
         paddingBottom: 16,
         background: 'var(--color-surface-raised)',   /* 피그마 rail: neutral/200 — 패널보다 한 단 가라앉힘 */
-        zIndex: 1150,
+        zIndex: 'var(--z-navigation)',
       }}
     >
       <Link href="/" aria-label="홈(상영작)" style={{ display: 'block' }}>
@@ -291,8 +293,8 @@ export function GlobalNav() {
     if (!mounted) return
     // /films/area/*는 검색 유입용 SEO 랜딩 — 탭 상태가 아니므로 복원 대상에서 제외
     // (랜딩 → 지도 CTA → 상영작 탭을 누르면 랜딩으로 돌아가버리는 문제 방지)
-    // 상영작 탭 루트는 '/'이고 상세는 여전히 '/films/*' 아래에 있다.
-    if (pathname === '/' || (pathname.startsWith('/films') && !pathname.startsWith('/films/area'))) {
+    // 대표 영화 상세(/movie/*)도 상영작 탭의 마지막 위치로 복원한다.
+    if (isFilmsPath(pathname) && !pathname.startsWith('/films/area')) {
       sessionStorage.setItem(FILMS_LAST_PATH_KEY, pathname)
       setFilmsHref(pathname)
     }
@@ -307,7 +309,11 @@ export function GlobalNav() {
   }, [pathname, mounted])
 
   if (!mounted) return null
+  /* 이미 상영작 영역(목록·상세) 안이면 탭은 목록으로 돌아간다. 마지막 위치 복원은
+     다른 탭에서 넘어올 때만 — 영화 상세에 있을 때 탭이 그 상세를 가리키면
+     탭을 눌러도 제자리라 목록으로 나갈 길이 사라진다. */
+  const filmsTabHref = isFilmsPath(pathname) ? '/' : filmsHref
   return isDesktop
-    ? <DesktopRail pathname={pathname} filmsHref={filmsHref} />
-    : <MobileTabBar pathname={pathname} filmsHref={filmsHref} />
+    ? <DesktopRail pathname={pathname} filmsHref={filmsTabHref} />
+    : <MobileTabBar pathname={pathname} filmsHref={filmsTabHref} />
 }

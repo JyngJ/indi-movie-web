@@ -5,8 +5,9 @@ export type AnalyticsEventName =
   | 'search result selected'
   | 'map viewed'
   | 'map filter changed'
-  | 'map region notice acted'
-  | 'map region notice dismissed'
+  /* 2026-09-16 지역 안내를 카드에서 토스트로 바꾸면서 acted·dismissed는 사라졌다.
+     (영화×지역) 조합마다 어떤 안내가 떴는지만 남긴다 — kind: summary | empty */
+  | 'map region notice shown'
   /** 위치 동의 사용자에게 접속 지역을 필터로 최초 1회 자동 지정 — region 속성 */
   | 'region auto assigned'
   | 'map pin clicked'

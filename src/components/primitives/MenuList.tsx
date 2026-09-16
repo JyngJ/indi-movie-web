@@ -18,7 +18,7 @@ export function MenuCard({ children, style }: { children: ReactNode; style?: CSS
 const rowStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: 12,
+  gap: 'var(--gutter-md)',
   padding: 'var(--gutter)',
   backgroundColor: 'var(--color-surface-card)',
   border: 'none',

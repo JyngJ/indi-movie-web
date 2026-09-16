@@ -36,7 +36,7 @@ export const COMPONENT_GROUPS: { title: string; desc: string; names: string[] }[
   {
     title: 'Action',
     desc: '누르면 무언가가 일어나는 것',
-    names: ['Button', 'IconButton', 'FabRound', 'ScrollNavButton', 'FavoriteButton', 'SortToggle', 'KakaoLoginButton'],
+    names: ['Button', 'IconButton', 'FabRound', 'ScrollNavButton', 'FavoriteButton', 'FavoriteToggle', 'SortToggle', 'KakaoLoginButton'],
   },
   {
     title: 'Selection',
@@ -61,7 +61,7 @@ export const COMPONENT_GROUPS: { title: string; desc: string; names: string[] }[
   {
     title: 'Overlay',
     desc: '화면 위에 얹히는 면',
-    names: ['BottomSheet', 'ConfirmDialog', 'BubbleTail'],
+    names: ['BottomSheet', 'ConfirmDialog', 'BubbleTail', 'PanelScrollBody'],
   },
 ]
 

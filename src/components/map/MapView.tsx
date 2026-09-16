@@ -36,8 +36,7 @@ import type { TheaterEvent } from '@/types/admin'
 import { SEOUL_GU, SEOUL_DONG } from '@/data/seoul-areas'
 import { normalizeGenre } from '@/lib/genres'
 import { getRegionFromCity, getRegionFromCoords, REGION_BOUNDS } from '@/lib/regions'
-import { RegionScreeningNotice } from './RegionScreeningNotice'
-import { withJosa } from '@/lib/josa'
+import { buildRegionNotice } from '@/lib/map/regionNotice'
 import { getStoredRegion, setStoredRegion, subscribeStoredRegion } from '@/lib/regionStorage'
 import { useUIStore } from '@/store/uiStore'
 import { REPORT_CATEGORIES } from '@/lib/reports/types'
@@ -1096,9 +1095,6 @@ export default function MapView() {
   /** 소식·관심 목록에서 들어와 지도 필터가 걸렸을 때 한 번 띄우는 안내 */
   const [filterToastMessage, setFilterToastMessage] = useState('')
   const [filterToastTrigger, setFilterToastTrigger] = useState(0)
-  /* 지역 안내 카드를 닫은 조합(영화×지역). 조합이 바뀌면 다시 보여준다 —
-     닫은 건 "이 조합에 대한 안내"지 기능 자체가 아니다. */
-  const [dismissedRegionNotice, setDismissedRegionNotice] = useState<string | null>(null)
   const [directorFilter, setDirectorFilter] = useState<{ name: string } | null>(null)
   const [panelStack, setPanelStack] = useState<DesktopPanelState[]>([])
   const desktopPanel = panelStack[panelStack.length - 1] ?? null
@@ -1867,27 +1863,43 @@ export default function MapView() {
     return { inRegion, inRegionShowtimes, outRegion, regionCount: outByRegion.size }
   }, [movieFilter, theaters, theaterPosterMovies, filters.regionId])
 
-  /* 안내 카드에 실제로 띄울 내용. 지역 필터가 없으면(전국) 가릴 게 없으니 아무것도 안 띄운다.
-     상영이 있으면 결과 요약만 띄운다 — 화면에 결과가 멀쩡히 있는데 다른 지역 숫자를
-     들이미는 건 지금 필요한 정보가 아니다. 지역 밖 이야기는 이 지역이 비었을 때만 한다.
-     숫자는 현재 지역 기준 — 지도에 실제로 보이는 것과 같아야 한다. */
+  /* 무엇을 어떤 그릇으로 알릴지는 buildRegionNotice가 정한다 — 결과 요약은 토스트,
+     이 지역에 상영이 없다는 사실은 행동이 붙은 카드. 숫자는 현재 지역 기준으로,
+     지도에 실제로 보이는 것과 같아야 한다. */
   const regionNotice = useMemo(() => {
-    if (!movieFilter || !filters.regionId || !movieRegionSplit) return null
-    const { inRegion, inRegionShowtimes, outRegion, regionCount } = movieRegionSplit
-    const key = `${movieFilter.id}:${filters.regionId}`
-    if (inRegion === 0) {
-      if (outRegion === 0) return null
-      return {
-        key,
-        message: `${filters.regionId}에서 ${withJosa(`「${movieFilter.title}」`, '을/를')} 상영하는 극장이 없어요. 다른 ${regionCount}개 지역에서 상영 중이에요`,
-        actionLabel: '전국에서 보기',
-      }
-    }
-    return {
-      key,
-      message: `극장 ${inRegion}곳에서 상영 ${inRegionShowtimes}회를 찾았어요`,
-    }
+    if (!movieFilter) return null
+    return buildRegionNotice({
+      movieTitle: movieFilter.title,
+      movieId: movieFilter.id,
+      regionId: filters.regionId,
+      split: movieRegionSplit,
+    })
   }, [movieFilter, filters.regionId, movieRegionSplit])
+
+  /* 지역 안내는 필터 결과 토스트와 같은 자리에서 한 번만 말한다 — 조합이 바뀔 때만 다시.
+     지역 밖 상영이 있다는 안내도 같은 토스트다. 빠져나갈 길은 지역 필터 칩이 맡는다. */
+  const lastRegionToastRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (!regionNotice) {
+      lastRegionToastRef.current = null
+      return
+    }
+    const signature = `${regionNotice.key}:${regionNotice.message}`
+    if (lastRegionToastRef.current === signature) return
+    lastRegionToastRef.current = signature
+    setFilterToastMessage(regionNotice.message)
+    setFilterToastTrigger((n) => n + 1)
+    trackEvent('map region notice shown', {
+      kind: regionNotice.kind,
+      movie_filter_id: movieFilter?.id,
+      movie_filter_title: movieFilter?.title,
+      region_id: filters.regionId,
+      in_region_count: movieRegionSplit?.inRegion ?? 0,
+      out_region_count: movieRegionSplit?.outRegion ?? 0,
+    })
+  // 안내 문장이 바뀔 때만 — 필터 객체가 새로 만들어졌다고 다시 말하지 않는다
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [regionNotice])
 
   useEffect(() => {
     const signature = JSON.stringify({
@@ -2588,10 +2600,10 @@ export default function MapView() {
       autoMovieFilterRef.current = true
       openDesktopPanel({ type: 'movie', id: mapFocus.id })
 
-      /* 지역은 건드리지 않는다. 예전엔 그 지역에 상영이 없으면 지역을 자동으로 풀고
-         토스트로 알렸는데, 고른 지역이 말없이 바뀌는 데다 토스트라 금방 사라졌다.
-         이제 지역을 그대로 두고 RegionScreeningNotice 카드가 "이 지역엔 없고 다른 N개
-         지역에 있다"를 계속 띄운다 — 지역을 푸는 판단은 사용자가 카드에서 한다. */
+      /* 지역은 건드리지 않는다. 예전엔 그 지역에 상영이 없으면 지역을 자동으로 풀었는데,
+         고른 지역이 말없이 바뀌는 게 문제였다. 지역은 그대로 두고 buildRegionNotice가
+         "이 지역엔 없고 다른 N개 지역에 있다"를 알린다 — 지역을 푸는 판단은 사용자가
+         지역 필터 칩에서 한다. */
       const region = filters.regionId
       if (title) {
         setFilterToastMessage(
@@ -3564,33 +3576,6 @@ export default function MapView() {
             }}
           />
         </div>
-        {regionNotice && dismissedRegionNotice !== regionNotice.key && (
-          <div style={{ pointerEvents: 'auto', maxWidth: 520 }}>
-            <RegionScreeningNotice
-              message={regionNotice.message}
-              actionLabel={regionNotice.actionLabel}
-              onAction={() => {
-                trackEvent('map region notice acted', {
-                  movie_filter_id: movieFilter?.id,
-                  movie_filter_title: movieFilter?.title,
-                  region_id: filters.regionId,
-                  in_region_count: movieRegionSplit?.inRegion ?? 0,
-                  out_region_count: movieRegionSplit?.outRegion ?? 0,
-                })
-                setStoredRegion(null)
-              }}
-              onDismiss={() => {
-                trackEvent('map region notice dismissed', {
-                  movie_filter_id: movieFilter?.id,
-                  region_id: filters.regionId,
-                  in_region_count: movieRegionSplit?.inRegion ?? 0,
-                  out_region_count: movieRegionSplit?.outRegion ?? 0,
-                })
-                setDismissedRegionNotice(regionNotice.key)
-              }}
-            />
-          </div>
-        )}
       </div>
 
       {/* PC 줌 슬라이더 — 테마 토글 아래 우측 */}
@@ -3729,7 +3714,7 @@ export default function MapView() {
           inset: `0 auto 0 ${GLOBAL_NAV_DESKTOP_WIDTH}px`,
           width: DESKTOP_DOCK_WIDTH,
           maxWidth: `calc(100vw - ${GLOBAL_NAV_DESKTOP_WIDTH}px)`,
-          backgroundColor: 'var(--color-surface-bg)',
+          backgroundColor: 'var(--comp-panel-bg)',
           display: 'flex',
           flexDirection: 'column',
           zIndex: 900,
@@ -3796,7 +3781,7 @@ export default function MapView() {
             borderRadius: '0 12px 12px 0',
             border: '1px solid var(--color-border)',
             borderLeft: 'none',
-            backgroundColor: 'var(--color-surface-card)',
+            backgroundColor: 'var(--comp-panel-bg)',
             boxShadow: 'var(--shadow-md)',
             display: 'flex',
             alignItems: 'center',
@@ -3956,7 +3941,7 @@ export default function MapView() {
             inset: `0 auto 0 ${GLOBAL_NAV_DESKTOP_WIDTH}px`,
             width: DESKTOP_DOCK_WIDTH,
             maxWidth: `calc(100vw - ${GLOBAL_NAV_DESKTOP_WIDTH}px)`,
-            backgroundColor: 'var(--color-surface-bg)',
+            backgroundColor: 'var(--comp-panel-bg)',
             display: 'flex',
             flexDirection: 'column',
             zIndex: 900,

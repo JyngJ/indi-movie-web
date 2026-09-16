@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { useRouter } from 'next/navigation'
+import { useProgressRouter } from '@/hooks/useProgressRouter'
 import { addDaysIso, toKstIsoDate } from '@/lib/date'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
 import { FavoriteActionButton } from '@/components/domain/favorites/FavoriteActionRow'
@@ -245,7 +245,7 @@ function MovieShowtimeCardSkeleton({ isDesktop }: { isDesktop: boolean }) {
 
 /* ── 메인 ────────────────────────────────────────────────────────── */
 export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
-  const router = useRouter()
+  const router = useProgressRouter()
   const isDesktop = useIsDesktop()
 
   const dates = useMemo(() => getDateRange(7), [])

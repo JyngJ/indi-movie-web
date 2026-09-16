@@ -30,7 +30,8 @@
     "audit:writing": "node scripts/audit/audit-writing.mjs",
     "audit:writing:check": "node scripts/audit/check-writing.mjs",
     "check:image-hosts": "node scripts/check-image-hosts.mjs",
-    "notify:favorites": "tsx --env-file=.env.local scripts/notify-favorites.ts"
+    "notify:favorites": "tsx --env-file=.env.local scripts/notify-favorites.ts",
+    "test:ui-contracts": "RUN_BROWSER_TESTS=1 vitest run src/components/map/mapLayers.browser.test.tsx src/components/navigation/RailPopover.browser.test.tsx src/components/primitives/FavoriteToggle.browser.test.tsx src/lib/navigation/filmsPath.test.ts src/components/domain/RouteProgressBar.browser.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0",
@@ -61,6 +62,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild": "^0.27.7",
     "tailwindcss": "^4",
     "tsx": "4.21.0",
     "typescript": "^5",

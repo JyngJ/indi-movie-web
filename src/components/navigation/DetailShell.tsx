@@ -26,12 +26,12 @@ export function DetailShell({ children }: { children: ReactNode }) {
           <div aria-hidden style={{
             position: 'fixed', left: GLOBAL_NAV_DESKTOP_WIDTH, top: 0, width: 16, height: 16,
             background: 'radial-gradient(circle 16px at 100% 100%, transparent 98%, var(--color-surface-raised) 100%)',
-            zIndex: 1100, pointerEvents: 'none',
+            zIndex: 'var(--z-panel-mask)', pointerEvents: 'none',
           }} />
           <div aria-hidden style={{
             position: 'fixed', left: GLOBAL_NAV_DESKTOP_WIDTH, bottom: 0, width: 16, height: 16,
             background: 'radial-gradient(circle 16px at 100% 0%, transparent 98%, var(--color-surface-raised) 100%)',
-            zIndex: 1100, pointerEvents: 'none',
+            zIndex: 'var(--z-panel-mask)', pointerEvents: 'none',
           }} />
         </>
       )}

@@ -110,3 +110,20 @@ The crawler runs on a Raspberry Pi (`ssh pi@100.76.84.97`, Tailscale). Full runb
 - **dtryx requests must stay at concurrency 1 per domain.** Bursty parallel requests (`Promise.all` over per-theater tasks, high `mapWithConcurrency`) get the RPi's public IP firewall-banned by dtryx. Do not raise concurrency without domain-level rate limiting.
 - **If dtryx returns `fetch failed` / connect timeouts (IP ban):** on the RPi, run the IP-rotation script — `ssh pi@100.76.84.97 'sudo systemd-run --unit=mac-rotate --collect /bin/bash /home/pi/mac-rotate.sh'`. It swaps the `eth0` cloned MAC to get a new DHCP public IP, with a 150s self-healing rollback. Verify with `timeout 8 bash -c "cat < /dev/null > /dev/tcp/www.dtryx.com/443" && echo OPEN`. See the runbook for detection, verification, and MAC revert.
 - Seat crawling is `npm run crawl:seats` (movie repo, throttled, all parsers). The old standalone `/home/pi/seat-checker` was retired 2026-07-09 — do not resurrect it.
+
+## UI 겹침·스크롤·상태 회귀 방지
+
+- 규칙 원본: `src/design-system/interactionRules.ts`. 값은 `src/styles/tokens.css`. 사람용 `/design-system/foundations/elevation#stacking`과 AI용 문서는 같은 원본을 사용한다.
+- 지도 내부는 `--z-map-*`, 본문·레일은 `--z-route-progress` / `--z-panel-mask` / `--z-navigation` / `--z-rail-popover`를 사용한다. 서로 다른 stacking context의 숫자를 단순 비교하지 말고 부모의 transform·opacity·z-index부터 확인한다.
+- 고정 높이 패널 본문은 `PanelScrollBody`, 메뉴는 `MenuCard` + `MenuRow`를 사용한다. 본문에 flex column을 직접 적용해 메뉴 카드를 축소하지 않는다.
+- 상세 관심 액션은 `FavoriteActionButton`/`FavoriteActionRow`를 사용한다. 표현 원본은 `FavoriteToggle`이며 상태색·폭 유지·reduced motion을 화면별로 복제하지 않는다.
+- 상세의 명령형 이동은 `useProgressRouter`, 상영작 영역 판정은 `isFilmsPath`를 공유한다.
+- 위 동작을 바꾸면 `npm run test:ui-contracts`를 실행한다. PR에서도 `ui-interaction-regression`으로 검사한다.
+
+## 알림 그릇 (토스트 기준)
+
+- 규칙 원본: `src/design-system/interactionRules.ts`의 "알림 그릇 고르기" + `GUIDES.Toast`.
+- **방금 한 행동의 결과는 토스트.** 스스로 사라지고 닫기 버튼을 두지 않는다. 화면 아래 가운데 `--color-neutral-900` 면.
+- **토스트가 사라진 뒤 돌아갈 길이 화면에 남아 있어야 한다.** 지도 지역 안내는 지역 필터 칩이 그 길이라 토스트로 충분하다.
+- **되돌릴 길이 없거나 결정을 받아야 하면 시트·다이얼로그.** 그런 일을 토스트로 알리지 않는다.
+- 지도 지역 안내 문장은 `src/lib/map/regionNotice.ts`의 `buildRegionNotice`가 만든다 — MapView에서 조건문을 다시 짜지 말 것. 근거: 결과 요약을 닫기 버튼 달린 카드로 띄우니 자기가 건 필터의 결과를 매번 손으로 치워야 했다(2026-09-16, RegionScreeningNotice 폐지).

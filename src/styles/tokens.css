@@ -16,6 +16,26 @@
 
 /* ─── Light Mode ──────────────────────────────────────────────────── */
 :root {
+  /* ── 겹침 순서 — 같은 부모 안에서만 비교 ── */
+  --z-route-progress: 1050; /* 본문 이동 진행 표시 */
+  --z-panel-mask: 1100; /* 본문 모서리 마스크 */
+  --z-navigation: 1150; /* 글로벌 메뉴 */
+  --z-rail-popover: 1200; /* 메뉴 옆 팝오버 */
+  /* 지도 마커 내부: 포스터 < 코너 칩 < 호버 콘텐츠 */
+  --z-map-poster: 1;
+  --z-map-chip: 10;
+  --z-map-popup: 20;
+  --z-map-marker-hover: 9999;
+
+  /* ── 패널·상세 관심 액션 ── */
+  --comp-panel-bg: var(--color-surface-bg); /* 패널과 접기 손잡이가 공유하는 면 */
+  --comp-favorite-bg-active: var(--color-error-tint);
+  --comp-favorite-bg-hover: color-mix(in srgb, var(--color-error-mid) 18%, var(--color-error-tint));
+  --comp-favorite-icon-active: var(--color-error-mid);
+  --comp-favorite-duration: 150ms;
+  --comp-favorite-pop-duration: 320ms;
+  --comp-favorite-press-scale: 0.97;
+  --comp-favorite-pop-scale: 1.3;
 
   /* ── Neutral scale — 2.0 웜그레이 램프 (S가 양끝으로 상승하는 U자 곡선, H 27~40) ── */
   --color-neutral-100: #FAF9F8;   /* 페이지 배경 (미색 종이) — 피그마 neutral/100 정합 (2026-08-07, 구 50 폐지) */
