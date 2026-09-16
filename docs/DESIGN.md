@@ -242,10 +242,16 @@ elevation은 **컴포넌트 종류**가 결정 — 선택 등 상태 표현에 �
 | 거터 | 목업 24 vs 코드 16 — 시트 구조 개편 때 통일 |
 | 포맷 배지 | 크롤 데이터에 포맷 필드 생기면 예외(더빙·필름)만 배지로 |
 
-## 지도 내부 겹침 순서 · 상세 액션 (2026-09-16)
+## 겹침·스크롤·선택 상태 (2026-09-16)
 
-`--z-map-poster`(1) < `--z-map-chip`(10) < `--z-map-popup`(20).
-포스터 그리드 부모에는 stacking context를 만들지 않는다. 호버 포스터를 popup 단계로 올려 같은 마커의 코너 칩보다 위에 표시한다.
-마커 사이에서는 `--z-map-marker-hover`(9999)로 호버 마커를 올린다. 이 값은 Leaflet 마커 내부에만 적용한다.
-도크 접기 버튼은 도크와 같은 `--color-surface-bg`를 사용한다.
-관심 상세 버튼은 미등록 시 기존 회색, 등록 시 `--color-error-tint` 배경이며 문구는 ‘관심 등록 / 관심 영화·극장·감독’이다. 하트 확대 애니메이션은 reduced motion에서 끈다.
+사람용 규칙과 AI용 규칙의 공통 원본은 `src/design-system/interactionRules.ts`다.
+`/design-system/foundations/elevation#stacking`과 `/design-system/llms.txt`가 같은 규칙을 보여 준다.
+
+- 지도 내부 순서는 `--z-map-poster` < `--z-map-chip` < `--z-map-popup`이다. 포스터 목록 부모에 별도 stacking context를 만들지 않는다. 지도 마커 간 호버 순서는 `--z-map-marker-hover`로 관리하며 전역 메뉴·팝오버와 비교하지 않는다.
+- 본문·메뉴 순서는 `--z-route-progress` < `--z-panel-mask` < `--z-navigation` < `--z-rail-popover`다. 전체 앱의 모든 모달을 이 순서로 이관한 것은 아니다. 새 본문·레일 요소는 이 역할 토큰을 사용한다.
+- 패널과 접기 손잡이는 `--comp-panel-bg`를 공유한다.
+- 높이가 제한된 본문은 `PanelScrollBody`를 사용한다. `display:block`·`min-height:0`·`overflow-y:auto`로 내용 높이를 보존한다. 메뉴는 `MenuCard` + `MenuRow`로 구성한다.
+- 상세 관심 액션은 `FavoriteActionButton` → `FavoriteToggle`로 표시한다. 상태색과 모션은 `--comp-favorite-*` 토큰으로 관리하며, 두 문구 중 긴 폭을 예약한다. `aria-pressed`와 reduced motion을 지원한다. 포스터 아이콘 토글은 기존 `FavoriteButton`이다.
+- 상세의 명령형 이동은 `useProgressRouter`로 진행 표시를 연결한다. 공통 `Providers`의 `RouteProgressBar`만 사용하며, 메뉴와 뒤로가기의 상영작 영역 판정은 `isFilmsPath`를 공유한다.
+
+검사: `npm run test:ui-contracts`. 실제 Chromium에서 지도 팝업 가림·낮은 팝오버의 마지막 행 접근·관심 버튼 상태별 너비/색/모션을 검증하고, 실제 이동 훅의 진행 표시 시작·종료와 대표 영화·극장·감독 경로의 상영작 영역 판정을 검사한다. PR의 `ui-interaction-regression`에서 자동 실행한다.

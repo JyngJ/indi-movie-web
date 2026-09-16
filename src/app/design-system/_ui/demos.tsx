@@ -6,7 +6,7 @@ import {
   Divider, EmptyState, FabRound, FilterPill, GenreChip, Icon, IconButton, Input,
   ListRow, PosterChip, ScrollNavButton, Switch, Tabs,
   SearchBar, SearchBarButton, SectionHeader, Skeleton, SortToggle, Toast, Wordmark,
-  MovieCardSkeleton, TheaterCardSkeleton,
+  MovieCardSkeleton, TheaterCardSkeleton, FavoriteToggle, PanelScrollBody, MenuCard, MenuRow,
 } from '@/components/primitives'
 
 /* 제품 컴포넌트를 그대로 import해 렌더한다 — 문서용 사본을 만들지 않는다. */
@@ -244,7 +244,23 @@ function ListRowDemo() {
   )
 }
 
+function FavoriteToggleDemo() {
+  const [active, setActive] = useState(false)
+  return <FavoriteToggle active={active} activeLabel="관심 영화" onClick={() => setActive(value => !value)} />
+}
+
 const DEMOS: Record<string, ReactNode> = {
+  FavoriteToggle: <FavoriteToggleDemo />,
+  PanelScrollBody: (
+    <div style={{ display: 'flex', flexDirection: 'column', height: 240, width: '100%', backgroundColor: 'var(--comp-panel-bg)' }}>
+      <div style={{ padding: 'var(--gutter)', flexShrink: 0 }}>고정 헤더 · 아래 메뉴를 스크롤해 보세요</div>
+      <PanelScrollBody>
+        <MenuCard>
+          {['관심 목록', '알림 설정', '프로필', '도움말', '마지막 메뉴'].map((title, index) => <MenuRow key={title} title={title} description="행 높이를 유지해요" last={index === 4} />)}
+        </MenuCard>
+      </PanelScrollBody>
+    </div>
+  ),
   Icon: (
     <>
       <Case label="크기 — xs 12 · sm 14 · md 16 · lg 20 · xl 24">

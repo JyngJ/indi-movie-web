@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, type ReactNode } from 'react'
+import { PanelScrollBody } from '@/components/primitives'
 import { SettingsHeader } from '@/components/map/SettingsPanel'
 import { GLOBAL_NAV_DESKTOP_WIDTH } from '@/components/navigation/GlobalNav'
 import { useLockBodyScroll } from '@/hooks/useLockBodyScroll'
@@ -64,8 +65,8 @@ export function RailPopover({
         width: 400,
         maxWidth: 'calc(100vw - 96px)',
         height: 'min(640px, calc(100dvh - 32px))',
-        zIndex: 1200,
-        backgroundColor: 'var(--color-surface-bg)',
+        zIndex: 'var(--z-rail-popover)',
+        backgroundColor: 'var(--comp-panel-bg)',
         border: '1px solid var(--color-border)',
         borderRadius: 'var(--radius-popover)',
         boxShadow: 'var(--shadow-sheet)',
@@ -77,9 +78,9 @@ export function RailPopover({
       <SettingsHeader title={title} onBack={onBack} onClose={onClose} trailing={trailing} />
       {/* 본문은 block 흐름으로 유지한다. flex column이면 메뉴 카드가 축소되고
           overflow:hidden에 아래 행이 잘린다. MyPageShell과 같은 스크롤 원칙. */}
-      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+      <PanelScrollBody>
         {children}
-      </div>
+      </PanelScrollBody>
     </div>
   )
 }

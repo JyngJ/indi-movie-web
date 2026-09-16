@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, Icon } from '@/components/primitives'
+import { FavoriteToggle } from '@/components/primitives'
 import { useFavorites } from '@/hooks/useFavorites'
 import type { FavoriteItemType } from '@/lib/favorites/types'
 import type { ReactNode } from 'react'
@@ -11,19 +11,7 @@ const LOGIN_COPY: Record<FavoriteItemType, string> = {
   director: '관심 감독으로 등록하면 이 감독 영화가 상영될 때 알려드려요.',
 }
 
-const LABEL: Record<FavoriteItemType, { off: string; on: string }> = {
-  movie: { off: '관심 등록', on: '관심 영화' },
-  theater: { off: '관심 등록', on: '관심 극장' },
-  director: { off: '관심 등록', on: '관심 감독' },
-}
-
-/** 등록 상태는 옅은 빨강 면과 하트로 표시한다. */
-function HeartIcon({ active }: { active: boolean }) {
-  const color = active ? 'var(--color-error-mid)' : 'currentColor'
-  return (
-    <Icon name="heart" size={16} fill={color} color={color} strokeWidth={0} />
-  )
-}
+const LABEL: Record<FavoriteItemType, string> = { movie: '관심 영화', theater: '관심 극장', director: '관심 감독' }
 
 /** 단독 버튼 — 이미 있는 CTA 행(극장 상세 등)에 끼워 넣을 때 */
 export function FavoriteActionButton({
@@ -41,18 +29,12 @@ export function FavoriteActionButton({
   const { isFavorite, toggle } = useFavorites()
   const active = isFavorite(type, id)
   return (
-    /* 회색(tertiary) — 액션 행에서 파란색은 지도 CTA 하나만 남긴다 (2026-08-24 확정) */
-    <Button
-      variant="tertiary"
-      size="md"
+    <FavoriteToggle
+      active={active}
+      activeLabel={LABEL[type]}
       onClick={() => toggle(type, id, { loginDescription: LOGIN_COPY[type], label })}
-      aria-pressed={active}
-      className="favorite-action"
-      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, ...style }}
-    >
-      <span className="favorite-action-heart"><HeartIcon active={active} /></span>
-      {active ? LABEL[type].on : LABEL[type].off}
-    </Button>
+      style={style}
+    />
   )
 }
 

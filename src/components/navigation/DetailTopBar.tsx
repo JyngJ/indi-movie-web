@@ -1,5 +1,7 @@
 'use client'
 
+import { isFilmsPath } from '@/lib/navigation/filmsPath'
+
 import { useProgressRouter } from '@/hooks/useProgressRouter'
 import type { ReactNode } from 'react'
 import { IconButton, Icon } from '@/components/primitives'
@@ -39,7 +41,7 @@ export function DetailTopBar({ crumbLabel, crumbHref, title, trailing, isDesktop
               // 직전이 상영작 흐름(/films*)이면 히스토리 back, 아니면(지도 등 다른 탭 경유)
               // 상영작 탭으로 — "직전 페이지"가 아니라 "이 흐름의 이전"으로 가는 규칙
               const prev = getPrevPathname()
-              if (prev && (prev.startsWith(crumbHref) || (crumbHref === '/films' && prev.startsWith('/movie/')))) router.back()
+              if (prev && (crumbHref === '/films' ? isFilmsPath(prev) : prev.startsWith(crumbHref))) router.back()
               else router.push(crumbHref)
             }}
             aria-label="뒤로가기"

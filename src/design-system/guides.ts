@@ -42,6 +42,36 @@ export interface ComponentGuide {
 }
 
 export const GUIDES: Record<string, ComponentGuide> = {
+  PanelScrollBody: {
+    intro: '높이가 제한된 패널의 본문을 스크롤해요. 자식 높이를 줄이지 않고 원래 크기로 쌓아요.',
+    specs: [{ title: '레이아웃', desc: 'display:block · flex:1 · min-height:0 · overflow-y:auto를 공통으로 보장해요.' }],
+    usage: [
+      { kind: 'do', rule: '패널 헤더와 형제로 두고, 메뉴 카드와 본문을 안에 넣어요. MY 페이지와 레일 팝오버가 공유해요.' },
+      { kind: 'dont', rule: '본문을 flex column으로 바꾸지 않아요.', instead: '본문 안에서 필요한 작은 그룹에만 flex를 적용해요.' },
+    ],
+  },
+  FavoriteToggle: {
+    intro: '상세 화면에서 관심 등록 상태를 문구와 배경색으로 보여 줘요. 영화·극장·감독이 같은 컨트롤을 사용해요.',
+    specs: [
+      { title: '선택 상태', desc: '기본은 Button tertiary · md예요. 선택하면 --comp-favorite-bg-active와 --comp-favorite-icon-active를 사용해요.' },
+      { title: '문구와 너비', desc: '관심 등록 / 관심 영화·극장·감독으로 표시해요. 두 상태 중 긴 문구의 폭을 예약해 위치가 움직이지 않아요.' },
+      { title: '애니메이션', desc: '--comp-favorite-* 토큰으로 누름과 하트 확대를 제어해요. reduced motion에서는 움직이지 않아요.' },
+    ],
+    usage: [
+      { kind: 'do', rule: '로그인·저장은 FavoriteActionButton에서 처리하고, 표시만 FavoriteToggle에 맡겨요.' },
+      { kind: 'dont', rule: '상세마다 배경색·하트·문구를 복사해 만들지 않아요.', instead: 'FavoriteActionButton 또는 FavoriteActionRow를 사용해요.' },
+    ],
+    a11y: [{ title: '선택 상태', desc: 'aria-pressed로 상태를 전달해요. 폭 확보용 숨긴 문구는 낭독하지 않아요.' }],
+  },
+  MenuCard: {
+    intro: '연관된 메뉴 행을 하나의 둥근 면으로 묶어요.',
+    usage: [{ kind: 'do', rule: 'MenuRow를 넣고, 높이가 제한된 패널에서는 PanelScrollBody 안에 배치해요.' }, { kind: 'dont', rule: '카드 높이를 고정하거나 flex-shrink로 압축하지 않아요.', instead: '본문을 스크롤해 마지막 행까지 접근할 수 있게 해요.' }],
+  },
+  MenuRow: {
+    intro: '메뉴의 아이콘·제목·설명·이동 표시를 일정한 간격으로 배치해요.',
+    specs: [{ title: '간격', desc: '상하·좌우 여백은 --gutter, 아이콘과 본문 사이는 --gutter-md예요. 내용에 따라 높이가 늘어나요.' }],
+    usage: [{ kind: 'do', rule: '마지막 행에 last를 지정해 아래 구분선을 제거해요. 행별 여백을 별도로 덮어쓰지 않아요.' }],
+  },
   Button: {
     changes: [
       { date: '2026-08-08', note: '크기를 sm/md/lg = 32/44/52, 좌우 여백을 16/32/48로 고정했습니다(피그마 확정). 웨이트는 400/500/700입니다.' },

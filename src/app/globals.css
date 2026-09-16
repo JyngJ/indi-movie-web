@@ -305,7 +305,7 @@ img {
   box-shadow: 0 8px 24px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10);
   padding: 10px 14px;
   pointer-events: none;
-  z-index: 9999;
+  z-index: var(--z-map-popup);
 }
 .po-list--left,
 .po-wrap.tip-l .po-list {
@@ -402,7 +402,7 @@ img {
   box-shadow: 0 8px 24px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10);
   padding: 10px 12px 12px;
   pointer-events: none;
-  z-index: 9999;
+  z-index: var(--z-map-popup);
   white-space: normal;
 }
 /* 왼쪽 방향 오버라이드 */
@@ -819,18 +819,4 @@ img {
 @media (prefers-reduced-motion: reduce) {
   .success-check-circle, /* Icon 컴포넌트가 path를 직접 그리므로 루트 클래스에서 자식 path를 잡는다 */
 .success-check path, .success-check-path { animation: none; stroke-dashoffset: 0; }
-}
-
-/* 관심 상세 액션 — 등록 상태와 터치 피드백 */
-.favorite-action[aria-pressed="true"] { background-color: var(--color-error-tint); }
-.favorite-action[aria-pressed="true"]:hover { background-color: color-mix(in srgb, var(--color-error-mid) 18%, var(--color-error-tint)); }
-.favorite-action-heart { display: inline-flex; }
-.favorite-action { transition: background-color 150ms ease, transform 150ms ease; }
-.favorite-action:active { transform: scale(0.97); }
-.favorite-action[aria-pressed="true"] .favorite-action-heart { animation: favorite-heart-pop 320ms ease-out; }
-@keyframes favorite-heart-pop { 0%, 100% { transform: scale(1); } 45% { transform: scale(1.3); } }
-@media (prefers-reduced-motion: reduce) {
-  .favorite-action { transition: none; }
-  .favorite-action:active { transform: none; }
-  .favorite-action[aria-pressed="true"] .favorite-action-heart { animation: none; }
 }

@@ -623,12 +623,12 @@ export default function FilmsPage() {
           <div aria-hidden style={{
             position: 'fixed', left: GLOBAL_NAV_DESKTOP_WIDTH, top: 0, width: 16, height: 16,
             background: 'radial-gradient(circle 16px at 100% 100%, transparent 98%, var(--color-surface-raised) 100%)',
-            zIndex: 1100, pointerEvents: 'none',
+            zIndex: 'var(--z-panel-mask)', pointerEvents: 'none',
           }} />
           <div aria-hidden style={{
             position: 'fixed', left: GLOBAL_NAV_DESKTOP_WIDTH, bottom: 0, width: 16, height: 16,
             background: 'radial-gradient(circle 16px at 100% 0%, transparent 98%, var(--color-surface-raised) 100%)',
-            zIndex: 1100, pointerEvents: 'none',
+            zIndex: 'var(--z-panel-mask)', pointerEvents: 'none',
           }} />
           {/* 카드가 레일 위에 떠 있다면 그림자가 레일 쪽으로 떨어져야 한다 — 코너만 깎여 있고
               그림자가 없어 평평하게 붙어 보였다. 본문이 카드 요소가 아니라(전폭 + paddingLeft)
