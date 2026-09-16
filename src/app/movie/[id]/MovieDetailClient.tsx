@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { useRouter } from 'next/navigation'
+import { useProgressRouter } from '@/hooks/useProgressRouter'
 import { Chip, Avatar, IconButton, Button, Icon, Divider, EmptyState, Skeleton, ShowtimeCellSkeleton } from '@/components/primitives'
 import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
 import { addDaysIso, toKstIsoDate } from '@/lib/date'
@@ -116,7 +116,7 @@ export function MovieDetailClient({ movie, initialShowtimes, theaterId }: {
   /** 극장 시트에서 넘어온 경우(?theater=) — 유입 경로 기록용 */
   theaterId?: string
 }) {
-  const router = useRouter()
+  const router = useProgressRouter()
   const isDesktop = useIsDesktop()
   const handleBack = () => {
     const query = new URLSearchParams(window.location.search)

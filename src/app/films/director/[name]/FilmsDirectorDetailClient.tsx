@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
-import { useRouter } from 'next/navigation'
+import { useProgressRouter } from '@/hooks/useProgressRouter'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
 import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
 import Image from 'next/image'
@@ -75,7 +75,7 @@ function FilmographyCell({ movie, isActive, onClick, isDesktop }: { movie: Movie
 
 /* ── 메인 ────────────────────────────────────────────────────────── */
 export function FilmsDirectorDetailClient({ directorName }: { directorName: string }) {
-  const router = useRouter()
+  const router = useProgressRouter()
   const isDesktop = useIsDesktop()
   const [sort, setSort] = useState<SortKey>('newest')
 

@@ -12,12 +12,12 @@ const LOGIN_COPY: Record<FavoriteItemType, string> = {
 }
 
 const LABEL: Record<FavoriteItemType, { off: string; on: string }> = {
-  movie: { off: '관심 영화 등록', on: '관심 영화' },
-  theater: { off: '관심 극장 등록', on: '관심 극장' },
-  director: { off: '관심 감독 등록', on: '관심 감독' },
+  movie: { off: '관심 등록', on: '관심 영화' },
+  theater: { off: '관심 등록', on: '관심 극장' },
+  director: { off: '관심 등록', on: '관심 감독' },
 }
 
-/** 등록되면 하트만 빨강 — 라벨은 회색 버튼 글자색 그대로 둔다 (포스터 하트·극장 시트와 같은 색) */
+/** 등록 상태는 옅은 빨강 면과 하트로 표시한다. */
 function HeartIcon({ active }: { active: boolean }) {
   const color = active ? 'var(--color-error-mid)' : 'currentColor'
   return (
@@ -47,9 +47,10 @@ export function FavoriteActionButton({
       size="md"
       onClick={() => toggle(type, id, { loginDescription: LOGIN_COPY[type], label })}
       aria-pressed={active}
+      className="favorite-action"
       style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, ...style }}
     >
-      <HeartIcon active={active} />
+      <span className="favorite-action-heart"><HeartIcon active={active} /></span>
       {active ? LABEL[type].on : LABEL[type].off}
     </Button>
   )

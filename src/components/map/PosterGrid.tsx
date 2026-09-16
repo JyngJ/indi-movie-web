@@ -264,7 +264,7 @@ export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, 
             </div>
           </div>
         ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: SLOT_GAP, position: 'relative', zIndex: 1 }}>
+        <div className="pm-poster-grid" style={{ display: 'flex', flexDirection: 'column', gap: SLOT_GAP, position: 'relative' }}>
           {Array.from({ length: count > 3 ? 2 : 1 }).map((_, row) => (
             <div key={row} style={{ display: 'flex', gap: SLOT_GAP }}>
               {Array.from({ length: perRow }).map((_, col) => {

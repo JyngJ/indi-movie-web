@@ -1,24 +1,34 @@
 'use client'
 
+import { usePathname } from 'next/navigation'
+import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useEffect, useRef, useState } from 'react'
-import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
+import { GLOBAL_NAV_DESKTOP_WIDTH } from '@/components/navigation/GlobalNav'
 
-/** 라우트 전환 진행 표시 — navStart() 호출로 시작.
- *  피그마 확정: 3px, 트랙 neutral/300 · 바 neutral/800, 프로그레스바 방식(좌→우 채움).
- *  실제 완료 시점은 목적지 페이지 렌더 = 이 컴포넌트 언마운트라, 그때까지 85%에서 대기. */
+/** 공통 레이아웃에서 이동 시작부터 목적지 경로 반영까지 표시한다. */
 export function navStart() {
   window.dispatchEvent(new CustomEvent('yh:nav-start'))
 }
 
-export function RouteProgressBar({ isDesktop }: { isDesktop: boolean }) {
+export function RouteProgressBar() {
+  const isDesktop = useIsDesktopLayout()
+  const pathname = usePathname()
   const [progress, setProgress] = useState<number | null>(null)   // null = 숨김
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
+    setProgress(null)
+    if (timerRef.current) clearInterval(timerRef.current)
+  }, [pathname])
+
+  useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout>
     const onStart = () => {
       if (timerRef.current) clearInterval(timerRef.current)
+      clearTimeout(timeout)
+      timeout = setTimeout(() => { setProgress(null); if (timerRef.current) clearInterval(timerRef.current) }, 15000)
       setProgress(12)
-      // 좌→우로 채워지되 85%에서 대기 — 완료(새 화면 렌더)와 함께 사라짐
+      // 좌→우로 채워지되 85%에서 대기 — 완료(목적지 경로 반영)와 함께 사라짐
       timerRef.current = setInterval(() => {
         setProgress((p) => {
           if (p == null) return p
@@ -27,8 +37,18 @@ export function RouteProgressBar({ isDesktop }: { isDesktop: boolean }) {
         })
       }, 120)
     }
+    const onClick = (event: MouseEvent) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+      const anchor = (event.target as Element).closest('a[href]') as HTMLAnchorElement | null
+      if (!anchor || anchor.download || (anchor.target && anchor.target !== '_self')) return
+      const url = new URL(anchor.href)
+      if (url.origin === location.origin && url.pathname !== location.pathname) onStart()
+    }
+    document.addEventListener('click', onClick, true)
     window.addEventListener('yh:nav-start', onStart)
     return () => {
+      clearTimeout(timeout)
+      document.removeEventListener('click', onClick, true)
       window.removeEventListener('yh:nav-start', onStart)
       if (timerRef.current) clearInterval(timerRef.current)
     }
@@ -41,10 +61,7 @@ export function RouteProgressBar({ isDesktop }: { isDesktop: boolean }) {
       aria-hidden
       style={{
         position: 'fixed',
-        // 모바일: 바텀 탭바 바로 위에 밀착 / 웹: 본문(레일 제외) 상단
-        ...(isDesktop
-          ? { top: 0 }
-          : { bottom: `calc(${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))` }),
+        top: 0,
         left: isDesktop ? GLOBAL_NAV_DESKTOP_WIDTH : 0,
         right: 0,
         height: 3,

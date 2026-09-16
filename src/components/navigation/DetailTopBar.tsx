@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useProgressRouter } from '@/hooks/useProgressRouter'
 import type { ReactNode } from 'react'
 import { IconButton, Icon } from '@/components/primitives'
 import { getPrevPathname } from '@/components/navigation/GlobalNav'
@@ -26,7 +26,7 @@ interface DetailTopBarProps {
 /** 상세 화면 공통 상단 바 — 뒤로가기 + [카테고리 > 현재명] breadcrumb + 우측 위젯.
  *  DetailShell(본문 1000 컬럼) 안에서 sticky — 화면별 자체 NavBar 대신 이걸 쓸 것. */
 export function DetailTopBar({ crumbLabel, crumbHref, title, trailing, isDesktop, onBack }: DetailTopBarProps) {
-  const router = useRouter()
+  const router = useProgressRouter()
   return (
     <div style={{ position: 'sticky', top: 0, zIndex: 50, paddingTop: 'env(safe-area-inset-top)', backgroundColor: 'var(--color-surface-bg)', borderBottom: '1px solid var(--color-border)' }}>
       <div style={{ height: 52, display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: isDesktop ? 4 : 0, paddingRight: 12, gap: 8 }}>
@@ -39,7 +39,7 @@ export function DetailTopBar({ crumbLabel, crumbHref, title, trailing, isDesktop
               // 직전이 상영작 흐름(/films*)이면 히스토리 back, 아니면(지도 등 다른 탭 경유)
               // 상영작 탭으로 — "직전 페이지"가 아니라 "이 흐름의 이전"으로 가는 규칙
               const prev = getPrevPathname()
-              if (prev && prev.startsWith(crumbHref)) router.back()
+              if (prev && (prev.startsWith(crumbHref) || (crumbHref === '/films' && prev.startsWith('/movie/')))) router.back()
               else router.push(crumbHref)
             }}
             aria-label="뒤로가기"

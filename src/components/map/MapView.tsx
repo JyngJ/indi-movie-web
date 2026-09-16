@@ -3796,7 +3796,7 @@ export default function MapView() {
             borderRadius: '0 12px 12px 0',
             border: '1px solid var(--color-border)',
             borderLeft: 'none',
-            backgroundColor: 'var(--color-surface-card)',
+            backgroundColor: 'var(--color-surface-bg)',
             boxShadow: 'var(--shadow-md)',
             display: 'flex',
             alignItems: 'center',

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { SectionHeader, MovieCardSkeleton, FabRound, Icon, Divider } from '@/components/primitives'
 import { AllMoviesGrid, ALL_MOVIES_GRID_ANCHOR_ID } from '@/components/domain/AllMoviesGrid'
-import { RouteProgressBar, navStart } from '@/components/domain/RouteProgressBar'
+import { navStart } from '@/components/domain/RouteProgressBar'
 import { AnniversarySection } from '@/components/domain/AnniversarySection'
 import { CurationSectionRow } from '@/components/domain/CurationSectionRow'
 import { FavoriteMoviesSection } from '@/components/domain/favorites/FavoriteMoviesSection'
@@ -781,7 +781,6 @@ export default function FilmsPage() {
         <Divider style={{ marginTop: 16 }} />
       </header>
 
-      <RouteProgressBar isDesktop={isDesktop} />
 
       {/* 2.0: PC 콘텐츠 최대폭 컬럼 (내부 gutter 포함 시각 ≈1000) — 프레임은 풀블리드 유지 */}
       <div style={isDesktop ? { maxWidth: 1048, margin: '0 auto' } : undefined}>

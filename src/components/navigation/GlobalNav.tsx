@@ -61,7 +61,7 @@ const DESKTOP_RAIL_BOTTOM = MOBILE_TABS.filter((tab) => tab.key === 'feed' || ta
 /** 탭 활성 판정은 key 기준 — 상영작 탭은 홈('/')과 구 경로('/films/*') 양쪽을 모두 자기 영역으로 본다 */
 function isTabActive(pathname: string, key: string): boolean {
   if (key === 'map') return pathname === '/map'
-  if (key === 'films') return pathname === '/' || pathname === '/films' || pathname.startsWith('/films/')
+  if (key === 'films') return pathname === '/' || pathname.startsWith('/movie/') || pathname === '/films' || pathname.startsWith('/films/')
   if (key === 'feed') return pathname === '/feed' || pathname.startsWith('/feed/')
   if (key === 'my') return pathname === '/my' || pathname.startsWith('/my/')
   return pathname === '/more' || pathname.startsWith('/more/')
@@ -159,7 +159,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
     // 소식·MY는 데스크톱에서 페이지 대신 팝오버 — 팝오버가 열려 있으면 활성
     const active = key === 'feed' ? isFeedOpen
       : key === 'my' ? isMyOpen
-      : (!isSearchOpen && !isFeedOpen && !isMyOpen && isTabActive(pathname, key))
+      : (!(pathname === '/map' && isSearchOpen) && !isFeedOpen && !isMyOpen && isTabActive(pathname, key))
     const resolvedHref = key === 'films' ? filmsHref : href
     const color = active ? ACTIVE_COLOR : INACTIVE_COLOR
     return (
@@ -291,8 +291,8 @@ export function GlobalNav() {
     if (!mounted) return
     // /films/area/*는 검색 유입용 SEO 랜딩 — 탭 상태가 아니므로 복원 대상에서 제외
     // (랜딩 → 지도 CTA → 상영작 탭을 누르면 랜딩으로 돌아가버리는 문제 방지)
-    // 상영작 탭 루트는 '/'이고 상세는 여전히 '/films/*' 아래에 있다.
-    if (pathname === '/' || (pathname.startsWith('/films') && !pathname.startsWith('/films/area'))) {
+    // 대표 영화 상세(/movie/*)도 상영작 탭의 마지막 위치로 복원한다.
+    if (pathname === '/' || pathname.startsWith('/movie/') || (pathname.startsWith('/films') && !pathname.startsWith('/films/area'))) {
       sessionStorage.setItem(FILMS_LAST_PATH_KEY, pathname)
       setFilmsHref(pathname)
     }
