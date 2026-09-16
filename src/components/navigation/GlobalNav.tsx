@@ -309,7 +309,11 @@ export function GlobalNav() {
   }, [pathname, mounted])
 
   if (!mounted) return null
+  /* 이미 상영작 영역(목록·상세) 안이면 탭은 목록으로 돌아간다. 마지막 위치 복원은
+     다른 탭에서 넘어올 때만 — 영화 상세에 있을 때 탭이 그 상세를 가리키면
+     탭을 눌러도 제자리라 목록으로 나갈 길이 사라진다. */
+  const filmsTabHref = isFilmsPath(pathname) ? '/' : filmsHref
   return isDesktop
-    ? <DesktopRail pathname={pathname} filmsHref={filmsHref} />
-    : <MobileTabBar pathname={pathname} filmsHref={filmsHref} />
+    ? <DesktopRail pathname={pathname} filmsHref={filmsTabHref} />
+    : <MobileTabBar pathname={pathname} filmsHref={filmsTabHref} />
 }
