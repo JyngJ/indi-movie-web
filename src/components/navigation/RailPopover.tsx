@@ -75,7 +75,9 @@ export function RailPopover({
       }}
     >
       <SettingsHeader title={title} onBack={onBack} onClose={onClose} trailing={trailing} />
-      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+      {/* 본문은 block 흐름으로 유지한다. flex column이면 메뉴 카드가 축소되고
+          overflow:hidden에 아래 행이 잘린다. MyPageShell과 같은 스크롤 원칙. */}
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
         {children}
       </div>
     </div>
