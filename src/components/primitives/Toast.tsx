@@ -50,7 +50,12 @@ export function Toast({ message, trigger = 0, visible, duration = 1600 }: ToastP
         padding: '12px 16px',
         borderRadius: 12,
         boxShadow: '0 8px 24px rgba(0, 0, 0, 0.28)',
-        whiteSpace: 'nowrap',
+        /* 두 줄까지 접힌다 — 좁은 화면에서 한 줄로 버티면 문장이 화면 밖으로 나간다.
+           (지역 안내처럼 40자쯤 되는 문장이 들어온다) */
+        maxWidth: 'min(520px, calc(100vw - 32px))',
+        textAlign: 'center',
+        lineHeight: 1.4,
+        wordBreak: 'keep-all',
         letterSpacing: '-0.01em',
       }}
     >
