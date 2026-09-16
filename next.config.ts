@@ -110,6 +110,11 @@ const nextConfig: NextConfig = {
     // 지역 페이지는 극장 목록이 본문이라 훨씬 느리게 변한다.
     const area = 'public, s-maxage=1800, stale-while-revalidate=86400'
     return [
+      // 대표 영화 상세 — 검색 유입이 전부 여기로 온다(2026-09 라우트 통합, #356).
+      // 통합 때 이 항목이 같이 오지 않아, 정작 가장 많이 열리는 페이지만 캐시 없이
+      // 매 방문 함수를 돌리고 있었다.
+      { source: '/movie/:id', headers: [{ key: 'Cache-Control', value: detail }] },
+      // 구 경로는 이제 308만 던진다 — 리다이렉트 응답도 캐시해 링크당 함수 실행을 막는다.
       { source: '/films/movie/:id', headers: [{ key: 'Cache-Control', value: detail }] },
       { source: '/films/theater/:id', headers: [{ key: 'Cache-Control', value: detail }] },
       { source: '/films/area/:region', headers: [{ key: 'Cache-Control', value: area }] },
