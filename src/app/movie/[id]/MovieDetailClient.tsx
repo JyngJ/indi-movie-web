@@ -424,7 +424,7 @@ export function MovieDetailClient({ movie, initialShowtimes, theaterId }: {
   )
 
   const synopsisSection = movie.synopsis ? (
-    <div style={{ padding: isDesktop ? '0 0 20px' : '0 16px 16px', borderBottom: '1px solid var(--color-border)' }}>
+    <div style={{ padding: isDesktop ? '0 0 20px' : '24px 16px 20px', borderBottom: '1px solid var(--color-border)' }}>
       <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>시놉시스</p>
       <ExpandableSynopsis text={movie.synopsis} />
     </div>
