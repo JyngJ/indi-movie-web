@@ -27,7 +27,9 @@ export function DetailDateTabs({
             key={d}
             onClick={() => hasShows && onSelect(d)}
             style={{
-              flexShrink: 0, width: 56, height: 60,
+              /* 폭이 남으면 셀이 나눠 갖는다 — PC 본문 컬럼을 채운다(피그마 2026-09-17).
+                 모바일(7×56 > 화면)에서는 56으로 남고 가로 스크롤 */
+              flex: '1 0 56px', minWidth: 56, height: 60,
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
               border: 'none', background: 'none', cursor: hasShows ? 'pointer' : 'default',
               opacity: hasShows ? 1 : 0.35,

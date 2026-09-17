@@ -12,8 +12,8 @@ import type { CSSProperties, ReactNode } from 'react'
  *  `overflow: hidden`을 걸지 않는다 — 극장 상세의 날짜탭이 sticky라 잘라내면 안 붙는다.
  *
  *  481~1023px에서는 `.mobile-container`가 앱을 480 컬럼으로 가두고 바깥이 회색이라
- *  흰 면이 컬럼에서 끊겨 보인다 — `.detail-key-panel` 클래스가 그 구간에서만 모서리를 깎는다
- *  (globals.css). 흰 면이 아니던 시절엔 안 보이던 이음매다. */
+ *  흰 면이 컬럼 경계에서 끊겨 보인다. 모서리를 깎거나 흰 면을 좌우로 흘리는 수법은
+ *  둘 다 물렸다(2026-09-17) — 그 구간은 끊긴 채로 둔다. */
 export function DetailKeyPanel({
   isDesktop,
   corners = 'all',

@@ -71,6 +71,15 @@ export function PosterThumb({
     ? 'var(--comp-poster-sheet-radius)'   /* 8px */
     : 'var(--comp-poster-radius)')         /* 6px */
   const dropShadow = shadow ? '0 2px 8px rgba(0,0,0,0.18)' : null
+  /* 포스터 없는 칸의 글자·워드마크 크기 기준 폭 */
+  const fallbackBase = fluid ? fluidTextBase : width
+  /* 워드마크 — 작은 썸네일(지도 핀 등)에는 글자만도 빠듯해서 뺀다 */
+  const markWidth = fallbackBase >= 72
+    ? Math.round(Math.min(72, Math.max(36, fallbackBase * 0.36)))
+    : 0
+  const markBottom = Math.max(6, Math.round(fallbackBase * 0.06))
+  /* logo.svg 448×153 — 글자가 워드마크 자리를 침범하지 않게 아래를 비워 둔다 */
+  const markSpace = markWidth ? Math.round(markWidth * 0.342) + markBottom + 8 : 0
 
   return (
     /* 컨테이너는 항상 고정 크기 — 선택 링이 레이아웃에 영향 없도록 box-shadow 사용 */
@@ -94,12 +103,36 @@ export function PosterThumb({
       {/* 포스터 */}
       <div
         style={{
+          position: 'relative',
           width: '100%',
           height: '100%',
           overflow: 'hidden',
           borderRadius: radiusVar,
         }}
       >
+        {src && !loaded && (
+          /* 로딩 플레이스홀더 — 옅은 면 + 가운데 워드마크. 빈 회색 칸이 뜨는 동안
+             무엇을 기다리는 칸인지 보이게 한다. 이미지가 뜨면 사라진다. */
+          <div
+            aria-hidden
+            style={{
+              position: 'absolute', inset: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              backgroundColor: 'var(--color-surface-raised)',
+              borderRadius: radiusVar,
+            }}
+          >
+            {markWidth > 0 && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src="/logo.svg"
+                alt="영화볼지도 로고"
+                aria-hidden
+                style={{ width: markWidth, opacity: 0.16, pointerEvents: 'none' }}
+              />
+            )}
+          </div>
+        )}
         {src ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -120,6 +153,7 @@ export function PosterThumb({
         ) : (
           <div
             style={{
+              position: 'relative',
               width: '100%',
               height: '100%',
               background: 'var(--color-neutral-800)',
@@ -127,12 +161,13 @@ export function PosterThumb({
               alignItems: 'center',
               justifyContent: 'center',
               padding: 4,
+              paddingBottom: 4 + markSpace,
             }}
           >
             {alt && (
               <span style={{
                 color: 'rgba(255,255,255,0.9)',
-                fontSize: Math.max(11, Math.min(20, Math.round((fluid ? fluidTextBase : width) * 0.15))),
+                fontSize: Math.max(11, Math.min(20, Math.round(fallbackBase * 0.15))),
                 fontWeight: 800,
                 textAlign: 'center',
                 lineHeight: 1.3,
@@ -145,6 +180,28 @@ export function PosterThumb({
               }}>
                 {alt}
               </span>
+            )}
+            {/* 포스터가 없어 제목만 남는 칸 — 바닥 가운데 워드마크를 옅게 깐다.
+                작은 썸네일(지도 핀 등)에는 글자만도 빠듯해서 넣지 않는다.
+                alt는 채우고 aria-hidden을 같이 건다 — 크롤러엔 텍스트를 주고
+                스크린리더 중복 낭독은 막는다(AGENTS 이미지 alt 정책). */}
+            {markWidth > 0 && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src="/logo.svg"
+                alt="영화볼지도 로고"
+                aria-hidden
+                style={{
+                  position: 'absolute',
+                  left: '50%',
+                  bottom: markBottom,
+                  transform: 'translateX(-50%)',
+                  width: markWidth,
+                  opacity: 0.22,
+                  filter: 'brightness(0) invert(1)',
+                  pointerEvents: 'none',
+                }}
+              />
             )}
           </div>
         )}

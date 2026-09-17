@@ -94,19 +94,9 @@ img {
 
 /* 상세 '핵심 정보' 패널 (DetailKeyPanel).
    모바일은 풀블리드 — 모서리를 깎지 않는다.
-   481~1023에서는 .mobile-container가 앱을 480 컬럼에 가두고 바깥이 회색이라 흰 면이
-   컬럼 경계에서 끊겨 보인다. box-shadow 스프레드로 흰 면을 좌우로 흘려 이음매를 없앤다
-   (shadow는 레이아웃·스크롤에 안 잡혀서 100vw처럼 가로 스크롤을 만들지 않는다).
-   clip-path는 그 번짐을 좌우로만 제한한다 — 위아래로 새면 밴드·섹션을 덮는다.
    PC(≥1024)는 본문 컬럼 안 카드라 모서리를 깎는다. */
 .detail-key-panel {
   border-radius: 0;
-}
-@media (max-width: 1023px) {
-  .detail-key-panel {
-    box-shadow: 0 0 0 100vmax var(--color-surface-card);
-    clip-path: inset(0 -100vmax);
-  }
 }
 @media (min-width: 1024px) {
   .detail-key-panel {
