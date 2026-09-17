@@ -91,18 +91,29 @@ export function normalizeDateTime(value: string) {
   }
 }
 
-// 실제 크롬 브라우저 UA. 이전에는 UA에 "crawler"가 박혀 있어 dtryx 봇 필터에 바로 걸렸다.
-export const BROWSER_UA =
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+/**
+ * 크롤러 신원. 사이트 주소와 연락처를 담아 상대가 우리를 특정하고 연락할 수 있게 한다.
+ *
+ * 한동안 크롬 UA에 sec-ch-ua 클라이언트 힌트까지 맞춰 브라우저인 척했다. 예전에 UA에
+ * "crawler"가 박혀 dtryx 봇 필터에 걸린 적이 있어서였는데, 2026-09-18에 RPi(운영 IP)에서
+ * 활성 크롤 소스 32곳을 두 UA로 직접 찔러 확인했다:
+ *   · 30곳 — 응답 코드·크기가 바이트 단위로 동일
+ *   · tinyticket — 정직한 UA 44KB 정상 / 브라우저 UA 820B 빈 껍데기 (위장이 오히려 방해)
+ *   · gymc.or.kr — UA와 무관하게 연결 실패(별건)
+ * dtryx가 막는 건 `curl/8.x` 같은 기본 UA(403)이지 봇이 아니다. 신원을 밝힌 UA는 200이다.
+ *
+ * 위장을 유지하면 얻는 것 없이, IP 차단 후 로테이션 기록과 합쳐져
+ * "차단 인지 → 신원 은닉 → 우회"라는 그림만 남는다. 도메인은 punycode로 쓴다 —
+ * 헤더 값에 비ASCII를 넣으면 fetch가 거부한다.
+ */
+export const CRAWLER_UA =
+  'indi-movie-web/1.0 (+https://www.xn--hq1bv8o5phw2d7wt.com; mail.jaeyong@gmail.com)'
 
-/** 브라우저처럼 보이는 기본 헤더 세트. extra로 API별 헤더(accept 등)를 덮어쓴다. */
-export function browserHeaders(extra: Record<string, string> = {}): Record<string, string> {
+/** 크롤 요청 기본 헤더. extra로 API별 헤더(accept 등)를 덮어쓴다. */
+export function crawlerHeaders(extra: Record<string, string> = {}): Record<string, string> {
   return {
-    'user-agent': BROWSER_UA,
+    'user-agent': CRAWLER_UA,
     'accept-language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-    'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
-    'sec-ch-ua-mobile': '?0',
-    'sec-ch-ua-platform': '"macOS"',
     ...extra,
   }
 }
@@ -157,7 +168,7 @@ export async function fetchJson<T>(url: string, headers: Record<string, string>)
 export async function fetchText(url: string) {
   return withRetry(async () => {
     const response = await fetch(url, {
-      headers: browserHeaders(),
+      headers: crawlerHeaders(),
       cache: 'no-store',
       signal: AbortSignal.timeout(30000),
     })

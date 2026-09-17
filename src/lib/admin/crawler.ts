@@ -11,8 +11,8 @@ import {
   normalizeDateTime,
   fetchJson,
   fetchText,
-  BROWSER_UA,
-  browserHeaders,
+  CRAWLER_UA,
+  crawlerHeaders,
   withRetry,
   mapWithConcurrency,
   extractDtryxCgid,
@@ -127,7 +127,7 @@ export async function resolveCrawlInput(
   if (inputKind === 'url' && url) {
     return withRetry(async () => {
       const response = await fetch(url, {
-        headers: browserHeaders(),
+        headers: crawlerHeaders(),
         signal: AbortSignal.timeout(30000),
       })
 
@@ -457,12 +457,9 @@ async function updateMovieeSeats(sources: AdminTheaterSource[], dbCandidates: an
       const tid = extractMovieeTheaterId(sourceUrl)
       const baseUrl = new URL(sourceUrl)
       const origin = baseUrl.origin
-      const headers = browserHeaders({
+      const headers = crawlerHeaders({
         accept: 'application/json, text/javascript, */*; q=0.01',
         'x-requested-with': 'XMLHttpRequest',
-        'sec-fetch-dest': 'empty',
-        'sec-fetch-mode': 'cors',
-        'sec-fetch-site': 'same-origin',
         referer: `${origin}/Theater/Index`,
       })
 
@@ -639,13 +636,12 @@ function dtryxDelay(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+/* accept·x-requested-with·referer는 dtryx API가 실제로 보는 값이라 남긴다.
+   sec-fetch-* 는 브라우저 위장용이라 뺐다 — 2026-09-18 실측에서 있으나 없으나 같은 응답. */
 function buildDtryxHeaders(referer: string): Record<string, string> {
-  return browserHeaders({
+  return crawlerHeaders({
     accept: 'application/json, text/javascript, */*; q=0.01',
     'x-requested-with': 'XMLHttpRequest',
-    'sec-fetch-dest': 'empty',
-    'sec-fetch-mode': 'cors',
-    'sec-fetch-site': 'same-origin',
     referer,
   })
 }
@@ -787,12 +783,9 @@ export async function crawlMovieeTicketApi(context: ParseContext) {
   const tid = extractMovieeTheaterId(sourceUrl)
   const baseUrl = new URL(sourceUrl)
   const origin = baseUrl.origin
-  const headers = browserHeaders({
+  const headers = crawlerHeaders({
     accept: 'application/json, text/javascript, */*; q=0.01',
     'x-requested-with': 'XMLHttpRequest',
-    'sec-fetch-dest': 'empty',
-    'sec-fetch-mode': 'cors',
-    'sec-fetch-site': 'same-origin',
     referer: `${origin}/Theater/Index`,
   })
   const dateParams = createMovieePlayDateParams(tid)
@@ -1497,7 +1490,7 @@ async function crawlPetitecine(context: ParseContext): Promise<CrawledShowtimeCa
 
     const resp = await fetch('https://petitecine.com/api/W0060.do', {
       method: 'POST',
-      headers: browserHeaders({ 'content-type': 'application/json' }),
+      headers: crawlerHeaders({ 'content-type': 'application/json' }),
       body: JSON.stringify({ req_cmd: 'selectlist', cinema_id: Number(cinemaId), chkCinemaId: 'N', movie_date: dateStr }),
       signal: AbortSignal.timeout(10000),
     })
@@ -1543,7 +1536,7 @@ async function crawlPetitecine(context: ParseContext): Promise<CrawledShowtimeCa
 async function crawlDrfa(context: ParseContext): Promise<CrawledShowtimeCandidate[]> {
   const url = context.sourceUrl ?? context.source.listingUrl
   const res = await fetch(url, {
-    headers: browserHeaders(),
+    headers: crawlerHeaders(),
     signal: AbortSignal.timeout(30000),
   })
   if (!res.ok) throw new Error(`DRFA fetch 실패: ${res.status}`)
@@ -1630,7 +1623,7 @@ async function crawlDrfa(context: ParseContext): Promise<CrawledShowtimeCandidat
 async function crawlKofaCinematheque(context: ParseContext): Promise<CrawledShowtimeCandidate[]> {
   const url = context.source.listingUrl
   const res = await fetch(url, {
-    headers: browserHeaders({ accept: 'text/html,*/*' }),
+    headers: crawlerHeaders({ accept: 'text/html,*/*' }),
     cache: 'no-store',
     signal: AbortSignal.timeout(30_000),
   })

@@ -58,7 +58,27 @@ timeout 8 bash -c "cat < /dev/null > /dev/tcp/www.dtryx.com/443" && echo OPEN ||
 ```
 `BLOCKED`(443 timeout)인데 `ping www.dtryx.com`은 되고 google 등 타 사이트는 정상이면 → **IP 밴 확정**.
 
-### 2. IP 로테이션 (RPi 공인 IP 교체)
+### 2. 먼저 할 것 — 부하를 줄이고 연락한다
+
+IP 로테이션은 **최후 수단이다.** 차단을 인식하고 IP를 바꿔 다시 접근한 기록은, 나중에
+접근권한 다툼이 생기면 가장 불리한 사실로 남는다(대법원 2021도1533은 "객관적으로 드러난
+여러 사정"으로 접근권한을 판단한다). 광고를 붙인 뒤에는 더 그렇다.
+
+밴이 확정되면 순서대로:
+
+1. **원인부터 줄인다** — 밴은 대부분 우리가 순간 요청을 몰아친 결과다. 도메인 동시성 1을
+   지키고 있었는지, 좌석 크롤이 `Promise.all`로 새지 않았는지 확인한다(2026-07-09 사고 원인).
+   크론 주기를 하루 3회에서 임시로 줄이는 것도 방법이다.
+2. **기다린다** — 일시적 rate limit이면 시간이 지나면 풀린다. 최소 하루는 두고 본다.
+3. **연락한다** — dtryx 고객센터나 해당 극장에 "상영 정보를 모아 관객을 예매 페이지로
+   보내는 서비스이고, 하루 N회 조회한다. 부담되면 간격을 조정하겠다. 공식 제공 경로가
+   있으면 그쪽을 쓰고 싶다"고 남긴다. 답이 없어도 **시도한 기록 자체가 방어 자료**다.
+4. 위 셋으로 안 되고 서비스가 멈춰 있을 때만 아래 로테이션을 쓴다.
+
+우리 크롤러는 UA에 사이트 주소와 메일을 싣는다(`CRAWLER_UA`). 상대가 우리를 특정해
+연락할 수 있으니, 차단 전에 문의가 올 여지가 있다. 이 신원을 지우지 말 것.
+
+### 3. IP 로테이션 (RPi 공인 IP 교체) — 최후 수단
 ```bash
 ssh pi@100.76.84.97 'sudo systemd-run --unit=mac-rotate --collect /bin/bash /home/pi/mac-rotate.sh'
 # ~20초 후 결과 확인
@@ -69,13 +89,13 @@ ssh pi@100.76.84.97 'tail -5 /home/pi/mac-change.log; curl -s https://api.ipify.
 - `systemd-run`으로 detached 실행 → SSH 세션이 끊겨도 계속 진행. SSH는 Tailscale 오버레이(`100.76.84.97`)라 공인 IP가 바뀌어도 유지됨.
 - 로그에 `dtryx:443 OPEN - 밴 회피 성공!` 뜨면 완료.
 
-### 3. MAC 원복 (필요 시)
+### 4. MAC 원복 (필요 시)
 ```bash
 ssh pi@100.76.84.97 'nmcli con mod "Wired connection 1" 802-3-ethernet.cloned-mac-address "" && nmcli con up "Wired connection 1"'
 ```
 빈 값 = 영구 하드웨어 MAC으로 복귀. (cloned MAC은 재부팅해도 NM이 유지하므로, 원복하려면 명시적으로 실행.)
 
-### 4. 검증
+### 5. 검증
 ```bash
 ssh pi@100.76.84.97 'cd /home/pi/movie && npm run crawl:seats 2>&1 | tail -5'
 ```

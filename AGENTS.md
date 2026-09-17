@@ -108,6 +108,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
 The crawler runs on a Raspberry Pi (`ssh pi@100.76.84.97`, Tailscale). Full runbook: `docs/RUNBOOK-crawler.md`.
 
 - **dtryx requests must stay at concurrency 1 per domain.** Bursty parallel requests (`Promise.all` over per-theater tasks, high `mapWithConcurrency`) get the RPi's public IP firewall-banned by dtryx. Do not raise concurrency without domain-level rate limiting.
+- **크롤러는 신원을 밝힌다.** UA(`CRAWLER_UA`)에 사이트 주소와 연락처가 들어 있다. 브라우저 위장(`sec-ch-ua`·`sec-fetch-*`)은 2026-09-18에 걷어냈다 — 활성 소스 32곳 실측에서 얻는 게 없었고(30곳 동일 응답, tinyticket은 오히려 위장이 방해), IP 로테이션 기록과 합쳐지면 "차단 인지 → 신원 은닉 → 우회" 그림만 남는다. 되돌리지 말 것.
+- **IP 로테이션은 최후 수단이다.** 밴이 나면 먼저 부하를 줄이고, 기다리고, 연락한다. 순서는 `docs/RUNBOOK-crawler.md`.
 - **If dtryx returns `fetch failed` / connect timeouts (IP ban):** on the RPi, run the IP-rotation script — `ssh pi@100.76.84.97 'sudo systemd-run --unit=mac-rotate --collect /bin/bash /home/pi/mac-rotate.sh'`. It swaps the `eth0` cloned MAC to get a new DHCP public IP, with a 150s self-healing rollback. Verify with `timeout 8 bash -c "cat < /dev/null > /dev/tcp/www.dtryx.com/443" && echo OPEN`. See the runbook for detection, verification, and MAC revert.
 - Seat crawling is `npm run crawl:seats` (movie repo, throttled, all parsers). The old standalone `/home/pi/seat-checker` was retired 2026-07-09 — do not resurrect it.
 
