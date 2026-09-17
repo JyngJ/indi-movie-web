@@ -15,6 +15,10 @@ import { FilmRankingSection } from '@/components/domain/FilmRankingSection'
 import { LocationPermissionModal } from '@/components/domain/LocationPermissionModal'
 import { PersonalizedSection } from '@/components/domain/PersonalizedSection'
 import { InstagramRecsSection } from '@/components/domain/InstagramRecsSection'
+
+/** 인스타그램 추천 섹션 노출 스위치 — 2026-09-17 사용자 요청으로 껐다.
+ *  데이터·컴포넌트는 그대로 두고 렌더만 막는다(다시 켤 때 이 상수만 true). */
+const SHOW_INSTAGRAM_RECS = false
 import { FilterChip } from '@/components/domain/filterBar/FilterChip'
 import { FilmsSearchBar } from '@/components/domain/FilmsSearchBar'
 import { RegionDropdown } from '@/components/domain/filterBar/RegionDropdown'
@@ -1160,15 +1164,18 @@ export default function FilmsPage() {
             {renderSpecial(special0, 0)}
 
             {/* 인스타그램에서 추천한 그 영화 — run1/run2 순번 체계 밖(개인화·기념일·특별전과 동일),
-                발견 성격이라 시의성 run1보다 위, 상단권에 배치 */}
-            <InstagramRecsSection
-              recommendations={instagramRecs}
-              activeMovieIds={activeMovieIdSet}
-              today={toKstIsoDate(new Date())}
-              isDesktop={isDesktop}
-              onMovieClick={handleMovieClick}
-              onFestivalClick={(slug) => router.push(`/festival/${slug}`)}
-            />
+                발견 성격이라 시의성 run1보다 위, 상단권에 배치.
+                2026-09-17 사용자 요청으로 잠시 내렸다 — 다시 켜려면 아래 상수만 true로. */}
+            {SHOW_INSTAGRAM_RECS && (
+              <InstagramRecsSection
+                recommendations={instagramRecs}
+                activeMovieIds={activeMovieIdSet}
+                today={toKstIsoDate(new Date())}
+                isDesktop={isDesktop}
+                onMovieClick={handleMovieClick}
+                onFestivalClick={(slug) => router.push(`/festival/${slug}`)}
+              />
+            )}
 
             {/* 3. 지금 출발하면 + 막바지 + 매진 임박 — 시의성. 연속 sparse 자동 페어링 */}
             {renderRun(run1, 'run1', startRun1)}

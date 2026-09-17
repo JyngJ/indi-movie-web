@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { useProgressRouter } from '@/hooks/useProgressRouter'
 import { addDaysIso, toKstIsoDate } from '@/lib/date'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
+import { DetailKeyPanel } from '@/components/navigation/DetailKeyPanel'
 import { FavoriteActionButton } from '@/components/domain/favorites/FavoriteActionRow'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import Image from 'next/image'
@@ -437,9 +438,10 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
 
   const content = (
     <div style={{ paddingBottom: isDesktop ? (selectedShowtimeData ? 220 : 64) : (selectedShowtimeData ? 148 : 80) }}>
-      {/* 헤더 */}
+      {/* 핵심 정보 패널 — 헤더 + 액션 + 지도 CTA + 날짜탭 (피그마 2026-09-17 확정) */}
       {/* 그라데이션 밴드는 뺐다 (2026-08-24) — 다른 상세(영화·감독)는 민 배경이라 혼자 튀었다 */}
-      <div style={{ padding: isDesktop ? '28px 28px 24px' : '20px 16px 20px' }}>
+      <DetailKeyPanel isDesktop={isDesktop} corners="top">
+      <div style={{ padding: isDesktop ? '28px 0 24px' : '20px 16px 20px' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', padding: '4px 12px', borderRadius: 9999, border: '1px solid color-mix(in srgb, var(--color-primary-base) 55%, transparent)', backgroundColor: 'var(--color-primary-subtle-l)', marginBottom: 12 }}>
           <span style={{ fontSize: 'var(--text-badge)', fontWeight: 600, lineHeight: 1, color: 'var(--color-primary-base)' }}>독립·예술영화관</span>
         </div>
@@ -489,17 +491,23 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
         </div>
       </div>
 
-      {/* 날짜 탭 */}
-      <div style={{
-        position: 'sticky', top: 52, zIndex: 20,
-        backgroundColor: 'var(--color-surface-bg)',
-        borderBottom: '1px solid var(--color-border)',
-      }}>
+      </DetailKeyPanel>
+
+      {/* 날짜 탭 — 패널의 아랫단. 패널 *안*에 넣으면 sticky가 패널 높이에 갇혀 목록을 스크롤할 때
+          따라오지 못한다(2026-09-17 확인). 그래서 sticky 요소 자신이 패널 조각이 된다. */}
+      <DetailKeyPanel
+        isDesktop={isDesktop}
+        corners="bottom"
+        style={{
+          position: 'sticky', top: 52, zIndex: 20,
+          borderBottom: '1px solid var(--color-border)',
+        }}
+      >
         <DetailDateTabs dates={dates} selectedDate={selectedDate} activeDates={activeDates} onSelect={setSelectedDate} />
-      </div>
+      </DetailKeyPanel>
 
       {/* 현재 상영중 */}
-      <div style={{ padding: isDesktop ? '20px 28px 0' : '16px 16px 0' }}>
+      <div style={{ padding: isDesktop ? '20px 0 0' : '16px 16px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 16 }}>
           <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
             {/* 미래 날짜에 "현재 상영중"은 거짓말 — 오늘만 현재고, 나머지는 그 날의 목록이다 (2026-08-24) */}
@@ -554,7 +562,7 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
     return (
       <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
         <DetailTopBar crumbLabel="영화" crumbHref="/films" title={theater.name} isDesktop trailing={<RegionFilterWidget />} />
-        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 0' }}>
           {content}
         </div>
         {selectedShowtimeData && (

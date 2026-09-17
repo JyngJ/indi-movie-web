@@ -75,8 +75,9 @@ export function ShowtimeCell({
           <Icon name="moon" size={14} />
         )}
       </div>
-      {/* 종료시간 — 별도 줄 (피그마) */}
-      {endTime && (
+      {/* 종료시간 — 별도 줄 (피그마). 상영 완료 회차에는 안 띄운다:
+          이미 끝난 회차에 "몇 시까지"는 쓸모가 없고, 시작 시간 취소선이 끝났다는 걸 이미 말한다 */}
+      {endTime && !isEnded && (
         <div className="mt-1" style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', fontFeatureSettings: '"tnum"', whiteSpace: 'nowrap' }}>
           -{endTime}
         </div>

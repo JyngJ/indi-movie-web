@@ -92,6 +92,25 @@ img {
   }
 }
 
+/* 상세 '핵심 정보' 패널 (DetailKeyPanel).
+   모바일은 풀블리드 — 모서리를 깎지 않는다.
+   PC(≥1024)는 본문 컬럼 안 카드라 모서리를 깎는다. */
+.detail-key-panel {
+  border-radius: 0;
+}
+@media (min-width: 1024px) {
+  .detail-key-panel {
+    border-radius: var(--radius-sheet);
+  }
+  /* 두 조각으로 쌓는 경우(극장 상세: 헤더 + sticky 날짜탭) — 맞닿는 쪽은 각지게 */
+  .detail-key-panel--top {
+    border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+  }
+  .detail-key-panel--bottom {
+    border-radius: 0 0 var(--radius-sheet) var(--radius-sheet);
+  }
+}
+
 /* 가로 스크롤 영역 스크롤바 숨김 */
 .no-scrollbar {
   scrollbar-width: none;
