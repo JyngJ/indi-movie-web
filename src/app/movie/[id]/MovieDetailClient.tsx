@@ -110,15 +110,22 @@ function DirectorChipLoader({ name, onClick }: { name: string; onClick: () => vo
 }
 
 /* ── 메인 ────────────────────────────────────────────────────────── */
-export function MovieDetailClient({ movie, initialShowtimes, theaterId }: {
+export function MovieDetailClient({ movie, initialShowtimes, initialSelection }: {
   movie: MovieDetail
   /** SSR에서 미리 읽은 시간표 — 첫 페인트에 회차가 바로 보이게 시드로 넣는다 */
   initialShowtimes?: MovieTheaterEntry[]
-  /** 극장 시트에서 넘어온 경우(?theater=) — 유입 경로 기록용 */
-  theaterId?: string
+  /** 회차 공유 링크(/movie/[id]/s/[showtimeId])로 들어온 경우의 초기 선택 */
+  initialSelection?: { date: string; theaterId: string; showtimeId: string }
 }) {
   const router = useProgressRouter()
   const isDesktop = useIsDesktop()
+  /* 극장 시트 경유(?theater=) — 서버가 이 쿼리를 읽으면 페이지가 매 요청 동적으로 굳는다.
+     유입 기록과 뒤로가기 목적지에만 쓰이니 클라이언트에서 주소를 직접 읽는다.
+     effect에서 담는다 — 첫 렌더에 읽으면 SSR 결과와 달라져 hydration이 어긋난다. */
+  const [theaterId, setTheaterId] = useState<string | undefined>(undefined)
+  useEffect(() => {
+    setTheaterId(new URLSearchParams(window.location.search).get('theater') ?? undefined)
+  }, [])
   const handleBack = () => {
     const query = new URLSearchParams(window.location.search)
     if (query.get('from') === 'curation') router.push('/map')
@@ -128,18 +135,18 @@ export function MovieDetailClient({ movie, initialShowtimes, theaterId }: {
   }
 
   const dates = useMemo(() => getDateRange(7), [])
-  const [selectedDate, setSelectedDate] = useState(dates[0])
+  const [selectedDate, setSelectedDate] = useState(initialSelection?.date ?? dates[0])
   // localStorage 초기화 금지 — hydration mismatch 방지 (effect에서 로드)
   const [regionId, setRegionId] = useState<string | null>(null)
   useEffect(() => { setRegionId(getStoredRegion()) }, [])
   // 다른 화면(지도 탭 등)의 지역 변경 동기
   useEffect(() => subscribeStoredRegion(setRegionId), [])
-  const [selectedShowtimeId, setSelectedShowtimeId] = useState<string | null>(null)
-  const [selectedTheaterId, setSelectedTheaterId] = useState<string | null>(null)
+  const [selectedShowtimeId, setSelectedShowtimeId] = useState<string | null>(initialSelection?.showtimeId ?? null)
+  const [selectedTheaterId, setSelectedTheaterId] = useState<string | null>(initialSelection?.theaterId ?? null)
   const [bookableOnly, setBookableOnly] = useState(false)
   // 공유 링크(?date=&theater=&showtime=)로 들어왔을 때, 날짜 변경 시 선택 초기화하는
   // 아래 effect가 복원 직후 곧바로 리셋해버리지 않도록 1회 억제한다.
-  const suppressResetOnDateChangeRef = useRef(false)
+  const suppressResetOnDateChangeRef = useRef(Boolean(initialSelection))
 
   const { data: theaterEntries = [], isLoading } = useMovieTheaterShowtimes(movie.id, initialShowtimes)
   /* 관심 극장 — 이름 옆 하트(표시 전용, 해제는 극장 상세에서) + 목록 앞 정렬 (2026-08-24) */
@@ -302,10 +309,9 @@ export function MovieDetailClient({ movie, initialShowtimes, theaterId }: {
 
   const shareSelectedShowtime = () => {
     if (!selectedShowtimeData || !selectedTheaterId) return
-    const url = new URL(window.location.href)
-    url.searchParams.set('date', selectedDate)
-    url.searchParams.set('theater', selectedTheaterId)
-    url.searchParams.set('showtime', selectedShowtimeData.st.id)
+    /* 회차는 경로로 싣는다 — 쿼리로 실으면 OG 카드를 굽기 위해 상세가 매 요청
+       동적으로 굳는다(2026-09-17). 구 쿼리 링크도 아래 복원 effect가 계속 받아준다. */
+    const url = new URL(`/movie/${movie.id}/s/${selectedShowtimeData.st.id}`, window.location.origin)
     void shareAndTrack({
       payload: {
         title: `${movie.title} - ${selectedShowtimeData.theaterName} ${selectedShowtimeData.st.showTime.slice(0, 5)}`,

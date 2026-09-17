@@ -245,18 +245,23 @@ function MovieShowtimeCardSkeleton({ isDesktop }: { isDesktop: boolean }) {
 }
 
 /* ── 메인 ────────────────────────────────────────────────────────── */
-export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
+export function FilmsTheaterDetailClient({ theater, initialSelection }: {
+  theater: Theater
+  /** 회차 공유 링크(/films/theater/[id]/s/[showtimeId])로 들어온 경우의 초기 선택 */
+  initialSelection?: { date: string; showtimeId: string; movieTitle: string }
+}) {
   const router = useProgressRouter()
   const isDesktop = useIsDesktop()
 
   const dates = useMemo(() => getDateRange(7), [])
-  const [selectedDate, setSelectedDate] = useState(dates[0])
+  const [selectedDate, setSelectedDate] = useState(initialSelection?.date ?? dates[0])
   const [copied, setCopied] = useState(false)
-  const [selectedShowtimeId, setSelectedShowtimeId] = useState<string | null>(null)
-  const [selectedMovieTitle, setSelectedMovieTitle] = useState<string | null>(null)
+  const [selectedShowtimeId, setSelectedShowtimeId] = useState<string | null>(initialSelection?.showtimeId ?? null)
+  /* 회차 카드는 제목이 있어야 뜬다(selectedShowtimeData) — 공유 경로는 서버가 이미 알고 넘긴다 */
+  const [selectedMovieTitle, setSelectedMovieTitle] = useState<string | null>(initialSelection?.movieTitle ?? null)
   // 공유 링크(?date=&showtime=)로 들어왔을 때, 날짜 변경 시 선택 초기화하는
   // 아래 effect가 복원 직후 곧바로 리셋해버리지 않도록 1회 억제한다.
-  const suppressResetOnDateChangeRef = useRef(false)
+  const suppressResetOnDateChangeRef = useRef(Boolean(initialSelection))
   const restoredShareRef = useRef(false)
 
   const { data: allMovies = [] } = useTheaterAllMovies(theater.id)
@@ -409,9 +414,9 @@ export function FilmsTheaterDetailClient({ theater }: { theater: Theater }) {
 
   const shareSelectedShowtime = () => {
     if (!selectedShowtimeData) return
-    const url = new URL(window.location.href)
-    url.searchParams.set('date', selectedDate)
-    url.searchParams.set('showtime', selectedShowtimeData.st.id)
+    /* 회차는 경로로 싣는다 — 쿼리로 실으면 OG 카드를 굽느라 극장 상세가 매 요청
+       동적으로 굳는다(2026-09-17). 구 쿼리 링크는 위 복원 effect가 계속 받아준다. */
+    const url = new URL(`/films/theater/${theater.id}/s/${selectedShowtimeData.st.id}`, window.location.origin)
     void shareAndTrack({
       payload: {
         title: `${theater.name} - ${selectedShowtimeData.movieTitle} ${selectedShowtimeData.st.showTime.slice(0, 5)}`,

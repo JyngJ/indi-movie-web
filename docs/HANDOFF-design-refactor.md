@@ -54,7 +54,9 @@
 - 증상: /films/movie·theater/[id] **직진입(SSR) 시 간헐적으로 hydration이 영영 안 끝남** — effects·react-query 전부 미실행, 회차 무한 로딩. 클라 네비게이션은 정상. 프로드·로컬 모두 재현되나 **라우트/환경별로 뒤집히는 레이스** (dev: movie fail·theater pass ↔ prod build: 반대).
 - 소거 완료(무죄): DetailShell, page Suspense, loading.tsx, ld+json, 클라이언트 JSX 전체(트리비얼도 스톨), useSearchParams, localStorage useState 초기화(→수정함), .next 캐시, 스트리밍 메타데이터 스크립트(→비활성화함).
 - 판정 도구: `버튼.__reactFiber$*` 키 존재 여부(hydration 완료), `performance` API 호출 수, `curl | grep '<!--$?-->'`(스트림 균형).
-- 현재 완화: force-dynamic(영화·극장 상세) + htmlLimitedBots(스트리밍 메타 차단) + mismatch 소스 제거. **완전 근절 미확인 — Next 16.2.4 selective hydration 레이스 의심.** Next 패치 추적할 것.
+- 현재 완화: htmlLimitedBots(스트리밍 메타 차단) + mismatch 소스 제거. **완전 근절 미확인 — Next 16.2.4 selective hydration 레이스 의심.** Next 패치 추적할 것.
+- **2026-09-17 변경 — force-dynamic은 걷어냈다.** Vercel Fluid Active CPU 무료 한도(4h)를 넘겨서다. 걷기 전에 재현을 다시 쟀다: 로컬 프로덕션 빌드(Next 16.2.4 동일)에서 영화·극장 상세 직진입 각 45회(정상 25 + CPU 6배·400kbps 스로틀 20회) **스톨 0건**, force-dynamic 빌드와 hydration 완료 시간도 같았다(정상 165ms / 스로틀 2.4s). 남은 완화들이 실제 원인을 덮고 있었을 가능성이 크다.
+- 프로브: `node scripts/dev/hydration-probe.mjs <baseUrl> <반복수> <라벨>` — 새 컨텍스트마다 직진입해 `__reactFiber$*` 키(hydration 완료)와 본문 렌더를 확인한다. **배포 후 프로덕션 URL로 한 번 더 돌릴 것.** 스톨이 잡히면 각 상세 page.tsx의 `export const revalidate` 자리에 `export const dynamic = 'force-dynamic'`을 되살리면 원복된다.
 
 ## 4. 함정·규칙 리마인드
 
