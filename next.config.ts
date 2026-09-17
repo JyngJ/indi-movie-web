@@ -114,6 +114,8 @@ const nextConfig: NextConfig = {
       // 통합 때 이 항목이 같이 오지 않아, 정작 가장 많이 열리는 페이지만 캐시 없이
       // 매 방문 함수를 돌리고 있었다.
       { source: '/movie/:id', headers: [{ key: 'Cache-Control', value: detail }] },
+      // 회차 공유 링크 — 본 상세와 같은 주기로 캐시한다(회차 id별로 따로 굳는다).
+      { source: '/movie/:id/s/:showtimeId', headers: [{ key: 'Cache-Control', value: detail }] },
       // 구 경로는 이제 308만 던진다 — 리다이렉트 응답도 캐시해 링크당 함수 실행을 막는다.
       { source: '/films/movie/:id', headers: [{ key: 'Cache-Control', value: detail }] },
       { source: '/films/theater/:id', headers: [{ key: 'Cache-Control', value: detail }] },
