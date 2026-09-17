@@ -4,28 +4,28 @@ import type { Metadata } from 'next'
 import type { Theater } from '@/types/api'
 import { Toast } from '@/components/primitives'
 import { getTheaterDetail, getTheaterTodayMovieTitles } from '@/lib/catalog/getTheaterDetail'
-import { toTheaterSchema } from '@/lib/seo/toTheaterSchema'
-import { getTheaterScreenings } from '@/lib/seo/getTheaterScreenings'
-import { toFaqSchema } from '@/lib/seo/toFaqSchema'
-import { toBreadcrumbSchema } from '@/lib/seo/toBreadcrumbSchema'
 import { resolveTheaterRegion } from '@/lib/regions'
-import { TheaterSeoContent } from '@/components/seo/TheaterSeoContent'
-import { FilmsTheaterDetailClient } from './FilmsTheaterDetailClient'
+import { TheaterBody } from './TheaterBody'
 import { ogImageUrl } from '@/lib/og/cards'
 
-// 영화 상세와 동일: ISR 정적 셸 hydration 정지 버그 회피 — 동적 렌더 강제
-export const dynamic = 'force-dynamic'
+/* 예전엔 `force-dynamic`이었다 — 직진입 hydration 스톨(#247, HANDOFF 3.9)의 완화책으로
+   넣었던 것이다. 그런데 방문마다 서버 렌더가 돌아 Vercel Fluid Active CPU 한도를 넘겼고,
+   #359가 붙인 CDN 캐시 헤더도 동적 페이지라 Next가 `no-store`로 덮어써 무력했다.
+   2026-09-17 로컬 프로덕션 빌드로 재현을 다시 쟀다 — 직진입 45회(정상 25 + CPU 6배·
+   400kbps 스로틀 20회)에서 스톨 0건. 그때 같이 넣은 완화들(htmlLimitedBots로 스트리밍
+   메타 차단, localStorage/useSearchParams를 effect로 이동)이 남아 있어 그쪽이 실제
+   원인이었을 가능성이 크다. 배포 후 프로덕션에서 같은 프로브로 재확인할 것 —
+   되돌리려면 이 주석 자리에 `export const dynamic = 'force-dynamic'`을 되살리면 된다. */
+export const revalidate = 300
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'
 
 export async function generateMetadata({
   params,
-  searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<Record<string, string | string[] | undefined>>
 }): Promise<Metadata> {
-  const [{ id }, query] = await Promise.all([params, searchParams])
+  const { id } = await params
   const theater = await getTheaterDetail(id)
   if (!theater) notFound()
 
@@ -49,9 +49,9 @@ export async function generateMetadata({
     // writing-audit-ignore — SEO 메타·스키마 문구는 문어체 유지
     : `${theater.name}(${where}) 상영시간표와 극장 정보. 주소는 ${theater.address}입니다. 지금은 등록된 상영이 없지만 영화볼지도는 전국 독립영화관 시간표를 매일 갱신하므로, 새 상영이 열리면 회차와 예매 링크를 바로 확인할 수 있습니다.`
   const url = `${BASE_URL}/films/theater/${id}`
-  /* 회차까지 골라서 공유한 링크(?showtime=)면 카드에 그 회차를 싣는다 */
-  const showtime = typeof query.showtime === 'string' ? query.showtime : undefined
-  const images = [ogImageUrl({ type: 'theater', id, showtime })]
+  /* 회차까지 골라서 공유한 링크는 /films/theater/[id]/s/[showtimeId]가 맡는다 —
+     여기서 쿼리를 읽으면 이 페이지가 다시 매 요청 렌더로 굳는다 */
+  const images = [ogImageUrl({ type: 'theater', id })]
 
   return {
     title,
@@ -91,59 +91,5 @@ export default async function FilmsTheaterDetailPage({
     <Suspense fallback={<Toast message="불러오는 중…" visible />}>
       <TheaterBody id={id} theater={theater} />
     </Suspense>
-  )
-}
-
-async function TheaterBody({ id, theater }: { id: string; theater: Theater }) {
-  const schema = toTheaterSchema(theater, BASE_URL)
-  /* 시간표는 클라이언트가 그려 서버 HTML이 비어 있었다 — 크롤러·답변형 AI가 읽을
-     같은 내용을 서버에서 렌더한다 (지역 페이지와 같은 방식) */
-  const seoData = await getTheaterScreenings(id)
-
-  /* city가 빈 극장이 9곳 있어 '기타'로 빠졌고, breadcrumb이 REGIONS에 없는
-     /films/area/기타(404)를 가리켰다 — 주소 폴백이 있는 리졸버를 쓴다. */
-  const region = resolveTheaterRegion(theater.city, theater.address)
-  const breadcrumbSchema = toBreadcrumbSchema([
-    { name: '영화볼지도', path: '/' },
-    { name: `${region} 독립영화관`, path: `/films/area/${encodeURIComponent(region)}` },
-    { name: theater.name },
-  ], BASE_URL)
-
-  const todayMovies = seoData.days.find((d) => d.date === seoData.date)?.movies ?? []
-  /* 본문(TheaterSeoContent)에 실제로 있는 문답만 스키마로도 낸다 */
-  const faqSchema = toFaqSchema([
-    {
-      question: `${theater.name}에서 오늘 무슨 영화를 상영하나요?`,
-      answer: todayMovies.length > 0
-        // writing-audit-ignore — SEO 메타·스키마 문구는 문어체 유지
-        ? `${todayMovies.map((m) => `${m.movieTitle} (${m.times.join(', ')})`).join(', ')}을 상영합니다.`
-        : `오늘은 등록된 상영이 없어요. 상영 시간표는 매일 갱신돼요.`,
-    },
-    {
-      question: `${theater.name}은 어디에 있나요?`,
-      // writing-audit-ignore — SEO 메타·스키마 문구는 문어체 유지
-      answer: `${theater.address}에 있습니다.`,
-    },
-  ])
-
-  return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
-      />
-      <TheaterSeoContent theater={theater} data={seoData} />
-      <Suspense>
-        <FilmsTheaterDetailClient theater={theater} />
-      </Suspense>
-    </>
   )
 }

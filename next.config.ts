@@ -119,6 +119,7 @@ const nextConfig: NextConfig = {
       // 구 경로는 이제 308만 던진다 — 리다이렉트 응답도 캐시해 링크당 함수 실행을 막는다.
       { source: '/films/movie/:id', headers: [{ key: 'Cache-Control', value: detail }] },
       { source: '/films/theater/:id', headers: [{ key: 'Cache-Control', value: detail }] },
+      { source: '/films/theater/:id/s/:showtimeId', headers: [{ key: 'Cache-Control', value: detail }] },
       { source: '/films/area/:region', headers: [{ key: 'Cache-Control', value: area }] },
     ]
   },

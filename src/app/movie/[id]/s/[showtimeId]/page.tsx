@@ -5,7 +5,7 @@ import { Toast } from '@/components/primitives'
 import { getMovieDetail } from '@/lib/catalog/getMovieDetail'
 import { getMovieShowtimesForSsr } from '@/lib/catalog/getMovieShowtimesCached'
 import { ogImageUrl } from '@/lib/og/cards'
-import { MovieBody } from '../../page'
+import { MovieBody } from '../../MovieBody'
 
 /** 회차 공유 링크 — /movie/[id]/s/[showtimeId]
  *
