@@ -440,9 +440,9 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection }:
   )
 
   const synopsisSection = movie.synopsis ? (
-    /* 핵심 정보 패널과의 간격 — 32(PC 갭 8 + 24 / 모바일 밴드 8 + 24)에서 네 배인 128로.
-       패널을 한 덩어리로 띄운 뒤 시놉시스가 바로 따라붙어 두 블록이 붙어 보였다 */
-    <div style={{ padding: isDesktop ? '120px 0 20px' : '120px 16px 20px', borderBottom: '1px solid var(--color-border)' }}>
+    /* PC는 패널과 한 칸 띄운다 — 패널 바로 아래가 32px이라 붙어 보였다.
+       컬럼 갭 8 + --spacing-8(32) = 40. 모바일은 8px 밴드가 경계를 이미 그어서 24 그대로. */
+    <div style={{ padding: isDesktop ? 'var(--spacing-8) 0 20px' : '24px 16px 20px', borderBottom: '1px solid var(--color-border)' }}>
       <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>시놉시스</p>
       <ExpandableSynopsis text={movie.synopsis} />
     </div>
