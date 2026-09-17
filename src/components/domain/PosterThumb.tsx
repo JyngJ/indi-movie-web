@@ -110,11 +110,15 @@ export function PosterThumb({
           borderRadius: radiusVar,
         }}
       >
-        {src && !loaded && (
+        {src && fade && !loaded && (
           /* 로딩 플레이스홀더 — 옅은 면 + 가운데 워드마크. 빈 회색 칸이 뜨는 동안
-             무엇을 기다리는 칸인지 보이게 한다. 이미지가 뜨면 사라진다. */
+             무엇을 기다리는 칸인지 보이게 한다. 이미지가 뜨면 사라진다.
+             `fade={false}`(지도 핀·그리드의 정적 마크업)에는 절대 걸지 말 것 —
+             onLoad/ref가 안 붙어 loaded가 영영 false라, 플레이스홀더가 포스터를
+             영구히 덮는다(2026-09-17 운영 사고). */
           <div
             aria-hidden
+            data-poster-placeholder
             style={{
               position: 'absolute', inset: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
