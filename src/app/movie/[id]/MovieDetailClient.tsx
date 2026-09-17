@@ -12,7 +12,8 @@ import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionR
 import { FavoriteDirectorMark } from '@/components/domain/favorites/FavoriteDirectorMark'
 import { ExpandableSynopsis } from '@/components/domain/movieDetail/ExpandableSynopsis'
 import { ShowtimeCell } from '@/components/domain/ShowtimeCell'
-import { getPrevPathname, GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
+import { getPrevPathname, getLastFilmsPathname, GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
+import { isFilmsPath } from '@/lib/navigation/filmsPath'
 import Image from 'next/image'
 import { useMovieTheaterShowtimes, useDirectorProfile } from '@/lib/supabase/queries'
 import { useFavorites } from '@/hooks/useFavorites'
@@ -126,12 +127,20 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection }:
   useEffect(() => {
     setTheaterId(new URLSearchParams(window.location.search).get('theater') ?? undefined)
   }, [])
+  /* 뒤로가기는 "이 흐름의 이전"으로 간다 — 브라우저 히스토리의 직전이 아니다.
+     지도 탭을 거쳐 상영작 탭으로 들어온 경우 history.back()이 지도로 튀었다(2026-09-18).
+     상영작에서 들어왔으면 상영작의 마지막 위치(피드 스크롤)로 돌아간다. */
   const handleBack = () => {
     const query = new URLSearchParams(window.location.search)
-    if (query.get('from') === 'curation') router.push('/map')
-    else if (theaterId) router.push(`/map?theater=${encodeURIComponent(theaterId)}`)
-    else if (getPrevPathname() && window.history.length > 1) router.back()
-    else router.push('/films')
+    /* 지도에서 온 진입은 지도로 — 큐레이션 시트·극장 시트 경유 */
+    if (query.get('from') === 'curation') { router.push('/map'); return }
+    if (theaterId) { router.push(`/map?theater=${encodeURIComponent(theaterId)}`); return }
+
+    const prev = getPrevPathname()
+    /* 직전이 상영작 흐름이면 history.back()이 그 위치(스크롤 포함)를 복원한다 */
+    if (prev && isFilmsPath(prev) && window.history.length > 1) { router.back(); return }
+    /* 아니면 상영작의 마지막 위치로 — 없으면 목록 최상단 */
+    router.push(getLastFilmsPathname() ?? '/')
   }
 
   const dates = useMemo(() => getDateRange(7), [])
@@ -431,7 +440,9 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection }:
   )
 
   const synopsisSection = movie.synopsis ? (
-    <div style={{ padding: isDesktop ? '0 0 20px' : '24px 16px 20px', borderBottom: '1px solid var(--color-border)' }}>
+    /* 핵심 정보 패널과의 간격 — 32(PC 갭 8 + 24 / 모바일 밴드 8 + 24)에서 네 배인 128로.
+       패널을 한 덩어리로 띄운 뒤 시놉시스가 바로 따라붙어 두 블록이 붙어 보였다 */
+    <div style={{ padding: isDesktop ? '120px 0 20px' : '120px 16px 20px', borderBottom: '1px solid var(--color-border)' }}>
       <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>시놉시스</p>
       <ExpandableSynopsis text={movie.synopsis} />
     </div>

@@ -272,6 +272,11 @@ const PREV_PATH_KEY = 'yh_prev_path'
 const CUR_PATH_KEY = 'yh_cur_path'
 
 /** 직전 pathname — 상세 뒤로가기가 브라우저 히스토리 대신 흐름 기준으로 판단할 때 사용 */
+/** 상영작 흐름에서 마지막으로 머문 경로(목록·피드 스크롤 위치가 붙는 곳). 없으면 null */
+export function getLastFilmsPathname(): string | null {
+  try { return sessionStorage.getItem(FILMS_LAST_PATH_KEY) } catch { return null }
+}
+
 export function getPrevPathname(): string | null {
   try { return sessionStorage.getItem(PREV_PATH_KEY) } catch { return null }
 }
