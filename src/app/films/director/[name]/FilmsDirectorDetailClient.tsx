@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useProgressRouter } from '@/hooks/useProgressRouter'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
+import { DetailKeyPanel } from '@/components/navigation/DetailKeyPanel'
 import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
 import Image from 'next/image'
 import { useMovies, useActiveMovieIds, useDirectorProfile } from '@/lib/supabase/queries'
@@ -132,7 +133,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
   const heroSection = (
     /* 영화 상세 히어로 문법: 왼쪽 이미지(아바타) + 오른쪽 텍스트/CTA 좌측 정렬 */
     <div style={{
-      background: 'var(--color-surface-bg)',
+      background: 'transparent',
       padding: isDesktop ? '32px 0 28px' : '24px var(--gutter) 20px',
       display: 'flex', gap: isDesktop ? 32 : 16, alignItems: 'flex-start',
     }}>
@@ -170,15 +171,21 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
     <div className="page-slide-in" style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
       {navBar}
 
-      <div style={{ maxWidth: isDesktop ? 1000 : undefined, margin: isDesktop ? '0 auto' : undefined }}>
-        {heroSection}
-        {!isDesktop && actionRow}
+      <div style={{
+        maxWidth: isDesktop ? 1000 : undefined, margin: isDesktop ? '0 auto' : undefined,
+        ...(isDesktop ? { padding: '24px 0', display: 'flex', flexDirection: 'column', gap: 8 } : {}),
+      }}>
+        {/* 핵심 정보 — 히어로 + 액션 행 (PC는 액션 행이 히어로 텍스트 컬럼 안) */}
+        <DetailKeyPanel isDesktop={isDesktop}>
+          {heroSection}
+          {!isDesktop && actionRow}
+        </DetailKeyPanel>
         {/* 섹션 디바이더 — 8px raised 밴드 (피그마 상세 통일 시안, 2026-08-24) */}
         {!isDesktop && <div aria-hidden style={{ height: 8, backgroundColor: 'var(--color-surface-raised)' }} />}
 
         {/* 소개 */}
         {profile?.bio && (
-          <div style={{ padding: '20px var(--gutter)', borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
+          <div style={{ padding: '24px var(--gutter) 20px', borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
             <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text-caption)' }}>소개</p>
             <p style={{ margin: 0, fontSize: 13, lineHeight: 1.8, color: 'var(--color-text-body)', wordBreak: 'keep-all' }}>{profile.bio}</p>
           </div>

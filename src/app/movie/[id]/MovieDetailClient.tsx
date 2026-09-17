@@ -7,6 +7,7 @@ import { Chip, Avatar, IconButton, Button, Icon, Divider, EmptyState, Skeleton, 
 import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
 import { addDaysIso, toKstIsoDate } from '@/lib/date'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
+import { DetailKeyPanel } from '@/components/navigation/DetailKeyPanel'
 import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
 import { FavoriteDirectorMark } from '@/components/domain/favorites/FavoriteDirectorMark'
 import { ExpandableSynopsis } from '@/components/domain/movieDetail/ExpandableSynopsis'
@@ -370,16 +371,16 @@ export function MovieDetailClient({ movie, initialShowtimes, theaterId }: {
   /* PC에서는 액션 행이 히어로 텍스트 컬럼 안(감독 칩 아래)에 붙는다 (2026-08-24 확정) */
   const heroSection = (
     <div style={{
-      background: 'var(--color-surface-bg)',
+      background: 'transparent',
       padding: isDesktop ? '32px 0 28px' : '24px 16px 20px',
       display: 'flex', gap: isDesktop ? 32 : 16, alignItems: 'flex-start',
     }}>
       {/* 포스터 */}
       <div style={{ flexShrink: 0, position: 'relative', width: isDesktop ? 200 : 100, height: isDesktop ? 300 : 150 }}>
         {movie.posterUrl ? (
-          <Image src={movie.posterUrl} alt={`${movie.title} 포스터`} fill priority sizes={isDesktop ? '200px' : '100px'} style={{ borderRadius: 0, objectFit: 'cover', boxShadow: 'inset 0 0 0 1px var(--comp-poster-border)' }} />
+          <Image src={movie.posterUrl} alt={`${movie.title} 포스터`} fill priority sizes={isDesktop ? '200px' : '100px'} style={{ borderRadius: 'var(--radius-poster)', objectFit: 'cover', boxShadow: 'inset 0 0 0 1px var(--comp-poster-border)' }} />
         ) : (
-          <div style={{ width: '100%', height: '100%', borderRadius: 0, background: 'var(--color-neutral-800)' }} />
+          <div style={{ width: '100%', height: '100%', borderRadius: 'var(--radius-poster)', background: 'var(--color-neutral-800)' }} />
         )}
       </div>
 
@@ -665,9 +666,9 @@ export function MovieDetailClient({ movie, initialShowtimes, theaterId }: {
     return (
       <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
         <DetailTopBar crumbLabel="영화" crumbHref="/films" title={movie.title} onBack={handleBack} isDesktop trailing={<RegionFilterWidget onRegionChange={setRegionId} />} />
-        <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 var(--gutter)' }}>
-          {/* hero */}
-          {heroSection}
+        <div style={{ maxWidth: 1000, margin: '0 auto', padding: '24px var(--gutter)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {/* 핵심 정보 — 히어로 + 액션 행(히어로 텍스트 컬럼 안) */}
+          <DetailKeyPanel isDesktop>{heroSection}</DetailKeyPanel>
 
           {/* 사이드바 폐지 (2026-08-24) — 감독 카드·상세 정보는 히어로(감독 칩·메타·장르)와
               전부 중복이었다. 회차 선택 카드만 우하단 플로팅으로 남긴다. */}
@@ -687,8 +688,10 @@ export function MovieDetailClient({ movie, initialShowtimes, theaterId }: {
   return (
     <div className="page-slide-in" style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
       <DetailTopBar crumbLabel="영화" crumbHref="/films" title={movie.title} onBack={handleBack} isDesktop={false} trailing={<RegionFilterWidget onRegionChange={setRegionId} />} />
-      {heroSection}
-      {actionRow}
+      <DetailKeyPanel isDesktop={false}>
+        {heroSection}
+        {actionRow}
+      </DetailKeyPanel>
       {/* 섹션 디바이더 — 8px raised 밴드 (피그마 상세 통일 시안, 2026-08-24) */}
       <div aria-hidden style={{ height: 8, backgroundColor: 'var(--color-surface-raised)' }} />
       {synopsisSection}
