@@ -268,13 +268,21 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
 }
 
 const FILMS_LAST_PATH_KEY = 'lastFilmsPath'
+/** 상영작 '목록'에서 마지막으로 머문 곳. lastFilmsPath는 상세까지 담아서,
+ *  상세에서 뒤로 갈 곳을 물으면 자기 자신을 돌려준다(2026-09-18). */
+const FILMS_LIST_PATH_KEY = 'lastFilmsListPath'
 const PREV_PATH_KEY = 'yh_prev_path'
 const CUR_PATH_KEY = 'yh_cur_path'
 
 /** 직전 pathname — 상세 뒤로가기가 브라우저 히스토리 대신 흐름 기준으로 판단할 때 사용 */
-/** 상영작 흐름에서 마지막으로 머문 경로(목록·피드 스크롤 위치가 붙는 곳). 없으면 null */
+/** 상영작 흐름에서 마지막으로 머문 경로(상세 포함). 없으면 null */
 export function getLastFilmsPathname(): string | null {
   try { return sessionStorage.getItem(FILMS_LAST_PATH_KEY) } catch { return null }
+}
+
+/** 상영작 목록에서 마지막으로 머문 경로 — 상세에서 '나가는 곳'은 이쪽이다 */
+export function getLastFilmsListPathname(): string | null {
+  try { return sessionStorage.getItem(FILMS_LIST_PATH_KEY) } catch { return null }
 }
 
 export function getPrevPathname(): string | null {
@@ -301,6 +309,8 @@ export function GlobalNav() {
     // 대표 영화 상세(/movie/*)도 상영작 탭의 마지막 위치로 복원한다.
     if (isFilmsPath(pathname) && !pathname.startsWith('/films/area')) {
       sessionStorage.setItem(FILMS_LAST_PATH_KEY, pathname)
+      /* 상세(/movie·/films/theater·/films/director)는 목록이 아니다 */
+      if (pathname === '/' || pathname === '/films') sessionStorage.setItem(FILMS_LIST_PATH_KEY, pathname)
       setFilmsHref(pathname)
     }
     // 직전 경로 기록 — GlobalNav는 탭·상세 전부에서 렌더되므로 전역 추적 지점으로 적합
