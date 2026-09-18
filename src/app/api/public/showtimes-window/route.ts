@@ -78,7 +78,7 @@ export async function GET(request: Request) {
       seat_total,
       booking_url,
       theaters(id, name, city, lat, lng),
-      movies(id, title, original_title, year, poster_url, genre, director, nation, kmdb_id, tmdb_id, rating)
+      movies(id, title, original_title, year, poster_url, genre, director, nation, kmdb_id, tmdb_id)
     `)
     .eq('is_active', true)
     .gte('show_date', from)

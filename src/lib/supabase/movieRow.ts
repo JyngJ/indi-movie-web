@@ -24,7 +24,6 @@ export function movieRowToMovie(row: Record<string, unknown>): Movie {
     nation: row.nation ? String(row.nation) : undefined,
     kmdbId: row.kmdb_id ? String(row.kmdb_id) : undefined,
     tmdbId: row.tmdb_id ? Number(row.tmdb_id) : undefined,
-    rating: row.rating ? Number(row.rating) : undefined,
     runtimeMinutes: row.runtime ? Number(row.runtime) : undefined,
   }
 }
@@ -42,6 +41,8 @@ export function rowToMovie(movieRaw: Record<string, unknown>): Movie {
     nation: movieRaw.nation != null ? String(movieRaw.nation) : undefined,
     kmdbId: movieRaw.kmdb_id != null ? String(movieRaw.kmdb_id) : undefined,
     tmdbId: movieRaw.tmdb_id != null ? Number(movieRaw.tmdb_id) : undefined,
+    /* 씨네21 별점 — 큐레이션 필터(평점 5.0 미만 제외)가 읽는다. 공개 응답에 나가면 안 되므로
+       curation-cache 라우트가 응답 직전에 걷어낸다. movieRowToMovie에는 싣지 않는다. */
     rating: movieRaw.rating != null ? Number(movieRaw.rating) : undefined,
     runtimeMinutes: movieRaw.runtime != null ? Number(movieRaw.runtime) : undefined,
   }

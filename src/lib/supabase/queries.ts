@@ -271,7 +271,7 @@ export function useInstagramRecommendations() {
           instagram_url, published_at, display_until, is_active, sort_order,
           instagram_recommendation_movies(
             id, movie_id, title_snapshot, sort_order,
-            movies(id,title,original_title,year,poster_url,genre,director,nation,kmdb_id,tmdb_id,rating)
+            movies(id,title,original_title,year,poster_url,genre,director,nation,kmdb_id,tmdb_id)
           ),
           festivals(id,name,slug,start_date,end_date,region,city,venue_text,banner_url,link_url,description,is_active)
         `)

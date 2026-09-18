@@ -111,6 +111,8 @@ export interface Movie {
   certification?: string
   kmdbId?: string
   tmdbId?: number
+  /** 씨네21 관객 별점(10점 만점). 큐레이션 필터(compute-curation)에서만 쓴다.
+   *  씨네21 고유 데이터라 공개 API 응답·클라이언트 조회에는 싣지 않는다(2026-09-18). */
   rating?: number
 }
 

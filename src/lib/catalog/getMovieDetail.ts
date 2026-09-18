@@ -13,7 +13,7 @@ import { toSecureImageUrl } from '@/lib/media/imageUrl'
  */
 const MOVIE_DETAIL_SELECT = `
   id, title, original_title, year, poster_url, genre, director,
-  nation, kmdb_id, tmdb_id, rating,
+  nation, kmdb_id, tmdb_id,
   movie_details (synopsis, runtime_minutes, certification, cast_members)
 `
 
@@ -39,7 +39,6 @@ function mapRow(data: unknown): MovieDetail {
     nation: row.nation ? String(row.nation) : undefined,
     kmdbId: row.kmdb_id ? String(row.kmdb_id) : undefined,
     tmdbId: row.tmdb_id ? Number(row.tmdb_id) : undefined,
-    rating: row.rating ? Number(row.rating) : undefined,
     synopsis: details?.synopsis ? String(details.synopsis) : undefined,
     runtimeMinutes: details?.runtime_minutes ? Number(details.runtime_minutes) : undefined,
     certification: details?.certification ? String(details.certification) : undefined,

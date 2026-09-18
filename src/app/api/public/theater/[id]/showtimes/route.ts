@@ -36,7 +36,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         nation,
         kmdb_id,
         tmdb_id,
-        rating,
         movie_details(synopsis, runtime_minutes, certification)
       )
     `)
@@ -67,7 +66,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       certification: details?.certification ? String(details.certification) : undefined,
       kmdbId: m.kmdb_id ? String(m.kmdb_id) : undefined,
       tmdbId: m.tmdb_id ? Number(m.tmdb_id) : undefined,
-      rating: m.rating ? Number(m.rating) : undefined,
     })
   }
 
