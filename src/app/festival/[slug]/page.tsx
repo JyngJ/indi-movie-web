@@ -23,7 +23,7 @@ const FESTIVAL_SELECT = `
   ),
   festival_movies(
     id, movie_id, movie_title_snapshot, sort_order,
-    movies(id,title,original_title,year,poster_url,genre,director,nation,kmdb_id,tmdb_id,rating)
+    movies(id,title,original_title,year,poster_url,genre,director,nation,kmdb_id,tmdb_id)
   ),
   festival_timetables(id, image_url, day_date, label, sort_order)
 `
