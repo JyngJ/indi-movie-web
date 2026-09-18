@@ -1,113 +1,128 @@
 # 인수인계 — 광고 도입 준비 · 상세 화면 개편 (2026-09-18)
 
-새 세션은 이 문서부터 읽는다. `AGENTS.md`의 브랜칭·아키텍처 규칙이 우선이고, 여기엔 그 문서에 없는 이 작업 흐름의 맥락만 적는다.
+`AGENTS.md`의 브랜칭·아키텍처 규칙이 우선이다. 이 문서는 그 밖의 작업 맥락만 담는다. 앱 전환 계획은 `docs/PLAN-mobile-app.md`.
 
 ---
 
-## 1. 오늘 머지된 것
+## 1. PR 현황
 
-| PR | 내용 |
+| PR | 상태 | 내용 |
+| --- | --- | --- |
+| #361 | 머지 | 상세 3종 핵심 정보 흰 패널(`DetailKeyPanel`), 상영 완료 회차 종료 시간 줄 제거 |
+| #362 | 머지 | 영화·극장 상세 ISR, 회차 공유 `?showtime=` → `/s/[showtimeId]` |
+| #363 | 머지 | 지도 핀·그리드 포스터 회색 덮개 버그(#361 회귀) |
+| #364 | 머지 | 상세 뒤로가기 상영작 흐름 기준, 시놉시스 간격, 패널 테두리 PC 한정 |
+| #365 | 열림 | 이 문서 |
+| #366 | 열림 | `public/ads.txt` |
+| #367 | 머지 | 크롤 요청 UA에 서비스 식별자·연락처, 브라우저 위장 헤더 제거 |
+| #368 | 열림 | 공개 응답에서 씨네21 관객 별점 제외 |
+
+### 기술 사실 (재발 방지)
+
+- `force-dynamic`(영화·극장 상세)은 직진입 hydration 스톨 완화책이었다(#247, HANDOFF-design-refactor 3.9). 제거 전 로컬 프로덕션 빌드 직진입 45회(스로틀 포함) 스톨 0건. 프로브: `scripts/dev/hydration-probe.mjs`. **프로덕션 재측정 미실시.**
+- `/films/area/[region]`의 `force-dynamic`은 유지. ISR에서 한글 경로 태그가 헤더에 실려 500(2026-07-25 Search Console 5xx 원인).
+- `PosterThumb` `fade={false}` 경로(지도 핀, `AllMoviesGrid`)는 정적 마크업이라 `onLoad` 없음. 로드 상태 의존 오버레이 금지. 회귀 테스트 `posterMarkerMarkup.test.tsx`.
+- 패널 테두리·모서리는 `globals.css`에서 관리. 인라인 스타일은 미디어 쿼리보다 우선한다.
+
+---
+
+## 2. 크롤러 (#367 반영 확인)
+
+머지 03:42 KST → RPi 04시 `git pull` 반영(`HEAD e388818`).
+
+| | 이전 | 새 UA |
+| --- | --- | --- |
+| showtimes (05시) | 97/97 성공, 후보 3,276 | 97/97 성공, 후보 3,158 |
+| seats (08시) | ✅ 80 | ✅ 80 |
+| dtryx 밴 | 마지막 7/23 | 없음 |
+
+- 실제 crontab: showtimes 05시 1회, seats 00·08·16시, events 04시(여기서 `git pull`), health 4시간 간격. `RUNBOOK-crawler.md`의 crontab 절(2026-07-09 기준)은 갱신되지 않았다.
+- 무비랜드 상품 페이지 404 재시도 8건/회는 9/16부터 계속 발생. UA 무관, 최종 갱신은 성공.
+- 사전 비교에서 tinyticket이 "새 UA에서만 정상"으로 나왔으나 curl 기준이었다. 실제 파서는 Playwright 경로라 헤더 변경 영향이 없다.
+
+---
+
+## 3. 이미지 권리
+
+### 실측
+
+**포스터 1,501장** — KMDb 1,298 · 씨네21 145 · 위키미디어 24 · JustWatch 20 · 자체 6 · 기타 8
+
+**감독 사진 463장** — 네이버 뉴스(`imgnews.naver.net`) 207 · 위키미디어 209 · 기타 47
+
+### 확인한 1차 자료
+
+- 한국영상자료원 저작권정책(`koreafilm.or.kr/pages/PC_00000096`): 기관 콘텐츠 기본 공공누리 제1유형. 단 **"영화 스틸/포스터 — 기관 외 저작물 — 사용 불가"** 로 명시 제외.
+- 공공데이터포털 KMDb 영화정보: "이용허락범위 제한 없음"(정보 데이터 대상).
+- 키노라이츠 이용약관: 포스터 권리 귀속 조항 없음(별도 고지 없이 사용).
+- 한국저작권보호원 해설: 영화 소개·감상평 목적 포스터 사용은 위반 아님, 출처 명시 조건(블로그·리뷰 전제).
+
+### 결정
+
+- 포스터: 유지. 근거는 저작권법 28조(인용)·35조의5(공정이용)와 배급사 홍보 목적 공개 관행. 조건으로 출처 표기와 권리자 삭제 요청 절차를 화면에 둔다(미구현).
+- 감독 사진: 근거 없는 254장 정리. 대체본은 위키미디어에서만.
+- 씨네21 관객 별점: 공개 응답에서 제외(#368). 큐레이션 저평점 필터 내부 용도로만 유지.
+
+### 감독 사진 정리 작업
+
+- 브랜치 `chore/cleanup-unlicensed-images`, worktree `/tmp/claude-501/movie-img`, 미커밋
+- `scripts/cleanup-unlicensed-director-photos.ts` — dry-run 기본, `--apply`, `--restore <백업>`
+- 마지막 dry-run: 대체 23 / 비움 231. **`--apply` 미실행, DB 변경 없음.**
+- 조회 제약: KMDb `kmdb_people2`는 빈 응답. 위키데이터 SPARQL 영화감독 직업 쿼리는 응답이 커서 JSON이 잘림 → LIMIT/OFFSET 페이징 필요. 위키백과 요약 API는 정확한 문서 제목 필요 → 검색 선행.
+
+---
+
+## 4. 법적 리스크 현황
+
+| 항목 | 상태 |
 | --- | --- |
-| #361 | 상세 3종(영화·감독·극장) 핵심 정보에 흰 패널(`DetailKeyPanel`) · 상영 완료 회차에서 종료 시간 줄 제거 |
-| #362 | 영화·극장 상세를 ISR로 · 회차 공유를 `?showtime=`에서 `/s/[showtimeId]` 경로로 |
-| #363 | 지도 핀·그리드 포스터가 회색 칸으로 덮이던 버그(=#361이 만든 회귀) |
-| #364 | 상세 뒤로가기를 상영작 흐름 기준으로 · 시놉시스 위 간격 · 패널 테두리(PC만) |
+| 크롤러 신원 위장 | 해소(#367) |
+| IP 로테이션 | runbook상 최후 수단. 실행 기록 7/9 1회 |
+| 개인정보처리방침 AdSense 항목 | 미반영. 초안 `docs/ADS-PRIVACY-RIGHTS-REVIEW.md`(codex 브랜치, 미커밋) |
+| 감독 사진 254장 | 정리 대기(dry-run 완료) |
+| 포스터 출처 표기·삭제 요청 절차 | 미구현 |
+| 씨네21 별점 공개 노출 | #368로 해소 예정. anon 키 REST 직접 조회는 남음 |
+| 씨네21 줄거리(최대 600자) | 수집·표시 중. 별점과 같은 성격이라 정리 대상 |
+| KMDb 포스터 이미지 | 자료원 "사용 불가" 명시. 공정이용·관행으로 유지 |
+| dtryx 상영 정보 | robots 전면 허용. 공식 경로 문의 미발송 |
+| 이미지 최적화 캐시 30일 | 포스터 유지에 따르는 리스크로 감수 |
 
-### 이 과정에서 얻은 사실 (다시 밟지 말 것)
-
-- **`force-dynamic`은 성능 무지가 아니라 hydration 스톨 완화책이었다.** #247/HANDOFF-design-refactor 3.9 참고. 걷어내기 전에 재현을 다시 쟀고(로컬 프로덕션 빌드, 정상 25회 + CPU 6배·400kbps 스로틀 20회, 영화·극장 각 45회) **스톨 0건**이었다. 프로브는 `scripts/dev/hydration-probe.mjs`. **배포된 프로덕션에서 한 번 더 돌려야 한다 — 아직 안 했다.**
-- **`/films/area/[region]`의 `force-dynamic`은 건드리지 말 것.** ISR이면 한글 경로 태그가 헤더에 실려 500이 난다(2026-07-25 Search Console 5xx의 실제 원인).
-- **`PosterThumb`에 `fade={false}`인 경로(지도 핀·`AllMoviesGrid`)는 정적 마크업이라 `onLoad`가 안 붙는다.** 로드 상태에 의존하는 오버레이를 걸면 포스터가 영구히 가려진다. 회귀 테스트가 `posterMarkerMarkup.test.tsx`에 있다.
-- **패널 테두리·모서리는 `globals.css`가 갖는다.** 인라인 스타일이면 "모바일에서 빼기" 미디어 쿼리가 못 이긴다.
+광고 게재 전 필수: 개인정보처리방침, 감독 사진, 포스터 출처 표기·삭제 절차, 씨네21 줄거리.
 
 ---
 
-## 2. 지금 하던 일 — 광고 도입 전 이미지 권리 정리
+## 5. 광고
 
-### 왜
+- 위치: 소식탭 상단 배너 · 상영작 피드 중간 · 예매 복귀 시(AdSense 자동 광고의 전면광고 형식 사용 예정)
+- 게시자 ID `pub-9133958847616613`. 사이트 승인 · 광고 단위 슬롯 ID 발급 전
+- 자동 광고 설정: 앵커 광고 끄기(하단 탭바와 겹침). 전면광고는 켠 뒤 Search Console 모바일 노출·클릭 2~3주 관찰
+- 심사 리스크: "스크랩된 콘텐츠" 정책. 지도 재구성·큐레이션·랭킹이 방어 근거
+- 피드 중간 슬롯은 고정 높이 필수(CLS), "광고" 라벨 필수
+- 코덱스 작업물: `codex/adsense-feed`(worktree `/private/tmp/movie-adsense`) — 소식탭 배너 컴포넌트, 미커밋 6건
 
-Vercel Hobby **Fluid Active CPU 한도 초과**(4h23m / 4h)로 광고·수익화 논의가 시작됐다. 광고를 붙이면 영리 이용이 분명해지므로, 그 전에 이용허락 근거가 없는 이미지를 걷어내기로 했다.
+---
 
-### 실측 (2026-09-18)
+## 6. 사용자 작업
 
-**영화 포스터 1,501장**
+- KMDb 문의: 포스터·스틸 이미지의 광고 게재 서비스 표시·변환·캐시 허용 여부
+- dtryx 문의: 공개 회차·잔여석 주기 조회 허용 여부, 공식 제공 경로
+- AdSense: 사이트 승인 → 광고 단위 생성 → `data-ad-slot` 전달
+- Vercel `id-412-class`(Node 20): 10/1부터 빌드 실패. 삭제 또는 Node 24
+- 프로덕션 hydration 프로브 재측정(1절)
 
-| 출처 | 수 | 판단 |
+---
+
+## 7. worktree
+
+| 경로 | 브랜치 | 상태 |
 | --- | --- | --- |
-| `file.koreafilm.or.kr` (KMDb) | 1,298 | 공공데이터포털 "이용허락범위 제한 없음" — 근거 있음 |
-| `image.cine21.com` | 145 | 허락 근거 없음 |
-| 위키미디어 | 24 | CC 계열 |
-| `images.justwatch.com` | 20 | 근거 없음 |
-| 자체 Supabase | 6 | 문제없음 |
-| mania.kr · Pinterest · artinsight | 8 | 출처 불명 |
+| `/Users/jungjaeyong/Documents/JyngJ/side/movie` | `feature/biff31` | 사용자 작업, PR #343 |
+| `/tmp/claude-501/movie-img` | `chore/cleanup-unlicensed-images` | 감독 사진 스크립트, 미커밋 |
+| `/tmp/claude-501/movie-ads` | `chore/adsense-prep` | PR #366 |
+| `/tmp/claude-501/movie-rating` | `chore/hide-cine21-rating` | PR #368 |
+| `/tmp/claude-501/movie-doc` | `docs/handoff-20260918` | PR #365 |
+| `/private/tmp/movie-adsense` | `codex/adsense-feed` | 미커밋 6건 |
+| `/Users/jungjaeyong/Documents/JyngJ/side/movie-favorites` | detached, +31 | 관심·알림 P3 작업. #315로 squash 머지된 것으로 보임 — 차이 확인 후 정리 |
+| `.claude/worktrees/adoring-greider-92802e` | detached, +1 | 시놉시스 문장 경계 백필, PR 없음 |
 
-**감독 사진 463장**
-
-| 출처 | 수 | 판단 |
-| --- | --- | --- |
-| `imgnews.naver.net` | 207 | 언론사 보도사진 — 리스크 최상위 |
-| 위키미디어(upload·commons·thumb) | 209 | CC 계열 |
-| 나무위키·알라딘·YES24·네이버쇼핑·더쿠·익스트림무비 등 | 47 | 출처 불명 |
-
-### 작업물
-
-- 브랜치 `chore/cleanup-unlicensed-images`, worktree `/tmp/claude-501/movie-img` (**아직 커밋 안 함**)
-- `scripts/cleanup-unlicensed-images.ts` — dry-run 기본, `--apply`로 적용, `--restore <백업파일>`로 원복. 적용 전 값은 `.backup/unlicensed-images-<시각>.json`에 남는다
-- 허용 호스트: `file.koreafilm.or.kr`, 위키미디어 3종, `*.supabase.co`
-
-### 대체본 조회에서 물린 것
-
-- **KMDb 인물 컬렉션(`kmdb_people2`)은 이 서비스키로 빈 응답만 온다.** 기존 `scripts/fetch-director-photos-kmdb.ts`도 지금은 아무것도 못 가져온다
-- **위키데이터 SPARQL은 직업 `VALUES` + `skos:altLabel UNION`을 한 쿼리에 몰면 에러 HTML을 돌려준다.** 직업별·라벨별로 쪼개서 여러 번 돌려야 한다
-- **위키백과 요약 API는 정확한 문서 제목이 필요하다.** 이름만 넣으면 적중률이 4%였다. `list=search`로 문서를 먼저 찾아야 한다
-
-### 마지막 상태
-
-포스터는 KMDb 대체 20장 / 비움 153장으로 계산이 끝났다. 감독 사진은 4단계 조회(위키데이터 일괄 → 한국어 위키백과 → 위키백과 검색 → 위키데이터 검색 → 영어 위키백과)로 **dry-run을 다시 돌리던 중 세션이 끊겼다.** 개선 전 수치는 23/254였다. **아직 `--apply`는 한 번도 실행하지 않았다 — DB는 그대로다.**
-
----
-
-## 3. 다음에 할 일
-
-1. **감독 사진 dry-run 재실행** → 대체본 수를 보고 사용자 확인 후 `--apply`
-2. **광고 3종** — 사용자가 확정한 위치
-   - 소식탭 상단 배너
-   - 상영작 피드 중간(섹션 사이 한두 줄)
-   - 예매 사이트에서 복귀했을 때
-   코덱스가 `codex/adsense-feed` 브랜치(worktree `/private/tmp/movie-adsense`)에 **소식탭 배너만** 만들어 뒀고 **6건이 커밋되지 않은 상태**다(`src/components/ads/`, `src/lib/ads/`, `providers.tsx`, `FeedContent.tsx`, `docs/ADSENSE-ROLLOUT.md`, `docs/ADS-PRIVACY-RIGHTS-REVIEW.md`). 게시자 ID `pub-9133958847616613`, 광고 단위 슬롯 ID는 아직 발급 전이라 송출은 비활성
-3. **개인정보처리방침 개정** — 현재 방침에 AdSense가 없다. 초안이 `docs/ADS-PRIVACY-RIGHTS-REVIEW.md`(미커밋)에 있다
-4. **프로덕션에서 hydration 프로브 재확인** (위 1절)
-5. **PostHog `capture_pageview` 설정 점검** — GA 28일 18,560뷰 대 PostHog 8,685뷰로 2배 차이가 난다. 내부 경로 이동을 놓치는 설정으로 의심되나 **아직 코드에서 확인하지 못했다**
-
-### 사용자만 할 수 있는 것
-
-- **KMDb에 문의** — "공공데이터포털 이용허락범위 제한 없음으로 제공되는 영화정보 API의 포스터·스틸 이미지를, 광고가 있는 무료 서비스에서 표시하고 크기 변환·서버 캐시하는 것이 허용 범위인가"
-- **dtryx에 문의** — 공개 회차·잔여석의 주기적 조회와 재표시가 허용되는지, 공식 제공 경로가 있는지
-- **AdSense** — 사이트 승인 확인 후 디스플레이 광고 단위를 만들어 `data-ad-slot` 숫자 받기
-- **Vercel `id-412-class` 프로젝트**(Node 20) — 10/1부터 새 빌드 실패. 삭제하거나 Node 24로 올리기
-
----
-
-## 4. 법적 검토 — 확인된 것과 아닌 것
-
-코덱스 세션(사용자 공유)에서 정리된 내용을 이 레포 실측과 대조한 결과다. **위법으로 확인된 것은 없고, 확인하지 않은 쟁점이 남았다**가 정확한 상태다.
-
-- **대법원 2021도1533(야놀자·여기어때)** — 반복 수집 자체나 IP 변경 자체로 위법이 되지 않는다. "상당한 부분의 복제와 같은 결과"에 이르렀는지, 객관적 접근 보호조치가 있었는지가 쟁점
-- **robots.txt 실측** — dtryx는 `User-Agent: * / Disallow:`(전면 허용, 단 브라우저 UA가 아니면 403), 씨네21은 SemrushBot만 차단, KMDb 웹사이트는 대부분 차단이지만 **우리는 공공데이터 API를 쓰므로 대상이 아니다**
-- **남은 쟁점** — KMDb 이미지 재사용 범위, 씨네21 이용허락, 출처 불명 이미지 254장, dtryx 차단의 성격(IP 로테이션 기록은 `docs/RUNBOOK-crawler.md`에 있다), 부정경쟁방지법 2조 파목·카목(민사)
-
----
-
-## 5. 열려 있는 작업 공간
-
-| worktree | 브랜치 | 상태 |
-| --- | --- | --- |
-| `/Users/jungjaeyong/Documents/JyngJ/side/movie` | `feature/biff31` | 사용자 작업 (PR #343) |
-| `/tmp/claude-501/movie-img` | `chore/cleanup-unlicensed-images` | 이미지 정리 스크립트, 미커밋 |
-| `/private/tmp/movie-adsense` | `codex/adsense-feed` | 코덱스 애드센스 작업, 미커밋 6건 |
-| `/Users/jungjaeyong/Documents/JyngJ/side/movie-favorites` | detached, main 대비 +31 | 관심 알림 P3 작업, PR 없음 |
-| `.claude/worktrees/adoring-greider-92802e` | detached, +1 | 시놉시스 문장 경계 백필 커밋, PR 없음 |
-
-뒤 둘은 PR 없이 커밋만 쌓여 있다. 살릴지 버릴지 사용자에게 확인할 것.
-
-모든 worktree는 `node_modules`·`.env.local`을 메인 체크아웃에서 심볼릭 링크로 가져다 쓴다. dev 서버는 `.claude/launch.json`에 포트별로 등록해 두고 `preview_start`로 띄운다(Bash로 직접 띄우지 말 것).
+worktree는 메인 체크아웃의 `node_modules`·`.env.local`을 심볼릭 링크로 사용한다.
