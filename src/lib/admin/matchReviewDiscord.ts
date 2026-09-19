@@ -1,11 +1,23 @@
 import crypto from 'node:crypto'
 import type { MovieRow } from './store/converters'
+import { formatListingHints, runtimeMatchIndex, type ListingHints } from './matchReviewHints'
 
 const DISCORD_API = 'https://discord.com/api/v10'
 
+/** 상영관 한 곳이 이 영화를 어떻게 적었는지 — 검수자가 후보와 대조하는 근거 */
+export interface ProviderListing {
+  theaterName: string
+  rawTitle: string
+  hints: ListingHints
+  firstDate: string
+  lastDate: string
+  showCount: number
+  bookingUrl?: string
+}
+
 export interface AmbiguousMovieGroup {
   title: string
-  theaterNames: string[]
+  listings: ProviderListing[]
   options: MovieRow[]
 }
 
@@ -43,7 +55,39 @@ function naverSearchUrl(movie: MovieRow) {
 function movieOptionLabel(movie: MovieRow, index: number) {
   const director = movie.director?.length ? movie.director.join(', ') : '감독 미상'
   const year = movie.year ?? '연도 미상'
-  return `${index + 1}) ${movie.title} (${year}, ${director})`
+  const runtime = movie.runtime_minutes ? `, ${movie.runtime_minutes}분` : ''
+  return `${index + 1}) ${movie.title} (${year}, ${director}${runtime})`
+}
+
+function formatShortDate(date: string) {
+  const [, month, day] = date.split('-').map(Number)
+  return month && day ? `${month}월 ${day}일` : date
+}
+
+function listingField(listing: ProviderListing) {
+  const period = listing.firstDate === listing.lastDate
+    ? formatShortDate(listing.firstDate)
+    : `${formatShortDate(listing.firstDate)}~${formatShortDate(listing.lastDate)}`
+  return {
+    name: `${listing.theaterName} 표기`,
+    value: [
+      `제목 「${listing.rawTitle}」`,
+      formatListingHints(listing.hints),
+      `${period} · ${listing.showCount}회차`,
+      ...(listing.bookingUrl ? [`[예매 페이지 열기](${listing.bookingUrl})`] : []),
+    ].join('\n').slice(0, 1024),
+    inline: false,
+  }
+}
+
+/** 상영관 러닝타임이 후보 하나와만 맞으면 그 번호를 알려 준다 */
+function runtimeHintLine(group: AmbiguousMovieGroup, options: MovieRow[]) {
+  const optionRuntimes = options.map((movie) => movie.runtime_minutes)
+  for (const listing of group.listings) {
+    const index = runtimeMatchIndex(listing.hints.runtimeMinutes, optionRuntimes)
+    if (index !== undefined) return `러닝타임 ${listing.hints.runtimeMinutes}분 — ${index + 1}번과 맞아요`
+  }
+  return undefined
 }
 
 function buildGroupComponents(group: AmbiguousMovieGroup) {
@@ -74,8 +118,11 @@ function buildGroupComponents(group: AmbiguousMovieGroup) {
 }
 
 function buildGroupEmbed(group: AmbiguousMovieGroup) {
-  const optionLines = group.options.slice(0, 5).map((movie, i) => movieOptionLabel(movie, i))
-  const theaterSample = group.theaterNames.slice(0, 5).join(', ') + (group.theaterNames.length > 5 ? ` 외 ${group.theaterNames.length - 5}곳` : '')
+  const options = group.options.slice(0, 5)
+  const optionLines = options.map((movie, i) => movieOptionLabel(movie, i))
+  const runtimeHint = runtimeHintLine(group, options)
+  const shownListings = group.listings.slice(0, 5)
+  const hiddenCount = group.listings.length - shownListings.length
 
   return {
     title: `🎬 동명 영화 매칭 보류: ${group.title}`,
@@ -83,10 +130,12 @@ function buildGroupEmbed(group: AmbiguousMovieGroup) {
       `DB에 같은 제목 영화가 ${group.options.length}개 있어서 자동으로 못 골랐어요. 아래 버튼으로 확인해주세요.`,
       '',
       optionLines.join('\n'),
+      ...(runtimeHint ? ['', runtimeHint] : []),
     ].join('\n'),
     color: 0xF39C12,
     fields: [
-      { name: '상영관', value: theaterSample || '알 수 없음', inline: false },
+      ...shownListings.map(listingField),
+      ...(hiddenCount > 0 ? [{ name: '다른 상영관', value: `${hiddenCount}곳 더 있어요`, inline: false }] : []),
     ],
   }
 }

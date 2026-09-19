@@ -20,7 +20,9 @@ import type {
 import { searchKmdbMovies } from '@/lib/admin/kmdb'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { normalizeSynopsis } from '@/lib/text/normalizeSynopsis'
-import { notifyAmbiguousMovieMatches, titleHash } from '@/lib/admin/matchReviewDiscord'
+import { notifyAmbiguousMovieMatches, titleHash, type ProviderListing } from '@/lib/admin/matchReviewDiscord'
+import { extractListingHints, mergeListingHints, movieeBookingUrl, movieeMovieRef, parseRawJson, type MovieeMovieRef } from '@/lib/admin/matchReviewHints'
+import { fetchMovieeMovieHints } from '@/lib/admin/crawler/movieeDetail'
 import {
   candidateFromRow,
   candidateToRow,
@@ -674,7 +676,7 @@ async function fetchAutoMatchInputs(supabase: ReturnType<typeof createSupabaseAd
   ] = await Promise.all([
     query,
     supabase.from('theaters').select('id, name'),
-    supabase.from('movies').select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, director'),
+    supabase.from('movies').select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, director, movie_details(runtime_minutes)'),
     supabase
       .from('showtime_candidates')
       .select('raw_text, matched_movie_id')
@@ -689,7 +691,12 @@ async function fetchAutoMatchInputs(supabase: ReturnType<typeof createSupabaseAd
   return {
     candidates: ((candidateRows ?? []) as CandidateRow[]).map(candidateFromRow),
     theaters: (theaterRows ?? []) as TheaterRow[],
-    movies: (movieRows ?? []) as MovieRow[],
+    // 러닝타임은 동명 영화 검수 알림에서 상영관 표기와 대조하는 데만 쓴다
+    movies: ((movieRows ?? []) as unknown as (MovieRow & { movie_details?: { runtime_minutes?: number | null } | { runtime_minutes?: number | null }[] | null })[])
+      .map(({ movie_details, ...movie }) => {
+        const details = Array.isArray(movie_details) ? movie_details[0] : movie_details
+        return { ...movie, runtime_minutes: details?.runtime_minutes ?? null }
+      }),
     providerMovieAliases: buildProviderMovieAliases((aliasRows ?? []) as Pick<CandidateRow, 'raw_text' | 'matched_movie_id'>[]),
   }
 }
@@ -701,13 +708,66 @@ function isBenignWarning(warning: string): boolean {
   return /매진|판매\s*중지|예매\s*종료|예매\s*불가|상영관을\s*확인/.test(warning)
 }
 
+interface ListingDraft extends ProviderListing {
+  moviee?: MovieeMovieRef
+}
+
+interface AmbiguousGroupDraft {
+  title: string
+  options: MovieRow[]
+  /** 상영관 이름 → 그 상영관의 원문 표기 */
+  listings: Map<string, ListingDraft>
+  alreadyNotified: boolean
+}
+
+function addListing(group: AmbiguousGroupDraft, candidate: CrawledShowtimeCandidate) {
+  const raw = parseRawJson(candidate.rawText)
+  const hints = extractListingHints(raw, candidate.releaseYear)
+  const existing = group.listings.get(candidate.theaterName)
+  if (existing) {
+    existing.showCount += 1
+    if (candidate.showDate < existing.firstDate) existing.firstDate = candidate.showDate
+    if (candidate.showDate > existing.lastDate) existing.lastDate = candidate.showDate
+    existing.hints = mergeListingHints(existing.hints, hints)
+    return
+  }
+  const moviee = movieeMovieRef(raw, candidate.sourceUrl)
+  group.listings.set(candidate.theaterName, {
+    theaterName: candidate.theaterName,
+    rawTitle: candidate.movieTitle,
+    hints,
+    firstDate: candidate.showDate,
+    lastDate: candidate.showDate,
+    showCount: 1,
+    bookingUrl: moviee ? movieeBookingUrl(moviee) : candidate.bookingUrl || candidate.sourceUrl,
+    moviee,
+  })
+}
+
+// 무비이는 회차 목록에 러닝타임·장르가 없어 알림 보낼 때만 영화 상세를 한 번 부른다.
+// 실패해도 알림은 보낸다 — 제목·기간만으로도 검수는 가능하다. 요청은 순차(동시성 1).
+async function finalizeListings(group: AmbiguousGroupDraft): Promise<ProviderListing[]> {
+  const listings: ProviderListing[] = []
+  for (const { moviee, ...listing } of group.listings.values()) {
+    if (moviee) {
+      try {
+        listing.hints = mergeListingHints(listing.hints, await fetchMovieeMovieHints(moviee))
+      } catch (error) {
+        console.warn('[autoMatch] 무비이 영화 상세 조회 실패:', (error as Error).message)
+      }
+    }
+    listings.push(listing)
+  }
+  return listings
+}
+
 export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<CandidateAutoMatchResult> {
   const supabase = createSupabaseAdminClient()
   const { candidates, theaters, movies, providerMovieAliases } = await fetchAutoMatchInputs(supabase, ids)
 
   const updated: CrawledShowtimeCandidate[] = []
   const movieResolutionCache = new Map<string, MovieResolutionResult>()
-  const ambiguousGroups = new Map<string, { title: string; options: MovieRow[]; theaterNames: Set<string>; alreadyNotified: boolean }>()
+  const ambiguousGroups = new Map<string, AmbiguousGroupDraft>()
   let matched = 0
   let autoApproved = 0
   let needsReview = 0
@@ -724,8 +784,8 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
     if (movieResult.ambiguous) {
       const key = candidate.movieTitle.trim()
       const alreadyNotified = candidate.warnings.some((w) => w.startsWith('동명 영화'))
-      const group = ambiguousGroups.get(key) ?? { title: key, options: movieResult.ambiguous, theaterNames: new Set<string>(), alreadyNotified: true }
-      group.theaterNames.add(candidate.theaterName)
+      const group = ambiguousGroups.get(key) ?? { title: key, options: movieResult.ambiguous, listings: new Map(), alreadyNotified: true }
+      addListing(group, candidate)
       group.alreadyNotified = group.alreadyNotified && alreadyNotified
       ambiguousGroups.set(key, group)
     }
@@ -795,11 +855,9 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
       toNotify = newAmbiguousGroups.filter((g) => !seenSet.has(titleHash(g.title)))
     }
     if (toNotify.length > 0) {
-      await notifyAmbiguousMovieMatches(toNotify.map((g) => ({
-        title: g.title,
-        theaterNames: Array.from(g.theaterNames),
-        options: g.options,
-      })))
+      const groups = []
+      for (const g of toNotify) groups.push({ title: g.title, listings: await finalizeListings(g), options: g.options })
+      await notifyAmbiguousMovieMatches(groups)
       if (noticeTableOk) {
         const { error: insertError } = await supabase
           .from('discord_match_notices')
