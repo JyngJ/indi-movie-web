@@ -21,7 +21,7 @@ import { searchKmdbMovies } from '@/lib/admin/kmdb'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { normalizeSynopsis } from '@/lib/text/normalizeSynopsis'
 import { notifyAmbiguousMovieMatches, titleHash, type ProviderListing } from '@/lib/admin/matchReviewDiscord'
-import { extractListingHints, mergeListingHints, movieeMovieRef, parseRawJson, type MovieeMovieRef } from '@/lib/admin/matchReviewHints'
+import { extractListingHints, mergeListingHints, movieeBookingUrl, movieeMovieRef, parseRawJson, type MovieeMovieRef } from '@/lib/admin/matchReviewHints'
 import { fetchMovieeMovieHints } from '@/lib/admin/crawler/movieeDetail'
 import {
   candidateFromRow,
@@ -731,6 +731,7 @@ function addListing(group: AmbiguousGroupDraft, candidate: CrawledShowtimeCandid
     existing.hints = mergeListingHints(existing.hints, hints)
     return
   }
+  const moviee = movieeMovieRef(raw, candidate.sourceUrl)
   group.listings.set(candidate.theaterName, {
     theaterName: candidate.theaterName,
     rawTitle: candidate.movieTitle,
@@ -738,7 +739,8 @@ function addListing(group: AmbiguousGroupDraft, candidate: CrawledShowtimeCandid
     firstDate: candidate.showDate,
     lastDate: candidate.showDate,
     showCount: 1,
-    moviee: movieeMovieRef(raw, candidate.sourceUrl),
+    bookingUrl: moviee ? movieeBookingUrl(moviee) : candidate.bookingUrl || candidate.sourceUrl,
+    moviee,
   })
 }
 

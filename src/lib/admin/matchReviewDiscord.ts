@@ -12,6 +12,7 @@ export interface ProviderListing {
   firstDate: string
   lastDate: string
   showCount: number
+  bookingUrl?: string
 }
 
 export interface AmbiguousMovieGroup {
@@ -73,6 +74,7 @@ function listingField(listing: ProviderListing) {
       `제목 「${listing.rawTitle}」`,
       formatListingHints(listing.hints),
       `${period} · ${listing.showCount}회차`,
+      ...(listing.bookingUrl ? [`[예매 페이지 열기](${listing.bookingUrl})`] : []),
     ].join('\n').slice(0, 1024),
     inline: false,
   }

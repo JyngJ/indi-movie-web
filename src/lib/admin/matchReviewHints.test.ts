@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { extractListingHints, formatListingHints, movieeMovieRef, parseRawJson, runtimeMatchIndex } from './matchReviewHints'
+import { extractListingHints, formatListingHints, movieeBookingUrl, movieeMovieRef, parseRawJson, runtimeMatchIndex } from './matchReviewHints'
 
 const movieeShowtime = '{"T_ID":"130","M_ID":"M000121756","GRPM_ID":"M000121755","M_NM":"괴물(기획전)","GRADE":"12","PLAY_DT":"2026-09-25"}'
 const movieeDetail = { M_ID: 'M000121756', RUNTIME: '126', GENRE: '드라마,미스터리,독립예술', DIRECTOR: null, GRADE: '12' }
@@ -30,6 +30,10 @@ describe('movieeMovieRef', () => {
     expect(movieeMovieRef(parseRawJson(movieeShowtime), 'https://moviee.co.kr/Theater/Index?thsynid=130')).toEqual({
       origin: 'https://moviee.co.kr', tid: '130', mId: 'M000121756', gId: 'M000121755',
     })
+  })
+  it('예매 링크는 영화가 선택된 상태로 연다', () => {
+    const ref = movieeMovieRef(parseRawJson(movieeShowtime), 'https://moviee.co.kr/Theater/Index?thsynid=130')!
+    expect(movieeBookingUrl(ref)).toBe('https://moviee.co.kr/Movie/Ticket?tid=130&gId=M000121755')
   })
   it('다른 사이트면 undefined', () => {
     expect(movieeMovieRef(parseRawJson(movieeShowtime), 'https://www.dtryx.com/cinema/main.do')).toBeUndefined()

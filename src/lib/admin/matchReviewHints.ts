@@ -97,6 +97,13 @@ function gradeLabel(grade: string) {
   return grade
 }
 
+/** 무비이 예매 페이지를 이 영화가 선택된 상태로 연다 — 무비이 극장 페이지가 쓰는 링크 형식 그대로 */
+export function movieeBookingUrl(ref: MovieeMovieRef) {
+  const params = new URLSearchParams({ tid: ref.tid })
+  if (ref.gId) params.set('gId', ref.gId)
+  return `${ref.origin}/Movie/Ticket?${params}`
+}
+
 /** 알림 필드 한 줄: "감독 정보 없음 · 126분 · 드라마, 미스터리 · 12세" */
 export function formatListingHints(hints: ListingHints) {
   return [
