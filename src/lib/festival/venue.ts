@@ -15,7 +15,13 @@ export function isMultiplexVenue(theaterName: string): boolean {
   return MULTIPLEX_BRANDS.some((brand) => normalized.includes(brand.replace(/\s+/g, '').toUpperCase()))
 }
 
-/** 상영관 카드에 붙일 안내 — 왜 여기엔 회차가 없는지 */
-export function multiplexNotice(theaterName: string): string {
-  return `${theaterName} 회차는 모으지 않아요 — 해당 극장 상영 시간표에서 확인해 주세요`
+/**
+ * 상영관 카드에 붙일 안내 — 극장 상세로 들어가도 영화제 회차는 없다는 것.
+ * @param hasFestivalScreenings 이 영화제의 회차 표(festival_screenings)가 있는가 —
+ *   있으면 그 표로 보내고, 없으면 극장 쪽 시간표로 보낸다
+ */
+export function multiplexNotice(theaterName: string, hasFestivalScreenings = false): string {
+  return hasFestivalScreenings
+    ? `${theaterName} 영화제 회차는 위 상영 시간표에서 볼 수 있어요`
+    : `${theaterName} 회차는 모으지 않아요 — 해당 극장 상영 시간표에서 확인해 주세요`
 }

@@ -329,11 +329,11 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)' }}>{link.theater.name}</div>
                   <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4 }}>{link.theater.address}</div>
-                  {/* 멀티플렉스는 우리가 회차를 모으지 않는다 — 극장 상세로 들어가면 빈 시간표를 보게 되므로
-                      들어가기 전에 어디서 확인해야 하는지 알린다 */}
+                  {/* 멀티플렉스는 우리가 평소 회차를 모으지 않는다 — 극장 상세로 들어가면 빈 시간표를 보게 되므로
+                      들어가기 전에 영화제 회차가 어디 있는지 알린다 */}
                   {isMultiplexVenue(link.theater.name) && (
                     <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4, wordBreak: 'keep-all' }}>
-                      {multiplexNotice(link.theater.name)}
+                      {multiplexNotice(link.theater.name, festival.screenings.length > 0)}
                     </div>
                   )}
                 </div>
@@ -351,7 +351,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
                   <div style={{ fontSize: 14, color: 'var(--color-text-body)' }}>{link.venueText ?? '임시 상영장'}</div>
                   {link.venueText && isMultiplexVenue(link.venueText) && (
                     <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4, wordBreak: 'keep-all' }}>
-                      {multiplexNotice(link.venueText)}
+                      {multiplexNotice(link.venueText, festival.screenings.length > 0)}
                     </div>
                   )}
                 </div>
