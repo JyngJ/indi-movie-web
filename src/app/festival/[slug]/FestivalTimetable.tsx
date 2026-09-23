@@ -158,6 +158,22 @@ function UnpublishedNotice({ officialUrl }: { officialUrl?: string | null }) {
 
 /* ── 회차 표기 조각 ────────────────────────────────────────────── */
 
+/**
+ * 회차를 눌렀을 때 갈 곳 — 우리 DB에 있는 영화면 영화 상세, 아니면 영화제 작품 페이지(새 탭).
+ * 영화제 상영작은 대부분 개봉 전이라 우리 DB에 없다. 막다른 행을 만들지 않으려고 공식 페이지로 보낸다.
+ */
+function useOpenScreening() {
+  const router = useRouter()
+  return (row: FestivalScreening): (() => void) | undefined => {
+    if (row.movieId) return () => router.push(`/films/movie/${row.movieId}`)
+    if (row.bookingUrl) {
+      const url = row.bookingUrl
+      return () => { window.open(url, '_blank', 'noopener,noreferrer') }
+    }
+    return undefined
+  }
+}
+
 function ScreeningTitle({ row }: { row: FestivalScreening }) {
   return (
     <span style={{ fontWeight: 700, color: 'var(--color-text-primary)' }}>
@@ -183,18 +199,18 @@ function GvBadge() {
 /* ── 모바일: 시간순 리스트 ─────────────────────────────────────── */
 
 function ScreeningList({ rows }: { rows: FestivalScreening[] }) {
-  const router = useRouter()
+  const openScreening = useOpenScreening()
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 var(--gutter) 4px' }}>
       {rows.map((row) => (
         <div
           key={row.id}
-          onClick={row.movieId ? () => router.push(`/films/movie/${row.movieId}`) : undefined}
+          onClick={openScreening(row)}
           style={{
             display: 'flex', gap: 12, padding: 'var(--gutter-md)',
             border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)',
             backgroundColor: 'var(--color-surface-card)',
-            cursor: row.movieId ? 'pointer' : 'default',
+            cursor: row.movieId || row.bookingUrl ? 'pointer' : 'default',
           }}
         >
           <div style={{ flexShrink: 0, width: 52 }}>
@@ -241,7 +257,7 @@ const TD: React.CSSProperties = {
 }
 
 function ScreeningTable({ rows }: { rows: FestivalScreening[] }) {
-  const router = useRouter()
+  const openScreening = useOpenScreening()
   return (
     // 표는 컬럼이 다섯이라 좁은 창에서 넘친다 — 페이지가 아니라 이 컨테이너가 가로로 스크롤한다
     <div style={{ overflowX: 'auto', padding: '0 var(--gutter) 4px' }}>
@@ -259,8 +275,8 @@ function ScreeningTable({ rows }: { rows: FestivalScreening[] }) {
           {rows.map((row) => (
             <tr
               key={row.id}
-              onClick={row.movieId ? () => router.push(`/films/movie/${row.movieId}`) : undefined}
-              style={{ cursor: row.movieId ? 'pointer' : 'default' }}
+              onClick={openScreening(row)}
+              style={{ cursor: row.movieId || row.bookingUrl ? 'pointer' : 'default' }}
             >
               <td style={{ ...TD, whiteSpace: 'nowrap', fontFeatureSettings: '"tnum"', fontWeight: 700, color: 'var(--color-text-primary)' }}>
                 {formatScreeningTime(row.startTime, row.runtimeMin)}
