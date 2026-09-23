@@ -21,7 +21,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { createClient } from '@supabase/supabase-js'
 import { crawlerHeaders } from '../src/lib/admin/crawler/utils'
-import { parseBiffScheduleDay, parseBiffSectionMap, type BiffScreening } from '../src/lib/festival/biffSchedule'
+import { parseBiffRuntime, parseBiffScheduleDay, parseBiffSectionMap, type BiffScreening } from '../src/lib/festival/biffSchedule'
 
 const envPath = path.resolve(process.cwd(), '.env.local')
 if (fs.existsSync(envPath)) {
@@ -46,11 +46,38 @@ const FESTIVAL = {
   region: '부산',
   city: '부산',
   venue_text: '영화의전당 · 센텀시티 일대',
+  banner_url: 'https://www.biff.kr/kor/img/cont/2026_31st_BIFF_POSTER.png',
   link_url: 'https://www.biff.kr/kor/',
   description:
     '아시아 최대 규모의 국제영화제. 영화의전당을 중심으로 센텀시티 일대 극장에서 열려요.\n'
     + '예매와 잔여석은 영화제 공식 예매처에서 확인해 주세요.',
   is_active: true,
+}
+
+/** 작품 상세를 한 번씩만 읽어 러닝타임을 붙인다. 행사 페이지는 러닝타임이 없어 건너뛴다. */
+async function attachRuntimes(screenings: BiffScreening[]): Promise<void> {
+  const urls = [...new Set(screenings
+    .map((screening) => screening.programUrl)
+    .filter((url): url is string => Boolean(url?.includes('/program/prog_view.asp'))))]
+  const runtimeByUrl = new Map<string, number | null>()
+
+  console.log(`  작품 러닝타임 ${urls.length}개 확인`)
+  for (const [index, url] of urls.entries()) {
+    const res = await fetch(url, {
+      headers: crawlerHeaders(),
+      signal: AbortSignal.timeout(15000),
+    }).catch(() => null)
+    const runtime = res?.ok ? parseBiffRuntime(await res.text()) : null
+    runtimeByUrl.set(url, runtime)
+    if ((index + 1) % 50 === 0 || index === urls.length - 1) {
+      console.log(`    ${index + 1}/${urls.length}`)
+    }
+    await new Promise((resolve) => setTimeout(resolve, 250))
+  }
+
+  for (const screening of screenings) {
+    screening.runtimeMin = screening.programUrl ? runtimeByUrl.get(screening.programUrl) ?? null : null
+  }
 }
 
 interface Venue {
@@ -227,6 +254,7 @@ async function main() {
   // ── 상영 시간표 ───────────────────────────────────────────
   console.log('\n상영 시간표:')
   const screenings = await fetchSchedule()
+  await attachRuntimes(screenings)
 
   const known = new Set(VENUES.map((v) => v.name))
   const unknown = [...new Set(screenings.map((s) => s.venueLabel).filter((v) => !known.has(v)))]
@@ -249,7 +277,7 @@ async function main() {
       festival_id: festivalId,
       screening_date: s.screeningDate,
       start_time: s.startTime,
-      runtime_min: null,
+      runtime_min: s.runtimeMin ?? null,
       festival_theater_id: festivalTheaterIdByName.get(s.venueLabel) ?? null,
       venue_label: s.venueLabel,
       screen_label: s.screenLabel,

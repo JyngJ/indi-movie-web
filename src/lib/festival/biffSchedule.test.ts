@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { EVENT_SECTION, parseBiffScheduleDay, parseBiffSectionMap, splitBiffVenue } from './biffSchedule'
+import { EVENT_SECTION, parseBiffRuntime, parseBiffScheduleDay, parseBiffSectionMap, splitBiffVenue } from './biffSchedule'
 
 // biff.kr 날짜별 시간표(2026-09-19 수집) 구조를 줄인 것
 const MENU = `
@@ -33,6 +33,16 @@ const PAGE = MENU + ROWS
 describe('parseBiffSectionMap', () => {
   it('메뉴 링크에서 섹션 번호와 이름을 읽는다', () => {
     expect(parseBiffSectionMap(PAGE)).toEqual({ 428: '개·폐막작', 442: '경쟁', 441: '특별상영' })
+  })
+})
+
+describe('parseBiffRuntime', () => {
+  it('작품 상세의 러닝타임을 분으로 읽는다', () => {
+    expect(parseBiffRuntime('<li class="en"><span class="screen_outx">러닝타임</span>80min</li>')).toBe(80)
+  })
+
+  it('러닝타임 표기가 없으면 null이다', () => {
+    expect(parseBiffRuntime('<li>행사</li>')).toBeNull()
   })
 })
 

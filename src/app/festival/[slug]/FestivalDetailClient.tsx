@@ -16,6 +16,7 @@ import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 import { FestivalTimetable } from './FestivalTimetable'
 import { isMultiplexVenue, multiplexNotice } from '@/lib/festival/venue'
 import { Icon } from '@/components/primitives'
+import { DetailKeyPanel } from '@/components/navigation/DetailKeyPanel'
 
 // http:// 원본(예: jiff.kr — HTTPS 인증서가 깨져있음)을 브라우저가 직접 요청하면 mixed-content
 // 자동 https 승격 때문에 깨진다. Next 이미지 최적화 엔드포인트를 거치면 서버가 대신
@@ -37,6 +38,73 @@ function timetableCaption(dayDate: string | null, label: string | null): string 
     ? `${Number(dayDate.slice(5, 7))}월 ${Number(dayDate.slice(8, 10))}일 (${DOW[new Date(`${dayDate}T12:00:00`).getDay()]})`
     : '전체'
   return label ? `${dayLabel} · ${label}` : dayLabel
+}
+
+function fullDateLabel(date: string): string {
+  const [, month, day] = date.split('-')
+  const dow = DOW[new Date(`${date}T12:00:00`).getDay()]
+  return `${Number(month)}월 ${Number(day)}일 (${dow})`
+}
+
+function FestivalInfo({
+  festival,
+  status,
+  dateLabel,
+  firstLinkedTheaterId,
+  isDesktop,
+  router,
+}: {
+  festival: FestivalDetail
+  status: FestivalStatus
+  dateLabel: string
+  firstLinkedTheaterId?: string | null
+  isDesktop: boolean
+  router: ReturnType<typeof useRouter>
+}) {
+  return (
+    <>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)', marginBottom: 'var(--spacing-2)' }}>
+        <span style={{ fontSize: 'var(--text-meta)', fontWeight: 700, lineHeight: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-on-accent)', backgroundColor: STATUS_COLOR[status], padding: 'var(--spacing-1) var(--spacing-3)', borderRadius: 'var(--radius-badge)' }}>
+          {STATUS_LABEL[status]}
+        </span>
+        <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', fontWeight: 600 }}>{dateLabel}</span>
+      </div>
+      <h1 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)', wordBreak: 'keep-all', textWrap: 'balance' }}>
+        {festival.name}
+      </h1>
+      <div style={{ marginTop: 'var(--spacing-2)', display: 'flex', alignItems: 'flex-start', gap: 'var(--spacing-1)', fontSize: 'var(--text-meta)', lineHeight: 1.5, color: 'var(--color-text-caption)' }}>
+        <Icon name="map-pin" size={14} strokeWidth={1.75} color="currentColor" style={{ marginTop: 'var(--spacing-1)', flexShrink: 0 }} />
+        <span>
+          {fullDateLabel(festival.startDate)} ~ {fullDateLabel(festival.endDate)} · {festival.city}
+          {festival.venueText ? ` · ${festival.venueText}` : ''}
+        </span>
+      </div>
+      {festival.description && (
+        <p style={{ margin: 'var(--spacing-4) 0 0', color: 'var(--color-text-body)', fontSize: 'var(--text-body)', lineHeight: 1.7, whiteSpace: 'pre-wrap', textWrap: 'pretty' }}>
+          {festival.description}
+        </p>
+      )}
+      {(festival.linkUrl || firstLinkedTheaterId) && (
+        <div style={{ display: 'flex', flexDirection: isDesktop ? 'row' : 'column', gap: 'var(--spacing-2)', marginTop: isDesktop ? 'auto' : 'var(--spacing-4)', paddingTop: isDesktop ? 'var(--spacing-5)' : 0 }}>
+          {festival.linkUrl && (
+            <a
+              href={festival.linkUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-2)', minHeight: 44, padding: '0 var(--spacing-4)', borderRadius: 'var(--radius-button)', backgroundColor: 'var(--color-primary-base)', color: 'var(--color-on-accent)', fontSize: 'var(--text-body)', fontWeight: 700, textDecoration: 'none' }}
+            >
+              공식 사이트 <Icon name="external-link" size={16} strokeWidth={2} color="currentColor" />
+            </a>
+          )}
+          {firstLinkedTheaterId && (
+            <MapCtaButton fullWidth={!isDesktop} style={isDesktop ? { flex: 1 } : undefined} onClick={() => router.push(`/map?theater=${firstLinkedTheaterId}`)}>
+              지도에서 보기
+            </MapCtaButton>
+          )}
+        </div>
+      )}
+    </>
+  )
 }
 
 /* ── 라인업 그리드 포스터 — PosterThumb은 고정 px 크기라 반응형 그리드엔 안 맞아 별도 작성 ── */
@@ -95,6 +163,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
   const currentTimetable = timetables[ttIndex]
 
   const firstLinkedTheaterId = festival.theaters.find((t) => t.theaterId)?.theaterId
+  const usesPosterHero = festival.slug === 'biff31'
 
   const sectionStyle: React.CSSProperties = { paddingTop: isDesktop ? 48 : 32 }
 
@@ -113,66 +182,69 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
         </div>
       </div>
 
-      {/* 배너 — 잘리지 않게 원본 비율 그대로 가로에 맞춤(크롭 없음). fill+objectFit:cover였을 땐
-          21:4처럼 아주 납작한 배너가 16:9 박스에 눌려 좌우가 크게 잘렸다. */}
-      {festival.bannerUrl && !bannerFailed ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={proxiedImageUrl(festival.bannerUrl, 1920)}
-          alt={festival.name}
-          onError={() => setBannerFailed(true)}
-          style={{ width: '100%', height: 'auto', display: 'block', backgroundColor: 'var(--color-surface-raised)' }}
-        />
-      ) : (
-        <div style={{ width: '100%', aspectRatio: '21/4', position: 'relative', backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
-          <span className="display-h2" style={{ color: 'var(--color-text-primary)', textAlign: 'center' }}>
-            {festival.name}
-          </span>
-        </div>
-      )}
-
-      {/* 헤더 */}
-      <div style={{ padding: '20px 16px 0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-          <span style={{ fontSize: 12, fontWeight: 700, lineHeight: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-on-accent)', backgroundColor: STATUS_COLOR[status], padding: '4px 12px', borderRadius: 9999 }}>
-            {STATUS_LABEL[status]}
-          </span>
-          <span style={{ fontSize: 13, color: 'var(--color-text-caption)', fontWeight: 600 }}>{dateLabel}</span>
-        </div>
-        <h1 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)', wordBreak: 'keep-all' }}>
-          {festival.name}
-        </h1>
-        <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--color-text-caption)' }}>
-          <Icon name="map-pin" size={14} strokeWidth={1.75} color="currentColor" />
-          {festival.region} · {festival.city}
-          {festival.venueText ? ` · ${festival.venueText}` : ''}
-        </div>
-
-        {/* CTA */}
-        {(festival.linkUrl || firstLinkedTheaterId) && (
-          <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-            {festival.linkUrl && (
-              <a
-                href={festival.linkUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  height: 44, borderRadius: 12, backgroundColor: 'var(--color-primary-base)', color: 'var(--color-on-accent)',
-                  fontSize: 14, fontWeight: 700, textDecoration: 'none',
-                }}
-              >
-                공식 사이트 <Icon name="external-link" size={16} strokeWidth={1.75} color="currentColor" />
-              </a>
-            )}
-            {firstLinkedTheaterId && (
-              <MapCtaButton fullWidth={false} style={{ flex: 1 }} onClick={() => router.push(`/map?theater=${firstLinkedTheaterId}`)}>
-                지도에서 보기
-              </MapCtaButton>
-            )}
+      {usesPosterHero ? (
+        <DetailKeyPanel
+          isDesktop={isDesktop}
+          style={{ maxWidth: isDesktop ? 1000 : undefined, margin: isDesktop ? 'var(--spacing-6) auto 0' : undefined }}
+        >
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: isDesktop ? 'var(--spacing-8)' : 'var(--spacing-4)', padding: isDesktop ? 'var(--spacing-8) 0' : 'var(--spacing-6) var(--gutter)' }}>
+            <div style={{ position: 'relative', flexShrink: 0, width: isDesktop ? 200 : 100, height: isDesktop ? 300 : 150, borderRadius: 'var(--radius-poster)', overflow: 'hidden', backgroundColor: 'var(--color-surface-raised)', boxShadow: 'inset 0 0 0 1px var(--comp-poster-border)' }}>
+              {festival.bannerUrl && !bannerFailed ? (
+                <Image
+                  src={festival.bannerUrl}
+                  alt={`${festival.name} 공식 포스터`}
+                  fill
+                  priority
+                  sizes={isDesktop ? '200px' : '100px'}
+                  onError={() => setBannerFailed(true)}
+                  style={{ objectFit: 'cover' }}
+                />
+              ) : (
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--spacing-2)', color: 'var(--color-text-caption)', fontSize: 'var(--text-meta)', textAlign: 'center' }}>
+                  {festival.name} 포스터
+                </div>
+              )}
+            </div>
+            <div style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', minHeight: isDesktop ? 300 : 150 }}>
+              <FestivalInfo
+                festival={festival}
+                status={status}
+                dateLabel={dateLabel}
+                firstLinkedTheaterId={firstLinkedTheaterId}
+                isDesktop={isDesktop}
+                router={router}
+              />
+            </div>
           </div>
-        )}
-      </div>
+        </DetailKeyPanel>
+      ) : (
+        <>
+          {/* 가로 배너를 쓰는 기존 영화제는 원본 비율을 유지한다. */}
+          {festival.bannerUrl && !bannerFailed ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={proxiedImageUrl(festival.bannerUrl, 1920)}
+              alt={festival.name}
+              onError={() => setBannerFailed(true)}
+              style={{ width: '100%', height: 'auto', display: 'block', backgroundColor: 'var(--color-surface-raised)' }}
+            />
+          ) : (
+            <div style={{ width: '100%', aspectRatio: '21/4', position: 'relative', backgroundColor: 'var(--color-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 var(--spacing-6)' }}>
+              <span className="display-h2" style={{ color: 'var(--color-text-primary)', textAlign: 'center' }}>{festival.name}</span>
+            </div>
+          )}
+          <div style={{ padding: 'var(--spacing-5) var(--gutter) 0' }}>
+            <FestivalInfo
+              festival={festival}
+              status={status}
+              dateLabel={dateLabel}
+              firstLinkedTheaterId={firstLinkedTheaterId}
+              isDesktop={isDesktop}
+              router={router}
+            />
+          </div>
+        </>
+      )}
 
       {/* 상영 시간표 — 구조화된 회차가 있으면 표로, 없으면 영화제가 배포한 이미지로,
           둘 다 없으면 "공개 전" 자리로. 섹션을 통째로 감추지는 않는다. */}
@@ -233,6 +305,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
       ) : (
         <FestivalTimetable
           screenings={festival.screenings}
+          theaters={festival.theaters}
           startDate={festival.startDate}
           endDate={festival.endDate}
           today={today}
@@ -362,7 +435,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
       </section>
 
       {/* 소개 */}
-      {festival.description && (
+      {festival.description && !usesPosterHero && (
         <section style={sectionStyle}>
           <SectionHeader title="소개" isDesktop={isDesktop} />
           <p style={{ padding: '12px 16px', fontSize: 14, lineHeight: 1.7, color: 'var(--color-text-body)', whiteSpace: 'pre-wrap' }}>

@@ -21,6 +21,7 @@ const nextConfig: NextConfig = {
       { protocol: 'http', hostname: 'file.koreafilm.or.kr' },    // 구 데이터에 http 포스터 존재
       { protocol: 'https', hostname: '*.supabase.co' },          // 어드민 업로드 스토리지
       { protocol: 'https', hostname: 'cdn.imweb.me' },           // 영화제 배너
+      { protocol: 'https', hostname: 'www.biff.kr' },            // 부산국제영화제 공식 포스터
       { protocol: 'https', hostname: 'image.cine21.com' },
       { protocol: 'https', hostname: '*.wikimedia.org' },
       { protocol: 'https', hostname: '*.naver.net' },            // imgnews·shopping.phinf

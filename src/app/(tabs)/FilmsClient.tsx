@@ -1131,20 +1131,22 @@ export default function FilmsPage() {
               </div>
             )}
 
-            {/* 주목할 영화제 — 지역 필터 무관 전국 대상, festivals 0개면 미노출.
-                배너 이미지가 이 섹션의 본문 전부라, banner_url이 없으면 섹션 헤더만 덩그러니
-                남는다(부산국제영화제처럼 배너를 안 받은 영화제에서 바로 걸렸다) — 그땐 통째로
-                감춘다. 영화제로 가는 길은 필터 줄 아래 바로가기 칩이 대신 연다. */}
-            {festivals.length > 0 && festivals[0].bannerUrl && (
-              <div style={{ paddingTop: isDesktop ? 24 : 16 }}>
-                <FestivalBannerCard
-                  festival={festivals[0]}
-                  today={toKstIsoDate(new Date())}
-                  isDesktop={isDesktop}
-                  onClick={() => router.push(`/festival/${festivals[0].slug}`)}
-                />
-              </div>
-            )}
+            {/* 주목할 영화제 — 지역 필터 무관 전국 대상. 부국제는 상단 전용 배너로 보여 주고,
+                여기서는 다른 영화제 가운데 배너 이미지가 있는 첫 항목만 노출한다.
+                배너 이미지가 이 섹션의 본문 전부라 banner_url이 없으면 통째로 감춘다. */}
+            {festivals
+              .filter((festival) => festival.slug !== 'biff31' && festival.bannerUrl)
+              .slice(0, 1)
+              .map((festival) => (
+                <div key={festival.id} style={{ paddingTop: isDesktop ? 24 : 16 }}>
+                  <FestivalBannerCard
+                    festival={festival}
+                    today={toKstIsoDate(new Date())}
+                    isDesktop={isDesktop}
+                    onClick={() => router.push(`/festival/${festival.slug}`)}
+                  />
+                </div>
+              ))}
 
             {/* 0. 인기 랭킹 — 순번 체계의 첫 자리. 상단 고정 섹션(개인화·기념일·특별전·인스타)과
                 달리 renderRun을 그대로 타므로 dwell/클릭 계측이 다른 큐레이션 행과 동일하다 */}

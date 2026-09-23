@@ -36,6 +36,8 @@ export interface BiffScreening {
   hasGv: boolean
   /** 첫 편의 biff.kr 작품(행사) 페이지 — 예매 버튼이 거기 있다 */
   programUrl: string | null
+  /** 작품 상세에서 읽은 러닝타임. 시간표 HTML만 파싱할 때는 아직 없다 */
+  runtimeMin?: number | null
 }
 
 function decodeEntities(text: string): string {
@@ -51,6 +53,14 @@ function decodeEntities(text: string): string {
 // 진짜 태그만 지운다. 행사 제목은 "<범죄도시> 시리즈"처럼 작품명 꺾쇠를 이스케이프 없이 싣는다.
 function stripTags(html: string): string {
   return decodeEntities(html.replace(/<\/?[a-zA-Z][a-zA-Z0-9]*(?:\s[^>]*)?\/?>/g, '')).replace(/\s+/g, ' ').trim()
+}
+
+/** 작품 상세의 `<span>러닝타임</span>80min` 표기에서 분 단위를 읽는다. */
+export function parseBiffRuntime(html: string): number | null {
+  const match = html.match(/<span[^>]*class=["'][^"']*screen_outx[^"']*["'][^>]*>\s*러닝타임\s*<\/span>\s*(\d{1,3})\s*(?:min|분)/i)
+  if (!match) return null
+  const minutes = Number(match[1])
+  return minutes > 0 ? minutes : null
 }
 
 /** 상단 메뉴에서 섹션 번호 ↔ 이름 표를 읽는다 — `prog_list.asp?c_idx=442` → "경쟁" */
