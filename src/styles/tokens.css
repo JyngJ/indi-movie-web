@@ -336,6 +336,7 @@
      고도: sm=E1 카드·버튼 hover / md=E2 FAB·드롭다운·팝업 / lg=E3 모달 / sheet=하단 고정 면(offset 0 ambient) */
   --shadow-base:  #140F0A;
   --shadow-sm:    0 1px 2px rgba(20, 15, 10, 0.10), 0 2px 8px rgba(20, 15, 10, 0.04);
+  --shadow-pin:   0 2px 6px rgba(0, 0, 0, 0.18);   /* 지도 극장 핀 — 피그마 2.0/shadow/pin */
   --shadow-md:    0 2px 4px rgba(20, 15, 10, 0.10), 0 8px 20px rgba(20, 15, 10, 0.06);
   --shadow-lg:    0 4px 8px rgba(20, 15, 10, 0.10), 0 16px 40px rgba(20, 15, 10, 0.08);
   --shadow-sheet: 0 0 24px rgba(20, 15, 10, 0.14), 0 0 6px rgba(20, 15, 10, 0.08);

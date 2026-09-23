@@ -15,8 +15,10 @@ export const revalidate = 3600
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'
 
+// 영화제 본 행은 '*' — poster_url·shortcut_image_url처럼 나중에 붙은 컬럼을 이름으로 적으면
+// 마이그레이션 전 배포에서 쿼리가 실패해 상세가 404가 된다(회차를 따로 읽는 것과 같은 이유).
 const FESTIVAL_SELECT = `
-  id, name, slug, start_date, end_date, region, city, venue_text, banner_url, link_url, description, is_active,
+  *,
   festival_theaters(
     id, theater_id, venue_text, sort_order,
     theaters(id,name,lat,lng,address,city,phone,website,instagram_url,screen_count,seat_count,parking,restaurant,accessibility,rating,created_at,updated_at)
@@ -90,6 +92,7 @@ async function fetchFestival(slug: string): Promise<FestivalDetail | null> {
   const row = data as unknown as {
     id: string; name: string; slug: string; start_date: string; end_date: string
     region: string; city: string; venue_text: string | null; banner_url: string | null
+    poster_url?: string | null; shortcut_image_url?: string | null
     link_url: string | null; description: string | null; is_active: boolean
     festival_theaters: {
       id: string; theater_id: string | null; venue_text: string | null; sort_order: number
@@ -170,14 +173,16 @@ export async function generateMetadata({
 
   const title = `${festival.name} | 영화볼지도`
   const description = truncateSnippet(festival.description, 110)
-    ?? `${festival.city}에서 열리는 ${festival.name}. 상영작·상영관 정보`
+    ?? `${festival.city}에서 열리는 ${festival.name}. 상영작·극장·상영 시간표`
 
+  // 공유 이미지는 가로 배너가 우선 — 없으면 세로 포스터. 루트 경로는 metadataBase가 절대 주소로 바꾼다
+  const ogImage = festival.bannerUrl ?? festival.posterUrl
   return {
     title,
     description,
     alternates: { canonical: `/festival/${slug}` },
-    openGraph: festival.bannerUrl
-      ? { title, description, url: `/festival/${slug}`, images: [{ url: festival.bannerUrl }] }
+    openGraph: ogImage
+      ? { title, description, url: `/festival/${slug}`, images: [{ url: ogImage }] }
       : { title, description, url: `/festival/${slug}` },
   }
 }

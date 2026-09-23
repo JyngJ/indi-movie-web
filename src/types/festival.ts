@@ -18,7 +18,12 @@ export interface Festival {
   city: string
   /** 영화제 전체 요약 장소 표기 — 개별 상영관의 임시 장소명은 FestivalTheaterLink.venueText */
   venueText: string | null
+  /** 가로 배너 — 상영작 탭 "주목할 영화제" 카드와 상세 상단 띠에 원본 비율로 깐다 */
   bannerUrl: string | null
+  /** 세로 공식 포스터 — 있으면 상세 상단을 영화 상세처럼 포스터 + 흰 패널로 그린다 */
+  posterUrl: string | null
+  /** 상영작 탭 바로가기 줄에 칩 대신 까는 가로 이미지 */
+  shortcutImageUrl: string | null
   linkUrl: string | null
   description: string | null
   isActive: boolean

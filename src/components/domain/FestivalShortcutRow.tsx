@@ -28,51 +28,56 @@ export function FestivalShortcutRow({ festivals, today, onSelect }: Props) {
   return (
     <div
       className="no-scrollbar"
-      style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '12px var(--gutter) 0' }}
+      style={{ display: 'flex', gap: 'var(--spacing-2)', overflowX: 'auto', padding: 'var(--spacing-3) var(--gutter) 0' }}
     >
-      {shortcuts.map((festival) => (
-        <button
-          key={festival.id}
-          type="button"
-          onClick={() => onSelect(festival.slug)}
-          aria-label={`${festival.name} 상영 시간표 보기`}
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8, flexShrink: 0,
-            width: festival.slug === 'biff31'
-              ? 'min(440px, calc(100vw - var(--gutter) - var(--gutter)))'
-              : 'auto',
-            minHeight: 'unset',
-            padding: festival.slug === 'biff31' ? 0 : 'var(--gutter-sm) var(--gutter-md)',
-            borderRadius: festival.slug === 'biff31' ? 'var(--radius-button)' : 'var(--radius-pill)',
-            border: festival.slug === 'biff31' ? 'none' : '1px solid var(--color-gv)',
-            backgroundColor: 'var(--color-surface-bg)',
-            color: 'var(--color-gv)',
-            fontSize: 'var(--text-meta)', fontWeight: 700, lineHeight: 1.2,
-            cursor: 'pointer',
-            overflow: 'hidden',
-          }}
-        >
-          {festival.slug === 'biff31' ? (
-            <Image
-              src="/images/festivals/biff31-shortcut.png"
-              alt="제31회 부산국제영화제 10월 6일부터 15일까지"
-              width={880}
-              height={230}
-              sizes="(max-width: 472px) calc(100vw - 32px), 440px"
-              style={{ display: 'block', width: '100%', height: 'auto' }}
-            />
-          ) : (
-            <>
-              <Icon name="calendar" size={14} strokeWidth={2} color="currentColor" />
-              <span>{festival.name}</span>
-              <span style={{ fontWeight: 500, opacity: 0.8, fontFeatureSettings: '"tnum"' }}>
-                {festivalShortcutDateLabel(festival, today)}
-              </span>
-              <Icon name="chevron-right" size={14} strokeWidth={2} color="currentColor" />
-            </>
-          )}
-        </button>
-      ))}
+      {shortcuts.map((festival) => {
+        const dateLabel = festivalShortcutDateLabel(festival, today)
+        // 바로가기 이미지가 있는 영화제는 칩 대신 가로 이미지 한 장 — 데이터(shortcut_image_url)가 정한다
+        const image = festival.shortcutImageUrl
+        return (
+          <button
+            key={festival.id}
+            type="button"
+            onClick={() => onSelect(festival.slug)}
+            aria-label={`${festival.name} 상영 시간표 보기`}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 'var(--spacing-2)', flexShrink: 0,
+              width: image ? 'min(440px, calc(100vw - var(--gutter) - var(--gutter)))' : 'auto',
+              minHeight: 'unset',
+              padding: image ? 0 : 'var(--gutter-sm) var(--gutter-md)',
+              borderRadius: image ? 'var(--radius-button)' : 'var(--radius-pill)',
+              /* 영화제는 필터가 아니라 다른 화면으로 나가는 문이다 — 지역칩과 헷갈리지 않게
+                 GV·이벤트와 같은 브랜드 보라를 쓴다 */
+              border: image ? 'none' : '1px solid var(--color-gv)',
+              backgroundColor: 'var(--color-surface-bg)',
+              color: 'var(--color-gv)',
+              fontSize: 'var(--text-meta)', fontWeight: 700, lineHeight: 1.2,
+              cursor: 'pointer',
+              overflow: 'hidden',
+            }}
+          >
+            {image ? (
+              <Image
+                src={image}
+                alt={`${festival.name} ${dateLabel}`}
+                width={880}
+                height={230}
+                sizes="(max-width: 472px) calc(100vw - 32px), 440px"
+                style={{ display: 'block', width: '100%', height: 'auto' }}
+              />
+            ) : (
+              <>
+                <Icon name="calendar" size={14} strokeWidth={2} color="currentColor" />
+                <span>{festival.name}</span>
+                <span style={{ fontWeight: 500, opacity: 0.8, fontFeatureSettings: '"tnum"' }}>
+                  {dateLabel}
+                </span>
+                <Icon name="chevron-right" size={14} strokeWidth={2} color="currentColor" />
+              </>
+            )}
+          </button>
+        )
+      })}
     </div>
   )
 }

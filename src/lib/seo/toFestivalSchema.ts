@@ -17,7 +17,9 @@ export function toFestivalSchema(
         .filter((name): name is string => Boolean(name)),
     ),
   ]
-  const bannerUrl = safeUrl(festival.bannerUrl)
+  // 스키마 image는 절대 주소여야 한다 — 포스터는 사이트 루트 경로(/images/...)로 올 수 있다
+  const posterUrl = festival.posterUrl?.startsWith('/') ? `${baseUrl}${festival.posterUrl}` : festival.posterUrl
+  const imageUrl = safeUrl(festival.bannerUrl) ?? safeUrl(posterUrl)
 
   return {
     '@context': 'https://schema.org',
@@ -27,7 +29,7 @@ export function toFestivalSchema(
     endDate: festival.endDate,
     url: `${baseUrl}/festival/${festival.slug}`,
     ...(festival.description ? { description: festival.description } : {}),
-    ...(bannerUrl ? { image: bannerUrl } : {}),
+    ...(imageUrl ? { image: imageUrl } : {}),
     location: venueNames.length > 0
       ? venueNames.map((name) => ({
           '@type': 'Place',

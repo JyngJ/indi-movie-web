@@ -29,6 +29,6 @@ describe('multiplexNotice', () => {
     expect(multiplexNotice('CGV 센텀시티')).toBe('CGV 센텀시티 회차는 모으지 않아요 — 해당 극장 상영 시간표에서 확인해 주세요')
   })
   it('영화제 회차 표가 있으면 그 표로 보낸다', () => {
-    expect(multiplexNotice('CGV 센텀시티', true)).toBe('CGV 센텀시티 영화제 회차는 위 상영 시간표에서 볼 수 있어요')
+    expect(multiplexNotice('CGV 센텀시티', true)).toBe('CGV 센텀시티 영화제 회차는 아래 상영 시간표에서 볼 수 있어요')
   })
 })

@@ -1131,11 +1131,11 @@ export default function FilmsPage() {
               </div>
             )}
 
-            {/* 주목할 영화제 — 지역 필터 무관 전국 대상. 부국제는 상단 전용 배너로 보여 주고,
-                여기서는 다른 영화제 가운데 배너 이미지가 있는 첫 항목만 노출한다.
-                배너 이미지가 이 섹션의 본문 전부라 banner_url이 없으면 통째로 감춘다. */}
+            {/* 주목할 영화제 — 지역 필터 무관 전국 대상. 가로 배너(banner_url)가 있는 첫 영화제만 노출한다.
+                배너 이미지가 이 섹션의 본문 전부라 없으면 통째로 감춘다. 세로 포스터만 있는 영화제
+                (부산국제영화제)는 필터 줄 아래 바로가기 이미지가 그 역할을 한다. */}
             {festivals
-              .filter((festival) => festival.slug !== 'biff31' && festival.bannerUrl)
+              .filter((festival) => festival.bannerUrl)
               .slice(0, 1)
               .map((festival) => (
                 <div key={festival.id} style={{ paddingTop: isDesktop ? 24 : 16 }}>

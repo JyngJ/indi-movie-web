@@ -1,4 +1,4 @@
-import { safeUrl } from '@/lib/seo/safeUrl'
+import { safeImageSrc, safeUrl } from '@/lib/seo/safeUrl'
 import type { Festival } from '@/types/festival'
 
 /** Supabase `festivals` row → Festival 변환 (movieRow.ts의 movieRowToMovie와 같은 원칙).
@@ -14,6 +14,9 @@ export function festivalRowToFestival(row: Record<string, unknown>): Festival {
     city: String(row.city),
     venueText: row.venue_text != null ? String(row.venue_text) : null,
     bannerUrl: safeUrl(row.banner_url as string | null | undefined) ?? null,
+    // 마이그레이션(docs/SUPABASE_FESTIVAL_MEDIA.sql) 전에는 컬럼이 없어 undefined로 온다
+    posterUrl: safeImageSrc(row.poster_url as string | null | undefined) ?? null,
+    shortcutImageUrl: safeImageSrc(row.shortcut_image_url as string | null | undefined) ?? null,
     linkUrl: safeUrl(row.link_url as string | null | undefined) ?? null,
     description: row.description != null ? String(row.description) : null,
     isActive: Boolean(row.is_active),

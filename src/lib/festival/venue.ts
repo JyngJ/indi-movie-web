@@ -22,6 +22,6 @@ export function isMultiplexVenue(theaterName: string): boolean {
  */
 export function multiplexNotice(theaterName: string, hasFestivalScreenings = false): string {
   return hasFestivalScreenings
-    ? `${theaterName} 영화제 회차는 위 상영 시간표에서 볼 수 있어요`
+    ? `${theaterName} 영화제 회차는 아래 상영 시간표에서 볼 수 있어요`
     : `${theaterName} 회차는 모으지 않아요 — 해당 극장 상영 시간표에서 확인해 주세요`
 }

@@ -239,7 +239,9 @@ export function useFestivals() {
     queryFn: async () => {
       const { data, error } = await supabase()
         .from('festivals')
-        .select('id, name, slug, start_date, end_date, region, city, venue_text, banner_url, link_url, description, is_active')
+        // '*' — poster_url·shortcut_image_url은 나중에 붙은 컬럼이라, 이름을 적으면 마이그레이션 전
+        // 배포에서 쿼리가 통째로 실패해 배너·바로가기가 다 사라진다. 없는 컬럼은 매퍼가 null로 받는다.
+        .select('*')
         .eq('is_active', true)
         .gte('end_date', today)
         .order('start_date', { ascending: true })

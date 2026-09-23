@@ -15,7 +15,8 @@
  * "영화제 회차는 이 페이지 시간표에 있다"고 안내한다(src/lib/festival/venue.ts). 영화제가
  * 끝나도 핀은 남으니, 정리하려면 지우는 게 아니라 회차 소스를 붙이는 쪽으로 판단할 것.
  *
- * 사전 조건: docs/SUPABASE_FESTIVAL_SCREENINGS.sql을 Supabase SQL 편집기에서 먼저 실행.
+ * 사전 조건: docs/SUPABASE_FESTIVAL_SCREENINGS.sql · docs/SUPABASE_FESTIVAL_MEDIA.sql을
+ * Supabase SQL 편집기에서 먼저 실행.
  */
 import * as fs from 'fs'
 import * as path from 'path'
@@ -46,7 +47,11 @@ const FESTIVAL = {
   region: '부산',
   city: '부산',
   venue_text: '영화의전당 · 센텀시티 일대',
-  banner_url: 'https://www.biff.kr/kor/img/cont/2026_31st_BIFF_POSTER.png',
+  // 공식 포스터는 세로라 banner_url(가로 배너 자리)이 아니라 poster_url에 둔다.
+  // 원본(biff.kr, 3000×4499 PNG 10MB)을 600×900 JPG로 줄여 사이트에 올렸다 — 핫링크하면 변환마다 10MB를 받는다.
+  banner_url: null,
+  poster_url: '/images/festivals/biff31-poster.jpg',
+  shortcut_image_url: '/images/festivals/biff31-shortcut.png',
   link_url: 'https://www.biff.kr/kor/',
   description:
     '아시아 최대 규모의 국제영화제. 영화의전당을 중심으로 센텀시티 일대 극장에서 열려요.\n'
@@ -54,7 +59,10 @@ const FESTIVAL = {
   is_active: true,
 }
 
-/** 작품 상세를 한 번씩만 읽어 러닝타임을 붙인다. 행사 페이지는 러닝타임이 없어 건너뛴다. */
+/**
+ * 작품 상세를 한 번씩만 읽어 러닝타임을 붙인다. 행사 페이지는 러닝타임이 없어 건너뛴다.
+ * 시간표와 같은 예절로 동시 요청 없이 1초 간격 — 작품 230편 안팎이라 4분쯤 걸린다.
+ */
 async function attachRuntimes(screenings: BiffScreening[]): Promise<void> {
   const urls = [...new Set(screenings
     .map((screening) => screening.programUrl)
@@ -72,7 +80,7 @@ async function attachRuntimes(screenings: BiffScreening[]): Promise<void> {
     if ((index + 1) % 50 === 0 || index === urls.length - 1) {
       console.log(`    ${index + 1}/${urls.length}`)
     }
-    await new Promise((resolve) => setTimeout(resolve, 250))
+    await new Promise((resolve) => setTimeout(resolve, 1000))
   }
 
   for (const screening of screenings) {

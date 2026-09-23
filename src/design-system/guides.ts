@@ -301,6 +301,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
     intro: '같은 자리에서 내용을 갈아 끼우는 탭 줄입니다. underline(패널·시트 안)과 pill(목록 위 필터형) 두 모습만 있습니다.',
     specs: [
       { title: 'underline', desc: '높이 42, 탭들이 폭을 균등하게 나눠 갖고 선택된 탭 아래 2px 밑줄이 붙습니다.' },
+      { title: 'underline · scrollable', desc: '탭이 많아 나눠 가질 수 없을 때(영화제 극장 탭). 탭이 글자 폭만큼 서고 줄이 가로로 스크롤됩니다.' },
       { title: 'pill', desc: 'FilterPill을 그대로 씁니다(높이 28). 개수 배지를 라벨에 붙일 수 있습니다.' },
     ],
     usage: [

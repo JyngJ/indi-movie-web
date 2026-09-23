@@ -5,7 +5,7 @@ import type { Festival } from '@/types/festival'
 function makeFestival(over: Partial<Festival> = {}): Festival {
   return {
     id: 'f', name: '어떤 영화제', slug: 'some', startDate: '2026-10-06', endDate: '2026-10-15',
-    region: '부산', city: '부산', venueText: null, bannerUrl: null, linkUrl: null,
+    region: '부산', city: '부산', venueText: null, bannerUrl: null, posterUrl: null, shortcutImageUrl: null, linkUrl: null,
     description: null, isActive: true,
     ...over,
   }
