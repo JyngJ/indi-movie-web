@@ -50,7 +50,7 @@ function koMatch(query: string, target: string): boolean {
   return t.includes(q) || decomposeKo(t).includes(decomposeKo(q))
 }
 
-function buildSuggestions(iv: string, movies: Movie[], theaters: Theater[], festivals: Festival[]): Suggestion[] {
+export function buildSuggestions(iv: string, movies: Movie[], theaters: Theater[], festivals: Festival[]): Suggestion[] {
   if (!iv) return []
   const seen = new Set<string>()
   const out: Suggestion[] = []
