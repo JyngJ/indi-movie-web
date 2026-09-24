@@ -165,7 +165,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
   return (
     <div style={{ minHeight: '100dvh', backgroundColor: 'var(--color-surface-bg)', paddingBottom: 'var(--spacing-24)' }}>
       {/* 상세 공통 상단 바 — 레일·하단 탭바는 festival/layout의 DetailShell이 띄운다 */}
-      <DetailTopBar crumbLabel="영화" crumbHref="/films" title={festival.name} isDesktop={isDesktop} />
+      <DetailTopBar crumbLabel="영화제" crumbHref="/films" title={festival.name} isDesktop={isDesktop} />
 
       <div style={{ maxWidth: isDesktop ? 1000 : undefined, margin: isDesktop ? '0 auto' : undefined, paddingTop: isDesktop ? 'var(--spacing-6)' : 0 }}>
         {/* 상단 — 세로 포스터가 있으면 영화 상세처럼 포스터 + 흰 패널, 가로 배너만 있으면 배너 띠 + 정보 */}

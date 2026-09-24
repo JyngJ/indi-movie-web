@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { FestivalDetail } from '@/types/festival'
 import { srOnly } from './srOnly'
+import { dateWithDow, summarizeFestivalScreenings } from '@/lib/seo/festivalSeo'
 
 /** "YYYY-MM-DD" → "8월 23일" — SSR 전용이라 타임존 파싱 없이 문자열로 처리 */
 function formatDate(iso: string): string {
@@ -23,15 +24,37 @@ export function FestivalSeoContent({ festival }: { festival: FestivalDetail }) {
     ),
   ]
 
+  const summary = festival.screenings.length > 0 ? summarizeFestivalScreenings(festival.screenings) : null
+  const workCount = summary?.titleCount ?? festival.movies.length
+
   // writing-audit-ignore — SEO 본문은 문어체 유지
-  const intro = `${festival.name}는 ${formatDate(festival.startDate)}부터 ${formatDate(festival.endDate)}까지 ${festival.city}${venueNames.length > 0 ? ` ${venueNames.join(', ')}` : ''}에서 열립니다.${festival.movies.length > 0 ? ` 올해는 ${festival.movies.length}편을 상영합니다.` : ''}`
+  const intro = `${festival.name}는 ${formatDate(festival.startDate)}부터 ${formatDate(festival.endDate)}까지 ${festival.city}${venueNames.length > 0 ? ` ${venueNames.join(', ')}` : ''}에서 열립니다.${workCount > 0 ? ` 올해는 ${workCount}편을 상영합니다.` : ''}${summary ? ` 상영 회차는 모두 ${festival.screenings.length}회이며 그중 ${summary.gvCount}회는 GV(관객과의 대화)가 있습니다.` : ''}`
 
   return (
     <section style={srOnly} data-seo-content>
       <p>{intro}</p>
       {festival.description && <p>{festival.description}</p>}
 
-      {festival.movies.length > 0 && (
+      {summary && (
+        <>
+          <h2>{festival.name} 상영 시간표</h2>
+          <ul>
+            {summary.byDate.map((d) => (
+              <li key={d.date}>{dateWithDow(d.date)} — {d.count}회차 · {d.venues.join(', ')}</li>
+            ))}
+          </ul>
+
+          <h2>{festival.name} 섹션별 상영작 ({summary.titleCount}편)</h2>
+          {summary.bySection.map((sec) => (
+            <div key={sec.section}>
+              <h3>{sec.section} ({sec.titles.length}편)</h3>
+              <p>{sec.titles.join(', ')}</p>
+            </div>
+          ))}
+        </>
+      )}
+
+      {!summary && festival.movies.length > 0 && (
         <>
           <h2>{festival.name} 상영작 ({festival.movies.length}편)</h2>
           <ul>
@@ -50,7 +73,7 @@ export function FestivalSeoContent({ festival }: { festival: FestivalDetail }) {
 
       {festival.theaters.length > 0 && (
         <>
-          <h2>상영 장소</h2>
+          <h2>{festival.name} 극장</h2>
           <ul>
             {festival.theaters.map((t) => (
               <li key={t.id}>

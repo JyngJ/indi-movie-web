@@ -3,8 +3,9 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { safeUrl } from '@/lib/seo/safeUrl'
-import { truncateSnippet } from '@/lib/seo/truncateSnippet'
 import { toFestivalSchema } from '@/lib/seo/toFestivalSchema'
+import { toBreadcrumbSchema } from '@/lib/seo/toBreadcrumbSchema'
+import { festivalMetaDescription, festivalSeoTitle } from '@/lib/seo/festivalSeo'
 import { FestivalSeoContent } from '@/components/seo/FestivalSeoContent'
 import { movieRowToMovie } from '@/lib/supabase/movieRow'
 import { festivalRowToFestival } from '@/lib/supabase/festivalRow'
@@ -13,7 +14,8 @@ import { FestivalDetailClient } from './FestivalDetailClient'
 
 export const revalidate = 3600
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'
+// 구조화 데이터 주소 — canonical·sitemap과 같은 푸니코드로(한글 도메인은 JSON-LD에서 모양이 갈린다)
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.xn--hq1bv8o5phw2d7wt.com'
 
 // 영화제 본 행은 '*' — poster_url·shortcut_image_url처럼 나중에 붙은 컬럼을 이름으로 적으면
 // 마이그레이션 전 배포에서 쿼리가 실패해 상세가 404가 된다(회차를 따로 읽는 것과 같은 이유).
@@ -171,9 +173,9 @@ export async function generateMetadata({
   const festival = await fetchFestival(slug)
   if (!festival) return { title: '영화볼지도' }
 
-  const title = `${festival.name} | 영화볼지도`
-  const description = truncateSnippet(festival.description, 110)
-    ?? `${festival.city}에서 열리는 ${festival.name}. 상영작·극장·상영 시간표`
+  // 검색 의도("부산국제영화제 시간표")에 맞춰 제목에 상영 시간표·극장 수를, 설명에 기간·회차를 싣는다
+  const title = `${festivalSeoTitle(festival)} | 영화볼지도`
+  const description = festivalMetaDescription(festival)
 
   // 공유 이미지는 가로 배너가 우선 — 없으면 세로 포스터. 루트 경로는 metadataBase가 절대 주소로 바꾼다
   const ogImage = festival.bannerUrl ?? festival.posterUrl
@@ -184,6 +186,8 @@ export async function generateMetadata({
     openGraph: ogImage
       ? { title, description, url: `/festival/${slug}`, images: [{ url: ogImage }] }
       : { title, description, url: `/festival/${slug}` },
+    // 루트 레이아웃의 기본 트위터 카드 이미지가 남지 않게 페이지 이미지로 덮는다
+    twitter: ogImage ? { title, description, images: [ogImage] } : { title, description },
   }
 }
 
@@ -197,12 +201,21 @@ export default async function FestivalDetailPage({
   if (!festival) notFound()
 
   const festivalSchema = toFestivalSchema(festival, BASE_URL)
+  // 화면 브레드크럼(영화제 › 이름)과 같은 경로 — 영화제는 상영작 탭에 모여 있다
+  const breadcrumbSchema = toBreadcrumbSchema(
+    [{ name: '영화볼지도', path: '/' }, { name: '영화제', path: '/films' }, { name: festival.name }],
+    BASE_URL,
+  )
 
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(festivalSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <FestivalSeoContent festival={festival} />
       <Suspense>
