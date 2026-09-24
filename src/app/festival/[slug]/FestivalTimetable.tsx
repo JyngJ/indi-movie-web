@@ -51,6 +51,10 @@ interface Props {
 
 const FAVORITES_TAB = '__favorites__'
 const TIME_GUTTER_W = 48
+/* 시각 열 폭 — 화면 가장자리 여백(--gutter)까지 덮는다 */
+const GUTTER_CSS = `calc(var(--gutter) + ${TIME_GUTTER_W}px)`
+/* 머리 줄이 붙는 높이 — DetailTopBar(52) 아래 */
+const STICKY_TOP = 'calc(52px + env(safe-area-inset-top))'
 const SCREEN_W = 164
 const CARD_W = SCREEN_W - 16
 const CARD_H = 116
@@ -134,6 +138,12 @@ export function FestivalTimetable({ screenings, theaters, startDate, endDate, to
 
   const sectionRef = useRef<HTMLElement | null>(null)
   const scrollerRef = useRef<HTMLDivElement | null>(null)
+  // 위에 붙는 머리 줄 — 바둑판 가로 스크롤을 그대로 따라간다
+  const headRowRef = useRef<HTMLDivElement | null>(null)
+  const syncHeadRow = useCallback(() => {
+    const el = scrollerRef.current
+    if (headRowRef.current && el) headRowRef.current.style.transform = `translateX(${-el.scrollLeft}px)`
+  }, [])
   const [canL, setCanL] = useState(false)
   const [canR, setCanR] = useState(false)
   const updateEdges = useCallback(() => {
@@ -166,8 +176,9 @@ export function FestivalTimetable({ screenings, theaters, startDate, endDate, to
   useEffect(() => {
     const el = scrollerRef.current
     if (el) el.scrollLeft = 0
+    syncHeadRow()
     updateEdges()
-  }, [shownVenues, updateEdges])
+  }, [shownVenues, updateEdges, syncHeadRow])
 
   // 지도에서 "시간표 보기" — 모바일은 그 극장 탭, PC는 그 극장 블록까지 가로 스크롤
   useEffect(() => {
@@ -204,6 +215,8 @@ export function FestivalTimetable({ screenings, theaters, startDate, endDate, to
         <UnpublishedNotice officialUrl={officialUrl} />
       ) : (
         <>
+          {/* 날짜 · (모바일) 극장 탭 · 툴바를 흰 띠 하나로 묶는다 — 아래 바둑판(웜 회색 면)과 구분 */}
+          <div style={{ marginTop: 'var(--spacing-2)', backgroundColor: 'var(--color-surface-card)', borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)', paddingBottom: 'var(--spacing-3)' }}>
           <div style={{ padding: '0 var(--gutter)' }}>
             <DetailDateTabs
               dates={days}
@@ -222,7 +235,6 @@ export function FestivalTimetable({ screenings, theaters, startDate, endDate, to
               value={effectiveTab}
               onChange={(v) => setMobileTab(v)}
               scrollable
-              style={{ marginTop: 'var(--spacing-2)' }}
             />
           )}
 
@@ -244,6 +256,7 @@ export function FestivalTimetable({ screenings, theaters, startDate, endDate, to
               </div>
             )}
           </div>
+          </div>
 
           {shownVenues.length === 0 || !axis ? (
             <p style={{ margin: 0, padding: 'var(--spacing-8) var(--gutter)', textAlign: 'center', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', wordBreak: 'keep-all' }}>
@@ -252,16 +265,40 @@ export function FestivalTimetable({ screenings, theaters, startDate, endDate, to
                 : day ? `${festivalDayLabel(day)}에 상영이 없어요` : '상영이 없어요'}
             </p>
           ) : (
-            <div style={{ position: 'relative', marginTop: 'var(--spacing-3)' }}>
+            <div style={{ marginTop: 'var(--spacing-3)' }}>
+              {/* 극장·관 머리 줄 — 바둑판 밖에 두고 페이지 기준으로 상단 바 아래에 붙인다.
+                  바둑판 안에 두면 가로 스크롤 영역이 세로 고정을 가둬서 붙지 않는다.
+                  가로 위치는 onScroll에서 바둑판을 따라 옮긴다 */}
+              <div style={{ position: 'sticky', top: STICKY_TOP, zIndex: 3, overflow: 'hidden', backgroundColor: 'var(--color-surface-bg)' }}>
+                <div ref={headRowRef} style={{ display: 'flex', alignItems: 'flex-start', width: 'max-content', paddingRight: 'var(--gutter)', willChange: 'transform' }}>
+                  <div style={{ width: GUTTER_CSS, flexShrink: 0 }} />
+                  <div style={{ display: 'flex', gap: 'var(--spacing-3)', marginLeft: 'var(--spacing-2)' }}>
+                    {shownVenues.map((venue) => (
+                      <VenueHeader
+                        key={venue}
+                        venue={venue}
+                        rows={dayRows.filter((r) => r.venueLabel === venue)}
+                        theaterId={theaterIdByVenue.get(venue) ?? null}
+                        collapsible={isDesktop}
+                        collapsed={isDesktop && collapsed.has(venue)}
+                        onToggleCollapsed={() => toggleCollapsed(venue)}
+                      />
+                    ))}
+                  </div>
+                </div>
+                {/* 왼쪽 위 모서리 — 시각 열과 같은 흰 면 */}
+                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: GUTTER_CSS, backgroundColor: 'var(--color-surface-card)', borderRight: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }} />
+              </div>
+
               <div
                 ref={scrollerRef}
                 className="no-scrollbar"
-                onScroll={updateEdges}
+                onScroll={() => { syncHeadRow(); updateEdges() }}
                 /* 좌우 여백을 스크롤 영역에 주지 않는다 — 주면 고정된 시각 열 왼쪽으로 표가 비친다.
                    시각 열이 화면 가장자리부터 여백까지 덮고, 오른쪽 여백은 안쪽 줄이 갖는다 */
-                style={{ overflowX: 'auto', paddingBottom: 'var(--spacing-2)' }}
+                style={{ overflowX: 'auto', overscrollBehaviorX: 'contain' }}
               >
-                <div style={{ display: 'flex', alignItems: 'flex-start', width: 'max-content', paddingRight: 'var(--gutter)' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', width: 'max-content', paddingRight: 'var(--gutter)', paddingBottom: 'var(--spacing-2)' }}>
                   <TimeGutter axis={axis} />
                   <div style={{ display: 'flex', gap: 'var(--spacing-3)', marginLeft: 'var(--spacing-2)' }}>
                     {shownVenues.map((venue) => (
@@ -273,9 +310,8 @@ export function FestivalTimetable({ screenings, theaters, startDate, endDate, to
                         theaterId={theaterIdByVenue.get(venue) ?? null}
                         selectedId={selectedId}
                         onSelect={(id) => setSelectedId((cur) => (cur === id ? null : id))}
-                        collapsible={isDesktop}
                         collapsed={isDesktop && collapsed.has(venue)}
-                        onToggleCollapsed={() => toggleCollapsed(venue)}
+                        collapsible={isDesktop}
                       />
                     ))}
                   </div>
@@ -300,13 +336,12 @@ function TimeGutter({ axis }: { axis: { start: number; end: number } }) {
   for (let m = axis.start; m <= axis.end; m += 60) hours.push(m)
   return (
     <div style={{
-      position: 'sticky', left: 0, zIndex: 2, flexShrink: 0,
-      width: `calc(var(--gutter) + ${TIME_GUTTER_W}px)`,
-      height: HEAD_H + (axis.end - axis.start) * PX_PER_MIN + BODY_PAD * 2 + 2,
+      position: 'sticky', left: 0, zIndex: 2, flexShrink: 0, width: GUTTER_CSS,
+      height: (axis.end - axis.start) * PX_PER_MIN + BODY_PAD * 2 + 1,
       backgroundColor: 'var(--color-surface-card)', borderRight: '1px solid var(--color-border)',
     }}>
       {hours.map((m) => {
-        const y = HEAD_H + 1 + BODY_PAD + (m - axis.start) * PX_PER_MIN
+        const y = BODY_PAD + (m - axis.start) * PX_PER_MIN
         return (
           <div key={m}>
             <span style={{
@@ -360,76 +395,106 @@ function VenueHead({ venue, count, theaterId, collapsible, collapsed, onToggleCo
   )
 }
 
-/* ── 극장 한 곳 — 테두리 안에 극장 줄 · 관 이름 줄 · 관별 세로 열 ───────── */
-function VenueBoard({ venue, rows, axis, theaterId, selectedId, onSelect, collapsible, collapsed, onToggleCollapsed }: {
+const venueScreens = (rows: FestivalScreening[]) => [...new Set(rows.map(screenOf))]
+/* 관 열 — 관마다 최소 SCREEN_W, 극장 이름이 더 길면 남는 폭을 관들이 나눠 갖는다 */
+const venueColumns = (count: number) => `repeat(${count}, minmax(${SCREEN_W}px, 1fr))`
+
+/* ── 극장 머리 — 극장 줄 + 관 이름 줄. 테두리의 윗부분(둥근 위 모서리)을 맡는다 ─────────
+      위에 붙는 머리 줄에 한 번, 바둑판 몸통 안에 높이 0으로 한 번 더 그린다. 몸통 쪽은 폭 계산용이라
+      보이지도 눌리지도 않는다 — 두 곳이 같은 max-content 규칙으로 폭을 정해 열이 어긋나지 않는다 */
+function VenueHeader({ venue, rows, theaterId, collapsible, collapsed, onToggleCollapsed }: {
+  venue: string
+  rows: FestivalScreening[]
+  theaterId: string | null
+  collapsible: boolean
+  collapsed: boolean
+  onToggleCollapsed?: () => void
+}) {
+  const screens = venueScreens(rows)
+  return (
+    <div style={{
+      width: 'max-content', minWidth: collapsed ? undefined : screens.length * SCREEN_W, height: HEAD_H + 1,
+      /* 테두리는 안쪽 그림자로 — border는 폭 계산에 들어가 머리와 몸통 폭이 어긋난다 */
+      boxShadow: 'inset 1px 0 0 var(--color-border), inset -1px 0 0 var(--color-border), inset 0 1px 0 var(--color-border)',
+      borderRadius: 'var(--radius-popover) var(--radius-popover) 0 0',
+      backgroundColor: 'var(--color-surface-card)', overflow: 'clip',
+    }}>
+      <VenueHead venue={venue} count={rows.length} theaterId={theaterId} collapsible={collapsible} collapsed={collapsed} onToggleCollapsed={onToggleCollapsed ?? (() => {})} />
+      {collapsed ? (
+        <div style={{ height: SCREEN_HEAD_H, borderBottom: '1px solid var(--color-border)' }} />
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: venueColumns(screens.length), height: SCREEN_HEAD_H, borderBottom: '1px solid var(--color-border)' }}>
+          {screens.map((screen, i) => (
+            <div key={screen} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 var(--spacing-2)',
+              borderLeft: i === 0 ? 'none' : '1px solid var(--color-border)',
+              fontSize: 'var(--text-meta)', fontWeight: 700, color: 'var(--color-text-body)', whiteSpace: 'nowrap',
+            }}>
+              {screen}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ── 극장 몸통 — 관별 세로 열에 회차 카드. 테두리의 아랫부분(둥근 아래 모서리)을 맡는다 ───── */
+function VenueBoard({ venue, rows, axis, theaterId, selectedId, onSelect, collapsible, collapsed }: {
   venue: string
   rows: FestivalScreening[]
   axis: { start: number; end: number }
   theaterId: string | null
   selectedId: string | null
   onSelect: (id: string) => void
-  /** PC만 — 극장을 이름만 남기고 접었다 편다 */
   collapsible: boolean
+  /** PC만 — 접힌 극장은 빈 면. 시각 축 높이는 그대로 둬 옆 극장과 줄이 맞는다 */
   collapsed: boolean
-  onToggleCollapsed: () => void
 }) {
-  const screens = [...new Set(rows.map(screenOf))]
+  const screens = venueScreens(rows)
   const bodyH = (axis.end - axis.start) * PX_PER_MIN + BODY_PAD * 2
   const hours: number[] = []
   for (let m = axis.start; m <= axis.end; m += 60) hours.push(m)
-  // 관 열 — 관마다 최소 SCREEN_W, 극장 이름이 더 길면 남는 폭을 관들이 나눠 갖는다
-  const columns = `repeat(${screens.length}, minmax(${SCREEN_W}px, 1fr))`
-
-  const frame: React.CSSProperties = {
-    flexShrink: 0, width: 'max-content', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-popover)',
-    backgroundColor: 'var(--color-surface-card)', overflow: 'hidden',
-  }
-  const head = <VenueHead venue={venue} count={rows.length} theaterId={theaterId} collapsible={collapsible} collapsed={collapsed} onToggleCollapsed={onToggleCollapsed} />
-
-  // 접힌 극장 — 극장 줄만 남기고 아래는 빈 면. 시각 축 높이는 그대로 둬 옆 극장과 줄이 맞는다
-  if (collapsed) {
-    return (
-      <section data-venue={venue} aria-label={`${venue} (접힘)`} style={{ ...frame, height: HEAD_H + bodyH + 2 }}>
-        {head}
-      </section>
-    )
-  }
 
   return (
-    <section data-venue={venue} aria-label={venue} style={frame}>
-      {head}
-
-      <div style={{ display: 'grid', gridTemplateColumns: columns, height: SCREEN_HEAD_H, borderBottom: '1px solid var(--color-border)' }}>
-        {screens.map((screen, i) => (
-          <div key={screen} style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 var(--spacing-2)',
-            borderLeft: i === 0 ? 'none' : '1px solid var(--color-border)',
-            fontSize: 'var(--text-meta)', fontWeight: 700, color: 'var(--color-text-body)', whiteSpace: 'nowrap',
-          }}>
-            {screen}
-          </div>
-        ))}
+    <section
+      data-venue={venue}
+      aria-label={collapsed ? `${venue} (접힘)` : venue}
+      style={{
+        flexShrink: 0, width: 'max-content',
+        boxShadow: 'inset 1px 0 0 var(--color-border), inset -1px 0 0 var(--color-border), inset 0 -1px 0 var(--color-border)',
+        borderRadius: '0 0 var(--radius-popover) var(--radius-popover)',
+        backgroundColor: 'var(--color-surface-bg)', overflow: 'clip',
+      }}
+    >
+      {/* 폭 계산용 머리 — 높이 0 · 보이지 않음 · 눌리지 않음 */}
+      <div aria-hidden inert style={{ height: 0, overflow: 'hidden', visibility: 'hidden' }}>
+        <VenueHeader venue={venue} rows={rows} theaterId={theaterId} collapsible={collapsible} collapsed={collapsed} />
       </div>
 
-      <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: columns, height: bodyH, backgroundColor: 'var(--color-surface-bg)' }}>
-        {hours.map((m) => (
-          <div key={m} style={{ position: 'absolute', left: 0, right: 0, top: BODY_PAD + (m - axis.start) * PX_PER_MIN, borderTop: '1px solid var(--color-border)' }} />
-        ))}
-        {screens.map((screen, i) => {
-          const list = rows.filter((r) => screenOf(r) === screen).sort((a, b) => toMinutes(a.startTime) - toMinutes(b.startTime))
-          let bottom = -Infinity
-          return (
-            <div key={screen} style={{ position: 'relative', borderLeft: i === 0 ? 'none' : '1px solid var(--color-border)' }}>
-              {list.map((row) => {
-                // 시작 시각 자리에 놓되, 앞 카드와 겹치면 아래로 민다(짧은 단편 연속 상영)
-                const top = Math.max(BODY_PAD + (toMinutes(row.startTime) - axis.start) * PX_PER_MIN, bottom + CARD_GAP)
-                bottom = top + CARD_H
-                return <ScreeningCard key={row.id} row={row} top={top} selected={row.id === selectedId} onSelect={() => onSelect(row.id)} />
-              })}
-            </div>
-          )
-        })}
-      </div>
+      {collapsed ? (
+        <div style={{ height: bodyH }} />
+      ) : (
+        <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: venueColumns(screens.length), height: bodyH }}>
+          {hours.map((m) => (
+            <div key={m} style={{ position: 'absolute', left: 0, right: 0, top: BODY_PAD + (m - axis.start) * PX_PER_MIN, borderTop: '1px solid var(--color-border)' }} />
+          ))}
+          {screens.map((screen, i) => {
+            const list = rows.filter((r) => screenOf(r) === screen).sort((a, b) => toMinutes(a.startTime) - toMinutes(b.startTime))
+            let bottom = -Infinity
+            return (
+              <div key={screen} style={{ position: 'relative', borderLeft: i === 0 ? 'none' : '1px solid var(--color-border)' }}>
+                {list.map((row) => {
+                  // 시작 시각 자리에 놓되, 앞 카드와 겹치면 아래로 민다(짧은 단편 연속 상영)
+                  const top = Math.max(BODY_PAD + (toMinutes(row.startTime) - axis.start) * PX_PER_MIN, bottom + CARD_GAP)
+                  bottom = top + CARD_H
+                  return <ScreeningCard key={row.id} row={row} top={top} selected={row.id === selectedId} onSelect={() => onSelect(row.id)} />
+                })}
+              </div>
+            )
+          })}
+        </div>
+      )}
     </section>
   )
 }
