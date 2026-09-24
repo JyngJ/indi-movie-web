@@ -17,6 +17,7 @@ import {
   countScreeningsByDate,
   defaultFestivalDay,
   festivalDayLabel,
+  listScreeningScreens,
   listScreeningVenues,
   normalizeTime,
   screeningEndTime,
@@ -395,7 +396,6 @@ function VenueHead({ venue, count, theaterId, collapsible, collapsed, onToggleCo
   )
 }
 
-const venueScreens = (rows: FestivalScreening[]) => [...new Set(rows.map(screenOf))]
 /* 관 열 — 관마다 최소 SCREEN_W, 극장 이름이 더 길면 남는 폭을 관들이 나눠 갖는다 */
 const venueColumns = (count: number) => `repeat(${count}, minmax(${SCREEN_W}px, 1fr))`
 
@@ -410,7 +410,7 @@ function VenueHeader({ venue, rows, theaterId, collapsible, collapsed, onToggleC
   collapsed: boolean
   onToggleCollapsed?: () => void
 }) {
-  const screens = venueScreens(rows)
+  const screens = listScreeningScreens(rows)
   return (
     <div style={{
       width: 'max-content', minWidth: collapsed ? undefined : screens.length * SCREEN_W, height: HEAD_H + 1,
@@ -451,7 +451,7 @@ function VenueBoard({ venue, rows, axis, theaterId, selectedId, onSelect, collap
   /** PC만 — 접힌 극장은 빈 면. 시각 축 높이는 그대로 둬 옆 극장과 줄이 맞는다 */
   collapsed: boolean
 }) {
-  const screens = venueScreens(rows)
+  const screens = listScreeningScreens(rows)
   const bodyH = (axis.end - axis.start) * PX_PER_MIN + BODY_PAD * 2
   const hours: number[] = []
   for (let m = axis.start; m <= axis.end; m += 60) hours.push(m)
