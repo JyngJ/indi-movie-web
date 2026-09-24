@@ -98,13 +98,31 @@ img {
 .detail-key-panel {
   border-radius: 0;
 }
+
+/* 상세 날짜 탭은 선택 전에도 눌러 이동할 수 있는 범위를 선으로 보여 준다. */
+.detail-date-tab {
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  background-color: transparent;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+.detail-date-tab:not(:disabled):hover {
+  background-color: var(--color-surface-raised);
+}
+.detail-date-tab[data-selected='true'] {
+  border-bottom: 2px solid var(--color-primary-base);
+}
 @media (min-width: 1024px) {
   .detail-key-panel {
     border-radius: var(--radius-sheet);
+    /* 극장·회차 카드와 같은 선. 모바일은 풀블리드라 선을 두르지 않는다 */
+    border: 1px solid var(--color-border);
   }
-  /* 두 조각으로 쌓는 경우(극장 상세: 헤더 + sticky 날짜탭) — 맞닿는 쪽은 각지게 */
+  /* 두 조각으로 쌓는 경우(극장 상세: 헤더 + sticky 날짜탭) — 맞닿는 쪽은 각지게,
+     선도 한 겹만 남긴다(두 조각이 마주 보면 2px로 굵어진다) */
   .detail-key-panel--top {
     border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+    border-bottom: 0;
   }
   .detail-key-panel--bottom {
     border-radius: 0 0 var(--radius-sheet) var(--radius-sheet);

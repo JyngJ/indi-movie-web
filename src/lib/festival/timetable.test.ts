@@ -7,6 +7,7 @@ import {
   festivalDayShortLabel,
   formatScreeningTail,
   formatScreeningTime,
+  listScreeningScreens,
   listScreeningVenues,
   normalizeTime,
   screeningEndTime,
@@ -103,6 +104,14 @@ describe('listScreeningVenues', () => {
       makeScreening({ venueLabel: 'CGV 센텀시티' }),
     ]
     expect(listScreeningVenues(list)).toEqual(['CGV 센텀시티', '영화의전당'])
+  })
+})
+
+describe('listScreeningScreens', () => {
+  it('숫자 관을 번호순으로 두고 특수관은 그 뒤에 둔다', () => {
+    const list = ['5관', '6관', 'IMAX관', '2관', '1관', '4관', '2관']
+      .map((screenLabel, index) => makeScreening({ id: String(index), screenLabel }))
+    expect(listScreeningScreens(list)).toEqual(['1관', '2관', '4관', '5관', '6관', 'IMAX관'])
   })
 })
 

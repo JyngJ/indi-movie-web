@@ -6,6 +6,7 @@ import type { FestivalScreening } from '@/types/festival'
 // ─────────────────────────────────────────────
 
 const DOW = ['일', '월', '화', '수', '목', '금', '토']
+const SCREEN_LABEL_COLLATOR = new Intl.Collator('ko', { numeric: true, sensitivity: 'base' })
 
 /**
  * 영화제 회기의 모든 날짜 — 회차가 아직 0개여도 탭은 서야 한다.
@@ -91,6 +92,12 @@ export function listScreeningVenues(screenings: FestivalScreening[]): string[] {
     out.push(s.venueLabel)
   }
   return out
+}
+
+/** 극장 안의 관 목록 — 중복을 없애고 `1관 → 2관 → … → IMAX관`처럼 자연 정렬한다 */
+export function listScreeningScreens(screenings: FestivalScreening[]): string[] {
+  const labels = screenings.map((screening) => screening.screenLabel ?? screening.venueLabel)
+  return [...new Set(labels)].sort(SCREEN_LABEL_COLLATOR.compare)
 }
 
 /**

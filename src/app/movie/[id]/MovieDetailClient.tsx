@@ -12,7 +12,7 @@ import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionR
 import { FavoriteDirectorMark } from '@/components/domain/favorites/FavoriteDirectorMark'
 import { ExpandableSynopsis } from '@/components/domain/movieDetail/ExpandableSynopsis'
 import { ShowtimeCell } from '@/components/domain/ShowtimeCell'
-import { getPrevPathname, getLastFilmsPathname, GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
+import { getPrevPathname, getLastFilmsListPathname, GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { isFilmsPath } from '@/lib/navigation/filmsPath'
 import Image from 'next/image'
 import { useMovieTheaterShowtimes, useDirectorProfile } from '@/lib/supabase/queries'
@@ -139,8 +139,10 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection }:
     const prev = getPrevPathname()
     /* 직전이 상영작 흐름이면 history.back()이 그 위치(스크롤 포함)를 복원한다 */
     if (prev && isFilmsPath(prev) && window.history.length > 1) { router.back(); return }
-    /* 아니면 상영작의 마지막 위치로 — 없으면 목록 최상단 */
-    router.push(getLastFilmsPathname() ?? '/')
+    /* 아니면 상영작 목록의 마지막 위치로 — 없으면 목록 최상단.
+       지도 탭을 들렀다 상영작 탭으로 돌아오면 탭이 이 상세를 복원하는데, 그때
+       '마지막 상영작 위치'는 이 상세 자신이라 제자리걸음이었다(2026-09-18). */
+    router.push(getLastFilmsListPathname() ?? '/')
   }
 
   const dates = useMemo(() => getDateRange(7), [])

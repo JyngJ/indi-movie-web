@@ -793,6 +793,7 @@ export default function FilmsPage() {
       <FestivalShortcutRow
         festivals={festivals}
         today={toKstIsoDate(new Date())}
+        isDesktop={isDesktop}
         onSelect={(slug) => router.push(`/festival/${slug}`)}
       />
       {!locModalSuppressed && (locState === 'prompt' || locState === 'denied' || locState === 'requesting') && (

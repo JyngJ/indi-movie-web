@@ -31,6 +31,8 @@ export function DetailKeyPanel({
       className={corners === 'all' ? 'detail-key-panel' : `detail-key-panel detail-key-panel--${corners}`}
       style={{
         backgroundColor: 'var(--color-surface-card)',
+        /* 모서리와 테두리는 globals.css `.detail-key-panel`이 갖는다 — 인라인이면
+           모바일에서 빼는 미디어 쿼리가 못 이긴다 */
         /* 모서리는 globals.css `.detail-key-panel`이 갖는다 — 인라인이면 미디어 쿼리가 못 이긴다 */
         paddingLeft: isDesktop ? 32 : 0,
         paddingRight: isDesktop ? 32 : 0,

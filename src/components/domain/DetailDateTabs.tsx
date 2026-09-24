@@ -28,6 +28,7 @@ export function DetailDateTabs({
   onSelect,
   labels,
   firstIsToday = true,
+  firstShowsMonth = false,
 }: {
   dates: string[]
   selectedDate: string
@@ -35,6 +36,8 @@ export function DetailDateTabs({
   onSelect: (isoDate: string) => void
   labels?: Readonly<Record<string, string>>
   firstIsToday?: boolean
+  /** 회기처럼 월 경계가 필요한 목록은 첫 날짜만 "10.6"으로 표시한다. */
+  firstShowsMonth?: boolean
 }) {
   const DOW = ['일', '월', '화', '수', '목', '금', '토']
   return (
@@ -50,15 +53,16 @@ export function DetailDateTabs({
             key={d}
             role="tab"
             aria-selected={isSelected}
+            data-selected={isSelected || undefined}
+            className="detail-date-tab"
             onClick={() => hasShows && onSelect(d)}
             style={{
               /* 폭이 남으면 셀이 나눠 갖는다 — PC 본문 컬럼을 채운다(피그마 2026-09-17).
                  모바일(7×56 > 화면)에서는 56으로 남고 가로 스크롤 */
               flex: '1 0 56px', minWidth: 56, height: 60,
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-1)',
-              border: 'none', background: 'none', cursor: hasShows ? 'pointer' : 'default',
+              cursor: hasShows ? 'pointer' : 'default',
               opacity: hasShows ? 1 : 0.35,
-              borderBottom: isSelected ? '2px solid var(--color-primary-base)' : '2px solid transparent',
               minHeight: 'auto',
             }}
             disabled={!hasShows}
@@ -67,7 +71,7 @@ export function DetailDateTabs({
               {top}
             </span>
             <span style={{ fontSize: 18, fontWeight: 700, fontFeatureSettings: '"tnum"', color: isSelected ? 'var(--color-primary-base)' : NUM_COLOR[kind] }}>
-              {dt.getDate()}
+              {i === 0 && firstShowsMonth ? `${dt.getMonth() + 1}.${dt.getDate()}` : dt.getDate()}
             </span>
           </button>
         )
