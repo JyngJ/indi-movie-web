@@ -139,6 +139,7 @@ export function FestivalTimetable({ screenings, theaters, startDate, endDate, to
   })
 
   const sectionRef = useRef<HTMLElement | null>(null)
+  const dateTabsRef = useRef<HTMLDivElement | null>(null)
   const scrollerRef = useRef<HTMLDivElement | null>(null)
   // 위에 붙는 머리 줄 — 바둑판 가로 스크롤을 그대로 따라간다
   const headRowRef = useRef<HTMLDivElement | null>(null)
@@ -148,6 +149,7 @@ export function FestivalTimetable({ screenings, theaters, startDate, endDate, to
   }, [])
   const [canL, setCanL] = useState(false)
   const [canR, setCanR] = useState(false)
+  const [showStickyDay, setShowStickyDay] = useState(false)
   const updateEdges = useCallback(() => {
     const el = scrollerRef.current
     if (!el) return
@@ -175,6 +177,15 @@ export function FestivalTimetable({ screenings, theaters, startDate, endDate, to
   const selected = dayRows.find((r) => r.id === selectedId) ?? null
 
   useEffect(() => { setSelectedId(null) }, [day, effectiveTab, favoritesOnly])
+  useEffect(() => {
+    const el = dateTabsRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(([entry]) => {
+      setShowStickyDay(!entry.isIntersecting && entry.boundingClientRect.bottom <= 52)
+    }, { rootMargin: '-52px 0px 0px 0px', threshold: 0 })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
   useEffect(() => {
     const el = scrollerRef.current
     if (el) el.scrollLeft = 0
@@ -204,6 +215,7 @@ export function FestivalTimetable({ screenings, theaters, startDate, endDate, to
     if (el) scrollRailBy(el, dir * Math.max(SCREEN_W * 2, el.clientWidth * 0.8))
   }
   const favoritesView = isDesktop ? favoritesOnly : effectiveTab === FAVORITES_TAB
+  const [stickyDate, stickyDow] = day ? festivalDayShortLabel(day).split(' ') : ['', '']
 
   return (
     <section ref={sectionRef} style={{ paddingTop: isDesktop ? 'var(--spacing-12)' : 'var(--spacing-8)', scrollMarginTop: 60 }}>
@@ -219,7 +231,7 @@ export function FestivalTimetable({ screenings, theaters, startDate, endDate, to
         <>
           {/* 날짜 · (모바일) 극장 탭 · 툴바를 흰 띠 하나로 묶는다 — 아래 바둑판(웜 회색 면)과 구분 */}
           <div style={{ marginTop: 'var(--spacing-2)', backgroundColor: 'var(--color-surface-card)', borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)', paddingBottom: 'var(--spacing-3)' }}>
-          <div style={{ padding: '0 var(--gutter)' }}>
+          <div ref={dateTabsRef} style={{ padding: '0 var(--gutter)' }}>
             <DetailDateTabs
               dates={days}
               selectedDate={day ?? ''}
@@ -227,6 +239,7 @@ export function FestivalTimetable({ screenings, theaters, startDate, endDate, to
               onSelect={setDay}
               labels={dayLabels}
               firstIsToday={false}
+              firstShowsMonth
             />
           </div>
 
@@ -294,9 +307,12 @@ export function FestivalTimetable({ screenings, theaters, startDate, endDate, to
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   backgroundColor: 'var(--color-surface-card)', borderRight: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)',
                 }}>
-                  <span style={{ fontSize: 'var(--text-meta)', fontWeight: 700, color: 'var(--color-text-body)', whiteSpace: 'nowrap', fontFeatureSettings: '"tnum"' }}>
-                    {day ? festivalDayShortLabel(day) : ''}
-                  </span>
+                  {showStickyDay && day && (
+                    <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-1)', color: 'var(--color-text-body)', whiteSpace: 'nowrap', fontFeatureSettings: '"tnum"' }}>
+                      <span style={{ fontSize: 'var(--text-badge)', fontWeight: 500 }}>{stickyDow}</span>
+                      <span style={{ fontSize: 'var(--text-meta)', fontWeight: 700 }}>{stickyDate}</span>
+                    </span>
+                  )}
                 </div>
               </div>
 

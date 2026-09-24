@@ -28,6 +28,7 @@ export function DetailDateTabs({
   onSelect,
   labels,
   firstIsToday = true,
+  firstShowsMonth = false,
 }: {
   dates: string[]
   selectedDate: string
@@ -35,6 +36,8 @@ export function DetailDateTabs({
   onSelect: (isoDate: string) => void
   labels?: Readonly<Record<string, string>>
   firstIsToday?: boolean
+  /** 회기처럼 월 경계가 필요한 목록은 첫 날짜만 "10.6"으로 표시한다. */
+  firstShowsMonth?: boolean
 }) {
   const DOW = ['일', '월', '화', '수', '목', '금', '토']
   return (
@@ -68,7 +71,7 @@ export function DetailDateTabs({
               {top}
             </span>
             <span style={{ fontSize: 18, fontWeight: 700, fontFeatureSettings: '"tnum"', color: isSelected ? 'var(--color-primary-base)' : NUM_COLOR[kind] }}>
-              {dt.getDate()}
+              {i === 0 && firstShowsMonth ? `${dt.getMonth() + 1}.${dt.getDate()}` : dt.getDate()}
             </span>
           </button>
         )
