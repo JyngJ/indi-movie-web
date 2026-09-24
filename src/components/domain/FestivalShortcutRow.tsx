@@ -35,7 +35,10 @@ export function FestivalShortcutRow({ festivals, today, isDesktop, onSelect }: P
   return (
     <div
       className="no-scrollbar"
-      style={{ display: 'flex', gap: 'var(--spacing-2)', overflowX: 'auto', padding: 'var(--spacing-3) var(--gutter) 0' }}
+      style={{
+        display: 'flex', gap: 'var(--spacing-2)', overflowX: 'auto',
+        padding: `${isDesktop ? 'var(--spacing-12)' : 'var(--spacing-8)'} var(--gutter) 0`,
+      }}
     >
       {shortcuts.map((festival) => {
         const dateLabel = festivalShortcutDateLabel(festival, today)
