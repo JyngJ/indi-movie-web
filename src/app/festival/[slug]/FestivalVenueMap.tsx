@@ -127,7 +127,8 @@ export default function FestivalVenueMap({ venues, selected, onSelect, onShowTim
   )
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)', padding: '0 var(--gutter)' }}>
+    /* 좌우는 위 SectionHeader와 같은 --gutter-sheet — 제목과 지도의 왼쪽 줄을 맞춘다 */
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)', padding: 'var(--spacing-3) var(--gutter-sheet) 0' }}>
       <div style={{ position: 'relative', height: isDesktop ? 480 : 320, borderRadius: 'var(--radius-control)', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
         {/* isolation — Leaflet 패널(z 200~700)을 이 상자 안에 가둬, 위에 띄우는 카드가 --z-map-popup으로 이긴다 */}
         <MapContainer

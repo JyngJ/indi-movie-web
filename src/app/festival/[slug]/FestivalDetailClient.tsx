@@ -22,7 +22,7 @@ import { FestivalTimetable } from './FestivalTimetable'
 // Leaflet은 window를 만진다 — 서버 렌더에서 빼고 자리만 잡아 둔다
 const FestivalVenueMap = dynamic(() => import('./FestivalVenueMap'), {
   ssr: false,
-  loading: () => <div style={{ height: 320, margin: '0 var(--gutter)', borderRadius: 'var(--radius-control)', backgroundColor: 'var(--color-surface-raised)' }} />,
+  loading: () => <div style={{ height: 320, margin: 'var(--spacing-3) var(--gutter-sheet) 0', borderRadius: 'var(--radius-control)', backgroundColor: 'var(--color-surface-raised)' }} />,
 })
 
 // http:// 원본(예: jiff.kr — HTTPS 인증서가 깨져있음)을 브라우저가 직접 요청하면 mixed-content
@@ -232,7 +232,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
               />
             ) : null}
             {venueMap.unpinned.length > 0 && (
-              <div style={{ margin: 'var(--spacing-3) var(--gutter) 0', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1)' }}>
+              <div style={{ margin: 'var(--spacing-3) var(--gutter-sheet) 0', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1)' }}>
                 {venueMap.unpinned.map((name) => (
                   <div key={name} style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--spacing-2)', fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)', wordBreak: 'keep-all' }}>
                     <Icon name="map-pin" size={14} strokeWidth={1.75} color="var(--color-text-caption)" style={{ marginTop: 'var(--spacing-1)', flexShrink: 0 }} />
