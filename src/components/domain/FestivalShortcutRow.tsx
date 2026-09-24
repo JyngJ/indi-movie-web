@@ -18,10 +18,11 @@ interface Props {
   festivals: Festival[]
   /** ISO date "YYYY-MM-DD" */
   today: string
+  isDesktop: boolean
   onSelect: (slug: string) => void
 }
 
-export function FestivalShortcutRow({ festivals, today, onSelect }: Props) {
+export function FestivalShortcutRow({ festivals, today, isDesktop, onSelect }: Props) {
   const shortcuts = selectShortcutFestivals(festivals, today)
   if (shortcuts.length === 0) return null
 
@@ -42,7 +43,9 @@ export function FestivalShortcutRow({ festivals, today, onSelect }: Props) {
             aria-label={`${festival.name} 상영 시간표 보기`}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 'var(--spacing-2)', flexShrink: 0,
-              width: image ? 'min(440px, calc(100vw - var(--gutter) - var(--gutter)))' : 'auto',
+              width: image
+                ? isDesktop ? '100%' : 'min(440px, calc(100vw - var(--gutter) - var(--gutter)))'
+                : 'auto',
               minHeight: 'unset',
               padding: image ? 0 : 'var(--gutter-sm) var(--gutter-md)',
               borderRadius: image ? 'var(--radius-button)' : 'var(--radius-pill)',
@@ -62,7 +65,7 @@ export function FestivalShortcutRow({ festivals, today, onSelect }: Props) {
                 alt={`${festival.name} ${dateLabel}`}
                 width={880}
                 height={230}
-                sizes="(max-width: 472px) calc(100vw - 32px), 440px"
+                sizes={isDesktop ? '1016px' : '(max-width: 472px) calc(100vw - 32px), 440px'}
                 style={{ display: 'block', width: '100%', height: 'auto' }}
               />
             ) : (
