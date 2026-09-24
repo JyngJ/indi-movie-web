@@ -53,9 +53,8 @@ const FESTIVAL = {
   poster_url: '/images/festivals/biff31-poster.jpg',
   shortcut_image_url: '/images/festivals/biff31-shortcut.png',
   link_url: 'https://www.biff.kr/kor/',
-  description:
-    '아시아 최대 규모의 국제영화제. 영화의전당을 중심으로 센텀시티 일대 극장에서 열려요.\n'
-    + '예매와 잔여석은 영화제 공식 예매처에서 확인해 주세요.',
+  // 설명은 두지 않는다 — 기간·장소·공식 사이트가 상단에 이미 있고, 예매 안내는 회차 선택 카드가 맡는다
+  description: null,
   is_active: true,
 }
 

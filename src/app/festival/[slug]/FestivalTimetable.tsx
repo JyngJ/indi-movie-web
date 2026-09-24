@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Chip, Icon, ScrollNavButton, SectionHeader, Tabs } from '@/components/primitives'
+import { Button, Chip, Icon, IconButton, ScrollNavButton, SectionHeader, Tabs } from '@/components/primitives'
 import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
 import { FavoriteToggle } from '@/components/domain/favorites/FavoriteToggle'
 import { BookingCtaButton, CloseRoundButton, type BookingCtaLabels } from '@/components/domain/booking/BookingActions'
@@ -51,6 +51,7 @@ interface Props {
 
 const FAVORITES_TAB = '__favorites__'
 const TIME_GUTTER_W = 48
+const COLLAPSED_W = 56
 const SCREEN_W = 164
 const CARD_W = SCREEN_W - 16
 const CARD_H = 116
@@ -123,6 +124,14 @@ export function FestivalTimetable({ screenings, theaters, startDate, endDate, to
   // PC "관심 표시한 것만 보기"
   const [favoritesOnly, setFavoritesOnly] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  // PC — 극장을 잠깐 접어 두고 다른 극장끼리 나란히 본다(날짜를 바꿔도 유지)
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(() => new Set())
+  const toggleCollapsed = (venue: string) => setCollapsed((prev) => {
+    const next = new Set(prev)
+    if (next.has(venue)) next.delete(venue)
+    else next.add(venue)
+    return next
+  })
 
   const sectionRef = useRef<HTMLElement | null>(null)
   const scrollerRef = useRef<HTMLDivElement | null>(null)
@@ -249,11 +258,13 @@ export function FestivalTimetable({ screenings, theaters, startDate, endDate, to
                 ref={scrollerRef}
                 className="no-scrollbar"
                 onScroll={updateEdges}
-                style={{ overflowX: 'auto', padding: '0 var(--gutter) var(--spacing-2)' }}
+                /* 좌우 여백을 스크롤 영역에 주지 않는다 — 주면 고정된 시각 열 왼쪽으로 표가 비친다.
+                   시각 열이 화면 가장자리부터 여백까지 덮고, 오른쪽 여백은 안쪽 줄이 갖는다 */
+                style={{ overflowX: 'auto', paddingBottom: 'var(--spacing-2)' }}
               >
-                <div style={{ display: 'flex', alignItems: 'flex-start', width: 'max-content' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', width: 'max-content', paddingRight: 'var(--gutter)' }}>
                   <TimeGutter axis={axis} />
-                  <div style={{ display: 'flex', gap: 'var(--spacing-3)' }}>
+                  <div style={{ display: 'flex', gap: 'var(--spacing-3)', marginLeft: 'var(--spacing-2)' }}>
                     {shownVenues.map((venue) => (
                       <VenueBoard
                         key={venue}
@@ -263,6 +274,9 @@ export function FestivalTimetable({ screenings, theaters, startDate, endDate, to
                         theaterId={theaterIdByVenue.get(venue) ?? null}
                         selectedId={selectedId}
                         onSelect={(id) => setSelectedId((cur) => (cur === id ? null : id))}
+                        collapsible={isDesktop}
+                        collapsed={isDesktop && collapsed.has(venue)}
+                        onToggleCollapsed={() => toggleCollapsed(venue)}
                       />
                     ))}
                   </div>
@@ -280,58 +294,95 @@ export function FestivalTimetable({ screenings, theaters, startDate, endDate, to
   )
 }
 
-/* ── 시각 열 — 가로로 스크롤해도 왼쪽에 붙어 있다 ─────────────────── */
+/* ── 시각 열 — 가로로 스크롤해도 왼쪽에 붙어 있다. 흰 면 + 오른쪽 경계로 표와 구분하고,
+      정시마다 표의 가로줄과 같은 높이에 눈금을 그어 줄을 따라 읽게 한다 ─────────── */
 function TimeGutter({ axis }: { axis: { start: number; end: number } }) {
   const hours: number[] = []
   for (let m = axis.start; m <= axis.end; m += 60) hours.push(m)
   return (
     <div style={{
-      position: 'sticky', left: 0, zIndex: 2, flexShrink: 0, width: TIME_GUTTER_W,
-      height: HEAD_H + (axis.end - axis.start) * PX_PER_MIN + BODY_PAD * 2,
-      backgroundColor: 'var(--color-surface-bg)',
+      position: 'sticky', left: 0, zIndex: 2, flexShrink: 0,
+      width: `calc(var(--gutter) + ${TIME_GUTTER_W}px)`,
+      height: HEAD_H + (axis.end - axis.start) * PX_PER_MIN + BODY_PAD * 2 + 2,
+      backgroundColor: 'var(--color-surface-card)', borderRight: '1px solid var(--color-border)',
     }}>
-      {hours.map((m) => (
-        <span key={m} style={{
-          position: 'absolute', left: 0, top: HEAD_H + BODY_PAD + (m - axis.start) * PX_PER_MIN - 8,
-          fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', fontFeatureSettings: '"tnum"',
-        }}>
-          {formatMinutes(m)}
-        </span>
-      ))}
+      {hours.map((m) => {
+        const y = HEAD_H + 1 + BODY_PAD + (m - axis.start) * PX_PER_MIN
+        return (
+          <div key={m}>
+            <span style={{
+              position: 'absolute', left: 'var(--gutter)', top: y - 8, lineHeight: '16px',
+              fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', fontFeatureSettings: '"tnum"',
+            }}>
+              {formatMinutes(m)}
+            </span>
+            <div style={{ position: 'absolute', right: 0, width: 'var(--spacing-1)', top: y, borderTop: '1px solid var(--color-border)' }} />
+          </div>
+        )
+      })}
     </div>
   )
 }
 
 /* ── 극장 한 곳 — 테두리 안에 극장 이름 줄 · 관 이름 줄 · 관별 세로 열 ───────── */
-function VenueBoard({ venue, rows, axis, theaterId, selectedId, onSelect }: {
+function VenueBoard({ venue, rows, axis, theaterId, selectedId, onSelect, collapsible, collapsed, onToggleCollapsed }: {
   venue: string
   rows: FestivalScreening[]
   axis: { start: number; end: number }
   theaterId: string | null
   selectedId: string | null
   onSelect: (id: string) => void
+  /** PC만 — 극장을 좁은 띠로 접었다 편다 */
+  collapsible: boolean
+  collapsed: boolean
+  onToggleCollapsed: () => void
 }) {
   const screens = [...new Set(rows.map(screenOf))]
   const bodyH = (axis.end - axis.start) * PX_PER_MIN + BODY_PAD * 2
   const hours: number[] = []
   for (let m = axis.start; m <= axis.end; m += 60) hours.push(m)
 
+  const frame: React.CSSProperties = {
+    flexShrink: 0, border: '1px solid var(--color-border)', borderRadius: 'var(--radius-popover)',
+    backgroundColor: 'var(--color-surface-card)', overflow: 'hidden',
+  }
+
+  // 접힌 극장 — 펼치기 버튼과 세로로 쓴 이름만 남긴다. 시각 축 높이는 그대로 둬 옆 극장과 줄이 맞는다
+  if (collapsed) {
+    return (
+      <section data-venue={venue} aria-label={`${venue} (접힘)`} style={{ ...frame, width: COLLAPSED_W, height: HEAD_H + bodyH + 2 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: VENUE_HEAD_H, borderBottom: '1px solid var(--color-border)' }}>
+          <IconButton variant="ghost" size={32} onClick={onToggleCollapsed} aria-label={`${venue} 펼치기`} title="펼치기">
+            <Icon name="chevron-right" size={16} strokeWidth={1.75} />
+          </IconButton>
+        </div>
+        {/* 이름은 글자로만 — 펼치기는 위 버튼 하나가 맡는다 */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)', width: '100%', padding: 'var(--spacing-4) 0',
+          writingMode: 'vertical-rl', fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-body)',
+        }}>
+          {venue}
+          <span style={{ fontSize: 'var(--text-meta)', fontWeight: 400, color: 'var(--color-text-caption)' }}>{rows.length}회차</span>
+        </div>
+      </section>
+    )
+  }
+
   return (
-    <section
-      data-venue={venue}
-      aria-label={venue}
-      style={{
-        flexShrink: 0, width: screens.length * SCREEN_W,
-        border: '1px solid var(--color-border)', borderRadius: 'var(--radius-popover)',
-        backgroundColor: 'var(--color-surface-card)', overflow: 'hidden',
-      }}
-    >
-      <header style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-1)', height: VENUE_HEAD_H, padding: '0 var(--spacing-2) 0 var(--gutter-md)', borderBottom: '1px solid var(--color-border)' }}>
-        <h3 style={{ margin: 0, minWidth: 0, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+    <section data-venue={venue} aria-label={venue} style={{ ...frame, width: screens.length * SCREEN_W }}>
+      {/* 하트 → 극장 이름 → 회차 수, 오른쪽 끝은 (PC) 접기 */}
+      <header style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-1)', height: VENUE_HEAD_H, padding: '0 var(--spacing-2) 0 var(--spacing-1)', borderBottom: '1px solid var(--color-border)' }}>
+        {theaterId && <FavoriteToggle type="theater" id={theaterId} label={venue} size={32} />}
+        <h3 style={{ margin: 0, minWidth: 0, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingLeft: theaterId ? 0 : 'var(--spacing-2)', fontSize: 'var(--text-subtitle)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
           {venue}
           <span style={{ marginLeft: 'var(--spacing-2)', fontSize: 'var(--text-meta)', fontWeight: 400, color: 'var(--color-text-caption)' }}>{rows.length}회차</span>
         </h3>
-        {theaterId && <FavoriteToggle type="theater" id={theaterId} label={venue} size={32} />}
+        {collapsible && (
+          <Button variant="text" size="sm" onClick={onToggleCollapsed} aria-label={`${venue} 접기`} style={{ flexShrink: 0 }}>
+            <Icon name="chevron-left" size={14} strokeWidth={1.75} color="currentColor" />
+            접기
+          </Button>
+        )}
       </header>
 
       <div style={{ display: 'flex', height: SCREEN_HEAD_H, borderBottom: '1px solid var(--color-border)' }}>

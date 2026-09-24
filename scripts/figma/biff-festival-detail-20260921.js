@@ -460,7 +460,7 @@ async function info(w, isDesktop, inPanel = false) {
   col.appendChild(row)
   col.appendChild(await T('제31회 부산국제영화제', '2.0/title', 'neutral/900', inPanel ? w : undefined, { size: isDesktop ? 32 : 24 }))
   col.appendChild(await T('10월 6일 (화) ~ 10월 15일 (목) · 부산 · 영화의전당 · 센텀시티 일대', '2.0/meta', 'neutral/500', inPanel ? w : undefined))
-  col.appendChild(await T('아시아 최대 규모의 국제영화제. 영화의전당을 중심으로 센텀시티 일대 극장에서 열려요.\n예매와 잔여석은 영화제 공식 예매처에서 확인해 주세요.', '2.0/body', 'neutral/700', inPanel ? w : w - 32))
+  // 설명 문단은 두지 않는다(2026-09-24) — 기간·장소·공식 사이트로 충분하다
   const btn = inst('2.0/Button', { Variant: 'Primary', Size: isDesktop ? 'md' : 'full', Icon: 'right', State: 'default' })
   await setTexts(btn, [[0, '공식 사이트']])
   swapIcon(btn, 'external-link')
