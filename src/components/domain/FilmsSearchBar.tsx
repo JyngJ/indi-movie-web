@@ -8,6 +8,7 @@ import { AddRequestModal, AddRequestCtaButton } from '@/components/domain/AddReq
 // 지도 탭과 검색 기록을 공유 — 같은 localStorage 키를 쓰는 지도 쪽 유틸을 그대로 재사용한다.
 // 지도에서 검색한 극장/영화가 상영작 탭 "최근 검색"에도 보이고, 그 반대도 마찬가지.
 import { loadRecentSearches, addToRecent, clearRecentSearches } from '@/lib/map/searchUtils'
+import { trackEvent } from '@/lib/analytics/client'
 import type { Movie, Theater } from '@/types/api'
 import type { Festival } from '@/types/festival'
 
@@ -143,6 +144,13 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
   }
 
   function navigateDirect(s: Suggestion) {
+    trackEvent('search result selected', {
+      result_type: s.type,
+      result_id: s.navigateTo.split('/').filter(Boolean).pop(),
+      result_name: s.label,
+      search_term: query.trim(),
+      source: 'films_search',
+    })
     addToHistory(s.label)
     navigate(s.label, s.navigateTo)
     setFocused(false)
@@ -151,6 +159,13 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
   }
 
   function mobileNavigate(s: Suggestion) {
+    trackEvent('search result selected', {
+      result_type: s.type,
+      result_id: s.navigateTo.split('/').filter(Boolean).pop(),
+      result_name: s.label,
+      search_term: mInput.trim(),
+      source: 'films_search',
+    })
     addToHistory(s.label)
     navigate(s.label, s.navigateTo)
     setMOpen(false)

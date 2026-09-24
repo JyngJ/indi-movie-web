@@ -50,15 +50,16 @@ export function DetailDateTabs({
             key={d}
             role="tab"
             aria-selected={isSelected}
+            data-selected={isSelected || undefined}
+            className="detail-date-tab"
             onClick={() => hasShows && onSelect(d)}
             style={{
               /* 폭이 남으면 셀이 나눠 갖는다 — PC 본문 컬럼을 채운다(피그마 2026-09-17).
                  모바일(7×56 > 화면)에서는 56으로 남고 가로 스크롤 */
               flex: '1 0 56px', minWidth: 56, height: 60,
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-1)',
-              border: 'none', background: 'none', cursor: hasShows ? 'pointer' : 'default',
+              cursor: hasShows ? 'pointer' : 'default',
               opacity: hasShows ? 1 : 0.35,
-              borderBottom: isSelected ? '2px solid var(--color-primary-base)' : '2px solid transparent',
               minHeight: 'auto',
             }}
             disabled={!hasShows}

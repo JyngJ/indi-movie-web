@@ -17,6 +17,7 @@ import {
   countScreeningsByDate,
   defaultFestivalDay,
   festivalDayLabel,
+  festivalDayShortLabel,
   listScreeningScreens,
   listScreeningVenues,
   normalizeTime,
@@ -287,8 +288,16 @@ export function FestivalTimetable({ screenings, theaters, startDate, endDate, to
                     ))}
                   </div>
                 </div>
-                {/* 왼쪽 위 모서리 — 시각 열과 같은 흰 면 */}
-                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: GUTTER_CSS, backgroundColor: 'var(--color-surface-card)', borderRight: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }} />
+                {/* 스크롤을 내려 날짜 탭이 사라져도 현재 날짜를 잃지 않게 시각 열 위에 남긴다. */}
+                <div style={{
+                  position: 'absolute', left: 0, top: 0, bottom: 0, width: GUTTER_CSS,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  backgroundColor: 'var(--color-surface-card)', borderRight: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)',
+                }}>
+                  <span style={{ fontSize: 'var(--text-meta)', fontWeight: 700, color: 'var(--color-text-body)', whiteSpace: 'nowrap', fontFeatureSettings: '"tnum"' }}>
+                    {day ? festivalDayShortLabel(day) : ''}
+                  </span>
+                </div>
               </div>
 
               <div

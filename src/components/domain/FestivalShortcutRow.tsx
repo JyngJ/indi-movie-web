@@ -3,6 +3,7 @@
 import Image from 'next/image'
 
 import { Icon } from '@/components/primitives'
+import { trackEvent } from '@/lib/analytics/client'
 import { festivalShortcutDateLabel, selectShortcutFestivals } from '@/lib/festival/shortcut'
 import type { Festival } from '@/types/festival'
 
@@ -39,7 +40,17 @@ export function FestivalShortcutRow({ festivals, today, isDesktop, onSelect }: P
           <button
             key={festival.id}
             type="button"
-            onClick={() => onSelect(festival.slug)}
+            onClick={() => {
+              trackEvent('curation movie selected', {
+                list_id: `festival_shortcut_${festival.slug}`,
+                section_title: '영화제 바로가기',
+                target_type: 'festival',
+                festival_slug: festival.slug,
+                festival_name: festival.name,
+                source: 'festival_shortcut',
+              })
+              onSelect(festival.slug)
+            }}
             aria-label={`${festival.name} 상영 시간표 보기`}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 'var(--spacing-2)', flexShrink: 0,
