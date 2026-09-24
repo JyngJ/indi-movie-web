@@ -92,8 +92,6 @@ interface Venue {
   /** 좌표·주소를 못 찾았을 때 쓸 검색어 — 극장 이름만으로는 안 잡히는 곳이 있다 */
   searchQuery?: string
   screenCount?: number
-  /** theaters에 등록하지 않고 이름만 남긴다 — 백화점 홀·강의실처럼 지도에 핀을 세울 극장이 아닌 곳 */
-  nameOnly?: boolean
 }
 
 // 순서 = 화면에 보이는 순서(sort_order). 영화의전당이 주 상영관이라 맨 앞.
@@ -109,9 +107,10 @@ const VENUES: Venue[] = [
   // 홀 이름이 스폰서를 따라 바뀐다(30회 신한카드홀 → 31회 우리은행홀). 건물 이름으로 등록한다.
   { name: '동서대학교 소향씨어터', searchQuery: '소향씨어터', screenCount: 1 },
   { name: '부산시청자미디어센터', searchQuery: '부산시청자미디어센터', screenCount: 1 },
-  // 액터스 하우스·마스터 클래스 같은 행사장
-  { name: '신세계백화점 센텀시티점', nameOnly: true },
-  { name: '동서대학교 센텀캠퍼스', nameOnly: true },
+  // 신세계백화점 9층 문화홀
+  { name: '신세계백화점 센텀시티점', searchQuery: '신세계백화점 센텀시티점 문화홀', screenCount: 1 },
+  // 센텀캠퍼스 4층 북카페 라운지
+  { name: '동서대학교 센텀캠퍼스', searchQuery: '동서대학교 센텀캠퍼스', screenCount: 1 },
 ]
 
 const SCHEDULE_URL = 'https://www.biff.kr/kor/html/schedule/date.asp'
@@ -160,11 +159,6 @@ async function naverLookup(query: string): Promise<{ address: string; lat: numbe
 }
 
 async function resolveTheaterId(venue: Venue): Promise<string | null> {
-  if (venue.nameOnly) {
-    console.log(`  이름만: ${venue.name}`)
-    return null
-  }
-
   const { data: existing } = await supabase
     .from('theaters')
     .select('id,name')
