@@ -3,20 +3,24 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { safeUrl } from '@/lib/seo/safeUrl'
-import { truncateSnippet } from '@/lib/seo/truncateSnippet'
 import { toFestivalSchema } from '@/lib/seo/toFestivalSchema'
+import { toBreadcrumbSchema } from '@/lib/seo/toBreadcrumbSchema'
+import { festivalMetaDescription, festivalSeoTitle } from '@/lib/seo/festivalSeo'
 import { FestivalSeoContent } from '@/components/seo/FestivalSeoContent'
 import { movieRowToMovie } from '@/lib/supabase/movieRow'
 import { festivalRowToFestival } from '@/lib/supabase/festivalRow'
-import type { FestivalDetail } from '@/types/festival'
+import type { FestivalDetail, FestivalScreening } from '@/types/festival'
 import { FestivalDetailClient } from './FestivalDetailClient'
 
 export const revalidate = 3600
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'
+// 구조화 데이터 주소 — canonical·sitemap과 같은 푸니코드로(한글 도메인은 JSON-LD에서 모양이 갈린다)
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.xn--hq1bv8o5phw2d7wt.com'
 
+// 영화제 본 행은 '*' — poster_url·shortcut_image_url처럼 나중에 붙은 컬럼을 이름으로 적으면
+// 마이그레이션 전 배포에서 쿼리가 실패해 상세가 404가 된다(회차를 따로 읽는 것과 같은 이유).
 const FESTIVAL_SELECT = `
-  id, name, slug, start_date, end_date, region, city, venue_text, banner_url, link_url, description, is_active,
+  *,
   festival_theaters(
     id, theater_id, venue_text, sort_order,
     theaters(id,name,lat,lng,address,city,phone,website,instagram_url,screen_count,seat_count,parking,restaurant,accessibility,rating,created_at,updated_at)
@@ -27,6 +31,51 @@ const FESTIVAL_SELECT = `
   ),
   festival_timetables(id, image_url, day_date, label, sort_order)
 `
+
+// 회차는 본 쿼리에 조인하지 않고 따로 읽는다. festival_screenings는 나중에 추가된 테이블이라
+// (docs/SUPABASE_FESTIVAL_SCREENINGS.sql) 마이그레이션 전에 배포되면 조인이 통째로 실패해
+// 영화제 상세가 404가 된다. 따로 읽으면 그 경우 회차만 비고 페이지는 그대로 뜬다.
+const SCREENING_SELECT = `
+  id, screening_date, start_time, runtime_min, festival_theater_id,
+  venue_label, screen_label, movie_id, movie_title_snapshot,
+  section, screening_code, has_gv, booking_url
+`
+
+interface ScreeningRow {
+  id: string; screening_date: string; start_time: string; runtime_min: number | null
+  festival_theater_id: string | null; venue_label: string; screen_label: string | null
+  movie_id: string | null; movie_title_snapshot: string
+  section: string | null; screening_code: string | null; has_gv: boolean; booking_url: string | null
+}
+
+async function fetchScreenings(
+  supabase: ReturnType<typeof createSupabaseServerClient>,
+  festivalId: string,
+): Promise<FestivalScreening[]> {
+  const { data, error } = await supabase
+    .from('festival_screenings')
+    .select(SCREENING_SELECT)
+    .eq('festival_id', festivalId)
+
+  if (error || !data) return []
+
+  return (data as unknown as ScreeningRow[]).map((sc) => ({
+    id: sc.id,
+    festivalId,
+    screeningDate: sc.screening_date,
+    startTime: sc.start_time,
+    runtimeMin: sc.runtime_min,
+    festivalTheaterId: sc.festival_theater_id,
+    venueLabel: sc.venue_label,
+    screenLabel: sc.screen_label,
+    movieId: sc.movie_id,
+    movieTitleSnapshot: sc.movie_title_snapshot,
+    section: sc.section,
+    screeningCode: sc.screening_code,
+    hasGv: sc.has_gv,
+    bookingUrl: safeUrl(sc.booking_url ?? undefined) ?? null,
+  }))
+}
 
 async function fetchFestival(slug: string): Promise<FestivalDetail | null> {
   const supabase = createSupabaseServerClient()
@@ -45,6 +94,7 @@ async function fetchFestival(slug: string): Promise<FestivalDetail | null> {
   const row = data as unknown as {
     id: string; name: string; slug: string; start_date: string; end_date: string
     region: string; city: string; venue_text: string | null; banner_url: string | null
+    poster_url?: string | null; shortcut_image_url?: string | null
     link_url: string | null; description: string | null; is_active: boolean
     festival_theaters: {
       id: string; theater_id: string | null; venue_text: string | null; sort_order: number
@@ -109,6 +159,8 @@ async function fetchFestival(slug: string): Promise<FestivalDetail | null> {
         label: tt.label,
         sortOrder: tt.sort_order,
       })),
+    // 정렬은 화면에서 날짜·상영관을 고른 뒤에 한다(selectDayScreenings) — 여기선 읽은 순서 그대로
+    screenings: await fetchScreenings(supabase, row.id),
   }
 }
 
@@ -121,17 +173,21 @@ export async function generateMetadata({
   const festival = await fetchFestival(slug)
   if (!festival) return { title: '영화볼지도' }
 
-  const title = `${festival.name} | 영화볼지도`
-  const description = truncateSnippet(festival.description, 110)
-    ?? `${festival.city}에서 열리는 ${festival.name}. 상영작·상영관 정보`
+  // 검색 의도("부산국제영화제 시간표")에 맞춰 제목에 상영 시간표·극장 수를, 설명에 기간·회차를 싣는다
+  const title = `${festivalSeoTitle(festival)} | 영화볼지도`
+  const description = festivalMetaDescription(festival)
 
+  // 공유 이미지는 가로 배너가 우선 — 없으면 세로 포스터. 루트 경로는 metadataBase가 절대 주소로 바꾼다
+  const ogImage = festival.bannerUrl ?? festival.posterUrl
   return {
     title,
     description,
     alternates: { canonical: `/festival/${slug}` },
-    openGraph: festival.bannerUrl
-      ? { title, description, url: `/festival/${slug}`, images: [{ url: festival.bannerUrl }] }
+    openGraph: ogImage
+      ? { title, description, url: `/festival/${slug}`, images: [{ url: ogImage }] }
       : { title, description, url: `/festival/${slug}` },
+    // 루트 레이아웃의 기본 트위터 카드 이미지가 남지 않게 페이지 이미지로 덮는다
+    twitter: ogImage ? { title, description, images: [ogImage] } : { title, description },
   }
 }
 
@@ -145,12 +201,21 @@ export default async function FestivalDetailPage({
   if (!festival) notFound()
 
   const festivalSchema = toFestivalSchema(festival, BASE_URL)
+  // 화면 브레드크럼(영화제 › 이름)과 같은 경로 — 영화제는 상영작 탭에 모여 있다
+  const breadcrumbSchema = toBreadcrumbSchema(
+    [{ name: '영화볼지도', path: '/' }, { name: '영화제', path: '/films' }, { name: festival.name }],
+    BASE_URL,
+  )
 
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(festivalSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <FestivalSeoContent festival={festival} />
       <Suspense>

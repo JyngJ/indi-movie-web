@@ -29,6 +29,8 @@ export interface TabsProps<T extends string> {
   variant?: 'underline' | 'pill'
   /** tablist에 붙는 이름. 스크린리더가 무슨 탭 묶음인지 읽는다. */
   label: string
+  /** underline 전용 — 탭이 많아 폭을 나눠 가질 수 없을 때. 탭이 글자 폭만큼 서고 줄이 가로로 스크롤된다. */
+  scrollable?: boolean
   style?: CSSProperties
 }
 
@@ -38,6 +40,7 @@ export function Tabs<T extends string>({
   onChange,
   variant = 'underline',
   label,
+  scrollable = false,
   style,
 }: TabsProps<T>) {
   if (variant === 'pill') {
@@ -67,7 +70,12 @@ export function Tabs<T extends string>({
     <div
       role="tablist"
       aria-label={label}
-      style={{ display: 'flex', borderBottom: '1px solid var(--color-border)', flexShrink: 0, ...style }}
+      className={scrollable ? 'no-scrollbar' : undefined}
+      style={{
+        display: 'flex', borderBottom: '1px solid var(--color-border)', flexShrink: 0,
+        ...(scrollable ? { overflowX: 'auto', padding: '0 var(--gutter)', gap: 'var(--spacing-1)' } : {}),
+        ...style,
+      }}
     >
       {items.map((item) => {
         const active = value === item.value
@@ -79,7 +87,9 @@ export function Tabs<T extends string>({
             aria-label={item.ariaLabel}
             onClick={() => onChange(item.value)}
             style={{
-              flex: 1,
+              flex: scrollable ? '0 0 auto' : 1,
+              padding: scrollable ? '0 var(--spacing-3)' : undefined,
+              whiteSpace: scrollable ? 'nowrap' : undefined,
               height: 42,
               border: 'none',
               background: 'none',

@@ -23,12 +23,25 @@ const SPEC = {
 /** 새 탭이 뜨기까지의 공백 동안 재클릭을 막는 시간 — 이 사이 연타가 중복 handoff의 원인이었다 */
 const OPENING_MS = 2200
 
+/** 외부 링크 CTA 문구 — 기본은 예매. 예매가 아니라 작품 정보로 보내는 자리(영화제 회차)만 바꾼다 */
+export interface BookingCtaLabels {
+  idle: string
+  opening: string
+  returned: string
+}
+const BOOKING_LABELS: BookingCtaLabels = {
+  idle: '예매하러 가기',
+  opening: '예매 사이트 여는 중…',
+  returned: '예매 사이트 다시 열기',
+}
+
 export function BookingCtaButton({
-  variant, bookingUrl, onClick,
+  variant, bookingUrl, onClick, labels = BOOKING_LABELS,
 }: {
   variant: Variant
   bookingUrl?: string | null
   onClick?: () => void
+  labels?: BookingCtaLabels
 }) {
   const s = SPEC[variant]
 
@@ -90,9 +103,9 @@ export function BookingCtaButton({
 
   if (bookingUrl) {
     const label =
-      phase === 'opening'  ? '예매 사이트 여는 중…'
-      : phase === 'returned' ? '예매 사이트 다시 열기'
-      : '예매하러 가기'
+      phase === 'opening'  ? labels.opening
+      : phase === 'returned' ? labels.returned
+      : labels.idle
 
     return (
       <a

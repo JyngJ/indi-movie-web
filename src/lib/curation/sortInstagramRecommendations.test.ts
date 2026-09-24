@@ -22,6 +22,8 @@ function fixtureFestival(overrides: Partial<Festival> & { id: string }): Festiva
     city: '서울',
     venueText: null,
     bannerUrl: null,
+    posterUrl: null,
+    shortcutImageUrl: null,
     linkUrl: null,
     description: null,
     isActive: true,

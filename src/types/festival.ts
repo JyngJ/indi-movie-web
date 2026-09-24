@@ -18,7 +18,12 @@ export interface Festival {
   city: string
   /** 영화제 전체 요약 장소 표기 — 개별 상영관의 임시 장소명은 FestivalTheaterLink.venueText */
   venueText: string | null
+  /** 가로 배너 — 상영작 탭 "주목할 영화제" 카드와 상세 상단 띠에 원본 비율로 깐다 */
   bannerUrl: string | null
+  /** 세로 공식 포스터 — 있으면 상세 상단을 영화 상세처럼 포스터 + 흰 패널로 그린다 */
+  posterUrl: string | null
+  /** 상영작 탭 바로가기 줄에 칩 대신 까는 가로 이미지 */
+  shortcutImageUrl: string | null
   linkUrl: string | null
   description: string | null
   isActive: boolean
@@ -56,8 +61,33 @@ export interface FestivalTimetable {
   sortOrder: number
 }
 
+export interface FestivalScreening {
+  id: string
+  festivalId: string
+  /** ISO date "YYYY-MM-DD" */
+  screeningDate: string
+  /** "HH:MM" — 초는 버린다 */
+  startTime: string
+  runtimeMin: number | null
+  /** festival_theaters 링크 — 끊겨도(SET NULL) venueLabel은 남는다 */
+  festivalTheaterId: string | null
+  /** 극장 이름 표기 스냅샷 */
+  venueLabel: string
+  /** 관 이름 — 멀티스크린 극장에서만 */
+  screenLabel: string | null
+  movieId: string | null
+  movieTitleSnapshot: string
+  section: string | null
+  /** 영화제 상영코드 — 관객이 이 코드로 회차를 지칭한다 */
+  screeningCode: string | null
+  hasGv: boolean
+  bookingUrl: string | null
+}
+
 export interface FestivalDetail extends Festival {
   theaters: FestivalTheaterLink[]
   movies: FestivalMovieLink[]
   timetables: FestivalTimetable[]
+  /** 구조화된 회차 — 0개면 상세 페이지가 timetables(이미지)로 폴백한다 */
+  screenings: FestivalScreening[]
 }

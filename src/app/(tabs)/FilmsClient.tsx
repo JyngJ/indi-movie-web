@@ -20,6 +20,7 @@ import { InstagramRecsSection } from '@/components/domain/InstagramRecsSection'
  *  데이터·컴포넌트는 그대로 두고 렌더만 막는다(다시 켤 때 이 상수만 true). */
 const SHOW_INSTAGRAM_RECS = false
 import { FilterChip } from '@/components/domain/filterBar/FilterChip'
+import { FestivalShortcutRow } from '@/components/domain/FestivalShortcutRow'
 import { FilmsSearchBar } from '@/components/domain/FilmsSearchBar'
 import { RegionDropdown } from '@/components/domain/filterBar/RegionDropdown'
 import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
@@ -788,6 +789,12 @@ export default function FilmsPage() {
 
       {/* 2.0: PC 콘텐츠 최대폭 컬럼 (내부 gutter 포함 시각 ≈1000) — 프레임은 풀블리드 유지 */}
       <div style={isDesktop ? { maxWidth: 1048, margin: '0 auto' } : undefined}>
+      {/* 영화제 바로가기 — 회기 중이거나 개막이 가까울 때만. 지역 필터와 무관한 전국 대상 */}
+      <FestivalShortcutRow
+        festivals={festivals}
+        today={toKstIsoDate(new Date())}
+        onSelect={(slug) => router.push(`/festival/${slug}`)}
+      />
       {!locModalSuppressed && (locState === 'prompt' || locState === 'denied' || locState === 'requesting') && (
         <LocationPermissionModal
           state={locState}
@@ -1124,17 +1131,22 @@ export default function FilmsPage() {
               </div>
             )}
 
-            {/* 주목할 영화제 — 지역 필터 무관 전국 대상, festivals 0개면 미노출 */}
-            {festivals.length > 0 && (
-              <div style={{ paddingTop: isDesktop ? 24 : 16 }}>
-                <FestivalBannerCard
-                  festival={festivals[0]}
-                  today={toKstIsoDate(new Date())}
-                  isDesktop={isDesktop}
-                  onClick={() => router.push(`/festival/${festivals[0].slug}`)}
-                />
-              </div>
-            )}
+            {/* 주목할 영화제 — 지역 필터 무관 전국 대상. 가로 배너(banner_url)가 있는 첫 영화제만 노출한다.
+                배너 이미지가 이 섹션의 본문 전부라 없으면 통째로 감춘다. 세로 포스터만 있는 영화제
+                (부산국제영화제)는 필터 줄 아래 바로가기 이미지가 그 역할을 한다. */}
+            {festivals
+              .filter((festival) => festival.bannerUrl)
+              .slice(0, 1)
+              .map((festival) => (
+                <div key={festival.id} style={{ paddingTop: isDesktop ? 24 : 16 }}>
+                  <FestivalBannerCard
+                    festival={festival}
+                    today={toKstIsoDate(new Date())}
+                    isDesktop={isDesktop}
+                    onClick={() => router.push(`/festival/${festival.slug}`)}
+                  />
+                </div>
+              ))}
 
             {/* 0. 인기 랭킹 — 순번 체계의 첫 자리. 상단 고정 섹션(개인화·기념일·특별전·인스타)과
                 달리 renderRun을 그대로 타므로 dwell/클릭 계측이 다른 큐레이션 행과 동일하다 */}

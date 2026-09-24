@@ -33,6 +33,7 @@ import { GvDetailPanel } from './GvDetailPanel'
 import { BookingCtaButton, ShareScheduleButton } from './booking/BookingActions'
 import type { GvEvent } from '@/data/gv-events'
 import { toSecureImageUrl } from '@/lib/media/imageUrl'
+import { naverDirectionsUrls } from '@/lib/map/directions'
 
 /* ── 상수 ──────────────────────────────────────────────────────── */
 // 접힌 상태에서 보이는 높이 — 피그마 TOBE collapsed: 핸들(24) + 헤더(128) + 포스터스트립(262, 포스터 238 + 상하 12)
@@ -699,12 +700,11 @@ export function TheaterSheet({
       selected_movie_id: selectedMovieId || null,
       source: 'theater_sheet',
     })
-    const url = `nmap://route/public?dlat=${theater.lat}&dlng=${theater.lng}&dname=${encodeURIComponent(theater.name)}&appname=kr.indi.movie`
-    const fallback = `https://map.naver.com/v5/directions/-/-/-/transit?c=${theater.lng},${theater.lat},15,0,0,0,dh`
+    const { app, web } = naverDirectionsUrls(theater)
     const a = document.createElement('a')
-    a.href = url
+    a.href = app
     a.click()
-    setTimeout(() => window.open(fallback, '_blank', 'noopener'), 1500)
+    setTimeout(() => window.open(web, '_blank', 'noopener'), 1500)
   }
 
   const shareTheater = () => {
