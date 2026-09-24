@@ -64,7 +64,7 @@ export function FestivalShortcutRow({ festivals, today, isDesktop, onSelect }: P
               width: image
                 ? isDesktop ? '100%' : 'min(440px, calc(100vw - var(--gutter) - var(--gutter)))'
                 : 'auto',
-              aspectRatio: usesWideBiffLayout ? '1400 / 230' : undefined,
+              aspectRatio: usesWideBiffLayout ? '8 / 1' : undefined,
               minHeight: 'unset',
               padding: image ? 0 : 'var(--gutter-sm) var(--gutter-md)',
               borderRadius: image ? 'var(--radius-button)' : 'var(--radius-pill)',
@@ -73,7 +73,7 @@ export function FestivalShortcutRow({ festivals, today, isDesktop, onSelect }: P
               border: usesWideBiffLayout
                 ? '1px solid var(--color-border)'
                 : image ? 'none' : '1px solid var(--color-gv)',
-              backgroundColor: 'var(--color-surface-bg)',
+              backgroundColor: usesWideBiffLayout ? 'var(--color-surface-card)' : 'var(--color-surface-bg)',
               color: 'var(--color-gv)',
               fontSize: 'var(--text-meta)', fontWeight: 700, lineHeight: 1.2,
               cursor: 'pointer',
@@ -101,17 +101,19 @@ export function FestivalShortcutRow({ festivals, today, isDesktop, onSelect }: P
                 </span>
                 <span
                   aria-hidden="true"
-                  style={{ position: 'absolute', inset: '0 0 0 auto', width: '13%', overflow: 'hidden' }}
+                  style={{ position: 'absolute', inset: '0 0 0 auto', width: '16%', backgroundColor: 'var(--color-surface-card)' }}
                 >
-                  <Image
-                    src={image}
-                    alt={`${festival.name} 로고`}
-                    width={880}
-                    height={230}
-                    sizes="132px"
-                    loading="eager"
-                    style={{ position: 'absolute', top: 0, right: 0, display: 'block', width: 'auto', maxWidth: 'none', height: '100%' }}
-                  />
+                  <span style={{ position: 'absolute', inset: '0 0 0 auto', width: '72%', overflow: 'hidden' }}>
+                    <Image
+                      src={image}
+                      alt={`${festival.name} 로고`}
+                      width={880}
+                      height={230}
+                      sizes="(min-width: 1100px) 486px, 48vw"
+                      loading="eager"
+                      style={{ position: 'absolute', top: 0, right: 0, display: 'block', width: 'auto', maxWidth: 'none', height: '100%' }}
+                    />
+                  </span>
                 </span>
               </>
             ) : image ? (
