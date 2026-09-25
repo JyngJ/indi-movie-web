@@ -7,6 +7,7 @@ import {
   festivalDayShortLabel,
   formatScreeningTail,
   formatScreeningTime,
+  isVenueCollapsible,
   listScreeningScreens,
   listScreeningVenues,
   normalizeTime,
@@ -112,6 +113,24 @@ describe('listScreeningScreens', () => {
     const list = ['5관', '6관', 'IMAX관', '2관', '1관', '4관', '2관']
       .map((screenLabel, index) => makeScreening({ id: String(index), screenLabel }))
     expect(listScreeningScreens(list)).toEqual(['1관', '2관', '4관', '5관', '6관', 'IMAX관'])
+  })
+})
+
+describe('isVenueCollapsible', () => {
+  it('같은 관의 회차가 여러 개여도 한 열이면 접지 않는다', () => {
+    const list = [
+      makeScreening({ id: '1', screenLabel: '중극장' }),
+      makeScreening({ id: '2', screenLabel: '중극장' }),
+    ]
+    expect(isVenueCollapsible(list)).toBe(false)
+  })
+
+  it('관 열이 2개 이상이면 접을 수 있다', () => {
+    const list = [
+      makeScreening({ id: '1', screenLabel: '1관' }),
+      makeScreening({ id: '2', screenLabel: '2관' }),
+    ]
+    expect(isVenueCollapsible(list)).toBe(true)
   })
 })
 
