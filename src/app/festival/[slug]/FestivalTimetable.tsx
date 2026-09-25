@@ -18,6 +18,7 @@ import {
   defaultFestivalDay,
   festivalDayLabel,
   festivalDayShortLabel,
+  isVenueCollapsible,
   listScreeningScreens,
   listScreeningVenues,
   normalizeTime,
@@ -288,17 +289,21 @@ export function FestivalTimetable({ screenings, theaters, startDate, endDate, to
                 <div ref={headRowRef} style={{ display: 'flex', alignItems: 'flex-start', width: 'max-content', paddingRight: 'var(--gutter)', willChange: 'transform' }}>
                   <div style={{ width: GUTTER_CSS, flexShrink: 0 }} />
                   <div style={{ display: 'flex', gap: 'var(--spacing-3)', marginLeft: 'var(--spacing-2)' }}>
-                    {shownVenues.map((venue) => (
-                      <VenueHeader
-                        key={venue}
-                        venue={venue}
-                        rows={dayRows.filter((r) => r.venueLabel === venue)}
-                        theaterId={theaterIdByVenue.get(venue) ?? null}
-                        collapsible={isDesktop}
-                        collapsed={isDesktop && collapsed.has(venue)}
-                        onToggleCollapsed={() => toggleCollapsed(venue)}
-                      />
-                    ))}
+                    {shownVenues.map((venue) => {
+                      const rows = dayRows.filter((r) => r.venueLabel === venue)
+                      const collapsible = isDesktop && isVenueCollapsible(rows)
+                      return (
+                        <VenueHeader
+                          key={venue}
+                          venue={venue}
+                          rows={rows}
+                          theaterId={theaterIdByVenue.get(venue) ?? null}
+                          collapsible={collapsible}
+                          collapsed={collapsible && collapsed.has(venue)}
+                          onToggleCollapsed={() => toggleCollapsed(venue)}
+                        />
+                      )
+                    })}
                   </div>
                 </div>
                 {/* 스크롤을 내려 날짜 탭이 사라져도 현재 날짜를 잃지 않게 시각 열 위에 남긴다. */}
@@ -327,19 +332,23 @@ export function FestivalTimetable({ screenings, theaters, startDate, endDate, to
                 <div style={{ display: 'flex', alignItems: 'flex-start', width: 'max-content', paddingRight: 'var(--gutter)', paddingBottom: 'var(--spacing-2)' }}>
                   <TimeGutter axis={axis} />
                   <div style={{ display: 'flex', gap: 'var(--spacing-3)', marginLeft: 'var(--spacing-2)' }}>
-                    {shownVenues.map((venue) => (
-                      <VenueBoard
-                        key={venue}
-                        venue={venue}
-                        rows={dayRows.filter((r) => r.venueLabel === venue)}
-                        axis={axis}
-                        theaterId={theaterIdByVenue.get(venue) ?? null}
-                        selectedId={selectedId}
-                        onSelect={(id) => setSelectedId((cur) => (cur === id ? null : id))}
-                        collapsed={isDesktop && collapsed.has(venue)}
-                        collapsible={isDesktop}
-                      />
-                    ))}
+                    {shownVenues.map((venue) => {
+                      const rows = dayRows.filter((r) => r.venueLabel === venue)
+                      const collapsible = isDesktop && isVenueCollapsible(rows)
+                      return (
+                        <VenueBoard
+                          key={venue}
+                          venue={venue}
+                          rows={rows}
+                          axis={axis}
+                          theaterId={theaterIdByVenue.get(venue) ?? null}
+                          selectedId={selectedId}
+                          onSelect={(id) => setSelectedId((cur) => (cur === id ? null : id))}
+                          collapsed={collapsible && collapsed.has(venue)}
+                          collapsible={collapsible}
+                        />
+                      )
+                    })}
                   </div>
                 </div>
               </div>

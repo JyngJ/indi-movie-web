@@ -100,6 +100,11 @@ export function listScreeningScreens(screenings: FestivalScreening[]): string[] 
   return [...new Set(labels)].sort(SCREEN_LABEL_COLLATOR.compare)
 }
 
+/** PC 표에서 접었을 때 실제로 폭이 줄어드는 극장 — 관 열이 2개 이상일 때만. */
+export function isVenueCollapsible(screenings: FestivalScreening[]): boolean {
+  return listScreeningScreens(screenings).length > 1
+}
+
 /**
  * 표에 그릴 회차 추리기 — 날짜는 필수, 상영관은 선택.
  * 정렬은 시작 시각 → 극장 → 관 순. 같은 시각이 여러 극장에 흩어져도 표가 흔들리지 않는다.
