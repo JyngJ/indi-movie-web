@@ -3,22 +3,16 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { usePendingNavItem } from '@/hooks/usePendingNavItem'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
-import { Button, Icon, Divider, EmptyState, Skeleton, MovieCardSkeleton } from '@/components/primitives'
-import { PosterChip } from '@/components/primitives'
+import { Button, Divider, EmptyState, Skeleton, MovieCardSkeleton } from '@/components/primitives'
 import { PosterThumb } from './PosterThumb'
 import { HoverPopup } from './CurationSectionRow'
 import { usePosterHover } from './usePosterHover'
 import { FavoriteToggle } from './favorites/FavoriteToggle'
 import type {
-  LastWeekFilm,
   NewIndieFilm,
   RecentlyViewedEntry,
   RecentlyViewedKind,
-  ReturningFilm,
-  SoloTheaterFilm,
-  TodayShowFilm,
 } from '@/lib/curation/types'
-import { getLastWeekBadgeText } from '@/lib/curation/lastWeekBadge'
 import type { Movie } from '@/types/api'
 
 /** 시트가 도달 가능한 2개 스냅 지점 — peek(최소, 기본값) / expanded(최대) */
@@ -35,12 +29,7 @@ export interface CurationItem {
   id: string
   title: string
   posterUrl?: string
-  badge?: string
   subtitle?: string
-  /** "지금 출발하면"/"단 한 곳" 섹션 전용 — 클릭 시 해당 극장으로 flyTo + 선택 */
-  theaterId?: string
-  /** 현재 위치로부터의 거리, 예: "1.2 km" — 위치 정보 있을 때만 */
-  distanceLabel?: string
   /** 데스크톱 호버 팝업(감독/장르/시놉시스)용 원본 영화 데이터 */
   movie?: Movie
   /** 1-based 순위 — 주면 포스터 좌하단에 스크림 + 큰 숫자 (상영작 탭 랭킹과 동일 문법) */
@@ -48,7 +37,6 @@ export interface CurationItem {
   /**
    * 관심 표시 — 주면 포스터 우상단에 오버레이 하트 토글 (관심 목록 그리드와 같은 문법, 2026-09-01 통일).
    * 구 "관심 영화"/"관심 감독" 텍스트 칩을 대체한다. 표식이 아니라 토글이라 여기서 바로 해제할 수 있다.
-   * distanceLabel과 자리가 겹치므로 둘을 함께 주지 않는다.
    * director 항목의 대상은 영화가 아니라 그 감독이다 — 해제하면 관심 감독에서 빠진다.
    */
   favorite?: { type: 'movie' | 'director'; id: string; label: string }
@@ -58,27 +46,17 @@ interface CurationSheetProps {
   snap: CurationSnap
   /** 드래그 제스처로 스냅 지점이 바뀔 때 — 부모가 snap 상태를 갱신하고, 함께 보고된 visibleHeight로 FAB 위치를 맞춤 */
   onSnapChange: (snap: CurationSnap, visibleHeight: number) => void
-  lastWeekFilms: LastWeekFilm[]
-  soloTheaterFilms: SoloTheaterFilm[]
-  /** soloTheaterFilms 기준이 되는 현재 선택 지역명, 예: "서울" */
-  soloRegionLabel?: string
-  todayShowFilms: TodayShowFilm[]
-  returningFilms: ReturningFilm[]
   newIndieFilms: NewIndieFilm[]
   recentlyViewed: RecentlyViewedEntry[]
   onMovieSelect?: (movieId: string, title: string, sectionKey?: string) => void
-  /** "지금 출발하면"/"단 한 곳" 섹션 전용 — 영화 상세 대신 해당 극장으로 flyTo + 선택 */
-  onTodayShowSelect?: (movieId: string, title: string, theaterId: string) => void
   onRemoveRecentlyViewed?: (kind: RecentlyViewedKind, id: string) => void
   onClearRecentlyViewed?: () => void
   onRecentItemClick?: (item: RecentlyViewedEntry) => void
-  /** 현재 위치 있을 때 극장 ID로 거리 텍스트("1.2 km") 조회 */
-  getTheaterDistance?: (theaterId: string) => string | null
   /** TheaterSheet가 열려 큐레이션 시트를 숨겨야 할 때 */
   hidden?: boolean
   signedIn?: boolean
-  favoriteItems?: CurationItem[]
-  rankingItems?: CurationItem[]
+  favoriteItems: CurationItem[]
+  rankingItems: CurationItem[]
   onShowAllFavorites?: () => void
   /** 큐레이션 스냅샷 로딩 중 — CurationSections로 그대로 내린다 */
   loading?: boolean
@@ -253,9 +231,6 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
           {/* 호버 확대는 포스터 위에서만 — 캡션 호버로 커지면 오작동처럼 느껴진다 */}
           <div ref={anchorRef} {...hoverProps} style={posterStyle}>
             <PosterThumb src={item.posterUrl} alt={item.title} width={posterSize.width} height={posterSize.height} size="lg" shadow={false} />
-            {item.distanceLabel && (
-              <PosterChip corner="top-right" tone="primary">{item.distanceLabel}</PosterChip>
-            )}
             {/* 순위 — 상영작 탭 랭킹과 같은 스크림(높이 42%) + KIMM 숫자(포스터 높이의 31%) */}
             {item.rank != null && (
               <div
@@ -282,10 +257,6 @@ function PosterItem({ item, posterSize, desktop, onSelect }: {
               </div>
             )}
             {item.rank != null && <span className="sr-only">{item.rank}위</span>}
-            {/* 좌상단 — 좌하단은 순위 전용이라 비워 둔다 (AGENTS.md 포스터 오버레이 칩 정책) */}
-            {item.badge && (
-              <PosterChip corner="top-left" tone="scrim">{item.badge}</PosterChip>
-            )}
           </div>
           <span style={{
             fontSize: 'var(--text-meta)',
@@ -455,74 +426,46 @@ function RecentList({
 }
 
 interface CurationSectionsProps {
-  lastWeekFilms: LastWeekFilm[]
-  soloTheaterFilms: SoloTheaterFilm[]
-  /** soloTheaterFilms 기준이 되는 현재 선택 지역명, 예: "서울" */
-  soloRegionLabel?: string
-  todayShowFilms: TodayShowFilm[]
-  returningFilms: ReturningFilm[]
   newIndieFilms: NewIndieFilm[]
   recentlyViewed: RecentlyViewedEntry[]
   onMovieSelect?: (movieId: string, title: string, sectionKey?: string) => void
-  /** "지금 출발하면"/"단 한 곳" 섹션 전용 — 영화 상세 대신 해당 극장으로 flyTo + 선택 */
-  onTodayShowSelect?: (movieId: string, title: string, theaterId: string) => void
   onRemoveRecentlyViewed?: (kind: RecentlyViewedKind, id: string) => void
   onClearRecentlyViewed?: () => void
   onRecentItemClick?: (item: RecentlyViewedEntry) => void
-  /** 현재 위치 있을 때 극장 ID로 거리 텍스트("1.2 km") 조회 */
-  getTheaterDistance?: (theaterId: string) => string | null
   /** 데스크톱 도크에서 호출 시 true — 포스터 행을 가로 스크롤 대신 한 줄 3개 그리드로 표시 */
   desktop?: boolean
   /** 로그인 여부 — 첫 섹션을 '관심 작품 상영'으로 바꿀지 결정 (2026-08-18) */
   signedIn?: boolean
   /** 관심 영화·감독 작품 중 지금 상영 중인 것 (로그인 시 첫 섹션) */
-  favoriteItems?: CurationItem[]
+  favoriteItems: CurationItem[]
   /** 예매 클릭 순위 상위 (둘째 섹션) */
-  rankingItems?: CurationItem[]
+  rankingItems: CurationItem[]
   /** 관심 섹션 '모두보기' — 지도 관심 필터를 켠다 */
   onShowAllFavorites?: () => void
   /** 큐레이션 스냅샷을 아직 받아오는 중 — 빈 섹션을 "없음"으로 그리면 안 된다 */
   loading?: boolean
 }
 
-const MAX_CURATION_SECTIONS = 3
-const SECTION_COLLAPSED_COUNT = 6
-const SECTION_PARTIAL_COUNT = 21
-
-type SectionExpand = 'collapsed' | 'partial'
+/** 섹션당 포스터 노출 개수 */
+const SECTION_VISIBLE_COUNT = 6
 
 /** 순위 섹션 노출 개수 — 6위까지 (2026-08-18 확정) */
 const RANKING_COUNT = 6
 
-const SECTION_FILMS_HREF: Record<string, string | null> = {
-  favorites:   '/my/favorites',
-  ranking:     '/films#realtime_popular_rank',
-  lastWeek:    '/films#realtime_last_week',
-  newIndie:    '/films#realtime_new_indie',
-  returning:   '/films#realtime_returning',
-  soloTheater: null,
-  todayShow:   null,
+/** 데스크톱 '모두보기'가 여는 상영작 탭 섹션. 관심 섹션은 페이지 이동 대신 onShowAllFavorites */
+const SECTION_FILMS_HREF: Record<string, string> = {
+  ranking:  '/films#realtime_popular_rank',
+  newIndie: '/films#realtime_new_indie',
 }
 
-const IconChevronDown = ({ open }: { open: boolean }) => (
-  <Icon name="chevron-down" size={14} />
-)
-
-/** 큐레이션 섹션(우선순위 상위 3개 + 최근 찾아본) — 모바일 시트·데스크톱 도크가 공유하는 본문 */
+/** 큐레이션 섹션(최대 2개 + 최근 찾아본) — 모바일 시트·데스크톱 도크가 공유하는 본문 */
 export function CurationSections({
-  lastWeekFilms,
-  soloTheaterFilms,
-  soloRegionLabel,
-  todayShowFilms,
-  returningFilms,
   newIndieFilms,
   recentlyViewed,
   onMovieSelect,
-  onTodayShowSelect,
   onRemoveRecentlyViewed,
   onClearRecentlyViewed,
   onRecentItemClick,
-  getTheaterDistance,
   desktop = false,
   signedIn = false,
   favoriteItems,
@@ -530,33 +473,6 @@ export function CurationSections({
   onShowAllFavorites,
   loading = false,
 }: CurationSectionsProps) {
-  const lastWeekItems: CurationItem[] = lastWeekFilms.map((film) => ({
-    id: film.movie.id,
-    title: film.movie.title,
-    posterUrl: film.movie.posterUrl,
-    badge: getLastWeekBadgeText(film.daysLeft, film.confidence ?? 'likely'),
-    subtitle: formatDirectors(film.movie.director) || undefined,
-    movie: film.movie,
-  }))
-  const soloTheaterItems: CurationItem[] = soloTheaterFilms.map((film) => ({
-    id: film.movie.id,
-    title: film.movie.title,
-    posterUrl: film.movie.posterUrl,
-    subtitle: film.theaterName,
-    theaterId: film.theaterId,
-    distanceLabel: getTheaterDistance?.(film.theaterId) ?? undefined,
-    movie: film.movie,
-  }))
-  const todayShowItems: CurationItem[] = todayShowFilms.map((film) => ({
-    id: film.movie.id,
-    title: film.movie.title,
-    posterUrl: film.movie.posterUrl,
-    badge: film.nextShowTime,
-    subtitle: film.theaterName,
-    theaterId: film.theaterId,
-    distanceLabel: getTheaterDistance?.(film.theaterId) ?? undefined,
-    movie: film.movie,
-  }))
   const newIndieItems: CurationItem[] = newIndieFilms.map((film) => ({
     id: film.movie.id,
     title: film.movie.title,
@@ -564,45 +480,21 @@ export function CurationSections({
     subtitle: formatDirectors(film.movie.director) || undefined,
     movie: film.movie,
   }))
-  const returningItems: CurationItem[] = returningFilms.map((film) => ({
-    id: film.movie.id,
-    title: film.movie.title,
-    posterUrl: film.movie.posterUrl,
-    badge: film.tagText,
-    subtitle: formatDirectors(film.movie.director) || undefined,
-    movie: film.movie,
-  }))
-
-  const legacyCandidates = [
-    { key: 'lastWeek', title: '막바지 상영', items: lastWeekItems, emptyText: '' },
-    { key: 'soloTheater', title: `${soloRegionLabel ?? '이 지역'}에서 단 한 곳`, items: soloTheaterItems, emptyText: '' },
-    { key: 'todayShow', title: '지금 출발하면 볼 수 있는', items: soloRegionLabel ? todayShowItems : [], emptyText: '' },
-    { key: 'newIndie', title: '이번 주 새롭게 상영하는 영화', items: newIndieItems, emptyText: '' },
-    { key: 'returning', title: '오랜만에 상영하는 영화', items: returningItems, emptyText: '' },
-  ]
 
   /* 2026-08-18 확정 구성 — 최대 2개 섹션.
      로그인: [관심 작품 상영] + [예매 많은 영화]  /  비로그인: [이번 주 새롭게 상영] + [예매 많은 영화]
      관심이 하나도 안 걸렸으면 로그인이어도 '새롭게 상영'으로 대체한다. */
-  const useNewComposition = !!favoriteItems || !!rankingItems
-  const primary = signedIn && (favoriteItems?.length ?? 0) > 0
-    ? { key: 'favorites', title: '관심 작품 상영 중', items: favoriteItems!, emptyText: '' }
-    : { key: 'newIndie', title: '이번 주 새롭게 상영하는 영화', items: newIndieItems, emptyText: '' }
-  const rankingSection = { key: 'ranking', title: '요즘 많이 찾는 영화', items: (rankingItems ?? []).slice(0, RANKING_COUNT), emptyText: '' }
+  const primary = signedIn && favoriteItems.length > 0
+    ? { key: 'favorites', title: '관심 작품 상영 중', items: favoriteItems }
+    : { key: 'newIndie', title: '이번 주 새롭게 상영하는 영화', items: newIndieItems }
+  const rankingSection = { key: 'ranking', title: '요즘 많이 찾는 영화', items: rankingItems.slice(0, RANKING_COUNT) }
 
-  const sections = (useNewComposition ? [primary, rankingSection] : legacyCandidates)
-    .filter((c) => c.items.length > 0)
-    .slice(0, useNewComposition ? 2 : MAX_CURATION_SECTIONS)
+  const sections = [primary, rankingSection].filter((c) => c.items.length > 0)
 
   /* 섹션은 items.length > 0인 것만 남기므로, 받아오는 중에는 하나도 안 남아 시트가
      통째로 빈다. 그러면 "아직 안 왔다"가 "볼 게 없다"로 읽힌다 — 상영작 탭이
      같은 상황을 스켈레톤으로 처리하는 것과 맞춘다. */
   const showSkeleton = loading && sections.length === 0
-
-  const [expandedSections, setExpandedSections] = useState<Record<string, SectionExpand>>({})
-  const setExpand = (key: string, state: SectionExpand) =>
-    setExpandedSections((prev) => ({ ...prev, [key]: state }))
-  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: SECTION_GAP }}>
@@ -631,74 +523,31 @@ export function CurationSections({
         </div>
       )}
       {sections.map((section) => {
-        const handleSelect = section.key === 'todayShow' || section.key === 'soloTheater'
-          ? (id: string, title: string) => {
-              const item = section.items.find((i) => i.id === id)
-              if (item?.theaterId) onTodayShowSelect?.(id, title, item.theaterId)
-            }
-          : (id: string, title: string) => onMovieSelect?.(id, title, section.key)
-        const expandState: SectionExpand = expandedSections[section.key] ?? 'collapsed'
-        // 새 구성(관심·순위·새롭게상영 2섹션)에서는 펼치기 없이 '모두보기'로 통일 (2026-08-18)
-        const isNewSection = useNewComposition
-        const hasMore = desktop && section.items.length > SECTION_COLLAPSED_COUNT
-        const hasManyMore = desktop && section.items.length > SECTION_PARTIAL_COUNT
-        const visibleItems = hasMore && expandState === 'partial'
-          ? section.items.slice(0, SECTION_PARTIAL_COUNT)
-          : section.items.slice(0, SECTION_COLLAPSED_COUNT)
-
-        const btnStyle = {
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-1)',
-          padding: '8px 0', border: 'none', borderRadius: 'var(--radius-button)',
-          background: 'var(--color-surface-raised)', color: 'var(--color-text-sub)',
-          fontSize: 12, fontWeight: 600, cursor: 'pointer',
-        } as const
-
+        const filmsHref = SECTION_FILMS_HREF[section.key]
         return (
-          <div key={section.key} ref={el => { sectionRefs.current[section.key] = el }}
-            style={{ display: 'flex', flexDirection: 'column', gap: SECTION_GAP }}>
+          <div key={section.key} style={{ display: 'flex', flexDirection: 'column', gap: SECTION_GAP }}>
             <Section title={section.title}>
-              <PosterRow items={visibleItems} onSelect={handleSelect} emptyText={section.emptyText} desktop={desktop} />
-              {/* 관심·순위 섹션은 펼치기 없이 '모두보기'로 바로 넘긴다 (2026-08-18).
+              <PosterRow
+                items={section.items.slice(0, SECTION_VISIBLE_COUNT)}
+                onSelect={(id, title) => onMovieSelect?.(id, title, section.key)}
+                emptyText=""
+                desktop={desktop}
+              />
+              {/* 펼치기 없이 '모두보기'로 바로 넘긴다 (2026-08-18).
                   관심 섹션은 페이지 이동 대신 지도에 관심 필터를 켠다 — 이미 보고 있는 화면에서 바로 좁히는 게 빠르다 */}
-              {isNewSection && desktop && section.key === 'favorites' && onShowAllFavorites && (
+              {desktop && section.key === 'favorites' && onShowAllFavorites && (
                 <div style={{ margin: '0 20px' }}>
                   <Button type="button" variant="tertiary" size="md" fullWidth onClick={onShowAllFavorites}>
                     모두보기 →
                   </Button>
                 </div>
               )}
-              {isNewSection && desktop && section.key !== 'favorites' && SECTION_FILMS_HREF[section.key] && (
+              {desktop && filmsHref && (
                 <div style={{ margin: '0 20px' }}>
                   <Button type="button" variant="tertiary" size="md" fullWidth
-                    onClick={() => { window.location.href = SECTION_FILMS_HREF[section.key]! }}>
+                    onClick={() => { window.location.href = filmsHref }}>
                     모두보기 →
                   </Button>
-                </div>
-              )}
-              {!isNewSection && hasMore && expandState === 'collapsed' && (
-                <div style={{ margin: '0 20px' }}>
-                  <Button type="button" variant="tertiary" size="md" fullWidth onClick={() => setExpand(section.key, 'partial')}>
-                    더보기 <Icon name="chevron-down" size={14} strokeWidth={1.75} color="currentColor" />
-                  </Button>
-                </div>
-              )}
-              {!isNewSection && hasMore && expandState === 'partial' && (
-                <div style={{ display: 'flex', gap: 'var(--spacing-2)', margin: '0 20px' }}>
-                  {/* 두 버튼 폭 1:1 — Button(fullWidth)은 flex-basis가 100%라 그냥 두면 '접기'가 다 먹는다 */}
-                  <div style={{ flex: '1 1 0', minWidth: 0 }}>
-                    <Button type="button" variant="tertiary" size="md" fullWidth onClick={() => {
-                      setExpand(section.key, 'collapsed')
-                      sectionRefs.current[section.key]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                    }}>
-                      접기 <Icon name="chevron-down" size={14} strokeWidth={1.75} color="currentColor" style={{ transform: 'rotate(180deg)' }} />
-                    </Button>
-                  </div>
-                  {hasManyMore && SECTION_FILMS_HREF[section.key] && (
-                    <a href={SECTION_FILMS_HREF[section.key]!}
-                      style={{ ...btnStyle, flex: '1 1 0', minWidth: 0, textDecoration: 'none' }}>
-                      모두보기 →
-                    </a>
-                  )}
                 </div>
               )}
             </Section>
@@ -724,19 +573,12 @@ export function CurationSections({
 export function CurationSheet({
   snap,
   onSnapChange,
-  lastWeekFilms,
-  soloTheaterFilms,
-  soloRegionLabel,
-  todayShowFilms,
-  returningFilms,
   newIndieFilms,
   recentlyViewed,
   onMovieSelect,
-  onTodayShowSelect,
   onRemoveRecentlyViewed,
   onClearRecentlyViewed,
   onRecentItemClick,
-  getTheaterDistance,
   hidden = false,
   signedIn,
   favoriteItems,
@@ -1001,19 +843,12 @@ export function CurationSheet({
         minHeight: 0,
       }}>
         <CurationSections
-          lastWeekFilms={lastWeekFilms}
-          soloTheaterFilms={soloTheaterFilms}
-          soloRegionLabel={soloRegionLabel}
-          todayShowFilms={todayShowFilms}
-          returningFilms={returningFilms}
           newIndieFilms={newIndieFilms}
           recentlyViewed={recentlyViewed}
           onMovieSelect={onMovieSelect}
-          onTodayShowSelect={onTodayShowSelect}
           onRemoveRecentlyViewed={onRemoveRecentlyViewed}
           onClearRecentlyViewed={onClearRecentlyViewed}
           onRecentItemClick={onRecentItemClick}
-          getTheaterDistance={getTheaterDistance}
           signedIn={signedIn}
           favoriteItems={favoriteItems}
           rankingItems={rankingItems}
