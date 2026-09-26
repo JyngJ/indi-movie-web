@@ -313,21 +313,20 @@ function MovieCard({
           )}
           {rank != null && <span className="sr-only">{rank}위</span>}
 
-          {/* 개봉 주년 — 좌상단. films 탭 포스터에서 우상단은 D-N, 좌하단은 순위가 쓰므로
-              남는 모서리가 여기다. 예전엔 "개봉 N주년, 다시 스크린에" 섹션을 통째로 차지했는데
-              한 줄을 쓸 만한 정보가 아니라 칩으로 내렸다 — 대신 어느 섹션에 나오든 따라붙는다 */}
-          {anniversaryAge != null && (
-            <PosterChip corner="top-left" tone="primary" label={`개봉 ${anniversaryAge}주년`}>
-              {anniversaryAge}주년
-            </PosterChip>
-          )}
-
-          {daysLeft != null && (
+          {/* 코너 태그 — 좌상단 한 자리. 막바지 D-N과 개봉 주년이 겹치면 D-N을 보여 준다:
+              D-N은 날짜가 지나면 사라져 놓치면 되돌릴 수 없고, 주년은 다른 섹션에서도 계속 붙는다.
+              우상단은 관심 하트 자리라 코너 태그를 두지 않는다 */}
+          {daysLeft != null ? (
             <PosterChip
-              corner="top-right"
-              tone={daysLeft === 0 ? 'error' : daysLeft === 1 ? 'warning' : 'neutral'}
+              corner="top-left"
+              attached
+              tone={daysLeft === 0 ? 'error' : daysLeft === 1 ? 'warning' : 'scrim'}
             >
               {daysLeft === 0 ? '오늘' : `D-${daysLeft}`}
+            </PosterChip>
+          ) : anniversaryAge != null && (
+            <PosterChip corner="top-left" tone="scrim" attached label={`개봉 ${anniversaryAge}주년`}>
+              {anniversaryAge}주년
             </PosterChip>
           )}
         </div>

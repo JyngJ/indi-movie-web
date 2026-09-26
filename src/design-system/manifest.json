@@ -7557,6 +7557,13 @@
           "doc": "compact — 포스터가 아닌 소형 썸네일(GV 카드의 56px 색 띠 등)에서만.\n기본 규격(12/700 · 8 12)은 높이 30px이라 56px 띠의 절반을 덮는다."
         },
         {
+          "name": "attached",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": "false",
+          "doc": "포스터 모서리에 붙인다 — offset 0, 바깥 모서리는 포스터 radius, 안쪽 대각 모서리만 --radius-badge.\n영화 한 편에 하나로 정해지는 값(개봉 주년 · 막바지 D-N)에만 쓴다."
+        },
+        {
           "name": "label",
           "type": "string | undefined",
           "optional": true,

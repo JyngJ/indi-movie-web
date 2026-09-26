@@ -28,7 +28,10 @@ function Segmented({ options, value, onChange }: {
   onChange: (v: string) => void
 }) {
   // 3 이하는 한 줄, 4는 2/2, 5 이상은 3칸씩 — 5개면 3/2가 된다.
-  const cols = options.length <= 3 ? options.length : options.length === 4 ? 2 : 3
+  // 10자 이상 옵션("bottom-right")이 있으면 2칸까지만 — 컨트롤 패널 폭에서 3칸이면 칸을 넘친다.
+  const longest = Math.max(...options.map(o => o.length))
+  const count = options.length <= 3 ? options.length : options.length === 4 ? 2 : 3
+  const cols = longest >= 10 ? Math.min(count, 2) : count
   return (
     <div className="ds-segmented" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
       {options.map(opt => (
