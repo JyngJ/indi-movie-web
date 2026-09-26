@@ -5,7 +5,8 @@ import { cookieStorageAdapter } from '@/lib/adapters/cookieStorage'
 import { getRecentlyViewed } from '@/lib/curation/recentlyViewed'
 import { getRegionFromCity } from '@/lib/regions'
 import { calculateDistanceKm } from '@/lib/map/distanceUtils'
-import { formatLocalDate, formatLocalTimeHHMM } from '@/lib/date'
+import { formatLocalDate, formatLocalTimeHHMM, toKstIsoDate } from '@/lib/date'
+import { refreshLastWeekFilms } from '@/lib/curation/lastWeekDaysLeft'
 import type { LocationCoords } from '@/lib/adapters/location'
 import type {
   LastWeekFilm,
@@ -176,14 +177,12 @@ export function useCurationData(open: boolean, regionId: string | null, refreshK
     regionId ? cacheData.newIndieFilms.filter(film => film.regions?.includes(regionId)) : cacheData.newIndieFilms
   ), [cacheData.newIndieFilms, regionId])
 
-  const lastWeekFilms = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10)
-    return cacheData.lastWeekFilms.filter((film) => {
-      if (film.maxShowDate < today) return false   // 이미 종영 — 제거
-      if (regionId && !film.regions?.includes(regionId)) return false
-      return true
-    })
-  }, [cacheData.lastWeekFilms, regionId])
+  /* 스냅샷의 daysLeft는 만든 날 기준이라 자정을 넘기면 하루씩 밀린다 — 오늘(KST)로 다시 센다.
+     예전엔 toISOString(UTC)으로 오늘을 잡아 KST 00~09시에는 어제 끝난 영화도 남았다 */
+  const lastWeekFilms = useMemo(
+    () => refreshLastWeekFilms(cacheData.lastWeekFilms, toKstIsoDate(new Date()), regionId),
+    [cacheData.lastWeekFilms, regionId],
+  )
 
   return {
     returningFilms,
