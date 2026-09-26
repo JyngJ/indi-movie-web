@@ -2634,19 +2634,6 @@ export default function MapView() {
     }
   }, [handleCurationMovieSelect, handlePinClick, isDesktopLayout, openDesktopPanel, router])
 
-  // "지금 출발하면" 선택 — 영화 상세 대신 해당 극장으로 flyTo + 그 회차 선택
-  const handleTodayShowSelect = useCallback((movieId: string, _title: string, theaterId: string) => {
-    handlePinClick(theaterId, movieId)
-  }, [handlePinClick])
-
-  // 큐레이션 카드 — 현재 위치 있을 때 극장까지 거리 텍스트("1.2 km")
-  const getTheaterDistance = useCallback((theaterId: string) => {
-    if (!coords) return null
-    const theater = theaters.find((t) => t.id === theaterId)
-    if (!theater) return null
-    return calculateAndFormatDistance(coords.lat, coords.lng, theater.lat, theater.lng)
-  }, [coords, theaters])
-
   // FAB 버튼 bottom — 모바일: 떠 있는 시트의 보이는 높이 + 여유 16만큼 띄움
   // 극장 시트 collapsed = THEATER_SHEET_COLLAPSED_H + 16 / 큐레이션 시트 peek = 현재 보이는 높이 + 16
   // 그 외(큐레이션 시트 expanded·극장 시트 expanded·시트 없음) = 하단 탭바(모바일 전용 — GlobalNav) 위 32px 고정
@@ -3656,16 +3643,9 @@ export default function MapView() {
           snap={curationSnap}
           onSnapChange={handleCurationSnapChange}
           hidden={!!selectedTheater}
-          lastWeekFilms={curationData.lastWeekFilms}
-          soloTheaterFilms={curationData.soloTheaterFilms}
-          soloRegionLabel={filters.regionId ?? undefined}
-          todayShowFilms={curationData.todayShowFilms}
-          returningFilms={curationData.returningFilms}
           newIndieFilms={curationData.newIndieFilms}
           recentlyViewed={curationData.recentlyViewed}
           onMovieSelect={handleCurationMovieSelect}
-          onTodayShowSelect={handleTodayShowSelect}
-          getTheaterDistance={getTheaterDistance}
           onRemoveRecentlyViewed={handleRemoveRecentlyViewed}
           onClearRecentlyViewed={handleClearRecentlyViewed}
           onRecentItemClick={handleRecentItemClick}
@@ -3740,16 +3720,9 @@ export default function MapView() {
             <div className="themed-scrollbar" style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingBottom: 24 }}>
               <CurationSections
                 loading={curationData.isLoading}
-                lastWeekFilms={curationData.lastWeekFilms}
-                soloTheaterFilms={curationData.soloTheaterFilms}
-                soloRegionLabel={filters.regionId ?? undefined}
-                todayShowFilms={curationData.todayShowFilms}
-                returningFilms={curationData.returningFilms}
                 newIndieFilms={curationData.newIndieFilms}
                 recentlyViewed={curationData.recentlyViewed}
                 onMovieSelect={handleCurationMovieSelect}
-                onTodayShowSelect={handleTodayShowSelect}
-                getTheaterDistance={getTheaterDistance}
                 onRemoveRecentlyViewed={handleRemoveRecentlyViewed}
                 onClearRecentlyViewed={handleClearRecentlyViewed}
                 onRecentItemClick={handleRecentItemClick}
