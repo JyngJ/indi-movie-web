@@ -96,24 +96,46 @@ function MiniPoster({ children }: { children: ReactNode }) {
   )
 }
 
-function FlowBox({ kind, children }: { kind: 'start' | 'question' | 'result'; children: ReactNode }) {
+/* 순서도 한 열의 폭 — 시작·조건·화살표가 이 열의 가운데에 선다 */
+const FLOW_COL = 224
+
+function FlowBox({ kind, children }: { kind: 'start' | 'result'; children: ReactNode }) {
   return (
     <div style={{
       padding: 'var(--spacing-3) var(--spacing-4)',
       borderRadius: kind === 'start' ? 'var(--radius-pill)' : 'var(--radius-control)',
-      background: kind === 'question' ? 'var(--color-surface-card)' : 'var(--color-surface-raised)',
-      boxShadow: kind === 'question' ? 'var(--shadow-inset)' : undefined,
-      fontSize: 'var(--text-body)', fontWeight: kind === 'question' ? 600 : 700,
+      background: 'var(--color-surface-raised)',
+      fontSize: 'var(--text-body)', fontWeight: 700,
       color: 'var(--color-text-primary)', lineHeight: 1.4,
     }}>{children}</div>
+  )
+}
+
+/* 조건 = 마름모. 글자는 돌리지 않고 가운데 띠에 두 줄로 얹는다 */
+function FlowDiamond({ children }: { children: ReactNode }) {
+  return (
+    <div style={{
+      position: 'relative', flexShrink: 0, width: FLOW_COL, height: 112,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center',
+    }}>
+      <svg aria-hidden width="100%" height="100%" viewBox="0 0 224 112" preserveAspectRatio="none"
+        style={{ position: 'absolute', inset: 0 }}>
+        <polygon points="112,1 223,56 112,111 1,56"
+          style={{ fill: 'var(--color-surface-card)', stroke: 'var(--color-border)', strokeWidth: 1.5 }} />
+      </svg>
+      <span style={{
+        position: 'relative', fontSize: 'var(--text-meta)', fontWeight: 600,
+        color: 'var(--color-text-primary)', lineHeight: 1.4,
+      }}>{children}</span>
+    </div>
   )
 }
 
 function FlowArrow({ label }: { label: string }) {
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)',
-      paddingLeft: 'var(--spacing-6)', height: 'var(--spacing-8)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-2)',
+      width: FLOW_COL, height: 'var(--spacing-8)',
       fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)',
     }}>
       <span aria-hidden>↓</span>{label}
@@ -126,7 +148,7 @@ function FlowBranch({ poster, title, examples }: { poster: ReactNode; title: str
     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)' }}>
       <span aria-hidden style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)', whiteSpace: 'nowrap' }}>아니오 →</span>
       {poster}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1)', maxWidth: 120 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1)', maxWidth: 112 }}>
         <span style={{ fontSize: 'var(--text-body)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{title}</span>
         <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)' }}>{examples}</span>
       </div>
@@ -135,23 +157,23 @@ function FlowBranch({ poster, title, examples }: { poster: ReactNode; title: str
 }
 
 function CornerTagFlow() {
-  const question = (q: string, branch: ReactNode) => (
-    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--spacing-3)' }}>
-      <div style={{ flex: '0 0 200px' }}><FlowBox kind="question">{q}</FlowBox></div>
+  const question = (q: ReactNode, branch: ReactNode) => (
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--spacing-2)' }}>
+      <FlowDiamond>{q}</FlowDiamond>
       {branch}
     </div>
   )
   return (
     <div role="img" aria-label="판별 순서: 칩에 넣을 값이 다른 섹션이나 극장 화면으로 옮겨도 같은지, 서울과 부산의 사용자가 같은 값을 보는지 차례로 묻는다. 하나라도 아니오면 떠 있는 칩, 둘 다 예면 코너 태그."
       style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: 600 }}>
-      <div style={{ alignSelf: 'flex-start' }}><FlowBox kind="start">칩에 넣을 값</FlowBox></div>
+      <div style={{ width: FLOW_COL, display: 'flex', justifyContent: 'center' }}><FlowBox kind="start">칩에 넣을 값</FlowBox></div>
       <FlowArrow label="" />
-      {question('① 다른 섹션이나 다른 극장 화면으로 옮겨도 같은 값인가?',
+      {question(<>① 다른 섹션·극장에서도<br />같은 값인가?</>,
         <FlowBranch
           poster={<MiniPoster><PosterChip corner="bottom-right" tone="error" size="compact">매진</PosterChip></MiniPoster>}
           title="떠 있는 칩" examples="매진 · 회차 시각 · GV 유형" />)}
       <FlowArrow label="예" />
-      {question('② 서울에 있는 사람과 부산에 있는 사람이 같은 값을 보는가?',
+      {question(<>② 서울·부산 사람이<br />같은 값을 보는가?</>,
         <FlowBranch
           poster={<MiniPoster><PosterChip corner="top-right" tone="primary" size="compact">1km</PosterChip></MiniPoster>}
           title="떠 있는 칩" examples="거리" />)}
