@@ -11,11 +11,12 @@ import React from 'react'
  * --text-meta(12) / 700 / --comp-poster-chip-pad / --radius-badge / offset 6.
  *
  * 모서리 배정 (films 탭 기준):
- *   좌상단 = 개봉 주년 · 좌하단 = 순위(스크림 별도) · 우상단 = D-N·거리 · 우하단 = 매진·일시
+ *   좌상단 = 코너 태그(막바지 D-N 우선, 없으면 개봉 주년) · 좌하단 = 순위(스크림 별도) · 우상단 = 거리·관심 하트 · 우하단 = 매진·일시
  *
  * attached — 떠 있는 칩 대신 포스터 모서리에 붙는 코너 태그.
  *   기준: 값이 영화 한 편에 하나로 정해지면 코너 태그(개봉 주년 · 막바지 D-N),
  *   극장·회차·위치에 따라 달라지면 떠 있는 칩(매진 · 회차 시각 · 거리 · GV 유형).
+ *   코너 태그는 좌상단에만 둔다.
  */
 
 export type PosterChipCorner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'

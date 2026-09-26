@@ -86,6 +86,84 @@ function PosterStage({ children }: { children: ReactNode }) {
   )
 }
 
+/* PosterChip 판별 질문 — 코너 태그로 붙일지, 떠 있는 칩으로 둘지 */
+function MiniPoster({ children }: { children: ReactNode }) {
+  return (
+    <div style={{
+      position: 'relative', flexShrink: 0, width: 56, height: 80, borderRadius: 'var(--radius-poster)',
+      background: 'linear-gradient(160deg, var(--color-neutral-600), var(--color-neutral-900))',
+    }}>{children}</div>
+  )
+}
+
+function FlowBox({ kind, children }: { kind: 'start' | 'question' | 'result'; children: ReactNode }) {
+  return (
+    <div style={{
+      padding: 'var(--spacing-3) var(--spacing-4)',
+      borderRadius: kind === 'start' ? 'var(--radius-pill)' : 'var(--radius-control)',
+      background: kind === 'question' ? 'var(--color-surface-card)' : 'var(--color-surface-raised)',
+      boxShadow: kind === 'question' ? 'var(--shadow-inset)' : undefined,
+      fontSize: 'var(--text-body)', fontWeight: kind === 'question' ? 600 : 700,
+      color: 'var(--color-text-primary)', lineHeight: 1.4,
+    }}>{children}</div>
+  )
+}
+
+function FlowArrow({ label }: { label: string }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)',
+      paddingLeft: 'var(--spacing-6)', height: 'var(--spacing-8)',
+      fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)',
+    }}>
+      <span aria-hidden>↓</span>{label}
+    </div>
+  )
+}
+
+function FlowBranch({ poster, title, examples }: { poster: ReactNode; title: string; examples: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)' }}>
+      <span aria-hidden style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)', whiteSpace: 'nowrap' }}>아니오 →</span>
+      {poster}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1)', maxWidth: 120 }}>
+        <span style={{ fontSize: 'var(--text-body)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{title}</span>
+        <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)' }}>{examples}</span>
+      </div>
+    </div>
+  )
+}
+
+function CornerTagFlow() {
+  const question = (q: string, branch: ReactNode) => (
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--spacing-3)' }}>
+      <div style={{ flex: '0 0 200px' }}><FlowBox kind="question">{q}</FlowBox></div>
+      {branch}
+    </div>
+  )
+  return (
+    <div role="img" aria-label="판별 순서: 칩에 넣을 값이 다른 섹션이나 극장 화면으로 옮겨도 같은지, 서울과 부산의 사용자가 같은 값을 보는지 차례로 묻는다. 하나라도 아니오면 떠 있는 칩, 둘 다 예면 코너 태그."
+      style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: 600 }}>
+      <div style={{ alignSelf: 'flex-start' }}><FlowBox kind="start">칩에 넣을 값</FlowBox></div>
+      <FlowArrow label="" />
+      {question('① 다른 섹션이나 다른 극장 화면으로 옮겨도 같은 값인가?',
+        <FlowBranch
+          poster={<MiniPoster><PosterChip corner="bottom-right" tone="error" size="compact">매진</PosterChip></MiniPoster>}
+          title="떠 있는 칩" examples="매진 · 회차 시각 · GV 유형" />)}
+      <FlowArrow label="예" />
+      {question('② 서울에 있는 사람과 부산에 있는 사람이 같은 값을 보는가?',
+        <FlowBranch
+          poster={<MiniPoster><PosterChip corner="top-right" tone="primary" size="compact">1km</PosterChip></MiniPoster>}
+          title="떠 있는 칩" examples="거리" />)}
+      <FlowArrow label="예" />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)' }}>
+        <MiniPoster><PosterChip corner="top-left" tone="scrim" size="compact" attached>10주년</PosterChip></MiniPoster>
+        <FlowBox kind="result">코너 태그 — 개봉 주년 · 막바지 D-N</FlowBox>
+      </div>
+    </div>
+  )
+}
+
 function ToastDemo() {
   const [n, setN] = useState(0)
   // Toast는 position: fixed다. transform이 걸린 조상이 있으면 그 상자가 기준이 되므로
@@ -392,17 +470,17 @@ const DOCS: Record<string, Doc> = {
       </PosterStage>,
       <PosterStage key="attached">
         <PosterChip corner="top-left" tone="scrim" attached>10주년</PosterChip>
-        <PosterChip corner="top-right" tone="scrim" attached>D-3</PosterChip>
       </PosterStage>,
-      <PosterStage key="judge">
-        <PosterChip corner="top-left" tone="scrim" attached>10주년</PosterChip>
-        <PosterChip corner="bottom-right" tone="error">매진</PosterChip>
-      </PosterStage>,
+      <CornerTagFlow key="judge" />,
       null,
-      <PosterStage key="attached-tone">
-        <PosterChip corner="top-left" tone="scrim" attached>10주년</PosterChip>
-        <PosterChip corner="top-right" tone="error" attached>오늘</PosterChip>
+      <PosterStage key="priority">
+        <PosterChip corner="top-left" tone="warning" attached>D-1</PosterChip>
       </PosterStage>,
+      <div key="attached-tone" style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-3)' }}>
+        <PosterStage><PosterChip corner="top-left" tone="scrim" attached>D-3</PosterChip></PosterStage>
+        <PosterStage><PosterChip corner="top-left" tone="warning" attached>D-1</PosterChip></PosterStage>
+        <PosterStage><PosterChip corner="top-left" tone="error" attached>오늘</PosterChip></PosterStage>
+      </div>,
       <PosterStage key="rank">
         <div style={{
           position: 'absolute', inset: 'auto 0 0 0', height: '42%',
