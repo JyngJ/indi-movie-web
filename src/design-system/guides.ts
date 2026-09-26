@@ -171,6 +171,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
 
   PosterChip: {
     changes: [
+      { date: '2026-09-27', note: '포스터 모서리에 붙는 코너 태그(attached)를 더했습니다. 개봉 주년과 막바지 D-N을 코너 태그로 옮기고, 주년은 primary에서 scrim으로, D-2 이상은 neutral에서 scrim으로 바꿨습니다. 오늘(error)·D-1(warning)은 그대로입니다.' },
       { date: '2026-09-01', note: '긴 카피를 자르지 않고 접도록 바꿨습니다(white-space: normal · word-break: keep-all · lineHeight 1.2 · maxWidth). 문서에는 접기가 규칙으로 적혀 있었는데 컴포넌트는 nowrap이라, 규칙을 지킨 곳은 정작 이 컴포넌트를 쓰지 않는 화면뿐이었습니다.' },
       { date: '2026-09-01', note: 'GvEventSection·InstagramRecsSection·TheaterSheet·CurationSheet의 인라인 칩을 실제로 이 컴포넌트로 옮겼습니다. 8/13에 합쳤다고 적었지만 옮겨간 건 CurationSectionRow 하나뿐이었고, 나머지는 구 스펙(10px/600·padding 4 8)으로 2주 넘게 남아 있었습니다.' },
       { date: '2026-08-13', note: '글자를 11px/600에서 12px/700으로, 안쪽 여백을 4 8에서 8 12로 키웠습니다. 문서는 11px인데 코드는 --text-badge(10px)를 써서 값이 셋으로 갈려 있었고, 포스터 위에서 읽히지 않았습니다.' },
@@ -183,16 +184,20 @@ export const GUIDES: Record<string, ComponentGuide> = {
     anatomy: [
       { name: 'corner', desc: '네 모서리 중 하나를 지정합니다. 좌하단은 순위 표기 전용으로 비워 둡니다.' },
       { name: 'tone', desc: '의미색을 고릅니다. error(매진) · warning(잔여 적음) · success(상영중) · gv · scrim(중립 정보).' },
+      { name: 'attached', desc: '켜면 포스터 모서리에 붙는 코너 태그가 됩니다. offset 0, 포스터와 맞닿는 바깥 모서리는 --radius-poster, 안쪽 대각 모서리만 --radius-badge, 그림자 없음.' },
       { name: 'size', desc: 'default(12/700 · 8 12)와 compact(10/600 · 4 8) 둘 중 하나. compact는 포스터가 아닌 소형 썸네일에만 씁니다.' },
     ],
     specs: [
       { title: '여백', desc: '포스터 모서리에서 6px(--comp-poster-chip-offset), 칩 내부는 8/12(--comp-poster-chip-pad)입니다.' },
+      { title: '코너 태그와 떠 있는 칩', desc: '값이 영화 한 편에 하나로 정해지면 코너 태그(개봉 주년 · 막바지 D-N), 극장·회차·위치에 따라 달라지면 떠 있는 칩(매진 · 회차 시각 · 거리 · GV 유형)입니다. 코너 태그는 영화에 붙은 꼬리표라 어느 섹션에 나오든 같은 값이고, 떠 있는 칩은 지금 보고 있는 극장·회차의 상태입니다.' },
+      { title: '코너 태그 색', desc: '기본은 scrim(먹색 반투명)입니다. 흰 반투명은 밝은 포스터에서, 회색 솔리드는 흑백·회색 포스터에서 묻혔습니다. 행동을 재촉해야 하는 값만 의미색을 씁니다 — 막바지 오늘은 error, D-1은 warning.' },
       { title: '좌하단 규칙', desc: '랭킹 섹션이 스크림과 KIMM 숫자를 좌하단에 배치합니다. 이 자리는 순위 표기로 비워 둡니다.' },
       { title: 'compact', desc: '기본 규격은 높이 30px이라 GV 카드의 56px 색 띠에서는 절반을 덮습니다. 그런 소형 썸네일에서만 compact(높이 20px)를 쓰고, 88px 이상 포스터에는 쓰지 않습니다.' },
       { title: '접기', desc: '긴 카피는 말줄임 대신 어절 단위로 접습니다. 막바지 카피("오늘이 마지막"·"D-n 막바지 상영")는 완화·생략이 금지라 92px 포스터에서 자르면 곧 규칙 위반이 됩니다. 폭은 포스터에서 좌우 offset을 뺀 만큼입니다.' },
     ],
     usage: [
       { kind: 'do', rule: '한 포스터에 칩은 두 개까지입니다.' },
+      { kind: 'dont', rule: '회차 시각·매진·거리처럼 극장이나 회차마다 달라지는 값을 코너 태그로 붙이지 않습니다.', instead: '떠 있는 칩(attached 없이)으로 둡니다.' },
       { kind: 'dont', rule: '좌하단에는 칩을 배치하지 않습니다. 순위 표기 자리입니다.', instead: '상태 정보는 우하단, 시간·거리는 우상단에 둡니다.' },
       { kind: 'caution', rule: '우상단은 관심 하트(FavoriteButton overlay)와 같은 자리입니다.', instead: '한 포스터에 하트와 우상단 칩을 함께 얹지 않습니다 — 관심 섹션에는 하트를, 거리·시간 정보에는 칩을 둡니다.' },
       { kind: 'caution', rule: 'neutral 톤(#78716C)은 neutral 램프에 대응 스탑이 없어 하드코딩으로 남아 있는 예외입니다. 새 색이 필요하다고 이 자리에 값을 하나 더 넣지 않습니다.', instead: '램프에 스탑을 만들고 그 토큰을 참조합니다.' },

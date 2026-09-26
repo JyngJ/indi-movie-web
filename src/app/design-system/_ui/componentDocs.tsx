@@ -375,11 +375,12 @@ const DOCS: Record<string, Doc> = {
       controls: [
         { kind: 'radio', name: 'corner', label: 'Corner', options: ['top-left', 'top-right', 'bottom-right'] },
         { kind: 'radio', name: 'tone', label: 'Tone', options: ['error', 'warning', 'success', 'gv', 'primary', 'scrim'] },
+        { kind: 'toggle', name: 'attached', label: '코너 태그' },
         { kind: 'text', name: 'label', label: '레이블', initial: '매진' },
       ],
       render: v => (
         <PosterStage>
-          <PosterChip corner={s(v, 'corner') as 'top-left'} tone={s(v, 'tone') as 'error'}>
+          <PosterChip corner={s(v, 'corner') as 'top-left'} tone={s(v, 'tone') as 'error'} attached={b(v, 'attached')}>
             {s(v, 'label')}
           </PosterChip>
         </PosterStage>
@@ -388,6 +389,14 @@ const DOCS: Record<string, Doc> = {
     specVisuals: [
       <PosterStage key="off">
         <PosterChip corner="top-left" tone="gv">GV</PosterChip>
+      </PosterStage>,
+      <PosterStage key="attached">
+        <PosterChip corner="top-left" tone="scrim" attached>10주년</PosterChip>
+        <PosterChip corner="top-right" tone="scrim" attached>D-3</PosterChip>
+      </PosterStage>,
+      <PosterStage key="attached-tone">
+        <PosterChip corner="top-left" tone="scrim" attached>10주년</PosterChip>
+        <PosterChip corner="top-right" tone="error" attached>오늘</PosterChip>
       </PosterStage>,
       <PosterStage key="rank">
         <div style={{

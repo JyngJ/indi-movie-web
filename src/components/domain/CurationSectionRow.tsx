@@ -317,7 +317,7 @@ function MovieCard({
               남는 모서리가 여기다. 예전엔 "개봉 N주년, 다시 스크린에" 섹션을 통째로 차지했는데
               한 줄을 쓸 만한 정보가 아니라 칩으로 내렸다 — 대신 어느 섹션에 나오든 따라붙는다 */}
           {anniversaryAge != null && (
-            <PosterChip corner="top-left" tone="primary" label={`개봉 ${anniversaryAge}주년`}>
+            <PosterChip corner="top-left" tone="scrim" attached label={`개봉 ${anniversaryAge}주년`}>
               {anniversaryAge}주년
             </PosterChip>
           )}
@@ -325,7 +325,8 @@ function MovieCard({
           {daysLeft != null && (
             <PosterChip
               corner="top-right"
-              tone={daysLeft === 0 ? 'error' : daysLeft === 1 ? 'warning' : 'neutral'}
+              attached
+              tone={daysLeft === 0 ? 'error' : daysLeft === 1 ? 'warning' : 'scrim'}
             >
               {daysLeft === 0 ? '오늘' : `D-${daysLeft}`}
             </PosterChip>
