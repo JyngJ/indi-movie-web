@@ -394,6 +394,11 @@ const DOCS: Record<string, Doc> = {
         <PosterChip corner="top-left" tone="scrim" attached>10주년</PosterChip>
         <PosterChip corner="top-right" tone="scrim" attached>D-3</PosterChip>
       </PosterStage>,
+      <PosterStage key="judge">
+        <PosterChip corner="top-left" tone="scrim" attached>10주년</PosterChip>
+        <PosterChip corner="bottom-right" tone="error">매진</PosterChip>
+      </PosterStage>,
+      null,
       <PosterStage key="attached-tone">
         <PosterChip corner="top-left" tone="scrim" attached>10주년</PosterChip>
         <PosterChip corner="top-right" tone="error" attached>오늘</PosterChip>
