@@ -17,7 +17,10 @@ if (typeof window !== 'undefined' && posthogToken) {
   posthog.init(posthogToken, {
     api_host: posthogHost,
     defaults: '2026-01-30',
-    capture_pageview: true,
+    // 'history_change' — 첫 로드와 앱 안 링크 이동(pushState·뒤로가기)을 모두 페이지뷰로 센다.
+    // 예전 값 true는 첫 로드만 세서, defaults가 켜 주는 history_change를 덮어쓰고 있었다.
+    // 그 결과 2026-09-24~27 영화 상세 조회(movie detail viewed) 1,225건 중 페이지뷰는 486건뿐이었다.
+    capture_pageview: 'history_change',
     capture_pageleave: true,
   })
 
