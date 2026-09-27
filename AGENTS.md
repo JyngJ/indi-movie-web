@@ -69,6 +69,13 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - `PRIM` 목록은 `src/components/primitives/index.ts`에서 자동으로 뽑는다. 손으로 적지 말 것 — 예전에 손 목록이 12개에 멈춰 있는 동안 index는 26개로 늘어, 프리미티브 62개 사용이 통째로 안 세졌다.
 - 감사 제외 파일 목록(스크립트에 하드코딩됨)은 그대로 유지: `onboarding/illustrations` / `GvPinSlots` / `GvPin` / `MapPin` / `GvMarkerIcon` / `opengraph-image` / `src/lib/og` / `dev/components` / `src/app/admin` (style) / `subwayUtils`.
 
+## 누른 뒤 반응 (피드백 회귀 방지)
+
+- 사람은 눌러서 화면이 바로 안 바뀌면 다시 누른다. 2026-09 영화제 바로가기가 이동에 2~7초 걸리는 동안 세션마다 3번씩(최대 14번) 눌렸고, 원인은 그 바로가기만 공통 진행 막대(`navStart`)를 안 부른 것이었다(#376).
+- **화면을 옮기는 클릭은 반응을 보인다.** `useProgressRouter()`를 쓰거나, `router.push` 직전에 `navStart()`를 부르거나, `usePendingNavItem`처럼 `useTransition`으로 누른 요소에 대기 표시를 띄운다. 몇 초 걸리는 이동은 누른 자리에도 "…하는 중…"을 덮고 재클릭을 막는다(`FestivalShortcutRow` 참고).
+- **회귀 게이트:** `npm run audit:feedback:check` — 진행 표시 없는 `router.push`(`navNoProgress`) 건수가 `scripts/audit/feedback-baseline.json` 대비 늘면 실패. CI(ui-audit.yml)가 PR마다 실행한다. 줄이면 baseline을 낮춰 같이 커밋하고, 올려서 통과시키지 말 것. 같은 경로로 쿼리만 바꾸는 push처럼 진행 표시가 필요 없는 곳은 그 줄 위에 `feedback-audit-ignore` 주석과 이유를 단다.
+- **실사용 확인:** `npm run report:clicks -- --days 7` — 운영 사이트의 연타(`repeat tap`, 같은 요소를 2초 안에 다시 누름) · `$rageclick` · `no-op click` · `dead click`을 요소·페이지별로 뽑는다(내부 사용자 제외). 연타 계측은 `src/lib/analytics/repeatTap.ts`, 원래 여러 번 누르는 요소는 `data-repeat-ok`로 뺀다.
+
 ## 이미지 alt 정책 (SEO·접근성)
 
 2026-08 네이버 서치어드바이저 "Alt 속성 누락" 진단이 전 페이지에 걸린 사고의 재발 방지 규칙 (PR #293).

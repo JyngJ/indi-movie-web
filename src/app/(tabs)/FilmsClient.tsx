@@ -789,7 +789,8 @@ export default function FilmsPage() {
 
       {/* 2.0: PC 콘텐츠 최대폭 컬럼 (내부 gutter 포함 시각 ≈1000) — 프레임은 풀블리드 유지 */}
       <div style={isDesktop ? { maxWidth: 1048, margin: '0 auto' } : undefined}>
-      {/* 영화제 바로가기 — 회기 중이거나 개막이 가까울 때만. 지역 필터와 무관한 전국 대상 */}
+      {/* 영화제 바로가기 — 회기 중이거나 개막이 가까울 때만. 지역 필터와 무관한 전국 대상.
+          feedback-audit-ignore — 진행 막대·"이동하는 중…"은 FestivalShortcutRow가 누를 때 띄운다 */}
       <FestivalShortcutRow
         festivals={festivals}
         today={toKstIsoDate(new Date())}

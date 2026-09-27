@@ -15,6 +15,12 @@
 // ================================
 
 import { trackEvent } from './client'
+import { RepeatTapTracker, STREAK_MS, tapTargetKey } from './repeatTap'
+
+/** 연타 계측 대상 — 누르는 요소. 표식(data-rc)이 없어도 잡는다 */
+const TAPPABLE = 'button, a[href], [role="button"], [role="tab"], [data-rc]'
+/** 원래 여러 번 누르는 요소 — 캐러셀·주 이동 버튼, 스테퍼 등. data-repeat-ok로 직접 뺄 수도 있다 */
+const REPEAT_OK = '[data-repeat-ok], [data-rc^="carousel-nav"], [data-rc^="datebar-week"]'
 
 /** 계측 대상 표식 — 컴포넌트 이름. rage click 집계 키와 동일한 값을 쓴다. */
 const RC_ATTR = 'data-rc'
@@ -120,6 +126,26 @@ function watchForResponse(rc: string, path: string): void {
 export function installDeadClickTracking(): () => void {
   if (typeof document === 'undefined') return () => {}
 
+  // 연타 — 같은 요소를 2초 안에 다시 누르고 주소가 그대로면 "반응이 안 보여 다시 누름"
+  const repeat = new RepeatTapTracker()
+  let flushTimer: ReturnType<typeof setTimeout> | null = null
+  const emitRepeat = (ev: ReturnType<RepeatTapTracker['flush']>) => {
+    if (ev && allow(`repeat:${ev.target}`, Date.now())) trackEvent('repeat tap', { target: ev.target, count: ev.count, path: ev.path })
+  }
+  const onTap = (e: MouseEvent) => {
+    const el = (e.target as Element | null)?.closest?.(TAPPABLE)
+    if (!(el instanceof HTMLElement) || el.closest(REPEAT_OK)) return
+    const target = tapTargetKey({
+      rc: el.getAttribute(RC_ATTR),
+      ariaLabel: el.getAttribute('aria-label'),
+      text: el.textContent,
+      tag: el.tagName,
+    })
+    emitRepeat(repeat.tap(target, window.location.href, window.location.pathname, Date.now()))
+    if (flushTimer) clearTimeout(flushTimer)
+    flushTimer = setTimeout(() => emitRepeat(repeat.flush(Date.now())), STREAK_MS + 50)
+  }
+
   const emitted = new Map<string, number[]>()
   let streakRc: string | null = null
   let streakCount = 0
@@ -172,5 +198,10 @@ export function installDeadClickTracking(): () => void {
   }
 
   document.addEventListener('click', onClick, true)
-  return () => document.removeEventListener('click', onClick, true)
+  document.addEventListener('click', onTap, true)
+  return () => {
+    document.removeEventListener('click', onClick, true)
+    document.removeEventListener('click', onTap, true)
+    if (flushTimer) clearTimeout(flushTimer)
+  }
 }

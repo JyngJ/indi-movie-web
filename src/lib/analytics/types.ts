@@ -67,6 +67,9 @@ export type AnalyticsEventName =
   /** 활성 상태인데 눌러도 화면이 전혀 안 변한 클릭 — disabled만 보던 'dead click'의 사각지대.
    *  온보딩/캐러셀처럼 "핸들러는 있는데 조용히 아무 일도 안 하는" 무반응을 잡는다. */
   | 'no-op click'
+  /** 같은 요소를 2초 안에 다시 누름(주소 변화 없음) — 반응이 안 보여 다시 누른 흔적.
+   *  target: data-rc·aria-label·글자, count: 묶음 안 탭 수. src/lib/analytics/repeatTap.ts */
+  | 'repeat tap'
 
 export type AnalyticsSource =
   | 'direct'

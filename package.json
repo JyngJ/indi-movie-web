@@ -14,6 +14,7 @@
     "crawl:seats": "tsx --env-file=.env.local scripts/crawl-seats.ts",
     "seo:indexnow": "tsx --env-file=.env.local scripts/submit-indexnow.ts",
     "seo:gsc": "tsx --env-file=.env.local scripts/gsc-report.ts",
+    "report:clicks": "tsx scripts/report-clicks.ts",
     "crawl:events": "tsx --env-file=.env.local scripts/crawl-events.ts",
     "seed:theaters": "tsx src/scripts/seed-theaters.ts",
     "seed:sources": "tsx src/scripts/seed-crawl-sources.ts",
@@ -29,6 +30,8 @@
     "audit:ui:check": "node scripts/audit/check-regression.mjs",
     "audit:writing": "node scripts/audit/audit-writing.mjs",
     "audit:writing:check": "node scripts/audit/check-writing.mjs",
+    "audit:feedback": "node scripts/audit/audit-feedback.mjs",
+    "audit:feedback:check": "node scripts/audit/check-feedback.mjs",
     "check:image-hosts": "node scripts/check-image-hosts.mjs",
     "notify:favorites": "tsx --env-file=.env.local scripts/notify-favorites.ts",
     "test:ui-contracts": "RUN_BROWSER_TESTS=1 vitest run src/components/map/mapLayers.browser.test.tsx src/components/navigation/RailPopover.browser.test.tsx src/components/primitives/FavoriteToggle.browser.test.tsx src/lib/navigation/filmsPath.test.ts src/components/domain/RouteProgressBar.browser.test.ts"
