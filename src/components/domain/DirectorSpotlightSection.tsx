@@ -102,7 +102,7 @@ function DirectorCard({ director, isDesktop, onClick }: { director: DirectorSpot
             style={{
               fontSize: size * 0.38,
               fontWeight: 700,
-              color: 'rgba(255,255,255,0.55)',
+              color: 'var(--color-on-scrim-sub)',
               fontFamily: 'var(--font-display)',
               userSelect: 'none',
             }}

@@ -58,6 +58,18 @@
   --color-surface-overlay-hover: rgba(0, 0, 0, 0.10);   /* IconButton overlay hover (Material state-layer식) */
   --color-surface-overlay-pressed: rgba(0, 0, 0, 0.14); /* IconButton overlay pressed */
 
+  /* ── 사진·포스터 위 (스크림) ──
+     어두운 면은 웜 블랙(15,12,9) — 포스터 순위 스크림과 같은 계열. 강도는 세 단계만 쓴다.
+     모달 뒤 딤은 위의 --color-scrim(0.55). */
+  --color-scrim-soft:     rgba(15, 12, 9, 0.45);   /* 비활성·조건 외 포스터 흐림 */
+  --color-scrim-strong:   rgba(15, 12, 9, 0.72);   /* 글자를 얹는 오버레이 (+N·상영 일정) · 사진 위 아이콘 버튼 */
+  --color-scrim-lightbox: rgba(15, 12, 9, 0.92);   /* 이미지 확대 보기 배경 */
+  /* 스크림·어두운 면 위 글자와 면 */
+  --color-on-scrim:         rgba(255, 255, 255, 0.9);    /* 주 텍스트 */
+  --color-on-scrim-sub:     rgba(255, 255, 255, 0.6);    /* 보조 텍스트·이니셜 */
+  --color-on-scrim-surface: rgba(255, 255, 255, 0.12);   /* 버튼·칩 바탕 */
+  --color-on-scrim-faint:   rgba(255, 255, 255, 0.15);   /* 워터마크 글자 */
+
   /* ── Text (라이트 모드)
       역할          토큰           HEX
       Primary       neutral/900    #0C0A08
@@ -140,6 +152,7 @@
   --color-gv-100: #E7DCF9;
 
   --color-white: #FFFFFF;
+  --color-black: #000000;   /* 원본 배경색을 알 수 없는 사진 뒤 고정 바탕 (인스타 카드) */
 
   /* ── Semantic — 2.0 뮤트 계급 통일 (형광 제거) ──
      주 사용 스탑: 밝은 배경 위 텍스트 + 솔리드 칩 배경 겸직 값 */
@@ -164,6 +177,9 @@
   --color-brand-kakao:       #FEE500;
   --color-brand-kakao-hover: #F2DA00;
   --color-brand-kakao-text:  rgba(0, 0, 0, 0.85);
+  /* 팀 소개 링크 — 각 서비스 브랜드 가이드 색 */
+  --color-brand-linkedin:    #0A66C2;
+  --color-brand-github:      #24292E;
 
   /* ── Typography: Families ── */
   /* display(KIMM): 제목·간판 전용. Bold(700)/Light(300) 2종.

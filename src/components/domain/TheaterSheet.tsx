@@ -95,7 +95,7 @@ function SynopsisCard({ synopsis, tags, visible, onSearchTheaters }: SynopsisCar
                     lineHeight: 1,
                     color: 'var(--color-neutral-200)',
                     border: '1px solid var(--color-neutral-600)',
-                    backgroundColor: 'rgba(255,255,255,0.08)',
+                    backgroundColor: 'var(--color-on-scrim-surface)',
                     borderRadius: 9999,
                     paddingLeft: 12,
                     paddingRight: 12,
@@ -1196,7 +1196,7 @@ export function TheaterSheet({
                               <div style={{
                                 position: 'absolute', inset: 0,
                                 borderRadius: 0,
-                                background: 'rgba(10, 8, 6, 0.45)',
+                                background: 'var(--color-scrim-soft)',
                                 pointerEvents: 'none',
                               }} />
                             )}
@@ -1519,30 +1519,30 @@ export function TheaterSheet({
                                       style={{
                                         position: 'absolute', inset: 0,
                                         borderRadius: 0,
-                                        background: 'rgba(10, 8, 6, 0.72)',
+                                        background: 'var(--color-scrim-strong)',
                                         display: 'flex', flexDirection: 'column',
                                         alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
                                         gap: 4,
                                       }}
                                     >
-                                      <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.6)', textAlign: 'center' }}>
+                                      <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--color-on-scrim-sub)', textAlign: 'center' }}>
                                         상영 일정
                                       </span>
                                       {dateLabels.length > 0 ? (
                                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                                           {dateLabels.map(({ iso, label }) => (
-                                            <span key={iso} style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.9)', lineHeight: 1.3 }}>
+                                            <span key={iso} style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-on-scrim)', lineHeight: 1.3 }}>
                                               {label}
                                             </span>
                                           ))}
                                           {moreCount > 0 && (
-                                            <span style={{ fontSize: 10, fontWeight: 500, color: 'rgba(255,255,255,0.55)', marginTop: 4 }}>
+                                            <span style={{ fontSize: 10, fontWeight: 500, color: 'var(--color-on-scrim-sub)', marginTop: 4 }}>
                                               +{moreCount}
                                             </span>
                                           )}
                                         </div>
                                       ) : (
-                                        <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.85)', textAlign: 'center' }}>
+                                        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-on-scrim)', textAlign: 'center' }}>
                                           일정 없음
                                         </span>
                                       )}
@@ -1589,10 +1589,10 @@ export function TheaterSheet({
                                     <div style={{
                                       position: 'absolute', inset: 0,
                                       borderRadius: 0,
-                                      background: 'rgba(0,0,0,0.45)',
+                                      background: 'var(--color-scrim-soft)',
                                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     }}>
-                                      <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.9)', textAlign: 'center', lineHeight: 1.3 }}>
+                                      <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-on-scrim)', textAlign: 'center', lineHeight: 1.3 }}>
                                         조건 외
                                       </span>
                                     </div>
@@ -1847,7 +1847,7 @@ export function TheaterSheet({
         <div
           style={{
             position: 'absolute', inset: 0,
-            backgroundColor: 'rgba(0,0,0,0.45)',
+            backgroundColor: 'var(--color-scrim)',
             zIndex: 200,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}

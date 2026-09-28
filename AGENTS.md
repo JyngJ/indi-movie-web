@@ -58,7 +58,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
   - spacing/radius는 4배수만 사용: `max(4, round(n/4)*4)`. gutter(좌우여백)는 `var(--gutter)`/`var(--gutter-md)`/`var(--gutter-sm)` = 16/12/8px (최상위 → 중첩 순).
   - radius는 역할 토큰 사용: `--radius-badge` / `--radius-poster` / `--radius-button` / `--radius-control` / `--radius-popover` / `--radius-sheet` / `--radius-pill`.
   - fontSize는 `--text-*` 타입 스케일 최근접 값으로. 하드코딩 px 금지.
-  - 색은 시맨틱 토큰 사용: `--color-error` / `--color-success` / `--color-warning` / `--color-info` / `--color-gv`. 액센트 배경 위 흰색 텍스트는 `--color-on-accent`.
+  - 색은 시맨틱 토큰 사용: `--color-error` / `--color-success` / `--color-warning` / `--color-info` / `--color-gv`. 액센트 배경 위 흰색 텍스트는 `--color-on-accent`. 사진·포스터 위 어두운 면은 `--color-scrim-soft`/`-strong`/`-lightbox`(모달 뒤 딤은 `--color-scrim`), 그 위 글자·면은 `--color-on-scrim`/`-sub`/`-surface`/`-faint`. 새 알파값을 만들지 말고 이 단계 중에서 고른다.
   - 포스터 오버레이 칩 정책 (2026-08-13 개정): fontSize `--text-meta`(12) / fontWeight 700, padding `8px 12px`, `--radius-badge`, lineHeight 1, offset 6px. 구 정책은 11px/600/`4px 8px`였는데 문서만 11px이고 코드는 `--text-badge`(10px)를 써서 셋이 어긋나 있었다 — 포스터 위에서 작아 안 읽히는 문제가 있어 한 단계 키우고 토큰으로 고정했다.
   - 코너 태그(`PosterChip attached`, 2026-09-27): 칩 값이 (영화, 오늘 날짜)만으로 정해지면 포스터 모서리에 붙인다(개봉 주년 · 막바지 D-N — D-N은 전국 최종 상영일 기준). 극장·회차·보는 사람의 위치 중 하나라도 필요하면 떠 있는 칩으로 둔다(매진 · 회차 시각 · 거리 · GV 유형). 상세 기준·경계 사례는 `guides.ts` PosterChip. **좌상단 한 자리만** 쓰고, 겹치면 막바지 D-N이 개봉 주년보다 우선. 색은 scrim이 기본이고 막바지 오늘=error · D-1=warning만 의미색.
   - 포스터 좌하단은 **순위 전용**으로 비워 둔다. 랭킹 섹션이 스크림(높이 42% · 투명 → `rgba(15,12,9,0.78)`) + KIMM 숫자(포스터 높이의 31%)를 얹는다. 다른 칩을 좌하단에 두지 말 것.

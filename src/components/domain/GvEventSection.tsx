@@ -164,7 +164,7 @@ export function GvEventSection({ events: allEvents, theaterName, selectedIsoDate
                     ) : (
                       <span style={{
                         fontFamily: 'var(--font-display)',
-                        fontSize: 'var(--text-h2)', fontWeight: 900, color: 'rgba(255,255,255,0.15)',
+                        fontSize: 'var(--text-h2)', fontWeight: 900, color: 'var(--color-on-scrim-faint)',
                         userSelect: 'none',
                       }}>{ev.label}</span>
                     )}

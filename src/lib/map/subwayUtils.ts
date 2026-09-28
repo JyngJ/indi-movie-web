@@ -23,6 +23,9 @@ export interface SubwayLineProperties {
 export const SUBWAY_LINE_MIN_ZOOM = 15
 export const STATION_PIN_MIN_ZOOM = 15
 export const STATION_PIN_FULL_ZOOM = 17
+/** 역 마커의 바깥 링·안쪽 면. 지도 핀과 검색 결과 아이콘이 같은 모양을 쓴다. */
+export const SUBWAY_MARKER_RING = '#111'
+export const SUBWAY_MARKER_FILL = '#fff'
 
 const SEOUL_SUBWAY_LINE_COLORS: Record<string, { light: string; dark: string }> = {
   '1': { light: '#0052A4', dark: '#4C8ED1' },
@@ -146,8 +149,8 @@ export function makeStationIcon(station: Station, isDark: boolean, zoom: number)
   const coreSize = Math.max(3, DOT - (outerStroke + innerStroke) * 2)
   const html = `
     <div title="${escapeHtml(station.name)}" style="width:120px;display:flex;flex-direction:column;align-items:center;gap:${GAP}px;overflow:visible;position:relative;">
-      <div style="width:${DOT}px;height:${DOT}px;border-radius:50%;background:#111;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.2);opacity:0.7;">
-        <div style="width:${DOT - outerStroke * 2}px;height:${DOT - outerStroke * 2}px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;">
+      <div style="width:${DOT}px;height:${DOT}px;border-radius:50%;background:${SUBWAY_MARKER_RING};display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.2);opacity:0.7;">
+        <div style="width:${DOT - outerStroke * 2}px;height:${DOT - outerStroke * 2}px;border-radius:50%;background:${SUBWAY_MARKER_FILL};display:flex;align-items:center;justify-content:center;">
           <div style="width:${coreSize}px;height:${coreSize}px;border-radius:50%;background:${color};"></div>
         </div>
       </div>

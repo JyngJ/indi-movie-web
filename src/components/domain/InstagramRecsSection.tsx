@@ -156,7 +156,7 @@ function InstagramRecCard({
         ...(isDesktop ? { height: DESKTOP_CARD_HEIGHT } : { aspectRatio: '4/3' }),
         // 카드뉴스 원본이 흰/검 배경 섞여있어 var(--color-surface-card)(라이트/다크 테마 따라 바뀜)로
         // 두면 mask 페이드 경계에서 사진 자체 배경색과 안 맞아 이질감 생김 — 항상 검정 고정.
-        backgroundColor: '#000',
+        backgroundColor: 'var(--color-black)',
         cursor: 'pointer', minHeight: 'auto',
       }}
       aria-label={title}

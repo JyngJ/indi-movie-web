@@ -90,7 +90,7 @@ export function GvDetailPanel({ ev, onClose, onCloseAll, panelMode }: GvDetailPa
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: '0 4px 16px rgba(0,0,0,0.20)',
           }}>
-            <span style={{ fontFamily: 'var(--font-display, sans-serif)', fontSize: 24, fontWeight: 700, color: 'rgba(255,255,255,0.8)' }}>
+            <span style={{ fontFamily: 'var(--font-display, sans-serif)', fontSize: 24, fontWeight: 700, color: 'var(--color-on-scrim)' }}>
               {ev.label}
             </span>
           </div>
