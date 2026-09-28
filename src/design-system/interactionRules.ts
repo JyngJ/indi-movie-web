@@ -34,6 +34,7 @@ export const INTERACTION_RULES = [
       '포스터의 아이콘 토글은 FavoriteButton, 상세의 문구 있는 토글은 FavoriteToggle을 사용해요. 로그인과 저장은 호출부에서 처리해요.',
       '상세 관심 토글은 미등록일 때 회색, 등록하면 옅은 빨강이에요. 문구가 바뀌어도 폭을 유지하고 reduced motion에서는 확대 애니메이션을 꺼요.',
       '상세의 명령형 이동은 useProgressRouter를 사용해요. RouteProgressBar는 Providers에 한 번만 두고, 메뉴 선택과 뒤로가기는 isFilmsPath로 상영작 경로를 판정해요.',
+      'RouteProgressBar는 모바일에서 하단 메뉴 바 바로 위에, 데스크톱에서 본문 상단에 붙여요. 모바일 엄지 동선 가까이에서 이동이 시작됐음을 보여 줘요.',
     ],
   },
 ]

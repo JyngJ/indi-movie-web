@@ -4,7 +4,13 @@ import { buildSync } from 'esbuild'
 import { chromium } from 'playwright-chromium'
 import { expect, it } from 'vitest'
 
-it.skipIf(process.env.RUN_BROWSER_TESTS !== '1')('상세 이동을 시작하면 진행 표시가 뜨고 목적지 반영 후 종료한다', async () => {
+// 데스크톱은 본문 상단, 모바일은 하단 메뉴 바(64px) 바로 위에 붙는다.
+const LAYOUTS = [
+  { name: '데스크톱', isDesktop: true, edge: 'top', expected: '0px' },
+  { name: '모바일', isDesktop: false, edge: 'bottom', expected: '64px' },
+] as const
+
+it.skipIf(process.env.RUN_BROWSER_TESTS !== '1').each(LAYOUTS)('$name: 상세 이동을 시작하면 진행 표시가 뜨고 목적지 반영 후 종료한다', async ({ isDesktop, edge, expected }) => {
   const root = process.cwd()
   const temp = mkdtempSync(join(root, '.ui-navigation-'))
   const browser = await chromium.launch()
@@ -19,7 +25,7 @@ it.skipIf(process.env.RUN_BROWSER_TESTS !== '1')('상세 이동을 시작하면 
       export const useRouter = () => router;
       export const usePathname = () => useSyncExternalStore(fn => { listeners.add(fn); return () => listeners.delete(fn); }, () => path);
     `)
-    writeFileSync(join(temp, 'layout.js'), 'export const useIsDesktopLayout = () => true; export const GLOBAL_NAV_DESKTOP_WIDTH = 64;')
+    writeFileSync(join(temp, 'layout.js'), `export const useIsDesktopLayout = () => ${isDesktop}; export const GLOBAL_NAV_DESKTOP_WIDTH = 64; export const GLOBAL_NAV_MOBILE_HEIGHT = 64;`)
     const bundle = buildSync({
       stdin: {
         contents: `
@@ -54,7 +60,7 @@ it.skipIf(process.env.RUN_BROWSER_TESTS !== '1')('상세 이동을 시작하면 
     expect(await bar.count()).toBe(0)
     await page.getByRole('button', { name: '다른 상세' }).click()
     await bar.waitFor({ state: 'visible' })
-    expect(await bar.evaluate(el => getComputedStyle(el).top)).toBe('0px')
+    expect(await bar.evaluate((el, side) => getComputedStyle(el)[side], edge)).toBe(expected)
     expect(await bar.count()).toBe(1)
     await page.evaluate(() => (window as unknown as { finishNavigation(path: string): void }).finishNavigation('/movie/2'))
     await bar.waitFor({ state: 'detached' })

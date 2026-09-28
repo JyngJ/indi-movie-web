@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useEffect, useRef, useState } from 'react'
-import { GLOBAL_NAV_DESKTOP_WIDTH } from '@/components/navigation/GlobalNav'
+import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 
 /** 공통 레이아웃에서 이동 시작부터 목적지 경로 반영까지 표시한다. */
 export function navStart() {
@@ -61,7 +61,10 @@ export function RouteProgressBar() {
       aria-hidden
       style={{
         position: 'fixed',
-        top: 0,
+        // 모바일: 하단 메뉴 바 바로 위에 밀착 / 데스크톱: 본문(레일 제외) 상단
+        ...(isDesktop
+          ? { top: 0 }
+          : { bottom: `calc(${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))` }),
         left: isDesktop ? GLOBAL_NAV_DESKTOP_WIDTH : 0,
         right: 0,
         height: 3,
