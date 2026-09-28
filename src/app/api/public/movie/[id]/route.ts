@@ -1,4 +1,5 @@
 import { getMovieDetail } from '@/lib/catalog/getMovieDetail'
+import { SHOWTIME_API_CACHE } from '@/lib/http/cachePolicy'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,7 +11,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
   return Response.json(movie, {
     headers: {
-      'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1800',
+      'Cache-Control': SHOWTIME_API_CACHE,
     },
   })
 }

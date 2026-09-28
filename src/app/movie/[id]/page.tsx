@@ -12,10 +12,16 @@ import { ogImageUrl } from '@/lib/og/cards'
    그대로 Vercel Fluid Active CPU로 나갔다 — 2026-09 무료 한도(4h)를 넘겼다.
    DB는 이미 캐시 뒤에 있어서(getMovieDetail·getMovieShowtimesForSsr) 요청마다 드는 건
    렌더 비용뿐이었다. 그래서 ISR로 돌린다.
-   주기는 next.config의 CDN 캐시(s-maxage=300)와 맞춘다 — 두 값이 어긋나면 어느 쪽이 신선도를 정하는지 알기 어려워진다.
+   주기는 next.config의 CDN 캐시(s-maxage)와 맞춘다 — 두 값이 어긋나면 어느 쪽이 신선도를 정하는지 알기 어려워진다.
    회차별 OG 카드가 필요한 공유 링크는 /movie/[id]/s/[showtimeId]가 맡는다(쿼리를 읽지
-   않아야 이 페이지가 정적으로 남는다). */
-export const revalidate = 300
+   않아야 이 페이지가 정적으로 남는다).
+
+   ISR로 바꾼 뒤에도 CPU가 줄지 않았다(2026-09 하루 9~10분 그대로). 5분 주기는 트래픽이
+   적은 사이트에선 거의 모든 방문이 "5분 넘게 묵은 캐시"를 만나 다시 그리게 만든다.
+   상영 시간표는 하루 3번 바뀌므로 주기를 1시간으로 늘리고, 크롤이 끝나면
+   /api/revalidate가 상영 데이터 태그를 무효화해 바로 반영되게 했다(scripts/crawl-showtimes.ts).
+   이 값을 바꾸면 회차 공유·극장 상세 페이지와 next.config의 detail 헤더도 같이 바꾼다. */
+export const revalidate = 3600
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'
 

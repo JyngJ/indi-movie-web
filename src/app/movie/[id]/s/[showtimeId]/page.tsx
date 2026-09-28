@@ -16,7 +16,8 @@ import { MovieBody } from '../../MovieBody'
  *
  *  날짜·극장은 회차 id로 찾는다 — 공유 링크에 셋을 다 실을 이유가 없다.
  *  검색 대상은 본 상세 하나여야 하므로 canonical을 그쪽으로 걸고 색인에서 뺀다. */
-export const revalidate = 300
+// 주기와 크롤 후 즉시 갱신 방식은 movie/[id]/page.tsx 주석 참고 — 값은 함께 움직인다.
+export const revalidate = 3600
 
 async function locate(id: string, showtimeId: string) {
   const showtimes = await getMovieShowtimesForSsr(id)

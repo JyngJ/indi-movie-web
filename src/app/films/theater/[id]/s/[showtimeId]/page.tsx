@@ -10,7 +10,8 @@ import { TheaterBody } from '../../TheaterBody'
 /** 회차 공유 링크 — /films/theater/[id]/s/[showtimeId]
  *  영화 상세의 같은 경로와 한 쌍이다. 쿼리(`?date=&showtime=`)로 회차를 싣던 시절엔
  *  OG 카드를 굽느라 극장 상세 전체가 매 요청 렌더로 굳었다. */
-export const revalidate = 300
+// 주기와 크롤 후 즉시 갱신 방식은 movie/[id]/page.tsx 주석 참고 — 값은 함께 움직인다.
+export const revalidate = 3600
 
 export async function generateMetadata({
   params,

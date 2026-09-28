@@ -1,5 +1,6 @@
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { toSecureImageUrl } from '@/lib/media/imageUrl'
+import { SHOWTIME_API_CACHE } from '@/lib/http/cachePolicy'
 
 export const dynamic = 'force-dynamic'
 
@@ -77,7 +78,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
   return Response.json(result, {
     headers: {
-      'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300',
+      'Cache-Control': SHOWTIME_API_CACHE,
     },
   })
 }

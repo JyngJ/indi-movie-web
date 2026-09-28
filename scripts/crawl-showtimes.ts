@@ -6,7 +6,7 @@ import type { CrawlRun } from '../src/types/admin'
 import { autoMatchShowtimeCandidates } from '../src/lib/admin/store'
 import { runAllSources } from '../src/lib/crawl/run-all-sources'
 import { notifyDiscord, notifyDiscordError, notifyDiscordMatch, notifyDiscordStart } from '../src/lib/crawl/notify-discord'
-import { buildChangedUrls, submitToIndexNow } from '../src/lib/seo/indexNow'
+import { buildChangedUrls, siteOrigin, submitToIndexNow } from '../src/lib/seo/indexNow'
 
 function formatRun(current: number, total: number, run: CrawlRun) {
   const progress = `[${String(current).padStart(String(total).length, ' ')}/${total}]`
@@ -58,7 +58,25 @@ async function main() {
     await notifyDiscordError('📽 자동매칭', msg)
   }
 
-  // 4단계: IndexNow 통보 — 상영 시간표는 하루 3번 바뀌는데 사이트맵만으로는 재크롤링이
+  // 4단계: 사이트 캐시 갱신 — 상세 페이지는 1시간 ISR이라, 알리지 않으면 방금 수집한
+  // 시간표가 최대 1시간 늦게 보인다. 검색엔진을 부르기(IndexNow) 전에 먼저 무효화해야
+  // 크롤러가 새 시간표를 가져간다. 실패해도 1시간 뒤엔 저절로 갱신되므로 파이프라인은 계속한다.
+  const cronSecret = process.env.CRON_SECRET
+  if (!cronSecret) {
+    console.warn('\n캐시 갱신 스킵 — CRON_SECRET 없음(.env.local에 Vercel과 같은 값을 넣을 것)')
+  } else {
+    try {
+      const res = await fetch(`${siteOrigin()}/api/revalidate`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${cronSecret}` },
+      })
+      console.log(res.ok ? '\n사이트 캐시 갱신 요청 완료' : `\n사이트 캐시 갱신 거부됨 (HTTP ${res.status})`)
+    } catch (e) {
+      console.warn(`사이트 캐시 갱신 실패(스킵): ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+
+  // 5단계: IndexNow 통보 — 상영 시간표는 하루 3번 바뀌는데 사이트맵만으로는 재크롤링이
   // 수 주 늦는다. 바뀐 URL을 Bing 쪽에 직접 밀어넣는다(ChatGPT 검색이 Bing 인덱스를 쓴다).
   // 색인 통보는 부가 작업이라 실패해도 파이프라인을 중단하지 않는다.
   try {

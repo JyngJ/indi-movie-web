@@ -32,15 +32,15 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
       /* 답변형 AI 크롤러를 명시적으로 허용한다. `*` 규칙으로도 통과하지만,
          일부 크롤러는 자기 이름의 규칙이 있는지부터 보고 없으면 보수적으로 굴며
          WAF·CDN 쪽에서 UA 기준으로 막히는 사고도 흔하다. 의도를 문서로 남기는 의미도 있다.
-         (GPTBot=학습, OAI-SearchBot/ChatGPT-User=ChatGPT 검색·인용) */
+         (OAI-SearchBot/ChatGPT-User=ChatGPT 검색·인용, Claude-SearchBot/Claude-User=Claude 검색·인용)
+         Google-Extended·Applebot-Extended는 크롤러가 아니라 "학습에 써도 되나"를 묻는 표식이라
+         여기 둬도 트래픽이 늘지 않는다. */
       {
         userAgent: [
-          'GPTBot',
           'OAI-SearchBot',
           'ChatGPT-User',
           'PerplexityBot',
           'Perplexity-User',
-          'ClaudeBot',
           'Claude-User',
           'Claude-SearchBot',
           'Google-Extended',
@@ -49,6 +49,14 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
         ],
         allow: '/',
         disallow,
+      },
+      /* 학습 전용 크롤러는 막는다(2026-09). 답변에 이 사이트를 인용하는 경로는 위 검색용 봇이
+         따로 맡고, 이쪽은 사이트 전체를 훑어 가기만 한다. 영화·감독 상세가 수천 쪽이라 한 번
+         훑을 때마다 캐시가 식은 페이지를 다시 그리게 되고, 그게 Vercel CPU로 나간다.
+         robots.txt를 따르는 봇에만 통한다 — 무시하는 봇은 Vercel Firewall에서 막아야 한다. */
+      {
+        userAgent: ['GPTBot', 'ClaudeBot', 'CCBot', 'Bytespider', 'meta-externalagent'],
+        disallow: '/',
       },
     ],
     sitemap: [`${BASE_URL}/sitemap.xml`, ...movieSitemaps],
