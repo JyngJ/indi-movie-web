@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
+import { GLOBAL_NAV_DESKTOP_WIDTH } from '@/components/navigation/GlobalNav'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { FooterWordmark } from '@/components/domain/FooterWordmark'
 import type { FaqSection } from './content'
@@ -112,7 +112,7 @@ export function FaqClient({ sections }: { sections: FaqSection[] }) {
       style={{
         minHeight: '100dvh',
         paddingLeft: isDesktop ? GLOBAL_NAV_DESKTOP_WIDTH : 0,
-        paddingBottom: isDesktop ? 40 : `calc(${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom) + 24px)`,
+        paddingBottom: isDesktop ? 40 : 'calc(var(--nav-mobile-offset) + 24px)',
         backgroundColor: 'var(--color-surface-bg)',
       }}
     >

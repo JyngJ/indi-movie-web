@@ -7,7 +7,6 @@ import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
 import { FavoriteToggle } from '@/components/domain/favorites/FavoriteToggle'
 import { BookingCtaButton, CloseRoundButton, type BookingCtaLabels } from '@/components/domain/booking/BookingActions'
 import { useFavorites } from '@/hooks/useFavorites'
-import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { trackEvent } from '@/lib/analytics/client'
 import { scrollRailBy } from '@/lib/ui/railScroll'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
@@ -622,7 +621,7 @@ function SelectedScreening({ row, day, isDesktop, onClose }: { row: FestivalScre
   ) : (
     <div style={{
       // DetailShell이 모바일 하단 탭바를 띄운다 — 극장 상세처럼 그 위에 붙인다
-      position: 'fixed', left: 0, right: 0, bottom: `calc(${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`, zIndex: 'var(--z-navigation)',
+      position: 'fixed', left: 0, right: 0, bottom: 'var(--nav-mobile-offset)', zIndex: 'var(--z-navigation)',
       padding: 'var(--spacing-3) var(--gutter) var(--spacing-4)',
       backgroundColor: 'var(--color-surface-card)', borderTop: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sheet)',
     }}>

@@ -37,6 +37,8 @@ import { naverDirectionsUrls } from '@/lib/map/directions'
 
 /* ── 상수 ──────────────────────────────────────────────────────── */
 // 접힌 상태에서 보이는 높이 — 피그마 TOBE collapsed: 핸들(24) + 헤더(128) + 포스터스트립(262, 포스터 238 + 상하 12)
+// 드래그 계산에 숫자가 필요해 safe-area(아이폰 홈 인디케이터)는 빠져 있다 — 아이폰에서는 탭바가 그만큼 더 높아
+// 보이는 시트가 약 34px 줄어든다. 고치려면 safe-area를 런타임에 읽어야 해서 보류(2026-09, --nav-mobile-offset 도입 시 확인).
 export const THEATER_SHEET_COLLAPSED_H = 414 + GLOBAL_NAV_MOBILE_HEIGHT
 
 /* ── 포스터 캐러셀 레이아웃 — 2.0: 고정폭 128 (피그마 PosterItem 스펙) ──
@@ -1104,7 +1106,7 @@ export function TheaterSheet({
         backgroundColor: 'var(--color-surface-bg)',
         flexShrink: 0,
         // 스크롤 비례 높이 축소 (228 → 90) + 하단 탭바 및 safe-area만큼 높이 확장
-        maxHeight: `calc(${262 - 172 * posterProgress}px + ${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`,
+        maxHeight: `calc(${262 - 172 * posterProgress}px + var(--nav-mobile-offset))`,
         overflow: 'hidden',
         position: 'relative',  // 스크롤 버튼 절대 위치 기준
       }}>
@@ -1133,7 +1135,7 @@ export function TheaterSheet({
             paddingTop: 12,    /* 2.0: 피그마 posters pad */
             paddingLeft: POSTER_PAD_LEFT,
             paddingRight: POSTER_PAD_LEFT,
-            paddingBottom: `calc(12px + ${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`,
+            paddingBottom: 'calc(12px + var(--nav-mobile-offset))',
             scrollbarWidth: 'none',
             cursor: 'grab',
             userSelect: 'none',
@@ -1251,8 +1253,8 @@ export function TheaterSheet({
             backgroundColor: panelMode ? 'var(--color-surface-bg)' : undefined,
             // 회차 선택 시 하단에서 뜨는 예매 바가 마지막 회차를 가리지 않도록 여백 확보
             paddingBottom: (selectedShowtimeId && showtimeInView)
-              ? (panelMode ? 'calc(88px + env(safe-area-inset-bottom))' : `calc(88px + ${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`)
-              : (panelMode ? 'env(safe-area-inset-bottom)' : `calc(${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`),
+              ? (panelMode ? 'calc(88px + env(safe-area-inset-bottom))' : 'calc(88px + var(--nav-mobile-offset))')
+              : (panelMode ? 'env(safe-area-inset-bottom)' : 'var(--nav-mobile-offset)'),
           }}
         >
           {/* 극장 정보 — 스크롤 시 위로 밀림 */}
@@ -1793,7 +1795,7 @@ export function TheaterSheet({
             backgroundColor: 'var(--color-surface-card)',
             borderTop: '1px solid var(--color-border)',
             padding: '12px var(--gutter-sheet)',
-            paddingBottom: panelMode ? 'max(12px, env(safe-area-inset-bottom))' : `calc(12px + ${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`,
+            paddingBottom: panelMode ? 'max(12px, env(safe-area-inset-bottom))' : 'calc(12px + var(--nav-mobile-offset))',
             zIndex: 10,
             display: 'flex', gap: 12,
           }}>

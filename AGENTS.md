@@ -128,6 +128,7 @@ The crawler runs on a Raspberry Pi (`ssh pi@100.76.84.97`, Tailscale). Full runb
 - 고정 높이 패널 본문은 `PanelScrollBody`, 메뉴는 `MenuCard` + `MenuRow`를 사용한다. 본문에 flex column을 직접 적용해 메뉴 카드를 축소하지 않는다.
 - 상세 관심 액션은 `FavoriteActionButton`/`FavoriteActionRow`를 사용한다. 표현 원본은 `FavoriteToggle`이며 상태색·폭 유지·reduced motion을 화면별로 복제하지 않는다.
 - 상세의 명령형 이동은 `useProgressRouter`, 상영작 영역 판정은 `isFilmsPath`를 공유한다.
+- 모바일 하단 메뉴 바를 비킬 때는 `var(--nav-mobile-offset)`(64px + `safe-area-inset-bottom`)을 쓴다. `GLOBAL_NAV_MOBILE_HEIGHT`(64)를 스타일에 직접 더하지 말 것 — safe-area를 빠뜨려 아이폰에서 지도 버튼이 바에 깔렸고, 부모·자식이 둘 다 더해 로고 아래가 이중으로 비었다(2026-09). 숫자가 꼭 필요한 드래그 계산만 상수를 쓴다.
 - 위 동작을 바꾸면 `npm run test:ui-contracts`를 실행한다. PR에서도 `ui-interaction-regression`으로 검사한다.
 
 ## 알림 그릇 (토스트 기준)

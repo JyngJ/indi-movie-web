@@ -4,7 +4,6 @@ import type { GvEvent } from '@/data/gv-events'
 import { gvEventTypeColor } from '@/lib/gv/adapter'
 import { trackEvent } from '@/lib/analytics/client'
 import { shareAndTrack } from '@/lib/analytics/shareTracking'
-import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { IconButton, Icon, ListRow } from '@/components/primitives'
 import { BookingCtaButton, ShareScheduleButton } from './booking/BookingActions'
 
@@ -12,7 +11,7 @@ interface GvDetailPanelProps {
   ev: GvEvent
   onClose: () => void
   onCloseAll?: () => void
-  /** 데스크톱 독/플로팅 패널 모드 — true면 하단 탭바가 없어 GLOBAL_NAV_MOBILE_HEIGHT 여백이 필요 없다 */
+  /** 데스크톱 독/플로팅 패널 모드 — true면 하단 탭바가 없어 --nav-mobile-offset 여백이 필요 없다 */
   panelMode?: boolean
 }
 
@@ -153,15 +152,16 @@ export function GvDetailPanel({ ev, onClose, onCloseAll, panelMode }: GvDetailPa
         )}
 
         {/* Spacer for footer */}
-        <div style={{ height: panelMode ? 88 : 88 + GLOBAL_NAV_MOBILE_HEIGHT }} />
+        <div style={{ height: panelMode ? 88 : 'calc(88px + var(--nav-mobile-offset))' }} />
       </div>
 
-      {/* CTA footer — 모바일에서는 하단 탭바에 가리지 않도록 GLOBAL_NAV_MOBILE_HEIGHT만큼 띄운다 */}
+      {/* CTA footer — 모바일에서는 하단 탭바(safe-area 포함) 바로 위에 둔다.
+          safe-area는 탭바가 이미 차지하므로 화면 끝 여백 없이 상하 12로 둔다 */}
       <div style={{
         position: 'absolute',
-        bottom: panelMode ? 0 : GLOBAL_NAV_MOBILE_HEIGHT,
+        bottom: panelMode ? 0 : 'var(--nav-mobile-offset)',
         left: 0, right: 0,
-        padding: '12px var(--gutter) max(16px, env(safe-area-inset-bottom))',
+        padding: panelMode ? '12px var(--gutter) max(16px, env(safe-area-inset-bottom))' : '12px var(--gutter)',
         background: 'var(--color-surface-card)',
         borderTop: '1px solid var(--color-border)',
         display: 'flex', gap: 12,

@@ -12,7 +12,7 @@ import {
   type SettingsPage,
 } from '@/components/map/SettingsPanel'
 import { TransitionPanel, slideVariants } from '@/components/motion'
-import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
+import { GLOBAL_NAV_DESKTOP_WIDTH } from '@/components/navigation/GlobalNav'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 
 /* TransitionPanel 자식 순서와 일치해야 한다 */
@@ -68,7 +68,7 @@ function MorePageContent() {
         display: 'flex',
         flexDirection: 'column',
         minHeight: '100dvh',
-        paddingBottom: `calc(${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`,
+        paddingBottom: 'var(--nav-mobile-offset)',
         backgroundColor: 'var(--color-surface-bg)',
       }}
     >
