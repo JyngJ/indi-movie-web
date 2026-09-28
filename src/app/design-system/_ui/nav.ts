@@ -94,6 +94,7 @@ export const NAV_GROUPS = () => [
     href: '/design-system/maintenance',
     items: [
       { href: '/design-system/drift', label: '코드 ↔ 피그마 차이' },
+      { href: '/design-system/checks', label: 'CI 검사' },
       { href: '/design-system/ai', label: 'AI Collaboration' },
     ],
   },
