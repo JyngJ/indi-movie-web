@@ -56,15 +56,27 @@ export function ogImageUrl(
 const POSTER = { width: 340, height: 510 }
 const WORDMARK = { width: 141, height: 48 }
 
-async function loadKimmBold() {
-  return readFile(path.join(process.cwd(), 'public/fonts/KIMM_bold.ttf'))
+/* 폰트(900KB)와 워드마크는 배포 동안 바뀌지 않는다. 카드마다 디스크에서 다시 읽고
+   base64로 다시 굽던 것을 인스턴스당 한 번으로 줄인다(Fluid 인스턴스는 요청 사이에 재사용된다).
+   실패한 읽기는 캐시하지 않아 다음 요청이 다시 시도한다. */
+let kimmBold: Promise<Buffer> | null = null
+let wordmarkUri: Promise<string> | null = null
+
+function loadKimmBold() {
+  kimmBold ??= readFile(path.join(process.cwd(), 'public/fonts/KIMM_bold.ttf'))
+    .catch((e) => { kimmBold = null; throw e })
+  return kimmBold
 }
 
 /** public/logo.svg(워드마크)를 primary/700로 물들여 data URI로. satori는 img의 SVG data URI를 렌더한다. */
-async function loadWordmarkDataUri() {
-  const raw = await readFile(path.join(process.cwd(), 'public/logo.svg'), 'utf8')
-  const tinted = raw.replace(/#C9C4B5/gi, OG_COLOR.wordmark)
-  return `data:image/svg+xml;base64,${Buffer.from(tinted).toString('base64')}`
+function loadWordmarkDataUri() {
+  wordmarkUri ??= readFile(path.join(process.cwd(), 'public/logo.svg'), 'utf8')
+    .then((raw) => {
+      const tinted = raw.replace(/#C9C4B5/gi, OG_COLOR.wordmark)
+      return `data:image/svg+xml;base64,${Buffer.from(tinted).toString('base64')}`
+    })
+    .catch((e) => { wordmarkUri = null; throw e })
+  return wordmarkUri
 }
 
 function ogResponse(node: React.ReactElement, fontBold: Buffer) {

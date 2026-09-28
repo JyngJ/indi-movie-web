@@ -1,6 +1,7 @@
 import { getCatalog } from '@/lib/catalog/store'
+import { SHOWTIME_API_CACHE } from '@/lib/http/cachePolicy'
 
-const CACHE_CONTROL = 'public, s-maxage=300, stale-while-revalidate=600'
+const CACHE_CONTROL = SHOWTIME_API_CACHE
 
 export async function GET() {
   try {

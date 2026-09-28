@@ -1,5 +1,6 @@
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { getMovieTheaterShowtimes } from '@/lib/catalog/getMovieTheaterShowtimes'
+import { SHOWTIME_API_CACHE } from '@/lib/http/cachePolicy'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,7 +15,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const entries = await getMovieTheaterShowtimes(supabase, id, { from, until })
     return Response.json(entries, {
       headers: {
-        'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300',
+        'Cache-Control': SHOWTIME_API_CACHE,
       },
     })
   } catch (error) {

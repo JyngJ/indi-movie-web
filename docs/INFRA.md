@@ -146,3 +146,21 @@ Vercel Production Deploy
    ↓
 Supabase는 별도 마이그레이션 (백엔드 담당)
 ```
+
+## Vercel 사용량 관리 (2026-09)
+
+무료(Hobby) 한도 중 **Fluid Active CPU(월 4시간)** 가 먼저 찼다. 서버에서 코드가 실제로 CPU를 쓴 시간이다.
+2026-09 기준 하루 9~10분(월 5시간 안팎)이었고, 9/13~17 상세 페이지 ISR 전환(#346·#359·#362) 뒤에도 줄지 않았다.
+하루 CPU가 PostHog 페이지뷰와 같이 움직여서(9/23~26 동반 상승) 사람 방문에 딸린 서버 작업을 먼저 줄였다.
+
+| 조치 | 위치 | 이유 |
+|---|---|---|
+| 회차·상영 API 캐시 2분 → 30분 | `src/lib/http/cachePolicy.ts` | 방문이 시간당 수십 회라 2분 캐시는 거의 적중하지 않았다. 데이터는 3시간(잔여석)·하루 3번(시간표)마다 바뀐다 |
+| 상세 ISR·CDN 캐시 5분 → 1시간 | `movie/[id]` 등 4개 페이지 + `next.config.ts` `detail` | 같은 이유. 크롤 직후 반영은 아래 on-demand 갱신이 맡는다 |
+| 크롤 후 캐시 갱신 | `/api/revalidate` ← `scripts/crawl-showtimes.ts` | 상영 데이터 태그를 `revalidateTag(tag, 'max')`로 무효화. RPi `.env.local`에 `CRON_SECRET` 필요 |
+| 학습 전용 크롤러 차단 | `src/app/robots.ts` | 수천 쪽을 훑으며 식은 캐시를 다시 그리게 한다. 검색·답변용 봇은 유지 |
+| OG 폰트·로고 한 번만 읽기 | `src/lib/og/cards.tsx` | 카드마다 900KB 폰트를 디스크에서 다시 읽고 있었다 |
+| 문서만 바뀐 커밋은 배포 건너뛰기 | `vercel.json` `ignoreCommand` | `docs/`·`*.md`·테스트·`.github`만 바뀌면 빌드하지 않는다. `scripts/audit/*.json`은 CI 검사 페이지가 읽으므로 빼지 않는다 |
+
+**다음에 CPU가 다시 오르면:** Vercel Usage → Fluid Active CPU에서 Type·경로별로 먼저 나눠 본다. 코드만 봐서는
+어느 경로가 큰지 확정할 수 없었다. 남은 후보는 OG 카드 렌더(카드당 수백 ms), 크롤러의 롱테일 상세 방문, 배포마다의 캐시 초기화다.

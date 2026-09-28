@@ -1,4 +1,5 @@
 import { listTheaterEvents } from '@/lib/admin/event-store'
+import { SHOWTIME_API_CACHE } from '@/lib/http/cachePolicy'
 
 export const dynamic = 'force-dynamic'
 
@@ -7,7 +8,7 @@ export async function GET() {
     const events = await listTheaterEvents({ fromDate: new Date().toISOString().slice(0, 10) })
     return Response.json(events, {
       headers: {
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+        'Cache-Control': SHOWTIME_API_CACHE,
       },
     })
   } catch (error) {

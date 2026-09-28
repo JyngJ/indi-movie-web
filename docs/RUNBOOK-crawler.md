@@ -9,6 +9,7 @@
 - **크롤러 서버:** Raspberry Pi (RPi). 접속 `ssh pi@100.76.84.97` (Tailscale 오버레이 IP — 공인 IP가 바뀌어도 유지됨).
 - **레포 경로:** `/home/pi/movie` (추적 브랜치 `main`). 코드는 `main`에 머지돼야 다음 크론에서 반영된다.
 - **환경변수:** RPi `/home/pi/movie/.env.local` (Supabase URL/service key 등). 모든 크롤 스크립트는 `tsx --env-file=.env.local ...` 로 실행.
+  - `CRON_SECRET` — Vercel 환경변수와 **같은 값**. `crawl:showtimes`가 수집 뒤 `/api/revalidate`를 불러 상세 페이지 캐시(1시간 ISR)를 바로 갱신할 때 쓴다. 없으면 경고만 찍고 넘어가며, 그때는 시간표가 최대 1시간 늦게 반영된다(2026-09 추가).
 - **네트워크:** RPi는 공인 IP를 `eth0`에 **직접** 받는다 (NAT 뒤 아님, KT 동적 DHCP). NetworkManager 관리, 연결명 `"Wired connection 1"`.
 
 ### crontab (2026-07-09 기준)

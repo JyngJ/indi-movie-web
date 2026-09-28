@@ -1,4 +1,5 @@
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { SHOWTIME_API_CACHE } from '@/lib/http/cachePolicy'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,7 +21,7 @@ export async function GET() {
     soloTheaterFilmsByRegion: strip(data?.solo_theater_films) ?? {},
   }, {
     headers: {
-      'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=900',
+      'Cache-Control': SHOWTIME_API_CACHE,
     },
   })
 }

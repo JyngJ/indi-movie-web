@@ -22,7 +22,7 @@ const ENDPOINT = 'https://api.indexnow.org/indexnow'
 /** 퓨니코드 — 한글 도메인 원문을 그대로 보내면 일부 엔드포인트가 거부한다(sitemap과 같은 이유) */
 const DEFAULT_HOST = 'www.xn--hq1bv8o5phw2d7wt.com'
 
-function siteOrigin(): string {
+export function siteOrigin(): string {
   const raw = process.env.NEXT_PUBLIC_SITE_URL
   if (!raw) return `https://${DEFAULT_HOST}`
   try {

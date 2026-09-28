@@ -16,7 +16,8 @@ import { ogImageUrl } from '@/lib/og/cards'
    메타 차단, localStorage/useSearchParams를 effect로 이동)이 남아 있어 그쪽이 실제
    원인이었을 가능성이 크다. 배포 후 프로덕션에서 같은 프로브로 재확인할 것 —
    되돌리려면 이 주석 자리에 `export const dynamic = 'force-dynamic'`을 되살리면 된다. */
-export const revalidate = 300
+// 주기와 크롤 후 즉시 갱신 방식은 movie/[id]/page.tsx 주석 참고 — 값은 함께 움직인다.
+export const revalidate = 3600
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'
 
