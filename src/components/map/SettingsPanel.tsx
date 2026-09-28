@@ -375,12 +375,12 @@ export function SettingsAboutPage() {
               <div style={{ fontSize: 12, color: 'var(--color-text-caption)', marginTop: 4 }}>{member.role}</div>
             </div>
             {member.linkedin && (
-              <IconButton size={32} aria-label={`${member.name} 링크드인`} onClick={() => window.open(member.linkedin!, '_blank', 'noopener')} style={{ backgroundColor: '#0A66C2', color: 'var(--color-on-accent)' }}>
+              <IconButton size={32} aria-label={`${member.name} 링크드인`} onClick={() => window.open(member.linkedin!, '_blank', 'noopener')} style={{ backgroundColor: 'var(--color-brand-linkedin)', color: 'var(--color-on-accent)' }}>
                 <Icon name="linkedin" size={16} />
               </IconButton>
             )}
             {member.github && (
-              <IconButton size={32} aria-label={`${member.name} 깃허브`} onClick={() => window.open(member.github!, '_blank', 'noopener')} style={{ backgroundColor: '#24292e', color: 'var(--color-on-accent)' }}>
+              <IconButton size={32} aria-label={`${member.name} 깃허브`} onClick={() => window.open(member.github!, '_blank', 'noopener')} style={{ backgroundColor: 'var(--color-brand-github)', color: 'var(--color-on-accent)' }}>
                 <Icon name="github" size={16} />
               </IconButton>
             )}

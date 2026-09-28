@@ -42,6 +42,7 @@ import { useUIStore } from '@/store/uiStore'
 import { REPORT_CATEGORIES } from '@/lib/reports/types'
 import {
   SUBWAY_LINE_MIN_ZOOM, STATION_PIN_MIN_ZOOM,
+  SUBWAY_MARKER_RING, SUBWAY_MARKER_FILL,
   subwayLineColor,
 } from '@/lib/map/subwayUtils'
 import { SubwayLayer } from './SubwayLayer'
@@ -3130,7 +3131,7 @@ export default function MapView() {
                   width: 15,
                   height: 15,
                   borderRadius: '50%',
-                  backgroundColor: '#111',
+                  backgroundColor: SUBWAY_MARKER_RING,
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -3139,7 +3140,7 @@ export default function MapView() {
                     width: 13,
                     height: 13,
                     borderRadius: '50%',
-                    backgroundColor: '#fff',
+                    backgroundColor: SUBWAY_MARKER_FILL,
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',

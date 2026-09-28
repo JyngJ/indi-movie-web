@@ -269,7 +269,7 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
                   style={{ position: 'relative', width: '100%', aspectRatio: '3/4', borderRadius: 'var(--radius-control)', overflow: 'hidden', cursor: 'zoom-in', backgroundColor: 'var(--color-surface-raised)' }}
                 >
                   <Image src={proxiedImageUrl(currentTimetable.imageUrl, 1200)} alt={timetableCaption(currentTimetable.dayDate, currentTimetable.label)} fill sizes="600px" style={{ objectFit: 'contain' }} />
-                  <div style={{ position: 'absolute', bottom: 'var(--spacing-3)', right: 'var(--spacing-3)', width: 32, height: 32, borderRadius: 'var(--radius-pill)', backgroundColor: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-on-accent)' }}>
+                  <div style={{ position: 'absolute', bottom: 'var(--spacing-3)', right: 'var(--spacing-3)', width: 32, height: 32, borderRadius: 'var(--radius-pill)', backgroundColor: 'var(--color-scrim-strong)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-on-accent)' }}>
                     <Icon name="zoom-in" size={16} strokeWidth={1.75} className="text-current" />
                   </div>
                 </div>
@@ -350,12 +350,12 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
       {lightboxOpen && currentTimetable && createPortal(
         <div
           onClick={() => setLightboxOpen(false)}
-          style={{ position: 'fixed', inset: 0, zIndex: 999999, backgroundColor: 'rgba(0,0,0,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--spacing-6)' }}
+          style={{ position: 'fixed', inset: 0, zIndex: 999999, backgroundColor: 'var(--color-scrim-lightbox)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--spacing-6)' }}
         >
           <button
             onClick={() => setLightboxOpen(false)}
             aria-label="닫기"
-            style={{ position: 'absolute', top: 'var(--spacing-4)', right: 'var(--spacing-4)', width: 36, height: 36, borderRadius: 'var(--radius-pill)', backgroundColor: 'rgba(255,255,255,0.12)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', minHeight: 'auto', color: 'var(--color-on-accent)' }}
+            style={{ position: 'absolute', top: 'var(--spacing-4)', right: 'var(--spacing-4)', width: 36, height: 36, borderRadius: 'var(--radius-pill)', backgroundColor: 'var(--color-on-scrim-surface)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', minHeight: 'auto', color: 'var(--color-on-accent)' }}
           >
             <Icon name="x" size={18} strokeWidth={1.75} className="text-current" />
           </button>

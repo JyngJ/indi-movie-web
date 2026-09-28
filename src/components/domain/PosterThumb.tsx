@@ -170,7 +170,7 @@ export function PosterThumb({
           >
             {alt && (
               <span style={{
-                color: 'rgba(255,255,255,0.9)',
+                color: 'var(--color-on-scrim)',
                 fontSize: Math.max(11, Math.min(20, Math.round(fallbackBase * 0.15))),
                 fontWeight: 800,
                 textAlign: 'center',
@@ -214,7 +214,7 @@ export function PosterThumb({
         {overflow != null && (
           <div
             className="absolute inset-0 flex items-center justify-center font-semibold text-[15px] text-white"
-            style={{ background: 'rgba(15,12,9,0.62)', borderRadius: radiusVar }}
+            style={{ background: 'var(--color-scrim-strong)', borderRadius: radiusVar }}
           >
             {typeof overflow === 'string' ? overflow : `+${overflow}`}
           </div>

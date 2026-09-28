@@ -4,11 +4,11 @@
     "LOSSLESS": 0,
     "LOW": 0,
     "MED": 0,
-    "REVIEW": 55
+    "REVIEW": 32
   },
   "summary": {
     "gutter": 32,
-    "color": 23,
+    "color": 0,
     "fontSize": 0,
     "asymmetryLR": 4,
     "asymmetryTB": 21,
