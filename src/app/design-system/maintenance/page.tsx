@@ -45,6 +45,23 @@ function LoopVisual() {
   )
 }
 
+/* 검사 네 줄에 체크 표시 — "명령어가 확인한다"를 그림으로 먼저 말한다. */
+function ChecksVisual() {
+  const row = (label: string) => (
+    <div key={label} style={{
+      display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)',
+      fontFamily: 'var(--font-mono)', fontSize: 'var(--text-meta)', color: 'var(--color-text-body)',
+    }}>
+      <span aria-hidden style={{ color: 'var(--color-success)', fontWeight: 700 }}>✓</span>{label}
+    </div>
+  )
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)' }}>
+      {['audit:ui', 'audit:writing', 'audit:feedback', 'test:ui-contracts'].map(row)}
+    </div>
+  )
+}
+
 function DriftVisual({ open }: { open: number }) {
   return (
     <div style={{ textAlign: 'center' }}>
@@ -75,6 +92,12 @@ export default function MaintenanceCoverPage() {
             title="코드 ↔ 피그마 차이"
             desc="피그마 변수와 코드 토큰을 이름으로 짝지어 값을 대조합니다. 어긋난 항목만 남겨 다음에 무엇을 고칠지 알려줍니다."
             visual={<DriftVisual open={open} />}
+          />
+          <CoverCard
+            href="/design-system/checks"
+            title="CI 검사"
+            desc="PR마다 도는 하드코딩·문구·반응 감사와 브라우저 계약 테스트. 무엇을 어떻게 세는지, 기준선을 왜 한 방향으로만 움직이는지 설명합니다."
+            visual={<ChecksVisual />}
           />
           <CoverCard
             href="/design-system/ai"
@@ -108,8 +131,9 @@ export default function MaintenanceCoverPage() {
             AI 도구가 임의의 값 대신 정의된 토큰을 쓰게 합니다.
           </li>
           <li>
-            <b style={{ color: 'var(--color-text-primary)' }}>회귀 방지</b> · 하드코딩된 값은 <Code>npm run audit:ui:check</Code>가
-            기준선과 비교해 늘어나면 실패시킵니다. CI가 PR마다 실행합니다.
+            <b style={{ color: 'var(--color-text-primary)' }}>회귀 방지</b> · 하드코딩·문구·누른 뒤 반응을 세는 감사 세 가지가
+            기준선보다 늘어나면 실패하고, 브라우저 계약 테스트가 겹침·스크롤·위치를 잽니다. CI가 PR마다 실행합니다 —
+            자세한 원리는 <Link href="/design-system/checks" style={{ color: 'var(--color-primary-base)' }}>CI 검사</Link>에 있습니다.
           </li>
         </ul>
       </DocSection>
