@@ -12,7 +12,9 @@ import { useUIStore } from '@/store/uiStore'
 import { Icon, type IconName } from '@/components/primitives'
 import { useNotificationEvents } from '@/hooks/useNotifications'
 
-/** §5 바텀 탭바 표준 높이(safe-area 포함) — 다른 화면 요소가 이 값만큼 비켜야 함 */
+/** §5 바텀 탭바 자체 높이(safe-area 제외). tokens.css --nav-mobile-height와 같은 값.
+ *  스타일에서 바를 비킬 때는 이 숫자 대신 'var(--nav-mobile-offset)'(safe-area 포함)을 쓴다.
+ *  숫자가 꼭 필요한 곳(드래그 계산 등)만 이 상수를 쓴다. */
 export const GLOBAL_NAV_MOBILE_HEIGHT = 64
 /** §5 아이콘 레일 표준 폭 */
 export const GLOBAL_NAV_DESKTOP_WIDTH = 64
@@ -80,7 +82,7 @@ function MobileTabBar({ pathname, filmsHref }: { pathname: string; filmsHref: st
         left: 0,
         right: 0,
         bottom: 0,
-        height: `calc(${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`,
+        height: 'var(--nav-mobile-offset)',
         paddingBottom: 'env(safe-area-inset-bottom)',
         paddingLeft: 'var(--spacing-8)', paddingRight: 'var(--spacing-8)',   /* 32 — 4탭 (구 3탭은 48) */
         display: 'flex',

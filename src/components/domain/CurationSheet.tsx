@@ -2,7 +2,6 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { usePendingNavItem } from '@/hooks/usePendingNavItem'
-import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { Button, Divider, EmptyState, Skeleton, MovieCardSkeleton } from '@/components/primitives'
 import { PosterThumb } from './PosterThumb'
 import { HoverPopup } from './CurationSectionRow'
@@ -836,8 +835,9 @@ export function CurationSheet({
       </div>
       <div ref={scrollAreaRef} style={{
         paddingTop: 4,
-        // 하단 글로벌 탭바(고정, 시트보다 위 z-index)에 본문 끝부분이 가려지지 않도록 그 높이만큼 여백 확보
-        paddingBottom: `calc(${GLOBAL_NAV_MOBILE_HEIGHT}px + 24px)`,
+        // 하단 글로벌 탭바(고정, 시트보다 위 z-index)에 본문 끝부분이 가려지지 않도록 그 높이만큼 여백 확보.
+        // safe-area는 시트 루트의 paddingBottom이 이미 맡으므로 여기선 바 자체 높이만 더한다.
+        paddingBottom: 'calc(var(--nav-mobile-height) + 24px)',
         overflowY: 'auto',
         flex: 1,
         minHeight: 0,

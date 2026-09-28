@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
+import { GLOBAL_NAV_DESKTOP_WIDTH } from '@/components/navigation/GlobalNav'
 import { PanelScrollBody } from '@/components/primitives'
 import { SettingsHeader } from '@/components/map/SettingsPanel'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
@@ -29,7 +29,7 @@ export function MyPageShell({
         height: '100dvh',
         overflow: 'hidden',
         paddingLeft: isDesktop ? GLOBAL_NAV_DESKTOP_WIDTH : 0,
-        paddingBottom: isDesktop ? 0 : `calc(${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`,
+        paddingBottom: isDesktop ? 0 : 'var(--nav-mobile-offset)',
         backgroundColor: 'var(--comp-panel-bg)',
       }}
     >

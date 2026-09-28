@@ -23,7 +23,7 @@ import { FilterChip } from '@/components/domain/filterBar/FilterChip'
 import { FestivalShortcutRow } from '@/components/domain/FestivalShortcutRow'
 import { FilmsSearchBar } from '@/components/domain/FilmsSearchBar'
 import { RegionDropdown } from '@/components/domain/filterBar/RegionDropdown'
-import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
+import { GLOBAL_NAV_DESKTOP_WIDTH } from '@/components/navigation/GlobalNav'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useCurationData } from '@/hooks/useCurationData'
 import { useLocationPermission } from '@/hooks/useLocationPermission'
@@ -617,7 +617,7 @@ export default function FilmsPage() {
     <div
       style={{
         minHeight: '100dvh',
-        paddingBottom: isDesktop ? 0 : `calc(${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`,
+        paddingBottom: isDesktop ? 0 : 'var(--nav-mobile-offset)',
         paddingLeft: isDesktop ? GLOBAL_NAV_DESKTOP_WIDTH : 0,
         backgroundColor: 'var(--color-surface-bg)',
       }}
@@ -1243,7 +1243,7 @@ export default function FilmsPage() {
             right: isDesktop ? 32 : 20,
             bottom: isDesktop
               ? 32
-              : `calc(${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom) + 16px)`,
+              : 'calc(var(--nav-mobile-offset) + 16px)',
             zIndex: 100,
           }}
         >

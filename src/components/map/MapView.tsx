@@ -12,7 +12,7 @@ import { useLocationPermission } from '@/hooks/useLocationPermission'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useFavorites } from '@/hooks/useFavorites'
 import { SearchBarButton, FabRound, Icon, Toast, Wordmark } from '@/components/primitives'
-import { GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
+import { GLOBAL_NAV_DESKTOP_WIDTH } from '@/components/navigation/GlobalNav'
 import { THEATER_SHEET_COLLAPSED_H } from '@/components/domain/TheaterSheet'
 import type { PinFavoriteMark } from '@/components/domain/MapPin'
 import { MapPin, TheaterSheet, CurationSheet, CurationSections, FilterBar, LocationPermissionModal, CURATION_PEEK_HEIGHT } from '@/components/domain'
@@ -2644,7 +2644,7 @@ export default function MapView() {
         ? THEATER_SHEET_COLLAPSED_H + 16
         : !selectedTheater && !searchOpen && curationSnap === 'peek' && curationVisibleHeight > 0
           ? curationVisibleHeight + 16
-          : GLOBAL_NAV_MOBILE_HEIGHT + 32)
+          : 'calc(var(--nav-mobile-offset) + 32px)')
     : 32
   const hasSearchResults = theaterResults.length > 0 || stationResults.length > 0 || movieResults.length > 0 || relatedDirectorResults.length > 0 || areaResults.length > 0 || festivalResults.length > 0
 

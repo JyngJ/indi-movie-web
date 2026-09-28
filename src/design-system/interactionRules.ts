@@ -8,6 +8,7 @@ export const INTERACTION_RULES = [
       '부모의 z-index·transform·opacity가 별도 stacking context를 만들면 자식은 그 범위를 벗어나지 못해요. 팝업 숫자를 높이기 전에 부모부터 확인해요.',
       '본문은 이동 진행 표시 < 모서리 마스크 < 글로벌 메뉴 < 메뉴 팝오버 순서예요. --z-route-progress·--z-panel-mask·--z-navigation·--z-rail-popover를 사용해요.',
       '패널과 접기 손잡이는 --comp-panel-bg를 공유해요. 별도 흰색 면을 붙이지 않아요.',
+      '모바일 하단 메뉴 바를 비키는 요소는 --nav-mobile-offset(바 64px + 아이폰 홈 인디케이터)을 사용해요. 64만 더하면 아이폰에서 바에 깔려요. 부모가 이미 비켰으면 자식에서 다시 더하지 않아요.',
     ],
   },
   {

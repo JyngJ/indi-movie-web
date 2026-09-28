@@ -373,6 +373,11 @@
   --gutter-sm:  8px;
   --max-width-mobile: 480px;
   --header-height:    52px;
+  /* 모바일 하단 메뉴 바. 바 자체 높이 + 아이폰 홈 인디케이터(safe-area, viewportFit cover라 실제로 생김).
+     바 위로 비켜야 하는 요소는 --nav-mobile-offset을 쓴다 — 64만 빼고 safe-area를 빠뜨리면 아이폰에서 바에 깔린다.
+     GlobalNav.tsx의 GLOBAL_NAV_MOBILE_HEIGHT와 같은 값 — 하나를 바꾸면 둘 다 바꾼다. */
+  --nav-mobile-height: 64px;
+  --nav-mobile-offset: calc(var(--nav-mobile-height) + env(safe-area-inset-bottom));
   --touch-target:     44px;
 }
 

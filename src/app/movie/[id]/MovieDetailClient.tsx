@@ -12,7 +12,7 @@ import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionR
 import { FavoriteDirectorMark } from '@/components/domain/favorites/FavoriteDirectorMark'
 import { ExpandableSynopsis } from '@/components/domain/movieDetail/ExpandableSynopsis'
 import { ShowtimeCell } from '@/components/domain/ShowtimeCell'
-import { getPrevPathname, getLastFilmsListPathname, GLOBAL_NAV_DESKTOP_WIDTH, GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
+import { getPrevPathname, getLastFilmsListPathname, GLOBAL_NAV_DESKTOP_WIDTH } from '@/components/navigation/GlobalNav'
 import { isFilmsPath } from '@/lib/navigation/filmsPath'
 import Image from 'next/image'
 import { useMovieTheaterShowtimes, useDirectorProfile } from '@/lib/supabase/queries'
@@ -720,7 +720,7 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection }:
       {selectedShowtimeData && typeof document !== 'undefined' && createPortal(
         // .page-slide-in의 transform이 컨테이닝 블록을 만들어 fixed가 페이지 하단(전체 콘텐츠 끝)에
         // 붙어버리는 문제 — 뷰포트 기준으로 뜨도록 body에 직접 포탈로 렌더한다.
-        <div style={{ position: 'fixed', bottom: isDesktop ? 0 : `calc(${GLOBAL_NAV_MOBILE_HEIGHT}px + env(safe-area-inset-bottom))`, left: isDesktop ? GLOBAL_NAV_DESKTOP_WIDTH : 0, right: 0, zIndex: 100, backgroundColor: 'var(--color-surface-card)', borderTop: '1px solid var(--color-border)', padding: '12px 16px', paddingBottom: isDesktop ? 'max(16px, env(safe-area-inset-bottom))' : '16px', boxShadow: '0 -4px 20px rgba(0,0,0,0.12)' }}>
+        <div style={{ position: 'fixed', bottom: isDesktop ? 0 : 'var(--nav-mobile-offset)', left: isDesktop ? GLOBAL_NAV_DESKTOP_WIDTH : 0, right: 0, zIndex: 100, backgroundColor: 'var(--color-surface-card)', borderTop: '1px solid var(--color-border)', padding: '12px 16px', paddingBottom: isDesktop ? 'max(16px, env(safe-area-inset-bottom))' : '16px', boxShadow: '0 -4px 20px rgba(0,0,0,0.12)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ fontSize: 16, fontWeight: 700, fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>
