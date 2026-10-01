@@ -10,6 +10,7 @@ import { festivalRowToFestival } from './festivalRow'
 import { formatLocalDate, toKstIsoDate } from '@/lib/date'
 import { getRegionFromCity } from '@/lib/regions'
 import type { MovieTheaterEntry } from '@/lib/catalog/getMovieTheaterShowtimes'
+import type { TheaterMovieEntryRow } from '@/lib/catalog/theaterShowtimes'
 
 function supabase() {
   return createSupabaseBrowserClient()
@@ -452,28 +453,50 @@ export interface TheaterMovieEntry {
  *  7일이면 maxDateWindowOffset이 항상 0이라 "다음 주" 버튼이 영원히 비활성이었다. */
 export const THEATER_MOVIES_WINDOW_DAYS = 14
 
-export function useTheaterAllMovies(theaterId: string | null) {
+function toTheaterMovieEntries(rows: TheaterMovieEntryRow[]): TheaterMovieEntry[] {
+  return rows.map((r) => ({ ...r, availableDates: new Set(r.availableDates) }))
+}
+
+/** SSR이 심은 첫 화면 데이터 — `updatedAt`은 ssrSnapshot.snapshotUpdatedAt 결과 */
+export interface QuerySeed<T> {
+  data: T
+  updatedAt: number
+}
+
+export function useTheaterAllMovies(
+  theaterId: string | null,
+  /** 조회 범위(오늘~endDate)가 같을 때만 넘길 것 — 다르면 다른 키의 값이 된다 */
+  seed?: QuerySeed<TheaterMovieEntryRow[]>,
+) {
   const today = formatLocalDate(new Date())
   const endDate = formatLocalDate(new Date(Date.now() + (THEATER_MOVIES_WINDOW_DAYS - 1) * 24 * 60 * 60 * 1000))
 
   return useQuery<TheaterMovieEntry[]>({
     queryKey: ['theater-all-movies', theaterId, today, THEATER_MOVIES_WINDOW_DAYS],
     enabled: !!theaterId,
+    initialData: seed ? toTheaterMovieEntries(seed.data) : undefined,
+    initialDataUpdatedAt: seed?.updatedAt,
     queryFn: async () => {
       const res = await fetch(`/api/public/theater/${theaterId}/movies?from=${today}&to=${endDate}`)
       if (!res.ok) throw new Error(`theater-movies fetch 실패: ${res.status}`)
-      const rows: Array<Omit<TheaterMovieEntry, 'availableDates'> & { availableDates: string[] }> = await res.json()
-      return rows.map((r) => ({ ...r, availableDates: new Set(r.availableDates) }))
+      return toTheaterMovieEntries(await res.json())
     },
     staleTime: 5 * 60 * 1000,
   })
 }
 
 /* ── 특정 영화관의 상영 시간표 ──────────────────────────────────── */
-export function useTheaterShowtimes(theaterId: string | null, date: string) {
+export function useTheaterShowtimes(
+  theaterId: string | null,
+  date: string,
+  /** 이 date의 값일 때만 넘길 것 — initialData는 지금 키에 그대로 들어간다 */
+  seed?: QuerySeed<{ movies: Movie[]; showtimes: Showtime[] }>,
+) {
   return useQuery<{ movies: Movie[]; showtimes: Showtime[] }>({
     queryKey: ['theater-showtimes', theaterId, date],
     enabled: !!theaterId,
+    initialData: seed?.data,
+    initialDataUpdatedAt: seed?.updatedAt,
     queryFn: async () => {
       const res = await fetch(`/api/public/theater/${theaterId}/showtimes?date=${date}`)
       if (!res.ok) throw new Error(`theater-showtimes fetch 실패: ${res.status}`)
