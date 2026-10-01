@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import type { Theater } from '@/types/api'
 import { toTheaterSchema } from '@/lib/seo/toTheaterSchema'
 import { getTheaterScreenings } from '@/lib/seo/getTheaterScreenings'
+import { getTheaterInitialShowtimes } from '@/lib/catalog/getTheaterShowtimesCached'
 import { toFaqSchema } from '@/lib/seo/toFaqSchema'
 import { toBreadcrumbSchema } from '@/lib/seo/toBreadcrumbSchema'
 import { resolveTheaterRegion } from '@/lib/regions'
@@ -23,7 +24,10 @@ export async function TheaterBody({
   const schema = toTheaterSchema(theater, BASE_URL)
   /* 시간표는 클라이언트가 그려 서버 HTML이 비어 있었다 — 크롤러·답변형 AI가 읽을
      같은 내용을 서버에서 렌더한다 (지역 페이지와 같은 방식) */
-  const seoData = await getTheaterScreenings(id)
+  const [seoData, initialShowtimes] = await Promise.all([
+    getTheaterScreenings(id),
+    getTheaterInitialShowtimes(id),
+  ])
 
   /* city가 빈 극장이 9곳 있어 '기타'로 빠졌고, breadcrumb이 REGIONS에 없는
      /films/area/기타(404)를 가리켰다 — 주소 폴백이 있는 리졸버를 쓴다. */
@@ -67,7 +71,11 @@ export async function TheaterBody({
       />
       <TheaterSeoContent theater={theater} data={seoData} />
       <Suspense>
-        <FilmsTheaterDetailClient theater={theater} initialSelection={initialSelection} />
+        <FilmsTheaterDetailClient
+          theater={theater}
+          initialSelection={initialSelection}
+          initialShowtimes={initialShowtimes}
+        />
       </Suspense>
     </>
   )

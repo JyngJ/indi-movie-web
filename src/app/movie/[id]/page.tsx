@@ -23,6 +23,15 @@ import { ogImageUrl } from '@/lib/og/cards'
    이 값을 바꾸면 회차 공유·극장 상세 페이지와 next.config의 detail 헤더도 같이 바꾼다. */
 export const revalidate = 3600
 
+/* 동적 경로는 generateStaticParams가 없으면 revalidate를 걸어도 요청마다 렌더된다(Next 16).
+   2026-10 운영 응답이 `private, no-store` + MISS였다 — ISR이 한 번도 안 걸려 있었다.
+   빈 배열은 "빌드 때는 안 그리고 첫 방문에 그려 캐시"라는 뜻이다(1h 주기·크롤 후 태그 무효화).
+   한글이 들어가는 경로(감독·지역)에는 쓰지 말 것 — 캐시 태그 헤더에 raw 한글이 실려 500이 난다
+   (films/area/[region]/page.tsx 주석). */
+export function generateStaticParams() {
+  return []
+}
+
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'
 
 export async function generateMetadata({
