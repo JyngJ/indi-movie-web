@@ -11,6 +11,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - If you need to run Next.js directly, pass `--webpack` explicitly.
 - Before changing Next.js CLI flags or bundler behavior, read `node_modules/next/dist/docs/01-app/03-api-reference/06-cli/next.md` and update this section plus `README.md`.
 
+## 광고·이미지 권리 (2026-09-18)
+
+- 광고 도입과 상세 화면 개편을 잇는 세션은 `docs/HANDOFF-20260918-ads-and-detail.md`를 먼저 읽을 것 — 실측 수치, 물린 함정, 남은 쟁점이 정리돼 있다.
+- **이용허락 근거가 없는 이미지를 새로 들이지 말 것.** 허용 호스트는 `file.koreafilm.or.kr`(KMDb 공공데이터)·위키미디어·자체 Supabase다. 언론사·나무위키·쇼핑몰 이미지는 광고 게재 서비스에서 쓸 근거가 없다.
+- `PosterThumb`에 `fade={false}`로 그리는 곳(지도 핀·상영작 그리드)은 `renderToStaticMarkup` 정적 마크업이라 `onLoad`/`ref`가 붙지 않는다. 로드 상태에 기대는 오버레이를 걸면 포스터가 영구히 가려진다(2026-09-17 운영 사고). 회귀 테스트는 `posterMarkerMarkup.test.tsx`.
+
 ## Design 2.0 · 피그마 동기화
 
 - 디자인 시스템·피그마 작업을 이어받는 세션은 `docs/HANDOFF-figma-design-system.md`(2026-08-10)를 먼저 읽을 것 — 피그마 Scripter 파이프라인, 확정 문법, 함정이 정리돼 있다.
