@@ -162,5 +162,22 @@ Supabase는 별도 마이그레이션 (백엔드 담당)
 | OG 폰트·로고 한 번만 읽기 | `src/lib/og/cards.tsx` | 카드마다 900KB 폰트를 디스크에서 다시 읽고 있었다 |
 | 문서만 바뀐 커밋은 배포 건너뛰기 | `vercel.json` `ignoreCommand` | `docs/`·`*.md`·테스트·`.github`만 바뀌면 빌드하지 않는다. `scripts/audit/*.json`은 CI 검사 페이지가 읽으므로 빼지 않는다 |
 
+### 2026-10: 상세 ISR이 한 번도 걸려 있지 않았다
+
+9월의 "ISR 전환 뒤에도 CPU가 안 줄었다"는 ISR이 실제로는 꺼져 있었기 때문이다. Next 16은 동적 경로에
+`generateStaticParams`가 없으면 `revalidate`를 걸어도 요청마다 렌더한다. #362(9/17)부터 모든 운영 빌드 로그의
+라우트 표에서 상세가 `ƒ (Dynamic)`이었고, 운영 응답은 `private, no-store` + `x-vercel-cache: MISS`였다.
+
+| 조치 | 위치 | 이유 |
+|---|---|---|
+| 빈 `generateStaticParams` 추가 | `movie/[id]`·`movie/[id]/s/[showtimeId]`·`films/theater/[id]`·`films/theater/[id]/s/[showtimeId]`·`festival/[slug]` | 빌드 라우트 표가 `●`로 바뀐다. 첫 방문에 그려 캐시한다 |
+| 극장 상세 첫 화면 데이터를 서버가 심음 | `src/lib/catalog/getTheaterShowtimesCached.ts` · `ssrSnapshot.ts` | 페이지 렌더 뒤 브라우저가 `/api/public/theater/[id]/movies`·`/showtimes`를 또 불러 방문 한 번에 함수 3번이었다. 1시간 안의 데이터면 다시 받지 않는다 |
+
+- 한글이 들어가는 경로(`director/[name]`·`films/director/[name]`·`films/area/[region]`)는 동적으로 둔다. ISR이면
+  캐시 태그 헤더에 raw 한글이 실려 500이 난다(#278).
+- 확인: 배포 빌드 로그의 라우트 표(`vercel inspect <배포 URL> --logs`)에서 상세가 `●`인지, 같은 상세를 두 번 요청했을 때
+  `x-vercel-cache`가 HIT/STALE로 바뀌는지.
+- 배포 횟수와 하루 함수 호출 수는 9월 30일치에서 상관이 없었다(-0.13). 호출 수는 방문량을 따라 움직였다.
+
 **다음에 CPU가 다시 오르면:** Vercel Usage → Fluid Active CPU에서 Type·경로별로 먼저 나눠 본다. 코드만 봐서는
 어느 경로가 큰지 확정할 수 없었다. 남은 후보는 OG 카드 렌더(카드당 수백 ms), 크롤러의 롱테일 상세 방문, 배포마다의 캐시 초기화다.
