@@ -210,33 +210,36 @@ export function PosterGrid({ slots, overflowCount = 0, tailDir, tailOffset = 0, 
           <div data-movie-id={slots[0].movie?.id} style={{ display: 'flex', alignItems: 'flex-start', gap: SLOT_GAP, position: 'relative', zIndex: 1 }}>
             {/* 포스터는 줌 기반 고정 크기 — stretch로 일정 높이를 따라가게 하면 일주일치
                 스케줄에서 포스터가 300px 넘게 부풀어 카드가 깨져 보인다 (2026-08-24) */}
-            <div style={{
-              position: 'relative', flexShrink: 0,
-              width: Math.round(posterH * 2 / 3), height: posterH,
-              borderRadius: 4, overflow: 'hidden',
-              backgroundColor: 'var(--color-neutral-800)',
-              boxShadow: 'inset 0 0 0 1px var(--comp-poster-border)',
-            }}>
-              {/* 관심 — 우상단 하트 뱃지 (그리드와 동일 문법, overflow hidden이라 안쪽 코너) */}
-              {isFavMovie(slots[0].movie) && (
-                <span style={{
-                  position: 'absolute', top: 3, right: 3, width: 16, height: 16,
-                  borderRadius: 9999, backgroundColor: 'var(--color-error-mid)',
-                  border: '1.5px solid var(--color-surface-bg)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: '0 1px 4px rgba(0,0,0,0.3)', zIndex: 2, pointerEvents: 'none',
-                }}>
-                  <Icon name="heart" size={8} fill="var(--color-on-accent)" color="var(--color-on-accent)" strokeWidth={0} style={{ flexShrink: 0 }} />
-                </span>
-              )}
-              {slots[0].movie?.posterUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={toSecureImageUrl(slots[0].movie.posterUrl)}
-                  alt={slots[0].movie.title ?? '영화 포스터'}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                />
-              )}
+            {/* 바깥 상자는 잘라내지 않는다 — "N회" 배지가 모서리 밖으로 걸쳐 나간다.
+                둥근 모서리 자르기는 안쪽 상자만 (overflow hidden에 배지가 잘리던 문제) */}
+            <div style={{ position: 'relative', flexShrink: 0, width: Math.round(posterH * 2 / 3), height: posterH }}>
+              <div style={{
+                position: 'relative', width: '100%', height: '100%',
+                borderRadius: 4, overflow: 'hidden',
+                backgroundColor: 'var(--color-neutral-800)',
+                boxShadow: 'inset 0 0 0 1px var(--comp-poster-border)',
+              }}>
+                {/* 관심 — 우상단 하트 뱃지 (그리드와 동일 문법, overflow hidden이라 안쪽 코너) */}
+                {isFavMovie(slots[0].movie) && (
+                  <span style={{
+                    position: 'absolute', top: 3, right: 3, width: 16, height: 16,
+                    borderRadius: 9999, backgroundColor: 'var(--color-error-mid)',
+                    border: '1.5px solid var(--color-surface-bg)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: '0 1px 4px rgba(0,0,0,0.3)', zIndex: 2, pointerEvents: 'none',
+                  }}>
+                    <Icon name="heart" size={8} fill="var(--color-on-accent)" color="var(--color-on-accent)" strokeWidth={0} style={{ flexShrink: 0 }} />
+                  </span>
+                )}
+                {slots[0].movie?.posterUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={toSecureImageUrl(slots[0].movie.posterUrl)}
+                    alt={slots[0].movie.title ?? '영화 포스터'}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
+                )}
+              </div>
               {occurrenceCount != null && occurrenceCount > 0 && (
                 <div style={{
                   position: 'absolute', top: -8, right: -8,
