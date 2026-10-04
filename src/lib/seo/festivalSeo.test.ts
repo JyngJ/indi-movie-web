@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { dateWithDow, festivalMetaDescription, festivalSeoTitle, summarizeFestivalScreenings } from './festivalSeo'
+import { dateWithDow, festivalMetaDescription, festivalSeoTitle, festivalViewMetaDescription, festivalViewSeoTitle, summarizeFestivalScreenings } from './festivalSeo'
 import type { FestivalDetail, FestivalScreening, FestivalTheaterLink } from '@/types/festival'
 
 const link = (sortOrder: number, venueText: string): FestivalTheaterLink => ({
@@ -69,5 +69,29 @@ describe('summarizeFestivalScreenings', () => {
 describe('dateWithDow', () => {
   it('요일을 붙인다', () => {
     expect(dateWithDow('2026-10-09')).toBe('10월 9일 (금)')
+  })
+})
+
+describe('festivalViewSeoTitle', () => {
+  it('날짜 페이지는 요일·회차 수를 싣는다', () => {
+    const rows = [screening({ screeningDate: '2026-10-08' }), screening({ screeningDate: '2026-10-08' })]
+    expect(festivalViewSeoTitle(festival(), { kind: 'day', date: '2026-10-08' }, rows)).toBe('제31회 부산국제영화제 10월 8일 (목) 상영 시간표 · 2회차')
+  })
+  it('GV 페이지는 관객과의 대화를 같이 싣는다', () => {
+    expect(festivalViewSeoTitle(festival(), { kind: 'gv' }, [screening({ hasGv: true })])).toBe('제31회 부산국제영화제 GV 일정 · 관객과의 대화 1회차')
+  })
+})
+
+describe('festivalViewMetaDescription', () => {
+  it('날짜 페이지 — 회차·극장·GV 수', () => {
+    const rows = [screening({ hasGv: true }), screening({ venueLabel: 'CGV 센텀시티' })]
+    expect(festivalViewMetaDescription(festival(), { kind: 'day', date: '2026-10-07' }, rows))
+      .toBe('제31회 부산국제영화제 10월 7일 (수) 상영 2회차를 시간순으로 정리했어요. 영화의전당·CGV 센텀시티 · GV 1회차')
+  })
+  it('GV 페이지 — 회차·날짜 수, 110자 안쪽', () => {
+    const rows = [screening({ hasGv: true }), screening({ hasGv: true, screeningDate: '2026-10-08' })]
+    const d = festivalViewMetaDescription(festival(), { kind: 'gv' }, rows)
+    expect(d.startsWith('부국제 GV(관객과의 대화) 2회차를 2일 동안 날짜·극장별로 모았어요.')).toBe(true)
+    expect(d.length).toBeLessThanOrEqual(110)
   })
 })

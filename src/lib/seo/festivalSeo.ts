@@ -1,4 +1,5 @@
 import type { FestivalDetail, FestivalScreening } from '@/types/festival'
+import type { FestivalView } from '@/lib/festival/festivalView'
 import { truncateSnippet } from './truncateSnippet'
 
 // ─────────────────────────────────────────────
@@ -86,4 +87,42 @@ export function summarizeFestivalScreenings(screenings: FestivalScreening[]): Fe
     titleCount: titles.size,
     gvCount: screenings.filter((s) => s.hasGv).length,
   }
+}
+
+/** 하위 페이지 회차의 극장 이름 — 처음 등장한 순 */
+function screeningVenues(screenings: FestivalScreening[]): string[] {
+  return [...new Set(screenings.map((s) => s.venueLabel))]
+}
+
+function venueLead(venues: string[]): string {
+  if (venues.length === 0) return ''
+  return `${venues.slice(0, 3).join('·')}${venues.length > 3 ? ` 등 ${venues.length}곳` : ''}`
+}
+
+/**
+ * 하위 페이지 제목 — 사이트 이름은 붙이지 않는다.
+ * 날짜: "제31회 부산국제영화제 10월 8일 (목) 상영 시간표 · 76회차"
+ * GV: "제31회 부산국제영화제 GV 일정 · 관객과의 대화 315회차"
+ * @param screenings 이 페이지에 실린 회차(selectViewScreenings 결과)
+ */
+export function festivalViewSeoTitle(festival: FestivalDetail, view: FestivalView, screenings: FestivalScreening[]): string {
+  if (view.kind === 'gv') return `${festival.name} GV 일정 · 관객과의 대화 ${screenings.length}회차`
+  return `${festival.name} ${dateWithDow(view.date)} 상영 시간표 · ${screenings.length}회차`
+}
+
+/** 하위 페이지 메타 설명(110자 안쪽) — 회차 수·극장·GV 수를 앞에 싣는다 */
+export function festivalViewMetaDescription(festival: FestivalDetail, view: FestivalView, screenings: FestivalScreening[]): string {
+  const venues = screeningVenues(screenings)
+  const lead = venueLead(venues)
+  let text: string
+  if (view.kind === 'gv') {
+    const days = new Set(screenings.map((s) => s.screeningDate)).size
+    text = `부국제 GV(관객과의 대화) ${screenings.length}회차를 ${days}일 동안 날짜·극장별로 모았어요.`
+      + `${lead ? ` ${lead}` : ''} · 상영 시각·섹션·예매 링크까지 한 번에 확인해 보세요`
+  } else {
+    const gv = screenings.filter((s) => s.hasGv).length
+    text = `${festival.name} ${dateWithDow(view.date)} 상영 ${screenings.length}회차를 시간순으로 정리했어요.`
+      + `${lead ? ` ${lead}` : ''}${gv > 0 ? ` · GV ${gv}회차` : ''}`
+  }
+  return truncateSnippet(text, 110) ?? text
 }

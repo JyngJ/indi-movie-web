@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Badge, Button, Icon, SectionHeader, ScrollNavButton } from '@/components/primitives'
@@ -16,6 +17,7 @@ import { buildFestivalVenueMap } from '@/lib/festival/venueMap'
 import { isMultiplexVenue, multiplexNotice } from '@/lib/festival/venue'
 import { toKstIsoDate } from '@/lib/date'
 import { scrollRailBy } from '@/lib/ui/railScroll'
+import { festivalViewPath, type FestivalView } from '@/lib/festival/festivalView'
 import type { FestivalDetail } from '@/types/festival'
 import { FestivalTimetable } from './FestivalTimetable'
 
@@ -114,7 +116,26 @@ function LineupPoster({ src, alt }: { src?: string; alt: string }) {
   )
 }
 
-export function FestivalDetailClient({ festival }: { festival: FestivalDetail }) {
+/* 시간표 제목 아래 이동 링크 — 하위 페이지(GV 일정 · 날짜별)와 본 상세를 잇는다. 크롤러가 따라갈 수 있게 <a>로 둔다 */
+function TimetableViewLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 'var(--spacing-1)',
+        margin: 'var(--spacing-2) var(--gutter) 0', padding: 'var(--spacing-2) var(--spacing-3)',
+        borderRadius: 'var(--radius-pill)', border: '1px solid var(--color-border)',
+        backgroundColor: 'var(--color-surface-card)', color: 'var(--color-text-body)',
+        fontSize: 'var(--text-meta)', fontWeight: 600, textDecoration: 'none',
+      }}
+    >
+      {children}
+      <Icon name="chevron-right" size={14} strokeWidth={1.75} color="currentColor" />
+    </Link>
+  )
+}
+
+export function FestivalDetailClient({ festival, view }: { festival: FestivalDetail; view?: FestivalView }) {
   const router = useRouter()
   // SSR은 window가 없어 항상 모바일 레이아웃으로 렌더 — useIsDesktopLayout을 마운트 전에
   // 그대로 쓰면 데스크톱 뷰포트에서 첫 클라이언트 렌더가 SSR 결과와 달라져 하이드레이션
@@ -136,6 +157,17 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
   const timetables = festival.timetables
   const currentTimetable = timetables[ttIndex]
   const hasScreenings = festival.screenings.length > 0
+  // GV 일정 페이지는 GV 회차만 표에 올린다. 지도·극장 수는 영화제 전체 기준 그대로
+  const gvCount = useMemo(() => festival.screenings.filter((s) => s.hasGv).length, [festival.screenings])
+  const timetableScreenings = useMemo(
+    () => (view?.kind === 'gv' ? festival.screenings.filter((s) => s.hasGv) : festival.screenings),
+    [festival.screenings, view],
+  )
+  const timetableLinks = view?.kind === 'gv'
+    ? <TimetableViewLink href={`/festival/${festival.slug}`}>전체 시간표 보기</TimetableViewLink>
+    : gvCount > 0
+      ? <TimetableViewLink href={festivalViewPath(festival.slug, { kind: 'gv' })}>GV 회차만 보기 ({gvCount}회차)</TimetableViewLink>
+      : null
 
   // 극장 지도 ↔ 시간표: 지도 카드의 "시간표 보기"가 시간표를 그 극장으로 맞춘다
   const venueMap = useMemo(() => buildFestivalVenueMap(festival.theaters, festival.screenings), [festival.theaters, festival.screenings])
@@ -284,7 +316,10 @@ export function FestivalDetailClient({ festival }: { festival: FestivalDetail })
           </section>
         ) : (
           <FestivalTimetable
-            screenings={festival.screenings}
+            screenings={timetableScreenings}
+            initialDay={view?.kind === 'day' ? view.date : null}
+            title={view?.kind === 'gv' ? `GV 일정 (${gvCount}회차)` : undefined}
+            headerLinks={timetableLinks}
             theaters={festival.theaters}
             startDate={festival.startDate}
             endDate={festival.endDate}
