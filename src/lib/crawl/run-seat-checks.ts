@@ -2,6 +2,10 @@ import type { CrawlRun } from '@/types/admin'
 import { updateSeatsOptimized } from '@/lib/admin/crawler'
 import { listAdminSources, saveCrawlRun } from '@/lib/admin/store'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { mapWithConcurrency } from '@/lib/admin/crawler/utils'
+import { buildSeatUpdateBatches } from './seatUpdateBatches'
+
+const SEAT_DB_CONCURRENCY = 8
 
 export interface RunSeatResult {
   runs: CrawlRun[]
@@ -23,7 +27,7 @@ export async function runSeatChecks(): Promise<RunSeatResult> {
   const fastSeatParsers = [
     'dtryxReservationApi',
     'movieeTicketApi',
-    'cineqApi',
+    'cineQApi',
     'tinyticketEventManager',
     'petitecine',
     'kofaCinematheque',
@@ -74,19 +78,45 @@ export async function runSeatChecks(): Promise<RunSeatResult> {
       continue
     }
 
-    // 좌석 수 업데이트: fingerprint 기준 단일 배치 upsert
-    // DB에 없는 fingerprint로 upsert하면 PostgREST가 insert로 빠져
-    // showtime_candidates의 not-null 컬럼(id 등) 위반이 나므로 미리 걸러낸다.
-    const rows = candidates
-      .filter((c) => knownFingerprints.has(c.fingerprint))
-      .map((c) => ({
-        fingerprint: c.fingerprint,
-        seat_available: c.seatAvailable,
-        seat_total: c.seatTotal,
-      }))
+    // 좌석 수 업데이트: 같은 좌석 값끼리 묶어 UPDATE ... WHERE fingerprint IN (...)
+    // upsert는 이미 있는 행이어도 id 등 NOT NULL 컬럼이 빠지면 23502로 막혀서
+    // 좌석이 한 건도 저장되지 않았다 (에러를 안 봐서 '갱신 성공'으로 집계됨).
+    const batches = buildSeatUpdateBatches(candidates, knownFingerprints)
+    // 좌석 값이 회차마다 달라 묶음이 크게 줄지 않는다 — Supabase 요청만 동시 8개로 돌린다
+    // (극장 사이트 요청이 아니라 dtryx 동시성 1 규칙과 무관)
+    let updatedCount = 0
+    let updateError: string | undefined
+    await mapWithConcurrency(batches.map((batch) => async () => {
+      if (updateError) return
+      const { error: dbError } = await supabase
+        .from('showtime_candidates')
+        .update({ seat_available: batch.seatAvailable, seat_total: batch.seatTotal })
+        .in('fingerprint', batch.fingerprints)
+      if (dbError) {
+        updateError = `좌석 저장 실패: ${dbError.code} ${dbError.message}`
+        return
+      }
+      updatedCount += batch.fingerprints.length
+    }), SEAT_DB_CONCURRENCY)
 
-    if (rows.length > 0) {
-      await supabase.from('showtime_candidates').upsert(rows, { onConflict: 'fingerprint' })
+    if (updateError) {
+      const run: CrawlRun = {
+        id: `seat_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
+        sourceId: source.id,
+        sourceName: source.theaterName,
+        inputKind: 'url',
+        status: 'failed',
+        startedAt: runStartedAt,
+        finishedAt: new Date().toISOString(),
+        candidates: [],
+        createdCount: 0,
+        updatedCount,
+        warningCount,
+        error: updateError,
+      }
+      await saveCrawlRun(run)
+      runs.push(run)
+      continue
     }
 
     const run: CrawlRun = {
@@ -99,7 +129,7 @@ export async function runSeatChecks(): Promise<RunSeatResult> {
       finishedAt: new Date().toISOString(),
       candidates: [],
       createdCount: 0,
-      updatedCount: rows.length,
+      updatedCount,
       warningCount,
     }
 
