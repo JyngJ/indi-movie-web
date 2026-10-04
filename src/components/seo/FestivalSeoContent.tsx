@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { FestivalDetail } from '@/types/festival'
 import { srOnly } from './srOnly'
 import { dateWithDow, summarizeFestivalScreenings } from '@/lib/seo/festivalSeo'
+import { festivalViewPath } from '@/lib/festival/festivalView'
 
 /** "YYYY-MM-DD" → "8월 23일" — SSR 전용이라 타임존 파싱 없이 문자열로 처리 */
 function formatDate(iso: string): string {
@@ -40,9 +41,20 @@ export function FestivalSeoContent({ festival }: { festival: FestivalDetail }) {
           <h2>{festival.name} 상영 시간표</h2>
           <ul>
             {summary.byDate.map((d) => (
-              <li key={d.date}>{dateWithDow(d.date)} — {d.count}회차 · {d.venues.join(', ')}</li>
+              <li key={d.date}>
+                <Link href={festivalViewPath(festival.slug, { kind: 'day', date: d.date })}>{dateWithDow(d.date)} 상영 시간표</Link>
+                {' '}— {d.count}회차 · {d.venues.join(', ')}
+              </li>
             ))}
           </ul>
+
+          {summary.gvCount > 0 && (
+            <p>
+              <Link href={festivalViewPath(festival.slug, { kind: 'gv' })}>{festival.name} GV 일정</Link>
+              {/* writing-audit-ignore — SEO 본문은 문어체 유지 */}
+              {' '}— 관객과의 대화 {summary.gvCount}회차를 날짜·극장별로 모았습니다.
+            </p>
+          )}
 
           <h2>{festival.name} 섹션별 상영작 ({summary.titleCount}편)</h2>
           {summary.bySection.map((sec) => (

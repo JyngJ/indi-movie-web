@@ -49,6 +49,12 @@ interface Props {
   officialUrl?: string | null
   /** 지도 카드의 "시간표 보기" — 바뀔 때마다 그 극장으로 맞춘다 */
   focusRequest?: { venue: string; at: number } | null
+  /** 처음 열 날짜 — 날짜별 페이지(/festival/biff31/2026-10-08)가 그날로 연다. 회차가 없는 날이면 무시 */
+  initialDay?: string | null
+  /** 섹션 제목 — GV 일정 페이지는 "GV 일정" */
+  title?: string
+  /** 제목 아래 이동 링크(GV만 보기 · 전체 시간표 보기) */
+  headerLinks?: React.ReactNode
 }
 
 const FAVORITES_TAB = '__favorites__'
@@ -87,7 +93,7 @@ const formatMinutes = (minutes: number) => {
 }
 const screenOf = (row: FestivalScreening) => row.screenLabel ?? row.venueLabel
 
-export function FestivalTimetable({ screenings, theaters, startDate, endDate, today, isDesktop, officialUrl, focusRequest }: Props) {
+export function FestivalTimetable({ screenings, theaters, startDate, endDate, today, isDesktop, officialUrl, focusRequest, initialDay, title = '상영 시간표', headerLinks }: Props) {
   const days = useMemo(() => buildFestivalDays(startDate, endDate), [startDate, endDate])
   const countByDate = useMemo(() => countScreeningsByDate(screenings), [screenings])
   const activeDates = useMemo(() => new Set(Object.keys(countByDate)), [countByDate])
@@ -119,6 +125,7 @@ export function FestivalTimetable({ screenings, theaters, startDate, endDate, to
   )
 
   const [day, setDay] = useState<string | null>(() => {
+    if (initialDay && countByDate[initialDay]) return initialDay
     const first = defaultFestivalDay(days, today)
     // 오늘이 회기 밖이거나 그날 회차가 없으면 회차 있는 첫날로
     return first && countByDate[first] ? first : days.find((d) => countByDate[d]) ?? first
@@ -220,10 +227,11 @@ export function FestivalTimetable({ screenings, theaters, startDate, endDate, to
   return (
     <section ref={sectionRef} style={{ paddingTop: isDesktop ? 'var(--spacing-12)' : 'var(--spacing-8)', scrollMarginTop: 60 }}>
       <SectionHeader
-        title="상영 시간표"
+        title={title}
         description={screenings.length > 0 ? '영화제 공식 발표 기준' : undefined}
         isDesktop={isDesktop}
       />
+      {headerLinks}
 
       {screenings.length === 0 ? (
         <UnpublishedNotice officialUrl={officialUrl} />

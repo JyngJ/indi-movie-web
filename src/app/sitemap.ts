@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getRegionFromCity, REGIONS } from '@/lib/regions'
+import { festivalViewPath, listFestivalViews } from '@/lib/festival/festivalView'
 
 // 24h였던 걸 1h로 단축 — /theater/[id]와 동일한 주기. 빌드 시점에 조회가 일시적으로
 // 비정상이었을 때 그 결과가 하루 종일 박제되는 걸 막는다(throw 처리와 함께 동작).
@@ -43,7 +44,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // is_active 필터 필수 — 비활성 영화제가 sitemap에 실리면 상세가 notFound()라
     // Search Console에 404가 쌓인다(죽은 극장 sitemap 이슈와 같은 재발 패턴).
     // 활성 영화제가 0개인 건 정상 상태라 빈 결과를 재시도 대상으로 삼지 않는다.
-    fetchWithRetry<{ slug: string; updated_at: string }>('festivals', () => supabase.from('festivals').select('slug, updated_at').eq('is_active', true), false),
+    fetchWithRetry<{ id: string; slug: string; updated_at: string }>('festivals', () => supabase.from('festivals').select('id, slug, updated_at').eq('is_active', true), false),
   ])
 
   const theaterUrls: MetadataRoute.Sitemap = theaters.map((t) => (
@@ -62,6 +63,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const festivalUrls: MetadataRoute.Sitemap = festivals.map((f) => (
     { url: `${BASE_URL}/festival/${f.slug}`, lastModified: new Date(f.updated_at), changeFrequency: 'weekly' as const, priority: 0.7 }
   ))
+
+  // 영화제 하위 페이지(날짜별 시간표 · GV 일정) — 회차가 있는 날짜만(없는 날짜는 notFound라 404가 쌓인다).
+  // 회차 조회가 실패해도 sitemap 전체를 버리지 않고 하위 페이지만 뺀다 — 회차 테이블은 영화제 본 행보다 나중에 생겼다
+  const festivalViewUrls: MetadataRoute.Sitemap = []
+  if (festivals.length > 0) {
+    const { data: screeningKeys } = await supabase
+      .from('festival_screenings')
+      .select('festival_id, screening_date, has_gv')
+      .in('festival_id', festivals.map((f) => f.id))
+    for (const f of festivals) {
+      const keys = (screeningKeys ?? [])
+        .filter((r) => r.festival_id === f.id)
+        .map((r) => ({ screeningDate: r.screening_date as string, hasGv: Boolean(r.has_gv) }))
+      for (const view of listFestivalViews(keys)) {
+        festivalViewUrls.push({ url: `${BASE_URL}${festivalViewPath(f.slug, view)}`, lastModified: new Date(f.updated_at), changeFrequency: 'daily', priority: 0.6 })
+      }
+    }
+  }
 
   // 극장이 실제 존재하는 지역만 — 빈 지역 페이지는 notFound()라 sitemap에 실으면 404가 쌓인다
   const regionsWithTheaters = new Set(theaters.map((t) => getRegionFromCity(t.city ?? '')))
@@ -82,5 +101,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...theaterUrls,
     ...directorUrls,
     ...festivalUrls,
+    ...festivalViewUrls,
   ]
 }
