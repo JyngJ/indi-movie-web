@@ -10,6 +10,8 @@ import { FavoriteActionButton } from '@/components/domain/favorites/FavoriteActi
 import { GLOBAL_NAV_DESKTOP_WIDTH } from '@/components/navigation/GlobalNav'
 import Image from 'next/image'
 import { useTheaterShowtimes, useTheaterAllMovies } from '@/lib/supabase/queries'
+import { snapshotUpdatedAt } from '@/lib/catalog/ssrSnapshot'
+import type { TheaterInitialShowtimes } from '@/lib/catalog/getTheaterShowtimesCached'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { withFlagsRaw } from '@/lib/nations'
 import type { Theater, Movie, Showtime } from '@/types/api'
@@ -245,10 +247,12 @@ function MovieShowtimeCardSkeleton({ isDesktop }: { isDesktop: boolean }) {
 }
 
 /* ── 메인 ────────────────────────────────────────────────────────── */
-export function FilmsTheaterDetailClient({ theater, initialSelection }: {
+export function FilmsTheaterDetailClient({ theater, initialSelection, initialShowtimes }: {
   theater: Theater
   /** 회차 공유 링크(/films/theater/[id]/s/[showtimeId])로 들어온 경우의 초기 선택 */
   initialSelection?: { date: string; showtimeId: string; movieTitle: string }
+  /** 서버가 미리 읽은 오늘 시간표 — 첫 화면에서 API를 다시 부르지 않게 한다 */
+  initialShowtimes?: TheaterInitialShowtimes | null
 }) {
   const router = useProgressRouter()
   const isDesktop = useIsDesktop()
@@ -264,8 +268,20 @@ export function FilmsTheaterDetailClient({ theater, initialSelection }: {
   const suppressResetOnDateChangeRef = useRef(Boolean(initialSelection))
   const restoredShareRef = useRef(false)
 
-  const { data: allMovies = [] } = useTheaterAllMovies(theater.id)
-  const { data: dayData, isLoading } = useTheaterShowtimes(theater.id, selectedDate)
+  /* 서버의 '오늘'(KST)과 브라우저의 오늘이 같을 때만 쓴다 — 자정 무렵 캐시된 페이지나
+     다른 시간대에서는 키가 어긋나 엉뚱한 날짜에 값이 들어간다. 신선도 판단은 마운트 때 한 번. */
+  const [seedUpdatedAt] = useState(() =>
+    initialShowtimes ? snapshotUpdatedAt(initialShowtimes.fetchedAt, Date.now()) : 0)
+  const seed = initialShowtimes && initialShowtimes.date === dates[0] ? initialShowtimes : null
+  const { data: allMovies = [] } = useTheaterAllMovies(
+    theater.id,
+    seed ? { data: seed.movies, updatedAt: seedUpdatedAt } : undefined,
+  )
+  const { data: dayData, isLoading } = useTheaterShowtimes(
+    theater.id,
+    selectedDate,
+    seed && selectedDate === seed.date ? { data: seed.day, updatedAt: seedUpdatedAt } : undefined,
+  )
 
   /* ── analytics: 극장을 영화 경유 없이 직접 본 흐름 — TheaterSheet의 type_c 패턴 미러링 ── */
   useEffect(() => {
