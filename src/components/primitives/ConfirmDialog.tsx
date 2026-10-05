@@ -15,7 +15,9 @@ interface Props {
   open: boolean
   title: string
   description?: ReactNode
-  confirmLabel?: string
+  /** 행동을 그대로 적는다(로그아웃·탈퇴하기). "확인"은 쓰지 않는다 — 라이팅 규칙 */
+  confirmLabel: string
+  /** 창만 닫고 아무것도 바꾸지 않으므로 "닫기". "취소"는 진행 중인 작업을 멈출 때만 쓴다 */
   cancelLabel?: string
   danger?: boolean
   busy?: boolean
@@ -27,8 +29,8 @@ export function ConfirmDialog({
   open,
   title,
   description,
-  confirmLabel = '확인',
-  cancelLabel = '취소',
+  confirmLabel,
+  cancelLabel = '닫기',
   danger = false,
   busy = false,
   onConfirm,

@@ -16,8 +16,8 @@ export function PosterOverlayChips() {
   const posters: { caption: string; chip: React.ReactNode }[] = [
     { caption: '오늘 (error·우상단)', chip: <PosterChip corner="top-right" tone="error">오늘</PosterChip> },
     { caption: 'D-1 (warning)', chip: <PosterChip corner="top-right" tone="warning">D-1</PosterChip> },
-    { caption: 'D-5 (neutral)', chip: <PosterChip corner="top-right" tone="neutral">D-5</PosterChip> },
-    { caption: '개봉 주년 (primary·좌상단)', chip: <PosterChip corner="top-left" tone="primary" label="개봉 30주년">30주년</PosterChip> },
+    { caption: 'D-5 막바지 (scrim·코너 태그)', chip: <PosterChip corner="top-left" tone="scrim" attached>D-5 막바지 상영</PosterChip> },
+    { caption: '개봉 주년 (scrim·코너 태그)', chip: <PosterChip corner="top-left" tone="scrim" attached label="개봉 30주년">30주년</PosterChip> },
     { caption: 'GV 유형 (gv·좌상단)', chip: <PosterChip corner="top-left" tone="gv">GV</PosterChip> },
     { caption: '매진 (error·우하단)', chip: <PosterChip corner="bottom-right" tone="error">매진</PosterChip> },
     { caption: '영화제 상태 (success)', chip: <PosterChip corner="bottom-right" tone="success">진행 중</PosterChip> },
@@ -52,7 +52,7 @@ function RankOverlay({ rank, width, height }: { rank: number; width: number; hei
           position: 'absolute', left: 0, right: 0, bottom: 0,
           height: Math.round(height * 0.42),
           borderRadius: '0 0 var(--radius-poster) var(--radius-poster)',
-          background: 'linear-gradient(to top, rgba(15,12,9,0.78), rgba(15,12,9,0))',
+          background: 'var(--gradient-rank-scrim)',
           pointerEvents: 'none',
         }}
       >

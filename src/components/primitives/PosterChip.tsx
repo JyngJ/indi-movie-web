@@ -20,17 +20,15 @@ import React from 'react'
  */
 
 export type PosterChipCorner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
-export type PosterChipTone = 'error' | 'warning' | 'success' | 'primary' | 'gv' | 'neutral' | 'scrim'
+export type PosterChipTone = 'error' | 'warning' | 'success' | 'gv' | 'scrim'
 
 const TONE_BG: Record<PosterChipTone, string> = {
   error:   'var(--color-error)',
   warning: 'var(--color-warning)',
   success: 'var(--color-success)',
-  primary: 'var(--color-primary-base)',
   gv:      'var(--color-gv)',
-  /* 상태가 아닌 중립 정보 — neutral 램프에 대응 스탑이 없어 예외로 둔다 */
-  neutral: '#78716C',
-  scrim:   'rgba(15,12,9,0.72)',
+  /* 상태가 아닌 중립 정보 · 코너 태그 기본색 */
+  scrim:   'var(--color-scrim-strong)',
 }
 
 interface PosterChipProps {

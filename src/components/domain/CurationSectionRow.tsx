@@ -294,7 +294,7 @@ function MovieCard({
                 position: 'absolute', left: 0, right: 0, bottom: 0,
                 height: Math.round(height * 0.42),
                 borderRadius: '0 0 var(--radius-poster) var(--radius-poster)',
-                background: 'linear-gradient(to top, rgba(15,12,9,0.78), rgba(15,12,9,0))',
+                background: 'var(--gradient-rank-scrim)',
                 pointerEvents: 'none',
               }}
             >

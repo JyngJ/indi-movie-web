@@ -10,6 +10,10 @@ const KIND: Record<string, { title: string; note: string }> = {
     title: '피그마에만 정의된 값',
     note: '피그마 변수로는 정의돼 있으나 코드 토큰이 없는 항목입니다. 사용을 시작할 때 tokens.css에 추가합니다.',
   },
+  'code-only': {
+    title: '코드에만 있는 값',
+    note: '코드 토큰은 있으나 피그마 변수나 이펙트 스타일이 없어 시안에서 고를 수 없는 항목입니다. 별칭과 폐지 예정 토큰은 뺍니다.',
+  },
   'type-scale': {
     title: '타입 스케일 밖의 크기',
     note: '2.0 텍스트 스타일에 없는 크기를 코드가 사용합니다. 스타일을 추가하거나 스케일 안의 값으로 조정합니다.',
@@ -22,6 +26,10 @@ const KIND: Record<string, { title: string; note: string }> = {
     title: '피그마 세트 미연결',
     note: '코드에는 있으나 대응하는 피그마 컴포넌트 세트가 없는 항목입니다.',
   },
+  'variant-broken': {
+    title: '이름이 밀린 배리언트',
+    note: '배리언트 이름이 "축=값" 형식에서 벗어나 피그마가 "속성 N" 같은 축을 새로 만든 세트입니다. 이름을 고쳐 축을 정리합니다.',
+  },
   'axis-missing': {
     title: '배리언트 축 없음',
     note: '코드가 가진 배리언트 축(variant·size·tone 등)이 피그마 세트에는 통째로 없습니다. 세트를 그리거나, 코드가 그 축을 실제로 쓰는지 다시 봅니다.',
@@ -32,7 +40,7 @@ const KIND: Record<string, { title: string; note: string }> = {
   },
 }
 
-const CHECK_ORDER = ['token-value', 'figma-only', 'type-scale', 'legacy-figma-style', 'component-unmapped', 'axis-missing', 'variant-missing']
+const CHECK_ORDER = ['token-value', 'figma-only', 'code-only', 'type-scale', 'legacy-figma-style', 'component-unmapped', 'variant-broken', 'axis-missing', 'variant-missing']
 
 /* 차이가 없을 때 빈 화면을 그냥 두지 않는다 — 무엇을 검사해서 0이 나왔는지가 결과의 절반이다. */
 function AllClear({ counts }: { counts: Record<string, number> }) {

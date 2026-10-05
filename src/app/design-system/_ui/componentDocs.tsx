@@ -175,7 +175,7 @@ function CornerTagFlow() {
       <FlowArrow label="예" />
       {question(<>② 서울·부산 사람이<br />같은 값을 보는가?</>,
         <FlowBranch
-          poster={<MiniPoster><PosterChip corner="top-right" tone="primary" size="compact">1km</PosterChip></MiniPoster>}
+          poster={<MiniPoster><PosterChip corner="top-right" tone="scrim" size="compact">1km</PosterChip></MiniPoster>}
           title="떠 있는 칩" examples="거리" />)}
       <FlowArrow label="예" />
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)' }}>
@@ -474,7 +474,7 @@ const DOCS: Record<string, Doc> = {
     playground: {
       controls: [
         { kind: 'radio', name: 'corner', label: 'Corner', options: ['top-left', 'top-right', 'bottom-right'] },
-        { kind: 'radio', name: 'tone', label: 'Tone', options: ['error', 'warning', 'success', 'gv', 'primary', 'scrim'] },
+        { kind: 'radio', name: 'tone', label: 'Tone', options: ['error', 'warning', 'success', 'gv', 'scrim'] },
         { kind: 'toggle', name: 'attached', label: '코너 태그' },
         { kind: 'text', name: 'label', label: '레이블', initial: '매진' },
       ],
@@ -506,7 +506,7 @@ const DOCS: Record<string, Doc> = {
       <PosterStage key="rank">
         <div style={{
           position: 'absolute', inset: 'auto 0 0 0', height: '42%',
-          background: 'linear-gradient(transparent, rgba(15,12,9,0.78))',
+          background: 'var(--gradient-rank-scrim)',
           borderRadius: '0 0 var(--radius-poster) var(--radius-poster)',
         }} />
         <div style={{

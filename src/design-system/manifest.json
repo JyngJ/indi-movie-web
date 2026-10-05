@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-16T08:52:29.003Z",
-  "figmaDumpAt": "2026-09-01T07:28:05.395Z",
+  "generatedAt": "2026-10-05T08:48:14.954Z",
+  "figmaDumpAt": "2026-10-05T08:42:41.899Z",
   "tokenGroups": [
     {
       "title": "겹침 순서 — 같은 부모 안에서만 비교",
@@ -332,6 +332,102 @@
           "figma": {
             "name": "surface/overlay-pressed",
             "value": "rgba(0, 0, 0, 0.14)",
+            "alias": null,
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        }
+      ]
+    },
+    {
+      "title": "사진·포스터 위 (스크림)",
+      "tokens": [
+        {
+          "name": "--color-scrim-soft",
+          "value": "rgba(15, 12, 9, 0.45)",
+          "comment": "비활성·조건 외 포스터 흐림",
+          "resolved": "rgba(15, 12, 9, 0.45)",
+          "figma": {
+            "name": "surface/scrim-soft",
+            "value": "rgba(15, 12, 9, 0.45)",
+            "alias": null,
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-scrim-strong",
+          "value": "rgba(15, 12, 9, 0.72)",
+          "comment": "글자를 얹는 오버레이 (+N·상영 일정) · 사진 위 아이콘 버튼",
+          "resolved": "rgba(15, 12, 9, 0.72)",
+          "figma": {
+            "name": "surface/scrim-strong",
+            "value": "rgba(15, 12, 9, 0.72)",
+            "alias": null,
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-scrim-lightbox",
+          "value": "rgba(15, 12, 9, 0.92)",
+          "comment": "이미지 확대 보기 배경",
+          "resolved": "rgba(15, 12, 9, 0.92)",
+          "figma": {
+            "name": "surface/scrim-lightbox",
+            "value": "rgba(15, 12, 9, 0.92)",
+            "alias": null,
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--gradient-rank-scrim",
+          "value": "linear-gradient(to top, rgba(15, 12, 9, 0.78), rgba(15, 12, 9, 0))",
+          "comment": "",
+          "resolved": "linear-gradient(to top, rgba(15, 12, 9, 0.78), rgba(15, 12, 9, 0))",
+          "figma": null
+        },
+        {
+          "name": "--color-on-scrim",
+          "value": "rgba(255, 255, 255, 0.9)",
+          "comment": "주 텍스트",
+          "resolved": "rgba(255, 255, 255, 0.9)",
+          "figma": {
+            "name": "text/on-scrim",
+            "value": "rgba(255, 255, 255, 0.9)",
+            "alias": null,
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-on-scrim-sub",
+          "value": "rgba(255, 255, 255, 0.6)",
+          "comment": "보조 텍스트·이니셜",
+          "resolved": "rgba(255, 255, 255, 0.6)",
+          "figma": {
+            "name": "text/on-scrim-sub",
+            "value": "rgba(255, 255, 255, 0.6)",
+            "alias": null,
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-on-scrim-surface",
+          "value": "rgba(255, 255, 255, 0.12)",
+          "comment": "버튼·칩 바탕",
+          "resolved": "rgba(255, 255, 255, 0.12)",
+          "figma": {
+            "name": "surface/on-scrim-surface",
+            "value": "rgba(255, 255, 255, 0.12)",
+            "alias": null,
+            "collection": "영화볼지도 시멘틱 - 2.0"
+          }
+        },
+        {
+          "name": "--color-on-scrim-faint",
+          "value": "rgba(255, 255, 255, 0.15)",
+          "comment": "워터마크 글자",
+          "resolved": "rgba(255, 255, 255, 0.15)",
+          "figma": {
+            "name": "text/on-scrim-faint",
+            "value": "rgba(255, 255, 255, 0.15)",
             "alias": null,
             "collection": "영화볼지도 시멘틱 - 2.0"
           }
@@ -869,6 +965,18 @@
             "alias": null,
             "collection": "영화볼지도 색상 - 2.0"
           }
+        },
+        {
+          "name": "--color-black",
+          "value": "#000000",
+          "comment": "원본 배경색을 알 수 없는 사진 뒤 고정 바탕 (인스타 카드)",
+          "resolved": "#000000",
+          "figma": {
+            "name": "black",
+            "value": "#000000",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
         }
       ]
     },
@@ -1048,21 +1156,60 @@
           "value": "#FEE500",
           "comment": "",
           "resolved": "#FEE500",
-          "figma": null
+          "figma": {
+            "name": "brand/kakao",
+            "value": "#FEE500",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
         },
         {
           "name": "--color-brand-kakao-hover",
           "value": "#F2DA00",
           "comment": "",
           "resolved": "#F2DA00",
-          "figma": null
+          "figma": {
+            "name": "brand/kakao-hover",
+            "value": "#F2DA00",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
         },
         {
           "name": "--color-brand-kakao-text",
           "value": "rgba(0, 0, 0, 0.85)",
           "comment": "",
           "resolved": "rgba(0, 0, 0, 0.85)",
-          "figma": null
+          "figma": {
+            "name": "brand/kakao-text",
+            "value": "rgba(0, 0, 0, 0.85)",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-brand-linkedin",
+          "value": "#0A66C2",
+          "comment": "",
+          "resolved": "#0A66C2",
+          "figma": {
+            "name": "brand/linkedin",
+            "value": "#0A66C2",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
+        },
+        {
+          "name": "--color-brand-github",
+          "value": "#24292E",
+          "comment": "",
+          "resolved": "#24292E",
+          "figma": {
+            "name": "brand/github",
+            "value": "#24292E",
+            "alias": null,
+            "collection": "영화볼지도 색상 - 2.0"
+          }
         }
       ]
     },
@@ -1284,7 +1431,12 @@
           "value": "20px",
           "comment": "",
           "resolved": "20px",
-          "figma": null
+          "figma": {
+            "name": "spacing/5",
+            "value": "20px",
+            "alias": null,
+            "collection": "영화볼지도 스페이싱 - 2.0"
+          }
         },
         {
           "name": "--spacing-6",
@@ -1958,6 +2110,13 @@
           "figma": null
         },
         {
+          "name": "--shadow-pin",
+          "value": "0 2px 6px rgba(0, 0, 0, 0.18)",
+          "comment": "지도 극장 핀 — 피그마 2.0/shadow/pin",
+          "resolved": "0 2px 6px rgba(0, 0, 0, 0.18)",
+          "figma": null
+        },
+        {
           "name": "--shadow-md",
           "value": "0 2px 4px rgba(20, 15, 10, 0.10), 0 8px 20px rgba(20, 15, 10, 0.06)",
           "comment": "",
@@ -2056,6 +2215,20 @@
           "value": "52px",
           "comment": "",
           "resolved": "52px",
+          "figma": null
+        },
+        {
+          "name": "--nav-mobile-height",
+          "value": "64px",
+          "comment": "",
+          "resolved": "64px",
+          "figma": null
+        },
+        {
+          "name": "--nav-mobile-offset",
+          "value": "calc(var(--nav-mobile-height) + env(safe-area-inset-bottom))",
+          "comment": "",
+          "resolved": "calc(var(--nav-mobile-height) + env(safe-area-inset-bottom))",
           "figma": null
         },
         {
@@ -2443,6 +2616,43 @@
           "visible": true
         }
       ]
+    },
+    {
+      "name": "2.0/shadow/panel-left",
+      "effects": [
+        {
+          "type": "DROP_SHADOW",
+          "radius": 2,
+          "spread": 0,
+          "offset": {
+            "x": -1,
+            "y": 0
+          },
+          "color": {
+            "r": 0.0784313753247261,
+            "g": 0.05882352963089943,
+            "b": 0.03921568766236305,
+            "a": 0.10000000149011612
+          },
+          "visible": true
+        },
+        {
+          "type": "DROP_SHADOW",
+          "radius": 8,
+          "spread": 0,
+          "offset": {
+            "x": -2,
+            "y": 0
+          },
+          "color": {
+            "r": 0.0784313753247261,
+            "g": 0.05882352963089943,
+            "b": 0.03921568766236305,
+            "a": 0.03999999910593033
+          },
+          "visible": true
+        }
+      ]
     }
   ],
   "figmaCollections": [
@@ -2451,7 +2661,7 @@
       "modes": [
         "Light"
       ],
-      "count": 38,
+      "count": 44,
       "vars": [
         {
           "name": "neutral/900",
@@ -2774,6 +2984,56 @@
           "scopes": [
             "EFFECT_COLOR"
           ]
+        },
+        {
+          "name": "black",
+          "value": "#000000",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL"
+          ]
+        },
+        {
+          "name": "brand/kakao",
+          "value": "#FEE500",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL"
+          ]
+        },
+        {
+          "name": "brand/kakao-hover",
+          "value": "#F2DA00",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL"
+          ]
+        },
+        {
+          "name": "brand/kakao-text",
+          "value": "#000000 @0.8500000238418579",
+          "scopes": [
+            "SHAPE_FILL",
+            "TEXT_FILL"
+          ]
+        },
+        {
+          "name": "brand/linkedin",
+          "value": "#0A66C2",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL",
+            "TEXT_FILL"
+          ]
+        },
+        {
+          "name": "brand/github",
+          "value": "#24292E",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL",
+            "TEXT_FILL"
+          ]
         }
       ]
     },
@@ -2782,7 +3042,7 @@
       "modes": [
         "Value"
       ],
-      "count": 10,
+      "count": 11,
       "vars": [
         {
           "name": "spacing/1",
@@ -2863,6 +3123,14 @@
             "WIDTH_HEIGHT",
             "GAP"
           ]
+        },
+        {
+          "name": "spacing/5",
+          "value": 20,
+          "scopes": [
+            "WIDTH_HEIGHT",
+            "GAP"
+          ]
         }
       ]
     },
@@ -2929,7 +3197,7 @@
       "modes": [
         "Light"
       ],
-      "count": 32,
+      "count": 39,
       "vars": [
         {
           "name": "surface/bg",
@@ -3205,6 +3473,62 @@
           },
           "scopes": [
             "ALL_SCOPES"
+          ]
+        },
+        {
+          "name": "surface/scrim-soft",
+          "value": "#0F0C09 @0.44999998807907104",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL"
+          ]
+        },
+        {
+          "name": "surface/scrim-strong",
+          "value": "#0F0C09 @0.7200000286102295",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL"
+          ]
+        },
+        {
+          "name": "surface/scrim-lightbox",
+          "value": "#0F0C09 @0.9200000166893005",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL"
+          ]
+        },
+        {
+          "name": "text/on-scrim",
+          "value": "#FFFFFF @0.8999999761581421",
+          "scopes": [
+            "SHAPE_FILL",
+            "TEXT_FILL"
+          ]
+        },
+        {
+          "name": "text/on-scrim-sub",
+          "value": "#FFFFFF @0.6000000238418579",
+          "scopes": [
+            "SHAPE_FILL",
+            "TEXT_FILL"
+          ]
+        },
+        {
+          "name": "text/on-scrim-faint",
+          "value": "#FFFFFF @0.15000000596046448",
+          "scopes": [
+            "SHAPE_FILL",
+            "TEXT_FILL"
+          ]
+        },
+        {
+          "name": "surface/on-scrim-surface",
+          "value": "#FFFFFF @0.11999999731779099",
+          "scopes": [
+            "FRAME_FILL",
+            "SHAPE_FILL"
           ]
         }
       ]
@@ -5333,17 +5657,17 @@
         },
         {
           "name": "confirmLabel",
-          "type": "string | undefined",
-          "optional": true,
-          "default": "'확인'",
-          "doc": ""
+          "type": "string",
+          "optional": false,
+          "default": null,
+          "doc": "행동을 그대로 적는다(로그아웃·탈퇴하기). \"확인\"은 쓰지 않는다 — 라이팅 규칙"
         },
         {
           "name": "cancelLabel",
           "type": "string | undefined",
           "optional": true,
-          "default": "'취소'",
-          "doc": ""
+          "default": "'닫기'",
+          "doc": "창만 닫고 아무것도 바꾸지 않으므로 \"닫기\". \"취소\"는 진행 중인 작업을 멈출 때만 쓴다"
         },
         {
           "name": "danger",
@@ -5953,8 +6277,88 @@
           "doc": "선택 상태 문구: 관심 영화 · 관심 극장 · 관심 감독"
         }
       ],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/FavoriteToggle",
+      "figma": {
+        "name": "2.0/FavoriteToggle",
+        "axes": {
+          "State": [
+            "off",
+            "off-hover",
+            "on",
+            "on-hover"
+          ]
+        },
+        "variants": [
+          {
+            "props": {
+              "State": "off"
+            },
+            "w": 140,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "surface/raised"
+          },
+          {
+            "props": {
+              "State": "off-hover"
+            },
+            "w": 140,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "neutral/300"
+          },
+          {
+            "props": {
+              "State": "on"
+            },
+            "w": 140,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "status/error-tint"
+          },
+          {
+            "props": {
+              "State": "on-hover"
+            },
+            "w": 140,
+            "h": 44,
+            "radius": 8,
+            "pad": [
+              0,
+              32,
+              0,
+              32
+            ],
+            "gap": 8,
+            "dir": "HORIZONTAL",
+            "fill": "#EBC7C5"
+          }
+        ]
+      }
     },
     {
       "name": "FilterPill",
@@ -6432,7 +6836,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#DDD9CF"
+            "fill": "surface/raised"
           },
           {
             "props": {
@@ -6492,7 +6896,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#DDD9CF"
+            "fill": "surface/raised"
           },
           {
             "props": {
@@ -6532,7 +6936,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000 @0.06"
+            "fill": "surface/overlay"
           },
           {
             "props": {
@@ -6552,7 +6956,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000 @0.1"
+            "fill": "surface/overlay-hover"
           },
           {
             "props": {
@@ -6572,7 +6976,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000 @0.14"
+            "fill": "surface/overlay-pressed"
           },
           {
             "props": {
@@ -6592,7 +6996,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000 @0.06"
+            "fill": "surface/overlay"
           },
           {
             "props": {
@@ -6612,7 +7016,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000 @0.1"
+            "fill": "surface/overlay-hover"
           },
           {
             "props": {
@@ -6632,7 +7036,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000 @0.14"
+            "fill": "surface/overlay-pressed"
           },
           {
             "props": {
@@ -6652,7 +7056,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000 @0.06"
+            "fill": "surface/overlay"
           },
           {
             "props": {
@@ -6672,7 +7076,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000 @0.1"
+            "fill": "surface/overlay-hover"
           },
           {
             "props": {
@@ -6692,7 +7096,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000 @0.14"
+            "fill": "surface/overlay-pressed"
           },
           {
             "props": {
@@ -6712,7 +7116,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000 @0.06"
+            "fill": "surface/overlay"
           },
           {
             "props": {
@@ -6732,7 +7136,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000 @0.1"
+            "fill": "surface/overlay-hover"
           },
           {
             "props": {
@@ -6752,7 +7156,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000 @0.14"
+            "fill": "surface/overlay-pressed"
           },
           {
             "props": {
@@ -6792,7 +7196,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#DDD9CF"
+            "fill": "surface/raised"
           },
           {
             "props": {
@@ -6832,7 +7236,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000 @0.06"
+            "fill": "surface/overlay"
           },
           {
             "props": {
@@ -6852,7 +7256,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000 @0.1"
+            "fill": "surface/overlay-hover"
           },
           {
             "props": {
@@ -6872,7 +7276,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000 @0.14"
+            "fill": "surface/overlay-pressed"
           },
           {
             "props": {
@@ -6892,7 +7296,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000 @0.06"
+            "fill": "surface/overlay"
           },
           {
             "props": {
@@ -6912,7 +7316,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000 @0.1"
+            "fill": "surface/overlay-hover"
           },
           {
             "props": {
@@ -6932,7 +7336,7 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#000000 @0.14"
+            "fill": "surface/overlay-pressed"
           }
         ]
       }
@@ -7594,13 +7998,18 @@
           "Size": [
             "default",
             "compact"
+          ],
+          "Attached": [
+            "false",
+            "true"
           ]
         },
         "variants": [
           {
             "props": {
               "Tone": "error",
-              "Size": "default"
+              "Size": "default",
+              "Attached": "false"
             },
             "w": 45,
             "h": 30,
@@ -7618,7 +8027,8 @@
           {
             "props": {
               "Tone": "error",
-              "Size": "compact"
+              "Size": "compact",
+              "Attached": "false"
             },
             "w": 34,
             "h": 20,
@@ -7636,7 +8046,8 @@
           {
             "props": {
               "Tone": "warning",
-              "Size": "default"
+              "Size": "default",
+              "Attached": "false"
             },
             "w": 66,
             "h": 30,
@@ -7654,7 +8065,8 @@
           {
             "props": {
               "Tone": "warning",
-              "Size": "compact"
+              "Size": "compact",
+              "Attached": "false"
             },
             "w": 51,
             "h": 20,
@@ -7672,7 +8084,8 @@
           {
             "props": {
               "Tone": "success",
-              "Size": "default"
+              "Size": "default",
+              "Attached": "false"
             },
             "w": 56,
             "h": 30,
@@ -7690,7 +8103,8 @@
           {
             "props": {
               "Tone": "success",
-              "Size": "compact"
+              "Size": "compact",
+              "Attached": "false"
             },
             "w": 42,
             "h": 20,
@@ -7708,7 +8122,8 @@
           {
             "props": {
               "Tone": "primary",
-              "Size": "default"
+              "Size": "default",
+              "Attached": "false"
             },
             "w": 58,
             "h": 30,
@@ -7726,7 +8141,8 @@
           {
             "props": {
               "Tone": "primary",
-              "Size": "compact"
+              "Size": "compact",
+              "Attached": "false"
             },
             "w": 44,
             "h": 20,
@@ -7744,7 +8160,8 @@
           {
             "props": {
               "Tone": "gv",
-              "Size": "default"
+              "Size": "default",
+              "Attached": "false"
             },
             "w": 42,
             "h": 30,
@@ -7762,7 +8179,8 @@
           {
             "props": {
               "Tone": "gv",
-              "Size": "compact"
+              "Size": "compact",
+              "Attached": "false"
             },
             "w": 30,
             "h": 20,
@@ -7780,7 +8198,8 @@
           {
             "props": {
               "Tone": "neutral",
-              "Size": "default"
+              "Size": "default",
+              "Attached": "false"
             },
             "w": 46,
             "h": 30,
@@ -7798,7 +8217,8 @@
           {
             "props": {
               "Tone": "neutral",
-              "Size": "compact"
+              "Size": "compact",
+              "Attached": "false"
             },
             "w": 34,
             "h": 20,
@@ -7816,7 +8236,8 @@
           {
             "props": {
               "Tone": "scrim",
-              "Size": "default"
+              "Size": "default",
+              "Attached": "false"
             },
             "w": 80,
             "h": 30,
@@ -7829,12 +8250,13 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#0F0C09 @0.72"
+            "fill": "surface/scrim-strong"
           },
           {
             "props": {
               "Tone": "scrim",
-              "Size": "compact"
+              "Size": "compact",
+              "Attached": "false"
             },
             "w": 63,
             "h": 20,
@@ -7847,7 +8269,79 @@
             ],
             "gap": 0,
             "dir": "HORIZONTAL",
-            "fill": "#0F0C09 @0.72"
+            "fill": "surface/scrim-strong"
+          },
+          {
+            "props": {
+              "Tone": "scrim",
+              "Size": "default",
+              "Attached": "true"
+            },
+            "w": 61,
+            "h": 30,
+            "radius": [
+              2,
+              0,
+              4,
+              0
+            ],
+            "pad": [
+              8,
+              12,
+              8,
+              12
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "surface/scrim-strong"
+          },
+          {
+            "props": {
+              "Tone": "error",
+              "Size": "default",
+              "Attached": "true"
+            },
+            "w": 89,
+            "h": 30,
+            "radius": [
+              2,
+              0,
+              4,
+              0
+            ],
+            "pad": [
+              8,
+              12,
+              8,
+              12
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#9B3331"
+          },
+          {
+            "props": {
+              "Tone": "warning",
+              "Size": "default",
+              "Attached": "true"
+            },
+            "w": 67,
+            "h": 30,
+            "radius": [
+              2,
+              0,
+              4,
+              0
+            ],
+            "pad": [
+              8,
+              12,
+              8,
+              12
+            ],
+            "gap": 0,
+            "dir": "HORIZONTAL",
+            "fill": "#B9800E"
           }
         ]
       }
@@ -8160,8 +8654,23 @@
       "file": "src/components/primitives/Skeleton.tsx",
       "doc": "",
       "props": [],
-      "figmaSet": null,
-      "figma": null
+      "figmaSet": "2.0/ShowtimeCellSkeleton",
+      "figma": {
+        "name": "2.0/ShowtimeCellSkeleton",
+        "axes": {},
+        "variants": [
+          {
+            "props": {},
+            "w": 104,
+            "h": 102,
+            "radius": 16,
+            "pad": null,
+            "gap": null,
+            "dir": null,
+            "fill": "neutral/200"
+          }
+        ]
+      }
     },
     {
       "name": "Skeleton",
@@ -8460,6 +8969,13 @@
           "doc": "tablist에 붙는 이름. 스크린리더가 무슨 탭 묶음인지 읽는다."
         },
         {
+          "name": "scrollable",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": "false",
+          "doc": "underline 전용 — 탭이 많아 폭을 나눠 가질 수 없을 때. 탭이 글자 폭만큼 서고 줄이 가로로 스크롤된다."
+        },
+        {
           "name": "style",
           "type": "CSSProperties | undefined",
           "optional": true,
@@ -8655,27 +9171,5 @@
       }
     }
   ],
-  "drift": [
-    {
-      "kind": "component-unmapped",
-      "id": "FavoriteToggle",
-      "code": "src/components/primitives/FavoriteToggle.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    },
-    {
-      "kind": "component-unmapped",
-      "id": "PanelScrollBody",
-      "code": "src/components/primitives/PanelScrollBody.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    },
-    {
-      "kind": "component-unmapped",
-      "id": "ShowtimeCellSkeleton",
-      "code": "src/components/primitives/Skeleton.tsx",
-      "figma": null,
-      "note": "대응하는 피그마 컴포넌트 세트가 없다"
-    }
-  ]
+  "drift": []
 }
