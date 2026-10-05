@@ -70,7 +70,15 @@ function loadDump() {
     console.warn(`⚠ 덤프 없음: ${DUMP}\n  피그마 대조 없이 코드만으로 빌드한다. Scripter에서 dump-state 실행 후 다시 돌릴 것.`)
     return null
   }
-  return JSON.parse(fs.readFileSync(DUMP, 'utf8'))
+  const dump = JSON.parse(fs.readFileSync(DUMP, 'utf8'))
+  /* 덤프 폴더는 다른 피그마 파일 작업과 같이 쓴다. 2026-09-30에 다른 프로젝트 파일 덤프가
+     state.json을 덮어써서, 그대로 빌드하면 drift 89건이 사이트에 실릴 뻔했다. */
+  const cols = (dump.variables || []).map(c => c.collection)
+  if (!cols.some(n => n.startsWith('영화볼지도'))) {
+    console.error(`✗ 영화볼지도 파일 덤프가 아니다: ${DUMP}\n  컬렉션: ${cols.join(', ') || '(없음)'}\n  피그마에서 영화볼지도 파일을 열고 dump-state를 다시 실행할 것.`)
+    process.exit(1)
+  }
+  return dump
 }
 
 /** 피그마 변수 이름(`neutral/900`)을 코드 이름 조각(`neutral-900`)으로. */
@@ -224,6 +232,9 @@ function collectComponentSets(dump) {
    억지로 붙이지 말 것 — 사이트가 그 세트의 수치를 "이 컴포넌트의 실측값"으로 싣는다.
    2026-09-01: PosterChip·GenreChip·DirectorChip이 2.0/Chip을 가리키고 있어서,
    포스터 칩 문서에 필터 칩(73×32 · radius 9999)의 수치가 실려 있었다. */
+/* 모양 없이 동작만 있는 컴포넌트 — 피그마에 그릴 것이 없어 세트 대조에서 뺀다. */
+const BEHAVIOR_ONLY = new Set(['PanelScrollBody'])
+
 const FIGMA_ALIAS = {
   FabRound: '2.0/FAB', FabPill: '2.0/FAB',
   SearchBarButton: '2.0/FilterButton',
@@ -345,6 +356,28 @@ for (const g of groups) {
   }
 }
 
+/* 코드에만 있는 토큰 — 피그마에서 고를 수 없는 값. 아래는 빼고 본다.
+   - 별칭(var(--x)): 원본 토큰이 대조된다
+   - 폐지·사용 금지 표시: 피그마에 새로 들이지 않는다
+   - 주석이 피그마 변수 이름(primary/800)인 것: 같은 값이 피그마에 이미 있다
+   그림자는 변수가 아니라 이펙트 스타일(2.0/shadow/*)로 대조한다. */
+const effectNames = new Set((dump?.effectStyles || []).map(e => e.name))
+if (dump) {
+  for (const g of groups) {
+    for (const t of g.tokens) {
+      if (!/^--(color|radius|spacing|shadow)-/.test(t.name) || t.figma) continue
+      if (/^var\(--[\w-]+\)$/.test(t.value)) continue
+      if (/폐지|금지/.test(t.comment)) continue
+      if (figmaVars.has(flat(t.comment.trim()))) continue
+      const shadow = t.name.match(/^--shadow-(.+)$/)
+      if (shadow && effectNames.has(`2.0/shadow/${shadow[1]}`)) continue
+      addDrift('code-only', t.name, t.resolved, null, shadow
+        ? `피그마 이펙트 스타일 2.0/shadow/${shadow[1]}가 없다`
+        : '피그마에 대응 변수가 없다')
+    }
+  }
+}
+
 // 피그마에만 있는 변수
 for (const [key, v] of figmaVars) {
   if (!matchedFigma.has(key)) {
@@ -386,6 +419,17 @@ for (const es of dump?.effectStyles ?? []) {
 
 const sets = collectComponentSets(dump)
 const setsByName = new Map(sets.map(s => [s.name, s]))
+
+/* 배리언트 이름이 밀린 세트 — 경로 이름("2.0/IconButton/overlay/32")인 컴포넌트를 세트에 합치면
+   피그마가 "속성 5" 같은 축을 새로 만들고 기존 축 값이 어긋난다(2026-10-05 IconButton 6개). */
+for (const set of sets) {
+  const autoAxes = Object.keys(set.axes).filter(k => /^(속성|Property) \d+$/.test(k))
+  const keyCounts = new Set(set.variants.map(v => Object.keys(v.props).length))
+  if (autoAxes.length || keyCounts.size > 1) {
+    addDrift('variant-broken', set.name, null, autoAxes.join(' · ') || `축 개수 ${[...keyCounts].join('·')}`,
+      '배리언트 이름이 축 형식에서 벗어났다 — 이름을 고쳐 축을 정리할 것')
+  }
+}
 /** 배리언트로 그려져야 하는 prop 이름 — 이것만 축 누락을 따진다. */
 const VARIANT_PROPS = new Set(['variant', 'size', 'tone', 'shape', 'state'])
 
@@ -425,7 +469,7 @@ function checkVariantCoverage(c, set) {
 
 const components = extractComponents(setsByName).map(c => {
   const set = c.figmaSet ? setsByName.get(c.figmaSet) : null
-  if (!c.figmaSet) addDrift('component-unmapped', c.name, c.file, null, '대응하는 피그마 컴포넌트 세트가 없다')
+  if (!c.figmaSet && !BEHAVIOR_ONLY.has(c.name)) addDrift('component-unmapped', c.name, c.file, null, '대응하는 피그마 컴포넌트 세트가 없다')
   if (set) checkVariantCoverage(c, set)
   return { ...c, figma: set ? { name: set.name, axes: set.axes, variants: set.variants } : null }
 })

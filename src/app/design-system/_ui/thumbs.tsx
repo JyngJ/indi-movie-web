@@ -40,13 +40,13 @@ const THUMBS: Record<string, ReactNode> = {
     <div style={{
       width: 208, padding: 'var(--spacing-4)', borderRadius: 'var(--radius-popover)',
       background: 'var(--color-surface-card)', border: '1px solid var(--color-border)',
-      boxShadow: 'var(--elevation-2, 0 8px 24px rgba(0,0,0,0.12))',
+      boxShadow: 'var(--shadow-sheet)',
       display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)',
     }}>
       <span style={{ fontSize: 'var(--text-body)', fontWeight: 700, color: 'var(--color-text-primary)' }}>로그아웃할까요?</span>
-      <div style={{ display: 'flex', gap: 'var(--spacing-2)', justifyContent: 'flex-end' }}>
-        <Button variant="secondary" size="sm">취소</Button>
-        <Button size="sm">로그아웃</Button>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1)' }}>
+        <Button size="sm" fullWidth>로그아웃</Button>
+        <Button variant="text" size="sm" fullWidth>닫기</Button>
       </div>
     </div>
   ),

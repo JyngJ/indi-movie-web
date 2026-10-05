@@ -90,7 +90,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
       { title: 'fullWidth', desc: '모바일 하단 고정 CTA 자리입니다. 넓은 화면에서는 가로로 늘어난 버튼이 초점을 흐리므로 권장하지 않습니다.' },
     ],
     usage: [
-      { kind: 'do', rule: 'primary는 가장 오른쪽(또는 마지막)에 배치하고, 취소는 text·tertiary로 낮춥니다.' },
+      { kind: 'do', rule: 'primary는 가장 오른쪽(또는 마지막)에 배치하고, 보조 버튼(닫기)은 secondary·text로 낮춥니다.' },
       { kind: 'dont', rule: 'primary를 나란히 두 개 배치하지 않습니다.', instead: '주행동 하나만 primary로 두고 나머지는 secondary·text로 낮춥니다.' },
       { kind: 'caution', rule: 'danger는 되돌릴 수 없는 행동에만 붙입니다.' },
     ],
@@ -171,6 +171,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
 
   PosterChip: {
     changes: [
+      { date: '2026-10-05', note: '쓰지 않던 primary·neutral 톤을 지웠습니다. neutral은 램프에 없는 #78716C를 하드코딩한 예외였고, 둘 다 9/27 이후 제품 화면에서 쓰이지 않았습니다. scrim 톤은 같은 값의 --color-scrim-strong을 참조합니다.' },
       { date: '2026-09-27', note: '포스터 모서리에 붙는 코너 태그(attached)를 더했습니다. 개봉 주년과 막바지 D-N을 좌상단 코너 태그로 옮기고(겹치면 D-N 우선), 주년은 primary에서 scrim으로, D-2 이상은 neutral에서 scrim으로 바꿨습니다. 오늘(error)·D-1(warning)은 그대로입니다.' },
       { date: '2026-09-01', note: '긴 카피를 자르지 않고 접도록 바꿨습니다(white-space: normal · word-break: keep-all · lineHeight 1.2 · maxWidth). 문서에는 접기가 규칙으로 적혀 있었는데 컴포넌트는 nowrap이라, 규칙을 지킨 곳은 정작 이 컴포넌트를 쓰지 않는 화면뿐이었습니다.' },
       { date: '2026-09-01', note: 'GvEventSection·InstagramRecsSection·TheaterSheet·CurationSheet의 인라인 칩을 실제로 이 컴포넌트로 옮겼습니다. 8/13에 합쳤다고 적었지만 옮겨간 건 CurationSectionRow 하나뿐이었고, 나머지는 구 스펙(10px/600·padding 4 8)으로 2주 넘게 남아 있었습니다.' },
@@ -203,12 +204,12 @@ export const GUIDES: Record<string, ComponentGuide> = {
       { kind: 'dont', rule: '회차 시각·매진·거리처럼 극장이나 회차마다 달라지는 값을 코너 태그로 붙이지 않습니다.', instead: '떠 있는 칩(attached 없이)으로 둡니다.' },
       { kind: 'dont', rule: '좌하단에는 칩을 배치하지 않습니다. 순위 표기 자리입니다.', instead: '상태 정보는 우하단, 시간·거리는 우상단에 둡니다.' },
       { kind: 'caution', rule: '우상단은 관심 하트(FavoriteButton overlay)와 같은 자리입니다.', instead: '한 포스터에 하트와 우상단 칩을 함께 얹지 않습니다 — 관심 섹션에는 하트를, 거리·시간 정보에는 칩을 둡니다.' },
-      { kind: 'caution', rule: 'neutral 톤(#78716C)은 neutral 램프에 대응 스탑이 없어 하드코딩으로 남아 있는 예외입니다. 새 색이 필요하다고 이 자리에 값을 하나 더 넣지 않습니다.', instead: '램프에 스탑을 만들고 그 토큰을 참조합니다.' },
+      { kind: 'caution', rule: '톤은 다섯 가지뿐입니다. 새 색이 필요하다고 칩에 값을 직접 넣지 않습니다.', instead: '의미가 없는 정보는 scrim으로 둡니다. 정말 새 의미라면 시맨틱 토큰부터 만듭니다.' },
     ],
     a11y: [
       { title: '축약 풀기', desc: 'label을 넘기면 스크린리더가 그 문구를 읽습니다. 화면의 "30주년"은 label="개봉 30주년"으로 풀어 줍니다 — 눈은 포스터를 함께 보지만 리더는 칩만 읽습니다.' },
       { title: '초점', desc: 'pointer-events: none이라 초점을 받지 않습니다. 칩이 전하는 사실은 감싸는 카드의 접근성 이름에 포함되어야 합니다.' },
-      { title: '대비', desc: '배경 사진을 통제할 수 없으므로 모든 톤이 불투명 배경 + 흰 글자(--color-on-accent)입니다. 반투명 배경을 쓰지 않습니다.' },
+      { title: '대비', desc: '배경 사진을 통제할 수 없으므로 글자는 모두 흰색(--color-on-accent)입니다. 의미색 톤은 불투명이고, scrim만 72% 먹색(--color-scrim-strong)입니다 — 밝은 포스터 위에서도 흰 글자와 4.5:1 이상을 지키는 가장 옅은 단계라서 그보다 옅은 스크림(soft 45%)은 칩에 쓰지 않습니다.' },
     ],
   },
 
@@ -435,6 +436,37 @@ export const GUIDES: Record<string, ComponentGuide> = {
     a11y: [
       { title: '제목 층', desc: 'title은 h2로 그려집니다. 화면에 h1이 하나 있어야 제목 층이 h1 → h2로 이어집니다 — 섹션 머리만 늘어놓으면 문서의 시작이 없습니다.' },
       { title: '이모지', desc: '이모지는 제목 글자 앞에 붙어 함께 읽힙니다. 뜻을 이모지에만 담지 않습니다.' },
+    ],
+  },
+
+  ConfirmDialog: {
+    changes: [
+      { date: '2026-10-05', note: '보조 버튼 기본 문구를 "취소"에서 "닫기"로 바꾸고, 주 버튼 문구(confirmLabel)를 필수로 만들었습니다. 기본값 "확인"·"취소"가 라이팅 규칙("확인" 금지, 창만 닫으면 "닫기")과 어긋나 있었습니다.' },
+    ],
+    intro:
+      '되돌릴 수 없는 행동 직전에 한 번 더 묻는 다이얼로그입니다. 로그아웃·회원탈퇴처럼 결과를 다시 돌릴 길이 없는 경우에만 씁니다. ' +
+      '모바일은 아래에서 올라오는 시트, 데스크톱은 가운데 카드로 뜹니다.',
+    anatomy: [
+      { name: 'title', desc: '묻는 문장 하나입니다. "로그아웃할까요?"처럼 행동을 그대로 묻습니다.' },
+      { name: 'description', desc: '무엇이 사라지고 무엇이 남는지 적습니다. 되돌릴 수 없다면 그 사실을 여기서 말합니다.' },
+      { name: 'confirmLabel', desc: '주 버튼 문구입니다. 필수이며 행동 이름을 씁니다 — "로그아웃", "탈퇴하기". "확인"은 쓰지 않습니다.' },
+      { name: 'cancelLabel', desc: '보조 버튼 문구입니다. 기본 "닫기". 창만 닫고 아무것도 바꾸지 않기 때문입니다.' },
+      { name: 'danger', desc: '켜면 주 버튼이 danger가 됩니다. 데이터가 지워지는 행동에만 켭니다.' },
+      { name: 'busy', desc: '처리 중에는 주 버튼에 로딩을 띄우고, 닫기·Esc·바깥 누르기를 막습니다.' },
+    ],
+    specs: [
+      { title: '배치', desc: '버튼은 세로로 쌓습니다. 주 버튼(lg · 풀폭)이 위, 닫기(text · md)가 아래입니다. 엄지가 먼저 닿는 자리에 주 행동을 둡니다.' },
+      { title: '모양', desc: '모바일은 상단만 --radius-sheet로 둥근 시트와 손잡이, 데스크톱은 폭 380 · --radius-popover 카드입니다. 그림자는 --shadow-sheet, 뒤 딤은 --color-scrim입니다.' },
+      { title: '등장', desc: '모바일은 아래에서 올라오고, 데스크톱은 0.96배에서 커지며 나타납니다. 280ms입니다.' },
+    ],
+    usage: [
+      { kind: 'do', rule: '되돌릴 수 없는 행동에만 씁니다.', instead: '되돌릴 수 있는 행동은 묻지 말고 바로 실행한 뒤 토스트로 결과를 알립니다.' },
+      { kind: 'dont', rule: '보조 버튼에 "취소"를 쓰지 않습니다.', instead: '"닫기"를 씁니다. "취소"는 보내는 중·저장 중인 작업을 멈출 때만 씁니다.' },
+      { kind: 'caution', rule: 'danger는 데이터가 지워지는 행동에만 켭니다. 로그아웃은 다시 로그인하면 되므로 primary입니다.' },
+    ],
+    a11y: [
+      { title: '역할', desc: 'role="alertdialog" · aria-modal이며, 제목이 aria-labelledby로 연결됩니다.' },
+      { title: '닫기', desc: 'Esc와 바깥 누르기로 닫힙니다. busy 동안은 둘 다 막아서 처리 중에 창이 사라지지 않게 합니다.' },
     ],
   },
 

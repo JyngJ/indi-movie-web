@@ -103,10 +103,10 @@ export default function ColorPage() {
   const pick = (test: (n: string) => boolean) =>
     all.filter(t => t.name.startsWith('--color-') && test(t.name) && /^#|^rgba/.test(t.resolved))
 
-  const surface = pick(n => n.includes('surface') || n.includes('border') || n.includes('scrim'))
+  const surface = pick(n => n.includes('surface') || n.includes('border') || n.includes('scrim') || n === '--color-black')
   const text = pick(n => n.includes('-text-') || n === '--color-on-accent')
   const status = pick(n => /warning|success|error|info|gv/.test(n))
-  const brand = pick(n => /cgv|mega|lotte/.test(n))
+  const brand = pick(n => n.startsWith('--color-brand-'))
 
   return (
     <DocPage
@@ -157,7 +157,7 @@ export default function ColorPage() {
         <SemanticTable title="Surface" note="면과 경계를 정의합니다. 배경(미색)과 카드(흰색)의 대비가 층을 만듭니다." tokens={surface} />
         <SemanticTable title="Text" note="글자 위계는 크기보다 색으로 먼저 만듭니다." tokens={text} />
         <SemanticTable title="Status" note="상영 상태·잔여석·GV를 나타냅니다. 종이 톤 위에서 안정적으로 읽히도록 채도를 낮춰 정의했습니다." tokens={status} />
-        <SemanticTable title="Brand" note="예매처 브랜드 색입니다. 외부 규정을 따르므로 그대로 사용합니다." tokens={brand} />
+        <SemanticTable title="Brand" note="소셜 로그인·외부 링크의 브랜드 색입니다. 각 서비스의 브랜드 가이드를 따르므로 그대로 사용합니다." tokens={brand} />
       </DocSection>
     </DocPage>
   )
