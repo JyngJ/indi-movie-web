@@ -48,6 +48,9 @@ export function DetailDateTabs({
         const isSelected = d === selectedDate
         const hasShows = activeDates.has(d)
         const top = labels?.[d] ?? (i === 0 && firstIsToday ? '오늘' : DOW[dt.getDay()])
+        /* 월이 붙는 첫 칸("12.31")은 20px 숫자가 58px라 56 칸을 넘는다 — 그 칸만 64 */
+        const withMonth = i === 0 && firstShowsMonth
+        const cell = withMonth ? 64 : 56
         return (
           <button
             key={d}
@@ -59,7 +62,7 @@ export function DetailDateTabs({
             style={{
               /* 폭이 남으면 셀이 나눠 갖는다 — PC 본문 컬럼을 채운다(피그마 2026-09-17).
                  모바일(7×56 > 화면)에서는 56으로 남고 가로 스크롤 */
-              flex: '1 0 56px', minWidth: 56, height: 60,
+              flex: `1 0 ${cell}px`, minWidth: cell, height: 60,
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-1)',
               cursor: hasShows ? 'pointer' : 'default',
               opacity: hasShows ? 1 : 0.35,
@@ -67,11 +70,12 @@ export function DetailDateTabs({
             }}
             disabled={!hasShows}
           >
-            <span style={{ fontSize: 'var(--text-badge)', fontWeight: labels?.[d] ? 700 : 500, color: isSelected ? 'var(--color-primary-base)' : DOW_COLOR[kind] }}>
+            {/* 줄 높이 1 — 상속된 1.5면 숫자(아래로 내려가는 획 없음) 밑에 빈 줄 높이가 남아 묶음이 2px 위로 떴다 */}
+            <span style={{ fontSize: 'var(--text-badge)', lineHeight: 1, fontWeight: labels?.[d] ? 700 : 500, color: isSelected ? 'var(--color-primary-base)' : DOW_COLOR[kind] }}>
               {top}
             </span>
-            <span style={{ fontSize: 18, fontWeight: 700, fontFeatureSettings: '"tnum"', color: isSelected ? 'var(--color-primary-base)' : NUM_COLOR[kind] }}>
-              {i === 0 && firstShowsMonth ? `${dt.getMonth() + 1}.${dt.getDate()}` : dt.getDate()}
+            <span style={{ fontSize: 'var(--text-h2)', lineHeight: 1, fontWeight: 700, fontFeatureSettings: '"tnum"', color: isSelected ? 'var(--color-primary-base)' : NUM_COLOR[kind] }}>
+              {withMonth ? `${dt.getMonth() + 1}.${dt.getDate()}` : dt.getDate()}
             </span>
           </button>
         )
