@@ -25,6 +25,7 @@ import {
   parseDtryxReleaseYear,
   normalizeCompactTime,
   normalizeMovieeMovieTitle,
+  stripTitleFormatSuffix,
   splitByDateLabel,
   normalizeKoreanDateLabel,
   extractTimelineMovieTitle,
@@ -1504,7 +1505,7 @@ async function crawlPetitecine(context: ParseContext): Promise<CrawledShowtimeCa
       if (rawTime.length < 4) continue
       const showTime = normalizeCompactTime(rawTime) ?? `${rawTime.slice(0, 2)}:${rawTime.slice(2, 4)}`
       const endTime = rawEnd.length >= 4 ? normalizeCompactTime(rawEnd) ?? `${rawEnd.slice(0, 2)}:${rawEnd.slice(2, 4)}` : undefined
-      const movieTitle = String(row['movie_name'] ?? '').replace(/\s*\(.*?\)\s*/g, '').trim()
+      const movieTitle = stripTitleFormatSuffix(row['movie_name'])
       const screenName = String(row['theater_name'] ?? '상영관')
       const seatAvail = Number(row['ticketing_seat_count'] ?? 0)
       const seatTotal = Number(row['movie_seat_count'] ?? 0)
