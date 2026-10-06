@@ -45,6 +45,7 @@ import {
 import type { ParseContext, DtryxCinema } from './crawler/utils'
 import { crawlTinyticketEventManager } from './crawler/browser'
 import { crawlScreenshotOcr, crawlBoardImageOcr } from './crawler/ocr'
+import { crawlHdArtsCenter } from './crawler/hdArtsCenter'
 
 interface DtryxMovie {
   MovieCd: string
@@ -209,6 +210,10 @@ export async function crawlShowtimeCandidates(context: ParseContext) {
 
   if (context.source.parser === 'kofaCinematheque') {
     return crawlKofaCinematheque(context)
+  }
+
+  if (context.source.parser === 'hdArtsCenter') {
+    return crawlHdArtsCenter(context)
   }
 
   const content = await resolveCrawlInput(
