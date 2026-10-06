@@ -1172,7 +1172,18 @@ async function resolveMovieForApproval(
     for (const title of titles) {
       const externalMovies = await searchKmdbMovies(title)
       const externalMovie = pickExactExternalMovie(title, externalMovies, expectedYear)
+        // 제목에 연도가 박혀 있으면 그 연도가 맞는 것이므로 재상영 구제를 하지 않는다
+        ?? (titleYear == null ? pickRereleaseExternalMovie(title, externalMovies, expectedYear) : undefined)
       if (!externalMovie) continue
+
+      // 이미 들어와 있는 영화면(재상영 구제 경로) 새로 만들지 않고 그대로 쓴다
+      const local = movies.find((m) => m.kmdb_id === externalMovie.movieId && m.kmdb_movie_seq === externalMovie.movieSeq)
+      if (local) {
+        const result = { movie: local }
+        cache?.set(cacheKey, result)
+        rememberProviderMovieAlias(candidate, local, providerMovieAliases)
+        return result
+      }
 
       const imported = await importAdminExternalMovie(externalMovie)
       const movie = {
@@ -1379,17 +1390,36 @@ function pickExternalMovieMatch(matches: AdminExternalMovie[], expectedYear?: nu
   return matches.find((movie) => isYearMatch(movie.year, expectedYear))
 }
 
-function pickExactExternalMovie(title: string, movies: AdminExternalMovie[], expectedYear?: number) {
+function exactExternalTitleMatches(title: string, movies: AdminExternalMovie[]) {
   const normalizedTitle = normalizeMatchText(title)
   const looseTitle = normalizeLooseMovieTitle(title)
-
-  // 1순위: 정규화 exact match
-  const exactMatches = movies.filter((movie) =>
+  return movies.filter((movie) =>
     normalizeMatchText(movie.title) === normalizedTitle ||
     (movie.originalTitle ? normalizeMatchText(movie.originalTitle) === normalizedTitle : false) ||
     normalizeLooseMovieTitle(movie.title) === looseTitle ||
     (movie.originalTitle ? normalizeLooseMovieTitle(movie.originalTitle) === looseTitle : false),
   )
+}
+
+// 재상영 판정. 크롤 release_year는 재개봉 연도라 고전은 제작연도와 수십 년 벌어진다
+// (사탄탱고 1994 → 2026). ±2 연도 검사에 걸려 동명이인으로 버려지던 경우를 구제한다.
+// KMDB에 같은 제목이 딱 한 편이고 그게 기대 연도보다 오래됐으면 동명 신작이 아니라 재상영으로 본다.
+// 같은 제목이 여러 편이면(파멸 1961·1970·1988) 어느 쪽인지 가릴 수 없으니 사람 확인으로 넘긴다.
+export function pickRereleaseExternalMovie(title: string, movies: AdminExternalMovie[], expectedYear?: number) {
+  if (expectedYear == null) return undefined
+  const exactMatches = exactExternalTitleMatches(title, movies)
+  if (exactMatches.length !== 1) return undefined
+  const only = exactMatches[0]
+  if (only.year == null || only.year >= expectedYear) return undefined
+  return only
+}
+
+function pickExactExternalMovie(title: string, movies: AdminExternalMovie[], expectedYear?: number) {
+  const normalizedTitle = normalizeMatchText(title)
+  const looseTitle = normalizeLooseMovieTitle(title)
+
+  // 1순위: 정규화 exact match
+  const exactMatches = exactExternalTitleMatches(title, movies)
   const exact = pickExternalMovieMatch(exactMatches, expectedYear)
   if (exact) return exact
 

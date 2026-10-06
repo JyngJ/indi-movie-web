@@ -25,6 +25,7 @@ import {
   parseDtryxReleaseYear,
   normalizeCompactTime,
   normalizeMovieeMovieTitle,
+  stripTitleFormatSuffix,
   splitByDateLabel,
   normalizeKoreanDateLabel,
   extractTimelineMovieTitle,
@@ -44,6 +45,7 @@ import {
 import type { ParseContext, DtryxCinema } from './crawler/utils'
 import { crawlTinyticketEventManager } from './crawler/browser'
 import { crawlScreenshotOcr, crawlBoardImageOcr } from './crawler/ocr'
+import { crawlHdArtsCenter } from './crawler/hdArtsCenter'
 
 interface DtryxMovie {
   MovieCd: string
@@ -208,6 +210,10 @@ export async function crawlShowtimeCandidates(context: ParseContext) {
 
   if (context.source.parser === 'kofaCinematheque') {
     return crawlKofaCinematheque(context)
+  }
+
+  if (context.source.parser === 'hdArtsCenter') {
+    return crawlHdArtsCenter(context)
   }
 
   const content = await resolveCrawlInput(
@@ -990,7 +996,15 @@ async function crawlDureraum(sourceUrl: string, context: ParseContext) {
   return dedupeCandidates(groups.flat())
 }
 
-function parseDurearumDay(html: string, showDate: string, context: ParseContext): CrawledShowtimeCandidate[] {
+// 영화의전당은 영화제·휴관 기간에 상영관마다 "제31회 부산국제영화제"·"2026 BIFF 준비기간" 같은
+// 자리표시 항목을 러닝타임 없이("| min") 00:00으로 올린다. 실제 회차가 아니라 매번 검토필요로 쌓였다.
+export function isDureraumPlaceholder(times: string[], runtimeMinutes?: string) {
+  return !runtimeMinutes && times.length > 0 && times.every((time) => time === '00:00')
+}
+
+function parseDurearumDay(rawHtml: string, showDate: string, context: ParseContext): CrawledShowtimeCandidate[] {
+  // 페이지에 주석 처리된 샘플 마크업("럭키 | 112min")이 남아 있어 러닝타임·시각이 잘못 잡힌다
+  const html = rawHtml.replace(/<!--[\s\S]*?-->/g, '')
   const candidates: CrawledShowtimeCandidate[] = []
   const ulRegex = /<ul>\s*<li class="title">([\s\S]*?)<\/ul>/g
   let ulMatch: RegExpExecArray | null
@@ -1020,6 +1034,7 @@ function parseDurearumDay(html: string, showDate: string, context: ParseContext)
     )]
 
     if (times.length === 0) continue
+    if (isDureraumPlaceholder(times, runtimeMatch?.[1])) continue
 
     for (const showTime of times) {
       candidates.push(buildCandidate({
@@ -1504,7 +1519,7 @@ async function crawlPetitecine(context: ParseContext): Promise<CrawledShowtimeCa
       if (rawTime.length < 4) continue
       const showTime = normalizeCompactTime(rawTime) ?? `${rawTime.slice(0, 2)}:${rawTime.slice(2, 4)}`
       const endTime = rawEnd.length >= 4 ? normalizeCompactTime(rawEnd) ?? `${rawEnd.slice(0, 2)}:${rawEnd.slice(2, 4)}` : undefined
-      const movieTitle = String(row['movie_name'] ?? '').replace(/\s*\(.*?\)\s*/g, '').trim()
+      const movieTitle = stripTitleFormatSuffix(row['movie_name'])
       const screenName = String(row['theater_name'] ?? '상영관')
       const seatAvail = Number(row['ticketing_seat_count'] ?? 0)
       const seatTotal = Number(row['movie_seat_count'] ?? 0)

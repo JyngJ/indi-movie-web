@@ -305,10 +305,16 @@ export function normalizeCompactTime(value: unknown) {
   return normalizeDtryxTime(text)
 }
 
-export function normalizeMovieeMovieTitle(value: unknown) {
+// 상영 형식 꼬리표만 떼어 낸다. 괄호를 통째로 지우면 "암살자(들)"처럼 괄호가
+// 제목의 일부인 영화가 "암살자"로 잘려 매칭에 실패한다.
+export function stripTitleFormatSuffix(value: unknown) {
   return String(value ?? '')
     .replace(/\((?:2D|3D|4D|영문자막|한글자막|자막|더빙|굿즈패키지|GV|시네토크|씨네토크)\)\s*$/i, '')
     .trim()
+}
+
+export function normalizeMovieeMovieTitle(value: unknown) {
+  return stripTitleFormatSuffix(value)
 }
 
 export function splitByDateLabel(content: string) {

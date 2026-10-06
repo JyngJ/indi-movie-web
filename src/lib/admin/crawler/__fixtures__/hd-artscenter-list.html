@@ -1,0 +1,1784 @@
+
+
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE HTML>
+<html  lang="ko" >
+
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"> <!-- 중공업 엔터프라이즈 모드 처리-->
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=2, user-scalable=yes, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src * gap://ready file:; style-src 'self' 'unsafe-inline'; img-src * 'self' data:; script-src * 'unsafe-inline' 'unsafe-eval'">
+  <meta property="og:image" content="/images/common/hhiarts-1.png">
+  <meta property="og:title" content="HD아트센터">
+  <meta property="og:description" content="HD아트센터 공연, 전시, 영화 예매 및 강좌 접수를 할 수 있습니다">
+
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/main/ios_icon_180-1.png?v=0.0.2" />
+  <link rel="icon" type="image/png" href="/images/main/ios_icon_192-1.png?v=0.0.2" sizes="192x192" />
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon-1.ico?v=0.0.2" />
+
+
+
+
+
+  <!-- <link rel="shortcut icon" sizes="192x192" href="/images/main/ios_icon_192.png?v=0.0.1"> -->
+
+
+
+  <!--  <meta name="viewport" content="width=device-width"> -->
+  <title>HD아트센터</title>
+    <script>
+        "use strict";
+        var __isMobile = false;
+        
+        
+        //주소의 www 제거
+        if (location.href.indexOf('/www.') > 0) {
+        	location.href = location.href.replaceAll('www.','')
+        }
+    </script>
+       
+    <link rel="stylesheet" type="text/css" href="/css/import.css?v=1.22" />
+
+
+    <!-- jquery Setting -->
+    <script src="/js/jquery/jquery-3.7.1.min.js?v=3.7.1"></script>
+
+
+    <!-- json Setting -->
+    <script src="/js/json/json2.js?v=2016-10-28"></script>
+
+<!-- 추가 항목 -->
+
+    <script type="text/javascript" src="/js/jquery.smenu-0.2.2.min.js?v=0.2.2"></script>
+    <script type="text/javascript" src="/js/jquery.bxslider.min.js?v=0.0.1"></script>
+    <script type="text/javascript" src="/js/slick.min.js?v=0.0.1"></script>
+    <script type="text/javascript" src="/js/comm.js?v=0.0.1"></script>
+    <script type="text/javascript" src="/js/ua-parser/ua-parser.min.js?v=1.0.0"></script>
+    <script src="/js/com/hhiarts.js?v=0.1.12"></script>
+
+    <script src="/js/kakao/kakao.min.v1.44.0.js?v=1.44.0"></script>
+
+    <script type="text/javascript" src="/js/cordova/cordova_load.js?v=0.0.8"></script>
+
+    <!--[if lt IE 9]>
+    <script src="/js/html5shiv.min.js"></script>
+    <script src="/js/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+<body>
+<!-- //추가 항목 -->
+
+
+<script type="text/javascript">
+"use strict";
+var _sSeelctMid = '0200';
+//mid는 배열 순번입니다. 2자리씩 사용.하위메뉴는 submenu[]에 오브젝트로 넣으시면 됩니다.
+//메뉴 관리 변수
+var _Menu = [
+                {    "mid" : "00" ,"title" : "공연" ,"url" : "/performance/list.do" ,"svc_id"  : "list" ,"session" : false ,"secure"  : false ,"type" :"forward" ,"param"   : "now=Y"
+                    ,"submenu" :[
+                                    { "mid"     : "0000" ,"title"   : "공연 예매" ,"url"     : "/performance/list.do"  ,"svc_id"  : "list"  ,"session" : false ,"secure"  : false,"type"    :"forward" ,"param"   : "now=Y"
+                                    ,"submenu"   :[
+                                                    { "mid"     : "000000","title"   : "공연예매" ,"url"     : "/performance/list.do" ,"svc_id"  : "list" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : "now=Y"
+                                                    ,"submenu"   :[]
+                                                    }
+                                                ,{ "mid"     : "000001" ,"title"   : "연간공연" ,"url"     : "/performance/yearlist.do" ,"svc_id"  : "yearlist" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : "unicodeseqitemtype=0000000607"
+                                                    ,"submenu"   :[]
+                                                    }
+
+                                                ]
+                                    }
+                                    ,{ "mid"     : "0001" ,"title"   : "공연장 소개" ,"url"     : "/performance/hallinfo.do" ,"svc_id"  : "hallinfo" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                        ,"submenu"   :[]
+                                    }
+                                    ,{ "mid"     : "0002" ,"title"   : "예매가이드" ,"url"     : "/performance/guide.do" ,"svc_id"  : "guide" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                        ,"submenu"   :[]
+                                        }
+                                    ,{ "mid"     : "0003" ,"title"   : "관람예절" ,"url"     : "/performance/manners.do" ,"svc_id"  : "manners" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                        ,"submenu"   :[]
+                                        }
+                               ]
+
+
+                }
+                ,{    "mid" : "01" ,"title" : "전시" ,"url" : "/exhibition/list.do" ,"svc_id"  : "list" ,"session" : false ,"secure"  : false ,"type" :"forward" ,"param"   : "now=Y"
+                     ,"submenu"   :[
+                                        { "mid"     : "0100" ,"title"   : "전시 예매" ,"url"     : "/exhibition/list.do"  ,"svc_id"  : "list"  ,"session" : false ,"secure"  : false,"type"    :"forward" ,"param"   : "now=Y"
+                                        ,"submenu"   :[
+                                                        { "mid"     : "010000","title"   : "전시예매" ,"url"     : "/exhibition/list.do" ,"svc_id"  : "list" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : "now=Y"
+                                                        ,"submenu"   :[]
+                                                        }
+                                                    ,{ "mid"     : "010001" ,"title"   : "연간전시" ,"url"     : "/exhibition/yearlist.do" ,"svc_id"  : "yearlist" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : "unicodeSeqItemType=0000000609"
+                                                        ,"submenu"   :[]
+                                                        }
+                                                    ]
+                                        }
+                                    ,{ "mid"     : "0101" ,"title"   : "미술관 소개" ,"url"     : "/exhibition/info.do" ,"svc_id"  : "info" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                        ,"submenu"   :[]
+                                        }
+                                    ,{ "mid"     : "0102" ,"title"   : "관람 예절" ,"url"     : "/exhibition/manners.do" ,"svc_id"  : "manners" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                        ,"submenu"   :[]
+                                        }
+                                    ,{ "mid"     : "0103" ,"title"   : "소장품 자료실" ,"url"     : "/exhibition/gallery_list.do" ,"svc_id"  : "gallery_list" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                        ,"submenu"   :[]
+                                        }
+                               ]
+
+                }
+                ,{    "mid" : "02" ,"title" : "영화" ,"url" : "/movie/list.do" ,"svc_id"  : "list" ,"session" : false ,"secure"  : false ,"type" :"forward" ,"param"   : ""
+                    ,"submenu"   :[
+                                    { "mid"     : "0200" ,"title"   : "영화 예매" ,"url"     : "/movie/list.do"  ,"svc_id"  : "list"  ,"session" : false ,"secure"  : false,"type"    :"forward" ,"param"   : ""
+                                        ,"submenu"   :[
+                                                ]
+                                    }
+                                    ,{ "mid"     : "0201" ,"title"   : "예매 가이드" ,"url"     : "/movie/guide.do" ,"svc_id"  : "guide" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                        ,"submenu"   :[]
+                                    }
+                                    ,{ "mid"     : "0202" ,"title"   : "영화관 소개" ,"url"     : "/movie/info.do" ,"svc_id"  : "info" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                        ,"submenu"   :[]
+                                    }
+                                    ,{ "mid"     : "0203" ,"title"   : "영화관 대관" ,"url"     : "/movie/info.do" ,"svc_id"  : "rental" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                        ,"submenu"   :[]
+                                    }
+                                    ,{ "mid"     : "0204" ,"title"   : "영화관람료" ,"url"     : "/movie/info.do" ,"svc_id"  : "fee" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                        ,"submenu"   :[]
+                                    }
+                                    ,{ "mid"     : "0205" ,"title"   : "영화쿠폰북" ,"url"     : "/movie/coupon.do" ,"svc_id"  : "couponList" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                        ,"submenu"   :[]
+                                        }
+                                    
+                              ]
+
+               }
+                ,{    "mid" : "03" ,"title" : "강좌" ,"url" : "/lecture/info.do" ,"svc_id"  : "info" ,"session" : false ,"secure"  : false ,"type" :"forward" ,"param"   : ""
+                    ,"submenu"   :[
+                                    { "mid"     : "0300" ,"title"   : "강좌시간표" ,"url"     : "/lecture/info.do"  ,"svc_id"  : "schedule"  ,"session" : false ,"secure"  : false,"type"    :"forward" ,"param"   : ""
+                                        ,"submenu"   :[
+                                                ]
+                                    }
+                                    ,{ "mid"     : "0301" ,"title"   : "강좌소개" ,"url"     : "/lecture/info.do"  ,"svc_id"  : "info"  ,"session" : false ,"secure"  : false,"type"    :"forward" ,"param"   : ""
+                                        ,"submenu"   :[
+                                                ]
+                                    }
+                                    ,{ "mid"     : "0302" ,"title"   : "수강신청" ,"url"     : "/lecture/list.do" ,"svc_id"  : "list" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                        ,"submenu"   :[]
+                                    }
+                                    ,{ "mid"     : "0303" ,"title"   : "수강신청가이드" ,"url"     : "/lecture/guide.do" ,"svc_id"  : "guide" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                        ,"submenu"   :[]
+                                        }
+                                    ,{ "mid"     : "0304" ,"title"   : "강사경력증명서" ,"url"     : "/lecture/guide.do" ,"svc_id"  : "career" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                        ,"submenu"   :[]
+                                        }
+                              ]
+               }
+                ,{    "mid" : "04" ,"title" : "대관 안내" ,"url" : "/facilities/guide_list.do" ,"svc_id"  : "guide_list" ,"session" : false ,"secure"  : false ,"type" :"forward" ,"param"   : ""
+                    ,"submenu"   :[
+                                    { "mid"     : "0400" ,"title"   : "대관 안내" ,"url"     : "/facilities/guide_list.do" ,"svc_id"  : "guide_list" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                            ,"submenu"   :[]
+                                    }
+                                    ,{ "mid"     : "0401" ,"title"   : "공연장 대관" ,"url"     : "/facilities/info_process.do"  ,"svc_id"  : "info_process"  ,"session" : false ,"secure"  : false,"type"    :"forward" ,"param"   : ""
+                                        ,"submenu"   :[
+                                                    { "mid"     : "040100","title"   : "대관절차" ,"url"     : "/facilities/info_process.do" ,"svc_id"  : "info_process" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                                        ,"submenu"   :[]
+                                                    }
+                                                    ,{ "mid"     : "040101" ,"title"   : "대관시설" ,"url"     : "/facilities/info_facilites.do" ,"svc_id"  : "info_facilites" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                                        ,"submenu"   :[]
+                                                    }
+                                                    ,{ "mid"     : "040102" ,"title"   : "대관 사용료" ,"url"     : "/facilities/info_fee.do" ,"svc_id"  : "info_fee" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                                    ,"submenu"   :[]
+                                                    }
+                                                    ,{ "mid"     : "040103" ,"title"   : "대관 규약" ,"url"     : "/facilities/info_rule.do" ,"svc_id"  : "info_rule" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                                        ,"submenu"   :[]
+                                                    }
+                                                ]
+                                    }
+                                    ,{ "mid"     : "0402" ,"title"   : "대관 가능일" ,"url"     : "/facilities/list_other.do" ,"svc_id"  : "ava_date" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                        ,"submenu"   :[]
+                                    }
+                                    ,{ "mid"     : "0403" ,"title"   : "미술관 대관" ,"url"     : "/facilities/guide_list.do"  ,"svc_id"  : "info_exhibition"  ,"session" : false ,"secure"  : false,"type"    :"forward" ,"param"   : ""
+                                        ,"submenu"   :[
+                                                    { "mid"     : "040300","title"   : "대관절차" ,"url"     : "/facilities/guide_list.do" ,"svc_id"  : "info_exhibition" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                                        ,"submenu"   :[]
+                                                    }
+                                                    ,{ "mid"     : "040301" ,"title"   : "대관 사용료" ,"url"     : "/facilities/guide_list.do" ,"svc_id"  : "info_exhibition_fee" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                                    ,"submenu"   :[]
+                                                    }
+                                                    ,{ "mid"     : "040302" ,"title"   : "대관 규약" ,"url"     : "/facilities/guide_list.do" ,"svc_id"  : "info_exhibition_rule" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                                        ,"submenu"   :[]
+                                                    }
+                                                ]
+                                    }                                    
+                                    ,{ "mid"     : "0404" ,"title"   : "기타 시설 대관" ,"url"     : "/facilities/list_other.do" ,"svc_id"  : "list_other" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                        ,"submenu"   :[]
+                                    }
+                              ]
+
+               }
+                
+
+
+                
+                    ,{    "mid" : "05" ,"title" : "멤버쉽" ,"url" : "/literary/info2.jsp" ,"svc_id"  : "" ,"session" : false ,"secure"  : false ,"type" :"forward" ,"param"   : ""
+                        ,"submenu"   :[
+                                   { "mid"     : "0500" ,"title"   : "포인트회원제" ,"url"     : "/literary/info2.jsp"  ,"svc_id"  : ""  ,"session" : false ,"secure"  : false,"type"    :"forward" ,"param"   : ""
+                                      ,"submenu"   :[
+                                               ]
+                                   }
+                                  ]
+                   }
+                                           
+                
+                
+                ,{    "mid" : "06" ,"title" : "고객센터" ,"url" : "/board/list.do" ,"svc_id"  : "consult" ,"session" : false ,"secure"  : false ,"type" :"forward" ,"param"   : ""
+                    ,"submenu"   :[
+                               { "mid"     : "0600" ,"title"   : "공지사항" ,"url"     : "/board/list.do"  ,"svc_id"  : "list"  ,"session" : false ,"secure"  : false,"type"    :"forward" ,"param"   : "boardSeq=0000000241"
+                                  ,"submenu"   :[
+                                           ]
+                               }
+                              ,{ "mid"     : "0601" ,"title"   : "채용안내" ,"url"     : "/incruit/list.do"  ,"svc_id"  : "list" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                ,"submenu"   :[]
+                               }
+                              ,{ "mid"     : "0602" ,"title"   : "고객소리함" ,"url"     : "/board/list.do" ,"svc_id"  : "consult" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                  ,"submenu"   :[]
+                                 }
+                              ,{ "mid"     : "0603" ,"title"   : "자주하는 질문" ,"url"     : "/board/faq_list.do" ,"svc_id"  : "faq_list" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                  ,"submenu"   :[]
+                                 }
+//                               ,{ "mid"     : "0604" ,"title"   : "이벤트" ,"url"     : "/event/list.do" ,"svc_id"  : "list" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+//                                   ,"submenu"   :[]
+//                                  }
+                            /*   ,{ "mid"     : "0605" ,"title"   : "이벤트 당첨자" ,"url"     : "#" ,"svc_id"  : "" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                  ,"submenu"   :[]
+                                 } */
+                              /*
+                                 ,{ "mid"     : "0605" ,"title"   : "설문조사" ,"url"     : "/board/list.do" ,"svc_id"  : "survey" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                  ,"submenu"   :[]
+                                 }*/
+                              ]
+               }
+                ,{    "mid" : "07" ,"title" : "센터소개" ,"url" : "/introduction/intro_1.do" ,"svc_id"  : "intro_1" ,"session" : false ,"secure"  : false ,"type" :"forward" ,"param"   : ""
+                    ,"submenu"   :[
+                               { "mid"     : "0700" ,"title"   : "HD아트센터 소개" ,"url"     : "/introduction/intro_1.do"  ,"svc_id"  : "intro_1"  ,"session" : false ,"secure"  : false,"type"    :"forward" ,"param"   : ""
+                                  ,"submenu"   :[
+                                           ]
+                               }
+                              ,{ "mid"     : "0701" ,"title"   : "상주예술단체" ,"url"     : "/introduction/artgroup.do" ,"svc_id"  : "artgroup" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                  ,"submenu"   :[]
+                                 }
+                              ,{ "mid"     : "0702" ,"title"   : "카페 베즐리 펍" ,"url"     : "/introduction/restaurant.do" ,"svc_id"  : "vezzly" ,"session" : false ,"secure"  : false ,"type"    :"forward" ,"param"   : ""
+                                  ,"submenu"   :[]
+                                 }
+                              ]
+               }
+
+            ];
+
+$(document).ready(function(){
+    _c.makeTopMenu();
+    _c.makeSubMenu();
+    controlNavigationUI();
+    });
+
+
+function _goMenu(sMid) {
+    var sMid1 = sMid.substr(0,2)
+    var sMid2 = sMid.substr(2,2)
+    var sMid3 = sMid.substr(4,2)
+    var oSelectMenuObject = null;
+    var sLocation = "";
+
+    if (sMid == "0501") { // 문예회원 가입
+        var user_type = "9999999999";
+        if (user_type == "9999999997") {
+            alert("비회원 로그인은 이용하실 수 없습니다.");
+            return;
+        }
+    }
+
+    if(sMid3 != "") {
+        oSelectMenuObject = _Menu[parseInt(sMid1)].submenu[parseInt(sMid2)].submenu[parseInt(sMid3)];
+    } else if (sMid2 != "") {
+        oSelectMenuObject = _Menu[parseInt(sMid1)].submenu[parseInt(sMid2)];
+    } else if (sMid1 != "") {
+        oSelectMenuObject = _Menu[parseInt(sMid1)];
+    }
+
+    sLocation =  oSelectMenuObject.url + "?mid=" +sMid;
+
+    if (oSelectMenuObject.svc_id != null && typeof oSelectMenuObject.svc_id != "undefined" &&  oSelectMenuObject.svc_id != "") {
+        sLocation +=  "&SVC_ID=" + oSelectMenuObject.svc_id;
+    }
+    if (oSelectMenuObject.param != null && typeof oSelectMenuObject.param != "undefined" &&  oSelectMenuObject.param != "") {
+        sLocation += "&"+ oSelectMenuObject.param;
+    }
+
+
+
+    if (oSelectMenuObject.session == true) {
+
+        
+            sLocation = "&" + __returnurlParamName + "="+encodeURIComponent(sLocation) ;
+            location.href =  __login_page + sLocation ;
+            return;
+       
+    }
+
+
+
+
+
+    // 사용자 Agent 정보 저장 처리
+
+      _c.saveAgent(oSelectMenuObject.mid, oSelectMenuObject.title);
+    //사용자 Agent 정보 저장 처리
+
+    location.href = sLocation;
+
+
+}
+
+</script>
+
+<script type="text/javascript">
+function controlNavigationUI() {
+    const isIOS = window.__cordova_platform === 'ios';
+    const isMain = location.pathname.includes('/main');
+
+    const backBtn = document.getElementById('backBtn');
+    const navOpen = document.getElementById('navOpenBtn');
+    const navClose = document.getElementById('navCloseBtn');
+    const mainHomeBtn = document.getElementById('mainHomeBtn');
+
+    if (isIOS && isMain) {
+      if (backBtn) backBtn.style.display = 'none';
+    } else if (isIOS && !isMain) {
+      if (navOpen) navOpen.style.display = 'none';
+      if (navClose) navClose.style.display = 'none';
+      if (backBtn) backBtn.style.display = 'block';
+    } else if (!isIOS) {
+        if (backBtn) backBtn.style.display = 'none';
+    }
+    if (isMain) {
+        if (mainHomeBtn) mainHomeBtn.style.display = 'none';
+    }
+}
+
+
+function goLogout(sUrl) {
+    _c.alert("로그아웃 하셨습니다.");
+    
+    if(typeof sUrl  == "undefined") {
+        document.location.href = "/member/logout.jsp";    
+    } else {
+        document.location.href = "/member/logout.jsp?rurl=" + encodeURIComponent(sUrl);
+    }
+    
+}
+
+
+
+
+
+$(document).ready(function(){
+    
+    var oTest = new Map();
+    if (typeof oTest.size != "function"){
+        _c.alert("설치.<a href='https://play.google.com/store/apps/details?id=kr.co.hhiarts'>HD아트센터 앱 설치</a>");    
+    }
+    
+});
+
+
+</script>
+<!-- 공지팝업 -->
+
+<!-- PC용 상단 팝업 -->
+<div id="popup1" class="close">
+    <div class="top_popup" id="divmbpc">
+    </div>
+    <div class="util">
+        <form name="notice_form" class="notice_form">
+            <span class="today_chk sri">
+                <input type="checkbox" id="mbchkbox" name="mbchkbox" value="checkbox" class="inp_check" onclick="closeWin('popup1',this);" />
+                <label for="mbchkbox" class="ico_check">오늘 하루 열지 않기</label>
+            </span>
+        </form>
+        <button type="button" onclick="closeWin('popup1',this); javascript:$('#popup1').addClass('close');" class="bt_close">닫기</button>
+    </div>
+</div>
+<!-- //PC용 상단 팝업 -->
+<!-- 모바일용 상단 팝업 -->
+<div id="m_popup1"  class="close">
+    <div class="m_top_popup" id="divmbmobile">
+    </div>
+    <div class="util">
+        <form name="notice_form" class="notice_form">
+            <span class="today_chk sri">
+                <input type="checkbox" id="mbchkbox2" name="mbchkbox2" value="checkbox" class="inp_check" onclick="closeWin('m_popup1',this);" />
+                <label for="mbchkbox2" class="ico_check">오늘 하루 열지 않기</label>
+            </span>
+        </form>
+        <button type="button" onclick="closeWin('m_popup1',this); javascript:$('#m_popup1').addClass('close');" class="bt_close">닫기</button>
+    </div>
+    <!-- <div class="util">
+        <a href="#" class="bt_close">닫기</a>
+    </div> -->
+</div>
+<!-- //모바일용 상단 팝업-->
+
+
+<script>
+    var _maincookieData = document.cookie;
+    if (_maincookieData.indexOf("popup1=done") < 0 || _maincookieData.indexOf("m_popup1=done") < 0 ) {
+        //팝업내용 가져 오기
+        getMainBanner ();
+    } else {
+        $('#popup1').addClass('close');
+        $('#m_popup1').addClass('close');
+    }
+
+
+    function setCookie(name, value, expirehours) {
+        var todayDate = new Date();
+        todayDate.setHours(todayDate.getHours() + expirehours);
+        document.cookie = name + "=" + escape(value) + "; path=/; expires=" + todayDate.toGMTString() + ";"
+    }
+    function closeWin(id, checkbox) {
+        if (checkbox.checked) {
+            setCookie(id, "done", 1);
+        }
+        //document.getElementById(id).style.display = "none";
+    }
+    function getMainBanner () {
+        _c.submit("mainBanner" ,"/mainview.do", "","",function(svcid, ecode,emsg,data){
+            var nLoop= -1;
+            var oData ;
+            var sPcHTML = "";
+            var sMoHTML = "";
+
+            if (data.mainbanner && data.mainbanner.length > 0) {
+
+                oData = data.mainbanner;
+                for (nLoop = 0 ; nLoop < oData.length ; nLoop ++ ){
+                    sPcHTML += '<div><img src="/common/popup/download.jsp?save_dir=ticketing&file_name='+oData[nLoop].pc_file_name+'&file_mask='+oData[nLoop].pc_file_mask+'" alt="'+oData[nLoop].pc_file_mask+'"></div>';
+                    sMoHTML += '<div><img src="/common/popup/download.jsp?save_dir=ticketing&file_name='+oData[nLoop].mobile_file_name+'&file_mask='+oData[nLoop].mobile_file_mask+'" alt="'+oData[nLoop].mobile_file_mask+'"></div>';
+                }
+
+                $("#divmbpc").html(sPcHTML);
+                $("#divmbmobile").html(sMoHTML);
+
+                $('#popup1').removeClass('close');
+                $('#m_popup1').removeClass('close');
+            }
+        },false);
+
+    }
+</script>
+<!-- // -->
+
+<div id="wrap" class="" >
+    <!-- skipToContent -->
+    <ul id="skipToContent">
+        <li><a href="#contents">본문 바로가기</a></li>
+        <li><a href="#gnb">주메뉴 바로가기</a></li>
+        <li><a href="#footer">페이지하단 바로가기</a></li>
+    </ul>
+    <!-- //skipToContent -->
+
+    <!-- header -->
+    <div id="header">
+        <div class="header_wrap">
+            <h1><a href="/index.jsp"><img src="/images/common/logo-1.png" alt="HD아트센터" /></a></h1>
+
+            <ul class="head_util">
+                <li class="info">
+                    
+                    <div class="off">
+                        <strong>로그인</strong>하세요.
+                        <a href="/member.do?SVC_ID=goGuestLogin">비회원로그인</a>
+                    </div>
+                    
+                </li>
+
+                <li class="home"><a href="/">홈으로</a></li>
+
+                
+                <li class="login"><a href="/member.do?SVC_ID=goLogin">로그인</a></li>
+                <li class="join"><a href="/member.do?SVC_ID=membership">회원가입</a></li>
+                <li class="mypage_area">
+                    <button type="button" class="btn_mypage">마이페이지</button>
+                    <div class="mypage_detail">
+                        <a href="/mypage/member/modify.do?SVC_ID=member_modify" class="tit">마이페이지</a>
+                        <ul>
+                            <li><a href="/mypage/reserveresult.do?SVC_ID=reserveresult&itemGroup=0000000608">예매현황</a></li>
+                            <li><a href="/mypage.do?SVC_ID=my_lecture">강좌등록현황</a></li>
+                            <li><a href="/mypage.do?SVC_ID=couponbuylist">영화예매권</a></li>
+                        </ul>
+                    </div>
+                </li>
+                
+
+            </ul>
+
+            <div class="nav_container hidePc">
+              
+              <div id="mainHomeBtn" class="nav_my"><a href="/">홈으로</a></div>
+            </div>
+
+
+            <div id="navOpenBtn" class="nav_all hidePc"><button type="button" onclick="toggleAllMenu()" class="nav_btn">전체메뉴 열기</button></div>
+            <div id="navCloseBtn" class="nav_close hidePc"><button type="button" onclick="toggleAllMenu()" class="nav_btn">전체메뉴 닫기</button></div>
+            <div id="backBtn" class="nav_all hidePc" style="display:none">
+              <button type="button" onclick="backMenu()" class="back_btn">Back</button>
+            </div>
+
+        </div>
+        <div class="mask"></div>
+        <div id="gnb">
+            <ul class="top1menu" id="ulTopMenu">
+            </ul>
+            <span class="bg"> </span>
+        </div>
+    </div>
+
+
+
+    <!-- 확인 레이어 -->
+    <div id="__confirm" class="layer_overlay_alert close"><!-- 클래스 close 없어지면 레이어 열림 -->
+        <div class="v_align">
+            <div class="basic_layer confirm ">
+                <h4 class="b_tit" id="__confirm_title" >타이틀 들어갑니다.</h4>
+                <div class="b_con">
+                    <!-- 레이어 콘텐츠 -->
+                    <p class="tx" id="__confirm_msg">서비스를 종료하시겠습니까?</p>
+                    <div class="btn_step">
+                        <button type="button" onclick="javascript:_c.confirmCancel();" class="bt_cancel_s">취소</button>
+                        <button type="button" onclick="javascript:_c.confirmOk();" class="bt_ok_s">확인</button>
+                    </div>
+                    <!-- 레이어 콘텐츠 -->
+                </div>
+                <button type="button" class="bt_close" onclick="javascript:$('#__confirm').addClass('close')">닫기</button>
+            </div>
+            <!-- //레이어 콘텐츠 -->
+        </div>
+    </div>
+    <!-- // -->
+
+    <!-- 처리중 레이어 -->
+    <div id="__progressMain" class="layer_overlay_white close"><!-- 메인에서 사용 -->
+        <div class="v_align">
+            <div class="basic_layer loading">
+                <div class="b_con">
+                    <!-- 레이어 콘텐츠 -->
+                    <span class="loader"></span>
+                    <strong>처리 중입니다.</strong>
+                    <p>잠시만 기다려 주시기 바랍니다.</p>
+                    <!-- //레이어 콘텐츠 -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 처리중 레이어 -->
+    <div id="__progress" class="layer_overlay close"><!-- 클래스 close 없어지면 레이어 열림 -->
+        <div class="v_align">
+            <div class="basic_layer loading">
+                <div class="b_con">
+                    <!-- 레이어 콘텐츠 -->
+                    <span class="loader"></span>
+                    <strong>처리 중입니다.</strong>
+                    <p>잠시만 기다려 주시기 바랍니다.</p>
+                    <!-- //레이어 콘텐츠 -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- // -->
+
+    <!-- 얼럿형 레이어 -->
+    <div id="__alert" class="layer_overlay_alert close"><!-- 클래스 close 없어지면 레이어 열림 -->
+        <div class="v_align">
+            <div class="basic_layer alert">
+                <div class="b_con">
+                    <!-- 레이어 콘텐츠 -->
+                    <p class="tx" id="__alert_msg">서비스를 종료하시겠습니까?</p>
+                    <div class="btn_step">
+                        <button type="button" onclick="javascript:$('#__alert').addClass('close');" class="bt_ok_s">확인</button>
+                    </div>
+                    <!-- 레이어 콘텐츠 -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- // -->
+
+
+    <!-- //header -->
+<!-- container -->
+<div id="container">
+
+ <!-- lnb -->
+<div id="lnb">
+
+</div>
+<!-- //lnb -->
+
+    <div id="contents" class="contents">
+        <!-- 서브 타이틀 -->
+        <div class="sub_location">
+            <div class="sub_location_wrap">
+                <h2>영화예매</h2>
+            </div>
+        </div>
+        <!-- //서브 타이틀 -->
+        <!-- 본문 내용 -->
+
+        <div class="sub_wrap">
+            <div class="cinema_wrap">
+                <!-- movie_data -->
+                <div class="mv_datawrap">
+                    <ul class="mv_data" id="searchDateList">
+                    </ul>
+                    <div class="ctrl">
+                        <button type="button" class="prev" onclick="preDate();">이전</button>
+                        <button type="button" class="next" onclick="nextDate();">다음</button>
+                    </div>
+                </div>
+                <!-- //movie_data -->
+
+                <div class="boxst mb30">
+                    <ul class="tx">
+                        <li><span class="t_pink">영화 예매는 상영시간 20분 전까지 인터넷 예매 및 취소가 가능합니다.</span></li>
+                        <li>대공연장 내부 음식물 반입 및 섭취를 금합니다.(영화 선택권 확대 차원에서 영화관으로 개방하고 있습니다만, 공연장 품격과 청결유지를 위해 고객님의 많은 협조와 양해 부탁드립니다.)</li>
+                    </ul>
+                </div>
+
+                <div class="board_top">
+                    <div class="board_total"><strong>총 <em>5 개</em></strong>의 영화가 있습니다.</div>
+                </div>
+
+                <!-- movie_list -->
+                <ul class="movie_list">
+                    <!-- 반복 -->
+                    
+                    
+                    
+                    <!-- class명 : 청불(noteenager)/12세(age12)/15세(age15)/전체관람(all) -->
+                    
+                        
+                        
+                        
+                        
+                            
+                            
+                        
+                    
+                    <li>
+                        <div class="thum">
+                            <i class="all">전체</i><!-- class명 : 청불(noteenager)/12세(age12)/15세(age15)/전체관람(all) -->
+                            <a href="javascript:goDetail('0000004062','20261807T', '0000000608');">
+                            
+                            
+                            <img src="/common/popup/download.jsp?save_dir=ticketing&file_name=/item/2026/9/c7dc80cc-99cd-4625-8a58-0a44691e33e0.jpg&file_mask=9ea8c9b1c2c04a9dbd6c6d34e58456e8.jpg" alt="(더빙) 극장판 치이카와:인어 섬의 비밀">
+                            </a>
+                        </div>
+                        <div class="con">
+                            <h3 class="tit"><a href="javascript:goDetail('0000004062','20261807T', '0000000608');">(더빙) 극장판 치이카와:인어 섬의 비밀</a></h3>
+                            <div class="set">
+                                <dl>
+                                    <dt>상영기간</dt>
+                                    <dd>2026.09.30 ~ 2026.10.13</dd>
+                                </dl>
+                            </div>
+                            <!-- timewrap -->
+                            <div class="timewrap">
+                                <div class="stit">상영관 및 시간</div>
+                                <ul class="area">
+                                    
+                                        
+                                        <!-- class명 : 청불(noteenager)/12세(age12)/15세(age15)/전체관람(all) -->
+                                        
+                                            
+                                                
+                                            
+                                            
+                                            
+                                            
+                                        
+                                        <li>
+                                        <strong><span class="snm1">시네마1관</span></strong>
+                                        <!-- class명 : 시네마1관(snm1)/시네마1관(snm2)/대공연장(bplace)/소공연장(splace) -->
+                                        <ol>
+                                            
+                                            
+                                            
+                                                 
+                                                
+                                                 <li class="seat ">
+                                                    
+                                                    
+                                                        
+                                                        
+                                                            <button type="button" class="disabled">14:10</button>
+                                                        
+                                                    
+                                                    
+                                                        
+                                                            <span>매진</span>
+                                                        
+                                                        
+                                                    
+                                                    
+
+                                                </li>
+                                            
+                                            
+                                            
+                                                 
+                                                 
+                                                 <li class="seat ">
+                                                    
+                                                    
+                                                        
+                                                            <button type="button" onclick="javascript:reserveChoiceTime('0000004062','20261807T', '0000000608', '20261006','19:10');">19:10</button>
+                                                        
+                                                        
+                                                    
+                                                    
+                                                        
+                                                        
+                                                            <span>잔여:<span class="t_pink">63</span>석</span>
+                                                        
+                                                    
+                                                    
+                                                </li>
+                                            
+                                            
+
+                                            
+
+
+                                        </ol>
+                                    </li>
+                                     
+                                        
+                                        <!-- class명 : 청불(noteenager)/12세(age12)/15세(age15)/전체관람(all) -->
+                                        
+                                            
+                                            
+                                            
+                                            
+                                                
+                                            
+                                        
+                                        <li>
+                                        <strong><span class="splace">소공연장</span></strong>
+                                        <!-- class명 : 시네마1관(snm1)/시네마1관(snm2)/대공연장(bplace)/소공연장(splace) -->
+                                        <ol>
+                                            
+                                            
+                                            
+                                            
+                                                 
+                                                
+                                                 <li class="seat ">
+                                                    
+                                                    
+                                                        
+                                                            <button type="button" onclick="javascript:reserveChoiceTime('0000004062','20261807T', '0000000608', '20261006','17:30');">17:30</button>
+                                                        
+                                                        
+                                                    
+                                                    
+                                                        
+                                                        
+                                                            <span>잔여:<span class="t_pink">169</span>석</span>
+                                                        
+                                                    
+                                                    
+
+                                                </li>
+                                            
+                                            
+                                            
+
+                                            
+
+
+                                        </ol>
+                                    </li>
+                                     
+                                </ul>
+                            </div>
+                            <!-- //timewrap -->
+                        </div>
+                        <div class="btn">
+                            
+                                
+                                    
+                                        <a href="javascript:reserveNext('0000004062','20261807T', '0000000608');" class="bt_normal point">예매하기</a>
+                                    
+                                
+                            
+                            <a href="javascript:goDetail('0000004062','20261807T', '0000000608');" class="bt_normal">상세보기</a>
+                        </div>
+                    </li>
+                    
+                    
+                    
+                    <!-- class명 : 청불(noteenager)/12세(age12)/15세(age15)/전체관람(all) -->
+                    
+                        
+                        
+                            
+                            
+                        
+                        
+                        
+                    
+                    <li>
+                        <div class="thum">
+                            <i class="age15">15</i><!-- class명 : 청불(noteenager)/12세(age12)/15세(age15)/전체관람(all) -->
+                            <a href="javascript:goDetail('0000004061','20224573D', '0000000608');">
+                            
+                            
+                            <img src="/common/popup/download.jsp?save_dir=ticketing&file_name=/item/2026/9/d8be7857-24ec-404a-93a1-c2713c64aa1d.jpg&file_mask=b5cfd3729bd9477593c8d5a99d1a20f4.jpg" alt="부활남:더 레드">
+                            </a>
+                        </div>
+                        <div class="con">
+                            <h3 class="tit"><a href="javascript:goDetail('0000004061','20224573D', '0000000608');">부활남:더 레드</a></h3>
+                            <div class="set">
+                                <dl>
+                                    <dt>상영기간</dt>
+                                    <dd>2026.09.30 ~ 2026.10.13</dd>
+                                </dl>
+                            </div>
+                            <!-- timewrap -->
+                            <div class="timewrap">
+                                <div class="stit">상영관 및 시간</div>
+                                <ul class="area">
+                                    
+                                        
+                                        <!-- class명 : 청불(noteenager)/12세(age12)/15세(age15)/전체관람(all) -->
+                                        
+                                            
+                                                
+                                            
+                                            
+                                            
+                                            
+                                        
+                                        <li>
+                                        <strong><span class="snm1">시네마1관</span></strong>
+                                        <!-- class명 : 시네마1관(snm1)/시네마1관(snm2)/대공연장(bplace)/소공연장(splace) -->
+                                        <ol>
+                                            
+                                            
+                                                
+                                                
+                                                    
+                                                
+                                                 <li class="seat morning">
+                                                    
+                                                    
+                                                        
+                                                        
+                                                            <button type="button" class="disabled">12:10</button>
+                                                        
+                                                    
+                                                    
+                                                        
+                                                            <span>매진</span>
+                                                        
+                                                        
+                                                    
+
+                                                    
+
+                                                </li>
+                                            
+                                            
+                                            
+                                                 
+                                                
+                                                 <li class="seat ">
+                                                    
+                                                    
+                                                        
+                                                            <button type="button" onclick="javascript:reserveChoiceTime('0000004061','20224573D', '0000000608', '20261006','16:10');">16:10</button>
+                                                        
+                                                        
+                                                    
+                                                    
+                                                        
+                                                        
+                                                            <span>잔여:<span class="t_pink">62</span>석</span>
+                                                        
+                                                    
+                                                    
+
+                                                </li>
+                                            
+                                            
+                                            
+
+                                            
+
+
+                                        </ol>
+                                    </li>
+                                     
+                                        
+                                        <!-- class명 : 청불(noteenager)/12세(age12)/15세(age15)/전체관람(all) -->
+                                        
+                                            
+                                            
+                                                
+                                            
+                                            
+                                            
+                                        
+                                        <li>
+                                        <strong><span class="snm2">시네마2관</span></strong>
+                                        <!-- class명 : 시네마1관(snm1)/시네마1관(snm2)/대공연장(bplace)/소공연장(splace) -->
+                                        <ol>
+                                            
+                                                
+                                                
+                                                    
+                                                
+                                                 <li class="seat morning">
+                                                    
+                                                    
+                                                        
+                                                        
+                                                            <button type="button" class="disabled" >09:40</button>
+                                                        
+                                                    
+
+                                                    
+                                                        
+                                                            <span>매진</span>
+                                                        
+                                                        
+                                                    
+                                                    
+                                                    
+                                                </li>
+                                            
+                                            
+                                            
+                                            
+                                            
+                                                 
+                                                 
+                                                 <li class="seat ">
+                                                    
+                                                    
+                                                        
+                                                            <button type="button" onclick="javascript:reserveChoiceTime('0000004061','20224573D', '0000000608', '20261006','19:10');">19:10</button>
+                                                        
+                                                        
+                                                    
+                                                    
+                                                        
+                                                        
+                                                            <span>잔여:<span class="t_pink">64</span>석</span>
+                                                        
+                                                    
+                                                    
+                                                </li>
+                                            
+                                            
+
+                                            
+
+
+                                        </ol>
+                                    </li>
+                                     
+                                </ul>
+                            </div>
+                            <!-- //timewrap -->
+                        </div>
+                        <div class="btn">
+                            
+                                
+                                    
+                                        <a href="javascript:reserveNext('0000004061','20224573D', '0000000608');" class="bt_normal point">예매하기</a>
+                                    
+                                
+                            
+                            <a href="javascript:goDetail('0000004061','20224573D', '0000000608');" class="bt_normal">상세보기</a>
+                        </div>
+                    </li>
+                    
+                    
+                    
+                    <!-- class명 : 청불(noteenager)/12세(age12)/15세(age15)/전체관람(all) -->
+                    
+                        
+                            
+                            
+                        
+                        
+                        
+                        
+                    
+                    <li>
+                        <div class="thum">
+                            <i class="noteenager">청불</i><!-- class명 : 청불(noteenager)/12세(age12)/15세(age15)/전체관람(all) -->
+                            <a href="javascript:goDetail('0000004059','20256161D', '0000000608');">
+                            
+                            
+                            <img src="/common/popup/download.jsp?save_dir=ticketing&file_name=/item/2026/9/29daae94-eacf-46cd-b0eb-734e2c6719af.jpg&file_mask=0923TX_129.jpg" alt="타짜:벨제붑의 노래">
+                            </a>
+                        </div>
+                        <div class="con">
+                            <h3 class="tit"><a href="javascript:goDetail('0000004059','20256161D', '0000000608');">타짜:벨제붑의 노래</a></h3>
+                            <div class="set">
+                                <dl>
+                                    <dt>상영기간</dt>
+                                    <dd>2026.09.23 ~ 2026.10.13</dd>
+                                </dl>
+                            </div>
+                            <!-- timewrap -->
+                            <div class="timewrap">
+                                <div class="stit">상영관 및 시간</div>
+                                <ul class="area">
+                                    
+                                        
+                                        <!-- class명 : 청불(noteenager)/12세(age12)/15세(age15)/전체관람(all) -->
+                                        
+                                            
+                                            
+                                                
+                                            
+                                            
+                                            
+                                        
+                                        <li>
+                                        <strong><span class="snm2">시네마2관</span></strong>
+                                        <!-- class명 : 시네마1관(snm1)/시네마1관(snm2)/대공연장(bplace)/소공연장(splace) -->
+                                        <ol>
+                                            
+                                            
+                                            
+                                                 
+                                                
+                                                 <li class="seat ">
+                                                    
+                                                    
+                                                        
+                                                        
+                                                            <button type="button" class="disabled">14:10</button>
+                                                        
+                                                    
+                                                    
+                                                        
+                                                            <span>매진</span>
+                                                        
+                                                        
+                                                    
+                                                    
+
+                                                </li>
+                                            
+                                            
+                                            
+                                            
+
+                                            
+
+
+                                        </ol>
+                                    </li>
+                                     
+                                        
+                                        <!-- class명 : 청불(noteenager)/12세(age12)/15세(age15)/전체관람(all) -->
+                                        
+                                            
+                                            
+                                            
+                                            
+                                                
+                                            
+                                        
+                                        <li>
+                                        <strong><span class="splace">소공연장</span></strong>
+                                        <!-- class명 : 시네마1관(snm1)/시네마1관(snm2)/대공연장(bplace)/소공연장(splace) -->
+                                        <ol>
+                                            
+                                                
+                                                
+                                                    
+                                                
+                                                 <li class="seat morning">
+                                                    
+                                                    
+                                                        
+                                                        
+                                                            <button type="button" class="disabled" >10:00</button>
+                                                        
+                                                    
+
+                                                    
+                                                        
+                                                            <span>매진</span>
+                                                        
+                                                        
+                                                    
+                                                    
+                                                    
+                                                </li>
+                                            
+                                            
+                                            
+                                            
+                                            
+                                                 
+                                                 
+                                                 <li class="seat ">
+                                                    
+                                                    
+                                                        
+                                                            <button type="button" onclick="javascript:reserveChoiceTime('0000004059','20256161D', '0000000608', '20261006','19:30');">19:30</button>
+                                                        
+                                                        
+                                                    
+                                                    
+                                                        
+                                                        
+                                                            <span>잔여:<span class="t_pink">164</span>석</span>
+                                                        
+                                                    
+                                                    
+                                                </li>
+                                            
+                                            
+
+                                            
+
+
+                                        </ol>
+                                    </li>
+                                     
+                                </ul>
+                            </div>
+                            <!-- //timewrap -->
+                        </div>
+                        <div class="btn">
+                            
+                                
+                                    
+                                        <a href="javascript:reserveNext('0000004059','20256161D', '0000000608');" class="bt_normal point">예매하기</a>
+                                    
+                                
+                            
+                            <a href="javascript:goDetail('0000004059','20256161D', '0000000608');" class="bt_normal">상세보기</a>
+                        </div>
+                    </li>
+                    
+                    
+                    
+                    <!-- class명 : 청불(noteenager)/12세(age12)/15세(age15)/전체관람(all) -->
+                    
+                        
+                        
+                        
+                            
+                            
+                        
+                        
+                    
+                    <li>
+                        <div class="thum">
+                            <i class="age12">12</i><!-- class명 : 청불(noteenager)/12세(age12)/15세(age15)/전체관람(all) -->
+                            <a href="javascript:goDetail('0000004058','20255033D', '0000000608');">
+                            
+                            
+                            <img src="/common/popup/download.jsp?save_dir=ticketing&file_name=/item/2026/9/574bdb6b-a894-4a9f-9070-7a1058cf9dac.jpg&file_mask=0923A12_131.jpg" alt="암살자들">
+                            </a>
+                        </div>
+                        <div class="con">
+                            <h3 class="tit"><a href="javascript:goDetail('0000004058','20255033D', '0000000608');">암살자들</a></h3>
+                            <div class="set">
+                                <dl>
+                                    <dt>상영기간</dt>
+                                    <dd>2026.09.23 ~ 2026.10.13</dd>
+                                </dl>
+                            </div>
+                            <!-- timewrap -->
+                            <div class="timewrap">
+                                <div class="stit">상영관 및 시간</div>
+                                <ul class="area">
+                                    
+                                        
+                                        <!-- class명 : 청불(noteenager)/12세(age12)/15세(age15)/전체관람(all) -->
+                                        
+                                            
+                                                
+                                            
+                                            
+                                            
+                                            
+                                        
+                                        <li>
+                                        <strong><span class="snm1">시네마1관</span></strong>
+                                        <!-- class명 : 시네마1관(snm1)/시네마1관(snm2)/대공연장(bplace)/소공연장(splace) -->
+                                        <ol>
+                                            
+                                                
+                                                
+                                                    
+                                                
+                                                 <li class="seat morning">
+                                                    
+                                                    
+                                                        
+                                                        
+                                                            <button type="button" class="disabled" >09:40</button>
+                                                        
+                                                    
+
+                                                    
+                                                        
+                                                            <span>매진</span>
+                                                        
+                                                        
+                                                    
+                                                    
+                                                    
+                                                </li>
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
+
+                                            
+
+
+                                        </ol>
+                                    </li>
+                                     
+                                        
+                                        <!-- class명 : 청불(noteenager)/12세(age12)/15세(age15)/전체관람(all) -->
+                                        
+                                            
+                                            
+                                                
+                                            
+                                            
+                                            
+                                        
+                                        <li>
+                                        <strong><span class="snm2">시네마2관</span></strong>
+                                        <!-- class명 : 시네마1관(snm1)/시네마1관(snm2)/대공연장(bplace)/소공연장(splace) -->
+                                        <ol>
+                                            
+                                            
+                                            
+                                            
+                                                 
+                                                
+                                                 <li class="seat ">
+                                                    
+                                                    
+                                                        
+                                                            <button type="button" onclick="javascript:reserveChoiceTime('0000004058','20255033D', '0000000608', '20261006','16:40');">16:40</button>
+                                                        
+                                                        
+                                                    
+                                                    
+                                                        
+                                                        
+                                                            <span>잔여:<span class="t_pink">61</span>석</span>
+                                                        
+                                                    
+                                                    
+
+                                                </li>
+                                            
+                                            
+                                            
+
+                                            
+
+
+                                        </ol>
+                                    </li>
+                                     
+                                        
+                                        <!-- class명 : 청불(noteenager)/12세(age12)/15세(age15)/전체관람(all) -->
+                                        
+                                            
+                                            
+                                            
+                                            
+                                                
+                                            
+                                        
+                                        <li>
+                                        <strong><span class="splace">소공연장</span></strong>
+                                        <!-- class명 : 시네마1관(snm1)/시네마1관(snm2)/대공연장(bplace)/소공연장(splace) -->
+                                        <ol>
+                                            
+                                            
+                                                
+                                                
+                                                    
+                                                
+                                                 <li class="seat morning">
+                                                    
+                                                    
+                                                        
+                                                        
+                                                            <button type="button" class="disabled">12:30</button>
+                                                        
+                                                    
+                                                    
+                                                        
+                                                            <span>매진</span>
+                                                        
+                                                        
+                                                    
+
+                                                    
+
+                                                </li>
+                                            
+                                            
+                                            
+                                            
+                                            
+
+                                            
+
+
+                                        </ol>
+                                    </li>
+                                     
+                                </ul>
+                            </div>
+                            <!-- //timewrap -->
+                        </div>
+                        <div class="btn">
+                            
+                                
+                                    
+                                        <a href="javascript:reserveNext('0000004058','20255033D', '0000000608');" class="bt_normal point">예매하기</a>
+                                    
+                                
+                            
+                            <a href="javascript:goDetail('0000004058','20255033D', '0000000608');" class="bt_normal">상세보기</a>
+                        </div>
+                    </li>
+                    
+                    
+                    
+                    <!-- class명 : 청불(noteenager)/12세(age12)/15세(age15)/전체관람(all) -->
+                    
+                        
+                        
+                        
+                            
+                            
+                        
+                        
+                    
+                    <li>
+                        <div class="thum">
+                            <i class="age12">12</i><!-- class명 : 청불(noteenager)/12세(age12)/15세(age15)/전체관람(all) -->
+                            <a href="javascript:goDetail('0000004056','20256308D', '0000000608');">
+                            
+                            
+                            <img src="/common/popup/download.jsp?save_dir=ticketing&file_name=/item/2026/9/71f711f1-c3e1-4fb9-8c68-0fae2c87e785.jpg&file_mask=thn_d969ad6bed3f4e028cc3541ed7ec9bb8.jpg" alt="인턴">
+                            </a>
+                        </div>
+                        <div class="con">
+                            <h3 class="tit"><a href="javascript:goDetail('0000004056','20256308D', '0000000608');">인턴</a></h3>
+                            <div class="set">
+                                <dl>
+                                    <dt>상영기간</dt>
+                                    <dd>2026.09.16 ~ 2026.10.13</dd>
+                                </dl>
+                            </div>
+                            <!-- timewrap -->
+                            <div class="timewrap">
+                                <div class="stit">상영관 및 시간</div>
+                                <ul class="area">
+                                    
+                                        
+                                        <!-- class명 : 청불(noteenager)/12세(age12)/15세(age15)/전체관람(all) -->
+                                        
+                                            
+                                            
+                                                
+                                            
+                                            
+                                            
+                                        
+                                        <li>
+                                        <strong><span class="snm2">시네마2관</span></strong>
+                                        <!-- class명 : 시네마1관(snm1)/시네마1관(snm2)/대공연장(bplace)/소공연장(splace) -->
+                                        <ol>
+                                            
+                                            
+                                                
+                                                
+                                                    
+                                                
+                                                 <li class="seat morning">
+                                                    
+                                                    
+                                                        
+                                                        
+                                                            <button type="button" class="disabled">11:40</button>
+                                                        
+                                                    
+                                                    
+                                                        
+                                                            <span>매진</span>
+                                                        
+                                                        
+                                                    
+
+                                                    
+
+                                                </li>
+                                            
+                                            
+                                            
+                                            
+                                            
+
+                                            
+
+
+                                        </ol>
+                                    </li>
+                                     
+                                        
+                                        <!-- class명 : 청불(noteenager)/12세(age12)/15세(age15)/전체관람(all) -->
+                                        
+                                            
+                                            
+                                            
+                                            
+                                                
+                                            
+                                        
+                                        <li>
+                                        <strong><span class="splace">소공연장</span></strong>
+                                        <!-- class명 : 시네마1관(snm1)/시네마1관(snm2)/대공연장(bplace)/소공연장(splace) -->
+                                        <ol>
+                                            
+                                            
+                                            
+                                                 
+                                                
+                                                 <li class="seat ">
+                                                    
+                                                    
+                                                        
+                                                            <button type="button" onclick="javascript:reserveChoiceTime('0000004056','20256308D', '0000000608', '20261006','15:00');">15:00</button>
+                                                        
+                                                        
+                                                    
+                                                    
+                                                        
+                                                        
+                                                            <span>잔여:<span class="t_pink">166</span>석</span>
+                                                        
+                                                    
+                                                    
+
+                                                </li>
+                                            
+                                            
+                                            
+                                            
+
+                                            
+
+
+                                        </ol>
+                                    </li>
+                                     
+                                </ul>
+                            </div>
+                            <!-- //timewrap -->
+                        </div>
+                        <div class="btn">
+                            
+                                
+                                    
+                                        <a href="javascript:reserveNext('0000004056','20256308D', '0000000608');" class="bt_normal point">예매하기</a>
+                                    
+                                
+                            
+                            <a href="javascript:goDetail('0000004056','20256308D', '0000000608');" class="bt_normal">상세보기</a>
+                        </div>
+                    </li>
+                    
+
+                </ul>
+                <!-- //movie_list -->
+            </div>
+        </div>
+        <!-- //본문 내용 -->
+    </div>
+</div>
+<form name="searchForm" id="searchForm">
+    <input type="hidden" name=ticketingitemseq id="ticketingitemseq" value=""/>
+    <input type="hidden" name="ticketingitemcode" id="ticketingitemcode" value=""/>
+    <input type="hidden" name="unicodeseqitemtype" id="unicodeseqitemtype" value=""/>
+
+    <input type="hidden" name="playdate" id="playdate" value=""/>
+    <input type="hidden" name="playtime" id="playtime" value=""/>
+
+    <input type="hidden" name="mid" id="mid" value="0200"/>
+    <input type="hidden" name="ticket_type" id="ticket_type" value="movie"/>
+    <input type="hidden" name="SVC_ID" id="SVC_ID" value="seat"/>
+</form>
+<script type="text/javascript">
+var seaterror = "";
+function reserveChoiceTime(ticketingitemseq, ticketingitemcode, unicodeseqitemtype, playDate, playTime){
+    $("#ticketingitemseq").val(ticketingitemseq);
+    $("#ticketingitemcode").val(ticketingitemcode);
+    $("#unicodeseqitemtype").val(unicodeseqitemtype);
+    $("#playdate").val(playDate);
+    $("#playtime").val(playTime);
+    var searchForm = document.searchForm;
+    searchForm.action = "/ticket/seat.do";
+    searchForm.method = "post";
+    searchForm.submit();
+}
+function reserveNext(ticketingitemseq, ticketingitemcode, unicodeseqitemtype){
+    $("#ticketingitemseq").val(ticketingitemseq);
+    $("#ticketingitemcode").val(ticketingitemcode);
+    $("#unicodeseqitemtype").val(unicodeseqitemtype);
+    var searchForm = document.searchForm;
+    searchForm.action = "/ticket/seat.do";
+    searchForm.method = "post";
+    searchForm.submit();
+}
+
+function goDetail(ticketingitemseq, ticketingitemcode, unicodeseqitemtype){
+    $("#ticketingitemseq").val(ticketingitemseq);
+    $("#ticketingitemcode").val(ticketingitemcode);
+    $("#unicodeseqitemtype").val(unicodeseqitemtype);
+    $("#SVC_ID").val("detail");
+    var searchForm = document.searchForm;
+    searchForm.action = "/movie/detail.do";
+    searchForm.method = "post";
+    searchForm.submit();
+}
+
+
+function searchSelectDate(searchDate){
+    if("_20211016_20211017_".indexOf(searchDate) > 0 ) {
+        alert("10/16(토)~17(일) 영화예매는 홈페이지 점검으로 인해 현장예매만 가능합니다.\n[문의] 052-209-7855~6 ");
+    }
+
+    location.href ="/movie/list.do?mid=0200&SVC_ID=list&searchDate="+searchDate;
+}
+
+function preDate(){
+//     var searchDate = "20261006";
+//     var searchDate1 = searchDate.substring(0, 4);
+//     var searchDate2 = searchDate.substring(4, 6);
+//     var searchDate3 = searchDate.substring(6, 8);
+//     var selectDate = new Date(searchDate1, searchDate2, searchDate3);
+//     selectDate.setDate(selectDate.getDate() -1);
+
+//     var year = selectDate.getFullYear();
+//     var month = selectDate.getMonth();
+//     var day = selectDate.getDate();
+//     var selectedClass = "";
+//     if (month < 10) {
+//         month = "0" + month;
+//     }
+
+//     if (day < 10) {
+//         day = "0" + day;
+//     }
+//     var selday = year + "" + month + "" + day;
+    if("_20211016_20211017_".indexOf("20261005") > 0 ) {
+        alert("10/16(토)~17(일) 영화예매는 홈페이지 점검으로 인해 현장예매만 가능합니다.\n[문의] 052-209-7855~6 ");
+    }
+
+    location.href ="/movie/list.do?mid=0200&SVC_ID=list&searchDate="+"20261005";
+}
+
+function nextDate(){
+//     var searchDate = "20261006";
+//     var searchDate1 = searchDate.substring(0, 4);
+//     var searchDate2 = searchDate.substring(4, 6);
+//     var searchDate3 = searchDate.substring(6, 8);
+//     var selectDate = new Date(searchDate1, searchDate2, searchDate3);
+//     selectDate.setDate(selectDate.getDate() + 1);
+
+//     var year = selectDate.getFullYear();
+//     var month = selectDate.getMonth();
+//     var day = selectDate.getDate();
+//     var selectedClass = "";
+//     if (month < 10) {
+//         month = "0" + month;
+//     }
+
+//     if (day < 10) {
+//         day = "0" + day;
+//     }
+//     var selday = year + "" + month + "" + day;
+    if("_20211016_20211017_".indexOf("20261007") > 0 ) {
+        alert("10/16(토)~17(일) 영화예매는 홈페이지 점검으로 인해 현장예매만 가능합니다.\n[문의] 052-209-7855~6 ");
+    }
+    location.href ="/movie/list.do?mid=0200&SVC_ID=list&searchDate="+"20261007";
+}
+
+
+function createSelectedDateInfo(searchDate) {
+
+    var searchDate1 = searchDate.substring(0, 4);
+    var searchDate2 = searchDate.substring(4, 6);
+    var searchDate3 = searchDate.substring(6, 8);
+
+
+    var selectDate = new Date(searchDate1, Number(searchDate2)-1, searchDate3);
+    var searchDateList = "";
+    var week = new Array('일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일');
+    for (var i = 0; i < 5; i++) {
+        var plus = 1;
+        if(i == 0){
+            plus = 0;
+        }
+        selectDate.setDate(selectDate.getDate() + plus);
+        var year = selectDate.getFullYear();
+        var month = selectDate.getMonth()+1;
+        var day = selectDate.getDate();
+        var selectedClass = "none";
+        if (month < 10) {
+            month = "0" + month;
+        }
+
+        if (day < 10) {
+            day = "0" + day;
+        }
+        var selday = year + "" + month + "" + day;
+        if (searchDate == selday) {
+            selectedClass = "on";
+        }
+        searchDateList += "<li><a href=\"javascript:searchSelectDate('"
+                + selday + "');\" class=\"" + selectedClass + "\"><strong>"
+                + year + "-" + month + "-" + day + "</strong><span>("
+                + week[selectDate.getDay()] + ")</span></a></li>";
+    }
+    $("#searchDateList").html(searchDateList);
+}
+
+$(document).ready(function() {
+    var searchDate = "20261006";
+    createSelectedDateInfo(searchDate);
+    
+    
+    
+        
+});
+</script>
+<!-- //container -->
+
+<!-- quick menu -->
+<div class="quick_menu">
+    <div class="mask"></div>
+    <div class="quick_con">
+        <button type="button" class="btn_quick" title="메뉴열림">메뉴</button>
+        <div class="list">
+            <a href="/mypage/reserveresult.do?SVC_ID=reserveresult" class="reserv">예매현황</a>
+            <a href="/lecture/list.do?mid=0301&SVC_ID=list" class="edu">수강신청</a>
+            <a href="/movie/list.do?mid=0200&SVC_ID=list" class="movie">영화예매</a>
+            <a href="/performance/list.do?mid=0000&SVC_ID=list&now=Y" class="perform">공연예매</a>
+            
+
+        </div>
+    </div>
+</div>
+<!-- //quick menu -->
+
+<!-- footer -->
+<div id="footer">
+    <div class="f_menu">
+        <div class="inner">
+            <div class="l_con">
+                <a href="/etc/personal_policy.jsp">개인정보처리방침</a>
+                <a href="/etc/image_process_policy.jsp">영상정보처리기기 운영방침</a>
+                <a href="/etc/access_terms.jsp">회원·이용약관</a>
+                <a href="/etc/sitemap.jsp">사이트맵</a>
+                <a href="mailto:artscenter@hd.com" title="아웃룩 연결됨">제휴 및 광고 문의</a>
+                <a href="https://buy.hd-artscenter.co.kr" target="_blank" title="새창열림">Arts-Buy</a>                
+            </div>
+            <div class="r_con">
+<!--                <a href="http://www.instagram.com/hhiarts" class="instar" target="_blank" title="새창열림">인스타그램</a> -->
+<!--                <a href="https://twitter.com/hhiarts" class="twt" target="_blank" title="새창열림">트위터</a> -->
+<!--                <a href="https://www.facebook.com/hhiarts" class="face" target="_blank" title="새창열림">페이스북</a> -->
+<!--                <a href="https://www.lahanhotels.com/ulsan/taste/view.do?seq=14" class="yone" target="_blank" title="새창열림">예원</a> -->
+<!--                <a href="http://www.hyundaihotel.com/ulsan/?p=213" class="amad" target="_blank" title="새창열림">Amadeus</a> -->
+               <button type="button" id="btnGoTop" title="상단으로">상단으로</button>
+            </div>
+        </div>
+    </div>
+    <div class="f_info">
+        <div class="inner">
+            <h2 class="blind">울산HD아트센터 홈페이지 정보</h2>
+            <div class="info">
+                <strong>HD아트센터 로고</strong>
+                <address><span>울산광역시 동구 방어진순환도로 1000(전하동)</span> <span>대표자 : 이상균, 금석호</span> <span>사업자번호 : 252-87-01412</span> <span>통신판매업신고 : 울산 동구 제 2004-00016호</span><span>대표전화번호 : 1522-3331(ARS)</span></address>
+                <p>Copyright(C) 2018 HD HHI HD Arts Center. All rights reserved.</p>
+            </div>
+
+            <div class="site_link">
+                <button class="tit"><span>문화예술관련 사이트</span></button>
+                <div class="cont">
+                    <ul>
+                        <li><a href="https://ucac.ulsan.go.kr" target="_blank" title="새창열림" rel="noopener noreferrer" >울산문화예술회관</a></li>
+                        <li><a href="https://www.bukgu.ulsan.kr/art" target="_blank" title="새창열림" rel="noopener noreferrer" >북구문화예술회관</a></li>
+                        <li><a href="https://artscenter.junggu.ulsan.kr" target="_blank" title="새창열림" rel="noopener noreferrer" >울산중구문화의전당</a></li>
+                        <li><a href="https://www.ucf.or.kr:478/" target="_blank" title="새창열림" rel="noopener noreferrer" >울주문화예술회관</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<!-- //footer -->
+</div>
+
+
+
+</body>
+</html>
