@@ -1,6 +1,7 @@
 import type { CrawledShowtimeCandidate } from '@/types/admin'
 import type { ParseContext } from './utils'
 import { buildCandidate, dedupeCandidates } from './utils'
+import { extractBoardImageUrls, findLatestBoardPostUrl, isBoardPostUrl } from './board'
 
 type ImageMediaType = 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'
 
@@ -166,32 +167,26 @@ export async function crawlBoardImageOcr(context: ParseContext): Promise<Crawled
   const url = context.sourceUrl ?? context.source.listingUrl
   const theaterName = context.source.theaterName
 
-  // 1) 게시글 HTML 가져오기
-  const pageRes = await fetch(url, {
-    headers: { 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36' },
-    signal: AbortSignal.timeout(12000),
-  })
-  if (!pageRes.ok) throw new Error(`게시글 fetch 실패: ${pageRes.status}`)
-  const html = await pageRes.text()
-
-  // 2) 이미지 URL 추출 (업로드된 첨부 이미지)
-  const imgMatches = [
-    ...html.matchAll(/<img[^>]+src=["']([^"']+)["'][^>]*>/g),
-  ]
-  const base = new URL(url)
-  const imgUrls = imgMatches
-    .map(m => {
-      const src = m[1]
-      if (!src || src.includes('logo') || src.includes('icon') || src.includes('banner') || src.includes('btn')) return null
-      try { return new URL(src, base).toString() } catch { return null }
+  const fetchHtml = async (target: string) => {
+    const res = await fetch(target, {
+      headers: { 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36' },
+      signal: AbortSignal.timeout(12000),
     })
-    .filter((u): u is string => Boolean(u))
-    // 콘텐츠 이미지만 (editor/data 경로 우선)
-    .sort((a, b) => {
-      const score = (u: string) => (u.includes('editor') || u.includes('data') || u.includes('upload') || u.includes('attach')) ? 1 : 0
-      return score(b) - score(a)
-    })
+    if (!res.ok) throw new Error(`게시판 fetch 실패: ${res.status}`)
+    return res.text()
+  }
 
+  // 1) 소스 주소가 게시판 목록이면 제목에 극장 이름이 든 최신 글을 고른다
+  let postUrl = url
+  if (!isBoardPostUrl(url)) {
+    const found = findLatestBoardPostUrl(await fetchHtml(url), url, theaterName)
+    if (!found) throw new Error(`게시판에서 "${theaterName}" 글을 찾을 수 없습니다`)
+    postUrl = found
+  }
+  const html = await fetchHtml(postUrl)
+
+  // 2) 이미지 URL 추출 — 썸네일보다 원본 우선
+  const imgUrls = extractBoardImageUrls(html, postUrl)
   if (!imgUrls.length) throw new Error('게시글에서 이미지를 찾을 수 없습니다')
 
   // 3) 첫 번째 콘텐츠 이미지 다운로드
@@ -207,5 +202,5 @@ export async function crawlBoardImageOcr(context: ParseContext): Promise<Crawled
 
   // 4) GPT OCR
   const schedule = await ocrScheduleImages([image], theaterName)
-  return candidatesFromSchedule(context, schedule, url, imgUrl)
+  return candidatesFromSchedule(context, schedule, postUrl, imgUrl)
 }
