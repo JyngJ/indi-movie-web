@@ -24,11 +24,6 @@ import type { Festival } from '@/types/festival'
  *   · 이동이 끝날 때까지 다시 누르지 못하게 막는다.
  */
 
-/* 한 번 띄운 페이지에서 이미 미리 불러온 영화제. 홈이 다시 그려질 때마다 바로가기가
-   새로 마운트돼 같은 영화제를 거듭 불러왔다 — 로컬 운영 빌드에서 홈 한 번 열면
-   /festival/biff31 prefetch 6건(2026-10). 요청 수가 곧 CDN 한도라 페이지당 한 번만 부른다. */
-const prefetched = new Set<string>()
-
 /* 이동이 실패해 화면에 남았을 때 바로가기를 다시 살리는 시간 */
 const PENDING_RESET_MS = 10_000
 
@@ -56,11 +51,7 @@ export function FestivalShortcutRow({ festivals, today, isDesktop, onSelect }: P
   const slugKey = shortcuts.map((f) => f.slug).join('|')
   useEffect(() => {
     if (!slugKey) return
-    for (const slug of slugKey.split('|')) {
-      if (prefetched.has(slug)) continue
-      prefetched.add(slug)
-      router.prefetch(`/festival/${slug}`)
-    }
+    for (const slug of slugKey.split('|')) router.prefetch(`/festival/${slug}`)
   }, [router, slugKey])
   useEffect(() => () => { if (resetTimer.current) clearTimeout(resetTimer.current) }, [])
 

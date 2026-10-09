@@ -13,11 +13,14 @@ export default function NotFound() {
       background: 'var(--color-surface-bg)',
       textAlign: 'center',
     }}>
+      {/* loading="lazy": 이 컴포넌트는 모든 페이지의 RSC 트리에 실려, 즉시 로드 <img>면 React가
+          모든 HTML <head>에 preload를 넣는다. 그래서 404가 아닌 방문마다 일러스트 두 장을 받았다(2026-10). */}
       {/* 영사 중인 스크린 연출 — 숫자는 별도 레이어(404-numbers.png)로 분리해 필름처럼 떨고,
           스크린 전체에 게이트 빛, 머리 위엔 빛을 가린 그림자가 진다. 좌표는 원본 1200×900 픽셀 실측값. */}
       <div style={{ position: 'relative', width: 240 }}>
         <img
           src="/illust/404-base.png"
+          loading="lazy"
           alt="빈 영화관에서 영사기 스크린을 바라보는 관객 일러스트"
           style={{ width: '100%', height: 'auto', opacity: 0.85, display: 'block' }}
         />
@@ -31,6 +34,7 @@ export default function NotFound() {
         {/* 스크린에 맺힌 404 — 필름 위빙으로 떨림 */}
         <img
           src="/illust/404-numbers.png"
+          loading="lazy"
           alt="스크린에 영사된 404 숫자"
           aria-hidden
           className="nf404-numbers"
