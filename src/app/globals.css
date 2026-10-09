@@ -8,13 +8,13 @@
   font-family: 'KIMM';
   font-weight: 300;
   font-display: swap;
-  src: url('/fonts/KIMM_Light.ttf') format('truetype');
+  src: url('/fonts/KIMM_Light.woff2') format('woff2');
 }
 @font-face {
   font-family: 'KIMM';
   font-weight: 700;
   font-display: swap;
-  src: url('/fonts/KIMM_bold.ttf') format('truetype');
+  src: url('/fonts/KIMM_bold.woff2') format('woff2');
 }
 
 /* ================================

@@ -179,5 +179,21 @@ Supabase는 별도 마이그레이션 (백엔드 담당)
   `x-vercel-cache`가 HIT/STALE로 바뀌는지.
 - 배포 횟수와 하루 함수 호출 수는 9월 30일치에서 상관이 없었다(-0.13). 호출 수는 방문량을 따라 움직였다.
 
+### 2026-10: CDN 요청 수(월 100만 건) 초과
+
+CPU 다음으로 CDN Requests가 Hobby 한도를 넘었다(30일 1,024,407건). 적중률은 97~100%라 함수 비용은 작지만
+한도는 건수로 센다. Observability → CDN Requests 12시간 상위가 `/my` 1.9K · `/feed` 1.5K · `/map` 1.5K · `/` 1.2K로,
+같은 시간 페이지뷰(1.4K)와 비슷했다 — 메뉴 바 탭 prefetch.
+
+| 조치 | 위치 | 이유 |
+|---|---|---|
+| 메뉴 바·레일 탭 링크 prefetch 끔 | `GlobalNav.tsx` `TAB_PREFETCH` | 모든 화면에 떠 있어 페이지뷰마다 네 탭을 미리 받았다 |
+| 영화제 바로가기 prefetch 페이지당 한 번 | `FestivalShortcutRow.tsx` | 홈이 다시 그려질 때마다 다시 마운트돼 홈 한 번에 6건 → 2건 |
+| `public/` 정적 파일 브라우저 캐시 | `next.config.ts` headers | 기본 `max-age=0`이라 파비콘·폰트·일러스트를 화면마다 다시 받았다. 폰트 1년, 나머지 7일. 내용을 바꾸면 파일 이름을 바꾼다 |
+| KIMM TTF → woff2 | `public/fonts/*.woff2`, `globals.css` | 924KB(전송 약 276KB) → 210KB. TTF는 OG 카드(Satori, woff2 미지원)용으로 남긴다 |
+
+- 확인: 운영 빌드(`next start`)에서 홈을 열었을 때 `/?_rsc`·`/map?_rsc`·`/feed?_rsc`·`/my?_rsc` 요청이 없어야 한다.
+- 남은 것: `/illust/404-base.png`가 12시간 486회 — 404 페이지가 그만큼 열린다. 경로별 404를 보고 봇이면 Firewall로 막는다.
+
 **다음에 CPU가 다시 오르면:** Vercel Usage → Fluid Active CPU에서 Type·경로별로 먼저 나눠 본다. 코드만 봐서는
 어느 경로가 큰지 확정할 수 없었다. 남은 후보는 OG 카드 렌더(카드당 수백 ms), 크롤러의 롱테일 상세 방문, 배포마다의 캐시 초기화다.

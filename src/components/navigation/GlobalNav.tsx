@@ -58,6 +58,12 @@ const MOBILE_TABS: MobileTab[] = [
   { key: 'my', href: '/my', label: 'MY', icon: 'user-round' },
 ]
 
+/* 탭 링크는 미리 불러오지 않는다(2026-10). 메뉴 바가 모든 화면에 떠 있어 페이지뷰마다
+   네 탭을 prefetch했고, 12시간 CDN 요청 상위가 /my·/feed·/map·/ 순으로 페이지뷰 수와
+   비슷하게 찍혔다 — Hobby 한도(월 100만 건)를 넘긴 주원인. 탭 화면은 CDN 캐시 적중이라
+   누른 뒤 받아도 빠르고, 이동 중에는 공통 진행 막대가 뜬다. */
+const TAB_PREFETCH = false
+
 /** 데스크톱 레일 — 위: 지도·상영작 / 아래(디바이더 밑): 소식·MY */
 const DESKTOP_RAIL_TOP = MOBILE_TABS.filter((tab) => tab.key === 'map' || tab.key === 'films')
 const DESKTOP_RAIL_BOTTOM = MOBILE_TABS.filter((tab) => tab.key === 'feed' || tab.key === 'my')
@@ -100,6 +106,7 @@ function MobileTabBar({ pathname, filmsHref }: { pathname: string; filmsHref: st
           <Link
             key={key}
             href={href}
+            prefetch={TAB_PREFETCH}
             aria-current={active ? 'page' : undefined}
             style={{
               flex: 1,
@@ -170,6 +177,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
       <Link
         key={key}
         href={resolvedHref}
+        prefetch={TAB_PREFETCH}
         aria-current={active ? 'page' : undefined}
         onClick={(e) => {
           if (key === 'feed' || key === 'my') {
@@ -250,7 +258,7 @@ function DesktopRail({ pathname, filmsHref }: { pathname: string; filmsHref: str
         zIndex: 'var(--z-navigation)',
       }}
     >
-      <Link href="/" aria-label="홈(상영작)" style={{ display: 'block' }}>
+      <Link href="/" prefetch={TAB_PREFETCH} aria-label="홈(상영작)" style={{ display: 'block' }}>
         <Image src="/logo-tile.png" alt="영화볼지도 로고" width={40} height={40} style={{ borderRadius: 4 }} />
       </Link>
 

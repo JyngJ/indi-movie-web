@@ -110,6 +110,8 @@ const nextConfig: NextConfig = {
     const detail = 'public, s-maxage=3600, stale-while-revalidate=86400'
     // 지역 페이지는 극장 목록이 본문이라 훨씬 느리게 변한다.
     const area = 'public, s-maxage=1800, stale-while-revalidate=86400'
+    const staticLong = 'public, max-age=31536000, immutable'
+    const staticWeek = 'public, max-age=604800, stale-while-revalidate=86400'
     return [
       // 대표 영화 상세 — 검색 유입이 전부 여기로 온다(2026-09 라우트 통합, #356).
       // 통합 때 이 항목이 같이 오지 않아, 정작 가장 많이 열리는 페이지만 캐시 없이
@@ -122,6 +124,14 @@ const nextConfig: NextConfig = {
       { source: '/films/theater/:id', headers: [{ key: 'Cache-Control', value: detail }] },
       { source: '/films/theater/:id/s/:showtimeId', headers: [{ key: 'Cache-Control', value: detail }] },
       { source: '/films/area/:region', headers: [{ key: 'Cache-Control', value: area }] },
+      // public/ 파일은 Next 기본값이 max-age=0이라 브라우저가 화면마다 다시 받는다.
+      // 12시간 CDN 요청 상위에 파비콘(/squarelogo.svg 1.2K)·KIMM 폰트(515회·143MB)·
+      // 404 일러스트가 올라 있었다(2026-10). 파일 이름에 해시가 없으므로 내용을 바꿀 땐
+      // 이름을 바꾼다 — 폰트는 1년, 나머지는 7일.
+      { source: '/fonts/:file*', headers: [{ key: 'Cache-Control', value: staticLong }] },
+      { source: '/illust/:file*', headers: [{ key: 'Cache-Control', value: staticWeek }] },
+      { source: '/area-backdrops/:file*', headers: [{ key: 'Cache-Control', value: staticWeek }] },
+      { source: '/:file(squarelogo\\.svg|logo-tile\\.png|logo\\.svg)', headers: [{ key: 'Cache-Control', value: staticWeek }] },
     ]
   },
 };
