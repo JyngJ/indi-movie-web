@@ -3,6 +3,17 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   allowedDevOrigins: ['192.168.188.20', 'http://192.168.188.20:3000', '100.120.113.87'],
   serverExternalPackages: ['playwright-chromium'],
+  // 브라우저 JS 조각 수를 줄인다(2026-10). Next 기본값(maxInitialRequests 25 · minSize 20KB)이면
+  // 첫 화면 하나에 청크 26개를 따로 받았고, 12시간 CDN 요청 29K 중 약 1만 건이 청크였다.
+  // Hobby CDN 한도는 요청 건수라 작은 공용 조각을 큰 덩어리로 합친다. framework·lib 그룹은 그대로.
+  webpack(config, { isServer, dev }) {
+    const split = config.optimization?.splitChunks
+    if (!isServer && !dev && split) {
+      split.maxInitialRequests = 10
+      split.minSize = 100_000
+    }
+    return config
+  },
   // Override Vercel's VERCEL_PROJECT_PRODUCTION_URL which may be set to a Korean punycode
   // domain (e.g. www.xn--939au0g4vj8sq7l.com) that Node.js 22+ rejects in new URL().
   // Next.js 16 reads this env var in getSocialImageMetadataBaseFallback when processing
