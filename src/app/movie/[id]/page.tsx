@@ -7,6 +7,7 @@ import { toMovieDescription } from '@/lib/seo/toMovieDescription'
 import { getMovieShowtimesForSsr } from '@/lib/catalog/getMovieShowtimesCached'
 import { MovieBody } from './MovieBody'
 import { ogImageUrl } from '@/lib/og/cards'
+import { robotsForScreenings } from '@/lib/seo/indexPolicy'
 
 /* 매 요청 SSR이던 화면이다(force-dynamic). 검색 유입 1위 경로라 요청 수 × 렌더가
    그대로 Vercel Fluid Active CPU로 나갔다 — 2026-09 무료 한도(4h)를 넘겼다.
@@ -85,6 +86,8 @@ export async function generateMetadata({
     alternates: {
       canonical: url,
     },
+    /* 상영이 없는 영화는 색인에서 뺀다 — 사이트맵(movie/sitemap.ts)과 같은 기준(indexPolicy) */
+    robots: robotsForScreenings(showtimes.length > 0),
   }
 }
 

@@ -8,6 +8,7 @@ import { toFaqSchema } from '@/lib/seo/toFaqSchema'
 import { toBreadcrumbSchema } from '@/lib/seo/toBreadcrumbSchema'
 import { ogImageUrl } from '@/lib/og/cards'
 import { Toast } from '@/components/primitives'
+import { robotsForScreenings } from '@/lib/seo/indexPolicy'
 
 export const revalidate = 3600
 
@@ -31,6 +32,8 @@ export async function generateMetadata({ params }: { params: Promise<{ name: str
     openGraph: { title, description, type: 'website', images },
     twitter: { card: 'summary_large_image', title, description, images },
     alternates: { canonical: `/films/director/${name}` },
+    /* 상영 중인 작품이 없는 감독은 색인에서 뺀다 — 사이트맵과 같은 기준(indexPolicy) */
+    robots: robotsForScreenings(nowShowing > 0),
   }
 }
 

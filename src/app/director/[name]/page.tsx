@@ -9,6 +9,8 @@ export async function generateMetadata({ params }: { params: Promise<{ name: str
     title: `${directorName} | 영화볼지도`,
     description: `${directorName} 감독 작품 및 현재 상영 정보`,
     alternates: { canonical: `/films/director/${name}` },
+    // 구 경로 — 대표 주소(/films/director)만 색인한다
+    robots: { index: false, follow: true },
   }
 }
 
