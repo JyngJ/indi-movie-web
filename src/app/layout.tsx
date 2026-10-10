@@ -3,7 +3,6 @@ import { ReactNode } from 'react'
 import './globals.css'
 import { Providers } from './providers'
 import { AnalyticsScripts } from '@/components/analytics/AnalyticsScripts'
-import { AdSenseScript } from '@/components/analytics/AdSenseScript'
 import { Icon } from '@/components/primitives'
 
 export const metadata: Metadata = {
@@ -59,7 +58,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="ko" suppressHydrationWarning>
       <head>
         {/* FOUC 방지: 렌더링 전 테마 적용 — React 19 알려진 경고(개발환경 only, 프로덕션 무관) */}
-        <AdSenseScript />
       </head>
       <body>
         <Providers>
