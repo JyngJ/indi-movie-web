@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { getIndexableMovies } from '@/lib/seo/getIndexableMovies'
 
 // movie sitemap은 generateSitemaps로 페이지네이션된다(/movie/sitemap/0.xml, 1.xml, …).
 // 정적 robots.txt에 0.xml만 하드코딩돼 있어 페이지가 늘면 뒤쪽 sitemap이 검색엔진에
@@ -12,12 +13,9 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.xn--hq1bv8o5ph
 const PAGE_SIZE = 1000
 
 export default async function robots(): Promise<MetadataRoute.Robots> {
-  const supabase = createSupabaseServerClient()
-  const { count } = await supabase
-    .from('movies')
-    .select('id', { count: 'exact', head: true })
-
-  const pageCount = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE))
+  // 영화 사이트맵과 같은 목록(상영이 있는 영화)으로 페이지 수를 센다 — movie/sitemap.ts
+  const movies = await getIndexableMovies(createSupabaseServerClient()).catch(() => [])
+  const pageCount = Math.max(1, Math.ceil(movies.length / PAGE_SIZE))
   const movieSitemaps = Array.from(
     { length: pageCount },
     (_, i) => `${BASE_URL}/movie/sitemap/${i}.xml`,

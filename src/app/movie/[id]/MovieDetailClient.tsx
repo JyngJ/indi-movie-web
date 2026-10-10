@@ -111,12 +111,14 @@ function DirectorChipLoader({ name, onClick }: { name: string; onClick: () => vo
 }
 
 /* ── 메인 ────────────────────────────────────────────────────────── */
-export function MovieDetailClient({ movie, initialShowtimes, initialSelection }: {
+export function MovieDetailClient({ movie, initialShowtimes, initialSelection, screeningSummary }: {
   movie: MovieDetail
   /** SSR에서 미리 읽은 시간표 — 첫 페인트에 회차가 바로 보이게 시드로 넣는다 */
   initialShowtimes?: MovieTheaterEntry[]
   /** 회차 공유 링크(/movie/[id]/s/[showtimeId])로 들어온 경우의 초기 선택 */
   initialSelection?: { date: string; theaterId: string; showtimeId: string }
+  /** 서버가 만든 상영 요약 한 줄(buildMovieScreeningSummary) — 크롤러가 읽는 본문 문장 */
+  screeningSummary?: string | null
 }) {
   const router = useProgressRouter()
   const isDesktop = useIsDesktop()
@@ -582,6 +584,11 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection }:
             <b style={{ color: 'var(--color-primary-base)' }}>{theaterEntries.filter((e) => getRegionFromAddress(e.theaterAddress) === regionId).length}</b>{'개 영화관 상영중, '}</>
           )}
           {'전국 '}<b style={{ color: 'var(--color-primary-base)' }}>{totalTheaterCount}</b>{'개 영화관 상영중'}
+        </p>
+      )}
+      {screeningSummary && totalTheaterCount > 0 && (
+        <p style={{ margin: 0, padding: isDesktop ? 'var(--spacing-1) 0 0' : 'var(--spacing-1) var(--gutter) 0', fontSize: 'var(--text-meta)', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+          {screeningSummary}
         </p>
       )}
 

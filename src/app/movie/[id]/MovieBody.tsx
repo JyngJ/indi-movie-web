@@ -7,6 +7,8 @@ import { toBreadcrumbSchema } from '@/lib/seo/toBreadcrumbSchema'
 import { getMovieShowtimesForSsr } from '@/lib/catalog/getMovieShowtimesCached'
 import { SeoShowtimesSection } from '@/components/seo/SeoShowtimesSection'
 import { MovieDetailClient } from './MovieDetailClient'
+import { buildMovieScreeningSummary } from '@/lib/seo/movieScreeningSummary'
+import { toKstIsoDate } from '@/lib/date'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'
 
@@ -77,6 +79,7 @@ export async function MovieBody({
         movie={movie}
         initialShowtimes={showtimes}
         initialSelection={initialSelection}
+        screeningSummary={buildMovieScreeningSummary(showtimes, toKstIsoDate(new Date()))}
       />
       <SeoShowtimesSection movieTitle={movie.title} entries={showtimes} />
     </>
