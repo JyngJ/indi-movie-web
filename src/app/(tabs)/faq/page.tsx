@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { AdSenseScript } from '@/components/analytics/AdSenseScript'
 import { toFaqSchema } from '@/lib/seo/toFaqSchema'
 import { getScreeningIndex } from '@/lib/seo/getScreeningIndex'
 import { buildSections } from './content'
@@ -23,6 +24,7 @@ export default async function FaqPage() {
 
   return (
     <>
+      <AdSenseScript />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <FaqClient sections={sections} />
     </>

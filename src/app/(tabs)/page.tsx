@@ -1,4 +1,5 @@
 import { getScreeningIndex } from '@/lib/seo/getScreeningIndex'
+import { AdSenseScript } from '@/components/analytics/AdSenseScript'
 import { toOrganizationSchema, toScreeningListSchema, toWebSiteSchema } from '@/lib/seo/toScreeningListSchema'
 import { ScreeningIndexSeoContent } from '@/components/seo/ScreeningIndexSeoContent'
 import FilmsClient from './FilmsClient'
@@ -26,6 +27,7 @@ export default async function Home() {
 
   return (
     <>
+      <AdSenseScript />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
