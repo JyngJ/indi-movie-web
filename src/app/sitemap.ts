@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { getIndexableMovies } from '@/lib/seo/getIndexableMovies'
 import { getRegionFromCity, REGIONS } from '@/lib/regions'
 import { festivalViewPath, listFestivalViews } from '@/lib/festival/festivalView'
 
@@ -38,9 +39,11 @@ async function fetchWithRetry<T>(
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createSupabaseServerClient()
 
-  const [theaters, directors, festivals] = await Promise.all([
+  const [theaters, indexableMovies, festivals] = await Promise.all([
     fetchWithRetry<{ id: string; updated_at: string; city: string | null }>('theaters', () => supabase.from('theaters').select('id, updated_at, city'), true),
-    fetchWithRetry<{ director: string[] | null }>('movies.director', () => supabase.from('movies').select('director'), true),
+    // 감독은 상영 중인 영화가 있는 사람만 싣는다(src/lib/seo/indexPolicy.ts). 예전엔 movies 전체의
+    // 감독 1,266명을 실었고 대부분이 상영 없는 빈 페이지였다(30일 검색 유입 96건).
+    getIndexableMovies(supabase),
     // is_active 필터 필수 — 비활성 영화제가 sitemap에 실리면 상세가 notFound()라
     // Search Console에 404가 쌓인다(죽은 극장 sitemap 이슈와 같은 재발 패턴).
     // 활성 영화제가 0개인 건 정상 상태라 빈 결과를 재시도 대상으로 삼지 않는다.
@@ -52,7 +55,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ))
 
   const directorNames = [...new Set(
-    directors.flatMap((m) => (m.director as string[] | null) ?? []).filter(Boolean)
+    indexableMovies.flatMap((m) => m.director).filter(Boolean)
   )]
   const directorUrls: MetadataRoute.Sitemap = directorNames.map((name) => ({
     url: `${BASE_URL}/films/director/${encodeURIComponent(name)}`,
