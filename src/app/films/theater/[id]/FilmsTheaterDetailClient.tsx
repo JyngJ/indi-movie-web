@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
+import { DetailBottomAd } from '@/components/ads/DetailBottomAd'
 import { createPortal } from 'react-dom'
 import { useProgressRouter } from '@/hooks/useProgressRouter'
 import { addDaysIso, toKstIsoDate } from '@/lib/date'
@@ -585,6 +586,7 @@ export function FilmsTheaterDetailClient({ theater, initialSelection, initialSho
         <DetailTopBar crumbLabel="영화" crumbHref="/films" title={theater.name} isDesktop trailing={<RegionFilterWidget />} />
         <div style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 0' }}>
           {content}
+          <DetailBottomAd />
         </div>
         {selectedShowtimeData && (
           <div style={{ position: 'fixed', right: 32, bottom: 32, width: 300, zIndex: 100, borderRadius: 16, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-card)', boxShadow: '0 6px 24px color-mix(in srgb, var(--color-primary-base) 55%, transparent)', overflow: 'hidden' }}>
@@ -642,6 +644,7 @@ export function FilmsTheaterDetailClient({ theater, initialSelection, initialSho
     <div className="page-slide-in" style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
       <DetailTopBar crumbLabel="영화" crumbHref="/films" title={theater.name} isDesktop={false} trailing={<RegionFilterWidget />} />
       {content}
+      <DetailBottomAd />
       <div style={{ height: 'env(safe-area-inset-bottom)' }} />
       {selectedShowtimeData && typeof document !== 'undefined' && createPortal(
         // .page-slide-in의 transform이 컨테이닝 블록을 만들어 fixed가 페이지 하단(전체 콘텐츠 끝)에

@@ -1,0 +1,20 @@
+/* 얇은 배너로 크기를 고정한다 — 반응형 auto는 정사각형 큰 광고까지 들어온다.
+   AdSense 반응형 광고 단위의 "정확한 크기 지정" 방식: <ins>에 width/height를 주고
+   data-ad-format을 빼면 그 크기의 광고만 받는다. 크기가 고정이라 자리도 미리 잡혀 CLS가 없다. */
+.slot {
+  display: inline-block;
+  width: 320px;
+  height: 50px;   /* 모바일 배너 320×50 */
+}
+
+@media (min-width: 768px) {
+  .slot {
+    width: 728px;
+    height: 90px; /* 리더보드 728×90 */
+  }
+}
+
+.frame {
+  display: flex;
+  justify-content: center;
+}

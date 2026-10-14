@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { DetailBottomAd } from '@/components/ads/DetailBottomAd'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useProgressRouter } from '@/hooks/useProgressRouter'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
@@ -215,6 +216,9 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
           </div>
         )}
 
+        {/* 광고 — 현재 상영작이 있으면 작품 목록 위. 작품 목록이 길어 맨 아래까지 내려가는 사람이 적다.
+            상영작이 없으면 이 자리가 히어로 바로 아래라 본문보다 광고가 먼저 보이므로 맨 아래로 보낸다 */}
+        {nowPlaying.length > 0 && <DetailBottomAd />}
         {!isDesktop && <div aria-hidden style={{ height: 8, backgroundColor: 'var(--color-surface-raised)', marginTop: 20 }} />}
         {/* 작품 목록 */}
         <div style={{ padding: isDesktop ? '64px 0 64px' : '24px 0 52px' }}>
@@ -254,6 +258,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
             </div>
           )}
         </div>
+        {nowPlaying.length === 0 && <DetailBottomAd />}
       </div>
 
       <div style={{ height: 'env(safe-area-inset-bottom)' }} />

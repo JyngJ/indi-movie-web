@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
+import { DetailBottomAd } from '@/components/ads/DetailBottomAd'
 import { createPortal } from 'react-dom'
 import { useProgressRouter } from '@/hooks/useProgressRouter'
 import { Chip, Avatar, IconButton, Button, Icon, Divider, EmptyState, Skeleton, ShowtimeCellSkeleton } from '@/components/primitives'
@@ -700,6 +701,7 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection, s
               전부 중복이었다. 회차 선택 카드만 우하단 플로팅으로 남긴다. */}
           {synopsisSection}
           {showtimesSection}
+          <DetailBottomAd />
         </div>
         {selectedShowtimeData && typeof document !== 'undefined' && createPortal(
           <div style={{ position: 'fixed', right: 40, bottom: 40, width: 320, zIndex: 100 }}>
@@ -723,6 +725,7 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection, s
       {synopsisSection}
       <div aria-hidden style={{ height: 8, backgroundColor: 'var(--color-surface-raised)' }} />
       {showtimesSection}
+      <DetailBottomAd />
       <div style={{ height: 'env(safe-area-inset-bottom)' }} />
       {selectedShowtimeData && typeof document !== 'undefined' && createPortal(
         // .page-slide-in의 transform이 컨테이닝 블록을 만들어 fixed가 페이지 하단(전체 콘텐츠 끝)에
