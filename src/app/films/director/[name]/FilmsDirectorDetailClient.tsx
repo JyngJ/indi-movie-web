@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { DetailBottomAd } from '@/components/ads/DetailBottomAd'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useProgressRouter } from '@/hooks/useProgressRouter'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
@@ -254,6 +255,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
             </div>
           )}
         </div>
+        <DetailBottomAd />
       </div>
 
       <div style={{ height: 'env(safe-area-inset-bottom)' }} />

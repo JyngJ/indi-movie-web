@@ -6,7 +6,7 @@
 // 지도·소식·MY·검색·설정은 앱 화면이라 광고 효과가 낮은데, 광고를 요청한 URL마다 AdSense
 // 크롤러가 따로 방문한다 — 12시간 CDN 요청 약 14K 중 3.4K가 이 크롤러였다(Hobby 한도는 건수).
 // <head> 밖에 렌더해도 React 19가 async 스크립트를 <head>로 끌어올린다.
-const ADSENSE_CLIENT = 'ca-pub-9133958847616613'
+import { ADSENSE_CLIENT } from '@/lib/ads/adsenseConfig'
 
 export function AdSenseScript() {
   if (process.env.VERCEL_ENV !== 'production') return null
