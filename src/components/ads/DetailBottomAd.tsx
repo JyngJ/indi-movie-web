@@ -3,13 +3,14 @@
 import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { ADSENSE_CLIENT, detailAdSlot } from '@/lib/ads/adsenseConfig'
+import styles from './DetailBottomAd.module.css'
 
 declare global {
   interface Window { adsbygoogle?: unknown[] }
 }
 
 /**
- * 상세(영화·극장·감독) 맨 아래 광고 한 칸.
+ * 상세(영화·극장·감독) 광고 한 칸 — 얇은 가로 배너.
  *
  * 자동 광고는 위치를 고를 수 없고, 인페이지 광고가 React가 그리는 구간에 끼어들면
  * removeChild 오류가 날 수 있다(HANDOFF-20260918 §5). 그래서 상세는 본문이 끝난 자리에
@@ -43,15 +44,15 @@ function AdUnit({ slot }: { slot: string }) {
       <p style={{ margin: '0 0 var(--spacing-2)', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
         광고
       </p>
-      {/* 높이를 미리 잡아 둔다 — 광고가 늦게 채워질 때 아래 여백이 밀리지 않게(CLS) */}
-      <ins
-        className="adsbygoogle"
-        style={{ display: 'block', minHeight: 'var(--spacing-24)' }}
-        data-ad-client={ADSENSE_CLIENT}
-        data-ad-slot={slot}
-        data-ad-format="auto"
-        data-full-width-responsive="true"
-      />
+      {/* 얇은 배너 고정 크기(모바일 320×50 · 768px 이상 728×90) — 크기는 CSS 모듈.
+          data-ad-format을 빼야 AdSense가 이 크기만 채운다 */}
+      <div className={styles.frame}>
+        <ins
+          className={`adsbygoogle ${styles.slot}`}
+          data-ad-client={ADSENSE_CLIENT}
+          data-ad-slot={slot}
+        />
+      </div>
     </section>
   )
 }
