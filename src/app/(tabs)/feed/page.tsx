@@ -36,7 +36,7 @@ function FeedPageInner() {
 
   return (
     <MyPageShell title="소식" trailing={trailing}>
-      <FeedContent authError={authError} />
+      <FeedContent authError={authError} withAds />
     </MyPageShell>
   )
 }

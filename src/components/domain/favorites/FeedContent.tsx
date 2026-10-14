@@ -8,13 +8,19 @@ import { Button, EmptyState } from '@/components/primitives'
 import { useFavorites } from '@/hooks/useFavorites'
 import { useNotificationEvents } from '@/hooks/useNotifications'
 import { FeedList } from './FeedList'
+import { AdSenseScript } from '@/components/analytics/AdSenseScript'
 
 /**
  * 소식 본문 — 모바일 /feed 페이지와 데스크톱 FeedPanel이 같이 쓴다.
  * 소식은 배치(scripts/notify-favorites.ts)가 관심 목록 × 상영 사실을 대조해 쌓아둔 것을 읽는다.
  * 열면 읽음 처리한다 — 안 읽은 건 배경으로 구분되므로 화면을 벗어나기 전까진 그대로 보인다.
  */
-export function FeedContent({ authError, onNavigate }: { authError?: string | null; onNavigate?: () => void }) {
+/**
+ * withAds — 소식이 실제로 있을 때만 AdSense 자동 광고 스크립트를 싣는다(모바일 /feed 페이지만).
+ * 로그인 화면·빈 상태는 게시자 콘텐츠가 없는 화면이라 광고를 띄우면 정책 위반이다.
+ * 데스크톱 소식 패널은 지도 등 다른 화면 위에 열리므로 싣지 않는다.
+ */
+export function FeedContent({ authError, onNavigate, withAds = false }: { authError?: string | null; onNavigate?: () => void; withAds?: boolean }) {
   const { status } = useAuth()
   const { favorites } = useFavorites()
   const { events, isLoading, markAllRead } = useNotificationEvents()
@@ -44,7 +50,12 @@ export function FeedContent({ authError, onNavigate }: { authError?: string | nu
   }
 
   if (events.length > 0) {
-    return <FeedList events={events} onNavigate={onNavigate} />
+    return (
+      <>
+        {withAds && <AdSenseScript />}
+        <FeedList events={events} onNavigate={onNavigate} />
+      </>
+    )
   }
 
   return (
