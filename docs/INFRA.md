@@ -197,5 +197,17 @@ CPU 다음으로 CDN Requests가 Hobby 한도를 넘었다(30일 1,024,407건). 
 - 첫 방문 JS 요청(로컬 `next start`): `/` 26→15 · `/movie/[id]` 29→17 · `/films/theater/[id]` 26→16 · `/map` 32→20.
 - 남은 것: 홈 첫 방문에 `/api/public/*` 16건 중 6건이 같은 주소 중복(movies·theaters·curation-cache·film-rankings·showtimes-window·active-showtimes). 영화제 바로가기 `router.prefetch` 한 번이 구간별 요청 약 11건으로 나간다(Next 16 segment prefetch).
 
+### 2026-10: CPU의 35%가 세션 프록시(`src/proxy.ts`)였다
+
+Usage → Fluid Active CPU → Type으로 나눠 보니 30일 5h 28m 중 **middleware 1h 55m(35.1%)** · function 3h 33m.
+`proxy.ts`(Supabase 세션 리프레시)는 정적 파일·API를 뺀 모든 페이지 요청에서 돌고, CDN 캐시 HIT 요청에도 먼저 실행된다.
+비로그인이면 바로 빠져나오지만 요청 자체가 함수 실행이라 건수만큼 CPU가 쌓였다.
+
+- 걷어낸 근거: 세션은 브라우저 클라이언트(`createBrowserClient`)가 쿠키에 저장하고 스스로 갱신한다. 서버에서 로그인
+  세션을 읽는 곳은 `/auth/callback`·`/auth/kakao/callback`(그 자리에서 세션을 만든다)과 `api/dev/kakao-memo`뿐이고,
+  어드민은 자체 쿠키·Bearer 토큰(`src/lib/admin/auth.ts`)이라 프록시와 무관하다
+- 다시 넣어야 하는 경우: 서버 컴포넌트·Server Action이 로그인 세션을 읽기 시작하면. 그때도 `matcher`를 그 경로로만 좁힐 것
+- 기대치: middleware 몫이 빠지면 30일 약 3h 33m — 한도(4h) 안
+
 **다음에 CPU가 다시 오르면:** Vercel Usage → Fluid Active CPU에서 Type·경로별로 먼저 나눠 본다. 코드만 봐서는
 어느 경로가 큰지 확정할 수 없었다. 남은 후보는 OG 카드 렌더(카드당 수백 ms), 크롤러의 롱테일 상세 방문, 배포마다의 캐시 초기화다.

@@ -25,7 +25,8 @@ export async function createSupabaseAuthServerClient() {
         try {
           cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
         } catch {
-          // 서버 컴포넌트에서는 쿠키를 못 쓴다. proxy.ts가 세션 리프레시를 담당하므로 무시해도 된다.
+          // 서버 컴포넌트에서는 쿠키를 못 쓴다. 세션 갱신은 브라우저 클라이언트(createBrowserClient)가
+          // 맡는다 — 요청마다 돌던 proxy.ts는 Fluid Active CPU의 35%라 2026-10에 걷어냈다(INFRA.md).
         }
       },
     },
