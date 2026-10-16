@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { EmptyState } from '@/components/primitives'
+import { CardContainer, EmptyState } from '@/components/primitives'
 import { PosterThumb } from '@/components/domain/PosterThumb'
 import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
 import { trackEvent } from '@/lib/analytics/client'
@@ -27,13 +27,16 @@ export function NoScreeningPanel({
   const gutter = isDesktop ? 0 : 'var(--gutter)'
   return (
     <div style={{ padding: `0 ${isDesktop ? '0' : 'var(--gutter)'}` }}>
-      <EmptyState
-        variant="block"
-        paddingY={32}
-        message="지금은 예정된 상영이 없어요"
-        description="관심 영화에 넣어 두면 다시 상영할 때 소식에서 알려 드려요"
-        action={<FavoriteActionRow type="movie" id={movie.id} label={movie.title} style={{ width: 280, maxWidth: '100%' }} />}
-      />
+      {/* 알림 안내는 카드로 묶어 위 섹션 제목·아래 비슷한 영화와 떼어 보이게 한다 */}
+      <CardContainer style={{ marginTop: 'var(--spacing-4)' }}>
+        <EmptyState
+          variant="block"
+          paddingY={24}
+          message="지금은 예정된 상영이 없어요"
+          description="관심 영화에 넣어 두면 다시 상영할 때 소식에서 알려 드려요"
+          action={<FavoriteActionRow type="movie" id={movie.id} label={movie.title} style={{ width: 280, maxWidth: '100%' }} />}
+        />
+      </CardContainer>
 
       {similar.length > 0 && (
         <section aria-labelledby="similar-now-showing" style={{ marginTop: 'var(--spacing-8)' }}>
