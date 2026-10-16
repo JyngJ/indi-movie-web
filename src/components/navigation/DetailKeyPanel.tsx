@@ -31,9 +31,12 @@ export function DetailKeyPanel({
       className={corners === 'all' ? 'detail-key-panel' : `detail-key-panel detail-key-panel--${corners}`}
       style={{
         backgroundColor: 'var(--color-surface-card)',
+        /* 자식의 위·아래 마진이 패널 밖으로 새지 않게(마진 겹침) — 모바일 영화 상세에서 액션 행의
+           아래 여백 20px이 흰 면 밖으로 빠져 미색 페이지 배경 띠로 보였다(2026-10-16).
+           overflow: hidden과 달리 자르지 않으므로 극장 상세의 sticky 날짜탭은 그대로 붙는다 */
+        display: 'flow-root',
         /* 모서리와 테두리는 globals.css `.detail-key-panel`이 갖는다 — 인라인이면
            모바일에서 빼는 미디어 쿼리가 못 이긴다 */
-        /* 모서리는 globals.css `.detail-key-panel`이 갖는다 — 인라인이면 미디어 쿼리가 못 이긴다 */
         paddingLeft: isDesktop ? 32 : 0,
         paddingRight: isDesktop ? 32 : 0,
         ...style,
