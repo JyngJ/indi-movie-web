@@ -1,5 +1,6 @@
 'use client'
 
+import { FeedAd } from '@/components/analytics/FeedAd'
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
@@ -190,7 +191,7 @@ function FestivalBannerCard({ festival, today, isDesktop, onClick }: { festival:
   )
 }
 
-export default function FilmsPage() {
+export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean }) {
   const router = useRouter()
   const isDesktopLayout = useIsDesktopLayout()
   const [mounted, setMounted] = useState(false)
@@ -1160,6 +1161,8 @@ export default function FilmsPage() {
 
             {/* 3. 지금 출발하면 + 막바지 + 매진 임박 — 시의성. 연속 sparse 자동 페어링 */}
             {renderRun(run1, 'run1', startRun1)}
+
+            {showFeedAd && !moviesLoading && gridMovies.length > 0 && <FeedAd />}
 
             {/* 4. 러닝타임·개봉주년·테마 — 지식형. run1(시의성)과 나눠서 PC 2열 페어링이
                 두 성격을 한 줄에 묶지 않게 한다 */}
