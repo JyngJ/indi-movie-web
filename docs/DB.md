@@ -358,6 +358,18 @@ ALTER TABLE instagram_recommendations ADD CONSTRAINT chk_insta_target CHECK (
 
 ---
 
+## 크롤러 묶음 쓰기 RPC (2026-10-16)
+
+`docs/SUPABASE_BULK_WRITES.sql`. 크롤러가 회차마다 요청을 하나씩 보내 Supabase 요청의 절반을 차지하던 것을 묶는다.
+
+| 함수 | 부르는 곳 | 입력 |
+|---|---|---|
+| `apply_candidate_matches(jsonb)` | 자동매칭 `autoMatchShowtimeCandidates` | `[{id, matched_theater_id, matched_movie_id, warnings, status}]` — 결과가 바뀐 후보만 |
+| `apply_candidate_seats(jsonb)` | 좌석 갱신 `runSeatChecks` | `[{fingerprint, seat_available, seat_total}]` |
+
+- 자동 승인 회차는 `showtimes`에 배열 upsert(500개씩)로 넣는다. 충돌 키가 한 요청 안에서 겹치면 Postgres가 묶음 전체를 거부하므로 미리 걷어낸다.
+- 함수가 없으면(PGRST202) 코드가 예전 방식(한 건씩)으로 돌아간다.
+
 ## 공통 트리거 (updated_at 자동 갱신)
 
 ```sql
