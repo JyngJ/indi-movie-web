@@ -1,6 +1,5 @@
 .container {
   margin: 32px var(--gutter);
-  min-height: 320px;
 }
 
 .label {
@@ -10,7 +9,19 @@
   font-size: var(--text-meta);
 }
 
+/* auto를 쓰지 않고 높이를 고정해 가로 배너만 요청한다.
+   좁은 화면에서는 좌우 여백 안으로 줄여 가로 스크롤을 막는다. */
 .ad {
   display: block;
   width: 100%;
+  max-width: 320px;
+  height: 50px;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .ad {
+    max-width: 728px;
+    height: 90px;
+  }
 }

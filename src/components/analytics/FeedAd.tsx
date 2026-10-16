@@ -37,8 +37,6 @@ export function FeedAd() {
         className={`adsbygoogle ${styles.ad}`}
         data-ad-client={ADSENSE_CLIENT}
         data-ad-slot="5376601636"
-        data-ad-format="auto"
-        data-full-width-responsive="true"
       />
     </aside>
   )

@@ -1185,6 +1185,9 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
             {/* 6~10. 연도별 · 거장/수상 · 매진 임박 · 신작·주말 · 시기별 · 무브먼트 */}
             {renderRun(run2, 'run2', startRun2 + 1)}
 
+            {/* 전체 상영작 바로 위 — 두 번째 가로 배너 */}
+            {showFeedAd && !moviesLoading && gridMovies.length > 0 && <FeedAd />}
+
             {/* 11. 전체 상영작 그리드 */}
             <LazyBlock isDesktop={isDesktop}>
             <AllMoviesGrid
