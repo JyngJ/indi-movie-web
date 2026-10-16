@@ -140,9 +140,11 @@ async function computeReturningFilms(supabase: ReturnType<typeof createSupabaseA
   const currentMovieIds = [...new Set((currentRows ?? []).map((r: Record<string, unknown>) => r.movie_id as string).filter(Boolean))]
   if (currentMovieIds.length === 0) { console.log('  현재 상영 중인 영화 없음'); return [] }
 
+  /* 지난 상영은 screening_days에서 읽는다 — showtimes는 30일만 보관한다(2026-10-16,
+     docs/SUPABASE_SCREENING_HISTORY.sql). 그 전에는 3일만 남아 이 섹션이 늘 비었다 */
   const twelveMonthsAgo = addMonthsToIso(asOfDate, -12)
   const { data: oldRows, error: e2 } = await supabase
-    .from('showtimes')
+    .from('screening_days')
     .select('movie_id')
     .in('movie_id', currentMovieIds)
     .lt('show_date', twelveMonthsAgo)
@@ -154,15 +156,28 @@ async function computeReturningFilms(supabase: ReturnType<typeof createSupabaseA
   if (candidateIds.length === 0) { console.log('  오랜만에 상영 후보 없음'); return [] }
   console.log(`  후보 ${candidateIds.length}편 발견`)
 
+  /* 지난 날짜(screening_days) + 앞으로 한 달(showtimes)을 합쳐야 이번 상영 묶음까지 run으로 잡힌다 */
   const sixYearsAgo = addMonthsToIso(asOfDate, -72)
-  const { data: historyRows, error: e3 } = await supabase
-    .from('showtimes')
-    .select('movie_id, show_date, movies(id, title, original_title, year, poster_url, genre, director, nation, kmdb_id, tmdb_id, rating)')
-    .in('movie_id', candidateIds)
-    .gte('show_date', sixYearsAgo)
-    .order('show_date', { ascending: true })
+  const movieSelect = 'movie_id, show_date, movies(id, title, original_title, year, poster_url, genre, director, nation, kmdb_id, tmdb_id, rating)'
+  const [{ data: pastRows, error: e3 }, { data: upcomingRows, error: e4 }] = await Promise.all([
+    supabase
+      .from('screening_days')
+      .select(movieSelect)
+      .in('movie_id', candidateIds)
+      .gte('show_date', sixYearsAgo)
+      .lt('show_date', asOfDate),
+    supabase
+      .from('showtimes')
+      .select(movieSelect)
+      .in('movie_id', candidateIds)
+      .eq('is_active', true)
+      .gte('show_date', asOfDate)
+      .lte('show_date', addMonthsToIso(asOfDate, 1)),
+  ])
 
   if (e3) throw e3
+  if (e4) throw e4
+  const historyRows = [...(pastRows ?? []), ...(upcomingRows ?? [])]
 
   const movieDateMap = new Map<string, { movie: Movie; dates: string[] }>()
   for (const row of (historyRows ?? []) as Record<string, unknown>[]) {

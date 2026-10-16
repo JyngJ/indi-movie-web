@@ -150,6 +150,27 @@ CREATE INDEX idx_showtimes_datetime     ON showtimes(show_date,  show_time);
 
 ---
 
+## screening_days (상영 기록 — 영구 보관, 2026-10-16)
+
+`showtimes`는 **30일만** 보관한다(pg_cron `cleanup-old-showtimes`). 그 전에 매일 `archive_screening_days(CURRENT_DATE)`가
+지난 날짜를 (영화 × 극장 × 날짜)별 회차 수로 옮겨 둔다(`archive-screening-days`, upsert라 여러 번 돌려도 같다).
+
+```sql
+CREATE TABLE screening_days (
+  movie_id    UUID    NOT NULL REFERENCES movies(id)   ON DELETE CASCADE,
+  theater_id  UUID    NOT NULL REFERENCES theaters(id) ON DELETE CASCADE,
+  show_date   DATE    NOT NULL,
+  show_count  INTEGER NOT NULL DEFAULT 0,
+  archived_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (movie_id, theater_id, show_date)
+);
+```
+
+- 쓰임: "오랜만에 돌아온 영화" 큐레이션(12개월 전 기록), 상영이 끝난 영화의 상영 이력
+- 읽기는 공개(RLS select true), 쓰기는 service role·함수만
+- 규모: 하루 약 300줄 — 1년 약 10만 줄. 2026-10-13 이전 기록은 3일 보관 시절에 이미 지워져 없다
+- 설치·정기 작업: `docs/SUPABASE_SCREENING_HISTORY.sql`
+
 ## stations (지하철역)
 
 ```sql
