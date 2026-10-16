@@ -7,6 +7,8 @@
 --   - 좌석 갱신: 좌석 값이 같은 회차끼리 묶었지만 값이 회차마다 달라 사실상 회차당 1회
 -- 코드(src/lib/admin/store.ts · src/lib/crawl/run-seat-checks.ts)는 아래 두 함수를 부르고,
 -- 함수가 없으면 예전 방식으로 돌아간다. 그래서 코드가 먼저 배포돼도 깨지지 않는다.
+-- 입력은 테이블 자체의 행 타입으로 푼다(jsonb_populate_recordset). 운영 DB의 warnings는
+-- docs/SUPABASE.sql의 TEXT[]가 아니라 JSONB라, 타입을 손으로 적었다가 42804로 막혔다.
 -- ═════════════════════════════════════════════════════════════
 
 -- 1. 자동매칭 결과 묶어 쓰기 — [{id, matched_theater_id, matched_movie_id, warnings, status}, …]
@@ -22,8 +24,7 @@ AS $$
         matched_movie_id   = u.matched_movie_id,
         warnings           = u.warnings,
         status             = u.status
-    FROM jsonb_to_recordset(updates)
-      AS u(id TEXT, matched_theater_id UUID, matched_movie_id UUID, warnings TEXT[], status TEXT)
+    FROM jsonb_populate_recordset(NULL::showtime_candidates, updates) AS u
     WHERE c.id = u.id
     RETURNING 1
   )
@@ -41,8 +42,7 @@ AS $$
     UPDATE showtime_candidates c
     SET seat_available = u.seat_available,
         seat_total     = u.seat_total
-    FROM jsonb_to_recordset(updates)
-      AS u(fingerprint TEXT, seat_available INTEGER, seat_total INTEGER)
+    FROM jsonb_populate_recordset(NULL::showtime_candidates, updates) AS u
     WHERE c.fingerprint = u.fingerprint
     RETURNING 1
   )
