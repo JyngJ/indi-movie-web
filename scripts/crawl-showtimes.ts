@@ -50,8 +50,8 @@ async function main() {
       matchResult = await autoMatchShowtimeCandidates()
     }
     const matchDuration = Date.now() - matchStart
-    console.log(`자동매칭 완료: ${matchResult.autoApproved}개 자동승인, ${matchResult.matched}개 매칭, ${matchResult.needsReview}개 검토필요 (${(matchDuration / 1000).toFixed(1)}s)`)
-    await notifyDiscordMatch(matchResult.matched, matchResult.autoApproved, matchResult.needsReview, matchDuration)
+    console.log(`자동매칭 완료: 자동승인 ${matchResult.autoApproved.screenings}회차·${matchResult.autoApproved.uniqueTitles}편, 매칭 후 검수 ${matchResult.matchedNeedsReview.screenings}회차·${matchResult.matchedNeedsReview.uniqueTitles}편, 미매칭 ${matchResult.unmatched.screenings}회차·${matchResult.unmatched.uniqueTitles}편, 저장 실패 ${matchResult.writeFailed.screenings}회차·${matchResult.writeFailed.uniqueTitles}편 (고유 영화 ${matchResult.uniqueMovieTitles}편, ${(matchDuration / 1000).toFixed(1)}s)`)
+    await notifyDiscordMatch(matchResult, matchDuration)
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)
     console.error(`자동매칭 실패(스킵, 다음 실행에 재시도): ${msg}`)
