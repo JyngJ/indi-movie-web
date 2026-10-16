@@ -28,15 +28,12 @@ async function freshGate() {
   vi.resetModules()
   return {
     gate: await import('./gate'),
-    onboarding: await import('@/lib/onboarding'),
-    storage: (await import('@/lib/adapters/storage')).storageAdapter,
   }
 }
 
-/** 온보딩을 끝낸 상태에서 visits 회차로 진입한 상황 */
+/** 이전까지 previousVisits번 방문한 사람이 다시 들어온 상황 */
 function seedOnboardedVisitor(local: ReturnType<typeof makeStorage>, previousVisits: number) {
   local.map.set('movie:visits:v1', String(previousVisits))
-  local.map.set('onboarding_seen_v1', '2026-01-01')
 }
 
 describe('shouldShowSurvey — 노출 회차', () => {
@@ -78,23 +75,6 @@ describe('shouldShowSurvey — 차단 조건', () => {
 
   beforeEach(() => { stores = installBrowserGlobals() })
   afterEach(() => { vi.unstubAllGlobals() })
-
-  it('온보딩을 끝내지 않은 재방문자에게는 노출하지 않는다 (겹침 방지)', async () => {
-    const { gate } = await freshGate()
-    // 1회차에 온보딩을 안 끝내고 이탈 → 방문 수만 올라가 있고 seen 플래그는 없다
-    stores.local.map.set('movie:visits:v1', '1')
-
-    expect(await gate.shouldShowSurvey()).toBeNull()
-  })
-
-  it('온보딩을 방금 끝낸 세션에는 노출하지 않는다', async () => {
-    const { gate, onboarding, storage } = await freshGate()
-    stores.local.map.set('movie:visits:v1', '1')
-    await onboarding.markOnboardingSeen(storage)
-
-    expect(onboarding.didOnboardThisSession()).toBe(true)
-    expect(await gate.shouldShowSurvey()).toBeNull()
-  })
 
   it('제출을 끝낸 사람에게는 다시 묻지 않는다', async () => {
     const { gate } = await freshGate()

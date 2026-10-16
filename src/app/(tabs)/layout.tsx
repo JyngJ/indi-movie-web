@@ -7,7 +7,6 @@ import { GlobalNav } from '@/components/navigation/GlobalNav'
 import { SettingsPanel } from '@/components/map/SettingsPanel'
 import { useUIStore } from '@/store/uiStore'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
-import { OnboardingGate } from '@/components/domain/onboarding/OnboardingGate'
 import { SurveyGate } from '@/components/domain/survey/SurveyGate'
 import { FeedPanel } from '@/components/domain/favorites/FeedPanel'
 import { MyPanel } from '@/components/auth/MyPanel'
@@ -68,9 +67,6 @@ export default function TabsLayout({ children }: { children: ReactNode }) {
       {/* 데스크톱 소식 패널 — 레일 '소식' 클릭 (모바일은 /feed 페이지) */}
       {isDesktopLayout && <FeedPanel />}
       {isDesktopLayout && <MyPanel />}
-
-      {/* 첫 방문 온보딩 — 플래그(onboarding_seen_v1) 확인 후에만 오버레이. 카탈로그 로딩은 뒤에서 계속 진행 */}
-      <OnboardingGate />
 
       {/* 재방문자 피드백 설문 — 2회차 이상 방문 + 미응답일 때만 15초 뒤 노출 */}
       <SurveyGate />

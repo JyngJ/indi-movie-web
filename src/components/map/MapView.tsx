@@ -63,6 +63,8 @@ import { PosterGrid } from './PosterGrid'
 import { ViewportTracker, ZoomSlider, OffScreenTracker, MapRefSetter, MapInteractionTracker } from './MapControls'
 import { SettingsPanel } from './SettingsPanel'
 import { toSecureImageUrl } from '@/lib/media/imageUrl'
+import { useFirstUseHint } from '@/hooks/useFirstUseHint'
+import { PinHint } from './PinHint'
 
 const SEARCH_CROSS_RESULT_LIMIT = 5
 const STATION_BOUNDS_PADDING = 0.25
@@ -1096,6 +1098,11 @@ export default function MapView() {
   /** 소식·관심 목록에서 들어와 지도 필터가 걸렸을 때 한 번 띄우는 안내 */
   const [filterToastMessage, setFilterToastMessage] = useState('')
   const [filterToastTrigger, setFilterToastTrigger] = useState(0)
+
+  /* 지도 첫 방문 힌트 — 핀의 포스터가 무슨 뜻인지 한 번만 알린다(예전 온보딩 3장 대신, 2026-10).
+     순서: 위치 권한 창 → 핀 안내 말풍선 → 지역 설정 안내. 권한 창이 떠 있는 동안은 확인을 미룬다 */
+  const locModalOpen = !locModalSuppressed && (locPermState === 'prompt' || locPermState === 'requesting' || locPermState === 'denied')
+  const pinHint = useFirstUseHint('mapPins', !locModalOpen, 1500)
   const [directorFilter, setDirectorFilter] = useState<{ name: string } | null>(null)
   const [panelStack, setPanelStack] = useState<DesktopPanelState[]>([])
   const desktopPanel = panelStack[panelStack.length - 1] ?? null
@@ -3287,6 +3294,8 @@ export default function MapView() {
       {/* 영화관 데이터 로딩 인디케이터 */}
       <Toast message="영화관 불러오는 중…" visible={theatersLoading} />
       <Toast message={filterToastMessage} trigger={filterToastTrigger} duration={2600} />
+      {/* 지도 첫 방문 핀 안내 — 실제 포스터 핀 하나에 붙는다. 닫으면 지역 설정 안내가 이어서 뜬다 */}
+      {pinHint.state === 'show' && <PinHint onDismiss={pinHint.dismiss} />}
       {/* iOS 키보드 트릭용 hidden dummy input — 항상 DOM에 존재 */}
       <input
         ref={dummyInputRef}
@@ -3530,6 +3539,7 @@ export default function MapView() {
         <div style={{ pointerEvents: 'auto' }}>
           <FilterBar
             desktop={isDesktopLayout}
+            holdRegionHint={pinHint.state !== 'done'}
             onChange={setFilters}
             onChipChange={flyToFilter}
             turnOnFavoritesSignal={favoritesFilterSignal}

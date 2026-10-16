@@ -12,7 +12,8 @@ import { FavoriteMoviesSection } from '@/components/domain/favorites/FavoriteMov
 import { DirectorSpecialSection } from '@/components/domain/DirectorSpecialSection'
 import { AllMoviesCtaBand } from '@/components/domain/AllMoviesCtaBand'
 import { FilmRankingSection } from '@/components/domain/FilmRankingSection'
-import { LocationPermissionModal } from '@/components/domain/LocationPermissionModal'
+import { HintBubble } from '@/components/domain/onboarding/HintBubble'
+import { useFirstUseHint } from '@/hooks/useFirstUseHint'
 import { PersonalizedSection } from '@/components/domain/PersonalizedSection'
 import { InstagramRecsSection } from '@/components/domain/InstagramRecsSection'
 
@@ -50,63 +51,22 @@ import type { Festival } from '@/types/festival'
 /* ── 지역 설정 힌트 말풍선 — 지도 FilterBar의 안내와 동일한 문구/닫기 동작(yh_region_tip) ── */
 function RegionHintBubble({ onDismiss }: { onDismiss: () => void }) {
   return (
-    <div
-      style={{
-        position: 'absolute',
-        top: 'calc(100% + 8px)',
-        right: 0,
-        zIndex: 60,
-        width: 276,   /* 안내 문구가 두 줄로 떨어지는 폭 */
-        animation: 'tipIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), tipGlow 0.7s ease-out',
-      }}
-    >
-      {/* 꼬리 — 지역 칩에 닿는 툴팁 문법 (우측 칩 정렬) */}
-      <div style={{
-        position: 'absolute',
-        top: -5,
-        right: 24,
-        width: 11,
-        height: 11,
-        background: 'var(--color-primary-base)',
-        transform: 'rotate(45deg)',
-        borderRadius: 4,
-      }} />
-      <div style={{
-        position: 'relative',
-        background: 'var(--color-primary-base)',
-        borderRadius: 12,
-        boxShadow: 'var(--shadow-popover)',
-        padding: '12px 12px 12px 16px',
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: 12,
-        color: 'var(--color-on-accent)',
-      }}>
-        <Icon name="map-pin" size={15} />
-        <span className="text-note" style={{ flex: 1, color: 'var(--color-on-accent)' }}>
-          지역을 설정해서 내 주변 영화관의 상영 정보를 조회하세요
-        </span>
-        <button
-          onClick={onDismiss}
-          style={{
-            width: 18, height: 18, minWidth: 18, minHeight: 18,
-            borderRadius: '50%',
-            background: 'color-mix(in srgb, var(--color-on-accent) 20%, transparent)',
-            border: 'none',
-            color: 'var(--color-on-accent)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer',
-            flexShrink: 0,
-            marginTop: -1,
-            padding: 0,
-          }}
-        >
-          <Icon name="x" size={8} />
-        </button>
-      </div>
-    </div>
+    <HintBubble icon="map-pin" tail="right" onDismiss={onDismiss} style={{ top: 'calc(100% + 8px)', right: 0 }}>
+      지역을 설정해서 내 주변 영화관의 상영 정보를 조회하세요
+    </HintBubble>
   )
 }
+
+/* ── 첫 방문 소개 말풍선 — 예전 온보딩 슬라이드 대신(2026-10). 서브타이틀 아래에 붙는다 ── */
+function IntroHintBubble({ theaterCount, onDismiss }: { theaterCount: number; onDismiss: () => void }) {
+  const count = theaterCount > 0 ? ` ${theaterCount}곳의` : ''
+  return (
+    <HintBubble icon="clapperboard" tail="left" confirmLabel="좋아요!" onDismiss={onDismiss} style={{ top: 'calc(100% + 8px)', left: 0, width: 300 }}>
+      전국 독립·예술영화관{count} 상영 시간표를 매일 모아요. 포스터를 누르면 상영하는 극장과 회차가 보여요.
+    </HintBubble>
+  )
+}
+
 
 const FESTIVAL_STATUS_LABEL: Record<FestivalStatus, string> = { upcoming: '예정', ongoing: '진행 중', ended: '종료' }
 
@@ -235,6 +195,8 @@ export default function FilmsPage() {
   const isDesktopLayout = useIsDesktopLayout()
   const [mounted, setMounted] = useState(false)
   const [regionHintDismissed, setRegionHintDismissed] = useState(false)
+  /* 첫 방문 소개가 먼저, 닫은 뒤에 지역 설정 안내 — 한 화면에 말풍선은 하나만 */
+  const introHint = useFirstUseHint('intro')
   useEffect(() => {
     setMounted(true)
     // 지도 FilterBar와 같은 힌트 — 한쪽에서 닫으면 다른 쪽에서도 다시 안 뜨도록 같은 세션 키 공유
@@ -243,7 +205,9 @@ export default function FilmsPage() {
 
   const handleMovieClick = (id: string) => { navStart(); router.push(`/movie/${id}`) }
 
-  const { state: locState, coords: locCoords, modalSuppressed: locModalSuppressed, request: requestLoc, dismiss: dismissLoc } = useLocationPermission()
+  /* 위치 권한은 지도에서만 묻는다 — 상영작 홈에서 첫 화면부터 권한 창을 띄우면 온보딩과 같은 벽이 된다(2026-10).
+     여기서는 이미 허용한 사람의 좌표만 쓴다 */
+  const { coords: locCoords } = useLocationPermission()
   // 접속 위치 지역 — 드롭다운 배지·자동 스크롤 + (미설정 사용자에 한해) 최초 1회 자동 지정
   const currentLocationRegion = useCurrentLocationRegion()
   const isDesktop = mounted && isDesktopLayout
@@ -665,9 +629,14 @@ export default function FilmsPage() {
               <h2 className="display-h1" style={{ margin: 0, color: 'var(--color-text-primary)' }}>
                 상영작
               </h2>
-              <p style={{ margin: '4px 0 0', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', whiteSpace: 'nowrap' }}>
-                {subtitle}
-              </p>
+              <div style={{ position: 'relative' }}>
+                <p style={{ margin: '4px 0 0', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', whiteSpace: 'nowrap' }}>
+                  {subtitle}
+                </p>
+                {introHint.state === 'show' && (
+                  <IntroHintBubble theaterCount={theaters.length} onDismiss={introHint.dismiss} />
+                )}
+              </div>
             </div>
 
             {/* Spacer */}
@@ -697,7 +666,7 @@ export default function FilmsPage() {
                   />
                 </div>
               )}
-              {mounted && !selectedRegion && !regionHintDismissed && !dropdownOpen && (
+              {mounted && introHint.state === 'done' && !selectedRegion && !regionHintDismissed && !dropdownOpen && (
                 <RegionHintBubble
                   onDismiss={() => {
                     sessionStorage.setItem('yh_region_tip', 'closed')
@@ -754,7 +723,7 @@ export default function FilmsPage() {
                     />
                   </div>
                 )}
-                {mounted && !selectedRegion && !regionHintDismissed && !dropdownOpen && (
+                {mounted && introHint.state === 'done' && !selectedRegion && !regionHintDismissed && !dropdownOpen && (
                   <RegionHintBubble
                     onDismiss={() => {
                       sessionStorage.setItem('yh_region_tip', 'closed')
@@ -777,9 +746,14 @@ export default function FilmsPage() {
         )}
 
         {!isDesktop && (
-          <p style={{ margin: '8px 0 0', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
-            {subtitle}
-          </p>
+          <div style={{ position: 'relative' }}>
+            <p style={{ margin: '8px 0 0', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
+              {subtitle}
+            </p>
+            {introHint.state === 'show' && (
+              <IntroHintBubble theaterCount={theaters.length} onDismiss={introHint.dismiss} />
+            )}
+          </div>
         )}
 
         {/* 구분선 */}
@@ -797,13 +771,6 @@ export default function FilmsPage() {
         isDesktop={isDesktop}
         onSelect={(slug) => router.push(`/festival/${slug}`)}
       />
-      {!locModalSuppressed && (locState === 'prompt' || locState === 'denied' || locState === 'requesting') && (
-        <LocationPermissionModal
-          state={locState}
-          onRequest={requestLoc}
-          onDismiss={dismissLoc}
-        />
-      )}
 
       {/* 주간 랭킹 — 독립영화 필터 미완성으로 임시 숨김
       {filmRankingRow && (
