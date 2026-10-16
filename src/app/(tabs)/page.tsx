@@ -45,7 +45,7 @@ export default async function Home() {
         intro="영화볼지도는 전국 독립·예술영화관의 상영 정보를 한눈에 보여주는 서비스입니다. 멀티플렉스엔 걸리지 않는 독립영화가 오늘 어느 독립영화관에서 몇 시에 상영하는지, 극장별 시간표와 상영작을 확인하세요."
         data={data}
       />
-      <FilmsClient />
+      <FilmsClient showFeedAd={process.env.VERCEL_ENV === 'production'} />
     </>
   )
 }
