@@ -25,13 +25,13 @@ async function main() {
   console.log(`대상 후보 ${ids.length}건`)
 
   const CHUNK = 600
-  let matched = 0, autoApproved = 0, needsReview = 0
+  let matchedNeedsReview = 0, autoApproved = 0, unmatched = 0, writeFailed = 0
   for (let i = 0; i < ids.length; i += CHUNK) {
     const chunk = ids.slice(i, i + CHUNK)
     const r = await autoMatchShowtimeCandidates(chunk)
-    matched += r.matched; autoApproved += r.autoApproved; needsReview += r.needsReview
-    console.log(`[${i + chunk.length}/${ids.length}] matched=${r.matched} autoApproved=${r.autoApproved} needsReview=${r.needsReview}`)
+    matchedNeedsReview += r.matchedNeedsReview.screenings; autoApproved += r.autoApproved.screenings; unmatched += r.unmatched.screenings; writeFailed += r.writeFailed.screenings
+    console.log(`[${i + chunk.length}/${ids.length}] matchedNeedsReview=${r.matchedNeedsReview.screenings} autoApproved=${r.autoApproved.screenings} unmatched=${r.unmatched.screenings} writeFailed=${r.writeFailed.screenings}`)
   }
-  console.log({ matched, autoApproved, needsReview })
+  console.log({ matchedNeedsReview, autoApproved, unmatched, writeFailed })
 }
 main()

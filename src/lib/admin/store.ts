@@ -20,6 +20,8 @@ import type {
 import { searchKmdbMovies } from '@/lib/admin/kmdb'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { chunk, dedupeByKey, isMatchUnchanged, isMissingRpcError } from '@/lib/crawl/bulkWrites'
+import { selectAutoMatchCandidates, summarizeAutoMatchOutcomes } from '@/lib/crawl/autoMatchSummary'
+import { toKstIsoDate } from '@/lib/date'
 import { normalizeSynopsis } from '@/lib/text/normalizeSynopsis'
 import { notifyAmbiguousMovieMatches, titleHash, type ProviderListing } from '@/lib/admin/matchReviewDiscord'
 import { extractListingHints, mergeListingHints, movieeBookingUrl, movieeMovieRef, parseRawJson, type MovieeMovieRef } from '@/lib/admin/matchReviewHints'
@@ -659,6 +661,9 @@ export async function resolveAmbiguousMovieMatch(titleHashValue: string, movieId
 }
 
 async function fetchAutoMatchInputs(supabase: ReturnType<typeof createSupabaseAdminClient>, ids?: string[]) {
+  const todayKst = toKstIsoDate(new Date())
+  // Fingerprint upsert overwrites status and matched_movie_id, so an existing needs_review row
+  // cannot safely be treated as unchanged. Keep retrying current candidates until writes are tracked.
   let query = supabase
     .from('showtime_candidates')
     .select('*')
@@ -667,6 +672,8 @@ async function fetchAutoMatchInputs(supabase: ReturnType<typeof createSupabaseAd
 
   if (ids?.length) {
     query = query.in('id', Array.from(new Set(ids)))
+  } else {
+    query = query.gte('show_date', todayKst)
   }
 
   const [
@@ -690,7 +697,11 @@ async function fetchAutoMatchInputs(supabase: ReturnType<typeof createSupabaseAd
   if (aliasError) throw new Error(aliasError.message)
 
   return {
-    candidates: ((candidateRows ?? []) as CandidateRow[]).map(candidateFromRow),
+    candidates: selectAutoMatchCandidates(
+      ((candidateRows ?? []) as CandidateRow[]).map(candidateFromRow),
+      todayKst,
+      Boolean(ids?.length),
+    ),
     theaters: (theaterRows ?? []) as TheaterRow[],
     // 러닝타임은 동명 영화 검수 알림에서 상영관 표기와 대조하는 데만 쓴다
     movies: ((movieRows ?? []) as unknown as (MovieRow & { movie_details?: { runtime_minutes?: number | null } | { runtime_minutes?: number | null }[] | null })[])
@@ -770,7 +781,7 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
   const ambiguousGroups = new Map<string, AmbiguousGroupDraft>()
   // 판정은 메모리에서 다 끝낸 뒤 DB에는 묶어서 쓴다 — 후보마다 요청 2번씩 보내던 것이
   // 크롤러 Supabase 요청의 대부분이었다(2026-10 로그 실측). 결과가 그대로인 후보는 쓰지 않는다.
-  const outcomes: { candidate: CrawledShowtimeCandidate; kind: 'autoApproved' | 'matched' | 'needsReview'; showtime?: ShowtimeRow }[] = []
+  const outcomes: { candidate: CrawledShowtimeCandidate; kind: 'autoApproved' | 'matchedNeedsReview' | 'unmatched'; showtime?: ShowtimeRow }[] = []
   const matchUpdates: CandidateMatchUpdate[] = []
 
   for (const candidate of candidates) {
@@ -814,7 +825,7 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
 
     outcomes.push({
       candidate: { ...candidate, matchedTheaterId: theater?.id, matchedMovieId: movie?.id, warnings, status: newStatus },
-      kind: canAutoApprove ? 'autoApproved' : theater && movie ? 'matched' : 'needsReview',
+      kind: canAutoApprove ? 'autoApproved' : theater && movie ? 'matchedNeedsReview' : 'unmatched',
       showtime: canAutoApprove && theater && movie ? showtimeRowFromCandidate(candidate, theater.id, movie.id) : undefined,
     })
     rememberProviderMovieAlias(candidate, movie, providerMovieAliases)
@@ -826,9 +837,10 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
   await writeShowtimeRows(supabase, written.flatMap((o) => (o.showtime ? [o.showtime] : [])))
 
   const updated = written.map((o) => o.candidate)
-  const autoApproved = written.filter((o) => o.kind === 'autoApproved').length
-  const matched = written.filter((o) => o.kind === 'matched').length
-  const needsReview = outcomes.length - autoApproved - matched
+  const summary = summarizeAutoMatchOutcomes(outcomes.map((outcome) => ({
+    kind: failedIds.has(outcome.candidate.id) ? 'writeFailed' as const : outcome.kind,
+    movieTitle: outcome.candidate.movieTitle,
+  })))
 
   // 경고 기반 판정은 같은 후보 행에만 유효 — 크롤마다 새 행이 생기면 리셋돼
   // 같은 동명 그룹이 반복 게시됐다. discord_match_notices(제목 해시 영구 기록)로 한 번만 알린다.
@@ -862,7 +874,7 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
     }
   }
 
-  return { matched, autoApproved, needsReview, updated }
+  return { ...summary, updated }
 }
 
 interface CandidateMatchUpdate {

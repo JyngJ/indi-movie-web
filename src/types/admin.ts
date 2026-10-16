@@ -285,10 +285,20 @@ export interface AdminShowtimeInput {
   isActive: boolean
 }
 
-export interface CandidateAutoMatchResult {
-  matched: number
-  autoApproved: number
-  needsReview: number
+export interface AutoMatchCategorySummary {
+  screenings: number
+  uniqueTitles: number
+}
+
+export interface AutoMatchSummary {
+  autoApproved: AutoMatchCategorySummary
+  matchedNeedsReview: AutoMatchCategorySummary
+  unmatched: AutoMatchCategorySummary
+  writeFailed: AutoMatchCategorySummary
+  uniqueMovieTitles: number
+}
+
+export interface CandidateAutoMatchResult extends AutoMatchSummary {
   updated: CrawledShowtimeCandidate[]
 }
 

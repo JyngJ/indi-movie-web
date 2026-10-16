@@ -32,7 +32,7 @@ export async function POST(request: Request) {
       // 3단계: 자동매칭
       const matchStart = Date.now()
       const matchResult = await autoMatchShowtimeCandidates()
-      await notifyDiscordMatch(matchResult.matched, matchResult.autoApproved, matchResult.needsReview, Date.now() - matchStart)
+      await notifyDiscordMatch(matchResult, Date.now() - matchStart)
 
       // 4단계: CDN 캐시 무효화 (theaters는 거의 안 바뀌므로 theaters 생략, 필요시 추가)
       revalidatePath('/api/public/stations')

@@ -487,8 +487,10 @@ export function AdminShowtimeConsole({ tabSlot }: { tabSlot?: React.ReactNode } 
         body: JSON.stringify({ ids }),
       })
       const result = (await response.json()) as {
-        matched?: number
-        needsReview?: number
+        autoApproved?: { screenings: number }
+        matchedNeedsReview?: { screenings: number }
+        unmatched?: { screenings: number }
+        writeFailed?: { screenings: number }
         updated?: CrawledShowtimeCandidate[]
         error?: { message: string }
       }
@@ -500,7 +502,7 @@ export function AdminShowtimeConsole({ tabSlot }: { tabSlot?: React.ReactNode } 
       await refresh()
       await refreshAdminMovies()
       mergeCandidatesIntoPayload(result.updated)
-      setMessage(`자동 매칭 완료: 성공 ${result.matched ?? 0}건, 확인 필요 ${result.needsReview ?? 0}건`)
+      setMessage(`자동 매칭 완료: 자동승인 ${result.autoApproved?.screenings ?? 0}회차 · 매칭 후 검수 ${result.matchedNeedsReview?.screenings ?? 0}회차 · 미매칭 ${result.unmatched?.screenings ?? 0}회차 · 저장 실패 ${result.writeFailed?.screenings ?? 0}회차`)
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '자동 매칭에 실패했습니다.')
     } finally {

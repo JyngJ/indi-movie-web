@@ -1,4 +1,4 @@
-import type { CrawlRun } from '@/types/admin'
+import type { AutoMatchSummary, CrawlRun } from '@/types/admin'
 
 const WEBHOOK_URL = process.env.DISCORD_REPORT_WEBHOOK_URL
 const FIELD_LIMIT = 900
@@ -190,12 +190,21 @@ export async function notifyDiscordSeats(runs: CrawlRun[], durationMs: number) {
   }
 }
 
-export async function notifyDiscordMatch(matched: number, autoApproved: number, needsReview: number, durationMs: number) {
+export async function notifyDiscordMatch(
+  summary: AutoMatchSummary,
+  durationMs: number,
+) {
   const secs = (durationMs / 1000).toFixed(1)
   await sendEmbed({
     title: '🔗 자동매칭 완료',
-    description: `**자동승인** ${autoApproved.toLocaleString()}개　·　**매칭** ${matched.toLocaleString()}개　·　**검토필요** ${needsReview.toLocaleString()}개　·　**소요** ${secs}s`,
-    color: autoApproved > 0 ? 0x2ECC71 : matched > 0 ? 0xF39C12 : 0xE74C3C,
+    description: [
+      `**자동승인** ${summary.autoApproved.screenings.toLocaleString()}회차 · ${summary.autoApproved.uniqueTitles.toLocaleString()}편`,
+      `**매칭 후 검수** ${summary.matchedNeedsReview.screenings.toLocaleString()}회차 · ${summary.matchedNeedsReview.uniqueTitles.toLocaleString()}편`,
+      `**미매칭** ${summary.unmatched.screenings.toLocaleString()}회차 · ${summary.unmatched.uniqueTitles.toLocaleString()}편`,
+      `**저장 실패** ${summary.writeFailed.screenings.toLocaleString()}회차 · ${summary.writeFailed.uniqueTitles.toLocaleString()}편`,
+      `**전체 고유 영화** ${summary.uniqueMovieTitles.toLocaleString()}편　·　**소요** ${secs}s`,
+    ].join('\n'),
+    color: summary.autoApproved.screenings > 0 ? 0x2ECC71 : summary.matchedNeedsReview.screenings > 0 ? 0xF39C12 : 0xE74C3C,
     footer: { text: nowKST() },
   })
 }
