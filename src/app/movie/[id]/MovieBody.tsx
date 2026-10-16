@@ -9,7 +9,7 @@ import { SeoShowtimesSection } from '@/components/seo/SeoShowtimesSection'
 import { MovieDetailClient } from './MovieDetailClient'
 import { buildMovieScreeningSummary } from '@/lib/seo/movieScreeningSummary'
 import { toKstIsoDate } from '@/lib/date'
-import { getScreeningIndex } from '@/lib/seo/getScreeningIndex'
+import { getSimilarityPool } from '@/lib/catalog/getSimilarityPool'
 import { pickSimilarNowShowing } from '@/lib/catalog/similarNowShowing'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'
@@ -26,9 +26,9 @@ export async function MovieBody({
 }) {
   const showtimes: MovieTheaterEntry[] = await getMovieShowtimesForSsr(id)
 
-  /* 상영이 없을 때만 — 캐시된 전국 상영 목록(getScreeningIndex, 6시간)에서 고른다. 추가 DB 조회 없음 */
+  /* 상영이 없을 때만 — 상영작 비교 정보(getSimilarityPool, 6시간 캐시)에서 감독·장르로 고른다 */
   const similarNowShowing = showtimes.length === 0
-    ? pickSimilarNowShowing(movie, (await getScreeningIndex()).movies)
+    ? pickSimilarNowShowing(movie, await getSimilarityPool())
     : []
 
   const schema = toMovieSchema(movie, BASE_URL)

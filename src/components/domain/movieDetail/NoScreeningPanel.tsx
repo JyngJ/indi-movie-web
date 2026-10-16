@@ -5,7 +5,7 @@ import { EmptyState } from '@/components/primitives'
 import { PosterThumb } from '@/components/domain/PosterThumb'
 import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
 import { trackEvent } from '@/lib/analytics/client'
-import type { SimilarPick } from '@/lib/catalog/similarNowShowing'
+import { similarReasonLabel, type SimilarPick } from '@/lib/catalog/similarNowShowing'
 
 const POSTER_W = 104
 const POSTER_H = 156
@@ -14,7 +14,7 @@ const POSTER_H = 156
  * 예정된 상영이 없는 영화의 상영 영역 (2026-10).
  * 예전엔 빈 날짜 탭 + "이 날 상영 정보가 없어요"만 남아, 검색으로 들어온 사람이 할 일이 없었다.
  *  1) 관심 영화로 넣으면 다시 상영할 때 알림(new_screening 규칙 — src/lib/notifications/rules.ts)
- *  2) 지금 상영 중인 같은 감독·같은 국가 영화(pickSimilarNowShowing). 고를 게 없으면 칸을 비운다.
+ *  2) 지금 상영 중인 영화 중 감독이 같거나 장르가 겹치는 것(pickSimilarNowShowing). 고를 게 없으면 칸을 비운다.
  * 목록은 서버가 골라 넘긴다 — HTML에 링크가 실려야 검색 로봇이 따라간다.
  */
 export function NoScreeningPanel({
@@ -49,7 +49,7 @@ export function NoScreeningPanel({
                 <Link
                   href={`/movie/${m.id}`}
                   onClick={() => trackEvent('similar movie selected', {
-                    movie_id: movie.id, movie_title: movie.title, target_movie_id: m.id, target_movie_title: m.title, reason: m.reason,
+                    movie_id: movie.id, movie_title: movie.title, target_movie_id: m.id, target_movie_title: m.title, reason: m.reason.kind,
                   })}
                   style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)', textDecoration: 'none' }}
                 >
@@ -58,7 +58,7 @@ export function NoScreeningPanel({
                     {m.title}
                   </span>
                   <span style={{ fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
-                    {m.reason === 'director' ? '같은 감독' : m.nation ?? '같은 국가'}
+                    {similarReasonLabel(m.reason)}
                   </span>
                 </Link>
               </li>
