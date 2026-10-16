@@ -30,6 +30,8 @@ import { cookieStorageAdapter } from '@/lib/adapters/cookieStorage'
 import { shareAndTrack } from '@/lib/analytics/shareTracking'
 import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/components/domain/booking/BookingActions'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
+import { NoScreeningPanel } from '@/components/domain/movieDetail/NoScreeningPanel'
+import type { SimilarPick } from '@/lib/catalog/similarNowShowing'
 
 function useIsDesktop() {
   const [v, setV] = useState(false)
@@ -112,7 +114,7 @@ function DirectorChipLoader({ name, onClick }: { name: string; onClick: () => vo
 }
 
 /* ── 메인 ────────────────────────────────────────────────────────── */
-export function MovieDetailClient({ movie, initialShowtimes, initialSelection, screeningSummary }: {
+export function MovieDetailClient({ movie, initialShowtimes, initialSelection, screeningSummary, similarNowShowing = [] }: {
   movie: MovieDetail
   /** SSR에서 미리 읽은 시간표 — 첫 페인트에 회차가 바로 보이게 시드로 넣는다 */
   initialShowtimes?: MovieTheaterEntry[]
@@ -120,6 +122,8 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection, s
   initialSelection?: { date: string; theaterId: string; showtimeId: string }
   /** 서버가 만든 상영 요약 한 줄(buildMovieScreeningSummary) — 크롤러가 읽는 본문 문장 */
   screeningSummary?: string | null
+  /** 예정된 상영이 없을 때 서버가 고른 "지금 상영 중인 비슷한 영화" */
+  similarNowShowing?: SimilarPick[]
 }) {
   const router = useProgressRouter()
   const isDesktop = useIsDesktop()
@@ -304,6 +308,7 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection, s
   }, [theaterEntries, selectedDate, bookableOnly, dates, isFavorite])
 
   const totalTheaterCount = theaterEntries.length
+  const noScreenings = !isLoading && totalTheaterCount === 0
   const { inRegion: inRegionEntries, otherRegion: otherRegionEntries } = useMemo(() => {
     if (!regionId) return { inRegion: [] as typeof dayTheaters, otherRegion: [] as typeof dayTheaters }
     return {
@@ -574,9 +579,12 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection, s
           상영 영화관 및 일정
         </span>
         {/* 섹션 헤더 보조 CTA는 sm — 감독 상세와 동일 문법 (2026-08-24) */}
-        <MapCtaButton fullWidth={false} size="sm" onClick={() => router.push(mapUrlWithSelection())}>
-          지도에서 필터로 보기
-        </MapCtaButton>
+        {/* 상영이 없으면 지도에 보여 줄 극장도 없다 */}
+        {!noScreenings && (
+          <MapCtaButton fullWidth={false} size="sm" onClick={() => router.push(mapUrlWithSelection())}>
+            지도에서 필터로 보기
+          </MapCtaButton>
+        )}
       </div>
       {!isLoading && totalTheaterCount > 0 && (
         <p style={{ margin: 0, padding: isDesktop ? '6px 0 0' : '6px 16px 0', fontSize: 12, color: 'var(--color-text-caption)', lineHeight: 1.5 }}>
@@ -593,6 +601,12 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection, s
         </p>
       )}
 
+      {/* 예정된 상영이 아예 없으면 빈 날짜 탭 대신 알림 안내 + 비슷한 상영작 (2026-10) */}
+      {noScreenings ? (
+        <div style={{ paddingBottom: 'var(--spacing-12)' }}>
+          <NoScreeningPanel movie={movie} similar={similarNowShowing} isDesktop={isDesktop} />
+        </div>
+      ) : (<>
       {/* 날짜 탭 — 극장 상세와 동일 (공용 DetailDateTabs) */}
       <div style={{ borderBottom: '1px solid var(--color-border)', marginTop: 12 }}>
         <DetailDateTabs dates={dates} selectedDate={selectedDate} activeDates={activeDates} onSelect={setSelectedDate} />
@@ -637,6 +651,7 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection, s
           <>{renderColumns(dayTheaters)}</>
         )}
       </div>
+      </>)}
     </div>
   )
 

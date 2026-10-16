@@ -9,6 +9,8 @@ import { SeoShowtimesSection } from '@/components/seo/SeoShowtimesSection'
 import { MovieDetailClient } from './MovieDetailClient'
 import { buildMovieScreeningSummary } from '@/lib/seo/movieScreeningSummary'
 import { toKstIsoDate } from '@/lib/date'
+import { getScreeningIndex } from '@/lib/seo/getScreeningIndex'
+import { pickSimilarNowShowing } from '@/lib/catalog/similarNowShowing'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'
 
@@ -23,6 +25,11 @@ export async function MovieBody({
   initialSelection?: { date: string; theaterId: string; showtimeId: string }
 }) {
   const showtimes: MovieTheaterEntry[] = await getMovieShowtimesForSsr(id)
+
+  /* 상영이 없을 때만 — 캐시된 전국 상영 목록(getScreeningIndex, 6시간)에서 고른다. 추가 DB 조회 없음 */
+  const similarNowShowing = showtimes.length === 0
+    ? pickSimilarNowShowing(movie, (await getScreeningIndex()).movies)
+    : []
 
   const schema = toMovieSchema(movie, BASE_URL)
   const screeningEventSchemas = toScreeningEventSchema(movie, showtimes, BASE_URL)
@@ -80,6 +87,7 @@ export async function MovieBody({
         initialShowtimes={showtimes}
         initialSelection={initialSelection}
         screeningSummary={buildMovieScreeningSummary(showtimes, toKstIsoDate(new Date()))}
+        similarNowShowing={similarNowShowing}
       />
       <SeoShowtimesSection movieTitle={movie.title} entries={showtimes} />
     </>
