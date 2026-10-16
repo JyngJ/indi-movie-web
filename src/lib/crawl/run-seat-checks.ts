@@ -3,9 +3,47 @@ import { updateSeatsOptimized } from '@/lib/admin/crawler'
 import { listAdminSources, saveCrawlRun } from '@/lib/admin/store'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { mapWithConcurrency } from '@/lib/admin/crawler/utils'
-import { buildSeatUpdateBatches } from './seatUpdateBatches'
+import { buildSeatUpdateBatches, type SeatReading } from './seatUpdateBatches'
+import { chunk, dedupeByKey, isMissingRpcError } from './bulkWrites'
 
 const SEAT_DB_CONCURRENCY = 8
+const SEAT_RPC_CHUNK = 1000
+const MISSING_RPC = 'missing-rpc'
+
+type Supabase = ReturnType<typeof createSupabaseAdminClient>
+
+async function writeSeatsBulk(supabase: Supabase, readings: readonly SeatReading[], known: ReadonlySet<string>) {
+  const rows = dedupeByKey(readings.filter((r) => known.has(r.fingerprint)), (r) => r.fingerprint)
+    .map((r) => ({ fingerprint: r.fingerprint, seat_available: r.seatAvailable, seat_total: r.seatTotal }))
+  let updatedCount = 0
+  for (const part of chunk(rows, SEAT_RPC_CHUNK)) {
+    const { data, error } = await supabase.rpc('apply_candidate_seats', { updates: part })
+    if (isMissingRpcError(error)) return { updatedCount, error: MISSING_RPC }
+    if (error) return { updatedCount, error: `좌석 저장 실패: ${error.code} ${error.message}` }
+    updatedCount += typeof data === 'number' ? data : part.length
+  }
+  return { updatedCount, error: undefined as string | undefined }
+}
+
+/** RPC 없을 때의 예전 방식 — 같은 좌석 값끼리 묶어 UPDATE ... WHERE fingerprint IN (...) */
+async function writeSeatsByValue(supabase: Supabase, readings: readonly SeatReading[], known: ReadonlySet<string>) {
+  const batches = buildSeatUpdateBatches(readings, known)
+  let updatedCount = 0
+  let error: string | undefined
+  await mapWithConcurrency(batches.map((batch) => async () => {
+    if (error) return
+    const { error: dbError } = await supabase
+      .from('showtime_candidates')
+      .update({ seat_available: batch.seatAvailable, seat_total: batch.seatTotal })
+      .in('fingerprint', batch.fingerprints)
+    if (dbError) {
+      error = `좌석 저장 실패: ${dbError.code} ${dbError.message}`
+      return
+    }
+    updatedCount += batch.fingerprints.length
+  }), SEAT_DB_CONCURRENCY)
+  return { updatedCount, error }
+}
 
 export interface RunSeatResult {
   runs: CrawlRun[]
@@ -78,26 +116,14 @@ export async function runSeatChecks(): Promise<RunSeatResult> {
       continue
     }
 
-    // 좌석 수 업데이트: 같은 좌석 값끼리 묶어 UPDATE ... WHERE fingerprint IN (...)
-    // upsert는 이미 있는 행이어도 id 등 NOT NULL 컬럼이 빠지면 23502로 막혀서
-    // 좌석이 한 건도 저장되지 않았다 (에러를 안 봐서 '갱신 성공'으로 집계됨).
-    const batches = buildSeatUpdateBatches(candidates, knownFingerprints)
-    // 좌석 값이 회차마다 달라 묶음이 크게 줄지 않는다 — Supabase 요청만 동시 8개로 돌린다
-    // (극장 사이트 요청이 아니라 dtryx 동시성 1 규칙과 무관)
-    let updatedCount = 0
-    let updateError: string | undefined
-    await mapWithConcurrency(batches.map((batch) => async () => {
-      if (updateError) return
-      const { error: dbError } = await supabase
-        .from('showtime_candidates')
-        .update({ seat_available: batch.seatAvailable, seat_total: batch.seatTotal })
-        .in('fingerprint', batch.fingerprints)
-      if (dbError) {
-        updateError = `좌석 저장 실패: ${dbError.code} ${dbError.message}`
-        return
-      }
-      updatedCount += batch.fingerprints.length
-    }), SEAT_DB_CONCURRENCY)
+    // 좌석 수 업데이트 — apply_candidate_seats RPC 한 번에 극장 하나(docs/SUPABASE_BULK_WRITES.sql).
+    // 예전엔 같은 좌석 값끼리 묶어 UPDATE ... WHERE fingerprint IN (...)을 보냈는데, 좌석 값이 회차마다
+    // 달라 사실상 회차 하나에 요청 하나였다(2026-10 로그 실측 하루 약 4,500건). RPC가 아직 없으면 예전 방식.
+    // upsert는 쓰지 않는다 — 이미 있는 행이어도 id 등 NOT NULL 컬럼이 빠지면 23502로 막힌다.
+    let { updatedCount, error: updateError } = await writeSeatsBulk(supabase, candidates, knownFingerprints)
+    if (updateError === MISSING_RPC) {
+      ;({ updatedCount, error: updateError } = await writeSeatsByValue(supabase, candidates, knownFingerprints))
+    }
 
     if (updateError) {
       const run: CrawlRun = {

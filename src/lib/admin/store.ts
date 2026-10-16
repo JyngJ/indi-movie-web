@@ -19,6 +19,7 @@ import type {
 } from '@/types/admin'
 import { searchKmdbMovies } from '@/lib/admin/kmdb'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { chunk, dedupeByKey, isMatchUnchanged, isMissingRpcError } from '@/lib/crawl/bulkWrites'
 import { normalizeSynopsis } from '@/lib/text/normalizeSynopsis'
 import { notifyAmbiguousMovieMatches, titleHash, type ProviderListing } from '@/lib/admin/matchReviewDiscord'
 import { extractListingHints, mergeListingHints, movieeBookingUrl, movieeMovieRef, parseRawJson, type MovieeMovieRef } from '@/lib/admin/matchReviewHints'
@@ -765,12 +766,12 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
   const supabase = createSupabaseAdminClient()
   const { candidates, theaters, movies, providerMovieAliases } = await fetchAutoMatchInputs(supabase, ids)
 
-  const updated: CrawledShowtimeCandidate[] = []
   const movieResolutionCache = new Map<string, MovieResolutionResult>()
   const ambiguousGroups = new Map<string, AmbiguousGroupDraft>()
-  let matched = 0
-  let autoApproved = 0
-  let needsReview = 0
+  // 판정은 메모리에서 다 끝낸 뒤 DB에는 묶어서 쓴다 — 후보마다 요청 2번씩 보내던 것이
+  // 크롤러 Supabase 요청의 대부분이었다(2026-10 로그 실측). 결과가 그대로인 후보는 쓰지 않는다.
+  const outcomes: { candidate: CrawledShowtimeCandidate; kind: 'autoApproved' | 'matched' | 'needsReview'; showtime?: ShowtimeRow }[] = []
+  const matchUpdates: CandidateMatchUpdate[] = []
 
   for (const candidate of candidates) {
     const theater = resolveTheater(candidate, theaters)
@@ -798,42 +799,36 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
     const hasOnlyBenignWarnings = warnings.length > 0 && blockingWarnings.length === 0
     const minConfidence = hasOnlyBenignWarnings ? 0.78 : 0.9
     const canAutoApprove = Boolean(theater && movie && blockingWarnings.length === 0 && candidate.confidence >= minConfidence)
-    const newStatus = canAutoApprove ? 'approved' : 'needs_review'
+    const newStatus: AdminShowtimeStatus = canAutoApprove ? 'approved' : 'needs_review'
 
-    const { data, error } = await supabase
-      .from('showtime_candidates')
-      .update({
-        matched_theater_id: theater?.id ?? null,
-        matched_movie_id: movie?.id ?? null,
+    const next = { matchedTheaterId: theater?.id ?? null, matchedMovieId: movie?.id ?? null, warnings, status: newStatus }
+    if (!isMatchUnchanged(candidate, next)) {
+      matchUpdates.push({
+        id: candidate.id,
+        matched_theater_id: next.matchedTheaterId,
+        matched_movie_id: next.matchedMovieId,
         warnings,
         status: newStatus,
       })
-      .eq('id', candidate.id)
-      .select()
-      .single()
-
-    if (error) {
-      needsReview += 1
-      continue
     }
 
-    if (canAutoApprove && theater && movie) {
-      // showtimes 테이블에 바로 삽입
-      await supabase
-        .from('showtimes')
-        .upsert(showtimeRowFromCandidate(candidate, theater.id, movie.id), {
-          onConflict: 'theater_id,movie_id,show_date,show_time,screen_name',
-        })
-      autoApproved += 1
-    } else if (theater && movie) {
-      matched += 1
-    } else {
-      needsReview += 1
-    }
+    outcomes.push({
+      candidate: { ...candidate, matchedTheaterId: theater?.id, matchedMovieId: movie?.id, warnings, status: newStatus },
+      kind: canAutoApprove ? 'autoApproved' : theater && movie ? 'matched' : 'needsReview',
+      showtime: canAutoApprove && theater && movie ? showtimeRowFromCandidate(candidate, theater.id, movie.id) : undefined,
+    })
     rememberProviderMovieAlias(candidate, movie, providerMovieAliases)
-
-    updated.push(candidateFromRow(data as CandidateRow))
   }
+
+  const failedIds = await writeCandidateMatches(supabase, matchUpdates)
+  // 후보 갱신에 실패한 회차는 예전처럼 showtimes에 넣지 않고 검토필요로 센다 — 다음 실행에 다시 판정된다
+  const written = outcomes.filter((o) => !failedIds.has(o.candidate.id))
+  await writeShowtimeRows(supabase, written.flatMap((o) => (o.showtime ? [o.showtime] : [])))
+
+  const updated = written.map((o) => o.candidate)
+  const autoApproved = written.filter((o) => o.kind === 'autoApproved').length
+  const matched = written.filter((o) => o.kind === 'matched').length
+  const needsReview = outcomes.length - autoApproved - matched
 
   // 경고 기반 판정은 같은 후보 행에만 유효 — 크롤마다 새 행이 생기면 리셋돼
   // 같은 동명 그룹이 반복 게시됐다. discord_match_notices(제목 해시 영구 기록)로 한 번만 알린다.
@@ -868,6 +863,53 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
   }
 
   return { matched, autoApproved, needsReview, updated }
+}
+
+interface CandidateMatchUpdate {
+  id: string
+  matched_theater_id: string | null
+  matched_movie_id: string | null
+  warnings: string[]
+  status: AdminShowtimeStatus
+}
+
+const BULK_CHUNK = 500
+
+/**
+ * 자동매칭 결과를 apply_candidate_matches RPC로 묶어 쓴다(docs/SUPABASE_BULK_WRITES.sql).
+ * RPC가 아직 없으면(SQL 실행 전) 예전처럼 한 건씩 쓴다. 실패한 후보 id를 돌려준다.
+ */
+async function writeCandidateMatches(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  updates: CandidateMatchUpdate[],
+): Promise<Set<string>> {
+  const failed = new Set<string>()
+  for (const part of chunk(updates, BULK_CHUNK)) {
+    const { error } = await supabase.rpc('apply_candidate_matches', { updates: part })
+    if (!error) continue
+    if (!isMissingRpcError(error)) {
+      console.error('[autoMatch] 후보 묶음 갱신 실패:', error.message)
+      for (const u of part) failed.add(u.id)
+      continue
+    }
+    for (const u of part) {
+      const { id, ...fields } = u
+      const { error: rowError } = await supabase.from('showtime_candidates').update(fields).eq('id', id)
+      if (rowError) failed.add(id)
+    }
+  }
+  return failed
+}
+
+/** 자동 승인된 회차를 showtimes에 배열 upsert로 넣는다 — 한 요청 안의 충돌 키 중복은 미리 걷어낸다 */
+async function writeShowtimeRows(supabase: ReturnType<typeof createSupabaseAdminClient>, rows: ShowtimeRow[]) {
+  const unique = dedupeByKey(rows, (r) => [r.theater_id, r.movie_id, r.show_date, r.show_time, r.screen_name].join('|'))
+  for (const part of chunk(unique, BULK_CHUNK)) {
+    const { error } = await supabase
+      .from('showtimes')
+      .upsert(part, { onConflict: 'theater_id,movie_id,show_date,show_time,screen_name' })
+    if (error) console.error('[autoMatch] showtimes 묶음 upsert 실패:', error.message)
+  }
 }
 
 export async function createAdminMovie(input: AdminMovieInput) {
