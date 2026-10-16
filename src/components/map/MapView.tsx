@@ -63,8 +63,7 @@ import { PosterGrid } from './PosterGrid'
 import { ViewportTracker, ZoomSlider, OffScreenTracker, MapRefSetter, MapInteractionTracker } from './MapControls'
 import { SettingsPanel } from './SettingsPanel'
 import { toSecureImageUrl } from '@/lib/media/imageUrl'
-import { markHintSeen, shouldShowHint } from '@/lib/onboarding'
-import { storageAdapter } from '@/lib/adapters/storage'
+import { useFirstUseHint } from '@/hooks/useFirstUseHint'
 
 const SEARCH_CROSS_RESULT_LIMIT = 5
 const STATION_BOUNDS_PADDING = 0.25
@@ -1100,24 +1099,9 @@ export default function MapView() {
   const [filterToastTrigger, setFilterToastTrigger] = useState(0)
 
   /* 지도 첫 방문 힌트 — 핀의 포스터가 무슨 뜻인지 한 번만 알린다(예전 온보딩 3장 대신, 2026-10).
-     위치 권한 창이 떠 있으면 기다린다. 권한 상태가 처음엔 idle이었다가 prompt로 바뀌므로
-     잠깐(1.5초) 두고, 그사이 창이 뜨면 타이머를 취소했다가 창이 닫힌 뒤 다시 잰다 */
+     순서: 위치 권한 창 → 핀 안내 말풍선 → 지역 설정 안내. 권한 창이 떠 있는 동안은 확인을 미룬다 */
   const locModalOpen = !locModalSuppressed && (locPermState === 'prompt' || locPermState === 'requesting' || locPermState === 'denied')
-  const pinHintDoneRef = useRef(false)
-  useEffect(() => {
-    if (pinHintDoneRef.current || locModalOpen) return
-    const timer = setTimeout(() => {
-      void shouldShowHint(storageAdapter, 'mapPins').then((should) => {
-        pinHintDoneRef.current = true
-        if (!should) return
-        void markHintSeen(storageAdapter, 'mapPins')
-        trackEvent('hint shown', { hint: 'mapPins' })
-        setFilterToastMessage('핀의 포스터는 지금 그 극장에서 상영 중인 영화예요')
-        setFilterToastTrigger((n) => n + 1)
-      })
-    }, 1500)
-    return () => clearTimeout(timer)
-  }, [locModalOpen])
+  const pinHint = useFirstUseHint('mapPins', !locModalOpen, 1500)
   const [directorFilter, setDirectorFilter] = useState<{ name: string } | null>(null)
   const [panelStack, setPanelStack] = useState<DesktopPanelState[]>([])
   const desktopPanel = panelStack[panelStack.length - 1] ?? null
@@ -3552,6 +3536,8 @@ export default function MapView() {
         <div style={{ pointerEvents: 'auto' }}>
           <FilterBar
             desktop={isDesktopLayout}
+            leadHint={pinHint.state === 'show' ? { icon: 'film', text: '핀의 포스터는 지금 그 극장에서 상영 중인 영화예요', onDismiss: pinHint.dismiss } : null}
+            holdRegionHint={pinHint.state === 'checking'}
             onChange={setFilters}
             onChipChange={flyToFilter}
             turnOnFavoritesSignal={favoritesFilterSignal}

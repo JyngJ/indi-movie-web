@@ -15,7 +15,8 @@ import { DateDropdown } from './filterBar/DateDropdown'
 import { MultiSelectDropdown } from './filterBar/MultiSelectDropdown'
 import { RegionDropdown } from './filterBar/RegionDropdown'
 import { FilterChip } from './filterBar/FilterChip'
-import { Icon } from '@/components/primitives'
+import { Icon, type IconName } from '@/components/primitives'
+import { HintBubble } from './onboarding/HintBubble'
 
 type OpenPanel = 'date' | 'genre' | 'nation' | 'region' | 'calendar' | null
 
@@ -51,6 +52,10 @@ export interface FilterBarProps {
   defaultRegionId?: string | null
   /** 외부(큐레이션 '모두보기' 등)에서 관심 칩을 켜달라는 신호 — 값이 바뀔 때마다 켠다 (2026-08-18) */
   turnOnFavoritesSignal?: number
+  /** 지역 안내보다 먼저 띄울 첫 사용 힌트 — 있으면 지역 안내를 미룬다 */
+  leadHint?: { icon: IconName; text: string; onDismiss: () => void } | null
+  /** 첫 사용 힌트를 확인하는 중 — 지역 안내가 먼저 떴다가 바뀌지 않게 잠시 미룬다 */
+  holdRegionHint?: boolean
 }
 
 export function FilterBar({
@@ -66,6 +71,8 @@ export function FilterBar({
   desktop = false,
   defaultRegionId,
   turnOnFavoritesSignal,
+  leadHint = null,
+  holdRegionHint = false,
 }: FilterBarProps) {
   const [dateId, setDateId] = useState<DateId>('this-week')
   const [customStart, setCustomStart] = useState<Date | null>(null)
@@ -459,70 +466,25 @@ export function FilterBar({
         */}
       </div>
 
-      {mounted && !regionId && !regionHintDismissed && (
-        <>
-          <div style={{
-            position: 'absolute',
-            top: 52,
-            left: regionHintLeft,
-            zIndex: 60,
-            width: 276,   /* 상영작 탭 말풍선과 동일 폭 — 두 줄 */
-            transition: 'left 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-            animation: 'tipIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), tipGlow 0.7s ease-out',
-          }}>
-            {/* 꼬리 — 지역 칩에 닿는 툴팁 문법 (2026-08-09 복원) */}
-            <div style={{
-              position: 'absolute',
-              top: -5,
-              left: 24,
-              width: 11,
-              height: 11,
-              background: 'var(--color-primary-base)',
-              transform: 'rotate(45deg)',
-              borderRadius: 4,
-            }} />
-            {/* 본체 */}
-            <div style={{
-              position: 'relative',
-              background: 'var(--color-primary-base)',
-              borderRadius: 12,
-              boxShadow: 'var(--shadow-popover)',
-              padding: '12px 12px 12px 16px',
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: 12,
-              color: 'var(--color-on-accent)',
-            }}>
-              {/* 핀 아이콘 */}
-              <Icon name="map-pin" size={15} />
-              {/* 문구 */}
-              <span className="text-note" style={{ flex: 1, color: 'var(--color-on-accent)' }}>
-                지역을 설정해서 내 주변 영화관의 상영 정보를 조회하세요
-              </span>
-              {/* 닫기 버튼 */}
-              <button
-                onClick={() => {
-                  sessionStorage.setItem('yh_region_tip', 'closed')
-                  setRegionHintDismissed(true)
-                }}
-                style={{
-                  width: 18, height: 18, minWidth: 18, minHeight: 18,
-                  borderRadius: '50%',
-                  background: 'color-mix(in srgb, var(--color-on-accent) 20%, transparent)',
-                  border: 'none',
-                  color: 'var(--color-on-accent)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer',
-                  flexShrink: 0,
-                  marginTop: -1,
-                  padding: 0,
-                }}
-              >
-                <Icon name="x" size={8} />
-              </button>
-            </div>
-          </div>
-        </>
+      {/* 첫 사용 힌트(지도 핀 안내 등)가 먼저 — 한 화면에 말풍선은 하나만 (2026-10) */}
+      {leadHint && (
+        <HintBubble icon={leadHint.icon} tail="none" onDismiss={leadHint.onDismiss} style={{ top: 52, left: 'var(--gutter)' }}>
+          {leadHint.text}
+        </HintBubble>
+      )}
+
+      {mounted && !leadHint && !holdRegionHint && !regionId && !regionHintDismissed && (
+        <HintBubble
+          icon="map-pin"
+          tail="left"
+          onDismiss={() => {
+            sessionStorage.setItem('yh_region_tip', 'closed')
+            setRegionHintDismissed(true)
+          }}
+          style={{ top: 52, left: regionHintLeft, transition: 'left 0.2s cubic-bezier(0.4, 0, 0.2, 1)' }}
+        >
+          지역을 설정해서 내 주변 영화관의 상영 정보를 조회하세요
+        </HintBubble>
       )}
 
       {mounted && createPortal(
