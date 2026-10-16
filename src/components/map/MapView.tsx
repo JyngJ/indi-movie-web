@@ -64,6 +64,7 @@ import { ViewportTracker, ZoomSlider, OffScreenTracker, MapRefSetter, MapInterac
 import { SettingsPanel } from './SettingsPanel'
 import { toSecureImageUrl } from '@/lib/media/imageUrl'
 import { useFirstUseHint } from '@/hooks/useFirstUseHint'
+import { PinHint } from './PinHint'
 
 const SEARCH_CROSS_RESULT_LIMIT = 5
 const STATION_BOUNDS_PADDING = 0.25
@@ -3293,6 +3294,8 @@ export default function MapView() {
       {/* 영화관 데이터 로딩 인디케이터 */}
       <Toast message="영화관 불러오는 중…" visible={theatersLoading} />
       <Toast message={filterToastMessage} trigger={filterToastTrigger} duration={2600} />
+      {/* 지도 첫 방문 핀 안내 — 실제 포스터 핀 하나에 붙는다. 닫으면 지역 설정 안내가 이어서 뜬다 */}
+      {pinHint.state === 'show' && <PinHint onDismiss={pinHint.dismiss} />}
       {/* iOS 키보드 트릭용 hidden dummy input — 항상 DOM에 존재 */}
       <input
         ref={dummyInputRef}
@@ -3536,8 +3539,7 @@ export default function MapView() {
         <div style={{ pointerEvents: 'auto' }}>
           <FilterBar
             desktop={isDesktopLayout}
-            leadHint={pinHint.state === 'show' ? { icon: 'film', text: '핀의 포스터는 지금 그 극장에서 상영 중인 영화예요', onDismiss: pinHint.dismiss } : null}
-            holdRegionHint={pinHint.state === 'checking'}
+            holdRegionHint={pinHint.state !== 'done'}
             onChange={setFilters}
             onChipChange={flyToFilter}
             turnOnFavoritesSignal={favoritesFilterSignal}

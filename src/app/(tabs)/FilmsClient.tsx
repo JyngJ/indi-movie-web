@@ -61,7 +61,7 @@ function RegionHintBubble({ onDismiss }: { onDismiss: () => void }) {
 function IntroHintBubble({ theaterCount, onDismiss }: { theaterCount: number; onDismiss: () => void }) {
   const count = theaterCount > 0 ? ` ${theaterCount}곳의` : ''
   return (
-    <HintBubble icon="clapperboard" tail="left" onDismiss={onDismiss} style={{ top: 'calc(100% + 8px)', left: 0, width: 300 }}>
+    <HintBubble icon="clapperboard" tail="left" confirmLabel="좋아요!" onDismiss={onDismiss} style={{ top: 'calc(100% + 8px)', left: 0, width: 300 }}>
       전국 독립·예술영화관{count} 상영 시간표를 매일 모아요. 포스터를 누르면 상영하는 극장과 회차가 보여요.
     </HintBubble>
   )

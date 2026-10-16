@@ -15,7 +15,7 @@ import { DateDropdown } from './filterBar/DateDropdown'
 import { MultiSelectDropdown } from './filterBar/MultiSelectDropdown'
 import { RegionDropdown } from './filterBar/RegionDropdown'
 import { FilterChip } from './filterBar/FilterChip'
-import { Icon, type IconName } from '@/components/primitives'
+import { Icon } from '@/components/primitives'
 import { HintBubble } from './onboarding/HintBubble'
 
 type OpenPanel = 'date' | 'genre' | 'nation' | 'region' | 'calendar' | null
@@ -52,9 +52,7 @@ export interface FilterBarProps {
   defaultRegionId?: string | null
   /** 외부(큐레이션 '모두보기' 등)에서 관심 칩을 켜달라는 신호 — 값이 바뀔 때마다 켠다 (2026-08-18) */
   turnOnFavoritesSignal?: number
-  /** 지역 안내보다 먼저 띄울 첫 사용 힌트 — 있으면 지역 안내를 미룬다 */
-  leadHint?: { icon: IconName; text: string; onDismiss: () => void } | null
-  /** 첫 사용 힌트를 확인하는 중 — 지역 안내가 먼저 떴다가 바뀌지 않게 잠시 미룬다 */
+  /** 첫 사용 힌트(지도 핀 안내)가 아직 끝나지 않음 — 지역 안내를 그 뒤로 미룬다 */
   holdRegionHint?: boolean
 }
 
@@ -71,7 +69,6 @@ export function FilterBar({
   desktop = false,
   defaultRegionId,
   turnOnFavoritesSignal,
-  leadHint = null,
   holdRegionHint = false,
 }: FilterBarProps) {
   const [dateId, setDateId] = useState<DateId>('this-week')
@@ -466,14 +463,8 @@ export function FilterBar({
         */}
       </div>
 
-      {/* 첫 사용 힌트(지도 핀 안내 등)가 먼저 — 한 화면에 말풍선은 하나만 (2026-10) */}
-      {leadHint && (
-        <HintBubble icon={leadHint.icon} tail="none" onDismiss={leadHint.onDismiss} style={{ top: 52, left: 'var(--gutter)' }}>
-          {leadHint.text}
-        </HintBubble>
-      )}
-
-      {mounted && !leadHint && !holdRegionHint && !regionId && !regionHintDismissed && (
+      {/* 첫 사용 힌트(지도 핀 안내)가 먼저 — 한 화면에 말풍선은 하나만 (2026-10) */}
+      {mounted && !holdRegionHint && !regionId && !regionHintDismissed && (
         <HintBubble
           icon="map-pin"
           tail="left"

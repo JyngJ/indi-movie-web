@@ -1,7 +1,7 @@
 'use client'
 
 import type { CSSProperties, ReactNode } from 'react'
-import { Icon, type IconName } from '@/components/primitives'
+import { Button, Icon, type IconName } from '@/components/primitives'
 
 /**
  * 안내 말풍선 — 지역 설정 안내와 첫 사용 힌트가 같은 모양을 쓴다.
@@ -17,6 +17,8 @@ export function HintBubble({
   children,
   onDismiss,
   tail = 'left',
+  tailLeft,
+  confirmLabel,
   style,
 }: {
   icon: IconName
@@ -24,6 +26,10 @@ export function HintBubble({
   onDismiss: () => void
   /** 꼬리 위치 — 위쪽 가장자리의 왼쪽·오른쪽, 또는 없음(가리킬 대상이 넓을 때) */
   tail?: 'left' | 'right' | 'none'
+  /** 꼬리의 왼쪽 위치(px) — 화면 가장자리에 밀려 말풍선이 옮겨져도 대상을 가리키게 직접 준다 */
+  tailLeft?: number
+  /** 첫 사용 힌트용 확인 버튼 문구("좋아요!") — 있으면 X 대신 이 버튼으로 닫는다 */
+  confirmLabel?: string
   /** 바깥 상자 위치·폭 — position/top/left/right/width 등 */
   style?: CSSProperties
 }) {
@@ -44,7 +50,7 @@ export function HintBubble({
           style={{
             position: 'absolute',
             top: -5,
-            ...(tail === 'left' ? { left: 'var(--spacing-6)' } : { right: 'var(--spacing-6)' }),
+            ...(tailLeft != null ? { left: tailLeft } : tail === 'left' ? { left: 'var(--spacing-6)' } : { right: 'var(--spacing-6)' }),
             width: 11,
             height: 11,
             background: 'var(--color-primary-base)',
@@ -67,28 +73,37 @@ export function HintBubble({
         }}
       >
         <Icon name={icon} size={15} />
-        <span className="text-note" style={{ flex: 1, color: 'var(--color-on-accent)', wordBreak: 'keep-all' }}>
-          {children}
-        </span>
-        <button
-          type="button"
-          aria-label="안내 닫기"
-          onClick={onDismiss}
-          style={{
-            width: 18, height: 18, minWidth: 18, minHeight: 18,
-            borderRadius: 'var(--radius-pill)',
-            background: 'color-mix(in srgb, var(--color-on-accent) 20%, transparent)',
-            border: 'none',
-            color: 'var(--color-on-accent)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer',
-            flexShrink: 0,
-            marginTop: -1,
-            padding: 0,
-          }}
-        >
-          <Icon name="x" size={8} />
-        </button>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 'var(--spacing-2)' }}>
+          <span className="text-note" style={{ color: 'var(--color-on-accent)', wordBreak: 'keep-all' }}>
+            {children}
+          </span>
+          {confirmLabel && (
+            <Button variant="secondary" size="sm" onClick={onDismiss} style={{ alignSelf: 'flex-end' }}>
+              {confirmLabel}
+            </Button>
+          )}
+        </div>
+        {!confirmLabel && (
+          <button
+            type="button"
+            aria-label="안내 닫기"
+            onClick={onDismiss}
+            style={{
+              width: 18, height: 18, minWidth: 18, minHeight: 18,
+              borderRadius: 'var(--radius-pill)',
+              background: 'color-mix(in srgb, var(--color-on-accent) 20%, transparent)',
+              border: 'none',
+              color: 'var(--color-on-accent)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer',
+              flexShrink: 0,
+              marginTop: -1,
+              padding: 0,
+            }}
+          >
+            <Icon name="x" size={8} />
+          </button>
+        )}
       </div>
     </div>
   )
