@@ -49,6 +49,8 @@ export type AnalyticsEventName =
   /** 첫 사용 힌트(소개 카드·지도 핀 토스트)를 보여 줌 — props.hint: 'intro' | 'mapPins'.
       2026-10 온보딩 슬라이드('onboarding viewed/skipped/completed')를 대신한다 */
   | 'hint shown'
+  /** 상영 없는 영화 상세의 "지금 상영 중인 비슷한 영화" — props.reason: 'director' | 'genre' */
+  | 'similar movie selected'
   | 'add request opened'
   | 'add request submitted'
   | 'landing variant assigned'

@@ -9,6 +9,8 @@ import { SeoShowtimesSection } from '@/components/seo/SeoShowtimesSection'
 import { MovieDetailClient } from './MovieDetailClient'
 import { buildMovieScreeningSummary } from '@/lib/seo/movieScreeningSummary'
 import { toKstIsoDate } from '@/lib/date'
+import { getSimilarityPool } from '@/lib/catalog/getSimilarityPool'
+import { pickSimilarNowShowing } from '@/lib/catalog/similarNowShowing'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'
 
@@ -23,6 +25,11 @@ export async function MovieBody({
   initialSelection?: { date: string; theaterId: string; showtimeId: string }
 }) {
   const showtimes: MovieTheaterEntry[] = await getMovieShowtimesForSsr(id)
+
+  /* 상영이 없을 때만 — 상영작 비교 정보(getSimilarityPool, 6시간 캐시)에서 감독·장르로 고른다 */
+  const similarNowShowing = showtimes.length === 0
+    ? pickSimilarNowShowing(movie, await getSimilarityPool())
+    : []
 
   const schema = toMovieSchema(movie, BASE_URL)
   const screeningEventSchemas = toScreeningEventSchema(movie, showtimes, BASE_URL)
@@ -80,6 +87,7 @@ export async function MovieBody({
         initialShowtimes={showtimes}
         initialSelection={initialSelection}
         screeningSummary={buildMovieScreeningSummary(showtimes, toKstIsoDate(new Date()))}
+        similarNowShowing={similarNowShowing}
       />
       <SeoShowtimesSection movieTitle={movie.title} entries={showtimes} />
     </>
