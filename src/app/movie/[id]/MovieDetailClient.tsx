@@ -737,8 +737,13 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection, s
       </DetailKeyPanel>
       {/* 섹션 디바이더 — 8px raised 밴드 (피그마 상세 통일 시안, 2026-08-24) */}
       <div aria-hidden style={{ height: 8, backgroundColor: 'var(--color-surface-raised)' }} />
-      {synopsisSection}
-      <div aria-hidden style={{ height: 8, backgroundColor: 'var(--color-surface-raised)' }} />
+      {/* 시놉시스가 없으면 밴드가 두 겹(16px)으로 붙는다 — 시놉시스가 있을 때만 그 아래 밴드를 둔다 */}
+      {synopsisSection && (
+        <>
+          {synopsisSection}
+          <div aria-hidden style={{ height: 8, backgroundColor: 'var(--color-surface-raised)' }} />
+        </>
+      )}
       {showtimesSection}
       <DetailBottomAd />
       <div style={{ height: 'env(safe-area-inset-bottom)' }} />
