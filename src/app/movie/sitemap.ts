@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getIndexableMovies, type IndexableMovie } from '@/lib/seo/getIndexableMovies'
+import { getReopenedMovies } from '@/lib/seo/getReopenedMovies'
 
 // 24h였던 걸 1h로 단축 — /theater/[id]와 동일한 주기. 빌드 시점에 조회가 일시적으로
 // 비정상이었을 때 그 결과가 하루 종일 박제되는 걸 막는다(throw 처리와 함께 동작).
@@ -22,7 +23,9 @@ async function indexableWithRetry(): Promise<IndexableMovie[]> {
   let lastMessage = '원인 불명'
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
-      return await getIndexableMovies(createSupabaseServerClient())
+      /* 상영 있는 영화 + 상영은 없지만 다시 연 영화(시놉시스·비슷한 상영작 충분, indexPolicy) */
+      const upcoming = await getIndexableMovies(createSupabaseServerClient())
+      return [...upcoming, ...(await getReopenedMovies(upcoming))]
     } catch (e) {
       lastMessage = e instanceof Error ? e.message : String(e)
       if (attempt < MAX_ATTEMPTS) await sleep(500 * attempt)
