@@ -12,7 +12,7 @@ import { FavoriteMoviesSection } from '@/components/domain/favorites/FavoriteMov
 import { DirectorSpecialSection } from '@/components/domain/DirectorSpecialSection'
 import { AllMoviesCtaBand } from '@/components/domain/AllMoviesCtaBand'
 import { FilmRankingSection } from '@/components/domain/FilmRankingSection'
-import { LocationPermissionModal } from '@/components/domain/LocationPermissionModal'
+import { FirstVisitIntro } from '@/components/domain/onboarding/FirstVisitIntro'
 import { PersonalizedSection } from '@/components/domain/PersonalizedSection'
 import { InstagramRecsSection } from '@/components/domain/InstagramRecsSection'
 
@@ -243,7 +243,9 @@ export default function FilmsPage() {
 
   const handleMovieClick = (id: string) => { navStart(); router.push(`/movie/${id}`) }
 
-  const { state: locState, coords: locCoords, modalSuppressed: locModalSuppressed, request: requestLoc, dismiss: dismissLoc } = useLocationPermission()
+  /* 위치 권한은 지도에서만 묻는다 — 상영작 홈에서 첫 화면부터 권한 창을 띄우면 온보딩과 같은 벽이 된다(2026-10).
+     여기서는 이미 허용한 사람의 좌표만 쓴다 */
+  const { coords: locCoords } = useLocationPermission()
   // 접속 위치 지역 — 드롭다운 배지·자동 스크롤 + (미설정 사용자에 한해) 최초 1회 자동 지정
   const currentLocationRegion = useCurrentLocationRegion()
   const isDesktop = mounted && isDesktopLayout
@@ -791,19 +793,14 @@ export default function FilmsPage() {
       <div style={isDesktop ? { maxWidth: 1048, margin: '0 auto' } : undefined}>
       {/* 영화제 바로가기 — 회기 중이거나 개막이 가까울 때만. 지역 필터와 무관한 전국 대상.
           feedback-audit-ignore — 진행 막대·"이동하는 중…"은 FestivalShortcutRow가 누를 때 띄운다 */}
+      {/* 첫 방문 소개 — 예전 온보딩 슬라이드 대신. 화면을 가리지 않고 한 번만 보인다 */}
+      <FirstVisitIntro theaterCount={theaters.length} />
       <FestivalShortcutRow
         festivals={festivals}
         today={toKstIsoDate(new Date())}
         isDesktop={isDesktop}
         onSelect={(slug) => router.push(`/festival/${slug}`)}
       />
-      {!locModalSuppressed && (locState === 'prompt' || locState === 'denied' || locState === 'requesting') && (
-        <LocationPermissionModal
-          state={locState}
-          onRequest={requestLoc}
-          onDismiss={dismissLoc}
-        />
-      )}
 
       {/* 주간 랭킹 — 독립영화 필터 미완성으로 임시 숨김
       {filmRankingRow && (
