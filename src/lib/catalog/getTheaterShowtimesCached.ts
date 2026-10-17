@@ -21,7 +21,7 @@ import {
 export const THEATER_INITIAL_WINDOW_DAYS = 14
 
 /** 10분 — 영화 상세 SSR 래퍼(getMovieShowtimesCached)와 같은 값 */
-const TTL = 600
+const TTL = 21600
 
 export interface TheaterInitialShowtimes {
   /** KST 오늘 (YYYY-MM-DD) */

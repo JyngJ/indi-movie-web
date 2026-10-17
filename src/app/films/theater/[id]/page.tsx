@@ -17,7 +17,7 @@ import { ogImageUrl } from '@/lib/og/cards'
    원인이었을 가능성이 크다. 배포 후 프로덕션에서 같은 프로브로 재확인할 것 —
    되돌리려면 이 주석 자리에 `export const dynamic = 'force-dynamic'`을 되살리면 된다. */
 // 주기와 크롤 후 즉시 갱신 방식은 movie/[id]/page.tsx 주석 참고 — 값은 함께 움직인다.
-export const revalidate = 3600
+export const revalidate = 21600
 
 /* 동적 경로는 generateStaticParams가 없으면 revalidate를 걸어도 요청마다 렌더된다(Next 16).
    2026-10 운영 응답이 `private, no-store` + MISS였다 — ISR이 한 번도 안 걸려 있었다.

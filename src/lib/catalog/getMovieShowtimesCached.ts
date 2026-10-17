@@ -13,7 +13,10 @@ import { getMovieTheaterShowtimes, type MovieTheaterEntry } from './getMovieThea
  *
  * 실시간성이 필요한 API 라우트는 이 래퍼를 쓰지 않는다 — 좌석 수가 늦게 반영된다.
  */
-const TTL = 600
+/* 6시간 — 상세 페이지 ISR 주기와 같다. 600이던 시절엔 이 값 때문에 영화 상세가 10분마다
+   다시 그려져 Vercel ISR Writes 한도를 넘길 뻔했다(2026-10). 상영 변경은 크롤 후 'movie-showtimes'
+   태그 무효화가 반영한다. */
+const TTL = 21600
 
 const getCached = unstable_cache(
   async (movieId: string, _dateKey: string): Promise<MovieTheaterEntry[]> => {

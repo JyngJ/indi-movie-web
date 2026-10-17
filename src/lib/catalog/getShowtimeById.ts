@@ -19,7 +19,7 @@ export interface ShowtimeLocation {
  *
  * 한 건 조회라 가볍지만, 봇이 공유 링크를 반복해서 긁는 경우가 있어 캐시를 둔다.
  */
-const TTL = 600
+const TTL = 21600
 
 const getCached = unstable_cache(
   async (showtimeId: string): Promise<ShowtimeLocation | null> => {

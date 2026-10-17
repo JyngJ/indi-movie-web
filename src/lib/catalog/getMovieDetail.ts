@@ -22,7 +22,7 @@ const MOVIE_DETAIL_SELECT = `
  * revalidate 3600)와 맞춘다: Next는 페이지 재검증 주기를 그 안에서 쓰인 캐시들의
  * 최솟값으로 낮추므로, 이보다 짧게 잡으면 페이지 재생성이 오히려 잦아진다.
  */
-const MOVIE_DETAIL_TTL = 3600
+const MOVIE_DETAIL_TTL = 21600
 
 function mapRow(data: unknown): MovieDetail {
   const row = data as Record<string, unknown>

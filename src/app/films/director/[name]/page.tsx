@@ -10,7 +10,7 @@ import { ogImageUrl } from '@/lib/og/cards'
 import { Toast } from '@/components/primitives'
 import { robotsForScreenings } from '@/lib/seo/indexPolicy'
 
-export const revalidate = 3600
+export const revalidate = 21600
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'
 
