@@ -13,13 +13,13 @@ import type { Theater } from '@/types/api'
 const THEATER_SELECT =
   'id,name,lat,lng,address,city,phone,website,instagram_url,screen_count,seat_count,parking,restaurant,accessibility,rating,created_at,updated_at'
 
-const THEATER_TTL = 3600
+const THEATER_TTL = 21600
 /**
- * 메타 description 문구용이라 1시간 지연은 무해하다. 더 짧게 잡으면 안 되는 이유:
- * Next는 페이지의 ISR 주기를 그 안에서 쓰인 캐시들의 최솟값으로 낮춘다 —
- * 300으로 두면 `/theater/[id]` 160여 페이지가 1시간이 아니라 5분마다 재생성된다.
+ * 메타 description 문구용이라 몇 시간 지연은 무해하다(크롤 후 태그 무효화가 따로 있다).
+ * 페이지 주기(6시간)보다 짧게 잡으면 안 되는 이유: Next는 페이지의 ISR 주기를 그 안에서
+ * 쓰인 캐시들의 최솟값으로 낮춘다 — 짧은 값 하나가 극장 상세 전체를 자주 재생성시킨다(ISR Writes).
  */
-const TODAY_TITLES_TTL = 3600
+const TODAY_TITLES_TTL = 21600
 
 export const getTheaterDetail = unstable_cache(
   async (id: string): Promise<Theater | null> => {

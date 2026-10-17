@@ -156,7 +156,7 @@ Supabase는 별도 마이그레이션 (백엔드 담당)
 | 조치 | 위치 | 이유 |
 |---|---|---|
 | 회차·상영 API 캐시 2분 → 30분 | `src/lib/http/cachePolicy.ts` | 방문이 시간당 수십 회라 2분 캐시는 거의 적중하지 않았다. 데이터는 3시간(잔여석)·하루 3번(시간표)마다 바뀐다 |
-| 상세 ISR·CDN 캐시 5분 → 1시간 | `movie/[id]` 등 4개 페이지 + `next.config.ts` `detail` | 같은 이유. 크롤 직후 반영은 아래 on-demand 갱신이 맡는다 |
+| 상세 ISR·CDN 캐시 5분 → 1시간 → 6시간(2026-10-18, ISR Writes) | `movie/[id]` 등 4개 페이지 + `next.config.ts` `detail` | 같은 이유. 크롤 직후 반영은 아래 on-demand 갱신이 맡는다 |
 | 크롤 후 캐시 갱신 | `/api/revalidate` ← `scripts/crawl-showtimes.ts` | 상영 데이터 태그를 `revalidateTag(tag, 'max')`로 무효화. RPi `.env.local`에 `CRON_SECRET` 필요 |
 | 학습 전용 크롤러 차단 | `src/app/robots.ts` | 수천 쪽을 훑으며 식은 캐시를 다시 그리게 한다. 검색·답변용 봇은 유지 |
 | OG 폰트·로고 한 번만 읽기 | `src/lib/og/cards.tsx` | 카드마다 900KB 폰트를 디스크에서 다시 읽고 있었다 |
@@ -171,7 +171,7 @@ Supabase는 별도 마이그레이션 (백엔드 담당)
 | 조치 | 위치 | 이유 |
 |---|---|---|
 | 빈 `generateStaticParams` 추가 | `movie/[id]`·`movie/[id]/s/[showtimeId]`·`films/theater/[id]`·`films/theater/[id]/s/[showtimeId]`·`festival/[slug]` | 빌드 라우트 표가 `●`로 바뀐다. 첫 방문에 그려 캐시한다 |
-| 극장 상세 첫 화면 데이터를 서버가 심음 | `src/lib/catalog/getTheaterShowtimesCached.ts` · `ssrSnapshot.ts` | 페이지 렌더 뒤 브라우저가 `/api/public/theater/[id]/movies`·`/showtimes`를 또 불러 방문 한 번에 함수 3번이었다. 1시간 안의 데이터면 다시 받지 않는다 |
+| 극장 상세 첫 화면 데이터를 서버가 심음 | `src/lib/catalog/getTheaterShowtimesCached.ts` · `ssrSnapshot.ts` | 페이지 렌더 뒤 브라우저가 `/api/public/theater/[id]/movies`·`/showtimes`를 또 불러 방문 한 번에 함수 3번이었다. 6시간(페이지 ISR 주기) 안의 데이터면 다시 받지 않는다 |
 
 - 한글이 들어가는 경로(`director/[name]`·`films/director/[name]`·`films/area/[region]`)는 동적으로 둔다. ISR이면
   캐시 태그 헤더에 raw 한글이 실려 500이 난다(#278).

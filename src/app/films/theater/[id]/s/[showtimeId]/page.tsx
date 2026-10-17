@@ -11,7 +11,7 @@ import { TheaterBody } from '../../TheaterBody'
  *  영화 상세의 같은 경로와 한 쌍이다. 쿼리(`?date=&showtime=`)로 회차를 싣던 시절엔
  *  OG 카드를 굽느라 극장 상세 전체가 매 요청 렌더로 굳었다. */
 // 주기와 크롤 후 즉시 갱신 방식은 movie/[id]/page.tsx 주석 참고 — 값은 함께 움직인다.
-export const revalidate = 3600
+export const revalidate = 21600
 
 /* 동적 경로는 generateStaticParams가 없으면 revalidate를 걸어도 요청마다 렌더된다(Next 16).
    2026-10 운영 응답이 `private, no-store` + MISS였다 — ISR이 한 번도 안 걸려 있었다.

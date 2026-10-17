@@ -23,8 +23,14 @@ import { pickSimilarNowShowing } from '@/lib/catalog/similarNowShowing'
    적은 사이트에선 거의 모든 방문이 "5분 넘게 묵은 캐시"를 만나 다시 그리게 만든다.
    상영 시간표는 하루 3번 바뀌므로 주기를 1시간으로 늘리고, 크롤이 끝나면
    /api/revalidate가 상영 데이터 태그를 무효화해 바로 반영되게 했다(scripts/crawl-showtimes.ts).
-   이 값을 바꾸면 회차 공유·극장 상세 페이지와 next.config의 detail 헤더도 같이 바꾼다. */
-export const revalidate = 3600
+   이 값을 바꾸면 회차 공유·극장 상세 페이지와 next.config의 detail 헤더도 같이 바꾼다.
+
+   2026-10-18 1시간 → 6시간. #386로 ISR이 실제로 걸린 뒤 Vercel ISR Writes가 하루 약 1만으로 뛰어
+   Hobby 한도(월 20만)를 넘길 참이었다. 원인은 이 값보다 상영 캐시 TTL(600초)이었다 — Next는 페이지
+   주기를 그 안에서 쓴 캐시의 최솟값으로 낮춰, 실제로는 10분마다 다시 그렸다. 페이지와 쓰는 캐시를
+   모두 6시간으로 맞춘다. 상영이 바뀌면 크롤 후 태그 무효화가 즉시 반영하므로 신선도는 그대로다.
+   24시간이 아닌 이유: 상영 캐시 키에 날짜가 들어 있어, 자정 뒤 다음 크롤 전까지 어제 구간 HTML이 남는 시간을 6시간 안으로 묶는다. */
+export const revalidate = 21600
 
 /* 동적 경로는 generateStaticParams가 없으면 revalidate를 걸어도 요청마다 렌더된다(Next 16).
    2026-10 운영 응답이 `private, no-store` + MISS였다 — ISR이 한 번도 안 걸려 있었다.

@@ -114,11 +114,11 @@ const nextConfig: NextConfig = {
   // force-dynamic은 그대로 둔다. 목적이 "정적 셸을 만들지 않는 것"이지
   // "캐시하지 않는 것"이 아니기 때문이다.
   async headers() {
-    // 상영 시간표는 크롤러가 하루 세 번(01·07·13시) 갱신하므로 1시간 캐시로도
-    // 체감 신선도가 떨어지지 않는다. stale-while-revalidate로 만료 직후 요청도
-    // 함수를 기다리지 않고 캐시를 받는다. 페이지의 revalidate(3600)와 같은 값을 쓴다 —
+    // 상영이 바뀌면 크롤 후 태그 무효화(/api/revalidate)가 반영하므로 시간 주기는 길게 둔다.
+    // stale-while-revalidate로 만료 직후 요청도 함수를 기다리지 않고 캐시를 받는다.
+    // 페이지의 revalidate(21600, 2026-10-18 ISR Writes 한도 대응)와 같은 값을 쓴다 —
     // 5분이던 시절엔 트래픽이 적어 거의 매 방문이 만료된 캐시를 만나 함수를 돌렸다.
-    const detail = 'public, s-maxage=3600, stale-while-revalidate=86400'
+    const detail = 'public, s-maxage=21600, stale-while-revalidate=86400'
     // 지역 페이지는 극장 목록이 본문이라 훨씬 느리게 변한다.
     const area = 'public, s-maxage=1800, stale-while-revalidate=86400'
     const staticLong = 'public, max-age=31536000, immutable'
