@@ -11,8 +11,9 @@ import { formatDiscordReportEmbeds, parseReportAction, reportActionComponents } 
 import { updateReportStatus } from '@/lib/reports/store'
 import { formatDiscordUserRequestEmbeds, parseUserRequestAction, userRequestActionComponents } from '@/lib/userRequests/discord'
 import { updateUserRequestStatus } from '@/lib/userRequests/store'
-import { approveShowtimeCandidates, resolveAmbiguousMovieMatch } from '@/lib/admin/store'
-import { parseMovieMatchAction } from '@/lib/admin/matchReviewDiscord'
+import { approveShowtimeCandidates, importAdminExternalMovie, resolveAmbiguousMovieMatch } from '@/lib/admin/store'
+import { getKmdbMovie } from '@/lib/admin/kmdb'
+import { parseMovieKmdbAction, parseMovieMatchAction } from '@/lib/admin/matchReviewDiscord'
 import OpenAI from 'openai'
 import nacl from 'tweetnacl'
 import { randomUUID } from 'crypto'
@@ -262,6 +263,13 @@ async function handleOcrCancel(sourceId: string) {
 }
 
 /* ── 동명 영화 매칭 보류 — 사람이 후보 고르기 ── */
+/** DB에 없던 KMDb 영화를 골랐을 때 — 가져와 DB에 넣은 뒤 같은 흐름으로 연결한다 */
+async function handleMovieKmdbChoice(hash: string, kmdbMovieId: string, kmdbMovieSeq: string) {
+  const imported = await importAdminExternalMovie(await getKmdbMovie(kmdbMovieId, kmdbMovieSeq))
+  const result = await handleMovieMatchChoice(hash, imported.id)
+  return { ...result, message: `🆕 「${imported.label}」(${imported.description})를 DB에 추가했어요\n${result.message}` }
+}
+
 async function handleMovieMatchChoice(hash: string, movieId: string) {
   const result = await resolveAmbiguousMovieMatch(hash, movieId)
   if (result.updatedCount === 0) {
@@ -394,6 +402,32 @@ export async function POST(request: Request) {
       after(async () => {
         try {
           const result = await handleMovieMatchChoice(action.hash, action.movieId)
+          await patchOriginalMessage(token, {
+            embeds: [{ description: result.message, color: result.ok ? 0x57F287 : 0xED4245 }],
+            components: [],
+            allowed_mentions: { parse: [] },
+          })
+        } catch (error) {
+          await patchOriginalMessage(token, {
+            embeds: [{ description: `❌ 오류: ${error instanceof Error ? error.message : String(error)}`, color: 0xED4245 }],
+            components: [],
+            allowed_mentions: { parse: [] },
+          })
+        }
+      })
+
+      return Response.json({ type: InteractionResponse.DEFERRED_UPDATE_MESSAGE })
+    }
+
+    // 동명 영화 매칭 보류 — DB에 없던 KMDb 영화를 골랐을 때
+    if (customId.startsWith('movie_kmdb:')) {
+      const action = parseMovieKmdbAction(customId)
+      if (!action) return ephemeralResponse('알 수 없는 액션입니다.')
+      const token = interaction.token
+
+      after(async () => {
+        try {
+          const result = await handleMovieKmdbChoice(action.hash, action.movieId, action.movieSeq)
           await patchOriginalMessage(token, {
             embeds: [{ description: result.message, color: result.ok ? 0x57F287 : 0xED4245 }],
             components: [],
