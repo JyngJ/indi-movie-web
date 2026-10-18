@@ -1,6 +1,8 @@
 import crypto from 'node:crypto'
 import type { MovieRow } from './store/converters'
 import { formatListingHints, runtimeMatchIndex, type ListingHints } from './matchReviewHints'
+import { yearMatchIndex } from './kmdbAlternatives'
+import type { AdminExternalMovie } from '@/types/admin'
 
 const DISCORD_API = 'https://discord.com/api/v10'
 
@@ -19,6 +21,8 @@ export interface AmbiguousMovieGroup {
   title: string
   listings: ProviderListing[]
   options: MovieRow[]
+  /** DB에 없는 같은 제목 KMDb 영화 — 누르면 DB에 추가하고 연결한다(pickKmdbAlternatives) */
+  kmdbOptions?: AdminExternalMovie[]
 }
 
 interface DiscordMessage {
@@ -90,9 +94,24 @@ function runtimeHintLine(group: AmbiguousMovieGroup, options: MovieRow[]) {
   return undefined
 }
 
+function kmdbOptionLabel(movie: AdminExternalMovie, number: number) {
+  const director = movie.director.length ? movie.director.join(', ') : '감독 미상'
+  const runtime = movie.runtimeMinutes ? `, ${movie.runtimeMinutes}분` : ''
+  return `${number}) ${movie.title} (${movie.year}, ${director}${runtime}) — DB에 없음`
+}
+
+/** 극장 표기 연도와 맞는 선택지가 하나뿐이면 알려 준다 — 기존 후보와 KMDb 후보를 이어서 번호를 매긴다 */
+function yearHintLine(group: AmbiguousMovieGroup, options: MovieRow[], kmdbOptions: AdminExternalMovie[]) {
+  const years = group.listings.flatMap((l) => (l.hints.year ? [l.hints.year] : []))
+  const index = yearMatchIndex(years, [...options.map((m) => m.year), ...kmdbOptions.map((m) => m.year)])
+  if (index === undefined) return undefined
+  return `제작 연도 ${years[0]} — ${index + 1}번과 맞아요${index >= options.length ? ' (새로 추가)' : ''}`
+}
+
 function buildGroupComponents(group: AmbiguousMovieGroup) {
   const hash = titleHash(group.title)
   const options = group.options.slice(0, 5)
+  const kmdbOptions = (group.kmdbOptions ?? []).slice(0, 5)
 
   const choiceRow = {
     type: 1,
@@ -114,13 +133,29 @@ function buildGroupComponents(group: AmbiguousMovieGroup) {
     })),
   }
 
-  return [choiceRow, linkRow]
+  /* KMDb 후보 — 누르면 KMDb에서 받아 DB에 넣고 같은 흐름으로 연결한다 */
+  const kmdbRow = {
+    type: 1,
+    components: kmdbOptions.map((movie, i) => ({
+      type: 2,
+      style: 3,
+      label: `${options.length + i + 1}번 (새로 추가)`,
+      custom_id: `movie_kmdb:${hash}:${movie.movieId}:${movie.movieSeq}`,
+    })),
+  }
+
+  return kmdbOptions.length > 0 ? [choiceRow, kmdbRow, linkRow] : [choiceRow, linkRow]
 }
 
 function buildGroupEmbed(group: AmbiguousMovieGroup) {
   const options = group.options.slice(0, 5)
-  const optionLines = options.map((movie, i) => movieOptionLabel(movie, i))
+  const kmdbOptions = (group.kmdbOptions ?? []).slice(0, 5)
+  const optionLines = [
+    ...options.map((movie, i) => movieOptionLabel(movie, i)),
+    ...kmdbOptions.map((movie, i) => kmdbOptionLabel(movie, options.length + i + 1)),
+  ]
   const runtimeHint = runtimeHintLine(group, options)
+  const yearHint = yearHintLine(group, options, kmdbOptions)
   const shownListings = group.listings.slice(0, 5)
   const hiddenCount = group.listings.length - shownListings.length
 
@@ -128,9 +163,12 @@ function buildGroupEmbed(group: AmbiguousMovieGroup) {
     title: `🎬 동명 영화 매칭 보류: ${group.title}`,
     description: [
       `DB에 같은 제목 영화가 ${group.options.length}개 있어서 자동으로 못 골랐어요. 아래 버튼으로 확인해주세요.`,
+      ...(kmdbOptions.length > 0 ? ['초록 버튼은 DB에 없는 KMDb 영화예요 — 누르면 DB에 추가하고 연결해요.'] : []),
       '',
       optionLines.join('\n'),
-      ...(runtimeHint ? ['', runtimeHint] : []),
+      ...(runtimeHint || yearHint ? [''] : []),
+      ...(runtimeHint ? [runtimeHint] : []),
+      ...(yearHint ? [yearHint] : []),
     ].join('\n'),
     color: 0xF39C12,
     fields: [
@@ -192,4 +230,12 @@ export function parseMovieMatchAction(customId: string) {
   const [, hash, movieId] = parts
   if (!hash || !movieId) return null
   return { hash, movieId }
+}
+
+export function parseMovieKmdbAction(customId: string) {
+  const parts = customId.split(':')
+  if (parts.length !== 4 || parts[0] !== 'movie_kmdb') return null
+  const [, hash, movieId, movieSeq] = parts
+  if (!hash || !movieId || !movieSeq) return null
+  return { hash, movieId, movieSeq }
 }

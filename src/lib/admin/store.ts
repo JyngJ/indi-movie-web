@@ -18,6 +18,7 @@ import type {
   ShowtimeSeatUpdateInput,
 } from '@/types/admin'
 import { searchKmdbMovies } from '@/lib/admin/kmdb'
+import { pickKmdbAlternatives } from '@/lib/admin/kmdbAlternatives'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { chunk, dedupeByKey, isMatchUnchanged, isMissingRpcError } from '@/lib/crawl/bulkWrites'
 import { selectAutoMatchCandidates, summarizeAutoMatchOutcomes } from '@/lib/crawl/autoMatchSummary'
@@ -863,7 +864,10 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
     }
     if (toNotify.length > 0) {
       const groups = []
-      for (const g of toNotify) groups.push({ title: g.title, listings: await finalizeListings(g), options: g.options })
+      for (const g of toNotify) {
+        const listings = await finalizeListings(g)
+        groups.push({ title: g.title, listings, options: g.options, kmdbOptions: await findKmdbAlternatives(g.title, g.options, listings) })
+      }
       await notifyAmbiguousMovieMatches(groups)
       if (noticeTableOk) {
         const { error: insertError } = await supabase
@@ -921,6 +925,17 @@ async function writeShowtimeRows(supabase: ReturnType<typeof createSupabaseAdmin
       .from('showtimes')
       .upsert(part, { onConflict: 'theater_id,movie_id,show_date,show_time,screen_name' })
     if (error) console.error('[autoMatch] showtimes 묶음 upsert 실패:', error.message)
+  }
+}
+
+/** 동명 영화 검수 메시지에 붙일 DB 밖 KMDb 후보 — 검색 실패는 후보 없이 보낸다 */
+async function findKmdbAlternatives(title: string, options: MovieRow[], listings: ProviderListing[]) {
+  try {
+    const years = listings.flatMap((l) => (l.hints.year ? [l.hints.year] : []))
+    return pickKmdbAlternatives(await searchKmdbMovies(title), title, options, years)
+  } catch (error) {
+    console.error('[autoMatch] KMDb 동명 후보 검색 실패:', (error as Error).message)
+    return []
   }
 }
 
