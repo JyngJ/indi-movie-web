@@ -23,6 +23,7 @@ jobs:
       - run: npm ci
       - run: npx tsx scripts/notify-email.ts --send
         env:
+          DISCORD_REPORT_WEBHOOK_URL: ${{ secrets.DISCORD_REPORT_WEBHOOK_URL }}
           EMAIL_NOTIFICATION_DELIVERY_ENABLED: 'true'
           NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
