@@ -249,6 +249,7 @@ export function FilmsSearchBar({ movies, theaters, festivals, isDesktop }: Props
           {query && (
             <IconButton
               variant="ghost"
+              shape="round"
               size={32}
               aria-label="검색어 지우기"
               onMouseDown={e => { e.preventDefault(); setQuery(''); desktopRef.current?.focus() }}

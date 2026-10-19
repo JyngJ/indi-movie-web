@@ -52,7 +52,7 @@ export function EmailNotificationForm({ onRegistered, onDismiss, dismissLabel = 
     <form noValidate onSubmit={register} className="flex flex-col gap-[var(--gap-form-section)]">
       <Input ref={inputRef} label="수신할 메일 주소" type="email" autoComplete="email" required maxLength={254} value={email} onChange={event => { setEmail(event.target.value); setEmailError('') }} error={emailError || undefined} disabled={busy}
         style={email ? { paddingRight: 'calc(var(--comp-btn-h-md) + var(--gutter-md))' } : undefined}
-        rightIcon={email ? <IconButton aria-label="메일 주소 지우기" disabled={busy} onPointerDown={event => event.preventDefault()} onClick={() => { setEmail(''); setEmailError(''); inputRef.current?.focus() }}><Icon name="x" size="md" /></IconButton> : undefined} />
+        rightIcon={email ? <IconButton shape="round" aria-label="메일 주소 지우기" disabled={busy} onPointerDown={event => event.preventDefault()} onClick={() => { setEmail(''); setEmailError(''); inputRef.current?.focus() }}><Icon name="x" size="md" /></IconButton> : undefined} />
       <label data-email-consent className="grid grid-cols-[auto_1fr] items-start gap-2 text-[length:var(--text-meta)] leading-5">
         <span className="flex h-5 items-center">
           <input className="m-0 size-4 shrink-0 accent-[var(--color-primary-base)]" type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)} required disabled={busy} />

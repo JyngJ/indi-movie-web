@@ -83,6 +83,7 @@ it.skipIf(process.env.RUN_BROWSER_TESTS !== '1')('이메일 동의 정렬·편�
     expect(await page.getByLabel('수신할 메일 주소').inputValue()).toBe('google-reader@example.com')
     const submit = page.getByRole('button', { name: '인증 메일 받기' })
     expect(await submit.isDisabled()).toBe(true)
+    expect(await page.getByRole('button', { name: '메일 주소 지우기' }).evaluate(el => parseFloat(getComputedStyle(el).borderRadius) >= el.getBoundingClientRect().width / 2)).toBe(true)
     await page.getByRole('button', { name: '메일 주소 지우기' }).click()
     expect(await page.getByLabel('수신할 메일 주소').inputValue()).toBe('')
     expect(await page.getByLabel('수신할 메일 주소').evaluate(el => el === document.activeElement)).toBe(true)
