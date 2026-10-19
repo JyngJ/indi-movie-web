@@ -58,6 +58,16 @@ export function createSupabaseAuthRepository(): AuthRepository {
         return
       }
 
+      // 비활성 제공자의 /authorize 응답(JSON 오류)으로 화면을 이탈시키지 않는다.
+      // 공개 설정만 조회하며, 비밀 키나 계정 정보는 사용하지 않는다.
+      const settingsResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/settings`, {
+        headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! },
+        signal: AbortSignal.timeout(8000),
+      })
+      if (!settingsResponse.ok) throw new Error('OAuth provider settings unavailable')
+      const settings = await settingsResponse.json()
+      if (settings.external?.[provider] !== true) throw new Error('OAuth provider unavailable')
+
       const redirectTo = `${origin}${AUTH_CALLBACK_PATH}?next=${encodeURIComponent(next)}`
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
@@ -106,7 +116,7 @@ export function createSupabaseAuthRepository(): AuthRepository {
       const { data } = supabase.auth.onAuthStateChange((_event, session) => {
         // 콜백 안에서 Supabase 호출을 await 하면 데드락 위험 — 다음 틱으로 미룬다
         setTimeout(() => {
-          toAuthUser(supabase, session?.user).then(cb)
+          toAuthUser(supabase, session?.user).then(cb, () => cb(mapSupabaseUser(session?.user)))
         }, 0)
       })
       return () => data.subscription.unsubscribe()

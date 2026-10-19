@@ -62,7 +62,7 @@ export function MyHomeContent({ authError, onProfile, onNotifications, onFavorit
   }
   if (status === 'signed-out' || !user) {
     return (
-      <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '32px var(--gutter)' }}>
+      <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '32px var(--gutter-form)' }}>
         <LoginPanel returnTo="/my" errorCode={authError} />
       </div>
     )

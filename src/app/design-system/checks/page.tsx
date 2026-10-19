@@ -42,6 +42,10 @@ const FEEDBACK: Record<string, string> = {
 
 /** 파일별로 무엇을 지키는지. package.json 스크립트에 새 파일이 생겼는데 여기 없으면 "설명 없음"으로 드러난다. */
 const CONTRACTS: Record<string, { guard: string; why: string }> = {
+  'src/components/auth/EmailNotificationPrompt.browser.test.tsx': {
+    guard: '동의 체크박스가 첫 줄 가운데에 맞고, 이메일 편집은 하위 화면으로 이동하며, 빈도 버튼이 선택한 값을 보내는지. 팝업 거절이 재방문에도 유지되고, 카드 간격·거터와 입력 오류가 시스템 규칙을 따르는지. 로그인 조회 실패·시간 초과와 외부 로그인 뒤로가기에서 화면이 복구되는지',
+    why: '선택형 이메일 등록이 서비스 이용을 막거나 거절한 사람에게 반복해서 나타나지 않게 합니다.',
+  },
   'src/components/map/mapLayers.browser.test.tsx': {
     guard: '지도 포스터에 마우스를 올리면 뜨는 팝업이 모서리 칩에 가리지 않는지',
     why: '부모 요소가 겹침 순서를 가둬서, 팝업이 칩 밑으로 들어간 적이 있습니다.',

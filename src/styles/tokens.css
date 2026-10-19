@@ -372,6 +372,11 @@
   /* ── Layout ── */
   --gutter:    16px;   /* 최상위 좌우 여백. 중첩 시 12 → 8 */
   --gutter-sheet: 24px; /* 2.0: 시트·패널 전용 거터 — 전역 gutter 개정 전 과도기 토큰 */
+  /* 독립된 이메일·인증 폼: 메뉴 행의 16/12/8 거터와 구분한다. */
+  --gutter-form: var(--spacing-6);      /* 24px — 페이지와 폼 카드 */
+  --gutter-form-wide: var(--spacing-8); /* 32px — 넓은 화면의 폼 카드 */
+  --gap-form-section: var(--spacing-6); /* 24px — 안내·입력·행동 구역 사이 */
+  --gap-form-content: var(--spacing-4); /* 16px — 같은 구역 안의 문구 */
   --gutter-md: 12px;
   --gutter-sm:  8px;
   --max-width-mobile: 480px;

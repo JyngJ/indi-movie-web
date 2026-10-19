@@ -1,18 +1,15 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from './AuthProvider'
-import { KakaoLoginButton } from '@/components/primitives'
+import { KakaoLoginButton, GoogleLoginButton } from '@/components/primitives'
+import { LoginEmailPreview } from './LoginEmailPreview'
+import type { AuthProvider } from '@/lib/auth/types'
 
-/**
- * 로그인 패널 — 내 계정 탭 홈(비로그인)과 전역 로그인 시트가 같이 쓴다.
- *
- * 일러스트는 두지 않는다. 로그인은 할 일이 하나뿐인 화면이라 그림이 들어가면
- * 시선이 먼저 그림에 가고 버튼이 아래로 밀린다.
- * 카피는 진입 맥락에 따라 바꿀 수 있다 (예: 하트 클릭 → "관심 영화로 등록하면 새 상영 소식을 알려드려요").
- * 구글은 Supabase 프로바이더 켜지면 버튼만 추가 (M0에서 카카오만 먼저).
- */
+/** 로그인 패널 — MY와 전역 로그인 시트가 공유한다.
+ * 메일 예시로 수신 혜택을 보여 주고, 이메일 수신은 로그인 후 별도로 선택한다.
+ * 진입 맥락의 제목·설명과 로그인 후 돌아갈 경로는 유지한다. */
 interface Props {
   title?: string
   description?: string
@@ -23,45 +20,63 @@ interface Props {
 }
 
 export function LoginPanel({
-  title = '내 영화 취향을 기억할게요',
-  description = '로그인하면 관심 영화·극장을 저장하고, 새로 상영 소식이 생기면 알려드려요.',
+  title = '관심 영화의 새 상영 소식을 알려 드려요',
+  description = '관심 목록을 저장하고, 이메일로 소식을 받아보세요',
   returnTo,
   errorCode,
 }: Props) {
   const { signIn } = useAuth()
-  const [busy, setBusy] = useState(false)
+  const [busy, setBusy] = useState<AuthProvider | null>(null)
+  const [error, setError] = useState('')
 
-  const handleKakao = async () => {
-    setBusy(true)
+  useEffect(() => {
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (!event.persisted) return
+      setBusy(null)
+      setError('')
+    }
+    window.addEventListener('pageshow', onPageShow)
+    return () => window.removeEventListener('pageshow', onPageShow)
+  }, [])
+
+  const handleSignIn = async (provider: AuthProvider) => {
+    setBusy(provider)
+    setError('')
     try {
-      await signIn('kakao', returnTo)
+      await signIn(provider, returnTo)
     } catch {
-      setBusy(false)
+      setBusy(null)
+      setError(provider === 'google'
+        ? '구글 로그인에 연결하지 못했어요. 카카오로 로그인하거나 잠시 후 다시 시도해 주세요.'
+        : '카카오 로그인에 연결하지 못했어요. 다시 시도해 주세요.')
     }
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, textAlign: 'center' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <h2 style={{ margin: 0, fontSize: 'var(--text-h2)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, textAlign: 'center', width: '100%', maxWidth: 360, marginInline: 'auto' }}>
+      <LoginEmailPreview />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <h2 className="text-balance" style={{ margin: 0, fontSize: 'var(--text-h2)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
           {title}
         </h2>
-        <p style={{ margin: 0, fontSize: 'var(--text-body)', lineHeight: 1.5, color: 'var(--color-text-secondary)' }}>
+        <p className="text-pretty" style={{ margin: 0, fontSize: 'var(--text-body)', lineHeight: 1.5, color: 'var(--color-text-secondary)' }}>
           {description}
         </p>
       </div>
 
-      {errorCode && (
+      {(errorCode || error) && (
         <p role="alert" style={{ margin: 0, fontSize: 'var(--text-meta)', color: 'var(--color-error)' }}>
-          로그인에 실패했어요. 다시 시도해 주세요. ({errorCode})
+          {error || '로그인하지 못했어요. 다시 시도해 주세요.'}
         </p>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%', maxWidth: 360 }}>
-        <KakaoLoginButton onClick={handleKakao} loading={busy} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 360 }}>
+        <KakaoLoginButton onClick={() => handleSignIn('kakao')} loading={busy === 'kakao'} disabled={busy !== null} />
+        <GoogleLoginButton onClick={() => handleSignIn('google')} loading={busy === 'google'} disabled={busy !== null} />
       </div>
 
       <p style={{ margin: 0, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
+        이메일 소식은 로그인 후 선택할 수 있어요<br />
         계속하면{' '}
         <Link href="/privacy" style={{ color: 'inherit', textDecoration: 'underline' }}>
           개인정보 처리방침

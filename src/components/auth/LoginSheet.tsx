@@ -83,6 +83,8 @@ export function LoginSheet() {
           background: 'var(--color-surface-card)',
           borderRadius: isDesktop ? 'var(--radius-popover)' : 'var(--radius-sheet) var(--radius-sheet) 0 0',
           width: isDesktop ? 420 : '100%',
+          maxHeight: 'calc(100dvh - 24px)',
+          overflowY: 'auto',
           boxShadow: 'var(--shadow-sheet)',
           transform: visible ? 'translateY(0)' : isDesktop ? 'scale(0.96) translateY(12px)' : 'translateY(100%)',
           opacity: visible ? 1 : 0,

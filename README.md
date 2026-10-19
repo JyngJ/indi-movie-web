@@ -213,3 +213,9 @@ npm run dev   # → http://localhost:3000
 
 지도 타일: © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, © [CARTO](https://carto.com/attributions)  
 지하철 데이터: Kaggle Seoul Subway Geospatial Data (CC0 Public Domain)
+
+### 이메일 상영 소식
+
+실행 환경은 Node.js 22 이상입니다. 이메일 발송 작업도 같은 버전을 사용합니다.
+
+선택형 이메일 등록 팝업과 월·금 오전 9시 요약 발송을 지원합니다. 기본값은 비활성이며, SQL 적용·Gmail 연결·환경 설정 후 활성화합니다. [이메일 알림 운영 안내](docs/RUNBOOK-email-notifications.md)와 [구현 범위](docs/PLAN-email-newsletter.md)를 참고하세요.

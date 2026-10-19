@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-05T08:48:14.954Z",
+  "generatedAt": "2026-10-19T11:49:34.847Z",
   "figmaDumpAt": "2026-10-05T08:42:41.899Z",
   "tokenGroups": [
     {
@@ -2190,6 +2190,34 @@
           "figma": null
         },
         {
+          "name": "--gutter-form",
+          "value": "var(--spacing-6)",
+          "comment": "24px — 페이지와 폼 카드",
+          "resolved": "24px",
+          "figma": null
+        },
+        {
+          "name": "--gutter-form-wide",
+          "value": "var(--spacing-8)",
+          "comment": "32px — 넓은 화면의 폼 카드",
+          "resolved": "32px",
+          "figma": null
+        },
+        {
+          "name": "--gap-form-section",
+          "value": "var(--spacing-6)",
+          "comment": "24px — 안내·입력·행동 구역 사이",
+          "resolved": "24px",
+          "figma": null
+        },
+        {
+          "name": "--gap-form-content",
+          "value": "var(--spacing-4)",
+          "comment": "16px — 같은 구역 안의 문구",
+          "resolved": "16px",
+          "figma": null
+        },
+        {
           "name": "--gutter-md",
           "value": "12px",
           "comment": "",
@@ -3914,6 +3942,13 @@
       "file": "src/components/primitives/Button.tsx",
       "doc": "",
       "props": [
+        {
+          "name": "density",
+          "type": "\"default\" | \"compact\" | undefined",
+          "optional": true,
+          "default": "'default'",
+          "doc": "짧은 선택지 여러 개를 나란히 둘 때 크기별 높이를 유지하면서 메타 글자·12px 좌우 패딩을 쓴다. 기본 md의 높이는 44px다."
+        },
         {
           "name": "variant",
           "type": "Variant | undefined",
@@ -6596,6 +6631,22 @@
       }
     },
     {
+      "name": "GoogleLoginButton",
+      "file": "src/components/primitives/GoogleLoginButton.tsx",
+      "doc": "Google 공식 로그인 로고는 변형하지 않는다.\n출처·이용 근거: https://developers.google.com/identity/branding-guidelines\n다른 소셜 로그인과 같은 높이·폭을 유지한다.",
+      "props": [
+        {
+          "name": "loading",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": "false",
+          "doc": ""
+        }
+      ],
+      "figmaSet": null,
+      "figma": null
+    },
+    {
       "name": "Icon",
       "file": "src/components/primitives/Icon.tsx",
       "doc": "",
@@ -9171,5 +9222,13 @@
       }
     }
   ],
-  "drift": []
+  "drift": [
+    {
+      "kind": "component-unmapped",
+      "id": "GoogleLoginButton",
+      "code": "src/components/primitives/GoogleLoginButton.tsx",
+      "figma": null,
+      "note": "대응하는 피그마 컴포넌트 세트가 없다"
+    }
+  ]
 }

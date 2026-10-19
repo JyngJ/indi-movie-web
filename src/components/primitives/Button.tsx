@@ -12,6 +12,8 @@ type Variant = 'primary' | 'secondary' | 'tertiary' | 'text' | 'ghost' | 'danger
 type Size = 'sm' | 'md' | 'lg' | 'full'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  /** 짧은 선택지 여러 개를 나란히 둘 때 크기별 높이를 유지하면서 메타 글자·12px 좌우 패딩을 쓴다. 기본 md의 높이는 44px다. */
+  density?: 'default' | 'compact'
   variant?: Variant
   size?: Size
   loading?: boolean
@@ -54,6 +56,13 @@ const sizeStyles: Record<Size, string> = {
   full: 'w-full px-[var(--comp-btn-px-lg)] text-[length:var(--text-title)] font-bold',
 }
 
+const compactSizeStyles: Record<Size, string> = {
+  sm: 'px-[var(--gutter-md)] text-[length:var(--text-meta)] font-normal',
+  md: 'px-[var(--gutter-md)] text-[length:var(--text-meta)] font-medium',
+  lg: 'px-[var(--gutter-md)] text-[length:var(--text-meta)] font-bold',
+  full: 'w-full px-[var(--gutter-md)] text-[length:var(--text-meta)] font-bold',
+}
+
 /* 높이는 인라인으로 — 전역 button { min-height: 44 }가 무레이어라 @layer utilities 클래스를 이김 */
 const sizeHeights: Record<Size, string> = {
   sm: 'var(--comp-btn-h-sm)',
@@ -63,6 +72,7 @@ const sizeHeights: Record<Size, string> = {
 }
 
 export function Button({
+  density = 'default',
   variant = 'primary',
   size = 'md',
   loading = false,
@@ -84,7 +94,7 @@ export function Button({
         rounded-[var(--comp-btn-radius)]
         transition-colors duration-150
         ${variantStyles[v]}
-        ${sizeStyles[size]}
+        ${density === 'compact' ? compactSizeStyles[size] : sizeStyles[size]}
         ${fullWidth ? 'w-full' : ''}
         ${isDisabled ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}
         ${className}
