@@ -31,7 +31,7 @@ export function EmailNotificationForm({ onRegistered, onDismiss, dismissLabel = 
     setBusyAction('register'); setError(''); setEmailError('')
     try {
       await update({ action: 'register', email, consent })
-      showGlobalToast('인증 메일을 보냈어요')
+      showGlobalToast('인증 메일을 보냈어요 — 도착까지 몇 분 걸릴 수 있어요')
       onRegistered?.()
     } catch (e) { setError(e instanceof Error ? e.message : '메일을 보내지 못했어요. 다시 시도해 주세요.') }
     finally { setBusyAction(null) }
@@ -45,14 +45,14 @@ export function EmailNotificationForm({ onRegistered, onDismiss, dismissLabel = 
   return <div className="flex flex-col gap-[var(--gap-form-section)] text-[length:var(--text-body)]">
     <div className="flex flex-col gap-[var(--gap-form-content)]">
     <p>관심 영화·감독·극장에 새 소식이 있으면 {EMAIL_SCHEDULE_LABEL}에 모아 보내 드려요</p>
-    {subscription?.status === 'pending' && <p>인증을 기다리고 있어요. 인증 메일이 보이지 않으면 스팸함을 확인해 주세요.</p>}
+    {subscription?.status === 'pending' && <p>인증 메일이 도착하기까지 몇 분 걸릴 수 있어요. 메일이 보이지 않으면 스팸함을 확인해 주세요.</p>}
     <p className="text-[length:var(--text-meta)] leading-relaxed text-[var(--color-text-sub)]">이미 지난 상영은 보내지 않아요. 메일이 오기 전에 끝나는 상영도 있어요.</p>
     </div>
     <div className="flex flex-col gap-3">
     <form noValidate onSubmit={register} className="flex flex-col gap-[var(--gap-form-section)]">
       <Input ref={inputRef} label="수신할 메일 주소" type="email" autoComplete="email" required maxLength={254} value={email} onChange={event => { setEmail(event.target.value); setEmailError('') }} error={emailError || undefined} disabled={busy}
         style={email ? { paddingRight: 'calc(var(--comp-btn-h-md) + var(--gutter-md))' } : undefined}
-        rightIcon={email ? <IconButton aria-label="메일 주소 지우기" disabled={busy} onPointerDown={event => event.preventDefault()} onClick={() => { setEmail(''); setEmailError(''); inputRef.current?.focus() }}><Icon name="x" size="md" /></IconButton> : undefined} />
+        rightIcon={email ? <IconButton shape="round" aria-label="메일 주소 지우기" disabled={busy} onPointerDown={event => event.preventDefault()} onClick={() => { setEmail(''); setEmailError(''); inputRef.current?.focus() }}><Icon name="x" size="md" /></IconButton> : undefined} />
       <label data-email-consent className="grid grid-cols-[auto_1fr] items-start gap-2 text-[length:var(--text-meta)] leading-5">
         <span className="flex h-5 items-center">
           <input className="m-0 size-4 shrink-0 accent-[var(--color-primary-base)]" type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)} required disabled={busy} />
