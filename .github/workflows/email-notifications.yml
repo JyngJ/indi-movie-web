@@ -1,0 +1,33 @@
+name: Email notifications
+on:
+  schedule:
+    # 한국 시간 월·금 09:00. 거절된 요청의 재시도는 10:00·11:00에 실행한다.
+    - cron: '0 0,1,2 * * 1,5'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: email-notifications
+  cancel-in-progress: false
+jobs:
+  send:
+    if: vars.EMAIL_NOTIFICATION_DELIVERY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsx scripts/notify-email.ts --send
+        env:
+          EMAIL_NOTIFICATION_DELIVERY_ENABLED: 'true'
+          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          EMAIL_NOTIFICATION_TOKEN_SECRET: ${{ secrets.EMAIL_NOTIFICATION_TOKEN_SECRET }}
+          GMAIL_CLIENT_ID: ${{ secrets.GMAIL_CLIENT_ID }}
+          GMAIL_CLIENT_SECRET: ${{ secrets.GMAIL_CLIENT_SECRET }}
+          GMAIL_REFRESH_TOKEN: ${{ secrets.GMAIL_REFRESH_TOKEN }}

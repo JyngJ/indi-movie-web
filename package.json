@@ -34,7 +34,8 @@
     "audit:feedback:check": "node scripts/audit/check-feedback.mjs",
     "check:image-hosts": "node scripts/check-image-hosts.mjs",
     "notify:favorites": "tsx --env-file=.env.local scripts/notify-favorites.ts",
-    "test:ui-contracts": "RUN_BROWSER_TESTS=1 vitest run src/components/map/mapLayers.browser.test.tsx src/components/navigation/RailPopover.browser.test.tsx src/components/primitives/FavoriteToggle.browser.test.tsx src/lib/navigation/filmsPath.test.ts src/components/domain/RouteProgressBar.browser.test.ts"
+    "test:ui-contracts": "RUN_BROWSER_TESTS=1 vitest run src/components/map/mapLayers.browser.test.tsx src/components/navigation/RailPopover.browser.test.tsx src/components/primitives/FavoriteToggle.browser.test.tsx src/lib/navigation/filmsPath.test.ts src/components/domain/RouteProgressBar.browser.test.ts src/components/auth/EmailNotificationPrompt.browser.test.tsx src/components/auth/AuthProvider.browser.test.tsx",
+    "notify:email": "tsx --env-file=.env.local scripts/notify-email.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0",
@@ -70,5 +71,8 @@
     "tsx": "4.21.0",
     "typescript": "^5",
     "vitest": "4.1.8"
+  },
+  "engines": {
+    "node": ">=22.0.0"
   }
 }

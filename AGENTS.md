@@ -62,6 +62,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 - **디자인 토큰·스케일 규칙:**
   - spacing/radius는 4배수만 사용: `max(4, round(n/4)*4)`. gutter(좌우여백)는 `var(--gutter)`/`var(--gutter-md)`/`var(--gutter-sm)` = 16/12/8px (최상위 → 중첩 순).
+  - 독립된 입력·인증 폼은 메뉴 거터와 구분한다. 페이지·카드 여백은 `--gutter-form`(24px), 넓은 화면의 카드 여백은 `--gutter-form-wide`(32px). 안내·입력·행동 구역 사이는 `--gap-form-section`(24px), 같은 구역 문구 사이는 `--gap-form-content`(16px). 카드의 모든 간격을 12px로 줄이지 않는다.
   - radius는 역할 토큰 사용: `--radius-badge` / `--radius-poster` / `--radius-button` / `--radius-control` / `--radius-popover` / `--radius-sheet` / `--radius-pill`.
   - fontSize는 `--text-*` 타입 스케일 최근접 값으로. 하드코딩 px 금지.
   - 색은 시맨틱 토큰 사용: `--color-error` / `--color-success` / `--color-warning` / `--color-info` / `--color-gv`. 액센트 배경 위 흰색 텍스트는 `--color-on-accent`. 사진·포스터 위 어두운 면은 `--color-scrim-soft`/`-strong`/`-lightbox`(모달 뒤 딤은 `--color-scrim`), 그 위 글자·면은 `--color-on-scrim`/`-sub`/`-surface`/`-faint`. 새 알파값을 만들지 말고 이 단계 중에서 고른다.
@@ -99,6 +100,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 원본은 `src/design-system/writing.ts` — 사람용 `/design-system/foundations/writing`, AI용 `/design-system/llms-writing.txt`가 거기서 렌더된다. 새 문구를 쓰거나 고칠 때 이 규칙을 따른다. 규칙을 바꾸려면 `writing.ts`를 고치고 여기 요약도 맞춘다.
 
 - **어미:** 화면 문장은 해요체 하나(~해요 / ~없어요 / ~했어요). 합니다체는 약관·개인정보처리방침에만. FAQ 답변도 해요체.
+- **관점:** 서비스의 제안·설명은 서비스 관점 — "상영 소식을 이메일로 보내 드릴까요?"("받아 볼까요?"와 혼용 금지). 버튼·설정·응답은 사용자 관점("인증 메일 받기", "이메일로 소식 받기"). 사용자 행동 확인은 "로그아웃할까요?"처럼 행동 그대로. 한 문장에 사용자의 "내"와 서비스의 "~할게요"를 섞지 않는다.
 - **마침표:** 한 줄 문구(제목·버튼·칩·토스트·빈 상태 한 줄)에는 찍지 않는다. 두 문장 이상 본문에만.
 - **띄어쓰기:** 보조 용언은 띄운다 — "해 주세요", "해 보세요". "상영 중"도 띄운다(포스터 칩만 "상영중" 허용).
 - **부호:** 나열은 가운뎃점(·), 부연은 줄표(—), 진행 중은 말줄임표 한 글자(…).

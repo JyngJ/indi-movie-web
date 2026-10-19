@@ -7,6 +7,7 @@ import { getQueryClient } from '@/lib/query-client'
 import { installDeadClickTracking } from '@/lib/analytics/deadClick'
 import { AuthProvider } from '@/components/auth/AuthProvider'
 import { RouteProgressBar } from '@/components/domain/RouteProgressBar'
+import { EmailNotificationPrompt } from '@/components/auth/EmailNotificationPrompt'
 import { LoginSheet } from '@/components/auth/LoginSheet'
 
 /** disabled 컨트롤·스크림 위의 무반응 클릭을 잡는 전역 리스너 */
@@ -45,6 +46,7 @@ export function Providers({ children }: { children: ReactNode }) {
         {children}
         {/* 전역 로그인 시트 — 포털이라 어느 셸에서든 뜬다 */}
         <LoginSheet />
+        <EmailNotificationPrompt />
         {process.env.NODE_ENV === 'development' && (
           <ReactQueryDevtools initialIsOpen={false} />
         )}

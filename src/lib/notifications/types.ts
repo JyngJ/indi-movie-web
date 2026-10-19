@@ -60,6 +60,8 @@ export const DEFAULT_PREFS: Omit<NotificationPrefs, 'userId'> = {
 
 /** 소식 카드 렌더에 필요한 스냅샷 — 원본 영화/극장이 지워져도 소식은 남아야 한다 */
 export interface NotificationPayload {
+  /** 묶인 소식의 실제 영화×극장. 이메일 발송 때 종료·취소 여부를 재확인한다. */
+  screeningRefs?: { movieId: string; theaterId: string }[]
   movieTitle: string
   directors: string[]
   posterUrl?: string

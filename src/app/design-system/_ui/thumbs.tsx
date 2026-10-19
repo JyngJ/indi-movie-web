@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import {
   Avatar, Badge, BottomSheet, BubbleTail, Button, Card, CardContainer, Chip, DirectorChip,
   Divider, EmptyState, FabRound, FavoriteButton, FilterPill, GenreChip,
-  Icon, IconButton, Input, KakaoLoginButton, ListRow, MenuCard, MenuRow, PosterChip,
+  Icon, IconButton, Input, GoogleLoginButton, KakaoLoginButton, ListRow, MenuCard, MenuRow, PosterChip,
   ScrollNavButton, Switch, Tabs,
   SearchBar, SearchBarButton, SectionHeader, Skeleton, SortToggle, Wordmark,
   MovieCardSkeleton, TheaterCardSkeleton,
@@ -67,6 +67,7 @@ const THUMBS: Record<string, ReactNode> = {
       </div>
     </div>
   ),
+  GoogleLoginButton: (<div style={{ width: 240 }}><GoogleLoginButton /></div>),
   KakaoLoginButton: (
     <div style={{ width: 200 }}>
       <KakaoLoginButton />

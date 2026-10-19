@@ -33,6 +33,7 @@ export type { DividerProps } from './Divider'
 export type { IconName, IconProps, IconSize } from './Icon'
 export { ConfirmDialog } from './ConfirmDialog'
 export { KakaoLoginButton } from './KakaoLoginButton'
+export { GoogleLoginButton } from './GoogleLoginButton'
 export { MenuCard, MenuRow } from './MenuList'
 export { FavoriteButton } from './FavoriteButton'
 

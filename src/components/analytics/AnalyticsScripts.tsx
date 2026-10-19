@@ -1,3 +1,6 @@
+'use client'
+
+import { usePathname } from 'next/navigation'
 import Script from 'next/script'
 import { Analytics } from '@vercel/analytics/next'
 
@@ -6,6 +9,9 @@ const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
 const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID ?? '1180526664237073'
 
 export function AnalyticsScripts() {
+  const pathname = usePathname()
+  // 인증·해지 토큰을 분석 서비스로 전송하지 않는다.
+  if (pathname?.startsWith('/email/')) return null
   return (
     <>
       <Analytics />

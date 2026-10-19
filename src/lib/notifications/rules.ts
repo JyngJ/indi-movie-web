@@ -165,6 +165,7 @@ export function buildNewScreeningEvents(input: {
         movieId: byTheater ? undefined : head.fact.movieId,
         theaterId: byTheater ? head.fact.theaterId : (sorted.length === 1 ? head.fact.theaterId : undefined),
         payload: {
+          screeningRefs: sorted.map(h => ({ movieId: h.fact.movieId, theaterId: h.fact.theaterId })),
           movieTitle: head.fact.movieTitle,
           directors: head.fact.directors,
           posterUrl: head.fact.posterUrl,

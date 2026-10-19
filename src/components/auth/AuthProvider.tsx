@@ -32,18 +32,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const repo = getRepo()
     let cancelled = false
 
-    repo.getCurrentUser().then((u) => {
+    let version = 0
+    let timeout: ReturnType<typeof setTimeout> | undefined
+    const invalidate = () => {
+      clearTimeout(timeout)
+      return ++version
+    }
+    const applyUser = (nextUser: AuthUser | null) => {
       if (cancelled) return
-      setUser(u)
-      setStatus(u ? 'signed-in' : 'signed-out')
-      if (u) identifyUser(u.id)
+      setUser(nextUser)
+      setStatus(nextUser ? 'signed-in' : 'signed-out')
+      if (nextUser) identifyUser(nextUser.id)
+    }
+    // 조회 실패·지연 때문에 초기 로딩에 갇히지 않는다. 이미 확인한 로그인은 유지한다.
+    const stopLoading = () => setStatus(current => current === 'loading' ? 'signed-out' : current)
+    const refresh = () => {
+      const current = invalidate()
+      timeout = setTimeout(() => {
+        if (cancelled || current !== version) return
+        invalidate()
+        stopLoading()
+      }, 8000)
+      repo.getCurrentUser().then(nextUser => {
+        if (cancelled || current !== version) return
+        invalidate()
+        applyUser(nextUser)
+      }).catch(() => {
+        if (cancelled || current !== version) return
+        invalidate()
+        stopLoading()
+      })
+    }
+    const unsubscribe = repo.onAuthStateChange(nextUser => {
+      invalidate()
+      applyUser(nextUser)
     })
+    refresh()
 
-    const unsubscribe = repo.onAuthStateChange((u) => {
-      setUser(u)
-      setStatus(u ? 'signed-in' : 'signed-out')
-      if (u) identifyUser(u.id)
-    })
+    // 외부 로그인에서 뒤로가기로 복원된 문서는 mount가 다시 실행되지 않는다.
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) refresh()
+    }
+    window.addEventListener('pageshow', onPageShow)
 
     // 카카오 콜백이 붙여준 auth_login 파라미터 — 이벤트 한 번 찍고 주소에서 지운다
     const params = new URLSearchParams(window.location.search)
@@ -57,6 +87,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       cancelled = true
+      invalidate()
+      window.removeEventListener('pageshow', onPageShow)
       unsubscribe()
     }
   }, [])

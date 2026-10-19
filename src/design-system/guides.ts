@@ -87,6 +87,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
     specs: [
       { title: '높이', desc: 'sm 32 · md 44 · lg 52입니다. 기본은 md(44)이며 터치 타깃 최소치(--touch-target)와 같습니다. sm은 밀집한 목록 안에서 씁니다.' },
       { title: '좌우 패딩', desc: '16 · 32 · 48로 spacing 4배수 스케일을 따릅니다. 레이블 길이에 따라 너비는 늘어나되 패딩은 고정합니다.' },
+      { title: '동등한 짧은 선택지', desc: 'density=compact는 기본 md 높이 44px를 유지하면서 meta 글자와 --gutter-md(12px) 좌우 패딩을 사용합니다. 더 자주·지금 정도·더 가끔 같은 응답을 나란히 놓을 때 쓰며, 우열이 없는 응답은 같은 secondary 톤으로 표시합니다.' },
       { title: 'fullWidth', desc: '모바일 하단 고정 CTA 자리입니다. 넓은 화면에서는 가로로 늘어난 버튼이 초점을 흐리므로 권장하지 않습니다.' },
     ],
     usage: [
@@ -245,7 +246,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
       { title: 'Clickability', desc: 'clickable 카드는 hover에서 한 단계 떠오르고(그림자 sm→md, 1px 상승), 누르는 순간 내려앉으며 면이 눌린 톤으로 바뀝니다. onClick을 전달하면 키보드로도 조작할 수 있습니다(role=button · Enter/Space · 포커스 링).' },
     ],
     usage: [
-      { kind: 'do', rule: '카드 안 요소 간격은 spacing/3(12), 카드 사이는 spacing/4(16) 이상 띄웁니다.' },
+      { kind: 'do', rule: '같은 구역 안의 요소는 12px, 카드 사이는 16px 이상 띄웁니다. 독립된 폼에서는 안내·입력·행동 구역을 --gap-form-section(24px)으로 나누고, 카드 여백은 --gutter-form(24px)·넓은 화면은 --gutter-form-wide(32px)를 씁니다. 모든 간격을 12px로 줄이지 않습니다.' },
       { kind: 'dont', rule: '카드 안에 카드를 넣지 않습니다 — 같은 높이의 흰 면이 겹치면 위계가 무너집니다. 하위 묶음이 필요하면 눌린 트레이(neutral-100 음각 면)를 깔고 그 위에 올립니다. 상영 시간표(ShowtimeGroupCard)의 흰 셀이 그 예외 문법입니다: 카드 → 음각 트레이 → 셀로 한 번 꺼졌다 올라오므로 카드 중첩이 아닙니다.' },
     ],
     a11y: [
@@ -363,6 +364,17 @@ export const GUIDES: Record<string, ComponentGuide> = {
       { title: '이름', desc: 'label에 대상 이름을 넘기면 "오디세이 관심 등록" / "오디세이 관심 해제"로 읽힙니다. 하트만 있는 버튼이 화면에 여럿이라 대상 이름 없이는 구분되지 않습니다.' },
       { title: '상태', desc: 'aria-pressed로 등록 여부를 알립니다. 색(빨강/회색)만으로 상태를 구분하지 않습니다.' },
       { title: '탭 크기', desc: 'size가 곧 탭 영역입니다 — IconButton은 width·height를 그 값으로 고정할 뿐 별도 여백을 두지 않습니다. 포스터 오버레이의 32는 권장 44보다 작은 의도된 예외이므로, 좁다고 그보다 더 줄이지 않습니다.' },
+    ],
+  },
+
+  GoogleLoginButton: {
+    intro: 'Google 계정으로 로그인하는 버튼입니다. 공식 색상 로고를 쓰고 다른 소셜 로그인과 같은 폭·높이로 표시해요.',
+    specs: [
+      { title: '구성', desc: 'Button lg의 52px 높이와 전체 폭을 사용해요. 흰 면 위에 공식 Google 로고와 "Google로 계속하기"를 표시해요.' },
+    ],
+    usage: [
+      { kind: 'do', rule: '한 제공자로 이동 중이면 모든 로그인 버튼을 비활성화하고 누른 버튼에 진행 상태를 표시해요.' },
+      { kind: 'dont', rule: 'Google 로고를 단색으로 바꾸거나 늘리지 않아요.' },
     ],
   },
 

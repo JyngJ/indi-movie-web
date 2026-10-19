@@ -13,7 +13,7 @@ function expireCookie(name: string) {
   document.cookie = `${name}=; Path=/; Max-Age=0; SameSite=Lax`
 }
 
-if (typeof window !== 'undefined' && posthogToken) {
+if (typeof window !== 'undefined' && posthogToken && !window.location.pathname.startsWith('/email/')) {
   posthog.init(posthogToken, {
     api_host: posthogHost,
     defaults: '2026-01-30',
