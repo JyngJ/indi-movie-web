@@ -127,6 +127,7 @@ export function getSessionContext(): AnalyticsProperties {
     landing_path: session.landingPath,
     referrer: session.referrer || null,
     visit_ref: collectRef() || null,
+    email_campaign: collectEmailCampaign(),
     device_type: deviceType(),
     viewport_width: window.innerWidth,
     viewport_height: window.innerHeight,
@@ -162,4 +163,12 @@ export function setSessionIntent(intent: SessionIntent) {
     session.intent = intent
   }
   writeSession(session)
+}
+
+/** 메일로 들어온 뒤 30분 동안의 행동만 연결한다. 개별 수신자 정보는 없다. */
+export function collectEmailCampaign(): string | null {
+  if (typeof document === 'undefined') return null
+  const value = document.cookie.match(/(?:^|;\s*)email_campaign=([^;]+)/)?.[1]
+  const campaign = parseVisitRef(value, Date.now())
+  return campaign && /^(?:digest|\d{4}-\d{2}-\d{2})$/.test(campaign) ? campaign : null
 }

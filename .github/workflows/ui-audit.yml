@@ -29,5 +29,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm test -- src/lib/emailNotifications src/lib/analytics/session.test.ts
       - run: npx playwright install --with-deps chromium
       - run: npm run test:ui-contracts

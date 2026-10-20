@@ -1,3 +1,5 @@
+import { captureEmailMetric } from './analytics'
+import { decorateDigest } from './tracking'
 import { randomUUID } from 'node:crypto'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { createSupabaseNotificationBatchRepository } from '@/lib/notifications/supabaseNotificationBatchRepository'
@@ -74,7 +76,8 @@ export async function runEmailBatch({ now = new Date(), send = false }: { now?: 
     if (!claimed) continue
     try {
       // 안전한 재시도에서도 현재 유효한 소식·설정으로 다시 구성한다.
-      const { error: refreshError } = await db.from('email_notification_deliveries').update({ message: { ...message, messageId: job.id }, event_ids: items.flatMap(i => i.eventIds) }).eq('id', job.id).eq('status', 'sending')
+      const trackedMessage = decorateDigest({ ...message, messageId: job.id }, origin, job.id, slot)
+      const { error: refreshError } = await db.from('email_notification_deliveries').update({ message: trackedMessage, event_ids: items.flatMap(i => i.eventIds) }).eq('id', job.id).eq('status', 'sending')
       if (refreshError) throw refreshError
 
       const fresh = await getSubscription(subscription.user_id)
@@ -83,10 +86,12 @@ export async function runEmailBatch({ now = new Date(), send = false }: { now?: 
         if (error) throw error
         continue
       }
-      const providerId = await sendGmail({ ...message, messageId: job.id })
+      const providerId = await sendGmail(trackedMessage)
       const { data: completed, error } = await db.rpc('complete_email_notification_delivery', { p_id: job.id, p_message_id: providerId })
       if (error || !completed) throw new MailSendError(true)
       result.sent++
+      // 통계 실패는 발송 성공을 되돌리거나 메일 재발송을 유발하지 않는다.
+      await captureEmailMetric('sent', { id: job.id, user_id: subscription.user_id, slot, sent_at: new Date().toISOString() })
     } catch (error) {
       // 응답이 없거나 성공 기록에 실패하면 중복 발송을 막기 위해 수동 확인한다.
       const uncertain = !(error instanceof MailSendError) || error.uncertain

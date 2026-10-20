@@ -25,6 +25,8 @@ jobs:
         env:
           DISCORD_REPORT_WEBHOOK_URL: ${{ secrets.DISCORD_REPORT_WEBHOOK_URL }}
           EMAIL_NOTIFICATION_DELIVERY_ENABLED: 'true'
+          EMAIL_ANALYTICS_ENABLED: 'true'
+          NEXT_PUBLIC_POSTHOG_TOKEN: ${{ secrets.NEXT_PUBLIC_POSTHOG_TOKEN }}
           NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -32,3 +34,12 @@ jobs:
           GMAIL_CLIENT_ID: ${{ secrets.GMAIL_CLIENT_ID }}
           GMAIL_CLIENT_SECRET: ${{ secrets.GMAIL_CLIENT_SECRET }}
           GMAIL_REFRESH_TOKEN: ${{ secrets.GMAIL_REFRESH_TOKEN }}
+      # 통계가 실패해도 메일 발송을 재실행하지 않는다. 다음 실행에서 발송 기록만 재동기화한다.
+      - run: npx tsx scripts/sync-email-analytics.ts --send
+        if: always()
+        env:
+          EMAIL_ANALYTICS_ENABLED: 'true'
+          NEXT_PUBLIC_POSTHOG_TOKEN: ${{ secrets.NEXT_PUBLIC_POSTHOG_TOKEN }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          EMAIL_NOTIFICATION_TOKEN_SECRET: ${{ secrets.EMAIL_NOTIFICATION_TOKEN_SECRET }}
