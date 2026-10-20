@@ -77,9 +77,7 @@ export function PosterThumb({
   const markWidth = fallbackBase >= 72
     ? Math.round(Math.min(72, Math.max(36, fallbackBase * 0.36)))
     : 0
-  const markBottom = Math.max(6, Math.round(fallbackBase * 0.06))
-  /* logo.svg 448×153 — 글자가 워드마크 자리를 침범하지 않게 아래를 비워 둔다 */
-  const markSpace = markWidth ? Math.round(markWidth * 0.342) + markBottom + 8 : 0
+  const markBottom = Math.max(8, Math.round((fallbackBase * 0.06) / 4) * 4)
 
   return (
     /* 컨테이너는 항상 고정 크기 — 선택 링이 레이아웃에 영향 없도록 box-shadow 사용 */
@@ -165,7 +163,6 @@ export function PosterThumb({
               alignItems: 'center',
               justifyContent: 'center',
               padding: 4,
-              paddingBottom: 4 + markSpace,
             }}
           >
             {alt && (
