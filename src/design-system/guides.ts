@@ -420,7 +420,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
   },
 
   Avatar: {
-    intro: '감독 사진을 표시합니다. 사진이 없으면 이름 첫 글자로 대체해 빈 원이 남지 않게 합니다.',
+    intro: '프로필 사진을 표시합니다. 사진이 없거나 불러오지 못하면 이름 첫 글자로 대체해 빈 원이 남지 않게 합니다.',
     specs: [
       { title: '이니셜', desc: '글자 크기는 지름의 36%입니다. 크기를 바꿔도 비율이 유지됩니다.' },
       { title: '크기', desc: '24는 감독 칩 안, 44는 목록, 64는 상세 머리입니다. 그 사이 값은 만들지 않습니다.' },
@@ -430,7 +430,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
       { kind: 'dont', rule: '아바타 자체를 클릭 타깃으로 쓰지 않습니다. 24px은 터치 타깃에 미치지 못합니다.', instead: '감독으로 이동해야 하면 DirectorChip을 씁니다.' },
     ],
     a11y: [
-      { title: '대체 텍스트', desc: '사진이 있으면 name이 그대로 img의 alt가 됩니다. name을 비우면 사진에 이름이 없는 채로 남습니다.' },
+      { title: '대체 텍스트', desc: '사진이 있으면 "{name} 프로필 사진"을 img의 alt로 제공합니다. name이 비어도 "사용자 프로필 사진"으로 대체합니다.' },
     ],
   },
 

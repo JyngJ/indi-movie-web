@@ -3566,7 +3566,7 @@
     {
       "name": "Avatar",
       "file": "src/components/primitives/Avatar.tsx",
-      "doc": "감독 원형 아바타 — 피그마 2.0/Avatar (Size=160/100/48/28).\n사진 없으면 이니셜 폴백(bg neutral-100 · 글자 neutral-500 · size×0.36).\n링은 --shadow-inset (피그마 2.0/shadow/inset 대응).",
+      "doc": "사람 원형 아바타 — 피그마 2.0/Avatar (Size=160/100/48/28).\n사진 없으면 이니셜 폴백(bg neutral-100 · 글자 neutral-500 · size×0.36).\n링은 --shadow-inset (피그마 2.0/shadow/inset 대응).",
       "props": [
         {
           "name": "name",

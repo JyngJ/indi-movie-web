@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { User } from '@supabase/supabase-js'
 import { mapSupabaseUser } from './mapUser'
-import { sanitizeReturnTo } from './types'
+import { resolveAvatarUrl, sanitizeReturnTo } from './types'
 
 describe('sanitizeReturnTo', () => {
   it('같은 오리진 path만 허용한다', () => {
@@ -15,6 +15,21 @@ describe('sanitizeReturnTo', () => {
     expect(sanitizeReturnTo('/\\evil.com')).toBe('/')
     expect(sanitizeReturnTo(null, '/my')).toBe('/my')
     expect(sanitizeReturnTo('', '/my')).toBe('/my')
+  })
+})
+
+describe('resolveAvatarUrl', () => {
+  it('공백뿐인 앱 프로필 사진은 OAuth 메타데이터 사진으로 폴백한다', () => {
+    expect(resolveAvatarUrl('  ', 'https://k.kakaocdn.net/a.jpg')).toBe('https://k.kakaocdn.net/a.jpg')
+  })
+
+  it('유효한 앱 프로필 사진은 OAuth 메타데이터보다 우선한다', () => {
+    expect(resolveAvatarUrl(' https://profile.example/a.jpg ', 'https://k.kakaocdn.net/a.jpg'))
+      .toBe('https://profile.example/a.jpg')
+  })
+
+  it('OAuth 메타데이터 사진도 공백뿐이면 미설정으로 취급한다', () => {
+    expect(resolveAvatarUrl(null, '   ')).toBeNull()
   })
 })
 
@@ -60,11 +75,11 @@ describe('mapSupabaseUser', () => {
 })
 
 describe('buildKakaoAuthorizeUrl', () => {
-  it('OIDC + 닉네임 스코프만 요청한다', async () => {
+  it('OIDC + 닉네임·프로필 사진 스코프를 요청한다', async () => {
     const { buildKakaoAuthorizeUrl } = await import('./kakao')
     const u = new URL(buildKakaoAuthorizeUrl({ clientId: 'cid', redirectUri: 'http://localhost:3000/auth/kakao/callback', state: 's1', nonce: 'n1' }))
     expect(u.origin + u.pathname).toBe('https://kauth.kakao.com/oauth/authorize')
-    expect(u.searchParams.get('scope')).toBe('openid profile_nickname talk_message')
+    expect(u.searchParams.get('scope')).toBe('openid profile_nickname profile_image talk_message')
     expect(u.searchParams.get('client_id')).toBe('cid')
     expect(u.searchParams.get('state')).toBe('s1')
     expect(u.searchParams.get('nonce')).toBe('n1')

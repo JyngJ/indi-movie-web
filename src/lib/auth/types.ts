@@ -13,6 +13,11 @@ export interface AuthUser {
   providers: AuthProvider[]
 }
 
+/** 프로필 사진은 앱 프로필 값을 우선하되 공백뿐인 값은 미설정으로 취급한다. */
+export function resolveAvatarUrl(profileAvatarUrl: string | null, authAvatarUrl: string | null): string | null {
+  return profileAvatarUrl?.trim() || authAvatarUrl?.trim() || null
+}
+
 export const DISPLAY_NAME_MAX = 30
 
 /** 닉네임 검증 — DB 제약(1~30자)과 동일. 반환: 정규화된 값 또는 에러 메시지 */

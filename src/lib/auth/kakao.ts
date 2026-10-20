@@ -2,7 +2,7 @@
  * 카카오 OAuth(OIDC) 어댑터 — 서버 전용. 인프라 계층.
  *
  * Supabase 카카오 프로바이더를 쓰지 않는 이유: GoTrue가 account_email·profile_image 스코프를 하드코딩해서
- * 비즈 앱이 아닌 카카오 앱(이메일 동의항목 못 켬)에선 KOE205로 실패한다. 우리는 닉네임만 필요.
+ * 비즈 앱이 아닌 카카오 앱(이메일 동의항목 못 켬)에선 KOE205로 실패한다. 필요한 동의항목만 직접 요청한다.
  * 그래서 카카오 인가는 직접 하고, 받은 id_token으로 Supabase 세션만 발급한다(signInWithIdToken).
  * 카카오 access token을 우리가 직접 들게 되므로 P3 "나에게 보내기"(talk_message)에도 그대로 쓸 수 있다.
  */
@@ -12,8 +12,9 @@ export const KAKAO_TOKEN_URL = 'https://kauth.kakao.com/oauth/token'
 export const KAKAO_CALLBACK_PATH = '/auth/kakao/callback'
 
 /** 요청 스코프 — 개발자 콘솔 동의항목과 정확히 일치해야 함.
- *  openid: OIDC id_token / profile_nickname: 필수 동의 / talk_message: 선택 동의(카톡 "나에게 보내기" 알림, 거부해도 로그인 됨) */
-export const KAKAO_SCOPES = ['openid', 'profile_nickname', 'talk_message'] as const
+ *  openid: OIDC id_token / profile_nickname: 필수 동의 / profile_image: 선택 동의(id_token picture) /
+ *  talk_message: 선택 동의(카톡 "나에게 보내기" 알림, 거부해도 로그인 됨) */
+export const KAKAO_SCOPES = ['openid', 'profile_nickname', 'profile_image', 'talk_message'] as const
 
 export interface KakaoTokenResponse {
   access_token: string
