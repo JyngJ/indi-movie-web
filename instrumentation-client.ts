@@ -1,4 +1,5 @@
 import posthog from 'posthog-js'
+import { collectEmailCampaign } from '@/lib/analytics/session'
 import { parseVisitRef } from '@/lib/analytics/visitRef'
 
 const posthogToken = process.env.NEXT_PUBLIC_POSTHOG_TOKEN
@@ -53,6 +54,12 @@ if (typeof window !== 'undefined' && posthogToken && !window.location.pathname.s
   } else {
     if (rawVisitRef) expireCookie('vref')
     posthog.unregister_for_session('visit_ref')
+  }
+
+  const emailCampaign = collectEmailCampaign()
+  if (readCookie('email_entry')) {
+    expireCookie('email_entry')
+    if (emailCampaign) posthog.capture('email entry', { email_campaign: emailCampaign, landing_path: window.location.pathname })
   }
 
   // /p 진입 자체를 이벤트 1건으로 남긴다 — 유입 "수"는 이 이벤트로 정확히 센다.

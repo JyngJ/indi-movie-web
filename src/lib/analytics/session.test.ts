@@ -66,3 +66,14 @@ describe('getSessionContext · visit_ref', () => {
     expect(untagged.visit_ref).toBeNull()
   })
 })
+
+ describe('메일 방문의 행동 연결', () => {
+  it('같은 탭의 기존 세션에서도 현재 쿠키로 메일 유입을 확인하고 만료 후 제거한다', () => {
+    const browser = stubBrowser('')
+    expect(getSessionContext().email_campaign).toBeNull()
+    browser.setCookie(`email_campaign=${formatVisitRef('2026-10-23', Date.now())}`)
+    expect(getSessionContext().email_campaign).toBe('2026-10-23')
+    browser.setCookie(`email_campaign=${formatVisitRef('2026-10-23', Date.now() - VISIT_REF_TTL_MS - 1)}`)
+    expect(getSessionContext().email_campaign).toBeNull()
+  })
+})
