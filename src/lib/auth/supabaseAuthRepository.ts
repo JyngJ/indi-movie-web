@@ -3,7 +3,7 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/browser'
 import { mapSupabaseUser } from './mapUser'
 import type { AuthRepository } from './repository'
 import type { AuthProvider, AuthUser } from './types'
-import { sanitizeReturnTo } from './types'
+import { resolveAvatarUrl, sanitizeReturnTo } from './types'
 
 /** OAuth 콜백 라우트. 여기서 code → session 교환 후 returnTo로 보낸다 */
 export const AUTH_CALLBACK_PATH = '/auth/callback'
@@ -33,7 +33,7 @@ async function toAuthUser(supabase: SupabaseClient, user: User | null | undefine
   return {
     ...base,
     displayName: data.display_name ?? base.displayName,
-    avatarUrl: data.avatar_url ?? base.avatarUrl,
+    avatarUrl: resolveAvatarUrl(data.avatar_url, base.avatarUrl),
   }
 }
 

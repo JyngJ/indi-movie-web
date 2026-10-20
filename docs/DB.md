@@ -249,6 +249,7 @@ CREATE TABLE subway_lines (
 
 - `id` = `auth.users.id` (ON DELETE CASCADE). Supabase Auth 카카오/구글 OAuth.
 - `email` **nullable** — 카카오는 비즈앱이 아니면 이메일 동의항목을 못 켠다. 알림용 이메일은 P3에서 별도 컬럼으로 받는다.
+- 카카오 직접 OIDC는 `openid`·`profile_nickname`·`profile_image`·`talk_message`를 요청한다. 카카오 Developers 동의항목에서 프로필 사진을 선택 동의로 켜야 하며, 기존 사용자는 다음 로그인에서 동의한 뒤 `picture`가 반영된다.
 - `auth.users` insert 트리거 `handle_new_auth_user()`가 `public.users` 행을 자동 생성 (닉네임·아바타는 raw_user_meta_data에서).
 - RLS: 본인 행만 select/update. 회원탈퇴는 RPC `delete_own_account()`(SECURITY DEFINER)로 `auth.users` 본인 행 삭제 → cascade.
 - 앱 코드: `src/lib/auth/` (도메인 타입·리포지토리 인터페이스·Supabase 어댑터), 세션 리프레시는 브라우저 클라이언트(`src/lib/supabase/browser.ts`, 2026-10에 `proxy.ts` 제거 — INFRA.md), 콜백 `src/app/auth/callback/route.ts`.
