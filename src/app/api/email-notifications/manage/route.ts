@@ -1,3 +1,5 @@
+import { after } from 'next/server'
+import { syncEmailSubscriberCount } from '@/lib/emailNotifications/subscriberCount'
 import { randomUUID } from 'node:crypto'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { readManagementToken, tokenHash } from '@/lib/emailNotifications/tokens'
@@ -32,6 +34,7 @@ export async function POST(request: Request) {
       if (error) throw error
       if (!data?.length) throw new Error('Expired token')
     }
+    after(async () => { await syncEmailSubscriberCount() })
     return Response.json({ ok: true }, { headers: { 'Cache-Control': 'no-store' } })
   } catch { return Response.json({ error: '링크를 사용하지 못했어요. 알림 설정에서 다시 시도해 주세요.' }, { status: 400 }) }
 }

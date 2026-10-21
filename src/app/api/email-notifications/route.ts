@@ -1,3 +1,5 @@
+import { after } from 'next/server'
+import { syncEmailSubscriberCount } from '@/lib/emailNotifications/subscriberCount'
 import { randomUUID } from 'node:crypto'
 import { createSupabaseAuthServerClient } from '@/lib/supabase/auth-server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
@@ -36,6 +38,7 @@ export async function POST(request: Request) {
       const { error } = await db.from('email_notification_subscriptions').update({ status: 'unsubscribed', revision: randomUUID(), prompt_dismissed: true, verification_hash: null, verification_expires_at: null, revoked_at: new Date().toISOString() }).eq('user_id', user.id)
       if (error) throw error
     } else return json({ error: '입력 내용을 다시 확인해 주세요' }, 400)
+    after(async () => { await syncEmailSubscriberCount() })
     return json({ enabled: true, subscription: await getSubscription(user.id) })
   } catch (error) {
     const code = error instanceof Error ? error.message : ''

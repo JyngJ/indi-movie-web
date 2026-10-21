@@ -1,0 +1,29 @@
+name: Email subscriber count
+on:
+  schedule:
+    # 한국 시간 매일 오전 8:55. 정기 메일 발송 여부와 독립적으로 현재 인원을 맞춘다.
+    - cron: '55 23 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: email-subscriber-count
+  cancel-in-progress: false
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsx scripts/snapshot-email-subscribers.ts --send
+        env:
+          EMAIL_ANALYTICS_ENABLED: 'true'
+          NEXT_PUBLIC_POSTHOG_TOKEN: ${{ secrets.NEXT_PUBLIC_POSTHOG_TOKEN }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          EMAIL_NOTIFICATION_TOKEN_SECRET: ${{ secrets.EMAIL_NOTIFICATION_TOKEN_SECRET }}
