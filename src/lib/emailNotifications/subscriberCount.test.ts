@@ -1,0 +1,36 @@
+import { afterEach, beforeEach, expect, it, vi } from 'vitest'
+const { query } = vi.hoisted(() => ({ query: { select: vi.fn(), eq: vi.fn(), not: vi.fn() } }))
+vi.mock('@/lib/supabase/admin', () => ({ createSupabaseAdminClient: () => ({ from: () => query }) }))
+import { countEmailSubscribers, syncEmailSubscriberCount } from './subscriberCount'
+beforeEach(() => {
+  vi.stubEnv('EMAIL_ANALYTICS_ENABLED', 'true')
+  vi.stubEnv('NEXT_PUBLIC_POSTHOG_TOKEN', 'test-token')
+  vi.stubEnv('EMAIL_NOTIFICATION_TOKEN_SECRET', 'a'.repeat(32))
+  query.select.mockReturnValue(query); query.eq.mockReturnValue(query)
+  query.not.mockReset().mockReturnValueOnce(query).mockResolvedValueOnce({ count: 3, error: null })
+})
+afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals() })
+it('인증 완료된 현재 수신자만 주소 조회 없이 정확한 인원수로 읽는다', async () => {
+  expect(await countEmailSubscribers()).toBe(3)
+  expect(query.select).toHaveBeenCalledWith('user_id', { count: 'exact', head: true })
+  expect(query.eq).toHaveBeenCalledWith('status', 'active')
+  expect(query.not).toHaveBeenCalledWith('subscribed_at', 'is', null)
+})
+it('3명에서 해지 후 2명, 0명으로 줄어든 값도 그대로 기록한다', async () => {
+  const fetcher = vi.fn().mockResolvedValue({ ok: true }); vi.stubGlobal('fetch', fetcher)
+  for (const count of [3, 2, 0]) expect(await syncEmailSubscriberCount(async () => count)).toBe(true)
+  expect(fetcher.mock.calls.map(c => JSON.parse(c[1].body).properties.active_subscribers)).toEqual([3, 2, 0])
+  const body = JSON.parse(fetcher.mock.calls[0][1].body)
+  expect(body.properties.$process_person_profile).toBe(false)
+  expect(Object.keys(body.properties).sort()).toEqual(['$geoip_disable', '$ip', '$process_person_profile', 'active_subscribers', 'measured_at'].sort())
+})
+it('조회 실패·null·비정상 값은 0으로 보내지 않고 통계 장애도 삼킨다', async () => {
+  const fetcher = vi.fn().mockResolvedValue({ ok: true }); vi.stubGlobal('fetch', fetcher)
+  query.not.mockReset().mockReturnValueOnce(query).mockResolvedValueOnce({ count: null, error: null })
+  await expect(countEmailSubscribers()).rejects.toThrow()
+  expect(await syncEmailSubscriberCount(async () => { throw new Error('offline') })).toBe(false)
+  expect(await syncEmailSubscriberCount(async () => -1)).toBe(false)
+  expect(fetcher).not.toHaveBeenCalled()
+  fetcher.mockRejectedValue(new Error('offline'))
+  expect(await syncEmailSubscriberCount(async () => 2)).toBe(false)
+})

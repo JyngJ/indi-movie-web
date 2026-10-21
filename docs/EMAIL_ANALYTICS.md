@@ -35,3 +35,10 @@
 - 목적지 URL·브라우저 쿠키에는 발송일만 있고 개별 발송 ID는 없다. `Referrer-Policy: no-referrer`, `Cache-Control: no-store`를 사용한다.
 
 공식 API 참고: https://posthog.com/docs/api/capture
+
+## 현재 수신 등록 인원
+
+`email subscribers snapshot`의 `active_subscribers`를 최신 조회 시각 기준으로 읽는다. 누적 합계·최대값이 아니다. `status=active`이고 email·subscribed_at이 있는 회원 수이며 인증 대기·해지·탈퇴 회원은 제외한다. DB 조회 실패를 0명으로 기록하지 않는다. 인증·해지·주소 변경 성공 뒤 갱신하고 매일 08:55 KST 전체 인원을 다시 맞춘다. 회원 탈퇴 등 별도 경로의 변경은 다음 전체 조회에 반영한다. GitHub 실행은 지연될 수 있으므로 최신 측정 시각과 함께 해석한다. 주소·개별 회원 식별자는 보내지 않는다.
+
+수동 조회: `npx tsx --env-file=.env.local scripts/snapshot-email-subscribers.ts`
+실제 저장: `EMAIL_ANALYTICS_ENABLED=true npx tsx --env-file=.env.local scripts/snapshot-email-subscribers.ts --send`
