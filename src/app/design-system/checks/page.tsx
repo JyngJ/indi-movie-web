@@ -42,6 +42,14 @@ const FEEDBACK: Record<string, string> = {
 
 /** 파일별로 무엇을 지키는지. package.json 스크립트에 새 파일이 생겼는데 여기 없으면 "설명 없음"으로 드러난다. */
 const CONTRACTS: Record<string, { guard: string; why: string }> = {
+  'src/components/navigation/ScrollToTopButton.browser.test.tsx': {
+    guard: '로그인한 소식에서 조금만 스크롤해도 맨 위로 버튼이 나타나고 실제 본문을 올리는지. 모바일 메뉴 바와 데스크톱 팝오버를 벗어나지 않는지',
+    why: '소식은 문서가 아닌 내부 본문이 스크롤돼서, 문서만 올리면 버튼을 눌러도 움직이지 않습니다.',
+  },
+  'src/hooks/useLocationPermission.browser.test.tsx': {
+    guard: '위치 안내를 건너뛴 뒤에도 현재위치 버튼이 권한을 요청하고, 차단 상태와 새 좌표를 돌려주는지',
+    why: '실패를 조용히 넘기는 재조회로는 위치 차단 안내를 보여 주지 못했습니다.',
+  },
   'src/components/auth/EmailNotificationPrompt.browser.test.tsx': {
     guard: '동의 체크박스가 첫 줄 가운데에 맞고, 이메일 편집은 하위 화면으로 이동하며, 빈도 버튼이 선택한 값을 보내는지. 팝업 거절이 재방문에도 유지되고, 카드 간격·거터와 입력 오류가 시스템 규칙을 따르는지. 로그인 조회 실패·시간 초과와 외부 로그인 뒤로가기에서 화면이 복구되는지',
     why: '선택형 이메일 등록이 서비스 이용을 막거나 거절한 사람에게 반복해서 나타나지 않게 합니다.',

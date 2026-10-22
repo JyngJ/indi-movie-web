@@ -20,6 +20,7 @@ export function FeedPanel() {
       onClose={close}
       title="소식"
       ariaLabel="소식"
+      scrollToTop={status === 'signed-in'}
       anchorHref="/feed"
       trailing={status === 'signed-in' ? (
         <Link href="/my/favorites" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }} onClick={close}>

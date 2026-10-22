@@ -35,7 +35,7 @@ function FeedPageInner() {
   ) : undefined
 
   return (
-    <MyPageShell title="소식" trailing={trailing}>
+    <MyPageShell title="소식" trailing={trailing} scrollToTop={status === 'signed-in'}>
       <FeedContent authError={authError} withAds />
     </MyPageShell>
   )

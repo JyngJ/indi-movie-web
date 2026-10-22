@@ -1,6 +1,7 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
+import { ScrollToTopButton } from '@/components/navigation/ScrollToTopButton'
 import { GLOBAL_NAV_DESKTOP_WIDTH } from '@/components/navigation/GlobalNav'
 import { PanelScrollBody } from '@/components/primitives'
 import { SettingsHeader } from '@/components/map/SettingsPanel'
@@ -11,18 +12,22 @@ export function MyPageShell({
   title,
   onBack,
   trailing,
+  scrollToTop = false,
   children,
 }: {
   title: string
   onBack?: () => void
   /** 헤더 우측 위젯 (⚙ 설정, "관심 목록 ›" 등) */
   trailing?: ReactNode
+  scrollToTop?: boolean
   children: ReactNode
 }) {
   const isDesktop = useIsDesktopLayout()
+  const scrollRef = useRef<HTMLDivElement>(null)
   return (
     <div
       style={{
+        position: 'relative',
         display: 'flex',
         flexDirection: 'column',
         /* height 고정 + 내부 스크롤 — minHeight면 문서가 스크롤돼 헤더가 같이 올라간다 (2026-08-24) */
@@ -38,7 +43,12 @@ export function MyPageShell({
       {/* 스크롤 컨테이너는 block이어야 한다 — flex column이면 자식들이 flex-shrink로
           찌그러져 스크롤 대신 행이 잘린다 (2026-08-24). 세로 채움이 필요한 자식은
           minHeight:'100%'를 스스로 쓴다. */}
-      <PanelScrollBody style={{ width: '100%', maxWidth: 560, margin: isDesktop ? '0 auto' : 0, paddingBottom: 24 }}>{children}</PanelScrollBody>
+      <PanelScrollBody ref={scrollRef} style={{ width: '100%', maxWidth: 560, margin: isDesktop ? '0 auto' : 0, paddingBottom: 24 }}>{children}</PanelScrollBody>
+      <ScrollToTopButton
+        targetRef={scrollRef}
+        enabled={scrollToTop}
+        style={{ bottom: isDesktop ? 'var(--gutter)' : 'calc(var(--nav-mobile-offset) + var(--gutter))' }}
+      />
     </div>
   )
 }

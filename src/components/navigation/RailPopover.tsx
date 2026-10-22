@@ -4,6 +4,7 @@ import { useEffect, useRef, type ReactNode } from 'react'
 import { PanelScrollBody } from '@/components/primitives'
 import { SettingsHeader } from '@/components/map/SettingsPanel'
 import { GLOBAL_NAV_DESKTOP_WIDTH } from '@/components/navigation/GlobalNav'
+import { ScrollToTopButton } from './ScrollToTopButton'
 import { useLockBodyScroll } from '@/hooks/useLockBodyScroll'
 
 /**
@@ -18,6 +19,7 @@ export function RailPopover({
   trailing,
   anchorHref,
   ariaLabel,
+  scrollToTop = false,
   children,
 }: {
   open: boolean
@@ -27,9 +29,11 @@ export function RailPopover({
   trailing?: ReactNode
   anchorHref: string
   ariaLabel: string
+  scrollToTop?: boolean
   children: ReactNode
 }) {
   const ref = useRef<HTMLDivElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
   useLockBodyScroll(false)
 
   useEffect(() => {
@@ -78,9 +82,10 @@ export function RailPopover({
       <SettingsHeader title={title} onBack={onBack} onClose={onClose} trailing={trailing} />
       {/* 본문은 block 흐름으로 유지한다. flex column이면 메뉴 카드가 축소되고
           overflow:hidden에 아래 행이 잘린다. MyPageShell과 같은 스크롤 원칙. */}
-      <PanelScrollBody>
+      <PanelScrollBody ref={scrollRef}>
         {children}
       </PanelScrollBody>
+      <ScrollToTopButton targetRef={scrollRef} enabled={scrollToTop} />
     </div>
   )
 }
