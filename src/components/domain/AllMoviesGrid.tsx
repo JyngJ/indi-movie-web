@@ -99,6 +99,8 @@ function GridCard({
         display: 'flex',
         flexDirection: 'column',
         gap: 8,
+        /* 칸보다 긴 내용은 칸을 밀지 않고 말줄임으로 — 그리드 열 폭(minmax(0, 1fr))과 한 쌍 */
+        minWidth: 0,
         cursor: onClick ? 'pointer' : undefined,
         /* RevealItem이 transform으로 자체 쌓임 맥락을 만들어, 포스터 안쪽 zIndex로는
            뒤에 오는 카드 밑으로 깔린다 — 확대분을 카드 단위로 올린다 */
@@ -247,9 +249,12 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
         <div
           style={{
             display: 'grid',
+            /* minmax(0, 1fr) — 그냥 1fr은 minmax(auto, 1fr)이라 열 폭이 그 열에서 가장 긴
+               한 줄짜리 내용(nowrap 감독 이름)만큼 늘어난다. 처음 9편엔 없다가 더 불러온 영화에
+               긴 이름이 끼면 그 열만 넓어져, 위로 올라와 보면 한 열 포스터만 커져 있었다(2026-10). */
             gridTemplateColumns: isDesktop
-              ? 'repeat(4, 1fr)'   /* 웹: 한 줄 4개 고정 */
-              : 'repeat(3, 1fr)',
+              ? 'repeat(4, minmax(0, 1fr))'   /* 웹: 한 줄 4개 고정 */
+              : 'repeat(3, minmax(0, 1fr))',
             gap: isDesktop ? 20 : 12,
             padding: isDesktop ? '16px var(--gutter-sheet) 0' : '14px var(--gutter-sheet) 0',
           }}
