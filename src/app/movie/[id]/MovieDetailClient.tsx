@@ -317,6 +317,10 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection, s
     }
   }, [dayTheaters, regionId])
 
+  // 선택 지역의 회차를 다 본 뒤 다른 지역으로 넘어갈 때 기존 광고 한 칸을 보여 준다.
+  // 한쪽 목록이 비면 경계가 없으므로 하단 배치를 유지한다.
+  const showRegionBoundaryAd = !isLoading && inRegionEntries.length > 0 && otherRegionEntries.length > 0
+
   const selectedShowtimeData = useMemo(() => {
     if (!selectedShowtimeId || !selectedTheaterId) return null
     const entry = dayTheaters.find((e) => e.theaterId === selectedTheaterId)
@@ -637,6 +641,12 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection, s
             )}
             {otherRegionEntries.length > 0 && (
               <>
+                {showRegionBoundaryAd && (
+                  // 모바일 목록 거터를 되돌려 광고 자체의 거터와 이중으로 좁아지지 않게 한다.
+                  <div style={{ marginInline: isDesktop ? 0 : 'calc(-1 * var(--gutter))', marginTop: 'var(--spacing-6)' }}>
+                    <DetailBottomAd />
+                  </div>
+                )}
                 {/* 지역 구분선 — 안 보인다는 피드백으로 여백·글자 키움 (2026-08-24). 그리드 전체 폭 차지 */}
                 <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 12, margin: isDesktop ? '40px 0 16px' : '24px 0 8px' }}>
                   <Divider flex />
@@ -716,7 +726,7 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection, s
               전부 중복이었다. 회차 선택 카드만 우하단 플로팅으로 남긴다. */}
           {synopsisSection}
           {showtimesSection}
-          <DetailBottomAd />
+          {!showRegionBoundaryAd && <DetailBottomAd />}
         </div>
         {selectedShowtimeData && typeof document !== 'undefined' && createPortal(
           <div style={{ position: 'fixed', right: 40, bottom: 40, width: 320, zIndex: 100 }}>
@@ -745,7 +755,7 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection, s
         </>
       )}
       {showtimesSection}
-      <DetailBottomAd />
+      {!showRegionBoundaryAd && <DetailBottomAd />}
       <div style={{ height: 'env(safe-area-inset-bottom)' }} />
       {selectedShowtimeData && typeof document !== 'undefined' && createPortal(
         // .page-slide-in의 transform이 컨테이닝 블록을 만들어 fixed가 페이지 하단(전체 콘텐츠 끝)에
