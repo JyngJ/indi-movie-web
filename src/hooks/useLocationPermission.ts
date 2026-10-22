@@ -62,6 +62,7 @@ function initPermissionState() {
 
 /** 위치 허용하기 / 설정했어요 버튼 — 허용 성공 여부를 반환한다 */
 async function request(): Promise<boolean> {
+  if (useLocationPermissionStore.getState().state === 'requesting') return false
   setState({ state: 'requesting' })
   try {
     const c = await locationAdapter.requestPosition()
@@ -87,14 +88,12 @@ function suppressModal() {
   setState({ suppressModal: true })
 }
 
-/** 위치 버튼 클릭 시 GPS 재조회 */
-function refetch() {
-  locationAdapter.getCurrentPosition().then((c) => {
-    if (c) {
-      locationAdapter.saveCache(c)
-      setState({ coords: c, state: 'success' })
-    }
-  })
+/** 사용자가 위치 버튼을 누르면 건너뛰기 상태와 무관하게 권한을 다시 요청한다. */
+async function refetch(): Promise<LocationCoords | null> {
+  // 온보딩에서 팝업을 생략했어도 명시적 클릭 뒤 차단 안내는 보여 준다.
+  setState({ suppressModal: false })
+  const success = await request()
+  return success ? useLocationPermissionStore.getState().coords : null
 }
 
 export function useLocationPermission() {

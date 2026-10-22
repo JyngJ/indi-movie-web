@@ -2304,13 +2304,13 @@ export default function MapView() {
     }
   }, [])
 
-  const handleLocate = useCallback(() => {
+  const handleLocate = useCallback(async () => {
     collapseCurationOnMapInteraction()
-    refetch()
-    if (coords && mapRef.current) {
-      springFlyTo(mapRef.current, [coords.lat, coords.lng], 15)
+    const location = await refetch()
+    if (location && mapRef.current) {
+      springFlyTo(mapRef.current, [location.lat, location.lng], 15)
     }
-  }, [coords, refetch, collapseCurationOnMapInteraction])
+  }, [refetch, collapseCurationOnMapInteraction])
 
 
 
@@ -3799,7 +3799,7 @@ export default function MapView() {
           </>
         )}
         <div style={{ height: isDesktopLayout ? 0 : 8 }} />
-        <FabRound onClick={handleLocate}><Icon name="locate-fixed" size={20} /></FabRound>
+        <FabRound aria-label="현재 위치로 이동하기" aria-busy={locPermState === 'requesting'} disabled={locPermState === 'requesting'} onClick={handleLocate}><Icon name="locate-fixed" size={20} /></FabRound>
       </div>
 
 
