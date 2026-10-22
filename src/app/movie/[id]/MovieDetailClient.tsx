@@ -526,7 +526,7 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection, s
           </div>
           <Icon name="chevron-right" size={15} />
         </button>
-        <div style={{ padding: '12px 16px 16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, backgroundColor: 'var(--color-neutral-100)' }}>
+        <div style={{ padding: '12px 16px 16px', display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, backgroundColor: 'var(--color-neutral-100)' }}>
           {entry.showtimes.map((st) => {
             /* TheaterSheet과 동일한 kind 분류 */
             const [sh, sm] = st.showTime.split(':').map(Number)

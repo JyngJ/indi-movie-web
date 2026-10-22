@@ -159,7 +159,7 @@ export function AddRequestModal({ open, query, onClose }: Props) {
             찾으시는 영화·영화관·감독이 아직 없나요? 추가 요청하면 반영해둘게요!
           </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 20 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8, marginBottom: 20 }}>
             {KIND_OPTIONS.map(({ kind: k, label, icon }) => {
               const selected = kind === k
               return (

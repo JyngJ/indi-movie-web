@@ -284,6 +284,8 @@ export function AllMoviesGrid({ movies, isDesktop, regionLabel, theaterCountByMo
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: 'vertical',
                     overflow: 'hidden',
+                    /* 칸 폭이 고정이라 띄어쓰기 없는 긴 영문 제목은 줄바꿈해야 잘리지 않는다 */
+                    overflowWrap: 'anywhere',
                     lineHeight: 1.3,
                   }}
                 >

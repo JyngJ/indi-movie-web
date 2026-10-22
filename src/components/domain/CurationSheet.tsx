@@ -174,7 +174,7 @@ function PosterRow({ items, onSelect, emptyText, desktop = false }: {
   return (
     <div ref={desktop ? undefined : scrollRef} className={desktop ? undefined : 'themed-scrollbar'} style={desktop ? {
       display: 'grid',
-      gridTemplateColumns: 'repeat(3, 1fr)',
+      gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
       gap: 'var(--spacing-3)',
       paddingLeft: 'var(--gutter)',
       paddingRight: 'var(--gutter)',

@@ -79,7 +79,7 @@ export function CalendarPicker({ startDate, endDate, onApply, onCancel, style }:
         }}>
           {hint}
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 4 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', marginBottom: 4 }}>
           {DOW.map((d, i) => (
             <div key={d} style={{
               textAlign: 'center', fontSize: 'var(--text-badge)', fontWeight: 600,
@@ -90,7 +90,7 @@ export function CalendarPicker({ startDate, endDate, onApply, onCancel, style }:
             </div>
           ))}
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', marginBottom: 8 }}>
           {cells.map((day, i) => {
             if (day === null) return <div key={i} style={{ height: 38 }} />
 

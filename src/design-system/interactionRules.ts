@@ -18,6 +18,7 @@ export const INTERACTION_RULES = [
       'PanelScrollBody는 block 흐름·min-height:0·overflow-y:auto를 보장해요. 긴 내용은 자식 높이를 줄이는 대신 스크롤해요.',
       '독립된 입력·인증 폼은 메뉴 행과 다른 간격을 써요. 페이지와 카드 여백은 --gutter-form(24px), 넓은 화면의 카드 여백은 --gutter-form-wide(32px)예요. 안내·입력·행동 구역 사이는 --gap-form-section(24px), 같은 구역 안 문구 사이는 --gap-form-content(16px)로 나눠요.',
       '메뉴는 MenuCard와 MenuRow를 사용해요. 카드의 overflow:hidden은 모서리를 자르는 용도이며 콘텐츠 높이를 제한하지 않아요.',
+      '같은 폭 그리드는 repeat(N, minmax(0, 1fr))로 나누고 칸에 minWidth:0을 줘요. 그냥 1fr은 가장 긴 한 줄 내용만큼 그 열을 넓혀요. 칸 안 긴 제목은 overflowWrap:anywhere로 줄바꿈해요.',
     ],
   },
   {
