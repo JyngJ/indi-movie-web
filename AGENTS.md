@@ -135,6 +135,7 @@ The crawler runs on a Raspberry Pi (`ssh pi@100.76.84.97`, Tailscale). Full runb
 - 규칙 원본: `src/design-system/interactionRules.ts`. 값은 `src/styles/tokens.css`. 사람용 `/design-system/foundations/elevation#stacking`과 AI용 문서는 같은 원본을 사용한다.
 - 지도 내부는 `--z-map-*`, 본문·레일은 `--z-route-progress` / `--z-panel-mask` / `--z-navigation` / `--z-rail-popover`를 사용한다. 서로 다른 stacking context의 숫자를 단순 비교하지 말고 부모의 transform·opacity·z-index부터 확인한다.
 - 고정 높이 패널 본문은 `PanelScrollBody`, 메뉴는 `MenuCard` + `MenuRow`를 사용한다. 본문에 flex column을 직접 적용해 메뉴 카드를 축소하지 않는다.
+- 같은 폭 그리드는 `repeat(N, minmax(0, 1fr))` + 칸에 `minWidth: 0`. 그냥 `1fr`은 `minmax(auto, 1fr)`이라 긴 nowrap 내용 하나가 그 열 전체를 넓힌다 — 상영작 그리드에서 더 불러온 뒤 한 열 포스터만 커졌다(#419). `gridEqualColumns.test.ts`가 `repeat(N, 1fr)`를 막는다.
 - 상세 관심 액션은 `FavoriteActionButton`/`FavoriteActionRow`를 사용한다. 표현 원본은 `FavoriteToggle`이며 상태색·폭 유지·reduced motion을 화면별로 복제하지 않는다.
 - 상세의 명령형 이동은 `useProgressRouter`, 상영작 영역 판정은 `isFilmsPath`를 공유한다.
 - 모바일 하단 메뉴 바를 비킬 때는 `var(--nav-mobile-offset)`(64px + `safe-area-inset-bottom`)을 쓴다. `GLOBAL_NAV_MOBILE_HEIGHT`(64)를 스타일에 직접 더하지 말 것 — safe-area를 빠뜨려 아이폰에서 지도 버튼이 바에 깔렸고, 부모·자식이 둘 다 더해 로고 아래가 이중으로 비었다(2026-09). 숫자가 꼭 필요한 드래그 계산만 상수를 쓴다.

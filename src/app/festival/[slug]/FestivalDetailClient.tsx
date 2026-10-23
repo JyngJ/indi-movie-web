@@ -344,7 +344,7 @@ export function FestivalDetailClient({ festival, view }: { festival: FestivalDet
                       style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)', width: 140, flexShrink: 0, cursor: link.movie ? 'pointer' : 'default' }}
                     >
                       <LineupPoster src={link.movie?.posterUrl} alt={normalizeTitle(link.movie?.title ?? link.movieTitleSnapshot)} />
-                      <span style={{ fontSize: 'var(--text-meta)', fontWeight: 600, color: 'var(--color-text-body)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3 }}>
+                      <span style={{ fontSize: 'var(--text-meta)', fontWeight: 600, color: 'var(--color-text-body)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', overflowWrap: 'anywhere', lineHeight: 1.3 }}>
                         {normalizeTitle(link.movie?.title ?? link.movieTitleSnapshot)}
                       </span>
                     </div>
@@ -355,15 +355,15 @@ export function FestivalDetailClient({ festival, view }: { festival: FestivalDet
               </div>
             ) : (
               <>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--spacing-3)', padding: 'var(--spacing-3) var(--gutter)' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 'var(--spacing-3)', padding: 'var(--spacing-3) var(--gutter)' }}>
                   {(lineupExpanded ? festival.movies : festival.movies.slice(0, LINEUP_COLLAPSED_COUNT)).map((link) => (
                     <div
                       key={link.id}
                       onClick={link.movie ? () => router.push(`/movie/${link.movie!.id}`) : undefined}
-                      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)', cursor: link.movie ? 'pointer' : 'default' }}
+                      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)', minWidth: 0, cursor: link.movie ? 'pointer' : 'default' }}
                     >
                       <LineupPoster src={link.movie?.posterUrl} alt={normalizeTitle(link.movie?.title ?? link.movieTitleSnapshot)} />
-                      <span style={{ fontSize: 'var(--text-meta)', fontWeight: 600, color: 'var(--color-text-body)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.3 }}>
+                      <span style={{ fontSize: 'var(--text-meta)', fontWeight: 600, color: 'var(--color-text-body)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', overflowWrap: 'anywhere', lineHeight: 1.3 }}>
                         {normalizeTitle(link.movie?.title ?? link.movieTitleSnapshot)}
                       </span>
                     </div>

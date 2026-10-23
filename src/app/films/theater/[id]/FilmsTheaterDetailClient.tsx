@@ -182,7 +182,7 @@ function MovieShowtimeCard({
       </button>
 
       {/* 상영시간 — 2.0 ShowtimeCell 3열, 눌린 트레이 위 흰 셀 반전 (피그마 ShowtimeGroupCard) */}
-      <div style={{ padding: '12px 16px 16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, backgroundColor: 'var(--color-neutral-100)' }}>
+      <div style={{ padding: '12px 16px 16px', display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, backgroundColor: 'var(--color-neutral-100)' }}>
         {showtimes.map((st) => {
           const [sh, sm] = st.showTime.split(':').map(Number)
           const startMin = sh * 60 + sm
@@ -539,13 +539,13 @@ export function FilmsTheaterDetailClient({ theater, initialSelection, initialSho
         </div>
 
         {isLoading ? (
-          <div style={isDesktop ? { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 0, columnGap: 16 } : {}}>
+          <div style={isDesktop ? { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 0, columnGap: 16 } : {}}>
             {[0, 1, 2].map((i) => <MovieShowtimeCardSkeleton key={i} isDesktop={isDesktop} />)}
           </div>
         ) : movieShowtimeGroups.length === 0 ? (
           <EmptyState message="이 날 상영 정보가 없어요" paddingY={40} />
         ) : (
-          <div className="reveal-rise" style={isDesktop ? { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 0, columnGap: 16 } : {}}>
+          <div className="reveal-rise" style={isDesktop ? { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 0, columnGap: 16 } : {}}>
             {movieShowtimeGroups.map(({ movie, showtimes }) => (
               <div key={movie.id} data-movie-anchor={movie.id}>
               <MovieShowtimeCard
