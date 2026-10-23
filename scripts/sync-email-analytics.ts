@@ -2,6 +2,7 @@
 import { createSupabaseAdminClient } from '../src/lib/supabase/admin'
 import { captureEmailMetric, emailAnalyticsConfigured } from '../src/lib/emailNotifications/analytics'
 import { getSubscription } from '../src/lib/emailNotifications/server'
+import { safeErrorSummary } from '../src/lib/emailNotifications/safeError'
 
 async function main() {
   if (!emailAnalyticsConfigured()) throw new Error('analytics_not_configured')
@@ -25,7 +26,7 @@ async function main() {
   console.log('[email analytics]', { dryRun: !process.argv.includes('--send'), synced, failed })
   if (failed) process.exitCode = 1
 }
-main().catch(() => {
-  console.error('[email analytics] 통계를 전송하지 못했어요 — 메일은 재발송하지 않아요')
+main().catch((error: unknown) => {
+  console.error('[email analytics] 통계를 전송하지 못했어요 — 메일은 재발송하지 않아요', safeErrorSummary(error))
   process.exitCode = 1
 })
