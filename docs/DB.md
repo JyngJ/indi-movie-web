@@ -366,7 +366,7 @@ ALTER TABLE instagram_recommendations ADD CONSTRAINT chk_insta_target CHECK (
 | 함수 | 부르는 곳 | 입력 |
 |---|---|---|
 | `apply_candidate_matches(jsonb)` | 자동매칭 `autoMatchShowtimeCandidates` | `[{id, matched_theater_id, matched_movie_id, warnings, status}]` — 결과가 바뀐 후보만 |
-| `apply_candidate_seats(jsonb)` | 좌석 갱신 `runSeatChecks` | `[{fingerprint, seat_available, seat_total}]` |
+| `apply_candidate_seats(jsonb)` | 좌석 갱신 `runSeatChecks` | `[{fingerprint, seat_available, seat_total}]` — 후보와 함께, 사이트에 실린 같은 회차(`showtimes`, 충돌 키 = 후보의 `matched_*`·날짜·시각·상영관)의 좌석도 바꾼다(2026-10-24). 반환값은 갱신된 후보 수 |
 
 - 자동 승인 회차는 `showtimes`에 배열 upsert(500개씩)로 넣는다. 충돌 키가 한 요청 안에서 겹치면 Postgres가 묶음 전체를 거부하므로 미리 걷어낸다.
 - 함수가 없으면(PGRST202) 코드가 예전 방식(한 건씩)으로 돌아간다.

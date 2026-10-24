@@ -32,6 +32,16 @@ AS $$
 $$;
 
 -- 2. 좌석 수 묶어 쓰기 — [{fingerprint, seat_available, seat_total}, …]
+--
+-- 2026-10-24 개정: 사이트에 실린 회차(showtimes)의 좌석도 같이 바꾼다.
+--   사이트는 잔여석·매진을 showtimes에서 읽는데, 좌석 갱신(3시간마다)은 후보만 바꾸고 있었다.
+--   showtimes의 좌석은 승인 순간 후보 값을 복사한 뒤로 상영 시간표 크롤(01·07·13시)이
+--   다시 승인할 때까지 그대로라, 13시 이후 좌석 변화가 다음날 01시까지 안 보였다.
+--   승인된 회차는 showtimes 충돌 키(theater_id·movie_id·show_date·show_time·screen_name)가
+--   후보의 matched_* 와 같은 값이라 그 키로 잇는다. 후보 status는 보지 않는다 — 크롤이 같은
+--   회차를 다시 넣을 때 status를 덮어써, 이미 실린 회차도 잠깐 approved가 아닐 수 있다.
+--   showtimes에 같은 키의 행이 있다는 것 자체가 한 번 승인됐다는 뜻이다.
+--   반환값은 예전처럼 갱신된 후보 수(run-seat-checks의 updatedCount).
 CREATE OR REPLACE FUNCTION apply_candidate_seats(updates JSONB)
 RETURNS INTEGER
 LANGUAGE sql
@@ -44,6 +54,23 @@ AS $$
         seat_total     = u.seat_total
     FROM jsonb_populate_recordset(NULL::showtime_candidates, updates) AS u
     WHERE c.fingerprint = u.fingerprint
+    RETURNING c.matched_theater_id, c.matched_movie_id, c.show_date, c.show_time, c.screen_name,
+              c.seat_available, c.seat_total
+  ),
+  -- 쓰기 CTE는 본 쿼리가 읽지 않아도 끝까지 실행된다
+  synced AS (
+    UPDATE showtimes s
+    SET seat_available = d.seat_available,
+        seat_total     = d.seat_total
+    FROM done d
+    WHERE d.matched_theater_id IS NOT NULL
+      AND d.matched_movie_id   IS NOT NULL
+      AND s.theater_id  = d.matched_theater_id
+      AND s.movie_id    = d.matched_movie_id
+      AND s.show_date   = d.show_date
+      AND s.show_time   = d.show_time
+      AND s.screen_name = d.screen_name
+      AND (s.seat_available IS DISTINCT FROM d.seat_available OR s.seat_total IS DISTINCT FROM d.seat_total)
     RETURNING 1
   )
   SELECT COUNT(*)::INTEGER FROM done

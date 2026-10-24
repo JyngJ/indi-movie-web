@@ -58,7 +58,9 @@ function todayIsoDate() {
 
 /**
  * 활성화된 모든 소스의 좌석 정보를 갱신.
- * showtime_candidates의 seat_available/seat_total을 upsert한다.
+ * showtime_candidates의 seat_available/seat_total을 바꾸고, apply_candidate_seats RPC가
+ * 사이트에 실린 같은 회차(showtimes)의 좌석도 함께 바꾼다(2026-10-24 개정 — 사이트는
+ * showtimes에서 잔여석을 읽는다). RPC가 없을 때의 예전 방식(writeSeatsByValue)은 후보만 바꾼다.
  */
 export async function runSeatChecks(): Promise<RunSeatResult> {
   const sources = await listAdminSources()
