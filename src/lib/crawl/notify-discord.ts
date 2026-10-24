@@ -1,4 +1,5 @@
 import type { AutoMatchSummary, CrawlRun } from '@/types/admin'
+import { formatTopUnmatched } from './autoMatchSummary'
 
 const WEBHOOK_URL = process.env.DISCORD_REPORT_WEBHOOK_URL
 const FIELD_LIMIT = 900
@@ -205,6 +206,10 @@ export async function notifyDiscordMatch(
       `**전체 고유 영화** ${summary.uniqueMovieTitles.toLocaleString()}편　·　**소요** ${secs}s`,
     ].join('\n'),
     color: summary.autoApproved.screenings > 0 ? 0x2ECC71 : summary.matchedNeedsReview.screenings > 0 ? 0xF39C12 : 0xE74C3C,
+    // 숫자만으로는 미매칭이 왜 많은지 알 수 없어 상위 제목을 붙인다(2026-10-24)
+    fields: summary.topUnmatched.length
+      ? [{ name: '미매칭 상위 (회차 많은 순)', value: formatTopUnmatched(summary.topUnmatched).join('\n').slice(0, FIELD_LIMIT), inline: false }]
+      : undefined,
     footer: { text: nowKST() },
   })
 }

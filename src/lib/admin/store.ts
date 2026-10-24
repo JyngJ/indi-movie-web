@@ -841,6 +841,9 @@ export async function autoMatchShowtimeCandidates(ids?: string[]): Promise<Candi
   const summary = summarizeAutoMatchOutcomes(outcomes.map((outcome) => ({
     kind: failedIds.has(outcome.candidate.id) ? 'writeFailed' as const : outcome.kind,
     movieTitle: outcome.candidate.movieTitle,
+    theaterName: outcome.candidate.theaterName,
+    missing: !outcome.candidate.matchedTheaterId && !outcome.candidate.matchedMovieId ? 'both' as const
+      : !outcome.candidate.matchedTheaterId ? 'theater' as const : 'movie' as const,
   })))
 
   // 경고 기반 판정은 같은 후보 행에만 유효 — 크롤마다 새 행이 생기면 리셋돼
