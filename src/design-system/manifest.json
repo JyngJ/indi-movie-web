@@ -7749,6 +7749,36 @@
       }
     },
     {
+      "name": "LoadingStatus",
+      "file": "src/components/primitives/LoadingStatus.tsx",
+      "doc": "요청이 끝날 때까지 유지하는 상태 안내. 완료 결과는 Toast를 사용해요.",
+      "props": [
+        {
+          "name": "message",
+          "type": "string | undefined",
+          "optional": true,
+          "default": "'불러오는 중…'",
+          "doc": ""
+        },
+        {
+          "name": "visible",
+          "type": "boolean | undefined",
+          "optional": true,
+          "default": "true",
+          "doc": ""
+        },
+        {
+          "name": "placement",
+          "type": "\"inline\" | \"floating\" | undefined",
+          "optional": true,
+          "default": "'floating'",
+          "doc": "떠 있는 안내가 기본이며, 목록·패널 안에서는 inline을 사용해요."
+        }
+      ],
+      "figmaSet": null,
+      "figma": null
+    },
+    {
       "name": "MenuCard",
       "file": "src/components/primitives/MenuList.tsx",
       "doc": "설정 탭과 같은 카드형 메뉴 리스트 컨테이너.\n바깥 테두리는 뺀다(2026-08-20) — 행마다 구분선이 있고 흰 면이 회색 배경 위에 떠 있어\n테두리가 한 겹 더 붙으면 상자 안에 상자처럼 보였다.",
@@ -9227,6 +9257,13 @@
       "kind": "component-unmapped",
       "id": "GoogleLoginButton",
       "code": "src/components/primitives/GoogleLoginButton.tsx",
+      "figma": null,
+      "note": "대응하는 피그마 컴포넌트 세트가 없다"
+    },
+    {
+      "kind": "component-unmapped",
+      "id": "LoadingStatus",
+      "code": "src/components/primitives/LoadingStatus.tsx",
       "figma": null,
       "note": "대응하는 피그마 컴포넌트 세트가 없다"
     }

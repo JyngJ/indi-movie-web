@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
-import { Toast } from '@/components/primitives'
+import { LoadingStatus } from '@/components/primitives'
 import { notFound } from 'next/navigation'
 import { getMovieDetail } from '@/lib/catalog/getMovieDetail'
 import { toMovieDescription } from '@/lib/seo/toMovieDescription'
@@ -120,7 +120,7 @@ export default async function MovieDetailPage({
   if (!movie) notFound()
 
   return (
-    <Suspense fallback={<Toast message="불러오는 중…" visible />}>
+    <Suspense fallback={<LoadingStatus />}>
       {/* ?theater= 유입 경로 기록과 뒤로가기 목적지는 클라이언트가 주소에서 직접 읽는다 —
           서버가 쿼리를 읽는 순간 이 페이지가 다시 동적으로 굳는다 */}
       <MovieBody id={id} movie={movie} />

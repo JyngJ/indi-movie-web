@@ -11,7 +11,7 @@ import type { Map as LeafletMap, Point as LeafletPoint } from 'leaflet'
 import { useLocationPermission } from '@/hooks/useLocationPermission'
 import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useFavorites } from '@/hooks/useFavorites'
-import { SearchBarButton, FabRound, Icon, Toast, Wordmark } from '@/components/primitives'
+import { SearchBarButton, FabRound, Icon, Toast, LoadingStatus, Wordmark } from '@/components/primitives'
 import { GLOBAL_NAV_DESKTOP_WIDTH } from '@/components/navigation/GlobalNav'
 import { THEATER_SHEET_COLLAPSED_H } from '@/components/domain/TheaterSheet'
 import type { PinFavoriteMark } from '@/components/domain/MapPin'
@@ -1077,7 +1077,7 @@ export default function MapView() {
   /* 검색은 위 목록을 클라이언트에서 거르는 구조라, 아직 안 받아왔으면 결과가 0건이다.
      그 0건을 "없음"과 구분하지 못하면 있는 영화를 없다고 말하게 된다. */
   const searchDataLoading = theatersLoading || stationsLoading || moviesLoading
-  const { data: activeMovieIds = EMPTY_ACTIVE_MOVIE_IDS } = useActiveMovieIds()
+  const { data: activeMovieIds = EMPTY_ACTIVE_MOVIE_IDS, isLoading: activeMoviesLoading } = useActiveMovieIds()
   const [filters, setFilters] = useState<FilterState>(() => ({
     dateId: 'this-week',
     customStart: null,
@@ -1118,7 +1118,7 @@ export default function MapView() {
   const selectedDateRange = useMemo(() => dateRangeForFilter(filters), [filters])
   const mapShowtimeStart = formatDateParam(selectedDateRange.start)
   const mapShowtimeEnd = formatDateParam(selectedDateRange.end)
-  const { data: mapShowtimes = EMPTY_MAP_SHOWTIMES } = useMapShowtimes(mapShowtimeStart, mapShowtimeEnd)
+  const { data: mapShowtimes = EMPTY_MAP_SHOWTIMES, isLoading: mapShowtimesLoading } = useMapShowtimes(mapShowtimeStart, mapShowtimeEnd)
   const mapRef = useRef<LeafletMap | null>(null)
   useEffect(() => () => cancelSpringAnimation(), [])
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -1126,7 +1126,8 @@ export default function MapView() {
   const [initialGvId, setInitialGvId] = useState<string | undefined>(undefined)
   const gvDelayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [expandedGvTheater, setExpandedGvTheater] = useState<string | null>(null)
-  const { data: rawTheaterEvents = EMPTY_THEATER_EVENTS } = useTheaterEvents()
+  const { data: rawTheaterEvents = EMPTY_THEATER_EVENTS, isLoading: theaterEventsLoading } = useTheaterEvents()
+  const mapDataLoading = searchDataLoading || activeMoviesLoading || mapShowtimesLoading || theaterEventsLoading
   // GV/이벤트 핀도 상영일정 날짜 필터를 따른다 — 필터 밖 날짜의 이벤트는 핀에서 제외.
   // 단, 영화제(festival)는 여러 날에 걸친 행사 자체를 알리는 게 목적이라 날짜 필터와 무관하게 항상 노출한다.
   const gvEvents = useMemo(
@@ -1806,13 +1807,14 @@ export default function MapView() {
   const [favoritesFilterSignal, setFavoritesFilterSignal] = useState(0)
   const handleShowAllFavorites = useCallback(() => {
     setFavoritesFilterSignal((n) => n + 1)
+    if (mapDataLoading) return
     setFilterToastMessage(
       favoriteTheaterCount > 0
         ? `관심 극장·영화가 있는 극장 ${favoriteTheaterCount}곳만 보여드려요`
         : '지금 상영 중인 관심 극장·영화가 없어요',
     )
     setFilterToastTrigger((n) => n + 1)
-  }, [favoriteTheaterCount])
+  }, [favoriteTheaterCount, mapDataLoading])
 
   const rankingCurationItems = useMemo<CurationItem[]>(() => {
     const screening = new Set<string>()
@@ -1876,14 +1878,14 @@ export default function MapView() {
      이 지역에 상영이 없다는 사실은 행동이 붙은 카드. 숫자는 현재 지역 기준으로,
      지도에 실제로 보이는 것과 같아야 한다. */
   const regionNotice = useMemo(() => {
-    if (!movieFilter) return null
+    if (!movieFilter || mapDataLoading) return null
     return buildRegionNotice({
       movieTitle: movieFilter.title,
       movieId: movieFilter.id,
       regionId: filters.regionId,
       split: movieRegionSplit,
     })
-  }, [movieFilter, filters.regionId, movieRegionSplit])
+  }, [movieFilter, filters.regionId, movieRegionSplit, mapDataLoading])
 
   /* 지역 안내는 필터 결과 토스트와 같은 자리에서 한 번만 말한다 — 조합이 바뀔 때만 다시.
      지역 밖 상영이 있다는 안내도 같은 토스트다. 빠져나갈 길은 지역 필터 칩이 맡는다. */
@@ -3292,9 +3294,11 @@ export default function MapView() {
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100dvh', overflow: 'hidden' }}>
-      {/* 영화관 데이터 로딩 인디케이터 */}
-      <Toast message="영화관 불러오는 중…" visible={theatersLoading} />
-      <Toast message={filterToastMessage} trigger={filterToastTrigger} duration={2600} />
+      {/* 지도에 필요한 정보를 모두 받을 때까지 상태 안내를 유지한다 */}
+      <LoadingStatus message="상영 정보를 불러오는 중…" visible={mapDataLoading} />
+      <div hidden={mapDataLoading}>
+        <Toast message={filterToastMessage} trigger={filterToastTrigger} duration={2600} />
+      </div>
       {/* 지도 첫 방문 핀 안내 — 실제 포스터 핀 하나에 붙는다. 닫으면 지역 설정 안내가 이어서 뜬다 */}
       {pinHint.state === 'show' && <PinHint onDismiss={pinHint.dismiss} />}
       {/* iOS 키보드 트릭용 hidden dummy input — 항상 DOM에 존재 */}

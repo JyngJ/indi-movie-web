@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import type { Theater } from '@/types/api'
-import { Toast } from '@/components/primitives'
+import { LoadingStatus } from '@/components/primitives'
 import { getTheaterDetail, getTheaterTodayMovieTitles } from '@/lib/catalog/getTheaterDetail'
 import { resolveTheaterRegion } from '@/lib/regions'
 import { TheaterBody } from './TheaterBody'
@@ -98,7 +98,7 @@ export default async function FilmsTheaterDetailPage({
   if (!theater) notFound()
 
   return (
-    <Suspense fallback={<Toast message="불러오는 중…" visible />}>
+    <Suspense fallback={<LoadingStatus />}>
       <TheaterBody id={id} theater={theater} />
     </Suspense>
   )

@@ -482,10 +482,25 @@ export const GUIDES: Record<string, ComponentGuide> = {
     ],
   },
 
+  LoadingStatus: {
+    intro: '정보를 불러오는 동안 상태를 알리는 안내입니다. 요청이 끝날 때까지 유지하고, 완료되면 숨깁니다.',
+    specs: [
+      { title: '표시 위치', desc: '지도·화면 로딩은 floating, 목록·패널 안의 안내는 inline을 사용합니다.' },
+    ],
+    usage: [
+      { kind: 'do', rule: '필요한 정보를 모두 불러올 때까지 표시합니다. 기다리는 동안 빈 결과를 확정하지 않습니다.' },
+      { kind: 'dont', rule: '완료 결과나 오류를 로딩 안내로 표시하지 않습니다.', instead: '방금 한 행동의 결과는 Toast, 실패는 다음 행동이 있는 오류 안내를 사용합니다.' },
+    ],
+    a11y: [
+      { title: '상태 낭독', desc: 'role="status"로 기다리는 상태를 알리고 초점을 빼앗지 않습니다.' },
+      { title: '동작 최소화', desc: '동작 최소화를 설정하면 회전 없이 아이콘과 문구를 표시합니다.' },
+    ],
+  },
+
   Toast: {
     intro: '결과를 알리고 사라지는 알림입니다. 사용자의 다음 동작을 막지 않습니다(pointer-events 없음).',
     specs: [
-      { title: '지속', desc: '기본 1600ms이며, trigger 값을 올릴 때마다 다시 표시됩니다.' },
+      { title: '지속', desc: '기본 1600ms이며, trigger 값을 올릴 때마다 다시 표시됩니다. 불러오는 동안 유지하는 안내는 LoadingStatus를 사용합니다.' },
     ],
     usage: [
       { kind: 'do', rule: '끝난 일을 알립니다 — "관심 영화에 담았어요". 사용자가 방금 한 행동의 결과만 담습니다.' },

@@ -39,3 +39,5 @@ export { FavoriteButton } from './FavoriteButton'
 
 export { PanelScrollBody } from './PanelScrollBody'
 export { FavoriteToggle } from './FavoriteToggle'
+
+export { LoadingStatus } from './LoadingStatus'

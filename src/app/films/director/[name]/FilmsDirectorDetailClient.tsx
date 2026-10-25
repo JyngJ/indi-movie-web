@@ -14,7 +14,7 @@ import { toSecureImageUrl } from '@/lib/media/imageUrl'
 import type { Movie } from '@/types/api'
 import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWidget'
 import { shareAndTrack } from '@/lib/analytics/shareTracking'
-import { Toast, Avatar, IconButton, SortToggle, Icon, EmptyState } from '@/components/primitives'
+import { LoadingStatus, Avatar, IconButton, SortToggle, Icon, EmptyState } from '@/components/primitives'
 import { Button } from '@/components/primitives'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 
@@ -97,7 +97,7 @@ export function FilmsDirectorDetailClient({ directorName }: { directorName: stri
   const visibleMovies = directorMovies
 
   if (isLoading) {
-    return <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}><Toast message="불러오는 중…" visible /></div>
+    return <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}><LoadingStatus /></div>
   }
 
   const navBar = (

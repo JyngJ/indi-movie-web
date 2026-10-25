@@ -6,7 +6,7 @@ import {
   Divider, EmptyState, FabRound, FavoriteButton, FilterPill, GenreChip,
   Icon, IconButton, Input, GoogleLoginButton, KakaoLoginButton, ListRow, MenuCard, MenuRow, PosterChip,
   ScrollNavButton, Switch, Tabs,
-  SearchBar, SearchBarButton, SectionHeader, Skeleton, SortToggle, Wordmark,
+  LoadingStatus, SearchBar, SearchBarButton, SectionHeader, Skeleton, SortToggle, Wordmark,
   MovieCardSkeleton, TheaterCardSkeleton,
 } from '@/components/primitives'
 
@@ -254,6 +254,7 @@ const THUMBS: Record<string, ReactNode> = {
       <SectionHeader title="오늘의 특별전" emoji="🎞" description="전국 독립·예술영화관" />
     </div>
   ),
+  LoadingStatus: <LoadingStatus placement="inline" />,
   Skeleton: (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
       <Skeleton width={140} height={14} />
