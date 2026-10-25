@@ -290,12 +290,22 @@ export interface AutoMatchCategorySummary {
   uniqueTitles: number
 }
 
+/** 미매칭 제목 하나 — 무엇을 못 찾았는지와 걸린 극장 */
+export interface UnmatchedTitleSummary {
+  title: string
+  screenings: number
+  theaterNames: string[]
+  missing: 'movie' | 'theater' | 'both'
+}
+
 export interface AutoMatchSummary {
   autoApproved: AutoMatchCategorySummary
   matchedNeedsReview: AutoMatchCategorySummary
   unmatched: AutoMatchCategorySummary
   writeFailed: AutoMatchCategorySummary
   uniqueMovieTitles: number
+  /** 미매칭 회차가 많은 제목 순(최대 5편) — Discord 보고에서 원인을 바로 보이게 */
+  topUnmatched: UnmatchedTitleSummary[]
 }
 
 export interface CandidateAutoMatchResult extends AutoMatchSummary {
