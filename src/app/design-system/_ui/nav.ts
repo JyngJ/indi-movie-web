@@ -56,7 +56,7 @@ export const COMPONENT_GROUPS: { title: string; desc: string; names: string[] }[
   {
     title: 'Feedback',
     desc: '상태를 알리는 것',
-    names: ['Toast', 'EmptyState', 'Skeleton'],
+    names: ['Toast', 'LoadingStatus', 'EmptyState', 'Skeleton'],
   },
   {
     title: 'Overlay',

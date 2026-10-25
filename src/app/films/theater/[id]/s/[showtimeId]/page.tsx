@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
-import { Toast } from '@/components/primitives'
+import { LoadingStatus } from '@/components/primitives'
 import { getTheaterDetail } from '@/lib/catalog/getTheaterDetail'
 import { getShowtimeById } from '@/lib/catalog/getShowtimeById'
 import { ogImageUrl } from '@/lib/og/cards'
@@ -71,7 +71,7 @@ export default async function TheaterShowtimeSharePage({
   if (!st || st.theaterId !== id) redirect(`/films/theater/${id}`)
 
   return (
-    <Suspense fallback={<Toast message="불러오는 중…" visible />}>
+    <Suspense fallback={<LoadingStatus />}>
       <TheaterBody
         id={id}
         theater={theater}

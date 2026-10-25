@@ -9,7 +9,7 @@ import { locationAdapter } from '@/lib/adapters/location'
 import { calculateAndFormatDistance, calculateDistanceKm } from '@/lib/map/distanceUtils'
 import { getRegionFromAddress } from '@/lib/regions'
 import { formatDateLabel } from '@/lib/date'
-import { Toast, Button, Divider, Tabs, TheaterCardSkeleton } from '@/components/primitives'
+import { LoadingStatus, Button, Divider, Tabs, TheaterCardSkeleton } from '@/components/primitives'
 import { MovieInfoTable } from '@/components/domain/movieDetail/MovieInfoTable'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 import { PanelShell } from './PanelShell'
@@ -58,7 +58,7 @@ export function MoviePanel({
     return (
       <PanelShell onClose={onClose} onBack={onBack} embedded={embedded}>
         <div style={{ height: 200 }}>
-          <Toast message="불러오는 중…" visible />
+          <LoadingStatus />
         </div>
       </PanelShell>
     )

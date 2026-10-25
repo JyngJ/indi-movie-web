@@ -5,7 +5,7 @@ import {
   Avatar, Badge, BottomSheet, BubbleTail, Button, Card, Chip, DirectorChip, FabRound,
   FilterPill, GenreChip, IconButton, Input, MovieCardSkeleton, PosterChip, ScrollNavButton,
   SearchBar, SearchBarButton, SectionHeader, Skeleton, SortToggle, TheaterCardSkeleton,
-  Toast, Wordmark,
+  LoadingStatus, Toast, Wordmark,
 } from '@/components/primitives'
 import { useState } from 'react'
 import { GUIDES } from '@/design-system/guides'
@@ -665,6 +665,10 @@ const DOCS: Record<string, Doc> = {
         <SectionHeader title="이번 주 GV" description="감독과의 대화가 열리는 상영이 있는 극장과 시간표를 모아 안내합니다. 예매는 각 극장에서" />
       </div>,
     ],
+  },
+
+  LoadingStatus: {
+    hero: <LoadingStatus placement="inline" message="상영 정보를 불러오는 중…" />,
   },
 
   Toast: {

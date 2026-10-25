@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useMovies, useActiveMovieIds } from '@/lib/supabase/queries'
-import { Toast, SortToggle } from '@/components/primitives'
+import { LoadingStatus, SortToggle } from '@/components/primitives'
 import { PanelShell } from './PanelShell'
 import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
 import { Icon } from '@/components/primitives'
@@ -45,7 +45,7 @@ export function DirectorPanel({
     return (
       <PanelShell onClose={onClose} onBack={onBack} embedded={embedded}>
         <div style={{ height: 200 }}>
-          <Toast message="불러오는 중…" visible />
+          <LoadingStatus />
         </div>
       </PanelShell>
     )

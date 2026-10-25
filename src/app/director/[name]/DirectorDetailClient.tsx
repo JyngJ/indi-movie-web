@@ -5,7 +5,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMovies, useActiveMovieIds, useDirectorProfile } from '@/lib/supabase/queries'
 import type { Movie } from '@/types/api'
-import { Toast, IconButton, SortToggle, Icon, EmptyState } from '@/components/primitives'
+import { LoadingStatus, IconButton, SortToggle, Icon, EmptyState } from '@/components/primitives'
 import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 import { DetailTopBar } from '@/components/navigation/DetailTopBar'
@@ -198,7 +198,7 @@ export function DirectorDetailClient({ directorName }: { directorName: string })
   if (isLoading) {
     return (
       <div style={{ minHeight: '100svh', backgroundColor: 'var(--color-surface-bg)' }}>
-        <Toast message="불러오는 중…" visible />
+        <LoadingStatus />
       </div>
     )
   }

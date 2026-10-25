@@ -5,7 +5,7 @@ import {
   Avatar, Badge, BottomSheet, BubbleTail, Button, Card, CardContainer, Chip, DirectorChip,
   Divider, EmptyState, FabRound, FilterPill, GenreChip, Icon, IconButton, Input,
   ListRow, PosterChip, ScrollNavButton, Switch, Tabs,
-  SearchBar, SearchBarButton, SectionHeader, Skeleton, SortToggle, Toast, Wordmark,
+  LoadingStatus, SearchBar, SearchBarButton, SectionHeader, Skeleton, SortToggle, Toast, Wordmark,
   MovieCardSkeleton, TheaterCardSkeleton, FavoriteToggle, PanelScrollBody, MenuCard, MenuRow,
 } from '@/components/primitives'
 
@@ -503,6 +503,8 @@ const DEMOS: Record<string, ReactNode> = {
       </Case>
     </Row>
   ),
+  LoadingStatus: <LoadingStatus placement="inline" message="상영 정보를 불러오는 중…" />,
+
   Toast: <Case label="trigger 값을 올리면 표시됩니다"><ToastDemo /></Case>,
   BottomSheet: (
     <Case label="시트 면 — 핸들과 상단 라운드">

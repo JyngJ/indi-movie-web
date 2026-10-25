@@ -144,6 +144,7 @@ The crawler runs on a Raspberry Pi (`ssh pi@100.76.84.97`, Tailscale). Full runb
 ## 알림 그릇 (토스트 기준)
 
 - 규칙 원본: `src/design-system/interactionRules.ts`의 "알림 그릇 고르기" + `GUIDES.Toast`.
+- **불러오는 상태는 `LoadingStatus`.** 필요한 정보가 준비될 때까지 유지하고, 그동안 빈 결과를 확정하지 않는다. 화면 위 안내는 `floating`, 목록·패널 안에서는 `inline`을 쓴다.
 - **방금 한 행동의 결과는 토스트.** 스스로 사라지고 닫기 버튼을 두지 않는다. 화면 아래 가운데 `--color-neutral-900` 면.
 - **토스트가 사라진 뒤 돌아갈 길이 화면에 남아 있어야 한다.** 지도 지역 안내는 지역 필터 칩이 그 길이라 토스트로 충분하다.
 - **되돌릴 길이 없거나 결정을 받아야 하면 시트·다이얼로그.** 그런 일을 토스트로 알리지 않는다.

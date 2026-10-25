@@ -7,7 +7,7 @@ import { getDirectorScreenings } from '@/lib/seo/getDirectorScreenings'
 import { toFaqSchema } from '@/lib/seo/toFaqSchema'
 import { toBreadcrumbSchema } from '@/lib/seo/toBreadcrumbSchema'
 import { ogImageUrl } from '@/lib/og/cards'
-import { Toast } from '@/components/primitives'
+import { LoadingStatus } from '@/components/primitives'
 import { robotsForScreenings } from '@/lib/seo/indexPolicy'
 
 export const revalidate = 21600
@@ -84,7 +84,7 @@ export default async function FilmsDirectorDetailPage({ params }: { params: Prom
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <DirectorSeoContent directorName={directorName} data={seoData} />
-      <Suspense fallback={<Toast message="불러오는 중…" visible />}>
+      <Suspense fallback={<LoadingStatus />}>
         <FilmsDirectorDetailClient directorName={directorName} />
       </Suspense>
     </>
