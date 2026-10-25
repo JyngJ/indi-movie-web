@@ -63,6 +63,7 @@ import { PosterGrid } from './PosterGrid'
 import { ViewportTracker, ZoomSlider, OffScreenTracker, MapRefSetter, MapInteractionTracker } from './MapControls'
 import { SettingsPanel } from './SettingsPanel'
 import { toSecureImageUrl } from '@/lib/media/imageUrl'
+import { isSoldOut } from '@/lib/catalog/seatAvailability'
 import { useFirstUseHint } from '@/hooks/useFirstUseHint'
 import { PinHint } from './PinHint'
 
@@ -1622,7 +1623,7 @@ export default function MapView() {
         byTheater.set(showtime.theaterId, theaterMovies)
       }
 
-      const hasSeats = showtime.seatAvailable > 0
+      const hasSeats = !isSoldOut(showtime.seatAvailable, showtime.seatTotal)
       const current = theaterMovies.get(showtime.movieId)
       if (current) {
         current.showtimeCount += 1
@@ -1660,7 +1661,7 @@ export default function MapView() {
         const [th, tm] = showtime.showTime.split(':').map(Number)
         const nowNow = new Date()
         const nowNowMins = nowNow.getHours() * 60 + nowNow.getMinutes()
-        list.push({ time: showtime.showTime.slice(0, 5), soldout: showtime.seatAvailable === 0, past: th * 60 + tm < nowNowMins })
+        list.push({ time: showtime.showTime.slice(0, 5), soldout: isSoldOut(showtime.seatAvailable, showtime.seatTotal), past: th * 60 + tm < nowNowMins })
         tMap.set(showtime.movieId, list)
       }
     }

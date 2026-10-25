@@ -1487,6 +1487,20 @@ function parseCsv(content: string, context: ParseContext) {
 }
 
 /* ── petitecine (/api/W0060.do) ──────────────────────────────── */
+/**
+ * 쁘띠씨네 회차의 잔여석. `ticketing_seat_count`는 남은 좌석이 아니라 **예매된 좌석**이다.
+ * 2026-10-25 실측: 앞으로의 105회차 중 99회차가 0, 나머지도 2·3·10·20뿐(283석 관 포함)이라
+ * 잔여석으로 읽으면 거의 전부 매진이 된다 — 실제로 99회차 중 96회차가 매진으로 떠 있었다.
+ * 좌석 필드는 movie_seat_count(총)·seat_x/y_count(배치)·ticketing_seat_count 넷뿐이다.
+ */
+export function petitecineSeats(row: Record<string, unknown>): { seatAvailable: number; seatTotal: number } {
+  const total = Number(row['movie_seat_count'] ?? 0)
+  const booked = Number(row['ticketing_seat_count'] ?? 0)
+  if (!Number.isFinite(total) || total <= 0) return { seatAvailable: 0, seatTotal: 0 }
+  const sold = Number.isFinite(booked) && booked > 0 ? booked : 0
+  return { seatAvailable: Math.max(0, total - sold), seatTotal: total }
+}
+
 async function crawlPetitecine(context: ParseContext): Promise<CrawledShowtimeCandidate[]> {
   const cinemaId = new URL(context.source.listingUrl).searchParams.get('cinema_id') ?? ''
   if (!cinemaId) throw new Error('petitecine: cinema_id 없음')
@@ -1521,8 +1535,7 @@ async function crawlPetitecine(context: ParseContext): Promise<CrawledShowtimeCa
       const endTime = rawEnd.length >= 4 ? normalizeCompactTime(rawEnd) ?? `${rawEnd.slice(0, 2)}:${rawEnd.slice(2, 4)}` : undefined
       const movieTitle = stripTitleFormatSuffix(row['movie_name'])
       const screenName = String(row['theater_name'] ?? '상영관')
-      const seatAvail = Number(row['ticketing_seat_count'] ?? 0)
-      const seatTotal = Number(row['movie_seat_count'] ?? 0)
+      const { seatAvailable: seatAvail, seatTotal } = petitecineSeats(row)
       const closed = seatTotal > 0 && seatAvail === 0
 
       allCandidates.push(buildCandidate({

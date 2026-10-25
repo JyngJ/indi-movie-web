@@ -33,6 +33,7 @@ import { GvDetailPanel } from './GvDetailPanel'
 import { BookingCtaButton, ShareScheduleButton } from './booking/BookingActions'
 import type { GvEvent } from '@/data/gv-events'
 import { toSecureImageUrl } from '@/lib/media/imageUrl'
+import { isSoldOut } from '@/lib/catalog/seatAvailability'
 import { naverDirectionsUrls } from '@/lib/map/directions'
 
 /* ── 상수 ──────────────────────────────────────────────────────── */
@@ -484,14 +485,14 @@ export function TheaterSheet({
 
   /* ── 매진 영화 ID 집합 (선택일 기준) ── */
   const soldoutMovieIds = useMemo(() => {
-    const byMovie = new Map<string, number[]>()
+    const byMovie = new Map<string, boolean[]>()
     for (const st of showtimes) {
       if (!byMovie.has(st.movieId)) byMovie.set(st.movieId, [])
-      byMovie.get(st.movieId)!.push(st.seatAvailable)
+      byMovie.get(st.movieId)!.push(isSoldOut(st.seatAvailable, st.seatTotal))
     }
     const ids = new Set<string>()
     for (const [id, seats] of byMovie) {
-      if (seats.length > 0 && seats.every((s) => s === 0)) ids.add(id)
+      if (seats.length > 0 && seats.every(Boolean)) ids.add(id)
     }
     return ids
   }, [showtimes])
@@ -1740,8 +1741,8 @@ export function TheaterSheet({
                   const kind: import('./ShowtimeCell').ShowtimeKind = (() => {
                     if (isToday && endMin <= nowMinutes) return 'ended'
                     if (isToday && startMin < nowMinutes && endMin > nowMinutes) return 'nowplaying'
-                    if (st.seatAvailable === 0) return 'soldout'
-                    if (st.seatAvailable <= st.seatTotal * 0.1) return 'low'
+                    if (isSoldOut(st.seatAvailable, st.seatTotal)) return 'soldout'
+                    if (st.seatTotal > 0 && st.seatAvailable <= st.seatTotal * 0.1) return 'low'
                     if (sh >= 21) return 'late'
                     return 'normal'
                   })()

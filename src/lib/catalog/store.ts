@@ -1,6 +1,6 @@
 import type { CatalogMovie, CatalogResponse, CatalogShowtime, CatalogTheater } from '@/types/catalog'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
-import { isAlmostSoldOut } from './seatAvailability'
+import { isAlmostSoldOut, isSoldOut } from './seatAvailability'
 import { isLateNightTime } from './lateNight'
 import { toSecureImageUrl } from '@/lib/media/imageUrl'
 
@@ -158,7 +158,7 @@ function movieFromRow(row: MovieRow): CatalogMovie {
 function showtimeFromRow(row: ShowtimeRow): CatalogShowtime {
   const seatAvailable = Number(row.seat_available ?? 0)
   const seatTotal = Number(row.seat_total ?? 0)
-  const kind = seatAvailable <= 0
+  const kind = isSoldOut(seatAvailable, seatTotal)
     ? 'soldout'
     : isLateNightTime(row.show_time)
       ? 'late'

@@ -23,6 +23,7 @@ import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/compo
 import { Skeleton, ShowtimeCellSkeleton, Button, Icon, EmptyState } from '@/components/primitives'
 import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
 import { ShowtimeCell } from '@/components/domain/ShowtimeCell'
+import { isSoldOut } from '@/lib/catalog/seatAvailability'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 
 function useIsDesktop() {
@@ -65,7 +66,7 @@ function formatLabel(st: Showtime): string {
 
 /* ── ShowtimeChip ──────────────────────────────────────────────── */
 function ShowtimeChip({ st, selected, onClick }: { st: Showtime; selected?: boolean; onClick?: () => void }) {
-  const soldout = st.seatAvailable === 0
+  const soldout = isSoldOut(st.seatAvailable, st.seatTotal)
   const low = !soldout && st.seatAvailable !== null && st.seatTotal > 0 && st.seatAvailable <= 20
   const seatColor = soldout ? 'var(--color-error)' : low ? 'var(--color-warning)' : 'var(--color-primary-base)'
   const label = formatLabel(st)
@@ -192,7 +193,7 @@ function MovieShowtimeCard({
           const kind: import('@/components/domain/ShowtimeCell').ShowtimeKind = (() => {
             if (isTodaySelected && endMin <= nowMinutes) return 'ended'
             if (isTodaySelected && startMin < nowMinutes && endMin > nowMinutes) return 'nowplaying'
-            if (st.seatAvailable === 0) return 'soldout'
+            if (isSoldOut(st.seatAvailable, st.seatTotal)) return 'soldout'
             if (st.seatTotal > 0 && st.seatAvailable <= st.seatTotal * 0.1) return 'low'
             if (sh >= 21) return 'late'
             return 'normal'
@@ -397,7 +398,7 @@ export function FilmsTheaterDetailClient({ theater, initialSelection, initialSho
           : sh * 60 + sm + 120
         return endMin > nowMinutes
       })
-      if (notEnded.length > 0 && notEnded.every((st) => st.seatAvailable === 0)) return 1
+      if (notEnded.length > 0 && notEnded.every((st) => isSoldOut(st.seatAvailable, st.seatTotal))) return 1
       return 0
     }
     return dayMovies.map((m) => ({ movie: m, showtimes: map.get(m.id) ?? [] }))

@@ -408,6 +408,8 @@ export interface MapShowtime {
   showDate: string
   showTime: string
   seatAvailable: number
+  /** 0이면 좌석을 안 주는 소스 — 매진 판정에서 빼야 한다(isSoldOut) */
+  seatTotal: number
   bookingUrl?: string
   movie: MapShowtimeMovie | null
 }
@@ -426,6 +428,7 @@ export function useMapShowtimes(startDate: string, endDate: string) {
         showDate: r.showDate,
         showTime: r.showTime,
         seatAvailable: r.seatAvailable ?? 0,
+        seatTotal: r.seatTotal ?? 0,
         bookingUrl: r.bookingUrl,
         movie: r.movie ? {
           id: r.movie.id,

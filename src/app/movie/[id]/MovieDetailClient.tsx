@@ -32,6 +32,7 @@ import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/compo
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 import { NoScreeningPanel } from '@/components/domain/movieDetail/NoScreeningPanel'
 import type { SimilarPick } from '@/lib/catalog/similarNowShowing'
+import { isSoldOut } from '@/lib/catalog/seatAvailability'
 
 function useIsDesktop() {
   const [v, setV] = useState(false)
@@ -59,7 +60,7 @@ function formatDateTab(dateStr: string) {
 /* ── 아이콘 ─────────────────────────────────────────────────────── */
 /* ── ShowtimeChip ──────────────────────────────────────────────── */
 function ShowtimeChip({ st, selected, onClick }: { st: Showtime; selected?: boolean; onClick?: () => void }) {
-  const soldout = st.seatAvailable === 0
+  const soldout = isSoldOut(st.seatAvailable, st.seatTotal)
   const low = !soldout && st.seatTotal > 0 && st.seatAvailable <= 20
   const seatColor = soldout ? 'var(--color-error)' : low ? 'var(--color-warning)' : 'var(--color-primary-base)'
   return (
@@ -273,7 +274,7 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection, s
           /* 예매 가능 = 좌석이 남았고 아직 안 끝난 회차 — 상영 완료를 남기면 필터 이름이 거짓말이 된다 (2026-08-24) */
           .filter((st) => {
             if (!bookableOnly) return true
-            if (st.seatAvailable <= 0) return false
+            if (isSoldOut(st.seatAvailable, st.seatTotal)) return false
             if (selectedDate !== dates[0]) return true
             const now = new Date()
             const nowMinutes = now.getHours() * 60 + now.getMinutes()
@@ -538,7 +539,7 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection, s
             const kind: import('@/components/domain/ShowtimeCell').ShowtimeKind = (() => {
               if (isToday && endMin <= nowMinutes) return 'ended'
               if (isToday && startMin < nowMinutes && endMin > nowMinutes) return 'nowplaying'
-              if (st.seatAvailable === 0) return 'soldout'
+              if (isSoldOut(st.seatAvailable, st.seatTotal)) return 'soldout'
               if (st.seatTotal > 0 && st.seatAvailable <= st.seatTotal * 0.1) return 'low'
               if (sh >= 21) return 'late'
               return 'normal'
