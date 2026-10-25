@@ -3,7 +3,7 @@ import { readFile } from 'fs/promises'
 import path from 'path'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { formatDateLabel } from '@/lib/date'
-import { isAlmostSoldOut } from '@/lib/catalog/seatAvailability'
+import { isAlmostSoldOut, isSoldOut } from '@/lib/catalog/seatAvailability'
 
 /* 링크 미리보기(카카오톡·디스코드·트위터) OG 카드 공용 렌더러.
  *
@@ -199,7 +199,7 @@ async function fetchShowtimeContext(showtimeId: string): Promise<ShowtimeContext
  * 좌석 색만 화면과 같은 규칙을 쓴다 — 매진은 회색, 잔여 10% 이하는 오커, 그 외 primary.
  */
 function ShowtimeCellBlock({ showtime }: { showtime: ShowtimeContext }) {
-  const soldout = showtime.seatAvailable <= 0
+  const soldout = isSoldOut(showtime.seatAvailable, showtime.seatTotal)
   const seatColor = soldout
     ? OG_COLOR.seatSoldout
     : isAlmostSoldOut(showtime.seatAvailable, showtime.seatTotal)

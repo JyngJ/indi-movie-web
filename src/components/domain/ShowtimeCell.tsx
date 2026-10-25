@@ -98,6 +98,10 @@ export function ShowtimeCell({
           <span className="projector-gate" style={{ fontSize: 'var(--text-body)', fontWeight: 700 }}>지금 상영중</span>
         ) : isEnded ? (
           <span style={{ fontSize: 'var(--text-body)', color: 'var(--color-text-placeholder)', fontWeight: 700 }}>상영 완료</span>
+        ) : seatTotal <= 0 ? (
+          /* 좌석을 안 주는 소스(KOFA·OCR)는 0/0 — 숫자를 그리면 잔여 0석으로 읽힌다.
+             셀 안쪽 폭(최소 72px)에 들어가게 짧게, 할 수 있는 일로 적는다 */
+          <span style={{ color: 'var(--color-text-sub)' }}>예매처 확인</span>
         ) : (
           <>
             <span style={{ color: seatColor, fontWeight: 600, textDecoration: isSoldout ? 'line-through' : 'none' }}>{seatAvailable}</span>

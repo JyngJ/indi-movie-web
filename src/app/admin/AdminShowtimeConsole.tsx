@@ -33,6 +33,7 @@ import {
   type SourceFormState,
 } from './adminShowtimeConsole/types'
 import { groupByCity, normalizeSearchText, splitListInput, upsertOption } from './adminShowtimeConsole/utils'
+import { isSoldOut } from '@/lib/catalog/seatAvailability'
 
 export function AdminShowtimeConsole({ tabSlot }: { tabSlot?: React.ReactNode } = {}) {
   const router = useRouter()
@@ -109,7 +110,7 @@ export function AdminShowtimeConsole({ tabSlot }: { tabSlot?: React.ReactNode } 
   const matchedCount = payload.candidates.filter((candidate) => candidate.matchedTheaterId && candidate.matchedMovieId).length
   const unmatchedCount = payload.candidates.filter((c) => !c.matchedTheaterId || !c.matchedMovieId).length
   const warningCount = payload.candidates.filter((c) => c.warnings.length > 0).length
-  const soldoutCount = payload.candidates.filter((c) => c.seatAvailable === 0).length
+  const soldoutCount = payload.candidates.filter((c) => isSoldOut(c.seatAvailable, c.seatTotal)).length
   const latestCandidateIdSet = useMemo(() => new Set(latestCandidateIds), [latestCandidateIds])
   const latestCount = payload.candidates.filter((candidate) => latestCandidateIdSet.has(candidate.id)).length
 
@@ -120,7 +121,7 @@ export function AdminShowtimeConsole({ tabSlot }: { tabSlot?: React.ReactNode } 
     if (candidateFilter === 'latest') list = list.filter((c) => latestCandidateIdSet.has(c.id))
     else if (candidateFilter === 'unmatched') list = list.filter((c) => !c.matchedTheaterId || !c.matchedMovieId)
     else if (candidateFilter === 'warning') list = list.filter((c) => c.warnings.length > 0)
-    else if (candidateFilter === 'soldout') list = list.filter((c) => c.seatAvailable === 0)
+    else if (candidateFilter === 'soldout') list = list.filter((c) => isSoldOut(c.seatAvailable, c.seatTotal))
 
     const query = normalizeSearchText(candidateSearchQuery)
     if (!query) return list
@@ -1437,7 +1438,7 @@ export function AdminShowtimeConsole({ tabSlot }: { tabSlot?: React.ReactNode } 
                 {visibleCandidates.map((candidate) => {
                   const isUnmatched = !candidate.matchedTheaterId || !candidate.matchedMovieId
                   const hasWarning = candidate.warnings.length > 0
-                  const isSoldout = candidate.seatAvailable === 0
+                  const isSoldout = isSoldOut(candidate.seatAvailable, candidate.seatTotal)
                   const rowClass = isUnmatched ? styles.rowUnmatched : hasWarning ? styles.rowWarning : isSoldout ? styles.rowSoldout : ''
                   return (
                   <tr key={candidate.id} className={rowClass}>

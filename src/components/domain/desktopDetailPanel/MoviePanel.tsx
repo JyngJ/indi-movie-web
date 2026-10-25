@@ -17,6 +17,7 @@ import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionR
 import { FavoriteDirectorMark } from '@/components/domain/favorites/FavoriteDirectorMark'
 import { Icon } from '@/components/primitives'
 import { toSecureImageUrl } from '@/lib/media/imageUrl'
+import { isSoldOut } from '@/lib/catalog/seatAvailability'
 
 /* ── 영화 상세 패널 ── */
 export function MoviePanel({
@@ -289,7 +290,7 @@ function MovieTheatersTab({
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {group.showtimes.map((st) => {
-              const soldout = st.seatAvailable === 0
+              const soldout = isSoldOut(st.seatAvailable, st.seatTotal)
               const low = !soldout && st.seatAvailable !== null && st.seatAvailable <= 20
               const seatColor = soldout ? 'var(--color-error)' : low ? 'var(--color-warning)' : 'var(--color-primary-base)'
               return (
