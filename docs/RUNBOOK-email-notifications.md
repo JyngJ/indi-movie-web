@@ -3,7 +3,7 @@
 ## 구성과 기본값
 
 - 발신: `indi.movie.map@gmail.com`
-- 한국 시간 월·금 09:13, 실패한 작업은 10:13·11:13 재시도 (정각을 피한다 — 아래 참고)
+- 한국 시간 월·금 09:13에 라즈베리파이가 실행을 건다. GitHub 예약(09:13~21:13 매시)은 예비. 발송 창은 09:00~21:59 (아래 참고)
 - 소식이 없으면 발송하지 않음
 - 빈도 의견 자동 요청은 보류. 화면·저장 기능은 유지하고, 이용자가 모이면 일괄 설문한다
 - 웹 팝업과 실제 요약 발송은 각각 기본 비활성
@@ -38,7 +38,25 @@ OAuth 토큰은 반드시 `indi.movie.map@gmail.com`으로 발급한다. 다른 
 
 ## 정기 실행
 
-`.github/workflows/email-notifications.yml`은 UTC 월·금 00:13·01:13·02:13에 실행한다. 같은 날짜는 하나의 발송 슬롯이므로, 이미 보낸 사람에게 재시도에서 다시 보내지 않는다. GitHub 예약은 지연되거나 빠질 수 있다 — 2026-10-23 첫 발송일에 정각(09:00·10:00) 예약이 둘 다 돌지 않아 수동으로 보냈고, 그 뒤 :13으로 옮겼다. 예약이 안 돌면 12:00 전에 Actions → Email notifications → Run workflow로 수동 실행한다(중복 발송 없음). 한국 시간 정오 이후 또는 월·금 이외에는 새 작업을 만들지 않는다.
+주 실행은 **라즈베리파이 cron**이다. 월·금 09:13 KST에 `npm run notify:email:dispatch`가 GitHub API로 `email-notifications.yml`을 `workflow_dispatch` 실행한다. 발송 자체는 그대로 Actions에서 하므로 Gmail·서비스 키를 라즈베리파이에 두지 않는다.
+
+`.github/workflows/email-notifications.yml`의 예약(UTC 월·금 00:13~12:13 매시 = KST 09:13~21:13)은 예비다. 같은 날짜는 하나의 발송 슬롯이므로 여러 번 돌아도 이미 보낸 사람에게 다시 보내지 않는다. 발송 창은 KST 09:00~21:59(`EMAIL_SEND_WINDOW_KST`) — 창 밖이나 월·금 이외에는 아무것도 보내지 않는다.
+
+왜: GitHub 예약은 몇 시간씩 늦거나 빠진다. 2026-10-23 09:00 예약이 16:25에 돌았고(당시 창 09~12시 밖이라 아무것도 안 보냄), 10-26엔 09:13·10:13·11:13 예약이 12시 전에 하나도 오지 않아 그날 발송을 놓쳤다. 같은 날 구독자 수 집계 예약도 2시간 6분 늦었다. 정각을 :13으로 옮기는 것으로는 이 지연을 못 막는다.
+
+예약도 라즈베리파이도 안 돌면 22:00 전에 Actions → Email notifications → Run workflow로 수동 실행한다(중복 발송 없음).
+
+### 라즈베리파이 설정
+
+1. GitHub → Settings → Developer settings → Fine-grained tokens에서 토큰을 만든다. Repository access는 `JyngJ/indi-movie-web` 하나, 권한은 **Actions: Read and write** 하나만. 만료일을 정하고 그 날짜를 달력에 적어 둔다.
+2. 라즈베리파이 `/home/pi/movie/.env.local`에 `GITHUB_EMAIL_DISPATCH_TOKEN=<토큰>`을 추가한다. 토큰을 채팅·저장소에 붙이지 않는다.
+3. 라즈베리파이 시간대를 `timedatectl`로 확인하고 crontab에 09:13 KST에 해당하는 줄을 넣는다. KST면 `13 9 * * 1,5`, UTC면 `13 0 * * 1,5`.
+   ```
+   13 9 * * 1,5 cd /home/pi/movie && npm run notify:email:dispatch >> /home/pi/email-dispatch.log 2>&1
+   ```
+4. 확인: `npm run notify:email:dispatch` 한 번 → Actions에 `workflow_dispatch` 실행이 생기는지 본다. 발송 창 밖이면 실행은 성공하고 아무것도 보내지 않는다.
+
+실행을 못 걸면(토큰 없음·만료·권한 부족·연결 실패) `DISCORD_REPORT_WEBHOOK_URL`로 경고가 온다. 토큰 만료가 가장 흔한 원인이다.
 
 저장소 Variables:
 

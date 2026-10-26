@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { normalizeEmail, scheduleSlot, shouldAskFrequency } from './domain'
 describe('email policy', () => {
-  it('월·금 한국 시간 오전에만 같은 날짜의 발송 슬롯을 사용한다', () => {
+  it('월·금 한국 시간 09:00~21:59에만 같은 날짜의 발송 슬롯을 사용한다', () => {
     expect(scheduleSlot(new Date('2026-10-18T23:59:00Z'))).toBeNull()
     expect(scheduleSlot(new Date('2026-10-19T00:00:00Z'))).toBe('2026-10-19')
     expect(scheduleSlot(new Date('2026-10-19T02:59:00Z'))).toBe('2026-10-19')
-    expect(scheduleSlot(new Date('2026-10-19T03:00:00Z'))).toBeNull()
+    // 예약이 늦게 와도 그날 저녁까지는 보낸다 (2026-10-23 09:00 예약이 16:25에 실행됨)
+    expect(scheduleSlot(new Date('2026-10-23T07:25:00Z'))).toBe('2026-10-23')
+    expect(scheduleSlot(new Date('2026-10-19T12:59:00Z'))).toBe('2026-10-19')
+    expect(scheduleSlot(new Date('2026-10-19T13:00:00Z'))).toBeNull()
     expect(scheduleSlot(new Date('2026-10-20T00:00:00Z'))).toBeNull()
     expect(scheduleSlot(new Date('2026-10-23T00:00:00Z'))).toBe('2026-10-23')
   })

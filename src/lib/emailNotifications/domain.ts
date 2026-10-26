@@ -22,12 +22,20 @@ export function normalizeEmail(raw: unknown): string | null {
   const email = raw.trim().toLowerCase()
   return email.length <= 254 && /^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\.[a-z]{2,}$/i.test(email) ? email : null
 }
+/**
+ * 발송 창(한국 시간, 끝 시각 미포함). 목표는 09시지만 GitHub 예약이 몇 시간씩 늦어서
+ * 창을 저녁까지 연다 — 2026-10-23 09:00 예약이 16:25에야 돌았고, 10-26 예약 셋은
+ * 12시 전에 하나도 오지 않아 오전 창(9~12시)이면 그날 발송을 통째로 놓쳤다.
+ * 22시 이후엔 밤 알림이 되므로 다음 발송일을 기다린다.
+ */
+export const EMAIL_SEND_WINDOW_KST = { startHour: 9, endHour: 22 } as const
+
 export function scheduleSlot(now: Date): string | null {
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23', weekday: 'short',
   }).formatToParts(now)
   const get = (type: string) => parts.find(p => p.type === type)?.value
-  if (!['Mon', 'Fri'].includes(get('weekday') ?? '') || Number(get('hour')) < 9 || Number(get('hour')) >= 12) return null
+  if (!['Mon', 'Fri'].includes(get('weekday') ?? '') || Number(get('hour')) < EMAIL_SEND_WINDOW_KST.startHour || Number(get('hour')) >= EMAIL_SEND_WINDOW_KST.endHour) return null
   return `${get('year')}-${get('month')}-${get('day')}`
 }
 /** TODO: 이용자가 충분히 모이면 일괄 빈도 설문을 기획한다.
