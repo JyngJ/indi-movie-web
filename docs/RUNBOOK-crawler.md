@@ -23,6 +23,7 @@
 | `15 1,7,13 * * *` | `npm run notify:favorites` (관심 알림 — 상영시간표 크롤 직후) | `notify.log` |
 | `0 */4 * * *` | `npm run check:crawl-health` | `health.log` |
 | `0 * * * *` | `dtryx-ban-watch.sh` (밴 감시, 알림전용) | `dtryx-ban-watch.log` |
+| `13 9 * * 1,5` (KST) | `npm run notify:email:dispatch` (소식 메일 워크플로 실행 — `RUNBOOK-email-notifications.md`) | `email-dispatch.log` |
 
 `crawl:seats` / `crawl:showtimes` / `check:crawl-health` 는 각각 Discord 리포트를 전송한다 (webhook `DISCORD_REPORT_WEBHOOK_URL`).
 
