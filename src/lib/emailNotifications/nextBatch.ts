@@ -15,6 +15,6 @@ export async function syncNextBatchPreview(preview: () => Promise<NextBatchPrevi
     const { slot, considered, ready } = await preview()
     if (![considered, ready].every(n => Number.isSafeInteger(n) && n >= 0)) return false
     return await captureEmailAggregate(NEXT_BATCH_EVENT, 'email-next-batch', startedAt,
-      { next_recipients: ready, active_subscribers: considered, slot, measured_at: startedAt })
+      { next_recipients: ready, active_subscribers: considered, send_date: slot, measured_at: startedAt })
   } catch { return false }
 }
