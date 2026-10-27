@@ -12,6 +12,8 @@ export interface AuthRepository {
   signOut(): Promise<void>
   /** 표시 이름 수정 (public.users.display_name). 반환: 갱신된 사용자 */
   updateDisplayName(displayName: string): Promise<AuthUser | null>
+  /** 마지막 지역 필터 저장 (public.users.preferred_city). null이면 지운다 */
+  updatePreferredRegion(regionId: string | null): Promise<void>
   /** 본인 계정 삭제 (auth.users → cascade) */
   deleteAccount(): Promise<void>
   /** 세션 변화 구독. 해제 함수 반환 */

@@ -16,6 +16,8 @@ interface AuthContextValue {
   signIn: (provider: OAuthProvider, returnTo?: string) => Promise<void>
   signOut: () => Promise<void>
   updateDisplayName: (displayName: string) => Promise<void>
+  /** 마지막 지역 필터를 계정에 저장 — 다음 방문에 복원된다 */
+  updatePreferredRegion: (regionId: string | null) => Promise<void>
   deleteAccount: () => Promise<void>
 }
 
@@ -114,6 +116,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (next) setUser(next)
   }, [])
 
+  const updatePreferredRegion = useCallback(async (regionId: string | null) => {
+    await getRepo().updatePreferredRegion(regionId)
+    setUser((prev) => (prev ? { ...prev, preferredRegion: regionId } : prev))
+  }, [])
+
   const deleteAccount = useCallback(async () => {
     await getRepo().deleteAccount()
     setUser(null)
@@ -121,8 +128,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const value = useMemo<AuthContextValue>(
-    () => ({ status, user, signIn, signOut, updateDisplayName, deleteAccount }),
-    [status, user, signIn, signOut, updateDisplayName, deleteAccount],
+    () => ({ status, user, signIn, signOut, updateDisplayName, updatePreferredRegion, deleteAccount }),
+    [status, user, signIn, signOut, updateDisplayName, updatePreferredRegion, deleteAccount],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -49,7 +49,6 @@ export interface FilterBarProps {
   onMovieChipClick?: () => void
   onDirectorChipClick?: () => void
   desktop?: boolean
-  defaultRegionId?: string | null
   /** 외부(큐레이션 '모두보기' 등)에서 관심 칩을 켜달라는 신호 — 값이 바뀔 때마다 켠다 (2026-08-18) */
   turnOnFavoritesSignal?: number
   /** 첫 사용 힌트(지도 핀 안내)가 아직 끝나지 않음 — 지역 안내를 그 뒤로 미룬다 */
@@ -67,7 +66,6 @@ export function FilterBar({
   onMovieChipClick,
   onDirectorChipClick,
   desktop = false,
-  defaultRegionId,
   turnOnFavoritesSignal,
   holdRegionHint = false,
 }: FilterBarProps) {
@@ -134,17 +132,12 @@ export function FilterBar({
     onChange?.({ dateId, customStart, customEnd, genres, nations, bookable, indie, regionId, favorites })
   }, [onChange, dateId, customStart, customEnd, genres, nations, bookable, indie, regionId, favorites])
 
+  // 접속 지역 자동 지정은 useCurrentLocationRegion이 저장소에 넣고, 여기선 구독으로 받는다.
+  // (예전엔 이 자리에서 GPS 기본값을 따로 넣어 상영작 탭과 규칙이 갈렸다)
   useEffect(() => {
-    // 사용자가 직접 선택한 경우 GPS 값으로 덮어쓰지 않음
-    if (userPickedRegionRef.current) return
-    // sessionStorage 저장값 > GPS 기본값
     const stored = getStoredRegion()
-    if (stored) { userPickedRegionRef.current = true; setRegionId(stored); return }
-    setRegionId(defaultRegionId ?? null)
-    // GPS 기본값도 공유 저장소에 반영 — 안 그러면 지도 탭에만 적용되고
-    // 상영작 탭은 지역 미설정 상태로 갈라짐 (이벤트로 전 화면 동기)
-    if (defaultRegionId) setStoredRegion(defaultRegionId)
-  }, [defaultRegionId])
+    if (stored) { userPickedRegionRef.current = true; setRegionId(stored) }
+  }, [])
 
   // 다른 화면(상영작 탭 등)에서 지역이 바뀌면 필터바 라벨도 즉시 동기화
   useEffect(() => subscribeStoredRegion((id) => {

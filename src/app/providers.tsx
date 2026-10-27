@@ -9,6 +9,7 @@ import { AuthProvider } from '@/components/auth/AuthProvider'
 import { RouteProgressBar } from '@/components/domain/RouteProgressBar'
 import { EmailNotificationPrompt } from '@/components/auth/EmailNotificationPrompt'
 import { LoginSheet } from '@/components/auth/LoginSheet'
+import { PreferredRegionSync } from '@/components/auth/PreferredRegionSync'
 
 /** disabled 컨트롤·스크림 위의 무반응 클릭을 잡는 전역 리스너 */
 function DeadClickTracking() {
@@ -42,6 +43,7 @@ export function Providers({ children }: { children: ReactNode }) {
       <AuthProvider>
         <OrientationLock />
         <DeadClickTracking />
+        <PreferredRegionSync />
         <RouteProgressBar />
         {children}
         {/* 전역 로그인 시트 — 포털이라 어느 셸에서든 뜬다 */}
