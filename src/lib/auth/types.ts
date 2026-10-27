@@ -11,6 +11,8 @@ export interface AuthUser {
   avatarUrl: string | null
   /** 로그인에 쓴 제공자들 (같은 이메일로 여러 개 연결될 수 있음) */
   providers: AuthProvider[]
+  /** 마지막으로 고른 지역 필터 (public.users.preferred_city, REGIONS id). 다음 방문에 복원한다 */
+  preferredRegion?: string | null
 }
 
 /** 프로필 사진은 앱 프로필 값을 우선하되 공백뿐인 값은 미설정으로 취급한다. */

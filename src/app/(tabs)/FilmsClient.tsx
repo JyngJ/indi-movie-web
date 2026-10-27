@@ -218,7 +218,7 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null)
   useEffect(() => { setSelectedRegion(getStoredRegion()) }, [])
   // 지도 탭에서 지역 바꿔도 동기 — persistent 탭 마운트라 이벤트 구독으로만 전달됨
-  useEffect(() => subscribeStoredRegion(setSelectedRegion), [])
+  useEffect(() => subscribeStoredRegion((id) => setSelectedRegion(id)), [])
 
   function pickRegion(id: string | null) {
     setSelectedRegion(id)

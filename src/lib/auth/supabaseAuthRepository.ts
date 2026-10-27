@@ -15,6 +15,7 @@ export const KAKAO_START_PATH = '/auth/kakao/start'
 interface ProfileRow {
   display_name: string | null
   avatar_url: string | null
+  preferred_city: string | null
 }
 
 /**
@@ -26,7 +27,7 @@ async function toAuthUser(supabase: SupabaseClient, user: User | null | undefine
   if (!base) return null
   const { data } = await supabase
     .from('users')
-    .select('display_name, avatar_url')
+    .select('display_name, avatar_url, preferred_city')
     .eq('id', base.id)
     .maybeSingle<ProfileRow>()
   if (!data) return base
@@ -34,6 +35,7 @@ async function toAuthUser(supabase: SupabaseClient, user: User | null | undefine
     ...base,
     displayName: data.display_name ?? base.displayName,
     avatarUrl: resolveAvatarUrl(data.avatar_url, base.avatarUrl),
+    preferredRegion: data.preferred_city,
   }
 }
 
@@ -103,6 +105,16 @@ export function createSupabaseAuthRepository(): AuthRepository {
         .eq('id', userData.user.id)
       if (error) throw error
       return toAuthUser(supabase, userData.user)
+    },
+
+    async updatePreferredRegion(regionId: string | null) {
+      const { data: userData, error: userError } = await supabase.auth.getUser()
+      if (userError || !userData.user) throw userError ?? new Error('not authenticated')
+      const { error } = await supabase
+        .from('users')
+        .update({ preferred_city: regionId })
+        .eq('id', userData.user.id)
+      if (error) throw error
     },
 
     async deleteAccount() {

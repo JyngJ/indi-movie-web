@@ -159,7 +159,7 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection, s
   const [regionId, setRegionId] = useState<string | null>(null)
   useEffect(() => { setRegionId(getStoredRegion()) }, [])
   // 다른 화면(지도 탭 등)의 지역 변경 동기
-  useEffect(() => subscribeStoredRegion(setRegionId), [])
+  useEffect(() => subscribeStoredRegion((id) => setRegionId(id)), [])
   const [selectedShowtimeId, setSelectedShowtimeId] = useState<string | null>(initialSelection?.showtimeId ?? null)
   const [selectedTheaterId, setSelectedTheaterId] = useState<string | null>(initialSelection?.theaterId ?? null)
   const [bookableOnly, setBookableOnly] = useState(false)

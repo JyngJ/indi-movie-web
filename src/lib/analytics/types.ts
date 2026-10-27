@@ -8,8 +8,9 @@ export type AnalyticsEventName =
   /* 2026-09-16 지역 안내를 카드에서 토스트로 바꾸면서 acted·dismissed는 사라졌다.
      (영화×지역) 조합마다 어떤 안내가 떴는지만 남긴다 — kind: summary | empty */
   | 'map region notice shown'
-  /** 위치 동의 사용자에게 접속 지역을 필터로 최초 1회 자동 지정 — region 속성 */
+  /** 세션 시작 시 지역 필터 자동 지정 — region 속성. auto assigned=접속 위치, restored=계정에 저장된 마지막 지역 */
   | 'region auto assigned'
+  | 'region restored'
   | 'map pin clicked'
   | 'theater sheet opened'
   | 'theater sheet expanded'

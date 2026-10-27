@@ -35,7 +35,7 @@ import type { Movie, Station, Theater } from '@/types/api'
 import type { TheaterEvent } from '@/types/admin'
 import { SEOUL_GU, SEOUL_DONG } from '@/data/seoul-areas'
 import { normalizeGenre } from '@/lib/genres'
-import { getRegionFromCity, getRegionFromCoords, REGION_BOUNDS } from '@/lib/regions'
+import { getRegionFromCity, REGION_BOUNDS } from '@/lib/regions'
 import { buildRegionNotice } from '@/lib/map/regionNotice'
 import { getStoredRegion, setStoredRegion, subscribeStoredRegion } from '@/lib/regionStorage'
 import { useUIStore } from '@/store/uiStore'
@@ -1285,7 +1285,7 @@ export default function MapView() {
         const prevRegion = autoRegionRef.current.prev
         autoRegionRef.current = null
         // 위와 동일한 이유로 sessionStorage를 거쳐 복원한다.
-        setStoredRegion(prevRegion)
+        setStoredRegion(prevRegion, { auto: true })
       }
       if (autoMovieFilterRef.current) {
         autoMovieFilterRef.current = false
@@ -1377,7 +1377,7 @@ export default function MapView() {
         autoRegionRef.current = { applied: targetRegion, prev: filters.regionId }
         // setFilters 직접 변경 금지 — sessionStorage(단일 source)를 거쳐야 상영작 탭 등
         // 다른 화면과 항상 동일한 값을 보게 된다. subscribeStoredRegion이 filters.regionId로 반영.
-        setStoredRegion(targetRegion)
+        setStoredRegion(targetRegion, { auto: true })
       }
       openDesktopPanel({ type: 'movie', id: movieId })
     } else {
@@ -3548,7 +3548,6 @@ export default function MapView() {
             onChange={setFilters}
             onChipChange={flyToFilter}
             turnOnFavoritesSignal={favoritesFilterSignal}
-            defaultRegionId={coords ? getRegionFromCoords(coords.lat, coords.lng) : null}
             nationOptions={nationOptions}
             movieFilter={movieFilter}
             directorFilter={directorFilter}

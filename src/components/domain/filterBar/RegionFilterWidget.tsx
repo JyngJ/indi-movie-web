@@ -13,7 +13,7 @@ export function RegionFilterWidget({ onRegionChange }: { onRegionChange?: (id: s
   useEffect(() => { setRegion(getStoredRegion()) }, [])
   // 지도 탭 등 다른 화면에서 지역이 바뀌면 이벤트로 동기 — persistent 탭 마운트라 재마운트가 없음.
   // onRegionChange는 부르지 않는다(부모 핸들러가 setStoredRegion을 다시 불러 이벤트 루프가 됨).
-  useEffect(() => subscribeStoredRegion(setRegion), [])
+  useEffect(() => subscribeStoredRegion((id) => setRegion(id)), [])
   const [open, setOpen] = useState(false)
   const chipRef = useRef<HTMLButtonElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
