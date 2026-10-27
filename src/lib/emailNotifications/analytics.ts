@@ -34,3 +34,18 @@ export async function captureEmailMetric(kind: EmailMetric, delivery: EmailDeliv
     return response.ok
   } catch { return false }
 }
+
+/** 개인과 연결하지 않는 집계값 이벤트(인원수 등). 사람 프로필·위치를 만들지 않는다. */
+export async function captureEmailAggregate(event: string, distinctId: string, timestamp: string, properties: Record<string, unknown>): Promise<boolean> {
+  if (!emailAnalyticsConfigured()) return false
+  try {
+    const host = new URL(process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com')
+    if (host.protocol !== 'https:') return false
+    const response = await fetch(new URL('/i/v0/e/', host), {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(3000),
+      body: JSON.stringify({ api_key: process.env.NEXT_PUBLIC_POSTHOG_TOKEN, event, distinct_id: distinctId, timestamp,
+        properties: { ...properties, $process_person_profile: false, $geoip_disable: true, $ip: '0.0.0.0' } }),
+    })
+    return response.ok
+  } catch { return false }
+}

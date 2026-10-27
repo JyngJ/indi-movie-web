@@ -42,3 +42,10 @@
 
 수동 조회: `npx tsx --env-file=.env.local scripts/snapshot-email-subscribers.ts`
 실제 저장: `EMAIL_ANALYTICS_ENABLED=true npx tsx --env-file=.env.local scripts/snapshot-email-subscribers.ts --send`
+
+## 다음 발송 대상자
+
+`email next batch snapshot`의 `next_recipients`를 최신 조회 시각 기준으로 읽는다. 다음 발송일(`slot`, 월·금)에 발송 작업을 지금 돌린다면 메일을 받을 인원이다. 수신 중이어도 보낼 소식이 없으면 빠지므로 현재 수신 등록 인원보다 작거나 같다. 발송 작업(`runEmailBatch`)을 조회 전용으로 그대로 돌려 같은 기준으로 센다. 조회 이후 새 소식이 쌓이면 실제 발송 인원은 늘 수 있다. 매일 08:55 KST에 갱신하며, 월·금엔 그날 발송분을 미리 보는 값이다. 조회 실패를 0명으로 기록하지 않는다. 주소·개별 회원 식별자는 보내지 않는다.
+
+수동 조회: `npx tsx --env-file=.env.local scripts/snapshot-email-next-batch.ts`
+실제 저장: `EMAIL_ANALYTICS_ENABLED=true npx tsx --env-file=.env.local scripts/snapshot-email-next-batch.ts --send`
