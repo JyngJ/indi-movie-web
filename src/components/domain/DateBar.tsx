@@ -116,6 +116,7 @@ export function DateBar({ days, selectedDate, onSelectDate, onPrev, onNext, hasP
               key={d.date}
               type="button"
               data-rc="datebar-date"
+              data-repeat-key={`datebar-date:${d.isoDate}`}
               /* 상영 없는 날도 누를 수 있다 — 그 날로 옮겨 다른 영화를 고를 수 있어야 한다.
                  흐린 표시는 "이 날은 없음"을 알리는 것이지 못 누른다는 뜻이 아니다 */
               className={`flex flex-col items-center${active ? '' : ' date-cell--hoverable'}`}

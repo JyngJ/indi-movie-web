@@ -152,7 +152,7 @@ export default function ChecksPage() {
           ['UI 하드코딩 감사', <>토큰을 두고 숫자나 색을 직접 적은 곳을 셉니다.<br /><Code>npm run audit:ui:check</Code></>],
           ['문구 감사', <>화면 문구가 라이팅 규칙을 어긴 곳을 셉니다.<br /><Code>npm run audit:writing:check</Code></>],
           ['누른 뒤 반응 감사', <>눌러도 한동안 아무 반응이 없는 이동을 셉니다.<br /><Code>npm run audit:feedback:check</Code></>],
-          ['브라우저 계약 테스트', <>겹침, 스크롤, 위치를 실제 화면에서 잽니다.<br /><Code>npm run test:ui-contracts</Code></>],
+          ['브라우저 계약 테스트', <>겹침·스크롤·위치와 필터 칩의 검색·해제 동작을 실제 화면에서 확인해요.<br /><Code>npm run test:ui-contracts</Code></>],
         ]} />
       </DocSection>
 

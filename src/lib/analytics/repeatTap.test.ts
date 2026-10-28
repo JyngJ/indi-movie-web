@@ -50,3 +50,22 @@ describe('tapTargetKey', () => {
     expect(tapTargetKey({ rc: null, ariaLabel: null, text: null, tag: 'BUTTON' })).toBe('button')
   })
 })
+
+
+describe('날짜 버튼의 연타 식별', () => {
+  const key = (date: string) => tapTargetKey({ repeatKey: `datebar-date:${date}`, rc: 'datebar-date', ariaLabel: null, text: '28', tag: 'BUTTON' })
+
+  it('같은 종류의 서로 다른 날짜를 연속 선택해도 연타로 세지 않는다', () => {
+    const tracker = new RepeatTapTracker()
+    tracker.tap(key('2026-10-28'), URL_A, '/map', 0)
+    expect(tracker.tap(key('2026-10-29'), URL_A, '/map', 300)).toBeNull()
+    expect(tracker.flush(300 + STREAK_MS)).toBeNull()
+  })
+
+  it('같은 날짜를 반복 선택한 경우에는 계속 연타로 센다', () => {
+    const tracker = new RepeatTapTracker()
+    tracker.tap(key('2026-10-28'), URL_A, '/map', 0)
+    tracker.tap(key('2026-10-28'), URL_A, '/map', 300)
+    expect(tracker.flush(300 + STREAK_MS)).toEqual({ target: 'datebar-date:2026-10-28', count: 2, path: '/map' })
+  })
+})
