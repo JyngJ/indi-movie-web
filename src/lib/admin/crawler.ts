@@ -1269,14 +1269,20 @@ function isMovielandPlaceholderTitle(value: string) {
   return /^loading\b[\s.]*$/i.test(value.trim())
 }
 
-function extractMovielandMovieTitle(content: string) {
+// 무비랜드는 상품명이 영문 대문자("I'M YOUR MAN"), '영문상품명' 칸에 한글 제목을 둔다.
+// 칸 뒤에 오는 문구가 상품마다 달라(판매가·월 렌탈 금액) 본문 텍스트 정규식보다 표 칸을 먼저 읽는다.
+export function extractMovielandMovieTitle(content: string) {
   const text = normalizeWhitespace(stripHtml(content))
+  const tableCell = content.match(/영문상품명[\s\S]*?<\/th>\s*<td[^>]*>([\s\S]*?)<\/td>/i)?.[1]
   const koreanTitle =
-    text.match(/영문상품명\s*([가-힣A-Za-z0-9\s:;,.!?'"()[\]-]{2,80})\s*판매가/)?.[1]?.trim() ??
+    (tableCell ? decodeHtmlEntity(normalizeWhitespace(stripHtml(tableCell))) : undefined) ||
+    text.match(/영문상품명\s*([가-힣A-Za-z0-9\s:;,.!?'"()[\]-]{2,80})\s*판매가/)?.[1]?.trim() ||
     text.match(/상품요약정보\s*:?\s*([가-힣A-Za-z0-9\s:;,.!?'"()[\]-]{2,80})\s+\d{4}/)?.[1]?.trim()
   const heading = normalizeWhitespace(stripHtml(content.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1] ?? ''))
+  // og:title은 "I'M YOUR MAN - MOVIE LAND" — 사이트명 꼬리가 붙으면 매칭이 안 된다
   const ogTitle = decodeHtmlEntity(content.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i)?.[1] ?? '')
     .replace(/\s*\|\s*영화 예매.*$/i, '')
+    .replace(/\s+-\s+MOVIE\s*LAND\s*$/i, '')
     .trim()
 
   const candidates = [koreanTitle, heading, ogTitle]

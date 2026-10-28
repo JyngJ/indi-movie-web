@@ -115,7 +115,7 @@ export function formatListingHints(hints: ListingHints) {
   ].filter(Boolean).join(' · ')
 }
 
-/** 러닝타임이 ±2분 안에서 정확히 한 후보와만 맞으면 그 인덱스 — 판단 보조용, 자동 매칭엔 안 쓴다 */
+/** 러닝타임이 ±2분 안에서 정확히 한 후보와만 맞으면 그 인덱스 — 검수 알림 표시용. 자동 판별은 runtimeDisambiguation.pickByRuntime */
 export function runtimeMatchIndex(runtimeMinutes: number | undefined, optionRuntimes: (number | null | undefined)[]) {
   if (!runtimeMinutes) return undefined
   const hits = optionRuntimes
