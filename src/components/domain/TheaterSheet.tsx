@@ -816,6 +816,43 @@ export function TheaterSheet({
     verticalAlign: 'middle',
   }
 
+  /* 극장 이름 아래 주소·액션 행 — 접힘·펼침·PC 패널이 같은 것을 쓴다.
+     세 군데에 따로 적혀 있을 때 접힘만 주소가 13px 보통 굵기, 액션 간격이 8이라
+     펼치는 순간 글자 굵기가 바뀌고 인스타그램이 둘째 줄에서 첫째 줄로 올라갔다(2026-10). */
+  const addressLineStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 8,
+    minWidth: 0,
+    color: 'var(--color-text-sub)',
+    fontSize: 'var(--text-body)',
+    fontWeight: 700,   /* 2.0/body-strong */
+    lineHeight: 1.5,
+  }
+
+  const theaterActionRow = (
+    /* 피그마 주소→액션 시각 간격 16 = gap 4 + 액션 pad 12. 버튼 히트박스(44) 안 여백 ~11이 이미 있으므로 4만 더함.
+       왼쪽 -8은 첫 버튼의 좌우 여백을 상쇄해 아이콘을 주소 글자선에 맞춘다 */
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 0, marginTop: 4, marginLeft: -8 }}>
+      <TheaterFavoriteAction theaterId={theater.id} theaterName={theater.name} style={actionBtn} />
+      <Button type="button" variant="text" size="md" style={actionBtn} onClick={openDirections}>
+        <Icon name="map-pinned" size={14} />
+        길찾기
+      </Button>
+      <Button type="button" variant="text" size="md" style={actionBtn} onClick={shareTheater}>
+        <Icon name="share-2" size={14} />
+        공유하기
+      </Button>
+      {hasInstagram && (
+        <Button type="button" variant="text" size="md" style={actionBtn} onClick={openInstagram}>
+          <Icon name="instagram" size={14} />
+          인스타그램
+        </Button>
+      )}
+    </div>
+  )
+
   return (
     <>
     <Toast message="복사했어요" trigger={copyCount} />
@@ -916,39 +953,10 @@ export function TheaterSheet({
                 </button>
               )}
             </div>
-            <div style={{
-              fontSize: 13,
-              color: 'var(--color-text-sub)',
-              marginTop: 8,
-              lineHeight: 1.25,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-            }}>
+            <div style={addressLineStyle}>
               <span style={{ minWidth: 0 }}>{theater.address}</span>
             </div>
-            <div style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 8,
-              marginTop: 12,
-            }}>
-              <TheaterFavoriteAction theaterId={theater.id} theaterName={theater.name} style={actionBtn} />
-              <Button type="button" variant="text" size="md" style={actionBtn} onClick={openDirections}>
-                <Icon name="map-pinned" size={14} />
-                길찾기
-              </Button>
-              <Button type="button" variant="text" size="md" style={actionBtn} onClick={shareTheater}>
-                <Icon name="share-2" size={14} />
-                공유하기
-              </Button>
-              {hasInstagram && (
-                <Button type="button" variant="text" size="md" style={actionBtn} onClick={openInstagram}>
-                  <Icon name="instagram" size={14} />
-                  인스타그램
-                </Button>
-              )}
-            </div>
+            {theaterActionRow}
           </div>
           <div style={{
             position: 'absolute',
@@ -1006,17 +1014,7 @@ export function TheaterSheet({
                   </button>
                 )}
               </div>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4,
-                marginTop: 8,
-                minWidth: 0,
-                color: 'var(--color-text-sub)',
-                fontSize: 'var(--text-body)',
-                fontWeight: 700,   /* 2.0/body-strong */
-                lineHeight: 1.5,
-              }}>
+              <div style={addressLineStyle}>
                 <span style={{
                   minWidth: 0,
                   overflow: 'hidden',
@@ -1031,30 +1029,7 @@ export function TheaterSheet({
               <Icon name="x" size={20} />
             </IconButton>
           </div>
-          <div style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 0,
-            /* 피그마 주소→액션 시각 간격 16 = gap 4 + 액션 pad 12. 버튼 히트박스(44) 안 여백 ~11이 이미 있으므로 4만 더함 */
-            marginTop: 4,
-            marginLeft: -8,
-          }}>
-            <TheaterFavoriteAction theaterId={theater.id} theaterName={theater.name} style={actionBtn} />
-            <Button type="button" variant="text" size="md" style={actionBtn} onClick={openDirections}>
-              <Icon name="map-pinned" size={14} />
-              길찾기
-            </Button>
-            <Button type="button" variant="text" size="md" style={actionBtn} onClick={shareTheater}>
-              <Icon name="share-2" size={14} />
-              공유하기
-            </Button>
-            {hasInstagram && (
-              <Button type="button" variant="text" size="md" style={actionBtn} onClick={openInstagram}>
-                <Icon name="instagram" size={14} />
-                인스타그램
-              </Button>
-            )}
-          </div>
+          {theaterActionRow}
         </div>
       ) : (
         /* Expanded 헤더 — nav row만 고정 (극장 정보는 스크롤 안으로)
@@ -1272,27 +1247,10 @@ export function TheaterSheet({
                 </button>
               )}
             </div>
-            <div style={{
-              fontSize: 'var(--text-body)', fontWeight: 700, color: 'var(--color-text-sub)',
-              marginTop: 8, lineHeight: 1.5,
-              display: 'flex', alignItems: 'center', gap: 4,
-            }}>
+            <div style={addressLineStyle}>
               <span style={{ minWidth: 0 }}>{theater.address}</span>
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 0, marginTop: 4, marginLeft: -8 }}>
-              <TheaterFavoriteAction theaterId={theater.id} theaterName={theater.name} style={actionBtn} compact />
-              <Button type="button" variant="text" size="md" style={actionBtn} onClick={openDirections}>
-                <Icon name="map-pinned" size={14} />길찾기
-              </Button>
-              <Button type="button" variant="text" size="md" style={actionBtn} onClick={shareTheater}>
-                <Icon name="share-2" size={14} />공유하기
-              </Button>
-              {hasInstagram && (
-                <Button type="button" variant="text" size="md" style={actionBtn} onClick={openInstagram}>
-                  <Icon name="instagram" size={14} />인스타그램
-                </Button>
-              )}
-            </div>
+            {theaterActionRow}
           </div>}
 
           {/* DateBar — sticky */}
