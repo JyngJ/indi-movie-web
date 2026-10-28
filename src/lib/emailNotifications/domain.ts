@@ -38,6 +38,17 @@ export function scheduleSlot(now: Date): string | null {
   if (!['Mon', 'Fri'].includes(get('weekday') ?? '') || Number(get('hour')) < EMAIL_SEND_WINDOW_KST.startHour || Number(get('hour')) >= EMAIL_SEND_WINDOW_KST.endHour) return null
   return `${get('year')}-${get('month')}-${get('day')}`
 }
+/** 다음 발송일. 오늘이 월·금이고 발송 창이 아직 안 닫혔으면 오늘, 아니면 다음 월·금. */
+export function nextScheduleSlot(now: Date): string {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23',
+  }).formatToParts(now)
+  const get = (type: string) => Number(parts.find(p => p.type === type)?.value)
+  const day = new Date(Date.UTC(get('year'), get('month') - 1, get('day')))
+  if (get('hour') >= EMAIL_SEND_WINDOW_KST.endHour) day.setUTCDate(day.getUTCDate() + 1)
+  while (![1, 5].includes(day.getUTCDay())) day.setUTCDate(day.getUTCDate() + 1)
+  return day.toISOString().slice(0, 10)
+}
 /** TODO: 이용자가 충분히 모이면 일괄 빈도 설문을 기획한다.
  * 3번째 발송 자동 설문은 보류한다. 의견 화면·저장 기능은 재사용을 위해 유지한다.
  * 이전 조건: successfulCount === 2. 발송 횟수로 다시 자동 활성화하지 않는다.

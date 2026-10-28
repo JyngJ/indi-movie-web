@@ -5,7 +5,7 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { createSupabaseNotificationBatchRepository } from '@/lib/notifications/supabaseNotificationBatchRepository'
 import { getRegionFromCity } from '@/lib/regions'
 import type { ScreeningFact } from '@/lib/notifications/types'
-import { scheduleSlot, type EmailSubscription } from './domain'
+import { nextScheduleSlot, scheduleSlot, type EmailSubscription } from './domain'
 import { renderDigest, selectDigestItems, selectWeeklyRecommendations, type DigestEvent } from './digest'
 import { gmailConfigured, MailSendError, sendGmail, type EmailMessage } from './gmail'
 import { getSubscription, siteOrigin } from './server'
@@ -23,11 +23,13 @@ async function currentScreenings(now: Date, slot: string): Promise<ScreeningFact
   const db = createSupabaseAdminClient()
   const end = new Date(`${slot}T00:00:00Z`); end.setUTCDate(end.getUTCDate() + 14)
   const time = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }).format(now)
+  // 다음 발송일 미리보기는 그날 상영 전체를 본다. 지난 회차를 빼는 건 오늘 보낼 때만이다.
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(now)
   type Row = { movie_id: string; theater_id: string; show_date: string; show_time: string; movies: { title: string; director: string[] | null; poster_url: string | null }; theaters: { name: string; city: string | null } }
   const rows = await all<Row>((from, to) => db.from('showtimes').select('movie_id,theater_id,show_date,show_time,movies(title,director,poster_url),theaters(name,city)').eq('is_active', true).gte('show_date', slot).lte('show_date', end.toISOString().slice(0, 10)).order('id').range(from, to) as never)
   const pairs = new Map<string, ScreeningFact>()
   for (const row of rows) {
-    if (!row.movies || !row.theaters || (row.show_date === slot && row.show_time <= time)) continue
+    if (!row.movies || !row.theaters || (row.show_date === slot && slot === today && row.show_time <= time)) continue
     const key = `${row.movie_id}:${row.theater_id}`
     const fact = pairs.get(key) ?? { movieId: row.movie_id, movieTitle: row.movies.title, posterUrl: row.movies.poster_url ?? undefined, directors: row.movies.director ?? [], theaterId: row.theater_id, theaterName: row.theaters.name, regionId: getRegionFromCity(row.theaters.city ?? ''), dates: [] }
     if (!fact.dates.includes(row.show_date)) fact.dates.push(row.show_date)
@@ -35,8 +37,10 @@ async function currentScreenings(now: Date, slot: string): Promise<ScreeningFact
   }
   return [...pairs.values()]
 }
-export async function runEmailBatch({ now = new Date(), send = false }: { now?: Date; send?: boolean } = {}) {
-  const slot = scheduleSlot(now)
+/** slot을 넘기면 그 발송일 기준으로 조회만 한다(미리보기). 발송은 항상 지금 슬롯으로만 한다. */
+export async function runEmailBatch({ now = new Date(), send = false, slot: previewSlot }: { now?: Date; send?: boolean; slot?: string } = {}) {
+  if (send && previewSlot) throw new Error('Preview slot cannot send')
+  const slot = previewSlot ?? scheduleSlot(now)
   const result = { considered: 0, ready: 0, sent: 0, failed: 0, unknown: 0 }
   if (!slot) return result
   if (send && (process.env.EMAIL_NOTIFICATION_DELIVERY_ENABLED !== 'true' || !gmailConfigured())) throw new Error('Email delivery is disabled or not configured')
@@ -101,4 +105,11 @@ export async function runEmailBatch({ now = new Date(), send = false }: { now?: 
     }
   }
   return result
+}
+
+/** 다음 발송일에 실제로 메일을 받을 인원 — 지금 쌓인 소식 기준 추정. 메일은 보내지 않는다. */
+export async function previewNextEmailBatch(now = new Date()) {
+  const slot = nextScheduleSlot(now)
+  const { considered, ready } = await runEmailBatch({ now, slot })
+  return { slot, considered, ready }
 }

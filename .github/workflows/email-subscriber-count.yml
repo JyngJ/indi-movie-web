@@ -12,7 +12,7 @@ concurrency:
 jobs:
   snapshot:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -21,6 +21,15 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx tsx scripts/snapshot-email-subscribers.ts --send
+        env:
+          EMAIL_ANALYTICS_ENABLED: 'true'
+          NEXT_PUBLIC_POSTHOG_TOKEN: ${{ secrets.NEXT_PUBLIC_POSTHOG_TOKEN }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          EMAIL_NOTIFICATION_TOKEN_SECRET: ${{ secrets.EMAIL_NOTIFICATION_TOKEN_SECRET }}
+      # 다음 발송일에 실제로 받을 인원(보낼 소식이 있는 수신자). 월·금 이 시각엔 그날 09:13 발송분을 미리 본다.
+      - run: npx tsx scripts/snapshot-email-next-batch.ts --send
+        if: ${{ !cancelled() }}
         env:
           EMAIL_ANALYTICS_ENABLED: 'true'
           NEXT_PUBLIC_POSTHOG_TOKEN: ${{ secrets.NEXT_PUBLIC_POSTHOG_TOKEN }}
