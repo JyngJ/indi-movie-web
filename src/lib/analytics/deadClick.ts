@@ -136,6 +136,7 @@ export function installDeadClickTracking(): () => void {
     const el = (e.target as Element | null)?.closest?.(TAPPABLE)
     if (!(el instanceof HTMLElement) || el.closest(REPEAT_OK)) return
     const target = tapTargetKey({
+      repeatKey: el.getAttribute('data-repeat-key'),
       rc: el.getAttribute(RC_ATTR),
       ariaLabel: el.getAttribute('aria-label'),
       text: el.textContent,

@@ -12,7 +12,7 @@
 export const STREAK_MS = 2_000
 
 export interface RepeatTapEvent {
-  /** 요소 식별 — data-rc > aria-label > 글자 > 태그 */
+  /** 요소 식별 — data-repeat-key > data-rc > aria-label > 글자 > 태그 */
   target: string
   count: number
   path: string
@@ -60,8 +60,9 @@ export class RepeatTapTracker {
   }
 }
 
-/** 요소를 사람이 읽을 수 있는 키로 — data-rc > aria-label > 보이는 글자 앞 30자 > 태그 */
-export function tapTargetKey(el: { rc: string | null; ariaLabel: string | null; text: string | null; tag: string }): string {
+/** 연타는 개별 항목을 구분한다. data-rc는 보고서의 요소 종류 집계용으로 유지한다. */
+export function tapTargetKey(el: { repeatKey?: string | null; rc: string | null; ariaLabel: string | null; text: string | null; tag: string }): string {
+  if (el.repeatKey) return el.repeatKey
   if (el.rc) return el.rc
   if (el.ariaLabel?.trim()) return el.ariaLabel.trim().slice(0, 60)
   const text = el.text?.replace(/\s+/g, ' ').trim()

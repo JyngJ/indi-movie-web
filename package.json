@@ -34,7 +34,7 @@
     "audit:feedback:check": "node scripts/audit/check-feedback.mjs",
     "check:image-hosts": "node scripts/check-image-hosts.mjs",
     "notify:favorites": "tsx --env-file=.env.local scripts/notify-favorites.ts",
-    "test:ui-contracts": "RUN_BROWSER_TESTS=1 vitest run src/components/map/mapLayers.browser.test.tsx src/components/navigation/RailPopover.browser.test.tsx src/components/primitives/Avatar.browser.test.tsx src/components/primitives/FavoriteToggle.browser.test.tsx src/lib/navigation/filmsPath.test.ts src/components/domain/RouteProgressBar.browser.test.ts src/components/auth/EmailNotificationPrompt.browser.test.tsx src/components/auth/AuthProvider.browser.test.tsx src/components/navigation/ScrollToTopButton.browser.test.tsx src/hooks/useLocationPermission.browser.test.tsx",
+    "test:ui-contracts": "RUN_BROWSER_TESTS=1 vitest run src/components/map/mapLayers.browser.test.tsx src/components/navigation/RailPopover.browser.test.tsx src/components/primitives/Avatar.browser.test.tsx src/components/primitives/FavoriteToggle.browser.test.tsx src/lib/navigation/filmsPath.test.ts src/components/domain/RouteProgressBar.browser.test.ts src/components/auth/EmailNotificationPrompt.browser.test.tsx src/components/auth/AuthProvider.browser.test.tsx src/components/navigation/ScrollToTopButton.browser.test.tsx src/hooks/useLocationPermission.browser.test.tsx src/components/domain/FilterBar.browser.test.tsx",
     "notify:email": "tsx --env-file=.env.local scripts/notify-email.ts",
     "notify:email:dispatch": "tsx --env-file=.env.local scripts/dispatch-email-notifications.ts"
   },

@@ -370,7 +370,7 @@ export function FilterBar({
             rc="movie"
             value={movieFilter.title.length > 10 ? movieFilter.title.slice(0, 10) + '…' : movieFilter.title}
             selected
-            onClick={() => {}}
+            onClick={() => onMovieChipClick?.()}
             onClear={onMovieFilterClear}
           />
         )}
@@ -380,7 +380,7 @@ export function FilterBar({
             rc="director"
             value={directorFilter.name.length > 10 ? directorFilter.name.slice(0, 10) + '…' : directorFilter.name}
             selected
-            onClick={() => {}}
+            onClick={() => onDirectorChipClick?.()}
             onClear={onDirectorFilterClear}
             separator="-"
           />
