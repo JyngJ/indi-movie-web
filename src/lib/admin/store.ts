@@ -19,6 +19,7 @@ import type {
 } from '@/types/admin'
 import { searchKmdbMovies } from '@/lib/admin/kmdb'
 import { pickKmdbAlternatives } from '@/lib/admin/kmdbAlternatives'
+import { listingIdentity, pickByRuntime, type ListingIdentity } from '@/lib/admin/runtimeDisambiguation'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { chunk, dedupeByKey, isMatchUnchanged, isMissingRpcError } from '@/lib/crawl/bulkWrites'
 import { selectAutoMatchCandidates, summarizeAutoMatchOutcomes } from '@/lib/crawl/autoMatchSummary'
@@ -685,7 +686,7 @@ async function fetchAutoMatchInputs(supabase: ReturnType<typeof createSupabaseAd
   ] = await Promise.all([
     query,
     supabase.from('theaters').select('id, name'),
-    supabase.from('movies').select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, director, movie_details(runtime_minutes)'),
+    supabase.from('movies').select(MATCH_MOVIE_COLUMNS),
     supabase
       .from('showtime_candidates')
       .select('raw_text, matched_movie_id')
@@ -704,14 +705,22 @@ async function fetchAutoMatchInputs(supabase: ReturnType<typeof createSupabaseAd
       Boolean(ids?.length),
     ),
     theaters: (theaterRows ?? []) as TheaterRow[],
-    // 러닝타임은 동명 영화 검수 알림에서 상영관 표기와 대조하는 데만 쓴다
-    movies: ((movieRows ?? []) as unknown as (MovieRow & { movie_details?: { runtime_minutes?: number | null } | { runtime_minutes?: number | null }[] | null })[])
-      .map(({ movie_details, ...movie }) => {
-        const details = Array.isArray(movie_details) ? movie_details[0] : movie_details
-        return { ...movie, runtime_minutes: details?.runtime_minutes ?? null }
-      }),
+    movies: flattenMatchMovies(movieRows),
     providerMovieAliases: buildProviderMovieAliases((aliasRows ?? []) as Pick<CandidateRow, 'raw_text' | 'matched_movie_id'>[]),
   }
+}
+
+// 러닝타임·등급은 동명 영화를 회차 길이로 가리고(pickByRuntime) 검수 알림에서 상영관 표기와 대조하는 데 쓴다
+const MATCH_MOVIE_COLUMNS = 'id, title, original_title, year, kmdb_id, kmdb_movie_seq, director, movie_details(runtime_minutes, certification)'
+
+type MatchMovieDetails = { runtime_minutes?: number | null; certification?: string | null }
+
+function flattenMatchMovies(rows: unknown[] | null): MovieRow[] {
+  return ((rows ?? []) as (MovieRow & { movie_details?: MatchMovieDetails | MatchMovieDetails[] | null })[])
+    .map(({ movie_details, ...movie }) => {
+      const details = Array.isArray(movie_details) ? movie_details[0] : movie_details
+      return { ...movie, runtime_minutes: details?.runtime_minutes ?? null, certification: details?.certification ?? null }
+    })
 }
 
 // 예매 상태성 경고(매진/예매 종료/예매 불가/판매 중지/상영관 확인)는 상영 정보의 정체성에는
@@ -736,6 +745,8 @@ interface AmbiguousGroupDraft {
 function addListing(group: AmbiguousGroupDraft, candidate: CrawledShowtimeCandidate) {
   const raw = parseRawJson(candidate.rawText)
   const hints = extractListingHints(raw, candidate.releaseYear)
+  // 러닝타임 필드가 없는 수집처(dtryx)는 종료 − 시작을 보여 준다
+  hints.runtimeMinutes ??= listingIdentity(candidate).runtimeMinutes
   const existing = group.listings.get(candidate.theaterName)
   if (existing) {
     existing.showCount += 1
@@ -1098,7 +1109,7 @@ export async function approveShowtimeCandidates(
     { data: aliasRows, error: aliasError },
   ] = await Promise.all([
     supabase.from('theaters').select('id, name'),
-    supabase.from('movies').select('id, title, original_title, year, kmdb_id, kmdb_movie_seq, director'),
+    supabase.from('movies').select(MATCH_MOVIE_COLUMNS),
     supabase
       .from('showtime_candidates')
       .select('raw_text, matched_movie_id')
@@ -1110,7 +1121,7 @@ export async function approveShowtimeCandidates(
   if (aliasError) throw new Error(aliasError.message)
 
   const theaters = (theaterRows ?? []) as TheaterRow[]
-  const movies = (movieRows ?? []) as MovieRow[]
+  const movies = flattenMatchMovies(movieRows)
   const movieResolutionCache = new Map<string, MovieResolutionResult>()
   const providerMovieAliases = buildProviderMovieAliases((aliasRows ?? []) as Pick<CandidateRow, 'raw_text' | 'matched_movie_id'>[])
 
@@ -1200,8 +1211,9 @@ function resolveMovie(candidate: CrawledShowtimeCandidate, movies: MovieRow[], p
   const providerMovieId = resolveProviderMovieAlias(candidate, movies, providerMovieAliases)
   if (providerMovieId) return providerMovieId
 
+  const identity = listingIdentity(candidate)
   for (const title of candidateMovieTitleCandidates(candidate.movieTitle)) {
-    const movie = resolveMovieByTitle(title, movies, candidate.releaseYear)
+    const movie = resolveMovieByTitle(title, movies, candidate.releaseYear, identity)
     if (movie) return movie
   }
   return null
@@ -1213,6 +1225,7 @@ async function resolveMovieForApproval(
   cache?: Map<string, MovieResolutionResult>,
   providerMovieAliases?: ProviderMovieAliases,
 ): Promise<MovieResolutionResult> {
+  const identity = listingIdentity(candidate)
   const localMovie = resolveMovie(candidate, movies, providerMovieAliases)
   if (localMovie) {
     if (Array.isArray(localMovie)) {
@@ -1227,7 +1240,7 @@ async function resolveMovieForApproval(
   const titleYear = extractTitleYear(candidate.movieTitle)
   const expectedYear = titleYear ?? candidate.releaseYear
   for (const title of titles) {
-    const localByCleanTitle = resolveMovieByTitle(title, movies, expectedYear)
+    const localByCleanTitle = resolveMovieByTitle(title, movies, expectedYear, identity)
     if (localByCleanTitle) {
       if (Array.isArray(localByCleanTitle)) {
         return { movie: undefined, ambiguous: localByCleanTitle, reason: `동명 영화 ${localByCleanTitle.length}개 — 확인 필요: ${candidate.movieTitle}` }
@@ -1236,14 +1249,15 @@ async function resolveMovieForApproval(
     }
   }
 
-  const cacheKey = movieResolutionCacheKey(titles, expectedYear)
+  // 같은 제목이라도 회차 길이가 다르면 다른 영화를 고를 수 있으니 상영 시간까지 키에 넣는다
+  const cacheKey = `${movieResolutionCacheKey(titles, expectedYear)}~${identity.runtimeMinutes ?? ''}`
   const cached = cache?.get(cacheKey)
   if (cached) return cached
 
   try {
     for (const title of titles) {
       const externalMovies = await searchKmdbMovies(title)
-      const externalMovie = pickExactExternalMovie(title, externalMovies, expectedYear)
+      const externalMovie = pickExactExternalMovie(title, externalMovies, expectedYear, identity)
         // 제목에 연도가 박혀 있으면 그 연도가 맞는 것이므로 재상영 구제를 하지 않는다
         ?? (titleYear == null ? pickRereleaseExternalMovie(title, externalMovies, expectedYear) : undefined)
       if (!externalMovie) continue
@@ -1305,8 +1319,12 @@ function isYearMatch(movieYear: number | null | undefined, expectedYear?: number
 // 동명이인 영화로 보고 매칭을 보류해 다음 단계(다음 타이틀 후보, KMDB 검색 등)로 넘긴다.
 // 후보가 2개 이상인데 연도 정보가 없으면(크롤 원문에 제작연도가 안 찍히는 경우가 흔함)
 // 어느 쪽인지 가릴 수 없으므로 첫 번째를 임의로 찍지 않고, 후보 전체를 반환해 사람 확인으로 넘긴다.
-function pickMovieMatch(matches: MovieRow[], expectedYear?: number): MovieRow | MovieRow[] | undefined {
+function pickMovieMatch(matches: MovieRow[], expectedYear?: number, identity?: ListingIdentity): MovieRow | MovieRow[] | undefined {
   if (matches.length === 0) return undefined
+  // 동명이 여럿이면 상영 시간이 연도보다 앞선다 — release_year는 상영 연도라
+  // 128분 「알파」(2025) 회차가 같은 제목 2026년 5분 단편에 붙었다(2026-10 실측 32회차)
+  const byRuntime = identity && pickByRuntime(matches, identity, movieIdentity)
+  if (byRuntime) return byRuntime
   if (matches.length === 1) {
     const only = matches[0]
     if (expectedYear != null && only.year != null && !isYearMatch(only.year, expectedYear)) return undefined
@@ -1317,9 +1335,13 @@ function pickMovieMatch(matches: MovieRow[], expectedYear?: number): MovieRow | 
   return matches
 }
 
-function resolveMovieByTitle(title: string, movies: MovieRow[], expectedYear?: number): MovieRow | MovieRow[] | undefined {
+function movieIdentity(movie: MovieRow) {
+  return { runtimeMinutes: movie.runtime_minutes, certification: movie.certification }
+}
+
+function resolveMovieByTitle(title: string, movies: MovieRow[], expectedYear?: number, identity?: ListingIdentity): MovieRow | MovieRow[] | undefined {
   const exactMatches = movies.filter((movie) => movie.title.trim() === title.trim())
-  const exact = pickMovieMatch(exactMatches, expectedYear)
+  const exact = pickMovieMatch(exactMatches, expectedYear, identity)
   if (exact) return exact
 
   const normalizedTitle = normalizeMatchText(title)
@@ -1331,7 +1353,7 @@ function resolveMovieByTitle(title: string, movies: MovieRow[], expectedYear?: n
     normalizeLooseMovieTitle(movie.title) === looseTitle ||
     (movie.original_title ? normalizeLooseMovieTitle(movie.original_title) === looseTitle : false),
   )
-  return pickMovieMatch(looseMatches, expectedYear)
+  return pickMovieMatch(looseMatches, expectedYear, identity)
 }
 
 function buildProviderMovieAliases(rows: Array<Pick<CandidateRow, 'raw_text' | 'matched_movie_id'>>) {
@@ -1452,8 +1474,11 @@ export function candidateMovieTitleCandidates(title: string) {
 // 후보가 여러 개면 개봉연도가 맞는 것을 우선한다. 후보가 1개뿐이고 연도가 어긋나면
 // 동명이인 영화로 보고 매칭을 보류해 다음 단계로 넘긴다.
 // 후보가 2개 이상인데 연도 정보가 없으면 어느 쪽인지 가릴 수 없으므로 보류한다.
-function pickExternalMovieMatch(matches: AdminExternalMovie[], expectedYear?: number) {
+function pickExternalMovieMatch(matches: AdminExternalMovie[], expectedYear?: number, identity?: ListingIdentity) {
   if (matches.length === 0) return undefined
+  // pickMovieMatch와 같은 이유로 상영 시간이 먼저 — KMDb는 동명 단편이 흔하다(최종면접 2012·2021·2026)
+  const byRuntime = identity && pickByRuntime(matches, identity)
+  if (byRuntime) return byRuntime
   if (matches.length === 1) {
     const only = matches[0]
     if (expectedYear != null && !isYearMatch(only.year, expectedYear)) return undefined
@@ -1486,13 +1511,13 @@ export function pickRereleaseExternalMovie(title: string, movies: AdminExternalM
   return only
 }
 
-function pickExactExternalMovie(title: string, movies: AdminExternalMovie[], expectedYear?: number) {
+function pickExactExternalMovie(title: string, movies: AdminExternalMovie[], expectedYear?: number, identity?: ListingIdentity) {
   const normalizedTitle = normalizeMatchText(title)
   const looseTitle = normalizeLooseMovieTitle(title)
 
   // 1순위: 정규화 exact match
   const exactMatches = exactExternalTitleMatches(title, movies)
-  const exact = pickExternalMovieMatch(exactMatches, expectedYear)
+  const exact = pickExternalMovieMatch(exactMatches, expectedYear, identity)
   if (exact) return exact
 
   // 2순위: 띄어쓰기/조사 차이 정도의 근접 제목만 허용한다.
@@ -1503,7 +1528,7 @@ function pickExactExternalMovie(title: string, movies: AdminExternalMovie[], exp
       return current.length >= 6 && looseTitle.length >= 6 && titleSimilarity(current, looseTitle) >= 0.88
     })
   })
-  const fuzzy = pickExternalMovieMatch(fuzzyMatches, expectedYear)
+  const fuzzy = pickExternalMovieMatch(fuzzyMatches, expectedYear, identity)
   if (fuzzy) return fuzzy
 
   // 3순위: 충분히 긴 검색어에 한해 부분 일치. 짧은 제목은 오매칭 위험이 커서 제외한다.
@@ -1515,7 +1540,7 @@ function pickExactExternalMovie(title: string, movies: AdminExternalMovie[], exp
       normalizedTitle.includes(t) ||
       (original.length >= 5 && (original.includes(normalizedTitle) || normalizedTitle.includes(original)))
   })
-  return pickExternalMovieMatch(partialMatches, expectedYear)
+  return pickExternalMovieMatch(partialMatches, expectedYear, identity)
 }
 
 function movieResolutionCacheKey(titles: string[], expectedYear?: number) {
