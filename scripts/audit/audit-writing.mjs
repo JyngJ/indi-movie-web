@@ -42,6 +42,7 @@ const EXCLUDE = [
   /src\/app\/dev\//,
   /src\/app\/admin\//,
   /src\/app\/privacy\//,
+  /src\/app\/terms\//,
   /src\/app\/api\//,
   /src\/components\/seo\//,
   /src\/lib\/seo\//,

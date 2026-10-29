@@ -12,7 +12,7 @@
     "fontSize": 0,
     "asymmetryLR": 2,
     "asymmetryTB": 21,
-    "gutterKinds": 5,
+    "gutterKinds": 4,
     "primitiveAdoptionPct": 86.9
   }
 }
