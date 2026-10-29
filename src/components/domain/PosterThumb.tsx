@@ -116,6 +116,7 @@ export function PosterThumb({
              영구히 덮는다(2026-09-17 운영 사고). */
           <div
             aria-hidden
+            className="animate-pulse motion-reduce:animate-none"
             data-poster-placeholder
             style={{
               position: 'absolute', inset: 0,

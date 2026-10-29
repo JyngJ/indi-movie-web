@@ -42,6 +42,10 @@ const FEEDBACK: Record<string, string> = {
 
 /** 파일별로 무엇을 지키는지. package.json 스크립트에 새 파일이 생겼는데 여기 없으면 "설명 없음"으로 드러난다. */
 const CONTRACTS: Record<string, { guard: string; why: string }> = {
+  'src/components/domain/FilmsEntry.browser.test.tsx': {
+    guard: '늦게 도착하는 랭킹이 같은 크기의 자리표시를 교체하고, 포스터 행이 함께 이동 없이 나타나는지',
+    why: '아래 섹션이 먼저 보였다가 랭킹이 끼어들며 밀리는 현상과 포스터마다 올라오는 연속 동작을 막습니다.',
+  },
   'src/components/navigation/ScrollToTopButton.browser.test.tsx': {
     guard: '로그인한 소식에서 조금만 스크롤해도 맨 위로 버튼이 나타나고 실제 본문을 올리는지. 모바일 메뉴 바와 데스크톱 팝오버를 벗어나지 않는지',
     why: '소식은 문서가 아닌 내부 본문이 스크롤돼서, 문서만 올리면 버튼을 눌러도 움직이지 않습니다.',

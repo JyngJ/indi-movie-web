@@ -4,6 +4,13 @@ import { buildSectionAnalytics, computeRunStartIndexes, shownCount } from './sec
 const s = (n: number) => ({ movies: Array.from({ length: n }, (_, i) => i) })
 
 describe('shownCount', () => {
+  it('자리표시가 본문으로 바뀌어도 뒤 섹션 순번을 유지한다', () => {
+    const pending = { movies: [], loading: true }
+    expect(shownCount([pending, s(0), s(3)])).toBe(2)
+    expect(computeRunStartIndexes([[pending], [s(3)]])).toEqual([0, 1])
+    expect(computeRunStartIndexes([[s(5)], [s(3)]])).toEqual([0, 1])
+  })
+
   it('빈 섹션은 안 센다', () => {
     expect(shownCount([s(3), s(0), s(1), s(0)])).toBe(2)
   })

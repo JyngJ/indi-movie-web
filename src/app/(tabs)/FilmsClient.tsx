@@ -4,11 +4,11 @@ import { FeedAd } from '@/components/analytics/FeedAd'
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { SectionHeader, MovieCardSkeleton, FabRound, Icon, Divider } from '@/components/primitives'
+import { SectionHeader, FabRound, Icon, Divider } from '@/components/primitives'
 import { AllMoviesGrid, ALL_MOVIES_GRID_ANCHOR_ID } from '@/components/domain/AllMoviesGrid'
 import { navStart } from '@/components/domain/RouteProgressBar'
 import { AnniversarySection } from '@/components/domain/AnniversarySection'
-import { CurationSectionRow } from '@/components/domain/CurationSectionRow'
+import { CurationSectionRow, CurationSectionSkeleton } from '@/components/domain/CurationSectionRow'
 import { FavoriteMoviesSection } from '@/components/domain/favorites/FavoriteMoviesSection'
 import { DirectorSpecialSection } from '@/components/domain/DirectorSpecialSection'
 import { AllMoviesCtaBand } from '@/components/domain/AllMoviesCtaBand'
@@ -77,19 +77,7 @@ const FESTIVAL_BANNER_DESKTOP_WIDTH = 662
 /* ── 섹션 지연 마운트 — 뷰포트 근접 시 실제 렌더, 그 전엔 고스트 행.
    섹션 전체를 한 번에 그리면 초기 렌더가 무거워서 스크롤 도달 시점에 나눠 그린다 ── */
 function GhostSectionRow({ isDesktop }: { isDesktop: boolean }) {
-  return (
-    <div style={{ paddingTop: isDesktop ? 48 : 32 }}>
-      {/* 실제 섹션과 동일 규격: h2(26px)+행 상단 여백 16, 포스터 210/120·gap 16/10 */}
-      <div style={{ width: 180, height: 26, borderRadius: 'var(--radius-badge)', margin: '0 var(--gutter-sheet) 16px', backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite' }} />
-      <div style={{ display: 'flex', gap: isDesktop ? 16 : 10, overflow: 'hidden', padding: '0 var(--gutter-sheet)' }}>
-        {Array.from({ length: isDesktop ? 6 : 3 }).map((_, i) => (
-          <div key={i} style={{ width: isDesktop ? 210 : 120, flexShrink: 0 }}>
-            <MovieCardSkeleton />
-          </div>
-        ))}
-      </div>
-    </div>
-  )
+  return <CurationSectionSkeleton isDesktop={isDesktop} />
 }
 
 /** forceShow — 뷰포트에 안 들어왔어도 즉시 실물을 렌더한다. CTA 밴드가 그리드로 스크롤할 때
@@ -101,7 +89,7 @@ function GhostSectionRow({ isDesktop }: { isDesktop: boolean }) {
    일일이 꿰면 하나 빠뜨렸을 때 조용히 다시 어긋나기 때문이다. */
 const ExpandAllContext = createContext(false)
 
-function LazyBlock({ isDesktop, children }: { isDesktop: boolean; children: React.ReactNode }) {
+function LazyBlock({ isDesktop, children, placeholder }: { isDesktop: boolean; children: React.ReactNode; placeholder?: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null)
   const [shown, setShown] = useState(false)
   /* 파생값으로 읽는다. effect에서 setShown을 부르면 렌더 → effect → 재렌더로 커밋이 한 박자
@@ -118,7 +106,7 @@ function LazyBlock({ isDesktop, children }: { isDesktop: boolean; children: Reac
     io.observe(el)
     return () => io.disconnect()
   }, [visible])
-  return <div ref={ref}>{visible ? children : <GhostSectionRow isDesktop={isDesktop} />}</div>
+  return <div ref={ref}>{visible ? children : (placeholder ?? <GhostSectionRow isDesktop={isDesktop} />)}</div>
 }
 
 /* ── 주목할 영화제 배너 — 카드 아님. 제목줄은 다른 섹션과 같은 SectionHeader(왼쪽 고정,
@@ -334,19 +322,23 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
   }, [dropdownOpen])
 
   const { data: movies = [], isLoading: moviesLoading } = useMovies()
-  const { data: theaters = [] } = useTheaters()
+  const { data: theaters = [], isLoading: theatersLoading } = useTheaters()
   const { data: curationLists = [], isLoading: curationListsLoading } = useCurationLists()
-  const { data: activeMovieIds = [] } = useActiveMovieIdsByRegion(selectedRegion)
-  const { data: movieTheaterPairs = [] } = useActiveMovieTheaterPairs(selectedRegion)
+  const { data: activeMovieIds = [], isLoading: activeMoviesLoading } = useActiveMovieIdsByRegion(selectedRegion)
+  const { data: movieTheaterPairs = [], isLoading: movieTheaterPairsLoading } = useActiveMovieTheaterPairs(selectedRegion)
   const { data: filmRankingRow } = useFilmRankings()
-  const { data: clickRankings } = useClickRankings()
-  const { data: festivals = [] } = useFestivals()
+  const { data: clickRankings, isLoading: clickRankingsLoading } = useClickRankings()
+  const { data: festivals = [], isLoading: festivalsLoading } = useFestivals()
   const { data: instagramRecs = [] } = useInstagramRecommendations()
-  const { lastWeekFilms, newIndieFilms, returningFilms, recentlyViewed, soloTheaterFilms, todayShowFilms } =
+  const { lastWeekFilms, newIndieFilms, returningFilms, recentlyViewed, soloTheaterFilms, todayShowFilms, isLoading: curationLoading } =
     useCurationData(true, selectedRegion, undefined, userLocation)
 
-  const { data: almostSoldOutCandidates = [] } = useAlmostSoldOutCandidates()
-  const { data: lateNightCandidates = [] } = useLateNightCandidates()
+  const { data: almostSoldOutCandidates = [], isLoading: almostSoldOutLoading } = useAlmostSoldOutCandidates()
+  const { data: lateNightCandidates = [], isLoading: lateNightLoading } = useLateNightCandidates()
+
+  // 목록을 구성할 기초 정보만 함께 기다린다. 랭킹·회차는 각 섹션 자리에서 기다린다.
+  const sectionDataLoading = !mounted || moviesLoading || theatersLoading || curationListsLoading ||
+    activeMoviesLoading || movieTheaterPairsLoading || festivalsLoading
 
   const sections = getFilmsTabCurationSections(movies, new Set(activeMovieIds), curationLists)
 
@@ -764,6 +756,13 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
 
       {/* 2.0: PC 콘텐츠 최대폭 컬럼 (내부 gutter 포함 시각 ≈1000) — 프레임은 풀블리드 유지 */}
       <div style={isDesktop ? { maxWidth: 1048, margin: '0 auto' } : undefined}>
+      {sectionDataLoading ? (
+        <>
+          <CurationSectionSkeleton title="지금 가장 많이 찾는 영화" isDesktop={isDesktop} />
+          <GhostSectionRow isDesktop={isDesktop} />
+          <GhostSectionRow isDesktop={isDesktop} />
+        </>
+      ) : <>
       {/* 영화제 바로가기 — 회기 중이거나 개막이 가까울 때만. 지역 필터와 무관한 전국 대상.
           feedback-audit-ignore — 진행 막대·"이동하는 중…"은 FestivalShortcutRow가 누를 때 띄운다 */}
       <FestivalShortcutRow
@@ -801,6 +800,7 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
       ─────────────────────────────────────────────────────── */}
       {(() => {
         type AnySection = {
+          loading?: boolean
           listId: string; nameKo: string; description?: string
           movies: import('@/types/api').Movie[]
           posterBadges?: Map<string, number>
@@ -818,11 +818,20 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
         const movements  = visibleSections.filter((s) => (SECTION_GROUP[s.listId] ?? 99) === 5)
         const themes     = visibleSections.filter((s) => (SECTION_GROUP[s.listId] ?? 99) === 6)
 
-        const rtLastWeek = realtimeSections.filter((s) => s.listId === 'realtime_last_week')
-        const rtNew      = realtimeSections.filter((s) => s.listId !== 'realtime_last_week')
+        function pendingSection(listId: string, nameKo: string): AnySection[] {
+          return [{ listId, nameKo, movies: [], loading: true }]
+        }
+        const rtLastWeek = curationLoading
+          ? pendingSection('realtime_last_week', '막바지 상영')
+          : realtimeSections.filter((s) => s.listId === 'realtime_last_week')
+        const rtNew: AnySection[] = curationLoading
+          ? [...pendingSection('realtime_new_indie', '이번 주 새롭게 상영하는 영화'),
+             ...pendingSection('realtime_returning', '오랜만에 상영하는 영화')]
+          : realtimeSections.filter((s) => s.listId !== 'realtime_last_week')
 
         // 매진 임박 — 3편 미만이면 getAlmostSoldOutFilms가 빈 배열을 반환해 섹션 자체가 숨겨짐
-        const rtAlmostSoldOut: AnySection[] = almostSoldOutFilms.length > 0 ? [{
+        const rtAlmostSoldOut: AnySection[] = almostSoldOutLoading
+          ? pendingSection('realtime_almost_soldout', '매진 임박') : almostSoldOutFilms.length > 0 ? [{
           listId: 'realtime_almost_soldout',
           nameKo: '매진 임박',
           description: '최근 확인 기준, 오늘·내일 회차의 좌석이 얼마 남지 않았어요',
@@ -832,7 +841,8 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
         }] : []
 
         // 이번 주말 상영 — 3편 미만이면 getWeekendFilms가 빈 배열을 반환해 섹션 자체가 숨겨짐
-        const rtWeekend: AnySection[] = weekendFilms.length > 0 ? [{
+        const rtWeekend: AnySection[] = lateNightLoading
+          ? pendingSection('realtime_weekend', '이번 주말 상영') : weekendFilms.length > 0 ? [{
           listId: 'realtime_weekend',
           nameKo: '이번 주말 상영',
           description: '이번 주말 볼 수 있는 회차예요',
@@ -842,7 +852,8 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
         }] : []
 
         // 지금 출발하면 볼 수 있는 — 3편 미만이면 위에서 이미 빈 배열로 걸러짐
-        const rtLeaveNow: AnySection[] = leaveNowFilms.length > 0 ? [{
+        const rtLeaveNow: AnySection[] = curationLoading
+          ? pendingSection('realtime_leave_now', '지금 출발하면 볼 수 있는') : leaveNowFilms.length > 0 ? [{
           listId: 'realtime_leave_now',
           nameKo: '지금 출발하면 볼 수 있는',
           description: '지금 출발하면 늦지 않게 볼 수 있는 회차예요',
@@ -852,7 +863,8 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
         }] : []
 
         // 단독 상영 — 3편 미만이면 위에서 이미 빈 배열로 걸러짐, 지역 미선택 시에도 빈 배열
-        const rtSolo: AnySection[] = soloFilms.length > 0 ? [{
+        const rtSolo: AnySection[] = curationLoading && selectedRegion
+          ? pendingSection('realtime_solo_theater', `${selectedRegion}에서 단 한 곳`) : soloFilms.length > 0 ? [{
           listId: 'realtime_solo_theater',
           nameKo: `${selectedRegion ?? '이 지역'}에서 단 한 곳`,
           description: '이 지역에서는 이 극장에서만 상영해요',
@@ -869,7 +881,8 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
           clickRankings?.views,
           (movieId) => activeMovieIdSet.has(movieId) && movieById.has(movieId),
         )
-        const rtPopularRank: AnySection[] = popularRanked.length >= 3 ? [{
+        const rtPopularRank: AnySection[] = clickRankingsLoading
+          ? pendingSection('realtime_popular_rank', '지금 가장 많이 찾는 영화') : popularRanked.length >= 3 ? [{
           listId: 'realtime_popular_rank',
           nameKo: '지금 가장 많이 찾는 영화',
           description: '최근 7일, 예매하러 떠나고 상세를 열어본 걸 합쳐 매겼어요',
@@ -962,10 +975,11 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
 
         // 연속 sparse 섹션을 2열로 페어링 (그룹 경계 무관)
         function renderRun(list: AnySection[], keyPrefix: string, startIndex: number) {
-          const active = list.filter((s) => s.movies.length > 0)
+          const active = list.filter((s) => s.loading || s.movies.length > 0)
           if (active.length === 0) return null
           const nodes: React.ReactNode[] = []
           function rowFor(s: AnySection, compact: boolean) {
+            if (s.loading) return <CurationSectionSkeleton key={s.listId} title={s.nameKo} isDesktop={isDesktop} />
             /* 순번은 실제 렌더 순서에서 여기서만 계산한다. 그날 게이트를 통과한 섹션만
                세므로 날짜 간 절대 비교용이 아니다 — 시점 간 비교는 list_id로 한다. */
             const position = startIndex + active.indexOf(s)
@@ -998,8 +1012,8 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
           // 모바일: 2열로 묶진 않지만, sparse(≤2편)는 카드 문법(수상 워터마크 포함)으로
           if (!isDesktop) {
             return <>{active.map((s) =>
-              <LazyBlock key={s.listId} isDesktop={isDesktop}>
-                {s.movies.length <= 2
+              <LazyBlock key={s.listId} isDesktop={isDesktop} placeholder={<CurationSectionSkeleton title={s.nameKo} isDesktop={isDesktop} />}>
+                {!s.loading && s.movies.length <= 2
                   ? <div style={{ display: 'flex', padding: '32px var(--gutter-sheet) 0' }}>{rowFor(s, true)}</div>
                   : rowFor(s, false)}
               </LazyBlock>
@@ -1010,7 +1024,7 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
           let pending: AnySection | null = null
           const deferred: AnySection[] = []
           for (const s of active) {
-            const sparse = s.movies.length <= 2
+            const sparse = !s.loading && s.movies.length <= 2
             if (sparse && pending == null) {
               pending = s
               continue
@@ -1025,13 +1039,13 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
                 </LazyBlock>
               )
               pending = null
-              deferred.forEach((d) => nodes.push(<LazyBlock key={d.listId} isDesktop={isDesktop}>{rowFor(d, false)}</LazyBlock>))
+              deferred.forEach((d) => nodes.push(<LazyBlock key={d.listId} isDesktop={isDesktop} placeholder={<CurationSectionSkeleton title={d.nameKo} isDesktop={isDesktop} />}>{rowFor(d, false)}</LazyBlock>))
               deferred.length = 0
               continue
             }
             // rich 섹션: 짝을 기다리는 sparse가 있으면 뒤로 미뤄두고, 없으면 바로 낸다
             if (pending != null) deferred.push(s)
-            else nodes.push(<LazyBlock key={s.listId} isDesktop={isDesktop}>{rowFor(s, false)}</LazyBlock>)
+            else nodes.push(<LazyBlock key={s.listId} isDesktop={isDesktop} placeholder={<CurationSectionSkeleton title={s.nameKo} isDesktop={isDesktop} />}>{rowFor(s, false)}</LazyBlock>)
           }
           if (pending != null) {
             // 끝까지 짝을 못 찾은 sparse — 큰 포스터 1~2장에 빈 공간 안 남게 단독 카드로
@@ -1042,7 +1056,7 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
                 </div>
               </LazyBlock>
             )
-            deferred.forEach((d) => nodes.push(<LazyBlock key={d.listId} isDesktop={isDesktop}>{rowFor(d, false)}</LazyBlock>))
+            deferred.forEach((d) => nodes.push(<LazyBlock key={d.listId} isDesktop={isDesktop} placeholder={<CurationSectionSkeleton title={d.nameKo} isDesktop={isDesktop} />}>{rowFor(d, false)}</LazyBlock>))
           }
           return <>{nodes}</>
         }
@@ -1087,20 +1101,6 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
 
         return (
           <>
-            {/* 로딩 중 자리표시 — 큐레이션 섹션이 몇 개 뜰지 로딩 전엔 알 수 없어 최소 자리만 흉내.
-                로딩 끝난 뒤에도 visibleSections가 비어 있으면(진짜 빈 상태) 계속 아무것도 안 그림 */}
-            {(moviesLoading || curationListsLoading) && (
-              <div style={{ paddingTop: isDesktop ? 48 : 24 }}>
-                <div style={{ display: 'flex', gap: isDesktop ? 16 : 10, overflow: 'hidden', padding: '0 16px' }}>
-                  {[0, 1, 2, 3].map((i) => (
-                    <div key={i} style={{ width: isDesktop ? 210 : 120, flexShrink: 0 }}>
-                      <MovieCardSkeleton />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* 주목할 영화제 — 지역 필터 무관 전국 대상. 가로 배너(banner_url)가 있는 첫 영화제만 노출한다.
                 배너 이미지가 이 섹션의 본문 전부라 없으면 통째로 감춘다. 세로 포스터만 있는 영화제
                 (부산국제영화제)는 필터 줄 아래 바로가기 이미지가 그 역할을 한다. */}
@@ -1200,6 +1200,7 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
           </>
         )
       })()}
+      </>}
 
       </div>
 
