@@ -15,6 +15,8 @@
 
 export interface RunnableSection {
   movies: unknown[]
+  /** 자리표시가 차지하는 섹션도 렌더 순번에 포함한다. */
+  loading?: boolean
 }
 
 /** 섹션이 실제로 그려지는 모양 */
@@ -72,7 +74,7 @@ export function buildSectionAnalytics(args: {
 
 /** 그날 실제로 그려지는 섹션 수 (빈 섹션은 renderRun이 걸러낸다) */
 export function shownCount(list: readonly RunnableSection[]): number {
-  return list.filter((s) => s.movies.length > 0).length
+  return list.filter((s) => s.loading || s.movies.length > 0).length
 }
 
 /**

@@ -7,7 +7,7 @@ import { PosterThumb } from '@/components/domain/PosterThumb'
 import { normalizeTitle } from '@/lib/text/normalizeTitle'
 import { withFlag } from '@/lib/nations'
 import type { Movie } from '@/types/api'
-import { BubbleTail, bubbleTailReach, GenreChip, PosterChip, SectionHeader, CardContainer, ScrollNavButton, Divider } from '@/components/primitives'
+import { BubbleTail, bubbleTailReach, GenreChip, PosterChip, SectionHeader, CardContainer, ScrollNavButton, Divider, Skeleton } from '@/components/primitives'
 import type { SectionAnalytics } from '@/lib/curation/sectionRuns'
 import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
 import { Carousel, CarouselContent, CarouselItem, useCarousel, RevealItem, RevealGroup } from '@/components/motion'
@@ -41,6 +41,8 @@ interface CurationSectionRowProps {
   analytics?: SectionAnalytics
 }
 
+const CARD_INFO_HEIGHT = { mobile: 88, desktop: 96 }
+
 const POSTER_SIZE = {
   mobile: { width: 120, height: 180 },
   desktop: { width: 210, height: 315 },
@@ -54,7 +56,7 @@ function MovieCardInfo({ movie, isDesktop, caption, customBottomInfo }: { movie:
   const fontSize = isDesktop ? 16 : 14
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minHeight: isDesktop ? CARD_INFO_HEIGHT.desktop : CARD_INFO_HEIGHT.mobile }}>
       {/* 제목 */}
       <span
         style={{
@@ -246,7 +248,6 @@ function MovieCard({
   onClick,
   rank,
   anniversaryAge,
-  revealIndex,
 }: {
   movie: Movie
   width: number
@@ -260,18 +261,12 @@ function MovieCard({
   rank?: number
   /** 개봉 주년(10의 배수) — 주면 포스터 좌상단에 칩 */
   anniversaryAge?: number
-  /** 행 안에서의 순번 — 등장 모션 계단 간격용 */
-  revealIndex: number
 }) {
-  const [posterReady, setPosterReady] = useState(!movie.posterUrl)
   const { anchorRef, popupPos, hoverProps, posterStyle } = usePosterHover(isDesktop)
 
   return (
     <>
-      <RevealItem
-        preset="slide"
-        ready={posterReady}
-        staggerIndex={revealIndex}
+      <div
         onClick={onClick}
         style={{ display: 'flex', flexDirection: 'column', gap: 8, width, flexShrink: 0, cursor: onClick ? 'pointer' : undefined }}
       >
@@ -282,7 +277,7 @@ function MovieCard({
           {...hoverProps}
           style={{ ...posterStyle, borderRadius: 'var(--radius-poster)' }}
         >
-          <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} shadow={false} onReady={() => setPosterReady(true)} />
+          <PosterThumb src={movie.posterUrl} alt={movie.title} width={width} height={height} shadow={false} />
 
           {/* 순위 — 포스터 좌하단. 네 모서리 중 유일하게 비어 있는 자리라 기존 칩과 안 부딪힌다.
               스크림이 대비를 보장하므로 포스터 그림이 밝든 어둡든 숫자가 읽힌다
@@ -332,12 +327,35 @@ function MovieCard({
         </div>
 
         <MovieCardInfo movie={movie} isDesktop={isDesktop} caption={caption} customBottomInfo={customBottomInfo} />
-      </RevealItem>
+      </div>
 
       {popupPos && (
         <HoverPopup movie={movie} x={popupPos.x} y={popupPos.y} posterWidth={popupPos.width} />
       )}
     </>
+  )
+}
+
+/** 본문과 같은 포스터·메타 높이를 예약한다. 로딩 중에는 노출 계측을 하지 않는다. */
+export function CurationSectionSkeleton({ title, isDesktop = false }: { title?: string; isDesktop?: boolean }) {
+  const { width, height } = isDesktop ? POSTER_SIZE.desktop : POSTER_SIZE.mobile
+  const scaleBleed = Math.ceil(height * 0.04)
+  return (
+    <section aria-busy="true" aria-label={title} style={{ paddingTop: isDesktop ? 48 : 32 }}>
+      <SectionHeader title={title ?? <Skeleton width={180} height="1.3em" className="motion-reduce:animate-none" />} isDesktop={isDesktop} />
+      <span className="sr-only" role="status">{title ?? '상영작'} 불러오는 중…</span>
+      <div aria-hidden style={{ display: 'flex', gap: isDesktop ? 16 : 10, overflow: 'hidden', padding: `${scaleBleed + 8}px var(--gutter-sheet)` }}>
+        {Array.from({ length: isDesktop ? 5 : 4 }, (_, i) => (
+          <div key={i} style={{ width, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <Skeleton width={width} height={height} className="motion-reduce:animate-none" />
+            <div style={{ minHeight: isDesktop ? CARD_INFO_HEIGHT.desktop : CARD_INFO_HEIGHT.mobile, display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <Skeleton width="75%" height="var(--text-body)" className="motion-reduce:animate-none" />
+              <Skeleton width="50%" height="var(--text-meta)" className="motion-reduce:animate-none" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   )
 }
 
@@ -528,6 +546,8 @@ function CurationRowTrack({
         />
       )}
       <RevealGroup>
+      {/* 행 전체를 동시에 페이드인한다. 개별 이미지 로드가 제목·순위의 등장 순서를 바꾸지 않는다. */}
+      <RevealItem preset="fade" settleMs={0}>
       <CarouselContent
         viewportStyle={{
           /* 호버 스케일 여유(scaleBleed)는 음수 마진으로 상쇄 — 포스터 시작선 = 거터 24 */
@@ -541,7 +561,6 @@ function CurationRowTrack({
           <CarouselItem key={movie.id}>
             <MovieCard
               movie={movie}
-              revealIndex={Math.min(i, 5)}
               width={width}
               height={height}
               isDesktop={isDesktop}
@@ -555,6 +574,7 @@ function CurationRowTrack({
           </CarouselItem>
         ))}
       </CarouselContent>
+      </RevealItem>
       </RevealGroup>
     </div>
   )

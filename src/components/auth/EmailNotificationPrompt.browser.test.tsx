@@ -152,6 +152,12 @@ it.skipIf(process.env.RUN_BROWSER_TESTS !== '1')('이메일 동의 정렬·편�
       expect(metrics.gap).toBe(metrics.expectedGap)
       expect(metrics.gutter).toBe(metrics.expectedGutter)
       const choices = page.locator('[aria-label="발송 빈도 의견"]').getByRole('button')
+      // 페이지 이동·화면 폭 변경 뒤에도 포인터 좌표는 유지된다. 이전에 누른 자리 아래에
+      // 새 버튼이 놓이면 한 개만 hover 색이므로, 기본색은 포인터를 치운 뒤 전환이 끝나면 잰다.
+      await page.mouse.move(0, 0)
+      await expect.poll(() => choices.evaluateAll(elements =>
+        new Set(elements.map(element => getComputedStyle(element).backgroundColor)).size,
+      )).toBe(1)
       const buttons = await choices.evaluateAll(elements => elements.map(element => {
         const rect = element.getBoundingClientRect(), style = getComputedStyle(element)
         return { y: rect.y, height: rect.height, color: style.backgroundColor }

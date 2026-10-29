@@ -43,18 +43,17 @@ function accentColors(eventType: AnniversaryEventType) {
 /* compact(1~2편) 카드 — 포스터 + 정보 inline. 예전엔 이 경로에만 호버가 없었다.
    확대만 쓰고 말풍선은 띄우지 않는다 — 제목·감독·연도가 이미 포스터 오른쪽에 펼쳐져
    있어서, 같은 자리에 뜨는 말풍선이 그 정보를 덮기만 한다. */
-function CompactFilmCard({ film, isDesktop, revealIndex, onClick }: {
+function CompactFilmCard({ film, isDesktop, onClick }: {
   film: Movie
   isDesktop: boolean
-  revealIndex: number
   onClick?: () => void
 }) {
   const { anchorRef, hoverProps, posterStyle } = usePosterHover(isDesktop)
 
   return (
     <RevealItem
-      preset="slide"
-      staggerIndex={revealIndex}
+      preset="fade"
+      staggerStep={0}
       onClick={onClick}
       style={{
         display: 'flex', gap: 'var(--spacing-3)', alignItems: 'flex-start', minWidth: 0,
@@ -152,12 +151,11 @@ export function AnniversarySection({
         <div style={{
           display: 'flex', gap: 'var(--spacing-4)', alignItems: 'flex-start', flexWrap: 'wrap',
         }}>
-          {films.slice(0, 2).map((film, i) => (
+          {films.slice(0, 2).map((film) => (
             <CompactFilmCard
               key={film.id}
               film={film}
               isDesktop={isDesktop}
-              revealIndex={i}
               onClick={onMovieClick ? () => {
                 trackEvent('curation movie selected', { ...analytics, movie_id: film.id, movie_title: film.title })
                 onMovieClick(film.id)
