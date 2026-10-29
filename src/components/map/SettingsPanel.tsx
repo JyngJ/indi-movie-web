@@ -130,6 +130,8 @@ export function SettingsMainPage({
         <Button variant="ghost" size="sm" style={{ color: 'var(--color-text-sub)', fontWeight: 500 }} onClick={() => onNavigate('attribution')}>출처 표기 정보</Button>
         <span style={footerDot}>·</span>
         {/* 만든 사람 탭 임시 숨김 */}
+        <Link href="/terms" className="hover-raise" style={{ ...footerLink, textDecoration: 'none' }}>이용약관</Link>
+        <span style={footerDot}>·</span>
         <Link href="/privacy" className="hover-raise" style={{ ...footerLink, textDecoration: 'none' }}>개인정보 처리방침</Link>
       </div>
       <div style={{ textAlign: 'center', marginTop: 8, fontSize: 'var(--text-badge)', color: 'var(--color-text-placeholder)' }}>

@@ -132,6 +132,14 @@ export function MyHomeContent({ authError, onProfile, onNotifications, onFavorit
         </Button>
         <span style={{ color: 'var(--color-text-placeholder)' }}>·</span>
         <Link
+          href="/terms"
+          className="hover-raise"
+          style={{ display: 'inline-flex', alignItems: 'center', height: 'var(--comp-btn-h-sm)', padding: '0 var(--comp-btn-px-sm)', fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)', textDecoration: 'none', borderRadius: 'var(--radius-control)' }}
+        >
+          이용약관
+        </Link>
+        <span style={{ color: 'var(--color-text-placeholder)' }}>·</span>
+        <Link
           href="/privacy"
           className="hover-raise"
           style={{ display: 'inline-flex', alignItems: 'center', height: 'var(--comp-btn-h-sm)', padding: '0 var(--comp-btn-px-sm)', fontSize: 'var(--text-meta)', color: 'var(--color-text-sub)', textDecoration: 'none', borderRadius: 'var(--radius-control)' }}

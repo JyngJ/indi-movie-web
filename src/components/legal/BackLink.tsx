@@ -13,7 +13,7 @@ export function BackLink() {
         else router.push('/')
       }}
       style={{
-        fontSize: 13,
+        fontSize: 'var(--text-meta)',
         color: 'var(--color-primary-base)',
         background: 'none',
         border: 'none',

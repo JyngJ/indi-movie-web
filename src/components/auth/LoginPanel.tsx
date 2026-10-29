@@ -79,6 +79,10 @@ export function LoginPanel({
         이메일 소식은 로그인 후 선택할 수 있어요<br />
         만 14세 이상만 가입할 수 있어요<br />
         계속하면{' '}
+        <Link href="/terms" style={{ color: 'inherit', textDecoration: 'underline' }}>
+          이용약관
+        </Link>
+        과{' '}
         <Link href="/privacy" style={{ color: 'inherit', textDecoration: 'underline' }}>
           개인정보 처리방침
         </Link>
