@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 }
 
 // 최종 개정일 — 내용 변경 시 함께 갱신
-const EFFECTIVE_DATE = '2026년 10월 20일'
+const EFFECTIVE_DATE = '2026년 10월 30일'
 const CONTACT_EMAIL = 'indi.movie.map@gmail.com'
 
 export default function PrivacyPolicyPage() {
@@ -41,17 +41,20 @@ export default function PrivacyPolicyPage() {
       <p style={{ marginBottom: 24 }}>
         영화볼지도(이하 &lsquo;서비스&rsquo;)는 전국 독립·예술영화관의 상영 정보를 지도로
         제공하는 무료 웹 서비스입니다. 로그인 없이도 모든 상영 정보를 이용할 수 있으며,
-        관심 목록·알림 등 일부 기능을 위해 카카오 계정으로 로그인할 수 있습니다. 서비스
+        관심 목록·알림 등 일부 기능을 위해 카카오 또는 Google 계정으로 로그인할 수 있습니다. 서비스
         운영·개선과 통계·광고 성과 측정, 광고 게재, 회원 기능 제공을 위해 아래와 같이 개인정보를
         처리하므로, 개인정보 보호법 제30조에 따라 그 내용을 안내합니다.
       </p>
 
       <Section title="1. 수집하는 정보 및 수집 방법">
         <p>로그인하지 않은 이용자에게서는 직접 입력하는 개인정보를 수집하지 않습니다.
-          카카오 로그인 시와 서비스 이용 과정에서 아래 정보가 수집될 수 있습니다.</p>
+          소셜 로그인 시와 서비스 이용 과정에서 아래 정보가 수집될 수 있습니다.</p>
         <ul style={ulStyle}>
           <li><b>회원 정보</b> (카카오 로그인 시): 카카오 회원번호, 닉네임, 프로필 이미지.
             서비스 안에서 닉네임은 직접 수정할 수 있습니다.</li>
+          <li><b>회원 정보</b> (Google 로그인 시): Google 계정 식별자, 이메일 주소, 이름,
+            프로필 이미지. 이메일 주소는 계정 식별에만 쓰며, 이메일 소식은 아래 &lsquo;이메일 소식
+            정보&rsquo;에서 따로 동의한 경우에만 보냅니다.</li>
           <li><b>회원이 만든 정보</b>: 관심 영화·감독·영화관 목록, 알림 설정값.</li>
           <li><b>알림 발송용 정보</b>: 카카오톡 메시지 수신에 동의한 경우, 알림 발송에
             필요한 카카오 연동 토큰. 알림 기능이 제공되기 전까지는 발송에 사용하지 않습니다.</li>
@@ -71,8 +74,10 @@ export default function PrivacyPolicyPage() {
             설정값 등. 이용자 기기의 로컬 저장소(localStorage)·쿠키에만 저장되며 서버로 수집되지
             않습니다.</li>
         </ul>
-        <p style={noteStyle}>수집 방법: 카카오 로그인 시 카카오로부터 제공, 서비스 이용 시
+        <p style={noteStyle}>수집 방법: 소셜 로그인 시 카카오·Google로부터 제공, 서비스 이용 시
           이용자의 직접 입력 및 쿠키·SDK를 통한 자동 수집.</p>
+        <p style={noteStyle}>만 14세 미만 아동은 회원으로 가입할 수 없습니다. 만 14세 미만 아동의
+          개인정보가 수집된 사실을 알게 되면 지체 없이 파기합니다.</p>
       </Section>
 
       <Section title="2. 정보의 이용 목적">
@@ -94,7 +99,9 @@ export default function PrivacyPolicyPage() {
           <li><b>Google AdSense</b> (Google) — 광고 게재, 맞춤형 광고 제공(4항 참고).</li>
           <li><b>Meta Pixel</b> (Meta Platforms) — 방문·페이지뷰 등 행태정보 수집, 광고 성과 측정.</li>
           <li><b>Google Analytics 4</b> (Google) — 방문·이용 통계 분석.</li>
-          <li><b>PostHog</b> — 서비스 이용 이벤트·세션 분석.</li>
+          <li><b>PostHog</b> — 서비스 이용 이벤트·세션 분석, 화면 이용 과정 기록(세션 리플레이).
+            세션 리플레이는 화면 이동·클릭·스크롤을 재생할 수 있게 기록하며, 입력란에 적은 내용은
+            가려서 저장합니다.</li>
           <li><b>Vercel Analytics</b> (Vercel) — 방문 트래픽 통계.</li>
         </ul>
         <p style={{ marginTop: 12 }}>
@@ -156,7 +163,7 @@ export default function PrivacyPolicyPage() {
         <ul style={ulStyle}>
           <li>Kakao Corp. — 카카오 로그인(소셜 로그인) 제공</li>
           <li>Meta Platforms — 광고 성과 측정(Meta Pixel)</li>
-          <li>Google LLC — 통계 분석(Google Analytics), 광고 게재(Google AdSense), 이메일 발송(Gmail)</li>
+          <li>Google LLC — Google 로그인(소셜 로그인) 제공, 통계 분석(Google Analytics), 광고 게재(Google AdSense), 이메일 발송(Gmail)</li>
           <li>PostHog — 제품 분석</li>
           <li>Vercel Inc. — 서비스 호스팅 및 트래픽 통계</li>
           <li>Supabase — 상영 정보 및 회원 정보(계정·관심 목록·알림 설정) 데이터베이스 운영</li>
@@ -209,6 +216,7 @@ export default function PrivacyPolicyPage() {
         <p>이 개인정보 처리방침은 법령·서비스 변경에 따라 개정될 수 있으며, 변경 시 본 페이지를
           통해 공지합니다.</p>
         <ul style={ulStyle}>
+          <li>2026년 10월 30일 — Google 로그인 수집 항목, 세션 리플레이, 만 14세 미만 가입 제한 안내 추가</li>
           <li>2026년 10월 20일 — 이메일 발송·추정 열람·링크 유입 통계 안내 추가</li>
           <li>2026년 10월 19일 — 선택형 이메일 상영 소식의 수집 항목·발송·보관·해지 안내 추가</li>
           <li>2026년 10월 1일 — Google AdSense 광고 게재에 따른 맞춤형 광고·행태정보 항목(4항),
