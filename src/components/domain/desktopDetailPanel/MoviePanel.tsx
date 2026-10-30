@@ -301,7 +301,7 @@ function MovieTheatersTab({
                     trackEvent('showtime selected', { movie_id: movieId, theater_id: entry.theaterId, theater_name: entry.theaterName, showtime_id: st.id, show_date: group.date, show_time: st.showTime, seat_available: st.seatAvailable, seat_total: st.seatTotal, source: 'desktop_panel_showtime' })
                     onTheaterOpen(entry.theaterId, group.date)
                   }}
-                  style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-raised)', cursor: soldout ? 'default' : 'pointer', opacity: soldout ? 0.5 : 1, textAlign: 'left', minHeight: 'auto' }}
+                  style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--color-border)', backgroundColor: soldout ? 'var(--color-surface-raised)' : 'var(--color-surface-card)', cursor: soldout ? 'default' : 'pointer', opacity: soldout ? 0.5 : 1, textAlign: 'left', minHeight: 'auto' }}
                 >
                   <div style={{ fontSize: 14, fontWeight: 700, fontFeatureSettings: '"tnum"', color: 'var(--color-text-primary)' }}>
                     {st.showTime.slice(0, 5)}
