@@ -33,11 +33,15 @@ export function emailPosterUrl(value?: string): string | null {
   } catch { return null }
 }
 
+// 포스터가 없거나 이용허락 근거가 없는 호스트면 같은 비율의 빈 포스터를 쓴다.
+// 글자만 남으면 3열 그리드에서 옆 칸 포스터와 높이가 어긋나 칸이 비어 보인다.
+const placeholderPoster = (origin: string) => origin + '/email/poster-placeholder-v1.png'
+
 function filmRows(items: EmailFilm[], origin: string): string {
   return items.map(item => {
-    const poster = emailPosterUrl(item.posterUrl)
+    const poster = emailPosterUrl(item.posterUrl) ?? placeholderPoster(origin)
     const href = escapeHtml(origin + item.path)
-    return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:24px"><tr>${poster ? `<td width="112" valign="top"><a href="${href}"><img src="${escapeHtml(poster)}" width="96" height="140" alt="${escapeHtml(item.title)} 포스터" style="display:block;object-fit:cover;border-radius:4px;border:0"></a></td>` : ''}<td valign="middle"><a href="${href}" style="font-weight:bold;color:${theme.ink};text-decoration:none;line-height:1.6">${escapeHtml(item.title)}</a><p style="margin:8px 0 16px;color:${theme.sub};font-size:${theme.meta};line-height:1.8">${escapeHtml(item.description)}</p><a href="${href}" style="display:inline-block;padding:12px 16px;background:${theme.tint};border-radius:8px;color:${theme.primary};font-size:${theme.meta};font-weight:bold;text-decoration:none">예매하러 가기 →</a></td></tr></table>`
+    return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:24px"><tr><td width="112" valign="top"><a href="${href}"><img src="${escapeHtml(poster)}" width="96" height="140" alt="${escapeHtml(item.title)} 포스터" style="display:block;object-fit:cover;border-radius:4px;border:0"></a></td><td valign="middle"><a href="${href}" style="font-weight:bold;color:${theme.ink};text-decoration:none;line-height:1.6">${escapeHtml(item.title)}</a><p style="margin:8px 0 16px;color:${theme.sub};font-size:${theme.meta};line-height:1.8">${escapeHtml(item.description)}</p><a href="${href}" style="display:inline-block;padding:12px 16px;background:${theme.tint};border-radius:8px;color:${theme.primary};font-size:${theme.meta};font-weight:bold;text-decoration:none">예매하러 가기 →</a></td></tr></table>`
   }).join('')
 }
 function filmGrid(films: EmailFilm[], origin: string): string {
@@ -45,8 +49,8 @@ function filmGrid(films: EmailFilm[], origin: string): string {
   for (let i = 0; i < films.length; i += 3) {
     const cells = films.slice(i, i + 3).map((film, index) => {
       const href = escapeHtml(origin + film.path)
-      const poster = emailPosterUrl(film.posterUrl)
-      return `<td width="33.33%" valign="top" style="padding:${index === 0 ? '0 8px 24px 0' : index === 1 ? '0 4px 24px 4px' : '0 0 24px 8px'}"><a href="${href}" style="display:block;color:${theme.ink};text-decoration:none">${poster ? `<img src="${escapeHtml(poster)}" width="256" alt="${escapeHtml(film.title)} 포스터" style="display:block;width:100%;max-width:256px;height:auto;border-radius:4px;border:0;margin-bottom:12px">` : ''}<span style="font-weight:bold;line-height:1.6">${escapeHtml(film.title)}</span></a>${film.directors?.length ? `<p style="margin:4px 0 0;font-size:${theme.meta};color:${theme.sub};line-height:1.6">${escapeHtml(film.directors.join('·'))}</p>` : ''}</td>`
+      const poster = emailPosterUrl(film.posterUrl) ?? placeholderPoster(origin)
+      return `<td width="33.33%" valign="top" style="padding:${index === 0 ? '0 8px 24px 0' : index === 1 ? '0 4px 24px 4px' : '0 0 24px 8px'}"><a href="${href}" style="display:block;color:${theme.ink};text-decoration:none"><img src="${escapeHtml(poster)}" width="256" alt="${escapeHtml(film.title)} 포스터" style="display:block;width:100%;max-width:256px;height:auto;border-radius:4px;border:0;margin-bottom:12px"><span style="font-weight:bold;line-height:1.6">${escapeHtml(film.title)}</span></a>${film.directors?.length ? `<p style="margin:4px 0 0;font-size:${theme.meta};color:${theme.sub};line-height:1.6">${escapeHtml(film.directors.join('·'))}</p>` : ''}</td>`
     }).join('')
     rows.push(`<tr>${cells}${'<td width="33.33%"></td>'.repeat(3 - Math.min(3, films.length - i))}</tr>`)
   }
