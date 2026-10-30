@@ -23,6 +23,7 @@ import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/compo
 import { Skeleton, ShowtimeCellSkeleton, Button, Icon, EmptyState } from '@/components/primitives'
 import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
 import { ShowtimeCell } from '@/components/domain/ShowtimeCell'
+import { initialScreeningDate } from '@/lib/catalog/initialScreeningDate'
 import { isSoldOut } from '@/lib/catalog/seatAvailability'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 
@@ -261,6 +262,7 @@ export function FilmsTheaterDetailClient({ theater, initialSelection, initialSho
 
   const dates = useMemo(() => getDateRange(7), [])
   const [selectedDate, setSelectedDate] = useState(initialSelection?.date ?? dates[0])
+  const initialDateResolvedRef = useRef(Boolean(initialSelection))
   const [copied, setCopied] = useState(false)
   const [selectedShowtimeId, setSelectedShowtimeId] = useState<string | null>(initialSelection?.showtimeId ?? null)
   /* 회차 카드는 제목이 있어야 뜬다(selectedShowtimeData) — 공유 경로는 서버가 이미 알고 넘긴다 */
@@ -275,7 +277,7 @@ export function FilmsTheaterDetailClient({ theater, initialSelection, initialSho
   const [seedUpdatedAt] = useState(() =>
     initialShowtimes ? snapshotUpdatedAt(initialShowtimes.fetchedAt, Date.now()) : 0)
   const seed = initialShowtimes && initialShowtimes.date === dates[0] ? initialShowtimes : null
-  const { data: allMovies = [] } = useTheaterAllMovies(
+  const { data: allMovies = [], isLoading: allMoviesLoading } = useTheaterAllMovies(
     theater.id,
     seed ? { data: seed.movies, updatedAt: seedUpdatedAt } : undefined,
   )
@@ -306,16 +308,17 @@ export function FilmsTheaterDetailClient({ theater, initialSelection, initialSho
     return set
   }, [allMovies])
 
-  // 오늘 상영 없으면 가장 빠른 날로 자동 이동 (데이터 로드 후 1회)
+  // 일별 시간표까지 준비된 뒤 한 번만 판단한다. 직접 고른 날짜·공유 회차는 보존한다.
   useEffect(() => {
-    if (activeDates.size === 0) return
-    if (selectedDate !== dates[0]) return  // 이미 다른 날 선택됨
-    if (activeDates.has(selectedDate)) return  // 오늘 상영 있음
-    const earliest = [...activeDates].sort()[0]
-    if (earliest) setSelectedDate(earliest)
-  // activeDates 로드 시점에만 체크
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeDates])
+    if (initialDateResolvedRef.current || allMoviesLoading || activeDates.size === 0) return
+    if (new URLSearchParams(window.location.search).has('date')) return
+    const now = new Date()
+    const today = toKstIsoDate(now)
+    if (activeDates.has(today) && (isLoading || !dayData)) return
+    initialDateResolvedRef.current = true
+    const next = initialScreeningDate(activeDates, dayData?.showtimes ?? [], now)
+    if (next) setSelectedDate(next)
+  }, [activeDates, allMoviesLoading, isLoading, dayData])
 
   // 날짜 변경 시 선택 회차 초기화 (공유 링크 복원 직후 1회는 건너뜀)
   useEffect(() => {
@@ -526,7 +529,7 @@ export function FilmsTheaterDetailClient({ theater, initialSelection, initialSho
           borderBottom: '1px solid var(--color-border)',
         }}
       >
-        <DetailDateTabs dates={dates} selectedDate={selectedDate} activeDates={activeDates} onSelect={setSelectedDate} />
+        <DetailDateTabs dates={dates.includes(selectedDate) ? dates : [...dates, selectedDate].sort()} selectedDate={selectedDate} activeDates={activeDates} onSelect={(date) => { initialDateResolvedRef.current = true; setSelectedDate(date) }} />
       </DetailKeyPanel>
 
       {/* 현재 상영중 */}
