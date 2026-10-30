@@ -14,3 +14,14 @@ it('메일의 제목과 링크를 이스케이프하고 포스터가 없어도 �
   expect(html).toContain('a=1&amp;b=2')
   expect(renderVerificationEmail('https://example.com', 'https://example.com/verify')).toContain('alt="영화볼지도 로고"')
 })
+it('포스터가 없는 영화도 그리드 칸에 같은 비율의 빈 포스터를 넣는다', () => {
+  const html = renderDigestEmail({ origin: 'https://example.com', unsubscribeUrl: 'https://example.com/manage', frequency: [], items: [{
+    groupType: 'theater', groupName: '시네마테크KOFA', title: '시네마테크KOFA의 상영 소식', description: '새 상영', path: '/films/theater/kofa',
+    films: [
+      { title: '넘버 원', directors: ['Les Blair'], description: '', path: '/movie/1' },
+      { title: '만종', directors: ['신상옥'], posterUrl: 'http://file.koreafilm.or.kr/poster.jpg', description: '', path: '/movie/2' },
+    ],
+  }] })
+  expect(html).toContain('src="https://example.com/email/poster-placeholder-v1.png" width="256" alt="넘버 원 포스터"')
+  expect(html).toContain('src="https://file.koreafilm.or.kr/poster.jpg"')
+})
