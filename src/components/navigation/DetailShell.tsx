@@ -33,6 +33,14 @@ export function DetailShell({ children }: { children: ReactNode }) {
             background: 'radial-gradient(circle 16px at 100% 0%, transparent 98%, var(--color-surface-raised) 100%)',
             zIndex: 'var(--z-panel-mask)', pointerEvents: 'none',
           }} />
+          {/* 상영작·지도와 같은 레일 경계 그림자. 본문 쪽 번짐은 잘라낸다. */}
+          <div aria-hidden style={{
+            position: 'fixed', left: GLOBAL_NAV_DESKTOP_WIDTH, top: 0, bottom: 0, width: 16,
+            borderRadius: '16px 0 0 16px',
+            boxShadow: 'var(--shadow-panel-left)',
+            clipPath: 'inset(-24px 0 -24px -24px)',
+            zIndex: 'var(--z-rail-popover)', pointerEvents: 'none',
+          }} />
         </>
       )}
       <div

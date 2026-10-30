@@ -62,6 +62,10 @@ const CONTRACTS: Record<string, { guard: string; why: string }> = {
     guard: '지도 포스터에 마우스를 올리면 뜨는 팝업이 모서리 칩에 가리지 않는지',
     why: '부모 요소가 겹침 순서를 가둬서, 팝업이 칩 밑으로 들어간 적이 있습니다.',
   },
+  'src/components/navigation/DetailShell.browser.test.tsx': {
+    guard: '상세 본문의 그림자가 레일 위에 보이고, 본문으로 번지거나 클릭을 막지 않으며 모바일에는 남지 않는지',
+    why: '상영작·지도에 있던 본문 경계 그림자가 상세 공통 틀에는 빠져 화면마다 깊이가 달랐습니다.',
+  },
   'src/components/navigation/RailPopover.browser.test.tsx': {
     guard: '창이 낮아도 MY 메뉴가 찌그러지지 않고 끝까지 스크롤되는지',
     why: '본문에 flex column이 걸려 메뉴 카드가 눌리고 아래 행이 잘렸습니다.',

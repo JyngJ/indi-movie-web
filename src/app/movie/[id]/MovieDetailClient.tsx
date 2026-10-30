@@ -32,6 +32,7 @@ import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/compo
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 import { NoScreeningPanel } from '@/components/domain/movieDetail/NoScreeningPanel'
 import type { SimilarPick } from '@/lib/catalog/similarNowShowing'
+import { initialScreeningDate } from '@/lib/catalog/initialScreeningDate'
 import { isSoldOut } from '@/lib/catalog/seatAvailability'
 
 function useIsDesktop() {
@@ -155,6 +156,7 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection, s
 
   const dates = useMemo(() => getDateRange(7), [])
   const [selectedDate, setSelectedDate] = useState(initialSelection?.date ?? dates[0])
+  const initialDateResolvedRef = useRef(Boolean(initialSelection))
   // localStorage 초기화 금지 — hydration mismatch 방지 (effect에서 로드)
   const [regionId, setRegionId] = useState<string | null>(null)
   useEffect(() => { setRegionId(getStoredRegion()) }, [])
@@ -240,16 +242,18 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection, s
     return set
   }, [theaterEntries, selectedDate])
 
-  // 오늘 상영 없으면 가장 빠른 날로 자동 이동 (데이터 로드 후 1회)
+  // 첫 진입에 오늘 회차가 모두 끝났으면 다음 상영일로 이동한다.
   useEffect(() => {
-    if (restoredShareRef.current || activeDates.size === 0) return
-    if (selectedDate !== dates[0]) return  // 이미 다른 날 선택됨
-    if (activeDates.has(selectedDate)) return  // 오늘 상영 있음
-    const earliest = [...activeDates].sort()[0]
-    if (earliest) setSelectedDate(earliest)
-  // activeDates 로드 시점에만 체크
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeDates])
+    if (initialDateResolvedRef.current || isLoading || theaterEntries.length === 0) return
+    if (restoredShareRef.current || new URLSearchParams(window.location.search).has('date')) return
+    initialDateResolvedRef.current = true
+    const now = new Date()
+    const today = toKstIsoDate(now)
+    const showtimes = theaterEntries.flatMap((entry) =>
+      entry.dateGroups.filter((group) => group.date === today).flatMap((group) => group.showtimes))
+    const next = initialScreeningDate(activeDates, showtimes, now)
+    if (next) setSelectedDate(next)
+  }, [activeDates, isLoading, theaterEntries])
 
   // 최초 마운트는 날짜 변경이 아니다. SSR 시드로 즉시 복원한 회차를 지우지 않는다.
   const previousDateRef = useRef(selectedDate)
@@ -614,7 +618,7 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection, s
       ) : (<>
       {/* 날짜 탭 — 극장 상세와 동일 (공용 DetailDateTabs) */}
       <div style={{ borderBottom: '1px solid var(--color-border)', marginTop: 12 }}>
-        <DetailDateTabs dates={dates} selectedDate={selectedDate} activeDates={activeDates} onSelect={setSelectedDate} />
+        <DetailDateTabs dates={dates.includes(selectedDate) ? dates : [...dates, selectedDate].sort()} selectedDate={selectedDate} activeDates={activeDates} onSelect={(date) => { initialDateResolvedRef.current = true; setSelectedDate(date) }} />
       </div>
 
       {/* 예매 가능만 보기 — 날짜 바 바로 아래 오른쪽 */}
