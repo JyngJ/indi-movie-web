@@ -68,7 +68,12 @@ it.skipIf(process.env.RUN_BROWSER_TESTS !== '1')('드래그 취소·캡처 상�
     const otherPointerId = activePointerId + 1
     await page.locator('#gesture').dispatchEvent('pointerdown', { pointerId: otherPointerId, button: 0, clientY: 10 })
     await page.locator('#gesture').dispatchEvent('pointercancel', { pointerId: otherPointerId, clientY: 10 })
-    await expect.poll(() => page.locator('#gesture').getAttribute('data-dragging')).toBe('true')
+    try {
+      await expect.poll(() => page.locator('#gesture').getAttribute('data-dragging')).toBe('true')
+    } catch (error) {
+      console.error('드래그 이벤트 기록', await page.evaluate(() => (window as any).fixture.events))
+      throw error
+    }
     await page.mouse.up()
     await expect.poll(async () => {
       const hits = await page.evaluate(() => (window as any).fixture.hits)
