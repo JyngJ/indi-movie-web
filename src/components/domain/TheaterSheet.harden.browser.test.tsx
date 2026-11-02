@@ -35,15 +35,19 @@ it.skipIf(process.env.RUN_BROWSER_TESTS !== '1')('첫 조회 실패는 빈 결�
   } finally { await browser.close() }
 }, 30000)
 
+const sheet = (page: Page) => page.locator('#root > div:not([role])')
+const cursor = (page: Page) => sheet(page).evaluate(el => getComputedStyle(el).cursor)
+
 async function beginDrag(page: Page) {
-  await page.mouse.move(100, 100)
+  await expect.poll(() => sheet(page).evaluate(el => Math.round(el.getBoundingClientRect().y))).toBe(0)
+  await page.mouse.move(100, 5)
   await page.mouse.down()
-  await expect.poll(() => page.locator('#gesture').getAttribute('data-dragging')).toBe('true')
-  await page.mouse.move(100, 300, { steps: 4 })
+  await expect.poll(() => cursor(page)).toBe('grabbing')
+  await page.mouse.move(100, 210, { steps: 4 })
   return page.evaluate(() => (window as any).fixture.pointerId as number)
 }
 
-it.skipIf(process.env.RUN_BROWSER_TESTS !== '1')('드래그 취소·캡처 상실·창 전환은 닫지 않고 복구하며 다음 정상 드래그를 보장한다', async () => {
+it.skipIf(process.env.RUN_BROWSER_TESTS !== '1')('실제 극장 시트가 드래그 취소·캡처 상실·창 전환 뒤 복구하고 다음 정상 드래그를 보장한다', async () => {
   const html = await buildTheaterHardenFixture()
   const browser = await chromium.launch()
   try {
@@ -53,23 +57,24 @@ it.skipIf(process.env.RUN_BROWSER_TESTS !== '1')('드래그 취소·캡처 상�
       if (url.pathname.startsWith('/fixture/')) return route.fulfill({ json: url.pathname.endsWith('movies') ? fixtureMovies(today()) : fixtureShowtimes(today()) })
       return route.fulfill({ contentType: 'text/html', body: html })
     })
-    await page.goto('https://fixture.test/gesture')
-    await page.locator('#gesture').waitFor()
+    await page.goto('https://fixture.test/?sheet=1')
+    await page.getByText('19:30', { exact: true }).waitFor()
+    expect(await sheet(page).evaluate(el => getComputedStyle(el).userSelect)).toBe('none')
     for (const event of ['pointercancel', 'lostpointercapture', 'blur']) {
       const pointerId = await beginDrag(page)
       if (event === 'blur') await page.evaluate(() => window.dispatchEvent(new Event('blur')))
-      else await page.locator('#gesture').dispatchEvent(event, { pointerId, clientY: 300 })
-      await expect.poll(() => page.locator('#gesture').getAttribute('data-dragging')).toBe('false')
+      else await sheet(page).dispatchEvent(event, { pointerId, clientY: 210 })
+      await expect.poll(() => cursor(page)).toBe('auto')
+      await expect.poll(() => sheet(page).evaluate(el => Math.round(el.getBoundingClientRect().y))).toBe(0)
       expect(await page.evaluate(() => (window as any).fixture.hits)).toEqual({ close: 0, collapse: 0, expand: 0 })
       await page.mouse.up()
     }
     const activePointerId = await beginDrag(page)
-    // 브라우저가 다시 발급할 수 있는 포인터 번호를 고정값으로 가정하지 않는다.
     const otherPointerId = activePointerId + 1
-    await page.locator('#gesture').dispatchEvent('pointerdown', { pointerId: otherPointerId, button: 0, clientY: 10 })
-    await page.locator('#gesture').dispatchEvent('pointercancel', { pointerId: otherPointerId, clientY: 10 })
+    await sheet(page).dispatchEvent('pointerdown', { pointerId: otherPointerId, button: 0, clientY: 10 })
+    await sheet(page).dispatchEvent('pointercancel', { pointerId: otherPointerId, clientY: 10 })
     try {
-      await expect.poll(() => page.locator('#gesture').getAttribute('data-dragging')).toBe('true')
+      await expect.poll(() => cursor(page)).toBe('grabbing')
     } catch (error) {
       console.error('드래그 이벤트 기록', await page.evaluate(() => (window as any).fixture.events))
       throw error
@@ -79,16 +84,5 @@ it.skipIf(process.env.RUN_BROWSER_TESTS !== '1')('드래그 취소·캡처 상�
       const hits = await page.evaluate(() => (window as any).fixture.hits)
       return hits.close + hits.collapse
     }).toBe(1)
-    await expect.poll(() => page.locator('#gesture').getAttribute('data-dragging')).toBe('false')
-    await page.goto('https://fixture.test/?sheet=1')
-    await page.getByText('19:30', { exact: true }).waitFor()
-    await page.mouse.move(100, 5)
-    await page.mouse.down()
-    await page.mouse.move(100, 210, { steps: 4 })
-    const sheetPointerId = await page.evaluate(() => (window as any).fixture.pointerId as number)
-    await page.locator('#root > div:not([role])').dispatchEvent('pointercancel', { pointerId: sheetPointerId, clientY: 210 })
-    await page.mouse.up()
-    expect(await page.getByText('극장 시트가 닫혔어요').count()).toBe(0)
-    expect(await page.getByText('검증용 극장', { exact: true }).count()).toBeGreaterThan(0)
   } finally { await browser.close() }
 }, 30000)
