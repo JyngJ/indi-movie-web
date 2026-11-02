@@ -162,6 +162,24 @@ function buildDays(count = 7, availableDates?: Set<string>, offset = 0): Day[] {
 }
 
 /* ── Sheet filter ───────────────────────────────────────────────── */
+function TheaterQueryFailure({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <div role="alert" style={{ flex: 1, minWidth: '100%' }}>
+      <EmptyState
+        message={message}
+        paddingY={32}
+        style={{ gap: 16 }}
+        action={
+          <Button variant="secondary" size="md" onClick={onRetry}>
+            <Icon name="rotate-cw" size="md" />
+            다시 불러오기
+          </Button>
+        }
+      />
+    </div>
+  )
+}
+
 interface SheetFilterState {
   genres: string[]
   nations: string[]
@@ -287,14 +305,17 @@ export function TheaterSheet({
   const [selectedIsoDate, setSelectedIsoDate] = useState(initialIsoDate ?? todayIso)
 
   /* ── Supabase 상영 데이터 ── */
-  const { data: showtimeData, isLoading: showtimesLoading } = useTheaterShowtimes(
+  const { data: showtimeData, isLoading: showtimesInitialLoading, isFetching: showtimesFetching, isError: showtimesError, refetch: retryShowtimes } = useTheaterShowtimes(
     theater.id,
     selectedIsoDate,
   )
   const showtimes: Showtime[] = showtimeData?.showtimes ?? []
+  const showtimesLoading = showtimesInitialLoading || (showtimesFetching && !showtimeData)
 
   /* ── 전체 상영 영화 (날짜 무관, 7일 범위) ── */
-  const { data: allMovieEntries = [], isLoading: allMoviesLoading } = useTheaterAllMovies(theater.id)
+  const { data: movieEntriesData, isLoading: moviesInitialLoading, isFetching: moviesFetching, isError: moviesError, refetch: retryMovies } = useTheaterAllMovies(theater.id)
+  const allMovieEntries = movieEntriesData ?? []
+  const allMoviesLoading = moviesInitialLoading || (moviesFetching && !movieEntriesData)
 
   /* ── selectedMovieId 초기화 — 전체 목록 기준 ── */
   useEffect(() => {
@@ -469,6 +490,7 @@ export function TheaterSheet({
     handlePointerDown,
     handlePointerMove,
     handlePointerUp,
+    handlePointerCancel,
   } = useDragSheet({
     viewportHeight,
     shownExpanded,
@@ -862,7 +884,8 @@ export function TheaterSheet({
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={(e) => handlePointerUp(e)}
-      onPointerCancel={(e) => handlePointerUp(e)}
+      onPointerCancel={handlePointerCancel}
+      onLostPointerCapture={handlePointerCancel}
       style={{
         position: dockMode ? 'relative' : 'absolute',
         left: dockMode ? 0 : floatingPanel ? 'auto' : 0,
@@ -1127,6 +1150,8 @@ export function TheaterSheet({
                   <div style={{ width: 50, height: 10, borderRadius: 4, marginTop: 4, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
                 </div>
               ))
+            : moviesError && !movieEntriesData
+              ? <TheaterQueryFailure message="상영작을 불러오지 못했어요" onRetry={() => { void retryMovies() }} />
             : allMovieEntries.length === 0
               ? (
                   <EmptyState
@@ -1428,6 +1453,8 @@ export function TheaterSheet({
                       <div style={{ width: 50, height: 10, borderRadius: 4, marginTop: 4, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
                     </div>
                   ))
+                : moviesError && !movieEntriesData
+                  ? <TheaterQueryFailure message="상영작을 불러오지 못했어요" onRetry={() => { void retryMovies() }} />
                 : allMovieEntries.length === 0
                   ? (
                       <EmptyState
@@ -1681,6 +1708,8 @@ export function TheaterSheet({
                   <ShowtimeCellSkeleton key={i} />
                 ))}
               </div>
+            ) : showtimesError && !showtimeData ? (
+              <TheaterQueryFailure message="상영 시간표를 불러오지 못했어요" onRetry={() => { void retryShowtimes() }} />
             ) : filteredShowtimes.length === 0 ? (
               <div style={{
                 paddingTop: 32,

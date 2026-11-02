@@ -42,6 +42,10 @@ const FEEDBACK: Record<string, string> = {
 
 /** 파일별로 무엇을 지키는지. package.json 스크립트에 새 파일이 생겼는데 여기 없으면 "설명 없음"으로 드러난다. */
 const CONTRACTS: Record<string, { guard: string; why: string }> = {
+  'src/components/domain/TheaterSheet.harden.browser.test.tsx': {
+    guard: '극장 시트 조회 실패·재시도·기존 내용 보존과 드래그 취소·창 전환 후 복구를 확인해요',
+    why: '조회 실패를 상영 없음으로 오인하거나, 취소된 드래그가 극장 시트를 닫는 일을 막아요',
+  },
   'src/components/domain/FilmsEntry.browser.test.tsx': {
     guard: '늦게 도착하는 랭킹이 같은 크기의 자리표시를 교체하고, 포스터 행이 함께 이동 없이 나타나는지',
     why: '아래 섹션이 먼저 보였다가 랭킹이 끼어들며 밀리는 현상과 포스터마다 올라오는 연속 동작을 막습니다.',
