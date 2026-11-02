@@ -38,6 +38,7 @@ it.skipIf(process.env.RUN_BROWSER_TESTS !== '1')('첫 조회 실패는 빈 결�
 async function beginDrag(page: Page) {
   await page.mouse.move(100, 100)
   await page.mouse.down()
+  await expect.poll(() => page.locator('#gesture').getAttribute('data-dragging')).toBe('true')
   await page.mouse.move(100, 300, { steps: 4 })
 }
 
@@ -57,18 +58,20 @@ it.skipIf(process.env.RUN_BROWSER_TESTS !== '1')('드래그 취소·캡처 상�
       await beginDrag(page)
       if (event === 'blur') await page.evaluate(() => window.dispatchEvent(new Event('blur')))
       else await page.locator('#gesture').dispatchEvent(event, { pointerId: 1, clientY: 300 })
-      expect(await page.locator('#gesture').getAttribute('data-dragging')).toBe('false')
+      await expect.poll(() => page.locator('#gesture').getAttribute('data-dragging')).toBe('false')
       expect(await page.evaluate(() => (window as any).fixture.hits)).toEqual({ close: 0, collapse: 0, expand: 0 })
       await page.mouse.up()
     }
     await beginDrag(page)
     await page.locator('#gesture').dispatchEvent('pointerdown', { pointerId: 2, button: 0, clientY: 10 })
     await page.locator('#gesture').dispatchEvent('pointercancel', { pointerId: 2, clientY: 10 })
-    expect(await page.locator('#gesture').getAttribute('data-dragging')).toBe('true')
+    await expect.poll(() => page.locator('#gesture').getAttribute('data-dragging')).toBe('true')
     await page.mouse.up()
-    const hits = await page.evaluate(() => (window as any).fixture.hits)
-    expect(hits.close + hits.collapse).toBe(1)
-    expect(await page.locator('#gesture').getAttribute('data-dragging')).toBe('false')
+    await expect.poll(async () => {
+      const hits = await page.evaluate(() => (window as any).fixture.hits)
+      return hits.close + hits.collapse
+    }).toBe(1)
+    await expect.poll(() => page.locator('#gesture').getAttribute('data-dragging')).toBe('false')
     await page.goto('https://fixture.test/?sheet=1')
     await page.getByText('19:30', { exact: true }).waitFor()
     await page.mouse.move(100, 5)
