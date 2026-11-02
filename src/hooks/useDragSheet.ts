@@ -43,6 +43,7 @@ export function useDragSheet({
   onExpand,
 }: UseDragSheetParams) {
   const dragActive      = useRef(false)
+  const activePointer = useRef<{ id: number; target: Element } | null>(null)
   const dragStartY      = useRef(0)
   const dragStartOffset = useRef(0)   // 드래그 시작 시점의 translateY
   const [dragOffset, setDragOffset] = useState(0)   // 현재 드래그 delta
@@ -50,6 +51,29 @@ export function useDragSheet({
 
   // 속도 계산용 — 최근 이벤트 (timestamp, y) 를 최대 5개 보관
   const velocityBuffer = useRef<Array<{ t: number; y: number }>>([])
+
+  const cancelDrag = useCallback(() => {
+    const pointer = activePointer.current
+    activePointer.current = null
+    dragActive.current = false
+    setDragging(false)
+    setDragOffset(0)
+    velocityBuffer.current = []
+    posterTouching.current = false
+    posterDrag.current.active = false
+    if (pointer?.target.hasPointerCapture(pointer.id)) pointer.target.releasePointerCapture(pointer.id)
+  }, [posterTouching, posterDrag])
+
+  useEffect(() => {
+    const onBlur = () => { if (dragActive.current) cancelDrag() }
+    const onVisibility = () => { if (document.hidden) onBlur() }
+    window.addEventListener('blur', onBlur)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      window.removeEventListener('blur', onBlur)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [cancelDrag])
 
   // containerRef.clientHeight는 마운트 전 0이라 잘못된 값이 나옴.
   // window.innerHeight * 0.85 = height: 85dvh 와 동일한 값을 직접 계산.
@@ -104,7 +128,7 @@ export function useDragSheet({
   }, [onCollapse, panelMode, shownExpanded])   // expanded 전환 시 ref가 새 DOM을 가리키므로 재등록 필요
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    if (panelMode) return
+    if (panelMode || activePointer.current || e.button !== 0) return
     // 버튼, 링크, 입력 요소 클릭은 드래그로 처리하지 않음
     if ((e.target as Element).closest('button, a, input, select, textarea')) return
     // expanded 모드: 스크롤 영역 내부 터치는 네이티브 스크롤에 맡김
@@ -114,6 +138,7 @@ export function useDragSheet({
       if (scrollEl?.contains(e.target as Element)) return
     }
     e.currentTarget.setPointerCapture(e.pointerId)
+    activePointer.current = { id: e.pointerId, target: e.currentTarget }
     dragActive.current      = true
     dragStartY.current      = e.clientY
     dragStartOffset.current = effectiveTranslate
@@ -122,7 +147,7 @@ export function useDragSheet({
   }
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (!dragActive.current) return
+    if (!dragActive.current || activePointer.current?.id !== e.pointerId) return
     // 포스터 영역 터치 중(방향 미확정 포함)이면 시트 수직 이동 무시
     if (posterTouching.current) return
     const delta    = e.clientY - dragStartY.current
@@ -138,7 +163,8 @@ export function useDragSheet({
   }
 
   const handlePointerUp = (e: React.PointerEvent) => {
-    if (!dragActive.current) return
+    if (!dragActive.current || activePointer.current?.id !== e.pointerId) return
+    activePointer.current = null
     dragActive.current = false
     setDragging(false)
     // posterTouching은 항상 리셋 (cancel 시 touchend 없이 stuck되는 케이스 방어)
@@ -195,6 +221,10 @@ export function useDragSheet({
     velocityBuffer.current = []
   }
 
+  const handlePointerCancel = (e: React.PointerEvent) => {
+    if (activePointer.current?.id === e.pointerId) cancelDrag()
+  }
+
   return {
     dragging,
     effectiveTranslate,
@@ -202,5 +232,6 @@ export function useDragSheet({
     handlePointerDown,
     handlePointerMove,
     handlePointerUp,
+    handlePointerCancel,
   }
 }

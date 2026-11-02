@@ -23,7 +23,7 @@ import {
   ChevronLeft, ChevronRight, CircleAlert, CircleCheck, CircleQuestionMark, CircleX,
   Clapperboard, Clock, Copy, Ellipsis, ExternalLink, Eye, Film, Funnel, Heart, Info,
   LayoutGrid, LoaderCircle, LocateFixed, Lock, Map as MapGlyph, MapPin, MapPinned, Minus,
-  Moon, Plus, Scale, Search, Send, Share2, Smartphone, Theater, TrendingDown, TrendingUp,
+  Moon, Plus, RotateCw, Scale, Search, Send, Share2, Smartphone, Theater, TrendingDown, TrendingUp,
   User, UserRound, X, ZoomIn,
 } from 'lucide-react'
 import type { LucideProps } from 'lucide-react'
@@ -91,6 +91,7 @@ const REGISTRY = {
   'arrow-up': ArrowUp,
   'arrow-down': ArrowDown,
   'arrow-right-left': ArrowRightLeft,
+  'rotate-cw': RotateCw,
   /* 조작 */
   x: X,
   plus: Plus,
