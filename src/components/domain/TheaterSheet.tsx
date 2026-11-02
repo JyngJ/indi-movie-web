@@ -329,7 +329,8 @@ export function TheaterSheet({
     setDateWindowOffset((o) => Math.min(o, maxDateWindowOffset))
   }, [maxDateWindowOffset])
   const days = buildDays(7, theaterAvailableDates, dateWindowOffset)
-  const selectedDate = days.find((d) => d.isoDate === selectedIsoDate)?.date ?? days[0].date
+  // 다른 주를 둘러봐도 조회 날짜는 유지한다. 보이지 않는 선택을 첫날로 표시하지 않는다.
+  const selectedDate = days.find((d) => d.isoDate === selectedIsoDate)?.date
 
   /* 선택된 영화가 상영하는 날짜 — 날짜바 밑줄 표시용 */
   const selectedMovieAvailableDates = useMemo(
