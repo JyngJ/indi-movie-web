@@ -20,6 +20,13 @@ describe('buildEmailReportEmbed', () => {
     expect(embed.color).toBe(0x2ECC71)
   })
 
+  it('관심 등록 안내를 받은 사람은 건너뛴 수에서 빼고 따로 적는다', () => {
+    const embed = buildEmailReportEmbed({ considered: 5, ready: 2, nudgeReady: 1, sent: 3, nudged: 1, failed: 0, unknown: 0 }, AT)!
+    expect(embed.description).toContain('그중 1명은 관심 영화가 없어 관심 등록 안내를 보냈어요')
+    expect(embed.description).toContain('새 소식이 없는 2명은 건너뛰었어요')
+    expect(embed.fields.map((f) => `${f.name} ${f.value}`)).toEqual(['수신 중 5명', '소식 있음 2명', '관심 등록 안내 1명', '보냄 3명'])
+  })
+
   it('일부 실패·결과 불명은 주황 카드에 따로 적는다', () => {
     const embed = buildEmailReportEmbed({ considered: 12, ready: 11, sent: 8, failed: 1, unknown: 2 }, AT)!
     expect(embed.title).toBe('📬 소식 메일을 일부만 보냈어요')

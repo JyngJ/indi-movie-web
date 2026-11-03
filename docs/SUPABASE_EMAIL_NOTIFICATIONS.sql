@@ -42,6 +42,12 @@ CREATE TABLE IF NOT EXISTS public.email_notification_deliveries (
   UNIQUE(user_id, revision, slot)
 );
 ALTER TABLE public.email_notification_deliveries ENABLE ROW LEVEL SECURITY;
+-- 관심이 하나도 없는 구독자 안내(nudge)는 소식(digest)과 같은 발송 흐름을 쓰고 종류로 구분한다.
+-- 안내는 계정당 최대 3통이라 user_id로 센다(재구독해도 revision과 무관하게 이어진다).
+ALTER TABLE public.email_notification_deliveries ADD COLUMN IF NOT EXISTS kind text NOT NULL DEFAULT 'digest';
+ALTER TABLE public.email_notification_deliveries DROP CONSTRAINT IF EXISTS email_notification_deliveries_kind_check;
+ALTER TABLE public.email_notification_deliveries ADD CONSTRAINT email_notification_deliveries_kind_check CHECK (kind IN ('digest','nudge'));
+CREATE INDEX IF NOT EXISTS email_notification_deliveries_nudge ON public.email_notification_deliveries(user_id) WHERE kind='nudge';
 REVOKE ALL ON public.email_notification_deliveries FROM anon, authenticated;
 GRANT ALL ON public.email_notification_deliveries TO service_role;
 
@@ -88,7 +94,10 @@ BEGIN
   UPDATE public.email_notification_deliveries SET status='sent', provider_message_id=p_message_id, sent_at=now()
     WHERE id=p_id AND status='sending' RETURNING * INTO d;
   IF NOT FOUND THEN RETURN false; END IF;
-  UPDATE public.email_notification_subscriptions SET sent_count=sent_count+1, updated_at=now() WHERE user_id=d.user_id AND revision=d.revision;
+  -- 발송 횟수는 소식 메일만 센다. 안내 메일이 빈도 설문 시점을 앞당기지 않게 한다.
+  IF d.kind='digest' THEN
+    UPDATE public.email_notification_subscriptions SET sent_count=sent_count+1, updated_at=now() WHERE user_id=d.user_id AND revision=d.revision;
+  END IF;
   RETURN true;
 END $$;
 

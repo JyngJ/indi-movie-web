@@ -6,7 +6,8 @@ import { createSupabaseNotificationBatchRepository } from '@/lib/notifications/s
 import { getRegionFromCity } from '@/lib/regions'
 import type { ScreeningFact } from '@/lib/notifications/types'
 import { nextScheduleSlot, scheduleSlot, type EmailSubscription } from './domain'
-import { renderDigest, selectDigestItems, selectWeeklyRecommendations, type DigestEvent } from './digest'
+import { renderDigest, selectDigestItems, selectWeeklyRecommendations, type DigestEvent, type DigestItem } from './digest'
+import { nudgeDue, renderNudge } from './nudge'
 import { gmailConfigured, MailSendError, sendGmail, type EmailMessage } from './gmail'
 import { getSubscription, siteOrigin } from './server'
 import { signManagementToken } from './tokens'
@@ -41,7 +42,8 @@ async function currentScreenings(now: Date, slot: string): Promise<ScreeningFact
 export async function runEmailBatch({ now = new Date(), send = false, slot: previewSlot }: { now?: Date; send?: boolean; slot?: string } = {}) {
   if (send && previewSlot) throw new Error('Preview slot cannot send')
   const slot = previewSlot ?? scheduleSlot(now)
-  const result = { considered: 0, ready: 0, sent: 0, failed: 0, unknown: 0 }
+  // ready는 소식이 있는 사람, nudgeReady는 관심이 없어 안내를 받을 차례인 사람. sent는 둘을 합친 발송 수.
+  const result = { considered: 0, ready: 0, nudgeReady: 0, sent: 0, nudged: 0, failed: 0, unknown: 0 }
   if (!slot) return result
   if (send && (process.env.EMAIL_NOTIFICATION_DELIVERY_ENABLED !== 'true' || !gmailConfigured())) throw new Error('Email delivery is disabled or not configured')
   const db = createSupabaseAdminClient()
@@ -55,22 +57,33 @@ export async function runEmailBatch({ now = new Date(), send = false, slot: prev
     const subscription = await getSubscription(original.user_id)
     if (!subscription || subscription.status !== 'active' || !subscription.email || !subscription.subscribed_at) continue
     const prefs = (await repo.listPrefs([subscription.user_id])).get(subscription.user_id)!
-    const sent = await all<{ event_ids: string[] }>((from, to) => db.from('email_notification_deliveries').select('event_ids').eq('user_id', subscription.user_id).eq('status', 'sent').order('id').range(from, to))
-    const sentIds = new Set(sent.flatMap(d => d.event_ids))
-    const events = await all<DigestEvent>((from, to) => db.from('notification_events').select('id,kind,subject_type,subject_id,movie_id,theater_id,payload').eq('user_id', subscription.user_id).in('kind', ['new_screening', 'last_week']).gte('created_at', subscription.subscribed_at!).lte('created_at', now.toISOString()).order('created_at').order('id').range(from, to))
-    const items = selectDigestItems({ events: events.filter(e => !sentIds.has(e.id)), favorites: favorites.filter(f => f.userId === subscription.user_id), prefs, screenings, lastWeek, today: slot })
-    if (!items.length) continue
-    result.ready++
+    const userFavorites = favorites.filter(f => f.userId === subscription.user_id)
+    let kind: 'digest' | 'nudge' = 'digest'
+    let items: DigestItem[] = []
+    if (userFavorites.length) {
+      const sent = await all<{ event_ids: string[] }>((from, to) => db.from('email_notification_deliveries').select('event_ids').eq('user_id', subscription.user_id).eq('status', 'sent').order('id').range(from, to))
+      const sentIds = new Set(sent.flatMap(d => d.event_ids))
+      const events = await all<DigestEvent>((from, to) => db.from('notification_events').select('id,kind,subject_type,subject_id,movie_id,theater_id,payload').eq('user_id', subscription.user_id).in('kind', ['new_screening', 'last_week']).gte('created_at', subscription.subscribed_at!).lte('created_at', now.toISOString()).order('created_at').order('id').range(from, to))
+      items = selectDigestItems({ events: events.filter(e => !sentIds.has(e.id)), favorites: userFavorites, prefs, screenings, lastWeek, today: slot })
+      if (!items.length) continue
+      result.ready++
+    } else {
+      // 결과를 모르는 발송도 보낸 것으로 센다 — 안내를 한도보다 더 보내지 않는다.
+      const nudges = await all<{ sent_at: string | null; created_at: string }>((from, to) => db.from('email_notification_deliveries').select('sent_at,created_at').eq('user_id', subscription.user_id).eq('kind', 'nudge').in('status', ['sent', 'sending', 'unknown']).order('id').range(from, to))
+      if (!nudgeDue({ slot, subscribedAt: subscription.subscribed_at, favoriteCount: 0, previousNudges: nudges.map(n => n.sent_at ?? n.created_at) })) continue
+      kind = 'nudge'
+      result.nudgeReady++
+    }
     if (!send) continue
     const expires = now.getTime() + 365 * 86400000
     const unsubscribeToken = signManagementToken({ userId: subscription.user_id, revision: subscription.revision, purpose: 'unsubscribe', expires: Number.MAX_SAFE_INTEGER })
     const frequencyToken = signManagementToken({ userId: subscription.user_id, revision: subscription.revision, purpose: 'frequency', expires })
     const unsubscribeUrl = `${origin}/email/manage?action=unsubscribe&token=${unsubscribeToken}`
-    const recommendations = selectWeeklyRecommendations({ screenings, favorites: favorites.filter(f => f.userId === subscription.user_id), prefs, items, today: slot })
-    const content = renderDigest({ items, recommendations, origin, unsubscribeUrl, frequencyUrl: `${origin}/email/manage?action=frequency&token=${frequencyToken}`, sentCount: subscription.sent_count })
+    const recommendations = selectWeeklyRecommendations({ screenings, favorites: userFavorites, prefs, items, today: slot })
+    const content = kind === 'nudge' ? renderNudge({ recommendations, origin, unsubscribeUrl }) : renderDigest({ items, recommendations, origin, unsubscribeUrl, frequencyUrl: `${origin}/email/manage?action=frequency&token=${frequencyToken}`, sentCount: subscription.sent_count })
     const id = randomUUID()
     const message: EmailMessage = { ...content, to: subscription.email, messageId: id, unsubscribeUrl: `${origin}/api/email-notifications/manage?token=${unsubscribeToken}` }
-    const { error: insertError } = await db.from('email_notification_deliveries').upsert({ id, user_id: subscription.user_id, revision: subscription.revision, slot, event_ids: items.flatMap(i => i.eventIds), message }, { onConflict: 'user_id,revision,slot', ignoreDuplicates: true })
+    const { error: insertError } = await db.from('email_notification_deliveries').upsert({ id, user_id: subscription.user_id, revision: subscription.revision, slot, kind, event_ids: items.flatMap(i => i.eventIds), message }, { onConflict: 'user_id,revision,slot', ignoreDuplicates: true })
     if (insertError) throw insertError
     const { data: job, error: jobError } = await db.from('email_notification_deliveries').select('id,status,event_ids,created_at').eq('user_id', subscription.user_id).eq('revision', subscription.revision).eq('slot', slot).single()
     if (jobError) throw jobError
@@ -81,7 +94,7 @@ export async function runEmailBatch({ now = new Date(), send = false, slot: prev
     try {
       // 안전한 재시도에서도 현재 유효한 소식·설정으로 다시 구성한다.
       const trackedMessage = decorateDigest({ ...message, messageId: job.id }, origin, job.id, slot)
-      const { error: refreshError } = await db.from('email_notification_deliveries').update({ message: trackedMessage, event_ids: items.flatMap(i => i.eventIds) }).eq('id', job.id).eq('status', 'sending')
+      const { error: refreshError } = await db.from('email_notification_deliveries').update({ message: trackedMessage, kind, event_ids: items.flatMap(i => i.eventIds) }).eq('id', job.id).eq('status', 'sending')
       if (refreshError) throw refreshError
 
       const fresh = await getSubscription(subscription.user_id)
@@ -94,8 +107,9 @@ export async function runEmailBatch({ now = new Date(), send = false, slot: prev
       const { data: completed, error } = await db.rpc('complete_email_notification_delivery', { p_id: job.id, p_message_id: providerId })
       if (error || !completed) throw new MailSendError(true)
       result.sent++
+      if (kind === 'nudge') result.nudged++
       // 통계 실패는 발송 성공을 되돌리거나 메일 재발송을 유발하지 않는다.
-      await captureEmailMetric('sent', { id: job.id, user_id: subscription.user_id, slot, sent_at: new Date().toISOString() })
+      await captureEmailMetric('sent', { id: job.id, user_id: subscription.user_id, slot, kind, sent_at: new Date().toISOString() })
     } catch (error) {
       // 응답이 없거나 성공 기록에 실패하면 중복 발송을 막기 위해 수동 확인한다.
       const uncertain = !(error instanceof MailSendError) || error.uncertain
@@ -110,6 +124,6 @@ export async function runEmailBatch({ now = new Date(), send = false, slot: prev
 /** 다음 발송일에 실제로 메일을 받을 인원 — 지금 쌓인 소식 기준 추정. 메일은 보내지 않는다. */
 export async function previewNextEmailBatch(now = new Date()) {
   const slot = nextScheduleSlot(now)
-  const { considered, ready } = await runEmailBatch({ now, slot })
-  return { slot, considered, ready }
+  const { considered, ready, nudgeReady } = await runEmailBatch({ now, slot })
+  return { slot, considered, ready, nudgeReady }
 }

@@ -11,7 +11,7 @@ export function trackingRepository(): TrackingRepository {
   return {
     async getSentDelivery(id) {
       const { data, error } = await db.from('email_notification_deliveries')
-        .select('id,user_id,revision,slot,sent_at').eq('id', id).eq('status', 'sent').maybeSingle()
+        .select('id,user_id,revision,slot,sent_at,kind').eq('id', id).eq('status', 'sent').maybeSingle()
       if (error) throw error
       return data
     },
