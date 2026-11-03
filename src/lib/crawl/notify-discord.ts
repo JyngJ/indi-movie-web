@@ -1,5 +1,6 @@
 import type { AutoMatchSummary, CrawlRun } from '@/types/admin'
 import { formatTopUnmatched } from './autoMatchSummary'
+import { formatStaleFinding, type StaleSourceFinding } from './sourceHealth'
 
 const WEBHOOK_URL = process.env.DISCORD_REPORT_WEBHOOK_URL
 const FIELD_LIMIT = 900
@@ -231,6 +232,19 @@ export async function notifyDiscordError(title: string, errorMessage: string) {
     title: `❌ ${title} 오류`,
     description: `\`\`\`\n${errorMessage.slice(0, 500)}\n\`\`\``,
     color: 0xE74C3C,
+    footer: { text: nowKST() },
+  })
+}
+
+/** "성공했는데 0건"이 이어지는 수집처 — 극장 페이지가 비어 있는 곳만(sourceHealth.ts) */
+export async function notifyDiscordStaleSources(findings: StaleSourceFinding[]) {
+  if (findings.length === 0) return
+  const chunks = chunkLines(findings.map(formatStaleFinding))
+  await sendEmbed({
+    title: `🕳 시간표가 비어 있는 극장 ${findings.length}곳`,
+    description: '수집은 "완료"인데 회차를 못 가져오고 있어요. 극장 페이지에 예정된 상영이 없어요.',
+    color: 0xE67E22,
+    fields: chunks.slice(0, 5).map((value, i) => ({ name: i === 0 ? '수집처' : '\u200b', value, inline: false })),
     footer: { text: nowKST() },
   })
 }

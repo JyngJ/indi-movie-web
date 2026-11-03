@@ -5,7 +5,9 @@
 import type { CrawlRun } from '../src/types/admin'
 import { autoMatchShowtimeCandidates } from '../src/lib/admin/store'
 import { runAllSources } from '../src/lib/crawl/run-all-sources'
-import { notifyDiscord, notifyDiscordError, notifyDiscordMatch, notifyDiscordStart } from '../src/lib/crawl/notify-discord'
+import { notifyDiscord, notifyDiscordError, notifyDiscordMatch, notifyDiscordStaleSources, notifyDiscordStart } from '../src/lib/crawl/notify-discord'
+import { findStaleSources } from '../src/lib/crawl/sourceHealth'
+import { loadSourceHealthInputs } from '../src/lib/crawl/sourceHealthStore'
 import { buildChangedUrls, siteOrigin, submitToIndexNow } from '../src/lib/seo/indexNow'
 
 function formatRun(current: number, total: number, run: CrawlRun) {
@@ -74,6 +76,17 @@ async function main() {
     } catch (e) {
       console.warn(`사이트 캐시 갱신 실패(스킵): ${e instanceof Error ? e.message : String(e)}`)
     }
+  }
+
+  // 4-1단계: 조용히 멈춘 수집처 — "완료인데 0건"이 이어지는데 극장 페이지가 비어 있는 곳을 알린다.
+  // 자동매칭·캐시 갱신 뒤에 봐야 방금 들어온 회차가 반영된다. 부가 작업이라 실패해도 계속한다.
+  try {
+    const { sources, upcomingByTheater } = await loadSourceHealthInputs()
+    const stale = findStaleSources(sources, upcomingByTheater, new Date())
+    console.log(`\n시간표 빈 극장 점검: ${stale.length}곳`)
+    await notifyDiscordStaleSources(stale)
+  } catch (e) {
+    console.warn(`수집처 점검 실패(스킵): ${e instanceof Error ? e.message : String(e)}`)
   }
 
   // 5단계: IndexNow 통보 — 상영 시간표는 하루 3번 바뀌는데 사이트맵만으로는 재크롤링이
