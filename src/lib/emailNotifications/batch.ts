@@ -43,7 +43,7 @@ export async function runEmailBatch({ now = new Date(), send = false, slot: prev
   if (send && previewSlot) throw new Error('Preview slot cannot send')
   const slot = previewSlot ?? scheduleSlot(now)
   // ready는 소식이 있는 사람, nudgeReady는 관심이 없어 안내를 받을 차례인 사람. sent는 둘을 합친 발송 수.
-  const result = { considered: 0, ready: 0, nudgeReady: 0, sent: 0, nudged: 0, failed: 0, unknown: 0 }
+  const result = { slot, considered: 0, ready: 0, nudgeReady: 0, sent: 0, nudged: 0, failed: 0, unknown: 0 }
   if (!slot) return result
   if (send && (process.env.EMAIL_NOTIFICATION_DELIVERY_ENABLED !== 'true' || !gmailConfigured())) throw new Error('Email delivery is disabled or not configured')
   const db = createSupabaseAdminClient()
