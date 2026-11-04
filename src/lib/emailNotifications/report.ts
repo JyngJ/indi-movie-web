@@ -3,6 +3,10 @@ export interface EmailBatchReport {
   considered?: number
   /** 그중 보낼 새 소식이 있던 사람 수 */
   ready?: number
+  /** 관심이 없어 관심 등록 안내를 받을 차례인 사람 수 */
+  nudgeReady?: number
+  /** sent 중 관심 등록 안내 */
+  nudged?: number
   sent: number
   failed: number
   unknown: number
@@ -49,7 +53,8 @@ export function buildEmailReportEmbed(result: EmailBatchReport, now = new Date()
 
   const lines: string[] = []
   if (sent) lines.push(`**${sent}명**에게 보냈어요`)
-  const skipped = result.considered != null && result.ready != null ? result.considered - result.ready : 0
+  if (result.nudged) lines.push(`그중 ${result.nudged}명은 관심 영화가 없어 관심 등록 안내를 보냈어요`)
+  const skipped = result.considered != null && result.ready != null ? result.considered - result.ready - (result.nudgeReady ?? 0) : 0
   if (skipped > 0) lines.push(`새 소식이 없는 ${skipped}명은 건너뛰었어요`)
   if (unknown) lines.push(`결과를 알 수 없는 ${unknown}명은 다시 보내지 않아요 — Gmail 보낸편지함에서 확인해 주세요`)
   if (failed) lines.push(`보내지 못한 ${failed}명은 다음 실행에서 다시 시도해요`)
@@ -57,6 +62,7 @@ export function buildEmailReportEmbed(result: EmailBatchReport, now = new Date()
   const fields: DiscordEmbed['fields'] = []
   if (result.considered != null) fields.push({ name: '수신 중', value: `${result.considered}명`, inline: true })
   if (result.ready != null) fields.push({ name: '소식 있음', value: `${result.ready}명`, inline: true })
+  if (result.nudgeReady) fields.push({ name: '관심 등록 안내', value: `${result.nudgeReady}명`, inline: true })
   fields.push({ name: '보냄', value: `${sent}명`, inline: true })
   if (failed) fields.push({ name: '실패', value: `${failed}명`, inline: true })
   if (unknown) fields.push({ name: '확인 필요', value: `${unknown}명`, inline: true })

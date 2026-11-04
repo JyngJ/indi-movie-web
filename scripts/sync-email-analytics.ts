@@ -11,7 +11,7 @@ async function main() {
   let synced = 0, failed = 0
   for (let offset = 0; ; offset += 100) {
     const { data, error } = await db.from('email_notification_deliveries')
-      .select('id,user_id,revision,slot,sent_at,message').eq('status', 'sent')
+      .select('id,user_id,revision,slot,sent_at,kind,message').eq('status', 'sent')
       .gte('sent_at', since).order('id').range(offset, offset + 99)
     if (error) throw error
     for (const delivery of data ?? []) {

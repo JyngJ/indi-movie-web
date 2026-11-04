@@ -77,3 +77,9 @@ export function renderDigestEmail(input: { origin: string; items: Omit<EmailDige
   return shell(input.origin, EMAIL_DIGEST_TITLE, interestSections(input.items, input.origin) + weekly + explore,
     '서비스를 쓰면서 겪은 불편이나 버그, 제안이 있으면 이 메일에 답장해 주세요.<br><br>상영 소식 수신에 동의한 주소로 보냈어요.<br>새 소식이 있을 때 월·금 오전 9시에 보내 드려요.<br><br>' + input.frequency.map(item => `<a href="${escapeHtml(item.url)}">${escapeHtml(item.label)}</a> `).join('') + `<a href="${escapeHtml(input.unsubscribeUrl)}" style="color:${theme.sub}">이메일 소식 그만 받기</a>`)
 }
+export function renderNudgeEmail(input: { origin: string; recommendations: EmailFilm[]; unsubscribeUrl: string; limit: number }): string {
+  const weekly = input.recommendations.length ? `<h2 style="color:${theme.primary};font-weight:600;font-size:${theme.section};line-height:1.5;margin:32px 0 12px">이번 주 이런 상영도 있어요</h2>${filmRows(input.recommendations, input.origin)}` : ''
+  return shell(input.origin, '아직 관심 영화가 없어요',
+    paragraph('관심 영화·감독·극장이 없어서 보낼 소식이 없었어요. 상영작에서 관심 등록을 해 두면 새 상영과 막바지 상영을 모아 월·금 오전 9시에 보내 드려요.') + button('관심 영화 고르러 가기', input.origin + '/films') + weekly,
+    `상영 소식 수신에 동의한 주소로 보냈어요.<br>관심 영화가 없는 동안 이 안내는 최대 ${input.limit}번만 보내요.<br><br><a href="${escapeHtml(input.unsubscribeUrl)}" style="color:${theme.sub}">이메일 소식 그만 받기</a>`)
+}

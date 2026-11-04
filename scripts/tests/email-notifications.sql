@@ -20,6 +20,13 @@ BEGIN
   IF NOT public.complete_email_notification_delivery(did,'provider1') THEN RAISE EXCEPTION 'completion failed'; END IF;
   IF public.complete_email_notification_delivery(did,'provider1') THEN RAISE EXCEPTION 'double completion'; END IF;
   IF (SELECT sent_count FROM public.email_notification_subscriptions WHERE user_id=uid) <> 1 THEN RAISE EXCEPTION 'incorrect count'; END IF;
+  -- 관심 등록 안내는 발송 횟수에 넣지 않는다.
+  did := gen_random_uuid();
+  INSERT INTO public.email_notification_deliveries(id,user_id,revision,slot,event_ids,message,kind)
+    VALUES(did,uid,rid,'2026-10-20','{}','{}','nudge');
+  IF NOT public.claim_email_notification_delivery(did) THEN RAISE EXCEPTION 'nudge claim failed'; END IF;
+  IF NOT public.complete_email_notification_delivery(did,'provider2') THEN RAISE EXCEPTION 'nudge completion failed'; END IF;
+  IF (SELECT sent_count FROM public.email_notification_subscriptions WHERE user_id=uid) <> 1 THEN RAISE EXCEPTION 'nudge counted as digest'; END IF;
   -- 다른 배치에서도 불확실한 전송이 있는 사용자에게 다시 보내지 않는다.
   INSERT INTO public.email_notification_deliveries(user_id,revision,slot,event_ids,message,status)
     VALUES(uid,rid,'2026-10-23','{}','{}','unknown');

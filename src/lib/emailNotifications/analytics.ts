@@ -3,6 +3,8 @@ import { createHmac } from 'node:crypto'
 export type EmailMetric = 'sent' | 'opened' | 'clicked'
 export interface EmailDeliveryMetric {
   id: string; user_id: string; slot: string; sent_at: string
+  /** 관심 등록 안내(nudge)는 소식(digest) 지표와 섞지 않는다. 컬럼이 생기기 전 기록은 digest. */
+  kind?: 'digest' | 'nudge' | null
 }
 export function emailAnalyticsConfigured(): boolean {
   return (process.env.EMAIL_ANALYTICS_ENABLED === 'true'
@@ -26,7 +28,7 @@ export async function captureEmailMetric(kind: EmailMetric, delivery: EmailDeliv
         distinct_id: `email:${recipient}`, event: `email digest ${kind}`,
         // 같은 발송분의 분자·분모가 함께 움직이도록 발송일 기준으로 묶는다.
         timestamp: delivery.sent_at,
-        properties: { delivery_id: delivery.id, campaign: delivery.slot, mail_type: 'digest',
+        properties: { delivery_id: delivery.id, campaign: delivery.slot, mail_type: delivery.kind ?? 'digest',
           observed_at: new Date().toISOString(), sent_at: delivery.sent_at,
           $process_person_profile: false, $geoip_disable: true, $ip: '0.0.0.0' },
       }),
