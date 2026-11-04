@@ -2,8 +2,12 @@
 import { reportEmailDelivery } from '../src/lib/emailNotifications/report'
 import { runEmailBatch } from '../src/lib/emailNotifications/batch'
 import { safeErrorSummary } from '../src/lib/emailNotifications/safeError'
-runEmailBatch({ send: process.argv.includes('--send') }).then(async result => {
+import { syncBatchSent } from '../src/lib/emailNotifications/batchSent'
+const send = process.argv.includes('--send')
+runEmailBatch({ send }).then(async result => {
   console.log('[email notifications]', result)
+  // 통계 실패는 발송 결과를 바꾸지 않는다.
+  if (send && result.slot && !(await syncBatchSent(result))) console.warn('[email notifications] 회차 발송 수를 PostHog에 남기지 못했어요')
   try { await reportEmailDelivery(result) }
   catch { console.error('[email notifications] 발송 결과를 report 채널에 보내지 못했어요'); process.exitCode = 1 }
   if (result.failed || result.unknown) process.exitCode = 1
