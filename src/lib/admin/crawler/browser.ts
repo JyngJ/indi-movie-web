@@ -1,8 +1,6 @@
 import type { CrawledShowtimeCandidate } from '@/types/admin'
 import type { ParseContext } from './utils'
-import { buildCandidate, dedupeCandidates, withRetry } from './utils'
-
-const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+import { buildCandidate, crawlerHeaders, dedupeCandidates, DEFAULT_SEAT_TOTAL, withRetry } from './utils'
 
 // Extended GV keyword regex — includes "컨버세이션" (시네마다방 고유 GV 프로그램명)
 const GV_RE =
@@ -61,9 +59,9 @@ function rowsToCandidate(
   row: TinyTicketRow,
 ): CrawledShowtimeCandidate {
   const isGv = GV_RE.test(row.venue) || GV_RE.test(row.movieTitle)
-  const warnings: string[] = []
-  if (isGv) warnings.push(`GV: ${row.venue}`)
-  if (row.seatAvailable < 0) warnings.push('잔여석 정보 없음')
+  // GV·강연은 영화가 아닌 행사가 섞여 있어 검수로 남긴다. 잔여석 표기가 없는 건 회차 정체와 무관하니 경고로 두지 않는다
+  const warnings: string[] = isGv ? [`GV: ${row.venue}`] : []
+  const hasSeats = row.seatAvailable >= 0 && row.seatTotal > 0
 
   return buildCandidate({
     context,
@@ -73,12 +71,14 @@ function rowsToCandidate(
     endTime: row.endTime,
     screenName: '상영관',
     formatText: '',
-    seatAvailable: Math.max(0, row.seatAvailable),
-    seatTotal: Math.max(0, row.seatTotal),
+    seatAvailable: hasSeats ? row.seatAvailable : DEFAULT_SEAT_TOTAL,
+    seatTotal: hasSeats ? row.seatTotal : DEFAULT_SEAT_TOTAL,
     price: 0,
     bookingUrl: context.source.listingUrl,
     rawText: JSON.stringify(row),
-    confidence: 0.85,
+    // 자동 승인 문턱이 0.9다. 0.85로 두었더니 2026-05 연결 이후 tinyticket 극장 5곳의 회차가
+    // 영화·극장 매칭을 다 마치고도 한 건도 승인되지 않아 극장 페이지가 내내 비어 있었다(2026-11).
+    confidence: warnings.length ? 0.82 : 0.93,
     warnings,
   })
 }
@@ -86,7 +86,8 @@ function rowsToCandidate(
 async function fetchSsrHtml(url: string): Promise<string> {
   return withRetry(async () => {
     const res = await fetch(url, {
-      headers: { 'user-agent': UA, accept: 'text/html,*/*', 'accept-language': 'ko-KR,ko;q=0.9' },
+      // 2026-09-18 실측: 브라우저 UA에는 820B 빈 껍데기를, 신원을 밝힌 UA에는 시간표가 든 44KB를 준다
+      headers: crawlerHeaders({ accept: 'text/html,*/*' }),
       cache: 'no-store',
       signal: AbortSignal.timeout(30_000),
     })

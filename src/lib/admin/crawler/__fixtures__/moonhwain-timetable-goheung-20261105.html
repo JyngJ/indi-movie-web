@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ko" lang="ko">
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta http-equiv="content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="imagetoolbar" content="no"/>
+<meta http-equiv="pragma" content="no-cache"/>
+<meta http-equiv="pragma" content="no-store"/>
+<meta http-equiv="page-exit" content="blendtrans(duration=0.2)"/>
+<meta http-equiv="page-enter" content="blendtrans(duration=0.2)"/>
+<meta name="author" content="" />
+<meta name="keywords" content="" />
+<meta name="description" content="상영스케줄" />
+<title>상영스케줄</title>
+<script src="common/js/jquery-1.11.0.js"></script>
+<link href="common/css/default.css?v=20261105090000" rel="stylesheet" type="text/css" />
+<link href="common/css/web_layout.css?v=20261105090000" rel="stylesheet" type="text/css" />
+<script type="text/javascript">
+	$(
+		function()
+		{
+			//마우스 오버시 좌표값을 받는다 -> e
+			$('.data').mouseover(function(e)
+			{
+				$(this).mousemove(function(e)
+				{
+					//layer안에있는 title의 값을 data의 wr_name 값으로 치환한다.
+					$('#layer #title').empty().append($(this).attr("l_name"));
+					$('#layer #name').empty().append($(this).attr("wr_name"));
+					$('#layer #conttent').empty().append($(this).text());
+
+					var t=e.pageY+20;
+					var l=e.pageX-15;
+					$('#layer').css({"top":t, "left":l,"position":"absolute","opacity":"0,8" }).show();
+				});
+			});
+			$('.data').mouseout(function()
+			{
+				$('#layer').hide();
+			});
+		}
+	);
+	//날짜변경
+	function move()
+	{
+		var selDate=$("#selDate").val();
+		location.href="/homePy/timeTable/index.html?b_id=goheung&selDate="+selDate;
+	}
+	//예매창
+	function wRsv(ss_date,ss_idx)
+	{
+		//회원과 비회원에 모두 체크가 안되어있으면 홈페이지와 연동하는것이므로 로그인 안내멘트 띄움
+					window.open('http://goheung2.moonhwain.net/rsvc/rsv_mv.html?b_id=goheung&in_ss_date='+ss_date+'&in_ss_idx='+ss_idx,'rsv', 'status=no, resizeable=no, scrollbars=yes, width=1100, height=1280');
+			}
+</script>
+
+</head>
+<body>
+
+<div id="wrap">
+	<div class="header">
+		<p class="icon"><img src="designer/images/index/top_icon.png"></p>
+		<h2>예매/취소 가능시간 <strong>상영시간 20분전</strong></h2>
+	</div>
+	<div class="daytime">
+		<div class="day">
+			<p class="line20w"></p>
+			<h2>상영일</h2>
+			<p class="dayselect">
+								<select id="selDate" name="selDate" onChange="move();">
+																		<option value="2026-11-05" selected >
+								2026년 11월 05일 (목)
+							</option>
+													<option value="2026-11-06"  >
+								2026년 11월 06일 (금)
+							</option>
+													<option value="2026-11-07"  class="sat">
+								2026년 11월 07일 (토)
+							</option>
+													<option value="2026-11-08"  class="sun">
+								2026년 11월 08일 (일)
+							</option>
+													<option value="2026-11-10"  >
+								2026년 11월 10일 (화)
+							</option>
+													<option value="2026-11-11"  >
+								2026년 11월 11일 (수)
+							</option>
+													<option value="2026-11-12"  >
+								2026년 11월 12일 (목)
+							</option>
+													<option value="2026-11-13"  >
+								2026년 11월 13일 (금)
+							</option>
+													<option value="2026-11-14"  class="sat">
+								2026년 11월 14일 (토)
+							</option>
+													<option value="2026-11-15"  class="sun">
+								2026년 11월 15일 (일)
+							</option>
+													<option value="2026-11-17"  >
+								2026년 11월 17일 (화)
+							</option>
+													<option value="2026-11-18"  >
+								2026년 11월 18일 (수)
+							</option>
+													<option value="2026-11-19"  >
+								2026년 11월 19일 (목)
+							</option>
+													<option value="2026-11-20"  >
+								2026년 11월 20일 (금)
+							</option>
+													<option value="2026-11-21"  class="sat">
+								2026년 11월 21일 (토)
+							</option>
+													<option value="2026-11-22"  class="sun">
+								2026년 11월 22일 (일)
+							</option>
+													<option value="2026-11-24"  >
+								2026년 11월 24일 (화)
+							</option>
+															</select>
+			</p>
+		</div>
+	</div>
+		<div class="schedule">
+		<table>
+			<thead>
+				<tr>
+					<th>영화명</th>
+					<th>등급</th>
+					<th>상영관</th>
+					<th>상영시간</th>
+				</tr>
+			</thead>
+			<tbody>
+										<tr>
+								<td style="text-align:center;" title="최종면접">최종면접</td>
+								<td>
+																			<p class="cl_15">15</p>
+																	</td>
+								<td>1관 (고흥작은영화관)</td>
+								<td align="center">
+									<div style="width:auto;text-align:center;display:inline-block;">
+																									<div class="time_select" style="float:left;width:auto;">
+																	<ul>
+																		<li>
+																			09:40																		</li>
+																	</ul>
+																</div>
+																															<div class="time_select" style="float:left;width:auto;">
+																	<ul>
+																		<li>
+																			11:40																		</li>
+																	</ul>
+																</div>
+																												<!-- - -->
+																												<div class="time_select" style="float:left;width:auto;">
+																	<ul>
+																		<li>
+																			15:35																		</li>
+																	</ul>
+																</div>
+																												<!-- - -->
+																												<div class="time_select" style="float:left;width:auto;padding-top:5px;">
+																	<ul>
+																																					<li><a class="on" href="javascript:wRsv('2026-11-05','176836')"><span class="data" l_name="87석" wr_name="21:22">[6] 19:35</span></a></li>
+																																			</ul>
+																</div>
+																												<!-- - -->
+																									<!-- - -->
+																					</div>
+								</td>
+							</tr>
+													<tr>
+								<td style="text-align:center;" title="(자막)하트 오브 비스트">(자막)하트 오브 비스트</td>
+								<td>
+																			<p class="cl_12">12</p>
+																	</td>
+								<td>1관 (고흥작은영화관)</td>
+								<td align="center">
+									<div style="width:auto;text-align:center;display:inline-block;">
+																						<!-- - -->
+																									<!-- - -->
+																												<div class="time_select" style="float:left;width:auto;">
+																	<ul>
+																		<li>
+																			13:40																		</li>
+																	</ul>
+																</div>
+																												<!-- - -->
+																												<div class="time_select" style="float:left;width:auto;padding-top:5px;">
+																	<ul>
+																																					<li><a class="on" href="javascript:wRsv('2026-11-05','177696')"><span class="data" l_name="82석" wr_name="19:21">[5] 17:40</span></a></li>
+																																			</ul>
+																</div>
+																												<!-- - -->
+																												<div class="time_select" style="float:left;width:auto;padding-top:5px;">
+																	<ul>
+																																					<li><a class="on" href="javascript:wRsv('2026-11-05','176840')"><span class="data" l_name="84석" wr_name="23:21">[7] 21:40</span></a></li>
+																																			</ul>
+																</div>
+																												<!-- - -->
+																					</div>
+								</td>
+							</tr>
+													<tr>
+								<td style="text-align:center;" title="실낙원">실낙원</td>
+								<td>
+																			<p class="cl_15">15</p>
+																	</td>
+								<td>2관 (고흥작은영화관)</td>
+								<td align="center">
+									<div style="width:auto;text-align:center;display:inline-block;">
+																									<div class="time_select" style="float:left;width:auto;">
+																	<ul>
+																		<li>
+																			09:45																		</li>
+																	</ul>
+																</div>
+																												<!-- - -->
+																									<!-- - -->
+																									<!-- - -->
+																									<!-- - -->
+																									<!-- - -->
+																									<!-- - -->
+																									<!-- - -->
+																					</div>
+								</td>
+							</tr>
+													<tr>
+								<td style="text-align:center;" title="킬링타임">킬링타임</td>
+								<td>
+																			<p class="cl_15">15</p>
+																	</td>
+								<td>2관 (고흥작은영화관)</td>
+								<td align="center">
+									<div style="width:auto;text-align:center;display:inline-block;">
+																						<!-- - -->
+																												<div class="time_select" style="float:left;width:auto;">
+																	<ul>
+																		<li>
+																			11:40																		</li>
+																	</ul>
+																</div>
+																												<!-- - -->
+																									<!-- - -->
+																												<div class="time_select" style="float:left;width:auto;">
+																	<ul>
+																		<li>
+																			17:20																		</li>
+																	</ul>
+																</div>
+																												<!-- - -->
+																									<!-- - -->
+																									<!-- - -->
+																					</div>
+								</td>
+							</tr>
+													<tr>
+								<td style="text-align:center;" title="수능, 출제의 비밀">수능, 출제의 비밀</td>
+								<td>
+																			<p class="cl_12">12</p>
+																	</td>
+								<td>2관 (고흥작은영화관)</td>
+								<td align="center">
+									<div style="width:auto;text-align:center;display:inline-block;">
+																						<!-- - -->
+																									<!-- - -->
+																												<div class="time_select" style="float:left;width:auto;">
+																	<ul>
+																		<li>
+																			13:15																		</li>
+																	</ul>
+																</div>
+																												<!-- - -->
+																									<!-- - -->
+																												<div class="time_select" style="float:left;width:auto;padding-top:5px;">
+																	<ul>
+																																					<li><a class="on" href="javascript:wRsv('2026-11-05','176854')"><span class="data" l_name="51석" wr_name="20:39">[6] 19:00</span></a></li>
+																																			</ul>
+																</div>
+																															<div class="time_select" style="float:left;width:auto;padding-top:5px;">
+																	<ul>
+																																					<li><a class="on" href="javascript:wRsv('2026-11-05','176856')"><span class="data" l_name="53석" wr_name="22:34">[7] 20:55</span></a></li>
+																																			</ul>
+																</div>
+																												<!-- - -->
+																					</div>
+								</td>
+							</tr>
+													<tr>
+								<td style="text-align:center;" title="여전히 찬란하게">여전히 찬란하게</td>
+								<td>
+																			<p class="cl_12">12</p>
+																	</td>
+								<td>2관 (고흥작은영화관)</td>
+								<td align="center">
+									<div style="width:auto;text-align:center;display:inline-block;">
+																						<!-- - -->
+																									<!-- - -->
+																									<!-- - -->
+																												<div class="time_select" style="float:left;width:auto;">
+																	<ul>
+																		<li>
+																			15:10																		</li>
+																	</ul>
+																</div>
+																												<!-- - -->
+																									<!-- - -->
+																									<!-- - -->
+																									<!-- - -->
+																					</div>
+								</td>
+							</tr>
+									</tbody>
+		</table>
+	</div>
+
+	<div class="cl_info">
+		<div class="title">
+			<p class="line20w"></p>
+			<h2>관람등급</h2>
+		</div>
+		<div class="box">
+			<ul>
+				<li>
+					<p class="cls_all">A</p>
+					<h3 class="col_all" >전체관람가</h3>
+					<h4 >모든 연령의 관람객이 관람할 수 있는 영화 </h4>
+				</li>
+				<li>
+					<p class="cls_12">12</p>
+					<h3 class="col_12" >만 12세이상 관람가</h3>
+					<h4 >만 12세 미만의 관람객은 관람할 수 없는 영화. 보호자 동반시 12세 미만 관람 가능</h4>
+				</li>
+				<li>
+					<p class="cls_15">15</p>
+					<h3 class="col_15" >만 15세이상 관람가</h3>
+					<h4 >만 15세 미만의 관람객은 관람할 수 없는 영화. 보호자 동반시 15세 미만 관람 가능</h4>
+				</li>
+				<li>
+					<p class="cls_19">19</p>
+					<h3 class="col_19"  >청소년관람불가</h3>
+					<h4 >만 19세 미만의 관람객은 관람할 수 없는 영화. 보호자 동반하여도 19세 미만(영, 유아 포함)은 관람불가. (영화 및 비디오물 진흥에 관한 법률 제 29조와 초, 중등 교육법 제 2조 규정에 의해 만 19세이상 고등학생은 관람할 수 없음.</h4>
+				</li>
+			</ul>
+		</div>
+	</div>
+</div>
+<div id="layer" class="layer">
+	<div class="title">
+		<strong>잔여석 :</strong> <span id="title">잔여석 현황</span>
+	</div>
+	<div class="name">
+		<strong>종료시간 :</strong> <span id="name">종료시간</span>
+	</div>
+</div>
+</body>
+</html>

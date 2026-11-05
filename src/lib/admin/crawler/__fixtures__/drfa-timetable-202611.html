@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<!-- META -->
+<meta charset="utf-8">
+<meta name="Generator" content="XpressEngine">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<!-- TITLE -->
+<title>이 달의 상영작</title>
+<!-- CSS -->
+<link rel="stylesheet" href="/common/css/xe.min.css?20220717171557" />
+<link rel="stylesheet" href="/layouts/simplestrap/css/bootstrap.min.css?20220527114122" />
+<link rel="stylesheet" href="/layouts/simplestrap/css/font-awesome.min.css?20220527114122" />
+<link rel="stylesheet" href="/layouts/simplestrap/css/simplestrap.min.css?20220527114122" />
+<link rel="stylesheet" href="/common/js/plugins/ui/jquery-ui.min.css?20220327112719" />
+<link rel="stylesheet" href="/modules/board/skins/xe_official_planner123/css/board.css?20220623010953" />
+<link rel="stylesheet" href="/modules/board/skins/xe_official_planner123/css/button.css?20220530103205" />
+<link rel="stylesheet" href="/modules/board/skins/xe_official_planner123/css/pagination.css?20220530103205" />
+<link rel="stylesheet" href="/modules/board/skins/xe_official_planner123/css/white.css?20220623010525" />
+<link rel="stylesheet" href="/modules/board/skins/xe_official_planner123/css/planner123_calendar_white.css?20240922110729" />
+<link rel="stylesheet" href="/modules/board/skins/xe_official_planner123/xeicon2/xeicon.min.css?20220530103413" />
+<link rel="stylesheet" href="/modules/editor/styles/ckeditor_recommend/style.css?20240830000521" />
+<!-- JS -->
+<script>
+var current_url = "https://drfa.co.kr/?mid=TIMETABLE";
+var request_uri = "https://drfa.co.kr/";
+var current_mid = "TIMETABLE";
+var waiting_message = "서버에 요청 중입니다. 잠시만 기다려주세요.";
+var ssl_actions = new Array();
+var default_url = "http://drfa.co.kr/";
+</script>
+<!--[if lt IE 9]><script src="/common/js/jquery-1.x.min.js?20220327112634"></script>
+<![endif]--><!--[if gte IE 9]><!--><script src="/common/js/jquery.min.js?20220327112635"></script>
+<!--<![endif]--><script src="/common/js/x.min.js?20220327112731"></script>
+<script src="/common/js/xe.min.js?20220327112731"></script>
+<script src="/modules/board/tpl/js/board.min.js?20220327112910"></script>
+<script src="/modules/board/skins/xe_official_planner123/js/plannerXE123_skin.js?20220530103344"></script>
+<script src="/layouts/simplestrap/js/jquery.cookie.min.js?20220527114122"></script>
+<!-- RSS -->
+<link rel="alternate" type="application/rss+xml" title="Site RSS" href="https://drfa.co.kr/rss" /><link rel="alternate" type="application/atom+xml" title="Site Atom" href="https://drfa.co.kr/atom" /><!-- ICON -->
+
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style> .xe_content { font-family:"나눔고딕";font-size:16px; }</style>
+<link rel="canonical" href="https://drfa.co.kr/" />
+<meta property="og:locale" content="ko_KR" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://drfa.co.kr/" />
+<meta property="og:title" content="이 달의 상영작" />
+<style>/* Colorset */
+::-webkit-scrollbar-thumb:hover,
+#navbar .navbar-nav > .open > a, #navbar .navbar-nav > .open > a:hover, #navbar .navbar-nav > .open > a:focus,
+#navbar .navbar-nav > .active > a, #navbar .navbar-nav > .active > a:hover, #navbar .navbar-nav > .active > a:focus, 
+.dropdown-menu .badge,
+.dropdown-menu>li>a:hover, .dropdown-menu>li>a:focus, .dropdown-submenu:hover>a, .dropdown-submenu:focus>a,
+.dropdown-menu>.active>a, .dropdown-menu>.active>a:hover, .dropdown-menu>.active>a:focus,
+.dropdown-submenu>.active>a, .dropdown-submenu>.active>a:hover, .dropdown-submenu>.active>a:focus,
+#popup_menu_area a:hover, #popup_menu_area a:active, #popup_menu_area a:focus,
+.nav-pills>li.active>a, .nav-pills>li.active>a:hover, .nav-pills>li.active>a:focus,
+.sidebar .list-group-item.active, .sidebar .list-group-item.active:hover, .sidebar .list-group-item.active:focus,
+.sidebar .list-group-item:hover, .sidebar .list-group-item:focus,
+#jumbotron .btn-lg.btn-default:hover, #jumbotron .btn-lg.btn-default:focus,
+#sidebar .list-group-item:hover,
+#sidebar .list-group-item:focus{background-color:#f0ad4e;color:#fff}
+.sidebar .list-group-item.active, .sidebar .list-group-item.active:hover, .sidebar .list-group-item.active:focus,
+.sidebar .list-group-item:hover, .sidebar .list-group-item:focus{background-color:#f0ad4e !important}
+.sidebar .list-group-item.active a, .sidebar .list-group-item.active:hover a, .sidebar .list-group-item.active:focus a,
+.sidebar .list-group-item:hover a, .sidebar .list-group-item:focus a{color:#fff}
+.sidebar .list-group-item:hover a>span[style], .sidebar .list-group-item:focus a>span[style]{color:#fff !important}
+#navbar,
+.sidebar .list-group-item.active, .sidebar .list-group-item.active:hover, .sidebar .list-group-item.active:focus,
+.sidebar .list-group-item:hover, .sidebar .list-group-item:focus,
+#sidebar .list-group-item:hover,
+#sidebar .list-group-item:focus{border-color:#f0ad4e}
+.nav-pills>li>a,
+a..list-group-item.active>.badge,
+.dropdown-menu>li:hover>a>.badge{color:#f0ad4e}
+.nav-pills>li>a>.badge{background-color:#f0ad4e;color:#fff}
+.nav-pills>.active>a>.badge{background-color:#fff;color:#f0ad4e}
+.form-control:focus{border-color:#f0ad4e;-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,0.075);box-shadow:inset 0 1px 1px rgba(0,0,0,0.075)}
+*:focus{outline-color:#f0ad4e!important}
+body{padding-top:0}
+#navbar{margin-bottom:0}
+#navbar+#jumbotron, #navbar+#main-carousel{margin-top:0}
+#navbar{border-bottom-width: 0}
+</style><script>
+//<![CDATA[
+xe.current_lang = "ko";
+xe.cmd_find = "찾기";
+xe.cmd_cancel = "취소";
+xe.cmd_confirm = "확인";
+xe.msg_no_root = "루트는 선택 할 수 없습니다.";
+xe.msg_no_shortcut = "바로가기는 선택 할 수 없습니다.";
+xe.msg_select_menu = "대상 메뉴 선택";
+//]]>
+</script>
+</head>
+<body>
+<script>jQuery("link[rel=stylesheet][href*='common/css/xe.min.css']").remove();
+(function(e,t,n){e('<span class="visible-desktop" style="font-size:1px !important;position:absolute;bottom:0" id="cwspear-is-awesome">.</span>').appendTo("body");var r=function(){return e("#cwspear-is-awesome").is(":visible")},i=e();e.fn.dropdownHover=function(n){i=i.add(this.parent());return this.each(function(){var s=e(this).parent(),o={delay:100,instantlyCloseOthers:!0},u={delay:e(this).data("delay"),instantlyCloseOthers:e(this).data("close-others")},a=e.extend(!0,{},o,n,u),f;s.hover(function(){if(r()){a.instantlyCloseOthers===!0&&i.removeClass("open");t.clearTimeout(f);e(this).addClass("open")}},function(){r()&&(f=t.setTimeout(function(){s.removeClass("open")},a.delay))})})};e(document).ready(function(){e('[data-hover="dropdown"]').dropdownHover()})})(jQuery,this);
+jQuery(function($){
+if($('#hidden-xs').is(':visible')) {
+	$('.dropdown').on('show.bs.dropdown', function(e){$(this).find('.dropdown-menu').first().stop(true, true).css('opacity', 0).slideDown(300).animate( { opacity: 1 },{ queue: false, duration: 300}); });
+	$('.dropdown').on('hide.bs.dropdown', function(e){$(this).find('.dropdown-menu').first().stop(true, true).slideUp(300).animate( { opacity: 0 },{ queue: false, duration: 300});});
+}
+$("[data-toggle='tooltip']").tooltip();
+$('.tooltip-show-auto').tooltip('show');
+/* $("#dropdown-toggle-login>a").tooltip({title:"로그인",placement:"bottom",trigger:"manual"}).tooltip("show").hover(function(){$(this).tooltip("hide");}); */
+$("#sidebar-toggle-button").click(function(){
+	$(this).find(".fa").toggleClass("fa-angle-left fa-angle-right");
+	if($.cookie("simplestrap_full_frame") == 'true'){
+		$("#content").addClass("col-sm-10 col-sm-push-2").removeClass("col-sm-12");
+		$("#sidebar").addClass("col col-sm-2 col-sm-pull-10")
+								.find(".panel").unwrap("<div class='panel-wrap col col-sm-2'></div>");	
+		$.cookie("simplestrap_full_frame",null);
+	} else {
+		$("#content").removeClass("col-sm-10 col-sm-push-2").addClass("col-sm-12");
+		$("#sidebar").removeClass("col col-sm-2 col-sm-pull-10")
+								.find(".panel").wrap("<div class='panel-wrap col-sm-2'></div>")
+		$.cookie("simplestrap_full_frame",'true');
+	}
+});
+if($.cookie("simplestrap_full_frame") == 'true'){
+	$.cookie("simplestrap_full_frame",null);
+	$("#sidebar-toggle-button").click();
+}
+$('#content .panel-heading [data-toggle=offcanvas]').click(function() {
+	$('#main-row').toggleClass('active');
+	$(this).find(".fa").toggleClass("fa-angle-left fa-angle-right");
+});
+});
+</script>
+
+<!--[if lt IE 10]>
+<script>jQuery(function($){$('input,textarea').placeholder();});</script>
+<![endif]-->
+<a href="#content" class="sr-only ss-skip">본문 바로가기</a>
+<nav id="navbar" class="navbar navbar-default navbar-static-top" role="navigation">
+		<div class="container">
+			<div class="navbar-header">
+			<span class="sr-only">메뉴 토글하기</span>
+			<button type="button" class="navbar-toggle navbar-toggle-left" data-toggle="collapse" data-target="#main-navbar"><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button>
+			<button type="button" class="navbar-toggle" data-toggle="modal" data-target="#modal-login"><i class="fa fa-sign-in" aria-hidden="true"></i> 로그인</button>						<button type="button" class="navbar-toggle" data-toggle="modal" data-target="#modal-search"><i class="fa fa-search" aria-hidden="true"></i> 검색</button>				<a class="navbar-brand" href="http://drfa.co.kr/index.php">
+										D/R/F/A/									</a>
+		</div>
+		<div class="collapse navbar-collapse navbar-left" id="main-navbar">
+			<ul class="navbar-nav nav">
+												<li class="dropdown active">
+					<a href="https://drfa.co.kr/coffee" class="dropdown-toggle" data-toggle="dropdown" >
+										 고품격 예술 CAFE/문화공간 조나단					 <span class="caret"></span></a>
+					<ul class="dropdown-menu">
+																		<li>
+							<a tabindex="-1" href="https://drfa.co.kr/DRistory">
+																 지금까지의 &lt;문화공간 조나단&gt; 이야기							</a>
+						</li>
+																								<li class="active">
+							<a tabindex="-1" href="https://drfa.co.kr/TIMETABLE">
+																 이 달의 상영작							</a>
+						</li>
+																								<li>
+							<a tabindex="-1" href="https://drfa.co.kr/free">
+																 DRFA 문화 매거진							</a>
+						</li>
+																								<li>
+							<a tabindex="-1" href="https://drfa.co.kr/GALLERY">
+																 JONATHAN'S GALLERY							</a>
+						</li>
+																								<li>
+							<a tabindex="-1" href="https://drfa.co.kr/teninsixMonth">
+																 문화공간 조나단 멤버십							</a>
+						</li>
+																	</ul>				</li>
+											</ul>
+		</div>
+		<div class="collapse navbar-collapse navbar-right" id="sub-navbar">
+						<ul class="navbar-nav nav">
+				<li class="dropdown" id="dropdown-toggle-search">
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-search" aria-hidden="true"></i><span class="visible-xs-inline-block"> 검색</span></a>
+					<div class="dropdown-menu dropdown-form" role="search">
+						<form action="https://drfa.co.kr/" method="get"><input type="hidden" name="error_return_url" value="/TIMETABLE" />
+							<input type="hidden" name="vid" value="" />
+							<input type="hidden" name="mid" value="TIMETABLE" />
+							<input type="hidden" name="act" value="IS" />
+							<input type="text" name="is_keyword" value="" placeholder="엔터 키를 눌러 검색..." class="form-control" />
+							<button type="submit" class="sr-only btn btn-warning btn-block"><i class="fa fa-search" aria-hidden="true"></i> 검색</button>
+						</form>
+					</div>
+				</li>				<li class="dropdown" id="dropdown-toggle-login">
+					<a href="#" data-toggle="modal" data-target="#modal-login"><i class="fa fa-sign-in" aria-hidden="true"></i> 로그인</a>
+				</li>							</ul>
+		</div>
+		</div>
+	</nav>
+<div id="main-carousel" class="carousel slide hidden-print" data-ride="carousel">
+	<div class="carousel-inner" role="listbox">
+		<div class="item active">
+							<img src="https://drfa.co.kr/files/attach/images/500/a767450e3cd0c3426d359a2737910729.jpg" alt="" />
+						<div class="carousel-caption">
+								<h1>.</h1>											</div>
+		</div>
+		<div class="item">
+							<img src="https://drfa.co.kr/files/attach/images/500/5bc76baba074a793e2f0a05aa303e224.jpg" alt="" />
+						<div class="carousel-caption">
+				<h1>.</h1>							</div>
+		</div>		<div class="item">
+							<img src="https://drfa.co.kr/files/attach/images/500/b9a810f5372b8a643a4dbfa076699fd4.jpg" alt="" />
+						<div class="carousel-caption">
+				<h1>.</h1>							</div>
+		</div>		<div class="item">
+							<img src="https://drfa.co.kr/files/attach/images/500/c17207e58db78dafd1f48b49eea60417.gif" alt="" />
+						<div class="carousel-caption">
+				<h1>카페 앞 풍경</h1>				<p>갯벌에 물이 들어오는 때는 보름달 뜨기 3일 전부터와 그믐 한 달에 8일 가량 들어와요</p>			</div>
+		</div>		<div class="item">
+							<img src="https://drfa.co.kr/files/attach/images/500/a3c40aeee4f28eea2f3a79889d8b63f4.jpg" alt="" />
+						<div class="carousel-caption">
+				<h1>.</h1>							</div>
+		</div>	</div>
+	<a class="left carousel-control" href="#main-carousel" role="button" data-slide="prev">
+		<span class="fa fa-angle-left fa-2x" aria-hidden="true"></span>
+		<span class="sr-only">이전</span>
+	</a>	<a class="right carousel-control" href="#main-carousel" role="button" data-slide="next">
+		<span class="fa fa-angle-right fa-2x" aria-hidden="true"></span>
+		<span class="sr-only">1</span>
+	</a></div>
+<div class="container" id="main-container">
+	<div class="row row-offcanvas row-offcanvas-left" id="main-row">
+		<div id="content" class="col col-sm-10 col-sm-push-2">
+						<article class="content panel panel-default" itemscope itemtype="http://schema.org/Article">
+				<div class="panel-heading">
+					<button id="sidebar-toggle-button" class="hidden-xs pull-left close" data-toggle="tooltip" data-title="전체화면 전환"><i class="fa fa-angle-left" aria-hidden="true"></i></button>
+					<button data-toggle="offcanvas" class=" pull-left close hidden-sm hidden-md hidden-lg"><i class="fa fa-angle-right" aria-hidden="true"></i></button>										<div class="clearfix"></div>
+				</div>				<div class="panel-body">
+																				<img src="/images/poster/reserve44.jpg"><div class="board">
+<div class="boardHeader">
+<div class="boardTitle">
+<h2 class="boardTitleText"><a href="https://drfa.co.kr/TIMETABLE">예약은 원하는 시간을 클릭 후 댓글 남기세요!(회원가입필수)</a></h2>
+</div>
+</div>
+      
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+<!--PlannerXE123 Skin V5.10.1(1.11.6+7.0.0p1)-->
+<div id='planner123' class="planner123">
+<div class="planner_control">
+<div class="planner_this">
+<span>November&nbsp;2026</span>
+</div>
+<div class="planner_navigation">
+<form style="float:left; margin-right:5px;" name = "fm_select_year"><input type="hidden" name="error_return_url" value="/TIMETABLE" /><input type="hidden" name="act" value="" /><input type="hidden" name="mid" value="TIMETABLE" /><input type="hidden" name="vid" value="" />
+<select name="selectyear" onchange="document.location.href='https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=' + this.options[this.selectedIndex].value +'&pMonth=11'">
+<option value='2026'>2026</option>
+<option value='2036'>2036</option>
+<option value='2035'>2035</option>
+<option value='2034'>2034</option>
+<option value='2033'>2033</option>
+<option value='2032'>2032</option>
+<option value='2031'>2031</option>
+<option value='2030'>2030</option>
+<option value='2029'>2029</option>
+<option value='2028'>2028</option>
+<option value='2027'>2027</option>
+<option value='2026'>2026</option>
+<option value='2025'>2025</option>
+<option value='2024'>2024</option>
+<option value='2023'>2023</option>
+<option value='2022'>2022</option>
+<option value='2021'>2021</option>
+</select></form>
+<a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=10"><span class="month_button" title="previous month"><</span></a>
+<a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=1"><span class="month_button" title="1 월" >1</span></a>
+<a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=2"><span class="month_button" title="2 월" >2</span></a>
+<a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=3"><span class="month_button" title="3 월" >3</span></a>
+<a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=4"><span class="month_button" title="4 월" >4</span></a>
+<a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=5"><span class="month_button" title="5 월" >5</span></a>
+<a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=6"><span class="month_button" title="6 월" >6</span></a>
+<a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=7"><span class="month_button" title="7 월" >7</span></a>
+<a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=8"><span class="month_button" title="8 월" >8</span></a>
+<a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=9"><span class="month_button" title="9 월" >9</span></a>
+<a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=10"><span class="month_button" title="10 월" >10</span></a>
+<a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=11"><span class="month_button_on" title="11 월" >11</span></a>
+<a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=12"><span class="month_button" title="12 월" >12</span></a>
+<a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=12"><span class="month_button" title="next month">></span></a>
+</div>
+</div>
+<table class='planner_calendar' summary='PlannerXE123'><thead><tr><th scope='col' width='14%'><div class='wd_border holiday'><div class='wd_title'>Sun 日</div></div></th><th scope='col' width='14%'><div class='wd_border'><div class='wd_title'>Mon 月</div></div></th><th scope='col' width='14%'><div class='wd_border'><div class='wd_title'>Tue 火</div></div></th><th scope='col' width='14%'><div class='wd_border'><div class='wd_title'>Wed 水</div></div></th><th scope='col' width='14%'><div class='wd_border'><div class='wd_title'>Thu 木</div></div></th><th scope='col' width='14%'><div class='wd_border'><div class='wd_title'>Fri 金</div></div></th><th scope='col' width='14%'><div class='wd_border saturday'><div class='wd_title'>Sat 土</div></div></th></tr></thead><tbody><tr id='planner_week0'><td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261101 class='strong link_allow '><span class='date_label holiday font_big'>1</span><span class='seasons24 strong'> </span></a></div><div id='week_schedule_0' style='position:relative;'></div><div id='day_schedule_container_2026-11-1'><div id='day_space_2026-11-1' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127541><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[08:00-08:20] '><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/541/127/120x165.crop.jpg?20260926101228'/><span style='clear:both; display:block;'>.<br><br></span></span></a></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/128627><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[12:00-12:40] 
+&nbsp;
+&nbsp;
+&quot;수많은 튀르키예 여성팬들을 울렸던 어떤 순애보에 관한 영화&quot;
+1978&#39; Antalya Golden Orange Film Festival 작품상,감독상,촬영상
+1977&#39; Turkish Film Critics Association (SIYAD) Awards 최우수작품상 후보
+&nbsp;
+...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/627/128/120x165.crop.jpg?20261101150456'/><span style='clear:both; display:block;'><br><font size=3><b>2:00 pm<br><br>붉은 스카프의 여자</font size></b><br>Selvi Boylum Al Yazmalim,1977<br><br><b><font color=#ECB908>잔여좌석</font color></b>/25석<br>주차장OPEN 1:00 pm<br><br><font size=1><BR></font size=1></span></span></a></div></div></div></td>
+<td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261102 class='strong link_allow '><span class='date_label weekday font_big'>2</span><span class='seasons24 strong'> </span></a></div><div id='day_schedule_container_2026-11-2'><div id='day_space_2026-11-2' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127542><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[08:00-08:20] '><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/542/127/120x165.crop.jpg?20260926101454'/><span style='clear:both; display:block;'>.<br><br></span></span></a></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127585><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[14:00-14:20] 
+황촉,Shuqin Huang 감독
+Li Gong ....&nbsp;&nbsp;Pan Yuliang
+Fang Cen ....&nbsp;&nbsp;Xiao Lan
+Shichang Da ....&nbsp;&nbsp;Wang Shouxin
+Er Dongsheng ....&nbsp;&nbsp;Pan Zanhua
+Zunxia Gao ....&nbsp;&nbsp;He Qiong
+Shen Hairong ....&nbsp;&nbsp...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/585/127/120x165.crop.jpg?20261102184753'/><span style='clear:both; display:block;'><br><font size=3><b>2:00 pm<br><br>화혼</font size></b><br>畵魂,Soul of a painter,1995<br><br><b><font color=#ECB908>잔여좌석</font color></b>/27석<br>주차장OPEN 1:20 pm<br><br><font size=1><BR></font size=1>애니D</span></span></a></div></div></div></td>
+<td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261103 class='strong link_allow '><span class='date_label weekday font_big'>3</span><span class='seasons24 strong'> </span><span class ='memorial memday_topline'> 학생독립운동기념일</span></a></div><div id='day_schedule_container_2026-11-3'><div id='day_space_2026-11-3' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127543><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[08:00-08:20] '><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/543/127/120x165.crop.jpg?20260926101601'/><span style='clear:both; display:block;'>.<br><br></span></span></a></div><div class='drag'><a style='vertical-align:top; background-color:#ffe100;' href=https://drfa.co.kr/TIMETABLE/127587><span class='schedule_view schedule_bottom  ' style='background-color:#ffe100; ' title='[14:00-14:20] 
+&nbsp;
+&nbsp;
+&nbsp;
+&quot;인간은 왜 &lt;첫사랑&gt;으로 회귀하는가?&quot;
+&nbsp;
+&nbsp;
+아이슬란드 영화는 늘 우리 영혼을 침잔시키고 그 위에
+&nbsp;
+한 층 더 두꺼운 지성의 담을 올립니다.
+&nbsp;
+문화공간 조나단에서 13년 째 롱 런 중...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/587/127/120x165.crop.jpg?20261102120558'/><span style='clear:both; display:block;'><br><font size=3><b>2:00 pm<br><br>첫사랑</font size></b><br>First Love<br><br><b><font color=#ECB908>잔여좌석</font color></b>/22석<br>주차장OPEN 1:20 pm<br><br><font size=1><BR></font size=1></span></span></a></div><div class ='memorial memday_bottomline'> 학생독립운동기념일</div></div></div></td>
+<td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261104 class='strong link_allow '><span class='date_label weekday font_big'>4</span><span class='seasons24 strong'> </span></a></div><div id='day_schedule_container_2026-11-4'><div id='day_space_2026-11-4' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127544><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title=''><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/544/127/120x165.crop.jpg?20260926101650'/><span style='clear:both; display:block;'>.<br><br></span></span></a></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127588><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[14:00-14:20] 
+쟝 마크 발리,Jean-Marc Vall&eacute;e 감독
+Emily Blunt ... Queen Victoria
+Rupert Friend ...Prince Albert
+Paul Bettany... Lord Melbourne
+Miranda Richardson ...Duchess of Kent
+2.35 : 1&nbsp;&nbsp;screen/color/DTS (as dts)/105분
+&quot;2010&#...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/588/127/120x165.crop.jpg?20261104112350'/><span style='clear:both; display:block;'><br><font size=3><b>2:00 pm<br><br>영 빅토리아</font size></b><br>The Young Victoria,2009<br><br><b><font color=#ECB908>잔여좌석</font color></b>/32석<br>주차장OPEN 1:40 pm<br><br><font size=1><BR></font size=1></span></span></a></div></div></div></td>
+<td class='today_bg drop'> <div class='planner_calendar_inner'><div class='date_div today_date_bg' style='height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261105 class='strong link_allow '><span class='date_label weekday font_big'>5</span><span class='seasons24 strong'> </span></a></div><div id='day_schedule_container_2026-11-5'><div id='day_space_2026-11-5' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffe100;' href=https://drfa.co.kr/TIMETABLE/127589><span class='schedule_view schedule_bottom  ' style='background-color:#ffe100; ' title='[13:00-13:20] &nbsp;
+
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&quot;DRFA 최단기간 흥행기록, 언제나 기립박수!&nbsp; 완벽하게 치유받고 싶으신가요?&quot;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+- 표백제로 찌든 영혼을 씻어내는 1시간 40분 -
+&nbsp;
+&#39;관객 관람평&#39;
+...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/589/127/120x165.crop.jpg?20261105105742'/><span style='clear:both; display:block;'><br><font size=3><b>1:00 pm<br><br>알프스에 사는 나의 할아버지</font size></b><br>My grandfather who lives in the Alps<br><br><b><font color=#ECB908>잔여좌석</font color></b>/23석<br>주차장OPEN 12:20<br><br><font size=1><BR></font size=1></span></span></a></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/128594><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[22:00-23:00] 
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&quot;IMDB 8.8이 말해주는 불멸의 유고 마스터피스!&quot;
+1981&#39; Cannes Film Festival 황금종려상 후보
+1981&#39; Montr&eacute;al World Film Festival 심사위원대상
+1980&#39; Pula Film Festival of Yugoslavia...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/594/128/120x165.crop.jpg?20261103005210'/><span style='clear:both; display:block;'><br><font size=3><b>3:00 pm<br><br>거기 누가 노래해</font size></b><br>Ko to tamo peva,1980<br><br><b><font color=#ECB908>잔여좌석</font color></b>/32석<br>주차장OPEN 2:00 pm<br><br><font size=1><BR></font size=1></span></span></a></div></div></div></td>
+<td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261106 class='strong link_allow '><span class='date_label weekday font_big'>6</span><span class='seasons24 strong'> </span></a></div><div id='day_schedule_container_2026-11-6'><div id='day_space_2026-11-6' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127546><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[08:00-08:20] '><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/546/127/120x165.crop.jpg?20260926110030'/><span style='clear:both; display:block;'>.</span></span></a></div></div></div></td>
+<td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261107 class='strong link_allow '><span class='date_label saturday font_big'>7</span><span class='seasons24 strong'> 입동</span></a></div><div id='day_schedule_container_2026-11-7'><div id='day_space_2026-11-7' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127549><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[08:00-08:20] 
+딕 리차드슨,Dick Richards 감독
+Martin Sheen ... Robert Beckwith
+Blythe Danner ... Sheila Beckwith
+Craig T. Nelson ... Bernie Ackerman
+David Hemmings ... Gavin Wilson
+1.33:1 wide screen/color/2.1 스테레오/99분
+&quot;1984&#39; Young Artist...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/549/127/120x165.crop.jpg?20261104143414'/><span style='clear:both; display:block;'><br><font size=3><b>11:00 am<br><br>7일간의 사랑</font size></b><br>Man, Woman and Child,1983<br><br><b><font color=#ECB908>잔여좌석</font color></b>/27석<br>주차장OPEN 10:00 pm<br>초지대교차막힘!!!!<br><font size=1><BR></font size=1></span></span></a></div></div></div></td>
+</tr>
+<tr id='planner_week1'><td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261108 class='strong link_allow '><span class='date_label holiday font_big'>8</span><span class='seasons24 strong'> </span></a></div><div id='week_schedule_1' style='position:relative;'></div><div id='day_schedule_container_2026-11-8'><div id='day_space_2026-11-8' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127552><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[08:00-08:20] '><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/552/127/120x165.crop.jpg?20260926110936'/><span style='clear:both; display:block;'>.<br><br></span></span></a></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/128899><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[12:20-12:40] 
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&quot;인간의 열등의식이 빚어낸 괴물&quot;
+1999&rsquo; Czech Lions 14개 부문 후보, 최우수작품상 포함 11개 부문 수상&nbsp;
+1998&#39; Polish Film Festival 각본상
+1998&#39; Karlovy Vary International ...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/899/128/120x165.crop.jpg?20261025234012'/><span style='clear:both; display:block;'><br><font size=3><b>2:00 pm<br><br>세칼은 죽어야 한다</font size></b><br>Je treba zabít Sekala,1998<br><br><b><font color=#ECB908>잔여좌석</font color></b>/32석<br>주차장OPEN 1:20 pm<br>초지대교차막힘!!!<br><font size=1><BR></font size=1></span></span></a></div></div></div></td>
+<td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261109 class='strong link_allow '><span class='date_label weekday font_big'>9</span><span class='lunar'>(10-1)</span><span class='seasons24 strong'> </span><span class ='memorial memday_topline'> 소방의날</span></a></div><div id='day_schedule_container_2026-11-9'><div id='day_space_2026-11-9' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127555><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[08:00-08:20] '><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/555/127/120x165.crop.jpg?20260926122045'/><span style='clear:both; display:block;'>.<br><br></span></span></a></div><div class='drag'><a style='vertical-align:top; background-color:#ff5656;' href=https://drfa.co.kr/TIMETABLE/127603><span class='schedule_view schedule_bottom  ' style='background-color:#ff5656; ' title='[14:00-14:20] 
+
+
+
+&quot;파도에 휩쓸려간 단 한 번의 사랑, 난 왜 그때 그 사랑을 잡지 못했을까?&quot;
+
+
+
+
+
+모든 베스트셀러 작가가 그러하겠지만
+Nicholas Sparks 역시 어마 어마한 독서량을 자랑하는 작가랍니다.
+1965년 12월 31일 네브래스카 주 오마하에서...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/603/127/120x165.crop.jpg?20261105162059'/><span style='clear:both; display:block;'><br><font size=3><b>2:00 pm<br><br>해변의 길손 </font size></b><br>Nights In Rodanthe,2008<br><br><b><font color=#ECB908>잔여좌석</font color></b>/31석<br>주차장OPEN 1:20 pm<br><br><font size=1><BR></font size=1></span></span></a></div><div class ='memorial memday_bottomline'> 소방의날</div></div></div></td>
+<td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261110 class='strong link_allow '><span class='date_label weekday font_big'>10</span><span class='seasons24 strong'> </span></a></div><div id='day_schedule_container_2026-11-10'><div id='day_space_2026-11-10' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127564><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[08:00-08:20] '><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/564/127/120x165.crop.jpg?20260926122146'/><span style='clear:both; display:block;'>.<br><br></span></span></a></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127606><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[14:00-14:20] 
+딕 리차드슨,Dick Richards 감독
+Martin Sheen ... Robert Beckwith
+Blythe Danner ... Sheila Beckwith
+Craig T. Nelson ... Bernie Ackerman
+David Hemmings ... Gavin Wilson
+1.33:1 wide screen/color/2.1 스테레오/99분
+&quot;1984&#39; Young Artist...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/606/127/120x165.crop.jpg?20261101082325'/><span style='clear:both; display:block;'><br><font size=3><b>2:00 pm<br><br>7일간의 사랑</font size></b><br>Man, Woman and Child,1983<br><br><b><font color=#ECB908>잔여좌석</font color></b>/33석<br>주차장OPEN 1:20 pm<br><br><font size=1><BR></font size=1></span></span></a></div></div></div></td>
+<td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261111 class='strong link_allow '><span class='date_label weekday font_big'>11</span><span class='seasons24 strong'> </span><span class ='memorial memday_topline'> 농업인의날</span></a></div><div id='day_schedule_container_2026-11-11'><div id='day_space_2026-11-11' ></div><div class='drag'><a style='vertical-align:top; background-color:#d3d1d1;' href=https://drfa.co.kr/TIMETABLE/127607><span class='schedule_view schedule_bottom  ' style='background-color:#d3d1d1; ' title='[14:00-14:20] 
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&quot;완벽하게 치유받고 싶으신가요?&quot;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+- 표백제로 찌든 영혼을 씻어내는 1시간 40분 -
+&nbsp;
+&#39;관객 관람평&#39;
+&nbsp;
+&nbsp;
+알프스 첩첩산속에서 마음의 문을 닫고 사...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/607/127/120x165.crop.jpg?20261027102453'/><span style='clear:both; display:block;'><br><font size=3><b>10:30 am<br><br>알프스에 사는 나의 할아버지</font size></b><br>My grandfather who lives in the Alps<br><br><b><font color=#F4FC26>잔여좌석/</font color></b>25석<br><br><font size=1><BR>주차장 OPEN 10:00am</font size=1></span></span></a></div><div class ='memorial memday_bottomline'> 농업인의날</div></div></div></td>
+<td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261112 class='strong link_allow '><span class='date_label weekday font_big'>12</span><span class='seasons24 strong'> </span></a></div><div id='day_schedule_container_2026-11-12'><div id='day_space_2026-11-12' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127566><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[08:00-08:20] '><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/566/127/120x165.crop.jpg?20261021161825'/><span style='clear:both; display:block;'>.<br><br><br><br><br><br></span></span></a></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127608><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[13:00-13:20] 
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&quot;거듭된 사랑, 거듭된 선택, 거듭된 실패!&quot;
+&nbsp;
+&nbsp;
+세상의 모든 여성들이 남편을 선택하는 것에 대해
+&nbsp;
+모두 현명한 판단을 하는 것은 아닙니다.
+&nbsp;
+그랬다면 조나단 유가 자라오면서 어...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/608/127/120x165.crop.jpg?20261102121637'/><span style='clear:both; display:block;'><br><font size=3><b>2:30 pm<br><br>레이디버드 레이디버드</font size></b><br>Ladybird Ladybird,1994<br><br><b><font color=#ECB908>잔여좌석</font color></b>/32석<br>주차장OPEN 2:00<br><br><font size=1><BR></font size=1></span></span></a></div></div></div></td>
+<td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261113 class='strong link_allow '><span class='date_label weekday font_big'>13</span><span class='seasons24 strong'> </span></a></div><div id='day_schedule_container_2026-11-13'><div id='day_space_2026-11-13' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127567><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[08:00-08:20] '><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/567/127/120x165.crop.jpg?20260926122452'/><span style='clear:both; display:block;'>.</span></span></a></div><div class='drag'><a style='vertical-align:top; background-color:#ff5656;' href=https://drfa.co.kr/TIMETABLE/128334><span class='schedule_view schedule_bottom  ' style='background-color:#ff5656; ' title='[13:00-13:20] 
+
+
+&quot;상영할 때 마다 기립박수, 우리 영혼을 정화 시키는 터키 영화 한 편!&quot;
+
+기억나시나요?
+삶의 마지막 시간을 며칠 앞둔 아버지를 모시고
+아버지가 그토록 가고 싶어하던 터키 남부 섬자락에서 열리는
+음악 축제로 여행을 떠나던 아들 이...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/334/128/120x165.crop.jpg?20261102121655'/><span style='clear:both; display:block;'><br><font size=3><b>2:00 pm<br><br>아빠</font size></b><br>Babamla birlikte,2020<br><br><b><font color=#ECB908>잔여좌석</font color></b>/27석<br>주차장OPEN 1:20 pm<br><br><font size=1><BR></font size=1></span></span></a></div></div></div></td>
+<td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261114 class='strong link_allow '><span class='date_label saturday font_big'>14</span><span class='seasons24 strong'> </span></a></div><div id='day_schedule_container_2026-11-14'><div id='day_space_2026-11-14' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127568><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[08:00-08:20] 
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&quot;바흐의 평균율이 흐르는 그녀의 하숙집에서 보낸 한 철&quot;
+2004&#39; Festival de la Fiction TV&nbsp; 최우수작품상, 여우주연상, 음악상
+&nbsp;
+&nbsp;
+&nbsp;
+거장의 성공한 작품을 리메이크 한다는 것은 ...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/568/127/120x165.crop.jpg?20261102122331'/><span style='clear:both; display:block;'><br><font size=3><b>11:00 am<br><br>바다의 침묵</font size></b><br>Le silence de la mer,2004<br><br><b><font color=#ECB908>잔여좌석</font color></b>/35석<br>초지대교차막힘!!!!<br><font size=1>식사마감!<BR></font size=1></span></span></a></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/128335><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[14:00-14:20] 
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&quot;지금 동검도는 이 영화로 몸살 중!&nbsp; 엔딩, 푸치니의 곡이 흘러나올 땐 전율&#39;
+&nbsp;
+&nbsp;
+&nbsp;
+퇴근 후 파김치가 된 몸으로 30분씩 짬짬히 1년을 번역했네요.
+&nbsp;
+파리 뒷골목...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/335/128/120x165.crop.jpg?20261102122354'/><span style='clear:both; display:block;'><br><font size=3><b>2:00 pm<br><br>푸치니를 위한 랩소디</font size></b><br>Rhapsody for Puccini<br><br><b><font color=#ECB908>잔여좌석/</font color></b>22석<br>주차장OPEN 1:00 pm<br>초지대교차막힘!!!!<br><font size=1><BR></font size=1></span></span></a></div></div></div></td>
+</tr>
+<tr id='planner_week2'><td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261115 class='strong link_allow '><span class='date_label holiday font_big'>15</span><span class='seasons24 strong'> </span></a></div><div id='week_schedule_2' style='position:relative;'></div><div id='day_schedule_container_2026-11-15'><div id='day_space_2026-11-15' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127569><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[08:00-08:20] '><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/569/127/120x165.crop.jpg?20260926122621'/><span style='clear:both; display:block;'>.<br><br></span></span></a></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/128907><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[13:00-13:20] 
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&quot;명장 레오 맥케리의 경력을 끝장낸 비운의 영화&quot;
+&nbsp;
+&nbsp;
+펄 벅이 쓴 &lsquo;차이나 스토리,China Story&rsquo;라는 오리지널 시나리오가 헐리우드를 돌아다니다
+&nbsp;
+20세기 폭스에 팔렸습니다.
+...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/907/128/120x165.crop.jpg?20261104170234'/><span style='clear:both; display:block;'><br><font size=3><b>2:00 pm<br><br>사탄은 졸지 않는다</font size></b><br>Satan Never Sleeps,1962<br><br><b><font color=#ECB908>잔여좌석</font color></b>/30석<br>주차장OPEN 1:20 pm<br>초지대교차막힘!!!<br><font size=1><BR></font size=1></span></span></a></div></div></div></td>
+<td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261116 class='strong link_allow '><span class='date_label weekday font_big'>16</span><span class='seasons24 strong'> </span></a></div><div id='day_schedule_container_2026-11-16'><div id='day_space_2026-11-16' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127570><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[08:00-08:20] '><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/570/127/120x165.crop.jpg?20260926122709'/><span style='clear:both; display:block;'>.<br><br></span></span></a></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/128336><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[14:00-14:20] 
+&nbsp;
+&nbsp;
+
+
+
+&quot;첫 상영 시 완벽한 기립박수!&nbsp; 히틀러가 단 한 번만 라이브로 듣고 싶어했던 음악가, 하지만 결국 들을 수 없었던 그의 첼로!&quot;
+
+요요마가 자신의 영원한 정신적. 기술적 스승이라고 불렀던 첼로의 거장 파블로 카잘...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/336/128/120x165.crop.jpg?20261102121756'/><span style='clear:both; display:block;'><br><font size=3><b>11:30 pm<br><br>파블로 카잘스</font size></b><br>Pau Casals i Defillo<br><br><b><font color=#ECB908>잔여좌석/</font color></b>27석<br>주차장OPEN 11:00 am<br><br><font size=1><BR></font size=1></span></span></a></div></div></div></td>
+<td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261117 class='strong link_allow '><span class='date_label weekday font_big'>17</span><span class='seasons24 strong'> </span><span class ='memorial memday_topline'> 순국선열의날</span></a></div><div id='day_schedule_container_2026-11-17'><div id='day_space_2026-11-17' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127571><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[08:00-08:20] '><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/571/127/120x165.crop.jpg?20260926122749'/><span style='clear:both; display:block;'>.<br><br></span></span></a></div><div class='drag'><a style='vertical-align:top; background-color:#ffe100;' href=https://drfa.co.kr/TIMETABLE/128384><span class='schedule_view schedule_bottom  ' style='background-color:#ffe100; ' title='[14:00-14:20] 
+
+​
+&quot;언제나 기립박수!&nbsp; 10년 묵은 스트레스가 날아간다!&nbsp;
+역대 썸머바캉스 영화 중 평점이 가장 높았던 영화!!!&quot;
+​
+
+&quot;코로나로 3년간 중단 되었던
+DRFA 썸머 바캉스가 다시 시작됩니다.
+조나단 유가 보석상자 속에 꼭꼭 숨겨두...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/384/128/120x165.crop.jpg?20261102121929'/><span style='clear:both; display:block;'><br><font size=3><b>2:00 pm<br><br>쇼 머스트 고 온</font size></b><br>Show must go on<br><br><b><font color=#ECB908>잔여좌석/</font color></b>35석<br>주차장OPEN 1:20 pm<br><br><font size=1><BR></font size=1></span></span></a></div><div class ='memorial memday_bottomline'> 순국선열의날</div></div></div></td>
+<td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261118 class='strong link_allow '><span class='date_label weekday font_big'>18</span><span class='lunar'>(10-10)</span><span class='seasons24 strong'> </span></a></div><div id='day_schedule_container_2026-11-18'><div id='day_space_2026-11-18' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127572><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[08:00-08:20] '><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/572/127/120x165.crop.jpg?20260926122938'/><span style='clear:both; display:block;'>.<br><br></span></span></a></div></div></div></td>
+<td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261119 class='strong link_allow '><span class='date_label weekday font_big'>19</span><span class='seasons24 strong'> </span></a></div><div id='day_schedule_container_2026-11-19'><div id='day_space_2026-11-19' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127573><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[08:00-08:20] '><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/573/127/120x165.crop.jpg?20260926123025'/><span style='clear:both; display:block;'>.</span></span></a></div><div class='drag'><a style='vertical-align:top; background-color:#ffe100;' href=https://drfa.co.kr/TIMETABLE/128388><span class='schedule_view schedule_bottom  ' style='background-color:#ffe100; ' title='[13:00-13:20] 
+J. 리 톰슨,J. Lee Thompson 감독
+Anthony Quinn ....&nbsp;&nbsp;Theo Tomasis
+Jacqueline Bisset ....&nbsp;&nbsp;Liz Cassidy
+Raf Vallone ....&nbsp;&nbsp;Spyros Tomasis
+Edward Albert ....&nbsp;&nbsp;Nico Tamasis
+James Franciscus ....&nbsp;&nbs...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/388/128/120x165.crop.jpg?20261027134820'/><span style='clear:both; display:block;'><br><font size=3><b>1:00 pm<br><br>그릭 타이쿤</font size></b><br>The Greek Tycoon,1978 <br><br><b><font color=#ECB908>잔여좌석</font color></b>/33석<br>주차장OPEN 12:20<br><br><font size=1><BR></font size=1></span></span></a></div></div></div></td>
+<td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261120 class='strong link_allow '><span class='date_label weekday font_big'>20</span><span class='seasons24 strong'> </span></a></div><div id='day_schedule_container_2026-11-20'><div id='day_space_2026-11-20' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127574><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[08:00-08:20] '><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/574/127/120x165.crop.jpg?20260926123101'/><span style='clear:both; display:block;'>.</span></span></a></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/128389><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[13:00-13:20] 
+프랑소와 지라르,Fran&ccedil;ois Girard 감독
+&nbsp;&nbsp;
+Dustin Hoffman...Carvelle
+Kathy Bates&nbsp; &nbsp; &nbsp; &nbsp; ...&nbsp; &nbsp; &nbsp; &nbsp; Headmistress
+Eddie Izzard&nbsp; &nbsp; &nbsp; &nbsp; ...&nbsp; &nbsp; &nbsp; &nbsp...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/389/128/120x165.crop.jpg?20261019082013'/><span style='clear:both; display:block;'><br><font size=3><b>1:00 pm<br><br>보이콰이어</font size></b><br>Boychoir,2014<br><br><b><font color=#ECB908>잔여좌석</font color></b>/35석<br>주차장OPEN 12:20<br><br><font size=1><BR></font size=1></span></span></a></div></div></div></td>
+<td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261121 class='strong link_allow '><span class='date_label saturday font_big'>21</span><span class='seasons24 strong'> </span></a></div><div id='day_schedule_container_2026-11-21'><div id='day_space_2026-11-21' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127575><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[08:00-08:20] 
+&nbsp;
+&nbsp;
+&nbsp;
+&quot;여러분은 숨도 쉬지 못하고 압도 당합니다&quot;
+&nbsp;
+&nbsp;
+헤르베르트 폰 카라얀부터 루빈스타인까지 수많은 거장들이
+&nbsp;
+앞다투어 &lt;내 인생의 지휘자&gt;로 꼽았던 위대한 음악가
+&nbsp;
+세르주 첼리비다...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/575/127/120x165.crop.jpg?20261101024051'/><span style='clear:both; display:block;'><br><font size=3><b>11:00 am<br><br>클래식에 내 영혼을 담아</font size></b><br>My Life,My Classic<br><br><b><font color=#ECB908></font color></b>잔여35석<br>초지대교 차막힘!<br><br><font size=1>식사마감!<BR></font size=1></span></span></a></div><div class='drag'><a style='vertical-align:top; background-color:#ffe100;' href=https://drfa.co.kr/TIMETABLE/128390><span class='schedule_view schedule_bottom  ' style='background-color:#ffe100; ' title='[14:00-14:20] 
+&nbsp;
+&nbsp;
+&nbsp;
+&quot;상영시간 2시간 30분, 정치인으로서 최초로 노벨 문학상을 수상한 위대한 작가로서의 처칠&quot;
+&nbsp;
+&nbsp;
+&nbsp;
+
+(윈스턴 레너드 스펜서 처칠 경,Sir Winston Leonard Spencer Churchill,1874~1965)
+&nbsp;
+&nb...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/390/128/120x165.crop.jpg?20261102190652'/><span style='clear:both; display:block;'><br><font size=3><b>2:00 pm<br><br>처칠, 내 젊은 날의 초상</font size></b><br>Young Winston<br><br><b><font color=#ECB908>잔여좌석/</font color></b>29석<br>주차장OPEN 1:00 pm<br>초지대교차막힘!!!!<br><font size=1><BR></font size=1>애니OFF</span></span></a></div></div></div></td>
+</tr>
+<tr id='planner_week3'><td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261122 class='strong link_allow '><span class='date_label holiday font_big'>22</span><span class='seasons24 strong'> 소설</span></a></div><div id='week_schedule_3' style='position:relative;'></div><div id='day_schedule_container_2026-11-22'><div id='day_space_2026-11-22' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127576><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[08:00-08:20] '><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/576/127/120x165.crop.jpg?20260926123226'/><span style='clear:both; display:block;'>.<br><br></span></span></a></div></div></div></td>
+<td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261123 class='strong link_allow '><span class='date_label weekday font_big'>23</span><span class='lunar'>(10-15)</span><span class='seasons24 strong'> </span></a></div><div id='day_schedule_container_2026-11-23'><div id='day_space_2026-11-23' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127577><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[08:00-08:20] '><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/577/127/120x165.crop.jpg?20260926123310'/><span style='clear:both; display:block;'>.<br><br></span></span></a></div><div class='drag'><a style='vertical-align:top; background-color:#ff5656;' href=https://drfa.co.kr/TIMETABLE/128397><span class='schedule_view schedule_bottom  ' style='background-color:#ff5656; ' title='[14:00-14:20] 
+브루스 베레스포드,Bruce Beresford 감독
+Chi Cao&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Li - as an adult
+Bruce Greenwood&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;...&nbsp;&nbs...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/397/128/120x165.crop.jpg?20261102122419'/><span style='clear:both; display:block;'><br><font size=3><b>2:00 pm<br><br>어떤 발레리노</font size></b><br>Mao's Last Dancer,2009<br><br><b><font color=#ECB908>잔여좌석/</font color></b>35석<br>주차장OPEN 1:20 pm<br><br><font size=1><BR></font size=1></span></span></a></div></div></div></td>
+<td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261124 class='strong link_allow '><span class='date_label weekday font_big'>24</span><span class='seasons24 strong'> </span></a></div><div id='day_schedule_container_2026-11-24'><div id='day_space_2026-11-24' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127578><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[08:00-08:20] '><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/578/127/120x165.crop.jpg?20260926123354'/><span style='clear:both; display:block;'>.<br><br></span></span></a></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/128398><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[14:00-14:20] 
+실비오 솔디니,Silvio Soldini 감독
+&nbsp;&nbsp;Licia Maglietta&nbsp;&nbsp;...&nbsp;&nbsp;Rosalba Barletta&nbsp;&nbsp;
+&nbsp;&nbsp;Bruno Ganz&nbsp;&nbsp;...&nbsp;&nbsp;Fernando Girasole&nbsp;&nbsp;
+&nbsp;&nbsp;Giuseppe Battiston&nbsp;&nbsp;...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/398/128/120x165.crop.jpg?20261102122446'/><span style='clear:both; display:block;'><br><font size=3><b>2:00 pm<br><br>빵과 튜울립</font size></b><br>Pane e tulipani,2000<br><br><b><font color=#ECB908>잔여좌석</font color></b>/35석<br>주차장OPEN 1:20 pm<br><br><font size=1><BR></font size=1></span></span></a></div></div></div></td>
+<td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261125 class='strong link_allow '><span class='date_label weekday font_big'>25</span><span class='seasons24 strong'> </span></a></div><div id='day_schedule_container_2026-11-25'><div id='day_space_2026-11-25' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127579><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[08:00-08:20] '><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/579/127/120x165.crop.jpg?20260926123438'/><span style='clear:both; display:block;'>.<br><br></span></span></a></div><div class='drag'><a style='vertical-align:top; background-color:#8aacce;' href=https://drfa.co.kr/TIMETABLE/128399><span class='schedule_view schedule_bottom  ' style='background-color:#8aacce; ' title='[14:00-14:20] 
+
+
+
+&quot;오늘 같이 산티아고를 걸어보시겠습니까?&quot;
+
+
+DRFA 관객 만족도 9.8의 힐링 영화입니다.
+잭 힛의 소설 &lt;산티아고 가는 길&gt;을 스크린에 옮긴 영화입니다.
+너무 바쁜 일상에
+앞만 보고 달려온 중년의 의사 아버지가
+어느 날 산티...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/399/128/120x165.crop.jpg?20261104115127'/><span style='clear:both; display:block;'><br><font size=3><b>2:00 pm<br><br>산티아고 가는 길</font size></b><br>Il cammino di Santoago<br><br><b><font color=#ECB908>잔여좌석</font color></b>/26석<br>주차장OPEN 1:00 pm<br><br><font size=1><BR></font size=1></span></span></a></div></div></div></td>
+<td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261126 class='strong link_allow '><span class='date_label weekday font_big'>26</span><span class='seasons24 strong'> </span></a></div><div id='day_schedule_container_2026-11-26'><div id='day_space_2026-11-26' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127580><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[08:00-08:20] '><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/580/127/120x165.crop.jpg?20261101023548'/><span style='clear:both; display:block;'>.<br><br><br><br><br><br><br></span></span></a></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/128400><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[13:00-13:20] 
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&quot;IMDB 8.8이 말해주는 불멸의 유고 마스터피스!&quot;
+1981&#39; Cannes Film Festival 황금종려상 후보
+1981&#39; Montr&eacute;al World Film Festival 심사위원대상
+1980&#39; Pula Film Festival of Yugoslavia...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/400/128/120x165.crop.jpg?20261102125643'/><span style='clear:both; display:block;'><br><font size=3><b>2:30 pm<br><br>거기 누가 노래해</font size></b><br>Ko to tamo peva,1980<br><br><b><font color=#ECB908>잔여좌석</font color></b>/35석<br>주차장OPEN 2:00<br><br><font size=1><BR></font size=1></span></span></a></div></div></div></td>
+<td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261127 class='strong link_allow '><span class='date_label weekday font_big'>27</span><span class='seasons24 strong'> </span></a></div><div id='day_schedule_container_2026-11-27'><div id='day_space_2026-11-27' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127581><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[08:00-08:20] 
+
+
+
+
+&quot;오늘 같이 산티아고를 걸어보시겠습니까?&quot;
+
+
+DRFA 관객 만족도 9.8의 힐링 영화입니다.
+잭 힛의 소설 &lt;산티아고 가는 길&gt;을 스크린에 옮긴 영화입니다.
+너무 바쁜 일상에
+앞만 보고 달려온 중년의 의사 아버지가
+어느 날 산...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/581/127/120x165.crop.jpg?20261030151230'/><span style='clear:both; display:block;'><br><font size=3><b>11:00 am<br><br>산티아고 가는 길</font size></b><br>Il cammino di Santoago<br><br><b><font color=#ECB908>잔여좌석</font color></b>/19석<br><br><br><font size=1><BR></font size=1></span></span></a></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/128401><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[13:00-13:20] 
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&quot;완벽하게 치유받고 싶으신가요?&quot;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+- 표백제로 찌든 영혼을 씻어내는 1시간 40분 -
+&nbsp;
+&#39;관객 관람평&#39;
+&nbsp;
+&nbsp;
+알프스 첩첩산속에서 마음의 문을 닫고 사...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/401/128/120x165.crop.jpg?20261102125743'/><span style='clear:both; display:block;'><br><font size=3><b>3:30 pm<br><br>알프스에 사는 나의 할아버지</font size></b><br>My grandfather who lives in the Alps<br><br><b><font color=#F4FC26>잔여좌석/</font color></b>15석<br><br><font size=1><BR>주차장 OPEN 3:00pm</font size=1></span></span></a></div></div></div></td>
+<td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261128 class='strong link_allow '><span class='date_label saturday font_big'>28</span><span class='lunar'>(10-20)</span><span class='seasons24 strong'> </span></a></div><div id='day_schedule_container_2026-11-28'><div id='day_space_2026-11-28' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127582><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[08:00-08:20] '><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/582/127/120x165.crop.jpg?20260926123639'/><span style='clear:both; display:block;'>.<br><br></span></span></a></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/128402><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[14:00-14:20] 
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&quot;첫 회 상영시, 관객평점 10점 만점!&nbsp; 전 유럽 박스 오피스를 강타한 인상주의 화가를 추적한 걸작!&quot;
+&nbsp;
+&nbsp;
+&nbsp;
+클로드 모네의 &lt;일출, 인상,Impression, soleil levant&gt;이란 그림의 제...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/402/128/120x165.crop.jpg?20261021175128'/><span style='clear:both; display:block;'><br><font size=3><b>2:00 pm<br><br>나의 빛의 화가들</font size></b><br>Mes peintres impressionnistes<br><br><b><font color=#EC5532>잔여좌석</font color></b>/35석<br>초지대교차막힘!<br><font size=1>(식사마감)<BR></font size=1></span></span></a></div></div></div></td>
+</tr>
+<tr id='planner_week4'><td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261129 class='strong link_allow '><span class='date_label holiday font_big'>29</span><span class='seasons24 strong'> </span><span class ='memorial memday_topline'> 대림절</span></a></div><div id='week_schedule_4' style='position:relative;'></div><div id='day_schedule_container_2026-11-29'><div id='day_space_2026-11-29' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127583><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[08:00-08:20] '><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/583/127/120x165.crop.jpg?20260926123720'/><span style='clear:both; display:block;'>.<br><br></span></span></a></div><div class ='memorial memday_bottomline'> 대림절</div></div></div></td>
+<td class='drop' bgcolor=transparent> <div class='planner_calendar_inner'><div class='date_div' style='margin:0; height:18px;'  title=일정작성하기 ><a href=https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261130 class='strong link_allow '><span class='date_label weekday font_big'>30</span><span class='seasons24 strong'> </span><span class ='memorial memday_topline'> 무역의날</span></a></div><div id='day_schedule_container_2026-11-30'><div id='day_space_2026-11-30' ></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/127584><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[08:00-08:20] '><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/584/127/120x165.crop.jpg?20260926123803'/><span style='clear:both; display:block;'>.<br><br></span></span></a></div><div class='drag'><a style='vertical-align:top; background-color:#ffffff;' href=https://drfa.co.kr/TIMETABLE/128403><span class='schedule_view schedule_bottom  ' style='background-color:#ffffff; ' title='[14:00-14:20] 
+&nbsp;
+&nbsp;
+&nbsp;
+&quot;이 가을, 영혼을 힐링할 시간!&quot;
+&nbsp;
+&nbsp;
+2007년 영국의 오디션 프로그램인 브리튼즈 갓 탤런트의 초대 우승자로
+&nbsp;
+당시 상금이 무려 18억원이었다고 합니다.
+&nbsp;
+폴 포츠가 무대에 올라 오페라를 ...'><img style='vertical-align:top;' src='https://drfa.co.kr/files/thumbnails/403/128/120x165.crop.jpg?20261102125810'/><span style='clear:both; display:block;'><br><font size=3><b>2:00 pm<br><br>어떤 성악가</font size></b><br>A Paul Potts Story<br><br><b><font color=#ECB908>잔여좌석</font color></b>/35석<br>주차장OPEN 1:20 pm<br><br><font size=1><BR></font size=1></span></span></a></div><div class ='memorial memday_bottomline'> 무역의날</div></div></div></td>
+<td bgcolor=transparent> <div class='planner_calendar_inner'></div></td>
+<td bgcolor=transparent> <div class='planner_calendar_inner'></div></td>
+<td bgcolor=transparent> <div class='planner_calendar_inner'></div></td>
+<td bgcolor=transparent> <div class='planner_calendar_inner'></div></td>
+<td bgcolor=transparent> <div class='planner_calendar_inner'></div></td>
+</tr>
+</tbody></table><div id='dummy' style='visibility:hidden; position:absolute; top:0px; left:-200px;'></div>
+</div>
+<div class="buttonRight" style="float:right;">
+<a href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispBoardWrite&amp;extra_vars1=20261105" class="buttonOfficial"><span>쓰기</span></a>
+</div>
+<script type="text/javascript">
+//<![CDATA[
+/* 일정 출력 */
+var arrayFromPHP = null; // PHP에서 만든 일정 어레이를 받아서(V560)
+var repeat_style = "Y";
+var ind_pOption = "M";
+var ind_mobile = "";
+var dispStart_stamp = "1793458860";
+var dispEnd_stamp = "1796050740";
+var dispStart_date = "2026,11,01,0,0,0";
+var dispEnd_date = "2026,11,30,23,59,59";
+var ind_Timetable = ""; // display time-table
+var lang_type = "ko";
+var adjust_title_color = "128";
+jQuery(function($){
+$(document).ready(function() {
+doDisplaySchedule(arrayFromPHP,repeat_style,ind_mobile);   // make schedule on the calendar table
+if ((ind_pOption == 'W1' || ind_pOption == 'W2') && ind_Timetable == 'Y' ) {
+fnMakeTableGrid(dispStart_date,dispEnd_date,ind_mobile,lang_type); // grid time table
+fnMakeWeeklySchedule(arrayFromPHP,dispStart_stamp,dispEnd_stamp); // make schedule in the time table
+fnAdjTimeTable(); // adjust time table header
+}
+});
+/* windows resize일때 일정폭 재계산 (별의미없음)*/
+$(window).resize(function() {
+doResizeScheduleWidth(arrayFromPHP);
+});
+/* blinker*/
+function blinker() {
+$('.blink_me').fadeOut(300);
+$('.blink_me').fadeIn(300);
+}
+setInterval(blinker, 1800);
+});
+//]]>
+</script>
+<img src="http://drfa.co.kr/images/poster/plannernavigation.jpg">
+ <div class="planner_navigation" style="float:none; height:30px; margin: 30px 30px 30px 30px;">
+            <form style="float:left; margin-right:30px;" name = "fm_select_year"><input type="hidden" name="error_return_url" value="/TIMETABLE" /><input type="hidden" name="act" value="" /><input type="hidden" name="mid" value="TIMETABLE" /><input type="hidden" name="vid" value="" />
+            <select name="selectyear" onchange="document.location.href='https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=' + this.options[this.selectedIndex].value +'&pMonth=11'">
+            <option value='2026'>2026</option>
+                            <option value='2036'>2036</option>
+                            <option value='2035'>2035</option>
+                            <option value='2034'>2034</option>
+                            <option value='2033'>2033</option>
+                            <option value='2032'>2032</option>
+                            <option value='2031'>2031</option>
+                            <option value='2030'>2030</option>
+                            <option value='2029'>2029</option>
+                            <option value='2028'>2028</option>
+                            <option value='2027'>2027</option>
+                            <option value='2026'>2026</option>
+                            <option value='2025'>2025</option>
+                            <option value='2024'>2024</option>
+                            <option value='2023'>2023</option>
+                            <option value='2022'>2022</option>
+                            <option value='2021'>2021</option>
+                        </select></form>
+            <a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=10"><span class="month_button" title="previous month"><</span></a>
+                                                <a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=1"><span class="month_button" title="1 월" >1</span></a>
+                                    <a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=2"><span class="month_button" title="2 월" >2</span></a>
+                                    <a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=3"><span class="month_button" title="3 월" >3</span></a>
+                                    <a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=4"><span class="month_button" title="4 월" >4</span></a>
+                                    <a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=5"><span class="month_button" title="5 월" >5</span></a>
+                                    <a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=6"><span class="month_button" title="6 월" >6</span></a>
+                                    <a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=7"><span class="month_button" title="7 월" >7</span></a>
+                                    <a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=8"><span class="month_button" title="8 월" >8</span></a>
+                                    <a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=9"><span class="month_button" title="9 월" >9</span></a>
+                                    <a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=10"><span class="month_button" title="10 월" >10</span></a>
+                                    <a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=11"><span class="month_button_on" title="11 월" >11</span></a>
+                                    <a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=12"><span class="month_button" title="12 월" >12</span></a>
+                                        <a style="float:left;" href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;pGanjioption=1&pYear=2026&pMonth=12"><span class="month_button" title="next month">></span></a>
+        </div>
+	
+    </div>
+<img src="/images/poster/reserve45.jpg">					<div class="clearfix"></div>
+									</div>
+			</article>
+					</div>
+		<aside id="sidebar" class="sidebar col col-sm-2 col-sm-pull-10">
+			<div class="panel panel-default">
+		<div class="panel-heading"><h3 class="panel-title"> 고품격 예술 CAFE/문화공간 조나단</h3></div>	<ul class="list-group">
+												<li class="list-group-item">
+					<a href="https://drfa.co.kr/DRistory"> 지금까지의 &lt;문화공간 조나단&gt; 이야기</a>
+				</li>
+															<li class="list-group-item active">
+					<a href="https://drfa.co.kr/TIMETABLE"> 이 달의 상영작</a>
+				</li>
+															<li class="list-group-item">
+					<a href="https://drfa.co.kr/free"> DRFA 문화 매거진</a>
+				</li>
+															<li class="list-group-item">
+					<a href="https://drfa.co.kr/GALLERY"> JONATHAN'S GALLERY</a>
+				</li>
+															<li class="list-group-item">
+					<a href="https://drfa.co.kr/teninsixMonth"> 문화공간 조나단 멤버십</a>
+				</li>
+						</ul>
+</div><div class="panel panel-default">
+	<div class="panel-heading"><h3 class="panel-title"><i class="fa fa-comments-o" aria-hidden="true"></i>  새로운 댓글</h3></div>
+	<div class="xe-widget-wrapper " style=""><div style="*zoom:1;padding:0px 0px 0px 0px !important;"><div class="list-group">
+						<a href="https://drfa.co.kr/TIMETABLE/127603#comment_129275" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="이 달의 상영작<br /><i class='fa fa-user' aria-hidden='true'></i> 유감독 ">
+				정광예(4/10%/D---ret0.8)			</a>
+							
+						<a href="https://drfa.co.kr/graphene/128433#comment_129272" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="ALMOST HUMAN<br /><i class='fa fa-user' aria-hidden='true'></i> 유감독 ">
+				힉스필들의 과대평가 
+
+ 
+
+조...			</a>
+							
+						<a href="https://drfa.co.kr/graphene/128433#comment_129258" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="ALMOST HUMAN<br /><i class='fa fa-user' aria-hidden='true'></i> 유감독 ">
+				힉스필드의 미래 
+
+ 
+
+ 
+
+ 
+
+
+...			</a>
+							
+						<a href="https://drfa.co.kr/TIMETABLE/128399#comment_129254" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="이 달의 상영작<br /><i class='fa fa-user' aria-hidden='true'></i> 안은주 ">
+				3명 예약 합니다 			</a>
+							
+						<a href="https://drfa.co.kr/graphene/128433#comment_129242" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="ALMOST HUMAN<br /><i class='fa fa-user' aria-hidden='true'></i> 유감독 ">
+				CUT.15-15도 드리프트 
+
+ 
+
+드...			</a>
+							
+						<a href="https://drfa.co.kr/graphene/128433#comment_129237" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="ALMOST HUMAN<br /><i class='fa fa-user' aria-hidden='true'></i> 유감독 ">
+				CUT.14 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+
+
+
+
+...			</a>
+							
+						<a href="https://drfa.co.kr/free/129229#comment_129230" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="DRFA 문화 매거진(멤버십전용)<br /><i class='fa fa-user' aria-hidden='true'></i> 유감독 ">
+				비밀글입니다.			</a>
+							
+						<a href="https://drfa.co.kr/graphene/128433#comment_129217" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="ALMOST HUMAN<br /><i class='fa fa-user' aria-hidden='true'></i> 유감독 ">
+				CUT.14 
+
+ 
+
+ 
+
+ 
+
+
+
+
+
+
+
+
+
+
+...			</a>
+							
+						<a href="https://drfa.co.kr/TIMETABLE/127549#comment_129182" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="이 달의 상영작<br /><i class='fa fa-user' aria-hidden='true'></i> 윤실장 ">
+				정광예(2B/D) 
+
+엡필라(2B/D) ...			</a>
+							
+						<a href="https://drfa.co.kr/TIMETABLE/128627#comment_129161" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="이 달의 상영작<br /><i class='fa fa-user' aria-hidden='true'></i> 유감독 ">
+				&quot;클리셰한 신파지만, 
+
+...			</a>
+							
+						<a href="https://drfa.co.kr/graphene/128433#comment_129157" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="ALMOST HUMAN<br /><i class='fa fa-user' aria-hidden='true'></i> 유감독 ">
+				CUT.20 
+
+ 
+
+ 
+
+ 
+
+카메라가 ...			</a>
+							
+						<a href="https://drfa.co.kr/TIMETABLE/127585#comment_129148" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="이 달의 상영작<br /><i class='fa fa-user' aria-hidden='true'></i> 윤실장 ">
+				김수경(6B/D) 
+
+두분(2B/ND)			</a>
+							
+						<a href="https://drfa.co.kr/TIMETABLE/128627#comment_129142" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="이 달의 상영작<br /><i class='fa fa-user' aria-hidden='true'></i> 카르페디엠T282(15%멤버) ">
+				황해수2명 예약합니다			</a>
+							
+						<a href="https://drfa.co.kr/TIMETABLE/128399#comment_129139" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="이 달의 상영작<br /><i class='fa fa-user' aria-hidden='true'></i> 유감독 ">
+				이희균(6RQ/3G+3H/D--&gt;리퀘...			</a>
+							
+						<a href="https://drfa.co.kr/TIMETABLE/127606#comment_129132" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="이 달의 상영작<br /><i class='fa fa-user' aria-hidden='true'></i> 윤실장 ">
+				김남리(2B/D) 
+
+단아(2G+2H)			</a>
+							
+						<a href="https://drfa.co.kr/TIMETABLE/128400#comment_129115" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="이 달의 상영작<br /><i class='fa fa-user' aria-hidden='true'></i> 유감독 ">
+				PRQ(3)			</a>
+							
+						<a href="https://drfa.co.kr/TIMETABLE/127588#comment_129069" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="이 달의 상영작<br /><i class='fa fa-user' aria-hidden='true'></i> 유감독 ">
+				학삐리(3B/D)			</a>
+							
+						<a href="https://drfa.co.kr/TIMETABLE/127588#comment_129065" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="이 달의 상영작<br /><i class='fa fa-user' aria-hidden='true'></i> 학삐리T720 ">
+				3명 예약합니다.			</a>
+							
+						<a href="https://drfa.co.kr/TIMETABLE/125247#comment_129059" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="이 달의 상영작<br /><i class='fa fa-user' aria-hidden='true'></i> Shooby ">
+				이영미 2명 예약합니다			</a>
+							
+						<a href="https://drfa.co.kr/TIMETABLE/127587#comment_129045" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="이 달의 상영작<br /><i class='fa fa-user' aria-hidden='true'></i> 별다섯 ">
+				2명 예약합니다.			</a>
+							
+						<a href="https://drfa.co.kr/graphene/128433#comment_129042" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="ALMOST HUMAN<br /><i class='fa fa-user' aria-hidden='true'></i> 유감독 ">
+				CUT.13 
+
+ 
+
+ 
+
+
+
+
+
+
+
+
+
+
+다음...			</a>
+							
+						<a href="https://drfa.co.kr/graphene/128433#comment_129027" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="ALMOST HUMAN<br /><i class='fa fa-user' aria-hidden='true'></i> 유감독 ">
+				CUT.12 
+
+ 
+
+ 
+
+ 
+
+ 
+
+
+
+
+
+
+
+
+...			</a>
+							
+						<a href="https://drfa.co.kr/graphene/128433#comment_129019" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="ALMOST HUMAN<br /><i class='fa fa-user' aria-hidden='true'></i> 유감독 ">
+				CUT.11 
+
+ 
+
+ 
+
+안녕하세요, ...			</a>
+							
+						<a href="https://drfa.co.kr/graphene/128433#comment_129016" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="ALMOST HUMAN<br /><i class='fa fa-user' aria-hidden='true'></i> 유감독 ">
+				CUT.11 
+
+조감독, 1번 그림의 ...			</a>
+							
+						<a href="https://drfa.co.kr/graphene/128433#comment_129010" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="ALMOST HUMAN<br /><i class='fa fa-user' aria-hidden='true'></i> 유감독 ">
+				HOUSE 
+
+ 
+
+ 
+
+자, 그럼 먼저 ...			</a>
+							
+						<a href="https://drfa.co.kr/graphene/128433#comment_129007" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="ALMOST HUMAN<br /><i class='fa fa-user' aria-hidden='true'></i> 유감독 ">
+				CUT.10 
+
+ 
+
+ 
+
+안녕하세요, ...			</a>
+							
+						<a href="https://drfa.co.kr/TIMETABLE/128335#comment_129002" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="이 달의 상영작<br /><i class='fa fa-user' aria-hidden='true'></i> 유감독 ">
+				김콜라(10B) 
+
+김지혜(3G/D)			</a>
+							
+						<a href="https://drfa.co.kr/graphene/128433#comment_128995" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="ALMOST HUMAN<br /><i class='fa fa-user' aria-hidden='true'></i> 유감독 ">
+				CUT.9 
+
+ 
+
+ 
+
+
+
+
+
+
+
+
+
+
+생성...			</a>
+							
+						<a href="https://drfa.co.kr/graphene/128433#comment_128991" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="ALMOST HUMAN<br /><i class='fa fa-user' aria-hidden='true'></i> 유감독 ">
+				안녕하세요, 조나단 감독님. 
+...			</a>
+							
+						<a href="https://drfa.co.kr/graphene/128433#comment_128985" class="list-group-item" data-html="true" data-container="body" data-toggle="tooltip" data-trigger="hover" data-placement="right" title="ALMOST HUMAN<br /><i class='fa fa-user' aria-hidden='true'></i> 유감독 ">
+				CUT.8 
+
+ 
+
+ 
+
+
+
+
+
+
+
+
+
+
+조감...			</a>
+							
+</div>
+</div></div>
+</div>			<div class="clearfix"></div>
+		</aside>			</div>
+</div>
+<div id="modal-search" class="modal fade">
+	<div class="modal-dialog modal-sm">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				<h4 class="modal-title">검색</h4>
+			</div>
+			<div class="modal-body">
+				<form action="https://drfa.co.kr/" method="get"><input type="hidden" name="error_return_url" value="/TIMETABLE" />
+					<input type="hidden" name="vid" value="" />
+					<input type="hidden" name="mid" value="TIMETABLE" />
+					<input type="hidden" name="act" value="IS" />
+					<div class="form-group">
+						<input type="text" name="is_keyword" value="" placeholder="" class="form-control" />
+					</div>
+					<div class="form-group">
+						<button type="submit" class="btn btn-warning btn-block"><i class="fa fa-search" aria-hidden="true"></i> 검색</button>
+					</div>
+				</form>
+			</div>
+		</div>	
+	</div>
+</div><div id="modal-login" class="modal fade">
+		<div class="modal-dialog modal-sm">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				<h4 class="modal-title">로그인</h4>
+			</div>
+			<div class="modal-body">
+								<form action="./" method="post" ><input type="hidden" name="error_return_url" value="/TIMETABLE" /><input type="hidden" name="mid" value="TIMETABLE" /><input type="hidden" name="vid" value="" /><input type="hidden" name="ruleset" value="@login" />
+															<input type="hidden" name="act" value="procMemberLogin" />
+					<input type="hidden" name="success_return_url" value="/TIMETABLE" />
+					<div class="form-group"><input type="email" name="user_id" id="uid" value=""  placeholder="이메일" class="form-control" required /></div>
+					<div class="form-group"><input type="password" name="password" id="upw" value="" placeholder="비밀번호" class="form-control" required /></div>
+					<div class="form-group">
+						<input type="checkbox" name="keep_signed" value="Y" onclick="if(this.checked) return confirm('브라우저를 닫더라도 로그인이 계속 유지될 수 있습니다.\n\n로그인 유지 기능을 사용할 경우 다음 접속부터는 로그인할 필요가 없습니다.\n\n단, 게임방, 학교 등 공공장소에서 이용 시 개인정보가 유출될 수 있으니 꼭 로그아웃을 해주세요.');" /> 
+						<label for="keep_signed" onclick="jQuery('#modal-login input[name=\'keep_signed\']').click();" style="font-weight: normal">
+							로그인 유지						</label>
+					</div>
+					<button type="submit" class="btn btn-warning btn-block"><i class="fa fa-sign-in" aria-hidden="true"></i> 로그인</button>
+				</form>			</div>
+			<div class="modal-footer">
+				<div class="btn-group btn-group-justified">
+					<a href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispMemberSignUpForm" class="btn btn-default btn-sm"><i class="fa fa-user-plus" aria-hidden="true"></i> 회원가입</a>					<a href="https://drfa.co.kr/index.php?mid=TIMETABLE&amp;act=dispMemberFindAccount" class="btn btn-default btn-sm"><i class="fa fa-question-circle" aria-hidden="true"></i> ID/PW 찾기</a>
+					
+				</div>
+			</div>		</div>
+	</div></div><footer id="footer" class="footer">
+	<div class="container">
+						<ul class="footer-list list-inline">
+								</ul>
+	</div>
+		<div id="hidden-xs" class="hidden-xs"></div>
+</footer>
+<!-- ETC -->
+<div class="wfsr"></div>
+<!--[if lt IE 9]><script src="/layouts/simplestrap/js/respond.min.js?20220527114122"></script><![endif]--><script src="/files/cache/js_filter_compiled/d046d1841b9c79c545b82d3be892699d.ko.compiled.js?20220530013230"></script><script src="/files/cache/js_filter_compiled/1bdc15d63816408b99f674eb6a6ffcea.ko.compiled.js?20220530013230"></script><script src="/files/cache/js_filter_compiled/9b007ee9f2af763bb3d35e4fb16498e9.ko.compiled.js?20220530013230"></script><script src="/addons/autolink/autolink.js?20220327112438"></script><script src="/common/js/plugins/ui/jquery-ui.min.js?20220327112719"></script><script src="/common/js/plugins/ui/jquery.ui.datepicker-ko.js?20220327112720"></script><script src="/addons/resize_image/js/resize_image.min.js?20220327112447"></script><script src="/layouts/simplestrap/js/bootstrap.min.js?20220527114122"></script><!--[if lt IE 10]><script src="/layouts/simplestrap/js/jquery.placeholder.min.js?20220527114122"></script><![endif]--><script src="/files/cache/ruleset/75667187a12cdc3ad838abeeac641a00.ko.js?20220622112236"></script></body>
+</html>

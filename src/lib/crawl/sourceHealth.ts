@@ -26,9 +26,11 @@ export interface SourceHealthInput {
   theaterId: string | null
   /** 최근 순. 좌석 갱신 실행은 빼고 넘긴다 */
   runs: SourceRunSnapshot[]
+  /** 오늘 이후 회차 중 검수 대기(needs_review)로 남은 수 */
+  pendingReviewUpcoming?: number
 }
 
-export type StaleKind = 'zero-streak' | 'manual-stale'
+export type StaleKind = 'zero-streak' | 'manual-stale' | 'pending-review'
 
 export interface StaleSourceFinding {
   sourceId: string
@@ -36,6 +38,8 @@ export interface StaleSourceFinding {
   kind: StaleKind
   /** 마지막으로 회차를 가져온 날로부터 지난 날 수 — 기록이 없으면 null */
   daysSinceLastHit: number | null
+  /** pending-review일 때 검수 대기 회차 수 */
+  pendingCount?: number
 }
 
 /** 자동 수집처: 최근 이만큼 연달아 0건(실패 포함)이면 알린다 — 하루 한 번 돌므로 3일 */
@@ -62,6 +66,13 @@ export function findStaleSources(
     const lastHit = s.runs.find((r) => r.status === 'completed' && r.createdCount > 0)
     const daysSinceLastHit = lastHit ? Math.floor((now.getTime() - new Date(lastHit.startedAt).getTime()) / DAY_MS) : null
 
+    // 2026-11 tinyticket 5곳·영화의전당: 수집·매칭은 매일 됐는데 신뢰도가 자동 승인 문턱 아래라
+    // 회차가 전부 검수 대기에 쌓였다. 새 회차가 계속 들어와 0건 연속에도 안 걸려 반년 가까이 몰랐다.
+    if ((s.pendingReviewUpcoming ?? 0) > 0) {
+      findings.push({ sourceId: s.sourceId, sourceName: s.sourceName, kind: 'pending-review', daysSinceLastHit, pendingCount: s.pendingReviewUpcoming })
+      continue
+    }
+
     if (isManualParser(s.parser)) {
       if (daysSinceLastHit === null || daysSinceLastHit >= MANUAL_STALE_DAYS) {
         findings.push({ sourceId: s.sourceId, sourceName: s.sourceName, kind: 'manual-stale', daysSinceLastHit })
@@ -79,6 +90,9 @@ export function findStaleSources(
 
 /** 디스코드 한 줄 */
 export function formatStaleFinding(f: StaleSourceFinding): string {
+  if (f.kind === 'pending-review') {
+    return `• **${f.sourceName}** — 수집한 회차 ${f.pendingCount}건이 검수 대기라 극장 페이지에 안 보여요 · 검수에서 승인하거나 수집처 신뢰도를 확인해 주세요`
+  }
   const since = f.daysSinceLastHit === null ? '최근 2주 수집 기록 없음' : `마지막 수집 ${f.daysSinceLastHit}일 전`
   return f.kind === 'manual-stale'
     ? `• **${f.sourceName}** — 수동 업로드 끊김(${since}) · 디스코드 /schedule로 시간표를 올리거나 자동 수집처를 찾아 주세요`

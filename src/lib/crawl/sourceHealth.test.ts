@@ -32,6 +32,14 @@ describe('findStaleSources', () => {
     expect(findStaleSources([fresh], new Map(), now)).toEqual([])
   })
 
+  it('검수 대기 회차만 쌓여 극장 페이지가 비면 알린다 — tinyticket 0.85', () => {
+    const stuck = src({ sourceName: '대전아트시네마', parser: 'tinyticketEventManager', runs: [run(0, 3), run(1, 5), run(2, 2)], pendingReviewUpcoming: 35 })
+    const [f] = findStaleSources([stuck], new Map(), now)
+    expect(f).toMatchObject({ kind: 'pending-review', pendingCount: 35 })
+    expect(formatStaleFinding(f)).toContain('35건이 검수 대기')
+    expect(findStaleSources([stuck], new Map([['t', 4]]), now)).toEqual([])
+  })
+
   it('극장 id가 없으면 판정하지 않는다', () => {
     expect(findStaleSources([src({ theaterId: null, runs: [run(0, 0), run(1, 0), run(2, 0)] })], new Map(), now)).toEqual([])
   })
