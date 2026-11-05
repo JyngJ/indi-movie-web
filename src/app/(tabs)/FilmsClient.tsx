@@ -33,6 +33,7 @@ import { useCurrentLocationRegion } from '@/hooks/useCurrentLocationRegion'
 import { getFilmsTabCurationSections, SECTION_GROUP } from '@/lib/curation/filmsTabLists'
 import { mergePopularRanking } from '@/lib/curation/popularRanking'
 import { buildSectionAnalytics, computeRunStartIndexes } from '@/lib/curation/sectionRuns'
+import { orderSections } from '@/lib/curation/sectionOrder'
 import { useSectionDwellTracking } from '@/hooks/useSectionDwellTracking'
 import { buildAnniversaryAges } from '@/lib/curation/getAnniversaryFilms'
 import { formatAlmostSoldOutCaption, getAlmostSoldOutFilms } from '@/lib/curation/getAlmostSoldOutFilms'
@@ -42,7 +43,7 @@ import { getTodayAnniversaries } from '@/lib/curation/directorAnniversaries'
 import { trackEvent } from '@/lib/analytics/client'
 import { buildYearsOnScreenCaptions } from '@/lib/curation/yearsOnScreenCaption'
 import { formatLocalDate, formatLocalTimeHHMM, toKstIsoDate } from '@/lib/date'
-import { useActiveMovieIdsByRegion, useActiveMovieTheaterPairs, useAlmostSoldOutCandidates, useClickRankings, useCurationLists, useFestivals, useFilmRankings, useInstagramRecommendations, useLateNightCandidates, useMovies, useTheaters } from '@/lib/supabase/queries'
+import { useActiveMovieIdsByRegion, useActiveMovieTheaterPairs, useAlmostSoldOutCandidates, useClickRankings, useCurationSectionScores, useCurationLists, useFestivals, useFilmRankings, useInstagramRecommendations, useLateNightCandidates, useMovies, useTheaters } from '@/lib/supabase/queries'
 import { getRegionFromCity } from '@/lib/regions'
 import { getStoredRegion, setStoredRegion, subscribeStoredRegion } from '@/lib/regionStorage'
 import { getFestivalDateLabel, getFestivalStatus, type FestivalStatus } from '@/lib/festival/status'
@@ -328,6 +329,8 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
   const { data: movieTheaterPairs = [], isLoading: movieTheaterPairsLoading } = useActiveMovieTheaterPairs(selectedRegion)
   const { data: filmRankingRow } = useFilmRankings()
   const { data: clickRankings, isLoading: clickRankingsLoading } = useClickRankings()
+  // 점수가 오기 전에 그리면 순서가 한 번 뒤바뀐다 — 섹션 로딩에 포함한다(실패하면 null로 원래 순서)
+  const { data: sectionScores = null, isLoading: sectionScoresLoading } = useCurationSectionScores()
   const { data: festivals = [], isLoading: festivalsLoading } = useFestivals()
   const { data: instagramRecs = [] } = useInstagramRecommendations()
   const { lastWeekFilms, newIndieFilms, returningFilms, recentlyViewed, soloTheaterFilms, todayShowFilms, isLoading: curationLoading } =
@@ -337,7 +340,7 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
   const { data: lateNightCandidates = [], isLoading: lateNightLoading } = useLateNightCandidates()
 
   // 목록을 구성할 기초 정보만 함께 기다린다. 랭킹·회차는 각 섹션 자리에서 기다린다.
-  const sectionDataLoading = !mounted || moviesLoading || theatersLoading || curationListsLoading ||
+  const sectionDataLoading = !mounted || moviesLoading || theatersLoading || curationListsLoading || sectionScoresLoading ||
     activeMoviesLoading || movieTheaterPairsLoading || festivalsLoading
 
   const sections = getFilmsTabCurationSections(movies, new Set(activeMovieIds), curationLists)
@@ -984,10 +987,14 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
                세므로 날짜 간 절대 비교용이 아니다 — 시점 간 비교는 list_id로 한다. */
             const position = startIndex + active.indexOf(s)
             /* dwell 이벤트와 click 이벤트에 같은 객체를 실어 둘의 속성이 어긋나지 않게 한다 */
-            const analytics = buildSectionAnalytics({
-              listId: s.listId, sectionTitle: s.nameKo, run: keyPrefix,
-              position, movieCount: s.movies.length, compact,
-            })
+            const analytics = {
+              ...buildSectionAnalytics({
+                listId: s.listId, sectionTitle: s.nameKo, run: keyPrefix,
+                position, movieCount: s.movies.length, compact,
+              }),
+              // 순서가 점수로 정해졌는지 — 동적 정렬 전후 비교용 (2026-11-05)
+              section_order: sectionScores && sectionScores.size > 0 ? 'score' : 'static',
+            }
             return (
               <CurationSectionRow key={s.listId} id={s.listId}
                 title={s.nameKo}   /* 2.0: 부제 삭제 */
@@ -1074,24 +1081,34 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
            곧 "이것들끼리는 한 줄에 묶지 말라"는 선언이다. 시의성(run1)과 지식형(run1b)을
            한 배열에 넣으면 PC에서 "매진 임박" 옆에 "비 오는 날 보는 영화"가 붙는다. */
         const runTop: AnySection[] = [...rtPopularRank]                    // 16.9% — 최상단 유지
-        const run1: AnySection[] = [                                       // 시의성
+        const run1Static: AnySection[] = [                                 // 시의성
           ...rtLastWeek,                                                   // 13.8%
           ...rtSolo,                                                       // 9.9% — run2에서 승격
           ...rtLeaveNow,                                                   // 9.0%
         ]
-        const run1b: AnySection[] = [                                      // 지식형 — 특별전 앞
+        const run1bStatic: AnySection[] = [                                // 지식형 — 특별전 앞
           ...critics,                                                      // 12.1 / 7.1% — run2 꼬리에서 승격
           ...themes,                                                       // healing 17.9%가 여기 들어 있다
           ...rtShortRuntime,                                               // 9.0%
           ...rtLongRuntime,
         ]
-        const run2: AnySection[] = [                                       // 나머지 — 특별전 뒤
+        const run2Static: AnySection[] = [                                 // 나머지 — 특별전 뒤
           ...decades,                                                      // 8.1 / 7.2% — 승격
           ...awards,                                                       // cannes 7.8 · masters_debut 7.5%
           ...rtAlmostSoldOut,                                              // 6.0% — run1 최상단에서 강등
           ...rtNew, ...rtWeekend,                                          // 5.5 / 5.1%
           ...seasonal, ...movements,
         ]
+
+        /* 2026-11-05 동적 정렬 — 위의 손 배치는 점수가 없을 때의 기본 순서로 남긴다.
+           점수(curation_section_score)는 위치 영향을 걷어낸 30일 클릭 비율이고, 오늘 상영작이
+           적은 섹션은 깎는다(lib/curation/sectionOrder). 랭킹(runTop)은 고정.
+           시의성(run1)은 그 안에서만 섞는다. 지식형(run1b)과 나머지(run2)는 성격이 같아
+           한 줄로 세운 뒤 run1b 칸 수만큼 위로 올린다 — 깊이 묻힌 섹션도 올라올 수 있다. */
+        const run1 = orderSections(run1Static, sectionScores)
+        const knowledgePool = orderSections([...run1bStatic, ...run2Static], sectionScores)
+        const run1b = knowledgePool.slice(0, run1bStatic.length)
+        const run2 = knowledgePool.slice(run1bStatic.length)
 
         /* startIndex는 "그날 실제로 그려진 섹션 수"로 이어붙인다. 예전엔 run1.length(게이트
            통과 여부를 안 본 배열 길이)를 썼는데, 숨은 섹션까지 세어 run2 순번이 부풀었다.
@@ -1130,11 +1147,13 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
               onMovieClick={handleMovieClick}
             />
 
-            {/* 1. 개인화 — 최근 본 영화 기반, 이력 없으면 미노출 */}
+            {/* 1. 개인화 — 최근 본 영화·관심 영화 기반. 함께 본 관객 기록(EASE) 우선, 없으면 규칙 방식.
+                이력 없으면 미노출 */}
             <PersonalizedSection
               movies={movies}
               activeMovieIds={activeMovieIds}
               recentlyViewed={recentlyViewed}
+              popular={popularRanked}
               isDesktop={isDesktop}
               onMovieClick={handleMovieClick}
             />

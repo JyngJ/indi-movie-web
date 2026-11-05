@@ -51,7 +51,8 @@ async function bundle(pageFixture: boolean) {
           export const useActiveMovieIdsByRegion=()=>q(['1','2','3'],'active');export const useActiveMovieTheaterPairs=()=>q([],'pairs');
           export const useClickRankings=()=>q(window.pending.includes('ranking')?undefined:window.ranking,'ranking');
           export const useFilmRankings=()=>q(null,'unused');export const useFestivals=()=>q([],'festivals');export const useInstagramRecommendations=()=>q([],'unused');
-          export const useAlmostSoldOutCandidates=()=>q([],'seats');export const useLateNightCandidates=()=>q([],'weekend');`,
+          export const useAlmostSoldOutCandidates=()=>q([],'seats');export const useLateNightCandidates=()=>q([],'weekend');
+          export const useCurationSectionScores=()=>q(null,'scores');export const useRecommendationNeighbors=()=>q(undefined,'unused');`,
         curation: 'export const useCurationData=()=>({isLoading:window.pending.includes("curation"),lastWeekFilms:[],newIndieFilms:[],returningFilms:[],recentlyViewed:[],soloTheaterFilms:[],todayShowFilms:[]});',
       }[args.path]! }))
     } }],
