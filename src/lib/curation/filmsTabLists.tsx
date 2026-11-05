@@ -1,6 +1,6 @@
 import type { CurationListRow } from '@/lib/curation/types'
 import type { Movie } from '@/types/api'
-import { Ghost, Heart, Video, Disc, Leaf, Crown, Award, Trophy, Star, Film, VenetianMask, Building2, Clapperboard, TreePine, Clock, CloudRain, Coffee, Popcorn, MoonStar, Palette, EyeOff, Umbrella, Sunrise, Contrast, BookOpen } from 'lucide-react'
+import { Ghost, Heart, Video, Disc, Leaf, Crown, Award, Trophy, Star, Film, VenetianMask, Building2, Clapperboard, TreePine, Clock, CloudRain, Coffee, Popcorn, MoonStar, Palette, EyeOff, Umbrella, Sunrise, Contrast, BookOpen, Sprout, Home, Users, Luggage, BedDouble, Waves, Hourglass, Briefcase, Soup, Music, Projector, MapPin } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 // ─────────────────────────────────────────────
@@ -27,6 +27,11 @@ function inYearRange(movie: Movie, range: [number, number]) {
   return movie.year >= range[0] && movie.year <= range[1]
 }
 
+function hasAnyNation(movie: Movie, nations: string[]) {
+  const own = (movie.nation ?? '').split(',').map((n) => n.trim())
+  return nations.some((n) => own.includes(n))
+}
+
 /** 영화가 해당 큐레이션 리스트의 멤버인지 판정 (dynamic: query 기반, static: member_ids 기반) */
 export function isCurationListMember(movie: Movie, list: CurationListRow): boolean {
   if (list.type === 'static') {
@@ -37,6 +42,7 @@ export function isCurationListMember(movie: Movie, list: CurationListRow): boole
   if (!query) return false
   if (query.genre && hasAnyGenre(movie, query.genre)) return true
   if (query.yearRange && inYearRange(movie, query.yearRange)) return true
+  if (query.nation && hasAnyNation(movie, query.nation)) return true
   return false
 }
 
@@ -73,6 +79,19 @@ const SECTION_CONFIG: Record<string, SectionConfig> = {
   theme_late_night_alone:   { emoji: <Sunrise size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, description: '잠 안 오는 새벽, 조용히 곁에 두는 영화들' },
   theme_black_white:        { emoji: <Contrast size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, description: '색을 덜어내서 더 선명해지는 장면들' },
   theme_based_on_novel:     { emoji: <BookOpen size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, description: '책으로 읽고, 극장에서 다시 만나는 이야기' },
+  // 발견 테마 — 방문마다 일부만 돌려 보여 준다(themeRotation, 2026-11-05)
+  discover_fresh_start:     { emoji: <Sprout size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, description: '무너진 자리에서 다시 걸음을 떼는 사람들' },
+  discover_family:          { emoji: <Home size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, description: '가장 가까워서 가장 어려운 사람들' },
+  discover_friend_lover:    { emoji: <Users size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, description: '친구라고 하기엔 가깝고, 연인이라 하기엔 애매한' },
+  discover_leaving_home:    { emoji: <Luggage size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, description: '떠나는 사람, 돌아오는 사람, 남는 사람' },
+  discover_hotel:           { emoji: <BedDouble size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, description: '잠시 머무는 곳에서 벌어지는 일들' },
+  discover_by_the_sea:      { emoji: <Waves size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, description: '파도 소리가 들리는 이야기' },
+  discover_one_day:         { emoji: <Hourglass size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, description: '하루, 혹은 하룻밤 사이에 모든 게 바뀐다' },
+  discover_working_people:  { emoji: <Briefcase size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, description: '일터에서 하루를 버티는 사람들의 얼굴' },
+  discover_food:            { emoji: <Soup size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, description: '한 끼 밥상에서 시작되는 이야기' },
+  discover_music:           { emoji: <Music size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, description: '노래와 연주가 곧 이야기가 되는 영화' },
+  discover_cinema:          { emoji: <Projector size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, description: '영화를 만들고, 상영하고, 사랑하는 사람들' },
+  discover_taiwan:          { emoji: <MapPin size={24} strokeWidth={1.75} color="var(--color-primary-base)" />, description: '대만 영화로 한 걸음 들어가 보기' },
 }
 
 export interface CurationSectionData {
@@ -117,7 +136,23 @@ export const SECTION_GROUP: Record<string, number> = {
   theme_late_night_alone:   6,
   theme_black_white:        6,
   theme_based_on_novel:     6,
+  // 발견 테마 — 7번 그룹은 방문마다 일부만 고른다(themeRotation)
+  discover_fresh_start:     7,
+  discover_family:          7,
+  discover_friend_lover:    7,
+  discover_leaving_home:    7,
+  discover_hotel:           7,
+  discover_by_the_sea:      7,
+  discover_one_day:         7,
+  discover_working_people:  7,
+  discover_food:            7,
+  discover_music:           7,
+  discover_cinema:          7,
+  discover_taiwan:          7,
 }
+
+/** 방문마다 일부만 보여 주는 발견 테마 그룹 */
+export const ROTATING_SECTION_GROUP = 7
 
 /**
  * 렌더에서 뺀 리스트 — 2026-08-26, 30일 CTR 근거.

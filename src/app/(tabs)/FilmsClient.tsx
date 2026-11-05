@@ -30,7 +30,9 @@ import { useIsDesktopLayout } from '@/hooks/useIsDesktopLayout'
 import { useCurationData } from '@/hooks/useCurationData'
 import { useLocationPermission } from '@/hooks/useLocationPermission'
 import { useCurrentLocationRegion } from '@/hooks/useCurrentLocationRegion'
-import { getFilmsTabCurationSections, SECTION_GROUP } from '@/lib/curation/filmsTabLists'
+import { getFilmsTabCurationSections, ROTATING_SECTION_GROUP, SECTION_GROUP } from '@/lib/curation/filmsTabLists'
+import { pickRotatingThemes } from '@/lib/curation/themeRotation'
+import { useThemeRotation } from '@/hooks/useThemeRotation'
 import { mergePopularRanking } from '@/lib/curation/popularRanking'
 import { buildSectionAnalytics, computeRunStartIndexes } from '@/lib/curation/sectionRuns'
 import { orderSections } from '@/lib/curation/sectionOrder'
@@ -507,6 +509,20 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
   ].filter((s) => s.movies.length > 0)
 
   const visibleSections = sections.filter((s) => s.movies.length > 0)
+
+  /* 발견 테마 — 후보 중 이번 방문에 몇 개만 고른다(lib/curation/themeRotation).
+     상영작 3편 미만인 테마는 후보에서 뺀다. seed는 mount 뒤에 정해지므로 그 전엔 비운다. */
+  const themeRotation = useThemeRotation()
+  const discoveryThemes = themeRotation.seed && themeRotation.history
+    ? pickRotatingThemes(
+        visibleSections.filter((s) => SECTION_GROUP[s.listId] === ROTATING_SECTION_GROUP && s.movies.length >= 3),
+        themeRotation.history, themeRotation.seed, themeRotation.startedAt)
+    : []
+  const { markShown } = themeRotation
+  const discoveryKey = discoveryThemes.map((s) => s.listId).join(',')
+  useEffect(() => {
+    if (discoveryKey) markShown(discoveryKey.split(','))
+  }, [discoveryKey, markShown])
 
   // 특별전: 같은 극장에서 동일 감독 영화 3편↑, 최대 2개
   const activeMovieIdSet = new Set(activeMovieIds)
@@ -1089,6 +1105,7 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
         const run1bStatic: AnySection[] = [                                // 지식형 — 특별전 앞
           ...critics,                                                      // 12.1 / 7.1% — run2 꼬리에서 승격
           ...themes,                                                       // healing 17.9%가 여기 들어 있다
+          ...discoveryThemes,                                              // 발견 테마 — 방문마다 4개 (2026-11-05)
           ...rtShortRuntime,                                               // 9.0%
           ...rtLongRuntime,
         ]
