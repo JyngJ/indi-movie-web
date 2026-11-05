@@ -2,25 +2,14 @@
  * 추천 학습용 데이터 어댑터 — PostHog 행동 기록과 Supabase 영화 정보·상영 일정을 읽어
  * 정규화된 값(Interaction·MovieFeatures)으로 돌려준다. 학습·평가 로직은 이 파일을 모른다.
  */
+import { hogql, POSTHOG_EXCLUDE_INTERNAL, POSTHOG_PROD_HOST } from '@/lib/analytics/posthogQuery'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { INTERACTION_WEIGHT, type InteractionKind, type MovieFeatures } from './types'
 
-const PROD_HOST = 'www.xn--hq1bv8o5phw2d7wt.com'
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 /** 사람·영화·신호·날짜별 횟수. 날짜가 있어야 시간으로 나눠 평가할 수 있다. */
 export interface DailySignal { user: string; movieId: string; kind: InteractionKind; day: string; count: number }
-
-async function hogql(query: string): Promise<unknown[][]> {
-  const key = process.env.POSTHOG_PERSONAL_API_KEY, project = process.env.POSTHOG_PROJECT_ID
-  if (!key || !project) throw new Error('POSTHOG_PERSONAL_API_KEY / POSTHOG_PROJECT_ID missing')
-  const res = await fetch(`https://us.posthog.com/api/projects/${project}/query/`, {
-    method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query: { kind: 'HogQLQuery', query } }), signal: AbortSignal.timeout(120000),
-  })
-  if (!res.ok) throw new Error(`PostHog query failed: ${res.status} ${(await res.text()).slice(0, 300)}`)
-  return ((await res.json()) as { results: unknown[][] }).results
-}
 
 /**
  * 운영 도메인·내부 사용자 제외. 관심 등록은 영화만.
@@ -40,9 +29,9 @@ export async function fetchDailySignals(days: number): Promise<DailySignal[]> {
         from events
         where event in ('movie detail viewed', 'showtime selected', 'booking clicked', 'favorite added')
           and (event != 'favorite added' or properties.fav_type = 'movie')
-          and properties.$host = '${PROD_HOST}'
+          and properties.$host = '${POSTHOG_PROD_HOST}'
           and timestamp >= now() - interval ${start} day and timestamp < now() - interval ${end} day
-          and (person.properties.$internal_or_test_user is null or person.properties.$internal_or_test_user != true)
+          and ${POSTHOG_EXCLUDE_INTERNAL}
       )
       group by 1, 2, 3, 4 limit ${limit}`)
     if (rows.length >= limit) throw new Error('PostHog result hit the row limit; shorten the window')

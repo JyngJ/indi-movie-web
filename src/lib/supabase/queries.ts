@@ -227,6 +227,36 @@ export function useClickRankings() {
   })
 }
 
+/* ── 상영작 탭 섹션 점수 (curation_section_score) — 섹션 순서용 ─────────── */
+// 테이블이 없거나 읽기에 실패하면 null — 화면은 원래 순서로 그린다.
+export function useCurationSectionScores() {
+  return useQuery<Map<string, number> | null>({
+    queryKey: ['curation-section-scores'],
+    queryFn: async () => {
+      const { data, error } = await supabase().from('curation_section_score').select('list_id, score')
+      if (error) return null
+      return new Map((data ?? []).map((r) => [r.list_id as string, Number(r.score)]))
+    },
+    staleTime: 60 * 60 * 1000,
+  })
+}
+
+/* ── 추천 이웃 (상영작 탭 "취향이 비슷한 관객이 본 영화") ─────────── */
+export type RecommendationNeighbors = Record<string, Array<{ movieId: string; score: number }>>
+export function useRecommendationNeighbors(movieIds: string[]) {
+  const ids = [...new Set(movieIds)].sort()
+  return useQuery<RecommendationNeighbors>({
+    queryKey: ['recommendation-neighbors', ids.join(',')],
+    queryFn: async () => {
+      const res = await fetch(`/api/public/recommendation-neighbors?ids=${ids.join(',')}`)
+      if (!res.ok) throw new Error(`recommendation-neighbors fetch 실패: ${res.status}`)
+      return res.json()
+    },
+    enabled: ids.length > 0,
+    staleTime: 60 * 60 * 1000,
+  })
+}
+
 /* ── 진행중/예정 영화제 (상영작 탭 "주목할 영화제" 배너) ─────────── */
 // 지역 필터를 안 탐 — festivals는 전국 대상. end_date >= today로 종료된 건 제외,
 // start_date 임박순 정렬(진행중이 upcoming보다 먼저 오도록 start_date가 이미 과거인
