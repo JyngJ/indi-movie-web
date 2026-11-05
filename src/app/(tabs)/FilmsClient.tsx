@@ -1133,6 +1133,19 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
         const [startTop, startRun1, startRun1b, startRun2] =
           computeRunStartIndexes([runTop, run1, run1b, run2])
 
+        /* 1. 개인화 — 최근 본 영화·관심 영화 기반. 함께 본 관객 기록(EASE) 우선, 없으면 규칙 방식.
+           이력 없으면 미노출 */
+        const personalizedSection = (
+          <PersonalizedSection
+            movies={movies}
+            activeMovieIds={activeMovieIds}
+            recentlyViewed={recentlyViewed}
+            popular={popularRanked}
+            isDesktop={isDesktop}
+            onMovieClick={handleMovieClick}
+          />
+        )
+
         return (
           <>
             {/* 주목할 영화제 — 지역 필터 무관 전국 대상. 가로 배너(banner_url)가 있는 첫 영화제만 노출한다.
@@ -1164,22 +1177,15 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
               onMovieClick={handleMovieClick}
             />
 
-            {/* 1. 개인화 — 최근 본 영화·관심 영화 기반. 함께 본 관객 기록(EASE) 우선, 없으면 규칙 방식.
-                이력 없으면 미노출 */}
-            <PersonalizedSection
-              movies={movies}
-              activeMovieIds={activeMovieIds}
-              recentlyViewed={recentlyViewed}
-              popular={popularRanked}
-              isDesktop={isDesktop}
-              onMovieClick={handleMovieClick}
-            />
-
             {/* 2. 기념일 */}
             {renderAnniversaries(anniversarySections)}
 
             {/* 3. 특별전 #0 */}
             {renderSpecial(special0, 0)}
+
+            {/* 개인화는 특별전 #0 뒤 — 랭킹과 같은 포스터 줄이 연달아 붙으면 두 섹션이 하나처럼 보였다
+                (2026-11-05). 특별전이 없는 날은 시의성 줄 뒤로 내려 랭킹과 떼어 둔다. */}
+            {special0 && personalizedSection}
 
             {/* 인스타그램에서 추천한 그 영화 — run1/run2 순번 체계 밖(개인화·기념일·특별전과 동일),
                 발견 성격이라 시의성 run1보다 위, 상단권에 배치.
@@ -1197,6 +1203,8 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
 
             {/* 3. 지금 출발하면 + 막바지 + 매진 임박 — 시의성. 연속 sparse 자동 페어링 */}
             {renderRun(run1, 'run1', startRun1)}
+
+            {!special0 && personalizedSection}
 
             {showFeedAd && !moviesLoading && gridMovies.length > 0 && <FeedAd />}
 
