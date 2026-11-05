@@ -213,6 +213,8 @@ export interface CurationListQuery {
   genre?: string[]
   /** [start, end] — movie.year 포함 범위 */
   yearRange?: [number, number]
+  /** movie.nation(쉼표로 이어진 제작국)에 하나라도 들어 있으면 매치 */
+  nation?: string[]
 }
 
 export interface CurationListRow {
