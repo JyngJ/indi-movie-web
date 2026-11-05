@@ -242,7 +242,7 @@ export async function notifyDiscordStaleSources(findings: StaleSourceFinding[]) 
   const chunks = chunkLines(findings.map(formatStaleFinding))
   await sendEmbed({
     title: `🕳 시간표가 비어 있는 극장 ${findings.length}곳`,
-    description: '수집은 "완료"인데 회차를 못 가져오고 있어요. 극장 페이지에 예정된 상영이 없어요.',
+    description: '수집은 "완료"인데 회차를 못 가져오거나 승인하지 못하고 있어요. 극장 페이지에 예정된 상영이 없어요.',
     color: 0xE67E22,
     fields: chunks.slice(0, 5).map((value, i) => ({ name: i === 0 ? '수집처' : '\u200b', value, inline: false })),
     footer: { text: nowKST() },

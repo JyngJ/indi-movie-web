@@ -7,7 +7,8 @@ const PAGE = 1000
 const LOOKBACK_DAYS = 14
 
 /**
- * 판정 재료 — 켜진 수집처와 최근 2주 실행 기록(좌석 갱신 seat_* 제외), 극장별 예정 상영 수.
+ * 판정 재료 — 켜진 수집처와 최근 2주 실행 기록(좌석 갱신 seat_* 제외), 극장별 예정 상영 수,
+ * 수집처별 검수 대기 회차 수.
  * 순수 판정은 sourceHealth.ts가 한다.
  */
 export async function loadSourceHealthInputs(): Promise<{ sources: SourceHealthInput[]; upcomingByTheater: Map<string, number> }> {
@@ -53,9 +54,30 @@ export async function loadSourceHealthInputs(): Promise<{ sources: SourceHealthI
     if (!data || data.length < PAGE) break
   }
 
+  const pendingBySource = new Map<string, number>()
+  for (let offset = 0; ; offset += PAGE) {
+    const { data, error } = await supabase
+      .from('showtime_candidates')
+      .select('source_id')
+      .eq('status', 'needs_review')
+      .gte('show_date', today)
+      .order('id')
+      .range(offset, offset + PAGE - 1)
+    if (error) throw new Error(`검수 대기 회차 조회 실패: ${error.message}`)
+    for (const r of data ?? []) pendingBySource.set(r.source_id, (pendingBySource.get(r.source_id) ?? 0) + 1)
+    if (!data || data.length < PAGE) break
+  }
+
   const sources: SourceHealthInput[] = (sourceRows ?? []).map((s) => {
     const theaterId = [s.matched_theater_id, s.theater_id].find((v): v is string => typeof v === 'string' && UUID.test(v)) ?? null
-    return { sourceId: s.id, sourceName: s.theater_name, parser: s.parser, theaterId, runs: runsBySource.get(s.id) ?? [] }
+    return {
+      sourceId: s.id,
+      sourceName: s.theater_name,
+      parser: s.parser,
+      theaterId,
+      runs: runsBySource.get(s.id) ?? [],
+      pendingReviewUpcoming: pendingBySource.get(s.id) ?? 0,
+    }
   })
   return { sources, upcomingByTheater }
 }

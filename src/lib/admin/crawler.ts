@@ -46,6 +46,9 @@ import type { ParseContext, DtryxCinema } from './crawler/utils'
 import { crawlTinyticketEventManager } from './crawler/browser'
 import { crawlScreenshotOcr, crawlBoardImageOcr } from './crawler/ocr'
 import { crawlHdArtsCenter } from './crawler/hdArtsCenter'
+import { parseCineQMovieTable, toCineQPlayDate } from './crawler/cineq'
+import { parseDrfaCalendar } from './crawler/drfa'
+import { parseMoonhwainTimeTableDates, parseMoonhwainTimeTableDay } from './crawler/moonhwainTimeTable'
 
 interface DtryxMovie {
   MovieCd: string
@@ -236,6 +239,8 @@ export async function crawlDtryxReservationApi(context: ParseContext) {
   // referer는 ASCII-safe한 핵심 파라미터만 포함 (한글 파라미터 제외)
   const headers = buildDtryxHeaders(`${origin}/cinema/main.do?cgid=${cgid}&BrandCd=${brandCd}`)
   const main = await fetchDtryxMain(origin, cgid, brandCd, headers)
+  const hiddenError = dtryxHiddenCinemaError(main.CinemaList ?? [], context.source.theaterName, urlCinemaCd)
+  if (hiddenError) throw new Error(hiddenError)
   const cinemas = (main.CinemaList ?? []).filter((cinema) => cinema.HiddenYn !== 'Y')
   const movies = (main.MovieList ?? []).filter((movie) => movie.HiddenYn !== 'Y')
   const playDates = (main.PlaySdtList ?? []).filter((date) => date.HiddenYn !== 'Y').slice(0, 7)
@@ -252,6 +257,21 @@ export async function crawlDtryxReservationApi(context: ParseContext) {
   if (!screenFilter) return candidates
   // 복합 건물 내 특정 관(screen)만 이 theater에 해당하는 경우 필터링
   return candidates.filter((c) => c.screenName.includes(screenFilter))
+}
+
+/**
+ * dtryx가 극장을 목록에서 숨기면(HiddenYn=Y) 회차 조회는 오류 없이 빈 배열을 준다. 예전에는 그걸
+ * "0건 완료"로 기록해 에무시네마·허리우드클래식·김해문화의전당이 몇 주씩 조용히 비어 있었다(2026-11).
+ * 숨김은 예매처를 옮겼거나 휴관했다는 뜻이라 사람이 봐야 한다 — 수집 오류로 올린다.
+ */
+export function dtryxHiddenCinemaError(allCinemas: DtryxCinema[], theaterName: string, urlCinemaCd: string | null) {
+  // 이름이 같은 공개 극장이 있으면 그쪽으로 수집된다(아래 pickDtryxCinema가 이름을 먼저 본다)
+  if (pickDtryxCinema(allCinemas.filter((c) => c.HiddenYn !== 'Y'), theaterName)) return undefined
+  const hidden = allCinemas.find((c) => c.HiddenYn === 'Y'
+    && ((urlCinemaCd && c.CinemaCd === urlCinemaCd) || (!urlCinemaCd && pickDtryxCinema([c], theaterName))))
+  return hidden
+    ? `디트릭스에서 ${hidden.CinemaNm}(${hidden.CinemaCd})을 숨김 처리했어요 — 예매처가 바뀌었거나 휴관 중일 수 있어요`
+    : undefined
 }
 
 export async function crawlAllDtryxSources(
@@ -287,6 +307,8 @@ export async function crawlAllDtryxSources(
             const srcUrl = new URL(source.listingUrl)
             const urlCinemaCd = srcUrl.searchParams.get('CinemaCd')
             const screenFilter = srcUrl.searchParams.get('screenFilter')
+            const hiddenError = dtryxHiddenCinemaError(main.CinemaList ?? [], source.theaterName, urlCinemaCd)
+            if (hiddenError) return { source, candidates: [], error: hiddenError }
             const targetCinema = pickDtryxCinema(cinemas, source.theaterName)
               ?? (urlCinemaCd ? cinemas.find((c) => c.CinemaCd === urlCinemaCd) : undefined)
               ?? (urlCinemaCd ? { CinemaNm: source.theaterName, CinemaCd: urlCinemaCd, HiddenYn: 'N' as const } : undefined)
@@ -520,55 +542,31 @@ async function updateCineQSeats(sources: AdminTheaterSource[], dbCandidates: any
     try {
       const candidatesForSource = dbCandidates.filter(c => c.source_id === source.id)
       if (candidatesForSource.length === 0) return { source, candidates: [] }
-      
-      const urlObj = new URL(source.listingUrl)
-      const theaterCode = urlObj.searchParams.get('TheaterCode') || '1001'
-      
-      const showDates = [...new Set(candidatesForSource.map(c => c.show_date).filter(Boolean))]
+
+      const theaterCode = cineQTheaterCode(source.listingUrl)
+      const showDates = [...new Set(candidatesForSource.map(c => c.show_date).filter(Boolean))] as string[]
+      const context: ParseContext = { source, inputKind: 'url', sourceUrl: source.listingUrl }
       const updatedCandidates: { fingerprint: string; seatAvailable: number; seatTotal: number }[] = []
       let warningCount = 0
 
-      const tasks = showDates.map(playDate => async () => {
+      await mapWithConcurrency(showDates.map(playDate => async () => {
         try {
-          const formattedDate = playDate.includes('-') ? playDate : `${playDate.slice(0,4)}-${playDate.slice(4,6)}-${playDate.slice(6,8)}`
-          const response = await fetch('https://www.cineq.co.kr/Theater/MovieTable2', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `TheaterCode=${theaterCode}&PlayDate=${formattedDate}`,
-            signal: AbortSignal.timeout(30000),
-          })
-          if (!response.ok) return
-          const html = await response.text()
-
-          const blocks = html.split('class="each-movie-title"')
-          for (let b = 1; b < blocks.length; b++) {
-            const block = blocks[b]
-            const titleMatch = block.match(/<h3>([^<]+)<\/h3>/)
-            const movieTitle = titleMatch ? titleMatch[1].trim() : '알 수 없음'
-
-            const timeRegex = /data-playdate="([^"]+)"[^>]*data-moviecode="([^"]+)"[^>]*data-screenplanid="([^"]+)"[\s\S]*?<a[^>]*>([^<]+)<\/a>/g
-            let match
-            while ((match = timeRegex.exec(block)) !== null) {
-              const showDate = match[1]
-              const showTime = match[4].trim()
-
-              const context: ParseContext = { source, inputKind: 'url', sourceUrl: source.listingUrl }
-              const c = buildCandidate({
-                context, movieTitle, screenName: '씨네Q 신도림', showDate, showTime, endTime: '', formatText: '', seatAvailable: 0, seatTotal: 0, price: 0, bookingUrl: '', rawText: '', confidence: 1, warnings: []
-              })
-              
-              const matchedDb = candidatesForSource.filter(db => db.fingerprint === c.fingerprint)
-              for (const m of matchedDb) {
-                updatedCandidates.push({ fingerprint: m.fingerprint, seatAvailable: DEFAULT_SEAT_TOTAL, seatTotal: DEFAULT_SEAT_TOTAL })
-              }
+          for (const row of await fetchCineQDay(theaterCode, playDate)) {
+            if (row.seatAvailable === null || row.seatTotal === null) continue
+            // 지문은 수집 때와 같은 재료(극장·제목·날짜·시각·상영관)로 만든다
+            const { fingerprint } = buildCandidate({
+              context, movieTitle: row.movieTitle, screenName: row.screenName, showDate: row.showDate, showTime: row.showTime,
+              formatText: '', seatAvailable: 0, seatTotal: 0, price: 0, rawText: '', confidence: 1, warnings: [],
+            })
+            for (const m of candidatesForSource.filter(db => db.fingerprint === fingerprint)) {
+              updatedCandidates.push({ fingerprint: m.fingerprint, seatAvailable: row.seatAvailable, seatTotal: row.seatTotal })
             }
           }
         } catch {
           warningCount++
         }
-      })
+      }), 1)
 
-      await mapWithConcurrency(tasks, 1)
       return { source, candidates: updatedCandidates, warningCount }
     } catch (error) {
       return { source, candidates: [], error: error instanceof Error ? error.message : String(error) }
@@ -879,6 +877,10 @@ export async function crawlSelfHosted(context: ParseContext) {
   if (hostname.includes('cineq.co.kr')) {
     return crawlCineQApi(context)
   }
+  // 문화인 시간표 화면(/homePy/timeTable/)은 지자체 도메인(ticket.ulju.ulsan.kr)에도 붙어 있어 경로로 먼저 가른다
+  if (new URL(url).pathname.startsWith('/homePy/timeTable/')) {
+    return crawlMoonhwainTimeTable(url, context)
+  }
   if (hostname.includes('moonhwain.net') || hostname.includes('moonhwain.kr')) {
     return crawlMoonhwain(url, context)
   }
@@ -914,6 +916,48 @@ async function crawlMoonhwain(sourceUrl: string, context: ParseContext) {
   const tasks = availableDates.map((date) => async () => {
     const html = await fetchSelfHosted(`${scheduleBase}?ss_date=${date}`)
     return parseMoonhwainDay(html, date, bookingBase, context)
+  })
+
+  const groups = await mapWithConcurrency(tasks, 1)
+  return dedupeCandidates(groups.flat())
+}
+
+async function crawlMoonhwainTimeTable(sourceUrl: string, context: ParseContext) {
+  const base = new URL(sourceUrl)
+  base.searchParams.delete('selDate')
+  const bId = base.searchParams.get('b_id') ?? ''
+  const indexHtml = await fetchSelfHosted(base.toString())
+  const dates = parseMoonhwainTimeTableDates(indexHtml).slice(0, 14)
+  if (dates.length === 0) return []
+  // 예매 창 주소는 시간표 화면의 wRsv()에 박혀 있다 — 극장마다 예매 도메인이 시간표 도메인과 다르다
+  const bookingBase = indexHtml.match(/window\.open\(['"](https?:\/\/[^'"]+?)\/rsvc\/rsv_mv\.html/)?.[1] ?? base.origin
+
+  const tasks = dates.map((date) => async () => {
+    const url = new URL(base)
+    url.searchParams.set('selDate', date)
+    const html = date === dates[0] ? indexHtml : await fetchSelfHosted(url.toString())
+    return parseMoonhwainTimeTableDay(html).map((row) => {
+      // 링크 없는 회차는 지난 회차거나 예매가 닫힌 회차다
+      const warnings = row.ssIdx ? [] : ['예매 종료 회차입니다.']
+      return buildCandidate({
+        context,
+        movieTitle: row.movieTitle,
+        showDate: date,
+        showTime: row.showTime,
+        endTime: row.endTime,
+        screenName: row.screenName,
+        formatText: row.screenName,
+        seatAvailable: row.seatAvailable ?? DEFAULT_SEAT_TOTAL,
+        seatTotal: DEFAULT_SEAT_TOTAL,
+        price: DEFAULT_PRICE,
+        bookingUrl: row.ssIdx
+          ? `${bookingBase}/rsvc/rsv_mv.html?b_id=${encodeURIComponent(bId)}&in_ss_date=${date}&in_ss_idx=${row.ssIdx}`
+          : url.toString(),
+        rawText: JSON.stringify({ ...row, showDate: date }),
+        confidence: warnings.length ? 0.82 : 0.93,
+        warnings,
+      })
+    })
   })
 
   const groups = await mapWithConcurrency(tasks, 1)
@@ -1049,7 +1093,9 @@ function parseDurearumDay(rawHtml: string, showDate: string, context: ParseConte
         price: DEFAULT_PRICE,
         bookingUrl,
         rawText: JSON.stringify({ movieTitle, showDate, showTime, screenName }),
-        confidence: 0.88,
+        // 자동 승인 문턱(0.9) 아래인 0.88로 두어 2026-05 연결 이후 한 회차도 자동 승인되지 않았다.
+        // 영화제·휴관 자리표시는 위 isDureraumPlaceholder가 이미 거른다.
+        confidence: 0.93,
         warnings: [],
       }))
     }
@@ -1060,11 +1106,7 @@ function parseDurearumDay(rawHtml: string, showDate: string, context: ParseConte
 
 async function fetchSelfHosted(url: string): Promise<string> {
   const response = await fetch(url, {
-    headers: {
-      'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-      accept: 'text/html,application/xhtml+xml',
-      'accept-language': 'ko-KR,ko;q=0.9',
-    },
+    headers: crawlerHeaders({ accept: 'text/html,application/xhtml+xml' }),
     cache: 'no-store',
     signal: AbortSignal.timeout(30000),
   })
@@ -1569,79 +1611,37 @@ async function crawlPetitecine(context: ParseContext): Promise<CrawledShowtimeCa
 /* ── DRFA (drfa.co.kr XE 캘린더) ────────────────────────────── */
 async function crawlDrfa(context: ParseContext): Promise<CrawledShowtimeCandidate[]> {
   const url = context.sourceUrl ?? context.source.listingUrl
-  const res = await fetch(url, {
-    headers: crawlerHeaders(),
-    signal: AbortSignal.timeout(30000),
-  })
-  if (!res.ok) throw new Error(`DRFA fetch 실패: ${res.status}`)
-  const html = await res.text()
+  const today = todayIsoDate()
+  // 달력은 한 달 단위라 말일 가까이엔 다음 달 회차가 안 보인다 — 이번 달과 다음 달을 같이 읽는다
+  const [year, month] = today.split('-').map(Number)
+  const next = month === 12 ? { y: year + 1, m: 1 } : { y: year, m: month + 1 }
+  const pages = [url, `https://drfa.co.kr/index.php?mid=TIMETABLE&pGanjioption=1&pYear=${next.y}&pMonth=${next.m}`]
 
-  // 연월 추출
-  const ymMatch = html.match(/(\d{4})년\s*(\d{1,2})월/)
-  const year = ymMatch ? parseInt(ymMatch[1]) : new Date().getFullYear()
-  const month = ymMatch ? parseInt(ymMatch[2]) : new Date().getMonth() + 1
-
-  // <td> 블록에서 날짜 + 상영 추출
-  const tdBlocks = [...html.matchAll(/<td[^>]*>([\s\S]{0,2000}?)<\/td>/g)]
-  const today = new Date().toISOString().slice(0, 10)
-  const candidates: CrawledShowtimeCandidate[] = []
-
-  for (const [, cell] of tdBlocks) {
-    // 날짜 번호
-    const dayMatch = cell.match(/class=['"](?:date|day)[^'"]*['"]>\s*(\d{1,2})\s*</)
-      ?? cell.match(/>(\d{1,2})<\/(?:div|span|td)>/)
-    if (!dayMatch) continue
-    const day = parseInt(dayMatch[1])
-    if (!day || day > 31) continue
-
-    const showDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-    if (showDate < today) continue
-
-    // 시간 패턴: "2:00 pm" / "11:00 am"
-    const timeMatches = [...cell.matchAll(/(\d{1,2}:\d{2})\s*(am|pm)/gi)]
-    // 영화 제목 (한국어)
-    const titleMatches = [...cell.matchAll(/<b>[\s\S]{0,20}?<br><br>([\s\S]{2,40}?)<\/font/g)]
-
-    // 잔여좌석
-    const seatMatch = cell.match(/잔여좌석.*?\/(\d+)석/)
-    const seatTotal = seatMatch ? parseInt(seatMatch[1]) : 0
-
-    for (let i = 0; i < timeMatches.length; i++) {
-      const rawTime = timeMatches[i][1]
-      const period = timeMatches[i][2].toLowerCase()
-      const [hStr, mStr] = rawTime.split(':')
-      let h = parseInt(hStr)
-      const m = parseInt(mStr)
-      if (period === 'pm' && h < 12) h += 12
-      if (period === 'am' && h === 12) h = 0
-      const showTime = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
-
-      const rawTitle = titleMatches[i]?.[1]?.trim()
-        ?? cell.match(/<b[^>]*>\s*(?:\d{1,2}:\d{2}\s*(?:am|pm)[^<]*<br><br>)?([\s\S]{2,40}?)<\/[^>]+>/i)?.[1]?.trim()
-      const movieTitle = rawTitle
-        ? rawTitle.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
-        : ''
-      if (!movieTitle || movieTitle.length < 2) continue
-
-      candidates.push(buildCandidate({
-        context,
-        movieTitle,
-        showDate,
-        showTime,
-        screenName: '1관',
-        formatText: '',
-        seatAvailable: 0,
-        seatTotal,
-        price: 40000,
-        bookingUrl: url,
-        rawText: cell.slice(0, 200),
-        confidence: 0.88,
-        warnings: [],
-      }))
-    }
+  const showtimes = []
+  for (const pageUrl of pages) {
+    const res = await fetch(pageUrl, { headers: crawlerHeaders(), signal: AbortSignal.timeout(30000) })
+    if (!res.ok) throw new Error(`DRFA fetch 실패: ${res.status}`)
+    showtimes.push(...parseDrfaCalendar(await res.text()))
   }
 
-  return dedupeCandidates(candidates)
+  return dedupeCandidates(showtimes
+    .filter((row) => row.showDate >= today)
+    .map((row) => buildCandidate({
+      context,
+      movieTitle: row.movieTitle,
+      releaseYear: row.releaseYear,
+      showDate: row.showDate,
+      showTime: row.showTime,
+      screenName: '1관',
+      formatText: row.originalTitle,
+      seatAvailable: row.seatAvailable ?? DEFAULT_SEAT_TOTAL,
+      seatTotal: row.seatTotal ?? DEFAULT_SEAT_TOTAL,
+      price: 40000,
+      bookingUrl: row.detailUrl ?? url,
+      rawText: JSON.stringify(row),
+      confidence: row.seatAvailable === 0 ? 0.82 : 0.93,
+      warnings: row.seatAvailable === 0 ? ['매진된 회차입니다.'] : [],
+    })))
 }
 
 /* ── 한국영상자료원 시네마테크 KOFA ──────────────────────────────── */
@@ -1740,71 +1740,68 @@ async function crawlKofaCinematheque(context: ParseContext): Promise<CrawledShow
   return dedupeCandidates(candidates)
 }
 
+const CINEQ_TABLE_URL = 'https://www.cineq.co.kr/Theater/MovieTable2'
+
+/** 씨네Q 하루치 시간표 HTML. PlayDate는 YYYYMMDD만 받는다(YYYY-MM-DD는 빈 화면이 200으로 온다) */
+async function fetchCineQDay(theaterCode: string, isoDate: string) {
+  return withRetry(async () => {
+    const response = await fetch(CINEQ_TABLE_URL, {
+      method: 'POST',
+      headers: crawlerHeaders({ 'content-type': 'application/x-www-form-urlencoded; charset=UTF-8', 'x-requested-with': 'XMLHttpRequest' }),
+      body: new URLSearchParams({ TheaterCode: theaterCode, PlayDate: toCineQPlayDate(isoDate) }).toString(),
+      signal: AbortSignal.timeout(30000),
+    })
+    if (!response.ok) throw new Error(`씨네Q 시간표 요청 실패: HTTP ${response.status}`)
+    return parseCineQMovieTable(await response.text())
+  }, { label: '씨네Q 시간표 요청' })
+}
+
+function cineQTheaterCode(listingUrl: string) {
+  return new URL(listingUrl).searchParams.get('TheaterCode') || '1001'
+}
+
+function addIsoDays(isoDate: string, days: number) {
+  const d = new Date(`${isoDate}T00:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + days)
+  return d.toISOString().slice(0, 10)
+}
+
 async function crawlCineQApi(
   context: ParseContext,
 ): Promise<CrawledShowtimeCandidate[]> {
-  const urlObj = new URL(context.source.listingUrl)
-  const theaterCode = urlObj.searchParams.get('TheaterCode') || '1001'
+  const theaterCode = cineQTheaterCode(context.source.listingUrl)
+  const today = todayIsoDate()
+  const dates = Array.from({ length: 7 }, (_, i) => addIsoDays(today, i))
 
-  const candidates: CrawledShowtimeCandidate[] = []
-
-  const today = new Date()
-  // Fetch today and next 4 days
-  for (let i = 0; i < 5; i++) {
-    const d = new Date(today)
-    d.setDate(d.getDate() + i)
-    // format YYYY-MM-DD
-    const playDate = [
-      d.getFullYear(),
-      String(d.getMonth() + 1).padStart(2, '0'),
-      String(d.getDate()).padStart(2, '0')
-    ].join('-')
-
+  const settled = await mapWithConcurrency(dates.map((date) => async () => {
     try {
-      const response = await fetch('https://www.cineq.co.kr/Theater/MovieTable2', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `TheaterCode=${theaterCode}&PlayDate=${playDate}`,
-        signal: AbortSignal.timeout(30000),
-      })
-
-      if (!response.ok) continue
-      const html = await response.text()
-
-      // Splitting by 'each-movie-title' to process movies separately
-      const blocks = html.split('class="each-movie-title"')
-      for (let b = 1; b < blocks.length; b++) {
-        const block = blocks[b]
-        const titleMatch = block.match(/<h3>([^<]+)<\/h3>/)
-        const movieTitle = titleMatch ? titleMatch[1].trim() : '알 수 없음'
-
-        const timeRegex = /data-playdate="([^"]+)"[^>]*data-moviecode="([^"]+)"[^>]*data-screenplanid="([^"]+)"[\s\S]*?<a[^>]*>([^<]+)<\/a>/g
-        let match
-        while ((match = timeRegex.exec(block)) !== null) {
-          const showDate = match[1]
-          const showTime = match[4].trim()
-
-          candidates.push(buildCandidate({
-            context,
-            movieTitle,
-            screenName: '씨네Q 신도림', // TODO: Parse actual screen name if available
-            showDate,
-            showTime,
-            bookingUrl: `https://www.cineq.co.kr/Theater/Movie?TheaterCode=${theaterCode}`,
-            formatText: '',
-            seatAvailable: 0,
-            seatTotal: 0,
-            price: 0,
-            confidence: 0.9,
-            warnings: [],
-            rawText: block.slice(0, 300).replace(/\s+/g, ' '),
-          }))
-        }
-      }
-    } catch (e) {
-      console.warn('CineQ crawling failed for date', playDate, e)
+      return { rows: await fetchCineQDay(theaterCode, date) }
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : String(error) }
     }
-  }
+  }), 1)
+  // 날짜 하나 실패는 넘기되, 전부 실패하면 "0건 완료"로 숨기지 않고 오류로 올린다
+  const failures = settled.filter((r) => 'error' in r)
+  if (failures.length === dates.length) throw new Error(failures[0].error)
 
-  return candidates
+  const candidates = settled.flatMap((r) => ('rows' in r ? r.rows ?? [] : [])).map((row) => {
+    const soldOut = row.seatAvailable === 0
+    return buildCandidate({
+      context,
+      movieTitle: row.movieTitle,
+      showDate: row.showDate,
+      showTime: row.showTime,
+      endTime: row.endTime,
+      screenName: row.screenName,
+      formatText: [row.screenName, ...row.attributes].join(' '),
+      seatAvailable: row.seatAvailable ?? DEFAULT_SEAT_TOTAL,
+      seatTotal: row.seatTotal ?? DEFAULT_SEAT_TOTAL,
+      price: DEFAULT_PRICE,
+      bookingUrl: `https://www.cineq.co.kr/Theater/Movie?TheaterCode=${theaterCode}`,
+      rawText: JSON.stringify(row),
+      confidence: soldOut ? 0.82 : 0.93,
+      warnings: soldOut ? ['매진된 회차입니다.'] : [],
+    })
+  })
+  return dedupeCandidates(candidates)
 }
