@@ -1,40 +1,42 @@
-'use client'
-
 import { useEffect, useRef, useState, useMemo } from 'react'
 import { usePendingNavItem } from '@/hooks/usePendingNavItem'
 import { PosterThumb } from './PosterThumb'
-import { DateBar, type Day, type DayType } from './DateBar'
-import { ShowtimeCell } from './ShowtimeCell'
+import { DetailDateTabs } from './DetailDateTabs'
+import { TheaterScheduleBody } from './theaterSchedule/TheaterScheduleBody'
 import { Button } from '@/components/primitives/Button'
 import { IconButton } from '@/components/primitives/IconButton'
 import { Icon } from '@/components/primitives/Icon'
 import { PosterChip } from '@/components/primitives/PosterChip'
 import { ScrollNavButton } from '@/components/primitives/ScrollNavButton'
-import { Divider } from '@/components/primitives/Divider'
 import { EmptyState } from '@/components/primitives/EmptyState'
 import { TheaterFavoriteAction } from '@/components/domain/favorites/TheaterFavoriteAction'
 import { FilterPill } from '@/components/primitives/FilterPill'
 import { Chip } from '@/components/primitives/Chip'
 import { DirectorChip } from '@/components/primitives/DirectorChip'
 import { Toast } from '@/components/primitives/Toast'
-import { useTheaterShowtimes, useTheaterAllMovies } from '@/lib/supabase/queries'
-import type { TheaterMovieEntry } from '@/lib/supabase/queries'
-import type { Theater, Showtime } from '@/types/api'
-import { ShowtimeCellSkeleton } from '@/components/primitives/Skeleton'
+import type { Theater } from '@/types/api'
 import { GENRES, normalizeGenre } from '@/lib/genres'
 import { GLOBAL_NAV_MOBILE_HEIGHT } from '@/components/navigation/GlobalNav'
 import { withFlag } from '@/lib/nations'
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { useDragSheet } from '@/hooks/useDragSheet'
 import { useMomentumScroll } from '@/hooks/useMomentumScroll'
+import { useTheaterSchedule } from '@/hooks/useTheaterSchedule'
 import { shareAndTrack } from '@/lib/analytics/shareTracking'
 import { GvEventSection } from './GvEventSection'
 import { GvDetailPanel } from './GvDetailPanel'
 import { BookingCtaButton, ShareScheduleButton } from './booking/BookingActions'
 import type { GvEvent } from '@/data/gv-events'
-import { toSecureImageUrl } from '@/lib/media/imageUrl'
 import { isSoldOut } from '@/lib/catalog/seatAvailability'
 import { naverDirectionsUrls } from '@/lib/map/directions'
+import {
+  EMPTY_SCHEDULE_FILTER,
+  dateForMovie,
+  filterMovieGroups,
+  isFilterActive,
+  splitNations,
+  type ScheduleMovieFilter,
+} from '@/lib/theater/schedule'
 
 /* ── 상수 ──────────────────────────────────────────────────────── */
 // 접힌 상태에서 보이는 높이 — 피그마 TOBE collapsed: 핸들(24) + 헤더(128) + 포스터스트립(262, 포스터 238 + 상하 12)
@@ -64,103 +66,6 @@ function calcPosterItemW(w: number): number {
 
 
 
-/* ── 시놉시스 카드 ──────────────────────────────────────────────── */
-interface SynopsisCardProps {
-  synopsis: string
-  tags?: string[]
-  visible: boolean
-  onSearchTheaters?: () => void
-}
-
-function SynopsisCard({ synopsis, tags, visible, onSearchTheaters }: SynopsisCardProps) {
-  return (
-    // grid-template-rows: 0fr → 1fr 트릭: 실제 콘텐츠 높이로 부드럽게 애니메이션
-    <div style={{
-      display: 'grid',
-      gridTemplateRows: visible ? '1fr' : '0fr',
-      transition: 'grid-template-rows 0.32s cubic-bezier(0.4, 0, 0.2, 1)',
-      backgroundColor: 'var(--color-neutral-800)',
-      flexShrink: 0,
-    }}>
-      <div style={{ overflow: 'hidden', minHeight: 0 }}>
-        <div style={{ padding: '16px var(--gutter-sheet) 20px' }}>
-          {/* 태그 — 있을 때만 */}
-          {tags && tags.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
-              {tags.map((tag) => (
-                <span
-                  key={tag}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    fontSize: 10,
-                    fontWeight: 500,
-                    lineHeight: 1,
-                    color: 'var(--color-neutral-200)',
-                    border: '1px solid var(--color-neutral-600)',
-                    backgroundColor: 'var(--color-on-scrim-surface)',
-                    borderRadius: 9999,
-                    paddingLeft: 12,
-                    paddingRight: 12,
-                    paddingTop: 4,
-                    paddingBottom: 4,
-                  }}
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-          {/* 시놉시스 — 전체 표시 (자세히 버튼 없음) */}
-          <p style={{
-            margin: 0,
-            fontSize: 13,
-            lineHeight: 1.7,
-            color: 'var(--color-neutral-200)',
-          }}>
-            {synopsis}
-          </p>
-          {/* 상영 중인 영화관 모두 검색 버튼 */}
-          <div style={{ marginTop: 16 }}>
-            <Button
-              variant="secondary"
-              size="sm"
-              fullWidth
-              onClick={onSearchTheaters}
-              style={{ borderColor: 'var(--color-neutral-600)', color: 'var(--color-neutral-200)' }}
-            >
-              상영중인 영화관 모두 검색
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/* ── 날짜 생성 헬퍼 ─────────────────────────────────────────────── */
-// availableDates: 'YYYY-MM-DD' 형태의 Set — 해당 날짜에만 상영 있음
-function buildDays(count = 7, availableDates?: Set<string>, offset = 0): Day[] {
-  const today = new Date()
-  return Array.from({ length: count }, (_, i) => {
-    const d = new Date(today)
-    d.setDate(today.getDate() + offset + i)
-    const dow  = ['일', '월', '화', '수', '목', '금', '토'][d.getDay()]
-    const date = String(d.getDate())
-    const absIdx = offset + i
-    const type: DayType =
-      absIdx === 0       ? 'today'
-      : d.getDay() === 0 ? 'sunday'
-      : d.getDay() === 6 ? 'saturday'
-      : 'weekday'
-
-    const isoDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-    const disabled = availableDates ? !availableDates.has(isoDate) : false
-
-    return { dow, date, isoDate, type, disabled }
-  })
-}
-
 /* ── Sheet filter ───────────────────────────────────────────────── */
 function TheaterQueryFailure({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
@@ -180,11 +85,7 @@ function TheaterQueryFailure({ message, onRetry }: { message: string; onRetry: (
   )
 }
 
-interface SheetFilterState {
-  genres: string[]
-  nations: string[]
-  bookable: boolean
-}
+type SheetFilterState = ScheduleMovieFilter
 
 /* ── Props ──────────────────────────────────────────────────────── */
 interface TheaterSheetProps {
@@ -239,9 +140,9 @@ export function TheaterSheet({
 
   /* ── Sheet filter state ─────────────────────────────────────── */
   // const [showTodayFirst, setShowTodayFirst] = useState(false) // TODO: 이 날 상영 필터 — UX 재검토 필요 (todo.md 참고)
-  const [sheetFilters, setSheetFilters] = useState<SheetFilterState>({ genres: [], nations: [], bookable: false })
+  const [sheetFilters, setSheetFilters] = useState<SheetFilterState>(EMPTY_SCHEDULE_FILTER)
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
-  const [pendingFilters, setPendingFilters] = useState<SheetFilterState>({ genres: [], nations: [], bookable: false })
+  const [pendingFilters, setPendingFilters] = useState<SheetFilterState>(EMPTY_SCHEDULE_FILTER)
 
   const applySheetFilters = (next: SheetFilterState, scope: 'theater_sheet' | 'theater_sheet_quick' = 'theater_sheet') => {
     trackEvent('map filter changed', {
@@ -297,27 +198,18 @@ export function TheaterSheet({
   // Keep last event alive so exit animation can play (panel stays rendered during slide-out)
   const lastGvEvRef = useRef<GvEvent | undefined>(undefined)
 
-  /* ── 날짜 선택 상태 (ISO date 기준) ── */
-  const todayIso = useMemo(() => {
-    const d = new Date()
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  }, [])
-  const [selectedIsoDate, setSelectedIsoDate] = useState(initialIsoDate ?? todayIso)
+  /* ── 시간표 — 날짜 먼저: 날짜를 고르면 그날 상영하는 영화가 회차와 함께 묶여 나온다.
+     상영작 탭 극장 페이지와 같은 훅·본문을 쓴다(2026-11). 예전엔 포스터로 영화를 먼저 고르는 구조라
+     페이지와 시트가 다른 앱처럼 보였고, 시트에서 회차까지 고른 비율이 3%였다. ── */
+  const schedule = useTheaterSchedule({
+    theaterId: theater.id,
+    initialDate: initialIsoDate,
+    initialShowtimeId,
+  })
+  const { allMovieEntries, moviesLoading: allMoviesLoading, moviesError, retryMovies } = schedule
+  const selectedIsoDate = schedule.selectedDate
 
-  /* ── Supabase 상영 데이터 ── */
-  const { data: showtimeData, isLoading: showtimesInitialLoading, isFetching: showtimesFetching, isError: showtimesError, refetch: retryShowtimes } = useTheaterShowtimes(
-    theater.id,
-    selectedIsoDate,
-  )
-  const showtimes: Showtime[] = showtimeData?.showtimes ?? []
-  const showtimesLoading = showtimesInitialLoading || (showtimesFetching && !showtimeData)
-
-  /* ── 전체 상영 영화 (날짜 무관, 7일 범위) ── */
-  const { data: movieEntriesData, isLoading: moviesInitialLoading, isFetching: moviesFetching, isError: moviesError, refetch: retryMovies } = useTheaterAllMovies(theater.id)
-  const allMovieEntries = movieEntriesData ?? []
-  const allMoviesLoading = moviesInitialLoading || (moviesFetching && !movieEntriesData)
-
-  /* ── selectedMovieId 초기화 — 전체 목록 기준 ── */
+  /* ── selectedMovieId 초기화 — 지도(공유·분석)가 쓰는 '보고 있는 영화' ── */
   useEffect(() => {
     if (allMovieEntries.length > 0 && !allMovieEntries.find((e) => e.movie.id === selectedMovieId)) {
       onMovieSelect(allMovieEntries[0].movie.id)
@@ -325,42 +217,6 @@ export function TheaterSheet({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allMovieEntries])
 
-  /* ── 날짜 바 — 7일, 상영 있는 날만 활성 ── */
-  const theaterAvailableDates = useMemo(() => {
-    const dates = new Set<string>()
-    for (const entry of allMovieEntries) {
-      for (const d of entry.availableDates) dates.add(d)
-    }
-    return dates
-  }, [allMovieEntries])
-
-  const [dateWindowOffset, setDateWindowOffset] = useState(0)
-  /* 상영 데이터가 있는 마지막 날이 속한 주 — 그 너머로는 넘길 수 없다.
-     고정 상한(21)이면 데이터가 없는 빈 주까지 넘어가 화면이 통째로 비었다.
-     주의: useTheaterAllMovies의 조회 범위(THEATER_MOVIES_WINDOW_DAYS)가 상한을 결정한다.
-     7일이던 시절엔 dayDiff ≤ 6 → 이 값이 항상 0이라 "다음 주"가 영구 비활성이었다. */
-  const maxDateWindowOffset = useMemo(() => {
-    if (theaterAvailableDates.size === 0) return 0
-    const last = [...theaterAvailableDates].sort().at(-1)!
-    const dayDiff = Math.round((Date.parse(`${last}T00:00:00`) - Date.parse(`${todayIso}T00:00:00`)) / 86_400_000)
-    return Math.max(0, Math.floor(dayDiff / 7) * 7)
-  }, [theaterAvailableDates, todayIso])
-  /* 데이터가 늦게 도착해 상한이 줄면 현재 오프셋도 되돌린다 */
-  useEffect(() => {
-    setDateWindowOffset((o) => Math.min(o, maxDateWindowOffset))
-  }, [maxDateWindowOffset])
-  const days = buildDays(7, theaterAvailableDates, dateWindowOffset)
-  // 다른 주를 둘러봐도 조회 날짜는 유지한다. 보이지 않는 선택을 첫날로 표시하지 않는다.
-  const selectedDate = days.find((d) => d.isoDate === selectedIsoDate)?.date
-
-  /* 선택된 영화가 상영하는 날짜 — 날짜바 밑줄 표시용 */
-  const selectedMovieAvailableDates = useMemo(
-    () => allMovieEntries.find((e) => e.movie.id === selectedMovieId)?.availableDates,
-    [allMovieEntries, selectedMovieId]
-  )
-  const daysWithMovieAvailability = selectedMovieAvailableDates
-    ? days.map((d) => ({ ...d, hasSelectedMovie: selectedMovieAvailableDates!.has(d.isoDate) }))
-    : days
 
   /* ── 바텀시트 필터 — 이 극장 영화에서만 가능한 장르/국가 ── */
   const availableGenres = useMemo(() => {
@@ -377,7 +233,7 @@ export function TheaterSheet({
     const s = new Set<string>()
     for (const entry of allMovieEntries) {
       if (!entry.movie.nation) continue
-      for (const n of entry.movie.nation.split(/[,，/·]+/).map(x => x.trim()).filter(Boolean)) s.add(n)
+      for (const n of splitNations(entry.movie.nation)) s.add(n)
     }
     return Array.from(s)
   }, [allMovieEntries])
@@ -387,7 +243,7 @@ export function TheaterSheet({
     if (shownExpanded) {
       setSheetFilters({ genres: mapFilters?.genres ?? [], nations: mapFilters?.nations ?? [], bookable: false })
     } else {
-      setSheetFilters({ genres: [], nations: [], bookable: false })
+      setSheetFilters(EMPTY_SCHEDULE_FILTER)
       setFilterSheetOpen(false)
     }
     // mapFilters는 open 시점에만 읽음
@@ -506,10 +362,10 @@ export function TheaterSheet({
     onExpand,
   })
 
-  /* ── 매진 영화 ID 집합 (선택일 기준) ── */
+  /* ── 매진 영화 ID 집합 (선택일 기준) — 접힌 포스터 줄 배지 ── */
   const soldoutMovieIds = useMemo(() => {
     const byMovie = new Map<string, boolean[]>()
-    for (const st of showtimes) {
+    for (const st of schedule.dayShowtimes) {
       if (!byMovie.has(st.movieId)) byMovie.set(st.movieId, [])
       byMovie.get(st.movieId)!.push(isSoldOut(st.seatAvailable, st.seatTotal))
     }
@@ -518,125 +374,38 @@ export function TheaterSheet({
       if (seats.length > 0 && seats.every(Boolean)) ids.add(id)
     }
     return ids
-  }, [showtimes])
+  }, [schedule.dayShowtimes])
 
-  /* ── 바텀시트 필터 적용 결과 ── */
-  const bookableMovieIds = useMemo(() => {
-    const ids = new Set<string>()
-    for (const entry of allMovieEntries) {
-      if (!entry.availableDates.has(selectedIsoDate)) continue
-      if (soldoutMovieIds.has(entry.movie.id)) continue
-      ids.add(entry.movie.id)
-    }
-    return ids
-  }, [allMovieEntries, selectedIsoDate, soldoutMovieIds])
+  /* ── 시트 필터 적용 결과 — 그날 영화 카드에 건다 ── */
+  const filteredGroups = useMemo(
+    () => filterMovieGroups(schedule.groups, sheetFilters, schedule.clock),
+    [schedule.groups, sheetFilters, schedule.clock],
+  )
 
-  const filteredMovieEntries = useMemo(() => {
-    const { genres, nations, bookable } = sheetFilters
-    if (genres.length === 0 && nations.length === 0 && !bookable) return allMovieEntries
-    return allMovieEntries.filter(entry => {
-      const matchesGenre = genres.length === 0 || entry.movie.genre.some(g => {
-        const normalized = normalizeGenre(g)
-        return normalized !== null && genres.includes(normalized)
-      })
-      const matchesNation = nations.length === 0 || (() => {
-        const ns = entry.movie.nation?.split(/[,，/·]+/).map(x => x.trim()).filter(Boolean) ?? []
-        return ns.some(n => nations.includes(n))
-      })()
-      const matchesBookable = !bookable || bookableMovieIds.has(entry.movie.id)
-      return matchesGenre && matchesNation && matchesBookable
-    })
-  }, [allMovieEntries, sheetFilters, bookableMovieIds])
-
-  /* ── 이 날 상영 영화 우선 정렬 (비활성화 — todo.md 참고) ── */
-  // const sortedAllEntries = useMemo(() => {
-  //   if (!showTodayFirst) return allMovieEntries
-  //   const playing = allMovieEntries.filter(e => e.availableDates.has(selectedIsoDate))
-  //   const notPlaying = allMovieEntries.filter(e => !e.availableDates.has(selectedIsoDate))
-  //   return [...playing, ...notPlaying]
-  // }, [allMovieEntries, selectedIsoDate, showTodayFirst])
-  const sortedAllEntries = allMovieEntries
-
-  // const sortedFilteredEntries = useMemo(() => {
-  //   if (!showTodayFirst) return filteredMovieEntries
-  //   const playing = filteredMovieEntries.filter(e => e.availableDates.has(selectedIsoDate))
-  //   const notPlaying = filteredMovieEntries.filter(e => !e.availableDates.has(selectedIsoDate))
-  //   return [...playing, ...notPlaying]
-  // }, [filteredMovieEntries, selectedIsoDate, showTodayFirst])
-  const sortedFilteredEntries = filteredMovieEntries
-  /* 선택 영화 카드가 뜨는지 — 카드의 아래 margin과 시간표 섹션 padTop이 겹치는 걸 막는다 */
-  const hasSelectedMovieCard = allMovieEntries.some(e => e.movie.id === selectedMovieId)
-
-  /* ── 선택 영화로 포스터 스트립 스크롤 ── */
+  /* ── 접힌 포스터 줄을 선택 영화 자리로 ── */
   const posterCenterDone = useRef(false)
-  /* 이 조합으로 이미 한 번 맞췄으면 다시 건드리지 않는다.
-     filteredMovieEntries는 렌더마다 새 배열이라 그냥 두면 effect가 매 렌더 돌면서
-     사용자가 좌우 버튼·드래그로 옮긴 위치를 곧바로 선택 영화 자리로 되돌린다. */
+  /* 이 조합으로 이미 한 번 맞췄으면 다시 건드리지 않는다 — 사용자가 옮긴 위치를 되돌리지 않게 */
   const lastCenterKey = useRef('')
   useEffect(() => {
     const el = posterScrollRef.current
-    if (!el || !selectedMovieId || allMovieEntries.length === 0) return
+    if (!el || shownExpanded || !selectedMovieId || allMovieEntries.length === 0) return
 
-    const centerKey = `${selectedMovieId}|${shownExpanded}|${allMovieEntries.length}|${filteredMovieEntries.length}|${posterItemW}`
+    const centerKey = `${selectedMovieId}|${allMovieEntries.length}|${posterItemW}`
     if (lastCenterKey.current === centerKey) return
     lastCenterKey.current = centerKey
 
-    // 현재 모드별 포스터 순서 계산
-    let visualEntries: typeof allMovieEntries
-    if (shownExpanded) {
-      const matchedIds = new Set(filteredMovieEntries.map(e => e.movie.id))
-      const nonMatching = allMovieEntries.filter(e => !matchedIds.has(e.movie.id))
-      visualEntries = [...filteredMovieEntries, ...nonMatching]
-
-      // 필터로 선택 영화가 밀려났으면 센터링 대신 맨 왼쪽 — 상영하는 영화들이 보이게
-      if (!matchedIds.has(selectedMovieId)) {
-        el.scrollTo({ left: 0, behavior: 'smooth' })
-        return
-      }
-    } else {
-      visualEntries = allMovieEntries
-    }
-
-    const idx = visualEntries.findIndex(e => e.movie.id === selectedMovieId)
+    const idx = allMovieEntries.findIndex(e => e.movie.id === selectedMovieId)
     if (idx < 0) return
-
-    const itemW = posterItemW
-    const gap = POSTER_GAP
-    const paddingLeft = POSTER_PAD_LEFT
-    const targetLeft = paddingLeft + idx * (itemW + gap)
+    const targetLeft = POSTER_PAD_LEFT + idx * (posterItemW + POSTER_GAP)
     const max = Math.max(0, el.scrollWidth - el.clientWidth)
-    const left = Math.min(max, Math.max(0, targetLeft - el.clientWidth / 2 + itemW / 2))
+    const left = Math.min(max, Math.max(0, targetLeft - el.clientWidth / 2 + posterItemW / 2))
     // 시트 첫 진입은 즉시 배치, 이후 선택 변경은 부드럽게 이동
     el.scrollTo({ left, behavior: posterCenterDone.current ? 'smooth' : 'auto' })
     posterCenterDone.current = true
-  // selectedMovieId 변경(외부 진입 포함) + 데이터 로드 시 실행
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedMovieId, allMovieEntries, filteredMovieEntries, shownExpanded, posterItemW])
+  }, [selectedMovieId, allMovieEntries, shownExpanded, posterItemW])
 
-  /* ── 펼칠 때 오늘 상영 없으면 가장 빠른 날로 자동 이동 ── */
-  useEffect(() => {
-    if (!shownExpanded || allMoviesLoading) return
-    if (selectedIsoDate !== todayIso) return
-    if (theaterAvailableDates.has(todayIso)) return
-    const earliest = Array.from(theaterAvailableDates).sort()[0]
-    if (earliest) setSelectedIsoDate(earliest)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shownExpanded, allMoviesLoading, theaterAvailableDates])
-
-  /* ── 선택된 상영 회차 ── */
-  const [selectedShowtimeId, setSelectedShowtimeId] = useState<string | null>(initialShowtimeId ?? null)
-
-  // 마운트 시점의 selectedMovieId 변경(initialShowtimeId 적용)은 회차 선택을 초기화하지 않는다.
-  const skipShowtimeResetRef = useRef(true)
-  useEffect(() => {
-    if (skipShowtimeResetRef.current) {
-      skipShowtimeResetRef.current = false
-      return
-    }
-    setSelectedShowtimeId(null)
-  }, [selectedMovieId])
-  useEffect(() => { if (!shownExpanded) setSelectedShowtimeId(null) }, [shownExpanded])
-
+  /* 접힌 포스터 줄은 목차다 — 영화를 누르면 그 영화가 상영하는 날로 옮기고, 펼친 뒤 그 카드로 스크롤한다 */
+  const [focusMovieId, setFocusMovieId] = useState<string | null>(initialShowtimeId ? selectedMovieId || null : null)
   const handleMovieSelect = (movieId: string, source: string) => {
     const entry = allMovieEntries.find((item) => item.movie.id === movieId)
     trackEvent('theater movie selected', {
@@ -648,66 +417,26 @@ export function TheaterSheet({
       selected_date: selectedIsoDate,
     })
     onMovieSelect(movieId)
+    const date = entry ? dateForMovie(entry.availableDates, selectedIsoDate) : undefined
+    if (date && date !== selectedIsoDate) schedule.selectDate(date)
+    setFocusMovieId(movieId)
   }
 
-  /* 영화 선택 시 상영시간 섹션으로 스무스 스크롤 (같은 영화 재탭 시 반복 방지) */
-  const prevScrollMovieIdRef = useRef(selectedMovieId)
   useEffect(() => {
-    if (!shownExpanded) return
-    if (prevScrollMovieIdRef.current === selectedMovieId) return
-    prevScrollMovieIdRef.current = selectedMovieId
-
+    if (!shownExpanded || !focusMovieId || schedule.showtimesLoading) return
     const id = requestAnimationFrame(() => {
       const container = scrollAreaRef.current
-      const target = showtimeSectionRef.current
+      const target = container?.querySelector<HTMLElement>(`[data-movie-anchor="${focusMovieId}"]`)
+      setFocusMovieId(null)
       if (!container || !target) return
       const headerOffset = dateBarStickyRef.current?.offsetHeight ?? 0
-      const delta = target.getBoundingClientRect().top - container.getBoundingClientRect().top - headerOffset - 8
+      const delta = target.getBoundingClientRect().top - container.getBoundingClientRect().top - headerOffset - 12
       container.scrollTo({ top: container.scrollTop + delta, behavior: 'smooth' })
     })
     return () => cancelAnimationFrame(id)
-  }, [selectedMovieId, shownExpanded])
+  }, [focusMovieId, shownExpanded, schedule.showtimesLoading, schedule.groups])
 
-  const handleShowtimeSelect = (showtime: Showtime) => {
-    setSelectedShowtimeId((prev) => {
-      const next = prev === showtime.id ? null : showtime.id
-      if (next) {
-        trackEvent('showtime selected', {
-          theater_id: theater.id,
-          theater_name: theater.name,
-          movie_id: showtime.movieId,
-          movie_title: showtime.movieTitle,
-          showtime_id: showtime.id,
-          show_date: showtime.showDate,
-          show_time: showtime.showTime,
-          seat_available: showtime.seatAvailable,
-          seat_total: showtime.seatTotal,
-          has_booking_url: Boolean(showtime.bookingUrl),
-          source: 'theater_sheet',
-        })
-      }
-      return next
-    })
-  }
-
-  /* ── 현재 시각 (1분마다 갱신, 오늘 탭에서 지난 회차 상태 표시) ── */
-  const [nowMinutes, setNowMinutes] = useState(() => {
-    const n = new Date()
-    return n.getHours() * 60 + n.getMinutes()
-  })
-  useEffect(() => {
-    const id = setInterval(() => {
-      const n = new Date()
-      setNowMinutes(n.getHours() * 60 + n.getMinutes())
-    }, 60_000)
-    return () => clearInterval(id)
-  }, [])
-
-  /* ── 상영시간 필터링 (오늘은 지난 상영도 포함, disabled로 표시) ── */
-  const filteredShowtimes = showtimes.filter((s) => {
-    if (s.movieId !== selectedMovieId) return false
-    return true
-  })
+  const selectedShowtime = schedule.selectedShowtime
 
   const openWebsite = () => {
     if (!theater.website) return
@@ -734,22 +463,16 @@ export function TheaterSheet({
   }
 
   const shareTheater = () => {
-    const selectedEntry = allMovieEntries.find((e) => e.movie.id === selectedMovieId)
-    const selectedShowtime = filteredShowtimes.find((st) => st.id === selectedShowtimeId)
-
     // '/map' — 진입점이 상영작으로 바뀐 뒤(#262) 지도 파라미터를 읽는 건 MapView 하나뿐이고
     // 그건 '/map'에서만 마운트된다. 루트로 보내면 받은 사람에게 파라미터가 통째로 무시된다.
     const url = new URL('/map', window.location.origin)
     url.searchParams.set('theater', theater.id)
     let title = theater.name
-    if (selectedEntry) {
-      url.searchParams.set('movie', selectedEntry.movie.id)
+    if (selectedShowtime) {
+      url.searchParams.set('movie', selectedShowtime.movieId)
       url.searchParams.set('date', selectedIsoDate)
-      title += ` - ${selectedEntry.movie.title}`
-      if (selectedShowtime) {
-        url.searchParams.set('showtime', selectedShowtime.id)
-        title += ` ${selectedShowtime.showTime.slice(0, 5)}`
-      }
+      url.searchParams.set('showtime', selectedShowtime.id)
+      title += ` - ${selectedShowtime.movieTitle} ${selectedShowtime.showTime.slice(0, 5)}`
     }
     void shareAndTrack({
       // text + url 동시에 넘기면 iOS Safari가 url을 무시하는 버그 있음 → title + url만 사용
@@ -759,8 +482,8 @@ export function TheaterSheet({
       properties: {
         theater_id: theater.id,
         theater_name: theater.name,
-        selected_movie_id: selectedMovieId || null,
-        selected_showtime_id: selectedShowtimeId || null,
+        selected_movie_id: selectedShowtime?.movieId ?? null,
+        selected_showtime_id: selectedShowtime?.id ?? null,
       },
       onCopied: () => setCopyCount(c => c + 1),
     })
@@ -1150,7 +873,7 @@ export function TheaterSheet({
                   <div style={{ width: 50, height: 10, borderRadius: 4, marginTop: 4, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
                 </div>
               ))
-            : moviesError && !movieEntriesData
+            : moviesError
               ? <TheaterQueryFailure message="상영작을 불러오지 못했어요" onRetry={() => { void retryMovies() }} />
             : allMovieEntries.length === 0
               ? (
@@ -1162,7 +885,7 @@ export function TheaterSheet({
                   />
                 )
               : (() => {
-                  return sortedAllEntries.map((entry) => {
+                  return allMovieEntries.map((entry) => {
                     const { movie } = entry
                     const unavailable = false // showTodayFirst && !entry.availableDates.has(selectedIsoDate)
                     const soldout = !unavailable && soldoutMovieIds.has(movie.id)
@@ -1254,7 +977,7 @@ export function TheaterSheet({
             overscrollBehavior: 'none',
             backgroundColor: panelMode ? 'var(--color-surface-bg)' : undefined,
             // 회차 선택 시 하단에서 뜨는 예매 바가 마지막 회차를 가리지 않도록 여백 확보
-            paddingBottom: (selectedShowtimeId && showtimeInView)
+            paddingBottom: (schedule.selectedShowtimeId && showtimeInView)
               ? (panelMode ? 'calc(88px + env(safe-area-inset-bottom))' : 'calc(88px + var(--nav-mobile-offset))')
               : (panelMode ? 'env(safe-area-inset-bottom)' : 'var(--nav-mobile-offset)'),
           }}
@@ -1279,37 +1002,31 @@ export function TheaterSheet({
             {theaterActionRow}
           </div>}
 
-          {/* DateBar — sticky */}
+          {/* 날짜 탭 — sticky */}
           <div ref={dateBarStickyRef} style={{
             position: 'sticky', top: 0, zIndex: 10,
             backgroundColor: panelMode ? 'var(--color-surface-card)' : 'var(--color-surface-bg)',
             borderTop: panelMode ? 'none' : '1px solid var(--color-border)',
-            borderBottom: panelMode ? '1px solid var(--color-border)' : undefined,
+            borderBottom: '1px solid var(--color-border)',
           }}>
-            <DateBar
-              days={daysWithMovieAvailability}
-              selectedDate={selectedDate}
-              hasPrev={dateWindowOffset > 0}
-              hasNext={dateWindowOffset < maxDateWindowOffset}
-              onPrev={() => setDateWindowOffset((o) => Math.max(0, o - 7))}
-              onNext={() => setDateWindowOffset((o) => Math.min(maxDateWindowOffset, o + 7))}
-              onSelectDate={(date) => {
-                const day = days.find((d) => d.date === date)
-                if (day) {
-                  trackEvent('theater date changed', {
-                    theater_id: theater.id,
-                    theater_name: theater.name,
-                    from_date: selectedIsoDate,
-                    to_date: day.isoDate,
-                    selected_movie_id: selectedMovieId || null,
-                    source: 'theater_sheet',
-                  })
-                  classifySessionIntent('type_c', {
-                    source: 'theater_sheet',
-                    theater_id: theater.id,
-                  })
-                  setSelectedIsoDate(day.isoDate)
-                }
+            <DetailDateTabs
+              dates={schedule.dates}
+              selectedDate={selectedIsoDate}
+              activeDates={schedule.activeDates}
+              onSelect={(date) => {
+                trackEvent('theater date changed', {
+                  theater_id: theater.id,
+                  theater_name: theater.name,
+                  from_date: selectedIsoDate,
+                  to_date: date,
+                  selected_movie_id: selectedMovieId || null,
+                  source: 'theater_sheet',
+                })
+                classifySessionIntent('type_c', {
+                  source: 'theater_sheet',
+                  theater_id: theater.id,
+                })
+                schedule.selectDate(date)
               }}
             />
           </div>
@@ -1317,469 +1034,102 @@ export function TheaterSheet({
           {/* GV & 이벤트 */}
           <GvEventSection events={gvEvents} theaterName={theater.name} selectedIsoDate={selectedIsoDate} onGvOpen={(id) => setSelGvId(id)} />
 
-          {/* ── 포스터 가로 스크롤 — expanded에서 스크롤과 함께 ── */}
-          {(() => {
-            const activeCount = sheetFilters.genres.length + sheetFilters.nations.length + (sheetFilters.bookable ? 1 : 0)
-            const filtersOn = activeCount > 0
-            const total = allMovieEntries.length
-            const matched = filteredMovieEntries.length
-            const matchedIds = filtersOn ? new Set(filteredMovieEntries.map(e => e.movie.id)) : null
-            const nonMatchingEntries = filtersOn ? allMovieEntries.filter(e => !matchedIds!.has(e.movie.id)) : []
-            // 필터 칩 기준 위/아래 여백 대칭 — 위: DateBar pad 8 + 필터 행 padTop 16 = 24,
-            // 아래: 필터 행 padBottom 16 + 스트립 padTop 8 = 24 (스트립 단독일 땐 16 유지)
-            const hasFilterRow = availableGenres.length > 0 || availableNations.length > 0
-            return (
-          <div style={{
-            borderBottom: '1px solid var(--color-border)',
-            backgroundColor: 'var(--color-surface-bg)',
-          }}>
-            {/* 필터 행 */}
-            {hasFilterRow && (
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                paddingLeft: 'var(--gutter-sheet)', paddingRight: 'var(--gutter-sheet)', paddingTop: 16, paddingBottom: 16,
-              }}>
-                {/* 왼쪽: 편수 + 활성 칩들 */}
-                <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 8, overflowX: 'auto', scrollbarWidth: 'none' }}>
-                  <span style={{
-                    flexShrink: 0, fontSize: 'var(--text-body)', fontWeight: 700,
-                    color: filtersOn ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
-                    whiteSpace: 'nowrap',
-                    lineHeight: 1,
-                  }}>
-                    {filtersOn ? `${matched}/${total}편` : `${total}편 상영`}
-                  </span>
-                  {/* 예매 가능만 보기 — 즉시 토글, 드로어 열지 않음 */}
-                  <FilterPill
-                    active={sheetFilters.bookable}
-                    onClick={() => applySheetFilters({ ...sheetFilters, bookable: !sheetFilters.bookable }, 'theater_sheet_quick')}
-                  >
-                    예매 가능만 보기
-                  </FilterPill>
-                  {sheetFilters.genres.map(g => (
-                    <FilterPill
-                      key={`g:${g}`}
-                      active
-                      onClick={() => applySheetFilters({ ...sheetFilters, genres: sheetFilters.genres.filter(x => x !== g) })}
-                    >
-                      {g}
-                      <Icon name="x" size={9} />
-                    </FilterPill>
-                  ))}
-                  {sheetFilters.nations.map(n => (
-                    <FilterPill
-                      key={`n:${n}`}
-                      active
-                      onClick={() => applySheetFilters({ ...sheetFilters, nations: sheetFilters.nations.filter(x => x !== n) })}
-                    >
-                      {withFlag(n)}
-                      <Icon name="x" size={9} />
-                    </FilterPill>
-                  ))}
-                </div>
-                {/* 오른쪽: 필터 버튼 */}
-                <FilterPill
-                  active={filtersOn}
-                  onClick={() => {
-                    trackEvent('theater sheet filter opened', { theater_id: theater.id, source: 'theater_sheet' })
-                    setPendingFilters(sheetFilters)
-                    setFilterSheetOpen(true)
-                  }}
-                >
-                  <Icon name="funnel" size={12} />
-                  필터{activeCount > 0 ? ` ${activeCount}` : ''}
-                </FilterPill>
-              </div>
-            )}
-
-            {/* 이 날 상영 필터 체크박스 — 비활성화 (todo.md 참고) */}
-            {/* <label style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              padding: '8px 16px',
-              cursor: 'pointer', fontSize: 'var(--text-badge)', userSelect: 'none',
-              color: showTodayFirst ? 'var(--color-primary-base)' : 'var(--color-text-caption)',
-              fontWeight: showTodayFirst ? 600 : 400,
-            }}>
-              <input type="checkbox" checked={showTodayFirst} onChange={e => setShowTodayFirst(e.target.checked)}
-                style={{ width: 13, height: 13, cursor: 'pointer', accentColor: 'var(--color-primary-base)', flexShrink: 0 }} />
-              이 날 상영하는 영화만 보기
-            </label> */}
-
-            <div style={{ position: 'relative' }}>
-              {/* 포스터 좌우 스크롤 버튼 — expanded 전체(모바일/PC 패널) */}
-              {(() => {
-                const scrollBy = (dir: 1 | -1) => scrollByPage(dir, posterItemW + POSTER_GAP)
-                /* 도크(panelMode)에서는 면을 더 묽게 — 패널 배경이 이미 흐리다 */
-                const btnStyle: React.CSSProperties = {
-                  ...posterNavStyle,
-                  zIndex: panelMode ? 2 : 3,
-                  backgroundColor: `color-mix(in srgb, var(--color-surface-card) ${panelMode ? 55 : 72}%, transparent)`,
-                  boxShadow: panelMode ? '0 1px 6px rgba(0,0,0,0.10)' : '0 1px 6px rgba(0,0,0,0.12)',
-                }
-                return (
-                  <>
-                    {posterCanScrollLeft && (
-                      <ScrollNavButton direction="left" style={btnStyle} onClick={() => scrollBy(-1)} />
-                    )}
-                    {posterCanScrollRight && (
-                      <ScrollNavButton direction="right" style={btnStyle} onClick={() => scrollBy(1)} />
-                    )}
-                  </>
-                )
-              })()}
-
-            <div
-              ref={posterScrollRef}
-              onScroll={updatePosterScrollEdge}
-              style={{
-                display: 'flex',
-                gap: 12,
-                overflowX: 'auto',
-                paddingTop: hasFilterRow ? 8 : 16,
-                paddingLeft: POSTER_PAD_LEFT,
-                paddingRight: POSTER_PAD_LEFT,
-                paddingBottom: 8,
-                scrollbarWidth: 'none',
-                cursor: 'grab',
-                userSelect: 'none',
-                touchAction: 'pan-y',
-              }}
-            >
-              {allMoviesLoading
-                ? Array.from({ length: 7 }).map((_, i) => (
-                    <div key={i} style={{ flexShrink: 0, width: posterItemW }}>
-                      <div style={{ width: posterItemW, height: posterItemH, borderRadius: 0, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
-                      <div style={{ width: 70, height: 11, borderRadius: 4, marginTop: 8, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
-                      <div style={{ width: 50, height: 10, borderRadius: 4, marginTop: 4, backgroundColor: 'var(--color-border)', animation: 'poster-wave 1.5s ease-in-out infinite', animationDelay: `${i * 130}ms` }} />
-                    </div>
-                  ))
-                : moviesError && !movieEntriesData
-                  ? <TheaterQueryFailure message="상영작을 불러오지 못했어요" onRetry={() => { void retryMovies() }} />
-                : allMovieEntries.length === 0
-                  ? (
-                      <EmptyState
-                        illustration={{ src: '/illust/no-showtimes.png', alt: '상영 정보 없음', width: 78, height: 104 }}
-                        message="확인된 상영 정보가 없어요"
-                        paddingY={8}
-                        style={{ flex: 1, minWidth: '100%', paddingBottom: 12 }}
-                      />
-                    )
-                  : <>
-                      {/* 조건 일치 영화 */}
-                      {sortedFilteredEntries.map((entry) => {
-                        const { movie } = entry
-                        const unavailable = !entry.availableDates.has(selectedIsoDate)
-                        const soldout = !unavailable && soldoutMovieIds.has(movie.id)
-                        return (
-                          <div
-                            key={movie.id}
-                            style={{ flexShrink: 0, width: posterItemW, overflow: 'visible' }}
-                          >
-                            <div style={{ width: posterItemW }}>
-                              <div style={{ position: 'relative' }}>
-                                <PosterThumb
-                                  width={posterItemW} height={posterItemH} size="lg" radius={2}
-                                  alt={movie.title}
-                                  src={movie.posterUrl}
-                                  selected={selectedMovieId === movie.id}
-                                  onClick={unavailable ? undefined : () => { handleMovieSelect(movie.id, 'poster_strip') }}
-                                />
-                                {soldout && (
-                                  <PosterChip corner="bottom-right" tone="error">매진</PosterChip>
-                                )}
-                                {unavailable && (() => {
-                                  const allDates = [...entry.availableDates].sort()
-                                  const MAX_SHOWN = 4
-                                  const selectedTime = new Date(selectedIsoDate).getTime()
-                                  // 선택한 날짜 기준 가장 가까운 상영일부터(과거·미래 상관없이) 채움
-                                  const nearestDates = [...allDates]
-                                    .sort((a, b) => Math.abs(new Date(a).getTime() - selectedTime) - Math.abs(new Date(b).getTime() - selectedTime))
-                                    .slice(0, MAX_SHOWN)
-                                  const shownSet = new Set(nearestDates)
-                                  const nextDates = allDates.filter((d) => shownSet.has(d))
-                                  const dateLabels = nextDates.map((iso) => ({
-                                    iso,
-                                    label: `${Number(iso.split('-')[2])}일`,
-                                  }))
-                                  const moreCount = allDates.length - dateLabels.length
-                                  return (
-                                    <div
-                                      onClick={() => handleMovieSelect(movie.id, 'unavailable_movie_card')}
-                                      style={{
-                                        position: 'absolute', inset: 0,
-                                        borderRadius: 0,
-                                        background: 'var(--color-scrim-strong)',
-                                        display: 'flex', flexDirection: 'column',
-                                        alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                                        gap: 4,
-                                      }}
-                                    >
-                                      <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--color-on-scrim-sub)', textAlign: 'center' }}>
-                                        상영 일정
-                                      </span>
-                                      {dateLabels.length > 0 ? (
-                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                                          {dateLabels.map(({ iso, label }) => (
-                                            <span key={iso} style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-on-scrim)', lineHeight: 1.3 }}>
-                                              {label}
-                                            </span>
-                                          ))}
-                                          {moreCount > 0 && (
-                                            <span style={{ fontSize: 10, fontWeight: 500, color: 'var(--color-on-scrim-sub)', marginTop: 4 }}>
-                                              +{moreCount}
-                                            </span>
-                                          )}
-                                        </div>
-                                      ) : (
-                                        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-on-scrim)', textAlign: 'center' }}>
-                                          일정 없음
-                                        </span>
-                                      )}
-                                    </div>
-                                  )
-                                })()}
-                              </div>
-                              <div style={{
-                                marginTop: 8, fontSize: 'var(--text-meta)', fontWeight: 600,
-                                color: 'var(--color-text-primary)',
-                                lineHeight: 1.35, overflow: 'hidden',
-                                display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-                                opacity: unavailable ? 0.4 : 1,
-                                textDecoration: 'none', // (showTodayFirst && unavailable) ? 'line-through' : 'none',
-                              }}>{movie.title}</div>
-                              {movie.director && movie.director.length > 0 && (
-                                <div style={{
-                                  marginTop: 4, fontSize: 10,
-                                  color: 'var(--color-text-caption)',
-                                  overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
-                                  opacity: unavailable ? 0.3 : 1,
-                                }}>{movie.director[0]}</div>
-                              )}
-                            </div>
-                          </div>
-                        )
-                      })}
-                      {/* 조건 외 구분선 + 반투명 영화 */}
-                      {filtersOn && nonMatchingEntries.length > 0 && (
-                        <>
-                          <div style={{
-                            flexShrink: 0, width: 1, height: posterItemH,
-                            alignSelf: 'flex-start', marginTop: 0,
-                            backgroundColor: 'var(--color-border)',
-                            marginLeft: 4, marginRight: 4,
-                          }} />
-                          {nonMatchingEntries.map((entry) => {
-                            const { movie } = entry
-                            return (
-                              <div key={movie.id} style={{ flexShrink: 0, width: posterItemW, overflow: 'visible', opacity: 0.38 }}>
-                                <div style={{ width: posterItemW }}>
-                                  <div style={{ position: 'relative' }}>
-                                    <PosterThumb width={posterItemW} height={posterItemH} size="lg" radius={2} alt={movie.title} src={movie.posterUrl} />
-                                    <div style={{
-                                      position: 'absolute', inset: 0,
-                                      borderRadius: 0,
-                                      background: 'var(--color-scrim-soft)',
-                                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    }}>
-                                      <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-on-scrim)', textAlign: 'center', lineHeight: 1.3 }}>
-                                        조건 외
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <div style={{
-                                    marginTop: 8, fontSize: 'var(--text-meta)', fontWeight: 600,
-                                    color: 'var(--color-text-primary)',
-                                    lineHeight: 1.35, overflow: 'hidden',
-                                    display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-                                  }}>{movie.title}</div>
-                                  {movie.director && movie.director.length > 0 && (
-                                    <div style={{
-                                      marginTop: 4, fontSize: 10,
-                                      color: 'var(--color-text-caption)',
-                                      overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
-                                    }}>{movie.director[0]}</div>
-                                  )}
-                                </div>
-                              </div>
-                            )
-                          })}
-                        </>
+          {/* 그날 상영작 — 상영작 탭 극장 페이지와 같은 본문 */}
+          <div ref={showtimeSectionRef} style={{ padding: `var(--gutter) var(--gutter-sheet) ${schedule.selectedShowtimeId ? 88 : 40}px` }}>
+            {(() => {
+              const activeCount = sheetFilters.genres.length + sheetFilters.nations.length + (sheetFilters.bookable ? 1 : 0)
+              const filtersOn = isFilterActive(sheetFilters)
+              const hasFilterOptions = availableGenres.length > 0 || availableNations.length > 0
+              return (
+                <TheaterScheduleBody
+                  schedule={schedule}
+                  groups={filteredGroups}
+                  countLabel={filtersOn ? `${filteredGroups.length}/${schedule.groups.length}편` : undefined}
+                  headingTrailing={(
+                    <div style={{ display: 'flex', gap: 8, minWidth: 0, overflowX: 'auto', scrollbarWidth: 'none' }}>
+                      {/* 예매 가능만 보기 — 즉시 토글, 드로어 열지 않음 */}
+                      <FilterPill
+                        active={sheetFilters.bookable}
+                        onClick={() => applySheetFilters({ ...sheetFilters, bookable: !sheetFilters.bookable }, 'theater_sheet_quick')}
+                      >
+                        예매 가능만
+                      </FilterPill>
+                      {hasFilterOptions && (
+                        <FilterPill
+                          active={sheetFilters.genres.length + sheetFilters.nations.length > 0}
+                          onClick={() => {
+                            trackEvent('theater sheet filter opened', { theater_id: theater.id, source: 'theater_sheet' })
+                            setPendingFilters(sheetFilters)
+                            setFilterSheetOpen(true)
+                          }}
+                        >
+                          <Icon name="funnel" size={12} />
+                          필터{activeCount > 0 ? ` ${activeCount}` : ''}
+                        </FilterPill>
                       )}
-                    </>
-              }
-            </div>
-
-            </div>{/* position:relative 래퍼 닫기 */}
-          </div>
-            )
-          })()}
-
-          {/* 선택된 영화 카드 — 카드가 있으면 아래 간격은 카드 margin(gutter-sheet)만으로 잡는다.
-              시간표 섹션이 padTop을 또 얹으면 아래만 넓어져 좌우 마진과 어긋난다 */}
-          {(() => {
-            const entry = allMovieEntries.find(e => e.movie.id === selectedMovieId)
-            if (!entry) return null
-            const { movie } = entry
-            return (
-              <div style={{
-                margin: 'var(--gutter-sheet)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 12,
-                overflow: 'hidden',
-                backgroundColor: 'var(--color-surface-card)',
-              }}>
-                <div style={{ display: 'flex', gap: 16, padding: 'var(--gutter-sheet)' }}>
-                  {/* 포스터 — 피그마 84×126, r2 */}
-                  <div style={{ flexShrink: 0, width: 84, height: 126, borderRadius: 'var(--radius-poster)', overflow: 'hidden', backgroundColor: 'var(--color-neutral-700)' }}>
-                    {movie.posterUrl && (
-                      <img src={toSecureImageUrl(movie.posterUrl)} alt={movie.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                    )}
-                  </div>
-                  {/* 영화 정보 */}
-                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <div className="display-h2" style={{
-                      color: 'var(--color-text-primary)',
-                      overflow: 'hidden',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                    }}>
-                      {movie.title}
                     </div>
-                    {/* 2.0: 정보 태그는 칩 옷 벗김 — 아웃라인 pill은 '누를 수 있는 것' 전용 문법 */}
-                    <div style={{
-                      fontSize: 'var(--text-meta)', fontWeight: 400,
-                      color: 'var(--color-text-caption)',
-                      lineHeight: 1.5,
-                    }}>
-                      {[
-                        movie.nation ? movie.nation.split(/[,，/·]+/).map(n => n.trim()).filter(Boolean).map(n => withFlag(n)).join(' ') : null,
-                        movie.runtimeMinutes ? `${movie.runtimeMinutes}분` : null,
-                        movie.genre && movie.genre.length > 0 ? movie.genre.join(' · ') : null,
-                      ].filter(Boolean).join(' · ')}
+                  )}
+                  onMovieOpen={(id) => onMovieDetailOpen ? onMovieDetailOpen(id) : navigateMovie(id, `/movie/${id}?theater=${theater.id}`)}
+                  onShowtimeSelected={(st) => trackEvent('showtime selected', {
+                    theater_id: theater.id,
+                    theater_name: theater.name,
+                    movie_id: st.movieId,
+                    movie_title: st.movieTitle,
+                    showtime_id: st.id,
+                    show_date: st.showDate,
+                    show_time: st.showTime,
+                    seat_available: st.seatAvailable,
+                    seat_total: st.seatTotal,
+                    has_booking_url: Boolean(st.bookingUrl),
+                    source: 'theater_sheet',
+                  })}
+                  onShowtimeUnavailable={(_, kind) => trackEvent('showtime unavailable clicked', {
+                    theater_id: theater.id,
+                    kind,
+                    source: 'theater_sheet',
+                  })}
+                  renderCardFooter={(movie) => (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px var(--gutter)' }}>
+                      {movie.director.length > 0 && (
+                        <DirectorChip
+                          name={movie.director[0]}
+                          pending={movieNavPendingId === `director-${movie.id}`}
+                          onClick={() => {
+                            if (onDirectorOpen) onDirectorOpen(movie.director[0])
+                            else navigateMovie(`director-${movie.id}`, `/director/${encodeURIComponent(movie.director[0])}`)
+                          }}
+                        />
+                      )}
+                      {onMovieSearch && (
+                        <Button
+                          type="button"
+                          variant="text"
+                          size="sm"
+                          style={{ marginLeft: 'auto', gap: 4 }}
+                          onClick={() => { onMovieSearch(movie.id, movie.title); onClose() }}
+                        >
+                          <Icon name="search" size={14} />
+                          지도에서 이 영화 찾기
+                        </Button>
+                      )}
                     </div>
-                    {/* 감독 칩 — 피그마 2.0/MovieCard 개선안. 예전엔 카드 아래 전체폭 행이라
-                        카드가 한 줄 더 길었다. 정보 칼럼 안으로 들여 그 줄을 없앤다 */}
-                    {movie.director && movie.director.length > 0 && (
-                      <DirectorChip
-                        name={movie.director[0]}
-                        pending={movieNavPendingId === `director-${movie.id}`}
-                        onClick={() => {
-                          if (onDirectorOpen) onDirectorOpen(movie.director[0])
-                          else navigateMovie(`director-${movie.id}`, `/director/${encodeURIComponent(movie.director[0])}`)
-                        }}
-                      />
-                    )}
-                  </div>
-                </div>
-                {/* 액션 버튼 */}
-                <div style={{ borderTop: '1px solid var(--color-border)', display: 'flex' }}>
-                  <Button
-                    type="button"
-                    variant="text"
-                    size="md"
-                    onClick={() => onMovieDetailOpen ? onMovieDetailOpen(movie.id) : navigateMovie(movie.id, `/movie/${movie.id}?theater=${theater.id}`)}
-                    style={{ ...cardActionBtn, opacity: movieNavPendingId === movie.id ? 0.5 : 1 }}
-                  >
-                    <Icon name="clapperboard" size={14} style={{ flexShrink: 0 }} />
-                    영화 상세 정보
-                  </Button>
-                  <Divider orientation="vertical" />
-                  <Button
-                    type="button"
-                    variant="text"
-                    size="md"
-                    onClick={() => { onMovieSearch?.(movie.id, movie.title); onClose() }}
-                    style={cardActionBtn}
-                  >
-                    <Icon name="search" size={14} />
-                    지도에서 이 영화 검색
-                  </Button>
-                </div>
-              </div>
-            )
-          })()}
-
-          {/* 상영시간표 */}
-          <div ref={showtimeSectionRef} style={{ padding: `${hasSelectedMovieCard ? 0 : 12}px var(--gutter-sheet) ${selectedShowtimeId ? 88 : 40}px` }}>
-            {showtimesLoading ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(var(--comp-showtime-min-width), 1fr))', gap: 12 }}>
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <ShowtimeCellSkeleton key={i} />
-                ))}
-              </div>
-            ) : showtimesError && !showtimeData ? (
-              <TheaterQueryFailure message="상영 시간표를 불러오지 못했어요" onRetry={() => { void retryShowtimes() }} />
-            ) : filteredShowtimes.length === 0 ? (
-              <div style={{
-                paddingTop: 32,
-                textAlign: 'center',
-                color: 'var(--color-text-caption)',
-                fontSize: 13,
-              }}>
-                선택한 날짜에 상영 정보가 없어요
-              </div>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(var(--comp-showtime-min-width), 1fr))', gap: 12 }}>
-                {filteredShowtimes.map((st) => {
-                  const [sh, sm] = st.showTime.split(':').map(Number)
-                  const startMin = sh * 60 + sm
-                  const endMin = st.endTime ? (() => { const [eh, em] = st.endTime!.split(':').map(Number); return eh * 60 + em })() : startMin + 120
-                  const isToday = selectedIsoDate === todayIso
-                  const kind: import('./ShowtimeCell').ShowtimeKind = (() => {
-                    if (isToday && endMin <= nowMinutes) return 'ended'
-                    if (isToday && startMin < nowMinutes && endMin > nowMinutes) return 'nowplaying'
-                    if (isSoldOut(st.seatAvailable, st.seatTotal)) return 'soldout'
-                    if (st.seatTotal > 0 && st.seatAvailable <= st.seatTotal * 0.1) return 'low'
-                    if (sh >= 21) return 'late'
-                    return 'normal'
-                  })()
-                  return (
-                    <ShowtimeCell
-                      key={st.id}
-                      startTime={st.showTime.slice(0, 5)}
-                      endTime={st.endTime ? st.endTime.slice(0, 5) : ''}
-                      seatAvailable={st.seatAvailable}
-                      seatTotal={st.seatTotal}
-                      kind={kind}
-                      selected={st.id === selectedShowtimeId}
-                      onClick={kind !== 'soldout' && kind !== 'nowplaying' && kind !== 'ended' ? () => handleShowtimeSelect(st) : undefined}
-                      onUnavailableClick={() => {
-                        trackEvent('showtime unavailable clicked', {
-                          theater_id: theater.id,
-                          kind,
-                          source: 'theater_sheet',
-                        })
-                      }}
-                    />
-                  )
-                })}
-              </div>
-            )}
-            {!showtimesLoading && filteredShowtimes.length > 0 && (
-              <div style={{
-                marginTop: 16,
-                fontSize: 'var(--text-meta)',
-                color: 'var(--color-text-caption)',
-                textAlign: 'center',
-                lineHeight: 1.5,
-              }}>
-                좌석 정보는 실시간이 아니라서<br />실제 현황과 다를 수 있어요
-              </div>
-            )}
+                  )}
+                />
+              )
+            })()}
           </div>
         </div>
       )}
       {/* ── 예매 바 — 회차 선택 시 하단에서 슬라이드 업 ── */}
       {shownExpanded && (() => {
-        const selectedSt = filteredShowtimes.find((st) => st.id === selectedShowtimeId)
+        const selectedSt = selectedShowtime
         const normalizedBookingUrl = selectedSt?.bookingUrl?.replace(/^http:\/\//i, 'https://')
         return (
           <div style={{
             position: 'absolute',
             left: 0, right: 0,
             bottom: 0,
-            transform: (selectedShowtimeId && showtimeInView) ? 'translateY(0)' : 'translateY(100%)',
+            transform: (schedule.selectedShowtimeId && showtimeInView) ? 'translateY(0)' : 'translateY(100%)',
             transition: 'transform 0.28s cubic-bezier(0.32, 0.72, 0, 1)',
             backgroundColor: 'var(--color-surface-card)',
             borderTop: '1px solid var(--color-border)',

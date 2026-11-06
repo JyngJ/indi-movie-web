@@ -116,8 +116,8 @@ export function dateForMovie(availableDates: ReadonlySet<string>, current: strin
 }
 
 export interface ScheduleMovieFilter {
-  genres: readonly string[]
-  nations: readonly string[]
+  genres: string[]
+  nations: string[]
   /** 고를 수 있는 회차가 하나라도 있는 영화만 */
   bookable: boolean
 }
