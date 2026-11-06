@@ -302,7 +302,10 @@ export function getPrevPathname(): string | null {
 /** 글로벌 네비게이션 — 모바일: 하단 탭바(지도·상영작·소식·MY), 데스크톱: 좌측 아이콘 레일(지도·상영작 | 소식·MY) */
 export function GlobalNav() {
   const isDesktop = useIsDesktopLayout()
-  const pathname = usePathname()
+  const routePathname = usePathname()
+  // 지도 위에서 극장 주소가 열린 동안은 지도 탭이 켜져 있어야 한다
+  const mapTheaterRouteId = useUIStore((s) => s.mapTheaterRouteId)
+  const pathname = mapTheaterRouteId ? '/map' : routePathname
   const [mounted, setMounted] = useState(false)
   const [filmsHref, setFilmsHref] = useState('/')
 

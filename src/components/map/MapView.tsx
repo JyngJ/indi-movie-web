@@ -2322,6 +2322,27 @@ export default function MapView() {
 
 
 
+  /* ── 지도 위 극장 주소 — 시트를 펼치면 주소가 극장 페이지(/films/theater/[id])가 된다.
+     (tabs)/map/@theater 가로채기 라우트가 지도를 그대로 둔 채 주소만 바꾸고, 같은 주소를 새로 열면
+     극장 페이지가 뜬다. 뒤로가기는 시트를 접는다. 모바일 시트만 — 데스크톱 도크는 늘 펼쳐져 있다 ── */
+  const mapTheaterRouteId = useUIStore((s) => s.mapTheaterRouteId)
+  useEffect(() => {
+    if (!mapTheaterRouteId) return
+    const theater = theaters.find((t) => t.id === mapTheaterRouteId)
+    if (!theater) return
+    if (exitTimerRef.current) clearTimeout(exitTimerRef.current)
+    setSheetExiting(false)
+    setSelectedId(theater.id)
+    setDisplayedId(theater.id)
+    setSheetExpanded(true)
+  }, [mapTheaterRouteId, theaters])
+  const prevTheaterRouteRef = useRef<string | null>(null)
+  useEffect(() => {
+    // 뒤로가기로 극장 주소에서 빠지면 시트를 접는다
+    if (prevTheaterRouteRef.current && !mapTheaterRouteId && !isDesktopLayout) setSheetExpanded(false)
+    prevTheaterRouteRef.current = mapTheaterRouteId
+  }, [mapTheaterRouteId, isDesktopLayout])
+
   // 퇴장 애니메이션 후 완전히 언마운트
   const closeSheet = useCallback(() => {
     if (exitTimerRef.current) clearTimeout(exitTimerRef.current)
@@ -3919,14 +3940,19 @@ export default function MapView() {
                 selected_movie_id: selectedMovieId,
               })
               setSheetExpanded(true)
+              if (!isDesktopLayout && !mapTheaterRouteId) {
+                // feedback-audit-ignore — 화면은 그대로이고 주소만 극장 페이지로 바뀐다(시트는 이미 펼쳐짐)
+                router.push(`/films/theater/${selectedTheater.id}`, { scroll: false })
+              }
             }}
-            onCollapse={() => setSheetExpanded(false)}
+            onCollapse={() => (mapTheaterRouteId ? router.back() : setSheetExpanded(false))}
             onClose={() => {
               trackEvent('theater sheet closed', {
                 theater_id: selectedTheater.id,
                 selected_movie_id: selectedMovieId || null,
                 source: 'theater_sheet',
               })
+              if (mapTheaterRouteId) router.back()
               closeSheet()
             }}
             onMovieSearch={(movieId, movieTitle) => {

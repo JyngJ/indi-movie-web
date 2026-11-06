@@ -49,6 +49,11 @@ interface UIStore {
   requestMapFocus: (focus: MapFocusRequest) => void
   clearMapFocus: () => void
 
+  /** 지도 위에서 극장 주소(/films/theater/[id])가 열려 있으면 그 극장 id — 지도 시트가 극장 페이지 역할을 한다.
+   *  (tabs)/map/@theater 가로채기 라우트가 켜고 끈다 */
+  mapTheaterRouteId: string | null
+  setMapTheaterRouteId: (id: string | null) => void
+
   /** 데스크톱 지도 화면 좌측 도크 접힘 상태 — 도크 토글 버튼과 GlobalNav '지도' 탭 재클릭이 함께 제어 */
   isMapDockCollapsed: boolean
   setMapDockCollapsed: (collapsed: boolean) => void
@@ -62,6 +67,9 @@ export const useUIStore = create<UIStore>((set, get) => ({
     set({ isBottomSheetOpen: true, bottomSheetContent: content }),
   closeBottomSheet: () =>
     set({ isBottomSheetOpen: false, bottomSheetContent: null }),
+
+  mapTheaterRouteId: null,
+  setMapTheaterRouteId: (id) => set({ mapTheaterRouteId: id }),
 
   isSearchOpen: false,
   setSearchOpen: (open) => set({ isSearchOpen: open }),

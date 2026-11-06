@@ -16,7 +16,9 @@ const MapView = dynamic(() => import('@/components/map/MapView'), { ssr: false }
 export default function TabsLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   // 홈('/')은 상영작, 지도는 '/map' — 랜딩 실험(상영작 랜딩 승) 결과를 라우트로 확정한 구조.
-  const isOnMap = pathname === '/map'
+  // 지도 위에서 극장 주소가 열린 동안(가로채기 라우트)도 지도 화면이다 — 주소만 극장 페이지
+  const mapTheaterRouteId = useUIStore((s) => s.mapTheaterRouteId)
+  const isOnMap = pathname === '/map' || mapTheaterRouteId !== null
   const settingsOpen = useUIStore((s) => s.isSettingsOpen)
   const setSettingsOpen = useUIStore((s) => s.setSettingsOpen)
   const settingsInitialPage = useUIStore((s) => s.settingsInitialPage)
