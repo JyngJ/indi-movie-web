@@ -34,6 +34,7 @@ import { NoScreeningPanel } from '@/components/domain/movieDetail/NoScreeningPan
 import type { SimilarPick } from '@/lib/catalog/similarNowShowing'
 import { initialScreeningDate } from '@/lib/catalog/initialScreeningDate'
 import { isSoldOut } from '@/lib/catalog/seatAvailability'
+import { showtimeKind } from '@/lib/theater/schedule'
 
 function useIsDesktop() {
   const [v, setV] = useState(false)
@@ -533,21 +534,8 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection, s
         </button>
         <div style={{ padding: '12px 16px 16px', display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, backgroundColor: 'var(--color-neutral-100)' }}>
           {entry.showtimes.map((st) => {
-            /* TheaterSheet과 동일한 kind 분류 */
-            const [sh, sm] = st.showTime.split(':').map(Number)
-            const startMin = sh * 60 + sm
-            const endMin = st.endTime ? (() => { const [eh, em] = st.endTime!.split(':').map(Number); return eh * 60 + em })() : startMin + 120
             const now = new Date()
-            const nowMinutes = now.getHours() * 60 + now.getMinutes()
-            const isToday = selectedDate === dates[0]
-            const kind: import('@/components/domain/ShowtimeCell').ShowtimeKind = (() => {
-              if (isToday && endMin <= nowMinutes) return 'ended'
-              if (isToday && startMin < nowMinutes && endMin > nowMinutes) return 'nowplaying'
-              if (isSoldOut(st.seatAvailable, st.seatTotal)) return 'soldout'
-              if (st.seatTotal > 0 && st.seatAvailable <= st.seatTotal * 0.1) return 'low'
-              if (sh >= 21) return 'late'
-              return 'normal'
-            })()
+            const kind = showtimeKind(st, { isToday: selectedDate === dates[0], nowMinutes: now.getHours() * 60 + now.getMinutes() })
             return (
               <ShowtimeCell
                 key={st.id}

@@ -2,7 +2,9 @@
 
 import { Icon } from '@/components/primitives'
 
-export type ShowtimeKind = 'normal' | 'low' | 'soldout' | 'late' | 'nowplaying' | 'ended'
+import type { ShowtimeKind } from '@/lib/theater/schedule'
+
+export type { ShowtimeKind }
 
 interface ShowtimeCellProps {
   startTime: string
