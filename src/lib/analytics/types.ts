@@ -35,6 +35,7 @@ export type AnalyticsEventName =
   | 'movie detail viewed'
   | 'movie detail tab changed'
   | 'movie theaters map opened'
+  | 'theater map opened'
   | 'movie theater selected'
   | 'curation movie selected'
   | 'curation section dwell'

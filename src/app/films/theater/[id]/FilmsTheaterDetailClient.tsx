@@ -425,6 +425,8 @@ export function FilmsTheaterDetailClient({ theater, initialSelection, initialSho
     // '/map' — 지도 파라미터는 '/map'에서만 마운트되는 MapView가 읽는다 (#262 이후)
     const url = new URL('/map', window.location.origin)
     url.searchParams.set('theater', theater.id)
+    // 지도가 영화 상세 진입과 구분해 받는다 — 시트를 접어 열고, 영화 필터를 걸지 않고, 뒤로가기를 이 페이지로
+    url.searchParams.set('from', 'theater')
     if (selectedShowtimeData) {
       url.searchParams.set('movie', selectedShowtimeData.st.movieId)
       url.searchParams.set('date', selectedDate)
@@ -511,7 +513,15 @@ export function FilmsTheaterDetailClient({ theater, initialSelection, initialSho
               공유
             </Button>
           </div>
-          <MapCtaButton fullWidth={!isDesktop} style={isDesktop ? { whiteSpace: 'nowrap' } : undefined} onClick={() => router.push(mapUrlWithSelection())}>
+          <MapCtaButton fullWidth={!isDesktop} style={isDesktop ? { whiteSpace: 'nowrap' } : undefined} onClick={() => {
+            trackEvent('theater map opened', {
+              theater_id: theater.id,
+              theater_name: theater.name,
+              has_showtime: Boolean(selectedShowtimeData),
+              source: 'films_theater_detail',
+            })
+            router.push(mapUrlWithSelection())
+          }}>
             지도에서 보기
           </MapCtaButton>
         </div>
