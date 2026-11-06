@@ -1102,7 +1102,9 @@ export default function MapView() {
 
   /* 지도 첫 방문 힌트 — 핀의 포스터가 무슨 뜻인지 한 번만 알린다(예전 온보딩 3장 대신, 2026-10).
      순서: 위치 권한 창 → 핀 안내 말풍선 → 지역 설정 안내. 권한 창이 떠 있는 동안은 확인을 미룬다 */
-  const locModalOpen = !locModalSuppressed && (locPermState === 'prompt' || locPermState === 'requesting' || locPermState === 'denied')
+  /* 극장 페이지에서 위치를 보러 왔을 때는 위치 권한 창을 이번 방문 동안 미룬다 — 핀부터 보여 준다 */
+  const [locModalDeferred, setLocModalDeferred] = useState(false)
+  const locModalOpen = !locModalSuppressed && !locModalDeferred && (locPermState === 'prompt' || locPermState === 'requesting' || locPermState === 'denied')
   const pinHint = useFirstUseHint('mapPins', !locModalOpen, 1500)
   const [directorFilter, setDirectorFilter] = useState<{ name: string } | null>(null)
   const [panelStack, setPanelStack] = useState<DesktopPanelState[]>([])
@@ -1146,6 +1148,8 @@ export default function MapView() {
   }, [gvEvents])
   selectedIdRef.current = selectedId
   const [fromMovieId, setFromMovieId] = useState<string | null>(null)
+  /* 상영작 탭 극장 페이지의 "지도에서 보기"로 들어왔을 때 — 시트의 뒤로가기는 그 페이지로 돌아간다 */
+  const [returnHref, setReturnHref] = useState<string | null>(null)
   const [initialSheetDate, setInitialSheetDate] = useState<string | undefined>(undefined)
   const [initialShowtimeId, setInitialShowtimeId] = useState<string | undefined>(undefined)
   const suppressMovieFilterFitRef = useRef(false)
@@ -2451,7 +2455,42 @@ export default function MapView() {
 
     restoredTheaterRef.current = restoreKey
     const fromMovie = searchParams.get('fromMovie')
-    if (movieParam) {
+    const fromTheaterPage = searchParams.get('from') === 'theater'
+    if (fromTheaterPage) {
+      /* 극장 페이지 → 지도: 위치를 보러 온 것이다. 시트는 접어 지도와 핀이 보이게 하고,
+         고르지 않은 영화 필터는 걸지 않는다. 고른 영화·날짜는 시트를 펼쳤을 때 이어지게 넘긴다.
+         예전엔 영화 상세 진입과 같은 길을 타서 시트가 지도를 덮고, 영화 필터가 걸리고,
+         뒤로가기가 열어 본 적 없는 영화 상세로 갔다 — 69%가 6초 안에 되돌아갔다(2026-11). */
+      suppressMovieFilterFitRef.current = true
+      closeSearch()
+      closeDesktopPanel()
+      if (exitTimerRef.current) clearTimeout(exitTimerRef.current)
+      setSheetExiting(false)
+      setSelectedId(theater.id)
+      setDisplayedId(theater.id)
+      if (movieParam) setSelectedMovieId(movieParam)
+      setInitialSheetDate(dateParam ?? undefined)
+      setInitialShowtimeId(showtimeParam ?? undefined)
+      setSheetExpanded(isDesktopLayout)
+      setFromMovieId(null)
+      setReturnHref(`/films/theater/${theater.id}`)
+      setLocModalDeferred(true)
+
+      trackEvent('theater sheet opened', {
+        theater_id: theater.id,
+        theater_name: theater.name,
+        selected_movie_id: movieParam || null,
+        source: 'theater_page',
+        has_movie_filter: false,
+      })
+
+      const currentZoom = mapRef.current?.getZoom() ?? 15
+      flyToForTheater(
+        [theater.lat, theater.lng],
+        Math.max(currentZoom, 16),
+        0.75,
+      )
+    } else if (movieParam) {
       openTheaterForMovie(theater.id, movieParam, dateParam ?? undefined, 'movie_detail')
       setInitialShowtimeId(showtimeParam ?? undefined)
       // 특정 회차까지 지정된 딥링크는 모바일에서도 시트를 화면 가득(펼침) 상태로 열어야 함
@@ -2484,20 +2523,22 @@ export default function MapView() {
       )
     }
 
-    if (fromMovie || movieParam) setFromMovieId(fromMovie ?? movieParam ?? null)
+    if (!fromTheaterPage) setReturnHref(null)
+    if (!fromTheaterPage && (fromMovie || movieParam)) setFromMovieId(fromMovie ?? movieParam ?? null)
 
     // history.replaceState는 useSearchParams를 갱신하지 않아 다음 내비게이션과 상태가
     // 어긋날 수 있다 — router.replace로 통일해 searchParams 훅과 정합을 맞춘다.
     const params = new URLSearchParams(Array.from(searchParams.entries()))
     params.delete('theater')
     params.delete('fromMovie')
+    params.delete('from')
     params.delete('date')
     params.delete('movie')
     params.delete('showtime')
     const qs = params.toString()
     router.replace(qs ? `/map?${qs}` : '/map', { scroll: false })
 
-  }, [closeSearch, flyToForTheater, isDesktopLayout, mapReadyTick, movies.length, openTheaterForMovie, router, searchParams, theaters])
+  }, [closeDesktopPanel, closeSearch, flyToForTheater, isDesktopLayout, mapReadyTick, movies.length, openTheaterForMovie, router, searchParams, theaters])
 
   // 영화 상세 / 패널에서 ?movie= 파라미터로 지도 필터만 복원
   const restoredMovieFilterRef = useRef<string | null>(null)
@@ -3860,6 +3901,10 @@ export default function MapView() {
       {/* 드래그 바텀시트 — TheaterSheet가 자체적으로 Leaflet 이벤트 차단 */}
       {/* 극장 시트 — 모바일: 풀스크린 드래그 시트 / 데스크톱: 좌측 도크에 내장(영화·감독 상세는 우측에 별도로 플로팅돼 동시 표시 가능) */}
       {selectedTheater && (() => {
+        /* 들어온 극장 페이지로 돌아가는 길은 그 극장 시트에서만 — 다른 핀을 누른 뒤엔 남기지 않는다 */
+        const sheetBackHref = returnHref === `/films/theater/${selectedTheater.id}`
+          ? returnHref
+          : fromMovieId ? `/movie/${fromMovieId}?tab=theaters` : null
         const theaterSheet = (
           <TheaterSheet
             theater={selectedTheater}
@@ -3919,7 +3964,7 @@ export default function MapView() {
             initialShowtimeId={initialShowtimeId}
             initialGvId={initialGvId}
             gvEvents={gvEvents}
-            onBack={fromMovieId ? () => router.push(`/movie/${fromMovieId}?tab=theaters`) : undefined}
+            onBack={sheetBackHref ? () => router.push(sheetBackHref) : undefined}
           />
         )
         if (!isDesktopLayout) return theaterSheet
@@ -4009,7 +4054,7 @@ export default function MapView() {
       )}
 
       {/* 위치 권한 팝업 */}
-      {!locModalSuppressed && (locPermState === 'prompt' || locPermState === 'requesting' || locPermState === 'denied') && (
+      {locModalOpen && (locPermState === 'prompt' || locPermState === 'requesting' || locPermState === 'denied') && (
         <LocationPermissionModal
           state={locPermState}
           onRequest={locRequest}
