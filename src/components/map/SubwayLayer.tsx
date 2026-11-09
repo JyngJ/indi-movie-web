@@ -6,6 +6,7 @@ import {
   SUBWAY_LINES,
   SUBWAY_LINE_MIN_ZOOM,
   subwayLineStyle,
+  snapStationToLine,
   makeStationIcon,
 } from '@/lib/map/subwayUtils'
 import type { Station } from '@/types/api'
@@ -36,15 +37,18 @@ function SubwayLayerComponent({
       )}
 
       {/* 지하철 역 마커 그리기 */}
-      {visibleStations.map((station) => (
-        <Marker
-          key={`station-${station.id}`}
-          position={[station.lat, station.lng]}
-          icon={makeStationIcon(station, isDark, zoom)}
-          interactive={false}
-          zIndexOffset={-1000}
-        />
-      ))}
+      {visibleStations.map((station) => {
+        const position = snapStationToLine(station)
+        return (
+          <Marker
+            key={`station-${station.id}`}
+            position={[position.lat, position.lng]}
+            icon={makeStationIcon(station, isDark, zoom)}
+            interactive={false}
+            zIndexOffset={-1000}
+          />
+        )
+      })}
     </>
   )
 }

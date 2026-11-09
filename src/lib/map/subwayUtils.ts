@@ -2,6 +2,7 @@ import L from 'leaflet'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import type { Station } from '@/types/api'
 import subwayLinesData from '@/data/subway-lines.json'
+import { createStationSnapper } from '@/lib/map/stationSnap'
 
 export interface SubwayLineProperties {
   line?: string
@@ -114,6 +115,9 @@ export const SUBWAY_LINES = {
   ...(subwayLinesData as FeatureCollection<Geometry, SubwayLineProperties>),
   features: (subwayLinesData as FeatureCollection<Geometry, SubwayLineProperties>).features.filter(isSubwayLineFeature),
 }
+
+/** 역 데이터와 노선 데이터의 출처가 달라 어긋나는 좌표를 지도에 그릴 때만 맞춘다 */
+export const snapStationToLine = createStationSnapper(SUBWAY_LINES.features)
 
 export function subwayLineStyle(feature: Feature<Geometry, SubwayLineProperties> | undefined, isDark: boolean) {
   return {
