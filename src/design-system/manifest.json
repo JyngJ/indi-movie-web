@@ -2111,9 +2111,9 @@
         },
         {
           "name": "--shadow-pin",
-          "value": "0 2px 6px rgba(0, 0, 0, 0.18)",
+          "value": "0 2px 4px rgba(0, 0, 0, 0.32)",
           "comment": "지도 극장 핀 — 피그마 2.0/shadow/pin",
-          "resolved": "0 2px 6px rgba(0, 0, 0, 0.18)",
+          "resolved": "0 2px 4px rgba(0, 0, 0, 0.32)",
           "figma": null
         },
         {

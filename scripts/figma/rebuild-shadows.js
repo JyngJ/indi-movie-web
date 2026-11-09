@@ -42,7 +42,7 @@ const DEFS = [
     '고도 3 — 모달, 다이얼로그'],
   ['2.0/shadow/sheet', [sh(0, 24, 0.14), sh(0, 6, 0.08)],
     '바텀시트 — offset 0 ambient (방향 없음: 화면 하단 고정 면)'],
-  ['2.0/shadow/pin', [sh(2, 6, 0.18)],
+  ['2.0/shadow/pin', [sh(2, 4, 0.32)],
     '지도 핀 — 1겹 유지 (작은 요소, 2겹은 과함)'],
 ]
 const existing = await figma.getLocalEffectStylesAsync()

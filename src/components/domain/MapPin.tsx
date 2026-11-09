@@ -27,6 +27,9 @@ const HEART_SIZE = 11
 const HEART_DX = 0
 const HEART_DY = 0.5
 const AURA = 44
+/** 스티커 흰 테두리 두께 */
+const RING = 2
+const RING_SELECTED = 2.5
 
 /* 흐린 핀(필터 밖 극장) — 다크 모드는 폐지돼 한 값만 둔다 */
 const DIMMED_DOT = 'var(--color-neutral-500)'
@@ -88,31 +91,28 @@ export function MapPin({ selected = false, favorite = 'none', label, labelOffset
         </div>
       )}
 
-      {/* dot — 관심 극장이면 원형 빨강 핀 안에 흰 하트 (흰 테두리 / 빨강 / 흰 하트) */}
-      <div style={{ position: 'relative', zIndex: 1, width: DOT, height: DOT }}>
-        {favTheater && !dimmed ? (
-          /* 원+테두리+하트를 단일 SVG로 — CSS left/top은 정수로 스냅돼 서브픽셀 정렬이 안 된다.
-             SVG 좌표계 안에서 하트를 원 중심에 수학적으로 놓고, 광학 보정은 HEART_DX/DY로. */
-          <svg width={DOT} height={DOT} viewBox={`0 0 ${DOT} ${DOT}`} aria-hidden="true" style={{ display: 'block', overflow: 'visible', filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.18))' /* = --shadow-pin (drop-shadow는 변수 합성 불가) */ }}>
-            {selected && <circle cx={DOT / 2} cy={DOT / 2} r={DOT / 2 + 1.5} fill="var(--color-primary-base)" />}
-            <circle cx={DOT / 2} cy={DOT / 2} r={DOT / 2} fill={selected ? '#fff' : 'var(--color-surface-bg)'} />
-            <circle cx={DOT / 2} cy={DOT / 2} r={DOT / 2 - (selected ? 2.5 : 2)} fill="var(--color-error-mid)" />
+      {/* 스티커 — 흰 테두리 / 색 원. 관심 극장은 빨강 + 흰 하트.
+          원과 하트를 단일 SVG로 그린다 — CSS left/top은 정수로 스냅돼 서브픽셀 정렬이 안 된다.
+          그림자는 바깥 원형 상자에 둔다 — drop-shadow()는 var(--shadow-pin)을 합성하지 못한다. */}
+      <div style={{
+        position: 'relative',
+        zIndex: 1,
+        width: DOT,
+        height: DOT,
+        borderRadius: '50%',
+        boxShadow: selected
+          ? '0 0 0 2.5px var(--color-primary-base), var(--shadow-pin)'
+          : 'var(--shadow-pin)',
+      }}>
+        <svg width={DOT} height={DOT} viewBox={`0 0 ${DOT} ${DOT}`} aria-hidden="true" style={{ display: 'block' }}>
+          <circle cx={DOT / 2} cy={DOT / 2} r={DOT / 2} fill="var(--color-on-accent)" />
+          <circle cx={DOT / 2} cy={DOT / 2} r={DOT / 2 - (selected ? RING_SELECTED : RING)} fill={favTheater && !dimmed ? 'var(--color-error-mid)' : dot} />
+          {favTheater && !dimmed && (
             <g transform={`translate(${DOT / 2 - HEART_SIZE / 2 + HEART_DX} ${DOT / 2 - HEART_SIZE / 2 + HEART_DY}) scale(${HEART_SIZE / 24})`}>
-              <path fill="#fff" d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+              <path fill="var(--color-on-accent)" d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
             </g>
-          </svg>
-        ) : (
-          <div style={{
-            width: DOT,
-            height: DOT,
-            borderRadius: '50%',
-            backgroundColor: dot,
-            border: selected ? '2.5px solid #fff' : '2px solid var(--color-surface-bg)',
-            boxShadow: selected
-              ? 'var(--shadow-pin), 0 0 0 2.5px var(--color-primary-base)'
-              : 'var(--shadow-pin)',
-          }} />
-        )}
+          )}
+        </svg>
         {/* 관심 영화 상영 중 — 하트 뱃지 (우상단) */}
         {favMovie && !dimmed && (
           <div style={{
