@@ -1,6 +1,7 @@
 /**
- * 역 데이터에는 있는데 노선 데이터에 없는 수도권 노선을 OSM에서 받아 subway-lines.json에 더한다.
- * 기존 노선은 건드리지 않고, 이 스크립트가 넣은 노선(source: 'osm')만 교체한다.
+ * 역 데이터에는 있는데 노선 데이터에 없는 노선·지선 구간을 OSM에서 받아 subway-lines.json에 더한다.
+ * 기존 노선은 건드리지 않고, 이 스크립트가 넣은 선(source: 'osm')만 교체한다.
+ * 기존 노선이 있으면 그 선에서 벗어난 구간만 더한다.
  * Usage: npx tsx scripts/fetch-overpass-missing-subway-lines.ts
  * 데이터 출처: OpenStreetMap contributors (ODbL)
  */
@@ -8,11 +9,13 @@ import { readFile, writeFile } from 'node:fs/promises'
 
 const OVERPASS_URL = 'https://overpass-api.de/api/interpreter'
 const LINES_PATH = 'src/data/subway-lines.json'
-const BBOX = '36.7,126.3,38.1,128.0'
+const BBOX = '34.9,126.3,38.1,129.4'
 
 /** 복선은 방향별 선로가 따로 있다 — 이미 받은 선로에서 이 거리 안이면 같은 구간으로 본다 */
 const DUPLICATE_TRACK_METERS = 25
 const SIMPLIFY_METERS = 4
+/** 기존 노선에 더하는 구간 중 이보다 짧으면 역 구내 선로 조각으로 보고 버린다 */
+const MIN_ADDED_SECTION_METERS = 300
 const METERS_PER_DEG_LAT = 110_540
 const METERS_PER_DEG_LNG = 88_000
 
@@ -26,10 +29,28 @@ const TARGETS: Array<{ line: string; pattern: RegExp }> = [
   { line: '의정부경전철', pattern: /^의정부경전철/ },
   { line: '우이신설선', pattern: /^우이신설선/ },
   { line: '공항철도', pattern: /^인천국제공항철도/ },
+  { line: '서울1호선', pattern: /^수도권 전철 1호선/ },
+  { line: '서울2호선', pattern: /^서울 지하철 2호선/ },
+  { line: '서울3호선', pattern: /^수도권 전철 3호선/ },
+  { line: '서울4호선', pattern: /^수도권 전철 4호선/ },
+  { line: '서울5호선', pattern: /^서울 지하철 5호선/ },
+  { line: '서울6호선', pattern: /^서울 지하철 6호선/ },
+  { line: '서울7호선', pattern: /^서울 지하철 7호선/ },
+  { line: '서울8호선', pattern: /^서울 지하철 8호선/ },
+  { line: '서울9호선', pattern: /^서울 지하철 9호선/ },
+  { line: '인천1호선', pattern: /^인천 도시철도 1호선/ },
+  { line: '부산1호선', pattern: /^부산 도시철도 1호선/ },
+  { line: '부산2호선', pattern: /^부산 도시철도 2호선/ },
+  { line: '부산3호선', pattern: /^부산 도시철도 3호선/ },
+  { line: '대구1호선', pattern: /^대구 도시철도 1호선/ },
+  { line: '대구2호선', pattern: /^대구 도시철도 2호선/ },
+  { line: '광주1호선', pattern: /^광주 도시철도 1호선/ },
+  { line: '대전1호선', pattern: /^대전 도시철도 1호선/ },
 ]
 
 type Point = [number, number]
 type Member = { type: string; ref: number; role: string; geometry?: Array<{ lat: number; lon: number }> }
+type LineFeature = { properties?: { source?: string; line?: string }; geometry: { type: string; coordinates: Point[][] } }
 type Relation = { id: number; tags: Record<string, string>; members: Member[] }
 
 function distanceMeters(a: Point, b: Point) {
@@ -63,9 +84,9 @@ function simplify(points: Point[], tolerance: number): Point[] {
 }
 
 /** 여러 방향·계통 relation의 선로에서 겹치지 않는 way만 고른다 */
-function uniqueTracks(relations: Relation[]): Point[][] {
+function uniqueTracks(relations: Relation[], existing: Point[][]): Point[][] {
   const seenWays = new Set<number>()
-  const accepted: Point[][] = []
+  const accepted: Point[][] = [...existing]
   const trackWays = (r: Relation) => r.members.filter((m) => m.type === 'way' && !/platform/.test(m.role) && (m.geometry?.length ?? 0) >= 2)
   const ordered = [...relations].sort((a, b) => trackWays(b).length - trackWays(a).length)
 
@@ -78,7 +99,7 @@ function uniqueTracks(relations: Relation[]): Point[][] {
       if (isNew) accepted.push(points)
     }
   }
-  return accepted
+  return accepted.slice(existing.length)
 }
 
 function stitch(ways: Point[][]): Point[][] {
@@ -110,7 +131,7 @@ function stitch(ways: Point[][]): Point[][] {
 }
 
 async function fetchRelations(): Promise<Relation[]> {
-  const query = `[out:json][timeout:180];relation["type"="route"]["route"~"^(train|light_rail|subway)$"](${BBOX});out geom;`
+  const query = `[out:json][timeout:300];relation["type"="route"]["route"~"^(train|light_rail|subway)$"]["name"~"호선|경의|수인|경춘|용인|의정부경전철|우이신설|인천국제공항철도"](${BBOX});out geom;`
   const res = await fetch(OVERPASS_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'indi-movie-web subway-lines-builder' },
@@ -122,21 +143,25 @@ async function fetchRelations(): Promise<Relation[]> {
 }
 
 async function main() {
-  const collection = JSON.parse(await readFile(LINES_PATH, 'utf8')) as { features: Array<{ properties?: { source?: string } }> }
+  const collection = JSON.parse(await readFile(LINES_PATH, 'utf8')) as { features: LineFeature[] }
   const kept = collection.features.filter((f) => f.properties?.source !== 'osm')
   const relations = await fetchRelations()
 
-  const added = TARGETS.map(({ line, pattern }) => {
+  const added = TARGETS.flatMap(({ line, pattern }) => {
     const matched = relations.filter((r) => pattern.test(r.tags.name ?? ''))
     if (matched.length === 0) throw new Error(`relation 없음: ${line}`)
-    const coordinates = stitch(uniqueTracks(matched))
+    const existing = kept.filter((f) => f.properties?.line === line).flatMap((f) => f.geometry.coordinates)
+    const minLength = existing.length > 0 ? MIN_ADDED_SECTION_METERS : 0
+    const coordinates = stitch(uniqueTracks(matched, existing))
+      .filter((chain) => chain.slice(1).reduce((sum, p, i) => sum + distanceMeters(chain[i], p), 0) >= minLength)
       .map((chain) => simplify(chain, SIMPLIFY_METERS).map(([lng, lat]) => [Number(lng.toFixed(5)), Number(lat.toFixed(5))]))
     console.log(`${line}: relation ${matched.length}, 선 ${coordinates.length}, 점 ${coordinates.reduce((n, c) => n + c.length, 0)}`)
-    return {
+    if (coordinates.length === 0) return []
+    return [{
       type: 'Feature',
       properties: { source: 'osm', line, lineCode: line, name: line },
       geometry: { type: 'MultiLineString', coordinates },
-    }
+    }]
   })
 
   await writeFile(LINES_PATH, JSON.stringify({ ...collection, features: [...kept, ...added] }))
