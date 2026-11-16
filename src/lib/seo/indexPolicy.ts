@@ -30,19 +30,42 @@ export function robotsForScreenings(hasUpcoming: boolean): RobotsDirective | und
    2~3주 Search Console·애드센스 반응을 보고 장르 기준(점수 3 이상 3편 → 567편)으로 넓힌다. */
 export const REOPEN_MIN_SYNOPSIS_CHARS = 80
 
+/* 2단계 (2026-11): 지난 상영 기록이 있는 영화를 연다.
+   2026-10-21→28 한 주에 Search Console NOINDEX가 70쪽에서 921쪽으로 늘었고, 같은 주 네이버 노출이
+   하루 4만 → 1만 3천으로 떨어졌다. 상영 없는 영화 상세에 "지난 상영"(극장·기간·회차, screening_days)을
+   실으면 이 사이트에만 있는 본문이 생긴다(src/lib/catalog/pastScreenings.ts).
+   하루·이틀짜리 기록은 극장 한두 줄뿐이라 빈 틀과 다르지 않아 3일 이상만 연다
+   (2026-11-16 실측: 상영 예정 없이 기록만 있는 271편 중 84편). 기록은 2026-10-13부터라 날이 갈수록 늘어난다. */
+export const REOPEN_MIN_PAST_SCREENING_DAYS = 3
+
 export interface MovieIndexFacts {
   hasUpcoming: boolean
   synopsisLength: number
   /** 지금 상영 중인 같은 감독 영화 수 */
   sameDirectorNowShowing: number
+  /** 오늘 이전에 상영한 날 수(screening_days) */
+  pastScreeningDays: number
 }
 
 export function shouldIndexMovie(f: MovieIndexFacts): boolean {
   if (f.hasUpcoming) return true
+  if (f.pastScreeningDays >= REOPEN_MIN_PAST_SCREENING_DAYS) return true
   return f.synopsisLength >= REOPEN_MIN_SYNOPSIS_CHARS && f.sameDirectorNowShowing > 0
 }
 
 /** 영화 상세 robots — 색인 대상이면 기본값, 아니면 색인 제외 + 링크는 따라가게 */
 export function robotsForMovie(f: MovieIndexFacts): RobotsDirective | undefined {
   return robotsForScreenings(shouldIndexMovie(f))
+}
+
+/**
+ * 사이트맵 수정일(lastmod) — 영화 정보 수정일과 마지막 상영일(KST 자정) 중 늦은 쪽, ISO 문자열.
+ * 다시 연 영화는 정보 수정일이 몇 달 전이라 검색엔진이 "바뀐 게 없다"고 보고 다시 읽기를 미뤘다.
+ * 그동안 예전 noindex가 남는다. 본문(지난 상영)이 바뀐 날을 수정일로 낸다.
+ */
+export function sitemapLastModified(updatedAt: string, lastScreeningDate: string | null): string {
+  const updated = new Date(updatedAt)
+  if (!lastScreeningDate) return updated.toISOString()
+  const screened = new Date(`${lastScreeningDate}T00:00:00+09:00`)
+  return (screened > updated ? screened : updated).toISOString()
 }

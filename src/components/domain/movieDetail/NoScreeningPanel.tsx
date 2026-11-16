@@ -1,30 +1,40 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
-import { CardContainer, EmptyState } from '@/components/primitives'
+import { Button, CardContainer, EmptyState } from '@/components/primitives'
 import { PosterThumb } from '@/components/domain/PosterThumb'
 import { FavoriteActionRow } from '@/components/domain/favorites/FavoriteActionRow'
 import { trackEvent } from '@/lib/analytics/client'
 import { similarReasonLabel, type SimilarPick } from '@/lib/catalog/similarNowShowing'
+import type { PastScreeningView } from '@/lib/catalog/pastScreenings'
 
 const POSTER_W = 104
 const POSTER_H = 156
+/** 지난 상영 극장 목록은 이만큼만 펼쳐 두고 나머지는 접는다 — 지금 볼 수 있는 비슷한 상영작이 아래로 밀리지 않게 */
+const PAST_COLLAPSED_COUNT = 3
 
 /**
  * 예정된 상영이 없는 영화의 상영 영역 (2026-10).
  * 예전엔 빈 날짜 탭 + "이 날 상영 정보가 없어요"만 남아, 검색으로 들어온 사람이 할 일이 없었다.
  *  1) 관심 영화로 넣으면 다시 상영할 때 알림(new_screening 규칙 — src/lib/notifications/rules.ts)
- *  2) 지금 상영 중인 영화 중 감독이 같거나 장르가 겹치는 것(pickSimilarNowShowing). 고를 게 없으면 칸을 비운다.
+ *  2) 지난 상영 — 어느 극장에서 언제 상영했는지(screening_days, 2026-11). 이 사이트에만 있는 본문이라
+ *     색인을 다시 여는 근거다(indexPolicy). 극장 이름은 극장 상세로 이어 검색 로봇이 따라가게 한다.
+ *     극장은 3곳만 보이고 나머지는 접는다. 접힌 줄도 HTML에는 남겨(hidden) 크롤러가 읽는다.
+ *  3) 지금 상영 중인 영화 중 감독이 같거나 장르가 겹치는 것(pickSimilarNowShowing). 고를 게 없으면 칸을 비운다.
  * 목록은 서버가 골라 넘긴다 — HTML에 링크가 실려야 검색 로봇이 따라간다.
  */
 export function NoScreeningPanel({
-  movie, similar, isDesktop,
+  movie, similar, past = null, isDesktop,
 }: {
   movie: { id: string; title: string }
   similar: SimilarPick[]
+  past?: PastScreeningView | null
   isDesktop: boolean
 }) {
   const gutter = isDesktop ? 0 : 'var(--gutter)'
+  const [pastExpanded, setPastExpanded] = useState(false)
+  const pastHidden = past ? Math.max(0, past.theaters.length - PAST_COLLAPSED_COUNT) : 0
   return (
     <div style={{ padding: `0 ${isDesktop ? '0' : 'var(--gutter)'}` }}>
       {/* 알림 안내는 카드로 묶어 위 섹션 제목·아래 비슷한 영화와 떼어 보이게 한다 */}
@@ -37,6 +47,54 @@ export function NoScreeningPanel({
           action={<FavoriteActionRow type="movie" id={movie.id} label={movie.title} style={{ width: 280, maxWidth: '100%' }} />}
         />
       </CardContainer>
+
+      {past && (
+        <section aria-labelledby="past-screenings" style={{ marginTop: 'var(--spacing-8)' }}>
+          <h2 id="past-screenings" style={{ margin: `0 0 var(--spacing-2)`, fontSize: 'var(--text-h2)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+            지난 상영
+          </h2>
+          <p style={{ margin: 0, fontSize: 'var(--text-body)', color: 'var(--color-text-secondary)', lineHeight: 1.5, wordBreak: 'keep-all' }}>
+            {past.sentence}
+          </p>
+          <ul style={{ listStyle: 'none', margin: 'var(--spacing-3) 0 0', padding: 0 }}>
+            {past.theaters.map((t, i) => (
+              <li key={t.id} hidden={!pastExpanded && i >= PAST_COLLAPSED_COUNT} style={{ borderTop: i === 0 ? 'none' : '1px solid var(--color-border)' }}>
+                <Link
+                  href={`/films/theater/${t.id}`}
+                  onClick={() => trackEvent('past screening theater selected', {
+                    movie_id: movie.id, movie_title: movie.title, theater_id: t.id, theater_name: t.name,
+                  })}
+                  style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 'var(--spacing-3)', padding: 'var(--spacing-3) 0', textDecoration: 'none' }}
+                >
+                  <span style={{ minWidth: 0, fontSize: 'var(--text-body)', fontWeight: 600, color: 'var(--color-text-primary)' }}>
+                    {t.name}
+                    <span style={{ marginLeft: 'var(--spacing-2)', fontSize: 'var(--text-meta)', fontWeight: 400, color: 'var(--color-text-caption)' }}>{t.region}</span>
+                  </span>
+                  <span style={{ flexShrink: 0, fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)', fontVariantNumeric: 'tabular-nums' }}>
+                    {t.period}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          {pastExpanded && past.moreCount > 0 && (
+            <p style={{ margin: 'var(--spacing-1) 0 0', fontSize: 'var(--text-meta)', color: 'var(--color-text-caption)' }}>
+              외 {past.moreCount}곳
+            </p>
+          )}
+          {pastHidden > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-expanded={pastExpanded}
+              onClick={() => setPastExpanded((v) => !v)}
+              style={{ marginTop: 'var(--spacing-1)', paddingLeft: 0, paddingRight: 0 }}
+            >
+              {pastExpanded ? '접기' : `극장 ${pastHidden}곳 더 보기`}
+            </Button>
+          )}
+        </section>
+      )}
 
       {similar.length > 0 && (
         <section aria-labelledby="similar-now-showing" style={{ marginTop: 'var(--spacing-8)' }}>

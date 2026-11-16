@@ -10,6 +10,7 @@ import { ogImageUrl } from '@/lib/og/cards'
 import { robotsForMovie } from '@/lib/seo/indexPolicy'
 import { getSimilarityPool } from '@/lib/catalog/getSimilarityPool'
 import { pickSimilarNowShowing } from '@/lib/catalog/similarNowShowing'
+import { getPastScreenings } from '@/lib/catalog/getPastScreenings'
 
 /* 매 요청 SSR이던 화면이다(force-dynamic). 검색 유입 1위 경로라 요청 수 × 렌더가
    그대로 Vercel Fluid Active CPU로 나갔다 — 2026-09 무료 한도(4h)를 넘겼다.
@@ -94,14 +95,15 @@ export async function generateMetadata({
     alternates: {
       canonical: url,
     },
-    /* 상영이 없으면 색인에서 빼되, 시놉시스가 있고 같은 감독 영화가 상영 중이면 연다 —
-       사이트맵(movie/sitemap.ts · getReopenedMovies)과 같은 기준(indexPolicy) */
+    /* 상영이 없으면 색인에서 빼되, 지난 상영이 3일 이상이거나 시놉시스가 있고 같은 감독 영화가
+       상영 중이면 연다 — 사이트맵(movie/sitemap.ts · getReopenedMovies)과 같은 기준(indexPolicy) */
     robots: robotsForMovie({
       hasUpcoming: showtimes.length > 0,
       synopsisLength: movie.synopsis?.trim().length ?? 0,
       sameDirectorNowShowing: showtimes.length > 0
         ? 0
         : pickSimilarNowShowing(movie, await getSimilarityPool()).filter((m) => m.reason.kind === 'director').length,
+      pastScreeningDays: showtimes.length > 0 ? 0 : (await getPastScreenings(id))?.days ?? 0,
     }),
   }
 }
