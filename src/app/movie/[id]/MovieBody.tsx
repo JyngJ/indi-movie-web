@@ -11,6 +11,8 @@ import { buildMovieScreeningSummary } from '@/lib/seo/movieScreeningSummary'
 import { toKstIsoDate } from '@/lib/date'
 import { getSimilarityPool } from '@/lib/catalog/getSimilarityPool'
 import { pickSimilarNowShowing } from '@/lib/catalog/similarNowShowing'
+import { getPastScreenings } from '@/lib/catalog/getPastScreenings'
+import { toPastScreeningView } from '@/lib/catalog/pastScreenings'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.영화볼지도.com'
 
@@ -31,6 +33,12 @@ export async function MovieBody({
     ? pickSimilarNowShowing(movie, await getSimilarityPool())
     : []
 
+  /* 상영이 없을 때만 — 지난 상영 기록(screening_days)을 본문으로 낸다. 이 사이트에만 있는 정보라
+     색인을 다시 여는 근거가 된다(indexPolicy). 문구는 서버가 오늘 날짜로 만든다. */
+  const today = toKstIsoDate(new Date())
+  const pastSummary = showtimes.length === 0 ? await getPastScreenings(id) : null
+  const pastScreenings = pastSummary ? toPastScreeningView(pastSummary, today) : null
+
   const schema = toMovieSchema(movie, BASE_URL)
   const screeningEventSchemas = toScreeningEventSchema(movie, showtimes, BASE_URL)
 
@@ -46,7 +54,7 @@ export async function MovieBody({
       answer: theaterNames.length > 0
         // writing-audit-ignore — SEO 메타·스키마 문구는 문어체 유지
         ? `전국 독립·예술영화관 ${theaterNames.length}곳에서 상영 중입니다: ${theaterNames.slice(0, 15).join(', ')}${theaterNames.length > 15 ? ' 등' : ''}. 극장별 상영 시간과 예매 링크는 영화볼지도에서 확인할 수 있습니다.`
-        : `지금은 전국 독립·예술영화관에 예정된 상영 일정이 없어요. 상영 시간표는 매일 갱신되니 새 상영이 열리면 여기서 확인할 수 있어요.`,
+        : `지금은 전국 독립·예술영화관에 예정된 상영 일정이 없어요. ${pastScreenings ? `지난 상영: ${pastScreenings.sentence}. ` : ''}상영 시간표는 매일 갱신되니 새 상영이 열리면 여기서 확인할 수 있어요.`,
     },
     {
       question: `${movie.title}의 가장 빠른 상영은 언제인가요?`,
@@ -86,8 +94,9 @@ export async function MovieBody({
         movie={movie}
         initialShowtimes={showtimes}
         initialSelection={initialSelection}
-        screeningSummary={buildMovieScreeningSummary(showtimes, toKstIsoDate(new Date()))}
+        screeningSummary={buildMovieScreeningSummary(showtimes, today)}
         similarNowShowing={similarNowShowing}
+        pastScreenings={pastScreenings}
       />
       <SeoShowtimesSection movieTitle={movie.title} entries={showtimes} />
     </>

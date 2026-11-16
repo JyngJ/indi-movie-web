@@ -33,6 +33,7 @@ import { formatBookingDate } from '@/lib/booking/confirmation'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 import { NoScreeningPanel } from '@/components/domain/movieDetail/NoScreeningPanel'
 import type { SimilarPick } from '@/lib/catalog/similarNowShowing'
+import type { PastScreeningView } from '@/lib/catalog/pastScreenings'
 import { initialScreeningDate } from '@/lib/catalog/initialScreeningDate'
 import { isSoldOut } from '@/lib/catalog/seatAvailability'
 
@@ -117,7 +118,7 @@ function DirectorChipLoader({ name, onClick }: { name: string; onClick: () => vo
 }
 
 /* ── 메인 ────────────────────────────────────────────────────────── */
-export function MovieDetailClient({ movie, initialShowtimes, initialSelection, screeningSummary, similarNowShowing = [] }: {
+export function MovieDetailClient({ movie, initialShowtimes, initialSelection, screeningSummary, similarNowShowing = [], pastScreenings = null }: {
   movie: MovieDetail
   /** SSR에서 미리 읽은 시간표 — 첫 페인트에 회차가 바로 보이게 시드로 넣는다 */
   initialShowtimes?: MovieTheaterEntry[]
@@ -127,6 +128,8 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection, s
   screeningSummary?: string | null
   /** 예정된 상영이 없을 때 서버가 고른 "지금 상영 중인 비슷한 영화" */
   similarNowShowing?: SimilarPick[]
+  /** 예정된 상영이 없을 때 서버가 만든 지난 상영 요약(screening_days) */
+  pastScreenings?: PastScreeningView | null
 }) {
   const router = useProgressRouter()
   const isDesktop = useIsDesktop()
@@ -614,7 +617,7 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection, s
       {/* 예정된 상영이 아예 없으면 빈 날짜 탭 대신 알림 안내 + 비슷한 상영작 (2026-10) */}
       {noScreenings ? (
         <div style={{ paddingBottom: 'var(--spacing-12)' }}>
-          <NoScreeningPanel movie={movie} similar={similarNowShowing} isDesktop={isDesktop} />
+          <NoScreeningPanel movie={movie} similar={similarNowShowing} past={pastScreenings} isDesktop={isDesktop} />
         </div>
       ) : (<>
       {/* 날짜 탭 — 극장 상세와 동일 (공용 DetailDateTabs) */}

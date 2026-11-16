@@ -53,6 +53,8 @@ export type AnalyticsEventName =
   | 'hint shown'
   /** 상영 없는 영화 상세의 "지금 상영 중인 비슷한 영화" — props.reason: 'director' | 'genre' */
   | 'similar movie selected'
+  /** 상영 없는 영화 상세의 "지난 상영" 극장 줄 — props.theater_id (2026-11) */
+  | 'past screening theater selected'
   | 'add request opened'
   | 'add request submitted'
   | 'landing variant assigned'
