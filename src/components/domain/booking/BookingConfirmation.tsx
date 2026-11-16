@@ -52,6 +52,7 @@ export function BookingConfirmation({ showtime, bookingUrl, onClose, children }:
   return createPortal(
     <dialog ref={dialog} className={styles.dialog} data-desktop={desktop} data-overlay-root=""
       aria-labelledby={titleId} onCancel={event => { event.preventDefault(); onClose() }}>
+      {!desktop && <div className={styles.handle} aria-hidden="true" />}
       <div className={styles.header}>
         <h2 id={titleId} tabIndex={-1} data-booking-focus>
           {view === 'report' ? '회차 오류 제보하기' : view === 'sent' ? '회차 오류를 제보했어요' : '예매할 회차를 확인해 주세요'}
@@ -68,9 +69,9 @@ export function BookingConfirmation({ showtime, bookingUrl, onClose, children }:
       </div>
       <div hidden={view !== 'confirm'}>
         {guide && <Guide guide={guide} />}
-        {!guide && <p>예매 페이지에서 상영 날짜와 시작 시간이 같은지 확인해 주세요</p>}
+        {!guide && <p className={styles.hint}>예매 페이지에서 상영 날짜와 시작 시간이 같은지 확인해 주세요</p>}
         <div className={styles.actions}>
-          <Button variant="secondary" onClick={onClose}>취소</Button>
+          <Button variant="text" onClick={onClose}>취소</Button>
           {children}
         </div>
       </div>
@@ -116,7 +117,7 @@ function Guide({ guide }: {
           </>
         )}
       </div>
-      <p>{guide === 'tinyticket'
+      <p className={styles.hint}>{guide === 'tinyticket'
         ? '좌석을 고르기 전에 영화 제목 바로 아래에서 날짜와 시작 시간을 확인해 주세요'
         : '상영시간표에서 날짜와 해당 회차의 시작 시간을 확인해 주세요'}</p>
     </section>
