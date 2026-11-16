@@ -20,6 +20,7 @@ import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWi
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { shareAndTrack } from '@/lib/analytics/shareTracking'
 import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/components/domain/booking/BookingActions'
+import { formatBookingDate } from '@/lib/booking/confirmation'
 import { Skeleton, ShowtimeCellSkeleton, Button, Icon, EmptyState } from '@/components/primitives'
 import { DetailDateTabs } from '@/components/domain/DetailDateTabs'
 import { ShowtimeCell } from '@/components/domain/ShowtimeCell'
@@ -635,6 +636,7 @@ export function FilmsTheaterDetailClient({ theater, initialSelection, initialSho
                 <BookingCtaButton
                   variant="card"
                   bookingUrl={selectedShowtimeData.st.bookingUrl}
+                  showtime={{ id: selectedShowtimeData.st.id, movieId: selectedShowtimeData.st.movieId, movieTitle: selectedShowtimeData.movieTitle, theaterName: theater.name, dateLabel: formatBookingDate(selectedShowtimeData.st.showDate, selectedShowtimeData.st.showTime) }}
                   onClick={() => trackEvent('booking clicked', {
                     theater_id: theater.id,
                     theater_name: theater.name,
@@ -685,6 +687,7 @@ export function FilmsTheaterDetailClient({ theater, initialSelection, initialSho
             <BookingCtaButton
               variant="bar"
               bookingUrl={selectedShowtimeData.st.bookingUrl}
+              showtime={{ id: selectedShowtimeData.st.id, movieId: selectedShowtimeData.st.movieId, movieTitle: selectedShowtimeData.movieTitle, theaterName: theater.name, dateLabel: formatBookingDate(selectedShowtimeData.st.showDate, selectedShowtimeData.st.showTime) }}
               onClick={() => trackEvent('booking clicked', {
                 theater_id: theater.id,
                 theater_name: theater.name,

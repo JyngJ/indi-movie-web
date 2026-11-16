@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import { IconButton, Icon } from '@/components/primitives'
+import { Button, IconButton, Icon } from '@/components/primitives'
+import { BookingConfirmation, type BookingShowtime } from './BookingConfirmation'
 import { trackEvent } from '@/lib/analytics/client'
 
 /**
@@ -36,12 +37,13 @@ const BOOKING_LABELS: BookingCtaLabels = {
 }
 
 export function BookingCtaButton({
-  variant, bookingUrl, onClick, labels = BOOKING_LABELS,
+  variant, bookingUrl, onClick, labels = BOOKING_LABELS, showtime,
 }: {
   variant: Variant
   bookingUrl?: string | null
   onClick?: () => void
   labels?: BookingCtaLabels
+  showtime?: BookingShowtime
 }) {
   const s = SPEC[variant]
 
@@ -101,6 +103,25 @@ export function BookingCtaButton({
     }, OPENING_MS)
   }, [onClick])
 
+  const [confirmationOpen, setConfirmationOpen] = useState(false)
+  useEffect(() => setConfirmationOpen(false), [bookingUrl, showtime?.id, showtime?.dateLabel])
+
+  if (bookingUrl && showtime) {
+    return (
+      <>
+        <Button variant="primary" size={variant === 'bar' ? 'lg' : 'md'} style={{ flex: 1 }} onClick={() => setConfirmationOpen(true)}>
+          {labels.idle}
+          <Icon name="external-link" size={s.extIcon} />
+        </Button>
+        {confirmationOpen && (
+          <BookingConfirmation showtime={showtime} bookingUrl={bookingUrl} onClose={() => setConfirmationOpen(false)}>
+            <BookingCtaButton variant={variant} bookingUrl={bookingUrl} onClick={onClick} labels={labels} />
+          </BookingConfirmation>
+        )}
+      </>
+    )
+  }
+
   if (bookingUrl) {
     const label =
       phase === 'opening'  ? labels.opening
@@ -113,7 +134,10 @@ export function BookingCtaButton({
         href={bookingUrl}
         target="_blank"
         rel="noopener noreferrer"
-        onClick={handleClick}
+        onClick={(event) => {
+          if (leftAtRef.current !== null && phase === 'opening') event.preventDefault()
+          else handleClick()
+        }}
         aria-busy={phase === 'opening'}
         style={{
           flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: s.gap,

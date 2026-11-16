@@ -29,6 +29,7 @@ import { recordRecentlyViewed } from '@/lib/curation/recentlyViewed'
 import { cookieStorageAdapter } from '@/lib/adapters/cookieStorage'
 import { shareAndTrack } from '@/lib/analytics/shareTracking'
 import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/components/domain/booking/BookingActions'
+import { formatBookingDate } from '@/lib/booking/confirmation'
 import { MapCtaButton } from '@/components/domain/movieDetail/MapCtaButton'
 import { NoScreeningPanel } from '@/components/domain/movieDetail/NoScreeningPanel'
 import type { SimilarPick } from '@/lib/catalog/similarNowShowing'
@@ -703,6 +704,7 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection, s
           <BookingCtaButton
             variant="card"
             bookingUrl={selectedShowtimeData.st.bookingUrl}
+            showtime={{ id: selectedShowtimeData.st.id, movieId: selectedShowtimeData.st.movieId, movieTitle: movie.title, theaterName: selectedShowtimeData.theaterName, dateLabel: formatBookingDate(selectedShowtimeData.st.showDate, selectedShowtimeData.st.showTime) }}
             onClick={() => trackEvent('booking clicked', {
               theater_id: selectedTheaterId ?? undefined,
               theater_name: selectedShowtimeData.theaterName,
@@ -787,6 +789,7 @@ export function MovieDetailClient({ movie, initialShowtimes, initialSelection, s
             <BookingCtaButton
               variant="bar"
               bookingUrl={selectedShowtimeData.st.bookingUrl}
+              showtime={{ id: selectedShowtimeData.st.id, movieId: selectedShowtimeData.st.movieId, movieTitle: movie.title, theaterName: selectedShowtimeData.theaterName, dateLabel: formatBookingDate(selectedShowtimeData.st.showDate, selectedShowtimeData.st.showTime) }}
               onClick={() => trackEvent('booking clicked', {
                 theater_id: selectedTheaterId ?? undefined,
                 theater_name: selectedShowtimeData.theaterName,
