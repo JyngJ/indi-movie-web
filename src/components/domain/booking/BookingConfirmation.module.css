@@ -8,7 +8,7 @@
   max-height: calc(100dvh - var(--spacing-6));
   overflow: auto;
   border: 0;
-  border-radius: var(--radius-sheet);
+  border-radius: var(--radius-popover);
   padding: var(--spacing-6);
   background: var(--color-surface-card);
   color: var(--color-text-primary);
@@ -24,6 +24,14 @@
   margin: 0;
   border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
   padding: var(--spacing-6) var(--gutter) max(var(--gutter), env(safe-area-inset-bottom));
+}
+
+.handle {
+  width: calc(var(--spacing-8) + var(--spacing-1));
+  height: var(--spacing-1);
+  margin: 0 auto var(--spacing-3);
+  border-radius: var(--radius-pill);
+  background: var(--color-border);
 }
 
 .header, .actions, .dates {
