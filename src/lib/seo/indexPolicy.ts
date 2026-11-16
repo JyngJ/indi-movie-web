@@ -57,3 +57,15 @@ export function shouldIndexMovie(f: MovieIndexFacts): boolean {
 export function robotsForMovie(f: MovieIndexFacts): RobotsDirective | undefined {
   return robotsForScreenings(shouldIndexMovie(f))
 }
+
+/**
+ * 사이트맵 수정일(lastmod) — 영화 정보 수정일과 마지막 상영일(KST 자정) 중 늦은 쪽, ISO 문자열.
+ * 다시 연 영화는 정보 수정일이 몇 달 전이라 검색엔진이 "바뀐 게 없다"고 보고 다시 읽기를 미뤘다.
+ * 그동안 예전 noindex가 남는다. 본문(지난 상영)이 바뀐 날을 수정일로 낸다.
+ */
+export function sitemapLastModified(updatedAt: string, lastScreeningDate: string | null): string {
+  const updated = new Date(updatedAt)
+  if (!lastScreeningDate) return updated.toISOString()
+  const screened = new Date(`${lastScreeningDate}T00:00:00+09:00`)
+  return (screened > updated ? screened : updated).toISOString()
+}

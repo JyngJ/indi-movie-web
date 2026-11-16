@@ -3,7 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { toKstIsoDate } from '@/lib/date'
 import { resolveTheaterRegion } from '@/lib/regions'
-import { countPastScreeningDays, summarizePastScreenings, type PastScreeningDay, type PastScreeningSummary } from './pastScreenings'
+import { pastScreeningStatsByMovie, summarizePastScreenings, type PastScreeningDay, type PastScreeningStats, type PastScreeningSummary } from './pastScreenings'
 
 /**
  * 지난 상영 기록(screening_days) 조회. screening_days는 크롤이 지난 날짜를 영구 보관하는 표다
@@ -59,12 +59,12 @@ export function getPastScreenings(movieId: string): Promise<PastScreeningSummary
 }
 
 /**
- * 영화별 지난 상영 날 수 — 사이트맵(getReopenedMovies)이 색인 기준을 영화 전체에 적용할 때 쓴다.
- * 2026-11 기준 약 1만 2천 행(한 달치)이라 movie_id·show_date만 읽어 센다. 기록이 몇 해 쌓여
- * 페이지 수가 부담되면 movie_id별로 미리 센 뷰로 바꾼다.
+ * 영화별 지난 상영 날 수·마지막 상영일 — 사이트맵(getReopenedMovies)이 색인 기준과 수정일(lastmod)을
+ * 영화 전체에 적용할 때 쓴다. 2026-11 기준 약 1만 2천 행(한 달치)이라 movie_id·show_date만 읽어 센다.
+ * 기록이 몇 해 쌓여 페이지 수가 부담되면 movie_id별로 미리 센 뷰로 바꾼다.
  */
-const getCachedDayCounts = unstable_cache(
-  async (today: string): Promise<[string, number][]> => {
+const getCachedStats = unstable_cache(
+  async (today: string): Promise<[string, PastScreeningStats][]> => {
     const supabase = createSupabaseServerClient()
     const rows: { movieId: string; showDate: string }[] = []
     for (let offset = 0; ; offset += PAGE) {
@@ -76,16 +76,16 @@ const getCachedDayCounts = unstable_cache(
         .order('theater_id')
         .order('show_date')
         .range(offset, offset + PAGE - 1)
-      if (error) throw new Error(`getPastScreeningDayCounts: ${error.message}`)
+      if (error) throw new Error(`getPastScreeningStats: ${error.message}`)
       for (const r of data ?? []) rows.push({ movieId: String(r.movie_id), showDate: String(r.show_date) })
       if (!data || data.length < PAGE) break
     }
-    return [...countPastScreeningDays(rows, today).entries()]
+    return [...pastScreeningStatsByMovie(rows, today).entries()]
   },
-  ['catalog', 'past-screening-day-counts'],
+  ['catalog', 'past-screening-stats'],
   { revalidate: TTL, tags: ['screening-index'] },
 )
 
-export async function getPastScreeningDayCounts(): Promise<Map<string, number>> {
-  return new Map(await getCachedDayCounts(toKstIsoDate(new Date())))
+export async function getPastScreeningStats(): Promise<Map<string, PastScreeningStats>> {
+  return new Map(await getCachedStats(toKstIsoDate(new Date())))
 }

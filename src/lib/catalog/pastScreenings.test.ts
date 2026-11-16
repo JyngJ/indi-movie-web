@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
-  countPastScreeningDays,
   pastScreeningDateLabel,
   pastScreeningSentence,
+  pastScreeningStatsByMovie,
   pastTheaterPeriodLabel,
   summarizePastScreenings,
   toPastScreeningView,
@@ -49,17 +49,17 @@ describe('summarizePastScreenings', () => {
   })
 })
 
-describe('countPastScreeningDays', () => {
-  it('영화별 상영한 날 수 — 같은 날 여러 극장은 하루, 오늘 이후는 제외', () => {
-    const m = countPastScreeningDays([
-      { movieId: 'x', showDate: '2026-10-13' },
-      { movieId: 'x', showDate: '2026-10-13' },
+describe('pastScreeningStatsByMovie', () => {
+  it('영화별 상영한 날 수와 마지막 날 — 같은 날 여러 극장은 하루, 오늘 이후는 제외', () => {
+    const m = pastScreeningStatsByMovie([
       { movieId: 'x', showDate: '2026-10-14' },
+      { movieId: 'x', showDate: '2026-10-13' },
+      { movieId: 'x', showDate: '2026-10-13' },
       { movieId: 'x', showDate: today },
       { movieId: 'y', showDate: '2026-10-01' },
     ], today)
-    expect(m.get('x')).toBe(2)
-    expect(m.get('y')).toBe(1)
+    expect(m.get('x')).toEqual({ days: 2, lastDate: '2026-10-14' })
+    expect(m.get('y')).toEqual({ days: 1, lastDate: '2026-10-01' })
   })
 })
 

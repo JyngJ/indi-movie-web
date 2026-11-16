@@ -3,8 +3,8 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { toKstIsoDate } from '@/lib/date'
 import { getSimilarityPool } from '@/lib/catalog/getSimilarityPool'
 import { pickSimilarNowShowing } from '@/lib/catalog/similarNowShowing'
-import { getPastScreeningDayCounts } from '@/lib/catalog/getPastScreenings'
-import { shouldIndexMovie } from './indexPolicy'
+import { getPastScreeningStats } from '@/lib/catalog/getPastScreenings'
+import { shouldIndexMovie, sitemapLastModified } from './indexPolicy'
 import type { IndexableMovie } from './getIndexableMovies'
 
 const PAGE = 1000
@@ -19,7 +19,7 @@ const compute = unstable_cache(
   async (_today: string, upcomingIds: string[]): Promise<IndexableMovie[]> => {
     const upcoming = new Set(upcomingIds)
     const pool = await getSimilarityPool()
-    const pastDays = await getPastScreeningDayCounts()
+    const past = await getPastScreeningStats()
     const supabase = createSupabaseServerClient()
     const out: IndexableMovie[] = []
     for (let offset = 0; ; offset += PAGE) {
@@ -45,16 +45,17 @@ const compute = unstable_cache(
           hasUpcoming: false,
           synopsisLength: details?.synopsis?.trim().length ?? 0,
           sameDirectorNowShowing: similar.filter((m) => m.reason.kind === 'director').length,
-          pastScreeningDays: pastDays.get(id) ?? 0,
+          pastScreeningDays: past.get(id)?.days ?? 0,
         })) {
-          out.push({ id, updatedAt: String(row.updated_at), director })
+          /* 수정일은 마지막 상영일까지 당긴다 — 정보 수정일만 내면 다시 연 페이지를 검색엔진이 늦게 읽는다 */
+          out.push({ id, updatedAt: sitemapLastModified(String(row.updated_at), past.get(id)?.lastDate ?? null), director })
         }
       }
       if (!data || data.length < PAGE) break
     }
     return out.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
   },
-  ['seo', 'reopened-movies', 'same-director', 'past-screenings'],
+  ['seo', 'reopened-movies', 'same-director', 'past-screenings', 'lastmod'],
   { revalidate: 21600, tags: ['screening-index'] },
 )
 

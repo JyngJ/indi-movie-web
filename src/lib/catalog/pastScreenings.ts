@@ -79,8 +79,15 @@ export function summarizePastScreenings(rows: readonly PastScreeningDay[], today
   return { firstDate: sorted[0], lastDate: sorted.at(-1)!, days: dates.size, shows, regions, theaters }
 }
 
-/** 날짜별 회차 행이 아닌, 영화별 상영한 날 수만 필요할 때(사이트맵) */
-export function countPastScreeningDays(rows: readonly { movieId: string; showDate: string }[], today: string): Map<string, number> {
+export interface PastScreeningStats {
+  /** 상영한 날 수 */
+  days: number
+  /** 마지막 상영일 YYYY-MM-DD */
+  lastDate: string
+}
+
+/** 영화별 상영한 날 수와 마지막 상영일 — 사이트맵(색인 기준·수정일)이 영화 전체에 적용할 때 쓴다 */
+export function pastScreeningStatsByMovie(rows: readonly { movieId: string; showDate: string }[], today: string): Map<string, PastScreeningStats> {
   const byMovie = new Map<string, Set<string>>()
   for (const r of rows) {
     if (r.showDate >= today) continue
@@ -88,7 +95,7 @@ export function countPastScreeningDays(rows: readonly { movieId: string; showDat
     s.add(r.showDate)
     byMovie.set(r.movieId, s)
   }
-  return new Map([...byMovie.entries()].map(([id, s]) => [id, s.size]))
+  return new Map([...byMovie.entries()].map(([id, s]) => [id, { days: s.size, lastDate: [...s].sort().at(-1)! }]))
 }
 
 const DOW = ['일', '월', '화', '수', '목', '금', '토']
