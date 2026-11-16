@@ -170,6 +170,7 @@ export function GvDetailPanel({ ev, onClose, onCloseAll, panelMode }: GvDetailPa
         <BookingCtaButton
           variant="bar"
           bookingUrl={ev.bookingUrl}
+          showtime={ev.eventDate && /\b\d{1,2}:\d{2}\b/.test(ev.time) ? { id: ev.id, movieId: ev.movieId, movieTitle: ev.movie, theaterName: ev.theaterName, dateLabel: ev.time } : undefined}
           onClick={() => trackEvent('booking clicked', {
             theater_name: ev.theaterName,
             movie_title: ev.movie,

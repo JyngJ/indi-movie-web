@@ -31,6 +31,7 @@ import { shareAndTrack } from '@/lib/analytics/shareTracking'
 import { GvEventSection } from './GvEventSection'
 import { GvDetailPanel } from './GvDetailPanel'
 import { BookingCtaButton, ShareScheduleButton } from './booking/BookingActions'
+import { formatBookingDate } from '@/lib/booking/confirmation'
 import type { GvEvent } from '@/data/gv-events'
 import { toSecureImageUrl } from '@/lib/media/imageUrl'
 import { isSoldOut } from '@/lib/catalog/seatAvailability'
@@ -1792,6 +1793,7 @@ export function TheaterSheet({
             <BookingCtaButton
               variant="bar"
               bookingUrl={normalizedBookingUrl}
+              showtime={selectedSt ? { id: selectedSt.id, movieId: selectedSt.movieId, movieTitle: selectedSt.movieTitle, theaterName: theater.name, dateLabel: formatBookingDate(selectedSt.showDate, selectedSt.showTime) } : undefined}
               onClick={() => {
                 if (!selectedSt) return
                 trackEvent('booking clicked', {

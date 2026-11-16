@@ -164,18 +164,19 @@ export function ReportSuccessNotice() {
 
 /* ── 버그 리포트 ── */
 export function SettingsReportPage({
-  selectedMovieId, selectedTheaterName, initialCategory, onSuccess,
+  selectedMovieId, selectedTheaterName, initialCategory, initialDetail, onSuccess,
 }: {
   selectedMovieId?: string | null
   selectedTheaterName?: string
   /** FAQ 등 외부 진입 시 분류 프리셀렉트 — 화이트리스트에 없는 값은 무시 */
   initialCategory?: string
+  initialDetail?: string
   onSuccess: () => void
 }) {
   const [category, setCategory] = useState(
     initialCategory && (REPORT_CATEGORIES as readonly string[]).includes(initialCategory) ? initialCategory : ''
   )
-  const [detail, setDetail] = useState('')
+  const [detail, setDetail] = useState(initialDetail ?? '')
   const [email, setEmail] = useState('')
   const [consent, setConsent] = useState(false)
   const [files, setFiles] = useState<File[]>([])
