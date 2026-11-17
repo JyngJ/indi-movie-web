@@ -19,6 +19,7 @@
     "reco:build": "tsx --env-file=.env.local scripts/recommendation/build.ts",
     "curate:section-scores": "tsx --env-file=.env.local scripts/curation/compute-section-scores.ts",
     "crawl:events": "tsx --env-file=.env.local scripts/crawl-events.ts",
+    "crawl:releases": "tsx --env-file=.env.local scripts/crawl-releases.ts",
     "seed:theaters": "tsx src/scripts/seed-theaters.ts",
     "seed:sources": "tsx src/scripts/seed-crawl-sources.ts",
     "seed:event-sources": "tsx --env-file=.env.local src/scripts/seed-event-sources.ts",

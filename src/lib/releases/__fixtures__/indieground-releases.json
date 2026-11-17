@@ -1,0 +1,60 @@
+{
+ "list": [
+  {
+   "movie_seq": null,
+   "releaseDate": null,
+   "writer": "support2",
+   "releaseDateString": "2026-12-02",
+   "korSubject": "내일의 민재",
+   "productionYear": "2025",
+   "seq": 761,
+   "movieSeq": 6293,
+   "pathname": "fileFolder/471fe768-3dde-42e5-bdd0-bdc02627080f_jpg",
+   "filename": "내일의민재_포스터.jpg",
+   "endKey": 100,
+   "aCount": 62
+  },
+  {
+   "movie_seq": null,
+   "releaseDate": null,
+   "writer": "support2",
+   "releaseDateString": "2026-11-30",
+   "korSubject": "왼손 피아니스트",
+   "productionYear": "2026",
+   "seq": 757,
+   "movieSeq": 6623,
+   "pathname": "fileFolder/8c31295c-8a1c-44cf-9ae4-568a85637023_jpg",
+   "filename": "왼손_포스터.jpg",
+   "endKey": 100,
+   "aCount": 62
+  },
+  {
+   "movie_seq": null,
+   "releaseDate": null,
+   "writer": "support2",
+   "releaseDateString": "2026-11-25",
+   "korSubject": "레이오버 호텔",
+   "productionYear": "2025",
+   "seq": 752,
+   "movieSeq": 6120,
+   "pathname": "fileFolder/b15a8e52-258b-4975-90ab-824fd8802105_jpg",
+   "filename": "레이오버호텔_포스터.jpg",
+   "endKey": 100,
+   "aCount": 62
+  },
+  {
+   "movie_seq": null,
+   "releaseDate": null,
+   "writer": "support2",
+   "releaseDateString": "2026-11-25",
+   "korSubject": "인간 초거대 알고리즘: 더 무비",
+   "productionYear": "2025",
+   "seq": 763,
+   "movieSeq": 6649,
+   "pathname": "fileFolder/34f9243e-4a3b-4fb4-85ea-19b8debbe57b_jpg",
+   "filename": "인간초거대알고리즘_포스터.jpg",
+   "endKey": 100,
+   "aCount": 62
+  }
+ ]
+}

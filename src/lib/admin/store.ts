@@ -25,6 +25,7 @@ import { chunk, dedupeByKey, isMatchUnchanged, isMissingRpcError } from '@/lib/c
 import { selectAutoMatchCandidates, summarizeAutoMatchOutcomes } from '@/lib/crawl/autoMatchSummary'
 import { toKstIsoDate } from '@/lib/date'
 import { normalizeSynopsis } from '@/lib/text/normalizeSynopsis'
+import { normalizeLooseMovieTitle, normalizeMatchText } from '@/lib/text/movieTitleMatch'
 import { notifyAmbiguousMovieMatches, titleHash, type ProviderListing } from '@/lib/admin/matchReviewDiscord'
 import { extractListingHints, mergeListingHints, movieeBookingUrl, movieeMovieRef, parseRawJson, type MovieeMovieRef } from '@/lib/admin/matchReviewHints'
 import { fetchMovieeMovieHints } from '@/lib/admin/crawler/movieeDetail'
@@ -1628,20 +1629,6 @@ function showtimeRowFromCandidate(
     booking_url: candidate.bookingUrl ?? null,
     is_active: true,
   }
-}
-
-function normalizeMatchText(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .normalize('NFKC')
-    .replace(/[\s"'‘’“”()[\]{}:;,.!?·ㆍ・_-]+/g, '')
-}
-
-function normalizeLooseMovieTitle(value: string) {
-  return normalizeMatchText(value)
-    .replace(/까지의/g, '까지')
-    .replace(/부터의/g, '부터')
 }
 
 function stripMovieTitleDecorations(value: string) {

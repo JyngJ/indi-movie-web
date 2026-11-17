@@ -1,6 +1,7 @@
 import type { AutoMatchSummary, CrawlRun } from '@/types/admin'
 import { formatTopUnmatched } from './autoMatchSummary'
 import { formatStaleFinding, type StaleSourceFinding } from './sourceHealth'
+import type { SyncReleasesSummary } from '@/lib/releases/syncReleases'
 
 const WEBHOOK_URL = process.env.DISCORD_REPORT_WEBHOOK_URL
 const FIELD_LIMIT = 900
@@ -223,6 +224,26 @@ export async function notifyDiscordCrawlStale(hoursSinceLastSuccess: number, las
     title: '🚨 크롤러 헬스체크 — 상영시간표 갱신 지연',
     description: `마지막 크롤 **성공**이 **${hoursSinceLastSuccess.toFixed(1)}시간** 전입니다. RPi 크론이 멈췄거나 소스가 계속 실패 중일 수 있습니다.\n마지막 성공: ${lastSuccessText}`,
     color: 0xE74C3C,
+    footer: { text: nowKST() },
+  })
+}
+
+/** 개봉 예정 수집 결과 — 바뀐 게 없으면 보내지 않는다(하루 1회 실행이라 조용한 날이 대부분) */
+export async function notifyDiscordReleases(summary: SyncReleasesSummary) {
+  const list = (items: string[]) => items.join('\n').slice(0, FIELD_LIMIT)
+  const fields = [
+    summary.imported.length && { name: `KMDb에서 가져옴 ${summary.imported.length}편`, value: list(summary.imported) },
+    summary.dateChanged.length && { name: `개봉일 변경 ${summary.dateChanged.length}편`, value: list(summary.dateChanged.map((d) => `${d.title}: ${d.from} → ${d.to}`)) },
+    summary.needsReview.length && { name: `검토 필요 ${summary.needsReview.length}편`, value: list(summary.needsReview.map((r) => `${r.title} — ${r.reason}`)) },
+    summary.stalePending.length && { name: `개봉 7일 지났는데 미등재 ${summary.stalePending.length}편`, value: list(summary.stalePending) },
+  ].filter((f): f is { name: string; value: string } => Boolean(f))
+  if (summary.created === 0 && fields.length === 0) return
+
+  await sendEmbed({
+    title: '🎬 개봉 예정 수집 (인디그라운드)',
+    description: `수집 ${summary.fetched}편 · 신규 ${summary.created}편 · 연결 ${summary.matched}편 · 미등재 ${summary.pending.length}편 · 개봉일 반영 ${summary.releaseDateUpdates}편`,
+    color: summary.needsReview.length || summary.stalePending.length ? 0xF39C12 : 0x2ECC71,
+    fields: fields.map((f) => ({ ...f, inline: false })),
     footer: { text: nowKST() },
   })
 }
