@@ -18,11 +18,14 @@ export type ReleaseMatchDecision<E extends ExternalMovieRef = ExternalMovieRef> 
 
 type Candidate = { title: string; originalTitle?: string | null; year?: number | null }
 
+/** "베리 베리 스트레인지 러브 (장편)"처럼 같은 제목의 단편과 가르려고 붙인 꼬리표는 떼고도 비교한다 */
+const FORMAT_SUFFIX = /\s*\((?:장편|단편|가제)\)\s*$/
+
 function titleMatches(release: UpcomingReleaseInput, candidate: Candidate) {
-  const target = normalizeLooseMovieTitle(release.title)
-  if (!target) return false
-  return normalizeLooseMovieTitle(candidate.title) === target ||
-    (candidate.originalTitle ? normalizeLooseMovieTitle(candidate.originalTitle) === target : false)
+  const targets = new Set([release.title, release.title.replace(FORMAT_SUFFIX, '')].map(normalizeLooseMovieTitle).filter(Boolean))
+  if (targets.size === 0) return false
+  return targets.has(normalizeLooseMovieTitle(candidate.title)) ||
+    (candidate.originalTitle ? targets.has(normalizeLooseMovieTitle(candidate.originalTitle)) : false)
 }
 
 function yearFits(release: UpcomingReleaseInput, candidate: Candidate) {

@@ -74,6 +74,10 @@ describe('decideReleaseMatch', () => {
     expect(decideReleaseMatch(input({ title: '포킴스: 네 남자의 이야기' }), [local({ title: '포킴스 네 남자의 이야기' })], undefined).kind).toBe('matched')
   })
 
+  it('(장편) 꼬리표는 떼고도 비교한다', () => {
+    expect(decideReleaseMatch(input({ title: '베리 베리 스트레인지 러브 (장편)', productionYear: 2025 }), [local({ title: '베리 베리 스트레인지 러브', year: 2026 })], undefined).kind).toBe('matched')
+  })
+
   it('연도 ±1까지 허용, 그 밖은 동명 영화로 보고 검토', () => {
     expect(decideReleaseMatch(input(), [local({ year: 2026 })], undefined).kind).toBe('matched')
     expect(decideReleaseMatch(input(), [local({ year: 2012 })], undefined)).toMatchObject({ kind: 'needs_review' })
@@ -145,7 +149,7 @@ describe('syncReleases', () => {
     })
 
     expect(searched).toEqual(['레이오버 호텔', '더 버스'])
-    expect(summary).toMatchObject({ fetched: 3, created: 3, matched: 2, imported: ['레이오버 호텔'], pending: ['더 버스'], stalePending: ['더 버스'], releaseDateUpdates: 2 })
+    expect(summary).toMatchObject({ fetched: 3, created: 3, matched: 2, imported: ['레이오버 호텔 ← K9 (2025)'], pending: ['더 버스'], stalePending: ['더 버스'], releaseDateUpdates: 2 })
     expect(saved[0].map((r) => [r.title, r.matchStatus, r.movieId])).toEqual([
       ['왼손 피아니스트', 'matched', 'm-left'], ['레이오버 호텔', 'matched', 'm-new'], ['더 버스', 'pending', null],
     ])
@@ -161,7 +165,8 @@ describe('syncReleases', () => {
       searchExternal: async (title) => [{ key: 'K1', title, year: 2025 }],
       importExternal: async () => { imported++; return 'x' },
     })
-    expect(summary.imported).toEqual(['내일의 민재'])
+    expect(summary.imported).toEqual(['내일의 민재 ← K1 (2025)'])
+    expect(summary.pending).toEqual([])
     expect(imported).toBe(0)
     expect(saved).toEqual([])
     expect(dates).toEqual([])

@@ -15,8 +15,9 @@ import type { AdminExternalMovie } from '../src/types/admin'
 
 const TITLE = '🎬 개봉 예정 수집'
 
+const dryRun = process.argv.includes('--dry-run')
+
 async function main() {
-  const dryRun = process.argv.includes('--dry-run')
   console.log(`[${new Date().toISOString()}] 개봉 예정 수집 시작${dryRun ? ' (dry-run)' : ''}`)
 
   const summary = await syncReleases<AdminExternalMovie & { key: string }>({
@@ -36,6 +37,7 @@ async function main() {
 
 main().catch(async (err: unknown) => {
   console.error('개봉 예정 수집 실패:', err)
-  await notifyDiscordError(TITLE, err instanceof Error ? err.message : String(err))
+  // dry-run은 사람이 터미널에서 돌리는 확인용 — 운영 채널에 오류를 올리지 않는다
+  if (!dryRun) await notifyDiscordError(TITLE, err instanceof Error ? err.message : String(err))
   process.exit(1)
 })

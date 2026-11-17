@@ -24,6 +24,7 @@ export interface SyncReleasesSummary {
   created: number
   dateChanged: Array<{ title: string; from: string; to: string }>
   matched: number
+  /** "제목 ← KMDb키 (연도)" */
   imported: string[]
   needsReview: Array<{ title: string; reason: string }>
   pending: string[]
@@ -49,6 +50,7 @@ export async function syncReleases<E extends ExternalMovieRef>(deps: SyncRelease
   }
 
   const merged: UpcomingRelease[] = []
+  const wouldImport = new Set<UpcomingRelease>()
   for (const input of inputs) {
     const prev = existing.get(input.sourceMovieId)
     const row = mergeRelease(prev, input, nowIso)
@@ -74,13 +76,14 @@ export async function syncReleases<E extends ExternalMovieRef>(deps: SyncRelease
     } else if (decision.kind === 'import') {
       if (deps.dryRun) {
         Object.assign(row, { matchStatus: 'pending', matchNote: `KMDb에서 가져올 예정: ${decision.external.key}` })
-        summary.imported.push(row.title)
+        summary.imported.push(importLabel(row.title, decision.external))
+        wouldImport.add(row)
         continue
       }
       const movieId = await deps.importExternal(decision.external)
       localMovies.push({ id: movieId, title: decision.external.title, originalTitle: decision.external.originalTitle, year: decision.external.year })
       Object.assign(row, { movieId, matchStatus: 'matched', matchNote: `KMDb ${decision.external.key}에서 가져옴` })
-      summary.imported.push(row.title)
+      summary.imported.push(importLabel(row.title, decision.external))
     } else {
       Object.assign(row, { matchStatus: decision.kind, matchNote: decision.reason })
     }
@@ -89,7 +92,7 @@ export async function syncReleases<E extends ExternalMovieRef>(deps: SyncRelease
   for (const row of merged) {
     if (row.matchStatus === 'matched') summary.matched++
     else if (row.matchStatus === 'needs_review') summary.needsReview.push({ title: row.title, reason: row.matchNote ?? '' })
-    else if (row.matchStatus === 'pending') {
+    else if (row.matchStatus === 'pending' && !wouldImport.has(row)) {
       summary.pending.push(row.title)
       if (nowDate.getTime() - Date.parse(`${row.releaseDate}T00:00:00+09:00`) > STALE_PENDING_DAYS * DAY_MS) summary.stalePending.push(row.title)
     }
@@ -103,6 +106,10 @@ export async function syncReleases<E extends ExternalMovieRef>(deps: SyncRelease
     if (updates.length) await deps.repo.setMovieReleaseDates(updates)
   }
   return summary
+}
+
+function importLabel(title: string, external: ExternalMovieRef) {
+  return `${title} ← ${external.key} (${external.year ?? '?'})`
 }
 
 /**
