@@ -1,4 +1,5 @@
 import { CRAWLER_UA } from '@/lib/admin/crawler/utils'
+import { parseIndiegroundDetail, type IndiegroundDetail } from './parseIndiegroundDetail'
 import { parseIndiegroundReleases } from './parseIndiegroundReleases'
 import type { UpcomingReleaseInput } from './types'
 
@@ -31,4 +32,17 @@ export async function fetchIndiegroundReleases(): Promise<UpcomingReleaseInput[]
     throw new Error(`인디그라운드 응답이 JSON이 아님: ${text.slice(0, 120)}`)
   }
   return parseIndiegroundReleases(payload)
+}
+
+const DETAIL_URL = 'https://indieground.kr/indie/movieLibraryView.do'
+
+/** 영화 상세의 감독·개봉일 — 연도로 가릴 수 없는 매칭을 감독으로 가를 때만 부른다 */
+export async function fetchIndiegroundDetail(sourceMovieId: string): Promise<IndiegroundDetail> {
+  const url = `${DETAIL_URL}?${new URLSearchParams({ seq: sourceMovieId })}`
+  const res = await fetch(url, {
+    headers: { 'user-agent': CRAWLER_UA, accept: 'text/html' },
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+  })
+  if (!res.ok) throw new Error(`인디그라운드 상세 응답 ${res.status} (seq=${sourceMovieId})`)
+  return parseIndiegroundDetail(await res.text())
 }

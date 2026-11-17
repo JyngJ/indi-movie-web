@@ -7,7 +7,7 @@
 import { importAdminExternalMovie } from '../src/lib/admin/store'
 import { searchKmdbMovies } from '../src/lib/admin/kmdb'
 import { notifyDiscordError, notifyDiscordReleases } from '../src/lib/crawl/notify-discord'
-import { fetchIndiegroundReleases } from '../src/lib/releases/indiegroundClient'
+import { fetchIndiegroundDetail, fetchIndiegroundReleases } from '../src/lib/releases/indiegroundClient'
 import { createSupabaseReleaseRepository } from '../src/lib/releases/supabaseReleaseRepository'
 import { syncReleases } from '../src/lib/releases/syncReleases'
 import { createSupabaseAdminClient } from '../src/lib/supabase/admin'
@@ -24,8 +24,9 @@ async function main() {
     source: 'indieground',
     repo: createSupabaseReleaseRepository(createSupabaseAdminClient()),
     fetchReleases: fetchIndiegroundReleases,
-    searchExternal: async (title) => (await searchKmdbMovies(title)).map((m) => ({ ...m, key: m.externalId })),
-    importExternal: async (movie) => (await importAdminExternalMovie(movie)).id,
+    searchExternal: async (title) => (await searchKmdbMovies(title)).map((m) => ({ ...m, key: m.externalId, directors: m.director })),
+    fetchDirectors: async (seq) => (await fetchIndiegroundDetail(seq)).directors,
+    importExternal: async ({ key: _key, directors: _directors, ...movie }) => (await importAdminExternalMovie(movie)).id,
     now: () => new Date(),
     dryRun,
     log: (line) => console.log(line),

@@ -1,7 +1,7 @@
-import { decideReleaseMatch } from './matchRelease'
+import { decideReleaseMatch, type ReleaseMatchDecision } from './matchRelease'
 import { mergeRelease, needsMatching } from './mergeRelease'
 import type { ReleaseRepository } from './repository'
-import type { ExternalMovieRef, ReleaseSource, UpcomingRelease, UpcomingReleaseInput } from './types'
+import type { ExternalMovieRef, LocalMovieRef, ReleaseSource, UpcomingRelease, UpcomingReleaseInput } from './types'
 
 /**
  * 개봉 예정 수집 유스케이스: 읽기 → 기존 행과 합치기 → 매칭 → 저장 → movies.release_date 반영.
@@ -12,6 +12,8 @@ export interface SyncReleasesDeps<E extends ExternalMovieRef> {
   fetchReleases(): Promise<UpcomingReleaseInput[]>
   repo: ReleaseRepository
   searchExternal(title: string): Promise<E[]>
+  /** 소스 상세의 감독 이름 — 연도로 가릴 수 없을 때만 부른다. 없으면 감독 대조를 건너뛴다 */
+  fetchDirectors?(sourceMovieId: string): Promise<string[]>
   /** 외부 영화를 movies에 넣고 movie id를 돌려준다 */
   importExternal(movie: E): Promise<string>
   now(): Date
@@ -61,15 +63,7 @@ export async function syncReleases<E extends ExternalMovieRef>(deps: SyncRelease
 
   for (const row of merged) {
     if (!needsMatching(row)) continue
-    let decision = decideReleaseMatch<E>(row, localMovies, undefined)
-    if (decision.kind === 'pending') {
-      // KMDb 요청은 한 건씩 — 동시 요청으로 몰지 않는다
-      const external = await deps.searchExternal(row.title).catch((error: unknown) => {
-        log(`KMDb 검색 실패 ${row.title}: ${error instanceof Error ? error.message : String(error)}`)
-        return undefined
-      })
-      decision = decideReleaseMatch<E>(row, localMovies, external)
-    }
+    const decision = await decideWithLazyLookups(row, localMovies, deps, log)
 
     if (decision.kind === 'matched') {
       Object.assign(row, { movieId: decision.movieId, matchStatus: 'matched', matchNote: null })
@@ -81,7 +75,7 @@ export async function syncReleases<E extends ExternalMovieRef>(deps: SyncRelease
         continue
       }
       const movieId = await deps.importExternal(decision.external)
-      localMovies.push({ id: movieId, title: decision.external.title, originalTitle: decision.external.originalTitle, year: decision.external.year })
+      localMovies.push({ id: movieId, title: decision.external.title, originalTitle: decision.external.originalTitle, year: decision.external.year, directors: decision.external.directors })
       Object.assign(row, { movieId, matchStatus: 'matched', matchNote: `KMDb ${decision.external.key}에서 가져옴` })
       summary.imported.push(importLabel(row.title, decision.external))
     } else {
@@ -106,6 +100,46 @@ export async function syncReleases<E extends ExternalMovieRef>(deps: SyncRelease
     if (updates.length) await deps.repo.setMovieReleaseDates(updates)
   }
   return summary
+}
+
+/**
+ * 판정에 필요한 외부 요청을 필요할 때만 한 건씩 한다(동시 요청 없음).
+ * - 로컬에 없으면(pending) KMDb 검색
+ * - 애매하면(needs_review) 소스 상세에서 감독을 읽어 다시 판정 — 감독으로 로컬 후보가 빠지면 KMDb까지 본다
+ */
+async function decideWithLazyLookups<E extends ExternalMovieRef>(
+  row: UpcomingRelease,
+  localMovies: LocalMovieRef[],
+  deps: SyncReleasesDeps<E>,
+  log: (line: string) => void,
+): Promise<ReleaseMatchDecision<E>> {
+  let external: E[] | undefined
+  let externalTried = false
+  let directors: string[] | undefined
+  let directorsTried = false
+
+  for (;;) {
+    const decision = decideReleaseMatch<E>(row, localMovies, external, directors)
+    if (decision.kind === 'pending' && !externalTried) {
+      externalTried = true
+      external = await deps.searchExternal(row.title).catch((error: unknown) => {
+        log(`KMDb 검색 실패 ${row.title}: ${error instanceof Error ? error.message : String(error)}`)
+        return undefined
+      })
+      if (external) continue
+      return decision
+    }
+    if (decision.kind === 'needs_review' && !directorsTried && deps.fetchDirectors) {
+      directorsTried = true
+      directors = await deps.fetchDirectors(row.sourceMovieId).catch((error: unknown) => {
+        log(`상세 조회 실패 ${row.title}: ${error instanceof Error ? error.message : String(error)}`)
+        return undefined
+      })
+      if (directors?.length) continue
+      return decision
+    }
+    return decision
+  }
 }
 
 function importLabel(title: string, external: ExternalMovieRef) {

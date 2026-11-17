@@ -73,12 +73,12 @@ export function createSupabaseReleaseRepository(supabase: SupabaseClient): Relea
       for (let from = 0; ; from += PAGE) {
         const { data, error } = await supabase
           .from('movies')
-          .select('id, title, original_title, year, release_date')
+          .select('id, title, original_title, year, release_date, director')
           .order('id')
           .range(from, from + PAGE - 1)
         if (error) throw new Error(`movies 조회 실패: ${error.message}`)
-        const rows = (data ?? []) as Array<{ id: string; title: string; original_title: string | null; year: number | null; release_date: string | null }>
-        out.push(...rows.map((m) => ({ id: m.id, title: m.title, originalTitle: m.original_title, year: m.year, releaseDate: m.release_date })))
+        const rows = (data ?? []) as Array<{ id: string; title: string; original_title: string | null; year: number | null; release_date: string | null; director: string[] | null }>
+        out.push(...rows.map((m) => ({ id: m.id, title: m.title, originalTitle: m.original_title, year: m.year, releaseDate: m.release_date, directors: m.director })))
         if (rows.length < PAGE) return out
       }
     },

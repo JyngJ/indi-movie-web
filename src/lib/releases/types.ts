@@ -42,6 +42,7 @@ export interface LocalMovieRef {
   originalTitle?: string | null
   year?: number | null
   releaseDate?: string | null
+  directors?: string[] | null
 }
 
 /** 외부(KMDb) 검색 결과 중 매칭에 필요한 부분 */
@@ -50,4 +51,5 @@ export interface ExternalMovieRef {
   title: string
   originalTitle?: string
   year?: number
+  directors?: string[]
 }
