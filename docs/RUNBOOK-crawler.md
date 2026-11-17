@@ -24,6 +24,7 @@
 | `0 */4 * * *` | `npm run check:crawl-health` | `health.log` |
 | `0 * * * *` | `dtryx-ban-watch.sh` (밴 감시, 알림전용) | `dtryx-ban-watch.log` |
 | `13 9 * * 1,5` (KST) | `npm run notify:email:dispatch` (소식 메일 워크플로 실행 — `RUNBOOK-email-notifications.md`) | `email-dispatch.log` |
+| `30 4 * * *` | `npm run crawl:releases` (개봉 예정 수집 — 인디그라운드, 04시 pull 뒤. 2026-11-18 추가, `PLAN-indieground-releases.md`) | `releases.log` |
 
 `crawl:seats` / `crawl:showtimes` / `check:crawl-health` 는 각각 Discord 리포트를 전송한다 (webhook `DISCORD_REPORT_WEBHOOK_URL`).
 
