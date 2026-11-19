@@ -46,7 +46,7 @@ const THUMBS: Record<string, ReactNode> = {
       <span style={{ fontSize: 'var(--text-body)', fontWeight: 700, color: 'var(--color-text-primary)' }}>로그아웃할까요?</span>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1)' }}>
         <Button size="sm" fullWidth>로그아웃</Button>
-        <Button variant="text" size="sm" fullWidth>닫기</Button>
+        <Button variant="text" size="sm" className="self-center">닫기</Button>
       </div>
     </div>
   ),

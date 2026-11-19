@@ -49,6 +49,8 @@ export function BookingConfirmation({ showtime, bookingUrl, onClose, children }:
     `예매 링크: ${bookingUrl}`,
   ].join('\n')
 
+  const closeButton = <Button variant="text" className={styles.dismiss} onClick={onClose}>닫기</Button>
+
   return createPortal(
     <dialog ref={dialog} className={styles.dialog} data-desktop={desktop} data-overlay-root=""
       aria-labelledby={titleId} onCancel={event => { event.preventDefault(); onClose() }}>
@@ -71,8 +73,9 @@ export function BookingConfirmation({ showtime, bookingUrl, onClose, children }:
         {guide && <Guide guide={guide} />}
         {!guide && <p className={styles.hint}>예매 페이지에서 상영 날짜와 시작 시간이 같은지 확인해 주세요</p>}
         <div className={styles.actions}>
-          <Button variant="text" onClick={onClose}>취소</Button>
+          {desktop && closeButton}
           {children}
+          {!desktop && closeButton}
         </div>
       </div>
       {view === 'report' && (

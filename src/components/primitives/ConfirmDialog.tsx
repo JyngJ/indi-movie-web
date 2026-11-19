@@ -108,11 +108,11 @@ export function ConfirmDialog({
             {description}
           </div>
         )}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 24 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-1)', marginTop: 24 }}>
           <Button variant={danger ? 'danger' : 'primary'} size="lg" fullWidth loading={busy} onClick={onConfirm}>
             {confirmLabel}
           </Button>
-          <Button variant="text" size="md" fullWidth disabled={busy} onClick={onCancel}>
+          <Button variant="text" size="md" className="self-center" disabled={busy} onClick={onCancel}>
             {cancelLabel}
           </Button>
         </div>
