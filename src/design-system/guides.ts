@@ -467,7 +467,7 @@ export const GUIDES: Record<string, ComponentGuide> = {
       { name: 'busy', desc: '처리 중에는 주 버튼에 로딩을 띄우고, 닫기·Esc·바깥 누르기를 막습니다.' },
     ],
     specs: [
-      { title: '배치', desc: '버튼은 세로로 쌓습니다. 주 버튼(lg · 풀폭)이 위, 닫기(text · md)가 아래입니다. 엄지가 먼저 닿는 자리에 주 행동을 둡니다.' },
+      { title: '배치', desc: '버튼은 세로로 쌓습니다. 주 버튼(lg · 풀폭)을 위에 두고, 4px 아래에 닫기(text · md)를 내용 너비로 가운데 정렬합니다. 닫기의 터치 영역은 높이 44px입니다.' },
       { title: '모양', desc: '모바일은 상단만 --radius-sheet로 둥근 시트와 손잡이, 데스크톱은 폭 380 · --radius-popover 카드입니다. 그림자는 --shadow-sheet, 뒤 딤은 --color-scrim입니다.' },
       { title: '등장', desc: '모바일은 아래에서 올라오고, 데스크톱은 0.96배에서 커지며 나타납니다. 280ms입니다.' },
     ],
