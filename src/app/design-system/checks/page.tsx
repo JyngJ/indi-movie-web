@@ -47,7 +47,7 @@ const CONTRACTS: Record<string, { guard: string; why: string }> = {
     why: '조회 실패를 상영 없음으로 오인하거나, 취소된 드래그가 극장 시트를 닫는 일을 막아요',
   },
   'src/components/domain/FilmsEntry.browser.test.tsx': {
-    guard: '늦게 도착하는 랭킹이 같은 크기의 자리표시를 교체하고, 포스터 행이 함께 이동 없이 나타나는지',
+    guard: '늦게 도착하는 랭킹이 같은 크기의 자리표시를 교체하고, 포스터 행이 함께 이동 없이 나타나는지, 편수가 많은 지역에서 전체 상영작 탭을 열고 뒤로 가면 추천으로 돌아오는지',
     why: '아래 섹션이 먼저 보였다가 랭킹이 끼어들며 밀리는 현상과 포스터마다 올라오는 연속 동작을 막습니다.',
   },
   'src/components/navigation/ScrollToTopButton.browser.test.tsx': {
