@@ -4,7 +4,7 @@ import { FeedAd } from '@/components/analytics/FeedAd'
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { SectionHeader, FabRound, Icon, Divider } from '@/components/primitives'
+import { SectionHeader, FabRound, Icon, Divider, LoadingStatus, Tabs } from '@/components/primitives'
 import { AllMoviesGrid, ALL_MOVIES_GRID_ANCHOR_ID } from '@/components/domain/AllMoviesGrid'
 import { navStart } from '@/components/domain/RouteProgressBar'
 import { AnniversarySection } from '@/components/domain/AnniversarySection'
@@ -51,6 +51,15 @@ import { getStoredRegion, setStoredRegion, subscribeStoredRegion } from '@/lib/r
 import { getFestivalDateLabel, getFestivalStatus, type FestivalStatus } from '@/lib/festival/status'
 import type { Theater } from '@/types/api'
 import type { Festival } from '@/types/festival'
+
+const FILMS_VIEWS = [
+  { value: 'recommended', label: '추천' },
+  { value: 'all', label: '전체 상영작' },
+] as const
+type FilmsView = (typeof FILMS_VIEWS)[number]['value']
+
+// 모바일 전체 그리드의 첫 묶음 안에 모두 들어오면 기존 화면을 유지한다.
+const SMALL_FILMS_LIST_LIMIT = 9
 
 /* ── 지역 설정 힌트 말풍선 — 지도 FilterBar의 안내와 동일한 문구/닫기 동작(yh_region_tip) ── */
 function RegionHintBubble({ onDismiss }: { onDismiss: () => void }) {
@@ -186,6 +195,13 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
   const router = useRouter()
   const isDesktopLayout = useIsDesktopLayout()
   const [mounted, setMounted] = useState(false)
+  const [filmsView, setFilmsView] = useState<FilmsView>('recommended')
+  useEffect(() => {
+    const readView = () => setFilmsView(new URLSearchParams(window.location.search).get('view') === 'all' ? 'all' : 'recommended')
+    readView()
+    window.addEventListener('popstate', readView)
+    return () => window.removeEventListener('popstate', readView)
+  }, [])
   const [regionHintDismissed, setRegionHintDismissed] = useState(false)
   /* 첫 방문 소개가 먼저, 닫은 뒤에 지역 설정 안내 — 한 화면에 말풍선은 하나만 */
   const introHint = useFirstUseHint('intro')
@@ -531,6 +547,32 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
   /* 전체 상영작 그리드에 들어갈 목록 — CTA 밴드의 편수 표기와 그리드가 같은 배열을 봐야
      "128편"이라고 써 놓고 다른 수가 뜨는 일이 없다 */
   const gridMovies = movies.filter((m) => activeMovieIdSet.has(m.id))
+  const gridLoading = !mounted || moviesLoading || activeMoviesLoading || movieTheaterPairsLoading
+  const showViewTabs = !gridLoading && gridMovies.length > SMALL_FILMS_LIST_LIMIT
+  const showAll = showViewTabs && filmsView === 'all'
+
+  function changeFilmsView(next: FilmsView) {
+    if (next === filmsView) return
+    const url = new URL(window.location.href)
+    if (next === 'all') url.searchParams.set('view', 'all')
+    else url.searchParams.delete('view')
+    window.history.pushState(null, '', url)
+    setFilmsView(next)
+    window.scrollTo({ top: 0, behavior: 'instant' })
+    if (next === 'all') {
+      trackEvent('curation grid entered', {
+        ...buildSectionAnalytics({
+          listId: 'all_movies_grid',
+          sectionTitle: '전체 상영작',
+          run: 'fixed_bottom',
+          movieCount: gridMovies.length,
+          layout: 'grid',
+        }),
+        entry_point: 'view_tabs',
+      })
+    }
+  }
+
 
   // 영화별 상영관 수 (AllMoviesGrid 정렬용)
   const theaterCountByMovie = new Map<string, number>()
@@ -768,6 +810,11 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
           </div>
         )}
 
+        {showViewTabs && (
+          <Tabs items={FILMS_VIEWS} value={filmsView} onChange={changeFilmsView}
+            label="상영작 보기" variant="pill" style={{ padding: 0, marginTop: 'var(--spacing-3)' }} />
+        )}
+
         {/* 구분선 */}
         <Divider style={{ marginTop: 16 }} />
       </header>
@@ -775,7 +822,17 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
 
       {/* 2.0: PC 콘텐츠 최대폭 컬럼 (내부 gutter 포함 시각 ≈1000) — 프레임은 풀블리드 유지 */}
       <div style={isDesktop ? { maxWidth: 1048, margin: '0 auto' } : undefined}>
-      {sectionDataLoading ? (
+      {filmsView === 'all' && gridLoading ? (
+        <LoadingStatus placement="inline" />
+      ) : showAll ? (
+        <AllMoviesGrid
+          key={selectedRegion ?? 'all-regions'}
+          movies={gridMovies}
+          isDesktop={isDesktop}
+          regionLabel={selectedRegion ?? undefined}
+          theaterCountByMovie={theaterCountByMovie}
+          onMovieClick={handleMovieClick} />
+      ) : sectionDataLoading ? (
         <>
           <CurationSectionSkeleton title="지금 가장 많이 찾는 영화" isDesktop={isDesktop} />
           <GhostSectionRow isDesktop={isDesktop} />
@@ -1215,32 +1272,29 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
             {/* 4. 특별전 #1 (interleaved) */}
             {special1 && <LazyBlock isDesktop={isDesktop}>{renderSpecial(special1, 1)}</LazyBlock>}
 
-            {/* 5. 전체 상영작 진입점 — 여기가 롱테일의 입구다. 그리드는 30일 CTR 55%로 전
-                섹션 1위인데 도달이 꼴찌라, 페이지 맨 아래까지 안 가도 들어갈 수 있게 한다.
-                그리드 바로 위가 아니라 롱테일 시작점에 두는 게 요점 — 바로 위면 아무 의미 없다.
-                감독 스포트라이트(2.3%, 44명)를 이 자리에서 걷어내고 대신 넣었다. */}
-            <AllMoviesCtaBand
+            {/* 탭을 나누지 않는 지역에서는 기존 하단 목록 진입점을 유지한다. */}
+            {!showViewTabs && <AllMoviesCtaBand
               movieCount={gridMovies.length}
               regionLabel={selectedRegion ?? undefined}
               isDesktop={isDesktop}
               position={startRun2}
-              onClick={handleGridCtaClick} />
+              onClick={handleGridCtaClick} />}
 
             {/* 6~10. 연도별 · 거장/수상 · 매진 임박 · 신작·주말 · 시기별 · 무브먼트 */}
-            {renderRun(run2, 'run2', startRun2 + 1)}
+            {renderRun(run2, 'run2', startRun2 + Number(!showViewTabs && gridMovies.length > 0))}
 
             {/* 전체 상영작 바로 위 — 두 번째 가로 배너 */}
             {showFeedAd && !moviesLoading && gridMovies.length > 0 && <FeedAd />}
 
             {/* 11. 전체 상영작 그리드 */}
-            <LazyBlock isDesktop={isDesktop}>
+            {!showViewTabs && <LazyBlock isDesktop={isDesktop}>
             <AllMoviesGrid
               movies={gridMovies}
               isDesktop={isDesktop}
               regionLabel={selectedRegion ?? undefined}
               theaterCountByMovie={theaterCountByMovie}
               onMovieClick={handleMovieClick} />
-            </LazyBlock>
+            </LazyBlock>}
           </>
         )
       })()}

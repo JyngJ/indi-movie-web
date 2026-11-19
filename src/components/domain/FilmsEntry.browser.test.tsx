@@ -29,7 +29,7 @@ async function bundle(pageFixture: boolean) {
         if (args.importer.endsWith('FilmsClient.tsx') && args.path.includes('/components/') && !args.path.endsWith('CurationSectionRow')) return { path: args.path, namespace: 'sections' }
       })
       builder.onLoad({ filter: /.*/, namespace: 'sections' }, args => {
-        if (args.path.endsWith('/primitives')) return { resolveDir: process.cwd(), loader: 'tsx', contents: `export const SectionHeader=({title})=><h2>{title}</h2>;export const MovieCardSkeleton=()=> <div style={{height:180}}>준비 중</div>;export const FabRound=()=>null;export const Icon=()=>null;export const Divider=()=>null;export const LoadingStatus=({message})=><div role="status">{message}</div>;` }
+        if (args.path.endsWith('/primitives')) return { resolveDir: process.cwd(), loader: 'tsx', contents: `export { Tabs } from '@/components/primitives/Tabs';export const SectionHeader=({title})=><h2>{title}</h2>;export const MovieCardSkeleton=()=> <div style={{height:180}}>준비 중</div>;export const FabRound=()=>null;export const Icon=()=>null;export const Divider=()=>null;export const LoadingStatus=({message})=><div role="status">{message}</div>;` }
         const name = args.path.split('/').pop()!
         const names: Record<string, string> = { GlobalNav: 'GLOBAL_NAV_DESKTOP_WIDTH', RouteProgressBar: 'navStart', HintBubble: 'HintBubble', FilterChip: 'FilterChip' }
         const symbol = names[name] ?? name
@@ -48,7 +48,7 @@ async function bundle(pageFixture: boolean) {
         queries: `const q=(data,key)=>({data,isLoading:window.pending.includes(key),isFetching:window.refreshing});
           export const useMovies=()=>q(window.movies,'movies');export const useTheaters=()=>q([],'theaters');
           export const useCurationLists=()=>q([{listId:'decade_90s',nameKo:'90년대 영화',type:'dynamic',query:{yearRange:[1990,1999]},minN:3}],'lists');
-          export const useActiveMovieIdsByRegion=()=>q(['1','2','3'],'active');export const useActiveMovieTheaterPairs=()=>q([],'pairs');
+          export const useActiveMovieIdsByRegion=()=>q(window.activeIds??['1','2','3'],'active');export const useActiveMovieTheaterPairs=()=>q([],'pairs');
           export const useClickRankings=()=>q(window.pending.includes('ranking')?undefined:window.ranking,'ranking');
           export const useFilmRankings=()=>q(null,'unused');export const useFestivals=()=>q([],'festivals');export const useInstagramRecommendations=()=>q([],'unused');
           export const useAlmostSoldOutCandidates=()=>q([],'seats');export const useLateNightCandidates=()=>q([],'weekend');
@@ -93,6 +93,20 @@ it.skipIf(process.env.RUN_BROWSER_TESTS !== '1').each([390, 1280])('폭 %ipx에�
     await page.evaluate('window.ranking=undefined;window.draw()')
     await expect.poll(() => rank.count()).toBe(0)
     expect(await page.getByRole('heading', { name: '90년대 영화' }).count()).toBe(1)
+    const tabs = page.getByRole('tablist', { name: '상영작 보기' })
+    expect(await tabs.count()).toBe(0)
+    const expanded = Array.from({ length: 10 }, (_, index) => ({ ...movies[0], id: String(index + 1), title: `영화 ${index + 1}` }))
+    await page.evaluate(items => {
+      Object.assign(window, { movies: items, activeIds: items.map(item => item.id) })
+      ;(window as Window & { draw?: () => void }).draw?.()
+    }, expanded)
+    await tabs.getByRole('tab', { name: '전체 상영작' }).click()
+    await page.getByText('전체 영화', { exact: true }).waitFor()
+    expect(new URL(page.url()).searchParams.get('view')).toBe('all')
+    expect(await lower.count()).toBe(0)
+    await page.goBack()
+    await lower.waitFor()
+    expect(await tabs.getByRole('tab', { name: '추천' }).getAttribute('aria-selected')).toBe('true')
     expect(errors).toEqual([])
   } finally { await browser.close() }
 }, 30000)
