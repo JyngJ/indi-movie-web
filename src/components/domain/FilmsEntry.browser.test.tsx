@@ -66,6 +66,7 @@ it.skipIf(process.env.RUN_BROWSER_TESTS !== '1').each([390, 1280])('폭 %ipx에�
   const browser = await chromium.launch()
   try {
     const page = await browser.newPage({ viewport: { width, height: 844 } })
+    await page.clock.setFixedTime(new Date('2026-11-20T03:00:00Z'))
     const errors: string[] = []
     page.on('pageerror', e => errors.push(e.message))
     await page.route('http://films.test/**', route => route.fulfill({ contentType: 'text/html', body: '<div id="root"></div>' }))
@@ -102,12 +103,13 @@ it.skipIf(process.env.RUN_BROWSER_TESTS !== '1').each([390, 1280])('폭 %ipx에�
       Object.assign(window, {
         movies: items,
         activeIds: items.map(item => item.id),
-        festivals: [{ id: 'fest', slug: 'fest', name: '독립영화제', startDate: '2000-01-01', endDate: '2099-12-31' }],
+        festivals: [{ id: 'fest', slug: 'fest', name: '제52회 서울독립영화제', startDate: '2026-11-25', endDate: '2026-12-02' }],
       })
       ;(window as Window & { draw?: () => void }).draw?.()
     }, expanded)
-    const festivalPill = page.getByRole('button', { name: '영화제 · 독립영화제 상영 시간표 보기' })
+    const festivalPill = page.getByRole('button', { name: '제52회 서울독립영화제 D-5 상영 시간표 보기' })
     await festivalPill.waitFor()
+    expect(await festivalPill.locator('strong').textContent()).toBe('D-5')
     const recommendationPill = tabs.getByRole('tab', { name: '추천' })
     const allPill = tabs.getByRole('tab', { name: '전체 상영작' })
     for (const pill of [recommendationPill, allPill, festivalPill]) {
