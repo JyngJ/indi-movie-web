@@ -22,11 +22,12 @@ async function bundle(pageFixture: boolean) {
         if (args.path === 'next/image') return { path: 'image', namespace: 'fixture' }
         if (/useSectionDwellTracking$|analytics\/client$/.test(args.path)) return { path: 'tracking', namespace: 'fixture' }
         if (!pageFixture) return
+        if (args.path.endsWith('RouteProgressBar')) return { path: 'progress', namespace: 'fixture' }
         if (args.path.endsWith('supabase/queries')) return { path: 'queries', namespace: 'fixture' }
         if (args.path.endsWith('useCurationData')) return { path: 'curation', namespace: 'fixture' }
         if (/useLocationPermission$|useCurrentLocationRegion$|useFirstUseHint$/.test(args.path)) return { path: 'hooks', namespace: 'fixture' }
         // 페이지의 로딩 전환은 실제 구현으로, 하위 섹션은 표시 순서만 검증한다.
-        if (args.importer.endsWith('FilmsClient.tsx') && args.path.includes('/components/') && !args.path.endsWith('CurationSectionRow')) return { path: args.path, namespace: 'sections' }
+        if (args.importer.endsWith('FilmsClient.tsx') && args.path.includes('/components/') && !/(CurationSectionRow|FestivalShortcutRow)$/.test(args.path)) return { path: args.path, namespace: 'sections' }
       })
       builder.onLoad({ filter: /.*/, namespace: 'sections' }, args => {
         if (args.path.endsWith('/primitives')) return { resolveDir: process.cwd(), loader: 'tsx', contents: `export { Tabs } from '@/components/primitives/Tabs';export const SectionHeader=({title})=><h2>{title}</h2>;export const MovieCardSkeleton=()=> <div style={{height:180}}>준비 중</div>;export const FabRound=()=>null;export const Icon=()=>null;export const Divider=()=>null;export const LoadingStatus=({message})=><div role="status">{message}</div>;` }
@@ -41,7 +42,8 @@ async function bundle(pageFixture: boolean) {
         return { contents, loader: 'tsx', resolveDir: process.cwd() }
       })
       builder.onLoad({ filter: /.*/, namespace: 'fixture' }, args => ({ resolveDir: process.cwd(), loader: 'tsx', contents: {
-        navigation: 'export const useRouter=()=>({push:()=>{}});',
+        navigation: 'export const useRouter=()=>({push:url=>{window.destination=url},prefetch:()=>{}});',
+        progress: 'export const navStart=()=>{window.progressStarted=true};',
         image: 'export default function Image(props){return <img {...props}/>}',
         tracking: 'export const useSectionDwellTracking=()=>{};export const trackEvent=()=>{};',
         hooks: 'export const useLocationPermission=()=>({coords:null});export const useCurrentLocationRegion=()=>null;export const useFirstUseHint=()=>({state:"done",dismiss:()=>{}});',
@@ -50,7 +52,7 @@ async function bundle(pageFixture: boolean) {
           export const useCurationLists=()=>q([{listId:'decade_90s',nameKo:'90년대 영화',type:'dynamic',query:{yearRange:[1990,1999]},minN:3}],'lists');
           export const useActiveMovieIdsByRegion=()=>q(window.activeIds??['1','2','3'],'active');export const useActiveMovieTheaterPairs=()=>q([],'pairs');
           export const useClickRankings=()=>q(window.pending.includes('ranking')?undefined:window.ranking,'ranking');
-          export const useFilmRankings=()=>q(null,'unused');export const useFestivals=()=>q([],'festivals');export const useInstagramRecommendations=()=>q([],'unused');
+          export const useFilmRankings=()=>q(null,'unused');export const useFestivals=()=>q(window.festivals??[],'festivals');export const useInstagramRecommendations=()=>q([],'unused');
           export const useAlmostSoldOutCandidates=()=>q([],'seats');export const useLateNightCandidates=()=>q([],'weekend');
           export const useCurationSectionScores=()=>q(null,'scores');export const useRecommendationNeighbors=()=>q(undefined,'unused');`,
         curation: 'export const useCurationData=()=>({isLoading:window.pending.includes("curation"),lastWeekFilms:[],newIndieFilms:[],returningFilms:[],recentlyViewed:[],soloTheaterFilms:[],todayShowFilms:[]});',
@@ -64,6 +66,7 @@ it.skipIf(process.env.RUN_BROWSER_TESTS !== '1').each([390, 1280])('폭 %ipx에�
   const browser = await chromium.launch()
   try {
     const page = await browser.newPage({ viewport: { width, height: 844 } })
+    await page.clock.setFixedTime(new Date('2026-11-20T03:00:00Z'))
     const errors: string[] = []
     page.on('pageerror', e => errors.push(e.message))
     await page.route('http://films.test/**', route => route.fulfill({ contentType: 'text/html', body: '<div id="root"></div>' }))
@@ -71,7 +74,7 @@ it.skipIf(process.env.RUN_BROWSER_TESTS !== '1').each([390, 1280])('폭 %ipx에�
     await page.evaluate(movies => {
       Object.assign(window, { movies, pending: ['ranking'], ranking: { booking: movies.map(m => ({ movieId: m.id, count: 10 })), views: [] } })
     }, movies)
-    await page.addStyleTag({ content: readFileSync('src/styles/tokens.css', 'utf8') + '.flex{display:flex}.shrink-0{flex-shrink:0}.grow-0{flex-grow:0}.overflow-hidden{overflow:hidden}.relative{position:relative}*{box-sizing:border-box}body{margin:0}.display-h2{font-size:20px;line-height:1.3}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden}span{line-height:1.3}' })
+    await page.addStyleTag({ content: readFileSync('src/styles/tokens.css', 'utf8') + '.flex{display:flex}.flex-wrap{flex-wrap:wrap}.items-center{align-items:center}.gap-2{gap:8px}.shrink-0{flex-shrink:0}.grow-0{flex-grow:0}.overflow-hidden{overflow:hidden}.relative{position:relative}*{box-sizing:border-box}body{margin:0}.display-h2{font-size:20px;line-height:1.3}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden}span{line-height:1.3}' })
     await page.addScriptTag({ content: output.outputFiles[0].text })
     const rank = page.getByRole('heading', { name: '지금 가장 많이 찾는 영화' })
     const lower = page.getByRole('heading', { name: '90년대 영화' })
@@ -97,16 +100,40 @@ it.skipIf(process.env.RUN_BROWSER_TESTS !== '1').each([390, 1280])('폭 %ipx에�
     expect(await tabs.count()).toBe(0)
     const expanded = Array.from({ length: 10 }, (_, index) => ({ ...movies[0], id: String(index + 1), title: `영화 ${index + 1}` }))
     await page.evaluate(items => {
-      Object.assign(window, { movies: items, activeIds: items.map(item => item.id) })
+      Object.assign(window, {
+        movies: items,
+        activeIds: items.map(item => item.id),
+        festivals: [{ id: 'fest', slug: 'fest', name: '제52회 서울독립영화제', startDate: '2026-11-25', endDate: '2026-12-02' }],
+      })
       ;(window as Window & { draw?: () => void }).draw?.()
     }, expanded)
-    await tabs.getByRole('tab', { name: '전체 상영작' }).click()
+    const festivalPill = page.getByRole('button', { name: '제52회 서울독립영화제 D-5 상영 시간표 보기' })
+    await festivalPill.waitFor()
+    expect(await festivalPill.locator('strong').textContent()).toBe('D-5')
+    const recommendationPill = tabs.getByRole('tab', { name: '추천' })
+    const allPill = tabs.getByRole('tab', { name: '전체 상영작' })
+    for (const pill of [recommendationPill, allPill, festivalPill]) {
+      expect(await pill.locator('xpath=ancestor::header').count()).toBe(0)
+    }
+    const [recommendedBox, allBox, festivalBox] = await Promise.all(
+      [recommendationPill, allPill, festivalPill].map(pill => pill.boundingBox()),
+    )
+    expect(recommendedBox!.x).toBeLessThan(allBox!.x)
+    expect(allBox!.x).toBeLessThan(festivalBox!.x)
+    expect(festivalBox!.y).toBe(allBox!.y)
+    expect(festivalBox!.height).toBe(allBox!.height)
+    await allPill.click()
+    expect(await festivalPill.isVisible()).toBe(true)
     await page.getByText('전체 영화', { exact: true }).waitFor()
     expect(new URL(page.url()).searchParams.get('view')).toBe('all')
     expect(await lower.count()).toBe(0)
     await page.goBack()
     await lower.waitFor()
     expect(await tabs.getByRole('tab', { name: '추천' }).getAttribute('aria-selected')).toBe('true')
+    await festivalPill.click()
+    expect(await page.evaluate('window.destination')).toBe('/festival/fest')
+    expect(await page.evaluate('window.progressStarted')).toBe(true)
+    expect(await festivalPill.getAttribute('aria-busy')).toBe('true')
     expect(errors).toEqual([])
   } finally { await browser.close() }
 }, 30000)
