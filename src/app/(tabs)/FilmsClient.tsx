@@ -810,11 +810,6 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
           </div>
         )}
 
-        {showViewTabs && (
-          <Tabs items={FILMS_VIEWS} value={filmsView} onChange={changeFilmsView}
-            label="상영작 보기" variant="pill" style={{ padding: 0, marginTop: 'var(--spacing-3)' }} />
-        )}
-
         {/* 구분선 */}
         <Divider style={{ marginTop: 16 }} />
       </header>
@@ -822,6 +817,18 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
 
       {/* 2.0: PC 콘텐츠 최대폭 컬럼 (내부 gutter 포함 시각 ≈1000) — 프레임은 풀블리드 유지 */}
       <div style={isDesktop ? { maxWidth: 1048, margin: '0 auto' } : undefined}>
+      {/* feedback-audit-ignore — 진행 막대와 대기 표시는 FestivalShortcutRow가 처리한다 */}
+      <FestivalShortcutRow
+        festivals={festivals}
+        today={toKstIsoDate(new Date())}
+        isDesktop={isDesktop}
+        onSelect={(slug) => router.push(`/festival/${slug}`)}
+      >
+        {showViewTabs && (
+          <Tabs items={FILMS_VIEWS} value={filmsView} onChange={changeFilmsView}
+            label="상영작 보기" variant="pill" style={{ padding: 0 }} />
+        )}
+      </FestivalShortcutRow>
       {filmsView === 'all' && gridLoading ? (
         <LoadingStatus placement="inline" />
       ) : showAll ? (
@@ -839,15 +846,6 @@ export default function FilmsPage({ showFeedAd = false }: { showFeedAd?: boolean
           <GhostSectionRow isDesktop={isDesktop} />
         </>
       ) : <>
-      {/* 영화제 바로가기 — 회기 중이거나 개막이 가까울 때만. 지역 필터와 무관한 전국 대상.
-          feedback-audit-ignore — 진행 막대·"이동하는 중…"은 FestivalShortcutRow가 누를 때 띄운다 */}
-      <FestivalShortcutRow
-        festivals={festivals}
-        today={toKstIsoDate(new Date())}
-        isDesktop={isDesktop}
-        onSelect={(slug) => router.push(`/festival/${slug}`)}
-      />
-
       {/* 주간 랭킹 — 독립영화 필터 미완성으로 임시 숨김
       {filmRankingRow && (
         <FilmRankingSection
