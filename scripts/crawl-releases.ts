@@ -11,11 +11,20 @@ import { fetchIndiegroundDetail, fetchIndiegroundReleases } from '../src/lib/rel
 import { createSupabaseReleaseRepository } from '../src/lib/releases/supabaseReleaseRepository'
 import { syncReleases } from '../src/lib/releases/syncReleases'
 import { createSupabaseAdminClient } from '../src/lib/supabase/admin'
+import { captureServerEvent } from '../src/lib/analytics/captureServerEvent'
+import {
+  RELEASES_CRAWL_EVENT,
+  RELEASES_CRAWL_FAILED_EVENT,
+  buildReleasesCrawlFailedProperties,
+  buildReleasesCrawlProperties,
+  releasesCrawlDistinctId,
+} from '../src/lib/releases/syncMetrics'
 import type { AdminExternalMovie } from '../src/types/admin'
 
 const TITLE = '🎬 개봉 예정 수집'
 
 const dryRun = process.argv.includes('--dry-run')
+const startedAt = Date.now()
 
 async function main() {
   console.log(`[${new Date().toISOString()}] 개봉 예정 수집 시작${dryRun ? ' (dry-run)' : ''}`)
@@ -33,12 +42,21 @@ async function main() {
   })
 
   console.log(JSON.stringify(summary, null, 2))
-  if (!dryRun) await notifyDiscordReleases(summary)
+  if (dryRun) return
+  await notifyDiscordReleases(summary)
+  // 실행마다 얼마나 했는지 PostHog에 남긴다 — 토큰이 없거나 실패해도 수집 결과에는 영향 없음
+  const logged = await captureServerEvent(RELEASES_CRAWL_EVENT, releasesCrawlDistinctId('indieground'),
+    buildReleasesCrawlProperties('indieground', summary, Date.now() - startedAt))
+  console.log(`PostHog 기록 ${logged ? '완료' : '건너뜀'}`)
 }
 
 main().catch(async (err: unknown) => {
   console.error('개봉 예정 수집 실패:', err)
   // dry-run은 사람이 터미널에서 돌리는 확인용 — 운영 채널에 오류를 올리지 않는다
-  if (!dryRun) await notifyDiscordError(TITLE, err instanceof Error ? err.message : String(err))
+  if (!dryRun) {
+    await notifyDiscordError(TITLE, err instanceof Error ? err.message : String(err))
+    await captureServerEvent(RELEASES_CRAWL_FAILED_EVENT, releasesCrawlDistinctId('indieground'),
+      buildReleasesCrawlFailedProperties('indieground', err, Date.now() - startedAt))
+  }
   process.exit(1)
 })

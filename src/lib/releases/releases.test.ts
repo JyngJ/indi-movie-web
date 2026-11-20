@@ -8,6 +8,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { ReleaseRepository } from './repository'
 import { planReleaseDateUpdates, syncReleases } from './syncReleases'
+import { buildReleasesCrawlFailedProperties, buildReleasesCrawlProperties, releasesCrawlDistinctId } from './syncMetrics'
 import type { ExternalMovieRef, LocalMovieRef, UpcomingRelease, UpcomingReleaseInput } from './types'
 
 const input = (over: Partial<UpcomingReleaseInput> = {}): UpcomingReleaseInput => ({
@@ -242,5 +243,26 @@ describe('syncReleases', () => {
     })
     expect(summary.dateChanged).toEqual([{ title: '내일의 민재', from: '2026-12-02', to: '2026-12-09' }])
     expect(summary.releaseDateUpdates).toBe(1)
+  })
+})
+
+describe('syncMetrics', () => {
+  it('요약을 건수·제목 속성으로 바꾼다', () => {
+    const props = buildReleasesCrawlProperties('indieground', {
+      fetched: 62, created: 2, matched: 60, imported: ['내일의 민재 ← K:40495 (2024)'],
+      dateChanged: [{ title: '공무도하', from: '2026-11-25', to: '2026-12-02' }],
+      needsReview: [{ title: '지난 여름', reason: '동명' }], pending: ['더 버스'], stalePending: [], releaseDateUpdates: 3,
+    }, 1234.6)
+    expect(props).toEqual({
+      source: 'indieground', duration_ms: 1235, fetched: 62, created: 2, matched: 60, imported: 1, needs_review: 1, pending: 1,
+      stale_pending: 0, date_changed: 1, release_date_updates: 3,
+      imported_titles: ['내일의 민재 ← K:40495 (2024)'], needs_review_titles: ['지난 여름'],
+      date_changed_titles: ['공무도하: 2026-11-25 → 2026-12-02'],
+    })
+    expect(releasesCrawlDistinctId('indieground')).toBe('crawler:releases:indieground')
+  })
+
+  it('실패 메시지는 300자로 자른다', () => {
+    expect(buildReleasesCrawlFailedProperties('indieground', new Error('x'.repeat(500)), 10).error).toHaveLength(300)
   })
 })
