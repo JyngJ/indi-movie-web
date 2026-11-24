@@ -28,6 +28,7 @@ import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { useDragSheet } from '@/hooks/useDragSheet'
 import { useMomentumScroll } from '@/hooks/useMomentumScroll'
 import { shareAndTrack } from '@/lib/analytics/shareTracking'
+import { theaterSharePath } from '@/lib/share/theaterSharePath'
 import { GvEventSection } from './GvEventSection'
 import { GvDetailPanel } from './GvDetailPanel'
 import { BookingCtaButton, ShareScheduleButton } from './booking/BookingActions'
@@ -738,19 +739,13 @@ export function TheaterSheet({
     const selectedEntry = allMovieEntries.find((e) => e.movie.id === selectedMovieId)
     const selectedShowtime = filteredShowtimes.find((st) => st.id === selectedShowtimeId)
 
-    // '/map' — 진입점이 상영작으로 바뀐 뒤(#262) 지도 파라미터를 읽는 건 MapView 하나뿐이고
-    // 그건 '/map'에서만 마운트된다. 루트로 보내면 받은 사람에게 파라미터가 통째로 무시된다.
-    const url = new URL('/map', window.location.origin)
-    url.searchParams.set('theater', theater.id)
+    // 지도(/map)가 아니라 극장 상세·회차 경로로 공유한다 — /map 미리보기는 고정값이라
+    // 받은 사람에게 어느 극장인지 안 보였다(theaterSharePath 주석).
+    const url = new URL(theaterSharePath(theater.id, selectedShowtime?.id), window.location.origin)
     let title = theater.name
     if (selectedEntry) {
-      url.searchParams.set('movie', selectedEntry.movie.id)
-      url.searchParams.set('date', selectedIsoDate)
       title += ` - ${selectedEntry.movie.title}`
-      if (selectedShowtime) {
-        url.searchParams.set('showtime', selectedShowtime.id)
-        title += ` ${selectedShowtime.showTime.slice(0, 5)}`
-      }
+      if (selectedShowtime) title += ` ${selectedShowtime.showTime.slice(0, 5)}`
     }
     void shareAndTrack({
       // text + url 동시에 넘기면 iOS Safari가 url을 무시하는 버그 있음 → title + url만 사용
