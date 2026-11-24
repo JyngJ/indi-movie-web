@@ -1,7 +1,8 @@
 import type { CrawledShowtimeCandidate } from '@/types/admin'
+import { CrawlNotice, SOURCE_SITE_ERROR_PREFIX, detectSourceSiteError } from '@/lib/crawl/crawlNotice'
 import type { ParseContext } from './utils'
 import { buildCandidate, dedupeCandidates } from './utils'
-import { extractBoardImageUrls, findLatestBoardPostUrl, isBoardPostUrl } from './board'
+import { buildBoardSubjectSearchUrl, extractBoardImageUrls, findLatestBoardPostUrl, isBoardPostUrl } from './board'
 
 type ImageMediaType = 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'
 
@@ -172,15 +173,32 @@ export async function crawlBoardImageOcr(context: ParseContext): Promise<Crawled
       headers: { 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36' },
       signal: AbortSignal.timeout(12000),
     })
+    const body = await res.text()
+    // 출처 사이트 자체 장애(5xx, 200에 실린 "Connect Error: Too many connections")는 파서 문제가 아니다.
+    // 2026-11-24 sunamswc.or.kr이 이 상태였는데 "글을 찾을 수 없습니다"로 기록돼 파서가 깨진 것처럼 보였다.
+    const siteError = detectSourceSiteError(res.status, body)
+    if (siteError) {
+      throw new CrawlNotice('source-site-error', `${SOURCE_SITE_ERROR_PREFIX}${new URL(target).hostname} 응답: ${siteError} — 다음 수집에 다시 시도해요`)
+    }
     if (!res.ok) throw new Error(`게시판 fetch 실패: ${res.status}`)
-    return res.text()
+    return body
   }
 
   // 1) 소스 주소가 게시판 목록이면 제목에 극장 이름이 든 최신 글을 고른다
   let postUrl = url
   if (!isBoardPostUrl(url)) {
-    const found = findLatestBoardPostUrl(await fetchHtml(url), url, theaterName)
-    if (!found) throw new Error(`게시판에서 "${theaterName}" 글을 찾을 수 없습니다`)
+    const listHtml = await fetchHtml(url)
+    let found = findLatestBoardPostUrl(listHtml, url, theaterName)
+    // 1쪽에 없으면 제목 검색 한 번 — 새 공지에 밀려 2쪽으로 넘어간 경우(2026-11 선암)
+    const searchUrl = found ? undefined : buildBoardSubjectSearchUrl(url, theaterName)
+    if (searchUrl) found = findLatestBoardPostUrl(await fetchHtml(searchUrl), url, theaterName)
+    if (!found) {
+      // 글 링크가 하나도 없으면 목록 자체를 못 받은 것이다 — 제목 검색 실패와 구분해 남긴다
+      const postLinkCount = listHtml.match(/wr_id=\d+/g)?.length ?? 0
+      throw new Error(postLinkCount === 0
+        ? `게시판 목록에 글 링크가 하나도 없어요(응답 ${listHtml.length}바이트) — 게시판 주소나 마크업이 바뀌었을 수 있어요`
+        : `게시판에서 "${theaterName}" 글을 찾을 수 없습니다`)
+    }
     postUrl = found
   }
   const html = await fetchHtml(postUrl)

@@ -34,6 +34,28 @@ export function findLatestBoardPostUrl(listHtml: string, listUrl: string, keywor
   return best?.url
 }
 
+/**
+ * 그누보드 제목 검색 주소(sfl=wr_subject&stx=…). 목록 1쪽에 글이 없을 때 쓴다.
+ * 2026-11-24 선암호수노인복지관 공지 게시판은 새 공지 11건에 밀려 "시네마in선암 11월" 글(wr_id 2010)이
+ * 2쪽으로 넘어가 있었고, 1쪽만 읽던 수집은 "글을 찾을 수 없습니다"로 실패했다.
+ * 그누보드 검색은 띄어쓰기로 낱말을 나누므로 공백을 뺀 이름으로 찾는다(제목이 "시네마in선암"이다).
+ * bo_table이 없는 주소(그누보드가 아님)는 undefined.
+ */
+export function buildBoardSubjectSearchUrl(listUrl: string, keyword: string) {
+  try {
+    const url = new URL(listUrl)
+    if (!url.searchParams.has('bo_table')) return undefined
+    const term = keyword.replace(/\s+/g, '')
+    if (!term) return undefined
+    url.searchParams.delete('page')
+    url.searchParams.set('sfl', 'wr_subject')
+    url.searchParams.set('stx', term)
+    return url.toString()
+  } catch {
+    return undefined
+  }
+}
+
 /** 게시글 본문 이미지 주소. 그누보드 썸네일(thumb-…_WxH)은 원본 파일 주소로 바꿔 앞에 둔다 */
 export function extractBoardImageUrls(html: string, pageUrl: string) {
   const base = new URL(pageUrl)

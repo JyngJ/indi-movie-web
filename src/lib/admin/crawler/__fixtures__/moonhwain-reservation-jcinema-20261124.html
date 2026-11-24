@@ -1,0 +1,51 @@
+<!--
+  전주 시네마타운 https://jcinema.moonhwain.net:451/reservation/01.html (2026-11-24 19:5x KST)
+  운영자가 실제 페이지에서 뽑은 마크업. 공백만 정리, 태그·클래스는 원본 그대로.
+  - 날짜 nav 30칸과 시간표 1~2행(헝거게임 5관·최종면접 5관)은 원본 값 그대로다.
+  - 3~7행은 원본과 같은 마크업에 운영자가 알려 준 영화·상영관·시각을 채웠다.
+    이 행들의 p_idx·회차ID(99001~)·관람등급은 원본 값이 아닌 자리 채움이다.
+  - 날짜 칸을 감싸는 div.date_wrap과 html/body, 한 자리 날짜의 표기("01")는 자리 채움이다.
+-->
+<html><body>
+<div class="date_wrap">
+<div class="day"><span title="2026-11-01">01<em class="week">일</em></span></div>
+<div class="day"><span title="2026-11-02">02<em class="week">월</em></span></div>
+<div class="day"><span title="2026-11-03">03<em class="week">화</em></span></div>
+<div class="day"><span title="2026-11-04">04<em class="week">수</em></span></div>
+<div class="day"><span title="2026-11-05">05<em class="week">목</em></span></div>
+<div class="day"><span title="2026-11-06">06<em class="week">금</em></span></div>
+<div class="day"><span title="2026-11-07">07<em class="week">토</em></span></div>
+<div class="day"><span title="2026-11-08">08<em class="week">일</em></span></div>
+<div class="day"><span title="2026-11-09">09<em class="week">월</em></span></div>
+<div class="day"><span title="2026-11-10">10<em class="week">화</em></span></div>
+<div class="day"><span title="2026-11-11">11<em class="week">수</em></span></div>
+<div class="day"><span title="2026-11-12">12<em class="week">목</em></span></div>
+<div class="day"><span title="2026-11-13">13<em class="week">금</em></span></div>
+<div class="day"><span title="2026-11-14">14<em class="week">토</em></span></div>
+<div class="day"><span title="2026-11-15">15<em class="week">일</em></span></div>
+<div class="day"><span title="2026-11-16">16<em class="week">월</em></span></div>
+<div class="day"><span title="2026-11-17">17<em class="week">화</em></span></div>
+<div class="day"><span title="2026-11-18">18<em class="week">수</em></span></div>
+<div class="day"><span title="2026-11-19">19<em class="week">목</em></span></div>
+<div class="day"><span title="2026-11-20">20<em class="week">금</em></span></div>
+<div class="day"><span title="2026-11-21">21<em class="week">토</em></span></div>
+<div class="day"><span title="2026-11-22">22<em class="week">일</em></span></div>
+<div class="day"><span title="2026-11-23">23<em class="week">월</em></span></div>
+<div class="day sel"><a href="?ss_date=2026-11-24" title="2026-11-24">24<em class="week">화</em></a></div>
+<div class="day on"><a href="?ss_date=2026-11-25" title="2026-11-25">25<em class="week">수</em></a></div>
+<div class="day on"><a href="?ss_date=2026-11-26" title="2026-11-26">26<em class="week">목</em></a></div>
+<div class="day on"><a href="?ss_date=2026-11-27" title="2026-11-27">27<em class="week">금</em></a></div>
+<div class="day"><span title="2026-11-28">28<em class="week">토</em></span></div>
+<div class="day"><span title="2026-11-29">29<em class="week">일</em></span></div>
+<div class="day"><span title="2026-11-30">30<em class="week">월</em></span></div>
+</div>
+<table class="time_list"><thead><tr><th>영화제목</th><th>상영타입</th><th>상영관</th><th>상영시간</th></tr></thead><tbody>
+<tr><td><p class="i_grade c_orange">15</p><h4><a href="/movie/detail.html?p_idx=3418&amp;ss_date=2026-11-24">헝거게임 50번째 추첨의 날</a></h4></td><td>디지털</td><td class="center"><!--주석--> 5관 </td><td class="time"><a href="javascript:wRsvMovie('jcinema','98339','');">10:00</a><a href="javascript:wRsvMovie('jcinema','98341','');">15:00</a></td></tr>
+<tr><td><p class="i_grade c_orange">15</p><h4><a href="/movie/detail.html?p_idx=3414&amp;ss_date=2026-11-24">최종면접</a></h4></td><td>디지털</td><td class="center"><!--주석--> 5관 </td><td class="time"><a href="javascript:wRsvMovie('jcinema','98340','');">12:50</a></td></tr>
+<tr><td><p class="i_grade c_orange">15</p><h4><a href="/movie/detail.html?p_idx=9001&amp;ss_date=2026-11-24">폴2:데드포인트</a></h4></td><td>디지털</td><td class="center"><!--주석--> 7관 </td><td class="time"><a href="javascript:wRsvMovie('jcinema','99001','');">10:20</a><a href="javascript:wRsvMovie('jcinema','99002','');">14:20</a></td></tr>
+<tr><td><p class="i_grade c_orange">15</p><h4><a href="/movie/detail.html?p_idx=9002&amp;ss_date=2026-11-24">폭설</a></h4></td><td>디지털</td><td class="center"><!--주석--> 7관 </td><td class="time"><a href="javascript:wRsvMovie('jcinema','99003','');">12:20</a></td></tr>
+<tr><td><p class="i_grade c_orange">15</p><h4><a href="/movie/detail.html?p_idx=3418&amp;ss_date=2026-11-24">헝거게임 50번째 추첨의 날</a></h4></td><td>디지털</td><td class="center"><!--주석--> 7관 </td><td class="time"><a href="javascript:wRsvMovie('jcinema','99004','');">16:20</a></td></tr>
+<tr><td><p class="i_grade c_orange">15</p><h4><a href="/movie/detail.html?p_idx=9002&amp;ss_date=2026-11-24">폭설</a></h4></td><td>디지털</td><td class="center"><!--주석--> 8관 </td><td class="time"><a href="javascript:wRsvMovie('jcinema','99005','');">10:00</a><a href="javascript:wRsvMovie('jcinema','99006','');">14:50</a><a href="javascript:wRsvMovie('jcinema','99007','');">16:40</a></td></tr>
+<tr><td><p class="i_grade c_orange">15</p><h4><a href="/movie/detail.html?p_idx=3418&amp;ss_date=2026-11-24">헝거게임 50번째 추첨의 날</a></h4></td><td>디지털</td><td class="center"><!--주석--> 8관 </td><td class="time"><a href="javascript:wRsvMovie('jcinema','99008','');">11:50</a></td></tr>
+</tbody></table>
+</body></html>

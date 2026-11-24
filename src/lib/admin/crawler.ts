@@ -49,6 +49,10 @@ import { crawlHdArtsCenter } from './crawler/hdArtsCenter'
 import { parseCineQMovieTable, toCineQPlayDate } from './crawler/cineq'
 import { parseDrfaCalendar } from './crawler/drfa'
 import { parseMoonhwainTimeTableDates, parseMoonhwainTimeTableDay } from './crawler/moonhwainTimeTable'
+import { hasMoonhwainSessions, parseMoonhwainReservationDates, parseMoonhwainReservationDay } from './crawler/moonhwainReservation'
+import { scanDtryxDates } from './crawler/dtryxScan'
+import { CrawlNotice, NO_OPEN_SESSIONS_PREFIX } from '@/lib/crawl/crawlNotice'
+import { toKstIsoDate } from '@/lib/date'
 
 interface DtryxMovie {
   MovieCd: string
@@ -239,8 +243,8 @@ export async function crawlDtryxReservationApi(context: ParseContext) {
   // referer는 ASCII-safe한 핵심 파라미터만 포함 (한글 파라미터 제외)
   const headers = buildDtryxHeaders(`${origin}/cinema/main.do?cgid=${cgid}&BrandCd=${brandCd}`)
   const main = await fetchDtryxMain(origin, cgid, brandCd, headers)
-  const hiddenError = dtryxHiddenCinemaError(main.CinemaList ?? [], context.source.theaterName, urlCinemaCd)
-  if (hiddenError) throw new Error(hiddenError)
+  const closedNotice = dtryxNoOpenSessionsNotice(main.CinemaList ?? [], context.source.theaterName, urlCinemaCd)
+  if (closedNotice) throw new CrawlNotice('no-open-sessions', closedNotice)
   const cinemas = (main.CinemaList ?? []).filter((cinema) => cinema.HiddenYn !== 'Y')
   const movies = (main.MovieList ?? []).filter((movie) => movie.HiddenYn !== 'Y')
   const playDates = (main.PlaySdtList ?? []).filter((date) => date.HiddenYn !== 'Y').slice(0, 7)
@@ -260,17 +264,22 @@ export async function crawlDtryxReservationApi(context: ParseContext) {
 }
 
 /**
- * dtryx가 극장을 목록에서 숨기면(HiddenYn=Y) 회차 조회는 오류 없이 빈 배열을 준다. 예전에는 그걸
- * "0건 완료"로 기록해 에무시네마·허리우드클래식·김해문화의전당이 몇 주씩 조용히 비어 있었다(2026-11).
- * 숨김은 예매처를 옮겼거나 휴관했다는 뜻이라 사람이 봐야 한다 — 수집 오류로 올린다.
+ * 예매 목록(reserve/main_list.do)의 HiddenYn=Y는 "극장이 사라졌다"가 아니라 "지금 예매할 회차가 없다"다.
+ * 2026-11-24 브라우저 확인: 설성시네마(000105)·에무시네마(000069)·허리우드클래식(000115)은 영화관 목록
+ * (cinema/list.do)에 그대로 등재돼 있고, 예매 화면 극장 목록 63곳 중 이 셋만 disabled, 날짜 버튼도 전부
+ * disabled였다. 이 상태에서 회차 조회는 오류 없이 빈 배열을 준다.
+ *
+ * 예전(#446)에는 이걸 "숨김 처리 — 예매처가 바뀌었거나 휴관" 수집 실패로 올려 매일 실패 경보가 울렸다.
+ * 이제는 수집 완료(0건)로 남기고 "열린 회차 없음"으로 안내한다 — 극장은 그대로 두고, 회차가 다시 열리면
+ * 다음 수집이 그대로 가져온다. 몇 주째 이어지면 소스 점검(0건 연속) 리포트가 사람에게 알린다.
  */
-export function dtryxHiddenCinemaError(allCinemas: DtryxCinema[], theaterName: string, urlCinemaCd: string | null) {
+export function dtryxNoOpenSessionsNotice(allCinemas: DtryxCinema[], theaterName: string, urlCinemaCd: string | null) {
   // 이름이 같은 공개 극장이 있으면 그쪽으로 수집된다(아래 pickDtryxCinema가 이름을 먼저 본다)
   if (pickDtryxCinema(allCinemas.filter((c) => c.HiddenYn !== 'Y'), theaterName)) return undefined
-  const hidden = allCinemas.find((c) => c.HiddenYn === 'Y'
+  const closed = allCinemas.find((c) => c.HiddenYn === 'Y'
     && ((urlCinemaCd && c.CinemaCd === urlCinemaCd) || (!urlCinemaCd && pickDtryxCinema([c], theaterName))))
-  return hidden
-    ? `디트릭스에서 ${hidden.CinemaNm}(${hidden.CinemaCd})을 숨김 처리했어요 — 예매처가 바뀌었거나 휴관 중일 수 있어요`
+  return closed
+    ? `${NO_OPEN_SESSIONS_PREFIX}디트릭스 예매 화면에서 ${closed.CinemaNm}(${closed.CinemaCd})의 회차가 열려 있지 않아요 — 극장 등록은 그대로예요`
     : undefined
 }
 
@@ -307,8 +316,8 @@ export async function crawlAllDtryxSources(
             const srcUrl = new URL(source.listingUrl)
             const urlCinemaCd = srcUrl.searchParams.get('CinemaCd')
             const screenFilter = srcUrl.searchParams.get('screenFilter')
-            const hiddenError = dtryxHiddenCinemaError(main.CinemaList ?? [], source.theaterName, urlCinemaCd)
-            if (hiddenError) return { source, candidates: [], error: hiddenError }
+            const closedNotice = dtryxNoOpenSessionsNotice(main.CinemaList ?? [], source.theaterName, urlCinemaCd)
+            if (closedNotice) return { source, candidates: [], error: closedNotice }
             const targetCinema = pickDtryxCinema(cinemas, source.theaterName)
               ?? (urlCinemaCd ? cinemas.find((c) => c.CinemaCd === urlCinemaCd) : undefined)
               ?? (urlCinemaCd ? { CinemaNm: source.theaterName, CinemaCd: urlCinemaCd, HiddenYn: 'N' as const } : undefined)
@@ -748,36 +757,15 @@ async function fetchDtryxShowtimes(
     return candidates
   }
 
-  // dtryx는 per-movie 조회만 지원(MovieCd=all·per-date 한방 조회 전부 빈 응답)하므로, 극장마다
-  // 브랜드 전체 영화(수십~백 편)를 모든 날짜에 무차별 조회하면 요청이 폭증해 rate-limit 밴을 부른다.
-  // 발견 비용을 줄이기 위해: 첫·마지막 날짜만 전 영화를 스캔해 이 극장의 실제 상영작 집합을 구하고
-  // (주 초·주 후반 신규 편성 모두 포착), 나머지 날짜는 그 집합만 조회한다.
-  const probeDates = playDates.length <= 2 ? playDates : [playDates[0], playDates[playDates.length - 1]]
-  const restDates = playDates.filter((d) => !probeDates.includes(d))
-
-  const all: CrawledShowtimeCandidate[] = []
-  const showingMovieCds = new Set<string>()
-
-  for (const playDate of probeDates) {
-    const groups = await mapWithConcurrency(
-      movies.map((movie) => async () => {
-        const c = await probeOne(movie, playDate)
-        if (c.length) showingMovieCds.add(movie.MovieCd)
-        return c
-      }),
-      1,
-    )
-    all.push(...groups.flat())
-  }
-
-  const showingMovies = movies.filter((m) => showingMovieCds.has(m.MovieCd))
-  for (const playDate of restDates) {
-    const groups = await mapWithConcurrency(
-      showingMovies.map((movie) => async () => probeOne(movie, playDate)),
-      1,
-    )
-    all.push(...groups.flat())
-  }
+  // dtryx는 per-movie 조회만 지원(MovieCd=all·per-date 한방 조회 전부 빈 응답)한다. 날짜 순서·전 영화
+  // 스캔 여부는 scanDtryxDates가 정한다 — 회차 없는 하루(휴관일)가 그 주 전체를 0건으로 만들지 않게.
+  const { candidates: all } = await scanDtryxDates(
+    playDates,
+    movies,
+    (movie) => movie.MovieCd,
+    probeOne,
+    (tasks) => mapWithConcurrency(tasks, 1),
+  )
 
   return dedupeCandidates(all)
 }
@@ -902,19 +890,20 @@ async function crawlMoonhwain(sourceUrl: string, context: ParseContext) {
     /window\.open\(["'](https?:\/\/[^"']+?)\/rsvc\/rsv_mv\.html/,
   )?.[1] ?? origin
 
-  const availableDates = Array.from(
-    indexHtml.matchAll(/<div[^>]+class="day\s+on"[^>]*>[\s\S]*?<a[^>]+(?:href="[^"]*ss_date=([\d-]+)"|title="([\d-]+)")[^>]*>/g),
-  )
-    .map((m) => m[1] ?? m[2])
-    .filter((d): d is string => Boolean(d))
-    .slice(0, 14)
+  // 날짜 칸 마크업은 극장·시기마다 다르다 — ss_date 링크를 모두 모으는 쪽으로 바꿨다(moonhwainReservation.ts)
+  // 크론이 05시 KST(전날 20시 UTC)에 돌므로 UTC 날짜(todayIsoDate)를 쓰면 하루 밀린다
+  const today = toKstIsoDate(new Date())
+  const linkedDates = parseMoonhwainReservationDates(indexHtml, today)
+  // 날짜 링크 없이 오늘 표만 그린 화면이면 오늘을 읽는다. 쿼리 없는 첫 화면이 곧 오늘 시간표다
+  const availableDates = (linkedDates.length === 0 && hasMoonhwainSessions(indexHtml) ? [today] : linkedDates).slice(0, 14)
 
   if (availableDates.length === 0) {
     throw new Error(`moonhwain 상영 날짜를 찾지 못했습니다: ${scheduleBase}`)
   }
 
   const tasks = availableDates.map((date) => async () => {
-    const html = await fetchSelfHosted(`${scheduleBase}?ss_date=${date}`)
+    // ss_date 없는 첫 화면이 곧 오늘 표다(2026-11-24 전주 시네마타운 확인) — 오늘은 다시 요청하지 않는다
+    const html = date === today ? indexHtml : await fetchSelfHosted(`${scheduleBase}?ss_date=${date}`)
     return parseMoonhwainDay(html, date, bookingBase, context)
   })
 
@@ -970,56 +959,27 @@ function parseMoonhwainDay(
   bookingBase: string,
   context: ParseContext,
 ): CrawledShowtimeCandidate[] {
-  const candidates: CrawledShowtimeCandidate[] = []
-  const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi
-  let rowMatch: RegExpExecArray | null
-
-  while ((rowMatch = rowRegex.exec(html)) !== null) {
-    const row = rowMatch[1]
-    if (!/<td/.test(row)) continue
-
-    const movieTitle = normalizeWhitespace(
-      stripHtml(row.match(/<h4[^>]*>([\s\S]*?)<\/h4>/i)?.[1] ?? ''),
-    )
-    if (!movieTitle) continue
-
-    const cells = Array.from(row.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)).map((m) => m[1])
-    const screenType = normalizeWhitespace(stripHtml(cells[1] ?? ''))
-    const screenName = normalizeWhitespace(
-      (cells[2] ?? '').replace(/<!--[\s\S]*?-->/g, ''),
-    ).replace(/\s+/g, ' ').trim() || '상영관 확인 필요'
-
-    const timeMatches = Array.from(
-      row.matchAll(/javascript:wRsvMovie\('([^']+)'\s*,\s*'([^']+)'\s*,\s*'([^']*)'\)[^>]*>(\d{1,2}:\d{2})/g),
-    )
-
-    for (const [, bId, inSsIdx, q, rawTime] of timeMatches) {
-      const showTime = normalizeDtryxTime(rawTime)
-      if (!showTime) continue
-
-      const bookingUrl = `${bookingBase}/rsvc/rsv_mv.html?b_id=${encodeURIComponent(bId)}&q=${encodeURIComponent(q)}&in_ss_idx=${encodeURIComponent(inSsIdx)}`
-      const formatText = [screenType, screenName].filter(Boolean).join(' ')
-      const warnings = screenName === '상영관 확인 필요' ? ['상영관을 확인해야 합니다.'] : []
-
-      candidates.push(buildCandidate({
-        context,
-        movieTitle,
-        showDate,
-        showTime,
-        screenName,
-        formatText,
-        seatAvailable: DEFAULT_SEAT_TOTAL,
-        seatTotal: DEFAULT_SEAT_TOTAL,
-        price: DEFAULT_PRICE,
-        bookingUrl,
-        rawText: JSON.stringify({ movieTitle, showDate, showTime, screenName, bId, inSsIdx }),
-        confidence: warnings.length ? 0.82 : 0.93,
-        warnings,
-      }))
-    }
-  }
-
-  return candidates
+  // 표 읽기는 순수 함수(moonhwainReservation.ts)가 한다 — 실제 마크업 픽스처로 검사한다
+  return parseMoonhwainReservationDay(html).map((row) => {
+    const screenName = row.screenName || '상영관 확인 필요'
+    const formatText = [row.screenType, screenName].filter(Boolean).join(' ')
+    const warnings = screenName === '상영관 확인 필요' ? ['상영관을 확인해야 합니다.'] : []
+    return buildCandidate({
+      context,
+      movieTitle: row.movieTitle,
+      showDate,
+      showTime: row.showTime,
+      screenName,
+      formatText,
+      seatAvailable: DEFAULT_SEAT_TOTAL,
+      seatTotal: DEFAULT_SEAT_TOTAL,
+      price: DEFAULT_PRICE,
+      bookingUrl: `${bookingBase}/rsvc/rsv_mv.html?b_id=${encodeURIComponent(row.bId)}&q=${encodeURIComponent(row.q)}&in_ss_idx=${encodeURIComponent(row.inSsIdx)}`,
+      rawText: JSON.stringify({ movieTitle: row.movieTitle, showDate, showTime: row.showTime, screenName, bId: row.bId, inSsIdx: row.inSsIdx }),
+      confidence: warnings.length ? 0.82 : 0.93,
+      warnings,
+    })
+  })
 }
 
 async function crawlDureraum(sourceUrl: string, context: ParseContext) {
