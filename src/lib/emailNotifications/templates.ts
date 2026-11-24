@@ -1,4 +1,5 @@
 import manifest from '@/design-system/manifest.json'
+import { licensedImageUrl } from '@/lib/media/imageUrl'
 import { EMAIL_DIGEST_TITLE, type EmailFilm, type EmailDigestItem, escapeHtml } from './domain'
 
 // 메일은 CSS 변수를 지원하지 않아 디자인 시스템의 확정 값을 인라인으로 넣는다.
@@ -24,13 +25,7 @@ export function renderVerificationEmail(origin: string, url: string): string {
     '링크는 1시간 동안 사용할 수 있어요<br>요청하지 않았다면 이 메일을 무시해 주세요')
 }
 export function emailPosterUrl(value?: string): string | null {
-  if (!value) return null
-  try {
-    const url = new URL(value)
-    if (!['http:', 'https:'].includes(url.protocol) || !['file.koreafilm.or.kr', 'upload.wikimedia.org', 'pkmgloiixwvhitqpcfyc.supabase.co'].includes(url.hostname)) return null
-    url.protocol = 'https:'
-    return url.href
-  } catch { return null }
+  return licensedImageUrl(value)
 }
 
 // 포스터가 없거나 이용허락 근거가 없는 호스트면 같은 비율의 빈 포스터를 쓴다.

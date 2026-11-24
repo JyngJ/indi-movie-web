@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { toSecureImageUrl } from './imageUrl'
+import { licensedImageUrl, toSecureImageUrl } from './imageUrl'
 
 describe('toSecureImageUrl', () => {
   it('http 포스터를 https로 올린다', () => {
@@ -26,5 +26,18 @@ describe('toSecureImageUrl', () => {
     expect(toSecureImageUrl(undefined)).toBeUndefined()
     expect(toSecureImageUrl(null)).toBeUndefined()
     expect(toSecureImageUrl('')).toBeUndefined()
+  })
+})
+
+describe('licensedImageUrl', () => {
+  it('허용 호스트는 https로 올려 돌려준다', () => {
+    expect(licensedImageUrl('http://file.koreafilm.or.kr/thm/a.jpg')).toBe('https://file.koreafilm.or.kr/thm/a.jpg')
+    expect(licensedImageUrl('https://upload.wikimedia.org/x.png')).toBe('https://upload.wikimedia.org/x.png')
+  })
+  it('언론사·그 밖의 호스트와 잘못된 값은 null', () => {
+    expect(licensedImageUrl('https://image.cine21.com/cine21/poster/a.jpg')).toBeNull()
+    expect(licensedImageUrl('javascript:alert(1)')).toBeNull()
+    expect(licensedImageUrl('not a url')).toBeNull()
+    expect(licensedImageUrl(null)).toBeNull()
   })
 })

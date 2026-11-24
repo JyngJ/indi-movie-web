@@ -16,3 +16,21 @@ export function toSecureImageUrl(url: string | null | undefined): string | undef
   if (!url) return undefined
   return url.startsWith('http://') ? `https://${url.slice('http://'.length)}` : url
 }
+
+/** 이용허락 근거가 있는 이미지 호스트 — KMDb 공공데이터 · 위키미디어 · 자체 Supabase (AGENTS.md "광고·이미지 권리") */
+export const LICENSED_IMAGE_HOSTS = ['file.koreafilm.or.kr', 'upload.wikimedia.org', 'pkmgloiixwvhitqpcfyc.supabase.co'] as const
+
+/**
+ * 허용 호스트의 이미지면 https 주소로, 아니면 null.
+ * DB엔 언론사 포스터(image.cine21.com 등)도 섞여 있다 — 메일·공유 카드처럼 밖으로 나가는
+ * 곳에서는 이 함수를 거쳐 걸러 낸다.
+ */
+export function licensedImageUrl(value: string | null | undefined): string | null {
+  if (!value) return null
+  try {
+    const url = new URL(value)
+    if (!['http:', 'https:'].includes(url.protocol) || !(LICENSED_IMAGE_HOSTS as readonly string[]).includes(url.hostname)) return null
+    url.protocol = 'https:'
+    return url.href
+  } catch { return null }
+}
