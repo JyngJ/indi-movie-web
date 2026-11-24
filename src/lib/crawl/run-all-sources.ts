@@ -1,6 +1,8 @@
 import type { CrawlRun } from '@/types/admin'
 import { crawlShowtimeCandidates } from '@/lib/admin/crawler'
 import { listAdminSources, saveCrawlRun } from '@/lib/admin/store'
+import { isCrawlNotice } from './crawlNotice'
+import { isManualParser } from './sourceHealth'
 
 export interface RunAllResult {
   runs: CrawlRun[]
@@ -45,8 +47,10 @@ export async function runAllSources(
         createdCount: candidates.length,
         updatedCount: 0,
         warningCount: candidates.reduce((sum, c) => sum + c.warnings.length, 0),
+        // 수동 OCR(디스코드 /schedule·어드민 업로드)은 크롤로 가져오는 게 원래 없다 — 0건이 정상이라
+        // 구조 변경 의심에서 뺀다(2026-11-24 리포트 20건 중 5건). 업로드 끊김은 소스 점검이 따로 알린다.
         structureWarning:
-          candidates.length === 0
+          candidates.length === 0 && !isManualParser(source.parser)
             ? '파싱 결과 0건 — 사이트 구조 변경으로 파서가 깨졌을 가능성 있음, 확인 필요'
             : undefined,
       }
@@ -54,12 +58,16 @@ export async function runAllSources(
       runs[index] = run
       onProgress?.(++completed, total, run)
     } catch (error) {
+      // 열린 회차 없음은 수집 성공(0건)이다 — 실패 경보·구조 변경 의심에 넣지 않는다.
+      // 출처 사이트 장애는 실패로 남기되 noticeKind로 리포트가 따로 묶는다.
+      const notice = isCrawlNotice(error) ? error.kind : undefined
       const run: CrawlRun = {
         id: `run_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
         sourceId: source.id,
         sourceName: source.theaterName,
         inputKind: 'url',
-        status: 'failed',
+        status: notice === 'no-open-sessions' ? 'completed' : 'failed',
+        noticeKind: notice,
         startedAt: runStartedAt,
         finishedAt: new Date().toISOString(),
         candidates: [],

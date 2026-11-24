@@ -1,5 +1,6 @@
 import type { AutoMatchSummary, CrawlRun } from '@/types/admin'
 import { formatTopUnmatched } from './autoMatchSummary'
+import { isNoOpenSessionsMessage, isSourceSiteErrorMessage } from './crawlNotice'
 import { formatStaleFinding, type StaleSourceFinding } from './sourceHealth'
 import type { SyncReleasesSummary } from '@/lib/releases/syncReleases'
 
@@ -54,14 +55,26 @@ export async function notifyDiscordStart(title: string) {
   })
 }
 
+/** 열린 회차가 없다는 안내(수집 성공 0건) — 실패도 구조 변경 의심도 아니다 */
+export function isNoOpenSessionsRun(run: CrawlRun) {
+  return run.noticeKind === 'no-open-sessions' || (run.status === 'completed' && isNoOpenSessionsMessage(run.error))
+}
+
+/** 출처 사이트 자체 장애 — 파서 실패와 나눠 보여 준다 */
+export function isSourceSiteErrorRun(run: CrawlRun) {
+  return run.status === 'failed' && (run.noticeKind === 'source-site-error' || isSourceSiteErrorMessage(run.error))
+}
+
 export async function notifyDiscord(payload: NotifyPayload) {
   const ok = payload.runs.filter((r) => r.status === 'completed')
-  const failed = payload.runs.filter((r) => r.status === 'failed')
+  const siteErrors = payload.runs.filter(isSourceSiteErrorRun)
+  const failed = payload.runs.filter((r) => r.status === 'failed' && !isSourceSiteErrorRun(r))
+  const noOpenSessions = ok.filter(isNoOpenSessionsRun)
   const totalNew = ok.reduce((s, r) => s + r.createdCount, 0)
   const totalWarn = ok.reduce((s, r) => s + r.warningCount, 0)
   const secs = (payload.durationMs / 1000).toFixed(1)
 
-  const color = failed.length === payload.runs.length ? 0xE74C3C
+  const color = failed.length + siteErrors.length === payload.runs.length ? 0xE74C3C
     : failed.length > 0 ? 0xF39C12
     : 0x2ECC71
 
@@ -88,6 +101,12 @@ export async function notifyDiscord(payload: NotifyPayload) {
     return `• ${r.sourceName}${err}`
   })
 
+  const noOpenSessionLines = noOpenSessions.map((r) => `• ${r.sourceName}`)
+  const siteErrorLines = siteErrors.map((r) => {
+    const err = r.error ? ` \`${r.error.replace(/^\[[^\]]+\]\s*/, '').slice(0, 80)}\`` : ''
+    return `• ${r.sourceName}${err}`
+  })
+
   const fields: { name: string; value: string; inline: boolean }[] = []
 
   const okChunks = chunkLines(okLines)
@@ -105,6 +124,22 @@ export async function notifyDiscord(payload: NotifyPayload) {
         ? `🧩 구조 변경 의심 (${structureWarningLines.length}건) [${i + 1}/${structChunks.length}]`
         : `🧩 구조 변경 의심 (${structureWarningLines.length}건)`
       fields.push({ name: label, value: chunk, inline: false })
+    })
+  }
+
+  if (noOpenSessionLines.length > 0) {
+    fields.push({
+      name: `📭 열린 회차 없음 (${noOpenSessionLines.length}곳) — 예매처 등록은 그대로, 회차가 열리면 자동 수집`,
+      value: chunkLines(noOpenSessionLines)[0] ?? '없음',
+      inline: false,
+    })
+  }
+
+  if (siteErrorLines.length > 0) {
+    fields.push({
+      name: `🌐 출처 사이트 오류 (${siteErrorLines.length}건) — 사이트 쪽 장애, 다음 수집에 재시도`,
+      value: chunkLines(siteErrorLines)[0] ?? '없음',
+      inline: false,
     })
   }
 

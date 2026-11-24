@@ -127,7 +127,12 @@ export interface CrawlRun {
   error?: string
   /** 파싱 성공했지만 후보 0건 — 사이트 구조 변경으로 파서가 깨졌을 가능성 경고 */
   structureWarning?: string
+  /** 파서 고장이 아닌 0건·실패의 이유(src/lib/crawl/crawlNotice.ts). 문구는 error에 함께 남는다 */
+  noticeKind?: CrawlNoticeKind
 }
+
+/** 예매처에 극장은 있지만 열린 회차가 없음 / 출처 사이트 자체 장애 */
+export type CrawlNoticeKind = 'no-open-sessions' | 'source-site-error'
 
 export interface ShowtimeApprovalPayload {
   ids: string[]
