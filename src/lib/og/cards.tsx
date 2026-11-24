@@ -2,7 +2,9 @@ import { ImageResponse } from 'next/og'
 import { readFile } from 'fs/promises'
 import path from 'path'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { formatDateLabel } from '@/lib/date'
+import { addDaysIso, formatDateLabel, toKstIsoDate } from '@/lib/date'
+import { licensedImageUrl } from '@/lib/media/imageUrl'
+import { pickTheaterCardFilms, THEATER_CARD_DAYS, type TheaterCardShowtimeRow } from './theaterCardFilms'
 import { isAlmostSoldOut, isSoldOut } from '@/lib/catalog/seatAvailability'
 
 /* 링크 미리보기(카카오톡·디스코드·트위터) OG 카드 공용 렌더러.
@@ -55,6 +57,36 @@ export function ogImageUrl(
 /* 피그마 공유 카드 실측 — 포스터 340×510(콘텐츠 높이 꽉), 워드마크 141×48 */
 const POSTER = { width: 340, height: 510 }
 const WORDMARK = { width: 141, height: 48 }
+/* 극장 카드의 이번 주 포스터 — 세 장(180×3 + 간격 16×2 = 572)이 오른쪽에 서고,
+   극장 이름 칸은 1040 − 572 − 48 = 420px이 남는다 */
+const THEATER_POSTER = { width: 180, height: 270 }
+const THEATER_NAME_WIDTH = 400
+
+/** 이름의 가장 긴 어절이 한 줄에 들어가는 글자 크기. KIMM은 한 글자가 대략 1.05em이다.
+ *  어절 안에서 줄이 꺾이면("라이카시네 / 마") 이름이 안 읽힌다 — 2026-11-24 시안 */
+function theaterNameFontSize(name: string) {
+  const longest = Math.max(...name.split(/\s+/).map((w) => w.length), 1)
+  return Math.max(36, Math.min(60, Math.floor(THEATER_NAME_WIDTH / (longest * 1.05))))
+}
+
+/**
+ * 포스터를 미리 받아 data URI로 넘긴다. satori에 URL을 그대로 주면 한 장만 실패해도
+ * 카드 전체가 깨진다 — 극장 카드는 포스터가 셋이라 못 받은 장은 빼고 그린다.
+ */
+async function loadPosterDataUri(url: string): Promise<string | null> {
+  // 언론사 포스터(image.cine21.com 등)는 광고 붙는 서비스에서 쓸 근거가 없다 — 허용 호스트만
+  const src = licensedImageUrl(url)
+  if (!src) return null
+  try {
+    const res = await fetch(src, { signal: AbortSignal.timeout(3000) })
+    if (!res.ok) return null
+    const type = res.headers.get('content-type') ?? 'image/jpeg'
+    if (!type.startsWith('image/')) return null
+    return `data:${type};base64,${Buffer.from(await res.arrayBuffer()).toString('base64')}`
+  } catch {
+    return null
+  }
+}
 
 /* 폰트(900KB)와 워드마크는 배포 동안 바뀌지 않는다. 카드마다 디스크에서 다시 읽고
    base64로 다시 굽던 것을 인스턴스당 한 번으로 줄인다(Fluid 인스턴스는 요청 사이에 재사용된다).
@@ -79,7 +111,11 @@ function loadWordmarkDataUri() {
   return wordmarkUri
 }
 
-function ogResponse(node: React.ReactElement, fontBold: Buffer) {
+const WEEK_SECONDS = 604800
+/* 이번 주 상영작을 얹는 극장 카드는 하루면 낡는다 — 끝난 영화 포스터가 7일씩 남지 않게 */
+const DAY_SECONDS = 86400
+
+function ogResponse(node: React.ReactElement, fontBold: Buffer, maxAgeSeconds = WEEK_SECONDS) {
   return new ImageResponse(node, {
     ...OG_SIZE,
     fonts: [{ name: 'KIMM', data: fontBold, weight: 700, style: 'normal' }],
@@ -89,9 +125,10 @@ function ogResponse(node: React.ReactElement, fontBold: Buffer) {
      * 수명을 1시간에서 7일로 늘렸다. satori 렌더는 카드 한 장에 수백 ms의 CPU를 쓰는데,
      * 카드에 들어가는 포스터·제목·극장명은 사실상 바뀌지 않는다. 1시간마다 같은 그림을
      * 다시 굽는 것이 2026-09 Fluid Active CPU 한도 초과에 한몫했다. 어드민에서 포스터를
-     * 교체하면 최대 7일 늦게 반영된다 — 공유 미리보기라 그 지연을 감수한다. */
+     * 교체하면 최대 7일 늦게 반영된다 — 공유 미리보기라 그 지연을 감수한다.
+     * 극장 카드만 하루(DAY_SECONDS)다 — 이번 주 상영작 포스터를 얹어서 7일이면 끝난 영화가 남는다. */
     headers: {
-      'Cache-Control': 'public, max-age=604800, s-maxage=604800, stale-while-revalidate=2592000',
+      'Cache-Control': `public, max-age=${maxAgeSeconds}, s-maxage=${maxAgeSeconds}, stale-while-revalidate=${maxAgeSeconds === WEEK_SECONDS ? 2592000 : maxAgeSeconds}`,
     },
   })
 }
@@ -322,23 +359,71 @@ export async function renderTheaterOg(id: string, showtimeId?: string) {
     if (st?.movie_id) return renderMovieOg(st.movie_id, showtimeId)
   }
 
-  const { data } = await supabase.from('theaters').select('name, address').eq('id', id).single()
-  const [fontBold, wordmark] = await Promise.all([loadKimmBold(), loadWordmarkDataUri()])
+  const today = toKstIsoDate(new Date())
+  const [{ data }, { data: rows }, [fontBold, wordmark]] = await Promise.all([
+    supabase.from('theaters').select('name, address').eq('id', id).single(),
+    supabase
+      .from('showtimes')
+      .select('movie_id, show_date, show_time, movies(title, poster_url)')
+      .eq('theater_id', id)
+      .eq('is_active', true)
+      .gte('show_date', today)
+      .lt('show_date', addDaysIso(today, THEATER_CARD_DAYS))
+      .limit(500),
+    Promise.all([loadKimmBold(), loadWordmarkDataUri()]),
+  ])
 
   const name = data?.name ?? '영화볼지도'
   const address = data?.address ?? ''
+  const films = pickTheaterCardFilms((rows ?? []) as unknown as TheaterCardShowtimeRow[])
+  const loaded = await Promise.all(films.posters.map(async (p) => ({ ...p, src: await loadPosterDataUri(p.posterUrl) })))
+  const posters = loaded.flatMap((p) => (p.src ? [{ ...p, src: p.src }] : []))
+  const countChip = films.filmCount > 0 ? <Chip label={`이번 주 ${films.filmCount}편 상영`} size={22} padV={6} padH={16} /> : null
 
+  /* 상영작이 없거나 포스터를 하나도 못 받으면 예전처럼 이름·주소만 크게 */
+  if (posters.length === 0) {
+    return ogResponse(
+      (
+        /* 도시 칩은 뺐다 — 주소 첫 토막과 같은 말이라 두 번 읽힌다 */
+        <StackCard wordmark={wordmark}>
+          <div style={{ fontFamily: 'KIMM', fontSize: name.length > 8 ? 64 : 80, fontWeight: 700, color: OG_COLOR.title, lineHeight: 1.1 }}>
+            {name}
+          </div>
+          {address ? <div style={{ fontSize: 22, color: OG_COLOR.meta }}>{address}</div> : null}
+          {countChip}
+        </StackCard>
+      ),
+      fontBold,
+      DAY_SECONDS,
+    )
+  }
+
+  /* 왼쪽 극장 · 오른쪽 이번 주 포스터. 아래 132는 워드마크 자리(60 + 48 + 24) */
   return ogResponse(
     (
-      /* 도시 칩은 뺐다 — 주소 첫 토막과 같은 말이라 두 번 읽힌다 */
-      <StackCard wordmark={wordmark}>
-        <div style={{ fontFamily: 'KIMM', fontSize: name.length > 8 ? 64 : 80, fontWeight: 700, color: OG_COLOR.title, lineHeight: 1.1 }}>
-          {name}
+      <div style={{ display: 'flex', width: '100%', height: '100%', backgroundColor: OG_COLOR.bg, padding: '60px 80px 132px', position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: 48 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: 'KIMM', fontSize: theaterNameFontSize(name), fontWeight: 700, color: OG_COLOR.title, lineHeight: 1.15, wordBreak: 'keep-all' }}>
+              {name}
+            </div>
+            {address ? <div style={{ fontSize: 22, color: OG_COLOR.meta, lineHeight: 1.4 }}>{address}</div> : null}
+            {countChip}
+          </div>
+          <div style={{ display: 'flex', gap: 16, flexShrink: 0 }}>
+            {posters.map((p) => (
+              <div key={p.posterUrl} style={{ display: 'flex', width: THEATER_POSTER.width, height: THEATER_POSTER.height, borderRadius: 12, overflow: 'hidden', backgroundColor: OG_COLOR.posterBg }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={p.src} alt={p.title} width={THEATER_POSTER.width} height={THEATER_POSTER.height} style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
+              </div>
+            ))}
+          </div>
         </div>
-        {address ? <div style={{ fontSize: 22, color: OG_COLOR.meta }}>{address}</div> : null}
-      </StackCard>
+        <WordmarkBottom src={wordmark} />
+      </div>
     ),
     fontBold,
+    DAY_SECONDS,
   )
 }
 
