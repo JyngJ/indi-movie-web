@@ -19,6 +19,7 @@ import type { Theater, Movie, Showtime } from '@/types/api'
 import { RegionFilterWidget } from '@/components/domain/filterBar/RegionFilterWidget'
 import { classifySessionIntent, trackEvent } from '@/lib/analytics/client'
 import { shareAndTrack } from '@/lib/analytics/shareTracking'
+import { theaterSharePath } from '@/lib/share/theaterSharePath'
 import { BookingCtaButton, ShareScheduleButton, CloseRoundButton } from '@/components/domain/booking/BookingActions'
 import { formatBookingDate } from '@/lib/booking/confirmation'
 import { Skeleton, ShowtimeCellSkeleton, Button, Icon, EmptyState } from '@/components/primitives'
@@ -440,7 +441,7 @@ export function FilmsTheaterDetailClient({ theater, initialSelection, initialSho
     if (!selectedShowtimeData) return
     /* 회차는 경로로 싣는다 — 쿼리로 실으면 OG 카드를 굽느라 극장 상세가 매 요청
        동적으로 굳는다(2026-09-17). 구 쿼리 링크는 위 복원 effect가 계속 받아준다. */
-    const url = new URL(`/films/theater/${theater.id}/s/${selectedShowtimeData.st.id}`, window.location.origin)
+    const url = new URL(theaterSharePath(theater.id, selectedShowtimeData.st.id), window.location.origin)
     void shareAndTrack({
       payload: {
         title: `${theater.name} - ${selectedShowtimeData.movieTitle} ${selectedShowtimeData.st.showTime.slice(0, 5)}`,
