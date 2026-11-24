@@ -49,7 +49,7 @@ import { crawlHdArtsCenter } from './crawler/hdArtsCenter'
 import { parseCineQMovieTable, toCineQPlayDate } from './crawler/cineq'
 import { parseDrfaCalendar } from './crawler/drfa'
 import { parseMoonhwainTimeTableDates, parseMoonhwainTimeTableDay } from './crawler/moonhwainTimeTable'
-import { extractMoonhwainMovieTitle, hasMoonhwainSessions, parseMoonhwainReservationDates } from './crawler/moonhwainReservation'
+import { hasMoonhwainSessions, parseMoonhwainReservationDates, parseMoonhwainReservationDay } from './crawler/moonhwainReservation'
 import { scanDtryxDates } from './crawler/dtryxScan'
 import { CrawlNotice, NO_OPEN_SESSIONS_PREFIX } from '@/lib/crawl/crawlNotice'
 import { toKstIsoDate } from '@/lib/date'
@@ -902,9 +902,8 @@ async function crawlMoonhwain(sourceUrl: string, context: ParseContext) {
   }
 
   const tasks = availableDates.map((date) => async () => {
-    const html = date === today && !linkedDates.includes(today)
-      ? indexHtml
-      : await fetchSelfHosted(`${scheduleBase}?ss_date=${date}`)
+    // ss_date 없는 첫 화면이 곧 오늘 표다(2026-11-24 전주 시네마타운 확인) — 오늘은 다시 요청하지 않는다
+    const html = date === today ? indexHtml : await fetchSelfHosted(`${scheduleBase}?ss_date=${date}`)
     return parseMoonhwainDay(html, date, bookingBase, context)
   })
 
@@ -960,56 +959,27 @@ function parseMoonhwainDay(
   bookingBase: string,
   context: ParseContext,
 ): CrawledShowtimeCandidate[] {
-  const candidates: CrawledShowtimeCandidate[] = []
-  const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi
-  let rowMatch: RegExpExecArray | null
-
-  while ((rowMatch = rowRegex.exec(html)) !== null) {
-    const row = rowMatch[1]
-    if (!/<td/.test(row)) continue
-
-    // 예매 링크가 없는 행(표 머리·안내 행)은 건너뛴다 — h4가 없는 화면에서 첫 칸을 제목으로 읽기 때문
-    if (!/javascript:wRsvMovie\(/.test(row)) continue
-    const movieTitle = normalizeWhitespace(extractMoonhwainMovieTitle(row))
-    if (!movieTitle) continue
-
-    const cells = Array.from(row.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)).map((m) => m[1])
-    const screenType = normalizeWhitespace(stripHtml(cells[1] ?? ''))
-    const screenName = normalizeWhitespace(
-      (cells[2] ?? '').replace(/<!--[\s\S]*?-->/g, ''),
-    ).replace(/\s+/g, ' ').trim() || '상영관 확인 필요'
-
-    const timeMatches = Array.from(
-      row.matchAll(/javascript:wRsvMovie\('([^']+)'\s*,\s*'([^']+)'\s*,\s*'([^']*)'\)[^>]*>(\d{1,2}:\d{2})/g),
-    )
-
-    for (const [, bId, inSsIdx, q, rawTime] of timeMatches) {
-      const showTime = normalizeDtryxTime(rawTime)
-      if (!showTime) continue
-
-      const bookingUrl = `${bookingBase}/rsvc/rsv_mv.html?b_id=${encodeURIComponent(bId)}&q=${encodeURIComponent(q)}&in_ss_idx=${encodeURIComponent(inSsIdx)}`
-      const formatText = [screenType, screenName].filter(Boolean).join(' ')
-      const warnings = screenName === '상영관 확인 필요' ? ['상영관을 확인해야 합니다.'] : []
-
-      candidates.push(buildCandidate({
-        context,
-        movieTitle,
-        showDate,
-        showTime,
-        screenName,
-        formatText,
-        seatAvailable: DEFAULT_SEAT_TOTAL,
-        seatTotal: DEFAULT_SEAT_TOTAL,
-        price: DEFAULT_PRICE,
-        bookingUrl,
-        rawText: JSON.stringify({ movieTitle, showDate, showTime, screenName, bId, inSsIdx }),
-        confidence: warnings.length ? 0.82 : 0.93,
-        warnings,
-      }))
-    }
-  }
-
-  return candidates
+  // 표 읽기는 순수 함수(moonhwainReservation.ts)가 한다 — 실제 마크업 픽스처로 검사한다
+  return parseMoonhwainReservationDay(html).map((row) => {
+    const screenName = row.screenName || '상영관 확인 필요'
+    const formatText = [row.screenType, screenName].filter(Boolean).join(' ')
+    const warnings = screenName === '상영관 확인 필요' ? ['상영관을 확인해야 합니다.'] : []
+    return buildCandidate({
+      context,
+      movieTitle: row.movieTitle,
+      showDate,
+      showTime: row.showTime,
+      screenName,
+      formatText,
+      seatAvailable: DEFAULT_SEAT_TOTAL,
+      seatTotal: DEFAULT_SEAT_TOTAL,
+      price: DEFAULT_PRICE,
+      bookingUrl: `${bookingBase}/rsvc/rsv_mv.html?b_id=${encodeURIComponent(row.bId)}&q=${encodeURIComponent(row.q)}&in_ss_idx=${encodeURIComponent(row.inSsIdx)}`,
+      rawText: JSON.stringify({ movieTitle: row.movieTitle, showDate, showTime: row.showTime, screenName, bId: row.bId, inSsIdx: row.inSsIdx }),
+      confidence: warnings.length ? 0.82 : 0.93,
+      warnings,
+    })
+  })
 }
 
 async function crawlDureraum(sourceUrl: string, context: ParseContext) {
