@@ -26,6 +26,15 @@
 | `13 9 * * 1,5` (KST) | `npm run notify:email:dispatch` (소식 메일 워크플로 실행 — `RUNBOOK-email-notifications.md`) | `email-dispatch.log` |
 | `30 4 * * *` | `npm run crawl:releases` (개봉 예정 수집 — 인디그라운드, 04시 pull 뒤. 2026-11-18 추가, `PLAN-indieground-releases.md`) | `releases.log` |
 
+**등록 대기(PR 머지 후 사람이 추가):** 인기 랭킹 사전 집계. 먼저 Supabase에서 `supabase/seeds/18_click_rankings.sql`을 실행하고, 그다음 크론을 추가한다.
+
+| 스케줄 | 작업 | 로그 |
+|--------|------|------|
+| `40 * * * *` | `npm run curate:click-rankings` (최근 7일 인기 랭킹 → `click_rankings`. 공개 API는 3시간보다 젊은 스냅샷만 읽고, 낡았을 때만 PostHog를 부른다) | `click-rankings.log` |
+
+- 크론 없이도 공개 API는 동작한다. 다만 그때는 스냅샷이 3시간마다 낡아서, 그 뒤 첫 요청이 PostHog를 기다린다(최대 4.5초).
+- 정각을 피한 이유: 매시 정각에는 다른 크론(`0 */3`, `0 */4`, `0 *`)이 몰린다.
+
 `crawl:seats` / `crawl:showtimes` / `check:crawl-health` 는 각각 Discord 리포트를 전송한다 (webhook `DISCORD_REPORT_WEBHOOK_URL`).
 
 ---
