@@ -27,6 +27,7 @@
     "find:duplicates": "tsx src/scripts/find-duplicate-theaters.ts",
     "crawl:curation": "tsx --env-file=.env.local src/scripts/compute-curation.ts",
     "curate:weekly-ranking": "tsx --env-file=.env.local scripts/compute-weekly-ranking.ts",
+    "curate:click-rankings": "tsx --env-file=.env.local scripts/compute-click-rankings.ts",
     "check:crawl-health": "tsx --env-file=.env.local scripts/check-crawl-health.ts",
     "backtest:last-week": "tsx --env-file=.env.local src/scripts/backtest-last-week-copy.ts",
     "ds:build": "node scripts/design-system/build-manifest.mjs",

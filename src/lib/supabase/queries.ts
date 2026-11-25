@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { fetchWithTimeout } from '@/lib/http/fetchWithTimeout'
 import type { AlmostSoldOutCandidate, CurationListRow, LateNightCandidate } from '@/lib/curation/types'
 import type { Theater, Movie, MovieDetail, Showtime, Station } from '@/types/api'
 import type { TheaterEvent } from '@/types/admin'
@@ -215,15 +216,23 @@ export interface ClickRankingEntry {
   count: number
 }
 
+/** 한 번 시도의 제한 시간. 서버 최악 경로(약 6.5초, route maxDuration 10초)보다 길게 둔다 */
+export const CLICK_RANKINGS_CLIENT_TIMEOUT_MS = 8000
+
+/* 스켈레톤이 보이는 최대 시간 = 8초 + 재시도 대기 1초 + 8초 ≈ 17초. 그 뒤엔 error라
+   FilmsClient가 섹션을 숨긴다(isLoading false · data undefined → 랭킹 0편 → 섹션 없음).
+   예전엔 제한이 없어 서버가 PostHog를 기다리는 동안 1분 넘게 스켈레톤이 남았다(2026-11-25). */
 export function useClickRankings() {
   return useQuery<{ booking: ClickRankingEntry[]; views: ClickRankingEntry[] }>({
     queryKey: ['click-rankings'],
-    queryFn: async () => {
-      const res = await fetch('/api/public/click-rankings')
+    queryFn: async ({ signal }) => {
+      const res = await fetchWithTimeout('/api/public/click-rankings', { signal, timeoutMs: CLICK_RANKINGS_CLIENT_TIMEOUT_MS })
       if (!res.ok) throw new Error(`click-rankings fetch 실패: ${res.status}`)
       return res.json()
     },
     staleTime: 60 * 60 * 1000,
+    retry: 1,
+    retryDelay: 1000,
   })
 }
 

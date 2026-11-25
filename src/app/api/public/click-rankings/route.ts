@@ -1,72 +1,47 @@
-// 최근 7일 PostHog 집계 랭킹 — 예매 클릭 / 상세 조회
-// CDN 캐시(s-maxage 6h)로 PostHog 쿼리 비용을 흡수한다. cron 불필요.
-// 프로덕션에는 POSTHOG_PERSONAL_API_KEY(query:read) / POSTHOG_PROJECT_ID 환경변수 필요.
+// 최근 7일 인기 랭킹(예매 클릭 / 상세 조회).
+// 판단은 lib/rankings/loadClickRankings.ts가 한다 — 스냅샷(click_rankings) 우선, 낡았을 때만 PostHog,
+// 실패는 캐시되는 200으로 내보내지 않는다(2026-11-25 장애 기록은 lib/rankings/clickRankings.ts).
+// 프로덕션 환경변수: POSTHOG_PERSONAL_API_KEY(query:read) · POSTHOG_PROJECT_ID · SUPABASE_SERVICE_ROLE_KEY
+
+import { after } from 'next/server'
+import { loadClickRankings } from '@/lib/rankings/loadClickRankings'
+import { queryClickRankingsFromPostHog } from '@/lib/rankings/posthogClickRankings'
+import { readClickRankingsSnapshot, writeClickRankingsSnapshot } from '@/lib/rankings/clickRankingsStore'
 
 export const dynamic = 'force-dynamic'
-
-interface HogQLResponse {
-  results: [string, number][]
-}
-
-async function hogql(query: string): Promise<[string, number][]> {
-  const token = process.env.POSTHOG_PERSONAL_API_KEY
-  const projectId = process.env.POSTHOG_PROJECT_ID
-  if (!token || !projectId) return []
-
-  const res = await fetch(`https://app.posthog.com/api/projects/${projectId}/query/`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ query: { kind: 'HogQLQuery', query } }),
-  })
-  if (!res.ok) return []
-  const data = (await res.json()) as HogQLResponse
-  return data.results ?? []
-}
-
-/** 최근 7일 '예매하러 가기' 클릭 수 — movie_id별 */
-const BOOKING_QUERY = `
-  SELECT properties.movie_id AS movie_id, count() AS cnt
-  FROM events
-  WHERE event = 'booking clicked'
-    AND timestamp >= now() - INTERVAL 7 DAY
-    AND isNotNull(properties.movie_id)
-  GROUP BY movie_id
-  ORDER BY cnt DESC
-  LIMIT 20
-`.trim()
-
-/** 최근 7일 영화 상세 페이지뷰 — /movie/:id + /films/movie/:id */
-const VIEWS_QUERY = `
-  SELECT replaceRegexpOne(properties.$pathname, '^(/films)?/movie/', '') AS movie_id, count() AS cnt
-  FROM events
-  WHERE event = '$pageview'
-    AND (properties.$pathname LIKE '/movie/%' OR properties.$pathname LIKE '/films/movie/%')
-    AND timestamp >= now() - INTERVAL 7 DAY
-  GROUP BY movie_id
-  ORDER BY cnt DESC
-  LIMIT 20
-`.trim()
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
-
-function toRanking(rows: [string, number][]) {
-  return rows
-    .filter(([id]) => UUID_RE.test(String(id)))
-    .map(([movieId, count]) => ({ movieId: String(movieId), count: Number(count) }))
-}
+/* 최악의 경로: 스냅샷 읽기 2초 + PostHog 병렬 4.5초 ≈ 6.5초, 응답 뒤 스냅샷 쓰기 2초.
+   제한을 적어 두지 않으면 플랫폼 기본값(수 분)까지 브라우저가 기다릴 수 있었다. */
+export const maxDuration = 10
 
 export async function GET() {
-  const [booking, views] = await Promise.all([hogql(BOOKING_QUERY), hogql(VIEWS_QUERY)])
+  const result = await loadClickRankings({
+    readSnapshot: () => readClickRankingsSnapshot(),
+    queryLive: () => queryClickRankingsFromPostHog(),
+    writeSnapshot: (snapshot) => writeClickRankingsSnapshot(snapshot),
+    now: () => new Date(),
+  })
 
-  return Response.json({
-    booking: toRanking(booking),
-    views: toRanking(views),
-  }, {
+  if (result.status === 503) {
+    console.error(`[click-rankings] 503 — ${result.reason}`)
+    return Response.json(result.body, { status: 503, headers: { 'Cache-Control': result.cacheControl } })
+  }
+
+  const persist = result.persist
+  if (persist) {
+    after(async () => {
+      try {
+        await persist()
+      } catch (error) {
+        // 시드 미적용(테이블 없음) 등 — 다음 요청은 다시 PostHog로 간다
+        console.warn('[click-rankings] 스냅샷 저장 실패:', error instanceof Error ? error.message : error)
+      }
+    })
+  }
+
+  return Response.json(result.body, {
     headers: {
-      'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=86400',
+      'Cache-Control': result.cacheControl,
+      'x-click-rankings-source': result.source,
     },
   })
 }
