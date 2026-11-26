@@ -129,6 +129,21 @@ ssh pi@100.76.84.97 'cd /home/pi/movie && npm run crawl:seats 2>&1 | tail -5'
 - dtryx 0건이 화요일에 몰리면 휴관일 문제를 의심한다 — 예전 파서는 첫날·마지막 날만 전 영화를 조회해 둘 다 휴관이면 그 주를 통째로 0건 처리했다(`crawler/dtryxScan.ts`에서 고침).
 - 이 컨테이너(클라우드 세션)에서는 dtryx·`:451` 포트 문화인 사이트에 닿지 않는다. 실사이트 확인은 RPi나 브라우저에서 한다.
 
+### 🕳 시간표가 비어 있는 극장 (소스 점검, 2026-11-26 추가)
+
+"완료 · 0건"은 `crawl_runs.error`가 비어 있어 원인을 볼 재료가 없다. RPi에서 읽기 전용 진단을 돌려 실제 응답을 남긴다.
+
+```bash
+npx tsx scripts/diagnose-stale-sources.ts                       # 기본: 가람영화관(dtryx 000026) · 동구영상미디어센터
+npx tsx scripts/diagnose-stale-sources.ts --dtryx "<listing_url>" --name <극장명> --name <디트릭스 등록명>
+npx tsx scripts/diagnose-stale-sources.ts --html "<listing_url>"
+```
+
+- 요청은 하나씩, 1초 간격. DB를 읽거나 쓰지 않는다. 원본 응답은 `.audit-out/diagnose/`(git 미추적).
+- dtryx 판정(`src/lib/crawl/sourceDiagnosis.ts`): `listed` 공개인데 회차 0 → 정말 회차가 없다 · `hidden` 열린 회차 없음 · `renamed` 코드가 바뀜 → `listing_url`의 `CinemaCd` 교체 · `missing` 수집처 주소(origin)와 `www.dtryx.com` 양쪽 결과를 비교해 예매처 이전 여부를 본다.
+- HTML 판정: 제목·시각/날짜 개수·이미지 수·게시판 글 링크. 시각이 0이고 이미지만 있으면 이미지 시간표다 — `tableText`로는 못 읽는다(`boardImageOcr` 후보).
+- 수동 업로드 끊김이 같은 극장에 두 줄 뜨면 수동 수집처가 갈라진 것이다(2026-11 인디스페이스). 업로드 입구는 `src/lib/crawl/ocrSource.ts`가 극장을 먼저 찾아 한 수집처로 모으고, 이미 갈라진 건 `supabase/seeds/19_merge_indiespace_ocr_sources.sql`처럼 `crawl_runs`·`showtime_candidates`를 옮긴 뒤 한쪽을 끈다. `showtimes`는 `theater_id` 기준이라 수집처를 정리해도 회차는 그대로다.
+
 ## 관련 파일 (RPi)
 
 | 경로 | 용도 |
@@ -144,3 +159,12 @@ ssh pi@100.76.84.97 'cd /home/pi/movie && npm run crawl:seats 2>&1 | tail -5'
 
 - dtryx 대상 요청은 **도메인당 동시성 1**을 유지한다. 병렬을 올리려면 도메인 단위 큐잉/레이트리밋을 먼저 설계한다 (무지성 `Promise.all`/높은 concurrency 금지).
 - 새 좌석/시간표 파서 추가 시 외부 예매 API에 대한 버스트가 없는지 확인한다.
+
+### 예매처 이전 — dtryx 목록에서 극장이 빠짐 (2026-11-26 가람영화관)
+
+- **증상:** dtryx 수집처가 오류 없이 매일 "완료 · 0건". `listing_url`의 `CinemaCd`가 `main_list.do` CinemaList에 공개(`N`)로도 숨김(`Y`)으로도 없다.
+- **왜 오류가 안 나나:** `crawlDtryxReservationApi`는 목록에 없는 코드도 가상 극장(synthetic cinema)으로 회차를 조회한다(산천어·토마토처럼 관 필터로 쪼갠 수집처를 위한 대비). 그래서 극장이 예매처를 떠나도 빈 응답 → 0건으로 끝난다. 이 대비를 오류로 바꾸면 관 필터 수집처가 깨질 수 있어 건드리지 않았다.
+- **가람영화관(삼척영화관, 000026) 근거:** 6/30 04:00 UTC 마지막 수집(누적 90회) → 6/30 16:00부터 0건. 2026-11-26 한국 IP 브라우저 확인: `samcheok.scinema.kr`·`.org` 모두 "시스템 점검중" 페이지, CinemaList에 000026·'삼척'·'가람' 없음(같은 브랜드 양구 000034는 정상). 삼척시청 블로그(2026-02-24)·스포츠경향(2026-07-09): 2026-07-01 빅브라더스 자체 발권으로 이전. 극장은 운영 중(11/26 6편).
+- **조치:** `supabase/seeds/21_disable_garam_dtryx_source.sql`로 수집처를 끈다(극장 행·기록 유지). 꺼진 수집처는 소스 점검 리포트에서 빠지므로 **극장 페이지는 새 수집처가 붙을 때까지 비어 있다.**
+- **후속(미완):** 빅브라더스 예매 페이지 또는 삼척시 안내(`https://www.samcheok.go.kr/00902.web`)에서 시간표를 받는 수집처. 클라우드 세션에서는 두 곳 다 닿지 않아(프록시 차단) 실제 응답 구조를 확인하지 못했다 — RPi에서 `scripts/diagnose-stale-sources.ts --html <url>`로 응답을 떠서 파서를 만든다. 그 전까지는 디스코드 `/schedule` 수동 업로드가 대안이다.
+- **판별:** `scripts/diagnose-stale-sources.ts --dtryx <listing_url> --name <극장명>` → `missing`이면 이 경우다(수집처 origin과 `www.dtryx.com` 결과가 둘 다 `missing`인지 본다).
