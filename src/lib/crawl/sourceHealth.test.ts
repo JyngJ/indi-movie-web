@@ -32,6 +32,19 @@ describe('findStaleSources', () => {
     expect(findStaleSources([fresh], new Map(), now)).toEqual([])
   })
 
+  it('같은 극장의 수동 수집처가 둘이면 한 줄만 알린다 — 인디스페이스·indie space', () => {
+    const a = src({ sourceId: 'ocr-인디스페이스', sourceName: '인디스페이스', parser: 'ocr', runs: [run(0, 0)] })
+    const b = src({ sourceId: 'ocr-indie-space', sourceName: 'indie space', parser: 'ocr', runs: [run(0, 0)] })
+    const f = findStaleSources([a, b], new Map(), now)
+    expect(f).toEqual([{ sourceId: 'ocr-인디스페이스', sourceName: '인디스페이스', kind: 'manual-stale', daysSinceLastHit: null }])
+  })
+
+  it('같은 극장의 다른 수동 수집처로 최근에 올렸으면 끊긴 게 아니다', () => {
+    const old = src({ sourceId: 'ocr-a', parser: 'ocr', runs: [run(0, 0), run(40, 30)] })
+    const fresh = src({ sourceId: 'ocr-b', parser: 'ocr', runs: [run(0, 0), run(2, 25)] })
+    expect(findStaleSources([old, fresh], new Map(), now)).toEqual([])
+  })
+
   it('검수 대기 회차만 쌓여 극장 페이지가 비면 알린다 — tinyticket 0.85', () => {
     const stuck = src({ sourceName: '대전아트시네마', parser: 'tinyticketEventManager', runs: [run(0, 3), run(1, 5), run(2, 2)], pendingReviewUpcoming: 35 })
     const [f] = findStaleSources([stuck], new Map(), now)

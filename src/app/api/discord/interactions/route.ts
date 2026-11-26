@@ -11,6 +11,7 @@ import { formatDiscordReportEmbeds, parseReportAction, reportActionComponents } 
 import { updateReportStatus } from '@/lib/reports/store'
 import { formatDiscordUserRequestEmbeds, parseUserRequestAction, userRequestActionComponents } from '@/lib/userRequests/discord'
 import { updateUserRequestStatus } from '@/lib/userRequests/store'
+import { ensureOcrSource } from '@/lib/crawl/ocrSourceStore'
 import { approveShowtimeCandidates, importAdminExternalMovie, resolveAmbiguousMovieMatch } from '@/lib/admin/store'
 import { getKmdbMovie } from '@/lib/admin/kmdb'
 import { parseMovieKmdbAction, parseMovieMatchAction } from '@/lib/admin/matchReviewDiscord'
@@ -102,29 +103,15 @@ async function ocrScheduleImage(imageUrl: string, theaterHint: string): Promise<
   return JSON.parse(sanitized) as ParsedSchedule
 }
 
-async function saveOcrToSupabase(schedule: ParsedSchedule): Promise<{ count: number; sourceId: string }> {
+async function saveOcrToSupabase(schedule: ParsedSchedule, theaterHint: string): Promise<{ count: number; sourceId: string }> {
   const supabase = createSupabaseAdminClient()
-  const id = `ocr-${schedule.theaterName.replace(/[^a-z0-9가-힣]/gi, '-').toLowerCase()}`
-
-  let { data: source } = await supabase.from('crawl_sources').select('id, matched_theater_id').eq('id', id).maybeSingle()
-  if (!source) {
-    // 1순위: 정확한 ilike 매칭 (한글 극장명)
-    let { data: theater } = await supabase.from('theaters').select('id, name').ilike('name', `%${schedule.theaterName}%`).maybeSingle()
-    // 2순위: 공백·특수문자 제거 후 전체 목록에서 normalize 매칭 (영문명 등 대비)
-    if (!theater) {
-      const normalize = (s: string) => s.replace(/\s+/g, '').replace(/[^a-z0-9가-힣]/gi, '').toLowerCase()
-      const norm = normalize(schedule.theaterName)
-      const { data: all } = await supabase.from('theaters').select('id, name')
-      theater = (all ?? []).find((t: { id: string; name: string }) => normalize(t.name) === norm || normalize(t.name).includes(norm) || norm.includes(normalize(t.name))) ?? null
-    }
-    const { data: created } = await supabase.from('crawl_sources').insert({
-      id, theater_id: id, theater_name: schedule.theaterName, matched_theater_id: theater?.id ?? null,
-      homepage_url: null, listing_url: 'ocr://discord', parser: 'ocr',
-      enabled: true, cadence: 'manual', health: 'healthy', notes: 'Discord /schedule 커맨드로 수집',
-    }).select('id, matched_theater_id').single()
-    source = created
-  }
-  if (!source) throw new Error('소스 생성 실패')
+  // 극장을 먼저 찾고 그 극장의 수동 수집처를 쓴다 — OCR이 영문 로고를 읽어도 새 수집처가 생기지 않게(ocrSource.ts)
+  const source = await ensureOcrSource(supabase, {
+    ocrTheaterName: schedule.theaterName,
+    theaterHint,
+    listingUrl: 'ocr://discord',
+    notes: 'Discord /schedule 커맨드로 수집',
+  })
 
   await supabase.from('crawl_runs').insert({
     id: randomUUID(), source_id: source.id, source_name: schedule.theaterName,
@@ -152,7 +139,7 @@ async function saveOcrToSupabase(schedule: ParsedSchedule): Promise<{ count: num
 
   const { error } = await supabase.from('showtime_candidates').upsert(rows, { onConflict: 'fingerprint' })
   if (error) throw new Error(error.message)
-  return { count: rows.length, sourceId: id }
+  return { count: rows.length, sourceId: source.id }
 }
 
 function buildOcrEmbed(schedule: ParsedSchedule, count: number) {
@@ -195,7 +182,7 @@ async function processScheduleCommand(token: string, imageUrl: string, theaterHi
       await sendDiscordWebhook(token, { content: '❌ 상영 정보를 찾을 수 없습니다. 상영시간표 이미지인지 확인해주세요.' })
       return
     }
-    const { count, sourceId } = await saveOcrToSupabase(schedule)
+    const { count, sourceId } = await saveOcrToSupabase(schedule, theaterHint)
     await sendDiscordWebhook(token, {
       embeds: [buildOcrEmbed(schedule, count)],
       components: ocrActionComponents(sourceId),

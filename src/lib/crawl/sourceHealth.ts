@@ -59,6 +59,18 @@ export function findStaleSources(
   now: Date,
 ): StaleSourceFinding[] {
   const findings: StaleSourceFinding[] = []
+  // 2026-11 인디스페이스: 같은 극장에 수동 수집처가 둘(`인디스페이스`·`indie space`)이라 같은 알림이 두 줄 떴다.
+  // 해야 할 일은 극장 하나에 업로드 한 번이므로 극장당 한 줄만 남긴다.
+  // 한 곳이라도 최근에 올렸으면 그 극장은 끊긴 게 아니다 — 극장의 수동 수집처 중 가장 최근 업로드로 판정한다.
+  const manualStaleTheaters = new Set<string>()
+  const lastManualHitByTheater = new Map<string, number>()
+  for (const s of sources) {
+    if (!s.theaterId || !isManualParser(s.parser)) continue
+    const hit = s.runs.find((r) => r.status === 'completed' && r.createdCount > 0)
+    if (!hit) continue
+    const t = new Date(hit.startedAt).getTime()
+    if (t > (lastManualHitByTheater.get(s.theaterId) ?? -Infinity)) lastManualHitByTheater.set(s.theaterId, t)
+  }
   for (const s of sources) {
     if (!s.theaterId) continue
     if ((upcomingByTheater.get(s.theaterId) ?? 0) > 0) continue
@@ -74,8 +86,11 @@ export function findStaleSources(
     }
 
     if (isManualParser(s.parser)) {
-      if (daysSinceLastHit === null || daysSinceLastHit >= MANUAL_STALE_DAYS) {
-        findings.push({ sourceId: s.sourceId, sourceName: s.sourceName, kind: 'manual-stale', daysSinceLastHit })
+      const theaterHit = lastManualHitByTheater.get(s.theaterId)
+      const theaterDays = theaterHit === undefined ? null : Math.floor((now.getTime() - theaterHit) / DAY_MS)
+      if ((theaterDays === null || theaterDays >= MANUAL_STALE_DAYS) && !manualStaleTheaters.has(s.theaterId)) {
+        manualStaleTheaters.add(s.theaterId)
+        findings.push({ sourceId: s.sourceId, sourceName: s.sourceName, kind: 'manual-stale', daysSinceLastHit: theaterDays })
       }
       continue
     }
