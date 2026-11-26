@@ -453,9 +453,9 @@ export const crawlSourcesToAdd = [
   {
     theaterName: '동구영상미디어센터',
     matchedTheaterId: '',
-    homepageUrl: '',
-    listingUrl: '',
-    parser: 'tableText',
+    homepageUrl: 'http://www.donggumc.kr',
+    listingUrl: 'http://www.donggumc.kr/bbs/board.php?bo_table=6_1&me_code=60',
+    parser: 'donggumcBoard', // 2026-11-26 범용 파서로는 0건 — src/lib/admin/crawler/donggumc.ts
     cadence: 'weekly',
     notes: '광주 동구 남문로 646',
   },

@@ -1,5 +1,6 @@
 import { adminAuthErrorResponse, requireAdminSessionUser } from '@/lib/admin/auth'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { ensureOcrSource } from '@/lib/crawl/ocrSourceStore'
 import OpenAI from 'openai'
 import { randomUUID } from 'crypto'
 
@@ -73,42 +74,18 @@ ${theaterHint ? `극장명 힌트: ${theaterHint}` : ''}
 
   if (action === 'save') {
     const supabase = createSupabaseAdminClient()
-    const sourceId = `ocr-${parsed.theaterName.replace(/[^a-z0-9가-힣]/gi, '-').toLowerCase()}`
-
-    let { data: source } = await supabase
-      .from('crawl_sources')
-      .select('id, matched_theater_id')
-      .eq('id', sourceId)
-      .maybeSingle()
-
-    if (!source) {
-      const { data: theater } = await supabase
-        .from('theaters')
-        .select('id')
-        .ilike('name', `%${parsed.theaterName}%`)
-        .maybeSingle()
-
-      const { data: created } = await supabase
-        .from('crawl_sources')
-        .insert({
-          id: sourceId,
-          theater_id: sourceId,
-          theater_name: parsed.theaterName,
-          matched_theater_id: theater?.id ?? null,
-          homepage_url: null,
-          listing_url: 'ocr://admin',
-          parser: 'ocr',
-          enabled: true,
-          cadence: 'manual',
-          health: 'healthy',
-          notes: '어드민 OCR 업로드',
-        })
-        .select('id, matched_theater_id')
-        .single()
-      source = created
+    // 극장을 먼저 찾고 그 극장의 수동 수집처를 쓴다(ocrSource.ts) — 이름 표기가 달라도 한 곳에 모인다
+    let source
+    try {
+      source = await ensureOcrSource(supabase, {
+        ocrTheaterName: parsed.theaterName,
+        theaterHint,
+        listingUrl: 'ocr://admin',
+        notes: '어드민 OCR 업로드',
+      })
+    } catch (error) {
+      return Response.json({ error: { message: error instanceof Error ? error.message : '소스 생성 실패' } }, { status: 500 })
     }
-
-    if (!source) return Response.json({ error: { message: '소스 생성 실패' } }, { status: 500 })
 
     const runId = randomUUID()
     await supabase.from('crawl_runs').insert({

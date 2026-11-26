@@ -79,10 +79,11 @@ export const ADMIN_THEATER_SOURCES: AdminTheaterSource[] = [
     homepageUrl: 'https://samcheok.scinema.org',
     listingUrl: `https://samcheok.scinema.org/cinema/main.do?cgid=${DTRYX_CGID}&BrandCd=scinema&CinemaCd=000026`,
     parser: 'dtryxReservationApi',
-    enabled: true,
+    // 2026-07-01 빅브라더스 자체 발권으로 이전 — dtryx CinemaList에서 000026이 빠져 6/30 이후 0건(supabase/seeds/21)
+    enabled: false,
     cadence: 'daily',
-    health: 'healthy',
-    notes: 'theaters-to-add.ts에서 "가람영화관"으로 등록. API상 명칭은 삼척영화관.',
+    health: 'broken',
+    notes: 'theaters-to-add.ts에서 "가람영화관"으로 등록. API상 명칭은 삼척영화관. 2026-07-01 빅브라더스로 예매처 이전 — 새 수집처 필요.',
   },
   {
     id: 'src-pyeongchang-scinema',

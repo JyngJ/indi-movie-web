@@ -18,6 +18,7 @@ import { Client, GatewayIntentBits, type Message } from 'discord.js'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 import { randomUUID } from 'crypto'
+import { ensureOcrSource } from '../src/lib/crawl/ocrSourceStore'
 
 const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN
 const DISCORD_OCR_CHANNEL_ID = process.env.DISCORD_OCR_CHANNEL_ID
@@ -107,43 +108,13 @@ JSON 외 다른 텍스트는 절대 포함하지 마세요.`,
 }
 
 async function getOrCreateSource(theaterName: string) {
-  const { data: existing } = await sb
-    .from('crawl_sources')
-    .select('id, theater_name, matched_theater_id')
-    .eq('theater_name', theaterName)
-    .maybeSingle()
-
-  if (existing) return existing
-
-  // theaters 테이블에서 극장 찾기
-  const { data: theater } = await sb
-    .from('theaters')
-    .select('id, name')
-    .ilike('name', `%${theaterName}%`)
-    .maybeSingle()
-
-  const id = `ocr-${theaterName.replace(/[^a-z0-9가-힣]/gi, '-').toLowerCase()}`
-
-  const { data: created, error } = await sb
-    .from('crawl_sources')
-    .insert({
-      id,
-      theater_id: id,
-      theater_name: theaterName,
-      matched_theater_id: theater?.id ?? null,
-      homepage_url: null,
-      listing_url: 'ocr://discord',
-      parser: 'ocr',
-      enabled: true,
-      cadence: 'manual',
-      health: 'healthy',
-      notes: 'Discord OCR 봇으로 수동 수집',
-    })
-    .select('id, theater_name, matched_theater_id')
-    .single()
-
-  if (error) throw new Error(`소스 생성 실패: ${error.message}`)
-  return created
+  // 극장을 먼저 찾고 그 극장의 수동 수집처를 쓴다(src/lib/crawl/ocrSource.ts) — 2026-11 인디스페이스 중복 재발 방지
+  const source = await ensureOcrSource(sb, {
+    ocrTheaterName: theaterName,
+    listingUrl: 'ocr://discord',
+    notes: 'Discord OCR 봇으로 수동 수집',
+  })
+  return { ...source, theater_name: theaterName }
 }
 
 function fingerprint(sourceId: string, movieTitle: string, showDate: string, showTime: string) {
