@@ -46,6 +46,7 @@ import type { ParseContext, DtryxCinema } from './crawler/utils'
 import { crawlTinyticketEventManager } from './crawler/browser'
 import { crawlScreenshotOcr, crawlBoardImageOcr } from './crawler/ocr'
 import { crawlHdArtsCenter } from './crawler/hdArtsCenter'
+import { crawlDonggumcBoard } from './crawler/donggumc'
 import { parseCineQMovieTable, toCineQPlayDate } from './crawler/cineq'
 import { parseDrfaCalendar } from './crawler/drfa'
 import { parseMoonhwainTimeTableDates, parseMoonhwainTimeTableDay } from './crawler/moonhwainTimeTable'
@@ -221,6 +222,10 @@ export async function crawlShowtimeCandidates(context: ParseContext) {
 
   if (context.source.parser === 'hdArtsCenter') {
     return crawlHdArtsCenter(context)
+  }
+
+  if (context.source.parser === 'donggumcBoard') {
+    return crawlDonggumcBoard(context)
   }
 
   const content = await resolveCrawlInput(
